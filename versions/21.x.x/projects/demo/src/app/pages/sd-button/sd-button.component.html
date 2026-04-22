@@ -1,0 +1,14 @@
+<h3>Default (inline)</h3>
+<sd-button color="primary" type="fill" title="Loading..." (click)="onClick($event)" prefixIcon="home" [loading]="true"></sd-button>
+<sd-button color="primary" type="fill" title="Enabled" (click)="onClick($event)" prefixIcon="home"></sd-button>
+<sd-button color="primary" type="fill" title="Disabled" (click)="onClick($event)" prefixIcon="home" disabled></sd-button>
+
+<h3>Block (width 100%)</h3>
+<div style="max-width: 400px; display: flex; flex-direction: column; gap: 8px;">
+  <sd-button color="primary" type="fill" title="Fill - Block" (click)="onClick($event)" block></sd-button>
+  <sd-button color="primary" type="light" title="Light - Block" (click)="onClick($event)" block></sd-button>
+  <sd-button color="primary" type="outline" title="Outline - Block" (click)="onClick($event)" block></sd-button>
+  <sd-button color="primary" type="link" title="Link - Block" (click)="onClick($event)" block></sd-button>
+  <sd-button color="success" type="fill" title="Success - Block - Loading" (click)="onClick($event)" block [loading]="true"></sd-button>
+  <sd-button color="error" type="fill" title="Error - Block - Disabled" (click)="onClick($event)" block disabled></sd-button>
+</div>

@@ -1,0 +1,66 @@
+@let badgeType = type();
+@let tt = tooltip();
+@let titleText = title();
+@let descText = description();
+@let iconName = icon() || defaultIcon;
+@let isPointer = click.observed;
+
+@if (badgeType === 'round') {
+  <div
+    class="c-badge"
+    matTooltipPosition="above"
+    [matTooltip]="tt || ''"
+    matTooltipClass="sd-multiline-tooltip"
+    [ngClass]="baseColorClasses()"
+    [class.pointer]="isPointer"
+    (click)="onClick($event)"
+    aria-hidden="true">
+    {{ titleText }}
+  </div>
+} @else if (badgeType === 'tag') {
+  <div
+    class="c-badge c-badge--tag"
+    matTooltipPosition="above"
+    [matTooltip]="tt || ''"
+    matTooltipClass="sd-multiline-tooltip"
+    [ngClass]="baseColorClasses()"
+    [class.pointer]="isPointer"
+    (click)="onClick($event)"
+    aria-hidden="true">
+    <div class="c-icon d-flex align-items-center">
+      @if (icon()) {
+        <span class="c-material-icon mr-4" [ngClass]="tagIconCombinedClasses()">
+          {{ iconName }}
+        </span>
+      }
+      <div class="d-flex flex-column align-items-start">
+        <span class="T14R c-badge-title">{{ titleText }}</span>
+        @if (descText) {
+          <span class="T12R c-badge-description">{{ descText }}</span>
+        }
+      </div>
+    </div>
+  </div>
+} @else {
+  <div
+    class="d-flex"
+    matTooltipPosition="above"
+    [matTooltip]="tt || ''"
+    matTooltipClass="sd-multiline-tooltip"
+    [class.c-badge-icon]="badgeType === 'icon'"
+    [class.pointer]="isPointer"
+    (click)="onClick($event)"
+    aria-hidden="true">
+    <div class="c-icon d-flex align-items-center">
+      <span class="c-material-icon mr-4" [ngClass]="iconCombinedClasses()">
+        {{ iconName }}
+      </span>
+      <div class="d-flex flex-column">
+        <span class="T14R c-badge-title">{{ titleText }}</span>
+        @if (descText) {
+          <span class="T10R c-badge-description">{{ descText }}</span>
+        }
+      </div>
+    </div>
+  </div>
+}

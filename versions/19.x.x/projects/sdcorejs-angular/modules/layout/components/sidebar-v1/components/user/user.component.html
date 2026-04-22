@@ -1,0 +1,41 @@
+@let _userInfo = userInfo();
+@let avatar = _userInfo?.avatar || _userInfo?.fullName || _userInfo?.username || _userInfo?.email;
+
+<div class="c-layout-user-wrapper">
+  <div class="c-layout-user-avatar" [matMenuTriggerFor]="userMenu" (menuClosed)="onMenuClosed()" (menuOpened)="onMenuOpened()">
+    <sd-avatar [src]="avatar" [size]="32"></sd-avatar>
+  </div>
+
+  @if (!isMobileOrTablet()) {
+    <div aria-hidden="true" mat-mini-fab class="c-layout-icon-toggle" (click)="onToggleMenuLock($event)">
+      <mat-icon style="color: #8c8c8c">
+        {{ isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left' }}
+      </mat-icon>
+    </div>
+  }
+</div>
+
+<mat-menu #userMenu="matMenu" xPosition="before" backdropClass="c-user-menu-backdrop-f90ce131-fa4c-4f71-a49b-ab7fa374fdd0">
+  <div aria-hidden="true" class="c-user-menu-wrapper" (click)="keepOpenWhenClickInsideMenu($event)">
+    <div class="c-user-info-wrapper">
+      <div class="c-user-avatar">
+        <sd-avatar [src]="avatar" [size]="40"></sd-avatar>
+      </div>
+      <span class="c-user-name">{{ _userInfo.fullName || _userInfo.username }}</span>
+      <span class="c-user-email">{{ _userInfo.email }}</span>
+    </div>
+
+    @if (changePasswordLayoutConfig) {
+      <div class="c-sign-button-wrapper">
+        <button class="c-account-options" (click)="changePassword()">
+          <img alt="lock" />
+          <span>Đổi mật khẩu</span>
+        </button>
+      </div>
+    }
+
+    <div class="c-sign-button-wrapper">
+      <button class="c-sign-button" mat-flat-button (click)="logout()">Đăng xuất</button>
+    </div>
+  </div>
+</mat-menu>

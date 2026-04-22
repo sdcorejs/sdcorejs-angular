@@ -1,0 +1,206 @@
+<div class="d-flex form-editor">
+  <div class="d-flex flex-column form-menu">
+    <div class="c-header">Components</div>
+    <div class="component-container" style="flex: 1">
+      <div class="form-editor-group" cdkDropList [cdkDropListData]="formBuilderComponents" [cdkDropListEnterPredicate]="noReturnPredicate">
+        @for (formBuilderComponent of formBuilderComponents; track formBuilderComponent.type) {
+          <div cdkDrag class="form-item" (click)="addComponent(formBuilderComponent)" aria-hidden="true">
+            <div class="c-form-item">
+              <span [innerHtml]="formBuilderComponent.icon | sdSafeHtml"></span>
+              <div class="title">
+                {{ formBuilderComponent.name }}
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+  <div class="d-flex flex-column form-content">
+    <div class="c-header d-flex align-items-center justify-content-between">
+      <div>Bố cục</div>
+      <div class="d-flex align-items-center" style="gap: 8px">
+        <mat-icon matTooltip="Xem JSON" fontIcon="code" (click)="viewJSON()"></mat-icon>
+        <mat-icon matTooltip="Cấu hình biến" fontIcon="scatter_plot" (click)="configureVariables()"></mat-icon>
+        <mat-icon matTooltip="Cấu hình xác thực cảnh báo/lỗi" fontIcon="error" (click)="openConfigureValidation()"></mat-icon>
+        <mat-icon
+          [matTooltip]="isPreview ? 'Trở về thiết kế' : 'Xem thử'"
+          [fontIcon]="isPreview ? 'stop_circle' : 'play_circle'"
+          (click)="isPreview = !isPreview"></mat-icon>
+      </div>
+    </div>
+    <div class="p-12 components" style="flex: 1; overflow-y: auto" id="frmComponent">
+      @if (isPreview) {
+        <sd-form-render [configuration]="{ components: this.components, validations: this.validations }"></sd-form-render>
+        <sd-button title="Validate" (click)="onValidate()"></sd-button>
+      } @else {
+        <div
+          cdkDropList
+          cdkDropListOrientation="vertical"
+          [cdkDropListData]="dragDropRows"
+          class="listY"
+          (cdkDropListDropped)="drop($event)"
+          (click)="clickFormContentEmpty()"
+          aria-hidden="true">
+          @for (row of dragDropRows; track row.rowIndex) {
+            <div
+              cdkDrag
+              (mouseover)="onMouseover($event, row)"
+              (focus)="onFocus($event)"
+              id="row_{{ row.rowIndex }}"
+              class="row-item"
+              aria-hidden="true">
+              <div class="btn-drag-row-item"><mat-icon matTooltip="Kéo lên / xuống">drag_indicator</mat-icon></div>
+              <div
+                class="c-row-item"
+                cdkDropList
+                cdkDropListOrientation="horizontal"
+                [cdkDropListData]="row.items"
+                (cdkDropListDropped)="drop($event)">
+                @for (item of row.items; track item.id; let i = $index) {
+                  <div
+                    cdkDrag
+                    [id]="item.id"
+                    class="component-item column-{{ item.layout?.columns || 12 }}"
+                    [class.active]="item.id === selectedComponent?.id"
+                    (click)="selectComponent(item)"
+                    (clickOutside)="onClickedOutside($event)"
+                    (cdkDragStarted)="dragStartComponentItem($event)"
+                    (cdkDragEnded)="dragEndComponentItem($event)"
+                    aria-hidden="true">
+                    <div class="c-component-item" [class.c-hidden]="item.properties?.hidden">
+                      <div class="c-actions">
+                        @if (item.type !== 'group') {
+                          <mat-icon
+                            [matTooltip]="item.properties?.viewed ? 'Bỏ chỉ xem' : 'Chỉ xem'"
+                            (click)="onChangeViewed(item)"
+                            fontSet="material-icons-outlined"
+                            style="font-size: 16px; cursor: pointer"
+                            [class.text-warning]="item.properties?.viewed">
+                            edit_off
+                          </mat-icon>
+                        }
+                        <mat-icon
+                          matTooltip="Nhân bản"
+                          (click)="onDuplicate(item)"
+                          fontSet="material-icons-outlined"
+                          style="font-size: 16px; cursor: pointer">
+                          content_copy
+                        </mat-icon>
+                        <mat-icon
+                          [matTooltip]="item.properties?.hidden ? 'Hiện' : 'Ẩn'"
+                          (click)="onChangeHidden(item)"
+                          fontSet="material-icons-outlined"
+                          style="font-size: 16px; cursor: pointer"
+                          [class.text-warning]="item.properties?.hidden">
+                          visibility_off
+                        </mat-icon>
+                        <mat-icon
+                          matTooltip="Xóa"
+                          (click)="removeComponent(item.id)"
+                          fontSet="material-icons-outlined"
+                          style="font-size: 16px; cursor: pointer"
+                          class="text-error">
+                          delete
+                        </mat-icon>
+                      </div>
+                      @if (item.type === 'textfield') {
+                        <textfield-control [component]="item"></textfield-control>
+                      } @else if (item.type === 'textarea') {
+                        <textarea-control [component]="item"></textarea-control>
+                      } @else if (item.type === 'chip-string') {
+                        <chip-string-control [component]="item"></chip-string-control>
+                      } @else if (item.type === 'chip-calendar') {
+                        <chip-calendar-control [component]="item"></chip-calendar-control>
+                      } @else if (item.type === 'number') {
+                        <number-control [component]="item"></number-control>
+                      } @else if (item.type === 'datetime') {
+                        <datetime-control [component]="item"></datetime-control>
+                      } @else if (item.type === 'select') {
+                        <select-control [component]="item"></select-control>
+                      } @else if (item.type === 'radio') {
+                        <radio-control [component]="item"></radio-control>
+                      } @else if (item.type === 'checkbox') {
+                        <checkbox-control [component]="item"></checkbox-control>
+                      } @else if (item.type === 'html') {
+                        <html-control [component]="item" #html></html-control>
+                      } @else if (item.type === 'upload') {
+                        <upload-control [component]="item"></upload-control>
+                      } @else if (item.type === 'table') {
+                        <table-control [component]="item"></table-control>
+                      }
+                      <div class="c-item-backdrop"></div>
+                    </div>
+                    <div cdkDropList cdkDropListOrientation="horizontal">
+                      <div
+                        cdkDrag
+                        (cdkDragMoved)="changeSizeControl($event, item, row.items, i)"
+                        (cdkDragEnded)="dragEndChangeSizeControl($event)"
+                        class="c-bar-resize-right"
+                        matTooltip="Co dãn"></div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+  <div class="d-flex flex-column form-attributes">
+    <div class="c-header">Thuộc tính</div>
+    @if (selectedComponent) {
+      <div class="attributes" style="flex: 1" aria-hidden="true">
+        @if (selectedComponent.type === 'textfield') {
+          <textfield-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></textfield-attribute>
+        } @else if (selectedComponent.type === 'textarea') {
+          <textarea-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></textarea-attribute>
+        } @else if (selectedComponent.type === 'chip-string') {
+          <chip-string-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></chip-string-attribute>
+        } @else if (selectedComponent.type === 'chip-calendar') {
+          <chip-calendar-attribute
+            [components]="components"
+            [variables]="variables"
+            [component]="selectedComponent"></chip-calendar-attribute>
+        } @else if (selectedComponent.type === 'number') {
+          <number-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></number-attribute>
+        } @else if (selectedComponent.type === 'datetime') {
+          <datetime-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></datetime-attribute>
+        } @else if (selectedComponent.type === 'select') {
+          <select-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></select-attribute>
+        } @else if (selectedComponent.type === 'radio') {
+          <radio-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></radio-attribute>
+        } @else if (selectedComponent.type === 'checkbox') {
+          <checkbox-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></checkbox-attribute>
+        } @else if (selectedComponent.type === 'html') {
+          <html-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></html-attribute>
+        } @else if (selectedComponent.type === 'upload') {
+          <upload-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></upload-attribute>
+        } @else if (selectedComponent.type === 'table') {
+          <table-attribute [components]="components" [variables]="variables" [component]="selectedComponent"></table-attribute>
+        }
+      </div>
+    }
+  </div>
+</div>
+<sd-modal title="JSON" view="dialog" width="80%" #popupViewJSON>
+  <sd-textarea [(model)]="jsonString"></sd-textarea>
+  <ng-container sdFooter>
+    <sd-button type="fill" title="Lưu" (click)="updateJSON()" prefixIcon="save" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>
+<sd-modal title="Cấu hình biến" view="dialog" width="800px" #popupConfigureVariables>
+  @for (variable of clonedVariables; track variable.id) {
+    <div class="d-flex align-items-center" style="gap: 8px">
+      <sd-input [form]="form" label="Trường dữ liệu" [(model)]="variable.key" required></sd-input>
+      <sd-input [form]="form" label="Nhãn hiển thị" [(model)]="variable.label" required></sd-input>
+      <sd-button prefixIcon="delete" (click)="removeVariables(variable.id)" color="error"></sd-button>
+    </div>
+  }
+  <a href="javascript:;" (click)="addVariables()">Thêm biến</a>
+  <ng-container sdFooter>
+    <sd-button type="fill" title="Lưu" (click)="updateVariables()" prefixIcon="save" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>
+<configure-validation (accept)="onUpdateValidations($event)"></configure-validation>

@@ -1,0 +1,171 @@
+<sd-modal width="500px" [title]="'Filter'">
+  <!-- TODO: Xử lý thêm phần này -->
+  <!-- <ng-container *ngFor="let column of columns | sdFilterColumn">
+    <div class="d-flex align-items-baseline">
+      <ng-container>
+        <div *sdDesktop class="c-checkable">
+          <mat-slide-toggle [(ngModel)]="inlineColumn[column.field]" color="primary"></mat-slide-toggle>
+        </div>
+      </ng-container>
+      <div class="c-filterable">
+        <sd-input
+          *ngIf="column.type === 'string'"
+          [label]="column.title"
+          type="text"
+          [(model)]="columnFilter[column.field]"
+          appearance="outline">
+        </sd-input>
+        <sd-input-number
+          *ngIf="column.type === 'number'"
+          [label]="column.title"
+          [(model)]="columnFilter[column.field]"
+          appearance="outline">
+        </sd-input-number>
+        <sd-select
+          *ngIf="column.type === 'boolean'"
+          [label]="column.title"
+          [items]="[
+            { value: '1', display: column.option?.displayOnTrue || 'True' },
+            { value: '0', display: column.option?.displayOnFalse || 'False' }
+          ]"
+          valueField="value"
+          displayField="display"
+          [(model)]="columnFilter[column.field]"
+          appearance="outline">
+        </sd-select>
+        <sd-autocomplete
+          *ngIf="column.type === 'values' || column.type === 'lazy-values'"
+          [label]="column.title"
+          [items]="column.option.items"
+          [valueField]="column.option.valueField"
+          [displayField]="column.option.displayField"
+          [(model)]="columnFilter[column.field]"
+          appearance="outline">
+        </sd-autocomplete>
+        <sd-date
+          *ngIf="column.type === 'date' || column.type === 'datetime' || column.type === 'time'"
+          [label]="column.title"
+          [(model)]="columnFilter[column.field]"
+          type="date"
+          appearance="outline">
+        </sd-date>
+      </div>
+    </div>
+  </ng-container> -->
+  <ng-container *ngFor="let item of externalFilters | filterExternal">
+    <div class="d-flex align-items-baseline">
+      <ng-container>
+        <div *sdDesktop class="c-checkable">
+          <mat-slide-toggle [(ngModel)]="inlineExternal[item.field]" color="primary"></mat-slide-toggle>
+        </div>
+      </ng-container>
+      <div class="c-filterable">
+        <sd-input
+          [label]="item.title"
+          *ngIf="item.type === 'string'"
+          type="text"
+          [(model)]="externalFilter[item.field]"
+          appearance="outline">
+        </sd-input>
+        <sd-input-number [label]="item.title" *ngIf="item.type === 'number'" [(model)]="externalFilter[item.field]" appearance="outline">
+        </sd-input-number>
+        <sd-select
+          [label]="item.title"
+          *ngIf="item.type === 'boolean'"
+          [items]="[
+            { value: '1', display: item.option?.displayOnTrue || 'True' },
+            { value: '0', display: item.option?.displayOnFalse || 'False' }
+          ]"
+          valueField="value"
+          displayField="display"
+          [(model)]="externalFilter[item.field]"
+          appearance="outline">
+        </sd-select>
+        <ng-container *ngIf="item.type === 'values' && item.option">
+          <sd-select
+            *ngIf="item.option?.selection === 'MULTIPLE'"
+            [label]="item.title"
+            [items]="item.option.items | filterValues | async"
+            [valueField]="item.option.valueField"
+            [displayField]="item.option.displayField"
+            [(model)]="externalFilter[item.field]"
+            appearance="outline"
+            multiple>
+          </sd-select>
+          <sd-autocomplete
+            *ngIf="item.option?.selection === 'AUTOCOMPLETE'"
+            [label]="item.title"
+            [items]="item.option.items | filterValues | async"
+            [valueField]="item.option.valueField"
+            [displayField]="item.option.displayField"
+            [(model)]="externalFilter[item.field]"
+            appearance="outline">
+          </sd-autocomplete>
+          <sd-select
+            *ngIf="item.option?.selection === 'MULTIPLEAUTOCOMPLETE'"
+            [label]="item.title"
+            [items]="item.option.items | filterValues | async"
+            [valueField]="item.option.valueField"
+            [displayField]="item.option.displayField"
+            [(model)]="externalFilter[item.field]"
+            appearance="outline"
+            multiple>
+          </sd-select>
+          <sd-select
+            *ngIf="!item.option?.selection"
+            [label]="item.title"
+            [items]="item.option.items | filterValues | async"
+            [valueField]="item.option.valueField"
+            [displayField]="item.option.displayField"
+            [(model)]="externalFilter[item.field]"
+            appearance="outline">
+          </sd-select>
+        </ng-container>
+        <ng-container *ngIf="item.type === 'lazy-values' && item.option">
+          <sd-select
+            *ngIf="item.option?.selection === 'MULTIPLE'"
+            [label]="item.title"
+            [items]="item.option.items"
+            [valueField]="item.option.valueField"
+            [displayField]="item.option.displayField"
+            [(model)]="externalFilter[item.field]"
+            appearance="outline"
+            multiple>
+          </sd-select>
+          <sd-autocomplete
+            *ngIf="!item.option?.selection"
+            [label]="item.title"
+            [items]="item.option.items"
+            [valueField]="item.option.valueField"
+            [displayField]="item.option.displayField"
+            [(model)]="externalFilter[item.field]"
+            appearance="outline">
+          </sd-autocomplete>
+        </ng-container>
+        <sd-date
+          [label]="item.title"
+          *ngIf="item.type === 'date' || item.type === 'datetime'"
+          [(model)]="externalFilter[item.field]"
+          appearance="outline">
+        </sd-date>
+        <!-- <sd-date-range
+          [label]="item.title"
+          *ngIf="item.type === 'daterange' && externalFilter[item.field]"
+          [(from)]="externalFilter[item.field].from"
+          [(to)]="externalFilter[item.field].to"
+          [min]="item.minDate"
+          [max]="item.maxDate"
+          appearance="outline">
+        </sd-date-range> -->
+        <!-- TODO -->
+        <!-- <ng-container *ngIf="item.type === 'custom' && item.filterDef">
+          <ng-container *ngTemplateOutlet="item.filterDef; context: { externalFilter: externalFilter }"> </ng-container>
+        </ng-container> -->
+      </div>
+    </div>
+  </ng-container>
+  <ng-container sdFooter>
+    <sd-button class="mr-auto" (click)="onClear()" title="Mặc định" type="link"> </sd-button>
+    <sd-button (click)="onApply()" title="Đồng ý" color="primary" type="fill"></sd-button>
+  </ng-container>
+</sd-modal>

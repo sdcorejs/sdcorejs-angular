@@ -1,0 +1,193 @@
+@let template = column?.filter?.filterDef;
+@let context = { columnFilter: columnFilter, autoId: autoId + column.field };
+
+<div class="d-flex c-inline-column align-items-end" style="width: 100%; max-width: 100%">
+  @if (
+    column.type === 'string' ||
+    column.type === 'number' ||
+    column.type === 'boolean' ||
+    column.type === 'values' ||
+    column.type === 'lazy-values' ||
+    column.type === 'date' ||
+    column.type === 'datetime' ||
+    column.type === 'time'
+  ) {
+    <!-- Operator filter -->
+    <div class="d-flex align-items-center" *ngIf="operators.length">
+      <sd-button
+        class="{{ column.type === 'number' && inlineSymbol !== 'filter_alt' ? 'mb-4 mr-2 ' : 'mr-2 ' }}"
+        fontSet="material-symbols-outlined"
+        [prefixIcon]="inlineSymbol"
+        [matMenuTriggerFor]="menu"
+        type="link">
+      </sd-button>
+      <mat-menu #menu="matMenu">
+        <button *ngFor="let operator of operators" (click)="onChangeOperator(operator)" mat-menu-item type="button">
+          <mat-icon fontSet="material-symbols-outlined" class="{{ column.type === 'number' ? 'mb-8 ' : '' }}">{{
+            operator.symbol
+          }}</mat-icon>
+          <span> {{ operator.display }}</span>
+        </button>
+      </mat-menu>
+    </div>
+    <!-- Nếu filter nhận vào template -->
+    @if (template) {
+      <ng-container *ngTemplateOutlet="template; context: context"></ng-container>
+    } 
+    <!-- Mặc định theo type và giá trị values defined của column -->
+    @else {
+      @if (column.type === 'string') {
+        <sd-input
+          *ngIf="column.type === 'string'"
+          [autoId]="autoId + column.field"
+          style="flex: 1 1 0%; min-width: 0"
+          size="sm"
+          type="text"
+          [(model)]="columnFilter[column.field]"
+          (keyupEnter)="onFilterChange()"
+          [disabled]="column.filter?.disabled"
+          hideInlineError>
+        </sd-input>
+      } @else if (column.type === 'number') {
+        @if (!column.filter?.type) {
+          <sd-input-number
+            [autoId]="autoId + column.field"
+            style="flex: 1 1 0%; min-width: 0"
+            size="sm"
+            [(model)]="columnFilter[column.field]"
+            (keyupEnter)="onFilterChange()"
+            [disabled]="column.filter?.disabled"
+            hideInlineError>
+          </sd-input-number>
+        } @else if (column.filter?.type === 'split-number') {
+          <div class="d-flex align-items-center" style="flex: 1 1 0%; min-width: 0">
+            <sd-input-number
+              [autoId]="autoId + '-from-' + column.field"
+              style="flex: 1 1 0%; min-width: 0"
+              size="sm"
+              [(model)]="columnFilter[column.field].from"
+              (sdChange)="onFilterChange()"
+              [disabled]="column.filter?.disabled"
+              hideInlineError>
+            </sd-input-number>
+            <div class="mx-4">-</div>
+            <sd-input-number
+              [autoId]="autoId + '-to-' + column.field"
+              style="flex: 1 1 0%; min-width: 0"
+              size="sm"
+              [(model)]="columnFilter[column.field].to"
+              (sdChange)="onFilterChange()"
+              [disabled]="column.filter?.disabled"
+              hideInlineError>
+            </sd-input-number>
+          </div>
+        }
+      } @else if (column.type === 'boolean') {
+        <sd-select
+          minWidthPanel="200px"
+          [autoId]="autoId + column.field"
+          style="flex: 1 1 0%; min-width: 0"
+          [style.width]="'100%'"
+          size="sm"
+          [items]="[
+            { value: '1', display: column.option?.displayOnTrue || 'True' },
+            { value: '0', display: column.option?.displayOnFalse || 'False' },
+          ]"
+          valueField="value"
+          displayField="display"
+          [(model)]="columnFilter[column.field]"
+          (sdChange)="onFilterChange()"
+          [disabled]="column.filter?.disabled"
+          hideInlineError>
+          <ng-template sdItemDef let-item="item">
+            @if (item.value === '1') {
+              <sd-badge color="success" [title]="column.option?.displayOnTrue || 'True'"> </sd-badge>
+            } @else {
+              <sd-badge color="error" [title]="column.option?.displayOnFalse || 'False'"> </sd-badge>
+            }
+          </ng-template>
+        </sd-select>
+      } @else if (column.type === 'values') {
+        <sd-select
+          minWidthPanel="200px"
+          [autoId]="autoId + column.field"
+          style="flex: 1 1 0%; min-width: 0"
+          [style.width]="'100%'"
+          size="sm"
+          [items]="items"
+          [valueField]="column.option.valueField"
+          [displayField]="column.option.displayField"
+          [(model)]="columnFilter[column.field]"
+          (sdChange)="onFilterChange()"
+          [disabled]="column.filter?.disabled"
+          [multiple]="column.option.selection === 'MULTIPLE'"
+          hideInlineError>
+        </sd-select>
+      } @else if (column.type === 'lazy-values') {
+        <sd-select
+          minWidthPanel="200px"
+          [autoId]="autoId + column.field"
+          style="flex: 1 1 0%; min-width: 0"
+          [style.width]="'100%'"
+          size="sm"
+          [items]="items"
+          [valueField]="column.option.valueField"
+          [displayField]="column.option.displayField"
+          [(model)]="columnFilter[column.field]"
+          (sdChange)="onFilterChange()"
+          [disabled]="column.filter?.disabled"
+          [multiple]="column.option.selection === 'MULTIPLE'"
+          hideInlineError>
+        </sd-select>
+      } @else if (column.type === 'date' || column.type === 'datetime' || column.type === 'time') {
+        @if (!column.filter?.type || column.filter?.type === 'daterange') {
+          <sd-date-range
+            style="flex: 1 1 0%; min-width: 0"
+            size="sm"
+            [(model)]="columnFilter[column.field]"
+            (sdChange)="onFilterChange()"
+            [disabled]="column.filter?.disabled"
+            hideInlineError>
+          </sd-date-range>
+        } @else if (column.filter?.type === 'date') {
+          <sd-date
+            [autoId]="autoId + column.field"
+            style="flex: 1 1 0%; min-width: 0"
+            type="date"
+            size="sm"
+            [(model)]="columnFilter[column.field]"
+            (sdChange)="onFilterChange()"
+            [disabled]="column.filter?.disabled"
+            hideInlineError>
+          </sd-date>
+        } @else if (column.filter?.type === 'split-date') {
+          <div class="d-flex align-items-center" style="flex: 1 1 0%; min-width: 0">
+            <sd-date
+              [autoId]="autoId + '-from-' + column.field"
+              style="flex: 1 1 0%; min-width: 0"
+              type="date"
+              size="sm"
+              [(model)]="columnFilter[column.field].from"
+              (sdChange)="onFilterChange()"
+              [disabled]="column.filter?.disabled"
+              hideInlineError>
+            </sd-date>
+            <div class="mx-4">-</div>
+            <sd-date
+              [autoId]="autoId + '-to-' + column.field"
+              style="flex: 1 1 0%; min-width: 0"
+              type="date"
+              size="sm"
+              [(model)]="columnFilter[column.field].to"
+              (sdChange)="onFilterChange()"
+              [disabled]="column.filter?.disabled"
+              hideInlineError>
+            </sd-date>
+          </div>
+        }
+      }
+    }
+  } @else {
+    <sd-input [autoId]="autoId + column.field" style="flex: 1 1 0%; min-width: 0" type="text" size="sm" disabled></sd-input>
+  }
+</div>

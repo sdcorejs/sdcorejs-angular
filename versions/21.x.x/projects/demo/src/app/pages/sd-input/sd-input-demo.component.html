@@ -1,0 +1,410 @@
+<!-- START: sd-input -->
+<div style="padding: 32px; max-width: 1400px; font-family: sans-serif">
+  <!-- =========================================== -->
+  <!-- SECTION 1: Trạng thái cơ bản                -->
+  <!-- =========================================== -->
+  <h2>1. Trạng thái cơ bản (Basic States)</h2>
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 40px">
+    <!-- md -->
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size md (default)</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          floatLabel="always"
+          label="Normal (required)"
+          placeholder="Nhập nội dung..."
+          helperText="Đây là helper text"
+          [(model)]="basicModel"
+          [form]="form"
+          required>
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Disabled" placeholder="Không thể nhập" [(model)]="disabledModel" [form]="form" disabled> </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Readonly" [(model)]="readonlyModel" [form]="form" readonly> </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Viewed (chỉ hiển thị)" [(model)]="viewedModel" [form]="form" viewed> </sd-input>
+      </div>
+    </div>
+
+    <!-- sm -->
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size sm</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          floatLabel="always"
+          label="Normal (required)"
+          placeholder="Nhập nội dung..."
+          helperText="Đây là helper text"
+          size="sm"
+          [(model)]="basicModel"
+          [form]="form"
+          required>
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Disabled" placeholder="Không thể nhập" size="sm" [(model)]="disabledModel" [form]="form" disabled> </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Readonly" size="sm" [(model)]="readonlyModel" [form]="form" readonly> </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Viewed (chỉ hiển thị)" size="sm" [(model)]="viewedModel" [form]="form" viewed> </sd-input>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 2: Loại dữ liệu (Type)              -->
+  <!-- =========================================== -->
+  <h2>2. Loại dữ liệu (Type)</h2>
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 40px">
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size md</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Text (default)" type="text" placeholder="Nhập text..." [(model)]="typeTextModel" [form]="form"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input label="Number" type="number" placeholder="Nhập số..." [(model)]="typeNumberModel" [form]="form"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input label="Password" type="password" placeholder="Nhập mật khẩu..." [(model)]="typePasswordModel" [form]="form"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input label="Email" type="email" placeholder="example@email.com" [(model)]="typeEmailModel" [form]="form"></sd-input>
+      </div>
+    </div>
+
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size sm</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Text (default)"
+          type="text"
+          size="sm"
+          placeholder="Nhập text..."
+          [(model)]="typeTextModel"
+          [form]="form"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input label="Number" type="number" size="sm" placeholder="Nhập số..." [(model)]="typeNumberModel" [form]="form"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Password"
+          type="password"
+          size="sm"
+          placeholder="Nhập mật khẩu..."
+          [(model)]="typePasswordModel"
+          [form]="form"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input label="Email" type="email" size="sm" placeholder="example@email.com" [(model)]="typeEmailModel" [form]="form"></sd-input>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 3: Validation — Inline Error        -->
+  <!-- =========================================== -->
+  <h2>3. Validation — Inline Error (mặc định)</h2>
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px">
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size md</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Required" placeholder="Để trống → lỗi" [(model)]="v_required" [form]="formValidation" required></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Minlength 3"
+          placeholder="Nhập dưới 3 ký tự → lỗi"
+          [(model)]="v_minlength"
+          [form]="formValidation"
+          [minlength]="3"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Maxlength 10 (có đếm ký tự)"
+          placeholder="Nhập quá 10 ký tự → lỗi"
+          [(model)]="v_maxlength"
+          [form]="formValidation"
+          [maxlength]="10"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Pattern (chỉ số)"
+          placeholder="Nhập chữ → lỗi"
+          [(model)]="v_pattern"
+          [form]="formValidation"
+          pattern="[0-9]+"
+          patternErrorMessage="Chỉ được nhập số"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Inline Error (lỗi được truyền từ ngoài)"
+          placeholder="Nhập gì cũng lỗi"
+          [(model)]="v_inline"
+          [form]="formValidation"
+          inlineError="Lỗi do backend trả về"></sd-input>
+      </div>
+    </div>
+
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size sm</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Required"
+          size="sm"
+          placeholder="Để trống → lỗi"
+          [(model)]="v_required"
+          [form]="formValidation"
+          required></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Minlength 3"
+          size="sm"
+          placeholder="Nhập dưới 3 ký tự → lỗi"
+          [(model)]="v_minlength"
+          [form]="formValidation"
+          [minlength]="3"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Maxlength 10 (có đếm ký tự)"
+          size="sm"
+          placeholder="Nhập quá 10 ký tự → lỗi"
+          [(model)]="v_maxlength"
+          [form]="formValidation"
+          [maxlength]="10"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Pattern (chỉ số)"
+          size="sm"
+          placeholder="Nhập chữ → lỗi"
+          [(model)]="v_pattern"
+          [form]="formValidation"
+          pattern="[0-9]+"
+          patternErrorMessage="Chỉ được nhập số"></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Inline Error"
+          size="sm"
+          placeholder="Nhập gì cũng lỗi"
+          [(model)]="v_inline"
+          [form]="formValidation"
+          inlineError="Lỗi do backend trả về"></sd-input>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 40px">
+    <button mat-stroked-button (click)="validateSection()">Validate tất cả</button>
+    <button mat-stroked-button (click)="resetSection()" style="margin-left: 8px">Reset</button>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 4: Validation — Hide Inline Error   -->
+  <!-- =========================================== -->
+  <h2>4. Validation — Hide Inline Error (icon + tooltip)</h2>
+  <p style="color: #666; margin-bottom: 16px">
+    Lỗi được ẩn bên dưới, hiển thị qua icon 🔴 ở cuối input. Hover vào icon để xem nội dung lỗi.
+  </p>
+
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 16px">
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size md</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Required + hideInlineError"
+          placeholder="Để trống → icon lỗi"
+          [(model)]="h_required"
+          [form]="formHide"
+          required
+          hideInlineError></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Maxlength 5 + hideInlineError"
+          placeholder="Nhập quá 5 ký tự → icon lỗi"
+          [(model)]="h_maxlength"
+          [form]="formHide"
+          [maxlength]="5"
+          hideInlineError></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Pattern (chỉ số) + hideInlineError"
+          placeholder="Nhập chữ → icon lỗi"
+          [(model)]="h_pattern"
+          [form]="formHide"
+          pattern="[0-9]+"
+          patternErrorMessage="Chỉ được nhập số"
+          hideInlineError></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Inline Error + hideInlineError"
+          placeholder="Nhập gì cũng lỗi"
+          [(model)]="h_inline"
+          [form]="formHide"
+          inlineError="Lỗi backend"
+          hideInlineError></sd-input>
+      </div>
+    </div>
+
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size sm</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Required + hideInlineError"
+          size="sm"
+          placeholder="Để trống → icon lỗi"
+          [(model)]="h_required"
+          [form]="formHide"
+          required
+          hideInlineError></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Maxlength 5 + hideInlineError"
+          size="sm"
+          placeholder="Nhập quá 5 ký tự → icon lỗi"
+          [(model)]="h_maxlength"
+          [form]="formHide"
+          [maxlength]="5"
+          hideInlineError></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Pattern (chỉ số) + hideInlineError"
+          size="sm"
+          placeholder="Nhập chữ → icon lỗi"
+          [(model)]="h_pattern"
+          [form]="formHide"
+          pattern="[0-9]+"
+          patternErrorMessage="Chỉ được nhập số"
+          hideInlineError></sd-input>
+      </div>
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Inline Error + hideInlineError"
+          size="sm"
+          placeholder="Nhập gì cũng lỗi"
+          [(model)]="h_inline"
+          [form]="formHide"
+          inlineError="Lỗi backend"
+          hideInlineError></sd-input>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom: 40px">
+    <button mat-stroked-button (click)="validateHide()">Validate tất cả</button>
+    <button mat-stroked-button (click)="resetHide()" style="margin-left: 8px">Reset</button>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 5: Tính năng đặc biệt              -->
+  <!-- =========================================== -->
+  <h2>5. Tính năng đặc biệt</h2>
+  <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 40px">
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size md</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Tooltip (icon info)" tooltip="Đây là nội dung tooltip giải thích field này" [(model)]="feat_tooltip" [form]="form">
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Hyperlink (giá trị là link)" hyperlink="https://google.com" [(model)]="feat_hyperlink" [form]="form" viewed>
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input label="Float label always" floatLabel="always" placeholder="Placeholder luôn nổi" [(model)]="feat_float" [form]="form">
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="blurOnEnter (Enter = blur)"
+          placeholder="Nhấn Enter để blur"
+          helperText="Nhấn Enter sẽ blur khỏi field"
+          blurOnEnter
+          [(model)]="feat_blurEnter"
+          [form]="form">
+        </sd-input>
+      </div>
+    </div>
+
+    <div style="width: 360px">
+      <h4 style="margin-bottom: 12px">Size sm</h4>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Tooltip (icon info)"
+          size="sm"
+          tooltip="Đây là nội dung tooltip giải thích field này"
+          [(model)]="feat_tooltip"
+          [form]="form">
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Hyperlink (giá trị là link)"
+          size="sm"
+          hyperlink="https://google.com"
+          [(model)]="feat_hyperlink"
+          [form]="form"
+          viewed>
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="Float label always"
+          size="sm"
+          floatLabel="always"
+          placeholder="Placeholder luôn nổi"
+          [(model)]="feat_float"
+          [form]="form">
+        </sd-input>
+      </div>
+
+      <div style="margin-bottom: 16px">
+        <sd-input
+          label="blurOnEnter (Enter = blur)"
+          size="sm"
+          placeholder="Nhấn Enter để blur"
+          helperText="Nhấn Enter sẽ blur khỏi field"
+          blurOnEnter
+          [(model)]="feat_blurEnter"
+          [form]="form">
+        </sd-input>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- END: sd-input -->

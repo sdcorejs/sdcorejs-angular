@@ -1,0 +1,40 @@
+/* ==========================================================================
+   CSS GRID UTILITIES
+   ========================================================================== */
+
+/* 1. Kích hoạt Grid cơ bản */
+.sd-grid-container {
+  display: grid;
+  column-gap: 8px;
+  row-gap: 0px;
+
+  /* 2. Định nghĩa tổng số cột của Grid Cha (từ 1 đến 12 cột) */
+  @for $i from 1 through 12 {
+    &.grid-cols-#{$i} {
+      /* Dùng minmax(0, 1fr) thay vì 1fr để chống vỡ layout khi nội dung text quá dài */
+      grid-template-columns: repeat($i, minmax(0, 1fr));
+    }
+  }
+
+  /* 3. Tiện ích chiếm CỘT (Column Spanning) cho phần tử con */
+  @for $i from 1 through 12 {
+    .col-span-#{$i} {
+      grid-column: span #{$i} / span #{$i};
+    }
+  }
+  /* Chiếm toàn bộ số cột hiện có (Full width) */
+  .col-span-full {
+    grid-column: 1 / -1;
+  }
+
+  /* 4. Tiện ích chiếm HÀNG (Row Spanning) cho phần tử con */
+  @for $i from 1 through 12 {
+    .row-span-#{$i} {
+      grid-row: span #{$i} / span #{$i};
+    }
+  }
+  /* Chiếm toàn bộ hàng (Full height) */
+  .row-span-full {
+    grid-row: 1 / -1;
+  }
+}

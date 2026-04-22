@@ -1,0 +1,169 @@
+@use '@angular/material' as mat; // Nếu cần mixin, nhưng ở đây dùng CSS thuần
+// @use 'sass:map'; // Nếu cần map
+
+// --- 1. TABLE & STICKY STYLES ---
+.table-responsive {
+  position: relative;
+  min-height: 50vh; // Đảm bảo chiều cao tối thiểu cho đẹp
+  height: 50vh;
+  overflow: auto;
+  border: 1px solid #dee2e6; // Viền bao ngoài container
+}
+
+.table {
+  margin-bottom: 0;
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background-color: #f8f9fa; // Màu nền header
+    border-bottom: 2px solid #dee2e6;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    white-space: nowrap;
+    z-index: 10; // Header nằm trên body
+
+    // Ô giao nhau giữa Header và Sticky Left (Góc trên cùng bên trái)
+    &.c-sticky-left {
+      z-index: 20;
+    }
+  }
+
+  tbody td {
+    vertical-align: middle;
+    padding-top: 6px;
+    padding-bottom: 6px;
+  }
+}
+
+// ... (code cũ)
+
+// Cột dính bên trái (Index)
+.c-sticky-left {
+  position: sticky;
+  left: 0;
+  border-right: 1px solid #dee2e6 !important;
+  border-left: none !important;
+  z-index: 5;
+
+  // [FIX QUAN TRỌNG]: Không dùng inherit nữa, ta sẽ set màu cụ thể bên dưới
+  // background-color: inherit; <--- XÓA DÒNG NÀY
+}
+
+// [FIX MỚI]: Set màu nền ĐẶC (Solid) cho cột Sticky để che nội dung trôi qua bên dưới
+// 1. Dòng Lẻ (Odd): Màu xám nhạt (Solid) thay vì rgba trong suốt
+.table-striped tbody tr:nth-of-type(odd) .c-sticky-left {
+  background-color: #f2f2f2; // Màu xám nhạt tương đương với rgba(0,0,0,0.05) trên nền trắng
+}
+
+// 2. Dòng Chẵn (Even): Màu trắng (Solid)
+.table-striped tbody tr:nth-of-type(even) .c-sticky-left {
+  background-color: #ffffff;
+}
+
+// 3. Khi Hover vào dòng: Cột Sticky cũng phải đổi màu theo hover để đồng bộ
+.table-hover tbody tr:hover .c-sticky-left {
+  background-color: #ececec; // Màu hover của Bootstrap (gray-200)
+}
+
+// ... (code cũ)
+
+// Xử lý màu nền xen kẽ (Striped) cho cả cột dính
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.table-striped tbody tr:nth-of-type(even) {
+  background-color: #ffffff;
+}
+
+// --- 2. EMPTY STATE (Vùng tải mẫu khi rỗng) ---
+.empty-state-wrapper {
+  height: 100%;
+  min-height: 40vh; // Chiều cao tối thiểu vùng trống
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #f8f9fa;
+  border: 2px dashed #cbd5e0; // Viền nét đứt
+  border-radius: 8px;
+  margin: 16px;
+  transition: all 0.2s ease-in-out;
+  color: #6c757d;
+
+  &:hover {
+    background-color: #e3f2fd; // Xanh nhạt khi hover
+    border-color: #2196f3;
+    color: #1976d2;
+
+    .empty-icon {
+      transform: scale(1.1);
+      color: #1976d2;
+    }
+
+    .text-link {
+      text-decoration: underline;
+    }
+  }
+
+  .empty-icon {
+    font-size: 64px;
+    height: 64px;
+    width: 64px;
+    margin-bottom: 16px;
+    color: #a0aec0;
+    transition: transform 0.2s;
+  }
+
+  h4 {
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+}
+
+// --- 3. UTILITIES ---
+.c-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  padding: 0 4px;
+}
+
+.c-mat-menu {
+  border: none;
+  min-width: unset;
+  padding: 0 8px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    line-height: 18px;
+    vertical-align: middle;
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// --- 4. PAGINATOR OVERRIDES ---
+:host ::ng-deep {
+  .mat-paginator-container {
+    min-height: 36px; // Tăng nhẹ để thoáng hơn
+    height: 36px;
+    padding: 0 8px;
+  }
+
+  .mat-paginator-range-label {
+    margin: 0 10px 0 10px;
+  }
+
+  .mat-icon-button {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+  }
+}

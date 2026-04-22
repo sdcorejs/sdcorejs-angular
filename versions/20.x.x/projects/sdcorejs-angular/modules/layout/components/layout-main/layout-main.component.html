@@ -1,0 +1,8 @@
+@let _userInfo = userInfo();
+@let _sidebar = sidebar();
+
+@if (_userInfo && _sidebar?.version === 1) {
+  <sidebar-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebar!">
+    <ng-content></ng-content>
+  </sidebar-v1>
+}

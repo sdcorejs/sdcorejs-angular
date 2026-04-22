@@ -1,0 +1,50 @@
+<sd-modal title="Cấu hình xác thực lỗi/cảnh báo" view="dialog" width="800px" #popupConfigureVariables>
+  @for (validation of validations; track $index; let idx = $index) {
+    <div class="mat-elevation-z2 position-relative p-8 mb-16" style="border-radius: 8px;">
+      <div class="row mx-0">
+        <sd-select
+          class="col-3"
+          label="Loại thông báo"
+          [(model)]="validation.alert"
+          [items]="alerts"
+          valueField="value"
+          displayField="display"
+          required></sd-select>
+        @if (validation.type === 'expression') {
+          <sd-input class="col-9" [form]="form" label="Thông báo hiển thị" [(model)]="validation.message" required></sd-input>
+          <expression-builder class="col-12" label="Biểu thức điều kiện" [(model)]="validation.expression" [attributes]="attributes"></expression-builder>
+        } @else if (validation.type === 'function') {
+          <sd-select
+            class="col-9"
+            [form]="form"
+            [(model)]="validation.code"
+            [items]="functions"
+            valueField="value"
+            displayField="display"
+            required></sd-select>
+        }
+        <mat-icon class="c-close-icon" (click)="removaValidation(idx)">delete</mat-icon>
+        <!-- <sd-button
+          
+          prefixIcon="delete"
+          (click)="removaValidation(idx)"
+          color="error"
+          type="link"></sd-button> -->
+      </div>
+    </div>
+  }
+  <sd-button title="Thêm xác thực" [matMenuTriggerFor]="menu" prefixIcon="add" color="primary" type="link"></sd-button>
+  <mat-menu #menu="matMenu">
+    <button (click)="addValidation('expression')" mat-menu-item type="button">
+      <!-- <mat-icon fontIcon="warning"></mat-icon> -->
+      <span>Biểu thức</span>
+    </button>
+    <button (click)="addValidation('function')" mat-menu-item type="button">
+      <!-- <mat-icon fontIcon="error"></mat-icon> -->
+      <span>Phương thức sẵn có</span>
+    </button>
+  </mat-menu>
+  <ng-container sdFooter>
+    <sd-button type="fill" title="Lưu" (click)="updateValidations()" prefixIcon="save" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>

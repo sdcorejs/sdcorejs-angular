@@ -1,0 +1,30 @@
+<div class="p-16">
+  <h2 class="mb-16">SdTable Demo</h2>
+  <sd-table [option]="tableOption" [autoId]="'demo-table'">
+    <ng-template sdTableCellDef="templateRef" let-item="item">
+      <div [innerHTML]="item.templateRef || '--'"></div>
+    </ng-template>
+  </sd-table>
+
+  <ng-template sdTableCellDef="cellDef" let-item="item" #cellDef>
+    <div [innerHTML]="item.cellDef || '--'"></div>
+  </ng-template>
+
+  <ng-template #filterInlineDefNumber let-columnFilter="columnFilter">
+    <sd-select
+      size="sm"
+      [items]="statuses"
+      displayField="display"
+      valueField="value"
+      minWidthPanel="200px"
+      [(model)]="columnFilter.number"
+      [style.width]="'100%'"
+      style="flex: 1 1 0%; min-width: 0"
+      (sdChange)="onFilterChange()"
+      hideInlineError>
+    </sd-select>
+
+    <!-- <sd-input size="sm" [(model)]="columnFilter['number']" (keyupEnter)="onFilterChange()" hideInlineError></sd-input> -->
+
+  </ng-template>
+</div>

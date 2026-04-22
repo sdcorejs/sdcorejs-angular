@@ -1,0 +1,90 @@
+<div class="demo-container">
+  <h1>SD Mini Editor Demo</h1>
+  <p class="demo-description">Component editor đơn giản cho comment input với CKEditor. Hỗ trợ bold, italic, link và mention.</p>
+
+  <!-- Demo 1: Basic HTML Output -->
+  <section class="demo-section">
+    <h2>1. Basic HTML Output</h2>
+    <p class="demo-hint">Editor cơ bản với output format HTML</p>
+
+    <sd-mini-editor [(ngModel)]="basicContent" [option]="basicOption"> </sd-mini-editor>
+
+    <div class="output-panel">
+      <h4>Output (HTML):</h4>
+      <pre>{{ basicContent || '(empty)' }}</pre>
+    </div>
+  </section>
+
+  <!-- Demo 2: Markdown Output -->
+  <section class="demo-section">
+    <h2>2. Markdown Output</h2>
+    <p class="demo-hint">Editor tự động convert HTML sang Markdown</p>
+
+    <sd-mini-editor [(ngModel)]="markdownContent" [option]="markdownOption"> </sd-mini-editor>
+
+    <div class="output-panel">
+      <h4>Output (Markdown):</h4>
+      <pre>{{ markdownContent || '(empty)' }}</pre>
+    </div>
+  </section>
+
+  <!-- Demo 3: With Mention -->
+  <section class="demo-section">
+    <h2>3. With Mention (&#64;)</h2>
+    <p class="demo-hint">Gõ &#64; để mention người dùng. Data: {{ users.length }} users</p>
+
+    <sd-mini-editor [(ngModel)]="mentionContent" [option]="mentionOption"> </sd-mini-editor>
+
+    <div class="output-panel">
+      <h4>Output:</h4>
+      <pre>{{ mentionContent || '(empty)' }}</pre>
+    </div>
+
+    <div class="logs-panel">
+      <div class="logs-header">
+        <h4>Event Logs:</h4>
+        <button class="btn-clear" (click)="clearLogs()">Clear</button>
+      </div>
+      <ul class="logs-list">
+        <li *ngFor="let log of mentionLogs">{{ log }}</li>
+        <li *ngIf="mentionLogs.length === 0" class="empty-log">No events yet...</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Demo 4: Disabled State -->
+  <section class="demo-section">
+    <h2>4. Disabled State</h2>
+    <p class="demo-hint">
+      <label> <input type="checkbox" [(ngModel)]="isDisabled" /> Disabled </label>
+    </p>
+
+    <sd-mini-editor [(ngModel)]="disabledContent" [option]="disabledOption" [disabled]="isDisabled"> </sd-mini-editor>
+  </section>
+
+  <!-- Demo 5: With Initial Content -->
+  <section class="demo-section">
+    <h2>5. With Initial Content</h2>
+    <p class="demo-hint">Editor có sẵn nội dung ban đầu</p>
+
+    <sd-mini-editor [(ngModel)]="initialContent" [option]="initialOption"> </sd-mini-editor>
+
+    <div class="output-panel">
+      <h4>Content:</h4>
+      <pre>{{ initialContent }}</pre>
+    </div>
+  </section>
+
+  <!-- Demo 6: Auto Height with Max Height -->
+  <section class="demo-section">
+    <h2>6. Auto Height with Max Height</h2>
+    <p class="demo-hint">Auto-height nhưng giới hạn chiều cao tối đa (maxHeight: 150px)</p>
+
+    <sd-mini-editor [(ngModel)]="maxHeightContent" [option]="maxHeightOption"> </sd-mini-editor>
+
+    <div class="output-panel">
+      <h4>Output:</h4>
+      <pre>{{ maxHeightContent || '(empty)' }}</pre>
+    </div>
+  </section>
+</div>

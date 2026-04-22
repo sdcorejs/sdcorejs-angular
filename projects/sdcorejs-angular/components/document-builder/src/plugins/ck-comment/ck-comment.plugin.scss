@@ -1,0 +1,57 @@
+:host ::ng-deep {
+  // Comment marker base styles
+  .ck-comment-marker {
+    background-color: var(--comment-bg, rgba(59, 130, 246, 0.3));
+    border-bottom: 2px solid rgb(59, 130, 246);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
+    }
+
+    // Pending state - animated highlight for inputting comment
+    &.ck-comment-pending {
+      background-color: var(--comment-pending-bg, rgba(245, 158, 11, 0.4));
+      border-bottom-color: rgb(245, 158, 11);
+    }
+
+    // Normal status (default blue)
+    &.ck-comment-normal {
+      background-color: var(--comment-bg, rgba(59, 130, 246, 0.2));
+      border-bottom-color: rgb(59, 130, 246);
+    }
+
+    // Selected state - darker highlight
+    &.ck-comment-selected {
+      background-color: var(--comment-selected-bg, (59, 130, 246, 0.5));
+      border-bottom-color: rgb(59, 130, 246);
+    }
+
+    // Modified status - yellow/orange
+    &.ck-comment-modified {
+      background-color: var(--comment-modified-bg, rgba(249, 115, 22, 0.3));
+      border-bottom-color: rgb(249, 115, 22);
+    }
+
+    // Broken status - red
+    &.ck-comment-broken {
+      background-color: var(--comment-broken-bg, rgba(239, 68, 68, 0.3));
+      border-bottom-color: rgb(239, 68, 68);
+      text-decoration: line-through;
+      text-decoration-color: rgb(239, 68, 68);
+    }
+  }
+
+  // Contextual balloon button styling
+  .ck-balloon-panel {
+    .ck-button {
+      &.ck-on,
+      &.ck-off {
+        &:hover {
+          background: var(--ck-color-button-default-hover-background);
+        }
+      }
+    }
+  }
+}

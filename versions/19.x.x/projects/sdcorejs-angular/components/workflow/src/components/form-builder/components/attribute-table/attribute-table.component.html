@@ -1,0 +1,74 @@
+<sd-section class="mt-8" title="Dữ liệu" icon="format_list_bulleted">
+  @if (tables.length) {
+    <!-- <div class="d-flex align-items-center py-4">
+      <div class="T14M" style="flex: 1">Dữ liệu cột</div>
+      <sd-autocomplete
+        style="width: 200px"
+        size="sm"
+        [(model)]="columnsKey"
+        [items]="tables"
+        valueField="value"
+        displayField="display"
+        (sdChange)="onChangeColumnsKey($event)"
+        hideInlineError></sd-autocomplete>
+    </div> -->
+    <sd-autocomplete
+        class="py-8"
+        label="Dữ liệu cột"
+        [(model)]="columnsKey"
+        [items]="tables"
+        valueField="value"
+        displayField="display"
+        (sdChange)="onChangeColumnsKey($event)"
+        hideInlineError></sd-autocomplete>
+  }
+  @if (!columnsKey) {
+    <div class="d-flex flex-column" style="gap: 4px">
+      <div class="T14M">Danh sách cột</div>
+      @for (item of columns; track item.key; let idx = $index) {
+        <div class="d-flex align-items-center py-4" style="gap: 4px; justify-content: space-between">
+          <div class="d-flex flex-column">
+            <sd-label [label]="item.label" [required]="item.validate?.required"></sd-label>
+            <div class="T12R text-secondary">{{ item.key }}</div>
+          </div>
+          <div class="d-flex align-items-center" style="gap: 4px">
+            <mat-icon class="text-secondary" style="cursor: pointer" [fontIcon]="'edit'" (click)="editColumn(idx)"></mat-icon>
+            <mat-icon class="text-secondary" style="cursor: pointer" [fontIcon]="'cancel'" (click)="removeColumn(idx)"></mat-icon>
+          </div>
+        </div>
+      }
+      <sd-button prefixIcon="add" title="Thêm cột" (click)="addColumn()" color="primary"></sd-button>
+    </div>
+  }
+</sd-section>
+<sd-modal title="Cấu hình cột" width="600px">
+  @if (column) {
+    <sd-section class="mt-8" title="Thông tin chung" icon="info">
+      <attribute-input [form]="form" label="Trường dữ liệu" [(model)]="column.key"></attribute-input>
+      <attribute-input [form]="form" label="Tên cột" [(model)]="column.label"></attribute-input>
+      <attribute-input [form]="form" label="Chiều rộng" [(model)]="column.width"></attribute-input>
+      <attribute-switch [form]="form" label="Bắt buộc" [(model)]="column.validate!.required"></attribute-switch>
+      <attribute-select [form]="form" label="Loại dữ liệu" [(model)]="column.type" [items]="types"></attribute-select>
+    </sd-section>
+    @if (column.type === 'boolean') {
+      <sd-section class="mt-8" title="Hiển thị" icon="info">
+        <attribute-input [form]="form" label="Hiển thị khi TRUE" [(model)]="column.displayOnTrue"></attribute-input>
+        <attribute-input [form]="form" label="Hiển thị khi FALSE" [(model)]="column.displayOnFalse"></attribute-input>
+      </sd-section>
+    } @else if (column.type === 'values') {
+      <attribute-selection
+        [components]="components"
+        [variables]="variables"
+        [component]="column"
+        [(valuesKey)]="column.valuesKey"
+        [(values)]="column.values"></attribute-selection>
+    } @else if (column.type === 'file' || column.type === 'image') {
+      <sd-section class="mt-8" title="Tham số" icon="settings">
+        <attribute-parameter label="Gán tham số" [components]="components" [(model)]="column!.args"></attribute-parameter>
+      </sd-section>
+    }
+  }
+  <ng-container sdFooter>
+    <sd-button prefixIcon="save" title="Lưu" (click)="onConfirm()" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>

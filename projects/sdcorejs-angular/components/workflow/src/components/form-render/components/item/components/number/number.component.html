@@ -1,0 +1,19 @@
+@if (component && entity) {
+  @if (viewed || component.properties?.viewed) {
+    <div class="text-secondary">{{ component.label || component.key }}</div>
+    <div class="T16M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
+  } @else {
+    <sd-input-number
+      [form]="form"
+      [label]="component.label || component.key"
+      [helperText]="component.helperText"
+      [name]="component.key"
+      [autoId]="component.key"
+      [(model)]="entity[component.key!]"
+      [required]="required"
+      [disabled]="disabled"
+      [max]="component.validate?.max"
+      [min]="component.validate?.min"
+      [viewed]="viewed || component.properties?.viewed"></sd-input-number>
+  }
+}

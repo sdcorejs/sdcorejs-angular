@@ -1,0 +1,22 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+$primaryColor: map.get(color.$color_map, 'primary');
+
+:host ::ng-deep {
+  .mdc-label {
+    margin-bottom: 0;
+  }
+  .mdc-checkbox {
+      --mat-sys-primary: #{$primaryColor};
+      --mdc-checkbox-selected-icon-color: #{$primaryColor};
+      --mdc-checkbox-selected-focus-icon-color: #{$primaryColor};
+      --mdc-checkbox-selected-pressed-icon-color: #{$primaryColor};
+      --mdc-checkbox-selected-pressed-state-layer-color: #{$primaryColor};
+      --mdc-checkbox-selected-focus-state-layer-color: #{$primaryColor};
+      --mdc-checkbox-selected-hover-state-layer-color: #{$primaryColor};
+      --mdc-checkbox-selected-hover-icon-color: #{$primaryColor};
+    }
+}
+
+

@@ -1,0 +1,40 @@
+@use '../../../../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+:host .mat-dialog-content {
+  margin: 0 -16px 16px -16px !important;
+}
+
+:host .mat-button {
+  background-color: #f5f5f5;
+}
+
+:host ::ng-deep .mat-dialog-title {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+:host ::ng-deep .mat-dialog-title .mat-icon {
+  margin-right: 5px;
+}
+
+:host {
+  display: block;
+}
+
+:host ::ng-deep .mat-dialog-title .mat-icon.info {
+  color: map.get(color.$color_map, 'info');
+}
+
+:host ::ng-deep .mat-dialog-title .mat-icon.warning {
+  color: map.get(color.$color_map, 'warning');
+}
+
+:host ::ng-deep .mat-dialog-title .mat-icon.success {
+  color: map.get(color.$color_map, 'success');
+}
+
+:host ::ng-deep .mat-dialog-title .mat-icon.error {
+  color: map.get(color.$color_map, 'error');
+}

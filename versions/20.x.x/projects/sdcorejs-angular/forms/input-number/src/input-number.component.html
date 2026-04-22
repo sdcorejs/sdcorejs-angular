@@ -1,0 +1,93 @@
+@let lbl = label();
+@let app = appearance();
+@let hideErr = hideInlineError();
+@let errMsg = errorTooltipMessage;
+@let viewDef = sdViewDef();
+@let hText = helperText();
+
+@if (viewed()) {
+  <sd-view
+    [label]="lbl"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="formControl.value"
+    [display]="formControl.value | sdFormatNumber"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="sdValueTemplate()">
+  </sd-view>
+} @else {
+  @if (!app) {
+    <ng-content select="[sdLabel]">
+      @if (lbl) {
+        <sd-label [label]="lbl" [required]="required()"></sd-label>
+      }
+    </ng-content>
+  }
+
+  <div
+    class="d-flex align-items-center"
+    [class.sd-view]="!!viewDef?.templateRef"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled"
+    (click)="onClick()"
+    aria-hidden="true">
+    @if (viewDef?.templateRef && !isFocused) {
+      <ng-container *ngTemplateOutlet="viewDef!.templateRef; context: { value: formControl.value }"> </ng-container>
+    } @else {
+      <mat-form-field
+        [class.sd-md]="size() === 'md'"
+        [class.sd-sm]="size() === 'sm'"
+        [class.hide-inline-error]="hideErr"
+        [appearance]="app!"
+        [floatLabel]="floatLabel()">
+        @if (app && lbl) {
+          <mat-label style="display: inline-block">
+            <div style="display: flex; align-items: center; gap: 4px">
+              <span>{{ lbl }}</span>
+              @if (hText) {
+                <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+              }
+            </div>
+          </mat-label>
+        }
+
+        <input
+          aria-hidden="true"
+          [id]="id"
+          [formControl]="inputControl"
+          #control
+          matInput
+          [placeholder]="placeholder() || lbl || ''"
+          [errorStateMatcher]="matcher"
+          (keyup.enter)="onKeyupEnter()"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          (keydown)="onKeydown($event)"
+          (compositionstart)="onCompositionStart($event)"
+          (compositionend)="onCompositionEnd($event)"
+          [required]="required()"
+          [readonly]="readonly()"
+          [autocomplete]="id"
+          (paste)="onPaste($event)"
+          autocorrect="off"
+          [attr.data-autoId]="autoId()" />
+
+        @if (hideErr && errMsg && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+        }
+
+        @if (!hideErr && errMsg && formControl.touched) {
+          <mat-error>{{ errMsg }}</mat-error>
+        }
+
+        @if (sdSuffixDef()?.templateRef; as suffixRef) {
+          <ng-container matSuffix>
+            <ng-container [ngTemplateOutlet]="suffixRef"></ng-container>
+          </ng-container>
+        }
+        <!-- <ng-container matSuffix>
+          <ng-content select="[sdSuffix]"></ng-content>
+        </ng-container> -->
+      </mat-form-field>
+    }
+  </div>
+}

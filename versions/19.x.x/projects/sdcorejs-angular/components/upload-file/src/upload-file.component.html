@@ -1,0 +1,109 @@
+<div class="d-flex flex-column" style="gap: 4px">
+  @if (!!sdLabelDef()?.templateRef) {
+    <ng-container *ngTemplateOutlet="sdLabelDef()?.templateRef!"> </ng-container>
+  } @else if (label()) {
+    <sd-label [label]="label()!" [description]="generatedDescription()" [helperText]="helperText()" [required]="required()"></sd-label>
+  }
+  <div
+    cdkDropList
+    (cdkDropListDropped)="onDrop($event)"
+    cdkDropListOrientation="horizontal"
+    class="d-flex"
+    [class.justify-content-center]="align() === 'center'"
+    [class.justify-content-start]="align() === 'left'">
+    @if (previewFiles().length < max() && !formControl.disabled) {
+      <div
+        class="d-flex justify-content-center align-items-center pointer c-area-upload"
+        [style.width]="previewWidth()"
+        [style.height]="previewHeight()"
+        (click)="onUpload()"
+        aria-hidden="true"
+        #dropElement>
+        <mat-icon class="c-upload" fontSet="material-icons-outlined"> file_upload </mat-icon>
+      </div>
+    }
+    @let previewImages = previewFiles() | filterImage;
+    @for (image of previewImages; track $index; let idx = $index) {
+      @if (!formControl.disabled || idx < maxOfImage()) {
+        <div class="c-area c-view" [class.c-loading]="!image.previewSrc && !image.src" [class.c-area-error]="image.isImgError" [style.width]="previewWidth()" [style.height]="previewHeight()" cdkDrag>
+          <div class="c-drag-placeholder" [style.width]="previewWidth()" [style.height]="previewHeight()" *cdkDragPlaceholder></div>
+          <div *cdkDragPreview [style]="{ width: previewWidth(), height: previewHeight() }" class="c-drag-preview">
+            <div class="c-container">
+              <mat-icon>image</mat-icon>
+            </div>
+          </div>
+          <div class="c-preview">
+            <div
+              class="c-img-container"
+              [class.c-disabled]="formControl.disabled"
+              [class.c-selected]="selectedFile() === image"
+              [class.has-overlay]="idx === maxOfImage() - 1 && formControl.disabled"
+              (click)="onSelect(image)"
+              aria-hidden="true">
+              @if (image.isImgError) {
+                <img class="c-img-error" alt="Image Error" [style.max-height]="previewHeight()" />
+              } @else if(image.previewSrc) {
+                <img class="c-img" [src]="image.previewSrc" alt="Preview" [style.max-height]="previewHeight()" (error)="onImgError(image)" />
+              } @else if(image.src) {
+                <img class="c-img" [src]="image.src" alt="Preview" [style.max-height]="previewHeight()" (error)="onImgError(image)" />
+              } @else {
+                <mat-spinner style="justify-self: center;" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
+              }
+              @if (idx === maxOfImage() - 1 && formControl.disabled && previewImages.length > maxOfImage()) {
+                <div class="c-overlay-count" (click)="preview()">
+                  <div class="c-overlay-text">+{{ previewImages.length - maxOfImage() }}</div>
+                </div>
+              }
+              <div class="c-action">
+                <mat-icon class="c-zoom" fontSet="material-icons-outlined" (click)="preview()">zoom_in</mat-icon>
+              </div>
+              @if (!formControl.disabled) {
+                <button class="c-btn-remove" (click)="onRemove(image)" mat-icon-button aria-label="Close">
+                  <mat-icon>close</mat-icon>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+  @let previewDocuments = previewFiles() | filterDocument;
+  @for (document of previewDocuments; track $index) {
+    <div class="c-document-container">
+      <img
+        [style.max-height]="previewHeight()"
+        class="c-document-image"
+        [class]="{
+          png: document.extension === 'png',
+          jpg: document.extension === 'jpg',
+          pdf: document.extension === 'pdf',
+          doc: document.extension === 'doc',
+          docx: document.extension === 'docx',
+          xls: document.extension === 'xls',
+          xlsx: document.extension === 'xlsx',
+          ppt: document.extension === 'ppt',
+          pptx: document.extension === 'pptx',
+          csv: document.extension === 'csv',
+          psd: document.extension === 'psd',
+          xml: document.extension === 'xml',
+          zip: document.extension === 'zip',
+          tiff: document.extension === 'tiff'
+        }"
+        alt="Preview" />
+      <a href="javascript:;" class="c-file-name T14M" (click)="onDownload(document)">{{ document.fileName || 'file' }}</a>
+      @if (document.fileSize) {
+        <span class="T12R text-black400"> - </span>
+        <span class="T12R text-black400 flex-shrink-0">{{ document.fileSize / 1024 | sdFormatNumber }}KB</span>
+      }
+
+      @if (!formControl.disabled) {
+        <mat-icon class="c-close" (click)="onRemove(document)">close</mat-icon>
+      }
+    </div>
+  }
+  @if (!formControl.disabled && formControl.touched && formControl.errors?.['required']) {
+    <div class="text-error T12R" style="padding: 4px 8px">{{ 'Vui lòng tải lên tệp/ảnh' }}</div>
+  }
+</div>
+<preview (download)="onDownload($event)"></preview>

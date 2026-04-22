@@ -1,0 +1,45 @@
+@if (component.properties?.viewed) {
+  @if (component.columns?.length) {
+    <div class="c-table">
+      <div class="c-header d-flex align-items-center bg-secondary-light">
+        @for (column of component.columns; track column.key) {
+          <div class="c-item" [style.width]="column.width">
+            {{ column.label }}
+          </div>
+        }
+      </div>
+      <div class="c-content">
+        <div class="row-table d-flex align-items-center">
+          @for (column of component.columns; track column.key) {
+            <div class="c-item text-secondary" [style.width]="column.width">{{ column.key }}</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+} @else {
+  <div class="d-block mb-0 T14M">
+    {{ component.label }}
+    @if (component.validate?.required) {
+      <span class="text-error mb-2">*</span>
+    }
+  </div>
+  @if (component.columns?.length) {
+    <div class="c-table">
+      <div class="c-header d-flex align-items-center bg-primary-light">
+        @for (column of component.columns; track column.key) {
+          <div class="c-item" [style.width]="column.width">
+            {{ column.label }}
+          </div>
+        }
+      </div>
+      <div class="c-content">
+        <div class="row-table d-flex align-items-center">
+          @for (column of component.columns; track column.key) {
+            <div class="c-item text-secondary" [style.width]="column.width">{{ column.key }}</div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+}

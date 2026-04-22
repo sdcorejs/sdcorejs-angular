@@ -1,0 +1,62 @@
+<div class="qb-container">
+  <ng-container *ngTemplateOutlet="groupTemplate; context: { $implicit: group, isRoot: true }"></ng-container>
+</div>
+
+<ng-template #groupTemplate let-group let-isRoot="isRoot" let-parent="parent" let-index="index">
+  <div class="qb-group">
+    
+    <div class="qb-header" [class.is-open]="group.isOpen">
+      <div class="qb-condition-switch">
+        <button type="button" 
+                [class.active]="group.condition === 'AND'" 
+                (click)="toggleCondition(group, 'AND')">AND</button>
+        <button type="button" 
+                [class.active]="group.condition === 'OR'" 
+                (click)="toggleCondition(group, 'OR')">OR</button>
+      </div>
+
+      <div class="qb-actions">
+        <button type="button" class="btn-icon btn-add" (click)="toggleDropdown(group, $event)">+</button>
+        
+        <div class="qb-dropdown" *ngIf="group.isOpen" (click)="$event.stopPropagation()" aria-hidden="true">
+          <button (click)="addGroup(group)">+ Add Group</button>
+          <button (click)="addRule(group)">+ Add Condition</button>
+        </div>
+
+        <button *ngIf="!isRoot" type="button" class="btn-icon btn-remove" (click)="removeItem(parent, index)">✕</button>
+      </div>
+    </div>
+
+    <div class="qb-body">
+      <div class="qb-list">
+        <div *ngFor="let item of group.rules; let i = index" 
+             class="qb-treenode"
+             [class.is-group]="isGroup(item)"
+             [class.is-rule]="!isGroup(item)">
+          
+          <ng-container *ngIf="!isGroup(item)">
+            <div class="qb-rule-card">
+              <div class="form-row">
+                <input class="form-input field-input" [(ngModel)]="item.field" placeholder="Select Field">
+                <ng-container *ngIf="item.field">
+                    <div class="divider"></div>
+                    <select class="form-input" [(ngModel)]="item.operator">
+                        <option value="Equal">Equal</option>
+                        <option value="Not Equal">Not Equal</option>
+                    </select>
+                    <div class="divider"></div>
+                    <input class="form-input" [(ngModel)]="item.value" placeholder="Value">
+                </ng-container>
+                <button type="button" class="btn-icon btn-remove-rule" (click)="removeItem(group, i)">✕</button>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="isGroup(item)">
+            <ng-container *ngTemplateOutlet="groupTemplate; context: { $implicit: item, isRoot: false, parent: group, index: i }"></ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ng-template>

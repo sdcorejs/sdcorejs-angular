@@ -1,0 +1,72 @@
+<div style="height: 500px; display: flex; gap: 20px; width: 1200px; margin: auto; margin-top: 50px">
+  <!-- Sd-anchor có đầy đủ config option -->
+  <div style="width: 700px; padding: 12px 0px; background-color: bisque; border-radius: 10px; overflow: hidden">
+    <sd-anchor-v2 sidebarWidth="300px" ellipsis isOverscroll isHiddenAnchorList >
+      <sd-anchor-item-v2 [title]="title">
+        <div style="width: 100%; height: 1000px; background-color: red"></div>
+      </sd-anchor-item-v2>
+
+      @if(showtieude2){
+        <sd-anchor-item-v2 [title]="'Tiêu đề 2'">
+          <div style="width: 100%; height: 200px; background-color: yellow"></div>
+        </sd-anchor-item-v2>
+        
+      }
+      <sd-anchor-item-v2 [title]="'Tiêu đề dài sẽ hiện 3 chấm Tiêu đề dài sẽ hiện 3 chấm Tiêu đề dài sẽ hiện 3 chấm'">
+        <div style="width: 100%; height: 1000px; background-color: green"></div>
+      </sd-anchor-item-v2>
+
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 4'">
+        <div style="width: 100%; height: 200px; background-color: palevioletred"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 5'">
+        <div style="width: 100%; height: 200px; background-color: brown"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 6'">
+        <div style="width: 100%; height: 200px; background-color: burlywood"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 7'">
+        <div style="width: 100%; height: 200px; background-color: blueviolet"></div>
+      </sd-anchor-item-v2>
+    </sd-anchor-v2>
+  </div>
+
+  <!-- Sd-anchor default -->
+  <div style="width: 500px">
+    <sd-anchor-v2>
+      <sd-anchor-item-v2 [title]="'Tiêu đề 1'">
+        <div style="width: 100%; height: 1000px; background-color: red"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 2'">
+        <div style="width: 100%; height: 1000px; background-color: green"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 3'">
+        <div style="width: 100%; height: 200px; background-color: yellow"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 4'">
+        <div style="width: 100%; height: 200px; background-color: palevioletred"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 5'">
+        <div style="width: 100%; height: 200px; background-color: brown"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 6'">
+        <div style="width: 100%; height: 200px; background-color: burlywood"></div>
+      </sd-anchor-item-v2>
+
+      <sd-anchor-item-v2 [title]="'Tiêu đề 7'">
+        <div style="width: 100%; height: 200px; background-color: blueviolet"></div>
+      </sd-anchor-item-v2>
+    </sd-anchor-v2>
+  </div>
+</div>
+
+

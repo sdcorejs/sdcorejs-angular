@@ -1,0 +1,22 @@
+@if (activeLabelTemplate()) {
+  <ng-container *ngTemplateOutlet="activeLabelTemplate()!"></ng-container>
+} @else {
+  @if (label()) {
+    <div class="T14R text-black400">{{ label() }}</div>
+  }
+}
+
+@if (activeValueTemplate()) {
+  <ng-container 
+    *ngTemplateOutlet="
+      activeValueTemplate()!; 
+      context: { $implicit: display(), value: value() }
+    "> 
+  </ng-container>
+} @else {
+  @if (hyperlink(); as link) {
+    <a [sdHref]="link">{{ display() }}</a>
+  } @else {
+    <div class="T14M">{{ display() | sdEmpty }}</div>
+  }
+}

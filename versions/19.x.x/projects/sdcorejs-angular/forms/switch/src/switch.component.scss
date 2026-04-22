@@ -1,0 +1,27 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+$primaryColor: map.get(color.$color_map, 'primary');
+$primaryLightColor: map.get(color.$color_map, 'primary-light');
+
+:host ::ng-deep {
+  // Khi sử dụng css của bootstrap thì label có margin nên phải thêm đoạn này
+  label {
+    margin-bottom: 0!important;
+  }
+  .mdc-switch {
+    --mdc-switch-selected-hover-track-color: #{$primaryLightColor};
+    --mdc-switch-selected-focus-state-layer-color: #{$primaryLightColor};
+    --mat-sys-primary: #{$primaryColor};
+    --mdc-switch-selected-handle-color: #{$primaryColor};
+    --mdc-switch-selected-hover-state-layer-color: #{$primaryLightColor};
+    --mdc-switch-selected-pressed-state-layer-color: #{$primaryLightColor};
+    --mdc-switch-selected-focus-handle-color: #{$primaryColor};
+    --mdc-switch-selected-hover-handle-color: #{$primaryColor};
+    --mdc-switch-selected-pressed-handle-color: #{$primaryColor};
+    --mdc-switch-selected-focus-track-color: #{$primaryLightColor};
+    --mdc-switch-selected-hover-track-color: #{$primaryLightColor};
+    --mdc-switch-selected-pressed-track-color: #{$primaryLightColor};
+    --mdc-switch-selected-track-color: #{$primaryLightColor};
+  }
+};

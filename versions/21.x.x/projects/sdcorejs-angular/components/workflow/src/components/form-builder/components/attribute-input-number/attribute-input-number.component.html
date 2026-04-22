@@ -1,0 +1,19 @@
+<!-- <div class="d-flex align-items-center py-4">
+  @if (label) {
+    <div class="T14R" style="flex: 1">{{ label }}</div>
+  }
+  <sd-input-number
+    style="width: 200px"
+    size="sm"
+    [(model)]="model"
+    [disabled]="disabled"
+    (sdChange)="onChange($event)"
+    hideInlineError></sd-input-number>
+</div> -->
+<sd-input-number
+    class="py-8"
+    [label]="label!"
+    [(model)]="model"
+    [disabled]="disabled"
+    (sdChange)="onChange($event)"
+    hideInlineError></sd-input-number>

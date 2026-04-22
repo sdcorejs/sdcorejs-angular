@@ -1,0 +1,106 @@
+<!-- START: sd-badge demo -->
+<div style="padding: 40px; font-family: sans-serif; display: flex; flex-direction: column; gap: 48px;">
+
+  <!-- TYPE: ROUND -->
+  <section>
+    <h2 style="margin-bottom: 16px">Type: Round</h2>
+
+    <!-- Sizes -->
+    <h3 style="margin-bottom: 8px">Sizes</h3>
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 24px">
+      <sd-badge type="round" size="xs" color="primary" title="XS (14px)" />
+      <sd-badge type="round" size="sm" color="primary" title="SM (16px)" />
+      <sd-badge type="round" size="md" color="primary" title="MD (18px)" />
+      <sd-badge type="round" size="lg" color="primary" title="LG (24px)" />
+    </div>
+
+    <!-- Colors -->
+    <h3 style="margin-bottom: 8px">Colors</h3>
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+      <sd-badge type="round" size="sm" color="primary"   title="Primary" />
+      <sd-badge type="round" size="sm" color="secondary" title="Secondary" />
+      <sd-badge type="round" size="sm" color="info"      title="Info" />
+      <sd-badge type="round" size="sm" color="success"   title="Success" />
+      <sd-badge type="round" size="sm" color="warning"   title="Warning" />
+      <sd-badge type="round" size="sm" color="error"     title="Error" />
+    </div>
+  </section>
+
+  <!-- TYPE: TAG -->
+  <section>
+    <h2 style="margin-bottom: 16px">Type: Tag</h2>
+
+    <!-- Sizes — no icon -->
+    <h3 style="margin-bottom: 8px">Sizes (no icon)</h3>
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 24px">
+      <sd-badge type="tag" size="xs" color="primary" title="XS (14px)" />
+      <sd-badge type="tag" size="sm" color="primary" title="SM (16px)" />
+      <sd-badge type="tag" size="md" color="primary" title="MD (18px)" />
+      <sd-badge type="tag" size="lg" color="primary" title="LG (24px)" />
+    </div>
+
+    <!-- Sizes — with icon -->
+    <h3 style="margin-bottom: 8px">Sizes (with icon)</h3>
+    <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 24px">
+      <sd-badge type="tag" size="xs" color="primary" title="XS" icon="check_circle" />
+      <sd-badge type="tag" size="sm" color="primary" title="SM" icon="check_circle" />
+      <sd-badge type="tag" size="md" color="primary" title="MD" icon="check_circle" />
+      <sd-badge type="tag" size="lg" color="primary" title="LG" icon="check_circle" />
+    </div>
+
+    <!-- Colors -->
+    <h3 style="margin-bottom: 8px">Colors</h3>
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 24px">
+      <sd-badge type="tag" size="sm" color="primary"   title="Primary"   icon="label" />
+      <sd-badge type="tag" size="sm" color="secondary" title="Secondary" icon="label" />
+      <sd-badge type="tag" size="sm" color="info"      title="Info"      icon="info" />
+      <sd-badge type="tag" size="sm" color="success"   title="Success"   icon="check_circle" />
+      <sd-badge type="tag" size="sm" color="warning"   title="Warning"   icon="warning" />
+      <sd-badge type="tag" size="sm" color="error"     title="Error"     icon="cancel" />
+    </div>
+
+    <!-- With description -->
+    <h3 style="margin-bottom: 8px">With Description</h3>
+    <div style="display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap">
+      <sd-badge type="tag" size="sm" color="primary"   title="Primary"   description="Mô tả chi tiết" icon="label" />
+      <sd-badge type="tag" size="sm" color="success"   title="Success"   description="Thao tác thành công" icon="check_circle" />
+      <sd-badge type="tag" size="sm" color="error"     title="Error"     description="Đã xảy ra lỗi" icon="cancel" />
+      <sd-badge type="tag" size="md" color="warning"   title="Warning"   description="Cần chú ý" icon="warning" />
+    </div>
+  </section>
+
+  <!-- TYPE: ICON -->
+  <section>
+    <h2 style="margin-bottom: 16px">Type: Icon</h2>
+
+    <!-- Sizes -->
+    <h3 style="margin-bottom: 8px">Sizes</h3>
+    <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-bottom: 24px">
+      <sd-badge type="icon" size="xs" color="primary" title="XS (14px)" icon="star" />
+      <sd-badge type="icon" size="sm" color="primary" title="SM (16px)" icon="star" />
+      <sd-badge type="icon" size="md" color="primary" title="MD (18px)" icon="star" />
+      <sd-badge type="icon" size="lg" color="primary" title="LG (24px)" icon="star" />
+    </div>
+
+    <!-- Colors -->
+    <h3 style="margin-bottom: 8px">Colors</h3>
+    <div style="display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin-bottom: 24px">
+      <sd-badge type="icon" size="md" color="primary"   title="Primary"   icon="person" />
+      <sd-badge type="icon" size="md" color="secondary" title="Secondary" icon="person" />
+      <sd-badge type="icon" size="md" color="info"      title="Info"      icon="info" />
+      <sd-badge type="icon" size="md" color="success"   title="Success"   icon="check_circle" />
+      <sd-badge type="icon" size="md" color="warning"   title="Warning"   icon="warning" />
+      <sd-badge type="icon" size="md" color="error"     title="Error"     icon="cancel" />
+    </div>
+
+    <!-- With description -->
+    <h3 style="margin-bottom: 8px">With Description</h3>
+    <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap">
+      <sd-badge type="icon" size="md" color="primary"   title="Nguyễn Văn A"  description="Nhân viên"   icon="person" />
+      <sd-badge type="icon" size="md" color="success"   title="Hoàn thành"    description="100%"        icon="task_alt" />
+      <sd-badge type="icon" size="lg" color="error"     title="Lỗi hệ thống"  description="Kiểm tra lại" icon="error" />
+    </div>
+  </section>
+
+</div>
+<!-- END: sd-badge demo -->

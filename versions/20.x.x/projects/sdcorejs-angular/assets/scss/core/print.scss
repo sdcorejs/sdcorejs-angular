@@ -1,0 +1,47 @@
+@media print {
+  .sd-print,
+  .cdk-overlay-container {
+    display: none;
+  }
+  #sdPrintSection {
+    font:
+      12pt 'Times New Roman',
+      Times,
+      serif;
+  }
+}
+
+@media not print {
+  #sdPrintSection {
+    display: none;
+  }
+}
+
+.sd-print-global {
+  table {
+    page-break-before: auto;
+
+    &.table-bordered {
+      th {
+        border: 1px solid #000;
+      }
+
+      td {
+        border: 1px solid #000;
+      }
+    }
+  }
+
+  .c-border {
+    border: 1px solid #000 !important;
+    border-radius: 2px;
+  }
+
+  .c-break-page-before {
+    page-break-before: always;
+  }
+
+  .c-break-page-after {
+    page-break-after: always;
+  }
+}

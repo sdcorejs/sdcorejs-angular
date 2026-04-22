@@ -1,0 +1,45 @@
+@use "sass:map";
+@use "../core/color";
+
+$default-theme: (
+  primary: #2A66F4,
+  primary-light: #EAF1FF,
+  primary-dark: #1C4AD9,
+  info: #2962FF,
+  info-light: #E7E9FF,
+  info-dark: #2240CC,
+  success: #4CAF50,
+  success-light: #DBEFDC,
+  success-dark: #39833C,
+  warning: #FF9600,
+  warning-light: #FFEACC,
+  warning-dark: #BF7000,
+  error: #F82C13,
+  error-light: #FED5D0,
+  error-dark: #BA200E,
+  secondary: #212121,
+  secondary-light: #E9E9E9,
+  secondary-dark: #000000,
+  light: #f8f9fa,
+  dark: #343a40,
+  black500: #212121,
+  black400: #757575,
+  black300: #BFBFBF,
+  black200: #E6E6E6,
+  black100: #F2F2F2,
+);
+
+// Can thiệp màu của Suffix/Prefix khi có lỗi
+// Chỉ áp dụng cho các component có hỗ trợ trailing icon
+:root {
+  --mat-form-field-error-trailing-icon-color: #{map.get($default-theme, 'error')};
+  --mat-form-field-error-hover-trailing-icon-color: #{map.get($default-theme, 'error-dark')};
+  --mat-form-field-error-focus-trailing-icon-color: #{map.get($default-theme, 'error-dark')};
+}
+
+@mixin theme($theme) {
+  $theme: map.merge($default-theme, $theme);
+  @each $color in color.$system-colors {
+    --sd-#{$color}: #{map.get($theme, $color)};
+  }
+}

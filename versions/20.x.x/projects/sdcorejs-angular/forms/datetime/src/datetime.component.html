@@ -1,0 +1,97 @@
+@let lbl = label();
+@let app = appearance();
+@let hideErr = hideInlineError();
+@let errMsg = errorTooltipMessage;
+@let viewDef = sdViewDef();
+@let hText = helperText();
+@let req = required();
+
+@let minD = resolvedMin();
+@let maxD = resolvedMax();
+
+@if (viewed()) {
+  <sd-view
+    [label]="lbl"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="formControl.value"
+    [display]="formControl.value | date: 'dd/MM/yyyy HH:mm'"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="sdValueTemplate()">
+  </sd-view>
+} @else {
+  @if (!app) {
+    <ng-content select="[sdLabel]">
+      @if (lbl) {
+        <sd-label [label]="lbl" [required]="req"></sd-label>
+      }
+    </ng-content>
+  }
+
+  <div
+    class="d-flex align-items-center"
+    [class.sd-view]="viewDef?.templateRef"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled"
+    (click)="onClick()"
+    aria-hidden="true">
+    @if (viewDef?.templateRef && !isFocused && !datetimePicker()?.opened) {
+      <ng-container *ngTemplateOutlet="viewDef!.templateRef; context: { value: formControl.value }"> </ng-container>
+    } @else {
+      <mat-form-field
+        class="c-form-field-datetime-input"
+        [class.sd-md]="size() === 'md'"
+        [class.sd-sm]="size() === 'sm'"
+        [class.hide-inline-error]="hideErr"
+        [appearance]="app || 'outline'"
+        [floatLabel]="floatLabel()">
+        @if (app && lbl) {
+          <mat-label style="display: inline-block">
+            <div class="d-flex align-items-center gap-4">
+              <span>{{ lbl }}</span>
+              @if (hText) {
+                <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+              }
+            </div>
+          </mat-label>
+        }
+
+        <mtx-datetimepicker #datetimePicker [type]="'datetime'" [mode]="'auto'"></mtx-datetimepicker>
+
+        <input
+          aria-hidden="true"
+          [attr.data-autoId]="autoId()"
+          [mtxDatetimepicker]="datetimePicker"
+          [id]="id"
+          (blur)="onConfirmInput($event)"
+          (keyup.enter)="onConfirmInput($event)"
+          (keydown)="onKeyDown($event)"
+          (dateChange)="onChange($event)"
+          [autocomplete]="id"
+          autocorrect="off"
+          [formControl]="formControl"
+          [required]="req"
+          [placeholder]="placeholder() || lbl || ''"
+          [min]="minD"
+          [max]="maxD"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          #input
+          matInput />
+
+        @if (hideErr && errMsg && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+        }
+
+        @if (!hideErr && errMsg && formControl.touched) {
+          <mat-error>{{ errMsg }}</mat-error>
+        }
+
+        <span class="pointer sd-suffix-icon" (click)="!formControl.disabled && datetimePicker?.open()" matSuffix
+          ><svg fill="currentColor" viewBox="0 0 24 24" fill="currentColor" focusable="false">
+            <path
+              d="M15,13H16.5V15.82L18.94,17.23L18.19,18.53L15,16.69V13M19,8H5V19H9.67C9.24,18.09 9,17.07 9,16A7,7 0 0,1 16,9C17.07,9 18.09,9.24 19,9.67V8M5,21C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H6V1H8V3H16V1H18V3H19A2,2 0 0,1 21,5V11.1C22.24,12.36 23,14.09 23,16A7,7 0 0,1 16,23C14.09,23 12.36,22.24 11.1,21H5M16,11.15A4.85,4.85 0 0,0 11.15,16C11.15,18.68 13.32,20.85 16,20.85A4.85,4.85 0 0,0 20.85,16C20.85,13.32 18.68,11.15 16,11.15Z"></path></svg
+        ></span>
+      </mat-form-field>
+    }
+  </div>
+}

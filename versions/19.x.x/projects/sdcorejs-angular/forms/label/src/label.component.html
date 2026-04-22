@@ -1,0 +1,18 @@
+@if (label) {
+  <div class="mb-0 d-flex">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <span class="T14M">{{ label }}</span>
+      @if (helperText) {
+        <mat-icon style="height: 1rem; width: 1rem; font-size: 1rem" [matTooltip]="helperText" matTooltipPosition="below"
+          >info_outline</mat-icon
+        >
+      }
+    </div>
+    @if (required) {
+      <span class="text-error mb-2 T14M">*</span>
+    }
+  </div>
+  @if (description) {
+    <div class="text-black400 T12R">{{ description }}</div>
+  }
+}

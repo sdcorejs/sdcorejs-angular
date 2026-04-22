@@ -1,0 +1,114 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+$badgeIconSize:
+  'xs' 14,
+  'sm' 16,
+  'md' 18,
+  'lg' 24;
+
+$badgeIconColor:
+  'primary' map.get(color.$color_map, 'primary'),
+  'secondary' map.get(color.$color_map, 'secondary'),
+  'black400' map.get(color.$color_map, 'black400'),
+  'info' map.get(color.$color_map, 'info'),
+  'success' map.get(color.$color_map, 'success'),
+  'error' map.get(color.$color_map, 'error'),
+  'warning' map.get(color.$color_map, 'warning');
+
+$badgeDescriptionColor: map.get(color.$color_map, 'black400');
+$badges: '';
+.c-badge {
+  border-radius: 20px;
+  padding: 2px 10px;
+  display: inline-block;
+  text-align: center;
+  overflow-wrap: break-word;
+
+  &.c-primary {
+    background: map.get(color.$color_map, 'primary-light');
+    color: map.get(color.$color_map, 'primary');
+    &.c-badge--tag {
+      border: 1px solid map.get(color.$color_map, 'primary');
+    }
+  }
+  &.c-secondary {
+    background: map.get(color.$color_map, 'secondary-light');
+    color: map.get(color.$color_map, 'secondary');
+    &.c-badge--tag {
+      border: 1px solid map.get(color.$color_map, 'secondary');
+    }
+  }
+  &.c-info {
+    background: map.get(color.$color_map, 'info-light');
+    color: map.get(color.$color_map, 'info');
+    &.c-badge--tag {
+      border: 1px solid map.get(color.$color_map, 'info');
+    }
+  }
+  &.c-warning {
+    background: map.get(color.$color_map, 'warning-light');
+    color: map.get(color.$color_map, 'warning');
+    &.c-badge--tag {
+      border: 1px solid map.get(color.$color_map, 'warning');
+    }
+  }
+  &.c-success {
+    background: map.get(color.$color_map, 'success-light');
+    color: map.get(color.$color_map, 'success');
+    &.c-badge--tag {
+      border: 1px solid map.get(color.$color_map, 'success');
+    }
+  }
+  &.c-error {
+    background: map.get(color.$color_map, 'error-light');
+    color: map.get(color.$color_map, 'error');
+    &.c-badge--tag {
+      border: 1px solid map.get(color.$color_map, 'error');
+    }
+  }
+
+  &.c-badge--tag {
+    border-radius: 4px;
+    padding: 1px 7px;
+
+    .c-material-icon {
+      @each $name, $size in $badgeIconSize {
+        padding: 0;
+        &.c-#{$name} {
+          line-height: 20px;
+        }
+      }
+    }
+  }
+}
+
+.c-badge-icon {
+  min-width: 50px;
+  .c-material-icon {
+    border-radius: 50%;
+    padding: 2px 2px 2px 0;
+    @each $name, $size in $badgeIconSize {
+      &.c-#{$name} {
+        width: #{$size + 4}px;
+        height: #{$size + 4}px;
+        font-size: #{$size}px;
+      }
+    }
+
+    @each $name, $color in $badgeIconColor {
+      &.c-#{$name} {
+        color: $color;
+      }
+    }
+  }
+}
+
+.c-badge-description {
+  color: $badgeDescriptionColor;
+}
+
+// Css để sử dụng \n tooltip
+::ng-deep .sd-multiline-tooltip {
+  white-space: pre-line;
+}

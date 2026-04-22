@@ -1,0 +1,22 @@
+.c-builder {
+    padding: 8px;
+    width: 100%;
+    border: 1px solid #e6e6e6;
+    border-radius: 4px;
+    .c-condition {
+      width: 80px;
+      .c-where {
+        width: 80px;
+        border: 1px solid #e6e6e6;
+        background-color: #f2f2f2;
+        color: #757575;
+        border-radius: 4px;
+        padding: 4px;
+        text-align: center;
+      }
+      .c-select {
+        margin-left: 10px;
+        width: 70px;
+      }
+    }
+  }

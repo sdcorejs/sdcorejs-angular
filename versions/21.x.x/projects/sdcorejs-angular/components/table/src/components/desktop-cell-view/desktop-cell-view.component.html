@@ -1,0 +1,123 @@
+@let view = item().meta.display[column().field];
+
+@let columnCharLimit = column()?.charLimited;
+@let isExpandByMore = isOverflowing() && columnCharLimit?.expandType === 'more';
+@let isExpandByTooltip = isOverflowing() && columnCharLimit?.expandType === 'tooltip';
+
+@if (view) {
+  @if (view.isHtml) {
+    @if (view.click) {
+      <div
+        #contentContainer
+        [attr.data-autoId]="autoId()"
+        (click)="view.click()"
+        class="text-break cursor-pointer"
+        [sdTooltip]="view.tooltip || (isExpandByTooltip ? htmlClickTooltip : '')"
+        [style]="view.cellStyle"
+        [style.max-width]="charLimited()?.width"
+        [class.c-ellipsis-html]="columnCharLimit?.enable"
+        [innerHTML]="view.data | sdSafeHtml"
+        aria-hidden="true"></div>
+
+      <ng-template #htmlClickTooltip>
+        <div
+          class="c-tooltip-inner-content"
+          [style.max-width]="'calc(' + charLimited()?.width + ' * 1.5)'"
+          style="max-height: 200px; overflow-y: auto; scrollbar-width: thin">
+          <div [innerHTML]="view.data | sdSafeHtml"></div>
+        </div>
+      </ng-template>
+    } @else {
+      <!-- Nếu column có bật "giới hạn ký tự" -->
+      @if (columnCharLimit?.enable) {
+        <div
+          #contentContainer
+          [style.max-width]="charLimited()?.width"
+          [class.c-ellipsis-html]="isCollapsed()"
+          [attr.data-autoId]="autoId()"
+          class="text-break"
+          [sdTooltip]="view.tooltip || (isExpandByTooltip ? htmlTooltip : '')"
+          containerClass="c-tooltip-html-d374bd93-f136-425c-bcc2-2d88cb163e44"
+          container="body"
+          placement="bottom"
+          [sdTooltipDelay]="100"
+          [style]="view.cellStyle"
+          [innerHTML]="view.data | sdSafeHtml"></div>
+
+        <ng-template #htmlTooltip>
+          <div
+            class="c-tooltip-inner-content"
+            [style.max-width]="'calc(' + charLimited()?.width + ' * 1.5)'"
+            style="max-height: 200px; overflow-y: auto; scrollbar-width: thin">
+            <div [innerHTML]="view.data | sdSafeHtml"></div>
+          </div>
+        </ng-template>
+
+        @if (isExpandByMore) {
+          <button (click)="toggle()" class="c-collapse">{{ isCollapsed() ? 'Xem thêm' : 'Thu gọn' }}</button>
+        }
+      } @else {
+        <div
+          [attr.data-autoId]="autoId()"
+          class="text-break"
+          [sdTooltip]="view.tooltip || ''"
+          [style]="view.cellStyle"
+          [innerHTML]="view.data | sdSafeHtml"></div>
+      }
+      <!-- End -->
+    }
+  } @else {
+    <!-- Nếu là giá trị lấy hiển thị lấy trực tiếp từ field -->
+    @if (view.badge) {
+      @if (view.data) {
+        <sd-badge
+          [attr.data-autoId]="autoId()"
+          [type]="view.badge.type"
+          [title]="view.data"
+          [color]="view.badge.color"
+          [icon]="view.badge.icon"
+          [sdTooltip]="view.tooltip || ''"
+          (click)="!!view.click && view.click()">
+        </sd-badge>
+      }
+    } @else {
+      @if (view.click) {
+        <div
+          #contentContainer
+          class="text-break"
+          [style]="view.cellStyle"
+          [style.max-width]="charLimited()?.width"
+          [class.c-ellipsis]="columnCharLimit?.enable"
+          [sdTooltip]="view.tooltip || (isExpandByTooltip ? view.data : '') | asString">
+          <a [attr.data-autoId]="autoId" href="javascript:;" (click)="view.click()">
+            {{ view.data }}
+          </a>
+        </div>
+      } @else {
+        <!-- Nếu column có bật "giới hạn ký tự" -->
+        @if (columnCharLimit?.enable) {
+          <div
+            #contentContainer
+            [attr.data-autoId]="autoId()"
+            class="text-break"
+            [style]="view.cellStyle"
+            [style.max-width]="charLimited()?.width"
+            [class.c-ellipsis]="isCollapsed()"
+            [sdTooltip]="view.tooltip || (isExpandByTooltip ? view.data : '') | asString">
+            {{ view.data }}
+          </div>
+
+          <!-- Nếu option xem full thông tin là "btn xem thêm" -->
+          @if (isExpandByMore) {
+            <button (click)="toggle()" class="c-collapse">{{ isCollapsed() ? 'Xem thêm' : 'Thu gọn' }}</button>
+          }
+        } @else {
+          <div [attr.data-autoId]="autoId()" class="text-break" [style]="view.cellStyle" [sdTooltip]="view.tooltip || ''">
+            {{ view.data }}
+          </div>
+        }
+        <!-- End -->
+      }
+    }
+  }
+}

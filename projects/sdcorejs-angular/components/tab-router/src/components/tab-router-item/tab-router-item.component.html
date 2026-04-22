@@ -1,0 +1,26 @@
+<a
+  [href]="[tab.url]"
+  class="tab-router__item d-flex align-items-center gap-8"
+  [class.tab-router__item--active]="tab.isActive"
+  (click)="onTabClick($event)"
+  (mousedown)="onMousedown($event)"
+  (mouseup)="onMouseup($event)">
+  @let info = tabInfo | sdTabInfo: tab;
+  @if (info) {
+    <sd-badge
+      style="overflow: hidden;white-space: nowrap;"
+      [icon]="info.icon"
+      [title]="info.icon"
+      [tooltip]="info.tooltip || info.name"
+      [title]="info.name"
+      [color]="info.color"
+      (click)="onTabClick($event)"></sd-badge>
+    <button
+      aria-hidden="true"
+      class="tab-router__close d-flex align-items-center justify-content-center ml-auto p-0"
+      (click)="close($event)"
+      (mousedown)="$event.stopPropagation()">
+      <mat-icon aria-hidden="true" fontIcon="close"></mat-icon>
+    </button>
+  }
+</a>

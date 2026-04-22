@@ -1,0 +1,30 @@
+@use '../../../../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+.c-anchor-list {
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  overflow-x: hidden;
+
+  .c-anchor-list-item {
+    border-bottom: 2px solid map.get(color.$color_map, 'secondary-light');
+    color: map.get(color.$color_map, 'black500');
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+
+    &.active {
+      border-bottom: 2px solid map.get(color.$color_map, 'primary');
+      font-weight: 700;
+    }
+    &:not(.active) {
+      border-bottom: 2px solid map.get(color.$color_map, 'secondary-light');
+      font-weight: 400;
+    }
+  }
+}

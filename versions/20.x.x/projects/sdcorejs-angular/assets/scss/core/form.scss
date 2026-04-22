@@ -1,0 +1,260 @@
+@use './color.scss' as color;
+@use 'sass:map';
+
+// Form field
+.mat-mdc-form-field {
+  font-size: 16px;
+  width: 100%;
+
+  // Xử lý tô màu required
+  .mat-mdc-form-field-required-marker {
+    color: map.get(color.$color_map, 'error');
+  }
+
+  // Xử lý màu border nhạt bớt
+  .mat-mdc-notch-piece {
+    &.mdc-notched-outline__leading {
+      border-color: map.get(color.$color_map, 'black200') !important;
+    }
+    &.mdc-notched-outline__notch {
+      border-top-color: map.get(color.$color_map, 'black200') !important;
+      border-bottom-color: map.get(color.$color_map, 'black200') !important;
+    }
+    &.mdc-notched-outline__trailing {
+      border-color: map.get(color.$color_map, 'black200') !important;
+    }
+  }
+
+  // Xử lý icon
+  .sd-suffix-icon {
+    color: #757575;
+    &:hover {
+      color: #616161;
+    }
+  }
+
+  // sdSuffixIcon
+  // Directive sdSuffixIcon (truyền icon từ component sử dụng vào Core)
+  .sd-suffix-icon.sd-hover {
+    visibility: hidden;
+  }
+
+  // Chỉ hiển thị khi được hover
+  .mat-mdc-form-field-flex {
+    &:hover {
+      .sd-suffix-icon.sd-hover {
+        visibility: visible;
+      }
+    }
+  }
+
+  .mat-mdc-form-field-prefix,
+  .mat-mdc-form-field-suffix {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &.mat-form-field-appearance-outline {
+    .mat-mdc-form-field-flex {
+      align-items: center;
+    }
+
+    .mat-mdc-form-field-infix {
+      mat-select.mat-mdc-select,
+      mat-date-range-input.mat-mdc-date-range-input,
+      input.mat-mdc-input-element,
+      textarea.mat-mdc-input-element {
+        font-size: 14px;
+        margin-top: 10px; // Text hiển thị trong auto complete
+      }
+    }
+
+    .mat-mdc-form-field-suffix {
+      top: 3.5px;
+    }
+
+    &.mat-mdc-form-field-type-mat-date-range-input,
+    &.c-form-field-date-input,
+    &.c-form-field-datetime-input {
+      .mdc-notched-outline__notch {
+        max-width: calc(100% - 60px);
+      }
+    }
+  }
+
+  // Bỏ padding nếu hideInlineError
+  &.hide-inline-error {
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+
+    &.mat-form-field-invalid {
+      .mat-mdc-notch-piece {
+        &.mdc-notched-outline__leading {
+          border-color: map.get(color.$color_map, 'error') !important;
+        }
+        &.mdc-notched-outline__notch {
+          border-top-color: map.get(color.$color_map, 'error') !important;
+          border-bottom-color: map.get(color.$color_map, 'error') !important;
+        }
+        &.mdc-notched-outline__trailing {
+          border-color: map.get(color.$color_map, 'error') !important;
+        }
+      }
+    }
+  }
+
+  // Size normal`
+  &.sd-md {
+    --mat-form-field-container-height: 40px;
+    --mat-form-field-container-vertical-padding: 3px;
+
+    &.mat-form-field-appearance-outline {
+      .mat-mdc-form-field-infix {
+        padding: 0 0 8px 0 !important;
+        border-top-width: 11.5px;
+        min-height: 43.5px;
+        width: auto;
+      }
+
+      .mat-mdc-form-field-label-wrapper {
+        font-size: 14px;
+        padding-top: 12px;
+        top: -18px;
+      }
+
+      .mat-mdc-form-field-icon-suffix {
+        top: 0;
+        right: 0;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .sd-suffix-icon,
+        .sd-error-icon {
+          height: 20px;
+          width: 20px;
+          font-size: 20px;
+          text-align: center;
+          padding: 0;
+        }
+      }
+
+      .mat-mdc-form-field-icon-prefix {
+        top: 0;
+        right: 0;
+        padding: 0 8px;
+        .sd-prefix-icon {
+          height: 20px;
+          width: 20px;
+          font-size: 20px;
+          text-align: center;
+          padding: 0;
+        }
+      }
+
+      &.mat-mdc-form-field-can-float {
+        &.mat-mdc-form-field-should-float {
+          .mat-mdc-form-field-label {
+            transform: translateY(-18px) scale(0.75);
+            width: 133.33333%;
+          }
+        }
+      }
+    }
+  }
+
+  // Size small
+  &.sd-sm {
+    --mat-form-field-container-height: 32px;
+    --mat-form-field-container-vertical-padding: 3px;
+
+    &.mat-form-field-appearance-outline {
+      .mat-mdc-form-field-infix {
+        border-top-width: 6px;
+        min-height: 32px;
+        width: auto;
+
+        mat-select.mat-mdc-select,
+        mat-date-range-input.mat-mdc-date-range-input,
+        input.mat-mdc-input-element,
+        textarea.mat-mdc-input-element {
+          margin-top: 2px; // Text hiển thị trong auto complete
+          font-size: 14px;
+        }
+      }
+
+      .mat-mdc-form-field-label-wrapper {
+        font-size: 14px;
+        padding-top: 8px;
+        top: -14px;
+      }
+
+      .mat-mdc-form-field-icon-suffix {
+        top: 0;
+        right: 0;
+        padding: 0 8px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        .sd-suffix-icon,
+        .sd-error-icon {
+          height: 16px;
+          width: 16px;
+          font-size: 16px;
+          text-align: center;
+          padding: 0;
+        }
+      }
+
+      .mat-mdc-form-field-icon-prefix {
+        top: 0;
+        left: 0;
+        padding: 0 4px;
+
+        .sd-prefix-icon {
+          height: 16px;
+          width: 16px;
+          font-size: 16px;
+          text-align: center;
+          padding: 0;
+        }
+      }
+
+      &.mat-mdc-form-field-can-float {
+        .mat-mdc-form-field-label {
+          top: 22px;
+        }
+
+        &.mat-mdc-form-field-should-float {
+          .mat-mdc-form-field-label {
+            transform: translateY(-10px) scale(0.75);
+            width: 133.33333%;
+          }
+        }
+      }
+
+      // Fix for date range and datetime inputs with small size
+      &.c-form-field-date-input,
+      &.c-form-field-datetime-input {
+        .mdc-notched-outline__notch {
+          max-width: calc(100% - 50px);
+        }
+      }
+    }
+  }
+}
+
+// Fix lỗi scss label của bootstrap có margin bottom
+mat-checkbox {
+  label.mat-mdc-checkbox-layout {
+    margin-bottom: 0;
+  }
+}
+
+// Placeholder mặc định 1rem (16px), mong muốn nên là 14px
+.mat-mdc-floating-label {
+  font-size: 14px !important;
+}

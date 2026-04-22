@@ -1,0 +1,34 @@
+@if (!!selection?.queries?.items?.length) {
+  <div class="d-flex align-items-center py-4">
+    @if (label) {
+      <div class="T14R" style="flex: 1">{{ label }}</div>
+    }
+    <div style="width: 200px" class="d-flex align-items-center">
+      <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
+    </div>
+  </div>
+  <sd-modal title="Thiết lập giá trị truy vấn" width="400px">
+    <div class="c-builder">
+      @for (property of leftProperties; track property.value) {
+        <div class="d-flex align-items-center py-8" style="gap: 8px">
+          <div style="width: 150px">
+            <div class="text-secondary">{{ property.value }}</div>
+            <div class="T16M">{{ property.display }}</div>
+          </div>
+          <sd-autocomplete
+            label="Trường lấy giá trị"
+            [form]="form"
+            style="flex: 1"
+            [(model)]="model![property.value]"
+            [items]="rightProperties"
+            valueField="value"
+            displayField="display"
+            hideInlineError></sd-autocomplete>
+        </div>
+      }
+    </div>
+    <ng-container sdFooter>
+      <sd-button prefixIcon="save" title="Xác nhận" (click)="onAccept()" color="primary" type="fill"></sd-button>
+    </ng-container>
+  </sd-modal>
+}

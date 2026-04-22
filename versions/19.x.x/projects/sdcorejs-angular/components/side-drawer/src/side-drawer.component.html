@@ -1,0 +1,58 @@
+<ng-template cdkPortal>
+  <div
+    [id]="id"
+    class="sd-side-drawer"
+    [ngStyle]="{ width: width() }"
+    [ngClass]="drawerClass()"
+    [class.sd-side-drawer-active]="isOpened"
+    #drawerContainer>
+    @if (isOpened) {
+      <ng-container>
+        <div class="c-header">
+          <div class="sd-side-drawer-title">
+            <ng-content select="[sdHeaderLeft]">
+              {{ title() }}
+            </ng-content>
+          </div>
+          <div class="sd-side-drawer-header-actions">
+            <ng-content select="[sdHeaderRight]"></ng-content>
+            @if (!hideClose()) {
+              <button type="button" class="sd-side-drawer-close-btn" (click)="close()" aria-label="Close">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="24"
+                  height="24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            }
+          </div>
+        </div>
+        @if (isOpened) {
+          <div class="sd-side-drawer-body">
+            <div class="sd-side-drawer-content">
+              <ng-content></ng-content>
+            </div>
+          </div>
+        }
+        <div class="sd-side-drawer-footer">
+          <ng-content select="[sdFooter]"></ng-content>
+        </div>
+      </ng-container>
+    }
+  </div>
+  @if (isOpened) {
+    <div
+      aria-hidden="true"
+      class="sd-side-drawer-backdrop"
+      (click)="disableBackdropClose() ? null : close()"
+      (wheel)="preventScroll($event)"
+      (touchmove)="preventScroll($event)"></div>
+  }
+</ng-template>

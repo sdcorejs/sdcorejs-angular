@@ -1,0 +1,18 @@
+@let _userInfo = userInfo();
+<sd-page>
+  <div class="d-flex flex-column" headerLeft>
+    <div class="font-weight-medium fs-20">Xin chào, {{ _userInfo?.fullName || _userInfo?.email || _userInfo?.username }}</div>
+    <span class="T12R text-secondary">{{ todayInfo() }}</span>
+  </div>
+
+  <div class="h-full d-flex flex-column align-items-center">
+    <div class="h-full d-flex flex-column align-items-center justify-content-center text-center wrapper">
+      <img alt="error-image" class="error-image" />
+      <span class="T16M mt-24">404 - Trang không tồn tại</span>
+      <span class="T16R text-secondary mt-4">
+        Trang bạn tìm không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại địa chỉ URL hoặc quay lại trang chủ để tiếp tục.
+      </span>
+      <sd-button class="mt-16" type="fill" color="primary" (click)="reload()" title="Quay trở lại" prefixIcon="arrow_back"> </sd-button>
+    </div>
+  </div>
+</sd-page>

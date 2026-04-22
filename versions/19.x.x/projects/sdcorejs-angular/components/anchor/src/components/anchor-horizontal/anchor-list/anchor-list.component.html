@@ -1,0 +1,16 @@
+<div class="c-anchor-list" #tabList (wheel)="onWheel($event, tabList)">
+  @for (section of sections; track section.id) {
+    <div
+      [class.active]="section.id === activeId"
+      [attr.data-sd-anchor-list-id]="section.id"
+      (click)="onTabClick(section)"
+      (keydown.enter)="onTabClick(section)"
+      tabindex="0"
+      class="c-anchor-list-item">
+      @if (section.icon) {
+        <mat-icon>{{ section.icon }}</mat-icon>
+      }
+      {{ section.title }}
+    </div>
+  }
+</div>
