@@ -1,7 +1,0 @@
-@if (!content) {
-  <div class="c-html d-flex align-items-center justify-content-center">
-    <span class="material-icons"> html </span>
-  </div>
-} @else {
-  <div [innerHTML]="hashed | htmlPipe: content: component"></div>
-}

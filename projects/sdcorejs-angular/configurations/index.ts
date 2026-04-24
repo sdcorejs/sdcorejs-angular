@@ -1,1 +1,0 @@
-export * from './src/sd-core.configuration';

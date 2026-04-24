@@ -1,9 +1,0 @@
-<div class="sd-avatar" [style.width.px]="size()" [style.height.px]="size()" [style.line-height.px]="size()" [style.backgroundColor]="bgColor()">
-  @if (isUrl()) {
-    <img [src]="src()" (error)="handleError()" alt="avatar" />
-  } @else {
-    <span class="sd-avatar-text" [style.fontSize.px]="size() / 2.5">
-      {{ initials() }}
-    </span>
-  }
-</div>

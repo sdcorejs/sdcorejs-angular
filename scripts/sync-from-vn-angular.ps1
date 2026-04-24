@@ -12,17 +12,17 @@ if (!(Test-Path -LiteralPath $TargetPath)) {
   throw "TargetPath not found: $TargetPath"
 }
 
-Write-Host "[1/4] Mirror copy source -> target" -ForegroundColor Cyan
+Write-Host "[1/5] Mirror copy source -> target" -ForegroundColor Cyan
 robocopy $SourcePath $TargetPath /MIR /XD .git node_modules dist .angular coverage versions scripts /R:1 /W:1 /NFL /NDL /NP | Out-Null
 
-Write-Host "[2/4] Normalize library folder sd-angular -> sdcorejs-angular" -ForegroundColor Cyan
+Write-Host "[2/5] Normalize library folder sd-angular -> sdcorejs-angular" -ForegroundColor Cyan
 $legacyLibPath = Join-Path $TargetPath "projects/sd-angular"
 $targetLibPath = Join-Path $TargetPath "projects/sdcorejs-angular"
 if ((Test-Path -LiteralPath $legacyLibPath) -and !(Test-Path -LiteralPath $targetLibPath)) {
   Rename-Item -LiteralPath $legacyLibPath -NewName "sdcorejs-angular"
 }
 
-Write-Host "[3/4] Replace legacy namespace and project references" -ForegroundColor Cyan
+Write-Host "[3/5] Replace legacy namespace and project references" -ForegroundColor Cyan
 $extensions = @("*.ts","*.tsx","*.js","*.jsx","*.mjs","*.cjs","*.json","*.md","*.scss","*.css","*.html","*.yml","*.yaml","*.txt","*.xml")
 $files = Get-ChildItem -Path $TargetPath -Recurse -File -Include $extensions |
   Where-Object {
@@ -47,6 +47,12 @@ foreach ($file in $files) {
   }
 }
 
+Write-Host "[4/5] Capture source commit and patch package.json" -ForegroundColor Cyan
+
+$commitId = (git -C $SourcePath rev-parse --short HEAD 2>$null).Trim()
+if (!$commitId) { $commitId = "unknown" }
+Write-Host "    Source commit: $commitId" -ForegroundColor DarkGray
+
 $rootPackagePath = Join-Path $TargetPath "package.json"
 if (Test-Path -LiteralPath $rootPackagePath) {
   $package = Get-Content -LiteralPath $rootPackagePath -Raw | ConvertFrom-Json
@@ -67,4 +73,8 @@ if (Test-Path -LiteralPath $rootPackagePath) {
   }
 }
 
-Write-Host "[4/4] Done. Modified files: $modified" -ForegroundColor Green
+Write-Host "[5/5] Rollout to v19 (primary) then v20, v21..." -ForegroundColor Cyan
+$multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1"
+& $multiVersionScript -RootPath $TargetPath -CommitId $commitId
+
+Write-Host "All done. Synced vn-angular@$commitId -> sdcorejs-angular -> v19/v20/v21. Modified files: $modified" -ForegroundColor Green
