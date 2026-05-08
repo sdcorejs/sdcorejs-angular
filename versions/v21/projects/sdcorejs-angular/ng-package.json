@@ -11,9 +11,10 @@
     "exceljs",
     "export-to-csv",
     "@omer-go/docx-parser-converter-ts",
-    "mammoth",
+    "@bjorn3/browser_wasi_shim",
     "keycloak-js",
-    "prismjs"
+    "prismjs",
+    "chart.js"
   ],
   "assets": ["assets"]
 }

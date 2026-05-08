@@ -1,8 +1,8 @@
-import { Directive, TemplateRef } from '@angular/core';
+import { Directive, TemplateRef, inject } from '@angular/core';
 
 @Directive({
   selector: '[sdTableExpandDef]',
 })
 export class SdMaterialSubInformationDefDirective {
-  constructor(public templateRef: TemplateRef<any>) {}
+  templateRef = inject(TemplateRef<any>);
 }

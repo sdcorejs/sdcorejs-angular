@@ -39,22 +39,30 @@ type UseBadgeValuesFunc<T = any, K = any> = (
   items: K[] // <-- Tráº£ vá» máº£ng dá»¯ liá»‡u Ä‘Ã£ load Ä‘á»ƒ tiá»‡n tra cá»©u
 ) => Badge;
 
-interface SdTableColumnBase<T = any> {
+interface ColumnTitleOption {
   title: string;
-  titleHtml?: string;
-  description?: string;
+  templateRef?: TemplateRef<any>;
+}
+
+interface ColumnCellOption {
+  templateRef?: TemplateRef<any>;
+  copiable?: boolean;
+  truncate?: {
+    enable?: boolean;
+    type?: 'more' | 'tooltip';
+  }
+}
+
+interface SdTableColumnBase<T = any> {
+  title: string | ColumnTitleOption;
+  cell?: ColumnCellOption;
   width?: string;
   minWidth?: string;
   maxWidth?: string;
   hidden?: boolean; // áº¨n hoÃ n toÃ n
   invisible?: boolean; // Máº·c Ä‘á»‹nh áº©n
   fixed?: boolean; // Cá»‘ Ä‘á»‹nh cá»™t
-  charLimited?: {
-    enable?: boolean; // Máº·c Ä‘á»‹nh cÃ³ báº­t giá»›i háº¡n kÃ½ tá»± hay khÃ´ng?
-    expandType?: 'more' | 'tooltip'; // Kiá»ƒu xem má»Ÿ rá»™ng? (Máº·c Ä‘á»‹nh lÃ  'tooltip')
-  };
   align?: 'right';
-  cellStyle?: (value: any, rowData: T) => Record<string, string>;
   htmlTemplate?: (value: any, rowData: T) => string;
   transform?: SdTableColumnTransformFunc<T>;
   tooltip?: (value: any, rowData: T) => string;
@@ -73,9 +81,8 @@ interface SdTableColumnBase<T = any> {
   };
   export?: {
     disabled?: boolean;
+    description?: string;
   };
-  cellDef?: TemplateRef<any>;
-  copiable?: boolean;
 }
 
 interface SdTableColumnText<T = any> extends SdTableColumnBase<T> {

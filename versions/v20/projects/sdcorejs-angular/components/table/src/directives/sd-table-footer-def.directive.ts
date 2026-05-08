@@ -1,9 +1,9 @@
-import { Directive, Input, TemplateRef } from '@angular/core';
+import { Directive, TemplateRef, inject, input } from '@angular/core';
 
 @Directive({
   selector: '[sdTableFooterDef]',
 })
 export class SdMaterialFooterDefDirective {
-  @Input() sdTableFooterDef?: string;
-  constructor(public templateRef: TemplateRef<any>) {}
+  sdTableFooterDef = input<string>();
+  templateRef = inject(TemplateRef<any>);
 }

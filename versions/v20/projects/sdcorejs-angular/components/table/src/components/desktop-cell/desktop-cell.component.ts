@@ -14,45 +14,58 @@ import { CommonModule } from '@angular/common';
 import { SdTabelCellDefDirective } from '../../directives/sd-table-cell-def.directive';
 import { SdTableColumn } from '../../models/table-column.model';
 import { SdTableItem } from '../../models/table-item.model';
-import { SdDesktopCellView } from '../desktop-cell-view/desktop-cell-view.component';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
+import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { ViewComponent } from './view/view.component';
 
-interface CharLimited {
-  title?: string;
-  width?: string;
-}
 
 @Component({
-  selector: 'sd-desktop-cell',
+  selector: 'desktop-cell',
   templateUrl: './desktop-cell.component.html',
   styleUrls: ['./desktop-cell.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, SdDesktopCellView, SdTooltipDirective],
+  imports: [CommonModule, SdTooltipDirective, ViewComponent],
 })
-export class SdDesktopCell {
+export class DesktopCellComponent {
   // Inject
-  private cdr = inject(ChangeDetectorRef);
+  #cdr = inject(ChangeDetectorRef);
 
   // ViewChild
   contentContainer = viewChild<ElementRef<HTMLElement>>('contentContainer');
 
   // Inputs
-  charLimited = input<CharLimited | undefined>();
-  value = input<any>();
   column = input.required<SdTableColumn>();
-  cellDef = input<Record<string, SdTabelCellDefDirective>>({});
+  item = input.required<SdTableItem>();
+  cellDef = input.required<Record<string, SdTabelCellDefDirective>>({});
 
-  autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  autoId = computed(() => {
-    const val = this.autoIdInput();
-    return val ? `${val}-view-` : undefined;
+  value = computed(() => {
+    return SdUtilities.getNestedValue(this.item()?.data, this.column()?.field);
   });
 
-  item = input.required<SdTableItem>({ alias: 'item' });
-  itemKey = computed(() => {
+  key = computed(() => {
     const data = this.item()?.data;
     return data?.id?.toString() || data?.code?.toString() || data?.value?.toString() || '';
+  });
+
+  autoId = computed(() => {
+    const column = this.column();
+    const key = this.key();
+    return `${key}_${column.field}`;
+  });
+
+  truncateEnable = computed(() => {
+    return this.column()?.cell?.truncate?.enable;
+  });
+
+  truncateWidth = computed(() => {
+    return this.column()?.width;
+  });
+
+  templateRef = computed(() => {
+    const cellDef = this.cellDef();
+    const column = this.column();
+    return cellDef[column?.field]?.templateRef || column?.cell?.templateRef;
   });
 
   isCollapsed = signal<boolean>(true);
@@ -60,7 +73,7 @@ export class SdDesktopCell {
 
   constructor() {
     effect(() => {
-      this.charLimited();
+      this.truncateWidth();
       const container = this.contentContainer();
       if (container) {
         this.#checkOverflow(container.nativeElement);
@@ -78,7 +91,7 @@ export class SdDesktopCell {
       const hasOverflow = element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
       if (this.isOverflowing() !== hasOverflow) {
         this.isOverflowing.set(hasOverflow);
-        this.cdr.markForCheck();
+        this.#cdr.markForCheck();
       }
     });
   };

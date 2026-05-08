@@ -10,7 +10,9 @@
         <div class="d-flex align-items-center ml-auto">
           <ng-content select="[sdHeaderRight]"></ng-content>
           <ng-content select="[sdHeader]"></ng-content>
-          <mat-icon class="text-secondary pointer" fontIcon="close" (click)="close()"></mat-icon>
+          @if (!hideClose()) {
+            <mat-icon class="text-secondary pointer" fontIcon="close" (click)="close()"></mat-icon>
+          }
         </div>
       </div>
     }

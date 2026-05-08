@@ -10,13 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms';
-import {
-  SdConfirmService,
-  SdExcelColumn,
-  SdExcelService,
-  SdLoadingService,
-  SdNotifyService,
-} from '@sdcorejs/angular/services';
+import { SdConfirmService, SdExcelColumn, SdExcelService, SdLoadingService, SdNotifyService } from '@sdcorejs/angular/services';
 // import hash from 'object-hash';
 import { SdTableColumn, SdTableOption } from '../../models';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
@@ -80,11 +74,19 @@ export class SdPopupExport {
           column.children
             ?.filter(e => !e.export?.disabled)
             .forEach(childColumn => {
-              columns.push(childColumn);
+              columns.push({
+                title: typeof childColumn.title === 'string' ? childColumn.title : childColumn.title?.title,
+                field: childColumn.field,
+                width: childColumn.width,
+              });
             });
           return;
         }
-        columns.push(column);
+        columns.push({
+          title: typeof column.title === 'string' ? column.title : column.title?.title,
+          field: column.field,
+          width: column.width,
+        });
       });
     return columns.map(e => ({
       field: e.field,

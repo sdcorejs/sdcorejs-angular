@@ -7,6 +7,7 @@ import {
   Injectable,
   OnDestroy,
   OnInit,
+  TemplateRef,
   computed,
   contentChild,
   contentChildren,
@@ -28,14 +29,17 @@ import { SdTabelCellDefDirective } from './directives/sd-table-cell-def.directiv
 import { SdMaterialSubInformationDefDirective } from './directives/sd-table-expand-def.directive';
 import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.directive';
 import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.directive';
+import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
 import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from './models/table-column.model';
 import { SdTableOption } from './models/table-option.model';
 import { SdTableFilterRequest, TableFilterRegister } from './services/table-filter/table-filter.model';
 
 import { CdkColumnDef } from '@angular/cdk/table';
+import { CdkDrag, CdkDragDrop, CdkDropList, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -49,9 +53,9 @@ import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { SdOperator, SdPagingReq, SdUtilities } from '@sdcorejs/angular/utilities';
 import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 
-import { ColumnFilterComponent, ExternalFilterComponent } from './components';
+import { ColumnFilterComponent, ColumnTitleComponent, ExternalFilterComponent } from './components';
 import { ConfigComponent } from './components/config/config.component';
-import { SdDesktopCell } from './components/desktop-cell/desktop-cell.component';
+import { DesktopCellComponent } from './components/desktop-cell/desktop-cell.component';
 import { SdDesktopCommand } from './components/desktop-command/desktop-command.component';
 import { SdPopupExport } from './components/popup-export/popup-export.component';
 import { SelectorActionComponent } from './components/selector-action/selector-action.component';
@@ -121,9 +125,12 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     MatSortModule,
     MatProgressSpinnerModule,
     MatCheckboxModule,
+    MatRadioModule,
+    DragDropModule,
     SdButton,
     SdDesktopCommand,
-    SdDesktopCell,
+    DesktopCellComponent,
+    ColumnTitleComponent,
     ExternalFilterComponent,
     ConfigComponent,
     ColumnFilterComponent,
@@ -164,6 +171,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   sdCellDefs = contentChildren(SdTabelCellDefDirective);
   sdFooterDefs = contentChildren(SdMaterialFooterDefDirective);
   sdFilterDefs = contentChildren(SdTableFilterDefDirective);
+  sdTitleDefs = contentChildren(SdTableTitleDefDirective);
 
   // ==========================================
   // 3. COMPUTED FROM QUERIES
@@ -171,7 +179,8 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   cellDef = computed(() => {
     const map: Record<string, SdTabelCellDefDirective> = {};
     for (const def of this.sdCellDefs()) {
-      if (def.sdTableCellDef) map[def.sdTableCellDef] = def;
+      const field = def.sdTableCellDef();
+      if (field) map[field] = def;
     }
     return map;
   });
@@ -179,12 +188,22 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   footerDef = computed(() => {
     const map: Record<string, SdMaterialFooterDefDirective> = {};
     for (const def of this.sdFooterDefs()) {
-      if (def.sdTableFooterDef) map[def.sdTableFooterDef] = def;
+      const field = def.sdTableFooterDef();
+      if (field) map[field] = def;
     }
     return map;
   });
 
   hasFooter = computed(() => Object.keys(this.footerDef()).length > 0);
+
+  titleDef = computed(() => {
+    const map: Record<string, SdTableTitleDefDirective> = {};
+    for (const def of this.sdTitleDefs()) {
+      const field = def.sdTableTitleDef();
+      if (field) map[field] = def;
+    }
+    return map;
+  });
 
   // ==========================================
   // 4. SIGNAL STATE
@@ -218,6 +237,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
 
   cacheValues: Record<string, any[]> = {};
   #cacheObjValues: Record<string, Record<string, string>> = {};
+  #itemIndexMap = new WeakMap<SdTableItem<T>, number>();
 
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
@@ -285,6 +305,12 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
           this.#subscription.add(sort.sortChange.subscribe(() => this.#reload.next({ force: false })));
         });
       }
+    });
+
+    effect(() => {
+      const items = this.items();
+      this.#itemIndexMap = new WeakMap();
+      items.forEach((item, idx) => this.#itemIndexMap.set(item, idx));
     });
   }
 
@@ -664,6 +690,14 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     this.items.set(args?.items || []);
     this.total.set(args?.total || 0);
 
+    // Ãp dá»¥ng defaultSelected: pre-select cÃ¡c item thá»a predicate
+    const defaultSelected = this.tableOption()?.selector?.defaultSelected;
+    if (defaultSelected) {
+      this.items().forEach(item => {
+        item.meta.selector!.isSelected = defaultSelected(item.data);
+      });
+    }
+
     await this.tableOption()?.reload?.onReload?.(this.items(), additionArgs);
     this.isSelectAll.set(this.items().every(e => e.meta.selector?.isSelected));
     this.#updateSelectedItems();
@@ -792,6 +826,13 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
         this.items()
           .filter(e => e !== rowData)
           .forEach(e => (e.meta.selector!.isSelected = false));
+        opt.selector?.onSelect?.(
+          rowData.data,
+          this.items()
+            .filter(e => e.meta.selector!.isSelected)
+            .map(e => e.data)
+        );
+        this.isSelectAll.set(false);
         this.#updateSelectedItems();
         return;
       }
@@ -866,6 +907,71 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   trackBy = (index: number, item: SdTableItem) => {
     return item.meta.id;
   };
+
+  isReorderDisabled(item: SdTableItem<T>): boolean {
+    const opt = this.tableOption()?.rowReorder;
+    if (!opt?.disabled || item.meta?.group?.items?.length) return false;
+    const idx = this.#itemIndexMap.get(item) ?? -1;
+    return opt.disabled(item.data, idx);
+  }
+
+  #sameGroup(a: SdTableItem<T>, b: SdTableItem<T>, allItems: SdTableItem<T>[]): boolean {
+    const groupOf = (item: SdTableItem<T>): number => {
+      let lastGroupIdx = -1;
+      for (let i = 0; i < allItems.length; i++) {
+        if (allItems[i].meta?.group?.items?.length) lastGroupIdx = i;
+        if (allItems[i] === item) return lastGroupIdx;
+      }
+      return -1;
+    };
+    return groupOf(a) === groupOf(b);
+  }
+
+  reorderSortPredicate = (index: number, drag: CdkDrag<SdTableItem<T>>, drop: CdkDropList<SdTableItem<T>[]>): boolean => {
+    const opt = this.tableOption()?.rowReorder;
+    if (!opt?.enabled) return false;
+    const allItems = drop.data;
+    const targetItem = allItems?.[index];
+    if (!targetItem) return false;
+    if (targetItem.meta?.group?.items?.length) return false;
+    if (this.tableOption()?.group) {
+      return this.#sameGroup(drag.data, targetItem, allItems);
+    }
+    return true;
+  };
+
+  onReorderDrop(event: CdkDragDrop<SdTableItem<T>[]>): void {
+    const { previousIndex, currentIndex } = event;
+    if (previousIndex === currentIndex) return;
+    const groupedItems = event.container.data;
+    const toItemsIndex = (domIdx: number): number => {
+      let count = 0;
+      for (let i = 0; i < domIdx; i++) {
+        if (!groupedItems[i]?.meta?.group?.items?.length) count++;
+      }
+      return count;
+    };
+    const fromIdx = toItemsIndex(previousIndex);
+    const toIdx = toItemsIndex(currentIndex);
+    const current = [...this.items()];
+    const localPositions = current.map(item => this.#localItems.indexOf(item));
+    moveItemInArray(current, fromIdx, toIdx);
+    this.items.set(current);
+    if (this.tableOption()?.type === 'local' && localPositions.every(p => p >= 0)) {
+      const newLocal = [...this.#localItems];
+      current.forEach((item, i) => {
+        newLocal[localPositions[i]] = item;
+      });
+      this.#localItems = newLocal;
+    }
+    this.table()?.renderRows();
+    this.tableOption()?.rowReorder?.onChange?.(
+      current.map(i => i.data),
+      event.item.data.data,
+      fromIdx,
+      toIdx
+    );
+  }
 
   #convertPagingReq = (filterReq: SdTableFilterRequest): SdPagingReq => {
     const opt = this.tableOption()!;

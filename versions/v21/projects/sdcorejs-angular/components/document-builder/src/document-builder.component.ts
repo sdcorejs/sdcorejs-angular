@@ -52,8 +52,7 @@ import {
   CkCommentPlugin,
 } from './plugins';
 import { getPresetColors, getColorPickerConfig, getFontSizeOptions, getHeadingOptions } from './document-builder.config';
-import { SdDocumentBuilderHeading, SdDocumentBuilderOption, SdDocumentBuilderVariable, SdEditorConfig } from './document-builder.model';
-import { CkComment } from './plugins/ck-comment/ck-comment.plugin.model';
+import { DocumentBuilderOption, SdDocumentBuilderHeading, SdDocumentBuilderOption, SdDocumentBuilderVariable } from './document-builder.model';
 import { normalize } from './document-builder.utils';
 
 @Component({
@@ -92,11 +91,10 @@ export class SdDocumentBuilder {
   #headingElementsMap = new Map<string, ModelElement>(); // Hash lÆ°u trá»¯ cÃ¡c heading
 
   // Config
-  config: SdEditorConfig = {
+  config: DocumentBuilderOption = {
     getOption: () => this.option,
     licenseKey: 'GPL', // Hoáº·c key thÆ°Æ¡ng máº¡i náº¿u cÃ³
     plugins: [
-      // GeneralHtmlSupport,
       FontSize,
       FontColor,
       FontFamily,

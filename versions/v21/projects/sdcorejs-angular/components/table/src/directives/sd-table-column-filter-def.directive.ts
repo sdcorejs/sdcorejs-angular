@@ -1,9 +1,9 @@
-import { Directive, Input, TemplateRef } from '@angular/core';
+import { Directive, TemplateRef, inject, input } from '@angular/core';
 
 @Directive({
   selector: '[sdTableColumnFilterDef]',
 })
 export class SdTableColumnFilterDefDirective {
-  @Input() sdTableColumnFilterDef?: string;
-  constructor(public templateRef: TemplateRef<any>) {}
+  sdTableColumnFilterDef = input<string>();
+  templateRef = inject(TemplateRef<any>);
 }

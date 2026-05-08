@@ -1,0 +1,30 @@
+.output {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 12px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 160px;
+  overflow-y: auto;
+  color: #333;
+}
+
+.event-log {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background: #f3f3f3;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 12px;
+  list-style: none;
+  min-height: 80px;
+
+  li {
+    padding: 2px 0;
+    color: #444;
+  }
+}

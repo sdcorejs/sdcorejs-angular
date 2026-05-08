@@ -218,6 +218,33 @@
       transform: rotate(360deg);
     }
   }
+
+  .sd-reorder-header,
+  .sd-reorder-cell {
+    width: 40px;
+    min-width: 40px;
+    padding: 0 4px;
+    box-sizing: border-box;
+  }
+
+  .sd-reorder-cell {
+    mat-icon {
+      cursor: grab;
+      color: rgba(0, 0, 0, 0.38);
+      display: flex;
+      align-items: center;
+
+      &:active {
+        cursor: grabbing;
+      }
+
+      &.sd-reorder-disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+    }
+  }
 }
 
 :host ::ng-deep {
@@ -246,6 +273,15 @@
     margin-top: 4px !important;
   }
 
+  // Ẩn mũi tên sort mặc định của Angular Material để tránh hiển thị 2 mũi tên,
+  // do bên dưới đã tự vẽ mũi tên bằng background-image theo style của design system.
+  .mat-sort-header-arrow {
+    display: none !important;
+  }
+
+  // Tự vẽ mũi tên sort qua background-image dựa vào aria-sort:
+  // - none: hiện icon 2 chiều (placeholder) khi cột có thể sort
+  // - ascending / descending: hiện mũi tên tương ứng với hướng sort hiện tại
   .mat-sort-header {
     cursor: pointer;
 
@@ -259,9 +295,6 @@
 
     &[aria-sort='none'] {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='24px' viewBox='0 0 24 24' width='24px' fill='%23000000'%3E%3Cpath d='M0 0h24v24H0V0z' fill='none'/%3E%3Cpath fill='%237A7A7A' d='M12 5.83L15.17 9l1.41-1.41L12 3 7.41 7.59 8.83 9 12 5.83zm0 12.34L8.83 15l-1.41 1.41L12 21l4.59-4.59L15.17 15 12 18.17z'/%3E%3C/svg%3E");
-      // &:hover {
-      //   background: none;
-      // }
     }
 
     &[aria-sort='ascending'] {
@@ -294,5 +327,28 @@
         margin-top: 2px !important;
       }
     }
+  }
+}
+
+:host ::ng-deep {
+  // CDK drag visual feedback
+  .cdk-drag-preview {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    background: white;
+    display: table;
+    width: 100%;
+
+    td {
+      padding: 0 8px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0;
+  }
+
+  .cdk-drop-list-dragging tr.c-row:not(.cdk-drag-placeholder) {
+    transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
   }
 }

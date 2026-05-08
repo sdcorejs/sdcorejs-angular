@@ -1,0 +1,38 @@
+@let lbl = label();
+@let hText = helperText();
+@let hideErr = hideInlineError();
+@let errMsg = errorMessage;
+@let req = required();
+@let maxLen = maxlength();
+@let showCounter = !!maxLen && !formControl.disabled && !hideErr;
+
+@if (lbl) {
+  <sd-label [label]="lbl" [required]="req" [helperText]="hText"></sd-label>
+}
+
+<div
+  class="sd-editor"
+  [class.sd-editor--readonly]="readonly()"
+  [class.sd-editor--error]="formControl.invalid && formControl.touched"
+  [class.has-counter]="showCounter"
+  [style.--sd-editor-content-min-height]="height()"
+  [style.--sd-editor-content-max-height]="maxHeight()"
+  [attr.data-autoId]="autoId()">
+  <ckeditor [editor]="Editor" [config]="editorConfig()" [disabled]="formControl.disabled" (ready)="onReady($event)"></ckeditor>
+
+  @if (showCounter) {
+    <div class="sd-editor-counter-row">
+      <span class="sd-editor-counter" [class.sd-editor-counter--over]="isOverLimit()"> {{ _textLength() }}/{{ maxLen }} </span>
+    </div>
+  }
+
+  @if (hideErr && errMsg && formControl.touched) {
+    <mat-icon class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above">error</mat-icon>
+  }
+</div>
+
+<div class="sd-editor-footer">
+  @if (!hideErr && errMsg && formControl.touched) {
+    <mat-error>{{ errMsg }}</mat-error>
+  }
+</div>

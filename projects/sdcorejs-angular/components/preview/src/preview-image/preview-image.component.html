@@ -1,0 +1,41 @@
+<sd-modal [title]="title" (sdClosed)="close.emit()" #modal>
+  <div class="p-16" style="overflow: hidden; height: 100%">
+    <!-- Main image -->
+    @if (images.length) {
+      <div style="gap: 8px;" class="image-gallery">
+        <div class="thumbnail-container">
+          @for (image of images; track image.id; let i = $index) {
+            <button
+              type="button"
+              class="thumbnail-wrapper"
+              (click)="onClickThumbnailImage(i)"
+              [ngStyle]="{
+                border: activeIndex === i ? '2px solid #2962ff' : 'none'
+              }">
+              @if (image.src) {
+                <img fill loading="lazy" [ngSrc]="image.src" alt="thumbnail" [id]="image.id" class="thumbnail-img" />
+              } @else {
+                <img fill loading="lazy" [src]="image.blobSrc" alt="thumbnail" [id]="image.id" class="thumbnail-img" />
+              }
+            </button>
+          }
+        </div>
+        <div class="main-image-container" #mainImage>
+          @let activedImage = images[activeIndex];
+          @if (activedImage.src) {
+            <img fill priority [ngSrc]="activedImage.src" class="main-image" alt="Main display image" />
+          } @else {
+            <img fill priority [src]="activedImage.blobSrc!" class="main-image" alt="Main display image" />
+          }
+          <sd-button prefixIcon="arrow_forward_ios" class="next-icon" (click)="updateCurrentImage(1)"></sd-button>
+          <sd-button prefixIcon="arrow_back_ios_new" class="back-icon" (click)="updateCurrentImage(-1)"></sd-button>
+        </div>
+      </div>
+    } @else {
+      <div class="no-image d-flex justify-content-center align-items-center flex-column m-20" style="height: 80%">
+        <i class="icon-no-image mb-16"></i>
+        <div>Không có thông tin ảnh</div>
+      </div>
+    }
+  </div>
+</sd-modal>

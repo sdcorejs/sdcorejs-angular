@@ -118,6 +118,32 @@ function Update-SideDrawerPortalCall {
   }
 }
 
+function Update-VersionTsConfig {
+  param(
+    [string]$TsConfigPath
+  )
+
+  if (!(Test-Path -LiteralPath $TsConfigPath)) {
+    return
+  }
+
+  $content = Get-Content -LiteralPath $TsConfigPath -Raw
+  $updated = $content
+
+  $updated = $updated -replace '"@sdcorejs/angular":\s*\["dist/sdcorejs-angular"\]', '"@sdcorejs/angular": ["./dist/sdcorejs-angular"]'
+  $updated = $updated -replace '"@sdcorejs/angular/\*":\s*\["dist/sdcorejs-angular/\*",\s*"projects/sdcorejs-angular/\*"\]', '"@sdcorejs/angular/*": ["./dist/sdcorejs-angular/*", "./projects/sdcorejs-angular/*"]'
+  $updated = $updated -replace '\s*"baseUrl"\s*:\s*"\.\/",\r?\n', ''
+  $updated = $updated -replace '\s*"ignoreDeprecations"\s*:\s*"[^"]+",\r?\n', ''
+
+  if ($updated -notmatch '"rootDir"\s*:') {
+    $updated = $updated -replace '"outDir"\s*:\s*"\.\/dist\/out-tsc",', ('"outDir": "./dist/out-tsc",' + "`r`n" + '    "rootDir": "./projects",')
+  }
+
+  if ($updated -ne $content) {
+    Set-Content -LiteralPath $TsConfigPath -Value $updated -Encoding UTF8
+  }
+}
+
 $step = 0
 foreach ($v in $versions) {
   $step++
@@ -133,6 +159,9 @@ foreach ($v in $versions) {
 
   $rootPackagePath = Join-Path $dest "package.json"
   Update-MajorInPackageJson -PackagePath $rootPackagePath -Major $v.Major
+
+  $rootTsConfigPath = Join-Path $dest "tsconfig.json"
+  Update-VersionTsConfig -TsConfigPath $rootTsConfigPath
 
   $sideDrawerPath = Join-Path $dest "projects/sdcorejs-angular/components/side-drawer/src/side-drawer.component.ts"
   Update-SideDrawerPortalCall -FilePath $sideDrawerPath -Major $v.Major

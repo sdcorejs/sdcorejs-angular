@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, forwardRef } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Input, Output, forwardRef } from '@angular/core';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import {
   Bold,
@@ -54,6 +54,11 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
 export class SdMiniEditor implements ControlValueAccessor {
   /** Cấu hình option cho editor */
   @Input({ required: true }) option!: SdMiniEditorOption;
+
+  @HostBinding('style.--sd-mini-editor-max-height')
+  get maxEditorHeight(): string | undefined {
+    return this.option?.maxHeight;
+  }
 
   /** NgModel binding - nội dung HTML/Markdown */
   @Input() value = '';

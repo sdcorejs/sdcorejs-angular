@@ -1,0 +1,75 @@
+<sd-modal width="907px" [title]="'Exported template'" #modal>
+  <div class="row">
+    <div *ngIf="!files?.length" class="col-12">
+      <div class="c-empty">
+        <img class="c-empty-image" alt="empty-image" />
+        <div class="T14R">{{ 'There are no exported templates' }}</div>
+      </div>
+    </div>
+    <ng-container *ngIf="files?.length">
+      <div class="col-12">
+        <div class="c-table" style="max-height: 50vh">
+          <table mat-table [dataSource]="files">
+            <ng-container matColumnDef="stt">
+              <th mat-header-cell class="c-th text-center px-5" *matHeaderCellDef style="width: 50px">#</th>
+              <td class="text-center px-5" mat-cell *matCellDef="let item; let idx = index">
+                {{ idx + 1 }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="fileName">
+              <th mat-header-cell class="c-th px-5" *matHeaderCellDef>
+                {{ 'File name' }}
+              </th>
+              <td class="px-5" mat-cell *matCellDef="let item">
+                {{ item.fileName }}
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="action">
+              <th mat-header-cell class="c-th px-5" *matHeaderCellDef style="width: 80px"></th>
+              <td class="px-5" mat-cell *matCellDef="let item">
+                <div class="d-flex">
+                  <button mat-icon-button aria-label="delete" (click)="removeFile(item)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                  <button mat-icon-button aria-label="download" (click)="onExport(item)">
+                    <mat-icon>download</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="['stt', 'fileName', 'action']; sticky: true"></tr>
+            <tr mat-row *matRowDef="let row; columns: ['stt', 'fileName', 'action']"></tr>
+          </table>
+        </div>
+      </div>
+      <div *ngIf="files.length < 5" class="col-12 mt-10">
+        <sd-button class="mr-4" [title]="'New template'" (click)="enableCreating = true" color="info" [disabled]="enableCreating">
+        </sd-button>
+        <sd-button *ngIf="exportOption?.enableUpload" [title]="'Upload template'" (click)="uploadTemplate()" type="outline">
+        </sd-button>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="enableCreating || !files?.length">
+      <div class="col-12 mt-20">
+        <div class="T14R">{{ 'Select columns for creating template' }}:</div>
+      </div>
+      <div class="col-12">
+        <mat-chip-listbox selectable="true" multiple="true">
+          <ng-container *ngFor="let column of columns">
+            <mat-chip-option [selected]="selected[column.field]" (click)="selected[column.field] = !selected[column.field]">
+              {{ column.title }}
+            </mat-chip-option>
+          </ng-container>
+        </mat-chip-listbox>
+      </div>
+      <div class="col-12 row">
+        <div class="col-10">
+          <sd-input [form]="form" [label]="'Template name'" [(model)]="templateName" [validator]="templateNameValidator"></sd-input>
+        </div>
+        <div class="col-2 mt-8">
+          <sd-button width="100%" [title]="'Save'" color="info" (click)="createTemplate()"> </sd-button>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</sd-modal>

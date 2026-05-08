@@ -1,0 +1,273 @@
+<!-- START: sd-editor -->
+<div style="padding: 32px; max-width: 960px; font-family: sans-serif">
+
+  <!-- =========================================== -->
+  <!-- SECTION 1: Trạng thái cơ bản                -->
+  <!-- =========================================== -->
+  <h2>1. Trạng thái cơ bản (Basic States)</h2>
+
+  <div style="margin-bottom: 12px">
+    <p style="color: #666; font-size: 13px; margin-bottom: 8px">Normal</p>
+    <sd-editor placeholder="Nhập nội dung..." height="180px" maxHeight="180px" [(model)]="basicValue" />
+  </div>
+
+  <div style="margin-bottom: 12px">
+    <p style="color: #666; font-size: 13px; margin-bottom: 8px">Disabled</p>
+    <sd-editor height="180px" maxHeight="180px" [(model)]="disabledValue" disabled />
+  </div>
+
+  <div style="margin-bottom: 40px">
+    <p style="color: #666; font-size: 13px; margin-bottom: 8px">Readonly</p>
+    <sd-editor height="180px" maxHeight="180px" [(model)]="readonlyValue" readonly />
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 2: label · helperText · placeholder -->
+  <!-- =========================================== -->
+  <h2>2. label · helperText · placeholder</h2>
+  <div style="margin-bottom: 40px">
+    <sd-editor
+      label="Mô tả sản phẩm"
+      helperText="Hỗ trợ in đậm, in nghiêng, gạch chân, căn lề, danh sách, link."
+      placeholder="Nhập mô tả sản phẩm..."
+      [(model)]="labelValue" />
+    <pre class="output">{{ labelValue || '(trống)' }}</pre>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 3: Validation — Inline Error        -->
+  <!-- =========================================== -->
+  <h2>3. Validation — Inline Error (mặc định)</h2>
+
+  <div style="margin-bottom: 16px">
+    <sd-editor
+      label="Required"
+      placeholder="Để trống rồi blur → lỗi required"
+      required
+      height="150px"
+      maxHeight="150px"
+      [(model)]="v_required"
+      [form]="formValidation"
+      name="v_required" />
+  </div>
+
+  <div style="margin-bottom: 16px">
+    <sd-editor
+      label="MaxLength 200 (có bộ đếm ký tự)"
+      helperText="Tối đa 200 ký tự"
+      [maxlength]="200"
+      height="150px"
+      maxHeight="150px"
+      [(model)]="v_maxLength"
+      [form]="formValidation"
+      name="v_maxLength" />
+  </div>
+
+  <div style="margin-bottom: 16px">
+    <sd-editor
+      label="Inline Error (lỗi truyền từ ngoài vào)"
+      placeholder="Nhập gì đó, lỗi backend luôn hiển thị khi được set"
+      [inlineError]="backendError"
+      height="150px"
+      maxHeight="150px"
+      [(model)]="v_inlineError"
+      [form]="formValidation"
+      name="v_inlineError" />
+  </div>
+
+  <div style="margin-bottom: 16px">
+    <sd-editor
+      label="Custom Validator (async)"
+      helperText="Tối thiểu 10 ký tự — validator chạy bất đồng bộ sau 400ms"
+      [validator]="customValidator"
+      height="150px"
+      maxHeight="150px"
+      [(model)]="v_customValidator"
+      [form]="formValidation"
+      name="v_customValidator" />
+  </div>
+
+  <div style="margin-bottom: 40px; display: flex; gap: 8px; flex-wrap: wrap">
+    <button mat-stroked-button (click)="validateSection()">Validate tất cả</button>
+    <button mat-stroked-button (click)="resetSection()">Reset</button>
+    <button mat-stroked-button (click)="simulateBackendError()">Giả lập lỗi backend</button>
+    <button mat-stroked-button (click)="clearBackendError()">Xóa lỗi backend</button>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 4: Validation — Hide Inline Error   -->
+  <!-- =========================================== -->
+  <h2>4. Validation — Hide Inline Error (icon + tooltip)</h2>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px">
+    Lỗi ẩn bên dưới, hiển thị qua icon lỗi cạnh label. Hover vào icon để xem nội dung lỗi.
+  </p>
+
+  <div style="margin-bottom: 16px">
+    <sd-editor
+      label="Required + hideInlineError"
+      placeholder="Để trống → icon lỗi"
+      required
+      hideInlineError
+      height="150px"
+      maxHeight="150px"
+      [(model)]="h_required"
+      [form]="formHide"
+      name="h_required" />
+  </div>
+
+  <div style="margin-bottom: 16px">
+    <sd-editor
+      label="MaxLength 100 + hideInlineError"
+      helperText="Tối đa 100 ký tự"
+      [maxlength]="100"
+      hideInlineError
+      height="150px"
+      maxHeight="150px"
+      [(model)]="h_maxLength"
+      [form]="formHide"
+      name="h_maxLength" />
+  </div>
+
+  <div style="margin-bottom: 40px; display: flex; gap: 8px">
+    <button mat-stroked-button (click)="validateHide()">Validate tất cả</button>
+    <button mat-stroked-button (click)="resetHide()">Reset</button>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 5: Upload ảnh — immediate           -->
+  <!-- =========================================== -->
+  <h2>5. Upload ảnh – chế độ immediate</h2>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px">
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">uploadMode: 'immediate'</code>
+    — ảnh upload lên server ngay khi người dùng chọn. Hỗ trợ
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">validation</code>,
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">batchSize</code>,
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">maxConcurrentUploads</code>,
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">maxImagesPerSelection</code>.
+  </p>
+  <div style="margin-bottom: 40px">
+    <sd-editor
+      label="Bài viết (upload ngay)"
+      helperText="jpg/png/webp · ≤ 2 MB · ≤ 4000×4000px · tối đa 5 ảnh/lần chọn"
+      placeholder="Soạn bài viết..."
+      [option]="immediateOption"
+      [(model)]="immediateValue" />
+
+    @if (immediateValue) {
+      <pre class="output">{{ immediateValue }}</pre>
+    }
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 6: Upload ảnh — deferred            -->
+  <!-- =========================================== -->
+  <h2>6. Upload ảnh – chế độ deferred</h2>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px">
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">uploadMode: 'deferred'</code>
+    — ảnh lưu tạm dưới dạng blob URL. Khi submit, gọi
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">uploadPendingImages()</code>
+    qua <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">viewChild</code>
+    để upload toàn bộ và nhận lại HTML với URL thật.
+  </p>
+  <div style="margin-bottom: 40px">
+    <sd-editor
+      #deferredEditor
+      label="Nội dung email"
+      helperText="Ảnh sẽ được upload khi bạn nhấn Lưu"
+      placeholder="Soạn email..."
+      [option]="deferredOption"
+      [maxlength]="500"
+      [(model)]="deferredValue" />
+
+    <div style="margin-top: 12px">
+      <button mat-stroked-button (click)="onDeferredSubmit()" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Đang upload...' : 'Lưu (upload pending images)' }}
+      </button>
+    </div>
+
+    @if (deferredSubmitResult) {
+      <pre class="output">{{ deferredSubmitResult }}</pre>
+    }
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 7: Reactive Form                    -->
+  <!-- =========================================== -->
+  <h2>7. Reactive Form</h2>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px">
+    Truyền
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">[form]</code>
+    để tự động đăng ký <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">FormControl</code>
+    vào <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">FormGroup</code>.
+    Dùng <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">name</code>
+    để đặt tên control (mặc định là UUID).
+  </p>
+  <div style="margin-bottom: 40px">
+    <sd-editor
+      label="Nội dung"
+      placeholder="Nhập nội dung..."
+      required
+      name="content"
+      [form]="form" />
+    <pre class="output">form.valid = {{ form.valid }}
+form.value = {{ formJson }}</pre>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 8: Events                           -->
+  <!-- =========================================== -->
+  <h2>8. Events: sdChange · sdFocus · sdBlur</h2>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px">Lắng nghe các output event của editor.</p>
+  <div style="margin-bottom: 40px">
+    <sd-editor
+      label="Editor có events"
+      placeholder="Gõ gì đó, click vào rồi click ra ngoài..."
+      [(model)]="eventValue"
+      (sdChange)="onSdChange($event)"
+      (sdFocus)="onSdFocus()"
+      (sdBlur)="onSdBlur()" />
+    <ul class="event-log">
+      @for (entry of eventLog; track $index) {
+        <li>{{ entry }}</li>
+      }
+      @empty {
+        <li style="color: #aaa">(chưa có event nào)</li>
+      }
+    </ul>
+  </div>
+
+  <!-- =========================================== -->
+  <!-- SECTION 9: Tùy chỉnh height · maxHeight     -->
+  <!-- =========================================== -->
+  <h2>9. Tùy chỉnh height · maxHeight</h2>
+  <p style="color: #666; font-size: 13px; margin-bottom: 16px">
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">height</code>
+    đặt chiều cao ban đầu của vùng soạn thảo.
+    <code style="background:#f0f0f0;padding:1px 5px;border-radius:3px;font-size:12px">maxHeight</code>
+    giới hạn chiều cao tối đa — nội dung vượt quá sẽ cuộn bên trong.
+  </p>
+  <div style="margin-bottom: 16px">
+    <p style="color: #555; font-size: 13px; margin-bottom: 8px">
+      height="200px" maxHeight="200px" (mặc định — cố định)
+    </p>
+    <sd-editor
+      label="Editor cố định"
+      placeholder="Nhập nhiều nội dung để thấy cuộn bên trong..."
+      height="200px"
+      maxHeight="200px"
+      [(model)]="heightValue" />
+  </div>
+  <div style="margin-bottom: 40px">
+    <p style="color: #555; font-size: 13px; margin-bottom: 8px">
+      height="120px" maxHeight="400px" (giãn nở lên đến 400px)
+    </p>
+    <sd-editor
+      label="Editor giãn nở"
+      placeholder="Nhập nhiều nội dung để thấy editor tự mở rộng..."
+      height="120px"
+      maxHeight="400px"
+      [(model)]="heightValue" />
+  </div>
+
+</div>
+<!-- END: sd-editor -->

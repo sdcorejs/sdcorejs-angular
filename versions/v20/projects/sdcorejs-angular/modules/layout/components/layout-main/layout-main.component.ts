@@ -1,15 +1,18 @@
-import { Component, computed, inject, input } from '@angular/core';
+﻿import {Component, computed, inject, input, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 
-// Import nội bộ trong module layout
+// Import ná»™i bá»™ trong module layout
 import { SdLayoutMenu, SdLayoutService } from '../../services';
 import { MenuPipe } from '../../pipes';
 import { SidebarV1Component } from '../sidebar-v1/main.component';
+import { SidebarMobileV1Component } from '../sidebar-mobile-v1/main.component';
+import { SdUtilities } from '@sdcorejs/angular/utilities';
 
 @Component({
   selector: 'sd-layout',
   templateUrl: './layout-main.component.html',
   styleUrls: ['./layout-main.component.scss'],
-  imports: [SidebarV1Component],
+  imports: [SidebarV1Component, SidebarMobileV1Component, NgTemplateOutlet],
   standalone: true,
 })
 export class SdLayoutComponent {
@@ -17,20 +20,20 @@ export class SdLayoutComponent {
   // INJECT SERVICES
   // ==========================================
   #menuPipe = inject(MenuPipe);
-  #layoutService = inject(SdLayoutService); // Inject LayoutService
+  #layoutService = inject(SdLayoutService);
 
   // ==========================================
   // SIGNAL INPUTS
   // ==========================================
   menusInput = input<SdLayoutMenu[]>([], { alias: 'menus' });
-
-  // Tự động format qua MenuPipe mỗi khi menusInput từ component cha thay đổi
   menus = computed(() => this.#menuPipe.transform(this.menusInput() || []));
 
   // ==========================================
-  // CONSUME SHARED STATE (Tuỳ chọn)
+  // CONSUME SHARED STATE
   // ==========================================
-  // Bạn có thể gán biến ngắn gọn để xài trong HTML (ví dụ: userInfo() thay vì layoutService.userInfo())
   userInfo = this.#layoutService.userInfo;
   sidebar = this.#layoutService.sidebar;
+
+  isMobileOrTablet = signal(SdUtilities.isMobile());
 }
+

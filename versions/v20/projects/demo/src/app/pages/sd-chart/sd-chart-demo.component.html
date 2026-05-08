@@ -1,0 +1,26 @@
+<div class="demo-container">
+  <h2>Scrolling Bar Chart Demo</h2>
+  <div class="chart-container">
+    <sd-bar-chart [data]="scrollingBarChartData" [options]="barChartOptions"></sd-bar-chart>
+  </div>
+
+  <h2>Mixed Chart (Bar & Line) Demo</h2>
+  <div class="chart-container">
+    <sd-bar-chart [data]="mixedChartData" [options]="barChartOptions"></sd-bar-chart>
+  </div>
+
+  <h2>Line Chart Demo</h2>
+  <div class="chart-container">
+    <sd-line-chart [data]="lineChartData" [options]="lineChartOptions"></sd-line-chart>
+  </div>
+
+  <h2>Pie Chart Demo</h2>
+  <div class="chart-container">
+    <sd-pie-chart [data]="pieChartData" [options]="{ responsive: true, maintainAspectRatio: false }"></sd-pie-chart>
+  </div>
+
+  <h2>Doughnut Chart Demo</h2>
+  <div class="chart-container">
+    <sd-doughnut-chart [data]="doughnutChartData" [options]="{ responsive: true, maintainAspectRatio: false }"></sd-doughnut-chart>
+  </div>
+</div>

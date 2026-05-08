@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { SidebarMobileDemoComponent } from './pages/sidebar-mobile/sidebar-mobile-demo.component';
 import { DemoCodeEditorComponent } from './pages/demo-code-editor.component';
 import { DemoInputComponent } from './pages/demo-input.component';
 import { FormBuilderComponent } from './pages/form-builder/form-builder.component';
@@ -21,8 +22,16 @@ import { SdSelectDemoComponent } from './pages/sd-select/sd-select-demo.componen
 import { SdTextAreaDemoComponent } from './pages/sd-textarea/sd-textarea-demo.component';
 import { SdUploadFileDemoComponent } from './pages/sd-upload-file/sd-upload-file-demo.component';
 import { SdTableDemoComponent } from './pages/sd-table/sd-table-demo.component';
+import { SdTableServerDemoComponent } from './pages/sd-table-server/sd-table-server-demo.component';
+import { SdChartDemoComponent } from './pages/sd-chart/sd-chart-demo.component';
+import { SdEditorDemoComponent } from './pages/sd-editor/sd-editor-demo.component';
+import { SdModalDemoComponent } from './pages/sd-modal/sd-modal-demo.component';
 
 export const routes: Routes = [
+  {
+    path: 'sidebar-mobile',
+    component: SidebarMobileDemoComponent,
+  },
   {
     path: 'form-builder',
     component: FormBuilderComponent,
@@ -110,5 +119,21 @@ export const routes: Routes = [
   {
     path: 'sd-table-demo',
     component: SdTableDemoComponent,
+  },
+  {
+    path: 'sd-table-server',
+    component: SdTableServerDemoComponent,
+  },
+  {
+    path: 'sd-chart',
+    component: SdChartDemoComponent,
+  },
+  {
+    path: 'sd-editor',
+    component: SdEditorDemoComponent,
+  },
+  {
+    path: 'sd-modal',
+    component: SdModalDemoComponent,
   },
 ];

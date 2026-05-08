@@ -18,10 +18,12 @@ export class SdConfirmService {
       yesButtonColor?: SdColor;
       noButtonColor?: SdColor;
       width?: string;
+      disableBackdropClose?: boolean;
     } = {}
   ) => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
       width: option?.width || '400px',
+      disableClose: option?.disableBackdropClose ?? true,
       data: {
         title: option?.title || 'XÃ¡c nháº­n',
         message,
@@ -55,10 +57,12 @@ export class SdConfirmService {
       yesButtonColor?: SdColor;
       noButtonColor?: SdColor;
       defaultValue?: string;
+      disableBackdropClose?: boolean;
     }
   ): Promise<string> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
       width: '400px',
+      disableClose: option?.disableBackdropClose ?? true,
       data: {
         title: option?.title || 'XÃ¡c nháº­n',
         message,
@@ -100,10 +104,12 @@ export class SdConfirmService {
       valueField: string;
       displayField: string;
       display?: 'row' | 'column';
+      disableBackdropClose?: boolean;
     }
   ): Promise<string> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
       width: '400px',
+      disableClose: option?.disableBackdropClose ?? true,
       data: {
         title: option?.title || 'XÃ¡c nháº­n',
         message,
@@ -146,10 +152,12 @@ export class SdConfirmService {
       noButtonColor?: SdColor;
       defaultValue?: string | Date;
       placeholder?: string;
+      disableBackdropClose?: boolean;
     }
   ): Promise<string> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
       width: '400px',
+      disableClose: option?.disableBackdropClose ?? true,
       data: {
         title: option?.title || 'XÃ¡c nháº­n',
         message,

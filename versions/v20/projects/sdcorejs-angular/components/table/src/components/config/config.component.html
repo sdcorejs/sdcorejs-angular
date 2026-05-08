@@ -56,19 +56,19 @@
             </td>
           </ng-container>
 
-          <ng-container matColumnDef="charLimited">
+          <ng-container matColumnDef="truncate">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 100px">
               {{ 'Giới hạn ký tự' }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
-              <sd-switch [(model)]="item.charLimited" />
+              <sd-switch [(model)]="item.truncate" />
             </td>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="['invisible', 'title', 'width', 'fixed', 'charLimited']; sticky: true"></tr>
+          <tr mat-header-row *matHeaderRowDef="['invisible', 'title', 'width', 'fixed', 'truncate']; sticky: true"></tr>
           <tr
             mat-row
-            *matRowDef="let row; columns: ['invisible', 'title', 'width', 'fixed', 'charLimited']"
+            *matRowDef="let row; columns: ['invisible', 'title', 'width', 'fixed', 'truncate']"
             cdkDrag
             [cdkDragData]="row"
             cdkDragLockAxis="y"

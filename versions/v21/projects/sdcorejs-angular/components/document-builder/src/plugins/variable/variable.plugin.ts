@@ -1,6 +1,6 @@
 ﻿import { v4 as uuidv4 } from 'uuid';
 import { Config, Plugin, Widget, toWidget } from 'ckeditor5';
-import { SdDocumentBuilderVariable, SdEditorConfig } from '../../document-builder.model';
+import { DocumentBuilderOption, SdDocumentBuilderVariable } from '../../document-builder.model';
 import { SdResolveMaybeAsync } from '@sdcorejs/angular/utilities';
 
 export class VariablePlugin extends Plugin {
@@ -149,8 +149,8 @@ export class VariablePlugin extends Plugin {
 
       try {
         let variable: SdDocumentBuilderVariable = JSON.parse(jsonData);
-        const config = editor.config as Config<SdEditorConfig>;
-        const getOption = config.get('getOption') as SdEditorConfig['getOption'];
+        const config = editor.config as Config<DocumentBuilderOption>;
+        const getOption = config.get('getOption') as DocumentBuilderOption['getOption'];
         const option = getOption?.();
         if (option?.onDropVariable) {
           // Bug 4 Fix (Q2-A): XÃ³a tham sá»‘ dropIndex â€” khÃ´ng cÃ²n tryá»n giÃ¡ trá»‹ hardcode 0
@@ -394,8 +394,8 @@ export class VariablePlugin extends Plugin {
         evt.stop();
 
         // Bug 2 Fix (Q1-A): Láº¥y option Ä‘á»ƒ gá»i onPasteVariable callback náº¿u cÃ³
-        const config = editor.config as Config<SdEditorConfig>;
-        const getOption = config.get('getOption') as SdEditorConfig['getOption'];
+        const config = editor.config as Config<DocumentBuilderOption>;
+        const getOption = config.get('getOption') as DocumentBuilderOption['getOption'];
         const option = getOption?.();
 
         // TÃ¡ch text thÃ nh cÃ¡c pháº§n: normal text vÃ  variables

@@ -12,18 +12,16 @@ export class SdConfirmServiceDemoComponent {
 
   // Basic confirm
   showBasicConfirm = () => {
-    this.confirmService
-      .confirm('Are you sure you want to proceed?')
-      .then(
-        value => {
-          console.log('Confirmed, value:', value);
-          alert('Confirmed!');
-        },
-        action => {
-          console.log('Cancelled, action:', action);
-          alert('Cancelled!');
-        }
-      );
+    this.confirmService.confirm('Are you sure you want to proceed?').then(
+      value => {
+        console.log('Confirmed, value:', value);
+        alert('Confirmed!');
+      },
+      action => {
+        console.log('Cancelled, action:', action);
+        alert('Cancelled!');
+      }
+    );
   };
 
   // Confirm with custom options
@@ -44,6 +42,25 @@ export class SdConfirmServiceDemoComponent {
         action => {
           console.log('Delete cancelled, action:', action);
           alert('Delete cancelled!');
+        }
+      );
+  };
+
+  // Confirm with disableBackdropClose = false
+  showConfirmWithDisableBackdropClose = () => {
+    this.confirmService
+      .confirm('This confirm dialog can be closed by clicking outside.', {
+        title: 'Closable Confirmation',
+        yesTitle: 'Understood',
+        noTitle: 'Cancel',
+        disableBackdropClose: false,
+      })
+      .then(
+        value => {
+          console.log('Confirmed, value:', value);
+        },
+        action => {
+          console.log('Cancelled, action:', action);
         }
       );
   };

@@ -135,7 +135,13 @@ export class TableExportService {
             if (!column) return;
 
             if (column.type === 'children') {
-              column?.children?.forEach(childColumn => handle(childColumn));
+              column?.children?.forEach(childColumn =>
+                handle({
+                  field: childColumn.field,
+                  title: typeof childColumn.title === 'string' ? childColumn.title : childColumn.title?.title,
+                  width: childColumn.width,
+                })
+              );
               return;
             }
             if (!columns.some(e => e.field === column.field)) return;
@@ -238,8 +244,8 @@ export class TableExportService {
             .forEach(childColumn => {
               tableColumns.push({
                 field: childColumn.field as string,
-                title: childColumn.title,
-                description: childColumn.description,
+                title: typeof childColumn.title === 'string' ? childColumn.title : childColumn.title?.title,
+                description: childColumn.export?.description,
                 width: childColumn.width,
               });
             });
@@ -247,8 +253,8 @@ export class TableExportService {
         }
         tableColumns.push({
           field: column.field as string,
-          title: column.title,
-          description: column.description,
+          title: typeof column.title === 'string' ? column.title : column.title?.title,
+          description: column.export?.description,
           width: column.width,
         });
       });

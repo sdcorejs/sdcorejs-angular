@@ -1,9 +1,9 @@
-import { Directive, Input, TemplateRef } from '@angular/core';
+import { Directive, TemplateRef, inject, input } from '@angular/core';
 
 @Directive({
   selector: '[sdTableCellDef]',
 })
 export class SdTabelCellDefDirective {
-  @Input() sdTableCellDef?: string;
-  constructor(public templateRef: TemplateRef<any>) {}
+  sdTableCellDef = input<string>();
+  templateRef = inject(TemplateRef<any>);
 }

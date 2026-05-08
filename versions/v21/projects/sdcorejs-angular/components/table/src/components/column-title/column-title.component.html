@@ -1,0 +1,8 @@
+@let _column = column();
+@let _templateRef = templateRef();
+
+@if (_templateRef) {
+  <ng-container *ngTemplateOutlet="_templateRef"></ng-container>
+} @else {
+  {{ _column.title }}
+}

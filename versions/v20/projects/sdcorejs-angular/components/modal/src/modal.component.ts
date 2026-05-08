@@ -43,6 +43,8 @@ export class SdModal {
   view = input<'dialog' | 'bottom-sheet' | undefined, 'dialog' | 'bottom-sheet' | null | undefined>(undefined, { transform: (v) => v ?? undefined });
   modalClass = input<string | string[] | Record<string, boolean>, string | string[] | Record<string, boolean> | null | undefined>('', { transform: (v) => v ?? '' });
   lazyLoadContent = input(true, { transform: booleanAttribute });
+  hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
+  disableBackdropClose = input<boolean, boolean | ''>(true, { transform: booleanAttribute }); // default to true to keep backward compatibility
 
   sdClosed = output<void>();
 
@@ -83,7 +85,10 @@ export class SdModal {
     this.#resolvedWidth = this.#resolveWidth();
 
     if ((!this.view() && this.#isMobile) || this.view() === 'bottom-sheet') {
-      this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), { panelClass: this.modalClass() as string | string[] });
+      this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), {
+        panelClass: this.modalClass() as string | string[],
+        disableClose: this.disableBackdropClose()
+      });
       this.#bottomSheetRef.afterDismissed()
         .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe(() => {
@@ -95,7 +100,7 @@ export class SdModal {
         width: this.#resolvedWidth,
         maxWidth: this.#resolvedWidth,
         panelClass: this.modalClass() as string | string[],
-        disableClose: true, // máº·c Ä‘á»‹nh ko cho Ä‘Ã³ng modal khi click out side
+        disableClose: this.disableBackdropClose(),
       });
       this.#dialogRef.afterClosed()
         .pipe(takeUntilDestroyed(this.#destroyRef))

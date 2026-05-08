@@ -26,6 +26,15 @@ interface SdTableBaseOption<T = any> {
   export?: SdTableOptionExport<T>;
   group?: SdTableOptionGroup<T>;
   filter?: SdTableOptionFilter;
+  rowReorder?: {
+    enabled?: boolean;
+    // Callback khi reorder xong
+    onChange?: (newRows: T[], movedItem: T, fromIndex: number, toIndex: number) => void;
+    // Náº¿u muá»‘n dÃ¹ng icon khÃ¡c, khÃ´ng thÃ¬ máº·c Ä‘á»‹nh sáº½ lÃ  icon reorder cá»§a material
+    icon?: string; 
+    // Cho phÃ©p reorder hay khÃ´ng (dynamic, theo row)
+    disabled?: (row: T, index: number) => boolean;
+  };
   commands?: SdTableCommand<T>[];
   command?: SdTableCommandOption<T>;
   columns: SdTableColumn<T>[];

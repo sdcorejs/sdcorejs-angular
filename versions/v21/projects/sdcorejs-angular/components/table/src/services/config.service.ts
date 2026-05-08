@@ -12,6 +12,7 @@ export class ConfigService {
     COMMAND: 'sdCommand',
     SELECTION: 'sdSelection',
     GROUP: 'sdGroup',
+    REORDER: 'reorder',
   };
   #prefix = 'TABLE_CONFIG';
   constructor(
@@ -49,7 +50,6 @@ export class ConfigService {
     const result: ConfiguredTableResult = {
       column: {},
       fixedColumn: {},
-      charLimitedColumn: {},
       firstColumns: [],
       secondColumns: [],
       firstHeaders: [],
@@ -82,6 +82,17 @@ export class ConfigService {
         // Náº¿u khÃ´ng thÃ¬ áº©n column Ä‘Ã³ Ä‘i
         const column = columns.find(e => e.field === col.origin.field);
         if (column) {
+          const title =
+            typeof column.title === 'string' ? col.title || col.origin.title : { ...column.title, title: col.title || col.origin.title };
+          const cell = {
+            ...column.cell,
+            truncate: {
+              ...column.cell?.truncate,
+              enable: col?.truncate ?? col.origin.truncate,
+              type: column?.cell?.truncate?.type ?? 'tooltip',
+            },
+          };
+
           result.column[col.origin.field] = {
             title: col.title || col.origin.title,
             width: col.width || col.origin.width,
@@ -94,21 +105,11 @@ export class ConfigService {
             };
           }
 
-          if (col.charLimited) {
-            result.charLimitedColumn[col.origin.field] = {
-              title: col.title || col.origin.title,
-              width: col.width || col.origin.width,
-            };
-          }
-
           result.firstColumns.push({
             ...column,
-            title: col.title || col.origin.title,
+            title: title,
             width: col.width || col.origin.width,
-            charLimited: {
-              enable: !!col?.charLimited,
-              expandType: column?.charLimited?.expandType ?? 'tooltip',
-            },
+            cell: cell,
           });
           result.firstHeaders.push(col.origin.field);
           result.displayedColumns.push(col.origin.field);
@@ -152,6 +153,11 @@ export class ConfigService {
     result.multipleHeader = result.secondHeaders.length > 0;
     // Sub infomation khÃ´ng thá»ƒ cÃ³ footer
     result.displayedFooters = result.displayedColumns.filter(val => val !== this.#COLUMNS.SUBINFORMATION);
+    if (option?.rowReorder?.enabled) {
+      result.displayedColumns.unshift(this.#COLUMNS.REORDER);
+      result.firstHeaders.unshift(this.#COLUMNS.REORDER);
+      result.displayedFooters.unshift(this.#COLUMNS.REORDER);
+    }
     return result;
   };
 
@@ -166,13 +172,17 @@ export class ConfigService {
         .map(e => ({
           origin: {
             field: e.field,
-            title: e.title,
+            title: typeof e.title === 'string' ? e.title : e.title?.title,
             width: e.width,
             invisible: e.invisible,
+            fixed: e.fixed,
+            truncate: e?.cell?.truncate?.enable,
           },
+          title: typeof e.title === 'string' ? e.title : e.title?.title,
+          width: e.width,
           invisible: e.invisible,
           fixed: e.fixed,
-          charLimited: !!e?.charLimited?.enable,
+          truncate: e?.cell?.truncate?.enable,
         })) || [];
     return {
       columns,

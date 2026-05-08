@@ -1,0 +1,62 @@
+name: Publish @sdcorejs/angular to npm
+
+on:
+  push:
+    tags:
+      - 'v*'           # stable: v19.1.0
+      - 'v*-beta.*'    # beta:   v19.0.0-beta.87
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'npm dist-tag (beta / latest)'
+        required: true
+        default: 'beta'
+        type: choice
+        options:
+          - beta
+          - latest
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Build library
+        run: npm run build
+
+      - name: Resolve dist-tag
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          elif echo "${{ github.ref_name }}" | grep -qE '(beta|alpha|rc)'; then
+            echo "tag=beta" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish @sdcorejs/angular
+        run: npm publish --access public --tag ${{ steps.tag.outputs.tag }}
+        working-directory: ./dist/sdcorejs-angular
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

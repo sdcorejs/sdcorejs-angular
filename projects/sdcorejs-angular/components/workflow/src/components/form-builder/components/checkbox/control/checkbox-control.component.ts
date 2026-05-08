@@ -1,0 +1,17 @@
+/* eslint-disable @angular-eslint/no-input-rename */
+import { CommonModule } from '@angular/common';
+import { Component, Input } from '@angular/core';
+import { SdFormGenericCheckbox } from '../../../../../models';
+
+@Component({
+  selector: 'checkbox-control',
+  templateUrl: './checkbox-control.component.html',
+  styleUrls: ['./checkbox-control.component.scss'],
+  imports: [CommonModule],
+})
+export class CheckboxControl {
+  component!: SdFormGenericCheckbox;
+  @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericCheckbox) {
+    this.component = component;
+  }
+}

@@ -1,7 +1,7 @@
 import { EditorConfig, EventInfo, ModelDocumentSelection, ViewDataTransfer } from 'ckeditor5';
-import { CkComment, CkCommentConfig } from './plugins/ck-comment/ck-comment.plugin.model';
+import { CkCommentConfig } from './plugins/ck-comment/ck-comment.plugin.model';
 
-export type SdEditorConfig = EditorConfig & { getOption?: () => SdDocumentBuilderOption };
+export type DocumentBuilderOption = EditorConfig & { getOption?: () => SdDocumentBuilderOption };
 
 export interface SdDocumentBuilderOption {
   onDropVariable?: (variable: SdDocumentBuilderVariable) => boolean | Promise<boolean | SdDocumentBuilderVariable>; // Callback khi thả variable vào editor (fires TRƯỚC khi insert — dùng để validate/transform)
@@ -14,12 +14,11 @@ export interface SdDocumentBuilderOption {
   orientation?: 'PORTRAIT' | 'LANDSCAPE'; // Orientation hiện tại
 }
 
-
 // 1. Interface cho Biến (Variable)
 export interface SdDocumentBuilderVariable<T = any> {
   id: string;
-  uuid?: string;        // Mã này FE tự sinh sau khi biến được drop
-  value: string;        // Giá trị render ra (ví dụ: {{full_name}})
+  uuid?: string; // Mã này FE tự sinh sau khi biến được drop
+  value: string; // Giá trị render ra (ví dụ: {{full_name}})
   display: string;
   bindingValue?: string; // Giá trị runtime đã binding (undefined = chưa bind)
   data?: T;

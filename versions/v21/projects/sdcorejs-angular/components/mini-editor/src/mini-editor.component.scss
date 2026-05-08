@@ -1,10 +1,11 @@
 .sd-mini-editor {
   display: block;
-  width: 100%;
-  overflow-y: auto;
 }
 
 ::ng-deep {
+  .ck-powered-by-balloon {
+    display: none !important;
+  }
   .ck-mentions {
     .ck-button.ck-on {
       background: var(--sd-primary) !important;
@@ -21,6 +22,19 @@
   .ck-editor {
     --ck-content-font-size: 14px;
     --ck-content-line-height: 1.5;
+  }
+
+  .ck-editor__editable_inline {
+    border: var(--ck-focus-ring);
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    max-height: var(--sd-mini-editor-max-height);
+    overflow: auto;
+  }
+
+  .ck-toolbar {
+    border-radius: 0;
+    border: 0 !important;
   }
 
   .ck-content {

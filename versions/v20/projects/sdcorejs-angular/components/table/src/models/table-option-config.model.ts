@@ -9,6 +9,8 @@ export interface OriginColumn {
   title: string;
   width?: string;
   invisible?: boolean;
+  fixed?: boolean;
+  truncate?: boolean;
 }
 
 export interface ConfiguredColumn {
@@ -17,7 +19,7 @@ export interface ConfiguredColumn {
   width?: string;
   invisible?: boolean;
   fixed?: boolean;
-  charLimited?: boolean;
+  truncate?: boolean;
 }
 
 export interface ConfiguredTable {
@@ -33,13 +35,6 @@ export interface ConfiguredTableResult {
     }
   >;
   fixedColumn: Record<
-    string,
-    {
-      title?: string;
-      width?: string;
-    }
-  >;
-  charLimitedColumn: Record<
     string,
     {
       title?: string;

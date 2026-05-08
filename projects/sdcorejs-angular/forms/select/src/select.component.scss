@@ -1,0 +1,200 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+:host {
+  padding-top: 5px;
+  display: block;
+  // [NEW]: Ngăn host phình to ngoài mức kiểm soát
+  max-width: 100%;
+}
+
+// Start: Xử lý loading
+::ng-deep {
+  .sd-loading-option {
+    // 1. Ẩn checkbox mặc định của material
+    .mat-pseudo-checkbox {
+      display: none !important;
+    }
+
+    // 2. Căn giữa spinner bên trong khung text
+    .mdc-list-item__primary-text {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    // 3. Set chiều cao
+    min-height: 50px !important;
+  }
+}
+// End: Xử lý loading
+
+// Start: Xử lý text không bị phình ra khi chọn nhiều
+.sd-trigger-text {
+  display: block;
+  width: 100%;
+  white-space: nowrap; // Bắt buộc nằm trên 1 dòng
+  overflow: hidden; // Giấu phần chữ bị tràn
+  text-overflow: ellipsis; // Biến phần bị giấu thành dấu ...
+}
+
+// Bổ sung thêm đoạn này để đảm bảo bản thân mat-select không bị phình ra
+:host ::ng-deep {
+  .mat-mdc-select-value {
+    max-width: 100%;
+    overflow: hidden;
+    // [NEW]: Ép chết chiều rộng để không bị chữ độn to lên
+    width: 0;
+    min-width: 100%;
+  }
+}
+// End: Xử lý text không bị phình ra khi chọn nhiều
+
+// Ẩn arrow khi có giá trị được chọn
+:host ::ng-deep .sd-selected .mat-mdc-select-arrow {
+  display: none;
+}
+
+// Custom arrow nên ẩn đi arrow mặc định
+:host ::ng-deep .mat-mdc-select-arrow {
+  display: none !important; // Ẩn icon mặc định
+}
+
+:host ::ng-deep .custom-arrow {
+  pointer-events: none; // Không ảnh hưởng khi bấm
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep {
+  // Form field color
+  .mat-mdc-form-field {
+    // Disabled background & border
+    &.mat-form-field-appearance-outline {
+      &.mat-form-field-disabled {
+        .mat-mdc-text-field-wrapper {
+          background: color.$disabled-bg;
+        }
+      }
+    }
+    // Disabled text input color
+    mat-select {
+      &.mat-mdc-select-disabled {
+        .mat-mdc-select-value {
+          color: color.$disabled-text !important;
+        }
+      }
+    }
+    .mat-mdc-placeholder-required {
+      color: map.get(color.$color_map, 'error');
+    }
+  }
+}
+
+/* CSS sdViewDef */
+.sd-view {
+  &:not(.c-focused):not(.c-disabled) {
+    &:hover {
+      background-color: #ebecf0;
+    }
+  }
+}
+
+/* Ẩn check box */
+::ng-deep .sd-select-panel {
+  .mat-mdc-option.sd-empty .mat-pseudo-checkbox {
+    display: none;
+  }
+}
+
+::ng-deep .sd-select-panel {
+  // Giảm chiều cao của mỗi dòng option
+  .mat-mdc-option {
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+  }
+
+  .c-filter-input-container {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    box-shadow: 0px 1px 0px 0px #f2f2f2;
+    padding: 8px;
+    margin-bottom: 8px;
+    z-index: 1000;
+    .filter-input-wrapper {
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid map.get(color.$color_map, 'black200');
+      border-radius: 4px;
+      background-color: #fff;
+      .mat-icon {
+        color: #dadada;
+      }
+      .c-search-input {
+        background-color: #fff;
+        border: none;
+        outline: none;
+        flex: 1;
+        padding: 4px;
+      }
+    }
+  }
+}
+
+::ng-deep .sd-multiline-tooltip {
+  white-space: pre-line;
+}
+
+::ng-deep .mat-mdc-select-panel.sd-select-panel {
+  padding: 0;
+  .mat-mdc-option.mdc-list-item--disabled.sd-empty {
+    .mdc-list-item__primary-text {
+      opacity: 0.8;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      .sd-empty-img {
+        width: 95px;
+        content: url('../assets/empty.svg');
+      }
+    }
+  }
+}
+
+::ng-deep .sd-select-panel.sd-multiple {
+  // Thu nhỏ Checkbox
+  .mat-pseudo-checkbox {
+    transform: scale(0.75);
+    margin-right: 8px !important;
+  }
+
+  .mdc-list-item__primary-text {
+    font-size: 14px;
+    white-space: normal;
+  }
+}
+
+/* [NEW]: Ghi đè min-width inline style của Angular Material 
+  để panel có thể tự mở rộng ra theo nội dung chữ hoặc panelWidth được cấu hình
+*/
+::ng-deep .mat-mdc-select-panel.sd-select-panel {
+  // Cho phép panel mở rộng tự do, tối đa lên tới 90vw (chống tràn màn hình mobile)
+  max-width: 90vw !important;
+
+  // Tùy chọn: Chống vỡ layout chữ khi khung panel quá nhỏ
+  .mat-mdc-option .mdc-list-item__primary-text {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+}

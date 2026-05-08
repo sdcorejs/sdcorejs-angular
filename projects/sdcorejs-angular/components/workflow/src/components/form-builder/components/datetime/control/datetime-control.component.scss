@@ -1,0 +1,18 @@
+.c-input {
+  width: 100%;
+  background: #fff;
+  height: 30px;
+  border: 1px solid #d3d3d3;
+  position: relative;
+  border-radius: 4px;
+
+  svg {
+    position: absolute;
+    top: 2px;
+    right: 3px;
+    color: #999;
+  }
+}
+.label{
+  font-weight: 500;
+}

@@ -1,8 +1,18 @@
+<ng-template #projectedContent>
+  <ng-content></ng-content>
+</ng-template>
+
 @let _userInfo = userInfo();
 @let _sidebar = sidebar();
 
 @if (_userInfo && _sidebar?.version === 1) {
-  <sidebar-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebar!">
-    <ng-content></ng-content>
-  </sidebar-v1>
+  @if (!isMobileOrTablet()) {
+    <sidebar-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebar!">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sidebar-v1>
+  } @else {
+    <sidebar-mobile-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebar!">
+      <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
+    </sidebar-mobile-v1>
+  }
 }

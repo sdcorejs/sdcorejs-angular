@@ -17,3 +17,6 @@ export * from '@sdcorejs/angular/components/document-builder';
 export * from '@sdcorejs/angular/components/mini-editor';
 export * from '@sdcorejs/angular/components/view';
 export * from '@sdcorejs/angular/components/code-editor';
+export * from '@sdcorejs/angular/components/chart';
+export * from '@sdcorejs/angular/components/editor';
+

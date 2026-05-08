@@ -50,7 +50,13 @@ export class SdTableDemoComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.tableOption = {
       type: 'server',
+      sort: {
+        enable: true,
+      },
       key: 'bc39e044-3c4b-46d7-a6ee-179327b87559',
+      rowReorder: {
+        enabled: true,
+      },
       items: async filterRequest => {
         console.log(filterRequest?.rawColumnFilter?.number);
         const res = await this.#getDemoData();
@@ -68,9 +74,6 @@ export class SdTableDemoComponent implements AfterViewInit {
           title: 'Number',
           type: 'number',
           width: '150px',
-          charLimited: {
-            enable: true,
-          },
           filter: {
             operator: {
               enable: true,
@@ -84,16 +87,13 @@ export class SdTableDemoComponent implements AfterViewInit {
           title: 'String',
           type: 'string',
           width: '200px',
-          charLimited: {
-            enable: true,
-            expandType: 'more',
-          },
           filter: {
             operator: {
               enable: true,
               list: ['CONTAIN', 'EQUAL', 'IN'],
             },
           },
+          sortable: true,
         },
         {
           field: 'boolean',
@@ -119,9 +119,6 @@ export class SdTableDemoComponent implements AfterViewInit {
           htmlTemplate: value => {
             return value;
           },
-          charLimited: {
-            enable: true,
-          },
           width: '200px',
         },
         {
@@ -131,9 +128,6 @@ export class SdTableDemoComponent implements AfterViewInit {
           transform: value => {
             return value;
           },
-          charLimited: {
-            enable: true,
-          },
           width: '200px',
         },
         {
@@ -141,18 +135,14 @@ export class SdTableDemoComponent implements AfterViewInit {
           title: 'TemplateRef',
           type: 'string',
           width: '200px',
-          charLimited: {
-            enable: true,
-          },
         },
         {
           field: 'cellDef',
           title: 'CellDef',
           type: 'string',
           width: '200px',
-          cellDef: this.cellDef,
-          charLimited: {
-            enable: true,
+          cell: {
+            templateRef: this.cellDef,
           },
         },
         {

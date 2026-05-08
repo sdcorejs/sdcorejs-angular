@@ -1,34 +1,37 @@
-@let columnField = column().field;
+@let _column = column();
+@let _item = item();
+@let _autoId = autoId();
 
-@let columnCharLimit = column()?.charLimited;
-@let isExpandByMore = isOverflowing() && columnCharLimit?.expandType === 'more';
-@let isExpandByTooltip = isOverflowing() && columnCharLimit?.expandType === 'tooltip';
+@let _truncateEnable = truncateEnable();
+@let _truncateWidth = truncateWidth();
+@let isExpandByMore = isOverflowing() && _column?.cell?.truncate?.type === 'more';
+@let isExpandByTooltip = isOverflowing() && _column?.cell?.truncate?.type === 'tooltip';
 
-@let template = cellDef()[columnField]?.templateRef || column()?.cellDef;
+@let _templateRef = templateRef();
 @let context =
   {
-    item: item().data,
-    column: column(),
-    autoId: autoId() + columnField + '-' + itemKey(),
+    item: _item.data,
+    column: _column,
+    autoId: _autoId,
   };
 
-@if (template) {
+@if (_templateRef) {
   <!-- Nếu column có bật "giới hạn ký tự" -->
-  @if (columnCharLimit?.enable) {
+  @if (_truncateEnable) {
     <div
       #contentContainer
-      [style.max-width]="charLimited()?.width"
+      [style.max-width]="_truncateWidth"
       [class.c-ellipsis-html]="isCollapsed()"
       [sdTooltip]="isExpandByTooltip ? htmlTooltip : ''">
-      <ng-container *ngTemplateOutlet="template; context: context" />
+      <ng-container *ngTemplateOutlet="_templateRef; context: context" />
     </div>
 
     <!-- Nếu option xem full thông tin là "tooltip" -->
     <ng-template #htmlTooltip>
       <div
-        [style.max-width]="'calc(' + charLimited()?.width + ' * 1.5)'"
+        [style.max-width]="'calc(' + _truncateWidth + ' * 1.5)'"
         style="max-height: 200px; overflow-y: auto; scrollbar-width: thin">
-        <ng-container *ngTemplateOutlet="template; context: context" />
+        <ng-container *ngTemplateOutlet="_templateRef; context: context" />
       </div>
     </ng-template>
 
@@ -39,8 +42,8 @@
       </button>
     }
   } @else {
-    <ng-container *ngTemplateOutlet="template; context: context" />
+    <ng-container *ngTemplateOutlet="_templateRef; context: context" />
   }
 } @else {
-  <sd-desktop-cell-view [column]="column()" [charLimited]="charLimited()" [item]="item()" [autoId]="context.autoId" />
+  <view [column]="column()" [item]="item()" [autoId]="context.autoId" />
 }

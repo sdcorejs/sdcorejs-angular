@@ -1,19 +1,17 @@
-<div class="c-anchor-vertical" [ngClass]="{ 'c-stop-scroll-propagation': !isOverscroll }" #wrapper>
-  <!-- Nội dung -->
-  <div class="c-anchor-content" #anchorContent>
+<div class="c-anchor-vertical" [ngClass]="{ 'c-stop-scroll-propagation': !isOverscroll() }" #wrapper>
+  <div class="c-anchor-content" [style.width]="'calc(100% - ' + sidebarWidth() + ' - 16px)'">
     <ng-content></ng-content>
   </div>
 
-  <!-- Danh sách tiêu đề các sections-->
-   @if(!isHiddenAnchorList){
-     <div class="c-anchor-list" [style.width]="sidebarWidth">
-       <sd-anchor-vertical-list-v2
-         [sections]="sections"
-         [ellipsis]="ellipsis"
-         [sidebarWidth]="sidebarWidth"
-         [activeSectionId]="activeSectionId"
-         (sdClickSection)="scrollSectionByClick($event)">
-       </sd-anchor-vertical-list-v2>
-     </div>
-   }
+  @if (!isHiddenAnchorList()) {
+    <div class="c-anchor-list" [style.width]="sidebarWidth()">
+      <sd-anchor-vertical-list-v2
+        [sections]="sections()"
+        [ellipsis]="ellipsis()"
+        [sidebarWidth]="sidebarWidth()"
+        [activeSectionId]="activeSectionId()"
+        (sdClickSection)="scrollSectionByClick($event)">
+      </sd-anchor-vertical-list-v2>
+    </div>
+  }
 </div>

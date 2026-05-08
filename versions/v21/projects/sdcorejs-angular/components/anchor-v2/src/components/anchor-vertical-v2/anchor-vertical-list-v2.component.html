@@ -1,19 +1,15 @@
-<div class="c-anchor-list" [style.width]="sidebarWidth">
-  @for (section of sections; track section.id) {
+<div class="c-anchor-list" [style.width]="sidebarWidth()">
+  @for (section of sections(); track section.id) {
     <div
       class="c-anchor-list-item"
-      [class.active]="section.id === activeSectionId"
+      [class.active]="section.id === activeSectionId()"
       (click)="onClickSection(section.id)"
       (keydown.enter)="onClickSection(section.id)"
       tabindex="0">
-      @if (section?.icon()) {
-        <mat-icon class="c-anchor-list-item-icon">{{ section?.icon() }}</mat-icon>
+      @if (section.icon()) {
+        <mat-icon class="c-anchor-list-item-icon">{{ section.icon() }}</mat-icon>
       }
-      <div
-        class="c-anchor-list-item-text"
-        [ngClass]="{
-          ellipsis
-        }">
+      <div class="c-anchor-list-item-text" [class.ellipsis]="ellipsis()">
         {{ section.title() }}
       </div>
     </div>

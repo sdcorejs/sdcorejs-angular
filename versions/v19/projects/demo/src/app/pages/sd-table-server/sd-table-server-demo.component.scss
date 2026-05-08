@@ -1,0 +1,427 @@
+// ─── Layout ──────────────────────────────────────────────────────────────────
+
+.demo-root {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+
+.demo-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 16px;
+  color: #fff;
+}
+
+.demo-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.demo-badge {
+  background: linear-gradient(135deg, #e94560, #c23152);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.demo-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.demo-subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+// ─── Tabs ─────────────────────────────────────────────────────────────────────
+
+.demo-tabs {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+  ::ng-deep .mat-mdc-tab-header {
+    background: #f8f9fc;
+    border-bottom: 1px solid #e8eaf0;
+  }
+
+  ::ng-deep .mat-mdc-tab-body-wrapper {
+    padding: 0;
+  }
+}
+
+.tab-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── Feature Card ─────────────────────────────────────────────────────────────
+
+.feature-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8eaf0;
+  overflow: hidden;
+}
+
+.feature-card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(to right, #f0f4ff, #fff);
+  border-bottom: 1px solid #e8eaf0;
+}
+
+.feature-icon {
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+  color: #3f51b5;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.feature-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.feature-desc {
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.5;
+
+  code {
+    background: #eef2ff;
+    color: #3f51b5;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+  }
+}
+
+// ─── Info Box ─────────────────────────────────────────────────────────────────
+
+.info-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #e8f5e9;
+  border-radius: 10px;
+  border: 1px solid #a5d6a7;
+  color: #2e7d32;
+  font-size: 13px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #43a047;
+  }
+
+  strong {
+    color: #1b5e20;
+  }
+}
+
+// ─── Selected Card ────────────────────────────────────────────────────────────
+
+.selected-card {
+  border-radius: 12px;
+  border: 1px solid #c5cae9;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(63, 81, 181, 0.1);
+}
+
+.selected-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #3f51b5, #5c6bc0);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.selected-card-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0;
+  padding: 0;
+}
+
+.selected-field {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0;
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #9e9e9e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .value {
+    font-size: 14px;
+    color: #1a1a2e;
+    font-weight: 500;
+
+    &.accent {
+      color: #3f51b5;
+      font-weight: 600;
+    }
+  }
+}
+
+// ─── Expand Detail ────────────────────────────────────────────────────────────
+
+.expand-detail {
+  padding: 16px 24px;
+  background: linear-gradient(to bottom, #f8f9fc, #fff);
+  border-top: 2px solid #e8eaf0;
+}
+
+.expand-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.expand-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #9e9e9e;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .value {
+    font-size: 14px;
+    color: #1a1a2e;
+    font-weight: 500;
+
+    &.accent {
+      color: #3f51b5;
+    }
+  }
+}
+
+// Status chips
+mat-chip {
+  font-size: 11px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  padding: 0 8px !important;
+
+  &.chip-active   { --mdc-chip-label-text-color: #2e7d32; background: #e8f5e9 !important; }
+  &.chip-probation { --mdc-chip-label-text-color: #e65100; background: #fff3e0 !important; }
+  &.chip-resigned { --mdc-chip-label-text-color: #b71c1c; background: #ffebee !important; }
+  &.chip-suspended { --mdc-chip-label-text-color: #6a1b9a; background: #f3e5f5 !important; }
+}
+
+// ─── Pre-select Controls ──────────────────────────────────────────────────────
+
+.preselect-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #f8f9fc;
+  border-bottom: 1px solid #e8eaf0;
+}
+
+.preselect-ids {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preselect-label {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.preselect-value {
+  background: #eef2ff;
+  color: #3f51b5;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.preselect-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-add,
+.btn-remove {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.btn-add {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+  &:hover:not(:disabled) { background: #c8e6c9; }
+}
+
+.btn-remove {
+  background: #fff3e0;
+  color: #e65100;
+  border: 1px solid #ffcc80;
+  &:hover:not(:disabled) { background: #ffe0b2; }
+}
+
+// ─── Event Log ────────────────────────────────────────────────────────────────
+
+.event-log {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.event-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #1a1a2e;
+  color: #fff;
+}
+
+.event-log-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #7c4dff;
+  }
+}
+
+.log-count {
+  background: #3f51b5;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+
+.btn-clear {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+}
+
+.event-log-body {
+  background: #12121f;
+  padding: 12px 16px;
+  min-height: 80px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.log-empty {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.log-entry {
+  font-family: 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+  color: #a5f3a5;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  line-height: 1.5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}

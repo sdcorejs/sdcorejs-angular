@@ -12,14 +12,47 @@ if (!(Test-Path -LiteralPath $TargetPath)) {
   throw "TargetPath not found: $TargetPath"
 }
 
+function Update-RootTsConfig {
+  param(
+    [string]$TsConfigPath
+  )
+
+  if (!(Test-Path -LiteralPath $TsConfigPath)) {
+    return
+  }
+
+  $content = Get-Content -LiteralPath $TsConfigPath -Raw
+  $updated = $content
+
+  $updated = $updated -replace '"@sdcorejs/angular":\s*\["dist/sdcorejs-angular"\]', '"@sdcorejs/angular": ["./dist/sdcorejs-angular"]'
+  $updated = $updated -replace '"@sdcorejs/angular/\*":\s*\["dist/sdcorejs-angular/\*",\s*"projects/sdcorejs-angular/\*"\]', '"@sdcorejs/angular/*": ["./dist/sdcorejs-angular/*", "./projects/sdcorejs-angular/*"]'
+  $updated = $updated -replace '\s*"baseUrl"\s*:\s*"\.\/",\r?\n', ''
+  $updated = $updated -replace '\s*"ignoreDeprecations"\s*:\s*"[^"]+",\r?\n', ''
+
+  if ($updated -ne $content) {
+    Set-Content -LiteralPath $TsConfigPath -Value $updated -Encoding UTF8
+  }
+}
+
 Write-Host "[1/5] Mirror copy source -> target" -ForegroundColor Cyan
 robocopy $SourcePath $TargetPath /MIR /XD .git node_modules dist .angular coverage versions scripts /R:1 /W:1 /NFL /NDL /NP | Out-Null
 
 Write-Host "[2/5] Normalize library folder sd-angular -> sdcorejs-angular" -ForegroundColor Cyan
 $legacyLibPath = Join-Path $TargetPath "projects/sd-angular"
 $targetLibPath = Join-Path $TargetPath "projects/sdcorejs-angular"
-if ((Test-Path -LiteralPath $legacyLibPath) -and !(Test-Path -LiteralPath $targetLibPath)) {
-  Rename-Item -LiteralPath $legacyLibPath -NewName "sdcorejs-angular"
+if (Test-Path -LiteralPath $legacyLibPath) {
+  if (!(Test-Path -LiteralPath $targetLibPath)) {
+    New-Item -ItemType Directory -Path $targetLibPath | Out-Null
+  }
+
+  robocopy $legacyLibPath $targetLibPath /MIR /R:1 /W:1 /NFL /NDL /NP | Out-Null
+
+  try {
+    Remove-Item -LiteralPath $legacyLibPath -Recurse -Force
+  }
+  catch {
+    Write-Warning "Could not remove legacy library folder after copy: $legacyLibPath"
+  }
 }
 
 Write-Host "[3/5] Replace legacy namespace and project references" -ForegroundColor Cyan
@@ -69,9 +102,21 @@ if (Test-Path -LiteralPath $rootPackagePath) {
   }
 
   if ($needsWrite) {
-    $package | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $rootPackagePath -Encoding UTF8
+    $jsonStr = $package | ConvertTo-Json -Depth 100
+    # PowerShell 5.x escapes non-ASCII and special chars as \uXXXX – unescape them back
+    $jsonStr = $jsonStr -replace '\\u0026', '&' `
+                        -replace '\\u003c', '<' `
+                        -replace '\\u003e', '>' `
+                        -replace '\\u0027', "'" `
+                        -replace '\\u2019', [char]0x2019 `
+                        -replace '\\u201c', [char]0x201c `
+                        -replace '\\u201d', [char]0x201d
+    Set-Content -LiteralPath $rootPackagePath -Value $jsonStr -Encoding UTF8
   }
 }
+
+$rootTsConfigPath = Join-Path $TargetPath "tsconfig.json"
+Update-RootTsConfig -TsConfigPath $rootTsConfigPath
 
 Write-Host "[5/5] Rollout to v19 (primary) then v20, v21..." -ForegroundColor Cyan
 $multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1"

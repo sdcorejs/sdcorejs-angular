@@ -1,42 +1,43 @@
+import { ChangeDetectionStrategy, Component, OnDestroy, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component, ContentChildren, EventEmitter, Input, OnInit, Output, QueryList } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { debounceTime, Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, debounceTime } from 'rxjs';
+
 import { SdAnchorItemV2 } from '../anchor-item-v2/anchor-item-v2.component';
 
 @Component({
   selector: 'sd-anchor-vertical-list-v2',
   templateUrl: './anchor-vertical-list-v2.component.html',
   styleUrl: './anchor-vertical-list-v2.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, MatIconModule],
   standalone: true,
 })
-export class SdAnchorVerticalListV2 implements OnInit {
-  constructor() {}
-  @Input() sections!: QueryList<SdAnchorItemV2>;
-  @Input() activeSectionId: string = '';
-  @Input() ellipsis!: boolean;
-  @Input() sidebarWidth!: string;
+export class SdAnchorVerticalListV2 implements OnDestroy {
+  sections = input.required<readonly SdAnchorItemV2[]>();
+  activeSectionId = input<string>('');
+  ellipsis = input<boolean>(false);
+  sidebarWidth = input<string>('');
 
-  @Output() sdClickSection = new EventEmitter<string>();
+  sdClickSection = output<string>();
 
-  #delay: number = 200;
+  #delay = 200;
   #clickSectionSubject = new Subject<string>();
   #subscription = new Subscription();
 
-  ngOnInit() {
+  constructor() {
     this.#subscription.add(
-      this.#clickSectionSubject.pipe(debounceTime(this.#delay)).subscribe((idSectionTarget: string) => {
-        this.sdClickSection.emit(idSectionTarget);
-      })
+      this.#clickSectionSubject
+        .pipe(debounceTime(this.#delay))
+        .subscribe((id: string) => this.sdClickSection.emit(id))
     );
   }
 
-  onClickSection = (idSectionTarget: string): void => {
-    this.#clickSectionSubject.next(idSectionTarget);
+  onClickSection = (id: string): void => {
+    this.#clickSectionSubject.next(id);
   };
-  
-  ngOnDestroy() {
-    this.#subscription?.unsubscribe();
+
+  ngOnDestroy(): void {
+    this.#subscription.unsubscribe();
   }
 }

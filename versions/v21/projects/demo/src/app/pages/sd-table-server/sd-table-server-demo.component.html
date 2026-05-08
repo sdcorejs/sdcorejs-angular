@@ -1,0 +1,188 @@
+<div class="demo-root">
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <div class="demo-header">
+    <div class="demo-header-left">
+      <span class="demo-badge">DEMO</span>
+      <div>
+        <h1 class="demo-title">sd-table – Server Mode</h1>
+        <p class="demo-subtitle">Showcase toàn bộ tính năng: multi-select, single-select (radio), expand row, row commands, export</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tabs ───────────────────────────────────────────────────────────── -->
+  <mat-tab-group class="demo-tabs" animationDuration="200ms">
+
+    <!-- ══ Tab 1 – Multi Select ══════════════════════════════════════════ -->
+    <mat-tab label="☑ Multi Select + Actions">
+      <div class="tab-content">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <mat-icon class="feature-icon">check_box</mat-icon>
+            <div>
+              <div class="feature-title">Multi Select với Bulk Actions</div>
+              <div class="feature-desc">Chọn nhiều nhân viên và thực hiện hành động hàng loạt (gửi email, xoá). Export Excel có sẵn.</div>
+            </div>
+          </div>
+          <sd-table [option]="serverMultiSelectOption" [autoId]="'multi-select'"></sd-table>
+        </div>
+
+        <!-- Selected info -->
+        @if (selectedEmployees().length) {
+          <div class="info-box">
+            <mat-icon>group</mat-icon>
+            <span>Đang chọn <strong>{{ selectedEmployees().length }}</strong> nhân viên:
+              {{ selectedEmployeesPreview }}
+            </span>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ══ Tab 2 – Single Select ═════════════════════════════════════════ -->
+    <mat-tab label="🔘 Single Select (Radio)">
+      <div class="tab-content">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <mat-icon class="feature-icon">radio_button_checked</mat-icon>
+            <div>
+              <div class="feature-title">Single Select – Radio Button</div>
+              <div class="feature-desc">Khi <code>selector.single = true</code>, table hiển thị radio button thay vì checkbox — chỉ được chọn 1 dòng.</div>
+            </div>
+          </div>
+          <sd-table [option]="serverSingleSelectOption" [autoId]="'single-select'"></sd-table>
+        </div>
+
+        <!-- Selected employee card -->
+        @if (selectedEmployee()) {
+          <div class="selected-card">
+            <div class="selected-card-header">
+              <mat-icon>person</mat-icon>
+              <span>Nhân viên đã chọn</span>
+            </div>
+            <div class="selected-card-body">
+              <div class="selected-field"><span class="label">Họ tên</span><span class="value">{{ selectedEmployee()!.name }}</span></div>
+              <div class="selected-field"><span class="label">Phòng ban</span><span class="value">{{ selectedEmployee()!.department }}</span></div>
+              <div class="selected-field"><span class="label">Chức vụ</span><span class="value">{{ selectedEmployee()!.position }}</span></div>
+              <div class="selected-field"><span class="label">Email</span><span class="value">{{ selectedEmployee()!.email }}</span></div>
+              <div class="selected-field"><span class="label">Lương</span><span class="value accent">{{ selectedEmployee()!.salary | number:'1.0-0' }} VNĐ</span></div>
+            </div>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+    <!-- ══ Tab 3 – Expand Row ════════════════════════════════════════════ -->
+    <mat-tab label="⬇ Expand Row">
+      <div class="tab-content">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <mat-icon class="feature-icon">expand_more</mat-icon>
+            <div>
+              <div class="feature-title">Expand Row – Chi tiết dòng</div>
+              <div class="feature-desc">Click vào nút mũi tên ở cuối dòng để mở rộng xem thông tin chi tiết. Chỉ 1 dòng mở tại một thời điểm (<code>expand.multiple = false</code>).</div>
+            </div>
+          </div>
+          <sd-table [option]="serverExpandOption" [autoId]="'expand-row'">
+            <ng-template sdTableExpandDef let-item="item">
+              <div class="expand-detail">
+                <div class="expand-detail-grid">
+                  <div class="expand-item"><span class="label">ID</span><span class="value">#{{ item.data.id }}</span></div>
+                  <div class="expand-item"><span class="label">Email</span><span class="value">{{ item.data.email }}</span></div>
+                  <div class="expand-item"><span class="label">Lương</span><span class="value accent">{{ item.data.salary | number:'1.0-0' }} VNĐ</span></div>
+                  <div class="expand-item"><span class="label">Ngày vào làm</span><span class="value">{{ item.data.joinDate | date:'dd/MM/yyyy' }}</span></div>
+                  <div class="expand-item"><span class="label">Trạng thái</span>
+                    <span class="value">
+                      <mat-chip [class]="'chip-' + item.data.status.toLowerCase()">{{ item.data.status }}</mat-chip>
+                    </span>
+                  </div>
+                  <div class="expand-item"><span class="label">Đang hoạt động</span><span class="value">{{ item.data.active ? '✅ Có' : '❌ Không' }}</span></div>
+                </div>
+              </div>
+            </ng-template>
+          </sd-table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ══ Tab 4 – Row Commands ══════════════════════════════════════════ -->
+    <mat-tab label="⚡ Row Commands">
+      <div class="tab-content">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <mat-icon class="feature-icon">settings</mat-icon>
+            <div>
+              <div class="feature-title">Row Commands – Hành động theo dòng</div>
+              <div class="feature-desc">Mỗi dòng có icon hành động riêng: Sửa, Xem chi tiết, Xoá — được canh phải (<code>command.align = 'right'</code>).</div>
+            </div>
+          </div>
+          <sd-table [option]="serverCommandOption" [autoId]="'row-command'"></sd-table>
+        </div>
+      </div>
+    </mat-tab>
+
+    <!-- ══ Tab 5 – defaultSelected ═══════════════════════════════════════ -->
+    <mat-tab label="🎯 defaultSelected">
+      <div class="tab-content">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <mat-icon class="feature-icon">playlist_add_check</mat-icon>
+            <div>
+              <div class="feature-title">defaultSelected – Pre-select programmatically</div>
+              <div class="feature-desc">
+                Dùng <code>selector.defaultSelected: (item) =&gt; boolean</code> để table tự chọn sẵn
+                các dòng sau mỗi lần load. Hữu dụng khi muốn reflect external state vào table selection.
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div class="preselect-controls">
+            <div class="preselect-ids">
+              <span class="preselect-label">Pre-selected IDs:</span>
+              <code class="preselect-value">{{ preSelectedIdsPreview }}</code>
+            </div>
+            <div class="preselect-actions">
+              <button class="btn-add" (click)="addPreSelectedId()">
+                <mat-icon>add</mat-icon> Thêm ID
+              </button>
+              <button class="btn-remove" (click)="removePreSelectedId()" [disabled]="!preSelectedIds().length">
+                <mat-icon>remove</mat-icon> Bỏ ID cuối
+              </button>
+            </div>
+          </div>
+
+          <sd-table [option]="serverDefaultSelectedOption" [autoId]="'default-selected'"></sd-table>
+        </div>
+
+        @if (preSelectedResult().length) {
+          <div class="info-box">
+            <mat-icon>check_circle</mat-icon>
+            <span>Đang chọn <strong>{{ preSelectedResult().length }}</strong> nhân viên từ pre-selection</span>
+          </div>
+        }
+      </div>
+    </mat-tab>
+
+  </mat-tab-group>
+
+  <!-- ── Event Log ──────────────────────────────────────────────────────── -->
+  <div class="event-log">
+    <div class="event-log-header">
+      <div class="event-log-title">
+        <mat-icon>terminal</mat-icon>
+        <span>Event Log</span>
+        <span class="log-count">{{ log().length }}</span>
+      </div>
+      <button class="btn-clear" (click)="clearLog()">Xoá</button>
+    </div>
+    <div class="event-log-body">
+      @if (!log().length) {
+        <div class="log-empty">Chưa có sự kiện nào...</div>
+      }
+      @for (entry of log(); track entry) {
+        <div class="log-entry">{{ entry }}</div>
+      }
+    </div>
+  </div>
+</div>

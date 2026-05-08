@@ -1,5 +1,8 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+# Git worktrees
+.worktrees/
+
 # Compiled output
 /dist
 /tmp
@@ -44,7 +47,6 @@ Thumbs.db
 # AI
 /.claude
 .agents/
-/docs
 /plans
 CLAUDE.md
 GEMINI.md

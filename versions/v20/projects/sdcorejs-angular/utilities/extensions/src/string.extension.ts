@@ -196,6 +196,15 @@ const generateUniqueCode = (name: string, existingCodes: string[]): string => {
   return newCode;
 };
 
+const sha256 = async (input: string): Promise<string> => {
+  const buffer = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest('SHA-256', buffer);
+  const bytes = new Uint8Array(hash);
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
 export const StringUtilities = {
   REGEX_EMAIL,
   REGEX_PHONE,
@@ -216,4 +225,5 @@ export const StringUtilities = {
   isNullOrWhiteSpace,
   convertToSnakeCaseCode,
   generateUniqueCode,
+  sha256,
 };

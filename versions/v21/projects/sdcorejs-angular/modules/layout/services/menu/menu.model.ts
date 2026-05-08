@@ -13,7 +13,7 @@ export interface SdLayoutRootMenu {
   id?: string;
   path: string;
   queryParams?: Params;
-  icon: string;
+  icon?: string;
   iconUrl?: string;
   title: string;
   permissionKey?: string;

@@ -1,8 +1,9 @@
 ﻿import { Injectable } from '@angular/core';
-import * as mammoth from 'mammoth';
-import { docxToHtml } from '@omer-go/docx-parser-converter-ts';
-import { SdDocxConvertOptions, SdDocxConvertResult } from './docx.model';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { SdLoadingService } from '@sdcorejs/angular/services/loading';
+
+import { SdDocxConvertOptions, SdDocxConvertResult } from './docx.model';
+import { createPandocInstance, PandocInstance } from './pandoc-core';
 
 @Injectable({
   providedIn: 'root',
@@ -14,9 +15,15 @@ export class SdDocxService {
   readonly #ERROR_INVALID_FORMAT = 'Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡. Vui lÃ²ng chá»n Máº«u cÃ³ Ä‘á»‹nh dáº¡ng DOC hoáº·c DOCX';
   readonly #ERROR_SIZE_EXCEEDED = 'KÃ­ch thÆ°á»›c tá»‡p máº«u vÆ°á»£t quÃ¡ tiÃªu chuáº©n há»— trá»£ cá»§a há»‡ thá»‘ng. Vui lÃ²ng thá»­ láº¡i';
 
-  #fileInput: HTMLInputElement | null = null;
+  readonly #PANDOC_WASM_URL = 'https://pandoc.github.io/pandoc-wasm/pandoc.wasm';
 
-  constructor(private notifyService: SdNotifyService) {}
+  #fileInput: HTMLInputElement | null = null;
+  #pandocInstance: PandocInstance | null = null;
+
+  constructor(
+    private notifyService: SdNotifyService,
+    private loadingService: SdLoadingService
+  ) {}
 
   async open(options?: SdDocxConvertOptions): Promise<SdDocxConvertResult | null> {
     return new Promise(resolve => {
@@ -35,12 +42,19 @@ export class SdDocxService {
           return;
         }
 
-        const result = await this.convertToHtml(file, options);
-        resolve(result);
-
-        // Cleanup
-        input.value = '';
-        input.removeEventListener('change', handleChange);
+        this.loadingService.start();
+        try {
+          const result = await this.convertToHtml(file, options);
+          resolve(result);
+        } catch (error) {
+          console.error('[SdDocxService] DocX conversion error:', error);
+          this.notifyService.error('CÃ³ lá»—i xáº£y ra khi chuyá»ƒn Ä‘á»•i file DOCX');
+          resolve(null);
+        } finally {
+          input.value = '';
+          input.removeEventListener('change', handleChange);
+          this.loadingService.stop();
+        }
       };
 
       this.#fileInput.addEventListener('change', handleChange, { once: true });
@@ -60,6 +74,24 @@ export class SdDocxService {
     document.body.appendChild(this.#fileInput);
   }
 
+  async #getPandocInstance(): Promise<PandocInstance> {
+    if (this.#pandocInstance) {
+      return this.#pandocInstance;
+    }
+
+    console.log('[SdDocxService] Fetching WASM binary from:', this.#PANDOC_WASM_URL);
+    const wasmResponse = await fetch(this.#PANDOC_WASM_URL);
+    if (!wasmResponse.ok) {
+      throw new Error(`Failed to fetch pandoc.wasm: ${wasmResponse.status} ${wasmResponse.statusText}`);
+    }
+    console.log('[SdDocxService] WASM fetched, size:', wasmResponse.headers.get('content-length'));
+    const wasmBinary = await wasmResponse.arrayBuffer();
+    console.log('[SdDocxService] WASM binary loaded, bytes:', wasmBinary.byteLength);
+    this.#pandocInstance = await createPandocInstance(wasmBinary);
+    console.log('[SdDocxService] Pandoc instance created successfully');
+    return this.#pandocInstance;
+  }
+
   async convertToHtml(input: File | Blob | ArrayBuffer, options?: SdDocxConvertOptions): Promise<SdDocxConvertResult | null> {
     const opts = {
       validateFormat: true,
@@ -71,17 +103,19 @@ export class SdDocxService {
     try {
       let fileName: string | undefined;
       let fileSize: number | undefined;
-      let arrayBuffer: ArrayBuffer;
+      let blob: Blob;
 
       if (input instanceof File) {
         fileName = input.name;
         fileSize = input.size;
-        arrayBuffer = await this.#fileToArrayBuffer(input);
+        blob = input;
       } else if (input instanceof Blob) {
         fileSize = input.size;
-        arrayBuffer = await this.#blobToArrayBuffer(input);
+        blob = input;
       } else {
-        arrayBuffer = input;
+        blob = new Blob([input], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
       }
 
       if (opts.validateFormat && fileName) {
@@ -99,33 +133,27 @@ export class SdDocxService {
         }
       }
 
-      const { validateFormat, validateSize, maxSizeInMb, ...conversionOptions } = opts;
+      console.log('[SdDocxService] Getting pandoc instance...');
+      const pandoc = await this.#getPandocInstance();
+      console.log('[SdDocxService] Converting DOCX, blob size:', blob.size);
 
-      // Try @omer-go first for better formatting, fallback to mammoth on BOM error
-      let html: string;
-      let messages: string[] = [];
-      try {
-        html = await docxToHtml(arrayBuffer, {
-          styleMode: 'inline',
-          useSemanticTags: true,
-          fragmentOnly: true,
-          ...conversionOptions,
-        });
-      } catch (omerError: any) {
-        console.log(omerError);
-        // Fallback to mammoth if @omer-go fails (e.g., BOM issue)
-        console.warn('@omer-go/docx-parser-converter-ts failed, falling back to mammoth:', omerError?.message);
-        const result = await mammoth.convertToHtml({ arrayBuffer }, conversionOptions as any);
-        html = result.value;
-        messages = result.messages.map(m => m.toString());
-      }
+      const pandocOpts: Record<string, any> = {
+        from: 'docx',
+        to: 'html',
+        'input-files': ['document.docx'],
+        standalone: true,
+        'embed-resources': true,
+      };
+
+      const result = await pandoc.convert(pandocOpts, null, { 'document.docx': blob });
+      console.log('[SdDocxService] Conversion done, stdout length:', result.stdout?.length, 'stderr:', result.stderr);
 
       return {
-        html,
-        messages,
+        html: result.stdout,
+        messages: result.warnings.map((w: any) => String(w)),
       };
     } catch (error) {
-      console.error('DocX conversion error:', error);
+      console.error('[SdDocxService] DocX conversion error:', error);
       this.notifyService.error('CÃ³ lá»—i xáº£y ra khi chuyá»ƒn Ä‘á»•i file DOCX');
       return null;
     }
@@ -139,38 +167,6 @@ export class SdDocxService {
   #isValidFormat(fileName: string): boolean {
     const lowerCaseName = fileName.toLowerCase();
     return this.#VALID_EXTENSIONS.some(ext => lowerCaseName.endsWith(ext));
-  }
-
-  #fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const result = e.target?.result as ArrayBuffer;
-        if (result) {
-          resolve(result);
-        } else {
-          reject(new Error('Failed to read file'));
-        }
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsArrayBuffer(file);
-    });
-  }
-
-  #blobToArrayBuffer(blob: Blob): Promise<ArrayBuffer> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const result = e.target?.result as ArrayBuffer;
-        if (result) {
-          resolve(result);
-        } else {
-          reject(new Error('Failed to read blob'));
-        }
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsArrayBuffer(blob);
-    });
   }
 }
 

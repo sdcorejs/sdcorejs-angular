@@ -14,3 +14,7 @@
 html {
   @include default.theme(default.$default-theme);
 }
+
+html, body {
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+}
