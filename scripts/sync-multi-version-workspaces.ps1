@@ -162,6 +162,12 @@ foreach ($v in $versions) {
     robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /R:1 /W:1 /NFL /NDL /NP | Out-Null
   }
 
+  # Explicitly delete projects/demo folder in target if present
+  $versionDemoPath = Join-Path $dest "projects/demo"
+  if (Test-Path -LiteralPath $versionDemoPath) {
+    Remove-Item -LiteralPath $versionDemoPath -Recurse -Force | Out-Null
+  }
+
   $rootPackagePath = Join-Path $dest "package.json"
   Update-MajorInPackageJson -PackagePath $rootPackagePath -Major $v.Major
 
