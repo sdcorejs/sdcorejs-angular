@@ -1,41 +1,272 @@
-<sd-modal [title]="title" (sdClosed)="close.emit()" #modal>
-  <div class="p-16" style="overflow: hidden; height: 100%">
-    <!-- Main image -->
-    @if (images.length) {
-      <div style="gap: 8px;" class="image-gallery">
-        <div class="thumbnail-container">
-          @for (image of images; track image.id; let i = $index) {
-            <button
-              type="button"
-              class="thumbnail-wrapper"
-              (click)="onClickThumbnailImage(i)"
-              [ngStyle]="{
-                border: activeIndex === i ? '2px solid #2962ff' : 'none'
-              }">
-              @if (image.src) {
-                <img fill loading="lazy" [ngSrc]="image.src" alt="thumbnail" [id]="image.id" class="thumbnail-img" />
-              } @else {
-                <img fill loading="lazy" [src]="image.blobSrc" alt="thumbnail" [id]="image.id" class="thumbnail-img" />
-              }
-            </button>
+<!--
+  Self-contained viewer shell. Component sizes to its parent (width:100%;
+  height:100%) — consumer decides whether to wrap in <sd-modal>,
+  <sd-side-drawer>, a page section, or use inline.
+-->
+<div [ngClass]="shellClass()" role="region">
+
+  <!-- ============================================
+       HEADER BAR
+       ============================================ -->
+  @if (stage() !== 'empty' && activeImage(); as img) {
+    <div class="sd-preview-header">
+      <div class="sd-preview-header__left">
+        <mat-icon class="sd-preview-header__icon" fontIcon="image"></mat-icon>
+        <div class="sd-preview-header__meta">
+          <div class="sd-preview-header__name T14M" [title]="img.name">{{ img.name }}</div>
+          @if (img.size) {
+            <div class="sd-preview-header__sub">
+              {{ formatBytes(img.size) }}
+            </div>
           }
-        </div>
-        <div class="main-image-container" #mainImage>
-          @let activedImage = images[activeIndex];
-          @if (activedImage.src) {
-            <img fill priority [ngSrc]="activedImage.src" class="main-image" alt="Main display image" />
-          } @else {
-            <img fill priority [src]="activedImage.blobSrc!" class="main-image" alt="Main display image" />
-          }
-          <sd-button prefixIcon="arrow_forward_ios" class="next-icon" (click)="updateCurrentImage(1)"></sd-button>
-          <sd-button prefixIcon="arrow_back_ios_new" class="back-icon" (click)="updateCurrentImage(-1)"></sd-button>
         </div>
       </div>
-    } @else {
-      <div class="no-image d-flex justify-content-center align-items-center flex-column m-20" style="height: 80%">
-        <i class="icon-no-image mb-16"></i>
-        <div>Không có thông tin ảnh</div>
+
+      @if (images().length > 1) {
+        <div class="sd-preview-header__counter" aria-live="polite">
+          {{ activeIndex() + 1 }} / {{ images().length }}
+        </div>
+      }
+    </div>
+  } @else if (title()) {
+    <!-- Optional override title even on empty state -->
+    <div class="sd-preview-header sd-preview-header--simple">
+      <div class="sd-preview-header__name T14M">{{ title() }}</div>
+    </div>
+  }
+
+  <!-- ============================================
+       BODY (stage + thumbnails per layout)
+       ============================================ -->
+  <div class="sd-preview-body">
+
+    <!-- STAGE ............................................................... -->
+    <div
+      class="sd-preview-stage"
+      [class.sd-preview-stage--dragging]="zoom() > 1"
+      (wheel)="onWheel($event)"
+      (pointerdown)="onPointerDown($event)"
+      (pointermove)="onPointerMove($event)"
+      (pointerup)="onPointerUp($event)"
+      (pointercancel)="onPointerCancel($event)"
+      (dblclick)="onImageDblClick()">
+
+      @switch (stage()) {
+        @case ('empty') {
+          <div class="sd-preview-status">
+            <div class="sd-preview-status__tile sd-preview-status__tile--muted">
+              <mat-icon fontIcon="image_not_supported"></mat-icon>
+            </div>
+            <div class="sd-preview-status__title">
+              {{ 'core.component.preview-image.no-image' | translate }}
+            </div>
+            <div class="sd-preview-status__hint">
+              {{ 'core.component.preview-image.no-image-hint' | translate }}
+            </div>
+          </div>
+        }
+        @case ('loading') {
+          <div class="sd-preview-status">
+            <div class="sd-preview-spinner" role="progressbar"></div>
+            <div class="sd-preview-status__hint">
+              {{ 'core.component.preview-image.loading' | translate }}
+            </div>
+          </div>
+        }
+        @default {
+          @if (activeImage(); as img) {
+            @if (img.loading) {
+              <!-- Per-image loading (retry inline) — giữ nav/dots/thumbs visible -->
+              <div class="sd-preview-image-loading" role="status"
+                   [attr.aria-label]="'core.component.preview-image.loading' | translate">
+                <div class="sd-preview-spinner"></div>
+                <div class="sd-preview-status__hint">
+                  {{ 'core.component.preview-image.loading' | translate }}
+                </div>
+              </div>
+            } @else if (img.error) {
+              <!-- Inline broken-image placeholder — giữ nav/dots/thumbs visible -->
+              <div class="sd-preview-image-broken" role="img"
+                   [attr.aria-label]="'core.component.preview-image.load-error' | translate">
+                <div class="sd-preview-status__tile sd-preview-status__tile--danger">
+                  <mat-icon fontIcon="broken_image"></mat-icon>
+                </div>
+                <div class="sd-preview-status__title">
+                  {{ 'core.component.preview-image.load-error' | translate }}
+                </div>
+                <div class="sd-preview-status__hint">
+                  {{ 'core.component.preview-image.load-error-hint' | translate }}
+                </div>
+                <button type="button" class="sd-preview-btn-primary" (click)="retryActive()" [attr.data-autoId]="autoIdRetry()">
+                  <mat-icon fontIcon="refresh"></mat-icon>
+                  <span>{{ 'core.component.preview-image.retry' | translate }}</span>
+                </button>
+              </div>
+            } @else {
+              <img
+                class="sd-preview-image"
+                [src]="img.blobUrl || img.url"
+                [alt]="img.alt || img.name"
+                [style.transform]="imageTransform()"
+                (error)="onImageError()"
+                draggable="false" />
+
+              @if (img.caption) {
+                <div class="sd-preview-caption">{{ img.caption }}</div>
+              }
+            }
+          }
+        }
+      }
+
+      <!-- KEYBOARD HINT ............................................. -->
+      @if (stage() === 'ready' && images().length > 1) {
+        <div class="sd-preview-kbd-hint" aria-hidden="true">
+          <span class="sd-preview-kbd">←</span>
+          <span class="sd-preview-kbd">→</span>
+          <span class="sd-preview-kbd-text">{{ 'core.component.preview-image.kbd-hint-nav' | translate }}</span>
+        </div>
+      }
+
+      <!-- NAV ARROWS ............................................. -->
+      @if (stage() === 'ready' && images().length > 1) {
+        <button
+          type="button"
+          class="sd-preview-nav sd-preview-nav--prev"
+          [disabled]="!hasPrev()"
+          [attr.aria-label]="'core.component.preview-image.prev' | translate"
+          [attr.data-autoId]="autoIdPrev()"
+          (click)="updateCurrentImage(-1)">
+          <mat-icon fontIcon="chevron_left"></mat-icon>
+        </button>
+        <button
+          type="button"
+          class="sd-preview-nav sd-preview-nav--next"
+          [disabled]="!hasNext()"
+          [attr.aria-label]="'core.component.preview-image.next' | translate"
+          [attr.data-autoId]="autoIdNext()"
+          (click)="updateCurrentImage(1)">
+          <mat-icon fontIcon="chevron_right"></mat-icon>
+        </button>
+      }
+
+      <!-- DOTS INDICATOR ......................................... -->
+      @if (thumbnailPosition() === 'dots' && stage() === 'ready' && images().length > 1) {
+        <div class="sd-preview-dots" role="tablist">
+          @for (img of images(); track img.id; let i = $index) {
+            <button
+              type="button"
+              class="sd-preview-dot"
+              [class.sd-preview-dot--active]="i === activeIndex()"
+              [attr.aria-label]="'core.component.preview-image.next' | translate"
+              [attr.data-autoId]="autoIdDot(i)"
+              (click)="onClickThumbnailImage(i)"></button>
+          }
+        </div>
+      }
+
+      <!-- FLOATING TOOLBAR ....................................... -->
+      @if (showToolbar() && stage() === 'ready') {
+        <div class="sd-preview-toolbar" role="toolbar">
+          @if (zoomable()) {
+            <button
+              type="button"
+              class="sd-preview-toolbar__btn"
+              [attr.aria-label]="'core.component.preview-image.zoom-out' | translate"
+              [attr.title]="'core.component.preview-image.zoom-out' | translate"
+              [attr.data-autoId]="autoIdZoomOut()"
+              (click)="zoomOut()">
+              <mat-icon fontIcon="zoom_out"></mat-icon>
+            </button>
+            <span class="sd-preview-toolbar__readout">{{ zoomPercent() }}%</span>
+            <button
+              type="button"
+              class="sd-preview-toolbar__btn"
+              [attr.aria-label]="'core.component.preview-image.zoom-in' | translate"
+              [attr.title]="'core.component.preview-image.zoom-in' | translate"
+              [attr.data-autoId]="autoIdZoomIn()"
+              (click)="zoomIn()">
+              <mat-icon fontIcon="zoom_in"></mat-icon>
+            </button>
+            <span class="sd-preview-toolbar__divider"></span>
+          }
+          <button
+            type="button"
+            class="sd-preview-toolbar__btn sd-preview-toolbar__btn--with-label"
+            [attr.aria-label]="'core.component.preview-image.fit' | translate"
+            [attr.data-autoId]="autoIdFit()"
+            (click)="fitToScreen()">
+            <mat-icon fontIcon="fit_screen"></mat-icon>
+            <span class="sd-preview-toolbar__btn-label">{{ 'core.component.preview-image.fit' | translate }}</span>
+          </button>
+          <button
+            type="button"
+            class="sd-preview-toolbar__btn"
+            [attr.aria-label]="'core.component.preview-image.rotate' | translate"
+            [attr.title]="'core.component.preview-image.rotate' | translate"
+            [attr.data-autoId]="autoIdRotate()"
+            (click)="rotate('right')">
+            <mat-icon fontIcon="rotate_right"></mat-icon>
+          </button>
+          <span class="sd-preview-toolbar__divider"></span>
+          @if (downloadable()) {
+            <button
+              type="button"
+              class="sd-preview-toolbar__btn"
+              [attr.aria-label]="'core.component.preview-image.download' | translate"
+              [attr.title]="'core.component.preview-image.download' | translate"
+              [attr.data-autoId]="autoIdDownload()"
+              (click)="downloadCurrent()">
+              <mat-icon fontIcon="download"></mat-icon>
+            </button>
+          }
+          <button
+            type="button"
+            class="sd-preview-toolbar__btn"
+            [attr.aria-label]="'core.component.preview-image.fullscreen' | translate"
+            [attr.title]="'core.component.preview-image.fullscreen' | translate"
+            [attr.data-autoId]="autoIdFullscreen()"
+            (click)="toggleFullscreen()">
+            <mat-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- THUMBNAIL STRIP .................................................... -->
+    @if (
+      stage() === 'ready' &&
+      images().length > 1 &&
+      thumbnailPosition() !== 'none' &&
+      thumbnailPosition() !== 'dots'
+    ) {
+      <div
+        class="sd-preview-thumbs"
+        [class.sd-preview-thumbs--vertical]="thumbnailPosition() === 'left' || thumbnailPosition() === 'right'">
+        @for (img of images(); track trackByImage($index, img); let i = $index) {
+          <button
+            type="button"
+            class="sd-preview-thumb"
+            [class.sd-preview-thumb--active]="i === activeIndex()"
+            [id]="'sd-preview-thumb-' + i"
+            [attr.aria-label]="img.name"
+            [attr.aria-current]="i === activeIndex() ? 'true' : null"
+            [attr.data-autoId]="autoIdThumb(i)"
+            (click)="onClickThumbnailImage(i)">
+            @if (img.error) {
+              <div class="sd-preview-thumb__broken">
+                <mat-icon fontIcon="broken_image"></mat-icon>
+              </div>
+            } @else {
+              <img class="sd-preview-thumb__img" [src]="img.blobUrl || img.url" [alt]="img.alt || img.name" />
+            }
+            <span class="sd-preview-thumb__badge">{{ i + 1 }}</span>
+            @if (thumbnailPosition() === 'right' || thumbnailPosition() === 'left') {
+              <span class="sd-preview-thumb__name" [title]="img.name">{{ img.name }}</span>
+            }
+          </button>
+        }
       </div>
     }
   </div>
-</sd-modal>
+</div>

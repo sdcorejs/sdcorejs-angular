@@ -1,4 +1,4 @@
-﻿import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import * as uuid from 'uuid';
 
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -21,6 +21,7 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { ColumnTransformPipe } from './pipes/column-transform.pipe';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdBadge } from "@sdcorejs/angular/components/badge";
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'sd-import-excel',
@@ -40,8 +41,7 @@ import { SdBadge } from "@sdcorejs/angular/components/badge";
     MatIconModule,
     MatMenuModule,
     MatProgressSpinner,
-    SdBadge
-],
+    SdBadge, TranslatePipe],
   providers: [
     ColumnHiddenPipe
   ]
@@ -75,6 +75,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
   isUploaded = false;
   isDownloadTemplate = false;
   @Output() sdClosed = new EventEmitter();
+  readonly #i18n = inject(I18nService);
   constructor(
     private ref: ChangeDetectorRef,
     private excelService: SdExcelService,
@@ -143,12 +144,12 @@ export class SdImportExcel implements OnInit, OnDestroy {
       const offset = this.hasDescription ? 2 : 1;
       items.splice(0, offset);
       if (items.length === 0) {
-        this.notifyService.warning(`Tá»‡p tin khÃ´ng cÃ³ dá»¯ liá»‡u`);
+        this.notifyService.warning(this.#i18n.t('core.component.import-excel.no-data-in-file'));
         return;
       }
       const limit = this.option.limit || 1000;
       if (items.length > limit) {
-        this.notifyService.warning(`Giá»›i háº¡n táº£i lÃªn ${limit} dÃ²ng`);
+        this.notifyService.warning(this.#i18n.t('core.component.import-excel.row-limit', { limit }));
         return;
       }
       this.#reset();
@@ -220,19 +221,19 @@ export class SdImportExcel implements OnInit, OnDestroy {
         if (column.defaultValue !== undefined) {
           item[column.field] = item[column.field] ?? column.defaultValue;
         } else if (column.required && !item[column.field] && item[column.field] !== 0) {
-          error[column.field] = `Dá»¯ liá»‡u báº¯t buá»™c`;
+          error[column.field] = this.#i18n.t('core.component.import-excel.required');
           errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
           continue;
         }
         if (column.type === 'string') {
           const value = (item[column.field] || '').toString();
           if (column.minlength !== undefined && value.length < column.minlength) {
-            error[column.field] = `Äá»™ dÃ i chuá»—i tá»‘i thiá»ƒu: ${column.minlength}`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.min-length', { min: column.minlength });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
           if (column.maxlength !== undefined && value.length > column.maxlength) {
-            error[column.field] = `Äá»™ dÃ i chuá»—i tá»‘i Ä‘a: ${column.maxlength}`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.max-length', { max: column.maxlength });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
@@ -241,7 +242,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
           if (item[column.field]) {
             const value = +item[column.field];
             if (!NumberUtilities.isNumber(item[column.field])) {
-              error[column.field] = `${item[column.field]} khÃ´ng pháº£i sá»‘ há»£p lá»‡`;
+              error[column.field] = this.#i18n.t('core.component.import-excel.not-a-number', { value: item[column.field] });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
@@ -251,12 +252,12 @@ export class SdImportExcel implements OnInit, OnDestroy {
             item[column.field] = undefined;
           }
           if (column.min !== undefined && item[column.field] < column.min) {
-            error[column.field] = `${item[column.field]} khÃ´ng thá»a giÃ¡ trá»‹ tá»‘i thiá»ƒu: ${column.min}`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.below-min', { value: item[column.field], min: column.min });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
           if (column.max !== undefined && item[column.field] > column.max) {
-            error[column.field] = `${item[column.field]} khÃ´ng thá»a giÃ¡ trá»‹ tá»‘i Ä‘a: ${column.max}`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.above-max', { value: item[column.field], max: column.max });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
@@ -278,17 +279,17 @@ export class SdImportExcel implements OnInit, OnDestroy {
           } else if (item[column.field] === '') item[column.field] = undefined;
 
           if (typeof item[column.field] !== 'boolean' && item[column.field] !== undefined && item[column.field] !== null) {
-            error[column.field] = `Vui lÃ²ng nháº­p giÃ¡ trá»‹ há»£p lá»‡ true, false, 1, 0`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.invalid-bool');
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
           }
         } else if (column.type === 'values') {
           if (item[column.field] && typeof item[column.field] !== 'number' && typeof item[column.field] !== 'string') {
-            error[column.field] = `GiÃ¡ trá»‹ ${item[column.field]} khÃ´ng há»£p lá»‡`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.invalid-value', { value: item[column.field] });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
           if (column.checkValueInArray && item[column.field] && !column.values.some(e => e.toString() === item[column.field].toString())) {
-            error[column.field] = `GiÃ¡ trá»‹ ${item[column.field]} khÃ´ng thuá»™c danh sÃ¡ch cho phÃ©p [${column.values.join()}]`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.value-not-in-list', { value: item[column.field], list: column.values.join() });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
@@ -301,29 +302,29 @@ export class SdImportExcel implements OnInit, OnDestroy {
           }
           if (format && item[column.field]) {
             if (typeof val !== 'string') {
-              error[column.field] = `NgÃ y ${val} khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng ${column.format}`;
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             if (type === 'date' && !this.#isValidDate(format, val)) {
-              error[column.field] = `NgÃ y ${val} khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng ${column.format}`;
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             if (type === 'time' && !this.#isValidTime(format, val)) {
-              error[column.field] = `NgÃ y ${val} khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng ${column.format}`;
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             if (type === 'datetime' && !this.#isValidDateTime(format, val)) {
-              error[column.field] = `NgÃ y ${val} khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng ${column.format}`;
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             item[column.field] = DateUtilities.parseFrom(val, format);
           }
           if (item[column.field] && !DateUtilities.isDate(item[column.field])) {
-            error[column.field] = `NgÃ y ${val} khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng ${column.format}`;
+            error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
@@ -340,7 +341,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
           if (validation.warningMessage) excelItem.meta.warningMessages.push(validation.warningMessage);
         }
       } catch (ex: any) {
-        error[column.field] = `${ex?.message || ex?.error || ex || 'CÃ³ lá»—i xáº£y ra'}`;
+        error[column.field] = `${ex?.message || ex?.error || ex || this.#i18n.t('core.component.import-excel.generic-error')}`;
         errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
       }
     }
@@ -432,7 +433,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
     const columns: SdExcelTemplateColumn[] = [
       {
         field: 'sdMessage',
-        title: 'ThÃ´ng bÃ¡o',
+        title: this.#i18n.t('core.component.import-excel.message-column'),
         width: '250px',
         required: false,
       },
@@ -451,7 +452,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
           }
           return {
             ...result,
-            sdMessage: (e.meta.errorMessages.join(', ') || e.meta.warningMessages.join(', ') || 'ThÃ nh cÃ´ng')
+            sdMessage: (e.meta.errorMessages.join(', ') || e.meta.warningMessages.join(', ') || this.#i18n.t('core.component.import-excel.success'))
               ?.replace(/<strong>/g, '')
               .replace(/<\/strong>/g, '')
               .replace(/<br>/g, '\n'),

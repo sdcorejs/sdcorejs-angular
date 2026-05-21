@@ -55,6 +55,7 @@ import {
   SdSearch,
   SdSelectionData,
 } from '@sdcorejs/angular/forms/models';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { ArrayUtilities, SdUtilities, StringUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { SdNestedKeyOf, SdSize } from '@sdcorejs/angular/utilities/models';
 
@@ -99,6 +100,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #ref = inject(ChangeDetectorRef);
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
   #el = inject(ElementRef);
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // 2. SIGNAL INPUTS & MODEL
@@ -154,7 +156,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
+    if (errors['required']) return this.#i18n.t('core.form.select.required');
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
@@ -405,7 +407,10 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
           return formValue === value;
         });
 
-        if (items.length <= this.limit()) return filteredList;
+        // Khi filtered mode báº­t vÃ  multiple=true, luÃ´n Ä‘áº©y item Ä‘Ã£ chá»n lÃªn trÃªn
+        // Ä‘á»ƒ user dá»… nhÃ¬n tháº¥y selection hiá»‡n táº¡i, ká»ƒ cáº£ dataset chÆ°a vÆ°á»£t limit.
+        const shouldPinSelectedFirst = this.filtered() && this.multiple() && isArray;
+        if (!shouldPinSelectedFirst && items.length <= this.limit()) return filteredList;
 
         return filteredList.sort((current, next) => {
           const value1 = hasFields ? this.itemValue(current) : current;

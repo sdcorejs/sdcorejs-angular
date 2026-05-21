@@ -5,16 +5,17 @@
     "entryFile": "src/public-api.ts"
   },
   "allowedNonPeerDependencies": [
-    "moment",
+    "@sdcorejs/utils",
     "@ckeditor/ckeditor5-angular",
     "ckeditor5",
+    "date-fns",
     "exceljs",
-    "export-to-csv",
     "@omer-go/docx-parser-converter-ts",
     "@bjorn3/browser_wasi_shim",
     "keycloak-js",
     "prismjs",
-    "chart.js"
+    "chart.js",
+    "pdfjs-dist"
   ],
   "assets": ["assets"]
 }

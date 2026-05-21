@@ -37,6 +37,7 @@ import { debounceTime } from 'rxjs/operators';
 import * as uuid from 'uuid';
 import { ISdEditorConfiguration, SD_EDITOR_CONFIGURATION, SdEditorUploadFileFuncUpload } from './configurations';
 import { SdNotifyService } from '@sdcorejs/angular/services';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { EditorImageUploadPlugin } from './plugins/image-upload/image-upload.plugin';
 import { EditorOption, SdEditorOption } from './models';
 import { HandleSdCustomValidator, SdCustomValidator, SdFormControl } from '@sdcorejs/angular/forms/models';
@@ -65,6 +66,7 @@ export class SdEditor {
   readonly #cdRef = inject(ChangeDetectorRef);
   readonly #uploadConfig = inject<ISdEditorConfiguration | ISdEditorConfiguration[]>(SD_EDITOR_CONFIGURATION, { optional: true });
   readonly #notifyService = inject(SdNotifyService);
+  readonly #i18n = inject(I18nService);
 
   // Input
   readonly option = input<SdEditorOption>({});
@@ -91,7 +93,7 @@ export class SdEditor {
   });
   readonly key = input<string | undefined>(undefined);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  readonly autoId = computed(() => (this.autoIdInput() ? `forms-editor-${this.autoIdInput()}` : undefined));
+  readonly autoId = computed(() => (this.autoIdInput() ? `components-editor-${this.autoIdInput()}` : undefined));
   readonly name = input<string>(uuid.v4());
   readonly valueModel = model<string>('', { alias: 'model' });
 
@@ -111,8 +113,8 @@ export class SdEditor {
   get errorMessage(): string | undefined {
     const errors = this.formControl.errors;
     if (!errors) return undefined;
-    if (errors['required']) return 'Vui lÃ²ng nháº­p ná»™i dung';
-    if (errors['maxlength']) return `Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: ${this.maxlength()}`;
+    if (errors['required']) return this.#i18n.t('core.component.editor.required');
+    if (errors['maxlength']) return this.#i18n.t('core.component.editor.maxlength', { max: this.maxlength() ?? 0 });
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
@@ -154,6 +156,8 @@ export class SdEditor {
         ...opt,
         uploadFn,
         onWarning: (msg: string) => this.#notifyService.warning(msg),
+        // Truyá»n i18n service xuá»‘ng CKEditor plugin (ngoÃ i DI tree) Ä‘á»ƒ dá»‹ch warning messages
+        _i18n: this.#i18n,
       }),
       plugins,
       toolbar: { items: toolbarItems, shouldNotGroupWhenFull: true },
@@ -221,7 +225,9 @@ export class SdEditor {
   focusEditor = () => this.#editor?.editing?.view?.focus?.();
 
   #uploadImages = async (): Promise<void> => {
-    const uploadMode = this.option()?.imageConfig?.uploadMode;
+    const uploadMode = this.option()?.imageConfig?.uploadMode ?? 'deferred';
+    // Early return náº¿u khÃ´ng pháº£i 'deferred' mode.
+    // Náº¿u trÆ°á»›c Ä‘Ã³ lÃ  mode "deferred" mÃ  mong muá»‘n chuyá»ƒn sang mode "immediate", dev chÆ°a cáº§n refactor code phÃ­a caller mÃ  khÃ´ng áº£nh hÆ°á»Ÿng Ä‘áº¿n logic.
     if (uploadMode !== 'deferred') return;
 
     const uploadFn = this.#buildUploadFn();
@@ -252,7 +258,7 @@ export class SdEditor {
     for (const blobUrl of processedBlobUrls) {
       plugin.pendingFiles.delete(blobUrl);
     }
-    
+
     for (const [blobUrl, file] of failedBatches.flat()) {
       plugin.pendingFiles.set(blobUrl, file);
     }

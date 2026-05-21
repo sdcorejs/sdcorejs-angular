@@ -1,6 +1,8 @@
-<div class="c-quick-action d-flex align-items-center gap-16" [class.active]="isOpened">
-  <div class="flex-1 T14R">
+<div class="c-quick-action d-flex align-items-center" [class.active]="opened()">
+  <div class="c-quick-action-message T14R">
     <ng-content select="[sdMessage]"></ng-content>
   </div>
-  <ng-content select="[sdAction]"></ng-content>
+  <div class="c-quick-action-action">
+    <ng-content select="[sdAction]"></ng-content>
+  </div>
 </div>

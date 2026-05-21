@@ -52,6 +52,8 @@
 }
 
 /* --- CKEditor Overrides --- */
+// Logo bản quyền ckedior 5 nên phải dùng ng:deep
+// Ẩn logo nên không ảnh hưởng đến css khác
 ::ng-deep .ck-powered-by {
   display: none;
 }

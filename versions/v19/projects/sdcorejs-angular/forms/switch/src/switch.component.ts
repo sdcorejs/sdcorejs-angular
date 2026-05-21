@@ -1,22 +1,24 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   EventEmitter,
   Input,
-  Output,
-  OnInit,
-  AfterViewInit,
+  input,
   OnDestroy,
+  OnInit,
+  Output,
 } from '@angular/core';
 import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdFormControl } from '@sdcorejs/angular/forms/models';
-import { SdColor, SdSize } from '@sdcorejs/angular/utilities/models';
+import { SdColor } from '@sdcorejs/angular/utilities/models';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
 
@@ -29,20 +31,15 @@ import * as uuid from 'uuid';
 })
 export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
   id = `I${uuid.v4()}`;
-  autoId?: string;
-  @Input('autoId') set _autoId(val: string | undefined | null) {
-    if (!val) {
-      return;
-    }
-    this.autoId = `forms-switch-${val}`;
-  }
+  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  readonly autoId = computed(() => (this.autoIdInput() ? `forms-switch-${this.autoIdInput()}` : undefined));
   #name = uuid.v4();
   @Input('name') set _name(val: string | undefined) {
     if (val) {
       this.#name = val;
     }
   }
-  @Input() size: SdSize = 'md';
+
   #form?: FormGroup;
   @Input() set form(val: NgForm | FormGroup | undefined | null) {
     if (val) {

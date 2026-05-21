@@ -1,12 +1,15 @@
-﻿import { Injectable } from '@angular/core';
+﻿import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
 import { SdColor } from '@sdcorejs/angular/utilities/models';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SdConfirmService {
+  readonly #i18n = inject(I18nService);
+
   constructor(private dialog: MatDialog) {}
 
   confirm = (
@@ -25,10 +28,10 @@ export class SdConfirmService {
       width: option?.width || '400px',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
-        title: option?.title || 'XÃ¡c nháº­n',
+        title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
-        yesTitle: option?.yesTitle || 'Äá»“ng Ã½',
-        noTitle: option?.noTitle || 'Há»§y bá»',
+        yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes'),
+        noTitle: option?.noTitle || this.#i18n.t('core.confirm.no'),
         noButtonColor: option?.noButtonColor || 'secondary',
         yesButtonColor: option?.yesButtonColor || 'primary',
       },
@@ -64,10 +67,10 @@ export class SdConfirmService {
       width: '400px',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
-        title: option?.title || 'XÃ¡c nháº­n',
+        title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
-        yesTitle: option?.yesTitle || 'CÃ³',
-        noTitle: option?.noTitle || 'KhÃ´ng',
+        yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
+        noTitle: option?.noTitle || this.#i18n.t('core.confirm.no-short'),
         noButtonColor: option?.noButtonColor || 'secondary',
         yesButtonColor: option?.yesButtonColor || 'primary',
         input: {
@@ -111,10 +114,10 @@ export class SdConfirmService {
       width: '400px',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
-        title: option?.title || 'XÃ¡c nháº­n',
+        title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
-        yesTitle: option?.yesTitle || 'CÃ³',
-        noTitle: option?.noTitle || 'KhÃ´ng',
+        yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
+        noTitle: option?.noTitle || this.#i18n.t('core.confirm.no-short'),
         noButtonColor: option?.noButtonColor || 'secondary',
         yesButtonColor: option?.yesButtonColor || 'primary',
         radio: {
@@ -159,10 +162,10 @@ export class SdConfirmService {
       width: '400px',
       disableClose: option?.disableBackdropClose ?? true,
       data: {
-        title: option?.title || 'XÃ¡c nháº­n',
+        title: option?.title || this.#i18n.t('core.confirm.title'),
         message,
-        yesTitle: option?.yesTitle || 'CÃ³',
-        noTitle: option?.noTitle || 'KhÃ´ng',
+        yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
+        noTitle: option?.noTitle || this.#i18n.t('core.confirm.no-short'),
         noButtonColor: option?.noButtonColor || 'secondary',
         yesButtonColor: option?.yesButtonColor || 'primary',
         date: {

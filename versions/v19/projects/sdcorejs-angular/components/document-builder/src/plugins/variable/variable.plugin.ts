@@ -68,12 +68,12 @@ export class VariablePlugin extends Plugin {
       },
     });
 
-    // 2b. One-way attribute converter cho bindingValue (chá»‰ editing view, khÃ´ng áº£nh hÆ°á»Ÿng getData())
-    // Chá»‰ cháº¡y khi bindValue() / clearValue() gá»i model.change â†’ setAttribute/removeAttribute
-    // Binding Ä‘Æ°á»£c persist vÃ o HTML (getData() vÃ  setData() cÃ³ binding state)
-    // conversion.for('downcast') áº£nh hÆ°á»Ÿng cáº£ editing view vÃ  data view (getData)
-    conversion.for('downcast').add(dispatcher => {
-      dispatcher.on('attribute:bindingValue:variable', (evt, data, conversionApi) => {
+    // 2b. bindingValue â†’ view
+    // - editingDowncast: HTML bind dÃ¹ng createRawElement Ä‘á»ƒ hiá»ƒn thá»‹ table/section trong editor.
+    // - dataDowncast (getData): CHá»ˆ lÆ°u data-binding-value (URI), khÃ´ng chÃ¨n block HTML vÃ o <span> â€”
+    //   trÃ¡nh HTML lÆ°u dáº¡ng <p><span>â€¦<table>â€¦ (invalid / upcast CKEditor lá»—i null.start).
+    const applyBindingValueAttributeToView = (isDataPipeline: boolean) => {
+      return (evt: any, data: any, conversionApi: any) => {
         if (!conversionApi.consumable.consume(data.item, evt.name)) return;
 
         const viewWriter = conversionApi.writer;
@@ -84,23 +84,54 @@ export class VariablePlugin extends Plugin {
         const isBound = !!bindingValue;
         const display = data.item.getAttribute('display') as string;
 
-        // Cáº­p nháº­t data-binding attribute trÃªn container span
-        viewWriter.setAttribute('data-binding', isBound ? 'true' : 'false', viewElement);
-
-        // XÃ³a text node cÅ© vÃ  chÃ¨n text má»›i (bound value hoáº·c {{display}})
         viewWriter.remove(viewWriter.createRangeIn(viewElement));
-        viewWriter.insert(
-          viewWriter.createPositionAt(viewElement, 0),
-          viewWriter.createText(isBound ? (bindingValue as string) : `{{${display}}}`)
-        );
-      });
+
+        if (!isBound) {
+          viewWriter.setAttribute('data-binding', 'false', viewElement);
+          viewWriter.removeAttribute('data-binding-value', viewElement);
+          viewWriter.insert(viewWriter.createPositionAt(viewElement, 0), viewWriter.createText(`{{${display}}}`));
+          return;
+        }
+
+        const raw = bindingValue as string;
+        const isHtml = /<[a-z][\s\S]*>/i.test(raw);
+
+        if (isHtml) {
+          viewWriter.setAttribute('data-binding', 'html', viewElement);
+          viewWriter.setAttribute('data-binding-value', encodeURIComponent(raw), viewElement);
+          if (isDataPipeline) {
+            // KhÃ´ng nhÃ©t DOM con vÃ o serialized HTML; upcast Ä‘á»c binding tá»« data-binding-value.
+            return;
+          }
+          const htmlHost = viewWriter.createRawElement(
+            'span',
+            { class: 'variable-html-content' },
+            (domElement: HTMLElement) => {
+              domElement.innerHTML = raw;
+            }
+          );
+          viewWriter.insert(viewWriter.createPositionAt(viewElement, 0), htmlHost);
+        } else {
+          viewWriter.setAttribute('data-binding', 'true', viewElement);
+          viewWriter.removeAttribute('data-binding-value', viewElement);
+          viewWriter.insert(viewWriter.createPositionAt(viewElement, 0), viewWriter.createText(raw));
+        }
+      };
+    };
+
+    conversion.for('dataDowncast').add(dispatcher => {
+      dispatcher.on('attribute:bindingValue:variable', applyBindingValueAttributeToView(true));
+    });
+    conversion.for('editingDowncast').add(dispatcher => {
+      dispatcher.on('attribute:bindingValue:variable', applyBindingValueAttributeToView(false));
     });
 
     // 3. HTML -> Model
     conversion.for('upcast').elementToElement({
       // NOTE: Chá»‰ khai bÃ¡o cÃ¡c attribute Cáº¦N THIáº¾T Ä‘á»ƒ nháº­n biáº¿t variable widget.
       // - data-binding KHÃ”NG Ä‘Æ°á»£c Ä‘Æ°a vÃ o required attributes (HTML cÅ© khÃ´ng cÃ³ sáº½ khÃ´ng Ä‘Æ°á»£c nháº­n biáº¿t).
-      // - Náº¿u data-binding="true" trong HTML â†’ Ä‘á»c text content lÃ m bindingValue Ä‘á»ƒ restore tráº¡ng thÃ¡i bound.
+      // - data-binding="true" â†’ Ä‘á»c text child lÃ m bindingValue (plain text).
+      // - data-binding="html" â†’ Ä‘á»c data-binding-value (URI-encoded) lÃ m bindingValue.
       view: {
         name: 'span',
         classes: 'variable-widget ck-widget',
@@ -112,11 +143,20 @@ export class VariablePlugin extends Plugin {
         },
       },
       model: (viewElement, { writer: modelWriter }) => {
-        const isBound = viewElement.getAttribute('data-binding') === 'true';
+        const bindingMode = viewElement.getAttribute('data-binding');
         let bindingValue: string | undefined;
 
-        if (isBound) {
-          // Äá»c text content lÃ m bindingValue (bound value Ä‘Æ°á»£c lÆ°u trá»±c tiáº¿p vÃ o innerHTML)
+        if (bindingMode === 'html') {
+          const encoded = viewElement.getAttribute('data-binding-value');
+          if (encoded) {
+            try {
+              bindingValue = decodeURIComponent(encoded);
+            } catch {
+              bindingValue = undefined;
+            }
+          }
+        } else if (bindingMode === 'true') {
+          // Äá»c text content lÃ m bindingValue (bound value Ä‘Æ°á»£c lÆ°u trá»±c tiáº¿p vÃ o inner text)
           for (const child of viewElement.getChildren()) {
             if (child.is('$text')) {
               bindingValue = (child as any).data as string;
@@ -157,16 +197,18 @@ export class VariablePlugin extends Plugin {
           const result = await SdResolveMaybeAsync<boolean | SdDocumentBuilderVariable>(option.onDropVariable(variable));
 
           // * Há»— trá»£ dá»¯ liá»‡u cÃ³ sáºµn sáº½ chá»‰ cáº§n nháº­n vÃ o boolean cÃ³ cho phÃ©p tháº£ hay khÃ´ng?
+          // i18n náº±m trong editor.config â€” plugin khÃ´ng cÃ³ DI nÃªn Ä‘á»c qua config; Angular wrapper luÃ´n truyá»n _i18n
+          const i18n = (editor.config as Config<DocumentBuilderOption>).get('_i18n') as DocumentBuilderOption['_i18n'];
           if (typeof result === 'boolean') {
             if (!result) {
-              throw new Error('KhÃ´ng cho phÃ©p thÃªm variable vÃ o vÄƒn báº£n');
+              throw new Error(i18n?.t('core.component.document-builder.variable.not-allowed') ?? '');
             }
           } else {
             // * Há»— trá»£ dá»¯ liá»‡u láº¥y tá»« API (Kiá»ƒm tra xem result cÃ³ Ä‘Ãºng Ä‘á»‹nh dáº¡ng interface SdDocumentBuilderVariable hay khÃ´ng?)
             if (this.#isSdDocumentBuilderVariableResult(result)) {
               variable = result;
             } else {
-              throw new Error('Dá»¯ liá»‡u variable khÃ´ng há»£p lá»‡');
+              throw new Error(i18n?.t('core.component.document-builder.variable.invalid-data') ?? '');
             }
           }
         }
@@ -434,6 +476,7 @@ export class VariablePlugin extends Plugin {
               try {
                 resolved = await SdResolveMaybeAsync<SdDocumentBuilderVariable | null>(option.onPasteVariable(fragment.display));
               } catch (e) {
+                // @i18n-ignore â€” dev console warning
                 console.warn(`[VariablePlugin] onPasteVariable("${fragment.display}") tháº¥t báº¡i:`, e);
               }
             }
@@ -599,6 +642,7 @@ export class VariablePlugin extends Plugin {
         }
       }
     } else {
+      // @i18n-ignore â€” dev console warning
       console.warn(`Variable vá»›i uuid "${uuid}" khÃ´ng tÃ¬m tháº¥y trong tÃ i liá»‡u.`);
     }
   }
@@ -706,6 +750,28 @@ export class VariablePlugin extends Plugin {
   /** XÃ³a toÃ n bá»™ binding values trong document. Shorthand cá»§a clearValues(). */
   clearAllValues(): void {
     this.clearValues();
+  }
+}
+
+/**
+ * HTML tá»« getData() phiÃªn báº£n cÅ© cÃ³ thá»ƒ chá»©a block (vd. table) bÃªn trong `span.variable-widget[data-binding="html"]`,
+ * khiáº¿n setData/upcast CKEditor lá»—i (unexpected-error, null.start). Gá»i trÆ°á»›c `setData` Ä‘á»ƒ giá»¯ chá»‰
+ * `data-binding-value` vÃ  bá» cÃ¡c node con.
+ */
+export function sanitizeVariableHtmlBoundSerializedHtml(html: string): string {
+  if (!html || !html.includes('variable-widget')) return html;
+  try {
+    const doc = new DOMParser().parseFromString(`<div id="__sd_var_sanitize_root__">${html}</div>`, 'text/html');
+    const root = doc.getElementById('__sd_var_sanitize_root__');
+    if (!root) return html;
+    root.querySelectorAll('span.variable-widget').forEach(el => {
+      if (el.getAttribute('data-binding') !== 'html') return;
+      if (!el.hasAttribute('data-binding-value')) return;
+      el.replaceChildren();
+    });
+    return root.innerHTML;
+  } catch {
+    return html;
   }
 }
 

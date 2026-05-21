@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>sd-preview-pdf · UI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif; background: #f0f2f5; color: #212121; }
+    *, *::before, *::after { box-sizing: border-box; }
+    @keyframes sd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    button { font-family: inherit; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="sd-preview-pdf.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+
+    function ModalFrame({ children }) {
+      return (
+        <div style={{
+          width: '100%', height: '100%',
+          background: 'rgba(15, 23, 42, 0.55)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 24,
+        }}>
+          <div style={{ width: '100%', height: '100%', maxWidth: 1380, maxHeight: 900 }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    const SEARCH_RESULTS = [
+      { page: 8, before: 'Phương thức ', term: 'thanh toán', after: ' được thực hiện trước ngày 05' },
+      { page: 8, before: 'Mọi khoản chậm trả tiền ', term: 'thanh toán', after: ' sẽ chịu lãi phạt 0,05%/ngày' },
+      { page: 11, before: 'Tiền đặt cọc được hoàn trả khi kết thúc ', term: 'thanh toán', after: ' đầy đủ' },
+      { page: 13, before: 'Bên A có quyền yêu cầu ', term: 'thanh toán', after: ' bù khoản tiền chậm' },
+      { page: 16, before: 'Nghĩa vụ ', term: 'thanh toán', after: ' đúng hạn của Bên B' },
+      { page: 21, before: 'Khi chấm dứt, các khoản ', term: 'thanh toán', after: ' phải được hoàn tất trong 30 ngày' },
+    ];
+
+    const W = 1420, H = 940;
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="primary" title="Đề xuất default — Document viewer với sidebar"
+            subtitle="Header có file info + toolbar phụ · Sidebar tab Trang/Mục lục/Tìm · Trang giấy nổi trên nền tối · Floating toolbar dưới cùng">
+            <DCArtboard id="default" label="A · Default — thumbnail sidebar" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf currentPage={3} sidebarOpen sidebarMode="thumbnails" /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="outline" label="B · Sidebar dạng Mục lục (outline)" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf currentPage={8} sidebarOpen sidebarMode="outline" /></ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="layouts" title="Variations layout">
+            <DCArtboard id="no-sidebar" label="C · Sidebar ẩn — focus đọc tài liệu" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf currentPage={1} sidebarOpen={false} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="continuous" label="D · Cuộn liên tục (continuous scroll)" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf currentPage={9} sidebarOpen sidebarMode="thumbnails" scrollMode="continuous" /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="zoomed" label="E · Zoom 150% — fit width" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf currentPage={8} sidebarOpen={false} zoom={150} zoomMode="page-width" /></ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="search" title="Tìm kiếm trong tài liệu">
+            <DCArtboard id="search-bar" label="F · Search bar + highlight" width={W} height={H}>
+              <ModalFrame>
+                <SdPreviewPdf currentPage={8}
+                  sidebarOpen sidebarMode="search"
+                  searchOpen searchTerm="thanh toán" searchResults={SEARCH_RESULTS} />
+              </ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="states" title="Trạng thái rỗng / lỗi / đang tải">
+            <DCArtboard id="loading" label="G · Loading document" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf state="loading" loadingProgress={62} sidebarOpen={false} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="error" label="H · Error — file hỏng / password" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf state="error" sidebarOpen={false} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="empty" label="I · Empty — chưa có tài liệu" width={W} height={H}>
+              <ModalFrame><SdPreviewPdf state="empty" sidebarOpen={false} /></ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="api" title="Đề xuất API · sd-preview-pdf"
+            subtitle="Pattern giống sd-preview-image v2 nhưng nhận thêm trang/zoom/scroll mode">
+            <DCArtboard id="api-card" label="API spec" width={1100} height={1100}>
+              <ApiProposal />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    function ApiProposal() {
+      const sectionStyle = { padding: '20px 28px', borderBottom: '1px solid #e5e7eb' };
+      const codeStyle = {
+        background: '#0d0e10', color: '#e4e4e7',
+        padding: '14px 16px', borderRadius: 8,
+        fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+        fontSize: 12.5, lineHeight: 1.65, whiteSpace: 'pre',
+        overflow: 'auto', border: '1px solid #1f2937',
+      };
+      const Tag = ({ kind, children }) => {
+        const palette = {
+          new:   { bg: '#dcfce7', fg: '#166534' },
+          note:  { bg: '#fef3c7', fg: '#854d0e' },
+          dep:   { bg: '#e0e7ff', fg: '#3730a3' },
+        }[kind];
+        return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: palette.bg, color: palette.fg, letterSpacing: '0.04em', marginRight: 8 }}>{kind.toUpperCase()}</span>;
+      };
+      return (
+        <div style={{ background: '#fff', height: '100%', overflow: 'auto', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+          <div style={{ ...sectionStyle, background: 'linear-gradient(180deg, #f8fafc, #fff)' }}>
+            <div style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>sd-preview-pdf · API đề xuất</div>
+            <div style={{ fontSize: 13, color: '#64748b' }}>
+              Standalone component dùng <code>pdfjs-dist</code> hoặc <code>ngx-extended-pdf-viewer</code> làm engine.
+              UI shell, sidebar, toolbar và state machine do component tự quản lý.
+              Hosted trong <code>&lt;sd-modal&gt;</code> giống sd-preview-image.
+            </div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Inputs / Configuration</div>
+            <div style={codeStyle}>{`@Input() title?: string;                              // override "Xem tài liệu"
+@Input() startPage = 1;
+@Input() initialZoom: number | 'page-fit' | 'page-width' | 'page-actual' = 'page-fit';
+@Input() sidebar: 'thumbnails' | 'outline' | 'search' | 'none' = 'thumbnails';
+@Input() sidebarOpen = true;
+@Input() scrollMode: 'page' | 'continuous' | 'horizontal' = 'page';
+@Input() showToolbar = true;
+@Input() showSearch = true;
+@Input() allowDownload = true;
+@Input() allowPrint = true;
+@Input() password?: string;                            // for encrypted PDFs
+@Input() httpHeaders?: Record<string, string>;         // for auth-gated URLs`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>open() — đa dạng kiểu source</div>
+            <div style={codeStyle}>{`type PdfSource =
+  | string                                             // URL
+  | File                                               // file picker
+  | Blob
+  | ArrayBuffer
+  | Uint8Array
+  | { url: string; httpHeaders?: Record<string,string>; withCredentials?: boolean }
+  | { data: ArrayBuffer | Uint8Array };
+
+open(
+  source: PdfSource | null | undefined,
+  options?: {
+    startPage?: number;
+    initialZoom?: number | 'page-fit' | 'page-width';
+    title?: string;        // override filename in header
+  }
+): Promise<void>;`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Outputs</div>
+            <div style={codeStyle}>{`@Output() close = new EventEmitter<void>();
+@Output() loaded = new EventEmitter<{ totalPages: number; meta: PdfMeta }>();
+@Output() pageChange = new EventEmitter<number>();
+@Output() zoomChange = new EventEmitter<number>();
+@Output() download = new EventEmitter<{ filename: string }>();
+@Output() print = new EventEmitter<void>();
+@Output() loadError = new EventEmitter<{ reason: 'invalid' | 'password' | 'network' }>();
+@Output() searchChange = new EventEmitter<{ term: string; total: number }>();`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Imperative API (qua @ViewChild)</div>
+            <div style={codeStyle}>{`goToPage(page: number): void;
+nextPage(): void;
+prevPage(): void;
+firstPage(): void;
+lastPage(): void;
+
+zoomIn(): void;
+zoomOut(): void;
+setZoom(z: number | 'page-fit' | 'page-width'): void;
+rotate(direction: 'left' | 'right'): void;
+
+toggleSidebar(): void;
+setSidebar(mode: 'thumbnails' | 'outline' | 'search' | 'none'): void;
+setScrollMode(mode: 'page' | 'continuous' | 'horizontal'): void;
+
+search(term: string, options?: { caseSensitive?: boolean; wholeWord?: boolean }): Promise<number>;
+searchNext(): void;
+searchPrev(): void;
+
+download(): void;
+print(): void;
+toggleFullscreen(): void;`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Keyboard shortcuts</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px 16px', fontSize: 13 }}>
+              <Kbd>← → / PgUp PgDn</Kbd><span>chuyển trang</span>
+              <Kbd>Home / End</Kbd><span>trang đầu / cuối</span>
+              <Kbd>+ / − / 0</Kbd><span>zoom in / out / vừa trang</span>
+              <Kbd>Ctrl + F</Kbd><span>mở thanh tìm kiếm</span>
+              <Kbd>F3 / Shift+F3</Kbd><span>kết quả tiếp theo / trước</span>
+              <Kbd>r / R</Kbd><span>xoay phải / xoay trái</span>
+              <Kbd>Ctrl + P</Kbd><span>in tài liệu</span>
+              <Kbd>Ctrl + S</Kbd><span>tải xuống</span>
+              <Kbd>F / Esc</Kbd><span>toàn màn hình / đóng</span>
+            </div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Implementation notes</div>
+            <div style={{ display: 'grid', gap: 8, fontSize: 13, lineHeight: 1.6 }}>
+              <div><Tag kind="new" />Dùng <code>pdfjs-dist</code> để parse + render — cài kèm web worker để render không block main thread.</div>
+              <div><Tag kind="new" />Mỗi trang render vào <code>&lt;canvas&gt;</code> + có layer <code>&lt;div&gt;</code> text để cho phép select / copy / search.</div>
+              <div><Tag kind="new" />Virtual scrolling khi <code>scrollMode: 'continuous'</code> — chỉ render trang trong viewport ±1.</div>
+              <div><Tag kind="new" />Outline đọc qua <code>pdfDoc.getOutline()</code> — render đệ quy ra Mục lục.</div>
+              <div><Tag kind="new" />Search dùng <code>pdfFindController</code> của PDF.js (xử lý unicode + diacritics tiếng Việt).</div>
+              <div><Tag kind="new" />Print qua <code>window.print()</code> với CSS <code>@page</code>, hoặc trigger native print dialog của PDF.js.</div>
+              <div><Tag kind="new" />Fullscreen qua browser Fullscreen API; double-tap (mobile) cũng zoom to fit/100%.</div>
+              <div><Tag kind="note" />Worker URL phải set qua <code>pdfjsLib.GlobalWorkerOptions.workerSrc</code>; đóng gói worker vào <code>assets/</code> của thư viện.</div>
+              <div><Tag kind="note" />Password-protected PDF: catch <code>PasswordException</code> → emit <code>loadError</code> với reason <code>'password'</code>, hiện modal nhập password (xử lý ở host, không trong component).</div>
+              <div><Tag kind="dep" />Phụ thuộc: <code>pdfjs-dist</code> (~ 1.2 MB gzipped, lazy load). Cân nhắc <code>ngx-extended-pdf-viewer</code> nếu muốn nhanh hơn nhưng kém customizable.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function Kbd({ children }) {
+      return (
+        <span style={{
+          display: 'inline-flex', alignItems: 'center', gap: 4,
+          padding: '2px 8px', height: 22,
+          border: '1px solid #d4d4d8',
+          background: '#f4f4f5',
+          color: '#3f3f46',
+          fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+          fontSize: 11.5, fontWeight: 500,
+          borderRadius: 4,
+          width: 'fit-content',
+        }}>{children}</span>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

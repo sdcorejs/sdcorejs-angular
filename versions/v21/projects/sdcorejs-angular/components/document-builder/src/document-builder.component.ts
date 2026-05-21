@@ -1,5 +1,6 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import {
   Alignment,
@@ -43,6 +44,7 @@ import {
   PageOrientation,
   TableCustom,
   VariablePlugin,
+  sanitizeVariableHtmlBoundSerializedHtml,
   ImageUploadPlugin,
   HeadingPlugin,
   ImageCustomPlugin,
@@ -69,6 +71,7 @@ import { normalize } from './document-builder.utils';
   ],
 })
 export class SdDocumentBuilder {
+  readonly #i18n = inject(I18nService);
   @Input({ required: true }) option!: SdDocumentBuilderOption;
   disabled = false;
   @Input('disabled') set _disabled(val: boolean | '' | undefined | null) {
@@ -93,6 +96,8 @@ export class SdDocumentBuilder {
   // Config
   config: DocumentBuilderOption = {
     getOption: () => this.option,
+    // Truyá»n i18n service xuá»‘ng CKEditor plugin (ngoÃ i DI tree) Ä‘á»ƒ dá»‹ch label/error
+    _i18n: this.#i18n,
     licenseKey: 'GPL', // Hoáº·c key thÆ°Æ¡ng máº¡i náº¿u cÃ³
     plugins: [
       FontSize,
@@ -337,7 +342,8 @@ export class SdDocumentBuilder {
   }
 
   setContent = (html: string) => {
-    this.#editor?.setData?.(html);
+    const safe = sanitizeVariableHtmlBoundSerializedHtml(html);
+    this.#editor?.setData?.(safe);
   };
 
   getContent = () => {

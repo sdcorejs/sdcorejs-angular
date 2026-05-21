@@ -1,3 +1,42 @@
+export { Utilities, BrowserUtilities } from '@sdcorejs/utils/fns';
+
+// Hardcoded i18n cho upload utility — pure function nên không inject() được I18nService.
+// Đọc lang trực tiếp từ localStorage (cùng key với I18nService: 'sd-core.language').
+// Khi I18nService chuyển sang reload-on-change model, lang ở đây luôn đồng bộ với UI.
+const SD_UPLOAD_MESSAGES = {
+  vi: {
+    'invalid-format': '[{name}] File tải lên không đúng định dạng. Vui lòng chọn lại',
+    'invalid-size': '[{name}] Kích thước file không hợp lệ. Vui lòng chọn một file khác',
+  },
+  en: {
+    'invalid-format': '[{name}] Invalid file format. Please select again',
+    'invalid-size': '[{name}] Invalid file size. Please choose a different file',
+  },
+  ja: {
+    'invalid-format': '[{name}] ファイル形式が正しくありません。もう一度選択してください',
+    'invalid-size': '[{name}] ファイルサイズが正しくありません。別のファイルを選択してください',
+  },
+  ko: {
+    'invalid-format': '[{name}] 파일 형식이 올바르지 않습니다. 다시 선택해 주세요',
+    'invalid-size': '[{name}] 파일 크기가 올바르지 않습니다. 다른 파일을 선택해 주세요',
+  },
+  zh: {
+    'invalid-format': '[{name}] 文件格式不正确，请重新选择',
+    'invalid-size': '[{name}] 文件大小不符合要求，请选择其他文件',
+  },
+} as const;
+
+type SdUploadMsgKey = keyof typeof SD_UPLOAD_MESSAGES.vi;
+type SdUploadLang = keyof typeof SD_UPLOAD_MESSAGES;
+
+const getSdUploadLang = (): SdUploadLang => {
+  try {
+    const stored = localStorage.getItem('sd-core.language');
+    if (stored && stored in SD_UPLOAD_MESSAGES) return stored as SdUploadLang;
+  } catch { /* ignore */ }
+  return 'vi';
+};
+
 const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validator?: (fileName: string) => string; multiple?: boolean }) => {
   const uploadId = 'U1e09c1c0-b647-437e-995e-d7a1a1b60550';
   const promise = new Promise<File | File[] | null>((resolve, reject) => {
@@ -23,24 +62,33 @@ const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validato
       try {
         const target = evt.target as DataTransfer;
 
+        // Hardcode i18n cho upload utility — pure function nên không inject() được I18nService.
+        // Đọc lang trực tiếp từ localStorage (cùng key với I18nService: 'sd-core.language').
+        // Throw plain Error(translatedText) để consumer không cần xử lý đặc biệt.
+        const throwUploadError = (msgKey: SdUploadMsgKey, name: string): never => {
+          const lang = getSdUploadLang();
+          const template = SD_UPLOAD_MESSAGES[lang][msgKey] ?? SD_UPLOAD_MESSAGES.vi[msgKey];
+          throw new Error(template.replace('{name}', name));
+        };
+
         if (option?.multiple) {
           const files: File[] = [];
           for (const file of target.files) {
             if (file) {
               const lastDot = file.name.lastIndexOf('.');
               if (lastDot === -1) {
-                throw new Error(`[${file.name}] File tải lên không đúng định dạng. Vui lòng chọn lại`);
+                throwUploadError('invalid-format', file.name);
               }
               const extension = file.name.substring(lastDot + 1);
               if (option) {
                 if (option.extensions?.length && !option.extensions.some(e => e.toLowerCase() === extension.toLowerCase())) {
-                  throw new Error(`[${file.name}] File tải lên không đúng định dạng. Vui lòng chọn lại`);
+                  throwUploadError('invalid-format', file.name);
                 }
                 if (option.maxSizeInMb && option.maxSizeInMb > 0 && option.maxSizeInMb * 1024 * 1024 < file.size) {
-                  const message = `[${file.name}] Kích thước file không hợp lệ. Vui lòng chọn một file khác`;
-                  throw new Error(message);
+                  throwUploadError('invalid-size', file.name);
                 }
                 if (option.validator && option.validator(file.name)) {
+                  // Custom validator returns its own message — pass through as-is (caller defines format).
                   const message = option.validator(file.name);
                   throw new Error(message);
                 }
@@ -54,16 +102,15 @@ const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validato
           if (file) {
             const lastDot = file.name.lastIndexOf('.');
             if (lastDot === -1) {
-              throw new Error(`[${file.name}] File tải lên không đúng định dạng. Vui lòng chọn lại`);
+              throwUploadError('invalid-format', file.name);
             }
             const extension = file.name.substring(lastDot + 1);
             if (option) {
               if (option.extensions?.length && !option.extensions.some(e => e.toLowerCase() === extension.toLowerCase())) {
-                throw new Error(`[${file.name}] File tải lên không đúng định dạng. Vui lòng chọn lại`);
+                throwUploadError('invalid-format', file.name);
               }
               if (option.maxSizeInMb && option.maxSizeInMb > 0 && option.maxSizeInMb * 1024 * 1024 < file.size) {
-                const message = `[${file.name}] Kích thước file không hợp lệ. Vui lòng chọn một file khác`;
-                throw new Error(message);
+                throwUploadError('invalid-size', file.name);
               }
               if (option.validator && option.validator(file.name)) {
                 const message = option.validator(file.name);
@@ -210,7 +257,7 @@ const isMobile = (): boolean => {
 };
 
 const randomId = (prefix?: string | null): string => {
-  const id = new Date().getTime().toString(36);
+  const id = `${new Date().getTime().toString(36)}${Math.random().toString(36).substring(2, 7)}`;
   if (prefix) {
     return `${prefix}_${id}`;
   }
@@ -283,7 +330,7 @@ const getClientPublicIp = async (): Promise<string | null> => {
     // Trả về địa chỉ IP
     return data.ip;
   } catch (error) {
-    console.error('Không thể lấy địa chỉ IP:', error);
+    console.error('Failed to fetch client IP:', error);
     return null; // Trả về null nếu có lỗi
   }
 };
@@ -307,6 +354,11 @@ const getNestedValue = (obj: any, path: string) => {
   return path.split('.').reduce((acc, part) => acc?.[part], obj);
 };
 
+/**
+ * @deprecated Use {@link Utilities} and {@link BrowserUtilities} from `@sdcorejs/utils/fns` instead.
+ * - upload/download/clipboard/isMobile → BrowserUtilities
+ * - allWithPaging (→ fetchAllByPaging) / randomId / hash / parseQueryParams / generateUuid / getNestedValue → Utilities
+ */
 const SdUtilities = {
   upload,
   download,

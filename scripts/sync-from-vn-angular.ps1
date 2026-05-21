@@ -34,12 +34,54 @@ function Update-RootTsConfig {
   }
 }
 
-Write-Host "[1/5] Mirror copy source -> target" -ForegroundColor Cyan
-robocopy $SourcePath $TargetPath /MIR /XD .git node_modules dist .angular coverage versions scripts /R:1 /W:1 /NFL /NDL /NP | Out-Null
+function Update-AngularJson {
+  param(
+    [string]$AngularJsonPath
+  )
 
-Write-Host "[2/5] Normalize library folder sd-angular -> sdcorejs-angular" -ForegroundColor Cyan
-$legacyLibPath = Join-Path $TargetPath "projects/sd-angular"
-$targetLibPath = Join-Path $TargetPath "projects/sdcorejs-angular"
+  if (!(Test-Path -LiteralPath $AngularJsonPath)) {
+    return
+  }
+
+  try {
+    $content = Get-Content -LiteralPath $AngularJsonPath -Raw
+    $json = ConvertFrom-Json $content
+    if ($json.projects.demo) {
+      $json.projects.PSObject.Properties.Remove('demo')
+      $updated = $json | ConvertTo-Json -Depth 100
+      $updated = $updated -replace '\\u0026', '&' `
+                          -replace '\\u003c', '<' `
+                          -replace '\\u003e', '>' `
+                          -replace '\\u0027', "'" `
+                          -replace '\\u2019', [char]0x2019 `
+                          -replace '\\u201c', [char]0x201c `
+                          -replace '\\u201d', [char]0x201d
+      Set-Content -LiteralPath $AngularJsonPath -Value $updated -Encoding UTF8
+      Write-Host "    Successfully removed 'demo' project from angular.json" -ForegroundColor Green
+    }
+  }
+  catch {
+    Write-Warning "Could not parse or update angular.json at $AngularJsonPath"
+  }
+}
+
+$v19Path = Join-Path $TargetPath "versions/v19"
+if (!(Test-Path -LiteralPath $v19Path)) {
+  New-Item -ItemType Directory -Path $v19Path | Out-Null
+}
+
+Write-Host "[1/5] Mirror copy source -> target v19 workspace" -ForegroundColor Cyan
+robocopy $SourcePath $v19Path /MIR /XD .git node_modules dist .angular coverage versions scripts demo /R:1 /W:1 /NFL /NDL /NP | Out-Null
+
+# Clean up projects/demo inside v19 if it was not caught by robocopy
+$v19DemoPath = Join-Path $v19Path "projects/demo"
+if (Test-Path -LiteralPath $v19DemoPath) {
+  Remove-Item -LiteralPath $v19DemoPath -Recurse -Force | Out-Null
+}
+
+Write-Host "[2/5] Normalize library folder sd-angular -> sdcorejs-angular in v19" -ForegroundColor Cyan
+$legacyLibPath = Join-Path $v19Path "projects/sd-angular"
+$targetLibPath = Join-Path $v19Path "projects/sdcorejs-angular"
 if (Test-Path -LiteralPath $legacyLibPath) {
   if (!(Test-Path -LiteralPath $targetLibPath)) {
     New-Item -ItemType Directory -Path $targetLibPath | Out-Null
@@ -55,11 +97,11 @@ if (Test-Path -LiteralPath $legacyLibPath) {
   }
 }
 
-Write-Host "[3/5] Replace legacy namespace and project references" -ForegroundColor Cyan
+Write-Host "[3/5] Replace legacy namespace and project references in v19" -ForegroundColor Cyan
 $extensions = @("*.ts","*.tsx","*.js","*.jsx","*.mjs","*.cjs","*.json","*.md","*.scss","*.css","*.html","*.yml","*.yaml","*.txt","*.xml")
-$files = Get-ChildItem -Path $TargetPath -Recurse -File -Include $extensions |
+$files = Get-ChildItem -Path $v19Path -Recurse -File -Include $extensions |
   Where-Object {
-    $_.FullName -notmatch "\\.git\\|\\node_modules\\|\\dist\\|\\.angular\\|\\coverage\\|\\versions\\"
+    $_.FullName -notmatch "\\.git\\|\\node_modules\\|\\dist\\|\\.angular\\|\\coverage\\"
   }
 
 $modified = 0
@@ -80,15 +122,19 @@ foreach ($file in $files) {
   }
 }
 
-Write-Host "[4/5] Capture source commit and patch package.json" -ForegroundColor Cyan
+Write-Host "[4/5] Capture source commit and patch v19 configuration" -ForegroundColor Cyan
 
 $commitId = (git -C $SourcePath rev-parse --short HEAD 2>$null).Trim()
 if (!$commitId) { $commitId = "unknown" }
 Write-Host "    Source commit: $commitId" -ForegroundColor DarkGray
 
-$rootPackagePath = Join-Path $TargetPath "package.json"
-if (Test-Path -LiteralPath $rootPackagePath) {
-  $package = Get-Content -LiteralPath $rootPackagePath -Raw | ConvertFrom-Json
+# Remove demo from v19 angular.json
+Update-AngularJson -AngularJsonPath (Join-Path $v19Path "angular.json")
+
+# Update package.json in v19 to remove start demo and use build:watch
+$v19PackagePath = Join-Path $v19Path "package.json"
+if (Test-Path -LiteralPath $v19PackagePath) {
+  $package = Get-Content -LiteralPath $v19PackagePath -Raw | ConvertFrom-Json
   $needsWrite = $false
 
   if ($package.name -ne "sdcorejs-angular") {
@@ -96,14 +142,19 @@ if (Test-Path -LiteralPath $rootPackagePath) {
     $needsWrite = $true
   }
 
-  if ($null -eq $package.scripts."mv:sync") {
-    $package.scripts | Add-Member -NotePropertyName "mv:sync" -NotePropertyValue "powershell -ExecutionPolicy Bypass -File ./scripts/sync-multi-version-workspaces.ps1"
+  if ($package.scripts.start -eq "ng serve demo") {
+    $package.scripts.start = "ng build sdcorejs-angular --watch"
+    $needsWrite = $true
+  }
+
+  if ($package.scripts.prebuild) {
+    # remove prebuild as we do not run tests before build
+    $package.scripts.PSObject.Properties.Remove('prebuild')
     $needsWrite = $true
   }
 
   if ($needsWrite) {
     $jsonStr = $package | ConvertTo-Json -Depth 100
-    # PowerShell 5.x escapes non-ASCII and special chars as \uXXXX – unescape them back
     $jsonStr = $jsonStr -replace '\\u0026', '&' `
                         -replace '\\u003c', '<' `
                         -replace '\\u003e', '>' `
@@ -111,15 +162,27 @@ if (Test-Path -LiteralPath $rootPackagePath) {
                         -replace '\\u2019', [char]0x2019 `
                         -replace '\\u201c', [char]0x201c `
                         -replace '\\u201d', [char]0x201d
-    Set-Content -LiteralPath $rootPackagePath -Value $jsonStr -Encoding UTF8
+    Set-Content -LiteralPath $v19PackagePath -Value $jsonStr -Encoding UTF8
   }
 }
 
-$rootTsConfigPath = Join-Path $TargetPath "tsconfig.json"
-Update-RootTsConfig -TsConfigPath $rootTsConfigPath
+$v19TsConfigPath = Join-Path $v19Path "tsconfig.json"
+Update-RootTsConfig -TsConfigPath $v19TsConfigPath
 
-Write-Host "[5/5] Rollout to v19 (primary) then v20, v21..." -ForegroundColor Cyan
+Write-Host "[5/5] Rollout to v20, v21 based on v19 workspace" -ForegroundColor Cyan
 $multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1"
 & $multiVersionScript -RootPath $TargetPath -CommitId $commitId
 
-Write-Host "All done. Synced vn-angular@$commitId -> sdcorejs-angular -> v19/v20/v21. Modified files: $modified" -ForegroundColor Green
+# Git commit in target workspace
+Write-Host "Creating git commit in target repository..." -ForegroundColor Cyan
+git -C $TargetPath add -A
+$hasChanges = (git -C $TargetPath status --porcelain 2>$null)
+if ($hasChanges) {
+  $commitMsg = "Sync with vn-angular@$commitId (standardized monorepo, demo removed)"
+  git -C $TargetPath commit -m $commitMsg
+  Write-Host "Committed changes: $commitMsg" -ForegroundColor Green
+} else {
+  Write-Host "No changes detected. Workspace is clean and up to date." -ForegroundColor Yellow
+}
+
+Write-Host "All done. Synced vn-angular@$commitId -> versions/v19 -> v20/v21. Reorganized monorepo structure." -ForegroundColor Green

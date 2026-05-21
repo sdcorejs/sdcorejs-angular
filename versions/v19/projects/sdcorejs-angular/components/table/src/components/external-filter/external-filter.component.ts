@@ -13,6 +13,7 @@ import { BehaviorSubject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 import { FilterValuesPipe } from '../../pipes';
 import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from '../../services/table-filter/table-filter.model';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'external-filter',
@@ -33,8 +34,7 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
     SdDateRange,
     SdButton,
     FilterValuesPipe,
-    SdCheckbox,
-  ],
+    SdCheckbox, TranslatePipe],
 })
 // eslint-disable-next-line @angular-eslint/component-class-suffix
 export class ExternalFilterComponent implements AfterViewInit, OnDestroy {

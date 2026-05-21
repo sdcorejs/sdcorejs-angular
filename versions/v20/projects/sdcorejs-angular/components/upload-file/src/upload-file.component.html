@@ -13,11 +13,12 @@
     [class.justify-content-start]="align() === 'left'">
     @if (previewFiles().length < max() && !formControl.disabled) {
       <div
-        class="d-flex justify-content-center align-items-center pointer c-area-upload"
+        class="d-flex justify-content-center align-items-center cursor-pointer c-area-upload"
         [style.width]="previewWidth()"
         [style.height]="previewHeight()"
         (click)="onUpload()"
         aria-hidden="true"
+        [attr.data-autoId]="autoId()"
         #dropElement>
         <mat-icon class="c-upload" fontSet="material-icons-outlined"> file_upload </mat-icon>
       </div>
@@ -58,7 +59,7 @@
                 <mat-icon class="c-zoom" fontSet="material-icons-outlined" (click)="preview()">zoom_in</mat-icon>
               </div>
               @if (!formControl.disabled) {
-                <button class="c-btn-remove" (click)="onRemove(image)" mat-icon-button aria-label="Close">
+                <button class="c-btn-remove" (click)="onRemove(image)" mat-icon-button aria-label="Close" [attr.data-autoId]="removeAutoId(idx)">
                   <mat-icon>close</mat-icon>
                 </button>
               }
@@ -69,7 +70,7 @@
     }
   </div>
   @let previewDocuments = previewFiles() | filterDocument;
-  @for (document of previewDocuments; track $index) {
+  @for (document of previewDocuments; track $index; let docIdx = $index) {
     <div class="c-document-container">
       <img
         [style.max-height]="previewHeight()"
@@ -98,12 +99,12 @@
       }
 
       @if (!formControl.disabled) {
-        <mat-icon class="c-close" (click)="onRemove(document)">close</mat-icon>
+        <mat-icon class="c-close" (click)="onRemove(document)" [attr.data-autoId]="removeAutoId(docIdx)">close</mat-icon>
       }
     </div>
   }
   @if (!formControl.disabled && formControl.touched && formControl.errors?.['required']) {
-    <div class="text-error T12R" style="padding: 4px 8px">{{ 'Vui lòng tải lên tệp/ảnh' }}</div>
+    <div class="text-error T12R" style="padding: 4px 8px">{{ ('core.component.upload-file.please-upload' | translate) }}</div>
   }
 </div>
 <preview (download)="onDownload($event)"></preview>

@@ -1,6 +1,7 @@
-import { Component, ViewEncapsulation, Input, Output, EventEmitter } from '@angular/core';
+﻿import { Component, ViewEncapsulation, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import {
   ClassicEditor,
@@ -14,8 +15,8 @@ import {
   FontColor,
   FontBackgroundColor,
   Alignment,
-  // Import Plugin tự viết
-  // PageNumberPlugin (nếu import từ file ngoài)
+  // Import Plugin tá»± viáº¿t
+  // PageNumberPlugin (náº¿u import tá»« file ngoÃ i)
 } from 'ckeditor5';
 import { PageNumberPlugin } from './plugins/page-number.plugin';
 
@@ -30,15 +31,15 @@ import { PageNumberPlugin } from './plugins/page-number.plugin';
   `,
   styles: [
     `
-      /* Style tối giản cho vùng soạn thảo Header/Footer */
+      /* Style tá»‘i giáº£n cho vÃ¹ng soáº¡n tháº£o Header/Footer */
       :host ::ng-deep .header-footer-editor-wrapper .ck-editor__editable_inline {
-        min-height: 100px; /* Header thường ngắn */
+        min-height: 100px; /* Header thÆ°á»ng ngáº¯n */
         max-height: 200px;
         padding: 10px 20px;
         border: 1px solid #ddd;
       }
 
-      /* Style hiển thị cho Placeholder số trang trong lúc soạn thảo */
+      /* Style hiá»ƒn thá»‹ cho Placeholder sá»‘ trang trong lÃºc soáº¡n tháº£o */
       :host ::ng-deep .page-number-marker,
       :host ::ng-deep .total-page-marker {
         font-size: 11px;
@@ -50,6 +51,7 @@ import { PageNumberPlugin } from './plugins/page-number.plugin';
   ],
 })
 export class SdHeaderFooterBuilder {
+  readonly #i18n = inject(I18nService);
   #editor!: ClassicEditor;
   Editor = ClassicEditor;
 
@@ -61,9 +63,11 @@ export class SdHeaderFooterBuilder {
   }
 
   @Output() modelChange = new EventEmitter<string>();
-  config: EditorConfig = {
-    licenseKey: 'GPL', // Hoặc key thương mại nếu có
-    // 1. PLUGIN RÚT GỌN (Bỏ Table, List, PageBreak...)
+  config: EditorConfig & { _i18n?: I18nService } = {
+    licenseKey: 'GPL', // Hoáº·c key thÆ°Æ¡ng máº¡i náº¿u cÃ³
+    // Truyá»n i18n service xuá»‘ng CKEditor plugin (ngoÃ i DI tree) Ä‘á»ƒ dá»‹ch label
+    _i18n: this.#i18n,
+    // 1. PLUGIN RÃšT Gá»ŒN (Bá» Table, List, PageBreak...)
     plugins: [
       Essentials,
       Paragraph,
@@ -74,9 +78,9 @@ export class SdHeaderFooterBuilder {
       FontColor,
       FontBackgroundColor,
       Alignment,
-      PageNumberPlugin, // <--- Plugin số trang
+      PageNumberPlugin, // <--- Plugin sá»‘ trang
     ],
-    // 2. TOOLBAR ĐƠN GIẢN
+    // 2. TOOLBAR ÄÆ N GIáº¢N
     toolbar: {
       items: [
         'undo',
@@ -89,14 +93,14 @@ export class SdHeaderFooterBuilder {
         'italic',
         'underline',
         '|',
-        'alignment', // Căn trái/phải/giữa (Quan trọng cho Header/Footer)
+        'alignment', // CÄƒn trÃ¡i/pháº£i/giá»¯a (Quan trá»ng cho Header/Footer)
         '|',
         'pageNumber',
-        'totalPages', // <--- 2 nút mới
+        'totalPages', // <--- 2 nÃºt má»›i
       ],
       shouldNotGroupWhenFull: true,
     },
-    // Cấu hình alignment
+    // Cáº¥u hÃ¬nh alignment
     alignment: {
       options: ['left', 'center', 'right'],
     },
@@ -111,3 +115,4 @@ export class SdHeaderFooterBuilder {
     });
   }
 }
+

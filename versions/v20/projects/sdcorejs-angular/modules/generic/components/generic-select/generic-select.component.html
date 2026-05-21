@@ -24,16 +24,16 @@
       <ng-template sdLabelDef let-value="item">
         <ng-container *ngIf="label">
           <label class="d-block mb-0 T14M"
-            >{{ label }} <span class="text-danger mb-2" *ngIf="required">*</span
-            ><span *ngIf="model">(<a href="javascript:;" (click)="navigate()">chi tiết</a>)</span>
+            >{{ label }} <span class="text-error mb-2" *ngIf="required">*</span
+            ><span *ngIf="model">(<a href="javascript:;" (click)="navigate()">{{ 'core.module.generic.generic-select.detail-link' | translate }}</a>)</span>
           </label>
         </ng-container>
       </ng-template>
       <ng-template sdAutocompleteDisplayDef let-value="item">
         <div *ngIf="value" class="w-100">
           <ng-container *ngIf="displayTransform; else noDisplayTransform">
-            <div class="media w-100 align-items-center justify-content-between">
-              <div class="media-body sl-media-wrap d-flex flex-column justify-content-center">
+            <div class="d-flex w-100 align-items-center justify-content-between">
+              <div class="sl-media-wrap d-flex flex-column justify-content-center">
                 <div class="T14M text-ellipsis">{{ value.displayTransform }}</div>
                 <div class="d-flex">
                   <a href="javascript:;" (click)="navigateDetail($event, value)" class="T12R text-ellipsis d-inline-block w-auto">{{
@@ -42,16 +42,15 @@
                 </div>
               </div>
               <div *ngIf="viewable" class="ml-6">
-                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view pointer text-gray sd-suffix-icon mr-0" matSuffix
+                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-gray sd-suffix-icon mr-0" matSuffix
                   >visibility</mat-icon
                 >
               </div>
             </div>
           </ng-container>
           <ng-template #noDisplayTransform>
-            <div class="media align-items-center justify-content-between">
-              <!-- TODO hardcode -->
-              <div class="media-body sl-media-wrap d-flex flex-column justify-content-center">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="sl-media-wrap d-flex flex-column justify-content-center">
                 <div class="T14M text-ellipsis">{{ value[displayField] }}</div>
                 <div class="d-flex">
                   <a href="javascript:;" (click)="navigateDetail($event, value)" class="T12R d-inline-block w-auto text-ellipsis">{{
@@ -63,7 +62,7 @@
                 <mat-icon
                   *ngIf="allowViewDetail"
                   (click)="onViewDetail($event, value)"
-                  class="sl-icon-view pointer sd-suffix-icon text-grey mr-0"
+                  class="sl-icon-view cursor-pointer sd-suffix-icon text-grey mr-0"
                   matSuffix
                   >visibility</mat-icon
                 >
@@ -97,25 +96,25 @@
       <ng-template sdSelectDisplayDef let-value="item">
         <div *ngIf="value" class="w-100">
           <ng-container *ngIf="displayTransform; else noDisplayTransform">
-            <div class="media align-items-center justify-content-between">
-              <div class="media-body sl-media-wrap d-flex flex-column justify-content-center">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="sl-media-wrap d-flex flex-column justify-content-center">
                 <div class="T14M text-ellipsis">{{ value.displayTransform }}</div>
-                <div class="flex" style="line-height: 1">
+                <div class="d-flex" style="line-height: 1">
                   <a href="javascript:;" (click)="navigateDetail($event, value)" class="T12R text-ellipsis d-inline-block w-auto">{{
                     value[valueField]
                   }}</a>
                 </div>
               </div>
               <div *ngIf="allowViewDetail && permission.detail" class="ml-6">
-                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view pointer text-grey sd-suffix-icon mr-0" matSuffix
+                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-grey sd-suffix-icon mr-0" matSuffix
                   >visibility</mat-icon
                 >
               </div>
             </div>
           </ng-container>
           <ng-template #noDisplayTransform>
-            <div class="media align-items-center justify-content-between">
-              <div class="media-body sl-media-wrap d-flex flex-column justify-content-center">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="sl-media-wrap d-flex flex-column justify-content-center">
                 <div class="T14M text-ellipsis">{{ value[displayField] }}</div>
                 <div class="d-flex" style="line-height: 1">
                   <a href="javascript:;" (click)="navigateDetail($event, value)" class="T12R text-ellipsis d-inline-block w-auto">{{
@@ -124,7 +123,7 @@
                 </div>
               </div>
               <div *ngIf="allowViewDetail" class="ml-6">
-                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view pointer text-grey sd-suffix-icon mr-0 ml-6" matSuffix
+                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-grey sd-suffix-icon mr-0 ml-6" matSuffix
                   >visibility</mat-icon
                 >
               </div>

@@ -19,7 +19,7 @@
 
 <div class="sd-toast__content">
   <div class="sd-toast__header">
-    <strong class="sd-toast__title">{{ data.title || (data.type | titlecase) }}</strong>
+    <strong class="sd-toast__title">{{ data.title || ('core.notify.type.' + data.type | translate) }}</strong>
     <button class="sd-toast__close" (click)="close()">✕</button>
   </div>
 
@@ -39,7 +39,7 @@
                 class="toggle-more btn-link" 
                 [class]="'text-' + data.type" 
                 (click)="toggleExpand()">
-          {{ isExpanded() ? 'Show less' : 'Show more (' + restCount + ')' }}
+          {{ isExpanded() ? ('core.notify.show-less' | translate) : ('core.notify.show-more' | translate: { count: restCount }) }}
         </button>
       }
     }

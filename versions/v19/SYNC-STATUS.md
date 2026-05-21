@@ -3,9 +3,9 @@
 | Key | Value |
 |-----|-------|
 | Angular Major | 19 |
-| Source Commit | 6df969e1 |
-| Synced At | 2026-05-08 00:41:17 |
-| Source | vn-angular â†’ sdcorejs-angular (root) â†’ v19 |
+| Source Commit | c083f626 |
+| Synced At | 2026-05-22 01:05:45 |
+| Source | vn-angular â†’ versions/v19 â†’ v19 |
 
 ## Notes
 - Sync rule: v19 is synced first (primary). v20 and v21 are rollout targets.

@@ -1,11 +1,11 @@
 .c-quick-action {
   box-shadow:
-    0px 0.4px 0.8px rgba(0, 0, 0, 0.1),
-    0px 3px 6px rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
+    0 0.4px 0.8px rgba(0, 0, 0, 0.1),
+    0 3px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
   position: fixed;
-  min-width: 320px;
   width: max-content;
+  max-width: min(90vw, 720px);
   background-color: #fff;
   bottom: 90px;
   left: 0;
@@ -14,9 +14,14 @@
   visibility: hidden;
   opacity: 0;
   pointer-events: none;
-  transition: all 0.2s ease-in-out;
+  transition:
+    transform 0.2s ease-in-out,
+    opacity 0.2s ease-in-out,
+    visibility 0.2s ease-in-out;
   transform: translate3d(0, 100%, 0);
   z-index: 99;
+  padding: 8px 12px;
+  gap: 16px;
 
   &.active {
     transform: translate3d(0, 0, 0);
@@ -24,4 +29,24 @@
     visibility: visible;
     pointer-events: all;
   }
+}
+
+.c-quick-action-message {
+  flex: 1 1 auto;
+  min-width: 0; /* allow long text to truncate inside via consumer's CSS if needed */
+}
+
+.c-quick-action-action {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+/* When the action slot has no projected content, drop the gap + action wrapper to avoid trailing whitespace. */
+.c-quick-action:has(.c-quick-action-action:empty) {
+  gap: 0;
+  padding-right: 16px; /* a touch more breathing room on the right when message-only */
+}
+.c-quick-action-action:empty {
+  display: none;
 }

@@ -27,8 +27,10 @@ $syncDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $syncCommit = if ($CommitId) { $CommitId } else { "unknown" }
 
 $versionsRoot = Join-Path $RootPath "versions"
-if (!(Test-Path -LiteralPath $versionsRoot)) {
-  New-Item -ItemType Directory -Path $versionsRoot | Out-Null
+$v19Path = Join-Path $versionsRoot "v19"
+
+if (!(Test-Path -LiteralPath $v19Path)) {
+  throw "Primary v19 workspace not found: $v19Path"
 }
 
 function Set-PackageVersion {
@@ -155,7 +157,10 @@ foreach ($v in $versions) {
 
   Write-Host "[$step/3] Syncing $($v.Folder) (Angular $($v.Major))..." -ForegroundColor Cyan
 
-  robocopy $RootPath $dest /MIR /XD .git node_modules dist .angular coverage versions /R:1 /W:1 /NFL /NDL /NP | Out-Null
+  if ($v.Folder -ne "v19") {
+    # Mirror copy from versions/v19 to the target version folder
+    robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /R:1 /W:1 /NFL /NDL /NP | Out-Null
+  }
 
   $rootPackagePath = Join-Path $dest "package.json"
   Update-MajorInPackageJson -PackagePath $rootPackagePath -Major $v.Major
@@ -176,7 +181,7 @@ foreach ($v in $versions) {
     "| Angular Major | $($v.Major) |",
     "| Source Commit | $syncCommit |",
     "| Synced At | $syncDate |",
-    "| Source | vn-angular → sdcorejs-angular (root) → $($v.Folder) |",
+    "| Source | vn-angular → versions/v19 → $($v.Folder) |",
     "",
     "## Notes",
     "- Sync rule: v19 is synced first (primary). v20 and v21 are rollout targets.",

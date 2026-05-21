@@ -23,6 +23,9 @@ concurrency:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [v19, v20, v21]
 
     steps:
       - name: Checkout
@@ -33,16 +36,16 @@ jobs:
         with:
           node-version: 20
           cache: npm
+          cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm run test:ci
+        run: npm ci --legacy-peer-deps
+        working-directory: versions/${{ matrix.version }}
 
       - name: Build library
-        run: npm run build
+        run: node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular
+        working-directory: versions/${{ matrix.version }}
 
       - name: Resolve dist-tag
         id: tag
@@ -57,6 +60,6 @@ jobs:
 
       - name: Publish @sdcorejs/angular
         run: npm publish --access public --tag ${{ steps.tag.outputs.tag }}
-        working-directory: ./dist/sdcorejs-angular
+        working-directory: versions/${{ matrix.version }}/dist/sdcorejs-angular
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

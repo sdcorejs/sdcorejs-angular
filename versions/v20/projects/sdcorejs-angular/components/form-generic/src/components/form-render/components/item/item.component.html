@@ -1,0 +1,118 @@
+@if (entity && component) {
+  @if (component.type === 'textfield') {
+    <div [class]="col">
+      <lib-textfield
+        [setVariables]="setVariables"
+        [form]="form"
+        [entity]="entity"
+        [component]="component"
+        [validator]="validator"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-textfield>
+    </div>
+  } @else if (component.type === 'textarea') {
+    <div [class]="col">
+      <lib-textarea
+        [setVariables]="setVariables"
+        [form]="form"
+        [entity]="entity"
+        [component]="component"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-textarea>
+    </div>
+  } @else if (component.type === 'chip-string') {
+    <div [class]="col">
+      <lib-chip-string
+        [setVariables]="setVariables"
+        [form]="form"
+        [entity]="entity"
+        [component]="component"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-chip-string>
+    </div>
+  } @else if (component.type === 'chip-calendar') {
+    <div [class]="col">
+      <lib-chip-calendar
+        [setVariables]="setVariables"
+        [form]="form"
+        [entity]="entity"
+        [component]="component"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-chip-calendar>
+    </div>
+  } @else if (component.type === 'number') {
+    <div [class]="col">
+      <lib-number
+        [setVariables]="setVariables"
+        [form]="form"
+        [entity]="entity"
+        [component]="component"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-number>
+    </div>
+  }
+  @if (component.type === 'select') {
+    <div [class]="col">
+      <lib-select
+        [setVariables]="setVariables"
+        [form]="form"
+        [component]="component"
+        [entity]="entity"
+        [required]="required"
+        [disabled]="disabled"
+        [validator]="validator"
+        [viewed]="viewed"></lib-select>
+    </div>
+  } @else if (component.type === 'radio') {
+    <div [class]="col">
+      <lib-radio
+        [setVariables]="setVariables"
+        [form]="form"
+        [component]="component"
+        [entity]="entity"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-radio>
+    </div>
+  } @else if (component.type === 'datetime') {
+    <div [class]="col">
+      <lib-datetime
+        [setVariables]="setVariables"
+        [form]="form"
+        [entity]="entity"
+        [component]="component"
+        [required]="required"
+        [disabled]="disabled"
+        [viewed]="viewed"></lib-datetime>
+    </div>
+  } @else if (component.type === 'upload') {
+    <div [class]="col">
+      <lib-upload
+        [setVariables]="setVariables"
+        [form]="form"
+        [component]="component"
+        [entity]="entity"
+        [required]="required"
+        [disabled]="disabled"
+        [validator]="validator"
+        [viewed]="viewed">
+      </lib-upload>
+    </div>
+  } @else if (component.type === 'table') {
+    <div [class]="col">
+      <lib-table [setVariables]="setVariables" [component]="component" [(model)]="entity[component.key!]" [viewed]="viewed"></lib-table>
+    </div>
+  } @else if (component.type === 'html') {
+    <div [class]="col">
+      <lib-html [setVariables]="setVariables" [form]="form" [entity]="entity" [component]="component" [viewed]="viewed"> </lib-html>
+    </div>
+  } @else if (component.type === 'break') {
+    <!-- Break: empty 12-col placeholder ép xuống dòng. Không render gì runtime. -->
+    <div class="col-12" style="height: 0;"></div>
+  }
+}

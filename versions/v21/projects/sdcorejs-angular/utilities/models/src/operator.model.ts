@@ -1,95 +1,34 @@
-export type SdOperator = SdOperatorHasData | SdOperatorNoData;
+import type { Operator, OperatorHasData, OperatorNoData } from '@sdcorejs/utils/models';
+export type { Operator, OperatorHasData, OperatorNoData };
 
-export type SdOperatorHasData =
-  | 'EQUAL'
-  | 'NOT_EQUAL'
-  | 'CONTAIN'
-  | 'NOT_CONTAIN'
-  | 'IN'
-  | 'NOT_IN'
-  | 'START_WITH'
-  | 'END_WITH'
-  | 'GREATER_THAN'
-  | 'LESS_THAN'
-  | 'GREATER_OR_EQUAL'
-  | 'LESS_OR_EQUAL'
-  | 'BETWEEN';
+/** @deprecated Use {@link Operator} from `@sdcorejs/utils/models` instead */
+export type SdOperator = Operator;
+/** @deprecated Use {@link OperatorHasData} from `@sdcorejs/utils/models` instead */
+export type SdOperatorHasData = OperatorHasData;
+/** @deprecated Use {@link OperatorNoData} from `@sdcorejs/utils/models` instead */
+export type SdOperatorNoData = OperatorNoData;
 
-export type SdOperatorNoData = 'NULL' | 'NOT_NULL';
-
+// `display` chứa i18n KEY (không phải chuỗi đã dịch).
+// Consumer phải gọi i18n.t(display) trước khi render ra UI.
+// @deprecated Use `OPERATORS` from `@sdcorejs/utils/constants` instead.
+// Note: OPERATORS has translated display labels; SdOperators uses i18n keys.
 export const SdOperators: {
-  value: SdOperator;
+  value: Operator;
   symbol?: string;
   display: string;
 }[] = [
-  {
-    value: 'EQUAL',
-    symbol: '=',
-    display: 'Bằng',
-  },
-  {
-    value: 'NOT_EQUAL',
-    symbol: '≠',
-    display: 'Không bằng',
-  },
-  {
-    value: 'GREATER_THAN',
-    symbol: '>',
-    display: 'Lớn hơn',
-  },
-  {
-    value: 'LESS_THAN',
-    symbol: '<',
-    display: 'Nhỏ hơn',
-  },
-  {
-    value: 'GREATER_OR_EQUAL',
-    symbol: '≥',
-    display: 'Lớn hơn, hoặc bằng',
-  },
-  {
-    value: 'LESS_OR_EQUAL',
-    symbol: '≤',
-    display: 'Nhỏ hơn, hoặc bằng',
-  },
-  {
-    value: 'CONTAIN',
-    symbol: 'join_inner',
-    display: 'Chứa',
-  },
-  {
-    value: 'NOT_CONTAIN',
-    symbol: 'join',
-    display: 'Không chứa',
-  },
-  {
-    value: 'START_WITH',
-    symbol: 'line_start_circle',
-    display: 'Bắt đầu bởi',
-  },
-  {
-    value: 'END_WITH',
-    symbol: 'line_end_circle',
-    display: 'Kết thúc bởi',
-  },
-  {
-    value: 'IN',
-    symbol: 'checklist_rtl',
-    display: 'Nằm trong',
-  },
-  {
-    value: 'NOT_IN',
-    symbol: 'event_list',
-    display: 'Không nằm trong',
-  },
-  {
-    value: 'NULL',
-    symbol: 'motion_photos_off',
-    display: 'Là rỗng',
-  },
-  {
-    value: 'NOT_NULL',
-    symbol: 'adjust',
-    display: 'Không rỗng',
-  },
+  { value: 'EQUAL',            symbol: '=',                 display: 'core.operator.equal.display' },
+  { value: 'NOT_EQUAL',        symbol: '≠',                 display: 'core.operator.not-equal.display' },
+  { value: 'GREATER_THAN',     symbol: '>',                 display: 'core.operator.greater-than.display' },
+  { value: 'LESS_THAN',        symbol: '<',                 display: 'core.operator.less-than.display' },
+  { value: 'GREATER_OR_EQUAL', symbol: '≥',                 display: 'core.operator.greater-or-equal.display' },
+  { value: 'LESS_OR_EQUAL',    symbol: '≤',                 display: 'core.operator.less-or-equal.display' },
+  { value: 'CONTAIN',          symbol: 'join_inner',        display: 'core.operator.contain.display' },
+  { value: 'NOT_CONTAIN',      symbol: 'join',              display: 'core.operator.not-contain.display' },
+  { value: 'START_WITH',       symbol: 'line_start_circle', display: 'core.operator.start-with.display' },
+  { value: 'END_WITH',         symbol: 'line_end_circle',   display: 'core.operator.end-with.display' },
+  { value: 'IN',               symbol: 'checklist_rtl',     display: 'core.operator.in.display' },
+  { value: 'NOT_IN',           symbol: 'event_list',        display: 'core.operator.not-in.display' },
+  { value: 'NULL',             symbol: 'motion_photos_off', display: 'core.operator.null.display' },
+  { value: 'NOT_NULL',         symbol: 'adjust',            display: 'core.operator.not-null.display' },
 ];

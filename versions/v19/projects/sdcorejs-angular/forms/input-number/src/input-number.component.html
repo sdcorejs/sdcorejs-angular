@@ -4,13 +4,14 @@
 @let errMsg = errorTooltipMessage;
 @let viewDef = sdViewDef();
 @let hText = helperText();
+@let fmt = format();
 
 @if (viewed()) {
   <sd-view
     [label]="lbl"
     [labelTemplate]="sdLabelTemplate()"
     [value]="formControl.value"
-    [display]="formControl.value | sdFormatNumber"
+    [display]="formControl.value | sdFormatNumber : undefined : fmt"
     [hyperlink]="hyperlink()"
     [valueTemplate]="sdValueTemplate()">
   </sd-view>

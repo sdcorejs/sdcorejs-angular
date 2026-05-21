@@ -158,6 +158,7 @@ export class SdAuthOmService {
     const claims = this.decodeJwtPayload(token);
     const exp = claims?.['exp'];
     if (typeof exp !== 'number') {
+      // @i18n-ignore â€” dev console warning
       console.warn('[SdAuthOmService] Token khÃ´ng cÃ³ exp â€” bá» qua auto-refresh');
       return;
     }

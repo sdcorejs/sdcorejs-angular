@@ -10,7 +10,7 @@ export interface ToastData {
   onAction?: () => void;
 }
 
-export interface SdNotifyOption {
+export interface NotifyOption {
   duration?: number; // Input từ user thì vẫn để là tùy chọn
   title?: string;
   actionLabel?: string;

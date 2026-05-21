@@ -51,7 +51,7 @@
         <div class="c-menu-tree">
           @if (totalMenuInMenusByGroup() >= 10) {
             <div style="padding: 0px 4px" class="c-menu-tree-search">
-              <sd-input size="sm" placeholder="Tìm kiếm" [model]="searchText()" (sdChange)="onFilterSearchText($event)">
+              <sd-input size="sm" [placeholder]="'core.module.layout.sidebar.search' | translate" [model]="searchText()" (sdChange)="onFilterSearchText($event)">
                 <ng-template sdSuffixDef>
                   @if (searchText()) {
                     <mat-icon class="c-search-prefix-icon cancel" (click)="onClearSearchText()">cancel</mat-icon>

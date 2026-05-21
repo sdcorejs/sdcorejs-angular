@@ -40,7 +40,18 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { HandleSdCustomValidator, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl } from '@sdcorejs/angular/forms/models';
-import { SdPatternCommons, SdPatternType, SdSize } from '@sdcorejs/angular/utilities/models';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdSize } from '@sdcorejs/angular/utilities/models';
+import type { ValidationPatternType } from '@sdcorejs/utils/models';
+import { VALIDATION_PATTERNS } from '@sdcorejs/utils/constants';
+
+// Back-compat: SdPatternType cÅ© â†’ ValidationPatternType má»›i.
+// 3 key Ä‘Ã£ Ä‘á»•i tÃªn trong @sdcorejs/utils v1.x.
+const LEGACY_PATTERN_ALIAS: Record<string, ValidationPatternType> = {
+  PHONE_VN: 'VN_PHONE',
+  IDVN: 'VN_ID',
+  IDVN_OR_PASSPORT: 'VN_ID_OR_PASSPORT',
+};
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
 
@@ -61,6 +72,7 @@ import * as uuid from 'uuid';
     MatButtonModule,
     SdLabel,
     SdView,
+    TranslatePipe,
   ],
 })
 export class SdInput implements OnDestroy, OnInit, AfterViewInit {
@@ -87,6 +99,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   // ==========================================
   #ref = inject(ChangeDetectorRef);
   #formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly #i18n = inject(I18nService);
 
   appearanceInput = input<MatFormFieldAppearance | undefined>(undefined, { alias: 'appearance' });
   appearance = computed(() => this.appearanceInput() ?? this.#formConfig?.appearance ?? 'outline');
@@ -122,19 +135,29 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   minlength = input<number | undefined, unknown>(undefined, { transform: v => (v == null ? undefined : Number(v)) });
   maxlength = input<number | undefined, unknown>(undefined, { transform: v => (v == null ? undefined : Number(v)) });
 
-  pattern = input<SdPatternType | string | undefined | null>();
+  pattern = input<ValidationPatternType | string | undefined | null>();
   patternErrorMessage = input<string | undefined | null>();
+
+  // Bá» qua náº¿u val khÃ´ng pháº£i string (number/boolean/object truyá»n nháº§m â†’ trÃ¡nh validator há»ng)
+  #lookupPattern = (val: unknown) => {
+    if (typeof val !== 'string') return undefined;
+    const key = (LEGACY_PATTERN_ALIAS[val] ?? val) as ValidationPatternType;
+    return VALIDATION_PATTERNS.find(e => e.type === key);
+  };
 
   resolvedPattern = computed(() => {
     const val = this.pattern();
-    const patternObj = SdPatternCommons.find(e => e.type === val);
-    return patternObj ? patternObj.regex : (val ?? undefined);
+    if (typeof val !== 'string') return undefined;
+    const patternObj = this.#lookupPattern(val);
+    return patternObj ? patternObj.pattern : val;
   });
 
   resolvedPatternErrorMsg = computed(() => {
-    const val = this.pattern();
-    const patternObj = SdPatternCommons.find(e => e.type === val);
-    return this.patternErrorMessage() ?? (patternObj ? patternObj.errorMessage : undefined);
+    // patternObj.errorMessage lÃ  i18n key (vd 'core.validator.email.error') â†’ wrap qua i18n.t() Ä‘á»ƒ hiá»ƒn thá»‹ string Ä‘Ã£ dá»‹ch
+    const customMsg = this.patternErrorMessage();
+    if (customMsg) return customMsg;
+    const patternObj = this.#lookupPattern(this.pattern());
+    return patternObj ? this.#i18n.t(patternObj.errorMessage) : undefined;
   });
 
   /**
@@ -146,9 +169,9 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
-    if (errors['maxlength']) return `Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: ${this.maxlength()}`;
-    if (errors['pattern']) return this.resolvedPatternErrorMsg() || 'Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡';
+    if (errors['required']) return this.#i18n.t('core.form.input.required');
+    if (errors['maxlength']) return this.#i18n.t('core.form.input.maxlength', { max: this.maxlength() ?? '' });
+    if (errors['pattern']) return this.resolvedPatternErrorMsg() || this.#i18n.t('core.form.input.invalid-pattern');
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
@@ -262,8 +285,18 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     return (): Record<string, any> | null => ({ inlineError: true });
   }
 
+  getCurrentLength = (): number => {
+    return (this.formControl.value ?? '').toString().length;
+  };
+
+  isMaxlengthExceeded = (): boolean => {
+    const max = this.maxlength();
+    return !!(max && max > 0 && this.getCurrentLength() > max);
+  };
+
   #onChange = () => {
     const value = this.formControl.value ?? '';
+
     this.valueModel.set(value);
     this.sdChange.emit(value);
   };

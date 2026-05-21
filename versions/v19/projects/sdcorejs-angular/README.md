@@ -35,7 +35,8 @@
 |---|---|
 | `@angular/core` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
 | `@angular/material` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
-| `@angular/material-moment-adapter` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
+| `@angular/material-date-fns-adapter` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
+| `date-fns` | `^3 \|\| ^4` |
 
 ### Installation / CÃ i Ä‘áº·t
 
@@ -188,7 +189,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 | Input | Type | Default | Description |
 |---|---|---|---|
 | `type` | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'` | Kiá»ƒu nÃºt |
-| `color` | `SdColor` | `'secondary'` | MÃ u sáº¯c |
+| `color` | `Color` | `'secondary'` | MÃ u sáº¯c |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | KÃ­ch thÆ°á»›c |
 | `title` | `string` | â€” | NhÃ£n nÃºt |
 | `prefixIcon` | `string` | â€” | Icon Material trÆ°á»›c text |
@@ -220,10 +221,10 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
 | Input | Type | Default | Description |
 |---|---|---|---|
 | `type` | `'tag' \| 'round' \| 'icon'` | `'icon'` | Kiá»ƒu badge |
-| `color` | `SdColor` | `'secondary'` | MÃ u sáº¯c |
+| `color` | `Color` | `'secondary'` | MÃ u sáº¯c |
 | `title` | `string \| number` | â€” | Ná»™i dung hiá»ƒn thá»‹ |
 | `icon` | `string` | â€” | Icon Material |
-| `size` | `SdSize` | `'sm'` | KÃ­ch thÆ°á»›c |
+| `size` | `Size` | `'sm'` | KÃ­ch thÆ°á»›c |
 | `tooltip` | `string` | â€” | Tooltip |
 
 Shorthand color inputs (boolean): `primary`, `secondary`, `success`, `info`, `warning`, `error`.
@@ -249,7 +250,7 @@ import { SdSection } from '@sdcorejs/angular/components/section';
 | `title` | `string` | *required* | TiÃªu Ä‘á» section |
 | `subTitle` | `string` | â€” | TiÃªu Ä‘á» phá»¥ |
 | `icon` | `string` | â€” | Icon Material |
-| `iconColor` | `SdColor` | `'primary'` | MÃ u icon |
+| `iconColor` | `Color` | `'primary'` | MÃ u icon |
 | `collapsable` | `boolean` | `false` | Cho phÃ©p thu gá»n |
 | `collapsed` | `boolean` | `false` | Tráº¡ng thÃ¡i ban Ä‘áº§u thu gá»n |
 | `hideHeader` | `boolean` | `false` | áº¨n pháº§n header |
@@ -277,7 +278,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 | Input | Type | Default | Description |
 |---|---|---|---|
 | `title` | `string` | â€” | TiÃªu Ä‘á» modal |
-| `color` | `SdColor` | `'primary'` | MÃ u header |
+| `color` | `Color` | `'primary'` | MÃ u header |
 | `width` | `'sx' \| 'sm' \| 'md' \| 'lg' \| string` | `'md'` | Äá»™ rá»™ng (md = 60vw) |
 | `height` | `string` | `'auto'` | Chiá»u cao |
 | `view` | `'dialog' \| 'bottom-sheet'` | auto | Tá»± Ä‘á»™ng bottom-sheet trÃªn mobile |
@@ -405,7 +406,6 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 | `SdHistory` | `@sdcorejs/angular/components/history` | Lá»‹ch sá»­ thay Ä‘á»•i |
 | `SdImportExcel` | `@sdcorejs/angular/components/import-excel` | Wizard import Excel |
 | `SdQueryBuilder` | `@sdcorejs/angular/components/query-builder` | Visual query builder |
-| `SdWorkflow` | `@sdcorejs/angular/components/workflow` | Workflow builder |
 | `SdCodeEditor` | `@sdcorejs/angular/components/code-editor` | Code editor (PrismJS) |
 | `SdMiniEditor` | `@sdcorejs/angular/components/mini-editor` | Rich text editor nhá» |
 | `SdDocumentBuilder` | `@sdcorejs/angular/components/document-builder` | Document builder |
@@ -653,7 +653,7 @@ export * from './src/my-component.component';
 // my-component.component.ts
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
-import { SdColor } from '@sdcorejs/angular/utilities';
+import { Color } from '@sdcorejs/angular/utilities';
 
 @Component({
   selector: 'sd-my-component',
@@ -664,7 +664,7 @@ import { SdColor } from '@sdcorejs/angular/utilities';
   imports: [],
 })
 export class SdMyComponent extends SdBaseSecureComponent {
-  color = input<SdColor, SdColor | undefined | null>('primary', {
+  color = input<Color, Color | undefined | null>('primary', {
     transform: (value) => value || 'primary',
   });
 
@@ -690,7 +690,7 @@ export * from '@sdcorejs/angular/components/my-component';
 | Base class | Extend `SdBaseSecureComponent` cho component cÃ³ permission |
 | Change detection | LuÃ´n dÃ¹ng `ChangeDetectionStrategy.OnPush` |
 | Standalone | LuÃ´n `standalone: true` |
-| Colors | DÃ¹ng `SdColor` type, khÃ´ng hardcode mÃ u |
+| Colors | DÃ¹ng `Color` type, khÃ´ng hardcode mÃ u |
 
 ### Build
 

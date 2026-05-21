@@ -1,13 +1,46 @@
 @let _userInfo = userInfo();
 <sd-page>
   <div class="d-flex flex-column" headerLeft>
-    <div class="font-weight-medium fs-20">Xin chào, {{ _userInfo?.fullName || _userInfo?.email || _userInfo?.username }}</div>
+    <div class="font-weight-medium fs-20">
+      {{ 'core.module.layout.greeting.hello' | translate: { name: _userInfo?.fullName ?? _userInfo?.email ?? _userInfo?.username ?? '' } }}
+    </div>
     <span class="T12R text-secondary">{{ todayInfo() }}</span>
   </div>
 
   <div class="wrapper">
-    <img alt="welcome-photo" class="welcome-image" />
-    <span class="first-line">Chúc bạn một ngày làm việc</span>
-    <span class="second-line">tràn đầy năng lượng & hiệu quả!</span>
+    <div class="bento">
+      <!-- Hero -->
+      <div class="card hero-card">
+        <div class="hero-ring ring-3"></div>
+        <div class="hero-ring ring-2"></div>
+        <div class="hero-ring ring-1"></div>
+        <div class="hero-core">
+          <mat-icon class="hero-icon">space_dashboard</mat-icon>
+        </div>
+        <div class="hero-decoration">
+          <span class="dot d1"></span>
+          <span class="dot d2"></span>
+          <span class="dot d3"></span>
+        </div>
+      </div>
+
+      <!-- Features -->
+      @for (feature of features; track feature.key; let i = $index) {
+        <div
+          class="card feature-card"
+          [class.feature-wide]="feature.area === 'audit' || feature.area === 'integ'"
+          [style.gridArea]="feature.area"
+          [style.animation-delay.ms]="(i + 1) * 80"
+        >
+          <div class="feature-accent"></div>
+          <div class="feature-content">
+            <div class="feature-icon-wrap">
+              <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
+            </div>
+            <span class="feature-label">{{ feature.key | translate }}</span>
+          </div>
+        </div>
+      }
+    </div>
   </div>
 </sd-page>

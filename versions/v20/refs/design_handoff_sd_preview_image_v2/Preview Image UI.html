@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>sd-preview-image · UI v2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" />
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; font-family: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif; background: #f0f2f5; color: #212121; }
+    *, *::before, *::after { box-sizing: border-box; }
+    @keyframes sd-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    button { font-family: inherit; }
+  </style>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="sd-preview-image.jsx"></script>
+
+  <script type="text/babel" data-presets="env,react">
+    const { DesignCanvas, DCSection, DCArtboard } = window;
+
+    // Modal-style frame (behind the viewer: faded page chrome)
+    function ModalFrame({ children }) {
+      return (
+        <div style={{
+          width: '100%', height: '100%',
+          background: 'rgba(15, 23, 42, 0.55)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 32,
+        }}>
+          <div style={{ width: '100%', height: '100%', maxWidth: 1280, maxHeight: 840 }}>
+            {children}
+          </div>
+        </div>
+      );
+    }
+
+    const W = 1320, H = 880;
+
+    function App() {
+      return (
+        <DesignCanvas>
+          <DCSection id="default" title="Đề xuất default — Modern dark gallery"
+            subtitle="Backdrop tối · header bar có metadata · nav arrow tròn lớn · keyboard hint · thumb strip dưới">
+            <DCArtboard id="bottom" label="A · Thumb strip dưới (mặc định)" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="bottom" activeIndex={2} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="zoomed" label="B · Zoom + toolbar đầy đủ" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="bottom" activeIndex={5} zoomed /></ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="layouts" title="Variations layout"
+            subtitle="Cho phép thumbnailPosition khác nhau tuỳ context dùng">
+            <DCArtboard id="right" label="C · Thumb dọc bên phải (giống bản cũ)" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="right" activeIndex={3} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="dots" label="D · Dots indicator (≤ 8 ảnh)" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="dots" activeIndex={1} images={SAMPLE_IMAGES.slice(0, 5)} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="minimal" label="E · Minimal (single image, không chrome)" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="minimal" activeIndex={0} images={SAMPLE_IMAGES.slice(0, 1)} showBottomToolbar={false} /></ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="states" title="Trạng thái rỗng / lỗi / đang tải">
+            <DCArtboard id="loading" label="F · Loading per-image" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="bottom" activeIndex={4} state="loading" loadingProgress={62} /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="error" label="G · Error + nút thử lại" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="bottom" activeIndex={4} state="error" /></ModalFrame>
+            </DCArtboard>
+            <DCArtboard id="empty" label="H · Empty — không có ảnh" width={W} height={H}>
+              <ModalFrame><SdPreviewImage variant="bottom" state="empty" images={[]} /></ModalFrame>
+            </DCArtboard>
+          </DCSection>
+
+          <DCSection id="api" title="Đề xuất API mới"
+            subtitle="Backwards-compatible — vẫn nhận (string | File)[], thêm dạng object có metadata">
+            <DCArtboard id="api-card" label="API + breaking changes" width={1100} height={840}>
+              <ApiProposal />
+            </DCArtboard>
+          </DCSection>
+        </DesignCanvas>
+      );
+    }
+
+    function ApiProposal() {
+      const sectionStyle = { padding: '20px 28px', borderBottom: '1px solid #e5e7eb' };
+      const codeStyle = {
+        background: '#0d0e10', color: '#e4e4e7',
+        padding: '14px 16px', borderRadius: 8,
+        fontFamily: 'ui-monospace, "SF Mono", Menlo, monospace',
+        fontSize: 12.5, lineHeight: 1.65, whiteSpace: 'pre',
+        overflow: 'auto',
+        border: '1px solid #1f2937',
+      };
+      const Tag = ({ kind, children }) => {
+        const palette = {
+          new:   { bg: '#dcfce7', fg: '#166534' },
+          break: { bg: '#fee2e2', fg: '#991b1b' },
+          keep:  { bg: '#e0e7ff', fg: '#3730a3' },
+        }[kind];
+        return <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: palette.bg, color: palette.fg, letterSpacing: '0.04em', marginRight: 8 }}>{kind.toUpperCase()}</span>;
+      };
+      return (
+        <div style={{ background: '#fff', height: '100%', overflow: 'auto', borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+          <div style={{ ...sectionStyle, background: 'linear-gradient(180deg, #f8fafc, #fff)' }}>
+            <div style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>sd-preview-image v2 · API đề xuất</div>
+            <div style={{ fontSize: 13, color: '#64748b' }}>
+              Mục tiêu: thêm zoom/rotate/download, metadata per-image, keyboard nav, fix memory leak,
+              cho phép tùy biến toolbar — vẫn tương thích call site cũ.
+            </div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Inputs / Config (mới)</div>
+            <div style={codeStyle}>{`@Input() thumbnailPosition: 'bottom' | 'right' | 'left' | 'top' | 'dots' | 'none' = 'bottom';
+@Input() showToolbar = true;       // zoom / rotate / download / fullscreen
+@Input() allowDownload = true;
+@Input() allowZoom = true;
+@Input() backdrop: 'dark' | 'light' = 'dark';
+@Input() loop = true;              // wrap ←/→ ở đầu/cuối`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>open() — nhận thêm dạng object</div>
+            <div style={codeStyle}>{`type PreviewItem = string | File | {
+  url?: string;
+  file?: File;
+  name?: string;          // override filename
+  caption?: string;       // hiển thị dưới ảnh
+  alt?: string;           // a11y
+  mime?: string;
+};
+
+open(
+  items: PreviewItem[] | null | undefined,
+  options?: { startIndex?: number }
+): Promise<void>;`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>Outputs (mới + giữ lại)</div>
+            <div style={codeStyle}>{`@Output() close = new EventEmitter<void>();                              // giữ
+@Output() activeIndexChange = new EventEmitter<number>();                 // mới
+@Output() download = new EventEmitter<{ index: number; item: PreviewItem }>(); // mới
+@Output() imageError = new EventEmitter<{ index: number; reason: string }>();  // mới`}</div>
+          </div>
+
+          <div style={sectionStyle}>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Tổng kết thay đổi</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, fontSize: 13, lineHeight: 1.65 }}>
+              <div><Tag kind="new" />Backdrop tối + chrome trong suốt → ảnh nổi bật, đỡ chói khi xem nhiều ảnh.</div>
+              <div><Tag kind="new" />Toolbar: zoom in/out + fit, rotate, download, fullscreen — toàn hardware-accelerated CSS transform.</div>
+              <div><Tag kind="new" />Header bar hiển thị filename · dimensions · file size · counter "3 / 12".</div>
+              <div><Tag kind="new" />Keyboard nav: <code>← →</code> chuyển, <code>Esc</code> đóng, <code>+/-</code> zoom, <code>r</code> rotate, <code>f</code> fullscreen.</div>
+              <div><Tag kind="new" />Mouse wheel zoom + drag-to-pan khi zoom &gt; 100%; pinch-zoom trên touch.</div>
+              <div><Tag kind="new" />Swipe trái/phải trên touch để chuyển ảnh.</div>
+              <div><Tag kind="new" />Active thumbnail dùng outline (không phải border) → kích thước không đổi khi active/inactive.</div>
+              <div><Tag kind="new" />Loading state per-image (spinner + progress) + error state có nút "Thử lại".</div>
+              <div><Tag kind="new" />Revoke <code>URL.createObjectURL</code> khi modal đóng → hết memory leak.</div>
+              <div><Tag kind="new" />Hỗ trợ <code>thumbnailPosition: 'dots'</code> khi gallery ≤ 8 ảnh.</div>
+              <div><Tag kind="keep" />Vẫn dựa trên <code>&lt;sd-modal&gt;</code>, vẫn standalone, OnPush.</div>
+              <div><Tag kind="keep" />Call <code>open(urls)</code> với mảng string vẫn hoạt động nguyên.</div>
+              <div><Tag kind="break" />Title cố định "Xem ảnh" → cho phép override qua <code>@Input() title</code>.</div>
+              <div><Tag kind="break" />Bỏ <code>NgOptimizedImage</code> vì conflict với blob URL + xoay/zoom; thay bằng <code>&lt;img&gt;</code> thường.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

@@ -22,12 +22,12 @@
         @if (changePasswordLayoutConfig) {
           <button class="m-user-action" (click)="changePassword()">
             <mat-icon>lock_outline</mat-icon>
-            <span>Đổi mật khẩu</span>
+            <span>{{ 'core.module.layout.user.change-password' | translate }}</span>
           </button>
         }
         <button class="m-user-action m-user-action--logout" (click)="logout()">
           <mat-icon>logout</mat-icon>
-          <span>Đăng xuất</span>
+          <span>{{ 'core.module.layout.user.logout' | translate }}</span>
         </button>
       </div>
     }
@@ -61,13 +61,13 @@
       <div class="c-sign-button-wrapper">
         <button class="c-account-options" (click)="changePassword()">
           <img alt="lock" />
-          <span>Đổi mật khẩu</span>
+          <span>{{ 'core.module.layout.user.change-password' | translate }}</span>
         </button>
       </div>
     }
 
     <div class="c-sign-button-wrapper">
-      <button class="c-sign-button" mat-flat-button (click)="logout()">Đăng xuất</button>
+      <button class="c-sign-button" mat-flat-button (click)="logout()">{{ 'core.module.layout.user.logout' | translate }}</button>
     </div>
   </div>
 </mat-menu>

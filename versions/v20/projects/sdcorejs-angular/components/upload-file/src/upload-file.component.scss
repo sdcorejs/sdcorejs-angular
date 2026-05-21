@@ -228,58 +228,58 @@
 
 .file {
   padding: 5px;
-  content: url('../../../assets/img/file-types/png/file.png');
+  content: url('./assets/file-types/file.png');
 
   &.png {
-    content: url('../../../assets/img/file-types/png/png.png');
+    content: url('./assets/file-types/png.png');
   }
 
   &.jpg {
-    content: url('../../../assets/img/file-types/png/jpg.png');
+    content: url('./assets/file-types/jpg.png');
   }
 
   &.pdf {
-    content: url('../../../assets/img/file-types/png/pdf.png');
+    content: url('./assets/file-types/pdf.png');
   }
 
   &.doc {
-    content: url('../../../assets/img/file-types/png/doc.png');
+    content: url('./assets/file-types/doc.png');
   }
 
   &.docx {
-    content: url('../../../assets/img/file-types/png/docx.png');
+    content: url('./assets/file-types/docx.png');
   }
 
   &.xls {
-    content: url('../../../assets/img/file-types/png/xls.png');
+    content: url('./assets/file-types/xls.png');
   }
 
   &.xlsx {
-    content: url('../../../assets/img/file-types/png/xlsx.png');
+    content: url('./assets/file-types/xlsx.png');
   }
 
   &.ppt {
-    content: url('../../../assets/img/file-types/png/xls.png');
+    content: url('./assets/file-types/xls.png');
   }
 
   &.pptx {
-    content: url('../../../assets/img/file-types/png/xlsx.png');
+    content: url('./assets/file-types/xlsx.png');
   }
 
   &.csv {
-    content: url('../../../assets/img/file-types/png/csv.png');
+    content: url('./assets/file-types/csv.png');
   }
 
   &.psd {
-    content: url('../../../assets/img/file-types/png/psd.png');
+    content: url('./assets/file-types/psd.png');
   }
 
   &.xml {
-    content: url('../../../assets/img/file-types/png/xml.png');
+    content: url('./assets/file-types/xml.png');
   }
 
   &.zip {
-    content: url('../../../assets/img/file-types/png/zip.png');
+    content: url('./assets/file-types/zip.png');
   }
 }
 
@@ -308,61 +308,61 @@
     height: 24px;
     max-width: 100%;
     margin-right: 4px;
-    content: url('../../../assets/img/file-types/png/file.png');
+    content: url('./assets/file-types/file.png');
     &.png {
-      content: url('../../../assets/img/file-types/png/png.png');
+      content: url('./assets/file-types/png.png');
     }
 
     &.jpg {
-      content: url('../../../assets/img/file-types/png/jpg.png');
+      content: url('./assets/file-types/jpg.png');
     }
 
     &.pdf {
-      content: url('../../../assets/img/file-types/png/pdf.png');
+      content: url('./assets/file-types/pdf.png');
     }
 
     &.doc {
-      content: url('../../../assets/img/file-types/png/doc.png');
+      content: url('./assets/file-types/doc.png');
     }
 
     &.docx {
-      content: url('../../../assets/img/file-types/png/docx.png');
+      content: url('./assets/file-types/docx.png');
     }
 
     &.xls {
-      content: url('../../../assets/img/file-types/png/xls.png');
+      content: url('./assets/file-types/xls.png');
     }
 
     &.xlsx {
-      content: url('../../../assets/img/file-types/png/xlsx.png');
+      content: url('./assets/file-types/xlsx.png');
     }
 
     &.ppt {
-      content: url('../../../assets/img/file-types/png/xls.png');
+      content: url('./assets/file-types/xls.png');
     }
 
     &.pptx {
-      content: url('../../../assets/img/file-types/png/xlsx.png');
+      content: url('./assets/file-types/xlsx.png');
     }
 
     &.csv {
-      content: url('../../../assets/img/file-types/png/csv.png');
+      content: url('./assets/file-types/csv.png');
     }
 
     &.psd {
-      content: url('../../../assets/img/file-types/png/psd.png');
+      content: url('./assets/file-types/psd.png');
     }
 
     &.xml {
-      content: url('../../../assets/img/file-types/png/xml.png');
+      content: url('./assets/file-types/xml.png');
     }
 
     &.zip {
-      content: url('../../../assets/img/file-types/png/zip.png');
+      content: url('./assets/file-types/zip.png');
     }
 
     &.tiff {
-      content: url('../../../assets/img/file-types/png/tiff.png');
+      content: url('./assets/file-types/tiff.png');
     }
   }
   .c-file-name {

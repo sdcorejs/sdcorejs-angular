@@ -19,8 +19,8 @@ import {
   contentChild
 } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
-import { provideMomentDateAdapter } from '@angular/material-moment-adapter';
-import { MatNativeDateModule } from '@angular/material/core';
+import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
+import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerInputEvent, MatDatepickerModule, MatDateRangePicker } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -28,9 +28,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
 import { ISdFormConfiguration, SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { SdSize } from '@sdcorejs/angular/utilities/models';
-import moment, { Moment } from 'moment';
+import { parse as parseDate } from 'date-fns';
+import { enUS as dfEnUS } from 'date-fns/locale';
 import * as uuid from 'uuid';
 
 interface Daterange {
@@ -44,13 +46,15 @@ interface Daterange {
   styleUrls: ['./date-range.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
-    provideMomentDateAdapter({
-      parse: { dateInput: 'DD/MM/YYYY' },
+    // DateFnsAdapter inject MAT_DATE_LOCALE; cáº¥p default en-US Ä‘á»ƒ parse/format hoáº¡t Ä‘á»™ng.
+    { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
+    provideDateFnsAdapter({
+      parse: { dateInput: 'dd/MM/yyyy' },
       display: {
-        dateInput: 'DD/MM/YYYY',
-        monthYearLabel: 'MMM YYYY',
-        dateA11yLabel: 'LL',
-        monthYearA11yLabel: 'MMMM YYYY',
+        dateInput: 'dd/MM/yyyy',
+        monthYearLabel: 'MMM yyyy',
+        dateA11yLabel: 'PP',
+        monthYearA11yLabel: 'MMMM yyyy',
       },
     }),
   ],
@@ -65,6 +69,7 @@ interface Daterange {
     MatDatepickerModule,
     MatNativeDateModule,
     SdLabel,
+    TranslatePipe,
   ],
 })
 export class SdDateRange implements OnDestroy, OnInit {
@@ -84,6 +89,7 @@ export class SdDateRange implements OnDestroy, OnInit {
   // ==========================================
   private cdRef = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -122,13 +128,13 @@ export class SdDateRange implements OnDestroy, OnInit {
     const c2Errors = this.control2?.errors;
 
     if (outerErrors?.['required'] || c1Errors?.['required'] || c2Errors?.['required']) {
-      return 'Vui lÃ²ng nháº­p thÃ´ng tin';
+      return this.#i18n.t('core.form.date-range.required');
     }
     if (outerErrors?.['matDatepickerMin'] || c1Errors?.['matDatepickerMin']) {
-      return `NgÃ y báº¯t Ä‘áº§u khÃ´ng há»£p lá»‡ (nhá» hÆ¡n giá»›i háº¡n)`;
+      return this.#i18n.t('core.form.date-range.invalid-min');
     }
     if (outerErrors?.['matDatepickerMax'] || c2Errors?.['matDatepickerMax']) {
-      return `NgÃ y káº¿t thÃºc khÃ´ng há»£p lá»‡ (lá»›n hÆ¡n giá»›i háº¡n)`;
+      return this.#i18n.t('core.form.date-range.invalid-max');
     }
     return undefined;
   }
@@ -178,14 +184,15 @@ export class SdDateRange implements OnDestroy, OnInit {
         const toStr = DateUtilities.isDate(val?.to) ? DateUtilities.toFormat(val?.to, 'yyyy/MM/dd') : null;
 
         // Chá»‰ set value náº¿u cÃ³ sá»± khÃ¡c biá»‡t (trÃ¡nh loop)
-        const currentFrom = this.control1.value ? DateUtilities.toFormat(this.control1.value.toDate(), 'yyyy/MM/dd') : null;
-        const currentTo = this.control2.value ? DateUtilities.toFormat(this.control2.value.toDate(), 'yyyy/MM/dd') : null;
+        // control1/control2 giá» giá»¯ native Date (date-fns adapter), khÃ´ng cáº§n .toDate() nhÆ° Moment.
+        const currentFrom = this.control1.value ? DateUtilities.toFormat(this.control1.value, 'yyyy/MM/dd') : null;
+        const currentTo = this.control2.value ? DateUtilities.toFormat(this.control2.value, 'yyyy/MM/dd') : null;
 
         if (fromStr !== currentFrom) {
-          this.control1.setValue(fromStr ? moment(fromStr, 'YYYY/MM/DD') : null, { emitEvent: false });
+          this.control1.setValue(fromStr ? parseDate(fromStr, 'yyyy/MM/dd', new Date()) : null, { emitEvent: false });
         }
         if (toStr !== currentTo) {
-          this.control2.setValue(toStr ? moment(toStr, 'YYYY/MM/DD') : null, { emitEvent: false });
+          this.control2.setValue(toStr ? parseDate(toStr, 'yyyy/MM/dd', new Date()) : null, { emitEvent: false });
         }
 
         // Äá»“ng bá»™ control tá»•ng Ä‘á»ƒ required cá»§a form cha khÃ´ng bá»‹ invalid khi model default Ä‘Ã£ cÃ³ giÃ¡ trá»‹.
@@ -247,17 +254,18 @@ export class SdDateRange implements OnDestroy, OnInit {
     return null;
   }
 
-  onStartChange = (event: MatDatepickerInputEvent<Moment>) => {
+  onStartChange = (event: MatDatepickerInputEvent<Date>) => {
     if (!this.#isFocus) this.#emit();
   };
 
-  onEndChange = (event: MatDatepickerInputEvent<Moment>) => {
+  onEndChange = (event: MatDatepickerInputEvent<Date>) => {
     if (!this.#isFocus) this.#emit();
   };
 
   #emit = () => {
-    const from = this.control1.value?.toDate() || null;
-    const to = this.control2.value?.toDate() || null;
+    // control1/control2 giá» giá»¯ native Date, khÃ´ng cáº§n .toDate().
+    const from = this.control1.value || null;
+    const to = this.control2.value || null;
 
     const currentModel = this.valueModel();
     const newFrom = DateUtilities.isDate(from) ? DateUtilities.toFormat(from, 'yyyy/MM/dd') : null;

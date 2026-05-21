@@ -1,0 +1,306 @@
+﻿import { afterNextRender, booleanAttribute, Component, ComponentRef, computed, contentChildren, createComponent, DestroyRef, effect, ElementRef, EnvironmentInjector, inject, Injector, input, numberAttribute, output } from '@angular/core';
+import { SdSplitterHandleComponent } from './splitter-handle/splitter-handle.component';
+import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
+import { ResolvedPanelMeta, SplitterLayoutState, SplitterOrientation } from './splitter.models';
+import { SplitterStateService } from './splitter-state.service';
+import { SdStorageService } from '@sdcorejs/angular/services/storage';
+
+@Component({
+  selector: 'sd-splitter',
+  standalone: true,
+  templateUrl: './splitter.component.html',
+  styleUrls: ['./splitter.component.scss'],
+  providers: [SplitterStateService],
+  host: {
+    'class': 'sd-splitter',
+    '[class.sd-splitter--horizontal]': 'orientation() === "horizontal"',
+    '[class.sd-splitter--vertical]': 'orientation() === "vertical"',
+    '[class.sd-splitter--disabled]': 'disabled()',
+  },
+})
+export class SdSplitterComponent {
+  #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  // EnvironmentInjector: dÃ¹ng cho createComponent (cáº§n injector tree). Lifetime application-scope.
+  #envInjector = inject(EnvironmentInjector);
+  // Component-scoped Injector: gáº¯n DestroyRef cá»§a component â†’ afterNextRender callback tá»± cancel khi destroy
+  #injector = inject(Injector);
+  #destroyRef = inject(DestroyRef);
+  #state = inject(SplitterStateService);
+  #storage = inject(SdStorageService);
+
+  #storageHandle = computed(() => {
+    const key = this.storageKey();
+    return key ? this.#storage.create<SplitterLayoutState>(key) : null;
+  });
+
+  orientation = input<SplitterOrientation>('horizontal');
+  disabled = input(false, { transform: booleanAttribute });
+  storageKey = input<string | undefined>(undefined);
+  snapThreshold = input<number, unknown>(0.5, { transform: numberAttribute });
+  keyboardStep = input<number, unknown>(10, { transform: numberAttribute });
+
+  readonly resizeEnd = output<SplitterLayoutState>();
+  readonly collapsedChange = output<{ panelId: string | number; collapsed: boolean }>();
+  readonly layoutChange = output<SplitterLayoutState>();
+
+  readonly panels = contentChildren(SdSplitterPanelComponent);
+
+  #handleRefs: ComponentRef<SdSplitterHandleComponent>[] = [];
+
+  #dragStartSize: { handleIndex: number; containerPx: number } | null = null;
+  #dragLastDelta = 0;
+  #prevCollapsedMap = new Map<string | number, boolean>();
+
+  constructor() {
+    // 1. Reconcile state khi panels signal Ä‘á»•i (panel add/remove qua @if/@for)
+    effect(() => {
+      const panels = this.panels();
+      const stored = this.#storageHandle()?.get() ?? null;
+      const metas = panels.map((p, i) => this.#toMeta(p, i));
+      this.#state.reconcile(metas, stored);
+    });
+
+    // Auto-save vÃ o storage khi committedLayout Ä‘á»•i (only commit triggers, khÃ´ng pháº£i live drag)
+    effect(() => {
+      const layout = this.#state.committedLayout();
+      const handle = this.#storageHandle();
+      if (handle && layout.panels.length > 0) {
+        handle.setSilent(layout);   // setSilent: khÃ´ng emit qua storage subject
+      }
+    });
+
+    // Emit layoutChange + collapsedChange (diff) khi committedLayout Ä‘á»•i
+    effect(() => {
+      const layout = this.#state.committedLayout();
+      if (layout.panels.length === 0) return;
+      this.layoutChange.emit(layout);
+
+      // Detect collapsed change qua diff vá»›i prev map
+      const currMap = this.#state.collapsedMap();
+      for (const [id, isCollapsed] of currMap) {
+        const prev = this.#prevCollapsedMap.get(id) ?? false;
+        if (prev !== isCollapsed) {
+          this.collapsedChange.emit({ panelId: id, collapsed: isCollapsed });
+        }
+      }
+      this.#prevCollapsedMap = new Map(currMap);
+    });
+
+    // 2. Apply flex style lÃªn panel host element dá»±a trÃªn liveSizes + collapsedMap.
+    // Normalize flex-grow cá»§a cÃ¡c panel flex Ä‘á»ƒ sum = 1 â†’ CSS phÃ¢n phá»‘i háº¿t free space.
+    // Náº¿u Ä‘á»ƒ raw weight (vd 0.7), sum < 1 â†’ flexbox Ä‘á»ƒ láº¡i khoáº£ng trá»‘ng bÃªn rÃ¬a.
+    effect(() => {
+      const sizes = this.#state.liveSizes();
+      const collapsed = this.#state.collapsedMap();
+      const panels = this.panels();
+
+      // TÃ­nh tá»•ng weight cá»§a panel flex Ä‘ang khÃ´ng collapsed (Ä‘á»ƒ normalize)
+      let totalFlexWeight = 0;
+      for (let i = 0; i < panels.length; i++) {
+        const panel = panels[i];
+        const id = panel.panelId() ?? i;
+        if (panel.unit() === 'flex' && !collapsed.get(id)) {
+          totalFlexWeight += sizes.get(id) ?? 1;
+        }
+      }
+
+      for (let i = 0; i < panels.length; i++) {
+        const panel = panels[i];
+        const id = panel.panelId() ?? i;
+        const isCollapsed = collapsed.get(id) === true;
+        const size = sizes.get(id) ?? 1;
+        let flex: string;
+        if (isCollapsed) {
+          flex = '0 0 0';
+        } else if (panel.unit() === 'px') {
+          flex = `0 0 ${size}px`;
+        } else {
+          // Normalize: grow = weight / totalWeight â†’ sum(grow) = 1
+          const grow = totalFlexWeight > 0 ? size / totalFlexWeight : 1;
+          flex = `${grow} 1 0`;
+        }
+        panel.elementRef.nativeElement.style.flex = flex;
+      }
+    });
+
+    // Sync handles sau khi DOM render xong (panels Ä‘Ã£ projected vÃ o host)
+    effect(() => {
+      const panelCount = this.panels().length;
+      const orientation = this.orientation();
+      const disabled = this.disabled();
+      const keyboardStep = this.keyboardStep();
+      afterNextRender(
+        () => this.#syncHandles(panelCount, orientation, disabled, keyboardStep),
+        { injector: this.#injector }   // component-scoped â†’ auto-cancel khi component destroy
+      );
+    });
+
+    // Destroy handle ComponentRef khi container bá»‹ destroy (trÃ¡nh leak)
+    this.#destroyRef.onDestroy(() => {
+      for (const ref of this.#handleRefs) ref.destroy();
+      this.#handleRefs = [];
+    });
+  }
+
+  #toMeta(panel: SdSplitterPanelComponent, index: number): ResolvedPanelMeta {
+    return {
+      id: panel.panelId() ?? index,
+      index,
+      unit: panel.unit(),
+      minSize: panel.minSize(),
+      maxSize: panel.maxSize(),
+      collapsible: panel.collapsible(),
+      resizable: panel.resizable(),
+      declaredSize: panel.size(),
+      lastSize: panel.size(),
+    };
+  }
+
+  #syncHandles(panelCount: number, orientation: SplitterOrientation, disabled: boolean, keyboardStep: number): void {
+    const panels = this.panels();
+    const needed = Math.max(0, panelCount - 1);
+    // Remove excess
+    while (this.#handleRefs.length > needed) {
+      this.#handleRefs.pop()!.destroy();
+    }
+    // Create missing + wire events
+    while (this.#handleRefs.length < needed) {
+      const ref = createComponent(SdSplitterHandleComponent, { environmentInjector: this.#envInjector });
+      const handleIndex = this.#handleRefs.length;
+      ref.instance.dragStart.subscribe(() => this.#onDragStart(handleIndex));
+      ref.instance.dragMove.subscribe(delta => this.#onDragMove(handleIndex, delta));
+      ref.instance.dragEnd.subscribe(() => this.#onDragEnd(handleIndex));
+      ref.instance.toggleRequest.subscribe(() => this.#onHandleToggle(handleIndex));
+      this.#handleRefs.push(ref);
+    }
+    // Apply inputs vá»›i disabled tÃ­nh theo per-panel resizable
+    for (let i = 0; i < this.#handleRefs.length; i++) {
+      const ref = this.#handleRefs[i];
+      const prev = panels[i];
+      const next = panels[i + 1];
+      const handleDisabled = disabled || !prev.resizable() || !next.resizable();
+      ref.setInput('orientation', orientation);
+      ref.setInput('disabled', handleDisabled);
+      ref.setInput('keyboardStep', keyboardStep);
+      ref.changeDetectorRef.detectChanges();
+    }
+    // Re-arrange DOM: panel0, handle0, panel1, handle1, ..., panelN
+    const host = this.#host.nativeElement;
+    for (let i = 0; i < panels.length; i++) {
+      host.appendChild(panels[i].elementRef.nativeElement);
+      if (i < this.#handleRefs.length) host.appendChild(this.#handleRefs[i].location.nativeElement);
+    }
+  }
+
+  #onDragStart(handleIndex: number): void {
+    const rect = this.#host.nativeElement.getBoundingClientRect();
+    const containerPx = this.orientation() === 'horizontal' ? rect.width : rect.height;
+    this.#dragStartSize = { handleIndex, containerPx };
+    this.#dragLastDelta = 0;
+    this.#host.nativeElement.classList.add('sd-splitter--dragging');
+  }
+
+  #onDragMove(handleIndex: number, deltaSinceStart: number): void {
+    if (!this.#dragStartSize) return;
+    const incrementalDelta = deltaSinceStart - this.#dragLastDelta;
+    this.#dragLastDelta = deltaSinceStart;
+    this.#state.applyDelta(handleIndex, incrementalDelta, this.#dragStartSize.containerPx, this.snapThreshold());
+  }
+
+  #onDragEnd(_handleIndex: number): void {
+    this.#dragStartSize = null;
+    this.#host.nativeElement.classList.remove('sd-splitter--dragging');
+    this.#state.commit();
+    this.resizeEnd.emit(this.#state.committedLayout());
+  }
+
+  #onHandleToggle(handleIndex: number): void {
+    // Double-click / Enter / Space â€” Æ°u tiÃªn collapse panel collapsible á»Ÿ phÃ­a prev, fallback next
+    const panels = this.panels();
+    const prev = panels[handleIndex];
+    const next = panels[handleIndex + 1];
+    const target = prev.collapsible() ? prev : next.collapsible() ? next : null;
+    if (!target) return;
+    const id = target.panelId() ?? panels.indexOf(target);
+    this.#state.togglePanel(id);
+    this.#state.commit();
+  }
+
+  // --- Imperative API ---
+
+  getLayout(): SplitterLayoutState {
+    const metas = this.#state.getPanelMetas();
+    const sizes = this.#state.liveSizes();
+    const collapsed = this.#state.collapsedMap();
+    return {
+      v: 1,
+      panels: metas.map(m => ({
+        id: m.id,
+        size: sizes.get(m.id) ?? m.declaredSize,
+        unit: m.unit,
+        collapsed: collapsed.get(m.id) ?? false,
+      })),
+    };
+  }
+
+  setLayout(state: SplitterLayoutState): void {
+    const metas = this.#state.getPanelMetas();
+    for (const stored of state.panels) {
+      const meta = metas.find(m => m.id === stored.id);
+      if (!meta || meta.unit !== stored.unit) continue;
+      this.#state.setLiveSize(meta.id, stored.size);
+      this.#state.setCollapsed(meta.id, stored.collapsed);
+    }
+    this.#state.commit();
+  }
+
+  resetLayout(): void {
+    const metas = this.#state.getPanelMetas();
+    for (const m of metas) {
+      this.#state.setLiveSize(m.id, m.declaredSize);
+      this.#state.setCollapsed(m.id, false);
+    }
+    this.#state.commit();
+  }
+
+  collapse(target: number | string): void {
+    const id = this.#resolveTarget(target);
+    this.#state.collapsePanel(id);
+    this.#state.commit();
+  }
+
+  expand(target: number | string): void {
+    const id = this.#resolveTarget(target);
+    this.#state.expandPanel(id);
+    this.#state.commit();
+  }
+
+  toggle(target: number | string): void {
+    const id = this.#resolveTarget(target);
+    this.#state.togglePanel(id);
+    this.#state.commit();
+  }
+
+  resizePanel(target: number | string, size: number): void {
+    const id = this.#resolveTarget(target);
+    const meta = this.#state.getPanelMetas().find(m => m.id === id);
+    if (!meta) return;
+    let clamped = Math.max(size, meta.minSize);
+    if (meta.maxSize != null) clamped = Math.min(clamped, meta.maxSize);
+    this.#state.setLiveSize(id, clamped);
+    this.#state.commit();
+  }
+
+  #resolveTarget(target: number | string): string | number {
+    const metas = this.#state.getPanelMetas();
+    if (typeof target === 'number') {
+      const meta = metas[target] ?? metas.find(m => m.id === target);
+      if (!meta) throw new Error(`Splitter: no panel at index ${target}`);
+      return meta.id;
+    }
+    const meta = metas.find(m => m.id === target);
+    if (!meta) throw new Error(`Splitter: no panel with id "${target}"`);
+    return meta.id;
+  }
+}
+

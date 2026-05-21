@@ -21,7 +21,8 @@ import {
   contentChild
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
-import { provideMomentDateAdapter } from '@angular/material-moment-adapter';
+import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
+import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -31,9 +32,11 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdFormControl } from '@sdcorejs/angular/forms/models';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdSize } from '@sdcorejs/angular/utilities';
 import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
-import moment, { Moment } from 'moment';
+import { parse as parseDate } from 'date-fns';
+import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
 
@@ -43,13 +46,16 @@ import * as uuid from 'uuid';
   styleUrls: ['./date.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
-    provideMomentDateAdapter({
-      parse: { dateInput: 'DD/MM/YYYY' },
+    // DateFnsAdapter inject MAT_DATE_LOCALE; náº¿u undefined sáº½ throw khi format/parse.
+    // Provide locale en-US táº¡i scope component Ä‘á»ƒ hÃ nh vi giá»‘ng Moment cÅ© (English default).
+    { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
+    provideDateFnsAdapter({
+      parse: { dateInput: 'dd/MM/yyyy' },
       display: {
-        dateInput: 'DD/MM/YYYY',
-        monthYearLabel: 'MMM YYYY',
-        dateA11yLabel: 'LL',
-        monthYearA11yLabel: 'MMMM YYYY',
+        dateInput: 'dd/MM/yyyy',
+        monthYearLabel: 'MMM yyyy',
+        dateA11yLabel: 'PP',
+        monthYearA11yLabel: 'MMMM yyyy',
       },
     }),
   ],
@@ -74,7 +80,7 @@ export class SdDate implements OnDestroy, OnInit {
   // 1. SIGNAL QUERIES
   // ==========================================
   inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
-  datePicker = viewChild<MatDatepicker<Moment>>(MatDatepicker);
+  datePicker = viewChild<MatDatepicker<Date>>(MatDatepicker);
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
@@ -86,6 +92,7 @@ export class SdDate implements OnDestroy, OnInit {
   // ==========================================
   private ref = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -127,10 +134,10 @@ export class SdDate implements OnDestroy, OnInit {
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
-    if (errors['matDatepickerMin']) { const d = this.resolvedMin(); return `NgÃ y nhá» nháº¥t: ${d ? new Date(d).toLocaleDateString('vi-VN') : ''}`; }
-    if (errors['matDatepickerMax']) { const d = this.resolvedMax(); return `NgÃ y lá»›n nháº¥t: ${d ? new Date(d).toLocaleDateString('vi-VN') : ''}`; }
-    if (errors['matDatetimePickerParse']) return `Parse error: ${errors['matDatetimePickerParse']?.text}`;
+    if (errors['required']) return this.#i18n.t('core.form.date.required');
+    if (errors['matDatepickerMin']) { const d = this.resolvedMin(); return this.#i18n.t('core.form.date.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' }); }
+    if (errors['matDatepickerMax']) { const d = this.resolvedMax(); return this.#i18n.t('core.form.date.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' }); }
+    if (errors['matDatetimePickerParse']) return this.#i18n.t('core.form.date.parse-error', { text: errors['matDatetimePickerParse']?.text ?? '' });
     if (errors['date']) return errors['date'] as string;
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
@@ -173,7 +180,8 @@ export class SdDate implements OnDestroy, OnInit {
   #subscription = new Subscription();
 
   constructor() {
-    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i (String/Date -> Moment)
+    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i (String/Date -> Date)
+    // Material date-fns adapter dÃ¹ng native Date lÃ m internal type cho FormControl.
     effect(() => {
       let val = this.valueModel();
       untracked(() => {
@@ -183,8 +191,8 @@ export class SdDate implements OnDestroy, OnInit {
         val = DateUtilities.toFormat(val, 'yyyy/MM/dd');
         if (this.#date !== val) {
           this.#date = val;
-          const dateObj = DateUtilities.isDate(this.#date) 
-              ? moment(DateUtilities.toFormat(this.#date, 'yyyy/MM/dd'), 'YYYY/MM/DD') 
+          const dateObj = DateUtilities.isDate(this.#date)
+              ? parseDate(DateUtilities.toFormat(this.#date, 'yyyy/MM/dd'), 'yyyy/MM/dd', new Date())
               : null;
           this.formControl.setValue(dateObj, { emitEvent: false });
         }
@@ -305,7 +313,7 @@ export class SdDate implements OnDestroy, OnInit {
         this.isValid = true;
         formControl.markAsDirty();
         formControl.markAsTouched();
-        formControl.setErrors({ ...formControl.errors, date: `Sai Ä‘á»‹nh dáº¡ng` });
+        formControl.setErrors({ ...formControl.errors, date: this.#i18n.t('core.form.date.invalid-format') });
       }, 0);
     } else {
       setTimeout(() => {
@@ -316,8 +324,9 @@ export class SdDate implements OnDestroy, OnInit {
     }
   };
 
-  onChange = (event: MatDatepickerInputEvent<Moment>) => {
-    const value = DateUtilities.toFormat(event.value?.toDate(), 'yyyy/MM/dd');
+  onChange = (event: MatDatepickerInputEvent<Date>) => {
+    // event.value giá» lÃ  native Date (date-fns adapter), khÃ´ng cáº§n .toDate() nhÆ° Moment.
+    const value = DateUtilities.toFormat(event.value, 'yyyy/MM/dd');
     this.inputRef()?.nativeElement?.focus();
     
     if (!this.isValid) {

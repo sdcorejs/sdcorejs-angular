@@ -19,6 +19,7 @@ import * as uuid from 'uuid';
 import { Router } from '@angular/router';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSchema, SdRegister } from '../../models';
 import { SdGenericService } from '../../services';
 import { ArrayUtilities, SdUtilities } from '@sdcorejs/angular/utilities';
@@ -28,7 +29,7 @@ import { ArrayUtilities, SdUtilities } from '@sdcorejs/angular/utilities';
   templateUrl: './generic-select.component.html',
   styleUrls: ['generic-select.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdSelect]
+  imports: [SdAutocomplete, SdSelect, TranslatePipe]
 })
 export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(SdAutocomplete) autocomplete?: SdAutocomplete;

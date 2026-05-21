@@ -101,57 +101,57 @@ $gap-size: 0.5rem;
 
 .file {
   padding: 4px;
-  content: url('../../assets/file-types/file.svg');
+  content: url('../../assets/file-types/file.png');
 
-  &.svg {
-    content: url('../../assets/file-types/png.svg');
+  &.png {
+    content: url('../../assets/file-types/png.png');
   }
 
   &.jpg {
-    content: url('../../assets/file-types/jpg.svg');
+    content: url('../../assets/file-types/jpg.png');
   }
 
   &.pdf {
-    content: url('../../assets/file-types/pdf.svg');
+    content: url('../../assets/file-types/pdf.png');
   }
 
   &.doc {
-    content: url('../../assets/file-types/doc.svg');
+    content: url('../../assets/file-types/doc.png');
   }
 
   &.docx {
-    content: url('../../assets/file-types/docx.svg');
+    content: url('../../assets/file-types/docx.png');
   }
 
   &.xls {
-    content: url('../../assets/file-types/xls.svg');
+    content: url('../../assets/file-types/xls.png');
   }
 
   &.xlsx {
-    content: url('../../assets/file-types/xlsx.svg');
+    content: url('../../assets/file-types/xlsx.png');
   }
 
   &.ppt {
-    content: url('../../assets/file-types/xls.svg');
+    content: url('../../assets/file-types/xls.png');
   }
 
   &.pptx {
-    content: url('../../assets/file-types/xlsx.svg');
+    content: url('../../assets/file-types/xlsx.png');
   }
 
   &.csv {
-    content: url('../../assets/file-types/csv.svg');
+    content: url('../../assets/file-types/csv.png');
   }
 
   &.psd {
-    content: url('../../assets/file-types/psd.svg');
+    content: url('../../assets/file-types/psd.png');
   }
 
   &.xml {
-    content: url('../../assets/file-types/xml.svg');
+    content: url('../../assets/file-types/xml.png');
   }
 
   &.zip {
-    content: url('../../assets/file-types/zip.svg');
+    content: url('../../assets/file-types/zip.png');
   }
 }

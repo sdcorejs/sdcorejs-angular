@@ -1,4 +1,4 @@
-<mat-checkbox [formControl]="formControl" [attr.data-autoId]="autoId" [color]="color">{{ label }}</mat-checkbox>
+<mat-checkbox [formControl]="formControl" [attr.data-autoId]="autoId()" [color]="color">{{ label }}</mat-checkbox>
 @if (formControl.errors?.['inlineError'] && formControl.touched) {
   <mat-error>
     {{ inlineError }}

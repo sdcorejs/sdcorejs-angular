@@ -5,6 +5,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 // Import sd-core
 import { SdAvatar } from '@sdcorejs/angular/components';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 // NOTE: Import ná»™i bá»™ trong module layout thÃ¬ dÃ¹ng path tÆ°Æ¡ng Ä‘á»‘i
 import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../../configurations';
 
@@ -12,7 +13,7 @@ import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../../configura
   selector: 'lib-layout-user',
   templateUrl: './user.component.html',
   styleUrls: ['./user.component.scss'],
-  imports: [MatMenuModule, MatButtonModule, MatIconModule, MatTooltipModule, SdAvatar],
+  imports: [MatMenuModule, MatButtonModule, MatIconModule, MatTooltipModule, SdAvatar, TranslatePipe],
   standalone: true,
 })
 export class LayoutUserComponent {

@@ -1,16 +1,6 @@
 ﻿import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule } from '@angular/common';
-import {
-  Component,
-  DestroyRef,
-  computed,
-  effect,
-  inject,
-  input,
-  output,
-  signal,
-  untracked
-} from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,6 +10,7 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { SdUtilities } from '@sdcorejs/angular/utilities';
 
@@ -46,6 +37,7 @@ import { LayoutUserComponent } from '../user/user.component';
     HighlightSearchPipe,
     SdSuffixDefDirective,
     LayoutUserComponent,
+    TranslatePipe,
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
@@ -77,7 +69,6 @@ export class SidebarComponent {
   // ==========================================
   screenHeight = window.innerHeight;
   isMobileOrTablet = SdUtilities.isMobile();
-  
   isMenuLock = signal<boolean>(this.#layoutStorageService.menuLockStatus?.get() ?? true);
   currentPath = signal<string>(window.location.pathname);
   searchText = signal<string>('');
@@ -94,15 +85,13 @@ export class SidebarComponent {
   // DATA STRUCTURES
   // ==========================================
   dataSource = new MatTreeNestedDataSource<SdLayoutMenu>();
-  treeControl = new NestedTreeControl<SdLayoutMenu>(node =>
-    'children' in node && node.children?.length ? node.children : []
-  );
+  treeControl = new NestedTreeControl<SdLayoutMenu>(node => ('children' in node && node.children?.length ? node.children : []));
 
   constructor() {
     // 1. EFFECT: Láº¯ng nghe menus Ä‘áº§u vÃ o thay Ä‘á»•i
     effect(() => {
       const currentMenus = this.menus();
-      
+
       untracked(() => {
         const lastActiveMenuGroupId = this.#layoutStorageService.lastActiveMenuGroupId.get();
         // Láº§n Ä‘áº§u vÃ o web, náº¿u user chÆ°a thao tÃ¡c gÃ¬ sáº½ máº·c Ä‘á»‹nh hiá»‡n menuGroup Ä‘áº§u tiÃªn
@@ -199,7 +188,7 @@ export class SidebarComponent {
 
   expandMenuGroup = (menuGroupNode: SdLayoutMenu): void => {
     this.titleMenuGroup.set(menuGroupNode?.tooltipTitle || menuGroupNode?.title);
-    
+
     // Case 1: Menu khÃ´ng cÃ³ children
     if (!('children' in menuGroupNode && menuGroupNode.children?.length)) {
       if ('path' in menuGroupNode) {
@@ -216,7 +205,7 @@ export class SidebarComponent {
       this.onFilterSearchText('');
       this.expandSideBar.emit();
     }
-    
+
     this.idMenuGroupActive.set(menuGroupNode?.id);
     this.#layoutStorageService.lastActiveMenuGroupId.set(menuGroupNode?.id || '');
     if (!this.currentPath()) {
@@ -232,7 +221,7 @@ export class SidebarComponent {
       const menuGroup = event.currentTarget as HTMLElement;
       const menuGroupIcon = menuGroup.querySelector('.c-menu-group-icon') as HTMLElement;
       const brandLightColorOpacity = this.#convertColor(this.sidebar()?.brandLightColor, 0.6);
-      
+
       if (menuGroupIcon) {
         menuGroupIcon.style.transition = 'all 0.15s';
         menuGroupIcon.style.backgroundColor = brandLightColorOpacity || 'rgba(248, 249, 250, 0.6)';
@@ -267,15 +256,24 @@ export class SidebarComponent {
       const content = menuNode.querySelector('.c-menu-node-description-content') as HTMLElement;
       const iconExpand = menuNode.querySelector('.c-menu-node-description-icon-expand') as HTMLElement;
       const brandLightColorOpacity = this.#convertColor(this.sidebar()?.brandLightColor, 0.6);
-      
+
       if (menuNode) {
         menuNode.style.transition = 'all 0.15s';
         menuNode.style.backgroundColor = brandLightColorOpacity || 'rgba(248, 249, 250, 0.6)';
 
         const brandColor = this.sidebar()?.brandColor || '#2962FF';
-        if (iconMenu) { iconMenu.style.transition = 'all 0.15s'; iconMenu.style.color = brandColor; }
-        if (content) { content.style.transition = 'all 0.15s'; content.style.color = brandColor; }
-        if (iconExpand) { iconExpand.style.transition = 'all 0.15s'; iconExpand.style.color = brandColor; }
+        if (iconMenu) {
+          iconMenu.style.transition = 'all 0.15s';
+          iconMenu.style.color = brandColor;
+        }
+        if (content) {
+          content.style.transition = 'all 0.15s';
+          content.style.color = brandColor;
+        }
+        if (iconExpand) {
+          iconExpand.style.transition = 'all 0.15s';
+          iconExpand.style.color = brandColor;
+        }
       }
     }
   };
@@ -291,9 +289,18 @@ export class SidebarComponent {
         menuNode.style.transition = 'all 0.15s';
         menuNode.style.backgroundColor = 'transparent';
 
-        if (iconMenu) { iconMenu.style.transition = 'all 0.15s'; iconMenu.style.color = '#8C8C8C'; }
-        if (content) { content.style.transition = 'all 0.15s'; content.style.color = '#1F1F1F'; }
-        if (iconExpand) { iconExpand.style.transition = 'all 0.15s'; iconExpand.style.color = '#8C8C8C'; }
+        if (iconMenu) {
+          iconMenu.style.transition = 'all 0.15s';
+          iconMenu.style.color = '#8C8C8C';
+        }
+        if (content) {
+          content.style.transition = 'all 0.15s';
+          content.style.color = '#1F1F1F';
+        }
+        if (iconExpand) {
+          iconExpand.style.transition = 'all 0.15s';
+          iconExpand.style.color = '#8C8C8C';
+        }
       }
     }
   };
@@ -319,18 +326,18 @@ export class SidebarComponent {
 
     if (!normalizeSearchText || normalizeSearchText.length < 3) {
       let menuGroupByPath = this.#getMenuGroupByCurrentPath(menus);
-      
+
       if (!menuGroupByPath?.length) {
         const lastActiveId = this.#layoutStorageService.lastActiveMenuGroupId.get() || '';
         menuGroupByPath = this.menus()?.filter(menu => menu?.id === lastActiveId) || [];
       }
-      
+
       if (menuGroupByPath?.length) {
         const matchedGroup = menuGroupByPath[0];
         this.idMenuGroupActive.set(matchedGroup?.id);
         this.#layoutStorageService.lastActiveMenuGroupId.set(matchedGroup?.id || '');
         this.titleMenuGroup.set(matchedGroup?.tooltipTitle || matchedGroup?.title);
-        
+
         if ('children' in matchedGroup && matchedGroup.children?.length) {
           this.menusByGroup.set(matchedGroup.children);
           this.#expandParentNodesByCurrentPath(this.menusByGroup());
@@ -342,7 +349,7 @@ export class SidebarComponent {
         this.titleMenuGroup.set('');
         this.menusByGroup.set([]);
       }
-      
+
       this.dataSource.data = this.menusByGroup();
     }
   };
@@ -367,7 +374,7 @@ export class SidebarComponent {
   #filterMenuBySearchText = (menus: SdLayoutMenu[]): void => {
     const normalizeSearchText = this.#normalizeSearchText(this.searchText());
 
-    if (!normalizeSearchText || normalizeSearchText.length < 3) {
+    if (!normalizeSearchText || normalizeSearchText.length < 2) {
       this.dataSource.data = menus;
       this.#onCollapseAllMenuNodes(menus);
       this.#expandParentNodesByCurrentPath(menus);
@@ -384,7 +391,7 @@ export class SidebarComponent {
     const result: SdLayoutMenu[] = [];
     for (const menu of menus) {
       const aliasTitle = SdUtilities.changeAliasLowerCase(menu.title as string);
-      
+
       if (aliasTitle.includes(aliasSearchText)) {
         result.push(menu);
         continue;
@@ -408,8 +415,8 @@ export class SidebarComponent {
     return this.#normalizePath(this.currentPath()).startsWith(this.#normalizePath(path));
   };
 
-  #normalizePath = (p: string): string => p.endsWith('/') ? p : p + '/';
-  
+  #normalizePath = (p: string): string => (p.endsWith('/') ? p : p + '/');
+
   #closeMenu(): void {
     this.showSideBar.emit(null);
   }
@@ -424,7 +431,10 @@ export class SidebarComponent {
     if (hexRegex.test(input)) {
       let hex = input.slice(1);
       if (hex.length === 3) {
-        hex = hex.split('').map(c => c + c).join('');
+        hex = hex
+          .split('')
+          .map(c => c + c)
+          .join('');
       }
       const r = parseInt(hex.substring(0, 2), 16);
       const g = parseInt(hex.substring(2, 4), 16);
@@ -451,16 +461,19 @@ export class SidebarComponent {
   };
 
   #getTotalMenus = (menus: SdLayoutMenu[]): number => {
-    return menus.reduce((total, menu) => total + this.#countMenuNode(menu), 0);
+    return menus.reduce((total, menu) => total + this.#countMenuChildrenNode(menu), 0);
   };
 
-  #countMenuNode = (menu: SdLayoutMenu): number => {
-    let count = 0;
-    if ('children' in menu && menu.children?.length) {
-      for (const child of menu.children) {
-        count += this.#countMenuNode(child);
-      }
+  #countMenuChildrenNode = (menu: SdLayoutMenu): number => {
+    if (!('children' in menu) || !menu.children?.length) {
+      return 0;
+    }
+
+    let count = menu.children.length;
+    for (const child of menu.children) {
+      count += this.#countMenuChildrenNode(child);
     }
     return count;
   };
 }
+

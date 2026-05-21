@@ -10,6 +10,9 @@ export interface SdStorageOption<T = any> {
 export interface SdStorage<T = any> {
   get: () => T;
   set: (data: T) => void;
+  // Ghi vào storage nhưng KHÔNG emit subject. Dùng cho thay đổi UI-only
+  // (vd: column width) để tránh re-trigger các subscriber gây reload data.
+  setSilent: (data: T) => void;
   has: () => boolean;
   remove: () => void;
   subject: BehaviorSubject<T>;

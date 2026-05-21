@@ -1,6 +1,6 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
-import { Inject, Injectable, Optional } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
 import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { lastValueFrom, Observable } from 'rxjs';
@@ -18,22 +18,21 @@ type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 export class SdApiService {
   readonly #defaultTimeout = 60000; // 60s
   readonly #dedupCacheDuration = 1000; // 1s (Deduplication cache duration)
+  #httpClient = inject(HttpClient);
+  #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) || [];
+  #cacheService = inject(SdCacheService);
 
   // Thay Ä‘á»•i cáº¥u trÃºc Cache: LÆ°u Observable thay vÃ¬ Subject phá»©c táº¡p
   // Key: hash string -> Value: { stream$: Observable, expiry: number }
   #inFlightRequests: Map<string, { stream$: Observable<any>; expiry: number }> = new Map();
 
-  constructor(
-    private httpClient: HttpClient,
-    @Inject(SD_API_CONFIG) @Optional() private configurations: ISdApiConfiguration[],
-    private cacheService: SdCacheService
-  ) {
+  constructor() {
     // Optional: CÆ¡ cháº¿ dá»n dáº¹p cache Ä‘á»‹nh ká»³ (má»—i 1 phÃºt dá»n dáº¹p cÃ¡c key háº¿t háº¡n)
     setInterval(() => this.#cleanupCache(), 60000);
   }
 
   get http() {
-    return this.httpClient;
+    return this.#httpClient;
   }
 
   // --- PUBLIC METHODS ---
@@ -81,7 +80,7 @@ export class SdApiService {
     // Layer 1: Persistent Cache (SdCacheService)
     if (option?.cacheOption) {
       const key = this.#generateKey(url, method, body, option);
-      const { get, set, has } = this.cacheService.create(key, option.cacheOption);
+      const { get, set, has } = this.#cacheService.create(key, option.cacheOption);
 
       if (has()) {
         return get();
@@ -116,7 +115,7 @@ export class SdApiService {
     const apiTimeout = option?.timeout ?? handler?.timeout ?? this.#defaultTimeout;
 
     // Táº¡o Observable call API
-    const request$ = this.httpClient
+    const request$ = this.#httpClient
       .request(method, url, {
         body,
         headers: option?.headers,
@@ -162,7 +161,7 @@ export class SdApiService {
   // --- HELPERS ---
 
   #getHandler = (url: string): SdApiHandler | undefined => {
-    const handlers = this.configurations?.flatMap(b => b?.handlers || []) || [];
+    const handlers = this.#configurations.flatMap(b => b?.handlers || []);
     return handlers.find(e => e.hosts.some(host => url.startsWith(host)));
   };
 

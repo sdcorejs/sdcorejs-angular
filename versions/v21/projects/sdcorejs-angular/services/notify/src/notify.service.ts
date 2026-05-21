@@ -8,8 +8,8 @@ import {
   signal
 } from '@angular/core';
 import { SdUtilities } from '@sdcorejs/angular/utilities';
-import { SdToastContainerComponent } from './components/toast-container.component';
-import { SdNotifyOption, ToastData, ToastType } from './notify.model';
+import { ToastContainerComponent } from './components/toast-container.component';
+import { NotifyOption, ToastData, ToastType } from './notify.model';
 
 @Injectable({
   providedIn: 'root',
@@ -36,7 +36,7 @@ export class SdNotifyService {
   }
 
   #initContainer() {
-    const componentRef = createComponent(SdToastContainerComponent, {
+    const componentRef = createComponent(ToastContainerComponent, {
       environmentInjector: this.injector,
     });
     componentRef.instance.toasts = this.toasts;
@@ -46,19 +46,19 @@ export class SdNotifyService {
   }
 
   // Public API
-  success(message: string, option?: SdNotifyOption) {
+  success(message: string, option?: NotifyOption) {
     this.#addImmediate('success', message, option);
   }
 
-  info(message: string, option?: SdNotifyOption) {
+  info(message: string, option?: NotifyOption) {
     this.#addImmediate('info', message, option);
   }
 
-  warning(message: string | string[], option?: SdNotifyOption) {
+  warning(message: string | string[], option?: NotifyOption) {
     this.#addToBuffer('warning', message, option);
   }
 
-  error(message: string | string[], option?: SdNotifyOption) {
+  error(message: string | string[], option?: NotifyOption) {
     this.#addToBuffer('error', message, option);
   }
 
@@ -76,7 +76,7 @@ export class SdNotifyService {
   }
 
   // Private helpers
-  #addImmediate(type: ToastType, message: string, option?: SdNotifyOption) {
+  #addImmediate(type: ToastType, message: string, option?: NotifyOption) {
     const newToast: ToastData = {
       id: SdUtilities.generateUuid(),
       type,
@@ -93,7 +93,7 @@ export class SdNotifyService {
     });
   }
 
-  #addToBuffer(type: ToastType, message: string | string[], option?: SdNotifyOption) {
+  #addToBuffer(type: ToastType, message: string | string[], option?: NotifyOption) {
     if (!this.#buffer[type]) {
       this.#buffer[type] = [];
     }
@@ -111,7 +111,7 @@ export class SdNotifyService {
     }, this.#DEBOUNCE_TIME);
   }
 
-  #flushBuffer(type: ToastType, option?: SdNotifyOption) {
+  #flushBuffer(type: ToastType, option?: NotifyOption) {
     const messages = [...new Set(this.#buffer[type])];
     
     // Cleanup

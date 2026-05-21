@@ -55,6 +55,7 @@ import {
   SdSearch,
   SdSelectionData,
 } from '@sdcorejs/angular/forms/models';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { ArrayUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { SdSize } from '@sdcorejs/angular/utilities/models';
 import { Observable, Subscription, combineLatest, defer, from, of, timer } from 'rxjs';
@@ -108,6 +109,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   // ==========================================
   private ref = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -160,7 +162,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
+    if (errors['required']) return this.#i18n.t('core.form.autocomplete.required');
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;

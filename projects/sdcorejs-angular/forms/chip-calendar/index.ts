@@ -1,1 +1,0 @@
-export * from './src/chip-calendar.component';

@@ -2,6 +2,8 @@ import { SdTableColumn } from './table-column.model';
 
 export interface TableOptionConfig {
   visible?: boolean;
+  resizable?: boolean;
+  onResize?: (field: string, width: string, columnWidth: Record<string, string>) => void;
 }
 
 export interface OriginColumn {

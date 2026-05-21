@@ -58,7 +58,7 @@
         </ng-template>
 
         @if (isExpandByMore) {
-          <button (click)="toggle()" class="c-collapse">{{ isCollapsed() ? 'Xem thêm' : 'Thu gọn' }}</button>
+          <button (click)="toggle()" class="c-collapse">{{ isCollapsed() ? ('core.component.form-builder.show-more' | translate) : ('core.component.form-builder.show-less' | translate) }}</button>
         }
       } @else {
         <div
@@ -113,7 +113,7 @@
 
           <!-- Nếu option xem full thông tin là "btn xem thêm" -->
           @if (isExpandByMore) {
-            <button (click)="toggle()" class="c-collapse">{{ isCollapsed() ? 'Xem thêm' : 'Thu gọn' }}</button>
+            <button (click)="toggle()" class="c-collapse">{{ isCollapsed() ? ('core.component.form-builder.show-more' | translate) : ('core.component.form-builder.show-less' | translate) }}</button>
           }
         } @else {
           <div [attr.data-autoId]="_autoId" class="text-break" [style]="view.cellStyle" [sdTooltip]="view.tooltip || ''">

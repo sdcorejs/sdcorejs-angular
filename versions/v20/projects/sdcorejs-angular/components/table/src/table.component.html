@@ -151,6 +151,10 @@
               mat-header-cell
               *matHeaderCellDef
               class="px-8 py-8 c-th"
+              [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
+              [minWidth]="column.minWidth"
+              [maxWidth]="column.maxWidth"
+              (resizeEnd)="onColumnResize(column.field, $event)"
               [style.width]="column.width"
               [style.min-width]="column.minWidth || column.width"
               [style.max-width]="column.maxWidth"
@@ -301,8 +305,8 @@
             } @else {
               <img class="c-image c-filter-empty-image" alt="filter-empty" />
             }
-            <div class="T16M">Không có kết quả phù hợp</div>
-            <div class="T16R text-secondary">Vui lòng tìm kiếm hoặc lọc theo tiêu chí khác</div>
+            <div class="T16M">{{ 'core.component.table.no-results' | translate }}</div>
+            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | translate }}</div>
           } @else {
             @if (_requireFiltered) {
               @if (tableConfiguration?.images?.filterRequired) {
@@ -310,14 +314,14 @@
               } @else {
                 <img class="c-image c-filter-required-image" alt="filter-required" />
               }
-              <div class="T16R text-secondary">Vui lòng chọn bộ lọc để bắt đầu</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | translate }}</div>
             } @else {
               @if (tableConfiguration?.images?.dataEmpty) {
                 <img class="c-image" [src]="tableConfiguration!.images!.dataEmpty" alt="data-empty" />
               } @else {
                 <img class="c-image c-data-empty-image" alt="data-empty" />
               }
-              <div class="T16R text-secondary">Chưa có dữ liệu</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | translate }}</div>
             }
           }
         </div>
@@ -327,7 +331,7 @@
       <div class="c-action">
         <ng-container *sdDesktop>
           @if (_tableOption.reload?.visible) {
-            <sd-button class="mr-8" title="Tải lại" prefixIcon="refresh" (click)="reload()" [disabled]="!_items.length" type="link">
+            <sd-button class="mr-8" [title]="'core.component.table.reload' | translate" prefixIcon="refresh" (click)="reload()" [disabled]="!_items.length" type="link">
             </sd-button>
           }
         </ng-container>
@@ -344,11 +348,11 @@
                   <mat-menu #menu="matMenu">
                     <button mat-menu-item (click)="exportExcel()" type="button">
                       <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
-                      <span> Xuất excel</span>
+                      <span> {{ 'core.component.table.export-excel' | translate }}</span>
                     </button>
                     <button mat-menu-item (click)="exportCSV()" type="button">
                       <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
-                      <span> Xuất CSV</span>
+                      <span> {{ 'core.component.table.export-csv' | translate }}</span>
                     </button>
                   </mat-menu>
                 } @else if (_export.visible === 'EXCEL') {
@@ -363,7 +367,7 @@
 
         <ng-container *sdDesktop>
           @if (configComponent()) {
-            <sd-button class="mr-8" [title]="'Thiết lập'" prefixIcon="settings" (click)="configComponent()!.open()" type="link">
+            <sd-button class="mr-8" [title]="('core.component.table.setup-short' | translate)" prefixIcon="settings" (click)="configComponent()!.open()" type="link">
             </sd-button>
           }
         </ng-container>
@@ -378,7 +382,7 @@
         [hidePageSize]="_tableOption.paginate?.hidePageSize"></mat-paginator>
       @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
         <div class="T14R pr-16">
-          Đang hiển thị: <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+          {{ 'core.component.table.showing' | translate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
         </div>
       }
     </div>

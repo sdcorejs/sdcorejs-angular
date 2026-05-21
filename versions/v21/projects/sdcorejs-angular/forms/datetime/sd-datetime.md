@@ -1,0 +1,140 @@
+﻿# `<sd-datetime>`
+
+**Type**: Component (form input)
+**Selector**: `sd-datetime`
+**Import path**: `@sdcorejs/angular/forms/datetime` (or barrel: `@sdcorejs/angular/forms`)
+**Class**: `SdDatetime`
+**Standalone**: yes
+**Change detection**: `OnPush`
+
+## One-line purpose
+Single date + time-of-day picker â€” user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Uses `provideDateFnsAdapter` with SDCoreJS label, validators, and `[viewed]` read-only support.
+
+## When to use
+- Capturing a precise moment (start time of a meeting, scheduled job, posting timestamp)
+- Audit-trail fields that need both date and time (created at, approved at)
+- Form fields where the user expects to see and edit minutes â€” NOT just a date
+- DETAIL state via `[viewed]="true"` to render the formatted datetime (or a hyperlink)
+
+## When NOT to use
+- Date only (no time) â†’ use `<sd-date>`
+- A range of dates â†’ use `<sd-date-range>`
+- Time-only (no date) â†’ not supported by this component
+- Read-only display where the input chrome should disappear â†’ use `[viewed]="true"` (preferred over `[disabled]`)
+
+## Inputs
+| Name | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-datetime-<value>"` for E2E selectors. |
+| `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`. |
+| `label` | `string \| undefined` | `undefined` | Field label (rendered via `<sd-label>`). |
+| `helperText` | `string \| undefined` | `undefined` | Hint text near the label. |
+| `placeholder` | `string \| undefined` | `undefined` | Placeholder when empty. |
+| `appearance` | `MatFormFieldAppearance` | from `SD_FORM_CONFIGURATION` ?? `'outline'` | Material form-field style. |
+| `floatLabel` | `FloatLabelType` | `'auto'` | Material float-label behaviour. |
+| `min` / `minDate` | `Date \| string \| 'TODAY'` | `undefined` | Earliest allowed datetime. Both aliases accepted; `'TODAY'` resolves to `new Date()`. |
+| `max` / `maxDate` | `Date \| string \| 'TODAY'` | `undefined` | Latest allowed datetime. |
+| `hyperlink` | `string \| null \| undefined` | `undefined` | Render value as a link in `[viewed]` mode. |
+| `required` | `boolean` | `false` | Adds `Validators.required`. |
+| `disabled` | `boolean` | `false` | Disables input + picker trigger. |
+| `viewed` | `boolean` | `false` | Read-only DETAIL mode â€” hides input, renders formatted datetime (or `<ng-template sdViewDef>`). |
+| `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error as a tooltip via `errorTooltipMessage`. |
+| `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message (synthetic `inlineError` validator). |
+| `model` | `string \| number \| Date \| null \| undefined` | `undefined` | Two-way bound value (use `[(model)]`). Stored / emitted as `yyyy/MM/dd HH:mm:ss` string (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`). |
+| `showSeconds` | `boolean` | `false` | When `true`, displays and stores seconds in the popup spinner and the stored/emitted format. |
+
+> **Coerce**: `required`, `disabled`, `viewed`, `hideInlineError`, `showSeconds` use `booleanAttribute` â€” bare attribute = `true`.
+
+## Outputs
+| Name | Type | Notes |
+| --- | --- | --- |
+| `sdChange` | `string \| null` | Emitted when picker confirms a new value or when the field is cleared. |
+| `sdFocus` | `void` | Fires when the input element gains focus. |
+
+## Content projection (slots)
+- `#sdLabel` template â€” custom label rendering
+- `#sdValue` template â€” custom display rendering inside the field
+- `<ng-template sdViewDef>` â€” read-only display template used in `[viewed]` mode
+
+## Form integration
+- **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.
+- **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
+- **`[viewed]="true"`** flips into DETAIL read-only mode: the input is hidden and the value (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
+- **Validators**: `[required]` adds `Validators.required`. `[inlineError]="msg"` injects a synthetic error and shows `msg`. The picker emits its own `matDatepickerMin` / `matDatepickerMax` errors (via the min/max bounds on `<input>`). Direct text entry validates against `dd/MM/yyyy HH:mm` (and `dd/MM/yyyy HH:mm:ss`) regex â€” bad format sets a synthetic `date: 'Sai Ä‘á»‹nh dáº¡ng'` error. Error tooltip messages: required â†’ "Vui lÃ²ng nháº­p thÃ´ng tin"; min â†’ "NgÃ y nhá» nháº¥t: <localized>"; max â†’ "NgÃ y lá»›n nháº¥t: <localized>"; bad format â†’ "Sai Ä‘á»‹nh dáº¡ng"; `inlineError` â†’ the provided message.
+- **Date adapter**: `provideDateFnsAdapter` configured with `dd/MM/yyyy HH:mm` parse/display. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
+
+## Public methods & getters
+
+| Member | Kind | Description |
+| --- | --- | --- |
+| `errorTooltipMessage` | getter `string \| undefined` | Returns a Vietnamese error message for the first active error on `formControl` (`required`, `matDatepickerMin`, `matDatepickerMax`, `date`, `customValidator`, `inlineError`). `undefined` when valid. |
+| `open()` | method | Opens the CDK Overlay datetime picker popup anchored to the component. No-op if already open or disabled. |
+| `close()` | method | Closes the popup overlay. |
+| `clear($event)` | method | Stops propagation, resets `formControl` and `valueModel` to `null`, emits `sdChange(null)`. No-op if control is already empty. |
+| `focus()` | method | Programmatically focuses the native input and opens the picker (deferred 100 ms). |
+| `blur()` | method | Programmatically blurs the native input. |
+| `focusInputElement()` | method | Focuses the native `<input>` without opening the picker. |
+| `onFocus()` | event handler | Sets `isFocused = true` and emits `sdFocus`. |
+| `onBlur()` | event handler | Sets `isFocused = false`. |
+| `onConfirmInput($event)` | event handler | Validates typed text against `dd/MM/yyyy HH:mm[ss]` regex on blur/enter; syncs back to `valueModel` and emits `sdChange` when valid. |
+| `formControl` | `SdFormControl` | Underlying reactive control. Accessible for direct validator inspection in tests. |
+| `pickerOpened` | `Signal<boolean>` | `true` while the CDK Overlay popup is open. |
+| `isFocused` | `boolean` | Current focus state (drives CSS classes). |
+
+## Visual cues (helps agent map screenshots â†’ component)
+- An outlined input field with a single calendar+clock icon on the trailing side
+- The text inside reads as `dd/MM/yyyy HH:mm` (e.g. `09/05/2026 14:30`)
+- Clicking the icon opens a popup: a month-grid calendar on top, a time picker (hours + minutes spinner/slider) below
+- An âœ• clear button appears when a value is set
+- In `[viewed]="true"` mode: no input chrome â€” just the formatted datetime as plain text (or as a hyperlink if `hyperlink` is set)
+
+## Examples
+
+### 1. Simple required datetime
+```html
+<sd-datetime
+  [form]="form" name="postingDateTime"
+  label="Thá»i Ä‘iá»ƒm háº¡ch toÃ¡n"
+  required
+  [(model)]="model.postingDateTime">
+</sd-datetime>
+```
+
+### 2. With min/max boundaries
+```html
+<sd-datetime
+  [form]="form" name="meetingStart"
+  label="Báº¯t Ä‘áº§u cuá»™c há»p"
+  min="TODAY" [max]="meetingEnd"
+  [(model)]="model.meetingStart"
+  (sdChange)="onMeetingStartChange($event)">
+</sd-datetime>
+```
+
+### 3. DETAIL state read-only with hyperlink
+```html
+<sd-datetime
+  label="Táº¡o lÃºc"
+  [model]="row.createdAt"
+  [viewed]="true"
+  hyperlink="/audit/{{ row.id }}">
+</sd-datetime>
+```
+
+## Anti-patterns
+- âŒ Using `formControlName` / `[(ngModel)]` â€” not wired; use `[form]+[name]` and `[(model)]`.
+- âŒ Using `[disabled]="true"` to express read-only DETAIL state â€” use `[viewed]="true"` instead so labels/links render correctly.
+- âŒ Storing the model as a `Date` object â€” the component normalizes to `yyyy/MM/dd HH:mm:ss` strings on emit; treat the value as a string.
+- âŒ Setting both `min`/`minDate` (and `max`/`maxDate`) at the same time â€” they are aliases; pick one.
+- âŒ Using this when only date matters â€” `<sd-date>` is simpler and avoids confusing users with an irrelevant time picker.
+
+## Related
+- `<sd-date>` â€” date-only picker
+- `<sd-date-range>` â€” two-date range picker
+- `<sd-chip-calendar>` â€” date with quick preset chips
+- `<sd-label>` â€” label primitive used internally
+- `SdViewDefDirective` â€” DETAIL-mode template projection
+- `SD_FORM_CONFIGURATION` token â€” global default `appearance`
+

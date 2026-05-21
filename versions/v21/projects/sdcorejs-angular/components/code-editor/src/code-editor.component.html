@@ -14,7 +14,7 @@
       </span>
     </div>
     
-    <button class="copy-btn" [matTooltip]="copied() ? 'Đã copy!' : 'Copy code'" (click)="copyToClipboard()">
+    <button class="copy-btn" [matTooltip]="copied() ? ('core.component.code-editor.copied' | translate) : 'Copy code'" (click)="copyToClipboard()">
       <mat-icon [class.text-success]="copied()">{{ copied() ? 'check' : 'content_copy' }}</mat-icon>
       <span>{{ copied() ? 'Copied' : 'Copy' }}</span>
     </button>

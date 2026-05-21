@@ -11,7 +11,7 @@
           <ng-content select="[sdHeaderRight]"></ng-content>
           <ng-content select="[sdHeader]"></ng-content>
           @if (!hideClose()) {
-            <mat-icon class="text-secondary pointer" fontIcon="close" (click)="close()"></mat-icon>
+            <mat-icon class="text-secondary cursor-pointer" fontIcon="close" (click)="close()" [attr.data-autoId]="closeButtonAutoId()"></mat-icon>
           }
         </div>
       </div>
@@ -32,31 +32,3 @@
     </div>
   }
 </ng-template>
-
-<!-- <ng-template #templateRef>
-  @if(!lazyLoadContent || alreadyOpened) {
-    <sd-modal-header *ngIf="title">
-      <span [innerHtml]="title"></span>
-      <div class="d-flex align-items-center">
-        <ng-content select="[sdModalHeaderRight]"></ng-content>
-        <button type="button" (click)="close()" mat-icon-button>
-          <mat-icon fontIcon="close"></mat-icon>
-        </button>
-      </div>
-    </sd-modal-header>
-  }
-  <ng-container *ngIf="!lazyLoadContent || alreadyOpened">
-    <sd-modal-header *ngIf="title">
-      <span [innerHtml]="title"></span>
-      <div class="d-flex align-items-center">
-        <ng-content select="[sdModalHeaderRight]"></ng-content>
-        <button type="button" (click)="close()" mat-icon-button>
-          <mat-icon fontIcon="close"></mat-icon>
-        </button>
-      </div>
-    </sd-modal-header>
-    <div class="d-flex flex-column px-12 px-md-24 pb-6 overflow-auto w-full mh-full">
-      <ng-content></ng-content>
-    </div>
-  </ng-container>
-</ng-template> -->

@@ -76,7 +76,9 @@ export class TableExportService {
   async #processExport(context: SdTableExportContext, args: { columns?: SdExcelColumn[]; isCSV?: boolean }) {
     const { option, total, fetchChunk, cacheObjValues } = context;
 
-    if (option.export?.type !== 'default') return;
+    // `type` lÃ  optional trÃªn SdTableOptionExportDefault â€” undefined cÅ©ng coi nhÆ° 'default'.
+    // Chá»‰ cháº·n nhÃ¡nh 'custom' (Ä‘Ã£ cÃ³ exportCustom xá»­ lÃ½ riÃªng).
+    if (option.export?.type === 'custom') return;
 
     const { isCSV } = args;
     try {
@@ -106,7 +108,7 @@ export class TableExportService {
           }
         }
 
-        if (option.export?.type === 'default' && option.export?.mapping) {
+        if (option.export?.type !== 'custom' && option.export?.mapping) {
           const mappedResults = option.export.mapping(exportItems);
           exportItems = mappedResults instanceof Promise ? await mappedResults : mappedResults;
         }
@@ -275,7 +277,7 @@ export class TableExportService {
 
     const columnFields = explicitColumns?.map(e => e.field) || [];
 
-    if (option.export?.type === 'default') {
+    if (option.export?.type !== 'custom') {
       return [...tableColumns, ...(option.export?.columns?.filter(e => !e.export?.disabled) || [])].filter(
         column => !columnFields?.length || columnFields.includes(column.field)
       );

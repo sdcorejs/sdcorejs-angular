@@ -1,5 +1,5 @@
 @let actions = selectedTableItems() | actionFilter: tableOption()?.selector?.actions;
-<sd-quick-action [isOpened]="isOpened()">
+<sd-quick-action [opened]="isOpened()">
   <div class="d-flex align-items-center" sdMessage>
     <div class="c-bg-length">
       <span class="c-length">{{ selectedTableItems()?.length }}</span>

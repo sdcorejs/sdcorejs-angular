@@ -61,6 +61,11 @@ export class SdStorageService {
       subject.next(data);
     };
 
+    const setSilent = (data: T) => {
+      this.#internalSet(hashKey, data, option);
+      // Cá»‘ tÃ¬nh KHÃ”NG gá»i subject.next â€” consumer dÃ¹ng kÃªnh riÃªng Ä‘á»ƒ thÃ´ng bÃ¡o
+    };
+
     const has = () => {
       return this.#internalGet<T>(hashKey, option) !== undefined;
     };
@@ -80,6 +85,7 @@ export class SdStorageService {
     return {
       get,
       set,
+      setSilent,
       has,
       remove,
       // @ts-ignore: Bá»• sung vÃ o interface náº¿u cáº§n

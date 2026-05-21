@@ -45,3 +45,4 @@ export interface ISdApiConfiguration {
 
 export const SD_API_CONFIG = new InjectionToken<ISdApiConfiguration>('sd-api.configuration');
 
+export const SD_API_CONFIGURATION = new InjectionToken<ISdApiConfiguration>('sd-api.configuration');

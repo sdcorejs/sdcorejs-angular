@@ -1,0 +1,17 @@
+:host {
+  display: block;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  transition: flex var(--sd-splitter-transition-duration, 200ms) ease;
+
+  &.sd-splitter__panel--collapsed {
+    flex: 0 0 0 !important;
+  }
+}
+
+// Disable transition khi parent đang drag để tránh lag và preview giật
+:host-context(.sd-splitter--dragging) {
+  transition: none !important;
+}

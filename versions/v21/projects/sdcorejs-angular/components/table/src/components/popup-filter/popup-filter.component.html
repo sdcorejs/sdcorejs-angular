@@ -165,7 +165,7 @@
     </div>
   </ng-container>
   <ng-container sdFooter>
-    <sd-button class="mr-auto" (click)="onClear()" title="Mặc định" type="link"> </sd-button>
-    <sd-button (click)="onApply()" title="Đồng ý" color="primary" type="fill"></sd-button>
+    <sd-button class="mr-auto" (click)="onClear()" [title]="'core.component.form-builder.default' | translate" type="link"> </sd-button>
+    <sd-button (click)="onApply()" [title]="'core.confirm.yes' | translate" color="primary" type="fill"></sd-button>
   </ng-container>
 </sd-modal>

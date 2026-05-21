@@ -60,7 +60,7 @@ import { SdDesktopCommand } from './components/desktop-command/desktop-command.c
 import { SdPopupExport } from './components/popup-export/popup-export.component';
 import { SelectorActionComponent } from './components/selector-action/selector-action.component';
 import { DEFAULT_TABLE_CONFIG, ISdTableConfiguration, SD_TABLE_CONFIGURATION } from './configurations';
-import { StickyShadowDirective } from './directives';
+import { SdColumnResizeDirective, StickyShadowDirective } from './directives';
 import { SdTableItem } from './models/table-item.model';
 import { ConfiguredTableResult } from './models/table-option-config.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
@@ -69,16 +69,19 @@ import { SdSelectionVisibleSelectAllPipe } from './pipes/selection-visible-selec
 import { SdSelectionVisiblePipe } from './pipes/selection-visible.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
+import { buildColumnWidthMap } from './services/column-width.util';
 import { SdTableFilterService } from './services/table-filter/table-filter.service';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Injectable()
 export class MatPaginatorIntlCro extends MatPaginatorIntl {
-  // ... (Giá»¯ nguyÃªn class cá»§a báº¡n)
-  override firstPageLabel = 'Trang Ä‘áº§u';
-  override lastPageLabel = 'Trang cuá»‘i';
-  override itemsPerPageLabel = 'Äang hiá»ƒn thá»‹';
-  override nextPageLabel = 'Trang sau';
-  override previousPageLabel = 'Trang trÆ°á»›c';
+  // i18n labels resolved at construction. Reads VI/EN from I18nService.
+  readonly #i18n = inject(I18nService);
+  override firstPageLabel = this.#i18n.t('core.component.table.paginator.first-page');
+  override lastPageLabel = this.#i18n.t('core.component.table.paginator.last-page');
+  override itemsPerPageLabel = this.#i18n.t('core.component.table.paginator.items-per-page');
+  override nextPageLabel = this.#i18n.t('core.component.table.paginator.next-page');
+  override previousPageLabel = this.#i18n.t('core.component.table.paginator.previous-page');
 
   override getRangeLabel = (page: number, pageSize: number, length: number) => {
     if (length === 0 || pageSize === 0) {
@@ -144,6 +147,8 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     SdHoverCopyDirective,
     SelectorActionComponent,
     StickyShadowDirective,
+    SdColumnResizeDirective,
+    TranslatePipe,
   ],
 })
 export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnInit, AfterViewInit, OnDestroy {
@@ -152,7 +157,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   // 1. SIGNAL INPUTS
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  autoId = computed(() => (this.autoIdInput() ? `table-${this.autoIdInput()}` : undefined));
+  autoId = computed(() => (this.autoIdInput() ? `components-table-${this.autoIdInput()}` : undefined));
   option = input.required<SdTableOption<T>>();
 
   // ==========================================
@@ -216,9 +221,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   total = signal<number | undefined>(undefined);
 
   loading = signal(false);
-  exporting = signal(false);
   isSelectAll = signal(false);
-  exportTitle = signal('Export');
 
   isFiltered = signal(false);
   requireFiltered = signal(false);
@@ -244,8 +247,13 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   #configService = inject(ConfigService);
   #gridFilterService = inject(SdTableFilterService);
   #notifyService = inject(SdNotifyService);
+  readonly #i18n = inject(I18nService);
   #tableFormatService = inject(TableFormatService);
   #tableExportService = inject(TableExportService);
+
+  // Expose state signals tá»« TableExportService cho template binding.
+  exporting = this.#tableExportService.exporting;
+  exportTitle = this.#tableExportService.exportTitle;
 
   // 2. Public & Optional Token
   tableConfiguration = inject<ISdTableConfiguration>(SD_TABLE_CONFIGURATION, { optional: true });
@@ -312,6 +320,26 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
       this.#itemIndexMap = new WeakMap();
       items.forEach((item, idx) => this.#itemIndexMap.set(item, idx));
     });
+
+    this.#subscription.add(
+      this.#configService.widthChange$.subscribe(({ field, width }) => {
+        // Update configuration signal local â€” KHÃ”NG gá»i loadValues/reload
+        const conf = this.configuration();
+        if (!conf) return;
+        const firstColumns = conf.firstColumns.map(c =>
+          c.field === field ? { ...c, width } : c
+        );
+        const column = { ...conf.column };
+        if (column[field]) {
+          column[field] = { ...column[field], width };
+        }
+        const fixedColumn = { ...conf.fixedColumn };
+        if (fixedColumn[field]) {
+          fixedColumn[field] = { ...fixedColumn[field], width };
+        }
+        this.configuration.set({ ...conf, firstColumns, column, fixedColumn });
+      })
+    );
   }
 
   ngOnInit() {}
@@ -661,7 +689,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
       let data: T[] = [];
       if (results instanceof Promise) {
         data = await results.catch(err => {
-          this.#notifyService.warning('CÃ³ lá»—i xáº£y ra');
+          this.#notifyService.warning(this.#i18n.t('core.component.table.error-occurred'));
           console.error(err);
           return [];
         });
@@ -669,7 +697,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
         data = results;
       }
       if (!Array.isArray(data)) {
-        this.#notifyService.warning('Dá»¯ liá»‡u khÃ´ng pháº£i lÃ  má»™t máº£ng');
+        this.#notifyService.warning(this.#i18n.t('core.component.table.not-an-array'));
         data = [];
       }
       this.#localItems = await this.#tableFormatService.format(data, opt.columns, this.cacheValues, this.#cacheObjValues);
@@ -899,6 +927,16 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   }
 
   detectChanges = () => this.#ref.detectChanges();
+
+  onColumnResize = (field: string, width: string) => {
+    // persistColumnWidth ghi storage (silent) vÃ  emit widthChange$,
+    // subscriber trong constructor Ä‘Ã£ update configuration() signal Ä‘á»“ng bá»™.
+    this.#configService.persistColumnWidth(field, width);
+
+    const onResize = this.tableOption()?.config?.onResize;
+    if (!onResize) return;
+    onResize(field, width, buildColumnWidthMap(this.configuration()?.column));
+  };
 
   onOperatorChange = (column: SdTableColumn, operator: SdOperator) => {
     this.tableOption()?.filter?.operatorChange?.(column, operator);

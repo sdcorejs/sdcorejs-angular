@@ -1,6 +1,7 @@
 ﻿import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { SdButton } from '@sdcorejs/angular/components';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 // NOTE: Import ná»™i bá»™ trong module layout thÃ¬ dÃ¹ng path tÆ°Æ¡ng Ä‘á»‘i
 import { SdPageComponent } from '../../../../components';
@@ -10,7 +11,7 @@ import { SdLayoutService, SdLayoutStorageService } from '../../../../services';
 @Component({
   templateUrl: './root.component.html',
   styleUrls: ['./root.component.scss'],
-  imports: [SdButton, SdPageComponent],
+  imports: [SdButton, SdPageComponent, TranslatePipe],
 })
 export class RootComponent {
   // ==========================================
@@ -18,6 +19,7 @@ export class RootComponent {
   // ==========================================
   readonly #route = inject(ActivatedRoute);
   readonly #layoutService = inject(SdLayoutService);
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // SIGNALS (STATE)
@@ -30,21 +32,14 @@ export class RootComponent {
   // PRIVATE METHODS
   // ==========================================
   #getTodayInfo(date: Date): string {
-    const mapping = {
-      0: 'Chá»§ Nháº­t',
-      1: 'Thá»© 2',
-      2: 'Thá»© 3',
-      3: 'Thá»© 4',
-      4: 'Thá»© 5',
-      5: 'Thá»© 6',
-      6: 'Thá»© 7',
-    };
-
-    return `${mapping[date.getDay() as keyof typeof mapping]}, ngÃ y ${date.toLocaleDateString('vi-VN', {
+    // WHY: weekday names i18n hÃ³a qua key core.module.layout.weekday.<0..6>
+    const weekday = this.#i18n.t(`core.module.layout.weekday.${date.getDay()}`);
+    const dateStr = date.toLocaleDateString('vi-VN', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
-    })}`;
+    });
+    return this.#i18n.t('core.module.layout.today-info.format', { weekday, date: dateStr });
   }
 
   // ==========================================

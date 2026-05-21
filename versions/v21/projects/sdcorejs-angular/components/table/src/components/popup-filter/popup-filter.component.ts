@@ -13,6 +13,7 @@ import { SdFilterColumnPipe } from '../../pipes/filter-column.pipe';
 import { SdFilterExternalPipe } from '../../pipes/filter-external.pipe';
 import { SdTableExternalFilter, TableFilterRegister } from '../../services/table-filter/table-filter.model';
 import { FilterValuesPipe } from '../../pipes';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'sd-popup-filter',
@@ -33,8 +34,7 @@ import { FilterValuesPipe } from '../../pipes';
     SdFilterColumnPipe,
     SdFilterExternalPipe,
     SdDesktopDirective,
-    FilterValuesPipe
-  ],
+    FilterValuesPipe, TranslatePipe],
 })
 // eslint-disable-next-line @angular-eslint/component-class-suffix
 export class SdPopupFilter {

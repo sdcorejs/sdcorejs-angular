@@ -44,6 +44,7 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import {
   HandleSdCustomValidator,
   ISdFormConfiguration,
@@ -103,6 +104,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   private coreConfiguration = inject(SD_CORE_CONFIGURATION, { optional: true });
   private formatNumberPipe = inject(SdFormatNumberPipe);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -139,6 +141,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
 
   type = input<'negative' | 'positive' | undefined>();
   precision = input<number>(3);
+  format = input<'1,234,567.89' | '1.234.567,89' | undefined>(undefined);
 
   min = input<number | undefined, unknown>(undefined, { transform: v => (v == null ? undefined : Number(v)) });
   max = input<number | undefined, unknown>(undefined, { transform: v => (v == null ? undefined : Number(v)) });
@@ -154,9 +157,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
-    if (errors['min']) return `GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n ${this.min()}`;
-    if (errors['max']) return `GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n ${this.max()}`;
+    if (errors['required']) return this.#i18n.t('core.form.input-number.required');
+    if (errors['min']) return this.#i18n.t('core.form.input-number.min', { min: this.min() ?? '' });
+    if (errors['max']) return this.#i18n.t('core.form.input-number.max', { max: this.max() ?? '' });
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
@@ -192,8 +195,14 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   isFocused = false;
 
   // DÃ¹ng computed thay cho getter cÅ© Ä‘á»ƒ táº­n dá»¥ng cache
-  decimalSeparator = computed(() => (this.coreConfiguration?.format?.number === '1.234.567,89' ? ',' : '.'));
-  thousandsSeparator = computed(() => (this.coreConfiguration?.format?.number === '1.234.567,89' ? '.' : ','));
+  decimalSeparator = computed(() => {
+    const fmt = this.format() ?? this.coreConfiguration?.format?.number;
+    return fmt === '1.234.567,89' ? ',' : '.';
+  });
+  thousandsSeparator = computed(() => {
+    const fmt = this.format() ?? this.coreConfiguration?.format?.number;
+    return fmt === '1.234.567,89' ? '.' : ',';
+  });
 
   regexPattern = computed(() => {
     const decimal = this.decimalSeparator();
@@ -309,7 +318,8 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   };
 
   #formatNumber = (text: any) => {
-    if (this.coreConfiguration?.format?.number === '1.234.567,89') {
+    const fmt = this.format() ?? this.coreConfiguration?.format?.number;
+    if (fmt === '1.234.567,89') {
       return NumberUtilities.toVN((text?.toString() || '').replace(/\./g, ''));
     } else {
       return NumberUtilities.toISO((text?.toString() || '').replace(/\,/g, ''));

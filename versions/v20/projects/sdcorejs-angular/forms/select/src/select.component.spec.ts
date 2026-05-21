@@ -1,0 +1,603 @@
+﻿import { Component, ViewChild } from '@angular/core';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
+import { SdSelect } from './select.component';
+
+// ---------------------------------------------------------------------------
+// Host wrappers
+// ---------------------------------------------------------------------------
+
+/** Default single-select host */
+@Component({
+  standalone: true,
+  imports: [SdSelect, FormsModule, ReactiveFormsModule],
+  template: `<sd-select
+    [label]="label"
+    [placeholder]="placeholder"
+    [items]="items"
+    valueField="id"
+    displayField="name"
+    [required]="required"
+    [disabled]="disabled"
+    [hideInlineError]="hideInlineError"
+    [inlineError]="inlineError"
+    [(model)]="model"
+    (sdChange)="onSdChange($event)"
+    (sdSelection)="onSdSelection($event)"></sd-select>`,
+})
+class HostComponent {
+  label?: string;
+  placeholder?: string;
+  items?: any;
+  required = false;
+  disabled = false;
+  hideInlineError = false;
+  inlineError?: string;
+  model?: any;
+  changes: any[] = [];
+  selections: any[] = [];
+  onSdChange(v: any) { this.changes.push(v); }
+  onSdSelection(v: any) { this.selections.push(v); }
+}
+
+/** Multi-select host â€” multiple is static so MatSelect doesn't throw */
+@Component({
+  standalone: true,
+  imports: [SdSelect, FormsModule, ReactiveFormsModule],
+  template: `<sd-select
+    [items]="items"
+    valueField="id"
+    displayField="name"
+    [multiple]="true"
+    [(model)]="model"
+    (sdChange)="onSdChange($event)"
+    (sdSelection)="onSdSelection($event)"></sd-select>`,
+})
+class MultiHostComponent {
+  items?: any;
+  model?: any;
+  changes: any[] = [];
+  selections: any[] = [];
+  onSdChange(v: any) { this.changes.push(v); }
+  onSdSelection(v: any) { this.selections.push(v); }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdSelect],
+  template: `<sd-select name="status" [form]="fg" valueField="id" displayField="name"></sd-select>`,
+})
+class FgHost {
+  fg!: FormGroup;
+}
+
+@Component({
+  standalone: true,
+  imports: [SdSelect, FormsModule],
+  template: `<form #f="ngForm"><sd-select name="status" [form]="f" valueField="id" displayField="name"></sd-select></form>`,
+})
+class NgFormHost {
+  @ViewChild('f') ngForm!: NgForm;
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const FRUIT_ITEMS = [
+  { id: 1, name: 'Apple' },
+  { id: 2, name: 'Banana' },
+  { id: 3, name: 'Cherry' },
+];
+
+/** 15 items so filtered() returns true (length > 10) */
+const LARGE_ITEMS = Array.from({ length: 15 }, (_, i) => ({ id: i + 1, name: `Item ${i + 1}` }));
+
+function getComp(fixture: ComponentFixture<any>): SdSelect {
+  const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect)
+    ?.componentInstance as SdSelect;
+  if (!comp) throw new Error('SdSelect not found in fixture');
+  return comp;
+}
+
+// ---------------------------------------------------------------------------
+// Main suite â€” single-select
+// ---------------------------------------------------------------------------
+
+describe('SdSelect', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  // -------------------------------------------------------------------------
+  // Creation & rendering
+  // -------------------------------------------------------------------------
+  describe('creation & rendering', () => {
+    it('creates the component', () => {
+      expect(comp).toBeTruthy();
+    });
+
+    it('renders a mat-select element', () => {
+      const el = fixture.nativeElement.querySelector('mat-select');
+      expect(el).not.toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Single-select mode
+  // -------------------------------------------------------------------------
+  describe('single-select mode', () => {
+    it('multiple() is false by default', () => {
+      expect(comp.multiple()).toBe(false);
+    });
+
+    it('onSelectionChange sets formControl value to the selected value', fakeAsync(() => {
+      comp.onSelectionChange({ value: 2, source: null! });
+      tick();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe(2);
+    }));
+
+    it('onSelectionChange updates valueModel to the selected value', fakeAsync(() => {
+      comp.onSelectionChange({ value: 1, source: null! });
+      tick();
+      fixture.detectChanges();
+      expect(comp.valueModel()).toBe(1);
+    }));
+
+    it('clear() sets formControl to null in single mode', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBeNull();
+    }));
+
+    it('clear() emits sdChange with null in single mode', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(host.changes).toContain(null);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Items / options
+  // -------------------------------------------------------------------------
+  describe('items input', () => {
+    it('populates filteredItems from static array after pipeline emits', fakeAsync(() => {
+      // Force inputControl to emit so combineLatest fires
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBe(3);
+    }));
+
+    it('renders empty filteredItems when items is null', fakeAsync(() => {
+      host.items = null;
+      fixture.detectChanges();
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBe(0);
+    }));
+
+    it('limits rendered items to the default limit (50)', fakeAsync(() => {
+      const many = Array.from({ length: 60 }, (_, i) => ({ id: i, name: `Item ${i}` }));
+      host.items = many;
+      fixture.detectChanges();
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBeLessThanOrEqual(50);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // Search / filter (filtered mode when items.length > 10)
+  // -------------------------------------------------------------------------
+  describe('search / filter behaviour', () => {
+    beforeEach(fakeAsync(() => {
+      host.items = LARGE_ITEMS;
+      fixture.detectChanges();
+      comp.inputControl.setValue('', { emitEvent: true });
+      tick(600);
+      fixture.detectChanges();
+    }));
+
+    it('filtered() is true when items.length > 10', () => {
+      expect(comp.filtered()).toBe(true);
+    });
+
+    it('filters filteredItems when inputControl search text changes', fakeAsync(() => {
+      comp.inputControl.setValue('Item 1');
+      tick(600);
+      fixture.detectChanges();
+      const names = comp.filteredItems().map((i: any) => i.name);
+      expect(names.some((n: string) => n.startsWith('Item 1'))).toBe(true);
+    }));
+
+    it('returns all items when search text is cleared', fakeAsync(() => {
+      comp.inputControl.setValue('Item 1');
+      tick(600);
+      fixture.detectChanges();
+      comp.inputControl.setValue('');
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBeGreaterThan(1);
+    }));
+
+    it('returns empty array when no items match search text', fakeAsync(() => {
+      comp.inputControl.setValue('zzz_no_match');
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.filteredItems().length).toBe(0);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // model two-way binding
+  // -------------------------------------------------------------------------
+  describe('model two-way binding', () => {
+    it('syncs formControl when model input changes', fakeAsync(() => {
+      host.model = 2;
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe(2);
+    }));
+
+    it('syncs valueModel back to host when formControl.setValue is called', fakeAsync(() => {
+      comp.formControl.setValue(3);
+      tick();
+      fixture.detectChanges();
+      expect(host.model).toBe(3);
+    }));
+
+    it('clear() resets valueModel to null in single mode', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(comp.valueModel()).toBeNull();
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // disabled
+  // -------------------------------------------------------------------------
+  describe('disabled', () => {
+    it('disables formControl when disabled = true', () => {
+      host.disabled = true;
+      fixture.detectChanges();
+      expect(comp.formControl.disabled).toBe(true);
+    });
+
+    it('enables formControl when disabled is toggled off', () => {
+      host.disabled = true;
+      fixture.detectChanges();
+      host.disabled = false;
+      fixture.detectChanges();
+      expect(comp.formControl.disabled).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // required validator
+  // -------------------------------------------------------------------------
+  describe('required validator', () => {
+    it('applies required validator when required = true', fakeAsync(() => {
+      host.required = true;
+      fixture.detectChanges();
+      tick();
+      comp.formControl.setValue(null, { emitEvent: false });
+      comp.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(comp.formControl.hasError('required')).toBe(true);
+    }));
+
+    it('passes validation when a value is provided with required = true', fakeAsync(() => {
+      host.required = true;
+      fixture.detectChanges();
+      tick();
+      comp.formControl.setValue(1, { emitEvent: false });
+      comp.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(comp.formControl.hasError('required')).toBe(false);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // inlineError validator
+  // -------------------------------------------------------------------------
+  describe('inlineError validator', () => {
+    it('sets inlineError on formControl when inlineError is provided', () => {
+      host.inlineError = 'Field error';
+      fixture.detectChanges();
+      comp.formControl.updateValueAndValidity();
+      expect(comp.formControl.hasError('inlineError')).toBe(true);
+    });
+
+    it('clears inlineError when inlineError input is cleared', () => {
+      host.inlineError = 'Field error';
+      fixture.detectChanges();
+      host.inlineError = undefined;
+      fixture.detectChanges();
+      comp.formControl.updateValueAndValidity();
+      expect(comp.formControl.hasError('inlineError')).toBe(false);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // errorTooltipMessage getter
+  // -------------------------------------------------------------------------
+  describe('errorTooltipMessage getter', () => {
+    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', fakeAsync(() => {
+      host.required = true;
+      fixture.detectChanges();
+      tick();
+      comp.formControl.setValue(null, { emitEvent: false });
+      comp.formControl.markAsTouched();
+      comp.formControl.updateValueAndValidity({ emitEvent: false });
+      expect(comp.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+    }));
+
+    it('returns the inlineError message when inlineError validator fires', () => {
+      host.inlineError = 'Custom select error';
+      fixture.detectChanges();
+      comp.formControl.updateValueAndValidity();
+      expect(comp.errorTooltipMessage).toBe('Custom select error');
+    });
+
+    it('returns undefined when no errors', () => {
+      expect(comp.errorTooltipMessage).toBeUndefined();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // output events â€” single mode
+  // -------------------------------------------------------------------------
+  describe('output events', () => {
+    it('emits sdChange when panel closes with a changed value', fakeAsync(() => {
+      // open: hash of current (null) value is stored
+      comp.onOpenedChange(true);
+      tick(200);
+      // change the form value to make hash differ
+      comp.formControl.setValue(2, { emitEvent: false });
+      // close: new hash != old hash â†’ sdChange emitted
+      comp.onOpenedChange(false);
+      tick();
+      fixture.detectChanges();
+      expect(host.changes.length).toBeGreaterThan(0);
+    }));
+
+    it('emits sdChange with null when clear() is called (single mode)', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(host.changes).toContain(null);
+    }));
+
+    it('emits sdSelection when clear() is called with a value (single mode)', fakeAsync(() => {
+      host.model = 1;
+      fixture.detectChanges();
+      tick();
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      const sel = host.selections[host.selections.length - 1];
+      expect(sel).toBeTruthy();
+      expect(sel.multiple).toBe(false);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // reValidate
+  // -------------------------------------------------------------------------
+  describe('reValidate', () => {
+    it('calls updateValueAndValidity on formControl', () => {
+      const spy = spyOn(comp.formControl, 'updateValueAndValidity').and.callThrough();
+      comp.reValidate();
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // appearance
+  // -------------------------------------------------------------------------
+  describe('appearance', () => {
+    it('defaults to "outline" without SD_FORM_CONFIGURATION token', () => {
+      expect(comp.appearance()).toBe('outline');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // item accessor helpers
+  // -------------------------------------------------------------------------
+  describe('item accessor helpers', () => {
+    it('itemValue returns the value at valueField path', () => {
+      expect(comp.itemValue({ id: 42, name: 'Test' } as any)).toBe(42);
+    });
+
+    it('itemDisplay returns the display string at displayField path', () => {
+      expect(comp.itemDisplay({ id: 1, name: 'Hello' } as any)).toBe('Hello');
+    });
+
+    it('itemDisabled returns false when disabledField is empty (default)', () => {
+      expect(comp.itemDisabled({ id: 1, name: 'X', disabled: true } as any)).toBe(false);
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Multi-select suite â€” uses dedicated MultiHostComponent
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (multi-select mode)', () => {
+  let fixture: ComponentFixture<MultiHostComponent>;
+  let host: MultiHostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [MultiHostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(MultiHostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('multiple() returns true', () => {
+    expect(comp.multiple()).toBe(true);
+  });
+
+  it('onSelectionChange sets formControl to array of selected values', fakeAsync(() => {
+    comp.onSelectionChange({ value: [1, 2], source: null! });
+    tick();
+    fixture.detectChanges();
+    expect(comp.formControl.value).toEqual([1, 2]);
+  }));
+
+  it('onSelectionChange updates valueModel to the array', fakeAsync(() => {
+    comp.onSelectionChange({ value: [3], source: null! });
+    tick();
+    fixture.detectChanges();
+    expect(comp.valueModel()).toEqual([3]);
+  }));
+
+  it('normalizedValue wraps scalar model into array', fakeAsync(() => {
+    host.model = 1;
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    expect(Array.isArray(comp.normalizedValue())).toBe(true);
+  }));
+
+  it('clear() sets valueModel to [] in multi mode', fakeAsync(() => {
+    host.model = [1, 2];
+    fixture.detectChanges();
+    tick();
+    comp.clear();
+    tick();
+    fixture.detectChanges();
+    expect(comp.valueModel()).toEqual([]);
+  }));
+
+  it('clear() emits sdSelection with multiple: true and empty values', fakeAsync(() => {
+    host.model = [1];
+    fixture.detectChanges();
+    tick();
+    comp.clear();
+    tick();
+    fixture.detectChanges();
+    const sel = host.selections[host.selections.length - 1];
+    expect(sel.multiple).toBe(true);
+    expect(sel.values).toEqual([]);
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// FormGroup lifecycle
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (FormGroup lifecycle)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<FgHost>;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({
+      imports: [FgHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(FgHost);
+    fixture.componentInstance.fg = fg;
+    fixture.detectChanges();
+  });
+
+  it('adds control to FormGroup on init', () => {
+    expect(fg.contains('status')).toBe(true);
+  });
+
+  it('removes control from FormGroup on destroy', () => {
+    fixture.destroy();
+    expect(fg.contains('status')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// NgForm extraction
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (NgForm extraction)', () => {
+  let fixture: ComponentFixture<NgFormHost>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [NgFormHost, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(NgFormHost);
+    fixture.detectChanges();
+  });
+
+  it('extracts FormGroup from NgForm and registers the control', fakeAsync(() => {
+    tick();
+    const ngForm = fixture.componentInstance.ngForm;
+    expect(ngForm).toBeTruthy();
+    expect(ngForm.form.contains('status')).toBe(true);
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// SD_FORM_CONFIGURATION token
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (SD_FORM_CONFIGURATION)', () => {
+  @Component({
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name"></sd-select>`,
+  })
+  class StubHost {}
+
+  let fixture: ComponentFixture<StubHost>;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [StubHost, NoopAnimationsModule],
+      providers: [{ provide: SD_FORM_CONFIGURATION, useValue: { appearance: 'fill' } }],
+    }).compileComponents();
+    fixture = TestBed.createComponent(StubHost);
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('uses appearance from SD_FORM_CONFIGURATION token', () => {
+    expect(comp.appearance()).toBe('fill');
+  });
+});
+

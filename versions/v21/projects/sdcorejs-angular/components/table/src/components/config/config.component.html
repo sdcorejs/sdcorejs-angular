@@ -1,4 +1,4 @@
-<sd-modal width="sm" [title]="'Thiết lập bảng'" #modal>
+<sd-modal width="sm" [title]="('core.component.table.setup' | translate)" #modal>
   @if (configuration) {
     <div class="c-container">
       <div class="c-table" style="max-height: 70vh">
@@ -16,7 +16,7 @@
           </ng-container> -->
           <ng-container matColumnDef="invisible">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 96px">
-              {{ 'Hiển thị' }}
+              {{ ('core.component.form-builder.display' | translate) }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <div class="d-flex" style="gap: 8px">
@@ -33,7 +33,7 @@
           </ng-container>
           <ng-container matColumnDef="title">
             <th mat-header-cell class="c-th px-4" *matHeaderCellDef>
-              {{ 'Tiêu đề cột' }}
+              {{ ('core.component.table.column-header' | translate) }}
             </th>
             <td class="px-4" mat-cell *matCellDef="let item">
               <sd-input class="pb-5" [placeholder]="item?.origin?.title" [(model)]="item.title" hideInlineError></sd-input>
@@ -41,7 +41,7 @@
           </ng-container>
           <ng-container matColumnDef="width">
             <th mat-header-cell class="c-th px-4" *matHeaderCellDef style="width: 80px">
-              {{ 'Rộng' }}
+              {{ ('core.component.table.width' | translate) }}
             </th>
             <td class="px-4" mat-cell *matCellDef="let item">
               <sd-input class="pb-5" [placeholder]="item?.origin?.width" [(model)]="item.width" hideInlineError></sd-input>
@@ -49,7 +49,7 @@
           </ng-container>
           <ng-container matColumnDef="fixed">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 80px">
-              {{ 'Cố định' }}
+              {{ ('core.component.table.fixed' | translate) }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <sd-switch [(model)]="item.fixed" />
@@ -58,7 +58,7 @@
 
           <ng-container matColumnDef="truncate">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 100px">
-              {{ 'Giới hạn ký tự' }}
+              {{ ('core.component.table.char-limit' | translate) }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <sd-switch [(model)]="item.truncate" />
@@ -79,8 +79,8 @@
     </div>
   }
   <ng-container sdFooter>
-    <sd-button class="mr-8" (click)="close()" title="Bỏ qua" color="secondary"> </sd-button>
-    <sd-button class="mr-8" (click)="onReset()" title="Mặc định" color="primary"> </sd-button>
-    <sd-button (click)="onSave()" title="Áp dụng" type="fill" color="primary"> </sd-button>
+    <sd-button class="mr-8" (click)="close()" [title]="'core.component.table.skip' | translate" color="secondary"> </sd-button>
+    <sd-button class="mr-8" (click)="onReset()" [title]="'core.component.form-builder.default' | translate" color="primary"> </sd-button>
+    <sd-button (click)="onSave()" [title]="'core.component.table.apply' | translate" type="fill" color="primary"> </sd-button>
   </ng-container>
 </sd-modal>

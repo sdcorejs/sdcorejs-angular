@@ -84,7 +84,7 @@ export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy
   // ==========================================
   // 3. COMPUTED STATE
   // ==========================================
-  autoId = computed(() => this.autoIdInput() ? `button-${this.autoIdInput()}` : undefined);
+  autoId = computed(() => this.autoIdInput() ? `components-button-${this.autoIdInput()}` : undefined);
   
   buttonClasses = computed(() => ({
     'c-square': (this.prefixIcon() || this.suffixIcon()) && !this.title(),

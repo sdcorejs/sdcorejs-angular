@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, computed, EventEmitter, Input, input, OnDestroy, OnInit, Output } from '@angular/core';
 import { AbstractControl, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,12 +17,8 @@ export class SdCheckbox implements OnDestroy, OnInit, AfterViewInit {
   id = `I${uuid.v4()}`;
   #name = uuid.v4();
 
-  autoId?: string;
-  @Input('autoId') set _autoId(val: string | undefined | null) {
-    if (val) {
-      this.autoId = `forms-checkbox-${val}`;
-    }
-  }
+  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  readonly autoId = computed(() => (this.autoIdInput() ? `forms-checkbox-${this.autoIdInput()}` : undefined));
   @Input() set name(val: string) {
     if (val) {
       this.#name = val;

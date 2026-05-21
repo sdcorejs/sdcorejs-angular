@@ -1,5 +1,6 @@
 ﻿import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output, computed, inject, input } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -19,10 +20,11 @@ export class SelectorActionComponent {
   tableOption = input<SdTableOption | undefined>(undefined);
   selectedTableItems = input<SdTableItem[] | undefined>(undefined);
   @Output() clear = new EventEmitter();
+  readonly #i18n = inject(I18nService);
 
   message = computed<string>(() => {
     const msg = this.tableOption()?.selector?.message;
-    if (!msg) return 'dá»¯ liá»‡u Ä‘Æ°á»£c chá»n';
+    if (!msg) return this.#i18n.t('core.component.table.selector-action.default-msg');
     if (typeof msg === 'function') {
       return msg(this.selectedTableItems()?.map(e => e.data));
     }

@@ -1,19 +1,9 @@
-import { SdFilter } from './filter.model';
-import { SdNestedKeyOf } from './nested-key-of.model';
-import { SdOrder } from './order.model';
+import type { QueryReq, PagingReq, PagingRes } from '@sdcorejs/utils/models';
+export type { QueryReq, PagingReq, PagingRes };
 
-export interface SdQueryReq<T = any> {
-  filters?: SdFilter<T>[];
-  fields?: SdNestedKeyOf<T>[];
-}
-
-export interface SdPagingReq<T = any> extends SdQueryReq<T> {
-  pageSize?: number;
-  pageNumber?: number;
-  orders?: SdOrder<T>[];
-}
-
-export interface SdPagingRes<T = any> {
-  items: T[];
-  total: number;
-}
+/** @deprecated Use {@link QueryReq} from `@sdcorejs/utils/models` instead */
+export type SdQueryReq<T = any> = QueryReq<T>;
+/** @deprecated Use {@link PagingReq} from `@sdcorejs/utils/models` instead */
+export type SdPagingReq<T = any> = PagingReq<T>;
+/** @deprecated Use {@link PagingRes} from `@sdcorejs/utils/models` instead */
+export type SdPagingRes<T = any> = PagingRes<T>;

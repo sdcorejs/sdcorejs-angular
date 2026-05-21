@@ -1,0 +1,20 @@
+<!-- <div class="d-flex align-items-center py-4">
+  @if (label) {
+    <div class="T14R" style="flex: 1">{{ label }}</div>
+  }
+  <sd-switch size="sm" [form]="form" [(model)]="model" (sdChange)="onChange($event)" hideInlineError></sd-switch>
+</div> -->
+<sd-select
+  class="py-8"
+  size="sm"
+  [label]="label!"
+  [form]="form"
+  [(model)]="model"
+  valueField="value"
+  displayField="display"
+  [items]="[
+    { value: true, display: ('core.confirm.yes-short' | translate) },
+    { value: false, display: ('core.confirm.no-short' | translate) }
+  ]"
+  (sdChange)="onChange($event)"
+  hideInlineError></sd-select>

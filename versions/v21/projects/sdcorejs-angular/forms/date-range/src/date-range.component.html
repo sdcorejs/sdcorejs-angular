@@ -41,7 +41,7 @@
       autocorrect="off"
       matStartDate
       [formControl]="control1"
-      [placeholder]="formControl.disabled ? '' : 'Từ'"
+      [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | translate)"
       (dateInput)="onStartChange($event)"
       (focus)="onFocus()"
       (blur)="onBlur()"
@@ -56,7 +56,7 @@
       autocorrect="off"
       matEndDate
       [formControl]="control2"
-      [placeholder]="formControl.disabled ? '' : 'đến'"
+      [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | translate)"
       (dateInput)="onEndChange($event)"
       (focus)="onFocus()"
       (blur)="onBlur()"
@@ -74,10 +74,10 @@
   }
 
   @if (control1.value || control2.value) {
-    <mat-icon class="pointer sd-suffix-icon" (click)="clear()" matSuffix>cancel</mat-icon>
+    <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix>cancel</mat-icon>
   }
 
-  <mat-icon class="pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix>today</mat-icon>
+  <mat-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix>today</mat-icon>
 
   <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
 </mat-form-field>

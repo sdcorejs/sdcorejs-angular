@@ -40,6 +40,7 @@ import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 
 @Component({
@@ -57,6 +58,7 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
     MatTooltipModule,
     SdLabel,
     SdEmptyPipe,
+    TranslatePipe,
   ],
 })
 export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
@@ -75,6 +77,7 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   // ==========================================
   #ref = inject(ChangeDetectorRef);
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly #i18n = inject(I18nService);
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -134,9 +137,9 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
-    if (errors['maxlength']) return `Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: ${this.maxlength()}`;
-    if (errors['pattern']) return 'Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡';
+    if (errors['required']) return this.#i18n.t('core.form.textarea.required');
+    if (errors['maxlength']) return this.#i18n.t('core.form.textarea.maxlength', { max: this.maxlength() ?? '' });
+    if (errors['pattern']) return this.#i18n.t('core.form.textarea.invalid-pattern');
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
@@ -284,6 +287,15 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   customInlineErrorValidator(): ValidatorFn {
     return (): Record<string, any> | null => ({ inlineError: true });
   }
+
+  getCurrentLength = (): number => {
+    return (this.formControl.value ?? '').toString().length;
+  };
+
+  isMaxlengthExceeded = (): boolean => {
+    const max = this.maxlength();
+    return !!(max && max > 0 && this.getCurrentLength() > max);
+  };
 
   #customValidator = (func: (value: any) => string | Promise<string>): AsyncValidatorFn => {
     return async (c: AbstractControl): Promise<Record<string, any> | null> => {

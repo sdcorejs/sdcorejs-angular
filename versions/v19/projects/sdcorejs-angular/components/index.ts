@@ -8,9 +8,8 @@ export * from '@sdcorejs/angular/components/table';
 export * from '@sdcorejs/angular/components/quick-action';
 export * from '@sdcorejs/angular/components/upload-file';
 export * from '@sdcorejs/angular/components/section';
-export * from '@sdcorejs/angular/components/workflow';
+// export * from '@sdcorejs/angular/components/form-generic';
 export * from '@sdcorejs/angular/components/anchor';
-export * from '@sdcorejs/angular/components/anchor-v2';
 export * from '@sdcorejs/angular/components/query-builder';
 export * from '@sdcorejs/angular/components/import-excel';
 export * from '@sdcorejs/angular/components/document-builder';
@@ -19,4 +18,6 @@ export * from '@sdcorejs/angular/components/view';
 export * from '@sdcorejs/angular/components/code-editor';
 export * from '@sdcorejs/angular/components/chart';
 export * from '@sdcorejs/angular/components/editor';
+export * from '@sdcorejs/angular/components/splitter';
+export * from '@sdcorejs/angular/components/preview';
 

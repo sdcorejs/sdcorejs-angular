@@ -1,32 +1,28 @@
-import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, ElementRef, Input, OnDestroy } from '@angular/core';
+﻿import { CommonModule } from '@angular/common';
+import { Component, ElementRef, effect, inject, input } from '@angular/core';
 import { v4 as uuidv4 } from 'uuid';
-import { AnchorService } from '../../services';
+import { IAnchorItem } from '../../models';
 
 @Component({
   selector: 'sd-anchor-item',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './anchor-item.component.html',
-  styleUrl: './anchor-item.component.scss',
+  styleUrls: ['./anchor-item.component.scss'],
+  imports: [CommonModule],
+  standalone: true,
 })
-export class SdAnchorItem implements AfterViewInit, OnDestroy {
-  @Input() title!: string;
-  @Input() icon?: string;
-  id = uuidv4();
+export class SdAnchorItem implements IAnchorItem {
+  title = input.required<string>();
+  icon = input<string | undefined>();
+  // Stable key dùng cho data-autoId. Nếu không truyền thì fallback về uuid (không stable giữa các lần render).
+  key = input<string | undefined>(undefined);
+  id: string = uuidv4();
+  elementRef = inject(ElementRef);
 
-  constructor(
-    public elementRef: ElementRef,
-    private service: AnchorService
-  ) {}
-
-  ngAfterViewInit() {
-    this.service.registerSection({
-      id: this.id,
-      element: this.elementRef.nativeElement,
-      title: this.title,
+  constructor() {
+    effect(() => {
+      if (this.title()) {
+        this.elementRef.nativeElement.removeAttribute('title');
+      }
     });
   }
-
-  ngOnDestroy() {}
 }

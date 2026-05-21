@@ -1,6 +1,3 @@
-<mat-slide-toggle [formControl]="formControl" [attr.data-autoId]="autoId" [color]="color">
+<mat-slide-toggle [formControl]="formControl" [attr.data-autoId]="autoId()" [color]="color">
   <sd-label [label]="label" [required]="required"></sd-label>
 </mat-slide-toggle>
-@if (!hideInlineError && formControl.errors?.['required'] && formControl.touched) {
-  <mat-error>Vui lòng nhập thông tin</mat-error>
-}

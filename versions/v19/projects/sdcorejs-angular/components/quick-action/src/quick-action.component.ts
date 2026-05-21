@@ -1,24 +1,15 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 @Component({
   selector: 'sd-quick-action',
   templateUrl: './quick-action.component.html',
   styleUrls: ['./quick-action.component.scss'],
   standalone: true,
-  imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdQuickAction {
-  isOpened = false;
-  @Input('isOpened') set _isOpened(isOpened: '' | boolean | undefined | null) {
-    this.isOpened = !!isOpened;
-  }
-  constructor() {}
-  open = () => {
-    this.isOpened = true;
-  };
-
-  close = () => {
-    this.isOpened = false;
-  };
+  /**
+   * Toggle visibility of the floating toolbar. Bare attribute = true.
+   */
+  readonly opened = input(false, { transform: booleanAttribute });
 }

@@ -103,7 +103,6 @@ export class SdBadge {
     const s = this.size();
     const f = this.fontSet();
     return {
-      'c-xs': s === 'xs',
       'c-sm': s === 'sm',
       'c-md': s === 'md',
       'c-lg': s === 'lg',

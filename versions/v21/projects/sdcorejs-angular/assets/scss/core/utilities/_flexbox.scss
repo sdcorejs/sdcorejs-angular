@@ -1,0 +1,54 @@
+// --------------------------------------------------------------------------
+// Flexbox
+// --------------------------------------------------------------------------
+
+// Flex shorthand
+.flex-1    { flex: 1 !important; }
+.flex-none { flex: none !important; }
+.flex-auto { flex: auto !important; }
+
+// Direction
+.flex-row            { flex-direction: row !important; }
+.flex-column         { flex-direction: column !important; }
+.flex-row-reverse    { flex-direction: row-reverse !important; }
+.flex-column-reverse { flex-direction: column-reverse !important; }
+
+// Wrap
+.flex-wrap   { flex-wrap: wrap !important; }
+.flex-nowrap { flex-wrap: nowrap !important; }
+
+// Grow & shrink
+.flex-grow-0   { flex-grow: 0 !important; }
+.flex-grow-1   { flex-grow: 1 !important; }
+.flex-shrink-0 { flex-shrink: 0 !important; }
+.flex-shrink-1 { flex-shrink: 1 !important; }
+
+// align-items
+.align-items-start    { align-items: flex-start !important; }
+.align-items-end      { align-items: flex-end !important; }
+.align-items-center   { align-items: center !important; }
+.align-items-baseline { align-items: baseline !important; }
+.align-items-stretch  { align-items: stretch !important; }
+
+// align-self
+.align-self-start   { align-self: flex-start !important; }
+.align-self-end     { align-self: flex-end !important; }
+.align-self-center  { align-self: center !important; }
+.align-self-stretch { align-self: stretch !important; }
+.align-self-auto    { align-self: auto !important; }
+
+// align-content
+.align-content-start   { align-content: flex-start !important; }
+.align-content-end     { align-content: flex-end !important; }
+.align-content-center  { align-content: center !important; }
+.align-content-between { align-content: space-between !important; }
+.align-content-around  { align-content: space-around !important; }
+.align-content-stretch { align-content: stretch !important; }
+
+// justify-content
+.justify-content-start   { justify-content: flex-start !important; }
+.justify-content-end     { justify-content: flex-end !important; }
+.justify-content-center  { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-around  { justify-content: space-around !important; }
+.justify-content-evenly  { justify-content: space-evenly !important; }

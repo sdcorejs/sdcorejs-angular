@@ -1,13 +1,14 @@
-import { Component, Input, signal, HostListener, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, Input, signal, HostListener, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { ToastData } from '../../notify.model';
 import { SdNotifyService } from '../../notify.service';
 
 @Component({
-  selector: 'sd-toast',
+  selector: 'toast',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslatePipe],
   templateUrl: './toast.component.html',
   styleUrls: ['./toast.component.scss'],
   animations: [
@@ -26,7 +27,7 @@ import { SdNotifyService } from '../../notify.service';
     '[class]': '"bg-white sd-toast"'
   }
 })
-export class SdToastComponent implements OnInit, OnDestroy {
+export class ToastComponent implements OnInit, OnDestroy {
   @Input({ required: true }) data!: ToastData;
   
   isExpanded = signal(false);
@@ -40,9 +41,9 @@ export class SdToastComponent implements OnInit, OnDestroy {
   constructor(private notifyService: SdNotifyService) {}
 
   ngOnInit() {
-    // Khởi tạo thời gian còn lại bằng duration ban đầu
+    // Khá»Ÿi táº¡o thá»i gian cÃ²n láº¡i báº±ng duration ban Ä‘áº§u
     this.remaining = this.data.duration;
-    // Bắt đầu đếm ngược ngay khi hiện ra
+    // Báº¯t Ä‘áº§u Ä‘áº¿m ngÆ°á»£c ngay khi hiá»‡n ra
     this.resumeTimer();
   }
 
@@ -55,17 +56,17 @@ export class SdToastComponent implements OnInit, OnDestroy {
   @HostListener('mouseenter')
   pauseTimer() {
     if (this.timer) {
-      // Xóa timer hiện tại
+      // XÃ³a timer hiá»‡n táº¡i
       clearTimeout(this.timer);
       this.timer = null;
-      // Tính toán thời gian đã trôi qua để trừ đi
+      // TÃ­nh toÃ¡n thá»i gian Ä‘Ã£ trÃ´i qua Ä‘á»ƒ trá»« Ä‘i
       this.remaining -= Date.now() - this.start;
     }
   }
 
   @HostListener('mouseleave')
   resumeTimer() {
-    // Chỉ chạy tiếp nếu còn thời gian và timer chưa chạy
+    // Chá»‰ cháº¡y tiáº¿p náº¿u cÃ²n thá»i gian vÃ  timer chÆ°a cháº¡y
     if (this.remaining > 0 && !this.timer) {
       this.start = Date.now();
       this.timer = setTimeout(() => {
@@ -74,7 +75,7 @@ export class SdToastComponent implements OnInit, OnDestroy {
     }
   }
 
-  // --- Logic cũ ---
+  // --- Logic cÅ© ---
 
   close() {
     this.notifyService.remove(this.data.id);

@@ -10,9 +10,9 @@ export interface SdEditorImageUploadValidation {
 }
 
 export interface SdEditorImageConfig {
-  /** 'immediate': upload ngay khi chọn ảnh.
-   ** 'deferred': lưu tạm, upload thì viewChild component rồi gọi upload() */
-  uploadMode?: 'immediate' | 'deferred';
+  // 'immediate': Upload ngay khi chọn ảnh.
+  // 'deferred': Lưu tạm ảnh blob, khi submit thì viewChild component sd-editor rồi gọi upload() để tự động map lại src lấy từ uploadFn,
+  uploadMode?: 'deferred' | 'immediate'; // Mặc định là 'deferred'
   uploadFn?: (files: File[]) => Promise<SdEditorUploadFileDetail[]>;
   validation?: SdEditorImageUploadValidation;
   maxConcurrentUploads?: number;

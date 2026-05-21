@@ -6,6 +6,7 @@ import {
   ElementRef,
   TemplateRef,
   booleanAttribute,
+  computed,
   inject,
   input,
   output,
@@ -35,6 +36,12 @@ export class SdModal {
 
   templateRef = viewChild.required<TemplateRef<any>>('templateRef');
   modal = viewChild<ElementRef>('modal');
+
+  // autoId prefix `modal-`. LÆ°u Ã½: footer/body buttons render qua <ng-content> nÃªn consumer pháº£i
+  // tá»± Ä‘áº·t [attr.data-autoId] cho cÃ¡c nÃºt Ä‘Ã³. Component chá»‰ tá»± bind autoId cho NÃšT ÄÃ“NG (X icon).
+  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  readonly autoId = computed(() => (this.autoIdInput() ? `components-modal-${this.autoIdInput()}` : undefined));
+  readonly closeButtonAutoId = computed(() => (this.autoId() ? `${this.autoId()}-close` : undefined));
 
   title = input<string, string | null | undefined>('', { transform: (v) => v ?? '' });
   color = input<SdColor, SdColor | null | undefined>('primary', { transform: (v) => v ?? 'primary' });

@@ -1,5 +1,6 @@
 ﻿import { Inject, Injectable, Optional } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
+import { Subject } from 'rxjs';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
 import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations';
@@ -15,6 +16,10 @@ export class ConfigService {
     REORDER: 'reorder',
   };
   #prefix = 'TABLE_CONFIG';
+  #storage?: SdStorage<ConfiguredTable>;
+  #widthChange = new Subject<{ field: string; width: string }>();
+  widthChange$ = this.#widthChange.asObservable();
+
   constructor(
     private storageService: SdStorageService,
     @Inject(SD_TABLE_CONFIGURATION) @Optional() public tableConfiguration: ISdTableConfiguration
@@ -162,7 +167,23 @@ export class ConfigService {
   };
 
   init = (tableOption: SdTableOption) => {
-    return this.#loadConfiguredTable(tableOption);
+    this.#storage = this.#loadConfiguredTable(tableOption);
+    return this.#storage;
+  };
+
+  persistColumnWidth = (field: string, width: string) => {
+    if (!this.#storage) return;
+    const current = this.#storage.get();
+    const columns = current?.columns ? [...current.columns] : [];
+    const idx = columns.findIndex(c => c.origin.field === field);
+    if (idx < 0) {
+      // Cá»™t chÆ°a cÃ³ trong storage (vd cá»™t má»›i thÃªm vÃ o option) â€” bá» qua;
+      // sáº½ Ä‘Æ°á»£c pick up qua flow loadConfigurationResult bÃ¬nh thÆ°á»ng.
+      return;
+    }
+    columns[idx] = { ...columns[idx], width };
+    this.#storage.setSilent({ ...current, columns });
+    this.#widthChange.next({ field, width });
   };
 
   #default = (tableOption: SdTableOption): ConfiguredTable => {

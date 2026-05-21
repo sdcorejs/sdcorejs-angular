@@ -1,0 +1,45 @@
+@if (!!selection?.variables?.items?.length) {
+  <div class="d-flex align-items-center py-4">
+    @if (label) {
+      <div class="T14R" style="flex: 1">{{ label }}</div>
+    }
+    <div style="width: 200px" class="d-flex align-items-center">
+      <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
+    </div>
+  </div>
+  <sd-modal [title]="'core.component.form-builder.set-on-change-assign' | translate" width="500px">
+    <div class="c-builder">
+      <div class="d-flex justify-content-end">
+        <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-field' | translate" color="primary" (click)="addField()"></sd-button>
+      </div>
+      <!-- Cấp 1 -->
+      @for (item of items; track item.id; let idx = $index) {
+        <div class="d-flex align-items-center py-8" style="gap: 8px">
+          <sd-autocomplete
+            [label]="'core.component.form-builder.target-field' | translate"
+            [form]="form"
+            style="flex: 1"
+            [(model)]="item.key"
+            [items]="leftProperties"
+            valueField="value"
+            displayField="display"
+            required
+            hideInlineError></sd-autocomplete>
+          <sd-autocomplete
+             [label]="'core.component.form-builder.target-value' | translate"
+            [form]="form"
+            style="flex: 1"
+            [(model)]="item.value"
+            [items]="rightProperties"
+            valueField="value"
+            displayField="display"
+            required
+            hideInlineError></sd-autocomplete>
+        </div>
+      }
+    </div>
+    <ng-container sdFooter>
+      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
+    </ng-container>
+  </sd-modal>
+}

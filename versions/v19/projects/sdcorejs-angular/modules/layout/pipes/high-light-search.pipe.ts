@@ -14,7 +14,7 @@ export class HighlightSearchPipe implements PipeTransform {
   ): string {
     const { color = '#ffff00' } = args ?? {};
     keyword = this.#normalizeValue(keyword);
-    if (!keyword || keyword.length < 3) {
+    if (!keyword || keyword.length < 2) {
       return value;
     }
     value = value?.trim() || '';

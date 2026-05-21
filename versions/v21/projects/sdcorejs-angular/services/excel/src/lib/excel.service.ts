@@ -1,14 +1,15 @@
-﻿import { Injectable } from '@angular/core';
-import { CellValue, Style, Workbook } from 'exceljs';
+﻿import { inject, Injectable } from '@angular/core';
+import type { CellValue, Style } from 'exceljs';
 // import hash from 'object-hash';
 import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { download, generateCsv, mkConfig } from 'export-to-csv';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SdExcelService {
+  readonly #i18n = inject(I18nService);
   #fieldStyle: Partial<Style> = {
     border: {
       bottom: { style: 'thin' },
@@ -117,6 +118,14 @@ export class SdExcelService {
 
   constructor() {}
 
+  // exceljs lÃ  CJS module â€” khi dynamic import tá»« ESM, named export `Workbook`
+  // cÃ³ thá»ƒ náº±m trÃªn `mod.Workbook` hoáº·c bá»‹ bá»c trong `mod.default.Workbook` tuá»³ bundler.
+  // Helper nÃ y chuáº©n hoÃ¡ cáº£ hai trÆ°á»ng há»£p.
+  async #loadWorkbook(): Promise<new () => import('exceljs').Workbook> {
+    const mod: any = await import('exceljs');
+    return mod.Workbook ?? mod.default?.Workbook;
+  }
+
   generateTemplate = async (template: SdExcelTemplate) => {
     const { fileName, columns, sheets } = template;
     if (!Array.isArray(columns)) {
@@ -131,7 +140,7 @@ export class SdExcelService {
       }
     }
     const hasDescription = columns.some(column => column.description);
-    // const { Workbook } = await import('exceljs');
+    const Workbook = await this.#loadWorkbook();
     const workbook = new Workbook();
     const firstSheet = workbook.addWorksheet('template'); // Láº¥y ra sheet Ä‘áº§u tiÃªn
     columns.forEach((column, index) => {
@@ -203,25 +212,31 @@ export class SdExcelService {
     );
   };
 
-  exportCSV = async (option: SdExcelExportOption) => {
+  exportCSV = async (option: SdExcelExportOption): Promise<void> => {
     const { columns, items, fileName } = option;
-    const headerCSV: Record<string, string> = {};
-    for (const column of columns) {
-      headerCSV[column.field] = column.title;
-    }
-    // const { mkConfig, generateCsv, download } = await import('export-to-csv');
-    const csvConfig = mkConfig({
-      filename: `${fileName || 'CSV'}_${DateUtilities.toFormat(new Date(), 'yyyy-MM-dd-HH-mm-ss')}`,
-      fieldSeparator: ',',
-      quoteCharacter: '"',
-      decimalSeparator: '.',
-      // showLabels: true,
-      showTitle: false,
-      title: fileName || 'CSV',
-      useBom: true,
-    });
-    const csv = generateCsv(csvConfig)([headerCSV, ...items]); // ([headerCSV, ...items]);
-    download(csvConfig)(csv);
+    const filename = `${fileName || 'CSV'}_${DateUtilities.toFormat(new Date(), 'yyyy-MM-dd-HH-mm-ss')}.csv`;
+
+    // Escape CSV cell: bá»c trong dáº¥u " náº¿u chá»©a dáº¥u pháº©y / xuá»‘ng dÃ²ng / dáº¥u ngoáº·c kÃ©p.
+    // Dáº¥u " bÃªn trong Ä‘Æ°á»£c nhÃ¢n Ä‘Ã´i theo chuáº©n RFC 4180.
+    const escape = (v: unknown): string => {
+      if (v == null) return '';
+      const s = String(v);
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const headerLine = columns.map(c => escape(c.title)).join(',');
+    const dataLines = items.map(item =>
+      columns.map(c => escape((item as Record<string, unknown>)[c.field])).join(','),
+    );
+
+    // Prepend UTF-8 BOM (ï»¿) Ä‘á»ƒ Excel má»Ÿ Ä‘Ãºng encoding cho tiáº¿ng Viá»‡t cÃ³ dáº¥u.
+    // DÃ¹ng CRLF vÃ¬ Excel trÃªn Windows Æ°u tiÃªn, macOS Excel cÅ©ng cháº¥p nháº­n.
+    const csv = 'ï»¿' + [headerLine, ...dataLines].join('\r\n');
+
+    SdUtilities.downloadBlob(
+      new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
+      filename,
+    );
   };
 
   export = async (option: SdExcelExportOption) => {
@@ -238,7 +253,7 @@ export class SdExcelService {
         hasDescription = true;
       }
     }
-    // const { Workbook } = await import('exceljs');
+    const Workbook = await this.#loadWorkbook();
     const workbook = new Workbook(); //await XlsxPopulate.fromBlankAsync(); // Äá»c file sau khi Ä‘Ã£ download
     const firstSheet = workbook.addWorksheet('data'); // Láº¥y ra sheet Ä‘áº§u tiÃªn
     columns.forEach((column, index) => {
@@ -350,15 +365,16 @@ export class SdExcelService {
         try {
           const buffer = e.target?.result as ArrayBuffer;
           if (!buffer) {
-            throw new Error('KhÃ´ng Ä‘á»c Ä‘Æ°á»£c ná»™i dung file');
+            throw new Error(this.#i18n.t('core.excel.cannot-read-file'));
           }
 
+          const Workbook = await this.#loadWorkbook();
           const wb = new Workbook();
           await wb.xlsx.load(buffer);
 
           const sheet = wb.worksheets[0];
           if (!sheet) {
-            throw new Error('File Excel khÃ´ng cÃ³ sheet dá»¯ liá»‡u');
+            throw new Error(this.#i18n.t('core.excel.no-sheet'));
           }
 
           const items: Record<string, any>[] = [];

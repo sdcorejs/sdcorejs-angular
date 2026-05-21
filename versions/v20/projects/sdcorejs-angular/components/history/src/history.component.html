@@ -20,7 +20,7 @@
         </div>
         <div class="meta">
           @if (item?.actor) {
-            <span>Bởi <strong>&#64;{{ item.actor }}</strong></span>
+            <span>{{ 'core.component.history.by' | translate }} <strong>&#64;{{ item.actor }}</strong></span>
           }
           @if (item?.source) {
             <span> &#183; {{ item.source }}</span>

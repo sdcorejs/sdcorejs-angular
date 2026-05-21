@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   ElementRef,
   contentChild,
   effect,
@@ -40,6 +41,7 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { DateUtilities, SdSize } from '@sdcorejs/angular/utilities';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
@@ -80,6 +82,7 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
 })
 export class SdChipCalendar implements AfterViewInit {
   #ref = inject(ChangeDetectorRef);
+  readonly #i18n = inject(I18nService);
   #subscription = new Subscription();
   #name = uuid.v4();
   #form?: FormGroup;
@@ -88,7 +91,8 @@ export class SdChipCalendar implements AfterViewInit {
   @ViewChild(MatMenuTrigger) menuTrigger!: MatMenuTrigger;
   @ViewChild(MatCalendar) calendar!: MatCalendar<Date>;
 
-  autoId = input<string | undefined>();
+  autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  autoId = computed(() => (this.autoIdInput() ? `forms-chip-calendar-${this.autoIdInput()}` : undefined));
   name = input<string | undefined>();
   appearance = input<MatFormFieldAppearance>('outline');
   floatLabel = input<FloatLabelType>('auto');
@@ -180,9 +184,9 @@ export class SdChipCalendar implements AfterViewInit {
     const errors = this.#formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p thÃƒÂ´ng tin';
-    if (errors['minlength']) return `Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p ÃƒÂ­t nhÃ¡ÂºÂ¥t ${this.min()} giÃƒÂ¡ trÃ¡Â»â€¹`;
-    if (errors['maxlength']) return `Vui lÃƒÂ²ng nhÃ¡ÂºÂ­p tÃ¡Â»â€˜i Ã„â€˜a ${this.max()} giÃƒÂ¡ trÃ¡Â»â€¹`;
+    if (errors['required']) return this.#i18n.t('core.form.chip-calendar.required');
+    if (errors['minlength']) return this.#i18n.t('core.form.chip-calendar.minlength', { min: this.min() });
+    if (errors['maxlength']) return this.#i18n.t('core.form.chip-calendar.maxlength', { max: this.max() });
     return undefined;
   }
 

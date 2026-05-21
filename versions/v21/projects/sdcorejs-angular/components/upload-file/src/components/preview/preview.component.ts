@@ -1,23 +1,25 @@
 ﻿import { CommonModule, NgOptimizedImage } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, inject } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { PreviewFile } from '../../services';
 import { MatIcon } from "@angular/material/icon";
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'preview',
   templateUrl: './preview.component.html',
   styleUrl: './preview.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdModal, SdButton, CommonModule, MatIcon],
+  imports: [SdModal, SdButton, CommonModule, MatIcon, TranslatePipe],
 })
 export class PreviewComponent {
   @ViewChild(SdModal) modal!: SdModal;
   @Output() download = new EventEmitter<PreviewFile>();
   @Output() close = new EventEmitter<void>();
 
-  title: string = 'Xem áº£nh';
+  readonly #i18n = inject(I18nService);
+  title: string = this.#i18n.t('core.component.upload-file.preview-title');
   thumbnailPosition: 'right' | 'left' | 'bottom' | 'top' = 'right';
   activeIndex = 0;
   previewFiles: PreviewFile[] = [];

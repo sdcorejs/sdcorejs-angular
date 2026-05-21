@@ -1,8 +1,9 @@
-import { FileLoader } from 'ckeditor5';
+﻿import { FileLoader } from 'ckeditor5';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdEditorImageUploadValidation } from '../../../models';
 
-// Dựa vào file để detect định dạng thay vì chỉ check tên
-// Tránh user gửi file không đúng, ví dụ file docx nhưng đổi tên thành ảnh docx.jpg
+// Dá»±a vÃ o file Ä‘á»ƒ detect Ä‘á»‹nh dáº¡ng thay vÃ¬ chá»‰ check tÃªn
+// TrÃ¡nh user gá»­i file khÃ´ng Ä‘Ãºng, vÃ­ dá»¥ file docx nhÆ°ng Ä‘á»•i tÃªn thÃ nh áº£nh docx.jpg
 const detectFormatFromBytes = async (file: File): Promise<string> => {
   const buffer = await file.slice(0, 12).arrayBuffer();
   const b = new Uint8Array(buffer);
@@ -38,10 +39,15 @@ const getImageInfo = async (file: File): Promise<{ width: number; height: number
   return { width, height, sizeMB, format };
 };
 
+// Helper: gá»i i18n.t khi cÃ³ service; náº¿u thiáº¿u thÃ¬ tráº£ empty (Angular wrapper luÃ´n truyá»n i18n)
+const tr = (i18n: I18nService | undefined, key: string, params: Record<string, unknown>): string =>
+  i18n?.t(key, params as any) ?? '';
+
 const validateImageFile = async (
   file: File,
   validation: SdEditorImageUploadValidation,
-  onWarning?: (message: string) => void
+  onWarning?: (message: string) => void,
+  i18n?: I18nService
 ): Promise<boolean> => {
   const { width, height, sizeMB, format } = await getImageInfo(file);
 
@@ -51,28 +57,30 @@ const validateImageFile = async (
       return fmt === 'jpeg' ? 'jpg' : fmt;
     });
     if (!normalizedFormats.includes(format)) {
-      onWarning?.(`Định dạng file ".${format}" không được phép. Các định dạng hợp lệ: ${normalizedFormats.join(', ')}`);
+      const allowed = normalizedFormats.join(', ');
+      onWarning?.(tr(i18n, 'core.component.editor.image.invalid-format', { format, allowed }));
       return false;
     }
   }
   if (validation.maxSizeMB !== undefined && sizeMB > validation.maxSizeMB) {
-    onWarning?.(`Dung lượng file ${sizeMB.toFixed(2)}MB vượt quá giới hạn ${validation.maxSizeMB}MB`);
+    const sizeMBFixed = sizeMB.toFixed(2);
+    onWarning?.(tr(i18n, 'core.component.editor.image.size-exceeded', { sizeMB: sizeMBFixed, maxSizeMB: validation.maxSizeMB }));
     return false;
   }
   if (validation.minWidth !== undefined && width < validation.minWidth) {
-    onWarning?.(`Chiều rộng ảnh ${width}px nhỏ hơn giới hạn tối thiểu ${validation.minWidth}px`);
+    onWarning?.(tr(i18n, 'core.component.editor.image.min-width', { width, min: validation.minWidth }));
     return false;
   }
   if (validation.minHeight !== undefined && height < validation.minHeight) {
-    onWarning?.(`Chiều cao ảnh ${height}px nhỏ hơn giới hạn tối thiểu ${validation.minHeight}px`);
+    onWarning?.(tr(i18n, 'core.component.editor.image.min-height', { height, min: validation.minHeight }));
     return false;
   }
   if (validation.maxWidth !== undefined && width > validation.maxWidth) {
-    onWarning?.(`Chiều rộng ảnh ${width}px vượt quá giới hạn ${validation.maxWidth}px`);
+    onWarning?.(tr(i18n, 'core.component.editor.image.max-width', { width, max: validation.maxWidth }));
     return false;
   }
   if (validation.maxHeight !== undefined && height > validation.maxHeight) {
-    onWarning?.(`Chiều cao ảnh ${height}px vượt quá giới hạn ${validation.maxHeight}px`);
+    onWarning?.(tr(i18n, 'core.component.editor.image.max-height', { height, max: validation.maxHeight }));
     return false;
   }
   return true;
@@ -81,17 +89,19 @@ const validateImageFile = async (
 export const validateAndGetFile = async (
   loader: FileLoader,
   validation?: SdEditorImageUploadValidation,
-  onWarning?: (message: string) => void
+  onWarning?: (message: string) => void,
+  i18n?: I18nService
 ): Promise<File> => {
   const file = (await loader.file) as File | null;
   if (!file) {
     throw new Error('No file found');
   }
   if (validation) {
-    const valid = await validateImageFile(file, validation, onWarning);
+    const valid = await validateImageFile(file, validation, onWarning, i18n);
     if (!valid) {
       throw new Error('Image validation failed');
     }
   }
   return file;
 };
+

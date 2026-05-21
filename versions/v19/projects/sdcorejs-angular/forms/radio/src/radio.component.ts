@@ -6,9 +6,11 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   ContentChild,
   EventEmitter,
   Input,
+  input,
   OnDestroy,
   OnInit,
   Output,
@@ -24,6 +26,7 @@ import * as uuid from 'uuid';
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 
 import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdHrefDirective } from "@sdcorejs/angular/directives";
@@ -34,18 +37,13 @@ import { SdHrefDirective } from "@sdcorejs/angular/directives";
   styleUrls: ['./radio.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, MatTooltipModule, MatFormFieldModule, MatIconModule, MatRadioModule, SdLabel, SdEmptyPipe, SdHrefDirective],
+  imports: [CommonModule, ReactiveFormsModule, MatTooltipModule, MatFormFieldModule, MatIconModule, MatRadioModule, SdLabel, SdEmptyPipe, SdHrefDirective, TranslatePipe],
 })
 // eslint-disable-next-line @angular-eslint/component-class-suffix
 export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   id = `I${uuid.v4()}`;
-  autoId?: string;
-  @Input('autoId') set _autoId(val: string | undefined | null) {
-    if (!val) {
-      return;
-    }
-    this.autoId = `forms-radio-${val}`;
-  }
+  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  readonly autoId = computed(() => (this.autoIdInput() ? `forms-radio-${this.autoIdInput()}` : undefined));
 
   #name = uuid.v4();
   @Input() set name(val: string | undefined) {

@@ -1,6 +1,5 @@
-import { SdNestedKeyOf } from "./nested-key-of.model";
+import type { Order } from '@sdcorejs/utils/models';
+export type { Order };
 
-export interface SdOrder<T = any> {
-  field: SdNestedKeyOf<T>;
-  direction: 'ASC' | 'DESC';
-}
+/** @deprecated Use {@link Order} from `@sdcorejs/utils/models` instead */
+export type SdOrder<T = any> = Order<T>;

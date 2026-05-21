@@ -1,6 +1,7 @@
-﻿import { Injectable } from '@angular/core';
+﻿import { inject, Injectable } from '@angular/core';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { SdLoadingService } from '@sdcorejs/angular/services/loading';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdDocxConvertOptions, SdDocxConvertResult } from './docx.model';
 import { createPandocInstance, PandocInstance } from './pandoc-core';
@@ -9,11 +10,10 @@ import { createPandocInstance, PandocInstance } from './pandoc-core';
   providedIn: 'root',
 })
 export class SdDocxService {
+  readonly #i18n = inject(I18nService);
+
   readonly #DEFAULT_MAX_SIZE_MB = 50;
   readonly #VALID_EXTENSIONS = ['.doc', '.docx'];
-
-  readonly #ERROR_INVALID_FORMAT = 'Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡. Vui lÃ²ng chá»n Máº«u cÃ³ Ä‘á»‹nh dáº¡ng DOC hoáº·c DOCX';
-  readonly #ERROR_SIZE_EXCEEDED = 'KÃ­ch thÆ°á»›c tá»‡p máº«u vÆ°á»£t quÃ¡ tiÃªu chuáº©n há»— trá»£ cá»§a há»‡ thá»‘ng. Vui lÃ²ng thá»­ láº¡i';
 
   readonly #PANDOC_WASM_URL = 'https://pandoc.github.io/pandoc-wasm/pandoc.wasm';
 
@@ -48,7 +48,7 @@ export class SdDocxService {
           resolve(result);
         } catch (error) {
           console.error('[SdDocxService] DocX conversion error:', error);
-          this.notifyService.error('CÃ³ lá»—i xáº£y ra khi chuyá»ƒn Ä‘á»•i file DOCX');
+          this.notifyService.error(this.#i18n.t('core.docx.convert-error'));
           resolve(null);
         } finally {
           input.value = '';
@@ -120,7 +120,7 @@ export class SdDocxService {
 
       if (opts.validateFormat && fileName) {
         if (!this.#isValidFormat(fileName)) {
-          this.notifyService.error(this.#ERROR_INVALID_FORMAT);
+          this.notifyService.error(this.#i18n.t('core.docx.invalid-format'));
           return null;
         }
       }
@@ -128,7 +128,7 @@ export class SdDocxService {
       if (opts.validateSize && fileSize !== undefined) {
         const maxSizeInBytes = opts.maxSizeInMb! * 1024 * 1024;
         if (fileSize > maxSizeInBytes) {
-          this.notifyService.error(this.#ERROR_SIZE_EXCEEDED);
+          this.notifyService.error(this.#i18n.t('core.docx.size-exceeded'));
           return null;
         }
       }
@@ -154,7 +154,7 @@ export class SdDocxService {
       };
     } catch (error) {
       console.error('[SdDocxService] DocX conversion error:', error);
-      this.notifyService.error('CÃ³ lá»—i xáº£y ra khi chuyá»ƒn Ä‘á»•i file DOCX');
+      this.notifyService.error(this.#i18n.t('core.docx.convert-error'));
       return null;
     }
   }

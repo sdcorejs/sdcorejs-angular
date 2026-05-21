@@ -1,5 +1,6 @@
 ﻿/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, inject } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { CommonModule } from '@angular/common';
 import { FormGroup } from '@angular/forms';
@@ -108,6 +109,7 @@ export class SdPopupExport {
     return [...this.tableColumns, ...this.additionalColumns];
   };
 
+  readonly #i18n = inject(I18nService);
   constructor(
     private ref: ChangeDetectorRef,
     private loadingService: SdLoadingService,
@@ -283,7 +285,7 @@ export class SdPopupExport {
       return;
     }
     if (!this.columns.some(e => this.selected[e.field])) {
-      this.notifyService.warning(`Vui lÃ²ng chá»n cá»™t dá»¯ liá»‡u Ä‘á»ƒ xuáº¥t`);
+      this.notifyService.warning(this.#i18n.t('core.component.table.popup-export.select-columns'));
       return;
     }
     this.loadingService.start();

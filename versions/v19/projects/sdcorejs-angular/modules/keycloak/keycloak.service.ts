@@ -20,6 +20,7 @@ export class SdKeycloakService {
     // 2. Lắng nghe sự kiện hết hạn token để tự động làm mới ngầm
     this.keycloak.onTokenExpired = () => {
       this.keycloak.updateToken(30).catch(() => {
+        // @i18n-ignore — dev console warning
         console.warn('Không thể làm mới token. Yêu cầu đăng nhập lại.');
         this.keycloak.login();
       });

@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  computed,
   ElementRef,
   contentChild,
   effect,
@@ -38,6 +39,7 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdSize } from '@sdcorejs/angular/utilities';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
@@ -75,12 +77,14 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
 })
 export class SdChip implements AfterViewInit {
   #ref = inject(ChangeDetectorRef);
+  readonly #i18n = inject(I18nService);
   #subscription = new Subscription();
   #name = uuid.v4();
   #form?: FormGroup;
 
   // Signals - inputs
-  autoId = input<string | undefined>();
+  autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  autoId = computed(() => (this.autoIdInput() ? `forms-chip-${this.autoIdInput()}` : undefined));
   name = input<string | undefined>();
   appearance = input<MatFormFieldAppearance>('outline');
   floatLabel = input<FloatLabelType>('auto');
@@ -160,14 +164,6 @@ export class SdChip implements AfterViewInit {
       }
     });
 
-    // Setup auto id and name
-    effect(() => {
-      const autoIdVal = this.autoId();
-      if (autoIdVal) {
-        // autoId is just for form association, no further processing needed
-      }
-    });
-
     effect(() => {
       const nameVal = this.name();
       if (nameVal) {
@@ -190,9 +186,9 @@ export class SdChip implements AfterViewInit {
     const errors = this.#formControl.errors;
     if (!errors) return undefined;
 
-    if (errors['required']) return 'Vui lÃ²ng nháº­p thÃ´ng tin';
-    if (errors['minlength']) return `Vui lÃ²ng nháº­p Ã­t nháº¥t ${this.min()} giÃ¡ trá»‹`;
-    if (errors['maxlength']) return `Vui lÃ²ng nháº­p tá»‘i Ä‘a ${this.max()} giÃ¡ trá»‹`;
+    if (errors['required']) return this.#i18n.t('core.form.chip.required');
+    if (errors['minlength']) return this.#i18n.t('core.form.chip.minlength', { min: this.min() });
+    if (errors['maxlength']) return this.#i18n.t('core.form.chip.maxlength', { max: this.max() });
     return undefined;
   }
 

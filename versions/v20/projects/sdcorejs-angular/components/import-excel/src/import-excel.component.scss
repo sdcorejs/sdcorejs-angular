@@ -1,29 +1,31 @@
-@use '@angular/material' as mat; // Nếu cần mixin, nhưng ở đây dùng CSS thuần
-// @use 'sass:map'; // Nếu cần map
+@use '@angular/material' as mat;
 
 // --- 1. TABLE & STICKY STYLES ---
 .table-responsive {
   position: relative;
-  min-height: 50vh; // Đảm bảo chiều cao tối thiểu cho đẹp
+  min-height: 50vh;
   height: 50vh;
   overflow: auto;
-  border: 1px solid #dee2e6; // Viền bao ngoài container
+  border: 1px solid #dee2e6;
 }
 
-.table {
+.sd-table {
+  width: 100%;
+  border-collapse: collapse;
   margin-bottom: 0;
+  font-size: 14px;
 
   thead th {
     position: sticky;
     top: 0;
-    background-color: #f8f9fa; // Màu nền header
+    background-color: #f8f9fa;
     border-bottom: 2px solid #dee2e6;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    border-top: 1px solid #dee2e6;
+    padding: 8px 6px;
     white-space: nowrap;
-    z-index: 10; // Header nằm trên body
+    z-index: 10;
+    font-weight: 600;
 
-    // Ô giao nhau giữa Header và Sticky Left (Góc trên cùng bên trái)
     &.c-sticky-left {
       z-index: 20;
     }
@@ -31,13 +33,35 @@
 
   tbody td {
     vertical-align: middle;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    padding: 6px;
+    border-top: 1px solid #dee2e6;
+  }
+
+  // Striped rows
+  tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  tbody tr:nth-of-type(even) {
+    background-color: #ffffff;
+  }
+
+  // Hover rows
+  tbody tr:hover {
+    background-color: #ececec;
+
+    .c-sticky-left {
+      background-color: #ececec;
+    }
+  }
+
+  // Override sticky bg for striped
+  tbody tr:nth-of-type(odd) .c-sticky-left {
+    background-color: #f2f2f2;
+  }
+  tbody tr:nth-of-type(even) .c-sticky-left {
+    background-color: #ffffff;
   }
 }
-
-// ... (code cũ)
-
 // Cột dính bên trái (Index)
 .c-sticky-left {
   position: sticky;
@@ -45,38 +69,9 @@
   border-right: 1px solid #dee2e6 !important;
   border-left: none !important;
   z-index: 5;
-
-  // [FIX QUAN TRỌNG]: Không dùng inherit nữa, ta sẽ set màu cụ thể bên dưới
-  // background-color: inherit; <--- XÓA DÒNG NÀY
 }
 
-// [FIX MỚI]: Set màu nền ĐẶC (Solid) cho cột Sticky để che nội dung trôi qua bên dưới
-// 1. Dòng Lẻ (Odd): Màu xám nhạt (Solid) thay vì rgba trong suốt
-.table-striped tbody tr:nth-of-type(odd) .c-sticky-left {
-  background-color: #f2f2f2; // Màu xám nhạt tương đương với rgba(0,0,0,0.05) trên nền trắng
-}
-
-// 2. Dòng Chẵn (Even): Màu trắng (Solid)
-.table-striped tbody tr:nth-of-type(even) .c-sticky-left {
-  background-color: #ffffff;
-}
-
-// 3. Khi Hover vào dòng: Cột Sticky cũng phải đổi màu theo hover để đồng bộ
-.table-hover tbody tr:hover .c-sticky-left {
-  background-color: #ececec; // Màu hover của Bootstrap (gray-200)
-}
-
-// ... (code cũ)
-
-// Xử lý màu nền xen kẽ (Striped) cho cả cột dính
-.table-striped tbody tr:nth-of-type(odd) {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-.table-striped tbody tr:nth-of-type(even) {
-  background-color: #ffffff;
-}
-
-// --- 2. EMPTY STATE (Vùng tải mẫu khi rỗng) ---
+// --- 2. EMPTY STATE ---
 .empty-state-wrapper {
   height: 100%;
   min-height: 40vh; // Chiều cao tối thiểu vùng trống

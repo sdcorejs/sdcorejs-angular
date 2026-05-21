@@ -41,6 +41,7 @@ import {
 } from './configurations';
 import { FilterDocumentPipe, FilterImagePipe } from './pipes';
 import { IsImage, PreviewFile, UploadFileService } from './services';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 // https://stackoverflow.com/questions/4459379/preview-an-image-before-it-is-uploaded
 @Component({
@@ -58,8 +59,7 @@ import { IsImage, PreviewFile, UploadFileService } from './services';
     FilterImagePipe,
     FilterDocumentPipe,
     SdFormatNumberPipe,
-    MatProgressSpinner,
-  ],
+    MatProgressSpinner, TranslatePipe],
 })
 export class SdUploadFile<TArgs = any> {
   // â”€â”€â”€ Injected Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -71,6 +71,7 @@ export class SdUploadFile<TArgs = any> {
   );
   readonly #uploadFileService = inject(UploadFileService);
   readonly #destroyRef = inject(DestroyRef);
+  readonly #i18n = inject(I18nService);
 
   // â”€â”€â”€ Internal State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly id = `I${uuid.v4()}`;
@@ -92,6 +93,12 @@ export class SdUploadFile<TArgs = any> {
   readonly sdLabelDef = contentChild(SdLabelDefDirective);
 
   // â”€â”€â”€ Input Signals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // autoId prefix `upload-file-`. Má»—i nÃºt remove dÃ¹ng index-based suffix Ä‘á»ƒ á»•n Ä‘á»‹nh khi filename trÃ¹ng nhau.
+  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  readonly autoId = computed(() => (this.autoIdInput() ? `components-upload-file-${this.autoIdInput()}` : undefined));
+  readonly removeAutoId = (index: number): string | undefined =>
+    (this.autoId() ? `${this.autoId()}-remove-${index}` : undefined);
+
   readonly args = input<TArgs>();
   readonly label = input<string>();
   readonly key = input<string | undefined>(undefined);
@@ -166,11 +173,11 @@ export class SdUploadFile<TArgs = any> {
     const exts = this.extensions();
     const maxSz = this.maxSize();
     if (exts.length && maxSz) {
-      return `Äá»‹nh dáº¡ng: ${exts.join(', ')} vÃ  tá»‘i Ä‘a: ${maxSz}MB`;
+      return this.#i18n.t('core.component.upload-file.desc-format-and-size', { exts: exts.join(', '), maxSize: maxSz });
     } else if (exts.length) {
-      return `Äá»‹nh dáº¡ng: ${exts.join(', ')}`;
+      return this.#i18n.t('core.component.upload-file.desc-format', { exts: exts.join(', ') });
     } else if (maxSz) {
-      return `Tá»‘i Ä‘a: ${maxSz}MB`;
+      return this.#i18n.t('core.component.upload-file.desc-max-size', { maxSize: maxSz });
     }
     return undefined;
   });
@@ -183,7 +190,7 @@ export class SdUploadFile<TArgs = any> {
   readonly model = model<(string | number)[]>([]);
 
   constructor() {
-    this.#validateDuplicateConfigKeys();
+    this.#validateDuplicateConfigurationKeys();
 
     // Sync form group & register form control
     afterNextRender(() => {
@@ -282,15 +289,15 @@ export class SdUploadFile<TArgs = any> {
     return Array.isArray(config) ? config : [config];
   };
 
-  #validateDuplicateConfigKeys = (): void => {
+  #validateDuplicateConfigurationKeys = (): void => {
     const configurations = this.#getConfigurations();
     if (!configurations.length) {
       return;
     }
 
     const seen = new Set<string>();
-    for (const cfg of configurations) {
-      const key = cfg.key;
+    for (const configuration of configurations) {
+      const key = configuration.key;
       const normalizedKey = key === undefined ? '__undefined__' : key;
       if (seen.has(normalizedKey)) {
         const label = key === undefined ? 'undefined' : key;
@@ -300,26 +307,25 @@ export class SdUploadFile<TArgs = any> {
     }
   };
 
-  #getSelectedConfig = (): ISdUploadFileConfiguration | undefined => {
+  #getSelectedConfiguration = (): ISdUploadFileConfiguration | undefined => {
     const configurations = this.#getConfigurations();
     if (!configurations.length) {
       return undefined;
     }
-
     const key = this.key();
-    return configurations.find(cfg => cfg.key === key);
+    return configurations.find(configuration => configuration.key === key);
   };
 
   #getUploadHandler = (): SdUploadFileFuncUpload<any> | undefined => {
-    return this.uploadInput() || this.#getSelectedConfig()?.upload;
+    return this.uploadInput() || this.#getSelectedConfiguration()?.upload;
   };
 
   #getDetailsHandler = (): SdUploadFileFuncDetails<any> | undefined => {
-    return this.details() || this.#getSelectedConfig()?.details;
+    return this.details() || this.#getSelectedConfiguration()?.details;
   };
 
   #getDownloadHandler = (): SdUploadFileFuncDownload<any> | undefined => {
-    return this.downloadInput() || this.#getSelectedConfig()?.download;
+    return this.downloadInput() || this.#getSelectedConfiguration()?.download;
   };
 
   // #updateValidator = () => {
@@ -339,7 +345,7 @@ export class SdUploadFile<TArgs = any> {
   #validate = async (file: File): Promise<string | null> => {
     if (this.type() === 'image') {
       if (file.type.split('/')[0] !== 'image') {
-        return `[${file.name}] Tá»‡p táº£i lÃªn khÃ´ng pháº£i lÃ  áº£nh`;
+        return this.#i18n.t('core.component.upload-file.not-image', { name: file.name });
       }
     }
     const exts = this.extensions();
@@ -347,13 +353,13 @@ export class SdUploadFile<TArgs = any> {
       const lastDot = file.name.lastIndexOf('.');
       const extension = file.name.substring(lastDot + 1);
       if (!exts.some(e => e.toUpperCase() === extension.toUpperCase())) {
-        return `[${file.name}] Tá»‡p táº£i lÃªn khÃ´ng Ä‘Ãºng Ä‘á»‹nh dáº¡ng: ${exts.join(', ')}`;
+        return this.#i18n.t('core.component.upload-file.invalid-format', { name: file.name, exts: exts.join(', ') });
       }
     }
     const maxSz = this.maxSize();
     if (maxSz) {
       if (maxSz * 1024 * 1024 < file.size) {
-        return `[${file.name}] KÃ­ch thÆ°á»›c tá»‡p tá»‘i Ä‘a: ${maxSz} MB`;
+        return this.#i18n.t('core.component.upload-file.size-exceeded', { name: file.name, maxSize: maxSz });
       }
     }
     if (this.type() === 'image' && (this.maxWidth() || this.maxHeight() || this.imageValidator())) {
@@ -419,14 +425,14 @@ export class SdUploadFile<TArgs = any> {
       })
       .catch(error => {
         console.error(error);
-        this.#notifyService.error(error?.message || 'CÃ³ lá»—i xáº£y ra trong quÃ¡ trÃ¬nh táº£i lÃªn tá»‡p');
+        this.#notifyService.error(error?.message || this.#i18n.t('core.component.upload-file.upload-failed'));
       });
   };
 
   #uploadFile = async (originFiles: File[]) => {
     const currentModel = [...(this.model() || [])];
     if (originFiles.length + currentModel.length > this.max()) {
-      this.#notifyService.warning(`Báº¡n Ä‘Ã£ chá»n quÃ¡ nhiá»u file. Vui lÃ²ng kiá»ƒm tra láº¡i sá»‘ lÆ°á»£ng`);
+      this.#notifyService.warning(this.#i18n.t('core.component.upload-file.too-many-files'));
       return;
     }
     for (let file of originFiles) {
@@ -453,10 +459,10 @@ export class SdUploadFile<TArgs = any> {
     const idx = files.indexOf(file);
     if (idx >= 0) {
       this.#confirmService
-        .confirm('Báº¡n cÃ³ muá»‘n xÃ³a file nÃ y khÃ´ng? Thao tÃ¡c nÃ y khÃ´ng thá»ƒ hoÃ n tÃ¡c', {
-          title: 'XÃ¡c nháº­n xÃ³a?',
-          yesTitle: 'XÃ¡c nháº­n',
-          noTitle: 'Há»§y',
+        .confirm(this.#i18n.t('core.component.upload-file.confirm-delete-message'), {
+          title: this.#i18n.t('core.component.upload-file.confirm-delete-title'),
+          yesTitle: this.#i18n.t('core.component.upload-file.confirm-yes'),
+          noTitle: this.#i18n.t('core.component.upload-file.confirm-no'),
           yesButtonColor: 'primary',
           noButtonColor: 'primary',
         })
@@ -599,8 +605,8 @@ export class SdUploadFile<TArgs = any> {
         const key = this.key();
         this.#notifyService.error(
           key === undefined
-            ? 'Vui lÃ²ng inject SD_UPLOAD_FILE_CONFIGURATION hoáº·c truyá»n [upload] trá»±c tiáº¿p vÃ o component'
-            : `KhÃ´ng tÃ¬m tháº¥y upload configuration theo key='${key}'. Vui lÃ²ng kiá»ƒm tra providers hoáº·c truyá»n [upload] trá»±c tiáº¿p`
+            ? this.#i18n.t('core.component.upload-file.no-configuration')
+            : this.#i18n.t('core.component.upload-file.no-configuration-key', { key })
         );
       }
     }

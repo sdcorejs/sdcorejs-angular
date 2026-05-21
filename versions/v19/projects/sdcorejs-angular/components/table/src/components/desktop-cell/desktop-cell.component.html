@@ -38,7 +38,7 @@
     <!-- Nếu option xem full thông tin là "btn xem thêm" -->
     @if (isExpandByMore) {
       <button (click)="toggle()" class="c-collapse">
-        {{ isCollapsed() ? 'Xem thêm' : 'Thu gọn' }}
+        {{ isCollapsed() ? ('core.component.form-builder.show-more' | translate) : ('core.component.form-builder.show-less' | translate) }}
       </button>
     }
   } @else {

@@ -1,12 +1,14 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  booleanAttribute,
   Component,
   Injector,
   OnDestroy,
   Type,
-  ViewChild,
   inject,
+  input,
   signal,
+  viewChild,
   createNgModule,
   NgModuleFactory,
 } from '@angular/core';
@@ -15,16 +17,17 @@ import {
   ActivatedRouteSnapshot,
   NavigationEnd,
   Router,
-  RouterEvent,
+  RouterOutlet,
   RoutesRecognized,
 } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { from, Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
+import { concatMap, filter } from 'rxjs/operators';
 
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdUtilities } from '@sdcorejs/angular/utilities';
 import { SdTabActivated, SdTabDeactivated } from '../../events/tab-router.event';
 import { SdTabAction } from '../../actions/tab-router.action';
@@ -33,15 +36,18 @@ import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
 
+// eslint-disable-next-line @angular-eslint/no-unused-standalone-imports
 @Component({
   selector: 'sd-tab-router-outlet',
   templateUrl: './tab-router-outlet.component.html',
   styleUrls: ['./tab-router-outlet.component.scss'],
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, SdTabRouterNavComponent],
+  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterOutlet, SdTabRouterNavComponent],
 })
 export class SdTabRouterOutletComponent implements OnDestroy {
-  @ViewChild('tabRouterNav') tabRouterNav?: SdTabRouterNavComponent;
+  disabled = input(false, { transform: booleanAttribute });
+
+  tabRouterNav = viewChild<SdTabRouterNavComponent>('tabRouterNav');
 
   tabs = signal<SdTab[]>([]);
 
@@ -50,6 +56,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   #injector = inject(Injector);
   #tabRouterService = inject(SdTabRouterService);
   #sdNotifyService = inject(SdNotifyService);
+  readonly #i18n = inject(I18nService);
   // Inject Ä‘á»ƒ Ä‘áº£m báº£o SdTabDecoratorService Ä‘Æ°á»£c khá»Ÿi táº¡o (nÃ³ register BehaviorSubject
   // tÄ©nh Ä‘á»ƒ @SdTab decorator cÃ³ thá»ƒ truy cáº­p SdTabRouterService). KhÃ´ng dÃ¹ng trá»±c tiáº¿p á»Ÿ Ä‘Ã¢y.
   #tabDecoratorService = inject(SdTabDecoratorService);
@@ -66,31 +73,25 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     this.#subscription.add(
       this.#router.events
         .pipe(
-          // Má»™t sá»‘ event cá»§a Angular bá»c trong wrapper cÃ³ .routerEvent â†’ unwrap vá» RouterEvent gá»‘c.
-          map((event: any) => (event instanceof RouterEvent ? event : event.routerEvent)),
+          // KHÃ”NG unwrap event.routerEvent (vd Scroll wrap NavigationEnd):
+          // Angular emit NavigationEnd RAW trÆ°á»›c, RouterScroller emit Scroll(NavigationEnd) sau.
+          // Náº¿u unwrap thÃªm Scroll â†’ handler fire 2 láº§n cho 1 nav â†’ race condition táº¡o duplicate tabs.
           // Hybrid: cáº§n Cáº¢ HAI event vÃ¬ má»—i event chá»©a data khÃ¡c nhau á»Ÿ thá»i Ä‘iá»ƒm khÃ¡c nhau.
           // - RoutesRecognized: navigation Ä‘ang in-flight â†’ getCurrentNavigation().extras.state Ä‘á»c Ä‘Æ°á»£c
           // - NavigationEnd: navigation hoÃ n táº¥t â†’ routerState.root Ä‘Ã£ update vá»›i route má»›i (cáº§n cho lazy routes)
-          filter(event => event instanceof RoutesRecognized || event instanceof NavigationEnd)
+          filter((event): event is RoutesRecognized | NavigationEnd =>
+            event instanceof RoutesRecognized || event instanceof NavigationEnd),
+          // Serialize: #handleEvent async (await getBestInjector). 2 nav liÃªn tiáº¿p
+          // khÃ´ng await xen káº½ â†’ trÃ¡nh race Ä‘á»c this.tabs() = [] khi tab Ä‘áº§u chÆ°a ká»‹p set.
+          concatMap(event => from(this.#handleEvent(event)))
         )
-        .subscribe(async (event: any) => {
-          if (event instanceof RoutesRecognized) {
-            // Capture state ngay lÃºc nav cÃ²n in-flight. ÄÃ¢y lÃ  Ä‘iá»ƒm duy nháº¥t cháº¯c cháº¯n
-            // getCurrentNavigation() tráº£ vá» Navigation object vá»›i extras.state nguyÃªn váº¹n.
-            this.#pendingNavigationState = this.#router.getCurrentNavigation()?.extras?.state ?? {};
-            return;
-          }
-          // NavigationEnd: dÃ¹ng activatedRoute.snapshot vÃ  routerState.root Má»šI nháº¥t
-          // (chá»©a route component Ä‘Ã£ Ä‘Æ°á»£c activate, cáº£ lazy láº«n standalone routes).
-          const route = this.#getActivatedRouteSnapshot(this.#activatedRoute.snapshot);
-          this.#rootRoute = this.#router.routerState.root;
-          await this.#activeRoute(event.urlAfterRedirects || event.url, route, this.#pendingNavigationState);
-          this.#pendingNavigationState = {};
-        })
+        .subscribe()
     );
 
     this.#subscription.add(
       this.#tabRouterService.actions.subscribe((event: SdTabAction | undefined) => {
+        if (this.disabled()) return;
+
         if (event?.type === 'close') {
           this.#closeTab(event.tab);
         }
@@ -102,9 +103,30 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     this.#subscription.unsubscribe();
   }
 
+  #handleEvent = async (event: RoutesRecognized | NavigationEnd): Promise<void> => {
+    if (this.disabled()) {
+      this.#pendingNavigationState = {};
+      return;
+    }
+    if (event instanceof RoutesRecognized) {
+      // Capture state ngay lÃºc nav cÃ²n in-flight. ÄÃ¢y lÃ  Ä‘iá»ƒm duy nháº¥t cháº¯c cháº¯n
+      // getCurrentNavigation() tráº£ vá» Navigation object vá»›i extras.state nguyÃªn váº¹n.
+      this.#pendingNavigationState = this.#router.getCurrentNavigation()?.extras?.state ?? {};
+      return;
+    }
+    // NavigationEnd: dÃ¹ng activatedRoute.snapshot vÃ  routerState.root Má»šI nháº¥t
+    // (chá»©a route component Ä‘Ã£ Ä‘Æ°á»£c activate, cáº£ lazy láº«n standalone routes).
+    const route = this.#getActivatedRouteSnapshot(this.#activatedRoute.snapshot);
+    this.#rootRoute = this.#router.routerState.root;
+    await this.#activeRoute(event.urlAfterRedirects || event.url, route, this.#pendingNavigationState);
+    this.#pendingNavigationState = {};
+  };
+
   tabTrackBy = (index: number, tab: SdTab) => tab.key;
 
   #closeTab = (tab: SdTab) => {
+    if (this.disabled()) return;
+
     const currentTabs = this.tabs();
     const { isActive, key: activeKey } = tab;
 
@@ -124,7 +146,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       }
     } else {
       this.tabs.set(currentTabs.filter(({ key }) => key !== tab.key));
-      this.tabRouterNav?.checkUI();
+      this.tabRouterNav()?.checkUI();
     }
   };
 
@@ -133,6 +155,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     route: ActivatedRouteSnapshot | null,
     state: Record<string, any> = {}
   ) => {
+    if (this.disabled()) return;
     if (!route?.component) return;
 
     const component = route.component as Type<any>;
@@ -260,11 +283,11 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       this.tabs.set([...updatedTabs, newTab]);
 
       if (this.tabs().length > 30) {
-        this.#sdNotifyService.warning('Báº¡n Ä‘Ã£ má»Ÿ quÃ¡ nhiá»u tab.');
+        this.#sdNotifyService.warning(this.#i18n.t('core.component.tab-router.too-many-tabs'));
       }
     }
 
-    this.tabRouterNav?.checkUI();
+    this.tabRouterNav()?.checkUI();
   };
 
   // Láº§n xuá»‘ng deepest firstChild Ä‘á»ƒ láº¥y snapshot cá»§a route lÃ¡ (route thá»±c sá»± render component).

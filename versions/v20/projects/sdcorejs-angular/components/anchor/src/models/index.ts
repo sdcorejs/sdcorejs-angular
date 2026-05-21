@@ -1,1 +1,1 @@
-export * from './anchor.model';
+﻿export * from './sd-anchor.model';

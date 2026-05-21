@@ -1,15 +1,16 @@
-import { CommonModule } from '@angular/common';
 import { Component, signal, WritableSignal } from '@angular/core';
 import { ToastData } from '../notify.model';
-import { SdToastComponent } from './toast/toast.component';
+import { ToastComponent } from './toast/toast.component';
 
 @Component({
-  selector: 'sd-toast-container',
+  selector: 'toast-container',
   standalone: true,
-  imports: [CommonModule, SdToastComponent],
+  imports: [ToastComponent],
   template: `
     <div class="toast-container">
-      <sd-toast *ngFor="let toast of toasts()" [data]="toast"> </sd-toast>
+      @for (toast of toasts(); track toast.id) {
+        <toast [data]="toast"> </toast>
+      }
     </div>
   `,
   styles: [
@@ -29,11 +30,6 @@ import { SdToastComponent } from './toast/toast.component';
     `,
   ],
 })
-export class SdToastContainerComponent {
-  // 1. Khai báo biến để nhận Signal từ Service
-  // Khởi tạo mặc định là mảng rỗng để không bị lỗi null
+export class ToastContainerComponent {
   toasts: WritableSignal<ToastData[]> = signal([]);
-
-  // 2. XÓA constructor inject SdNotifyService
-  constructor() {}
 }

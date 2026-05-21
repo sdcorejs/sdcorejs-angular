@@ -1,6 +1,7 @@
-import { SdEditorImageConfig, SdEditorImageUploadValidation } from '../../models';
+﻿import { SdEditorImageConfig, SdEditorImageUploadValidation } from '../../models';
 import { SdEditorUploadFileDetail, SdEditorUploadFileFuncUpload } from '../../configurations';
 import { FileRepository, Image, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Plugin, FileLoader } from 'ckeditor5';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { validateAndGetFile } from './utils';
 
 type GetOptionFn =
@@ -8,6 +9,7 @@ type GetOptionFn =
       imageConfig?: SdEditorImageConfig;
       uploadFn?: SdEditorUploadFileFuncUpload;
       onWarning?: (message: string) => void;
+      _i18n?: I18nService;
     })
   | undefined;
 
@@ -112,6 +114,7 @@ class DeferredImageUploadAdapter {
   #imageMetaMap: Map<string, ImageMeta>;
   #validation: SdEditorImageUploadValidation | undefined;
   #onWarning: ((message: string) => void) | undefined;
+  #i18n: I18nService | undefined;
   #lazyLoad: boolean;
   #currentBlobUrl: string | null = null;
 
@@ -122,6 +125,7 @@ class DeferredImageUploadAdapter {
     options: {
       validation?: SdEditorImageUploadValidation;
       onWarning?: (message: string) => void;
+      i18n?: I18nService;
       lazyLoad: boolean;
     }
   ) {
@@ -130,11 +134,12 @@ class DeferredImageUploadAdapter {
     this.#imageMetaMap = imageMetaMap;
     this.#validation = options.validation;
     this.#onWarning = options.onWarning;
+    this.#i18n = options.i18n;
     this.#lazyLoad = options.lazyLoad;
   }
 
   upload = async (): Promise<{ default: string }> => {
-    const file = await validateAndGetFile(this.#loader, this.#validation, this.#onWarning);
+    const file = await validateAndGetFile(this.#loader, this.#validation, this.#onWarning, this.#i18n);
     if (!file) throw new Error('Image validation failed');
     this.#currentBlobUrl = URL.createObjectURL(file);
     this.#pendingFiles.set(this.#currentBlobUrl, file);
@@ -155,6 +160,7 @@ class ImmediateImageUploadAdapter {
   #loader: FileLoader;
   #validation: SdEditorImageUploadValidation | undefined;
   #onWarning: ((message: string) => void) | undefined;
+  #i18n: I18nService | undefined;
   #scheduler: BatchUploadScheduler;
   #imageMetaMap: Map<string, ImageMeta>;
   #lazyLoad: boolean;
@@ -166,6 +172,7 @@ class ImmediateImageUploadAdapter {
     options: {
       validation?: SdEditorImageUploadValidation;
       onWarning?: (message: string) => void;
+      i18n?: I18nService;
       lazyLoad: boolean;
     }
   ) {
@@ -174,11 +181,12 @@ class ImmediateImageUploadAdapter {
     this.#imageMetaMap = imageMetaMap;
     this.#validation = options.validation;
     this.#onWarning = options.onWarning;
+    this.#i18n = options.i18n;
     this.#lazyLoad = options.lazyLoad;
   }
 
   upload = async (): Promise<{ default: string }> => {
-    const file = await validateAndGetFile(this.#loader, this.#validation, this.#onWarning);
+    const file = await validateAndGetFile(this.#loader, this.#validation, this.#onWarning, this.#i18n);
     if (!file) throw new Error('Image validation failed');
     const detail = await this.#scheduler.enqueue(file);
     this.#imageMetaMap.set(detail.cdn, {
@@ -246,7 +254,9 @@ export class EditorImageUploadPlugin extends Plugin {
           if (maxPerSelection !== undefined) {
             const files: File[] = Array.isArray(options?.file) ? options.file : options?.file ? [options.file] : [];
             if (files.length > maxPerSelection) {
-              option?.onWarning?.(`Chỉ được phép chọn tối đa ${maxPerSelection} ảnh mỗi lần`);
+              // Angular wrapper luÃ´n truyá»n _i18n; náº¿u thiáº¿u thÃ¬ warning sáº½ lÃ  chuá»—i rá»—ng (i18n service tá»± log missing key)
+              const msg = option?._i18n?.t('core.component.editor.image.max-per-selection', { max: maxPerSelection }) ?? '';
+              option?.onWarning?.(msg);
               evt.stop();
             }
           }
@@ -272,10 +282,11 @@ export class EditorImageUploadPlugin extends Plugin {
       const uploadMode = imageConfig?.uploadMode ?? 'deferred';
       const validation = imageConfig?.validation;
       const onWarning = option?.onWarning;
+      const i18n = option?._i18n;
       const lazyLoad = imageConfig?.lazyLoad ?? true;
 
       if (uploadMode === 'deferred') {
-        return new DeferredImageUploadAdapter(loader, this.pendingFiles, this.#imageMetaMap, { validation, onWarning, lazyLoad });
+        return new DeferredImageUploadAdapter(loader, this.pendingFiles, this.#imageMetaMap, { validation, onWarning, i18n, lazyLoad });
       }
 
       if (!this.#batchScheduler) {
@@ -289,7 +300,7 @@ export class EditorImageUploadPlugin extends Plugin {
       if (!this.#batchScheduler) {
         throw new Error('No upload function configured');
       }
-      return new ImmediateImageUploadAdapter(loader, this.#batchScheduler, this.#imageMetaMap, { validation, onWarning, lazyLoad });
+      return new ImmediateImageUploadAdapter(loader, this.#batchScheduler, this.#imageMetaMap, { validation, onWarning, i18n, lazyLoad });
     };
   }
 
@@ -313,7 +324,7 @@ export class EditorImageUploadPlugin extends Plugin {
       }
     }
 
-    // Downcast: model → HTML view
+    // Downcast: model â†’ HTML view
     editor.conversion.for('downcast').add((dispatcher: any) => {
       for (const [modelAttr, htmlAttr] of [
         ['loading', 'loading'],
@@ -339,7 +350,7 @@ export class EditorImageUploadPlugin extends Plugin {
       }
     });
 
-    // Upcast: HTML → model
+    // Upcast: HTML â†’ model
     editor.conversion.for('upcast').add((dispatcher: any) => {
       dispatcher.on(
         'element:figure',
@@ -435,3 +446,4 @@ export class EditorImageUploadPlugin extends Plugin {
     return result || 'Image';
   }
 }
+

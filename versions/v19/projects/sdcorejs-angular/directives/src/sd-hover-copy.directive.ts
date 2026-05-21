@@ -1,5 +1,6 @@
-﻿import { Directive, ElementRef, Input, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+﻿import { Directive, ElementRef, inject, Input, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 @Directive({
   selector: '[sdHoverCopy]',
@@ -8,9 +9,13 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   @Input({ alias: 'sdHoverCopy', required: true }) copyText!: string;
   @Input() sdHoverCopyDisabled = false;
 
+  readonly #i18n = inject(I18nService);
+
   #copyButton: HTMLElement | null = null;
   #tooltip!: HTMLElement;
-  #defaultTooltip = 'Sao chÃ©p';
+  get #defaultTooltip(): string {
+    return this.#i18n.t('core.directive.hover-copy.tooltip');
+  }
 
   constructor(
     private el: ElementRef,
