@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdDatetime } from './datetime.component';
 
@@ -120,6 +120,53 @@ describe('SdDatetime', () => {
   });
 
   // -------------------------------------------------------------------------
+  describe('clear button (slim)', () => {
+    const clearBtn = () =>
+      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+
+    it('renders the slim clear button when a value is set', () => {
+      host.model = '2026/05/15 14:30:00';
+      fixture.detectChanges();
+      expect(clearBtn()).not.toBeNull();
+    });
+
+    it('hides the clear button when there is no value', () => {
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when required', () => {
+      host.required = true;
+      host.model = '2026/05/15 14:30:00';
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when disabled', () => {
+      host.disabled = true;
+      host.model = '2026/05/15 14:30:00';
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('clicking the clear button resets value and emits null', () => {
+      host.model = '2026/05/15 14:30:00';
+      fixture.detectChanges();
+      clearBtn()!.click();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBeNull();
+      expect(host.changes).toContain(null);
+    });
+
+    it('uses the slim close icon (not the filled cancel icon)', () => {
+      host.model = '2026/05/15 14:30:00';
+      fixture.detectChanges();
+      const icon = clearBtn()!.querySelector('mat-icon');
+      expect(icon?.textContent?.trim()).toBe('close');
+    });
+  });
+
+  // -------------------------------------------------------------------------
   describe('min/max validation', () => {
     it('resolvedMin returns a Date when min is an ISO string', () => {
       host.min = '2026-01-01T00:00:00';
@@ -213,20 +260,20 @@ describe('SdDatetime', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage', () => {
+  describe('errorMessage', () => {
     it('returns "Vui lòng nhập thông tin" for required error', () => {
       host.required = true;
       fixture.detectChanges();
       comp.formControl.setValue(null, { emitEvent: false });
       comp.formControl.markAsTouched();
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('Vui lòng nhập thông tin');
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns undefined when no errors', () => {
       host.model = '2026/05/15 14:30:00';
       fixture.detectChanges();
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
     });
   });
 
@@ -401,6 +448,45 @@ describe('SdDatetime', () => {
       expect(comp.pickerOpened()).toBe(false);
     });
   });
+
+  // -------------------------------------------------------------------------
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      comp.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-empty toggling with value', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-empty')).toBe('true');
+      comp.formControl.setValue('15/05/2026 14:30');
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
+    });
+
+    it('renders data-value as ISO string for datetime string', () => {
+      comp.formControl.setValue('15/05/2026 14:30');
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-value')).toBeTruthy();
+    });
+
+    it('renders data-invalid=true only after touched + invalid', () => {
+      comp.formControl.setValidators([Validators.required]);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-invalid')).toBe('false');
+      comp.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-invalid')).toBe('true');
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -452,4 +538,55 @@ describe('SdDatetime (NgForm extraction)', () => {
     expect(ngForm).toBeTruthy();
     expect(ngForm.form.contains('startAt')).toBe(true);
   }));
+});
+
+// ---------------------------------------------------------------------------
+// bare input + open()
+// ---------------------------------------------------------------------------
+
+describe('SdDatetime (bare input + open)', () => {
+  let bareFixture: ComponentFixture<SdDatetime>;
+  let bareComp: SdDatetime;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdDatetime, NoopAnimationsModule],
+    }).compileComponents();
+    bareFixture = TestBed.createComponent(SdDatetime);
+    bareComp = bareFixture.componentInstance;
+  });
+
+  it('bare defaults to false and applies no host class', () => {
+    bareFixture.detectChanges();
+    expect(bareComp.bare()).toBe(false);
+    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(false);
+  });
+
+  it('bare=true adds the .sd-bare host class', () => {
+    bareFixture.componentRef.setInput('bare', true);
+    bareFixture.detectChanges();
+    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  });
+
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
+    bareFixture.detectChanges();
+    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    bareFixture.componentRef.setInput('label', 'Bắt đầu');
+    bareFixture.detectChanges();
+    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    bareFixture.detectChanges();
+    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    bareFixture.componentRef.setInput('viewed', true);
+    bareFixture.detectChanges();
+    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
+  });
+
+  it('open() opens the picker overlay', () => {
+    bareFixture.detectChanges();
+    bareComp.open();
+    expect(bareComp.pickerOpened()).toBe(true);
+  });
 });

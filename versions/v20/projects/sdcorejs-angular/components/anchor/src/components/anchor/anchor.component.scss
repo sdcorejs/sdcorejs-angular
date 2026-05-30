@@ -11,10 +11,12 @@
   }
 
   .c-anchor-content {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0; // cho phép shrink khi content rộng
   }
 
   .c-anchor-list {
+    flex: 0 0 auto; // flex-basis truyền qua inline style từ sidebarWidth()
     position: sticky;
     top: 0px;
     right: 6px; // Độ rộng của scroll-y lệch sang phải

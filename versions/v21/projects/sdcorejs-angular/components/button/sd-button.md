@@ -119,6 +119,23 @@ The button itself does NOT enforce permission â€” wrap with the `*sdPermiss
 </sd-button>
 ```
 
+## E2E test attributes
+
+Rendered on the inner `<button mat-*-button class="c-button">` element (same anchor as `data-autoid`, one per the 4 button-type branches):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `components-button-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | input `disabled` |
+| `data-loading` | `"true"` / `"false"` | input `loading` |
+
+Selector example:
+
+```ts
+const btn = page.locator('[data-autoid="components-button-save"]');
+await expect(btn).toHaveAttribute('data-loading', 'false');
+```
+
 ## Anti-patterns
 - âŒ `<sd-button (click)="navigate()">` for navigation â€” use `<sd-anchor>` so right-click "open in new tab" works
 - âŒ Adding `[routerLink]` directly on `<sd-button>` host â€” better is wrapping the button in an `<a [routerLink]>` OR using `<sd-anchor>`

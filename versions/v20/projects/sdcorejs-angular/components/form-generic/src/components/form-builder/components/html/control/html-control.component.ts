@@ -1,11 +1,11 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { SdFormatComponent, SdFormGenericHtml } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
 import { HtmlPipe } from '../../../../../pipes';
 import { FormGenericService } from '../../../../../services';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'html-control',
@@ -22,7 +22,7 @@ export class HtmlControl {
     this.content = this.component.content;
   }
   content?: string;
-  hashed?: string; // DÃ¹ng Ä‘á»ƒ Ã©p Angular nháº­n diá»‡n sá»± thay Ä‘á»•i cá»§a HTML khi content/variables
+  hashed?: string; // Dùng để ép Angular nhận diện sự thay đổi của HTML khi content/variables
   #subscription = new Subscription();
   constructor(
     private ref: ChangeDetectorRef,
@@ -32,14 +32,14 @@ export class HtmlControl {
 
   ngAfterViewInit(): void {
     this.#subscription.add(
-      // Chá»‰ láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i tÆ°Æ¡ng á»©ng vá»›i component dá»±a vÃ o id
+      // Chỉ lắng nghe sự kiện thay đổi tương ứng với component dựa vào id
       this.builderService.componentListeners.pipe(filter(component => component.id === this.component.id)).subscribe(async () => {
         if (this.component.template) {
           this.content = await this.formGenericService.html.getContent(this.component.template);
         } else {
           this.content = this.component.content;
         }
-        this.hashed = SdUtilities.hash({
+        this.hashed = Utilities.hash({
           content: this.content,
           variables: this.component.properties?.variables?.reduce(
             (current, next) => ({
@@ -58,4 +58,3 @@ export class HtmlControl {
     this.#subscription.unsubscribe();
   }
 }
-

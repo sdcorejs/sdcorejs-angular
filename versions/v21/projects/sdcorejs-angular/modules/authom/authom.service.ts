@@ -1,7 +1,7 @@
-﻿import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
+import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { SdAuthOmTenantConfig } from './authom.configuration';
-import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { StringUtilities } from '@sdcorejs/utils/fns';
 
 const STORAGE_KEY_STATE = 'authom_state';
 const STORAGE_KEY_CODE_VERIFIER = 'authom_code_verifier';
@@ -158,8 +158,8 @@ export class SdAuthOmService {
     const claims = this.decodeJwtPayload(token);
     const exp = claims?.['exp'];
     if (typeof exp !== 'number') {
-      // @i18n-ignore â€” dev console warning
-      console.warn('[SdAuthOmService] Token khÃ´ng cÃ³ exp â€” bá» qua auto-refresh');
+      // @i18n-ignore — dev console warning
+      console.warn('[SdAuthOmService] Token không có exp — bỏ qua auto-refresh');
       return;
     }
     const threshold = this.config.refreshThresholdSeconds ?? DEFAULT_REFRESH_THRESHOLD_SECONDS;
@@ -272,4 +272,3 @@ export class SdAuthOmService {
     return this.silentRefresh();
   }
 }
-

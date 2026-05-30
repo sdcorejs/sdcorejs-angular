@@ -25,7 +25,7 @@ Multi-line text input â€” `<textarea>` with label, validators (required/max
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-textarea-<value>"` for E2E selectors. |
+| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoid="forms-textarea-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
 | `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height (applied via `.sd-md` / `.sd-sm` class). |
 | `form` | `FormGroup \| NgForm \| { form: FormGroup } \| undefined` | `undefined` | Parent form. `NgForm` and `{ form }` wrappers are auto-unwrapped to `FormGroup`. |
@@ -52,6 +52,46 @@ Multi-line text input â€” `<textarea>` with label, validators (required/max
 | Name | Type | Notes |
 | --- | --- | --- |
 | `sdChange` | `any` | Emitted on each value change (and after auto-trim on blur). |
+
+## E2E test attributes
+
+Rendered on the inner `<textarea matInput>` element (same anchor as `data-autoid`):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `forms-textarea-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
+| `data-invalid` | `"true"` / `"false"` | `formControl.invalid && (touched \|\| dirty)` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` |
+| `data-value` | string | `sdSerializeDataValue(formControl.value)` |
+| `data-required` | `"true"` / `"false"` | `required` input; always present |
+| `data-maxlength` | numeric string | present only when `[maxlength]` is defined |
+| `data-pattern` | string | present only when `[pattern]` is non-empty |
+| `data-error-message` | string | present only when the component is currently showing an error tooltip message |
+
+> **Note**: `sd-textarea` does not support `minlength` â€” no `data-minlength` attribute is emitted.
+
+Selector example:
+
+```ts
+const el = page.locator('[data-autoid="forms-textarea-notes"]');
+await expect(el).toHaveAttribute('data-empty', 'false');
+await expect(el).toHaveAttribute('data-value', 'some text');
+// validation meta (when set)
+await expect(el).toHaveAttribute('data-required', 'true');
+await expect(el).toHaveAttribute('data-maxlength', '500');
+await expect(el).toHaveAttribute('data-pattern', '^[A-Za-z]+$');
+// error message â€” only when field is in error state
+await expect(el).toHaveAttribute('data-error-message', 'Vui lÃ²ng nháº­p thÃ´ng tin');
+```
+
+## Host classes
+Applied automatically on `<sd-textarea>` for styling hooks:
+
+| Class | Condition | Effect |
+| --- | --- | --- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `<ng-template sdLabelDef>` â€” custom label rendering (used only when `[appearance]` is null/falsy)

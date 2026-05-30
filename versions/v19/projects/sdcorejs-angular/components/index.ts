@@ -6,6 +6,7 @@ export * from '@sdcorejs/angular/components/side-drawer';
 export * from '@sdcorejs/angular/components/modal';
 export * from '@sdcorejs/angular/components/table';
 export * from '@sdcorejs/angular/components/quick-action';
+export * from '@sdcorejs/angular/components/query-bar';
 export * from '@sdcorejs/angular/components/upload-file';
 export * from '@sdcorejs/angular/components/section';
 // export * from '@sdcorejs/angular/components/form-generic';
@@ -20,4 +21,5 @@ export * from '@sdcorejs/angular/components/chart';
 export * from '@sdcorejs/angular/components/editor';
 export * from '@sdcorejs/angular/components/splitter';
 export * from '@sdcorejs/angular/components/preview';
+export * from '@sdcorejs/angular/components/autoid-inspector';
 

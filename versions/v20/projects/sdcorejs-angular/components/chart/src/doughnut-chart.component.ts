@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, effect, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, InputSignal, OnDestroy, OnInit, effect, input, viewChild } from '@angular/core';
 import { Chart, ChartData, ChartOptions, Plugin, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -16,9 +16,9 @@ Chart.register(...registerables);
 export class SdDoughnutChartComponent implements OnInit, OnDestroy {
   canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
-  data = input.required<ChartData<'doughnut'>>();
-  options = input<ChartOptions<'doughnut'>>();
-  plugins = input<Plugin<'doughnut'>[]>([]);
+  data: InputSignal<ChartData<'doughnut'>> = input.required<ChartData<'doughnut'>>();
+  options: InputSignal<ChartOptions<'doughnut'> | undefined> = input<ChartOptions<'doughnut'>>();
+  plugins: InputSignal<Plugin<'doughnut'>[]> = input<Plugin<'doughnut'>[]>([]);
 
   chart: Chart<'doughnut'> | undefined;
 

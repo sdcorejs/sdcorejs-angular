@@ -131,3 +131,18 @@ These are typically called via a `#modal` template reference: `<sd-modal #modal>
 - `<sd-history>` â€” common modal body for audit logs
 - `SdNotifyService` â€” non-blocking toast/snackbar alternative
 
+## E2E test attributes
+
+Because `sd-modal` renders into a MatDialog overlay (mounted at `document.body`), the QA anchor lives on a `<div class="sd-modal-root">` wrapper added inside the template:
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `components-modal-<autoId>` | input `autoId` |
+| `data-opened` | `"true"` while open; `"false"` while closed | `isOpened` signal |
+
+Selector example:
+
+```ts
+await page.locator('.sd-modal-root[data-autoid="components-modal-confirm"][data-opened="true"]').waitFor();
+```
+

@@ -58,6 +58,14 @@ Typeahead single-select dropdown â€” user types to filter a static array OR
 | `sdSelection` | `SdSelectionData` | `{ values, selectedItems, value, selectedItem }` â€” full payload incl. raw item. |
 | `sdAdd` | `void` | Fired by the "+" button when `[addable]="true"`. |
 
+## Host classes
+Applied automatically on `<sd-autocomplete>` for styling hooks:
+
+| Class | Condition | Effect |
+| --- | --- | --- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
+
 ## Content projection (slots)
 - `#sdLabel` template â€” custom label rendering
 - `#sdValue` template â€” custom in-list option rendering
@@ -68,7 +76,7 @@ Typeahead single-select dropdown â€” user types to filter a static array OR
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. The component then calls `formGroup.addControl(name, formControl)` on `ngAfterViewInit` and `formGroup.removeControl(name)` on `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: input is hidden, the display label (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
-- **Validators**: `[required]` adds `Validators.required`. `[validator]` accepts an async custom validator. `[inlineError]="msg"` injects a synthetic error and shows `msg`. Built-in error tooltip messages: required â†’ "Vui lÃ²ng nháº­p thÃ´ng tin"; custom validator and inline-error messages bubble up via `errorTooltipMessage`.
+- **Validators**: `[required]` adds `Validators.required`. `[validator]` accepts an async custom validator. `[inlineError]="msg"` injects a synthetic error and shows `msg`. Built-in error tooltip messages: required â†’ "Vui lÃ²ng nháº­p thÃ´ng tin"; custom validator and inline-error messages bubble up via `errorMessage`.
 - **Reactive validator updates** â€” `required`, `validator`, and `inlineError` are signal inputs; an internal `effect()` calls `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip validators on/off at runtime with no manual call needed.
 - **`[disabled]` reactive** â€” toggling `disabled` calls `inputControl.disable() / enable()` and `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
 - **`[(model)]` two-way** â€” host writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` to avoid triggering `valueChanges`. The reverse direction (selection â†’ `formControl.setValue` â†’ `valueModel.set()` â†’ `(modelChange)`) flows through the normal signal-model mechanism.
@@ -108,7 +116,7 @@ Typeahead single-select dropdown â€” user types to filter a static array OR
 
 ## Visual cues (helps agent map screenshots â†’ component)
 - Outlined input field with a label that floats on focus
-- Trailing icons: ðŸ” search icon when empty; âœ• cancel icon (Ã—) when a value is selected; loading spinner when an async source is in flight; optional "+" add button when `[addable]`
+- Trailing icons: ðŸ” search icon when empty; a **slim clear button** (`.sd-clear-btn`, thin `close` icon) when a value is selected; loading spinner when an async source is in flight; optional "+" add button when `[addable]`. The clear button **replaces** the search icon (like `sd-select`), so it is **always shown** when there's a value â€” NOT hover-gated.
 - Below the field, a Material panel slides down listing matching options; each row uses `displayField` (or custom `sdItemDef` template)
 - Highlighted/selected option painted in primary color
 - In `[viewed]="true"` mode: no input box â€” just plain text (or hyperlink) of the resolved display value
@@ -154,6 +162,30 @@ loadCustomers = ({ type, searchText, value }: any) => {
   [viewed]="true"
   hyperlink="/customer/{{ model.customerCode }}">
 </sd-autocomplete>
+```
+
+## E2E test attributes
+
+Rendered on the inner `<input>` element (same anchor as `data-autoid`):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `forms-autocomplete-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
+| `data-invalid` | `"true"` / `"false"` | `formControl.invalid && (touched \|\| dirty)` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` |
+| `data-value` | string | `sdSerializeDataValue(formControl.value)` |
+| `data-required` | `"true"` / `"false"` | `required` input; always present |
+| `data-error-message` | string | present only when the component is currently showing an error tooltip message |
+
+> **Note**: `sd-autocomplete` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
+
+Selector example:
+
+```ts
+const el = page.locator('[data-autoid="forms-autocomplete-customer"]');
+await expect(el).toHaveAttribute('data-empty', 'false');
+await expect(el).toHaveAttribute('data-required', 'false');
 ```
 
 ## Anti-patterns

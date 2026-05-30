@@ -1,7 +1,7 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
 import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { SD_EMPTY_STR } from '@sdcorejs/angular/utilities/models';
+import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { SdFormGenericComponent, SdFormGenericHtml } from '../models';
 import { FormGenericService } from '../services';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
@@ -29,25 +29,25 @@ export class ComponentViewedPipe implements PipeTransform {
     }
     const val = entity?.[component.key];
     if (val === undefined || val === null) {
-      return SD_EMPTY_STR;
+      return EMPTY_STR;
     }
     if (component.type === 'textfield' || component.type === 'textarea') {
-      return val || SD_EMPTY_STR;
+      return val || EMPTY_STR;
     }
     if (component.type === 'number') {
-      return this.formatNumberPipe.transform(value)?.toString() ?? SD_EMPTY_STR;
+      return this.formatNumberPipe.transform(value)?.toString() ?? EMPTY_STR;
     }
     if (component.type === 'datetime') {
       if (component.subtype === 'datetime') {
-        return DateUtilities.toFormat(val, 'dd/MM/yyyy HH:mm') || SD_EMPTY_STR;
+        return DateUtilities.toFormat(val, 'dd/MM/yyyy HH:mm') || EMPTY_STR;
       } else {
-        return DateUtilities.toFormat(val, 'dd/MM/yyyy') || SD_EMPTY_STR;
+        return DateUtilities.toFormat(val, 'dd/MM/yyyy') || EMPTY_STR;
       }
     }
     if (component.type === 'select' || component.type === 'radio' || component.type === 'checklist') {
       const values = (Array.isArray(val) ? val : [val]).filter(value => value !== undefined && value !== null && value !== '');
       if (!values.length) {
-        return SD_EMPTY_STR;
+        return EMPTY_STR;
       }
       const selection = await this.formGenericService.selection.getDefinition(component?.valuesKey);
       // Náº¿u cÃ³ cáº¥u hÃ¬nh view tÆ°Æ¡ng á»©ng vá»›i selection thÃ¬ sá»­ dá»¥ng viewed
@@ -56,7 +56,7 @@ export class ComponentViewedPipe implements PipeTransform {
           (await selection.viewed(values, {
             entity,
             component,
-          })) || SD_EMPTY_STR
+          })) || EMPTY_STR
         );
       }
       // NgoÃ i ra xá»­ lÃ½ láº¥y thÃ´ng tin items
@@ -65,7 +65,7 @@ export class ComponentViewedPipe implements PipeTransform {
         component,
       });
       if (!items) {
-        return SD_EMPTY_STR;
+        return EMPTY_STR;
       }
       // Náº¿u items lÃ  Array thÃ¬ kiá»ƒm tra value vÃ  hiá»ƒn thá»‹ display
       if (Array.isArray(items)) {
@@ -73,7 +73,7 @@ export class ComponentViewedPipe implements PipeTransform {
           items
             .filter(e => values.includes(e.value))
             .map(e => e.display)
-            .join(', ') || SD_EMPTY_STR
+            .join(', ') || EMPTY_STR
         );
       }
       // items lÃ  Function (lazyValues) thÃ¬ thá»±c hiá»‡n gá»i API
@@ -85,7 +85,7 @@ export class ComponentViewedPipe implements PipeTransform {
           results
             .filter(e => values.includes(e.value))
             .map(e => e.display)
-            .join(', ') || SD_EMPTY_STR
+            .join(', ') || EMPTY_STR
         );
       });
     }

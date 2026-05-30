@@ -6,13 +6,13 @@
           <button
             type="button"
             class="thumbnail-wrapper"
-            [class.c-img-error]="file.isImgError"
+            [class.c-image-error]="file.isImgError"
             (click)="onClickThumbnailImage(i)"
             [ngStyle]="{
               border: activeIndex === i ? '2px solid #2962ff' : 'none'
             }">
             @if(file.isImgError) {
-              <img fill alt="thumbnail" class="thumbnail-img" />
+              <img fill alt="thumbnail" class="thumbnail-img sd-image-image-error" style="width: 24px; height: 24px; justify-self: center;" />
             } @else if (file.isPreviewImage && (file.previewSrc || file.src)) {
               <img fill [src]="file.previewSrc || file.src" alt="thumbnail" class="thumbnail-img" />
             } @else {
@@ -42,7 +42,7 @@
         @let selectedFile = previewFiles[activeIndex];
         @if(selectedFile) {
           @if(selectedFile.isImgError) {
-            <div class="c-img-error">
+            <div class="c-image-error">
               <mat-icon>warning_amber</mat-icon>
               <div class="T14R">{{ 'core.component.upload-file.error-occurred' | translate }}</div>
             </div>

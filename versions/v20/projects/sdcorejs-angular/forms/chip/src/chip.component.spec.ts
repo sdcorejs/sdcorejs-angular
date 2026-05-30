@@ -308,13 +308,13 @@ describe('SdChip', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage', () => {
+  describe('errorMessage', () => {
     it('returns "Vui lòng nhập thông tin" for required error', () => {
       host.required = true;
       fixture.detectChanges();
       chip.formControl.setValue([]);
       chip.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(chip.errorTooltipMessage).toBe('Vui lòng nhập thông tin');
+      expect(chip.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns minlength message with count', () => {
@@ -322,7 +322,7 @@ describe('SdChip', () => {
       fixture.detectChanges();
       chip.formControl.setValue(['a']);
       chip.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(chip.errorTooltipMessage).toBe('Vui lòng nhập ít nhất 2 giá trị');
+      expect(chip.errorMessage()).toBe('Vui lòng nhập ít nhất 2 giá trị');
     });
 
     it('returns maxlength message with count', () => {
@@ -330,13 +330,13 @@ describe('SdChip', () => {
       fixture.detectChanges();
       chip.formControl.setValue(['a', 'b']);
       chip.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(chip.errorTooltipMessage).toBe('Vui lòng nhập tối đa 1 giá trị');
+      expect(chip.errorMessage()).toBe('Vui lòng nhập tối đa 1 giá trị');
     });
 
     it('returns undefined when no errors', () => {
       chip.formControl.setValue(['x']);
       chip.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(chip.errorTooltipMessage).toBeUndefined();
+      expect(chip.errorMessage()).toBeUndefined();
     });
   });
 
@@ -391,6 +391,27 @@ describe('SdChip', () => {
       chip.inputControl.setValue('typing...');
       chip.onFocus();
       expect(chip.inputControl.value).toBe('');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('host classes', () => {
+    it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
+      host.label = '';
+      fixture.detectChanges();
+      const hostEl = fixture.debugElement.query(el => el.componentInstance instanceof SdChip).nativeElement as HTMLElement;
+      expect(hostEl.classList.contains('sd-has-label')).toBe(false);
+      host.label = 'Tags';
+      fixture.detectChanges();
+      expect(hostEl.classList.contains('sd-has-label')).toBe(true);
+    });
+
+    it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+      const hostEl = fixture.debugElement.query(el => el.componentInstance instanceof SdChip).nativeElement as HTMLElement;
+      expect(hostEl.classList.contains('sd-viewed')).toBe(false);
+      host.viewed = true;
+      fixture.detectChanges();
+      expect(hostEl.classList.contains('sd-viewed')).toBe(true);
     });
   });
 });
@@ -489,5 +510,61 @@ describe('SdChip — autoId', () => {
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input.sd-chip-input');
     expect(input?.getAttribute('data-autoid')).toBe('forms-chip-tags');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E2E attributes
+// ---------------------------------------------------------------------------
+
+describe('SdChip — E2E attributes', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let chip: SdChip;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)
+      ?.componentInstance as SdChip;
+    if (!chip) throw new Error('SdChip not found in fixture');
+  });
+
+  it('renders data-disabled reflecting FormControl state', () => {
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-disabled')).toBe('false');
+    chip.formControl.disable();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-disabled')).toBe('true');
+  });
+
+  it('renders data-value as JSON-stringified array', () => {
+    chip.formControl.setValue(['ng', 'rxjs']);
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-value')).toBe('["ng","rxjs"]');
+  });
+
+  it('renders data-empty true for [] / false for non-empty', () => {
+    chip.formControl.setValue([]);
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-empty')).toBe('true');
+    chip.formControl.setValue(['x']);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-empty')).toBe('false');
+  });
+
+  it('renders data-count reflecting array length', () => {
+    chip.formControl.setValue(['a', 'b', 'c']);
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-count')).toBe('3');
   });
 });

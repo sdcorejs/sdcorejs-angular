@@ -1,10 +1,10 @@
-﻿import { SdColor } from '@sdcorejs/angular/utilities';
+import { Color } from '@sdcorejs/utils/models';
 
 export interface SdHistoryItemType {
   title: string;
   status?: {
     title?: string;
-    color?: SdColor;
+    color?: Color;
     icon?: string;
   };
   date?: string;
@@ -12,4 +12,3 @@ export interface SdHistoryItemType {
   source?: string;
   description?: string;
 }
-

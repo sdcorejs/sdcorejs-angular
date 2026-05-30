@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { DocumentBuilderI18n } from '../../document-builder.model';
 
 import {
   ClassicEditor,
@@ -63,10 +64,13 @@ export class SdHeaderFooterBuilder {
   }
 
   @Output() modelChange = new EventEmitter<string>();
-  config: EditorConfig & { _i18n?: I18nService } = {
+  readonly #editorI18n: DocumentBuilderI18n = {
+    t: (key, params) => this.#i18n.t(key, params),
+  };
+
+  config: EditorConfig & { _i18n?: DocumentBuilderI18n } = {
     licenseKey: 'GPL', // Hoáº·c key thÆ°Æ¡ng máº¡i náº¿u cÃ³
-    // Truyá»n i18n service xuá»‘ng CKEditor plugin (ngoÃ i DI tree) Ä‘á»ƒ dá»‹ch label
-    _i18n: this.#i18n,
+    _i18n: this.#editorI18n,
     // 1. PLUGIN RÃšT Gá»ŒN (Bá» Table, List, PageBreak...)
     plugins: [
       Essentials,

@@ -22,8 +22,8 @@ Follow-ups:
 
 ### 2.2. Out of scope
 
-- Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, anchor-v2, history, preview, upload-file, mini-editor)
-- **Skipped per user direction**: anchor-v2, workflow, query-builder, document-builder, history, modules/generic (none of these are forms anyway)
+- Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, anchor, history, preview, upload-file, mini-editor)
+- **Skipped per user direction**: workflow, query-builder, document-builder, history, modules/generic (none of these are forms anyway)
 - Services, modules, handlers, interceptors (Plan 5+)
 - Heavy components (Plan 6): chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow â€” **skipped per user direction until those features are finalized**
 

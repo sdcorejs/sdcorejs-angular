@@ -1,47 +1,76 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
-// import hash from 'object-hash';
+import { Pipe, PipeTransform } from '@angular/core';
 import { SdTableOption } from '../models/table-option.model';
 import { MapToSdTableItem, SdTableItem } from '../models/table-item.model';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
-@Pipe({
-  name: 'sdGroup',
-})
+import { Utilities } from '@sdcorejs/utils/fns';
+
+@Pipe({ name: 'sdGroup' })
 export class SdGroupPipe implements PipeTransform {
-  transform(items: SdTableItem[], gridOption: SdTableOption): SdTableItem[] {
-    const { group } = gridOption;
-    if (!group) {
+  /**
+   * Nhóm items theo `option.group.fields`. Mỗi group sinh ra 1 synthetic SdTableItem
+   * (group header) đặt trước children. Header có `meta.group.isGroupHeader = true` + `key`
+   * + `values` + `items` + `isExpanded` để template + table consume.
+   *
+   * Khi `option.group.collapsible = true` + group đang collapse → children bị lọc khỏi output.
+   *
+   * `expandState` (optional, owned by component) — Map<key, expanded> giữ trạng thái
+   * expand/collapse qua các lần transform. Pipe đọc state từ Map; nếu key chưa tồn tại,
+   * dùng `!option.group.defaultCollapsed`. Pipe ghi state về Map cho lần read sau.
+   *
+   * @example
+   * `_items | sdGroup: _tableOption : groupExpandState`
+   */
+  transform(
+    items: SdTableItem[],
+    gridOption: SdTableOption,
+    expandState?: Map<string, boolean>,
+  ): SdTableItem[] {
+    if (gridOption?.tree) {
+      if (typeof ngDevMode !== 'undefined' && ngDevMode && gridOption.group) {
+        console.warn('[sd-table] option.tree and option.group cannot be used together. group is ignored.');
+      }
       return items;
     }
-    const { fields, htmlTemplate } = group;
-    if (!fields?.length) {
-      return items;
-    }
-    const groupItem: Record<string, SdTableItem[]> = {};
+    const group = gridOption?.group;
+    if (!group?.fields?.length) return items;
+    const fields = group.fields;
+    const collapsible = !!group.collapsible;
+    const defaultExpanded = !group.defaultCollapsed;
+
+    // Bucket items theo combined field-value hash.
+    // Field hỗ trợ dot-notation (vd 'customer.id') — resolve qua getNestedValue.
+    const buckets = new Map<string, { values: Record<string, any>; items: SdTableItem[] }>();
     for (const item of items) {
-      let obj = {};
-      for (const field of fields) {
-        obj = {
-          ...obj,
-          ...((item as any)[field] ?? { [field]: (item as any)[field] }),
-        };
+      const values: Record<string, any> = {};
+      for (const f of fields) values[f as string] = Utilities.getNestedValue(item.data, f as string);
+      const key = Utilities.hash(values);
+      let bucket = buckets.get(key);
+      if (!bucket) {
+        bucket = { values, items: [] };
+        buckets.set(key, bucket);
       }
-      const key = SdUtilities.hash(obj);
-      if (!groupItem[key]) {
-        groupItem[key] = [];
-      }
-      groupItem[key].push(item);
+      bucket.items.push(item);
     }
-    const results: SdTableItem[] = [];
-    for (const key of Object.keys(groupItem)) {
-      const result = MapToSdTableItem({}, );
-      result.meta.group!.items = groupItem[key];
-      result.meta.group!.htmlTemplate = htmlTemplate(groupItem[key]);
-      results.push(result);
-      for (const item of groupItem[key]) {
-        results.push(item);
+
+    const result: SdTableItem[] = [];
+    buckets.forEach((bucket, key) => {
+      const isExpanded = expandState?.has(key) ? !!expandState.get(key) : defaultExpanded;
+      if (collapsible && expandState) expandState.set(key, isExpanded);
+
+      const header = MapToSdTableItem({} as any);
+      header.meta.group = {
+        isGroupHeader: true,
+        key,
+        values: bucket.values,
+        items: bucket.items,
+        isExpanded,
+      };
+      header.meta.selector!.selectable = false;
+      result.push(header);
+
+      if (!collapsible || isExpanded) {
+        for (const child of bucket.items) result.push(child);
       }
-    }
-    return results;
+    });
+    return result;
   }
 }
-

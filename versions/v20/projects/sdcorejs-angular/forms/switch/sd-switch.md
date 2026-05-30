@@ -123,6 +123,28 @@ None â€” label comes from the `[label]` input.
 - âŒ Building DETAIL view by setting `[disabled]="true"` â€” the toggle still renders. Render text ("CÃ³" / "KhÃ´ng") yourself in the parent view.
 - âŒ Stacking many switches in a tight row without labels or grouping â€” confusing; use a `<sd-fieldset>` / `<sd-list>` layout.
 
+## E2E test attributes
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `forms-switch-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` â€” true when null |
+| `data-value` | `"true"` / `"false"` | `sdSerializeDataValue(formControl.value)` |
+| `data-required` | `"true"` / `"false"` | `required` input; always present |
+
+> **Note**: `sd-switch` emits only `data-required` from the new validation-meta set. It has no maxlength / minlength / pattern / errorMessage support.
+
+### Playwright selector example
+```typescript
+// Select by autoid
+const toggle = page.locator('[data-autoid="forms-switch-notify"]');
+expect(toggle).toHaveAttribute('data-value', 'true');
+
+// Select by state
+const disabledToggles = page.locator('sd-switch [data-disabled="true"]');
+```
+
 ## Related
 - `<sd-checkbox>` â€” boolean with checkbox metaphor (consent / list-row select)
 - `<sd-radio>` â€” pick-one with > 2 states

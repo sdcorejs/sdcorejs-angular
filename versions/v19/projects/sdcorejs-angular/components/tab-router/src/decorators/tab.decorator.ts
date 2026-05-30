@@ -1,5 +1,5 @@
-﻿import { Type } from '@angular/core';
-import { SdColor } from '@sdcorejs/angular/utilities/models';
+import { Type } from '@angular/core';
+import { Color } from '@sdcorejs/utils/models';
 import { filter, take } from 'rxjs/operators';
 import { SdTabDecoratorService } from '../services/tab-decorator.service';
 
@@ -15,7 +15,7 @@ export declare interface SdTabComponentBuilder {
   name: string | ((args: SdTabComponentArgs) => string);
   icon?: string | ((args: SdTabComponentArgs) => string);
   tooltip?: string | ((args: SdTabComponentArgs) => string);
-  color?: SdColor | ((args: SdTabComponentArgs) => SdColor);
+  color?: Color | ((args: SdTabComponentArgs) => Color);
 }
 
 export function SdTabComponent<T>(builder: SdTabComponentBuilder) {
@@ -30,4 +30,3 @@ export function SdTabComponent<T>(builder: SdTabComponentBuilder) {
       });
   };
 }
-

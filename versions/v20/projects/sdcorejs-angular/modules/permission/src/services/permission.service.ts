@@ -2,7 +2,7 @@
 import { SdCache, SdCacheService } from '@sdcorejs/angular/services/cache';
 import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
-import { SdMaybeAsync, SdResolveMaybeAsync } from '@sdcorejs/angular/utilities';
+import { MaybeAsync, resolveMaybeAsync } from '@sdcorejs/utils/models';
 
 @Injectable({ providedIn: 'root' })
 export class SdPermissionService {
@@ -90,7 +90,7 @@ export class SdPermissionService {
     }
 
     try {
-      const permissions: string[] = await SdResolveMaybeAsync(configuration.loadPermissions());
+      const permissions: string[] = await resolveMaybeAsync(configuration.loadPermissions());
       this.#setPermissionsForKey(normalizedKey, permissions || []);
     } catch (err) {
       console.error(err);
@@ -131,12 +131,12 @@ export class SdPermissionService {
 
   getToken = async (key?: string) => {
     const effectiveKey = this.#getEffectivePermissionKey(key);
-    const getToken = this.#getConfigurationByKey(effectiveKey)?.getToken as (() => SdMaybeAsync<string | undefined | null>) | undefined;
+    const getToken = this.#getConfigurationByKey(effectiveKey)?.getToken as (() => MaybeAsync<string | undefined | null>) | undefined;
     if (!getToken) {
       throw new Error('[Permission] Method getToken');
     }
 
-    const token = await SdResolveMaybeAsync(getToken());
+    const token = await resolveMaybeAsync(getToken());
     if (token === '') {
       return undefined;
     }

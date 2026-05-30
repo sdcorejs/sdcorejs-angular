@@ -2,9 +2,16 @@
 @use 'sass:map';
 
 :host {
-  padding-top: 5px;
   display: block;
 }
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
+:host(.sd-viewed) { padding-top: 0; }
 
 :host ::ng-deep {
   // Form field color
@@ -46,5 +53,52 @@
       padding-top: 4px;
       font-size: 14px; // Chữ nhỏ lại
     }
+  }
+}
+
+// =============================================================================
+// Bare mode — "không khung": bóc hết shell mat-form-field để control nằm phẳng
+// trong context inline (vd. chip query-bar BETWEEN date/datetime).
+// -----------------------------------------------------------------------------
+// Khi dùng <sd-date-range bare>:
+//   - Trong chip / token / inline editor — nơi đã có viền riêng & layout chặt.
+// Khi KHÔNG dùng:
+//   - Form thông thường (cần outline + label + subscript).
+//   - State chỉ-đọc: dùng [viewed]=true để render <sd-view> (text only).
+//
+// bare và viewed bù nhau:
+//   - viewed=true               → text qua <sd-view>, không có form-field.
+//   - bare=true + viewed=false  → form-field bị bóc khung, vẫn mở được range picker.
+// =============================================================================
+
+:host(.sd-bare) {
+  display: inline-flex;
+  align-items: center;
+}
+
+:host(.sd-bare) ::ng-deep {
+  // Form-field mặc định 100% width — co về auto.
+  .mat-mdc-form-field { width: auto; }
+
+  // Wrapper outline/nền: bỏ đệm + nền để text ngồi sát viền chip.
+  .mat-mdc-text-field-wrapper { padding: 0; background: transparent; }
+
+  // Flex row chứa prefix/infix/suffix: bỏ đệm, canh giữa dọc.
+  .mat-mdc-form-field-flex { padding: 0; align-items: center; }
+
+  // Viền outline ("notched"): ẩn — chip đã có viền riêng.
+  .mdc-notched-outline { display: none; }
+
+  // Vùng hint/error dưới control: ẩn — chip không có chỗ cho subscript.
+  .mat-mdc-form-field-subscript-wrapper { display: none; }
+
+  // Infix là vùng input thật: bỏ đệm + min-height, canh giữa, bỏ border.
+  .mat-mdc-form-field-infix {
+    padding: 0;
+    min-height: 0;
+    width: auto;
+    border: 0;
+    display: inline-flex;
+    align-items: center;
   }
 }

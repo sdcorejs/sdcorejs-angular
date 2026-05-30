@@ -8,7 +8,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../../../configurations';
 import {
   SdFormGenericComponent,
@@ -86,8 +86,8 @@ export class AttributeTable {
   addColumn = () => {
     this.selectedIdx = undefined;
     this.column = {
-      key: SdUtilities.randomId('key'),
-      label: SdUtilities.randomId('label'),
+      key: Utilities.randomId('key'),
+      label: Utilities.randomId('label'),
       type: 'string',
       width: '100px',
       validate: {},

@@ -18,7 +18,7 @@ Per File Map in `plans/2026-05-18-core-ui-test-coverage-plan-4.md`.
 ### 2.2. Out of scope â€” Plan 5+
 
 - **Deferred per user direction**: import-excel (heavy XLSX wrapper)
-- **Skipped indefinitely per user direction**: chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder
+- **Skipped indefinitely per user direction**: chart, document-builder, editor, workflow, form-generic, history, query-builder
 
 ## 3. Approach
 

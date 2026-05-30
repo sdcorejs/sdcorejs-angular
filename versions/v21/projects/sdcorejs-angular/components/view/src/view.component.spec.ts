@@ -279,4 +279,101 @@ describe('SdView', () => {
       expect(span.textContent?.trim()).toBe('injected-display');
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Branch-coverage extensions (batch 4)
+  // -------------------------------------------------------------------------
+
+  describe('[labelTemplate] input wins over content #sdLabel', () => {
+    @Component({
+      standalone: true,
+      imports: [SdView],
+      template: `
+        <ng-template #myLabelTpl><span class="injected-lbl">From-input</span></ng-template>
+        <sd-view [display]="'d'" [labelTemplate]="myLabelTpl">
+          <ng-template #sdLabel><span class="content-lbl">From-content</span></ng-template>
+        </sd-view>
+      `,
+    })
+    class LabelTemplateHost {
+      @ViewChild('myLabelTpl', { static: true }) tpl!: TemplateRef<unknown>;
+    }
+
+    it('renders label from [labelTemplate] (input) — not from content', async () => {
+      await TestBed.configureTestingModule({
+        imports: [LabelTemplateHost],
+        providers: [provideRouter([])],
+      }).compileComponents();
+      const fixture = TestBed.createComponent(LabelTemplateHost);
+      fixture.detectChanges();
+      const el = getHostEl(fixture);
+      expect(el.querySelector('.injected-lbl')).not.toBeNull();
+      expect(el.querySelector('.content-lbl')).toBeNull();
+    });
+  });
+
+  describe('selectedItems context passthrough', () => {
+    @Component({
+      standalone: true,
+      imports: [SdView],
+      template: `
+        <sd-view [display]="'D'" [value]="'V'" [selectedItems]="items">
+          <ng-template #sdValue let-d let-v="value" let-items="selectedItems">
+            <span class="ctx">{{ d }}|{{ v }}|{{ items?.length }}</span>
+          </ng-template>
+        </sd-view>
+      `,
+    })
+    class SelectedItemsHost {
+      items: any[] = [{ a: 1 }, { a: 2 }, { a: 3 }];
+    }
+
+    it('exposes selectedItems on value template context', async () => {
+      await TestBed.configureTestingModule({
+        imports: [SelectedItemsHost],
+        providers: [provideRouter([])],
+      }).compileComponents();
+      const fixture = TestBed.createComponent(SelectedItemsHost);
+      fixture.detectChanges();
+      const ctx = (fixture.debugElement.query(By.directive(SdView)).nativeElement as HTMLElement).querySelector('.ctx');
+      expect(ctx?.textContent?.trim()).toBe('D|V|3');
+    });
+  });
+
+  describe('hyperlink branch (with empty display + sdEmpty pipe path)', () => {
+    @Component({
+      standalone: true,
+      imports: [SdView],
+      template: `<sd-view [display]="display" [hyperlink]="link"></sd-view>`,
+    })
+    class HyperlinkHost {
+      display: string | null = 'X';
+      link: string | null = '/x';
+    }
+
+    it('renders anchor when hyperlink is a non-empty string', async () => {
+      await TestBed.configureTestingModule({
+        imports: [HyperlinkHost],
+        providers: [provideRouter([])],
+      }).compileComponents();
+      const fixture = TestBed.createComponent(HyperlinkHost);
+      fixture.detectChanges();
+      const a = (fixture.debugElement.query(By.directive(SdView)).nativeElement as HTMLElement).querySelector('a');
+      expect(a).not.toBeNull();
+      expect(a?.textContent?.trim()).toBe('X');
+    });
+
+    it('falls back to .T14M div when hyperlink is null', async () => {
+      await TestBed.configureTestingModule({
+        imports: [HyperlinkHost],
+        providers: [provideRouter([])],
+      }).compileComponents();
+      const fixture = TestBed.createComponent(HyperlinkHost);
+      fixture.componentInstance.link = null;
+      fixture.detectChanges();
+      const el = fixture.debugElement.query(By.directive(SdView)).nativeElement as HTMLElement;
+      expect(el.querySelector('a')).toBeNull();
+      expect(el.querySelector('div.T14M')?.textContent?.trim()).toBe('X');
+    });
+  });
 });

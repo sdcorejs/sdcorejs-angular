@@ -8,7 +8,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
-import { SdColor } from '@sdcorejs/angular/utilities/models';
+import { Color } from '@sdcorejs/utils/models';
 import * as uuid from 'uuid';
 
 export interface DialogData {
@@ -17,8 +17,8 @@ export interface DialogData {
   message?: string;
   yesTitle?: string;
   noTitle?: string;
-  yesButtonColor?: SdColor;
-  noButtonColor?: SdColor;
+  yesButtonColor?: Color;
+  noButtonColor?: Color;
   input?: {
     placeholder?: string;
     minlength?: number;

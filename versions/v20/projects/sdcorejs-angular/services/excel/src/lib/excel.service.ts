@@ -1,7 +1,8 @@
 ﻿import { inject, Injectable } from '@angular/core';
 import type { CellValue, Style } from 'exceljs';
 // import hash from 'object-hash';
-import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
 
@@ -204,7 +205,7 @@ export class SdExcelService {
       }
     }
     const file = await workbook.xlsx.writeBuffer();
-    SdUtilities.downloadBlob(
+    BrowserUtilities.downloadBlob(
       new Blob([file], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       }),
@@ -233,7 +234,7 @@ export class SdExcelService {
     // DÃ¹ng CRLF vÃ¬ Excel trÃªn Windows Æ°u tiÃªn, macOS Excel cÅ©ng cháº¥p nháº­n.
     const csv = 'ï»¿' + [headerLine, ...dataLines].join('\r\n');
 
-    SdUtilities.downloadBlob(
+    BrowserUtilities.downloadBlob(
       new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
       filename,
     );
@@ -312,7 +313,7 @@ export class SdExcelService {
       });
     });
     const file = await workbook.xlsx.writeBuffer();
-    SdUtilities.downloadBlob(
+    BrowserUtilities.downloadBlob(
       new Blob([file], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       }),
@@ -340,7 +341,7 @@ export class SdExcelService {
   };
   upload = async (): Promise<{ items: Record<string, any>[]; file: File | null }> => {
     try {
-      const fileResult = await SdUtilities.upload({
+      const fileResult = await BrowserUtilities.upload({
         extensions: ['xlsx'],
         maxSizeInMb: 10,
       });

@@ -22,7 +22,6 @@ import {
   viewChild,
 } from '@angular/core';
 import {
-  AbstractControl,
   AsyncValidatorFn,
   FormGroup,
   FormsModule,
@@ -39,9 +38,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { HandleSdCustomValidator, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl } from '@sdcorejs/angular/forms/models';
+import { HandleSdCustomValidator, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdSize } from '@sdcorejs/angular/utilities/models';
+import { Size } from '@sdcorejs/utils/models';
 import type { ValidationPatternType } from '@sdcorejs/utils/models';
 import { VALIDATION_PATTERNS } from '@sdcorejs/utils/constants';
 
@@ -61,6 +61,7 @@ import * as uuid from 'uuid';
   styleUrls: ['./input.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -92,6 +93,35 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => (this.autoIdInput() ? `forms-input-${this.autoIdInput()}` : undefined));
+
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed<string | null>(() => {
+    if (this.type() === 'password') return null;
+    return sdSerializeDataValue(this.#state().value);
+  });
+
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly dataMaxLength = computed(() => {
+    const v = this.maxlength();
+    return v == null ? null : String(v);
+  });
+  readonly dataMinLength = computed(() => {
+    const v = this.minlength();
+    return v == null ? null : String(v);
+  });
+  readonly dataPattern = computed(() => {
+    const v = this.pattern();
+    return v == null || v === '' ? null : String(v);
+  });
+  readonly dataErrorMessage = computed(() => {
+    void this.#state();
+    const msg = this.errorMessage();
+    return msg && msg.length > 0 ? msg : null;
+  });
+
   name = input<string>(uuid.v4());
 
   // ==========================================
@@ -106,7 +136,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   floatLabel = input<FloatLabelType>('auto');
 
-  size = input<SdSize>('md');
+  size = input<Size>('md');
   // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -161,11 +191,13 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   });
 
   /**
-   * Tá»•ng há»£p error message Ä‘áº§u tiÃªn Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
-   * DÃ¹ng getter (khÃ´ng pháº£i computed) vÃ¬ formControl.errors khÃ´ng pháº£i Angular signal.
-   * cdRef.markForCheck() Ä‘Æ°á»£c gá»i qua sdChanges subscription nÃªn getter sáº½ Ä‘Æ°á»£c re-evaluate Ä‘Ãºng cycle.
+   * First active error message for tooltip display when `hideInlineError = true`.
+   * Re-runs only when `#state` ticks (value / status / touched change) â€” no longer
+   * invoked on every change-detection cycle as a getter would be.
    */
-  get errorTooltipMessage(): string | undefined {
+  readonly errorMessage = computed<string | undefined>(() => {
+    // Subscribe to form-state changes so the computed re-evaluates correctly.
+    void this.#state();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -175,12 +207,11 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
-  }
+  });
 
   validator = input<SdCustomValidator | undefined>();
   inlineError = input<string | undefined>();
   hyperlink = input<string | null | undefined>();
-  tooltip = input<string | undefined>();
 
   valueModel = model<any>(undefined, { alias: 'model' });
 
@@ -191,6 +222,10 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   sdFocus = output<void>(); // Äá»•i sang void vÃ¬ khÃ´ng truyá»n data
   sdBlur = output<any>();
   keyupEnter = output<any>();
+  // why: sdChange fire per-keystroke nÃªn consumer KHÃ”NG dÃ¹ng nÃ³ Ä‘á»ƒ trigger
+  // "commit filter" (sáº½ over-reload). `cleared` lÃ  intent rÃµ rÃ ng cho action
+  // X (clear button) â€” consumer nhÆ° column-filter dÃ¹ng Ä‘á»ƒ fire reload ngay.
+  cleared = output<void>();
 
   // ðŸš¨ GIá»® Láº I EVENT_EMITTER DUY NHáº¤T VÃŒ Cáº¦N CHECK OBSERVERED
   @Output() sdFocusForceBlur = new EventEmitter<void>();
@@ -273,17 +308,13 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     if (min && min > 0) validators.push(Validators.minLength(min));
     if (max && max > 0) validators.push(Validators.maxLength(max));
     if (pat) validators.push(Validators.pattern(pat));
-    if (inl) validators.push(this.customInlineErrorValidator());
+    if (inl) validators.push(SdInlineErrorValidator);
     if (val) asyncValidators.push(HandleSdCustomValidator(val));
 
     this.formControl.setValidators(validators.length ? validators : null);
     this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
     this.formControl.updateValueAndValidity({ emitEvent: false });
   };
-
-  customInlineErrorValidator(): ValidatorFn {
-    return (): Record<string, any> | null => ({ inlineError: true });
-  }
 
   getCurrentLength = (): number => {
     return (this.formControl.value ?? '').toString().length;
@@ -299,6 +330,26 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
     this.valueModel.set(value);
     this.sdChange.emit(value);
+  };
+
+  // why: dá»±a trÃªn valueModel() (signal model-input) thay vÃ¬ formControl.value â€”
+  // khi bá»‹ wrap (vd <sd-input-color>) effect set formControl cháº¡y SAU lÃºc template
+  // eval nÃªn formControl.value chÆ°a ká»‹p cÃ³; valueModel() thÃ¬ cÃ³ ngay. Method (khÃ´ng
+  // computed) Ä‘á»ƒ re-eval má»—i CD. Required khÃ´ng Ä‘Æ°á»£c clear; disabled/readonly áº©n nÃºt.
+  showClear = (): boolean => {
+    if (this.required() || this.disabled() || this.readonly()) return false;
+    return !sdIsEmpty(this.valueModel());
+  };
+
+  clear = ($event?: Event) => {
+    $event?.stopPropagation();
+    if (sdIsEmpty(this.valueModel()) && sdIsEmpty(this.formControl.value)) return;
+    // why: clear lÃ  thao tÃ¡c chá»§ Ä‘á»™ng â†’ model vá» null (khÃ´ng pháº£i '' hay undefined).
+    // undefined chá»‰ dÃ nh cho tráº¡ng thÃ¡i pristine chÆ°a tá»«ng nháº­p.
+    this.formControl.setValue(null, { emitEvent: false });
+    this.valueModel.set(null);
+    this.sdChange.emit(null);
+    this.cleared.emit();
   };
 
   onKeyupEnter = () => {
@@ -355,13 +406,4 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   };
 }
 
-export function backendErrorValidator(backendErrorMessage: string): ValidatorFn {
-  return (control: AbstractControl): Record<string, any> | null => {
-    const value = control.value as string;
-    if (value === backendErrorMessage) {
-      return { backendError: true };
-    }
-    return null;
-  };
-}
 

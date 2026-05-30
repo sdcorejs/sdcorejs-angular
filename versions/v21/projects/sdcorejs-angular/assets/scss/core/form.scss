@@ -33,6 +33,48 @@
     }
   }
 
+  // why: nút clear "thanh mảnh" dùng chung cho sd-select/sd-date/sd-datetime —
+  // hình tròn nền trong suốt, hover mới hiện nền xám + chuyển đỏ. Icon `close`
+  // (nét mảnh) thay cho `cancel` (tròn đặc, trông "mập"). Đồng bộ với sd-input-color.
+  .sd-clear-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+    color: #757575;
+    transition: background-color 80ms ease, color 80ms ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: map.get(color.$color_map, 'error');
+    }
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+    }
+  }
+
+  // why: biến thể hover-gate — nút clear ẩn cho tới khi hover (hoặc field đang
+  // focus, để người dùng bàn phím vẫn thấy). Dùng cho sd-input/sd-input-number/
+  // sd-input-color/sd-date/sd-datetime. KHÔNG dùng cho sd-select/sd-autocomplete
+  // vì ở đó clear thay thế icon dropdown/search nên phải luôn hiển thị.
+  .sd-clear-btn.sd-hover {
+    visibility: hidden;
+  }
+  .mat-mdc-form-field-flex:hover .sd-clear-btn.sd-hover,
+  .mat-mdc-form-field-flex:focus-within .sd-clear-btn.sd-hover {
+    visibility: visible;
+  }
+
   // sdSuffixIcon
   // Directive sdSuffixIcon (truyền icon từ component sử dụng vào Core)
   .sd-suffix-icon.sd-hover {
@@ -247,7 +289,7 @@
   }
 }
 
-// Fix lỗi scss label của bootstrap có margin bottom
+// Override reboot rule `label { margin-bottom: 0.5rem }` cho mat-checkbox layout
 mat-checkbox {
   label.mat-mdc-checkbox-layout {
     margin-bottom: 0;

@@ -54,8 +54,11 @@
 /* --- CKEditor Overrides --- */
 // Logo bản quyền ckedior 5 nên phải dùng ng:deep
 // Ẩn logo nên không ảnh hưởng đến css khác
-::ng-deep .ck-powered-by {
-  display: none;
+::ng-deep {
+  .ck-powered-by,
+  .ck-powered-by-balloon {
+    display: none !important;
+  }
 }
 
 :host ::ng-deep {
@@ -80,6 +83,10 @@
     padding: 24px !important;
     overflow-y: auto !important;
     border: 1px solid var(--ck-color-base-border) !important;
+
+    &.ck-focused {
+      box-shadow: none !important;
+    }
   }
 
   .sd-editor.has-counter .ck-editor__editable {

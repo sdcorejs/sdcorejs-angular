@@ -1,6 +1,6 @@
 ﻿import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
@@ -272,6 +272,17 @@ describe('SdAutocomplete', () => {
       fixture.detectChanges();
       expect(comp.valueModel()).toBeNull();
     }));
+
+    it('renders a slim clear button with the thin close icon when a value is set', fakeAsync(() => {
+      host.items = ['Alpha', 'Beta'];
+      host.model = 'Alpha';
+      fixture.detectChanges();
+      tick();
+      fixture.detectChanges();
+      const btn = fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+      expect(btn).not.toBeNull();
+      expect(btn!.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -341,9 +352,9 @@ describe('SdAutocomplete', () => {
   });
 
   // -------------------------------------------------------------------------
-  // errorTooltipMessage
+  // errorMessage
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage getter', () => {
+  describe('errorMessage getter', () => {
     it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', fakeAsync(() => {
       host.model = 'seed';
       host.required = true;
@@ -352,18 +363,18 @@ describe('SdAutocomplete', () => {
       comp.formControl.setValue(null, { emitEvent: false });
       comp.formControl.markAsTouched();
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(comp.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
     }));
 
     it('returns inlineError message when inlineError validator fires', () => {
       host.inlineError = 'Custom msg';
       fixture.detectChanges();
       comp.formControl.updateValueAndValidity();
-      expect(comp.errorTooltipMessage).toBe('Custom msg');
+      expect(comp.errorMessage()).toBe('Custom msg');
     });
 
     it('returns undefined when no errors', () => {
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
     });
   });
 
@@ -525,6 +536,106 @@ describe('SdAutocomplete (SD_FORM_CONFIGURATION)', () => {
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {
     expect(comp.appearance()).toBe('fill');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E2E data-* attributes (Tasks 11â€“12)
+// ---------------------------------------------------------------------------
+
+describe('SdAutocomplete (E2E attributes)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdAutocomplete;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    host.valueField = 'id';
+    host.displayField = 'name';
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('renders data-disabled reflecting FormControl state', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('input');
+    expect(el.getAttribute('data-disabled')).toBe('false');
+    comp.formControl.disable();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-disabled')).toBe('true');
+  });
+
+  it('renders data-empty toggling with value', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('input');
+    expect(el.getAttribute('data-empty')).toBe('true');
+    comp.formControl.setValue('VN');
+    fixture.detectChanges();
+    expect(el.getAttribute('data-empty')).toBe('false');
+  });
+
+  it('renders data-value reflecting selected key', () => {
+    comp.formControl.setValue('VN');
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('input');
+    expect(el.getAttribute('data-value')).toBe('VN');
+  });
+
+  it('renders data-invalid=true only after touched + invalid', () => {
+    comp.formControl.setValidators([Validators.required]);
+    comp.formControl.updateValueAndValidity();
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('input');
+    expect(el.getAttribute('data-invalid')).toBe('false');
+    comp.formControl.markAsTouched();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-invalid')).toBe('true');
+  });
+
+  it('renders data-loading reflecting the loading signal', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('input');
+    expect(el.getAttribute('data-loading')).toBe('false');
+    comp.loading.set(true);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-loading')).toBe('true');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// host classes
+// ---------------------------------------------------------------------------
+
+describe('SdAutocomplete (host classes)', () => {
+  let fixture: ComponentFixture<SdAutocomplete>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdAutocomplete, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdAutocomplete);
+  });
+
+  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'Tá»‰nh/ThÃ nh');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
 

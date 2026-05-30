@@ -38,7 +38,7 @@ $gap-size: 0.5rem;
       z-index: 9999;
     }
 
-    .c-img-error {
+    .c-image-error {
       text-align: center;
       color: map.get(color.$color_map, 'error');
       mat-icon {
@@ -73,14 +73,8 @@ $gap-size: 0.5rem;
       height: 100%;
       display: block;
     }
-    &.c-img-error {
+    &.c-image-error {
       background-color: map.get(color.$color_map, 'black200');
-      .thumbnail-img {
-        justify-self: center;
-        height: 24px;
-        width: 24px;
-        content: url('../../assets/img-error.svg') !important;
-      }
     }
   }
 

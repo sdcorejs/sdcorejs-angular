@@ -16,7 +16,7 @@ import { FormControl, FormGroup } from '@angular/forms';
 import { SdSection } from '@sdcorejs/angular/components/section';
 // import { sha1 } from 'object-hash';
 import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../configurations';
@@ -123,7 +123,7 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
     );
     this.#subscription.add(
       this.form.valueChanges.pipe(debounceTime(500), startWith(this.form.value)).subscribe(values => {
-        const hashedValues = SdUtilities.hash(values);
+        const hashedValues = Utilities.hash(values);
         if (this.hashedValues !== hashedValues) {
           this.hashedValues = hashedValues;
           // á»ž tráº¡ng thÃ¡i view thÃ¬ khÃ´ng cÃ³ FormControl nÃªn pháº£i binding entity má»›i cÃ³ dá»¯ liá»‡u cho formValue

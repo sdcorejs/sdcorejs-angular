@@ -39,7 +39,7 @@ Status / label indicator â€” shows a state (success / warning / error / inf
 | `title` | `string \| number \| null \| undefined` | `undefined` | Visible label or count. |
 | `description` | `string \| null \| undefined` | `undefined` | Optional secondary line shown under `title` (only `tag` and `icon` types). |
 | `tooltip` | `string \| null \| undefined` | `undefined` | Material tooltip text (position above; multiline supported). |
-| `size` | `'xs' \| 'sm' \| 'md' \| 'lg'` | `'sm'` | Icon size class. Falsy coerces back to `'sm'`. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Size token. Ãp dá»¥ng cho cáº£ container (`round` + `tag`: padding + font-size title/description) vÃ  icon span (`icon`/`tag`/`round`-cÃ³-icon: width/height/font-size). `sm` giá»¯ giÃ¡ trá»‹ visual trÆ°á»›c Ä‘Ã¢y Ä‘á»ƒ khÃ´ng vá»¡ UI cÅ©. Falsy coerces back to `'sm'`. |
 
 > Boolean color shortcuts take priority over `color` (precedence: primary â†’ secondary â†’ success â†’ info â†’ warning â†’ error â†’ `color` input).
 
@@ -53,8 +53,9 @@ None â€” content is driven by `title`, `description`, and `icon`.
 
 ## Visual cues
 - **`type="icon"` (default)**: a horizontal row â€” icon on the left (colored per `color`), title (and optional description) on the right; no background/border. Compact, used inline in tables and lists.
-- **`type="round"`**: a solid colored pill containing only the `title` text. Good for status chips ("Äang hoáº¡t Ä‘á»™ng") and numeric counters.
+- **`type="round"`**: a solid colored pill containing `title` text. Há»— trá»£ thÃªm `icon` (ká»ƒ tá»« version cÃ³ size md/lg) â€” khi truyá»n `icon`, render icon-left + title-right giá»‘ng `tag` nhÆ°ng giá»¯ pill border-radius. KhÃ´ng há»— trá»£ `description`.
 - **`type="tag"`**: a light-tinted rounded card with icon + title + optional description; the background is a soft tint of `color` and the text is `color`.
+- **`size`**: `sm` (máº·c Ä‘á»‹nh, padding/font hiá»‡n há»¯u) / `md` / `lg` â€” Ã¡p dá»¥ng cho cáº£ `round` vÃ  `tag`, scale padding container + font-size title/description; icon span scale theo `$badgeIconSize` (16/18/24px).
 - Default icon (when none specified) is a small filled dot (`fiber_manual_record`).
 - Cursor is `pointer` only when `(click)` is bound; otherwise non-interactive.
 
@@ -94,11 +95,32 @@ None â€” content is driven by `title`, `description`, and `icon`.
 <sd-badge type="round" primary [title]="unreadCount()"></sd-badge>
 ```
 
+### 5. Round pill cÃ³ icon (size md)
+```html
+<sd-badge
+  type="round"
+  success
+  icon="check_circle"
+  title="ÄÃ£ duyá»‡t"
+  size="md">
+</sd-badge>
+```
+
+### 6. Size variants â€” md / lg
+```html
+<sd-badge type="round" primary title="sm" size="sm"></sd-badge>
+<sd-badge type="round" primary title="md" size="md"></sd-badge>
+<sd-badge type="round" primary title="lg" size="lg"></sd-badge>
+
+<sd-badge type="tag" info icon="label" title="md" size="md"></sd-badge>
+<sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
+```
+
 ## Anti-patterns
 - Using `<sd-badge>` as a primary action â€” it's a status indicator; for actions use `<sd-button>` or `<sd-quick-action>`
-- Long sentences in `title` â€” keep it short (1-3 words); use `description` for secondary detail (and only with `icon`/`tag` types)
+- Long sentences in `title` â€” keep it short (1-3 words); use `description` for secondary detail (only with `icon`/`tag` types â€” `round` khÃ´ng há»— trá»£ description)
 - Mixing multiple boolean color shortcuts (`<sd-badge primary error>`) â€” only one wins by precedence; pass `color` explicitly when dynamic
-- Setting `type="round"` and expecting an icon to render â€” round mode is text-only
+- Truyá»n `description` cho `type="round"` â€” sáº½ bá»‹ bá» qua (round chá»‰ render title; dÃ¹ng `tag` hoáº·c `icon` náº¿u cáº§n 2 dÃ²ng)
 - Using a badge to convey error STATE that the user must act on â€” pair with a tooltip or follow-up `<sd-button>` so the user has a path forward
 
 ## Related

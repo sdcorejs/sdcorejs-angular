@@ -1,6 +1,6 @@
 ﻿import { Injectable, inject, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdResolveMaybeAsync } from '@sdcorejs/angular/utilities/models';
+import { resolveMaybeAsync } from '@sdcorejs/utils/models';
 import { ISdLayoutConfiguration, ISdSidebarConfiguration, SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../configurations';
 
 @Injectable({
@@ -46,7 +46,7 @@ export class SdLayoutService {
   #initUserInfo(): void {
     const userInfoConfig = this.#layoutConfiguration!.userInfo;
     if (typeof userInfoConfig === 'function') {
-      SdResolveMaybeAsync(userInfoConfig()).then(userInfo => this.userInfo.set(userInfo));
+      resolveMaybeAsync(userInfoConfig()).then(userInfo => this.userInfo.set(userInfo));
     } else {
       this.userInfo.set(userInfoConfig);
     }
@@ -55,7 +55,7 @@ export class SdLayoutService {
   #initSidebar(): void {
     const sidebarConfig = this.#layoutConfiguration!.sidebar;
     if (typeof sidebarConfig === 'function') {
-      SdResolveMaybeAsync(sidebarConfig()).then(config => this.sidebar.set(config));
+      resolveMaybeAsync(sidebarConfig()).then(config => this.sidebar.set(config));
     } else {
       this.sidebar.set(sidebarConfig);
     }

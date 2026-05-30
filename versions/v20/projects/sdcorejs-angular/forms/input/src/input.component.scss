@@ -1,9 +1,17 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
-:host ::ng-deep .mat-mdc-form-field.sd-form-tooltip {
-  width: calc(100% - 30px);
+:host {
+  display: block;
 }
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
+:host(.sd-viewed) { padding-top: 0; }
 
 :host ::ng-deep {
   // Form field color
@@ -42,13 +50,6 @@
   }
 }
 
-.sd-tooltip {
-  display: inline-block;
-  text-align: center;
-  margin: auto;
-  width: 30px;
-}
-
 .sd-maxlength-counter {
   position: absolute;
   right: 4px;
@@ -71,11 +72,6 @@
 :host ::ng-deep .sd-input-container:hover .sd-maxlength-counter,
 :host ::ng-deep .sd-input-container .sd-maxlength-counter.sd-maxlength-counter--visible {
   opacity: 1;
-}
-
-:host {
-  padding-top: 5px;
-  display: block;
 }
 
 .sd-md:hover .btn-copy {

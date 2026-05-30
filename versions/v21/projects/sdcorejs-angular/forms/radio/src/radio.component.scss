@@ -11,6 +11,42 @@
   }
 }
 
+// why: --sd-c là màu hiện tại của control. Default = primary. Host class .sd-c-<x>
+// override. Material [color] không nhận giá trị ngoài ThemePalette → override token vars.
+:host {
+  --sd-c: var(--sd-primary);
+}
+:host(.sd-c-secondary) { --sd-c: var(--sd-secondary); }
+:host(.sd-c-info)      { --sd-c: var(--sd-info); }
+:host(.sd-c-success)   { --sd-c: var(--sd-success); }
+:host(.sd-c-warning)   { --sd-c: var(--sd-warning); }
+:host(.sd-c-error)     { --sd-c: var(--sd-error); }
+
+// why: Angular Material 19 radio dùng SONG SONG hai bộ token. Theme M2 (azure-blue etc)
+// set rule `.mat-mdc-radio-button.mat-accent { --mat-radio-selected-*-icon-color: #4caf50 }`
+// ở specificity (0,2,0) — đè token mặc định. Override CẢ `--mat-radio-*` LẪN `--mdc-radio-*`
+// với `!important` để chắc thắng rule theme bất kể consumer build/theme.
+:host ::ng-deep .mat-mdc-radio-button,
+:host ::ng-deep .mat-mdc-radio-group,
+:host ::ng-deep .mdc-radio {
+  // MDC layer (selected-*-icon-color)
+  --mdc-radio-selected-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-focus-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-hover-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-pressed-icon-color: var(--sd-c) !important;
+  --mdc-radio-selected-focus-state-layer-color: var(--sd-c) !important;
+  --mdc-radio-selected-hover-state-layer-color: var(--sd-c) !important;
+
+  // M2/M3 wrapper (--mat-radio-*) — đây mới là tier theme `.mat-accent` set màu.
+  // Đúng tên token (selected-*-icon-color + checked-ripple-color) theo user inspect.
+  --mat-radio-selected-icon-color: var(--sd-c) !important;
+  --mat-radio-selected-focus-icon-color: var(--sd-c) !important;
+  --mat-radio-selected-hover-icon-color: var(--sd-c) !important;
+  --mat-radio-selected-pressed-icon-color: var(--sd-c) !important;
+  --mat-radio-checked-ripple-color: var(--sd-c) !important;
+  --mat-radio-checked-state-layer-color: var(--sd-c) !important;
+}
+
 .c-section {
   /* display: flex; */
   align-content: center;

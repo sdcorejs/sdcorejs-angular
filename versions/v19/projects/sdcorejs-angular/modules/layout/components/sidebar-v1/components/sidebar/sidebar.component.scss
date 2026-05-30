@@ -174,10 +174,22 @@ li {
               }
 
               .c-menu-node-description-icon-expand {
-                text-align: left;
+                display: flex;
+                align-items: center;
+                justify-content: start;
                 background-color: transparent;
                 border: none;
                 font-size: 20px;
+              }
+
+              .c-menu-node-description-icon-pin {
+                display: flex;
+                align-items: center;
+                justify-content: start;
+                background-color: transparent;
+                border: none;
+                font-size: 18px;
+                opacity: 0;
               }
             }
           }

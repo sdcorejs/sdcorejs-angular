@@ -1,3 +1,16 @@
-<mat-slide-toggle [formControl]="formControl" [attr.data-autoId]="autoId()" [color]="color">
-  <sd-label [label]="label" [required]="required"></sd-label>
-</mat-slide-toggle>
+@if (viewed()) {
+  @if (label()) {
+    <div class="T14R text-black400">{{ label() }}</div>
+  }
+  <div class="T14M">{{ (model() ? 'core.form.switch.on' : 'core.form.switch.off') | translate }}</div>
+} @else {
+  <mat-slide-toggle
+    [formControl]="formControl"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()"
+    [attr.data-required]="dataRequired()">
+    <sd-label [label]="label()" [required]="required()"></sd-label>
+  </mat-slide-toggle>
+}

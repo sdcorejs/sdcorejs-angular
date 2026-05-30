@@ -1,7 +1,8 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TemplateRef } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms';
-import { DateUtilities, SdNestedKeyOf, SdOperator, SdOrder, SdPagingReq } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';
 import { SdTableColumn } from '../../models/table-column.model';
 
@@ -20,7 +21,7 @@ export interface TableFilterConfiguration {
 }
 
 export interface TableFilterValue {
-  columnOperator?: Record<string, SdOperator>;
+  columnOperator?: Record<string, Operator>;
 
   columnFilter?: Record<string, any>; // GiÃ¡ trá»‹ filter column
 
@@ -32,13 +33,13 @@ export interface TableFilterValue {
 }
 
 export interface SdTableFilterRequest<T = any> {
-  columnOperator: Record<SdNestedKeyOf<T>, SdOperator>;
-  rawColumnFilter: Record<SdNestedKeyOf<T>, any>;
+  columnOperator: Record<NestedKeyOf<T>, Operator>;
+  rawColumnFilter: Record<NestedKeyOf<T>, any>;
   rawExternalFilter: Record<string, any>;
   pageNumber: number;
   pageSize: number;
   orderBy?: string;
-  orderDirection?: SdOrder['direction'];
+  orderDirection?: Order['direction'];
   isExported?: boolean;
   visibledColumns?: SdTableColumn[];
 }
@@ -57,7 +58,7 @@ export interface SdTableOptionFilter<T = any> {
   hideInlineFilter?: boolean | 'auto';
 
   /** HÃ m xá»­ lÃ½ khi Ä‘á»•i Operator cá»§a filter column */
-  operatorChange?: (column?: SdTableColumn, operator?: SdOperator) => void;
+  operatorChange?: (column?: SdTableColumn, operator?: Operator) => void;
 
   /** Danh sÃ¡ch external filter */
   externalFilters?: SdTableExternalFilter[];
@@ -84,11 +85,11 @@ export const SdConvertToPagingReq = (
     columns?: SdTableColumn[];
     externalFilters?: SdTableExternalFilter[];
     fieldMapping?: Record<string, string>;
-    orders?: SdOrder[];
+    orders?: Order[];
   }
-): SdPagingReq => {
+): PagingReq => {
   const { externalFilters, columns, fieldMapping } = args;
-  const req: SdPagingReq = {
+  const req: PagingReq = {
     filters: [],
     orders: args?.orders || [],
     pageNumber: filterRequest.pageNumber,
@@ -268,7 +269,7 @@ interface BaseFilter<TData = any> {
   defaultShowing?: boolean;
   required?: boolean; // Báº­t lÃªn náº¿u báº¯t buá»™c pháº£i cÃ³ giÃ¡ trá»‹- má»›i thá»±c hiá»‡n gá»i API filter
   hidden?: boolean; // áº¨n filter
-  defaultOperator?: SdOperator; // ÄÃ´i lÃºc cá»™t string nhÆ°ng láº¡i muá»‘n tÃ¬m kiáº¿m chÃ­nh xÃ¡c
+  defaultOperator?: Operator; // ÄÃ´i lÃºc cá»™t string nhÆ°ng láº¡i muá»‘n tÃ¬m kiáº¿m chÃ­nh xÃ¡c
   data?: TData; // CÃ¡c tham sá»‘ muá»‘n truyá»n thÃªm Ä‘á»ƒ Ä‘Ã¡nh dáº¥u/nháº­n biáº¿t ..., vÃ­ dá»¥ mappingField
   onChange?: (value: any) => void;
 }

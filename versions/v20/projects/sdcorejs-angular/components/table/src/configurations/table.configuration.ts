@@ -1,41 +1,41 @@
-﻿import { InjectionToken } from '@angular/core';
+import { InjectionToken } from '@angular/core';
 import { SdTableOptionPaginate } from '../models/table-option-paginate.model';
 import { SdTableOptionFilter } from '../services/table-filter/table-filter.model';
-import { SdOperator } from '@sdcorejs/angular/utilities';
+import { Operator } from '@sdcorejs/utils/models';
 import { SdTableColumn } from '../models';
 
 export interface ISdTableConfiguration {
   paginate?: {
-    /** Sá»‘ dÃ²ng má»—i trang. */
+    /** Số dòng mỗi trang. */
     pageSize?: SdTableOptionPaginate['pageSize'];
 
-    /** Danh sÃ¡ch cÃ¡c tuá»³ chá»n sá»‘ dÃ²ng/trang mÃ  ngÆ°á»i dÃ¹ng cÃ³ thá»ƒ chá»n. */
+    /** Danh sách các tuỳ chọn số dòng/trang mà người dùng có thể chọn. */
     pages?: SdTableOptionPaginate['pages'];
 
     showFirstLastButtons?: SdTableOptionPaginate['showFirstLastButtons'];
   };
   filter?: {
-    /** áº¨n bá»™ lá»c dÆ°á»›i cá»™t, náº¿u khÃ´ng cáº¥u hÃ¬nh thÃ¬ giÃ¡ trá»‹ máº·c Ä‘á»‹nh lÃ  false */
+    /** Ẩn bộ lọc dưới cột, nếu không cấu hình thì giá trị mặc định là false */
     hideInlineFilter?: SdTableOptionFilter['hideInlineFilter'];
 
-    /** Sá»‘ lÆ°á»£ng external filter má»—i dÃ²ng, máº·c Ä‘á»‹nh lÃ  6 */
+    /** Số lượng external filter mỗi dòng, mặc định là 6 */
     externalFilterPerRow?: SdTableOptionFilter['externalFilterPerRow'];
 
-    /**  KÃ­ch hoáº¡t cháº¿ Ä‘á»™ lá»c thá»§ cÃ´ng, hiá»ƒn thá»‹ nÃºt Ã¡p dá»¥ng, máº·c Ä‘á»‹nh lÃ  false */
+    /**  Kích hoạt chế độ lọc thủ công, hiển thị nút áp dụng, mặc định là false */
     manualFilter?: SdTableOptionFilter['manualFilter'];
 
-    /** áº¨n toolbar (xÃ³a bá»™ lá»c, thiáº¿t láº­p) cá»§a external filter, khi cÃ³ Ã­t external filter user khÃ´ng cáº§n chá»©c nÄƒng nÃ y, máº·c Ä‘á»‹nh lÃ  false */
+    /** Ẩn toolbar (xóa bộ lọc, thiết lập) của external filter, khi có ít external filter user không cần chức năng này, mặc định là false */
     hideExternalFilterToolbar?: SdTableOptionFilter['hideExternalFilterToolbar'];
 
     operator?: {
-      list?: Partial<Record<SdTableColumn['type'], SdOperator[]>>;
-      default?: Partial<Record<SdTableColumn['type'], SdOperator>>;
+      list?: Partial<Record<SdTableColumn['type'], Operator[]>>;
+      default?: Partial<Record<SdTableColumn['type'], Operator>>;
     };
   };
   images?: {
-    filterRequired?: string; // Link áº£nh cho table á»Ÿ tráº¡ng thÃ¡i cáº§n nháº­p filter
-    dataEmpty?: string; // Link áº£nh cho table á»Ÿ tráº¡ng thÃ¡i khÃ´ng cÃ³ dá»¯ liá»‡u
-    filterEmpty?: string; // Link áº£nh cho table á»Ÿ tráº¡ng thÃ¡i filter khÃ´ng cÃ³ dá»¯ liá»‡u
+    filterRequired?: string; // Link ảnh cho table ở trạng thái cần nhập filter
+    dataEmpty?: string; // Link ảnh cho table ở trạng thái không có dữ liệu
+    filterEmpty?: string; // Link ảnh cho table ở trạng thái filter không có dữ liệu
   };
 }
 
@@ -47,4 +47,3 @@ export const DEFAULT_TABLE_CONFIG: ISdTableConfiguration = {
 };
 
 export const SD_TABLE_CONFIGURATION = new InjectionToken<ISdTableConfiguration>('sd-table.configuration');
-

@@ -1,6 +1,6 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pipe, PipeTransform } from '@angular/core';
-import { SD_EMPTY_STR } from '@sdcorejs/angular/utilities/models';
+import { EMPTY_STR } from '@sdcorejs/utils/constants';
 @Pipe({
   name: 'sdEmpty',
   standalone: true,
@@ -8,9 +8,8 @@ import { SD_EMPTY_STR } from '@sdcorejs/angular/utilities/models';
 export class SdEmptyPipe implements PipeTransform {
   transform(value: any): string {
     if (value === undefined || value === null || value === '') {
-      return SD_EMPTY_STR;
+      return EMPTY_STR;
     }
     return value;
   }
 }
-

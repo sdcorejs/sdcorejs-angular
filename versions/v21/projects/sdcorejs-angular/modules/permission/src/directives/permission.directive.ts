@@ -5,7 +5,7 @@ import { SdPermissionService } from '../services';
   selector: '[sdPermission]',
 })
 export class SdPermissionDirective {
-  readonly #templateRef = inject<TemplateRef<any>>(TemplateRef);
+  readonly #templateRef: TemplateRef<Record<string, never>> = inject(TemplateRef);
   readonly #viewContainerRef = inject(ViewContainerRef);
   readonly #permissionService = inject(SdPermissionService);
 

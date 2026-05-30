@@ -1,0 +1,20 @@
+<mat-menu #m="matMenu" xPosition="after" yPosition="below" class="c-field-picker-menu">
+  @for (field of fields(); track $index) {
+    <button
+      type="button"
+      mat-menu-item
+      [disabled]="isDisabled(field)"
+      (click)="pick.emit(field)">
+      <mat-icon fontSet="material-icons-outlined" class="c-field-item-icon">
+        {{ iconFor(field) }}
+      </mat-icon>
+      <span class="c-field-item-label">{{ field.label }}</span>
+      <span class="c-field-item-type">{{ field.type }}</span>
+      @if (isCurrent(field) || isUsed(field)) {
+        <mat-icon class="c-field-item-check" fontSet="material-icons-outlined">check</mat-icon>
+      }
+    </button>
+  } @empty {
+    <div class="c-field-empty">Chưa có field nào được cấu hình.</div>
+  }
+</mat-menu>

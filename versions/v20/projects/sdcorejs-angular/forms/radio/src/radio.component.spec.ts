@@ -103,7 +103,7 @@ describe('SdRadio', () => {
     it('coerces non-array items to empty array', () => {
       (host as any).items = null;
       fixture.detectChanges();
-      expect(radio.items).toEqual([]);
+      expect(radio.normalizedItems()).toEqual([]);
     });
   });
 
@@ -187,16 +187,16 @@ describe('SdRadio', () => {
   });
 
   describe('output events', () => {
-    it('emits modelChange + sdChange + sdSelection when formControl value changes', () => {
+    it('emits sdChange + sdSelection + propagates [(model)] when formControl value changes', () => {
       const sdSpy = spyOn(radio.sdChange, 'emit').and.callThrough();
-      const modelSpy = spyOn(radio.modelChange, 'emit').and.callThrough();
       const selSpy = spyOn(radio.sdSelection, 'emit').and.callThrough();
 
       radio.formControl.setValue('b');
       fixture.detectChanges();
 
       expect(sdSpy).toHaveBeenCalledWith('b');
-      expect(modelSpy).toHaveBeenCalledWith('b');
+      // host's `model` is updated through the auto-generated `modelChange` of the `model()` signal
+      expect(host.model).toBe('b');
       expect(selSpy).toHaveBeenCalledWith(jasmine.objectContaining({ value: 'b' }));
     });
   });
@@ -241,6 +241,55 @@ describe('SdRadio', () => {
       aFixture.detectChanges();
       expect(aRadio.autoId()).toBeUndefined();
     });
+
+    describe('E2E attributes', () => {
+      it('renders data-disabled reflecting FormControl state', () => {
+        aFixture.componentInstance.autoId = 'gender';
+        aFixture.detectChanges();
+        const group = aFixture.nativeElement.querySelector('mat-radio-group');
+        expect(group.getAttribute('data-disabled')).toBe('false');
+
+        aRadio.formControl.disable();
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-disabled')).toBe('true');
+
+        aRadio.formControl.enable();
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-disabled')).toBe('false');
+      });
+
+      it('renders data-value reflecting selected key', () => {
+        aFixture.componentInstance.autoId = 'gender';
+        aFixture.detectChanges();
+        const group = aFixture.nativeElement.querySelector('mat-radio-group');
+
+        aRadio.formControl.setValue('a');
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-value')).toBe('a');
+
+        aRadio.formControl.setValue('b');
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-value')).toBe('b');
+      });
+
+      it('renders data-empty toggling with selection', () => {
+        aFixture.componentInstance.autoId = 'gender';
+        aFixture.detectChanges();
+        const group = aFixture.nativeElement.querySelector('mat-radio-group');
+
+        aRadio.formControl.setValue(null);
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-empty')).toBe('true');
+
+        aRadio.formControl.setValue('a');
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-empty')).toBe('false');
+
+        aRadio.formControl.setValue(null);
+        aFixture.detectChanges();
+        expect(group.getAttribute('data-empty')).toBe('true');
+      });
+    });
   });
 });
 
@@ -265,6 +314,110 @@ describe('SdRadio (FormGroup lifecycle)', () => {
   it('removes control on destroy', () => {
     fixture.destroy();
     expect(fg.contains('mode')).toBe(false);
+  });
+});
+
+describe('SdRadio (viewed + color)', () => {
+  @Component({
+    standalone: true,
+    imports: [SdRadio, FormsModule],
+    template: `<sd-radio
+      [label]="label"
+      [items]="items"
+      valueField="code"
+      displayField="name"
+      [viewed]="viewed"
+      [color]="color"
+      [(model)]="model"></sd-radio>`,
+  })
+  class VHost {
+    label = 'Pick one';
+    items = [...ITEMS];
+    viewed = false;
+    color: any = 'primary';
+    model: any = null;
+  }
+
+  let f: ComponentFixture<VHost>;
+  let radio: SdRadio;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [VHost, NoopAnimationsModule] }).compileComponents();
+    f = TestBed.createComponent(VHost);
+    f.detectChanges();
+    radio = f.debugElement.query(el => el.componentInstance instanceof SdRadio).componentInstance;
+  });
+
+  it('viewedText returns displayField string (not the item object) when value matches', () => {
+    radio.formControl.setValue('b');
+    f.detectChanges();
+    expect(radio.viewedText()).toBe('Option B');
+  });
+
+  it('viewedText falls back to empty string when value does not match any item', () => {
+    radio.formControl.setValue('zzz');
+    f.detectChanges();
+    expect(radio.viewedText()).toBe('');
+  });
+
+  it('viewed=true renders text (no mat-radio-group)', () => {
+    f.componentInstance.viewed = true;
+    f.componentInstance.model = 'a';
+    f.detectChanges();
+    expect(f.nativeElement.querySelector('mat-radio-group')).toBeNull();
+    const txt = (f.nativeElement.textContent as string).trim();
+    expect(txt).toContain('Option A');
+    expect(txt).not.toContain('[object');
+  });
+
+  it('viewed text is empty placeholder when no value selected', () => {
+    f.componentInstance.viewed = true;
+    f.componentInstance.model = null;
+    f.detectChanges();
+    // SdEmptyPipe renders some empty placeholder ('-' or similar) — assert no [object Object] leak.
+    const txt = (f.nativeElement.textContent as string);
+    expect(txt).not.toContain('[object');
+  });
+
+  it('color input drives host class .sd-c-<color>', () => {
+    f.componentInstance.color = 'success';
+    f.detectChanges();
+    const hostEl = f.debugElement.query(el => el.componentInstance instanceof SdRadio).nativeElement as HTMLElement;
+    expect(hostEl.classList.contains('sd-c-success')).toBe(true);
+    expect(hostEl.classList.contains('sd-c-primary')).toBe(false);
+  });
+
+  // why: bug "luôn ăn màu accent" do theme set `--mat-radio-selected-icon-color: #4caf50`
+  // qua `.mat-mdc-radio-button.mat-accent` (user pasted inspect). Override CẢ `--mat-radio-*`
+  // LẪN `--mdc-radio-*` với `!important`. Spec assert mọi token icon-color đã propagate.
+  it('overrides --mat-radio-selected-*-icon-color (theme.mat-accent) via --sd-c chain', () => {
+    const root = document.documentElement;
+    const prev = root.style.getPropertyValue('--sd-error');
+    root.style.setProperty('--sd-error', 'rgb(220, 38, 38)');
+    try {
+      f.componentInstance.color = 'error';
+      f.detectChanges();
+      const inner = f.nativeElement.querySelector('.mat-mdc-radio-button') as HTMLElement;
+      expect(inner).not.toBeNull();
+      const cs = getComputedStyle(inner);
+      // M2 wrapper tokens — đây mới là tier theme `.mat-accent` set màu.
+      expect(cs.getPropertyValue('--mat-radio-selected-icon-color').trim()).toBe('rgb(220, 38, 38)');
+      expect(cs.getPropertyValue('--mat-radio-selected-focus-icon-color').trim()).toBe('rgb(220, 38, 38)');
+      expect(cs.getPropertyValue('--mat-radio-selected-hover-icon-color').trim()).toBe('rgb(220, 38, 38)');
+      expect(cs.getPropertyValue('--mat-radio-selected-pressed-icon-color').trim()).toBe('rgb(220, 38, 38)');
+      expect(cs.getPropertyValue('--mat-radio-checked-ripple-color').trim()).toBe('rgb(220, 38, 38)');
+      // MDC layer tokens
+      expect(cs.getPropertyValue('--mdc-radio-selected-icon-color').trim()).toBe('rgb(220, 38, 38)');
+    } finally {
+      if (prev) root.style.setProperty('--sd-error', prev);
+      else root.style.removeProperty('--sd-error');
+    }
+  });
+
+  it('color defaults to primary when null/undefined passed', () => {
+    f.componentInstance.color = null;
+    f.detectChanges();
+    expect(radio.color()).toBe('primary');
   });
 });
 

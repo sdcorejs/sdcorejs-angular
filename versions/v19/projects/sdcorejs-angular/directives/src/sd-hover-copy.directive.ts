@@ -1,5 +1,5 @@
 ﻿import { Directive, ElementRef, inject, Input, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
 @Directive({
@@ -111,7 +111,7 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     this.renderer.listen(this.#copyButton, 'click', () => {
       console.log('click', this.copyText);
       if (this.copyText && !this.sdHoverCopyDisabled) {
-        SdUtilities.copyToClipboard(String(this.copyText));
+        BrowserUtilities.copyToClipboard(String(this.copyText));
         this.#showTooltip('Copied');
         setTimeout(() => this.#hideTooltip(), 1000);
       }

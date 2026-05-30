@@ -30,7 +30,11 @@ export class SdView {
 
   // Input Ä‘á»ƒ há»©ng template tá»« component cha (nhÆ° sd-input, sd-select) truyá»n xuá»‘ng
   labelTemplate = input<TemplateRef<any> | undefined>();
-  valueTemplate = input<TemplateRef<any> | undefined>(); 
+  valueTemplate = input<TemplateRef<any> | undefined>();
+
+  // why: cha (sd-select) chuyá»ƒn danh sÃ¡ch item Ä‘Ã£ chá»n xuá»‘ng Ä‘á»ƒ template "head +N"
+  // (chip multi sd-select) cÃ³ thá»ƒ Ä‘á»c displayField â€” sd-view chá»‰ lÃ  proxy, khÃ´ng tá»± build list.
+  selectedItems = input<any[] | undefined>();
 
   // ==========================================
   // 2. SIGNAL QUERIES (Thay tháº¿ @ContentChild)

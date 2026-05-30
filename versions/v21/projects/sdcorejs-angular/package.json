@@ -1,6 +1,6 @@
 ﻿{
   "name": "@sdcorejs/angular",
-  "version": "19.0.0-beta.96",
+  "version": "19.0.0-beta.104",
   "peerDependencies": {
     "@angular/common": "^19.0.0 || ^20.0.0 || ^21.0.0",
     "@angular/core": "^19.0.0 || ^20.0.0 || ^21.0.0",
@@ -8,7 +8,7 @@
     "@angular/material-date-fns-adapter": "^19.0.0 || ^20.0.0 || ^21.0.0"
   },
   "dependencies": {
-    "@sdcorejs/utils": "^1.0.3",
+    "@sdcorejs/utils": "^1.1.2",
     "@ckeditor/ckeditor5-angular": "11.1.2",
     "@omer-go/docx-parser-converter-ts": "^1.0.0",
     "@bjorn3/browser_wasi_shim": "^0.4.2",

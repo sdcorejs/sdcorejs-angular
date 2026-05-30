@@ -2,18 +2,51 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { SdAnchor } from './anchor.component';
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
 
 // ---------------------------------------------------------------------------
-// Host for main suite
+// IntersectionObserver mock
+// ---------------------------------------------------------------------------
+// why: `jasmine.createSpy(...)` returns a function that is NOT reliably
+// constructable across jasmine versions — `new IntersectionObserver(cb)` in
+// anchor.component.ts then throws "target is not a constructor". Use a real
+// constructor function with a top-level `callCount` counter for assertions.
+let capturedIOCallback: IntersectionObserverCallback | null = null;
+let ioConstructorCallCount = 0;
+
+function MockIntersectionObserver(this: any, callback: IntersectionObserverCallback): void {
+  capturedIOCallback = callback;
+  ioConstructorCallCount += 1;
+  this.observe = (_target: Element) => undefined;
+  this.disconnect = () => undefined;
+  this.unobserve = (_target: Element) => undefined;
+  this.takeRecords = () => [];
+  this.root = null;
+  this.rootMargin = '';
+  this.thresholds = [];
+}
+
+function mockIntersectionObserver(): void {
+  capturedIOCallback = null;
+  ioConstructorCallCount = 0;
+  (window as any).IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+}
+
+function triggerIntersection(entries: Partial<IntersectionObserverEntry>[]): void {
+  capturedIOCallback?.(entries as IntersectionObserverEntry[], {} as IntersectionObserver);
+}
+
+// ---------------------------------------------------------------------------
+// Host components
 // ---------------------------------------------------------------------------
 @Component({
   standalone: true,
   imports: [SdAnchor, SdAnchorItem],
   template: `
     <div style="height: 400px">
-      <sd-anchor [type]="type" [isHiddenAnchorList]="hidden">
+      <sd-anchor [hideNav]="hidden">
         <sd-anchor-item [title]="'Section 1'">
           <div style="height: 200px">Section 1 content</div>
         </sd-anchor-item>
@@ -28,19 +61,15 @@ import { SdAnchorItem } from '../anchor-item/anchor-item.component';
   `,
 })
 class HostComponent {
-  type: 'vertical' | 'horizontal' = 'vertical';
   hidden = false;
 }
 
-// ---------------------------------------------------------------------------
-// Host for isHiddenAnchorList = true (separate describe avoids resetTestingModule)
-// ---------------------------------------------------------------------------
 @Component({
   standalone: true,
   imports: [SdAnchor, SdAnchorItem],
   template: `
     <div style="height: 400px">
-      <sd-anchor [isHiddenAnchorList]="true">
+      <sd-anchor [hideNav]="true">
         <sd-anchor-item [title]="'Section 1'">
           <div>content</div>
         </sd-anchor-item>
@@ -50,9 +79,18 @@ class HostComponent {
 })
 class HiddenHost {}
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
+@Component({
+  imports: [SdAnchor, SdAnchorItem],
+  template: `
+    <div style="height: 400px">
+      <sd-anchor>
+        <sd-anchor-item title="Section 1"><div style="height: 200px">x</div></sd-anchor-item>
+      </sd-anchor>
+    </div>
+  `,
+})
+class HostDefaultComponent {}
+
 function getAnchor(fixture: ComponentFixture<unknown>): SdAnchor {
   const de = fixture.debugElement.query(By.directive(SdAnchor));
   if (!de) throw new Error('SdAnchor not found in fixture');
@@ -64,16 +102,15 @@ function getAnchor(fixture: ComponentFixture<unknown>): SdAnchor {
 // ---------------------------------------------------------------------------
 describe('SdAnchor', () => {
   let fixture: ComponentFixture<HostComponent>;
-  let host: HostComponent;
   let anchor: SdAnchor;
 
   beforeEach(async () => {
+    mockIntersectionObserver();
     await TestBed.configureTestingModule({
       imports: [HostComponent, NoopAnimationsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);
-    host = fixture.componentInstance;
     fixture.detectChanges();
     anchor = getAnchor(fixture);
   });
@@ -90,34 +127,87 @@ describe('SdAnchor', () => {
       expect(anchor.sections().length).toBe(3);
     }));
 
-    it('initialises activeSectionId to the first section id after first render', fakeAsync(() => {
+    it('activeSectionId starts as empty string before any intersection fires', () => {
+      expect(anchor.activeSectionId()).toBe('');
+    });
+
+    it('activeSectionId is set when first section becomes intersecting', fakeAsync(() => {
       tick();
       fixture.detectChanges();
-      const firstId = anchor.sections()[0]?.id ?? '';
-      expect(firstId).toBeTruthy();
-      expect(anchor.activeSectionId()).toBe(firstId);
+      const sections = anchor.sections();
+      triggerIntersection([{ isIntersecting: true, target: sections[0].elementRef.nativeElement }]);
+      expect(anchor.activeSectionId()).toBe(sections[0].id);
     }));
   });
 
   // -------------------------------------------------------------------------
-  describe('type input', () => {
-    it('defaults to "vertical"', () => {
-      expect(anchor.type()).toBe('vertical');
-    });
+  describe('scroll-spy (IntersectionObserver)', () => {
+    it('activates the topmost visible section in document order', fakeAsync(() => {
+      tick();
+      fixture.detectChanges();
+      const sections = anchor.sections();
+      // sections[1] and sections[2] both visible → first in order wins
+      triggerIntersection([
+        { isIntersecting: true, target: sections[1].elementRef.nativeElement },
+        { isIntersecting: true, target: sections[2].elementRef.nativeElement },
+      ]);
+      expect(anchor.activeSectionId()).toBe(sections[1].id);
+    }));
 
-    it('reflects "horizontal" when set on host', () => {
-      host.type = 'horizontal';
+    it('switches active section when a new section scrolls into view', fakeAsync(() => {
+      tick();
       fixture.detectChanges();
-      expect(anchor.type()).toBe('horizontal');
-    });
+      const sections = anchor.sections();
+      triggerIntersection([{ isIntersecting: true, target: sections[0].elementRef.nativeElement }]);
+      expect(anchor.activeSectionId()).toBe(sections[0].id);
 
-    it('reverts to "vertical" when reset', () => {
-      host.type = 'horizontal';
+      triggerIntersection([
+        { isIntersecting: false, target: sections[0].elementRef.nativeElement },
+        { isIntersecting: true, target: sections[1].elementRef.nativeElement },
+      ]);
+      expect(anchor.activeSectionId()).toBe(sections[1].id);
+    }));
+
+    it('does not update activeSectionId while click-scrolling is in progress', fakeAsync(() => {
+      tick();
       fixture.detectChanges();
-      host.type = 'vertical';
+      const sections = anchor.sections();
+      anchor.scrollSectionByClick(sections[2].id);
+      expect(anchor.activeSectionId()).toBe(sections[2].id);
+
+      // Intersection fires mid-scroll animation — must be ignored
+      triggerIntersection([{ isIntersecting: true, target: sections[0].elementRef.nativeElement }]);
+      expect(anchor.activeSectionId()).toBe(sections[2].id);
+
+      tick(200); // flush fallback timeout
+    }));
+
+    it('resumes scroll-spy after scrollend fires', fakeAsync(() => {
+      tick();
       fixture.detectChanges();
-      expect(anchor.type()).toBe('vertical');
-    });
+      const sections = anchor.sections();
+      anchor.scrollSectionByClick(sections[1].id);
+
+      anchor.wrapper().nativeElement.dispatchEvent(new Event('scrollend'));
+      tick();
+
+      triggerIntersection([{ isIntersecting: true, target: sections[0].elementRef.nativeElement }]);
+      expect(anchor.activeSectionId()).toBe(sections[0].id);
+
+      tick(200); // flush pending fallback timeout
+    }));
+
+    it('resumes scroll-spy via 200ms timeout fallback when scroll position is unchanged', fakeAsync(() => {
+      tick();
+      fixture.detectChanges();
+      const sections = anchor.sections();
+      anchor.scrollSectionByClick(sections[0].id);
+
+      tick(200); // fallback fires → #isClickScrolling = false
+
+      triggerIntersection([{ isIntersecting: true, target: sections[2].elementRef.nativeElement }]);
+      expect(anchor.activeSectionId()).toBe(sections[2].id);
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -130,6 +220,7 @@ describe('SdAnchor', () => {
 
       anchor.scrollSectionByClick(secondId);
       expect(anchor.activeSectionId()).toBe(secondId);
+      tick(200);
     }));
 
     it('handles an unknown / non-existent section id without throwing', fakeAsync(() => {
@@ -138,6 +229,7 @@ describe('SdAnchor', () => {
       expect(() => anchor.scrollSectionByClick('nonexistent-uuid')).not.toThrow();
       // activeSectionId is still set even when the element is not found
       expect(anchor.activeSectionId()).toBe('nonexistent-uuid');
+      tick(200);
     }));
 
     it('updates activeSectionId when called with a third section', fakeAsync(() => {
@@ -146,6 +238,7 @@ describe('SdAnchor', () => {
       const thirdId = anchor.sections()[2]?.id ?? '';
       anchor.scrollSectionByClick(thirdId);
       expect(anchor.activeSectionId()).toBe(thirdId);
+      tick(200);
     }));
   });
 
@@ -160,9 +253,9 @@ describe('SdAnchor', () => {
     it('subscriptions are disposed after destroy (no double-dispose error)', fakeAsync(() => {
       tick();
       fixture.detectChanges();
-      // Trigger a click first to register #clickScrollSubscription
       const firstId = anchor.sections()[0]?.id ?? '';
       anchor.scrollSectionByClick(firstId);
+      tick(200);
       expect(() => fixture.destroy()).not.toThrow();
     }));
   });
@@ -171,10 +264,6 @@ describe('SdAnchor', () => {
   describe('autoId', () => {
     it('returns undefined when autoId input is not provided', () => {
       expect(anchor.autoId()).toBeUndefined();
-    });
-
-    it('itemAutoId returns undefined when autoId is not set', () => {
-      expect(anchor.itemAutoId('first')).toBeUndefined();
     });
   });
 
@@ -188,153 +277,54 @@ describe('SdAnchor', () => {
       expect(anchor.ellipsis()).toBe(false);
     });
 
-    it('isOverscroll defaults to false', () => {
-      expect(anchor.isOverscroll()).toBe(false);
+    it('overScroll defaults to false', () => {
+      expect(anchor.overScroll()).toBe(false);
     });
 
-    it('isHiddenAnchorList defaults to false', () => {
-      expect(anchor.isHiddenAnchorList()).toBe(false);
+    it('hideNav reflects bound value (host binds hidden=false)', () => {
+      expect(anchor.hideNav()).toBe(false);
+    });
+
+    it('color defaults to "primary"', () => {
+      expect(anchor.color()).toBe('primary');
     });
   });
 });
 
 // ---------------------------------------------------------------------------
-// Scroll-spy suite
+// hideNav default = BrowserUtilities.isMobile() (UA-dependent, report regression)
 // ---------------------------------------------------------------------------
-describe('SdAnchor (scroll-spy)', () => {
-  let fixture: ComponentFixture<HostComponent>;
+describe('SdAnchor (hideNav default UA-dependent)', () => {
+  let fixture: ComponentFixture<HostDefaultComponent>;
   let anchor: SdAnchor;
-  let wrapperEl: HTMLElement;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [HostComponent, NoopAnimationsModule],
-    }).compileComponents();
-    fixture = TestBed.createComponent(HostComponent);
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({ imports: [HostDefaultComponent] }).compileComponents();
+    fixture = TestBed.createComponent(HostDefaultComponent);
     fixture.detectChanges();
-    anchor = getAnchor(fixture);
-    wrapperEl = fixture.nativeElement.querySelector('.c-anchor-vertical');
+    anchor = fixture.debugElement.query(By.directive(SdAnchor)).componentInstance;
   });
 
-  /** Set offsetTop / offsetHeight on each section's native element. */
-  function mockSectionOffsets(offsets: Array<{ top: number; height: number }>) {
-    const sections = anchor.sections();
-    offsets.forEach((o, i) => {
-      Object.defineProperty(sections[i].elementRef.nativeElement, 'offsetTop', {
-        value: o.top,
-        configurable: true,
-      });
-      Object.defineProperty(sections[i].elementRef.nativeElement, 'offsetHeight', {
-        value: o.height,
-        configurable: true,
-      });
-    });
-  }
+  it('hideNav() trả default = BrowserUtilities.isMobile()', () => {
+    expect(anchor.hideNav()).toBe(BrowserUtilities.isMobile());
+  });
 
-  /**
-   * Make getComputedStyle return zero padding/border so that
-   * #updateCurrentScroll returns just scrollTop (no extra offsets).
-   */
-  function stubComputedStyle() {
-    spyOn(window, 'getComputedStyle').and.returnValue({
-      paddingTop: '0px',
-      borderTopWidth: '0px',
-    } as CSSStyleDeclaration);
-  }
-
-  it('updates activeSectionId when scroll enters second section', fakeAsync(() => {
-    tick();
-    fixture.detectChanges();
-    stubComputedStyle();
-    mockSectionOffsets([
-      { top: 0, height: 400 },
-      { top: 400, height: 400 },
-      { top: 800, height: 400 },
-    ]);
-
-    Object.defineProperty(wrapperEl, 'scrollTop', { value: 450, configurable: true, writable: true });
-    wrapperEl.dispatchEvent(new Event('scroll'));
-    tick(50); // advance past auditTime(50)
-    fixture.detectChanges();
-
-    const sections = anchor.sections();
-    expect(anchor.activeSectionId()).toBe(sections[1].id);
-  }));
-
-  it('updates activeSectionId when scroll enters third section', fakeAsync(() => {
-    tick();
-    fixture.detectChanges();
-    stubComputedStyle();
-    mockSectionOffsets([
-      { top: 0, height: 400 },
-      { top: 400, height: 400 },
-      { top: 800, height: 400 },
-    ]);
-
-    Object.defineProperty(wrapperEl, 'scrollTop', { value: 850, configurable: true, writable: true });
-    wrapperEl.dispatchEvent(new Event('scroll'));
-    tick(50);
-    fixture.detectChanges();
-
-    const sections = anchor.sections();
-    expect(anchor.activeSectionId()).toBe(sections[2].id);
-  }));
-
-  it('rate-limits rapid scroll events via auditTime(50)', fakeAsync(() => {
-    tick();
-    fixture.detectChanges();
-    stubComputedStyle();
-    mockSectionOffsets([
-      { top: 0, height: 400 },
-      { top: 400, height: 400 },
-      { top: 800, height: 400 },
-    ]);
-
-    // dispatch three rapid events before auditTime fires
-    Object.defineProperty(wrapperEl, 'scrollTop', { value: 100, configurable: true, writable: true });
-    wrapperEl.dispatchEvent(new Event('scroll'));
-    Object.defineProperty(wrapperEl, 'scrollTop', { value: 200, configurable: true, writable: true });
-    wrapperEl.dispatchEvent(new Event('scroll'));
-    Object.defineProperty(wrapperEl, 'scrollTop', { value: 450, configurable: true, writable: true });
-    wrapperEl.dispatchEvent(new Event('scroll'));
-    tick(50); // only the last value (450) should be processed
-    fixture.detectChanges();
-
-    const sections = anchor.sections();
-    expect(anchor.activeSectionId()).toBe(sections[1].id);
-  }));
-
-  it('stays on last section when scrollTop exceeds all section bounds', fakeAsync(() => {
-    tick();
-    fixture.detectChanges();
-    stubComputedStyle();
-    mockSectionOffsets([
-      { top: 0, height: 400 },
-      { top: 400, height: 400 },
-      { top: 800, height: 400 },
-    ]);
-
-    // scrollTop beyond last section's bottom → no section matched → activeSectionId unchanged
-    const initialId = anchor.activeSectionId();
-    Object.defineProperty(wrapperEl, 'scrollTop', { value: 1300, configurable: true, writable: true });
-    wrapperEl.dispatchEvent(new Event('scroll'));
-    tick(50);
-    fixture.detectChanges();
-
-    // activeSectionId should remain whatever it was before (first section id),
-    // since no section range covers scrollTop=1300
-    expect(anchor.activeSectionId()).toBe(initialId);
-  }));
+  it('chrome headless desktop → isMobile=false → hideNav=false', () => {
+    expect(BrowserUtilities.isMobile()).toBe(false);
+    expect(anchor.hideNav()).toBe(false);
+  });
 });
 
 // ---------------------------------------------------------------------------
-// Separate suite for isHiddenAnchorList = true
+// hideNav = true
 // ---------------------------------------------------------------------------
-describe('SdAnchor (isHiddenAnchorList=true)', () => {
+describe('SdAnchor (hideNav=true)', () => {
   let fixture: ComponentFixture<HiddenHost>;
   let anchor: SdAnchor;
 
   beforeEach(async () => {
+    mockIntersectionObserver();
     await TestBed.configureTestingModule({
       imports: [HiddenHost, NoopAnimationsModule],
     }).compileComponents();
@@ -344,15 +334,20 @@ describe('SdAnchor (isHiddenAnchorList=true)', () => {
     anchor = getAnchor(fixture);
   });
 
-  it('does not set activeSectionId after first render when hidden', fakeAsync(() => {
+  it('does not register IntersectionObserver when hideNav=true', fakeAsync(() => {
     tick();
     fixture.detectChanges();
-    // When isHiddenAnchorList=true, afterNextRender skips the activeSectionId.set() call
+    expect(ioConstructorCallCount).toBe(0);
+  }));
+
+  it('activeSectionId remains empty string when hideNav=true', fakeAsync(() => {
+    tick();
+    fixture.detectChanges();
     expect(anchor.activeSectionId()).toBe('');
   }));
 
-  it('isHiddenAnchorList() returns true', () => {
-    expect(anchor.isHiddenAnchorList()).toBe(true);
+  it('hideNav() returns true', () => {
+    expect(anchor.hideNav()).toBe(true);
   });
 
   it('destroys cleanly when hidden', fakeAsync(() => {

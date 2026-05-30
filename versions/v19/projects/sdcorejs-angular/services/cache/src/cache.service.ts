@@ -1,6 +1,7 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
-import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { SdCache, SdCacheOption } from './cache.model';
@@ -22,7 +23,7 @@ export class SdCacheService {
   create<T = any>(key: string | object, option?: SdCacheOption<T>): SdCache<T> {
     if (!key) throw new Error('Key is required');
 
-    const hashKey = SdUtilities.hash({ key });
+    const hashKey = Utilities.hash({ key });
 
     // 1. Init Subject: Load data cÃ³ sáºµn náº¿u cÃ³
     if (!this.#subjects.has(hashKey)) {

@@ -7,11 +7,11 @@
 }
 
 @if (activeValueTemplate()) {
-  <ng-container 
+  <ng-container
     *ngTemplateOutlet="
-      activeValueTemplate()!; 
-      context: { $implicit: display(), value: value() }
-    "> 
+      activeValueTemplate()!;
+      context: { $implicit: display(), value: value(), selectedItems: selectedItems() }
+    ">
   </ng-container>
 } @else {
   @if (hyperlink(); as link) {

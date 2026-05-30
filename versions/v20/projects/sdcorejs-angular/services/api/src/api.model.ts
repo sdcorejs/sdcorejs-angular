@@ -2,7 +2,6 @@
 import { HttpClient, HttpErrorResponse, HttpRequest, HttpResponse } from '@angular/common/http';
 import { InjectionToken } from '@angular/core';
 import { SdCacheOption } from '@sdcorejs/angular/services/cache';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
 // import hash from 'object-hash';
 
 export interface SdApiOption {

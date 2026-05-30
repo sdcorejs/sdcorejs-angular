@@ -15,6 +15,7 @@ import {
   OnDestroy,
   OnInit,
   output,
+  TemplateRef,
   viewChild,
   contentChild
 } from '@angular/core';
@@ -26,11 +27,14 @@ import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@ang
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
+import { ISdFormConfiguration, SD_FORM_CONFIGURATION, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
+import { SdView } from '@sdcorejs/angular/components/view';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
-import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { SdSize } from '@sdcorejs/angular/utilities/models';
+import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { Size } from '@sdcorejs/utils/models';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import * as uuid from 'uuid';
@@ -45,6 +49,7 @@ interface Daterange {
   templateUrl: './date-range.component.html',
   styleUrls: ['./date-range.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; cáº¥p default en-US Ä‘á»ƒ parse/format hoáº¡t Ä‘á»™ng.
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
@@ -69,6 +74,7 @@ interface Daterange {
     MatDatepickerModule,
     MatNativeDateModule,
     SdLabel,
+    SdView,
     TranslatePipe,
   ],
 })
@@ -96,9 +102,27 @@ export class SdDateRange implements OnDestroy, OnInit {
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => this.autoIdInput() ? `forms-date-range-${this.autoIdInput()}` : undefined);
+
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => {
+    const v = this.#state().value as { from?: Date | null; to?: Date | null } | null | undefined;
+    const empty = !v || !v.from || !v.to;
+    return empty ? 'true' : 'false';
+  });
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly dataErrorMessage = computed(() => {
+    void this.#state();
+    const msg = this.errorMessage();
+    return msg && msg.length > 0 ? msg : null;
+  });
+
   name = input<string>(uuid.v4());
 
-  size = input<SdSize>('md');
+  size = input<Size>('md');
   // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -120,9 +144,9 @@ export class SdDateRange implements OnDestroy, OnInit {
 
   /**
    * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
-   * DÃ¹ng getter (khÃ´ng pháº£i computed) vÃ¬ formControl.errors khÃ´ng pháº£i Angular signal.
    */
-  get errorTooltipMessage(): string | undefined {
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
     const outerErrors = this.formControl.errors;
     const c1Errors = this.control1?.errors;
     const c2Errors = this.control2?.errors;
@@ -137,10 +161,46 @@ export class SdDateRange implements OnDestroy, OnInit {
       return this.#i18n.t('core.form.date-range.invalid-max');
     }
     return undefined;
-  }
+  });
 
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
+
+  /** Bare mode â€” strip the form-field shell to fit inline in a chip / token. */
+  bare = input(false, { transform: booleanAttribute });
+
+  /** Viewed mode â€” render a read-only <sd-view> instead of the editable form-field. */
+  viewed = input(false, { transform: booleanAttribute });
+
+  /** Optional <ng-template #sdValue> projected by consumer to override the viewed text. */
+  sdValueTemplate = contentChild<TemplateRef<unknown>>('sdValue');
+
+  /**
+   * Formatted "dd/MM/yyyy â†’ dd/MM/yyyy" string for the viewed-mode display.
+   * why: viewed mode chá»‰ hiá»ƒn thá»‹ text â€” cáº§n format gá»n cho cáº£ 2 Ä‘áº§u range,
+   * Returns empty when both ends are blank, "from â†’" when only from is set, and so on.
+   */
+  formatted = computed<string>(() => {
+    const m = this.valueModel();
+    const fmt = (d: unknown): string => {
+      if (d == null || d === '') return '';
+      const dt = d instanceof Date ? d : new Date(String(d));
+      if (isNaN(dt.getTime())) return '';
+      const dd = String(dt.getDate()).padStart(2, '0');
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      return `${dd}/${mm}/${dt.getFullYear()}`;
+    };
+    const a = fmt(m?.from);
+    const b = fmt(m?.to);
+    if (!a && !b) return '';
+    return `${a} â†’ ${b}`;
+  });
+
+  /** Open the range picker panel programmatically (for query-bar chip auto-open). */
+  open = (): void => {
+    if (this.formControl.disabled) return;
+    this.picker()?.open();
+  };
 
   appearanceInput = input<MatFormFieldAppearance | undefined>(undefined, { alias: 'appearance' });
   appearance = computed(() => this.appearanceInput() ?? this.formConfig?.appearance ?? 'outline');
@@ -163,7 +223,7 @@ export class SdDateRange implements OnDestroy, OnInit {
   // ==========================================
   // 5. INTERNAL STATE & STREAMS
   // ==========================================
-  isMobileOrTablet = SdUtilities.isMobile();
+  isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new FormControl();
   control1 = new FormControl();
   control2 = new FormControl();

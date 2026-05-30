@@ -1,4 +1,5 @@
-﻿import { MaterialIconFontSet, SdColor } from '@sdcorejs/angular/utilities/models';
+﻿import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
+import { Color } from '@sdcorejs/utils/models';
 
 export interface SdTableCommandOption<T = any> {
   align?: 'left' | 'right';
@@ -8,7 +9,7 @@ export interface SdTableCommandOption<T = any> {
 export type SdTableCommand<T = any> = SdTableCommandNormal<T> | SdTableCommandChildren<T>;
 
 export interface SdTableCommandNormal<T = any> {
-  color?: SdColor;
+  color?: Color;
   icon?: string | ((rowData: T) => string);
   fontSet?: MaterialIconFontSet;
   title?: string | ((rowData: T) => string);

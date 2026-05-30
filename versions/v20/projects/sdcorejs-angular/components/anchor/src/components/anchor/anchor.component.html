@@ -1,18 +1,19 @@
-﻿<div class="c-anchor-vertical" [ngClass]="{ 'c-stop-scroll-propagation': !isOverscroll() }" #wrapper>
-  <div class="c-anchor-content" [style.width]="'calc(100% - ' + sidebarWidth() + ' - 16px)'">
+﻿<div class="c-anchor-vertical" [ngClass]="{ 'c-stop-scroll-propagation': !overScroll() }" #wrapper>
+  <div class="c-anchor-content">
     <ng-content></ng-content>
   </div>
 
-  @if (!isHiddenAnchorList()) {
-    <div class="c-anchor-list" [style.width]="sidebarWidth()">
-      <sd-anchor-vertical-list
+  @if (!hideNav()) {
+    <div class="c-anchor-list" [style.flex-basis]="sidebarWidth()">
+      <anchor-nav
         [sections]="sections()"
         [ellipsis]="ellipsis()"
         [sidebarWidth]="sidebarWidth()"
         [activeSectionId]="activeSectionId()"
         [parentAutoId]="autoId()"
-        (sdClickSection)="scrollSectionByClick($event)">
-      </sd-anchor-vertical-list>
+        [color]="color()"
+        (clickSection)="scrollSectionByClick($event)">
+      </anchor-nav>
     </div>
   }
 </div>

@@ -1,8 +1,8 @@
 ﻿import { Injectable } from '@angular/core';
 // import hash from 'object-hash';
 import { SdStorageService } from '@sdcorejs/angular/services';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
-import { SdOperator } from '@sdcorejs/angular/utilities/models';
+import { Utilities } from '@sdcorejs/utils/fns';
+import { Operator } from '@sdcorejs/utils/models';
 import { map, startWith } from 'rxjs/operators';
 import { SdTableFilterDefDirective } from '../../directives/sd-table-filter-def.directive';
 import { SdTableColumn } from '../../models/table-column.model';
@@ -27,13 +27,13 @@ export class SdTableFilterService {
       columns: SdTableColumn[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
-      columnOperator?: Record<string, SdOperator>;
+      columnOperator?: Record<string, Operator>;
     }
   ) => {
     let cacheSession = false;
 
     const { id, columns, externalFilters } = args;
-    const tempKey = SdUtilities.hash({
+    const tempKey = Utilities.hash({
       id,
       columns: columns?.map(e => e.field).filter(field => !!field) || [],
       externalFilters: externalFilters?.map(e => e.field).filter(field => !!field) || [],
@@ -175,11 +175,11 @@ export class SdTableFilterService {
   #defaultValue = (args: {
     columns: SdTableColumn[] | undefined;
     externalFilters: SdTableExternalFilter[] | undefined;
-    columnOperator?: Record<string, SdOperator>;
+    columnOperator?: Record<string, Operator>;
   }): TableFilterValue => {
     const columnFilter: Record<string, any> = {};
     const externalFilter: Record<string, any> = {};
-    const columnOperator: Record<string, SdOperator> = args.columnOperator || {};
+    const columnOperator: Record<string, Operator> = args.columnOperator || {};
     const { columns, externalFilters } = args;
     // Filter column
     for (const item of columns || []) {
@@ -235,13 +235,13 @@ export class SdTableFilterService {
       columns: SdTableColumn[] | undefined;
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
-      columnOperator?: Record<string, SdOperator>;
+      columnOperator?: Record<string, Operator>;
     },
     value: TableFilterValue
   ): TableFilterValue => {
     const columnFilter: Record<string, any> = {};
     const externalFilter: Record<string, any> = {};
-    const columnOperator: Record<string, SdOperator> = args.columnOperator || {};
+    const columnOperator: Record<string, Operator> = args.columnOperator || {};
     const { columns, externalFilters } = args;
     // Filter column
     for (const item of columns || []) {

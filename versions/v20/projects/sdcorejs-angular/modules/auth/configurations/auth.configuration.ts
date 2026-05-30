@@ -1,6 +1,6 @@
-﻿import { InjectionToken } from '@angular/core';
+import { InjectionToken } from '@angular/core';
 import { CanActivate } from '@angular/router';
-import { SdMaybeAsync } from '@sdcorejs/angular/utilities';
+import { MaybeAsync } from '@sdcorejs/utils/models';
 import { SdAuthInfo } from '../services';
 
 export interface ISdAuthConfiguration {
@@ -11,13 +11,12 @@ export interface ISdAuthConfiguration {
 export const SD_AUTH_CONFIGURATION = new InjectionToken<ISdAuthConfiguration>('sd.auth.configuration');
 
 interface IAuthConfigurationAction {
-  signout: () => SdMaybeAsync<void>;
-  changePassword?: () => SdMaybeAsync<void>;
+  signout: () => MaybeAsync<void>;
+  changePassword?: () => MaybeAsync<void>;
 }
 
 interface IAuthConfigurationGuard {
   auth?: CanActivate['canActivate'];
   portal?: CanActivate['canActivate'];
-  authInfo: () => SdMaybeAsync<SdAuthInfo>;
+  authInfo: () => MaybeAsync<SdAuthInfo>;
 }
-

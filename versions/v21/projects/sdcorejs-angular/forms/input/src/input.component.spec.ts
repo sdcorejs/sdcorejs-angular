@@ -1,6 +1,6 @@
 ﻿import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdInput } from './input.component';
@@ -24,6 +24,7 @@ import { queryByCss } from '../../../testing/test-utils';
     [blurOnEnter]="blurOnEnter"
     [pattern]="pattern"
     [patternErrorMessage]="patternErrorMessage"
+    [autoId]="autoId"
     [(model)]="model"
     (sdChange)="onSdChange($event)"></sd-input>`,
 })
@@ -31,6 +32,7 @@ class HostComponent {
   label?: string;
   placeholder?: string;
   helperText?: string;
+  autoId?: string;
   type: 'text' | 'password' | 'number' | 'email' = 'text';
   required = false;
   disabled = false;
@@ -266,37 +268,39 @@ describe('SdInput', () => {
     });
   });
 
-  describe('errorTooltipMessage getter', () => {
+  describe('errorMessage getter', () => {
     it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', () => {
       // pre-seed: avoids NG0100 â€” ngAfterViewInit calls detectChanges();
       // a non-empty starting value keeps the control valid during that pass
       host.model = 'seed';
       host.required = true;
       fixture.detectChanges();
-      input.formControl.setValue('', { emitEvent: false });
-      input.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(input.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      input.formControl.setValue('');
+      input.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(input.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
     });
 
     it('returns maxlength message with limit', () => {
       host.model = '';
       host.maxlength = 3;
       fixture.detectChanges();
-      input.formControl.setValue('abcd', { emitEvent: false });
-      input.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(input.errorTooltipMessage).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 3');
+      input.formControl.setValue('abcd');
+      input.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(input.errorMessage()).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 3');
     });
 
     it('returns inlineError message when inlineError validator fires', () => {
       host.inlineError = 'ÄÃ£ cÃ³ lá»—i';
       fixture.detectChanges();
       input.formControl.updateValueAndValidity();
-      expect(input.errorTooltipMessage).toBe('ÄÃ£ cÃ³ lá»—i');
+      expect(input.errorMessage()).toBe('ÄÃ£ cÃ³ lá»—i');
     });
 
     it('returns undefined when no errors', () => {
       input.formControl.setValue('x');
-      expect(input.errorTooltipMessage).toBeUndefined();
+      expect(input.errorMessage()).toBeUndefined();
     });
   });
 
@@ -473,6 +477,194 @@ describe('SdInput', () => {
       expect(spy).toHaveBeenCalled();
     });
   });
+
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+
+      input.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-empty=true when value is null/empty', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-empty')).toBe('true');
+
+      input.formControl.setValue('hello');
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
+    });
+
+    it('renders data-value reflecting FormControl value', () => {
+      input.formControl.setValue('hello');
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-value')).toBe('hello');
+    });
+
+    it('omits data-value when type=password', () => {
+      fixture.componentInstance.type = 'password';
+      input.formControl.setValue('secret');
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.hasAttribute('data-value')).toBe(false);
+    });
+
+    it('renders data-invalid=true only after touched + invalid', () => {
+      input.formControl.setValidators([Validators.required]);
+      input.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-invalid')).toBe('false');
+
+      input.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-invalid')).toBe('true');
+    });
+
+    it('renders data-required reflecting required input', () => {
+      host.model = 'seed';
+      host.required = true;
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-required')).toBe('true');
+
+      host.required = false;
+      fixture.detectChanges();
+      expect(el.getAttribute('data-required')).toBe('false');
+    });
+
+    it('renders data-maxlength/minlength/pattern when inputs are set', () => {
+      host.maxlength = 100;
+      host.minlength = 5;
+      host.pattern = 'VN_PHONE';
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-maxlength')).toBe('100');
+      expect(el.getAttribute('data-minlength')).toBe('5');
+      expect(el.getAttribute('data-pattern')).toBe('VN_PHONE');
+    });
+
+    it('omits data-maxlength/minlength/pattern when not set', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.hasAttribute('data-maxlength')).toBe(false);
+      expect(el.hasAttribute('data-minlength')).toBe(false);
+      expect(el.hasAttribute('data-pattern')).toBe(false);
+    });
+
+    it('renders data-error-message when validation triggers', () => {
+      host.model = 'seed';
+      host.required = true;
+      fixture.detectChanges();
+      input.formControl.setValue('', { emitEvent: false });
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      input.formControl.markAsTouched();
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.getAttribute('data-error-message')).toBeTruthy();
+    });
+
+    it('omits data-error-message when no error', () => {
+      input.formControl.setValue('hello');
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input[matInput]');
+      expect(el.hasAttribute('data-error-message')).toBe(false);
+    });
+  });
+
+  describe('clear button (slim, hover-gated)', () => {
+    const clearBtn = () =>
+      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+
+    it('renders the slim clear button when a value is set', () => {
+      host.model = 'hello';
+      fixture.detectChanges();
+      expect(clearBtn()).not.toBeNull();
+    });
+
+    it('uses the thin close icon (not the filled cancel icon)', () => {
+      host.model = 'hello';
+      fixture.detectChanges();
+      expect(clearBtn()!.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
+    });
+
+    it('carries the sd-hover class so it only shows on hover/focus', () => {
+      host.model = 'hello';
+      fixture.detectChanges();
+      expect(clearBtn()!.classList.contains('sd-hover')).toBe(true);
+    });
+
+    it('hides the clear button when there is no value', () => {
+      host.model = '';
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when required', () => {
+      host.required = true;
+      host.model = 'hello';
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when disabled', () => {
+      host.disabled = true;
+      host.model = 'hello';
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when readonly', () => {
+      host.readonly = true;
+      host.model = 'hello';
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('clicking the clear button resets value to null and emits null', () => {
+      host.model = 'hello';
+      fixture.detectChanges();
+      clearBtn()!.click();
+      fixture.detectChanges();
+      expect(input.formControl.value).toBeNull();
+      expect(host.changes).toContain(null);
+    });
+
+    it('clear() is a no-op when already empty (no extra change emitted)', () => {
+      const before = host.changes.length;
+      input.clear();
+      fixture.detectChanges();
+      expect(host.changes.length).toBe(before);
+    });
+
+    it('clear() emits cleared output (dedicated intent â€” consumer dÃ¹ng Ä‘á»ƒ fire reload mÃ  KHÃ”NG over-trigger nhÆ° sdChange per-keystroke)', () => {
+      host.model = 'hello';
+      fixture.detectChanges();
+      const spy = jasmine.createSpy('cleared');
+      input.cleared.subscribe(spy);
+
+      input.clear();
+      fixture.detectChanges();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('cleared NOT emitted when clear() runs while already empty (early-return path)', () => {
+      const spy = jasmine.createSpy('cleared');
+      input.cleared.subscribe(spy);
+
+      // model is empty initially
+      input.clear();
+      fixture.detectChanges();
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe('SdInput (FormGroup lifecycle)', () => {
@@ -542,6 +734,37 @@ describe('SdInput (with SD_FORM_CONFIGURATION fill)', () => {
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {
     expect(input.appearance()).toBe('fill');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// host classes
+// ---------------------------------------------------------------------------
+
+describe('SdInput (host classes)', () => {
+  let fixture: ComponentFixture<SdInput>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdInput, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdInput);
+  });
+
+  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'Há» vÃ  tÃªn');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
 

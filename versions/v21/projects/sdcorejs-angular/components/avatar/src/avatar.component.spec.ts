@@ -154,4 +154,44 @@ describe('SdAvatar', () => {
       expect(fixture.nativeElement.querySelector('img')).not.toBeNull();
     });
   });
+
+  // ===========================================================================
+  // Branch-coverage extensions (batch 4)
+  // ===========================================================================
+  describe('undefined src branch', () => {
+    it('renders "?" initials for undefined src', () => {
+      setInput(fixture, 'src', undefined);
+      expect(queryByCss(fixture, 'span.sd-avatar-text').textContent?.trim()).toBe('?');
+    });
+
+    it('uses neutral #bdc3c7 background for undefined src', () => {
+      setInput(fixture, 'src', undefined);
+      const wrapper = queryByCss<HTMLDivElement>(fixture, '.sd-avatar');
+      expect(wrapper.style.backgroundColor).toBe('rgb(189, 195, 199)');
+    });
+  });
+
+  describe('initials edge cases', () => {
+    it('whitespace-only string → empty initials', () => {
+      setInput(fixture, 'src', '   ');
+      // why: words.length === 0 returns '' before fallback "?", so span shows empty.
+      expect(queryByCss(fixture, 'span.sd-avatar-text').textContent?.trim()).toBe('');
+    });
+
+    it('trims surrounding spaces and uses first+last word initial', () => {
+      setInput(fixture, 'src', '  Le  Van  Cuong  ');
+      expect(queryByCss(fixture, 'span.sd-avatar-text').textContent?.trim()).toBe('LC');
+    });
+  });
+
+  describe('handleError direct call', () => {
+    it('calling handleError() manually sets isUrl to false even without DOM event', () => {
+      setInput(fixture, 'src', 'https://x.com/a.png');
+      expect(fixture.componentInstance.isUrl()).toBe(true);
+
+      fixture.componentInstance.handleError();
+      fixture.detectChanges();
+      expect(fixture.componentInstance.isUrl()).toBe(false);
+    });
+  });
 });

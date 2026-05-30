@@ -74,7 +74,7 @@ None â€” text comes from the `label` input.
 
 ### `inlineError` flow
 
-Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator()` call that attaches a custom `ValidatorFn` (`customInlineErrorValidator`) returning `{ inlineError: true }`. The template then shows `<mat-error>{{ inlineError }}</mat-error>` when `formControl.errors?.['inlineError'] && formControl.touched`. Clearing `[inlineError]` to an empty string removes the validator and calls `updateValueAndValidity()`.
+Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator()` call that attaches the shared `SdInlineErrorValidator` (from `@sdcorejs/angular/forms/models`) returning `{ inlineError: true }`. The template then shows `<mat-error>{{ inlineError }}</mat-error>` when `formControl.errors?.['inlineError'] && formControl.touched`. Clearing `[inlineError]` to an empty string removes the validator and calls `updateValueAndValidity()`.
 
 ## Visual cues (helps agent map screenshots â†’ component)
 - A square box on the left + label text on the right
@@ -116,6 +116,17 @@ Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator(
 - âŒ Using a checkbox for a single ON/OFF setting in a settings page â€” prefer `<sd-switch>` for that visual idiom.
 - âŒ Stacking many checkboxes for mutually exclusive options â€” use `<sd-radio>`.
 - âŒ Forgetting `[form]` and trying to validate via the parent FormGroup â€” control won't be registered.
+
+## E2E test attributes
+
+Anchor: `<mat-checkbox>`, Prefix: `forms-checkbox-`
+
+| Attribute | Values | Notes |
+| --- | --- | --- |
+| `data-autoid` | string | Set from `autoId` input; e.g. `forms-checkbox-agree`. |
+| `data-disabled` | `'true'` \| `'false'` | Reflects FormControl disabled state. |
+| `data-empty` | `'true'` \| `'false'` | `'true'` when value is null/undefined; `'false'` for any boolean. |
+| `data-value` | `'true'` \| `'false'` | Serialized boolean (string form). |
 
 ## Related
 - `<sd-switch>` â€” toggle-style boolean

@@ -1,12 +1,12 @@
-﻿import {Component, computed, inject, input, signal } from '@angular/core';
+import {Component, computed, inject, input, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 
-// Import ná»™i bá»™ trong module layout
+// Import nội bộ trong module layout
 import { SdLayoutMenu, SdLayoutService } from '../../services';
 import { MenuPipe } from '../../pipes';
 import { SidebarV1Component } from '../sidebar-v1/main.component';
 import { SidebarMobileV1Component } from '../sidebar-mobile-v1/main.component';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'sd-layout',
@@ -34,6 +34,5 @@ export class SdLayoutComponent {
   userInfo = this.#layoutService.userInfo;
   sidebar = this.#layoutService.sidebar;
 
-  isMobileOrTablet = signal(SdUtilities.isMobile());
+  isMobileOrTablet = signal(BrowserUtilities.isMobile());
 }
-

@@ -1,6 +1,6 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { SdMobileDirective } from './sd-mobile.directive';
 
 @Component({
@@ -26,7 +26,7 @@ describe('SdMobileDirective', () => {
 
   describe('when isMobile() returns true', () => {
     beforeEach(() => {
-      spyOn(SdUtilities, 'isMobile').and.returnValue(true);
+      spyOn(BrowserUtilities, 'isMobile').and.returnValue(true);
       fixture = createFixture();
     });
 
@@ -39,7 +39,7 @@ describe('SdMobileDirective', () => {
 
   describe('when isMobile() returns false', () => {
     beforeEach(() => {
-      spyOn(SdUtilities, 'isMobile').and.returnValue(false);
+      spyOn(BrowserUtilities, 'isMobile').and.returnValue(false);
       fixture = createFixture();
     });
 
@@ -49,4 +49,3 @@ describe('SdMobileDirective', () => {
     });
   });
 });
-

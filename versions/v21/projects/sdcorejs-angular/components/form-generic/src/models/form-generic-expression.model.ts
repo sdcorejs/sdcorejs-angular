@@ -1,4 +1,4 @@
-﻿import { SdOperator, SdOperators } from '@sdcorejs/angular/utilities/models';
+﻿import { Operator as SdOperator } from '@sdcorejs/utils/models';
 import { SdFormGenericComponent, SdFormGenericGroup } from './form-generic-component.model';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 

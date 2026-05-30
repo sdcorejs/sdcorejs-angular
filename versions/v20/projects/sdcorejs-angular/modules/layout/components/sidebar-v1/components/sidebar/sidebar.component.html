@@ -18,6 +18,25 @@
     <div class="c-body">
       <div class="c-menu">
         <div class="c-menu-group">
+          @if (_sidebar?.pin?.enabled && pinnedMenuGroup().children?.length) {
+            <button
+              (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
+              (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
+              (click)="expandPinnedGroup()"
+              [matTooltip]="'Đã ghim'"
+              [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
+              [matTooltipPosition]="'right'"
+              style="padding: 0; margin: 0; border: none; background-color: transparent">
+              <mat-icon
+                class="c-menu-group-icon"
+                [ngStyle]="{
+                  color: isPinnedMenuGroupActive() ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
+                  backgroundColor: isPinnedMenuGroupActive() ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                }">
+                push_pin
+              </mat-icon>
+            </button>
+          }
           @for (nodeMenuGroup of menus(); track nodeMenuGroup.id) {
             <button
               (mouseenter)="onMouseOverMenuGroupNode($event, nodeMenuGroup)"
@@ -79,6 +98,17 @@
                         color: (currentPath() | menuFocus: node) ? _sidebar.brandColor || '#2962FF' : '#1F1F1F',
                       }"
                       [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
+
+                    @if (_sidebar?.pin?.enabled) {
+                      <mat-icon
+                        class="c-menu-node-description-icon-pin"
+                        [fontSet]="isPinnedNode(node) ? 'material-icons' : 'material-icons-outlined'"
+                        [style.opacity]="isPinnedNode(node) || isHoveredNode(node) ? '1' : null"
+                        [style.color]="isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || '#2962FF' : null"
+                        (click)="onTogglePin($event, node)"
+                        >push_pin
+                      </mat-icon>
+                    }
                   </div>
                 </li>
               </mat-nested-tree-node>
@@ -111,7 +141,7 @@
             </mat-tree>
           </div>
         </div>
-        </div>
+      </div>
     </div>
 
     <div class="c-footer">

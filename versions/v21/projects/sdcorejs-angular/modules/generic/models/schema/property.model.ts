@@ -1,5 +1,5 @@
 ﻿import { SdTableColumn } from '@sdcorejs/angular/components';
-import { SdColor } from '@sdcorejs/angular/utilities/models';
+import { Color } from '@sdcorejs/utils/models';
 
 /**
  * @description
@@ -150,7 +150,7 @@ interface PropertyEnum<T> extends PropertyBase<T> {
   options: {
     value: string;
     display: string;
-    badgeColor?: SdColor;
+    badgeColor?: Color;
     badgeIcon?: string;
   }[];
 }

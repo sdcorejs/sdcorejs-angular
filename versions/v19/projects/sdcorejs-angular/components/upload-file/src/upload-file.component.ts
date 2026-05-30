@@ -19,7 +19,7 @@ import {
   viewChild,
   viewChildren
 } from '@angular/core';
-import { FormGroup, NgForm } from '@angular/forms';
+import { FormGroup, NgForm, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
@@ -28,7 +28,8 @@ import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdFormControl } from '@sdcorejs/angular/forms/models';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import * as uuid from 'uuid';
 import { PreviewComponent } from './components/preview/preview.component';
 import {
@@ -75,7 +76,7 @@ export class SdUploadFile<TArgs = any> {
 
   // â”€â”€â”€ Internal State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly id = `I${uuid.v4()}`;
-  readonly #isMobileOrTablet = SdUtilities.isMobile();
+  readonly #isMobileOrTablet = BrowserUtilities.isMobile();
   readonly #canvas1 = `C${uuid.v4()}`;
   readonly #canvas2 = `C${uuid.v4()}`;
   #name = uuid.v4();
@@ -98,6 +99,11 @@ export class SdUploadFile<TArgs = any> {
   readonly autoId = computed(() => (this.autoIdInput() ? `components-upload-file-${this.autoIdInput()}` : undefined));
   readonly removeAutoId = (index: number): string | undefined =>
     (this.autoId() ? `${this.autoId()}-remove-${index}` : undefined);
+
+  // â”€â”€â”€ E2E data attributes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  readonly dataDisabled = computed(() => (this.disabled() ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.previewFiles()) ? 'true' : 'false'));
+  readonly dataCount = computed(() => String(this.previewFiles()?.length ?? 0));
 
   readonly args = input<TArgs>();
   readonly label = input<string>();
@@ -233,6 +239,19 @@ export class SdUploadFile<TArgs = any> {
       }
     });
 
+    // why: required() lÃ  signal input â€” pháº£i Ä‘Äƒng kÃ½ validator qua effect Ä‘á»ƒ báº¯t thay
+    // Ä‘á»•i runtime. Validators.required nháº­n biáº¿t array rá»—ng (length === 0) lÃ  empty
+    // nÃªn file array hoáº¡t Ä‘á»™ng Ä‘Ãºng. updateValueAndValidity Ä‘á»ƒ chip lá»—i xuáº¥t hiá»‡n
+    // ngay khi required toggle true mÃ  chÆ°a upload file nÃ o.
+    effect(() => {
+      if (this.required()) {
+        this.formControl.setValidators(Validators.required);
+      } else {
+        this.formControl.clearValidators();
+      }
+      this.formControl.updateValueAndValidity({ emitEvent: false });
+    });
+
     // Cleanup on destroy
     this.#destroyRef.onDestroy(() => {
       this.#revokePreviewBlobURLs();
@@ -328,20 +347,6 @@ export class SdUploadFile<TArgs = any> {
     return this.downloadInput() || this.#getSelectedConfiguration()?.download;
   };
 
-  // #updateValidator = () => {
-  //   this.formControl.clearValidators();
-  //   this.formControl.clearAsyncValidators();
-  //   const validators: ValidatorFn[] = [];
-  //   const asyncValidators: AsyncValidatorFn[] = [];
-  //   if (this.required()) {
-  //     validators.push(Validators.required);
-  //   }
-  //   this.formControl.setValidators(validators);
-  //   this.formControl.setAsyncValidators(asyncValidators);
-  //   this.formControl.updateValueAndValidity();
-  // };
-
-
   #validate = async (file: File): Promise<string | null> => {
     if (this.type() === 'image') {
       if (file.type.split('/')[0] !== 'image') {
@@ -409,7 +414,7 @@ export class SdUploadFile<TArgs = any> {
 
   // â”€â”€â”€ Public Event Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   onUpload = () => {
-    SdUtilities.upload({
+    BrowserUtilities.upload({
       maxSizeInMb: this.maxSize(),
       extensions: this.extensions(),
       multiple: this.max() > 1,
@@ -644,7 +649,7 @@ export class SdUploadFile<TArgs = any> {
    */
   onDownload = (previewFile: PreviewFile) => {
     if (previewFile.file || previewFile.src) {
-      SdUtilities.download(previewFile.file! || previewFile.src!, previewFile.fileName);
+      BrowserUtilities.download(previewFile.file! || previewFile.src!, previewFile.fileName);
       return;
     }
     if (previewFile.idOrKey) {

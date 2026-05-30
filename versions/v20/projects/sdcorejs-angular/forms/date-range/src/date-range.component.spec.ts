@@ -1,6 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { By } from '@angular/platform-browser';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdDateRange } from './date-range.component';
 
@@ -15,6 +16,8 @@ import { SdDateRange } from './date-range.component';
     [label]="label"
     [required]="required"
     [disabled]="disabled"
+    [bare]="bare"
+    [viewed]="viewed"
     [min]="min"
     [max]="max"
     [model]="model"
@@ -25,6 +28,8 @@ class HostComponent {
   label?: string;
   required = false;
   disabled = false;
+  bare = false;
+  viewed = false;
   min: any = undefined;
   max: any = undefined;
   model: any = undefined;
@@ -205,19 +210,20 @@ describe('SdDateRange', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage', () => {
+  describe('errorMessage', () => {
     it('returns "Vui lòng nhập thông tin" for required error on formControl', () => {
       host.required = true;
       fixture.detectChanges();
-      comp.formControl.setValue(null, { emitEvent: false });
-      comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('Vui lòng nhập thông tin');
+      comp.formControl.setValue(null);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns undefined when there are no errors', () => {
       host.model = { from: '2026/01/01', to: '2026/01/31' };
       fixture.detectChanges();
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
     });
   });
 
@@ -300,6 +306,106 @@ describe('SdDateRange', () => {
       comp.clear();
       expect(comp.control1.value).toBeNull();
       expect(comp.control2.value).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el = fixture.nativeElement.querySelector('mat-date-range-input');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      comp.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-empty=true when from or to is missing', () => {
+      comp.formControl.setValue({ from: new Date('2026-05-01'), to: null });
+      fixture.detectChanges();
+      const el = fixture.nativeElement.querySelector('mat-date-range-input');
+      expect(el.getAttribute('data-empty')).toBe('true');
+    });
+
+    it('renders data-empty=false when both from and to are present', () => {
+      comp.formControl.setValue({
+        from: new Date('2026-05-01T00:00:00.000Z'),
+        to: new Date('2026-05-31T00:00:00.000Z'),
+      });
+      fixture.detectChanges();
+      const el = fixture.nativeElement.querySelector('mat-date-range-input');
+      expect(el.getAttribute('data-empty')).toBe('false');
+    });
+
+    it('renders data-value as JSON for {from, to}', () => {
+      const from = new Date('2026-05-01T00:00:00.000Z');
+      const to = new Date('2026-05-31T00:00:00.000Z');
+      comp.formControl.setValue({ from, to });
+      fixture.detectChanges();
+      const el = fixture.nativeElement.querySelector('mat-date-range-input');
+      expect(el.getAttribute('data-value')).toBe(JSON.stringify({ from, to }));
+    });
+
+    it('renders data-invalid=true only after dirty + invalid', () => {
+      // sdFormControlState gates invalid on (touched || dirty).
+      // MatDateRangeInput's form integration resets touched state on the aggregate
+      // formControl, so we use markAsDirty() to satisfy the gate instead.
+      host.required = true;
+      fixture.detectChanges();
+      const el = fixture.nativeElement.querySelector('mat-date-range-input');
+      expect(el.getAttribute('data-invalid')).toBe('false');
+      comp.formControl.setErrors({ required: true });
+      comp.formControl.markAsDirty();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-invalid')).toBe('true');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('bare + viewed + open()', () => {
+    it('bare host adds .sd-bare', () => {
+      // host bindings reflect from inputs after detectChanges
+      host.bare = true; // add `bare` to the test host component as a passthrough input
+      fixture.detectChanges();
+      const hostEl = fixture.nativeElement.querySelector('sd-date-range') as HTMLElement;
+      expect(hostEl.classList.contains('sd-bare')).toBe(true);
+    });
+
+    it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
+      host.label = undefined;
+      fixture.detectChanges();
+      const hostEl = fixture.nativeElement.querySelector('sd-date-range') as HTMLElement;
+      expect(hostEl.classList.contains('sd-has-label')).toBe(false);
+      host.label = 'Khoảng thời gian';
+      fixture.detectChanges();
+      expect(hostEl.classList.contains('sd-has-label')).toBe(true);
+    });
+
+    it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+      const hostEl = fixture.nativeElement.querySelector('sd-date-range') as HTMLElement;
+      expect(hostEl.classList.contains('sd-viewed')).toBe(false);
+      host.viewed = true;
+      fixture.detectChanges();
+      expect(hostEl.classList.contains('sd-viewed')).toBe(true);
+    });
+
+    it('viewed renders sd-view (not the mat-form-field input)', () => {
+      host.viewed = true;
+      fixture.detectChanges();
+      const view = fixture.nativeElement.querySelector('sd-date-range sd-view');
+      expect(view).not.toBeNull();
+      const dateInput = fixture.nativeElement.querySelector('sd-date-range mat-date-range-input');
+      expect(dateInput).toBeNull();
+    });
+
+    it('open() opens the range picker programmatically', () => {
+      // grab the inner sd-date-range component instance
+      const cmp = fixture.debugElement.query(By.directive(SdDateRange)).componentInstance as SdDateRange;
+      const picker = cmp.picker();
+      expect(picker).toBeTruthy();
+      spyOn(picker!, 'open');
+      cmp.open();
+      expect(picker!.open).toHaveBeenCalled();
     });
   });
 });

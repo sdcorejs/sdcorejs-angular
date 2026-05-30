@@ -17,7 +17,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
-import { DefaultMaterialIconFontSet, MaterialIconFontSet, SdColor } from '@sdcorejs/angular/utilities/models';
+import { Color } from '@sdcorejs/utils/models';
+import { DefaultMaterialIconFontSet, MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 
@@ -55,7 +56,7 @@ export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy
     transform: (value) => value || 'light'
   });
 
-  color = input<SdColor, SdColor | undefined | null>('secondary', {
+  color = input<Color, Color | undefined | null>('secondary', {
     transform: (value) => value || 'secondary'
   });
 

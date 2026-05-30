@@ -1,0 +1,75 @@
+<!--
+  Seamless string/number chip — the pill IS the input. One border, three flush
+  segments: label · input(s) · ×. State styling driven by [data-state].
+-->
+<span
+  class="c-seamless"
+  [attr.data-state]="state()"
+  [class.c-seamless--compact]="density() === 'compact'"
+  [class.c-seamless--comfortable]="density() === 'comfortable'"
+  (click)="focusFromShell($event)">
+
+  <!-- Label segment: icon + field name (+ optional operator pill) -->
+  <span class="c-seamless__label">
+    <mat-icon class="c-seamless__icon" fontSet="material-icons-outlined">{{ icon() }}</mat-icon>
+    <span class="c-seamless__field">{{ field().label }}</span>
+    @if (showOperator() && !isNoData()) {
+      <sd-operator class="c-seamless__op" [operators]="[operator()]" [model]="operator()" [disabled]="true" />
+    } @else if (!isNoData()) {
+      <span class="c-seamless__sep">:</span>
+    }
+  </span>
+
+  <!-- Input segment — transparent, borderless; hidden for NULL / NOT_NULL -->
+  @if (!isNoData()) {
+    <span class="c-seamless__input">
+      @if (isBetween()) {
+        <input
+          #firstInput
+          type="text"
+          class="c-seamless__field-input"
+          [attr.data-autoid]="autoId() ? autoId() + '-from' : null"
+          [ngModel]="draftFrom()"
+          (ngModelChange)="draftFrom.set($event)"
+          [size]="sizeFor(draftFrom(), phFrom())"
+          [placeholder]="phFrom()"
+          (focus)="onFocus()"
+          (blur)="commitRange()"
+          (keydown.enter)="$any($event.target).blur()"
+          (keydown.escape)="revertAndBlur($any($event.target))" />
+        <span class="c-seamless__dash" aria-hidden="true">—</span>
+        <input
+          type="text"
+          class="c-seamless__field-input"
+          [attr.data-autoid]="autoId() ? autoId() + '-to' : null"
+          [ngModel]="draftTo()"
+          (ngModelChange)="draftTo.set($event)"
+          [size]="sizeFor(draftTo(), phTo())"
+          [placeholder]="phTo()"
+          (focus)="onFocus()"
+          (blur)="commitRange()"
+          (keydown.enter)="$any($event.target).blur()"
+          (keydown.escape)="revertAndBlur($any($event.target))" />
+      } @else {
+        <input
+          #firstInput
+          type="text"
+          class="c-seamless__field-input"
+          [attr.data-autoid]="autoId() ?? null"
+          [ngModel]="draft()"
+          (ngModelChange)="draft.set($event)"
+          [size]="sizeFor(draft(), ph())"
+          [placeholder]="ph()"
+          (focus)="onFocus()"
+          (blur)="commitSingle()"
+          (keydown.enter)="$any($event.target).blur()"
+          (keydown.escape)="revertAndBlur($any($event.target))" />
+      }
+    </span>
+  }
+
+  <!-- × segment -->
+  <button type="button" class="c-seamless__x" aria-label="Remove filter" (click)="onRemove($event)">
+    <mat-icon fontSet="material-icons-outlined">close</mat-icon>
+  </button>
+</span>

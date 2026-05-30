@@ -7,14 +7,17 @@
   booleanAttribute,
   computed,
   contentChildren,
+  effect,
   input,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Subscription, auditTime, debounceTime, filter, fromEvent, map, take } from 'rxjs';
-
-import { SdAnchorVerticalList } from '../anchor-vertical/anchor-vertical-list.component';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { Color } from '@sdcorejs/utils/models';
+import { Subscription, fromEvent, take } from 'rxjs';
+import { AnchorNav } from '../anchor-nav/anchor-nav.component';
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
 
 @Component({
@@ -22,7 +25,7 @@ import { SdAnchorItem } from '../anchor-item/anchor-item.component';
   templateUrl: './anchor.component.html',
   styleUrls: ['./anchor.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, SdAnchorVerticalList],
+  imports: [CommonModule, AnchorNav],
   standalone: true,
 })
 export class SdAnchor implements OnDestroy {
@@ -31,101 +34,132 @@ export class SdAnchor implements OnDestroy {
 
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `components-anchor-${this.autoIdInput()}` : undefined));
-  // Derive autoId cho từng item theo `key` (nếu consumer không truyền key → undefined, không bind).
-  readonly itemAutoId = (key: string | undefined): string | undefined =>
-    this.autoId() && key ? `${this.autoId()}-${key}` : undefined;
 
-  type = input<'vertical' | 'horizontal'>('vertical');
   sidebarWidth = input<string>('200px');
   ellipsis = input(false, { transform: booleanAttribute });
-  isOverscroll = input(false, { transform: booleanAttribute });
-  isHiddenAnchorList = input(false, { transform: booleanAttribute });
+  overScroll = input(false, { transform: booleanAttribute });
+  // Mobile: default ẩn nav (sidebar TOC chiếm chỗ trên màn hình hẹp).
+  // Consumer truyền `[hideNav]="false"` để force hiện trên mobile.
+  hideNav = input(BrowserUtilities.isMobile(), { transform: booleanAttribute });
+  // Màu highlight active nav (text + icon + vertical bar). Default 'primary'.
+  color = input<Color>('primary');
 
   activeSectionId = signal<string>('');
 
-  #scrollSubscription = new Subscription();
-  #clickScrollSubscription = new Subscription();
-  #delay = 100;
-  #currentScrollTop = 0;
+  #initialized = false;
+  #isClickScrolling = false;
+  #clickScrollSubscription: Subscription | null = null;
+  #intersectionObserver: IntersectionObserver | null = null;
+  #visibleSections = new Set<Element>();
   #timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  #timeoutScrollFallback = 200;
 
   constructor() {
     afterNextRender(() => {
-      if (!this.isHiddenAnchorList()) {
-        this.activeSectionId.set(this.sections()[0]?.id ?? '');
-        this.#registerScrollSubscription();
+      this.#initialized = true;
+      if (!this.hideNav()) {
+        this.#registerIntersectionObserver();
+      }
+    });
+
+    // Lắng nghe thay đổi sections để đăng ký lại observe section
+    effect(() => {
+      this.sections();
+      if (!this.hideNav() && this.#initialized) {
+        untracked(() => this.#registerIntersectionObserver());
       }
     });
   }
 
-  #registerScrollSubscription = (): void => {
-    this.#disposeResources();
+  #registerIntersectionObserver(): void {
+    this.#cleanIntersectionObserver();
     const wrapperEl = this.wrapper().nativeElement;
-    this.#scrollSubscription = fromEvent<UIEvent>(wrapperEl, 'scroll')
-      .pipe(auditTime(50))
-      .subscribe((event: UIEvent) => {
-        const el = event.target as HTMLElement;
-        this.#currentScrollTop = this.#updateCurrentScroll(el);
+
+    // Brower API IntersectionObserver sẽ hỗ trợ khi nào 1 section được hiện ra trong wrapperEl
+    this.#intersectionObserver = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            // Nếu section mới đi vào vùng nhìn thấy -> add vào set
+            this.#visibleSections.add(entry.target);
+          } else {
+            // Nếu section đã đi ra khỏi vùng nhìn thấy -> xóa khỏi Set
+            this.#visibleSections.delete(entry.target);
+          }
+        }
+
+        // Nếu đang scroll bởi click section thì return luôn, k phải quét qua tìm vùng section được active
+        if (this.#isClickScrolling) {
+          return;
+        }
+
         for (const section of this.sections()) {
-          const rect = section.elementRef.nativeElement;
-          const rectTop = rect.offsetTop;
-          const rectBottom = rectTop + rect.offsetHeight;
-          if (this.#currentScrollTop >= rectTop && this.#currentScrollTop < rectBottom) {
-            this.activeSectionId.set(section.id);
+          // Kiểm tra xem DOM của section nào đang nằm trong danh sách đang nhìn thấy để active chính xác
+          if (this.#visibleSections.has(section.elementRef.nativeElement)) {
+            if (this.activeSectionId() !== section.id) {
+              this.activeSectionId.set(section.id);
+            }
             break;
           }
         }
-      });
-  };
+      },
+      { root: wrapperEl, threshold: 0 }
+    );
+
+    // Đăng ký theo dõi từng section có trong anchor
+    for (const section of this.sections()) {
+      this.#intersectionObserver.observe(section.elementRef.nativeElement);
+    }
+  }
 
   scrollSectionByClick(idSectionTarget: string): void {
     this.activeSectionId.set(idSectionTarget);
     const targetSection = this.sections().find(s => s.id === idSectionTarget)?.elementRef;
-    if (!targetSection) return;
+    if (!targetSection) {
+      return;
+    }
+    this.#cleanScrollSectionByClickObserver();
+    this.#isClickScrolling = true;
 
-    this.#disposeResources();
     const wrapperEl = this.wrapper().nativeElement;
     const targetElement = targetSection.nativeElement;
-    const prevScrollTop = this.#currentScrollTop;
 
-    this.#clickScrollSubscription = fromEvent<UIEvent>(wrapperEl, 'scroll')
-      .pipe(
-        auditTime(this.#delay),
-        map((event: UIEvent) => {
-          const el = event.target as HTMLElement;
-          this.#currentScrollTop = this.#updateCurrentScroll(el);
-          const wrapperTop = wrapperEl.getBoundingClientRect().top;
-          const targetRect = targetElement.getBoundingClientRect();
-          const isVisible = targetRect.top >= 0 && targetRect.bottom <= window.innerHeight;
-          return Math.abs(targetRect.top - wrapperTop) < 1 || isVisible;
-        }),
-        filter(Boolean),
-        debounceTime(this.#delay + 100),
-        take(1)
-      )
-      .subscribe(() => this.#registerScrollSubscription());
+    const prevScrollTop = wrapperEl.scrollTop; // Lưu lại vị trí cuộn hiện tại của container
+    const scrollTop = prevScrollTop + targetElement.getBoundingClientRect().top - wrapperEl.getBoundingClientRect().top; // Vị trí section cần scroll tới
 
+    // Đăng ký sự kiện nếu đã được scroll xong
+    this.#clickScrollSubscription = fromEvent(wrapperEl, 'scrollend')
+      .pipe(take(1))
+      .subscribe(() => {
+        this.#isClickScrolling = false;
+      });
+
+    // Nếu sectionTarget đã ở đúng vị trí (click nhưng không scroll) thì sau #timeoutScrollFallback kích hoạt lại IntersectionObserver
     this.#timeoutId = setTimeout(() => {
-      if (prevScrollTop === this.#currentScrollTop) {
-        this.#registerScrollSubscription();
+      if (wrapperEl.scrollTop === prevScrollTop) {
+        this.#isClickScrolling = false;
+        this.#clickScrollSubscription?.unsubscribe();
       }
-    }, this.#delay + 100);
+    }, this.#timeoutScrollFallback);
 
-    wrapperEl.scrollTo({ top: targetElement.offsetTop, behavior: 'smooth' });
+    wrapperEl.scrollTo({ top: scrollTop, behavior: 'smooth' });
   }
 
-  #updateCurrentScroll(el: HTMLElement): number {
-    const style = getComputedStyle(el);
-    return el.scrollTop + parseFloat(style.paddingTop) + parseFloat(style.borderTopWidth);
-  }
-
-  #disposeResources = (): void => {
-    if (this.#timeoutId) clearTimeout(this.#timeoutId);
-    this.#scrollSubscription?.unsubscribe();
+  #cleanScrollSectionByClickObserver = (): void => {
+    if (this.#timeoutId) {
+      clearTimeout(this.#timeoutId);
+    }
     this.#clickScrollSubscription?.unsubscribe();
   };
 
+  #cleanIntersectionObserver = (): void => {
+    this.#intersectionObserver?.disconnect();
+    this.#visibleSections.clear();
+  };
+
   ngOnDestroy(): void {
-    this.#disposeResources();
+    this.#cleanScrollSectionByClickObserver();
+    this.#cleanIntersectionObserver();
   }
 }

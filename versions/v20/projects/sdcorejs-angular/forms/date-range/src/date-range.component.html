@@ -3,12 +3,21 @@
 @let app = appearance();
 @let req = required();
 @let hideErr = hideInlineError();
-@let errMsg = errorTooltipMessage;
+@let errMsg = errorMessage();
 @let hText = helperText();
 @let minD = resolvedMin();
 @let maxD = resolvedMax();
 @let sz = size();
 
+@if (viewed()) {
+  <sd-view
+    [label]="lbl"
+    [labelTemplate]="lblDef?.templateRef ?? null"
+    [value]="valueModel()"
+    [display]="formatted()"
+    [valueTemplate]="sdValueTemplate()">
+  </sd-view>
+} @else {
 @if (!app && lblDef?.templateRef) {
   <ng-container *ngTemplateOutlet="lblDef!.templateRef"> </ng-container>
 }
@@ -33,7 +42,14 @@
     </mat-label>
   }
 
-  <mat-date-range-input [max]="maxD" [min]="minD" [rangePicker]="picker" [disabled]="formControl.disabled" [required]="req">
+  <mat-date-range-input [max]="maxD" [min]="minD" [rangePicker]="picker" [disabled]="formControl.disabled" [required]="req"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-invalid]="dataInvalid()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()"
+    [attr.data-required]="dataRequired()"
+    [attr.data-error-message]="dataErrorMessage()">
     <input
       aria-hidden="true"
       [id]="id1"
@@ -81,3 +97,4 @@
 
   <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
 </mat-form-field>
+}

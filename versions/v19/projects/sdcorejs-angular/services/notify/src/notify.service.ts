@@ -1,4 +1,4 @@
-﻿import { DOCUMENT } from '@angular/common';
+import { DOCUMENT } from '@angular/common';
 import {
   ApplicationRef,
   createComponent,
@@ -7,7 +7,7 @@ import {
   Injectable,
   signal
 } from '@angular/core';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { ToastContainerComponent } from './components/toast-container.component';
 import { NotifyOption, ToastData, ToastType } from './notify.model';
 
@@ -78,7 +78,7 @@ export class SdNotifyService {
   // Private helpers
   #addImmediate(type: ToastType, message: string, option?: NotifyOption) {
     const newToast: ToastData = {
-      id: SdUtilities.generateUuid(),
+      id: Utilities.generateUuid(),
       type,
       message,
       title: option?.title,
@@ -125,7 +125,7 @@ export class SdNotifyService {
     const finalTitle = messages.length > 1 ? `${title} (${messages.length})` : title;
 
     const newToast: ToastData = {
-      id: SdUtilities.generateUuid(),
+      id: Utilities.generateUuid(),
       type,
       message: messages.length === 1 ? messages[0] : messages, 
       title: finalTitle,

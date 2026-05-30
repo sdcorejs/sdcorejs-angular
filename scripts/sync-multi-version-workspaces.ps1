@@ -61,6 +61,11 @@ function Update-MajorInPackageJson {
   $angularVersion = "^$Major.0.0"
   $ngPackagrVersion = "^$Major.0.0"
   $materoVersion = "^$Major.0.0"
+  $typescriptVersion = switch ($Major) {
+    "20" { "~5.8.3" }
+    "21" { "~5.9.3" }
+    default { "~5.7.2" }
+  }
 
   $packages = @(
     "@angular/animations",
@@ -70,6 +75,7 @@ function Update-MajorInPackageJson {
     "@angular/core",
     "@angular/forms",
     "@angular/material",
+    "@angular/material-date-fns-adapter",
     "@angular/material-moment-adapter",
     "@angular/platform-browser",
     "@angular/platform-browser-dynamic",
@@ -86,6 +92,12 @@ function Update-MajorInPackageJson {
   $updated = Set-PackageVersion -Content $updated -PackageName "@ng-matero/extensions" -Version $materoVersion
   $updated = Set-PackageVersion -Content $updated -PackageName "@ng-matero/extensions-moment-adapter" -Version $materoVersion
   $updated = Set-PackageVersion -Content $updated -PackageName "ng-packagr" -Version $ngPackagrVersion
+  $updated = Set-PackageVersion -Content $updated -PackageName "typescript" -Version $typescriptVersion
+
+  if ($Major -eq "21") {
+    $updated = Set-PackageVersion -Content $updated -PackageName "angular-eslint" -Version "^21.0.0"
+    $updated = Set-PackageVersion -Content $updated -PackageName "typescript-eslint" -Version "^8.60.0"
+  }
 
   if ($updated -ne $content) {
     Set-Content -LiteralPath $PackagePath -Value $updated -Encoding UTF8

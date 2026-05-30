@@ -65,6 +65,36 @@ function Update-AngularJson {
   }
 }
 
+function Update-ChartInputSignalAnnotations {
+  param(
+    [string]$RootPath
+  )
+
+  $chartTypes = @("bar", "line", "pie", "doughnut")
+
+  foreach ($chartType in $chartTypes) {
+    $filePath = Join-Path $RootPath "projects/sdcorejs-angular/components/chart/src/$chartType-chart.component.ts"
+    if (!(Test-Path -LiteralPath $filePath)) {
+      continue
+    }
+
+    $content = Get-Content -LiteralPath $filePath -Raw
+    $updated = $content
+
+    if ($updated -notmatch "\bInputSignal\b") {
+      $updated = $updated -replace "ElementRef, ", "ElementRef, InputSignal, "
+    }
+
+    $updated = $updated -replace "data = input\.required<ChartData<'$chartType'>>\(\);", "data: InputSignal<ChartData<'$chartType'>> = input.required<ChartData<'$chartType'>>();"
+    $updated = $updated -replace "options = input<ChartOptions<'$chartType'>>\(\);", "options: InputSignal<ChartOptions<'$chartType'> | undefined> = input<ChartOptions<'$chartType'>>();"
+    $updated = $updated -replace "plugins = input<Plugin<'$chartType'>\[\]>\(\[\]\);", "plugins: InputSignal<Plugin<'$chartType'>[]> = input<Plugin<'$chartType'>[]>([]);"
+
+    if ($updated -ne $content) {
+      Set-Content -LiteralPath $filePath -Value $updated -Encoding UTF8
+    }
+  }
+}
+
 $v19Path = Join-Path $TargetPath "versions/v19"
 if (!(Test-Path -LiteralPath $v19Path)) {
   New-Item -ItemType Directory -Path $v19Path | Out-Null
@@ -168,6 +198,7 @@ if (Test-Path -LiteralPath $v19PackagePath) {
 
 $v19TsConfigPath = Join-Path $v19Path "tsconfig.json"
 Update-RootTsConfig -TsConfigPath $v19TsConfigPath
+Update-ChartInputSignalAnnotations -RootPath $v19Path
 
 Write-Host "[5/5] Rollout to v20, v21 based on v19 workspace" -ForegroundColor Cyan
 $multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1"

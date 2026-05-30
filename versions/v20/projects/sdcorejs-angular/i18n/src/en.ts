@@ -4,21 +4,58 @@ export const EN_MESSAGES = {
   'core.common.reload': 'Reload page',
   'core.test.greet': 'Hello {name}',
 
-  // ---- Validators (pattern.model.ts) ----
+  // ---- Validators (VALIDATION_PATTERNS in @sdcorejs/utils/constants) ----
   'core.validator.email.name': 'Email',
   'core.validator.email.error': 'Invalid email',
   'core.validator.phone.name': 'Phone',
   'core.validator.phone.error': 'Invalid phone number',
+  // Legacy aliases — pattern.model.ts cũ vẫn dùng các key này (phone-vn / cccd / id-vn)
   'core.validator.phone-vn.name': 'VN phone',
-  'core.validator.phone-vn.error': 'Invalid phone number',
+  'core.validator.phone-vn.error': 'Invalid Vietnamese phone number',
   'core.validator.cccd.name': 'National ID',
   'core.validator.cccd.error': 'Invalid national ID (12 digits)',
-  'core.validator.passport.name': 'Passport',
-  'core.validator.passport.error': 'Invalid passport (1 letter + 7 digits)',
   'core.validator.id-vn.name': 'National ID / Passport',
   'core.validator.id-vn.error': 'Invalid national ID or passport',
+  'core.validator.vn-phone.name': 'VN phone',
+  'core.validator.vn-phone.error': 'Invalid Vietnamese phone number',
+  'core.validator.vn-id.name': 'National ID',
+  'core.validator.vn-id.error': 'Invalid national ID (12 digits)',
+  'core.validator.passport.name': 'Passport',
+  'core.validator.passport.error': 'Invalid passport (1 letter + 7 digits)',
+  'core.validator.vn-id-or-passport.name': 'National ID / Passport',
+  'core.validator.vn-id-or-passport.error': 'Invalid national ID or passport',
   'core.validator.time.name': 'Time',
   'core.validator.time.error': 'Invalid time (format HH:mm)',
+  'core.validator.url.name': 'URL',
+  'core.validator.url.error': 'Invalid URL',
+  'core.validator.domain.name': 'Domain',
+  'core.validator.domain.error': 'Invalid domain',
+  'core.validator.ipv4.name': 'IPv4',
+  'core.validator.ipv4.error': 'Invalid IPv4 address',
+  'core.validator.ipv6.name': 'IPv6',
+  'core.validator.ipv6.error': 'Invalid IPv6 address',
+  'core.validator.image-url.name': 'Image URL',
+  'core.validator.image-url.error': 'Invalid image URL',
+  'core.validator.slug.name': 'Slug',
+  'core.validator.slug.error': 'Invalid slug',
+  'core.validator.number.name': 'Number',
+  'core.validator.number.error': 'Invalid number',
+  'core.validator.integer.name': 'Integer',
+  'core.validator.integer.error': 'Invalid integer',
+  'core.validator.decimal.name': 'Decimal',
+  'core.validator.decimal.error': 'Invalid decimal number',
+  'core.validator.positive-number.name': 'Positive number',
+  'core.validator.positive-number.error': 'Must be a positive number',
+  'core.validator.uuid.name': 'UUID',
+  'core.validator.uuid.error': 'Invalid UUID',
+  'core.validator.code-16.name': '16-char code',
+  'core.validator.code-16.error': 'Invalid 16-character code',
+  'core.validator.code-32.name': '32-char code',
+  'core.validator.code-32.error': 'Invalid 32-character code',
+  'core.validator.hex-color.name': 'Hex color',
+  'core.validator.hex-color.error': 'Invalid hex color',
+  'core.validator.base64.name': 'Base64',
+  'core.validator.base64.error': 'Invalid Base64 string',
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': 'Equal',
@@ -33,6 +70,7 @@ export const EN_MESSAGES = {
   'core.operator.end-with.display': 'Ends with',
   'core.operator.in.display': 'In',
   'core.operator.not-in.display': 'Not in',
+  'core.operator.between.display': 'Between',
   'core.operator.null.display': 'Is empty',
   'core.operator.not-null.display': 'Is not empty',
 
@@ -132,6 +170,14 @@ export const EN_MESSAGES = {
 
   // ---- Forms: radio ----
   'core.form.radio.required': 'Please enter information',
+
+  // ---- Forms: switch ----
+  'core.form.switch.on': 'On',
+  'core.form.switch.off': 'Off',
+
+  // ---- Forms: checkbox ----
+  'core.form.checkbox.checked': 'Yes',
+  'core.form.checkbox.unchecked': 'No',
 
   // ---- Forms: select ----
   'core.form.select.required': 'Please enter information',
@@ -252,6 +298,8 @@ export const EN_MESSAGES = {
   'core.component.form-builder.default': 'Default',
   'core.component.form-builder.show-more': 'Show more',
   'core.component.form-builder.show-less': 'Show less',
+  'core.component.inform.show-more': 'Show more',
+  'core.component.inform.show-less': 'Show less',
   'core.component.form-builder.row-overflow': 'Cannot move to this row because the total size exceeds 12 columns',
   'core.component.form-builder.upload-source.all': 'All',
   'core.component.form-builder.upload-source.photo-library': 'Pick from library',

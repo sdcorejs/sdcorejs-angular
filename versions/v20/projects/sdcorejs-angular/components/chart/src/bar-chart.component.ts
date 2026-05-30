@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, effect, input, computed, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, InputSignal, OnDestroy, OnInit, effect, input, computed, viewChild } from '@angular/core';
 import { Chart, ChartData, ChartOptions, Plugin, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -18,9 +18,9 @@ Chart.register(...registerables);
 export class SdBarChartComponent implements OnInit, OnDestroy {
   canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
-  data = input.required<ChartData<'bar'>>();
-  options = input<ChartOptions<'bar'>>();
-  plugins = input<Plugin<'bar'>[]>([]);
+  data: InputSignal<ChartData<'bar'>> = input.required<ChartData<'bar'>>();
+  options: InputSignal<ChartOptions<'bar'> | undefined> = input<ChartOptions<'bar'>>();
+  plugins: InputSignal<Plugin<'bar'>[]> = input<Plugin<'bar'>[]>([]);
 
   isScrollable = computed(() => {
     const labelsLength = this.data()?.labels?.length || 0;

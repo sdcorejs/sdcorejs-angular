@@ -1,7 +1,7 @@
 @let _label = label();
 @let _appearance = appearance();
 @let _hideInlineError = hideInlineError();
-@let errMsg = errorTooltipMessage;
+@let _errorMessage = errorMessage();
 @let _sdViewDef = sdViewDef();
 @let _helperText = helperText();
 @let _multiple = multiple();
@@ -16,7 +16,8 @@
     [value]="_normalizedValue"
     [display]="display()"
     [hyperlink]="hyperlink()"
-    [valueTemplate]="sdValueTemplate()">
+    [valueTemplate]="sdValueTemplate()"
+    [selectedItems]="selectedItems()">
   </sd-view>
 } @else {
   @if (!_appearance) {
@@ -47,128 +48,247 @@
         ">
       </ng-container>
     } @else {
-      <mat-form-field
-        [class.sd-md]="size() === 'md'"
-        [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="_hideInlineError"
-        [appearance]="_appearance!"
-        [floatLabel]="floatLabel()">
-        @if (_appearance && _label) {
-          <mat-label style="display: inline-block">
-            <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ _label }}</span>
-              @if (_helperText) {
-                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
-              }
-            </div>
-          </mat-label>
-        }
+      @if (_multiple) {
+        <mat-form-field
+          [class.sd-md]="size() === 'md'"
+          [class.sd-sm]="size() === 'sm'"
+          [class.hide-inline-error]="_hideInlineError"
+          [appearance]="_appearance!"
+          [floatLabel]="floatLabel()">
+          @if (_appearance && _label) {
+            <mat-label style="display: inline-block">
+              <div style="display: flex; align-items: center; gap: 4px">
+                <span>{{ _label }}</span>
+                @if (_helperText) {
+                  <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
+                }
+              </div>
+            </mat-label>
+          }
 
-        <mat-select
-          #select
-          [formControl]="formControl"
-          [placeholder]="placeholder() || _label || ''"
-          [multiple]="_multiple"
-          (selectionChange)="onSelectionChange($event)"
-          disableOptionCentering="true"
-          [panelWidth]="calculatedPanelWidth()"
-          [panelClass]="_multiple ? ['sd-select-panel', 'sd-multiple'] : 'sd-select-panel'"
-          [class.sd-selected]="
-            !_required && (_multiple ? _normalizedValue?.length : _normalizedValue !== undefined && _normalizedValue !== null)
-          "
-          [required]="_required"
-          (openedChange)="onOpenedChange($event)"
-          [attr.data-autoId]="autoId()"
-          matTooltipClass="sd-multiline-tooltip"
-          [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
-          [matTooltip]="tooltip() || ''">
-          <mat-select-trigger>
-            @if (_multiple) {
+          <mat-select
+            #select
+            multiple
+            [formControl]="formControl"
+            [placeholder]="placeholder() || _label || ''"
+            (selectionChange)="onSelectionChange($event)"
+            disableOptionCentering="true"
+            [panelWidth]="calculatedPanelWidth()"
+            [panelClass]="['sd-select-panel', 'sd-multiple']"
+            [class.sd-selected]="!_required && _normalizedValue?.length"
+            [required]="_required"
+            (openedChange)="onOpenedChange($event)"
+            [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-invalid]="dataInvalid()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-loading]="dataLoading()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-error-message]="dataErrorMessage()"
+            matTooltipClass="sd-multiline-tooltip"
+            [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
+            [matTooltip]="tooltip() || ''">
+            <mat-select-trigger>
               <div class="sd-trigger-text" [matTooltip]="display() || ''" matTooltipPosition="above">
                 {{ display() }}
               </div>
-            } @else {
-              {{ display() }}
-            }
-          </mat-select-trigger>
+            </mat-select-trigger>
 
-          @if (filtered()) {
-            <div class="c-filter-input-container">
-              <div class="filter-input-wrapper">
-                <mat-icon>search</mat-icon>
-                <input
-                  [formControl]="inputControl"
-                  aria-hidden="true"
-                  matInput
-                  autocomplete="off"
-                  class="c-search-input"
-                  (keydown)="$event.stopPropagation()" />
+            @if (filtered()) {
+              <div class="c-filter-input-container">
+                <div class="filter-input-wrapper">
+                  <mat-icon>search</mat-icon>
+                  <input
+                    [formControl]="inputControl"
+                    aria-hidden="true"
+                    matInput
+                    autocomplete="off"
+                    class="c-search-input"
+                    (keydown)="$event.stopPropagation()" />
+                </div>
               </div>
-            </div>
-          }
+            }
 
-          @let asyncItems = filteredItems();
-          @if (asyncItems) {
-            @if (!asyncItems.length && !loading()) {
-              <mat-option class="sd-empty" disabled>
-                <img class="sd-empty-img" alt="empty-image" />
-              </mat-option>
-            } @else {
-              @let iDefTpl = itemDef()?.templateRef;
-
-              @if (valueField() && displayField()) {
-                @for (item of asyncItems; track itemValue(item)) {
-                  <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
-                    <div matTooltipPosition="above" [matTooltip]="itemDisplay(item)">
-                      @if (iDefTpl) {
-                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
-                      } @else {
-                        {{ itemDisplay(item) }}
-                      }
-                    </div>
-                  </mat-option>
-                }
-              } @else if (!valueField() && !displayField()) {
-                @for (item of asyncItems; track item) {
-                  <mat-option [value]="item">
-                    <div matTooltipPosition="above" [matTooltip]="itemDisplay(item)">
-                      @if (iDefTpl) {
-                        <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
-                      } @else {
-                        {{ item }}
-                      }
-                    </div>
-                  </mat-option>
+            @let asyncItems = filteredItems();
+            @if (asyncItems) {
+              @if (!asyncItems.length && !loading()) {
+                <mat-option class="sd-empty" disabled>
+                  <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
+                </mat-option>
+              } @else {
+                @let iDefTpl = itemDef()?.templateRef;
+                @if (valueField() && displayField()) {
+                  @for (item of asyncItems; track itemValue(item)) {
+                    <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
+                      <div>
+                        @if (iDefTpl) {
+                          <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        } @else {
+                          {{ itemDisplay(item) }}
+                        }
+                      </div>
+                    </mat-option>
+                  }
+                } @else if (!valueField() && !displayField()) {
+                  @for (item of asyncItems; track item) {
+                    <mat-option [value]="item">
+                      <div>
+                        @if (iDefTpl) {
+                          <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        } @else {
+                          {{ item }}
+                        }
+                      </div>
+                    </mat-option>
+                  }
                 }
               }
             }
+
+            @if (loading()) {
+              <mat-option disabled class="sd-loading-option">
+                <mat-spinner diameter="24"></mat-spinner>
+              </mat-option>
+            }
+          </mat-select>
+
+          @if (_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
           }
 
-          @if (loading()) {
-            <mat-option disabled class="sd-loading-option">
-              <mat-spinner diameter="24"></mat-spinner>
-            </mat-option>
+          @if (!_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-error>{{ _errorMessage }}</mat-error>
           }
-        </mat-select>
 
-        @if (_hideInlineError && errMsg && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
-        }
+          @if (_normalizedValue?.length && !_required && !formControl.disabled) {
+            <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
+            <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>keyboard_arrow_down</mat-icon>
+          }
+        </mat-form-field>
+      } @else {
+        <mat-form-field
+          [class.sd-md]="size() === 'md'"
+          [class.sd-sm]="size() === 'sm'"
+          [class.hide-inline-error]="_hideInlineError"
+          [appearance]="_appearance!"
+          [floatLabel]="floatLabel()">
+          @if (_appearance && _label) {
+            <mat-label style="display: inline-block">
+              <div style="display: flex; align-items: center; gap: 4px">
+                <span>{{ _label }}</span>
+                @if (_helperText) {
+                  <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
+                }
+              </div>
+            </mat-label>
+          }
 
-        @if (!_hideInlineError && errMsg && formControl.touched) {
-          <mat-error>{{ errMsg }}</mat-error>
-        }
+          <mat-select
+            #select
+            [formControl]="formControl"
+            [placeholder]="placeholder() || _label || ''"
+            (selectionChange)="onSelectionChange($event)"
+            disableOptionCentering="true"
+            [panelWidth]="calculatedPanelWidth()"
+            [panelClass]="'sd-select-panel'"
+            [class.sd-selected]="!_required && _normalizedValue !== undefined && _normalizedValue !== null"
+            [required]="_required"
+            (openedChange)="onOpenedChange($event)"
+            [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-invalid]="dataInvalid()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-loading]="dataLoading()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-error-message]="dataErrorMessage()"
+            matTooltipClass="sd-multiline-tooltip"
+            [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
+            [matTooltip]="tooltip() || ''">
+            <mat-select-trigger>
+              {{ display() }}
+            </mat-select-trigger>
 
-        @if (
-          (_multiple ? _normalizedValue?.length : _normalizedValue !== undefined && _normalizedValue !== null) &&
-          !_required &&
-          !formControl.disabled
-        ) {
-          <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear($event)" matSuffix>cancel</mat-icon>
-        } @else {
-          <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>keyboard_arrow_down</mat-icon>
-        }
-      </mat-form-field>
+            @if (filtered()) {
+              <div class="c-filter-input-container">
+                <div class="filter-input-wrapper">
+                  <mat-icon>search</mat-icon>
+                  <input
+                    [formControl]="inputControl"
+                    aria-hidden="true"
+                    matInput
+                    autocomplete="off"
+                    class="c-search-input"
+                    (keydown)="$event.stopPropagation()" />
+                </div>
+              </div>
+            }
+
+            @let asyncItems = filteredItems();
+            @if (asyncItems) {
+              @if (!asyncItems.length && !loading()) {
+                <mat-option class="sd-empty" disabled>
+                  <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
+                </mat-option>
+              } @else {
+                @let iDefTpl = itemDef()?.templateRef;
+
+                @if (valueField() && displayField()) {
+                  @for (item of asyncItems; track itemValue(item)) {
+                    <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
+                      <div>
+                        @if (iDefTpl) {
+                          <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        } @else {
+                          {{ itemDisplay(item) }}
+                        }
+                      </div>
+                    </mat-option>
+                  }
+                } @else if (!valueField() && !displayField()) {
+                  @for (item of asyncItems; track item) {
+                    <mat-option [value]="item">
+                      <div>
+                        @if (iDefTpl) {
+                          <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+                        } @else {
+                          {{ item }}
+                        }
+                      </div>
+                    </mat-option>
+                  }
+                }
+              }
+            }
+
+            @if (loading()) {
+              <mat-option disabled class="sd-loading-option">
+                <mat-spinner diameter="24"></mat-spinner>
+              </mat-option>
+            }
+          </mat-select>
+
+          @if (_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+          }
+
+          @if (!_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-error>{{ _errorMessage }}</mat-error>
+          }
+
+          @if (_normalizedValue !== undefined && _normalizedValue !== null && !_required && !formControl.disabled) {
+            <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
+            <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>keyboard_arrow_down</mat-icon>
+          }
+        </mat-form-field>
+      }
     }
   </div>
 }

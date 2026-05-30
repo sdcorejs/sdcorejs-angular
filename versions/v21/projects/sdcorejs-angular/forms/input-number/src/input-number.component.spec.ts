@@ -1,6 +1,6 @@
 ﻿import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdInputNumber } from './input-number.component';
@@ -394,44 +394,47 @@ describe('SdInputNumber', () => {
   });
 
   // -------------------------------------------------------------------------
-  // errorTooltipMessage
+  // errorMessage
   // -------------------------------------------------------------------------
 
-  describe('errorTooltipMessage', () => {
+  describe('errorMessage', () => {
     it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', () => {
       host.model = 1;  // seed to avoid NG0100
       host.required = true;
       fixture.detectChanges();
-      comp.formControl.setValue(null, { emitEvent: false });
-      comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      comp.formControl.setValue(null);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
     });
 
     it('returns min error message with the configured min value', () => {
       host.min = 50;
       fixture.detectChanges();
-      comp.formControl.setValue(10, { emitEvent: false });
-      comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n 50');
+      comp.formControl.setValue(10);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n 50');
     });
 
     it('returns max error message with the configured max value', () => {
       host.max = 100;
       fixture.detectChanges();
-      comp.formControl.setValue(200, { emitEvent: false });
-      comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n 100');
+      comp.formControl.setValue(200);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n 100');
     });
 
     it('returns inlineError text when inlineError validator fires', () => {
       host.inlineError = 'GiÃ¡ trá»‹ khÃ´ng há»£p lá»‡';
       fixture.detectChanges();
       comp.formControl.updateValueAndValidity();
-      expect(comp.errorTooltipMessage).toBe('GiÃ¡ trá»‹ khÃ´ng há»£p lá»‡');
+      expect(comp.errorMessage()).toBe('GiÃ¡ trá»‹ khÃ´ng há»£p lá»‡');
     });
 
     it('returns undefined when control has no errors', () => {
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
     });
   });
 
@@ -476,6 +479,121 @@ describe('SdInputNumber', () => {
   describe('appearance', () => {
     it('defaults to "outline" when no SD_FORM_CONFIGURATION token is provided', () => {
       expect(comp.appearance()).toBe('outline');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // E2E attributes
+  // -------------------------------------------------------------------------
+
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = getInput(fixture);
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      comp.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-empty=true when value is null/empty', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = getInput(fixture);
+      expect(el.getAttribute('data-empty')).toBe('true');
+      comp.formControl.setValue(7);
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
+    });
+
+    it('renders data-value as stringified number', () => {
+      comp.formControl.setValue(42);
+      fixture.detectChanges();
+      const el: HTMLInputElement = getInput(fixture);
+      expect(el.getAttribute('data-value')).toBe('42');
+    });
+
+    it('renders data-invalid=true only after touched + invalid', () => {
+      comp.formControl.setValidators([Validators.required]);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      const el: HTMLInputElement = getInput(fixture);
+      expect(el.getAttribute('data-invalid')).toBe('false');
+      comp.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-invalid')).toBe('true');
+    });
+  });
+
+  describe('clear button (slim, hover-gated)', () => {
+    const clearBtn = () =>
+      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+
+    it('renders the slim clear button when a value is set', () => {
+      host.model = 123;
+      fixture.detectChanges();
+      expect(clearBtn()).not.toBeNull();
+    });
+
+    it('uses the thin close icon (not the filled cancel icon)', () => {
+      host.model = 123;
+      fixture.detectChanges();
+      expect(clearBtn()!.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
+    });
+
+    it('carries the sd-hover class so it only shows on hover/focus', () => {
+      host.model = 123;
+      fixture.detectChanges();
+      expect(clearBtn()!.classList.contains('sd-hover')).toBe(true);
+    });
+
+    it('hides the clear button when there is no value', () => {
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when required', () => {
+      host.required = true;
+      host.model = 123;
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('hides the clear button when disabled', () => {
+      host.disabled = true;
+      host.model = 123;
+      fixture.detectChanges();
+      expect(clearBtn()).toBeNull();
+    });
+
+    it('clicking the clear button resets value and emits null', () => {
+      host.model = 123;
+      fixture.detectChanges();
+      clearBtn()!.click();
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBeNull();
+      expect(host.changes).toContain(null);
+    });
+
+    it('clear() emits cleared output (dedicated intent â€” column-filter dÃ¹ng Ä‘á»ƒ fire reload mÃ  KHÃ”NG over-trigger nhÆ° sdChange per-keystroke)', () => {
+      host.model = 123;
+      fixture.detectChanges();
+      const spy = jasmine.createSpy('cleared');
+      comp.cleared.subscribe(spy);
+
+      comp.clear();
+      fixture.detectChanges();
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('cleared NOT emitted when clear() runs while value already empty (early-return path)', () => {
+      const spy = jasmine.createSpy('cleared');
+      comp.cleared.subscribe(spy);
+
+      comp.clear();
+      fixture.detectChanges();
+
+      expect(spy).not.toHaveBeenCalled();
     });
   });
 });
@@ -559,6 +677,37 @@ describe('SdInputNumber (SD_FORM_CONFIGURATION appearance)', () => {
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {
     expect(comp.appearance()).toBe('fill');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// host classes
+// ---------------------------------------------------------------------------
+
+describe('SdInputNumber (host classes)', () => {
+  let fixture: ComponentFixture<SdInputNumber>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdInputNumber, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdInputNumber);
+  });
+
+  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'Sá»‘ tiá»n');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
 

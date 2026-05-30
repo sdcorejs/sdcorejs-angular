@@ -12,9 +12,10 @@ import {
   effect,
   inject,
   input,
+  model,
   output,
   TemplateRef,
-  ViewChild,
+  viewChild,
 } from '@angular/core';
 import {
   AsyncValidatorFn,
@@ -40,9 +41,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { DateUtilities, SdSize } from '@sdcorejs/angular/utilities';
+import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
+import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
 import { SdRemovableChipPipe } from './pipes';
@@ -61,6 +64,7 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./chip-calendar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -85,35 +89,84 @@ export class SdChipCalendar implements AfterViewInit {
   readonly #i18n = inject(I18nService);
   #subscription = new Subscription();
   #name = uuid.v4();
-  #form?: FormGroup;
   #isBlurring = false;
 
-  @ViewChild(MatMenuTrigger) menuTrigger!: MatMenuTrigger;
-  @ViewChild(MatCalendar) calendar!: MatCalendar<Date>;
+  menuTrigger = viewChild(MatMenuTrigger);
+  calendar = viewChild<MatCalendar<Date>>(MatCalendar);
 
-  autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
+    alias: 'autoId',
+    transform: (v): string | undefined => v ?? undefined,
+  });
   autoId = computed(() => (this.autoIdInput() ? `forms-chip-calendar-${this.autoIdInput()}` : undefined));
-  name = input<string | undefined>();
-  appearance = input<MatFormFieldAppearance>('outline');
-  floatLabel = input<FloatLabelType>('auto');
-  size = input<SdSize>('md');
-  form = input<NgForm | FormGroup | undefined>();
-  label = input('');
-  placeholder = input<string | undefined>();
-  removable = input<boolean | ((item: any) => boolean)>(true);
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+  readonly dataCount = computed(() => {
+    const v = this.#state().value;
+    return String(Array.isArray(v) ? v.length : 0);
+  });
+
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly dataErrorMessage = computed(() => {
+    void this.#state();
+    const msg = this.errorMessage();
+    return msg && msg.length > 0 ? msg : null;
+  });
+  name = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  appearance = input<MatFormFieldAppearance, MatFormFieldAppearance | null | undefined>('outline', {
+    transform: (v): MatFormFieldAppearance => v || 'outline',
+  });
+  floatLabel = input<FloatLabelType, FloatLabelType | null | undefined>('auto', {
+    transform: (v): FloatLabelType => v || 'auto',
+  });
+  size = input<Size, Size | null | undefined>('md', {
+    transform: (v): Size => v || 'md',
+  });
+  // why: parent may bind NgForm (template-driven), FormGroup (reactive), or a wrapper with `.form`.
+  // Transform once at the input boundary so the rest of the component only deals with FormGroup.
+  form = input<FormGroup | undefined, any>(undefined, {
+    transform: (val: any): FormGroup | undefined => {
+      if (!val) return undefined;
+      if (val instanceof NgForm) return val.form;
+      if (val instanceof FormGroup) return val;
+      if (val?.form instanceof FormGroup) return val.form;
+      return undefined;
+    },
+  });
+  label = input<string, string | null | undefined>('', {
+    transform: (v): string => v ?? '',
+  });
+  placeholder = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  removable = input<boolean | ((item: any) => boolean), boolean | ((item: any) => boolean) | null | undefined>(true, {
+    transform: (v): boolean | ((item: any) => boolean) => v ?? true,
+  });
   hideInlineError = input(false, { transform: booleanAttribute });
-  model = input<(string | number)[] | undefined>();
   required = input(false, { transform: booleanAttribute });
-  min = input<number>(0);
-  max = input<number>(0);
+  min = input<number, number | null | undefined>(0, {
+    transform: (v): number => v ?? 0,
+  });
+  max = input<number, number | null | undefined>(0, {
+    transform: (v): number => v ?? 0,
+  });
   disabled = input(false, { transform: booleanAttribute });
   viewed = input(false, { transform: booleanAttribute });
-  hyperlink = input<string | null | undefined>();
+  hyperlink = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
 
-  modelChange = output<any[]>();
+  // Two-way model
+  model = model<(string | number)[] | undefined>(undefined);
+
+  // Outputs (modelChange auto-generated by model() signal)
   sdChange = output<any[]>();
 
-  @ViewChild('input') input!: ElementRef<HTMLInputElement>;
+  input = viewChild<ElementRef<HTMLInputElement>>('input');
   sdViewDef = contentChild(SdViewDefDirective);
   sdLabelDef = contentChild(SdLabelDefDirective);
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
@@ -126,17 +179,6 @@ export class SdChipCalendar implements AfterViewInit {
   readonly separatorKeysCodes = [ENTER, COMMA];
 
   constructor() {
-    effect(() => {
-      const formInput = this.form();
-      if (formInput) {
-        if (formInput instanceof NgForm) {
-          this.#form = formInput.form;
-        } else {
-          this.#form = formInput;
-        }
-      }
-    });
-
     effect(() => {
       this.required();
       this.min();
@@ -180,7 +222,8 @@ export class SdChipCalendar implements AfterViewInit {
     return this.#inputControl;
   }
 
-  get errorTooltipMessage(): string | undefined {
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
     const errors = this.#formControl.errors;
     if (!errors) return undefined;
 
@@ -188,7 +231,7 @@ export class SdChipCalendar implements AfterViewInit {
     if (errors['minlength']) return this.#i18n.t('core.form.chip-calendar.minlength', { min: this.min() });
     if (errors['maxlength']) return this.#i18n.t('core.form.chip-calendar.maxlength', { max: this.max() });
     return undefined;
-  }
+  });
 
   get matcher() {
     return this.#matcher;
@@ -200,11 +243,11 @@ export class SdChipCalendar implements AfterViewInit {
         this.#ref.markForCheck();
       })
     );
-    this.#form?.addControl(this.#name, this.#formControl);
+    this.form()?.addControl(this.#name, this.#formControl);
   }
 
   ngOnDestroy() {
-    this.#form?.removeControl(this.#name);
+    this.form()?.removeControl(this.#name);
     this.#subscription.unsubscribe();
   }
 
@@ -239,7 +282,7 @@ export class SdChipCalendar implements AfterViewInit {
     const values: string[] = this.#formControl.value ?? [];
     if (typeof item === 'string') {
       this.#formControl.setValue(values.filter(value => item !== value));
-      this.modelChange.emit(this.#formControl.value);
+      this.model.set(this.#formControl.value);
       this.sdChange.emit(this.#formControl.value);
     }
     this.#inputControl.setValue('');
@@ -254,11 +297,12 @@ export class SdChipCalendar implements AfterViewInit {
         if (!values.includes(item)) {
           values.push(item);
           this.#formControl.setValue(values);
-          this.modelChange.emit(this.#formControl.value);
+          this.model.set(this.#formControl.value);
           this.sdChange.emit(this.#formControl.value);
         }
       }
-      this.input.nativeElement.value = '';
+      const inputEl = this.input();
+      if (inputEl) inputEl.nativeElement.value = '';
       this.#inputControl.setValue('', {
         emitEvent: false,
       });
@@ -278,7 +322,7 @@ export class SdChipCalendar implements AfterViewInit {
     this.#isBlurring = false;
     setTimeout(() => {
       if (this.isFocused) {
-        this.input?.nativeElement?.focus();
+        this.input()?.nativeElement?.focus();
       }
     }, 100);
   };
@@ -287,7 +331,7 @@ export class SdChipCalendar implements AfterViewInit {
     evt?.stopPropagation();
     this.#inputControl.setValue('');
     this.#formControl.setValue([]);
-    this.modelChange.emit(this.#formControl.value);
+    this.model.set(this.#formControl.value);
     this.sdChange.emit(this.#formControl.value);
     this.#ref.detectChanges();
   };
@@ -299,21 +343,21 @@ export class SdChipCalendar implements AfterViewInit {
       if (!values.includes(value)) {
         values.push(value);
         this.#formControl.setValue(values);
-        this.modelChange.emit(this.#formControl.value);
+        this.model.set(this.#formControl.value);
         this.sdChange.emit(this.#formControl.value);
       } else {
         this.#formControl.setValue(values.filter(date => value !== date));
-        this.modelChange.emit(this.#formControl.value);
+        this.model.set(this.#formControl.value);
         this.sdChange.emit(this.#formControl.value);
       }
-      this.calendar.updateTodaysDate();
+      this.calendar()?.updateTodaysDate();
       this.#ref.markForCheck();
     }
   };
 
   #closeCalendar = () => {
     this.isFocused = false;
-    this.input.nativeElement.blur();
+    this.input()?.nativeElement?.blur();
   };
 
   #dateClass = (cellDate: Date) => {

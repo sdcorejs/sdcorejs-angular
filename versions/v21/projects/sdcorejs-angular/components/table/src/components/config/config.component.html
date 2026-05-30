@@ -1,22 +1,18 @@
-<sd-modal width="sm" [title]="('core.component.table.setup' | translate)" #modal>
-  @if (configuration) {
+@let _configuration = configuration();
+
+<sd-modal width="sm" [title]="'core.component.table.setup' | translate" #modal>
+  @if (_configuration) {
     <div class="c-container">
       <div class="c-table" style="max-height: 70vh">
         <table
-          #table
           mat-table
-          [dataSource]="configuration.columns!"
+          [dataSource]="_configuration.columns!"
           cdkDropList
-          [cdkDropListData]="configuration.columns"
+          [cdkDropListData]="_configuration.columns"
           (cdkDropListDropped)="dropTable($event)">
-          >
-          <!-- <ng-container matColumnDef="stt">
-            <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 50px">#</th>
-            <td class="text-center px-4" mat-cell *matCellDef="let item; let idx = index"></td>
-          </ng-container> -->
           <ng-container matColumnDef="invisible">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 96px">
-              {{ ('core.component.form-builder.display' | translate) }}
+              {{ 'core.component.form-builder.display' | translate }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <div class="d-flex" style="gap: 8px">
@@ -33,23 +29,23 @@
           </ng-container>
           <ng-container matColumnDef="title">
             <th mat-header-cell class="c-th px-4" *matHeaderCellDef>
-              {{ ('core.component.table.column-header' | translate) }}
+              {{ 'core.component.table.column-header' | translate }}
             </th>
             <td class="px-4" mat-cell *matCellDef="let item">
-              <sd-input class="pb-5" [placeholder]="item?.origin?.title" [(model)]="item.title" hideInlineError></sd-input>
+              <sd-input class="pb-4" [placeholder]="item?.origin?.title" [(model)]="item.title" hideInlineError></sd-input>
             </td>
           </ng-container>
           <ng-container matColumnDef="width">
             <th mat-header-cell class="c-th px-4" *matHeaderCellDef style="width: 80px">
-              {{ ('core.component.table.width' | translate) }}
+              {{ 'core.component.table.width' | translate }}
             </th>
             <td class="px-4" mat-cell *matCellDef="let item">
-              <sd-input class="pb-5" [placeholder]="item?.origin?.width" [(model)]="item.width" hideInlineError></sd-input>
+              <sd-input class="pb-4" [placeholder]="item?.origin?.width" [(model)]="item.width" hideInlineError></sd-input>
             </td>
           </ng-container>
           <ng-container matColumnDef="fixed">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 80px">
-              {{ ('core.component.table.fixed' | translate) }}
+              {{ 'core.component.table.fixed' | translate }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <sd-switch [(model)]="item.fixed" />
@@ -58,7 +54,7 @@
 
           <ng-container matColumnDef="truncate">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 100px">
-              {{ ('core.component.table.char-limit' | translate) }}
+              {{ 'core.component.table.char-limit' | translate }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <sd-switch [(model)]="item.truncate" />

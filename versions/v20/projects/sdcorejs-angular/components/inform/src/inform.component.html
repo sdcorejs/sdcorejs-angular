@@ -1,0 +1,55 @@
+@if (!dismissed()) {
+  @let ic = effectiveIcon();
+  <div
+    class="c-inform"
+    [attr.role]="liveRole()"
+    [ngClass]="colorClasses()"
+    [attr.data-autoId]="autoId() || null"
+    [attr.data-autoid]="autoId() || null">
+
+    @if (ic) {
+      <mat-icon class="c-inform-icon c-material-icon" aria-hidden="true" [ngClass]="fontSetClasses()">{{ ic }}</mat-icon>
+    }
+
+    @let al = actionLabel();
+    <div class="c-inform-content">
+      @if (title(); as t) {
+        <div class="c-inform-title">{{ t }}</div>
+      }
+      @if (description(); as d) {
+        <div
+          #body
+          class="c-inform-body"
+          [class.is-clamped]="clampLines() !== null"
+          [style.-webkit-line-clamp]="clampLines()">
+          {{ d }}
+        </div>
+      }
+      @if (showToggle()) {
+        <button type="button" class="c-inform-toggle" (click)="toggleExpanded()">
+          {{ (expanded() ? 'core.component.inform.show-less' : 'core.component.inform.show-more') | translate }}
+        </button>
+      }
+
+      @if (hasActionSlot()) {
+        <div class="c-inform-action">
+          <ng-content select="[sdInformAction]"></ng-content>
+        </div>
+      } @else if (al) {
+        <button type="button" class="c-inform-action c-inform-action-link" (click)="onAction($event)">
+          {{ al }}
+        </button>
+      }
+    </div>
+
+    @if (closable()) {
+      <button
+        type="button"
+        class="c-inform-close"
+        [attr.aria-label]="'core.common.close' | translate"
+        (click)="onClose($event)">
+        <mat-icon class="material-icons" aria-hidden="true">close</mat-icon>
+      </button>
+    }
+  </div>
+}

@@ -1,0 +1,27 @@
+@let _current = model();
+
+<button
+  type="button"
+  class="c-op-trigger"
+  [disabled]="disabled()"
+  [matMenuTriggerFor]="menu"
+  [matTooltip]="currentLabel()"
+  matTooltipPosition="above"
+  [attr.data-autoId]="autoId() ?? null">
+  <span class="c-op-icon" [innerHTML]="currentIcon()"></span>
+</button>
+
+<mat-menu #menu="matMenu" class="c-op-menu">
+  @for (item of items(); track item.value) {
+    <button
+      type="button"
+      mat-menu-item
+      class="c-op-row"
+      [class.c-op-active]="item.value === _current"
+      (click)="select(item.value)">
+      <span class="c-op-icon" [innerHTML]="item.icon"></span>
+      <span class="c-op-label">{{ item.display }}</span>
+      <span class="c-op-code">{{ item.value }}</span>
+    </button>
+  }
+</mat-menu>

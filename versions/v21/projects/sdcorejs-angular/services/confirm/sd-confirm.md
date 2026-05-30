@@ -110,7 +110,7 @@ None. The service depends on `MatDialog` from `@angular/material/dialog`, so the
 - **Backdrop click**: disabled by default (`disableBackdropClose: true`). Pass `false` to allow clicking outside to dismiss.
 - **Cancel rejects, not resolves**: every method returns a `Promise` that **rejects** (with the string `'CANCEL'`) when the user cancels â€” wrap calls in `try/catch` (or `.then(...).catch(...)`).
 - **Width**: only `confirm()` exposes `width`. The other variants are fixed at `'400px'`.
-- **`Color`** comes from `@sdcorejs/angular/utilities/models` (theme color tokens like `'primary'`, `'secondary'`, etc.).
+- **`Color`** comes from `@sdcorejs/utils/models` (theme color tokens like `'primary'`, `'secondary'`, etc.).
 
 ## Examples
 
@@ -229,5 +229,5 @@ Covers (13 specs total):
 ## Related
 - `SdNotifyService` (`@sdcorejs/angular/services/notify`) â€” for non-blocking confirmations / toasts.
 - `MatDialog` (`@angular/material/dialog`) â€” underlying dialog driver.
-- `Color` (`@sdcorejs/angular/utilities/models`) â€” color token type for the buttons.
+- `Color` (`@sdcorejs/utils/models`) â€” color token type for the buttons.
 

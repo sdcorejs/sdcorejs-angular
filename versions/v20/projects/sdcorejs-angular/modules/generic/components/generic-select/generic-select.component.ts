@@ -22,7 +22,8 @@ import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSchema, SdRegister } from '../../models';
 import { SdGenericService } from '../../services';
-import { ArrayUtilities, SdUtilities } from '@sdcorejs/angular/utilities';
+import { ArrayUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'sd-generic-select',
@@ -183,13 +184,13 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     this.#subscription.add(
       this.#queryChanges.pipe(startWith(uuid.v4())).subscribe(prefix => {
         if (this.relationMappedTo && this.#multipleRelationValue && this.relationType === 'OneToMany') {
-          this.cacheChecksum = SdUtilities.hash({
+          this.cacheChecksum = Utilities.hash({
             prefix,
             ...this.query,
             [this.relationMappedTo]: this.#multipleRelationValue,
           });
         } else {
-          this.cacheChecksum = SdUtilities.hash({
+          this.cacheChecksum = Utilities.hash({
             prefix,
             ...this.query,
           });

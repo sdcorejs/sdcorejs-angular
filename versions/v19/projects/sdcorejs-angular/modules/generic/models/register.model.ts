@@ -1,12 +1,12 @@
 ﻿import { SdSearchReq } from '@sdcorejs/angular/forms/models';
-import { SdFilter, SdPagingReq, SdPagingRes, SdQueryReq } from '@sdcorejs/angular/utilities/models';
+import { Filter, PagingReq, PagingRes, QueryReq } from '@sdcorejs/utils/models';
 import { SdSchema } from './schema/schema.model';
 
 export interface SdRegister<T = any> {
   schema: () => Promise<SdSchema>;
-  paging: (req?: SdPagingReq<T>) => Promise<SdPagingRes<T>>;
-  all?: (req?: SdQueryReq<T>) => Promise<T[]>;
-  search?: (req: SdSearchReq, filters?: SdFilter[]) => Promise<T[]>;
+  paging: (req?: PagingReq<T>) => Promise<PagingRes<T>>;
+  all?: (req?: QueryReq<T>) => Promise<T[]>;
+  search?: (req: SdSearchReq, filters?: Filter[]) => Promise<T[]>;
   detail?: (identityValue: string | number) => Promise<T>;
   create?: (entity: Partial<T>) => Promise<T>;
   update?: (identityValue: string | number, entity: Partial<T>) => Promise<T>;

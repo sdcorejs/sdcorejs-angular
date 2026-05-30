@@ -1,5 +1,5 @@
 ﻿import * as uuid from 'uuid';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
 
 // NOTE: Import ná»™i bá»™ trong module layout thÃ¬ dÃ¹ng path tÆ°Æ¡ng Ä‘á»‘i
@@ -104,7 +104,7 @@ export class MenuPipe implements PipeTransform {
       {} as Record<string, any>
     );
 
-    return Object.keys(hashData).length > 0 ? SdUtilities.hash(hashData) : uuid.v4();
+    return Object.keys(hashData).length > 0 ? Utilities.hash(hashData) : uuid.v4();
   };
 }
 

@@ -3,3 +3,4 @@ export * from './src/sd-form-control.model';
 export * from './src/sd-custom-validator.model';
 export * from './src/sd-selection-data.model';
 export * from './src/sd-search.model';
+export * from './src/form-control-state';

@@ -1,5 +1,6 @@
 ﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
+  afterNextRender,
   booleanAttribute,
   Component,
   Injector,
@@ -28,7 +29,7 @@ import { concatMap, filter } from 'rxjs/operators';
 
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTabActivated, SdTabDeactivated } from '../../events/tab-router.event';
 import { SdTabAction } from '../../actions/tab-router.action';
 import { SdTab } from '../../models';
@@ -52,7 +53,6 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   tabs = signal<SdTab[]>([]);
 
   #router = inject(Router);
-  #activatedRoute = inject(ActivatedRoute);
   #injector = inject(Injector);
   #tabRouterService = inject(SdTabRouterService);
   #sdNotifyService = inject(SdNotifyService);
@@ -68,6 +68,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   // vÃ  dÃ¹ng láº¡i á»Ÿ NavigationEnd. LÃ½ do: táº¡i NavigationEnd, getCurrentNavigation() Ä‘Ã£ tráº£ vá» null,
   // cÃ²n lastSuccessfulNavigation vÃ  window.history.state khÃ´ng Ä‘Ã¡ng tin cáº­y vá»›i má»i case.
   #pendingNavigationState: Record<string, any> = {};
+  // Serialize má»i #activeRoute (router events + initial sync) Ä‘á»ƒ trÃ¡nh race táº¡o duplicate tab.
+  #activationQueue: Promise<void> = Promise.resolve();
 
   constructor() {
     this.#subscription.add(
@@ -97,11 +99,23 @@ export class SdTabRouterOutletComponent implements OnDestroy {
         }
       })
     );
+
+    // Initial navigation cÃ³ thá»ƒ hoÃ n táº¥t trÆ°á»›c khi outlet subscribe router.events
+    // (blocking init hoáº·c outlet mount muá»™n). Catch-up sau first render.
+    afterNextRender(() => {
+      void this.#syncCurrentRoute();
+    });
   }
 
   ngOnDestroy(): void {
     this.#subscription.unsubscribe();
   }
+
+  #scheduleActivation = (task: () => Promise<void>): Promise<void> => {
+    const run = this.#activationQueue.then(task);
+    this.#activationQueue = run.catch(() => undefined);
+    return run;
+  };
 
   #handleEvent = async (event: RoutesRecognized | NavigationEnd): Promise<void> => {
     if (this.disabled()) {
@@ -114,12 +128,45 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       this.#pendingNavigationState = this.#router.getCurrentNavigation()?.extras?.state ?? {};
       return;
     }
-    // NavigationEnd: dÃ¹ng activatedRoute.snapshot vÃ  routerState.root Má»šI nháº¥t
-    // (chá»©a route component Ä‘Ã£ Ä‘Æ°á»£c activate, cáº£ lazy láº«n standalone routes).
-    const route = this.#getActivatedRouteSnapshot(this.#activatedRoute.snapshot);
-    this.#rootRoute = this.#router.routerState.root;
-    await this.#activeRoute(event.urlAfterRedirects || event.url, route, this.#pendingNavigationState);
+    // NavigationEnd: dÃ¹ng routerState.snapshot.root (canonical state táº¡i NavigationEnd),
+    // KHÃ”NG dÃ¹ng injected ActivatedRoute.snapshot â€” cÃ³ thá»ƒ chÆ°a sync trÃªn initial load.
+    const navigationState = this.#pendingNavigationState;
     this.#pendingNavigationState = {};
+    await this.#scheduleActivation(async () => {
+      const route = this.#getActivatedRouteSnapshot(this.#router.routerState.snapshot.root);
+      this.#rootRoute = this.#router.routerState.root;
+      await this.#activeRoute(event.urlAfterRedirects || event.url, route, navigationState);
+    });
+  };
+
+  // BÃ¹ initial navigation náº¿u NavigationEnd Ä‘Ã£ fire trÆ°á»›c khi outlet subscribe.
+  #syncCurrentRoute = (): Promise<void> => {
+    if (this.disabled() || !this.#router.navigated) {
+      return Promise.resolve();
+    }
+
+    const route = this.#getActivatedRouteSnapshot(this.#router.routerState.snapshot.root);
+    if (!route?.component) {
+      return Promise.resolve();
+    }
+
+    const [urlPath] = this.#router.url.split('?');
+    const key = Utilities.hash({
+      url: urlPath,
+      queryParams: { ...(route.queryParams || {}) },
+    });
+
+    if (this.tabs().some(tab => tab.key === key)) {
+      return Promise.resolve();
+    }
+
+    return this.#scheduleActivation(async () => {
+      if (this.tabs().some(tab => tab.key === key)) {
+        return;
+      }
+      this.#rootRoute = this.#router.routerState.root;
+      await this.#activeRoute(this.#router.url, route, {});
+    });
   };
 
   tabTrackBy = (index: number, tab: SdTab) => tab.key;
@@ -164,7 +211,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     const data = { ...(route.data || {}) };
     const [url] = fullUrl.split('?');
     // Tab identity = hash(url + queryParams). CÃ¹ng key = cÃ¹ng tab, khÃ´ng táº¡o láº¡i.
-    const key = SdUtilities.hash({ url, queryParams });
+    const key = Utilities.hash({ url, queryParams });
 
     let existedIndex = -1;
     let activatedIndex = -1;
@@ -235,7 +282,9 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     };
 
     const finalInjector = await getBestInjector(route);
-    const activatedRoute = this.#getActivatedRoute(this.#rootRoute!, component);
+    // Refresh root sau await: lazy route tree cÃ³ thá»ƒ hoÃ n táº¥t trong lÃºc resolve injector.
+    this.#rootRoute = this.#router.routerState.root;
+    const activatedRoute = this.#findActivatedRouteForSnapshot(this.#rootRoute, route);
 
     const newTab: SdTab = {
       key,
@@ -297,13 +346,19 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     return node;
   };
 
-  // DFS tÃ¬m ActivatedRoute (khÃ´ng pháº£i snapshot) trong tree theo component class.
-  // Cáº§n ActivatedRoute tháº­t vÃ¬ SdOutletInjector sáº½ inject nÃ³ vÃ o component qua DI.
-  #getActivatedRoute = (activatedRoute: ActivatedRoute, component: any): ActivatedRoute | null => {
-    if (activatedRoute.component === component) return activatedRoute;
+  // DFS match leaf snapshot â†’ ActivatedRoute instance (á»•n Ä‘á»‹nh hÆ¡n so vá»›i so sÃ¡nh component class).
+  #findActivatedRouteForSnapshot = (
+    activatedRoute: ActivatedRoute,
+    targetSnapshot: ActivatedRouteSnapshot,
+  ): ActivatedRoute | null => {
+    if (activatedRoute.snapshot === targetSnapshot) {
+      return activatedRoute;
+    }
     for (const child of activatedRoute.children) {
-      const result = this.#getActivatedRoute(child, component);
-      if (result) return result;
+      const result = this.#findActivatedRouteForSnapshot(child, targetSnapshot);
+      if (result) {
+        return result;
+      }
     }
     return null;
   };

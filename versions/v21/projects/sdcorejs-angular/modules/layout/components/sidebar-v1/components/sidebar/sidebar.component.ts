@@ -12,12 +12,12 @@ import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { BrowserUtilities, StringUtilities } from '@sdcorejs/utils/fns';
 
 // NOTE: Import ná»™i bá»™ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { HighlightSearchPipe, MenuFocusPipe } from '../../../../pipes';
-import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
+import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
 import { LayoutUserComponent } from '../user/user.component';
 
 @Component({
@@ -58,7 +58,6 @@ export class SidebarComponent {
   menus = input.required<SdLayoutMenu[]>();
   userInfo = input.required<SdLayoutUserInfo>();
   sidebar = input.required<SidebarConfigurationV1>();
-
   expandSideBar = output<void>();
   popupUserMenuClosed = output<void>();
   popupUserMenuOpened = output<void>();
@@ -68,41 +67,64 @@ export class SidebarComponent {
   // STATE SIGNALS
   // ==========================================
   screenHeight = window.innerHeight;
-  isMobileOrTablet = SdUtilities.isMobile();
+  isMobileOrTablet = BrowserUtilities.isMobile();
   isMenuLock = signal<boolean>(this.#layoutStorageService.menuLockStatus?.get() ?? true);
   currentPath = signal<string>(window.location.pathname);
   searchText = signal<string>('');
   titleMenuGroup = signal<string | undefined>('');
   idMenuGroupActive = signal<string | undefined>('');
   menusByGroup = signal<SdLayoutMenu[]>([]);
+  #hoveredMenuNodeKey = signal<string | null>(null);
+  #pinIconHoverTimerId = signal<ReturnType<typeof setTimeout> | null>(null);
+  pinnedMenuGroup = signal<SdLayoutChildrenMenu>(
+    this.#layoutStorageService.pinnedMenuGroup.get() ?? {
+      id: 'pinned-menu-group',
+      title: 'ÄÃ£ ghim',
+      children: [],
+    }
+  );
 
   // ==========================================
   // COMPUTED STATE
   // ==========================================
   totalMenuInMenusByGroup = computed(() => this.#getTotalMenus(this.menusByGroup()));
+  pinnedNodeKeys = computed(() => new Set(this.pinnedMenuGroup().children?.map(m => this.#getMenuNodeKey(m)) ?? []));
+  isPinnedMenuGroupActive = computed(() => this.idMenuGroupActive() === this.pinnedMenuGroup().id);
 
   // ==========================================
   // DATA STRUCTURES
   // ==========================================
+  #pinIconHoverTimerDelay: number = 300;
+  #isFirstBindingMenu = signal<boolean>(true);
   dataSource = new MatTreeNestedDataSource<SdLayoutMenu>();
   treeControl = new NestedTreeControl<SdLayoutMenu>(node => ('children' in node && node.children?.length ? node.children : []));
 
   constructor() {
-    // 1. EFFECT: Láº¯ng nghe menus Ä‘áº§u vÃ o thay Ä‘á»•i
+    this.#setupEffects();
+    this.#setupSubscriptions();
+  }
+
+  #setupEffects(): void {
     effect(() => {
       const currentMenus = this.menus();
-
       untracked(() => {
         const lastActiveMenuGroupId = this.#layoutStorageService.lastActiveMenuGroupId.get();
-        // Láº§n Ä‘áº§u vÃ o web, náº¿u user chÆ°a thao tÃ¡c gÃ¬ sáº½ máº·c Ä‘á»‹nh hiá»‡n menuGroup Ä‘áº§u tiÃªn
-        if (!lastActiveMenuGroupId) {
-          this.#layoutStorageService.lastActiveMenuGroupId.set(currentMenus?.[0]?.id ?? '');
+        const pinnedGroup = this.pinnedMenuGroup();
+        const isPinEnabled = this.sidebar()?.pin?.enabled;
+        // Xá»­ lÃ½ khi láº§n Ä‘áº§u vÃ o web (náº¿u chÆ°a cÃ³ active group)
+        if (!lastActiveMenuGroupId || (lastActiveMenuGroupId === pinnedGroup?.id && !isPinEnabled)) {
+          // Æ¯u tiÃªn pinnedGroup náº¿u Ä‘á»§ Ä‘iá»u kiá»‡n, cÃ²n khÃ´ng láº¥y menu Ä‘áº§u tiá»n dev khai bÃ¡o
+          const targetId = isPinEnabled && pinnedGroup?.children?.length ? pinnedGroup?.id : currentMenus?.[0]?.id;
+          this.#layoutStorageService.lastActiveMenuGroupId.set(targetId ?? '');
         }
+
         this.#bindingMenuGroupByCurrentPath(currentMenus);
+        this.#isFirstBindingMenu.set(false);
       });
     });
+  }
 
-    // 2. Láº¯ng nghe Router Event (Sá»­ dá»¥ng takeUntilDestroyed thay tháº¿ ngOnDestroy)
+  #setupSubscriptions(): void {
     this.#router.events.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(event => {
       if (event instanceof NavigationEnd) {
         if (this.currentPath() !== window.location.pathname) {
@@ -120,6 +142,32 @@ export class SidebarComponent {
 
   onToggleMenuNode = (menu: SdLayoutMenu): void => {
     this.treeControl.toggle(menu);
+  };
+
+  isPinnedNode = (node: SdLayoutMenu): boolean => this.pinnedNodeKeys().has(this.#getMenuNodeKey(node));
+  isHoveredNode = (node: SdLayoutMenu): boolean => this.#hoveredMenuNodeKey() === this.#getMenuNodeKey(node);
+
+  expandPinnedGroup = (): void => {
+    const group = this.pinnedMenuGroup();
+    this.idMenuGroupActive.set(group.id);
+    this.#layoutStorageService.lastActiveMenuGroupId.set(group.id || '');
+    this.titleMenuGroup.set(group.title);
+    this.#setMenusByGroup(group.children ?? []);
+    this.searchText.set('');
+    this.expandSideBar.emit();
+  };
+
+  onTogglePin = (event: MouseEvent, node: SdLayoutMenu): void => {
+    event.stopPropagation();
+    const key = this.#getMenuNodeKey(node);
+    this.pinnedMenuGroup.update(group => {
+      const children = group.children ?? [];
+      const exists = children.some(m => this.#getMenuNodeKey(m) === key);
+      const updatedChildren = exists ? children.filter(m => this.#getMenuNodeKey(m) !== key) : [...children, node];
+      const updatedGroup = { id: 'pinned-menu-group', title: 'ÄÃ£ ghim', children: updatedChildren };
+      this.#layoutStorageService.pinnedMenuGroup.set(updatedGroup);
+      return updatedGroup;
+    });
   };
 
   #onExpandAllMenuNodes = (menus: SdLayoutMenu[]): void => {
@@ -158,6 +206,7 @@ export class SidebarComponent {
   };
 
   onUserMenuClosed = (): void => this.popupUserMenuClosed.emit();
+
   onUserMenuOpened = (): void => this.popupUserMenuOpened.emit();
 
   navigate = (args: { path: string; queryParams: Params }): void => {
@@ -199,8 +248,7 @@ export class SidebarComponent {
 
     // Case 2: Menu cÃ³ children
     if ('children' in menuGroupNode && menuGroupNode.children?.length) {
-      this.menusByGroup.set(menuGroupNode.children);
-      this.dataSource.data = this.menusByGroup();
+      this.#setMenusByGroup(menuGroupNode.children);
       this.searchText.set('');
       this.onFilterSearchText('');
       this.expandSideBar.emit();
@@ -250,8 +298,31 @@ export class SidebarComponent {
   };
 
   onMouseOverMenuNode = (event: MouseEvent, menuItem: SdLayoutMenu): void => {
+    const menuNode = event.currentTarget as HTMLElement;
+    const brandColor = this.sidebar()?.brandColor || '#2962FF';
+
+    // Náº¿u cÃ³ báº­t config pin menu
+    if (this.sidebar()?.pin?.enabled) {
+      const iconPin = menuNode.querySelector('.c-menu-node-description-icon-pin') as HTMLElement;
+      if (iconPin) {
+        if (this.#pinIconHoverTimerId()) {
+          clearTimeout(this.#pinIconHoverTimerId()!);
+          this.#pinIconHoverTimerId.set(null);
+        }
+
+        this.#pinIconHoverTimerId.set(
+          setTimeout(() => {
+            this.#hoveredMenuNodeKey.set(this.#getMenuNodeKey(menuItem));
+            iconPin.style.color = brandColor;
+            iconPin.style.transition = 'all 0.15s';
+            iconPin.style.opacity = '1';
+            this.#pinIconHoverTimerId.set(null);
+          }, this.#pinIconHoverTimerDelay)
+        );
+      }
+    }
+
     if (!this.#menuFocusPipe.transform(this.currentPath(), menuItem)) {
-      const menuNode = event.currentTarget as HTMLElement;
       const iconMenu = menuNode.querySelector('.c-menu-node-icon') as HTMLElement;
       const content = menuNode.querySelector('.c-menu-node-description-content') as HTMLElement;
       const iconExpand = menuNode.querySelector('.c-menu-node-description-icon-expand') as HTMLElement;
@@ -261,7 +332,6 @@ export class SidebarComponent {
         menuNode.style.transition = 'all 0.15s';
         menuNode.style.backgroundColor = brandLightColorOpacity || 'rgba(248, 249, 250, 0.6)';
 
-        const brandColor = this.sidebar()?.brandColor || '#2962FF';
         if (iconMenu) {
           iconMenu.style.transition = 'all 0.15s';
           iconMenu.style.color = brandColor;
@@ -279,8 +349,27 @@ export class SidebarComponent {
   };
 
   onMouseLeaveMenuNode = (event: MouseEvent, menuItem: SdLayoutMenu): void => {
+    const menuNode = event.currentTarget as HTMLElement;
+
+    // Náº¿u cÃ³ báº­t config pin menu
+    if (this.sidebar()?.pin?.enabled) {
+      const iconPin = menuNode.querySelector('.c-menu-node-description-icon-pin') as HTMLElement;
+      if (iconPin) {
+        if (this.#pinIconHoverTimerId()) {
+          clearTimeout(this.#pinIconHoverTimerId()!);
+          this.#pinIconHoverTimerId.set(null);
+        }
+        this.#hoveredMenuNodeKey.set(null);
+
+        iconPin.style.transition = 'all 0.15s';
+        if (!this.isPinnedNode(menuItem)) {
+          iconPin.style.color = '#8C8C8C';
+          iconPin.style.opacity = '0';
+        }
+      }
+    }
+
     if (!this.#menuFocusPipe.transform(this.currentPath(), menuItem)) {
-      const menuNode = event.currentTarget as HTMLElement;
       const iconMenu = menuNode.querySelector('.c-menu-node-icon') as HTMLElement;
       const content = menuNode.querySelector('.c-menu-node-description-content') as HTMLElement;
       const iconExpand = menuNode.querySelector('.c-menu-node-description-icon-expand') as HTMLElement;
@@ -308,6 +397,22 @@ export class SidebarComponent {
   // ==========================================
   // PRIVATE LOGIC
   // ==========================================
+  #setMenusByGroup = (menus: SdLayoutMenu[]): void => {
+    this.menusByGroup.set(menus);
+    this.dataSource.data = menus;
+  };
+
+  #getMenuNodeKey = (node: SdLayoutMenu): string => {
+    if (node?.id) {
+      return node.id;
+    }
+    if ('path' in node && node.path) {
+      return node.path;
+    }
+
+    return node.title || '';
+  };
+
   #getMenuGroupByCurrentPath = (menus: SdLayoutMenu[], menuGroup?: SdLayoutMenu): SdLayoutMenu[] => {
     for (const menu of menus) {
       if ('path' in menu && this.#isMenuPathMatchByCurrentPath(menu.path)) {
@@ -315,34 +420,75 @@ export class SidebarComponent {
       }
       if ('children' in menu && menu.children?.length) {
         const result = this.#getMenuGroupByCurrentPath(menu.children, menuGroup ?? menu);
-        if (result?.length) return result;
+        if (result?.length) {
+          return result;
+        }
       }
     }
     return [];
   };
 
   #bindingMenuGroupByCurrentPath = (menus: SdLayoutMenu[]): void => {
-    const normalizeSearchText = this.#normalizeSearchText(this.searchText());
+    // Chá»‰ bindingGroup má»›i khi ngÆ°á»i dÃ¹ng khÃ´ng searchText
+    if (!this.#getValidSearchText()) {
+      const pinnedChildren = this.pinnedMenuGroup()?.children ?? [];
 
-    if (!normalizeSearchText || normalizeSearchText.length < 3) {
+      // Æ¯u tiÃªn: Current path khá»›p vá»›i item trong pinMenuGroup thÃ¬ láº§n Ä‘áº§u vÃ o trang sáº½ hiá»‡n pinnedMenuGroup
+      const isPinnedPathMatchValid =
+        this.sidebar()?.pin?.enabled &&
+        pinnedChildren?.length &&
+        this.#getMenuGroupByCurrentPath(pinnedChildren)?.length &&
+        this.#isFirstBindingMenu() &&
+        this.idMenuGroupActive() !== this.pinnedMenuGroup()?.id;
+
+      if (isPinnedPathMatchValid) {
+        const pinned = this.pinnedMenuGroup();
+        this.idMenuGroupActive.set(pinned.id);
+        this.#layoutStorageService.lastActiveMenuGroupId.set(pinned.id ?? '');
+        this.titleMenuGroup.set(pinned.title);
+        this.#setMenusByGroup(pinnedChildren);
+        this.#expandParentNodesByCurrentPath(pinnedChildren);
+        return;
+      }
+
       let menuGroupByPath = this.#getMenuGroupByCurrentPath(menus);
-
+      // Náº¿u khÃ´ng tÃ¬m Ä‘Æ°á»£c path nÃ o khá»›p vá»›i menu
       if (!menuGroupByPath?.length) {
         const lastActiveId = this.#layoutStorageService.lastActiveMenuGroupId.get() || '';
+        // Náº¿u cÃ³ pinned group thÃ¬ hiá»‡n máº­c Ä‘á»‹nh lÃ  pinnedMenuGroup
+        if (this.sidebar()?.pin?.enabled && lastActiveId === this.pinnedMenuGroup()?.id && pinnedChildren?.length) {
+          const pinned = this.pinnedMenuGroup();
+          this.idMenuGroupActive.set(pinned.id);
+          this.titleMenuGroup.set(pinned.title);
+          this.#setMenusByGroup(pinnedChildren);
+          this.#expandParentNodesByCurrentPath(pinnedChildren);
+          return;
+        }
+        // Náº¿u khÃ´ng cÃ³ pinnedMenuGroup thÃ¬ menuGroup láº¥y tá»« thao tÃ¡c cuá»‘i cÃ¹ng cá»§a ngÆ°á»i dÃ¹ng
         menuGroupByPath = this.menus()?.filter(menu => menu?.id === lastActiveId) || [];
       }
 
+      // Kiá»ƒm tra láº¡i menuGroupPath Ä‘Ã£ thá»±c sá»± tÃ¬m Ä‘Æ°á»£c chÆ°a?
       if (menuGroupByPath?.length) {
-        const matchedGroup = menuGroupByPath[0];
-        this.idMenuGroupActive.set(matchedGroup?.id);
-        this.#layoutStorageService.lastActiveMenuGroupId.set(matchedGroup?.id || '');
-        this.titleMenuGroup.set(matchedGroup?.tooltipTitle || matchedGroup?.title);
-
-        if ('children' in matchedGroup && matchedGroup.children?.length) {
-          this.menusByGroup.set(matchedGroup.children);
-          this.#expandParentNodesByCurrentPath(this.menusByGroup());
+        // Náº¿u user Ä‘ang á»Ÿ pinedGroup vÃ  curentPath cÃ³ chá»©a trong pinnedMenuGroup thÃ¬ return luÃ´n, khÃ´ng chuyá»ƒn sang menuGroup má»›i
+        if (
+          this.sidebar()?.pin?.enabled &&
+          this.idMenuGroupActive() === this.pinnedMenuGroup()?.id &&
+          this.#getMenuGroupByCurrentPath(pinnedChildren)?.length
+        ) {
+          return;
         } else {
-          this.menusByGroup.set([]);
+          const matchedGroup = menuGroupByPath[0];
+          this.idMenuGroupActive.set(matchedGroup?.id);
+          this.#layoutStorageService.lastActiveMenuGroupId.set(matchedGroup?.id || '');
+          this.titleMenuGroup.set(matchedGroup?.tooltipTitle || matchedGroup?.title);
+
+          if ('children' in matchedGroup && matchedGroup.children?.length) {
+            this.menusByGroup.set(matchedGroup.children);
+            this.#expandParentNodesByCurrentPath(this.menusByGroup());
+          } else {
+            this.menusByGroup.set([]);
+          }
         }
       } else {
         this.idMenuGroupActive.set('');
@@ -372,14 +518,13 @@ export class SidebarComponent {
   }
 
   #filterMenuBySearchText = (menus: SdLayoutMenu[]): void => {
-    const normalizeSearchText = this.#normalizeSearchText(this.searchText());
-
-    if (!normalizeSearchText || normalizeSearchText.length < 2) {
+    const validSearchText = this.#getValidSearchText();
+    if (!validSearchText) {
       this.dataSource.data = menus;
       this.#onCollapseAllMenuNodes(menus);
       this.#expandParentNodesByCurrentPath(menus);
     } else {
-      const aliasSearchText = SdUtilities.changeAliasLowerCase(normalizeSearchText);
+      const aliasSearchText = StringUtilities.changeAliasLowerCase(validSearchText);
       this.dataSource.data = this.#getMenuByAliasSearchText(menus, aliasSearchText);
       if (this.dataSource.data?.length) {
         this.#onExpandAllMenuNodes(this.dataSource.data);
@@ -390,7 +535,7 @@ export class SidebarComponent {
   #getMenuByAliasSearchText = (menus: SdLayoutMenu[], aliasSearchText: string): SdLayoutMenu[] => {
     const result: SdLayoutMenu[] = [];
     for (const menu of menus) {
-      const aliasTitle = SdUtilities.changeAliasLowerCase(menu.title as string);
+      const aliasTitle = StringUtilities.changeAliasLowerCase(menu.title as string);
 
       if (aliasTitle.includes(aliasSearchText)) {
         result.push(menu);
@@ -410,8 +555,14 @@ export class SidebarComponent {
   };
 
   #isMenuPathMatchByCurrentPath = (path: string): boolean => {
-    if (!path) return false;
-    if (this.currentPath() === path) return true;
+    if (!path) {
+      return false;
+    }
+
+    if (this.currentPath() === path) {
+      return true;
+    }
+
     return this.#normalizePath(this.currentPath()).startsWith(this.#normalizePath(path));
   };
 
@@ -422,9 +573,11 @@ export class SidebarComponent {
   }
 
   #convertColor = (input: string | undefined, opacity = 1): string => {
-    if (!input) return '';
-    input = input.trim();
+    if (!input) {
+      return '';
+    }
 
+    input = input.trim();
     const hexRegex = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
     const rgbRegex = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i;
 
@@ -450,6 +603,11 @@ export class SidebarComponent {
     }
 
     return input;
+  };
+
+  #getValidSearchText = (): string => {
+    const normalized = this.#normalizeSearchText(this.searchText());
+    return normalized && normalized.length >= 2 ? normalized : '';
   };
 
   #normalizeSearchText = (searchText: string) => {

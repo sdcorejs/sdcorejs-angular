@@ -43,6 +43,25 @@ describe('SdButton', () => {
       setInput(fixture, 'title', 'X');
       expect(queryByCss(fixture, 'mat-icon.c-icon-prefix').textContent?.trim()).toBe('save');
     });
+
+    // why: bug "text dài button bị xuống hàng cắt height" — fix bằng nowrap + ellipsis
+    // trên .c-title + min-width:0 cho flex wrapper.
+    it('applies nowrap + ellipsis on .c-title so long text never wraps to 2 lines', () => {
+      setInput(fixture, 'title', 'Khôi phục mặc định');
+      fixture.detectChanges();
+      const title = queryByCss(fixture, 'span.c-title');
+      const cs = getComputedStyle(title);
+      expect(cs.whiteSpace).toBe('nowrap');
+      expect(cs.textOverflow).toBe('ellipsis');
+      expect(cs.overflow).toBe('hidden');
+    });
+
+    it('applies nowrap on the button itself so MDC label cannot break to 2 lines', () => {
+      setInput(fixture, 'title', 'Lưu & Tải lại');
+      fixture.detectChanges();
+      const btn = fixture.nativeElement.querySelector('button.c-button') as HTMLElement;
+      expect(getComputedStyle(btn).whiteSpace).toBe('nowrap');
+    });
   });
 
   describe('booleanAttribute coercion', () => {
@@ -199,5 +218,31 @@ describe('SdButton', () => {
       tick(500);
       expect(received.length).toBe(0);
     }));
+  });
+
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting disabled input', () => {
+      setInput(fixture, 'autoId', 'save');
+      setInput(fixture, 'type', 'fill');
+      fixture.detectChanges();
+      const btn = queryByCss<HTMLButtonElement>(fixture, 'button.c-button');
+      expect(btn.getAttribute('data-disabled')).toBe('false');
+
+      setInput(fixture, 'disabled', true);
+      fixture.detectChanges();
+      expect(btn.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-loading reflecting loading input', () => {
+      setInput(fixture, 'autoId', 'save');
+      setInput(fixture, 'type', 'fill');
+      fixture.detectChanges();
+      const btn = queryByCss<HTMLButtonElement>(fixture, 'button.c-button');
+      expect(btn.getAttribute('data-loading')).toBe('false');
+
+      setInput(fixture, 'loading', true);
+      fixture.detectChanges();
+      expect(btn.getAttribute('data-loading')).toBe('true');
+    });
   });
 });

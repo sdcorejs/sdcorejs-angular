@@ -16,7 +16,7 @@ import { SdConfirmService, SdExcelColumn, SdExcelService, SdLoadingService, SdNo
 import { SdTableColumn, SdTableOption } from '../../models';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportDefault } from '../../models/table-option-export.model';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 
 @Component({
@@ -60,7 +60,7 @@ export class SdPopupExport {
     if (!this.exportOption?.key) {
       return null;
     }
-    return SdUtilities.hash({
+    return Utilities.hash({
       prefix,
       key: this.exportOption?.key,
     });

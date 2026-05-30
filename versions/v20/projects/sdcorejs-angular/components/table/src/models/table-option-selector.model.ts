@@ -22,6 +22,22 @@ export interface SdTableOptionSelector<T = any> {
    * DÃ¹ng khi cáº§n programmatically set selected items tá»« bÃªn ngoÃ i.
    */
   defaultSelected?: (rowData: T) => boolean;
+  /**
+   * Giá»¯ láº¡i selection khi user chuyá»ƒn trang / filter / sort / reload.
+   * Selection chá»‰ bá»‹ clear khi user báº¥m nÃºt X (onClearSelection) hoáº·c bá» chá»n tá»«ng item.
+   *
+   * - Default (false): selection bá»‹ máº¥t khi data items Ä‘Æ°á»£c re-fetch (server-side) hoáº·c
+   *   item references thay Ä‘á»•i. Action bar chá»‰ hiá»ƒn thá»‹ sá»‘ item selected á»Ÿ page hiá»‡n táº¡i.
+   * - Enabled (true): table giá»¯ map ná»™i bá»™ selectedItems theo `meta.id` (hash cá»§a data).
+   *   Sau má»—i #render, restore `isSelected` cho item nÃ o id Ä‘Ã£ cÃ³ trong map.
+   *   `selectedTableItems()` tráº£ vá» TOÃ€N Bá»˜ item Ä‘Ã£ chá»n xuyÃªn trang (ká»ƒ cáº£ off-page),
+   *   nÃªn action bar + callback `click(items)` nháº­n Ä‘áº§y Ä‘á»§ data Ä‘ang Ä‘Æ°á»£c chá»n.
+   *
+   * LÆ°u Ã½: matching dá»±a trÃªn `Utilities.hash(data)` â€” hai item cÃ³ cÃ¹ng data shape sáº½
+   * trÃ¹ng id (mong muá»‘n). Náº¿u data cÃ³ timestamp/random field thay Ä‘á»•i giá»¯a cÃ¡c láº§n fetch,
+   * id sáº½ khÃ¡c vÃ  selection khÃ´ng restore Ä‘Æ°á»£c.
+   */
+  preserveSelection?: boolean;
 }
 
 export type SdTableAction<T = any> = SdTableActionNormal<T> | SdTableActionChildren<T>;
@@ -37,7 +53,7 @@ export interface SdTableActionNormal<T = any> {
    * Font set cá»§a Material icon.
    * Kiá»ƒu thá»±c táº¿ láº¥y tá»« `SdButton['fontSet']` vÃ  chá»‰ há»— trá»£ cÃ¡c giÃ¡ trá»‹ thuá»™c `MaterialIconFontSet`,
    * vÃ­ dá»¥: `material-icons`, `material-icons-outlined`, `material-icons-round`,
-   * `material-icons-sharp`, `material-symbols-outlined`.
+   * `material-icons-sharp`.
    * Náº¿u khÃ´ng truyá»n, `SdButton` sáº½ dÃ¹ng font set máº·c Ä‘á»‹nh cá»§a nÃ³.
    */
   fontSet?: SdUnwrapSignal<SdButton['fontSet']>;

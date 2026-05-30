@@ -31,10 +31,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdFormControl } from '@sdcorejs/angular/forms/models';
+import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
+import { sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { SdSize } from '@sdcorejs/angular/utilities';
-import { DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Size } from '@sdcorejs/utils/models';
+import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
@@ -45,6 +48,7 @@ import * as uuid from 'uuid';
   templateUrl: './date.component.html',
   styleUrls: ['./date.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; náº¿u undefined sáº½ throw khi format/parse.
     // Provide locale en-US táº¡i scope component Ä‘á»ƒ hÃ nh vi giá»‘ng Moment cÅ© (English default).
@@ -99,9 +103,23 @@ export class SdDate implements OnDestroy, OnInit {
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => this.autoIdInput() ? `forms-date-${this.autoIdInput()}` : undefined);
+
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly dataErrorMessage = computed(() => {
+    void this.#state();
+    const msg = this.errorMessage();
+    return msg && msg.length > 0 ? msg : null;
+  });
+
   name = input<string>(uuid.v4());
 
-  size = input<SdSize>('md');
+  size = input<Size>('md');
   // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -123,14 +141,16 @@ export class SdDate implements OnDestroy, OnInit {
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
   viewed = input(false, { transform: booleanAttribute });
+  /** Flatten the field chrome to a chip-friendly trigger (value + caret only). */
+  bare = input(false, { transform: booleanAttribute });
 
   inlineError = input<string | undefined>();
 
   /**
    * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
-   * DÃ¹ng getter (khÃ´ng pháº£i computed) vÃ¬ formControl.errors khÃ´ng pháº£i Angular signal.
    */
-  get errorTooltipMessage(): string | undefined {
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -142,7 +162,7 @@ export class SdDate implements OnDestroy, OnInit {
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
-  }
+  });
 
   hyperlink = input<string | null | undefined>();
 
@@ -171,7 +191,7 @@ export class SdDate implements OnDestroy, OnInit {
   // ==========================================
   // 5. INTERNAL STATE & STREAMS
   // ==========================================
-  isMobileOrTablet = SdUtilities.isMobile();
+  isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
   isFocused = false;
   isValid?: boolean;
@@ -213,7 +233,7 @@ export class SdDate implements OnDestroy, OnInit {
       untracked(() => {
         const validators: ValidatorFn[] = [];
         if (req) validators.push(Validators.required);
-        if (inl) validators.push(this.customInlineErrorValidator());
+        if (inl) validators.push(SdInlineErrorValidator);
         
         this.formControl.setValidators(validators.length ? validators : null);
         this.formControl.updateValueAndValidity({ emitEvent: false });
@@ -244,10 +264,6 @@ export class SdDate implements OnDestroy, OnInit {
     return null;
   }
 
-  customInlineErrorValidator(): ValidatorFn {
-    return (): Record<string, any> | null => ({ inlineError: true });
-  }
-
   onFocus = () => {
     this.isFocused = true;
     this.sdFocus.emit();
@@ -275,6 +291,12 @@ export class SdDate implements OnDestroy, OnInit {
       this.inputRef()?.nativeElement?.focus();
       this.datePicker()?.open();
     }, 100);
+  };
+
+  /** Open the datepicker calendar programmatically (anchors to the field input). */
+  open = () => {
+    if (this.formControl.disabled) return;
+    this.datePicker()?.open();
   };
 
   focusInputElement() {

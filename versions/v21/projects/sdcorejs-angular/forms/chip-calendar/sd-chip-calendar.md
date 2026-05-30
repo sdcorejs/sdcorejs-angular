@@ -39,7 +39,7 @@ Multi-date picker rendered as chips â€” user opens a calendar popup and tog
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables interaction. |
 | `viewed` | `boolean` | `false` | DETAIL read-only mode. |
-| `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorTooltipMessage`. |
+| `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorMessage`. |
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Used in `[viewed]` mode for clickable chips. |
 
 > **Coerce**: `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` â€” bare attribute = `true`.
@@ -49,6 +49,14 @@ Multi-date picker rendered as chips â€” user opens a calendar popup and tog
 | --- | --- | --- |
 | `modelChange` | `any[]` | Emits the new array of date strings on toggle/remove/clear. |
 | `sdChange` | `any[]` | SDCoreJS-standard change event (same payload). |
+
+## Host classes
+Applied automatically on `<sd-chip-calendar>` for styling hooks:
+
+| Class | Condition | Effect |
+| --- | --- | --- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `#sdLabel` template â€” custom label
@@ -110,6 +118,30 @@ canRemove = (d: string) => new Date(d.replaceAll('/', '-')) >= new Date();
   [(model)]="model.trainingDates"
   [removable]="canRemove">
 </sd-chip-calendar>
+```
+
+## E2E test attributes
+
+Rendered on the `<input class="sd-chip-input">` element (same anchor as `data-autoid`):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `forms-chip-calendar-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
+| `data-invalid` | `"true"` / `"false"` | `formControl.invalid && (touched \|\| dirty)` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` |
+| `data-value` | string | `sdSerializeDataValue(formControl.value)` |
+| `data-required` | `"true"` / `"false"` | `required` input; always present |
+| `data-error-message` | string | present only when the component is currently showing an error tooltip message |
+
+> **Note**: `sd-chip-calendar` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
+
+Selector example:
+
+```ts
+const el = page.locator('[data-autoid="forms-chip-calendar-dates"]');
+await expect(el).toHaveAttribute('data-empty', 'false');
+await expect(el).toHaveAttribute('data-required', 'false');
 ```
 
 ## Anti-patterns

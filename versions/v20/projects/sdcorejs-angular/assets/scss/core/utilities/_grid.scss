@@ -1,6 +1,7 @@
 // --------------------------------------------------------------------------
-// Grid — Bootstrap-compatible row/col + CSS Grid container
-//   Không phụ thuộc Bootstrap, thuần CSS Flexbox / CSS Grid
+// Grid — row/col 12-column flexbox + native CSS Grid container
+//   Thuần CSS Flexbox / CSS Grid, không phụ thuộc framework ngoài.
+//   Breakpoint convention (sm/md/lg/xl) trùng Bootstrap để host app dễ migrate.
 // --------------------------------------------------------------------------
 
 // --------------------------------------------------------------------------
@@ -63,7 +64,7 @@ $grid-gutter: 16px;
 }
 
 // --------------------------------------------------------------------------
-// 1b. Responsive columns  — Bootstrap-compatible breakpoints
+// 1b. Responsive columns
 //   col-sm-{1-12} : ≥ 576px
 //   col-md-{1-12} : ≥ 768px
 //   col-lg-{1-12} : ≥ 992px

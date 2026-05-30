@@ -20,27 +20,26 @@ Signal-based scroll-spy navigation (OnPush) â€” pairs a side TOC with the a
 - For app-level routing â†’ use `routerLink` instead
 - For tab-style content swapping (only one section visible at a time) â†’ use `<sd-tab>`
 - For breadcrumbs â†’ use a dedicated breadcrumb component
-- When you need a fully custom horizontal TOC bar â€” the `type` input is accepted but the current implementation renders the vertical sidebar layout regardless of its value; a true horizontal mode is not yet implemented
 
 ## Inputs (`<sd-anchor>`)
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | E2E test hook. Computed prefix `components-anchor-{autoId}`. Each anchor item's clickable element gets `components-anchor-{autoId}-{item.key}` (requires `key` on `<sd-anchor-item>`). |
-| `type` | `'vertical' \| 'horizontal'` | `'vertical'` | Layout direction. Vertical is the primary mode. |
-| `sidebarWidth` | `string` | `'200px'` | CSS width of the right-hand TOC. Content width is computed as `calc(100% - sidebarWidth - 16px)`. |
+| `sidebarWidth` | `string` | `'200px'` | Flex-basis cá»§a TOC sidebar (cá»™t pháº£i). Content area chiáº¿m flex-1 pháº§n cÃ²n láº¡i. Wrapper dÃ¹ng `gap: 16px` giá»¯a 2 cá»™t â€” khÃ´ng cáº§n subtract trong calc. |
 | `ellipsis` | `boolean` | `false` | `transform: booleanAttribute` â€” bare attribute = true. Truncates long titles in the TOC. |
-| `isOverscroll` | `boolean` | `false` | `transform: booleanAttribute` â€” bare attribute = true. When false (default), adds `c-stop-scroll-propagation` class to prevent the body from scrolling when the inner panel hits its bounds. |
-| `isHiddenAnchorList` | `boolean` | `false` | `transform: booleanAttribute` â€” bare attribute = true. Hides the TOC sidebar entirely (and disables scroll-spy registration); content takes full width. |
+| `overScroll` | `boolean` | `false` | `transform: booleanAttribute` â€” bare attribute = true. When false (default), adds `c-stop-scroll-propagation` class to prevent the body from scrolling when the inner panel hits its bounds. |
+| `hideNav` | `boolean` | `BrowserUtilities.isMobile()` | `transform: booleanAttribute` â€” bare attribute = true. Default theo UA: mobile â†’ `true` (áº©n TOC), desktop â†’ `false`. Override explicit qua `[hideNav]="false"` Ä‘á»ƒ force hiá»‡n trÃªn mobile, hoáº·c `[hideNav]="true"` Ä‘á»ƒ áº©n trÃªn desktop. Khi hide, scroll-spy cÅ©ng bá»‹ disable, content chiáº¿m 100% width. |
+| `color` | `Color` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | MÃ u highlight active nav â€” apply cho text, icon, vertical bar bÃªn trÃ¡i. Bind qua CSS var `--anchor-active-color` map sang token global `--sd-{color}`. Import `Color` tá»« `@sdcorejs/utils/models`. |
 
 ## Outputs (`<sd-anchor>`)
 None exposed on the host element.
 
-> Internally `<sd-anchor-vertical-list>` emits `sdClickSection` which the host listens to and routes to `scrollSectionByClick()`. This is an implementation detail; consumers should never bind to it directly.
+> Internally `<anchor-nav>` emits `clickSection` which the host listens to and routes to `scrollSectionByClick()`. This is an implementation detail; consumers should never bind to it directly.
 
 ## State (`<sd-anchor>`)
 | Signal | Type | Initial | Description |
 | --- | --- | --- | --- |
-| `activeSectionId` | `Signal<string>` | `''` | UUID of the currently visible / active section. Set to the first section's id immediately after first render (unless `isHiddenAnchorList` is true). Updated automatically by the scroll-spy listener and synchronously on `scrollSectionByClick()`. Read-only from the outside â€” do not mutate directly. |
+| `activeSectionId` | `Signal<string>` | `''` | UUID of the currently visible / active section. Set to the first section's id immediately after first render (unless `hideNav` is true). Updated automatically by the scroll-spy listener and synchronously on `scrollSectionByClick()`. Read-only from the outside â€” do not mutate directly. |
 
 ## Inputs (`<sd-anchor-item>`)
 | Name | Type | Default | Notes |
@@ -80,20 +79,22 @@ None exposed on the host element.
 </div>
 ```
 
+## Internal components (khÃ´ng expose ra ngoÃ i)
+- **`<anchor-nav>`** (class `AnchorNav`, folder `components/anchor-nav/`) â€” TOC sidebar render danh sÃ¡ch items, emit `clickSection` lÃªn parent. Äá»•i tÃªn tá»« `SdAnchorVerticalList` / `<sd-anchor-vertical-list>` / `(sdClickSection)` cÅ©. Internal-only, khÃ´ng export, khÃ´ng dÃ¹ng tá»« consumer code.
+
 ## Behavior notes
-- **Initialisation**: `afterNextRender` fires once after the first browser paint. If `isHiddenAnchorList` is false at that point, `activeSectionId` is set to the first section's id and the scroll-spy subscription is registered. If `isHiddenAnchorList` is true, both steps are skipped and `activeSectionId` stays `''`.
+- **Initialisation**: `afterNextRender` fires once after the first browser paint. If `hideNav` is false at that point, `activeSectionId` is set to the first section's id and the scroll-spy subscription is registered. If `hideNav` is true, both steps are skipped and `activeSectionId` stays `''`.
 - **Scroll spy**: The scroll listener uses `auditTime(50)` to throttle DOM reads. For each scroll event it reads each section's `offsetTop` / `offsetHeight` and sets `activeSectionId` to the first section whose range contains the current scroll position (adjusted for `padding-top` and `border-top-width`).
 - **Click-to-scroll**: `scrollSectionByClick(id)` immediately sets `activeSectionId` to the target id and calls `wrapperEl.scrollTo({ top: targetElement.offsetTop, behavior: 'smooth' })`. The scroll-spy subscription is suspended for the duration of the animated scroll (detected via `auditTime(100) + debounceTime(200) + take(1)`) to prevent active-state flicker. A fallback `setTimeout(100ms)` re-registers the subscription if no scroll event is emitted (e.g. the target is already in view).
 - **Active section detection** accounts for the wrapper's `padding-top` and `border-top-width` so sections inside padded containers are highlighted correctly.
 - **Auto-cleanup**: `ngOnDestroy` disposes both scroll subscriptions and clears the pending setTimeout, preventing memory leaks when the component is destroyed.
 
 ## Visual cues
-- **Vertical layout (default / `type="vertical"`)**: Two-column layout â€” scrollable content area on the left; fixed-width TOC sidebar on the right. The sidebar width is controlled by `sidebarWidth` (default `200px`); content width auto-fills the remainder via `calc(100% - sidebarWidth - 16px)`.
-- **`type="horizontal"`**: The input is accepted (no error) but the current template always renders the vertical two-column layout regardless of the value. A dedicated horizontal top-bar mode is not yet implemented.
+- **Vertical layout** (current â€” only supported mode): Two-column flex layout â€” scrollable content area trÃªn trÃ¡i (`flex: 1 1 auto`, `min-width: 0`); fixed-width TOC sidebar bÃªn pháº£i (`flex: 0 0 auto`, `flex-basis: sidebarWidth()`). Wrapper `gap: 16px` giá»¯a 2 cá»™t. Horizontal top-bar mode chÆ°a Ä‘Æ°á»£c há»— trá»£.
 - **TOC items**: Each row shows an optional leading Material icon and the section title. The active item receives an accent color/highlight to indicate the current scroll position.
 - **Ellipsis**: Long titles wrap to multiple lines by default. When `ellipsis` is set, they truncate with `â€¦` at the configured sidebar width.
-- **Hidden sidebar (`isHiddenAnchorList`)**: The TOC column is removed from the DOM (via `@if`) and the content area expands to full width. Scroll-spy is also disabled.
-- **Scroll propagation**: By default (`isOverscroll="false"`), the `c-stop-scroll-propagation` CSS class is applied to the wrapper, trapping scroll within the panel and preventing the page body from scrolling when the panel reaches its bounds.
+- **Hidden sidebar (`hideNav`)**: The TOC column is removed from the DOM (via `@if`) and the content area expands to full width. Scroll-spy is also disabled.
+- **Scroll propagation**: By default (`overScroll="false"`), the `c-stop-scroll-propagation` CSS class is applied to the wrapper, trapping scroll within the panel and preventing the page body from scrolling when the panel reaches its bounds.
 
 ## Examples
 
@@ -124,17 +125,39 @@ None exposed on the host element.
 
 ### 3. Allow scroll bleed-through to outer page
 ```html
-<sd-anchor [isOverscroll]="true">
+<sd-anchor [overScroll]="true">
   <sd-anchor-item title="Pháº§n 1">â€¦</sd-anchor-item>
   <sd-anchor-item title="Pháº§n 2">â€¦</sd-anchor-item>
 </sd-anchor>
 ```
 
-### 4. Hide TOC conditionally (e.g. for read-only / mobile)
+### 4. Äá»•i mÃ u highlight active nav
 ```html
-<sd-anchor [isHiddenAnchorList]="isMobile()">
+<!-- Default: primary -->
+<sd-anchor color="success">
+  <sd-anchor-item title="Pháº§n 1" icon="check_circle">â€¦</sd-anchor-item>
+  <sd-anchor-item title="Pháº§n 2" icon="check_circle">â€¦</sd-anchor-item>
+</sd-anchor>
+
+<!-- CÃ¡c giÃ¡ trá»‹: 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error' -->
+<sd-anchor color="error">â€¦</sd-anchor>
+```
+
+### 5. Force-show TOC trÃªn mobile (override default `hideNav=isMobile()`)
+```html
+<!-- Máº·c Ä‘á»‹nh: mobile â†’ hideNav=true (áº©n), desktop â†’ hideNav=false (hiá»‡n) -->
+<sd-anchor>
   <sd-anchor-item title="ThÃ´ng tin chung">â€¦</sd-anchor-item>
-  <sd-anchor-item title="Lá»‹ch sá»­">â€¦</sd-anchor-item>
+</sd-anchor>
+
+<!-- Force hiá»‡n trÃªn mobile -->
+<sd-anchor [hideNav]="false">
+  <sd-anchor-item title="ThÃ´ng tin chung">â€¦</sd-anchor-item>
+</sd-anchor>
+
+<!-- Force áº©n trÃªn desktop -->
+<sd-anchor [hideNav]="true">
+  <sd-anchor-item title="ThÃ´ng tin chung">â€¦</sd-anchor-item>
 </sd-anchor>
 ```
 
@@ -144,9 +167,8 @@ None exposed on the host element.
 - Putting `<sd-anchor-item>` outside an `<sd-anchor>` host â€” the parent is required for scroll-spy to work
 - Adding `title="â€¦"` as a native HTML attribute (browser tooltip) on `<sd-anchor-item>` â€” the component already binds via `input.required` and clears the native attribute
 - Putting `<sd-anchor-item>` from a different component family inside `<sd-anchor>` â€” they use different services
-- Defaulting `isOverscroll` on long pages â€” the default `false` traps scroll inside the panel, which is usually what you want for a TOC
+- Defaulting `overScroll` on long pages â€” the default `false` traps scroll inside the panel, which is usually what you want for a TOC
 - Trying to set `[id]="'my-id'"` on `<sd-anchor-item>` â€” `id` is an auto-generated UUID property, not an Angular input; the binding is silently ignored and scroll-spy uses the generated id
-- Relying on `type="horizontal"` for a horizontal TOC â€” the input exists but horizontal layout is not yet rendered; the sidebar always appears on the right regardless
 
 ## Related
 - `<sd-tab>` â€” when only one section should be visible at a time

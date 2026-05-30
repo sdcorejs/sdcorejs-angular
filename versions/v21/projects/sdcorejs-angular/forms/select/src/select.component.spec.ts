@@ -1,6 +1,6 @@
 ﻿import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdSelect } from './select.component';
@@ -348,9 +348,9 @@ describe('SdSelect', () => {
   });
 
   // -------------------------------------------------------------------------
-  // errorTooltipMessage getter
+  // errorMessage getter
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage getter', () => {
+  describe('errorMessage getter', () => {
     it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', fakeAsync(() => {
       host.required = true;
       fixture.detectChanges();
@@ -358,18 +358,18 @@ describe('SdSelect', () => {
       comp.formControl.setValue(null, { emitEvent: false });
       comp.formControl.markAsTouched();
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(comp.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
     }));
 
     it('returns the inlineError message when inlineError validator fires', () => {
       host.inlineError = 'Custom select error';
       fixture.detectChanges();
       comp.formControl.updateValueAndValidity();
-      expect(comp.errorTooltipMessage).toBe('Custom select error');
+      expect(comp.errorMessage()).toBe('Custom select error');
     });
 
     it('returns undefined when no errors', () => {
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
     });
   });
 
@@ -572,6 +572,64 @@ describe('SdSelect (NgForm extraction)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// bare + open() â€” Task 3
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (bare + open)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fixture: ComponentFixture<SdSelect<any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let component: SdSelect<any>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdSelect, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdSelect);
+    component = fixture.componentInstance;
+  });
+
+  it('bare defaults false; bare=true adds .sd-bare host class', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(false);
+    fixture.componentRef.setInput('bare', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  });
+
+  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'Tráº¡ng thÃ¡i');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
+  });
+
+  it('open() opens the select panel', () => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.componentRef.setInput('items', [{ id: 'a', name: 'A' }]);
+    fixture.detectChanges();
+    component.open();
+    expect(component.selectRef()?.panelOpen).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // SD_FORM_CONFIGURATION token
 // ---------------------------------------------------------------------------
 
@@ -598,6 +656,73 @@ describe('SdSelect (SD_FORM_CONFIGURATION)', () => {
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {
     expect(comp.appearance()).toBe('fill');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E2E data-* attributes (Tasks 11â€“12)
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (E2E attributes)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('renders data-disabled reflecting FormControl state', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-disabled')).toBe('false');
+    comp.formControl.disable();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-disabled')).toBe('true');
+  });
+
+  it('renders data-empty toggling with value', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-empty')).toBe('true');
+    comp.formControl.setValue(1);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-empty')).toBe('false');
+  });
+
+  it('renders data-value reflecting selected key', () => {
+    comp.formControl.setValue(2);
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-value')).toBe('2');
+  });
+
+  it('renders data-invalid=true only after touched + invalid', () => {
+    comp.formControl.setValidators([Validators.required]);
+    comp.formControl.updateValueAndValidity();
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-invalid')).toBe('false');
+    comp.formControl.markAsTouched();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-invalid')).toBe('true');
+  });
+
+  it('renders data-loading reflecting the loading signal', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement.querySelector('mat-select');
+    expect(el.getAttribute('data-loading')).toBe('false');
+    comp.loading.set(true);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-loading')).toBe('true');
   });
 });
 

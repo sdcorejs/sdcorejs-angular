@@ -17,7 +17,7 @@ import {
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
-import { SdTabelCellDefDirective, SdTable, SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
+import { SdTableCellDefDirective, SdTable, SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { SdAutocomplete, SdInput, SdInputNumber, SdRadio, SdSearch } from '@sdcorejs/angular/forms';
 import { filter, startWith, Subject, Subscription } from 'rxjs';
@@ -44,7 +44,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     SdAutocomplete,
     SdUploadFile,
     SdTable,
-    SdTabelCellDefDirective,
+    SdTableCellDefDirective,
     SdSideDrawer,
     SdButton,
     SdUploadFile,

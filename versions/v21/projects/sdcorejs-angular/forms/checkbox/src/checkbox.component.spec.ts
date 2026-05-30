@@ -11,6 +11,7 @@ import { SdCheckbox } from './checkbox.component';
     [label]="label"
     [color]="color"
     [disabled]="disabled"
+    [viewed]="viewed"
     [inlineError]="inlineError"
     [autoId]="autoId"
     [(model)]="model"
@@ -18,8 +19,9 @@ import { SdCheckbox } from './checkbox.component';
 })
 class HostComponent {
   label?: string;
-  color: 'primary' | 'warn' = 'primary';
+  color: any = 'primary';
   disabled: boolean | '' | null | undefined = false;
+  viewed = false;
   inlineError = '';
   autoId: string | null | undefined = undefined;
   model: any = false;
@@ -127,13 +129,71 @@ describe('SdCheckbox', () => {
 
   describe('color', () => {
     it('defaults to primary', () => {
-      expect(checkbox.color).toBe('primary');
+      expect(checkbox.color()).toBe('primary');
     });
 
-    it('accepts "warn"', () => {
-      host.color = 'warn';
+    it('accepts full Color enum (success)', () => {
+      host.color = 'success';
       fixture.detectChanges();
-      expect(checkbox.color).toBe('warn');
+      expect(checkbox.color()).toBe('success');
+    });
+
+    it('falls back to primary when null/undefined', () => {
+      host.color = null;
+      fixture.detectChanges();
+      expect(checkbox.color()).toBe('primary');
+    });
+
+    it('drives host class .sd-c-<color>', () => {
+      host.color = 'warning';
+      fixture.detectChanges();
+      const hostEl = fixture.debugElement.query(el => el.componentInstance instanceof SdCheckbox).nativeElement as HTMLElement;
+      expect(hostEl.classList.contains('sd-c-warning')).toBe(true);
+      expect(hostEl.classList.contains('sd-c-primary')).toBe(false);
+    });
+
+    // why: bug "luôn ăn màu accent" do theme set `--mat-checkbox-selected-icon-color`
+    // qua `.mat-mdc-checkbox.mat-accent` ở specificity (0,2,1). Override CẢ `--mat-*` LẪN
+    // `--mdc-*` với `!important`. Spec gán --sd-warning giả lập + verify chain propagate.
+    it('overrides --mat-checkbox-* and --mdc-checkbox-* tokens via --sd-c chain', () => {
+      const root = document.documentElement;
+      const prev = root.style.getPropertyValue('--sd-warning');
+      root.style.setProperty('--sd-warning', 'rgb(245, 158, 11)');
+      try {
+        host.color = 'warning';
+        fixture.detectChanges();
+        const inner = fixture.nativeElement.querySelector('.mat-mdc-checkbox') as HTMLElement;
+        expect(inner).not.toBeNull();
+        const cs = getComputedStyle(inner);
+        expect(cs.getPropertyValue('--mat-checkbox-selected-icon-color').trim()).toBe('rgb(245, 158, 11)');
+        expect(cs.getPropertyValue('--mdc-checkbox-selected-icon-color').trim()).toBe('rgb(245, 158, 11)');
+      } finally {
+        if (prev) root.style.setProperty('--sd-warning', prev);
+        else root.style.removeProperty('--sd-warning');
+      }
+    });
+  });
+
+  describe('viewed mode', () => {
+    it('viewed=false renders mat-checkbox (editable)', () => {
+      expect(fixture.nativeElement.querySelector('mat-checkbox')).toBeTruthy();
+    });
+
+    it('viewed=true hides mat-checkbox and shows checked/unchecked text', () => {
+      host.viewed = true;
+      host.model = true;
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('mat-checkbox')).toBeNull();
+      const txt = (fixture.nativeElement.textContent as string);
+      expect(/Có|Yes|はい|是|예|core\.form\.checkbox\.checked/.test(txt)).toBe(true);
+    });
+
+    it('viewed=true with model=false shows unchecked text', () => {
+      host.viewed = true;
+      host.model = false;
+      fixture.detectChanges();
+      const txt = (fixture.nativeElement.textContent as string);
+      expect(/Không|No|いいえ|否|아니오|core\.form\.checkbox\.unchecked/.test(txt)).toBe(true);
     });
   });
 
@@ -148,6 +208,37 @@ describe('SdCheckbox', () => {
       host.autoId = null;
       fixture.detectChanges();
       expect(checkbox.autoId()).toBeUndefined();
+    });
+  });
+
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement.querySelector('mat-checkbox');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      checkbox.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-value as "true"/"false"', () => {
+      checkbox.formControl.setValue(true);
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement.querySelector('mat-checkbox');
+      expect(el.getAttribute('data-value')).toBe('true');
+      checkbox.formControl.setValue(false);
+      fixture.detectChanges();
+      expect(el.getAttribute('data-value')).toBe('false');
+    });
+
+    it('renders data-empty true for null, false for any boolean value', () => {
+      checkbox.formControl.setValue(null);
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement.querySelector('mat-checkbox');
+      expect(el.getAttribute('data-empty')).toBe('true');
+      checkbox.formControl.setValue(false);
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
     });
   });
 });

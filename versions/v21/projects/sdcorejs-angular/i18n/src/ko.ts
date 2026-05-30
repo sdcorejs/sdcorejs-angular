@@ -6,21 +6,58 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.common.reload': '페이지 새로고침',
   'core.test.greet': '안녕하세요 {name}님',
 
-  // ---- Validators (pattern.model.ts) ----
+  // ---- Validators (VALIDATION_PATTERNS in @sdcorejs/utils/constants) ----
   'core.validator.email.name': '이메일',
   'core.validator.email.error': '올바르지 않은 이메일 형식입니다',
   'core.validator.phone.name': '전화번호',
   'core.validator.phone.error': '올바르지 않은 전화번호 형식입니다',
+  // Legacy aliases
   'core.validator.phone-vn.name': 'VN 전화번호',
-  'core.validator.phone-vn.error': '올바르지 않은 전화번호 형식입니다',
+  'core.validator.phone-vn.error': '올바르지 않은 베트남 전화번호 형식입니다',
   'core.validator.cccd.name': '주민번호',
   'core.validator.cccd.error': '올바르지 않은 주민번호 형식입니다 (12자리)',
-  'core.validator.passport.name': '여권',
-  'core.validator.passport.error': '올바르지 않은 여권번호입니다 (영문 1자 + 숫자 7자리)',
   'core.validator.id-vn.name': '주민번호 / 여권',
   'core.validator.id-vn.error': '올바르지 않은 주민번호 또는 여권번호입니다',
+  'core.validator.vn-phone.name': 'VN 전화번호',
+  'core.validator.vn-phone.error': '올바르지 않은 베트남 전화번호 형식입니다',
+  'core.validator.vn-id.name': '주민번호',
+  'core.validator.vn-id.error': '올바르지 않은 주민번호 형식입니다 (12자리)',
+  'core.validator.passport.name': '여권',
+  'core.validator.passport.error': '올바르지 않은 여권번호입니다 (영문 1자 + 숫자 7자리)',
+  'core.validator.vn-id-or-passport.name': '주민번호 / 여권',
+  'core.validator.vn-id-or-passport.error': '올바르지 않은 주민번호 또는 여권번호입니다',
   'core.validator.time.name': '시간',
   'core.validator.time.error': '올바르지 않은 시간 형식입니다 (HH:mm 형식)',
+  'core.validator.url.name': 'URL',
+  'core.validator.url.error': '올바르지 않은 URL 형식입니다',
+  'core.validator.domain.name': '도메인',
+  'core.validator.domain.error': '올바르지 않은 도메인 형식입니다',
+  'core.validator.ipv4.name': 'IPv4',
+  'core.validator.ipv4.error': '올바르지 않은 IPv4 주소입니다',
+  'core.validator.ipv6.name': 'IPv6',
+  'core.validator.ipv6.error': '올바르지 않은 IPv6 주소입니다',
+  'core.validator.image-url.name': '이미지 URL',
+  'core.validator.image-url.error': '올바르지 않은 이미지 URL입니다',
+  'core.validator.slug.name': '슬러그',
+  'core.validator.slug.error': '올바르지 않은 슬러그 형식입니다',
+  'core.validator.number.name': '숫자',
+  'core.validator.number.error': '올바르지 않은 숫자 형식입니다',
+  'core.validator.integer.name': '정수',
+  'core.validator.integer.error': '올바르지 않은 정수 형식입니다',
+  'core.validator.decimal.name': '소수',
+  'core.validator.decimal.error': '올바르지 않은 소수 형식입니다',
+  'core.validator.positive-number.name': '양수',
+  'core.validator.positive-number.error': '양수여야 합니다',
+  'core.validator.uuid.name': 'UUID',
+  'core.validator.uuid.error': '올바르지 않은 UUID 형식입니다',
+  'core.validator.code-16.name': '16자 코드',
+  'core.validator.code-16.error': '올바르지 않은 16자 코드입니다',
+  'core.validator.code-32.name': '32자 코드',
+  'core.validator.code-32.error': '올바르지 않은 32자 코드입니다',
+  'core.validator.hex-color.name': 'HEX 색상',
+  'core.validator.hex-color.error': '올바르지 않은 HEX 색상 형식입니다',
+  'core.validator.base64.name': 'Base64',
+  'core.validator.base64.error': '올바르지 않은 Base64 문자열입니다',
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': '같음',
@@ -35,6 +72,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.operator.end-with.display': '~로 끝',
   'core.operator.in.display': '~중 하나',
   'core.operator.not-in.display': '~중 하나가 아님',
+  'core.operator.between.display': '범위 내',
   'core.operator.null.display': '비어 있음',
   'core.operator.not-null.display': '비어 있지 않음',
 
@@ -134,6 +172,14 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: radio ----
   'core.form.radio.required': '선택해 주세요',
+
+  // ---- Forms: switch ----
+  'core.form.switch.on': '켜짐',
+  'core.form.switch.off': '꺼짐',
+
+  // ---- Forms: checkbox ----
+  'core.form.checkbox.checked': '예',
+  'core.form.checkbox.unchecked': '아니오',
 
   // ---- Forms: select ----
   'core.form.select.required': '선택해 주세요',
@@ -254,6 +300,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.default': '기본',
   'core.component.form-builder.show-more': '더 보기',
   'core.component.form-builder.show-less': '접기',
+  'core.component.inform.show-more': '더 보기',
+  'core.component.inform.show-less': '접기',
   'core.component.form-builder.row-overflow': '전체 크기가 12열을 초과하여 이 행으로 이동할 수 없습니다',
   'core.component.form-builder.upload-source.all': '전체',
   'core.component.form-builder.upload-source.photo-library': '라이브러리에서 선택',

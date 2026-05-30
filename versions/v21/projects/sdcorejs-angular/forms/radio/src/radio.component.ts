@@ -1,19 +1,20 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
+  booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   computed,
-  ContentChild,
-  EventEmitter,
-  Input,
+  contentChild,
+  effect,
+  inject,
   input,
+  model,
   OnDestroy,
   OnInit,
-  Output,
+  output,
 } from '@angular/core';
 import { FormGroup, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -25,11 +26,13 @@ import * as uuid from 'uuid';
 
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 
-import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, SdInlineErrorValidator, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
+import { Color } from '@sdcorejs/utils/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdHrefDirective } from "@sdcorejs/angular/directives";
+import { SdHrefDirective } from '@sdcorejs/angular/directives';
 
 @Component({
   selector: 'sd-radio',
@@ -37,121 +40,135 @@ import { SdHrefDirective } from "@sdcorejs/angular/directives";
   styleUrls: ['./radio.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  host: {
+    // why: host class .sd-c-<x> + default sd-c-primary cho fallback. Thay data-sd-color
+    // Ä‘á»ƒ trÃ¡nh edge case host-attr-binding khÃ´ng reactive trong vÃ i cáº£nh build pipeline.
+    '[class.sd-c-primary]': "color() === 'primary'",
+    '[class.sd-c-secondary]': "color() === 'secondary'",
+    '[class.sd-c-info]': "color() === 'info'",
+    '[class.sd-c-success]': "color() === 'success'",
+    '[class.sd-c-warning]': "color() === 'warning'",
+    '[class.sd-c-error]': "color() === 'error'",
+  },
   imports: [CommonModule, ReactiveFormsModule, MatTooltipModule, MatFormFieldModule, MatIconModule, MatRadioModule, SdLabel, SdEmptyPipe, SdHrefDirective, TranslatePipe],
 })
 // eslint-disable-next-line @angular-eslint/component-class-suffix
 export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
+  readonly #ref = inject(ChangeDetectorRef);
+
   id = `I${uuid.v4()}`;
-  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  readonly autoId = computed(() => (this.autoIdInput() ? `forms-radio-${this.autoIdInput()}` : undefined));
-
   #name = uuid.v4();
-  @Input() set name(val: string | undefined) {
-    if (val) {
-      this.#name = val;
-    }
-  }
   formControl = new SdFormControl();
-  // get isNumber() {
-  //   if (this.#model || this.#model === 0) {
-  //     return typeof (this.#model) === 'number';
-  //   }
-  //   if (this.items?.length) {
-  //     if (this.valueField) {
-  //       return typeof (this.items[0][this.valueField]) === 'number';
-  //     } else {
-  //       return typeof (this.items[0]) === 'number';
-  //     }
-  //   }
-  //   return false;
-  // }
-  #form?: FormGroup;
-  @Input() set form(val: NgForm | FormGroup | undefined | null) {
-    if (val) {
-      if (val instanceof NgForm) {
-        this.#form = val.form;
-      } else {
-        this.#form = val;
-      }
-    }
-  }
-  @Input() label?: string;
-  @Input() placeholder?: string;
-  display: 'row' | 'column' = 'row';
-  @Input('display') set _display(display: 'row' | 'column' | undefined | null) {
-    this.display = display || 'row';
-  }
-  // Model
-  @Input() set model(value: number | string | boolean) {
-    if (value !== this.formControl.value) {
-      this.formControl.setValue(value, {
-        emitEvent: false,
-      });
-    }
-  }
-  // Items
-  items: any[] = [];
-  @Input('items') set pItems(items: any[] | undefined) {
-    if (!Array.isArray(items)) {
-      this.items = [];
-    } else {
-      this.items = items;
-    }
-  }
-  @Input({ required: true }) valueField!: string;
-  @Input({ required: true }) displayField!: string;
-
-  // Validator
-  required = false;
-  @Input('required') set _required(val: boolean | '' | undefined | null) {
-    this.required = val === '' || !!val;
-    this.#updateValidator();
-  }
-
-  inlineError?: string;
-  @Input('inlineError') set _inlineError(val: string) {
-    this.inlineError = val;
-    this.#updateValidator();
-  }
-
-  // Optional
-  @Input() set disabled(val: boolean | '' | undefined | null) {
-    val = val === '' || val;
-    if (val) {
-      this.formControl.disable();
-    } else {
-      this.formControl.enable();
-    }
-  }
-
-  viewed = false;
-  @Input('viewed') set _viewed(val: boolean | '' | undefined | null) {
-    this.viewed = val === '' || !!val;
-  }
-  @Input() hyperlink?: string | null;
-
-  @ContentChild(SdSuffixDefDirective) sdSuffixDef?: SdSuffixDefDirective;
-  @ContentChild(SdLabelDefDirective) sdLabelDef?: SdLabelDefDirective;
-  @ContentChild(SdViewDefDirective) sdViewDef?: SdViewDefDirective;
-
-  @Output() modelChange = new EventEmitter();
-  @Output() sdChange = new EventEmitter();
-  @Output() sdSelection = new EventEmitter<{
-    value: any | any[];
-    item?: any;
-  }>();
   #subscription = new Subscription();
-  constructor(public ref: ChangeDetectorRef) {}
 
-  get viewedText() {
-    return this.items?.find(e => this.formControl?.value?.toString() === e?.[this.valueField]?.toString()) ?? '';
+  // Inputs â€” accept null|undefined at boundary, transform to canonical
+  readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
+    alias: 'autoId',
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  readonly name = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  // why: parent may bind NgForm (template-driven), FormGroup (reactive), or a wrapper with `.form`.
+  // Transform once at the input boundary so the rest of the component only deals with FormGroup.
+  readonly form = input<FormGroup | undefined, any>(undefined, {
+    transform: (val: any): FormGroup | undefined => {
+      if (!val) return undefined;
+      if (val instanceof NgForm) return val.form;
+      if (val instanceof FormGroup) return val;
+      if (val?.form instanceof FormGroup) return val.form;
+      return undefined;
+    },
+  });
+  readonly label = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  readonly placeholder = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  readonly display = input<'row' | 'column', 'row' | 'column' | null | undefined>('row', {
+    transform: (v): 'row' | 'column' => v || 'row',
+  });
+  readonly items = input<any[], any[] | null | undefined>([], {
+    transform: (v): any[] => (Array.isArray(v) ? v : []),
+  });
+  readonly valueField = input.required<string>();
+  readonly displayField = input.required<string>();
+  readonly required = input(false, { transform: booleanAttribute });
+  readonly inlineError = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly viewed = input(false, { transform: booleanAttribute });
+  // why: legacy callers pass `null` â†’ fallback to 'primary'. Color enum má»Ÿ rá»™ng hÆ¡n ThemePalette,
+  // Ã¡p dá»¥ng qua host attr [data-sd-color] + SCSS override MDC token vars (mat [color] khÃ´ng nháº­n 'success'/'info'/...).
+  readonly color = input<Color, Color | null | undefined>('primary', {
+    transform: (v): Color => v || 'primary',
+  });
+  readonly hyperlink = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+
+  // Two-way model
+  readonly model = model<number | string | boolean | undefined | null>(undefined);
+
+  // Content children
+  readonly sdSuffixDef = contentChild(SdSuffixDefDirective);
+  readonly sdLabelDef = contentChild(SdLabelDefDirective);
+  readonly sdViewDef = contentChild(SdViewDefDirective);
+
+  // Outputs (modelChange auto-generated by model() signal)
+  readonly sdChange = output<unknown>();
+  readonly sdSelection = output<{ value: any | any[]; item?: any }>();
+
+  // Computed (template bindings)
+  readonly autoId = computed(() => (this.autoIdInput() ? `forms-radio-${this.autoIdInput()}` : undefined));
+  // Kept for back-compat with templates that read `normalizedItems()` â€” alias of items()
+  readonly normalizedItems = computed(() => this.items());
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+
+  readonly viewedText = computed(() => {
+    const items = this.items();
+    const vField = this.valueField();
+    const dField = this.displayField();
+    // why: tÃ¬m item match value rá»“i tráº£ vá» string á»Ÿ `displayField`, khÃ´ng tráº£ nguyÃªn object (sáº½ in [object Object]).
+    const match = items.find(e => this.formControl?.value?.toString() === e?.[vField]?.toString());
+    return match?.[dField] ?? '';
+  });
+
+  constructor() {
+    effect(() => {
+      const val = this.name();
+      if (val) this.#name = val;
+    });
+
+    effect(() => {
+      const value = this.model();
+      if (value !== this.formControl.value) {
+        this.formControl.setValue(value, { emitEvent: false });
+      }
+    });
+
+    effect(() => {
+      if (this.disabled()) this.formControl.disable();
+      else this.formControl.enable();
+    });
+
+    effect(() => {
+      this.required();
+      this.inlineError();
+      this.#updateValidator();
+    });
   }
 
   ngOnInit() {
     this.#subscription.add(
       this.formControl.sdChanges.subscribe(() => {
-        // this.formControl.updateValueAndValidity();
-        this.ref.markForCheck();
+        this.#ref.markForCheck();
       })
     );
   }
@@ -159,45 +176,35 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     this.#subscription.add(
       this.formControl.valueChanges.subscribe(value => {
-        const val = value;
-        // if (this.isNumber && Number.isNumber(value)) {
-        //   val = +value;
-        // }
-        this.modelChange.emit(val);
-        this.sdChange.emit(val);
+        const vField = this.valueField();
+        this.model.set(value);
+        this.sdChange.emit(value);
         this.sdSelection.emit({
-          value: val,
-          item: this.items?.find(e => val?.toString() === e?.[this.valueField]?.toString()),
+          value,
+          item: this.items().find(e => value?.toString() === e?.[vField]?.toString()),
         });
       })
     );
-    this.#form?.addControl(this.#name, this.formControl);
+    this.form()?.addControl(this.#name, this.formControl);
   }
 
   ngOnDestroy() {
     this.#subscription.unsubscribe();
-    this.#form?.removeControl(this.#name);
+    this.form()?.removeControl(this.#name);
   }
 
   #updateValidator = () => {
     this.formControl.clearValidators();
     const validators: ValidatorFn[] = [];
-    if (this.required) {
+    if (this.required()) {
       validators.push(Validators.required);
     }
-    if (this.inlineError) {
-      validators.push(this.customInlineErrorValidator());
+    if (this.inlineError()) {
+      validators.push(SdInlineErrorValidator);
     }
     this.formControl.setValidators(validators);
     this.formControl.updateValueAndValidity();
   };
-
-  // HÃ m táº¡o Validators tÃ¹y chá»‰nh cho inlineError
-  customInlineErrorValidator(): ValidatorFn {
-    return (): Record<string, any> | null => {
-      return { inlineError: true };
-    };
-  }
 
   reValidate = () => {
     this.formControl.updateValueAndValidity({ emitEvent: true });

@@ -4,6 +4,7 @@
   ElementRef,
   input,
   signal,
+  TemplateRef,
   viewChild,
   computed,
   effect,
@@ -11,11 +12,11 @@
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SdTabelCellDefDirective } from '../../directives/sd-table-cell-def.directive';
+import { SdTableCellDefDirective } from '../../directives/sd-table-cell-def.directive';
 import { SdTableColumn } from '../../models/table-column.model';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { ViewComponent } from './view/view.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
@@ -38,10 +39,10 @@ export class DesktopCellComponent {
   // Inputs
   column = input.required<SdTableColumn>();
   item = input.required<SdTableItem>();
-  cellDef = input.required<Record<string, SdTabelCellDefDirective>>({});
+  cellDef = input.required<Record<string, SdTableCellDefDirective>>({});
 
   value = computed(() => {
-    return SdUtilities.getNestedValue(this.item()?.data, this.column()?.field);
+    return Utilities.getNestedValue(this.item()?.data, this.column()?.field);
   });
 
   key = computed(() => {
@@ -63,7 +64,9 @@ export class DesktopCellComponent {
     return this.column()?.width;
   });
 
-  templateRef = computed(() => {
+  // why: widen to TemplateRef<any> so ng-packagr doesn't try to surface the
+  // directive's internal Context type through this public computed.
+  templateRef = computed<TemplateRef<any> | undefined>(() => {
     const cellDef = this.cellDef();
     const column = this.column();
     return cellDef[column?.field]?.templateRef || column?.cell?.templateRef;

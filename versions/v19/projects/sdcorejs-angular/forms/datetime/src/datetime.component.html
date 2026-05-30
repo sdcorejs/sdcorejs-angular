@@ -1,7 +1,7 @@
 @let lbl = label();
 @let app = appearance();
 @let hideErr = hideInlineError();
-@let errMsg = errorTooltipMessage;
+@let errMsg = errorMessage();
 @let viewDef = sdViewDef();
 @let hText = helperText();
 @let req = required();
@@ -59,6 +59,12 @@
         <input
           aria-hidden="true"
           [attr.data-autoId]="autoId()"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-error-message]="dataErrorMessage()"
           [id]="id"
           (blur)="onConfirmInput($event)"
           (keyup.enter)="onConfirmInput($event)"
@@ -81,6 +87,18 @@
 
         @if (!hideErr && errMsg && formControl.touched) {
           <mat-error>{{ errMsg }}</mat-error>
+        }
+
+        @if (formControl.value && !req && !formControl.disabled) {
+          <button
+            type="button"
+            class="sd-clear-btn sd-hover"
+            matSuffix
+            (click)="clear($event)"
+            title="Xóa"
+            aria-label="Xóa">
+            <mat-icon>close</mat-icon>
+          </button>
         }
 
         <span class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && open()" matSuffix

@@ -1,0 +1,56 @@
+.c-op-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--sd-primary, #0f766e);
+  cursor: pointer;
+  border-radius: 4px;
+
+  &:hover:not([disabled]) { background: rgba(0, 0, 0, 0.04); }
+  &[disabled] { color: rgba(0, 0, 0, 0.26); cursor: default; }
+}
+
+// Trigger icon (in :host).
+.c-op-icon {
+  display: inline-flex;
+  align-items: center;
+
+  svg { display: block; }
+}
+
+// Menu rows render in a document.body overlay, so component-scoped styles can't
+// reach them — target the panel class (forwarded by <mat-menu class="c-op-menu">)
+// via ::ng-deep. why: Material wraps projected content in `.mat-mdc-menu-item-text`,
+// so the flex row + alignment must live on that wrapper, not on the button.
+::ng-deep .c-op-menu {
+  .mat-mdc-menu-item-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .c-op-icon {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+
+    svg { display: block; }
+  }
+
+  .c-op-label { flex: 1 1 auto; }
+
+  // Push code flush to the right edge, vertically centered with the rest.
+  .c-op-code {
+    margin-left: auto;
+    padding-left: 16px;
+    color: var(--sd-text-muted, #7a7a7a);
+    font-size: 11px;
+    font-family: monospace;
+  }
+
+  .c-op-row.c-op-active { background: var(--sd-primary-light, rgba(15, 118, 110, 0.08)); }
+}

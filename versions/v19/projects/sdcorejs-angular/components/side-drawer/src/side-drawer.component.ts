@@ -11,9 +11,11 @@ import {
   ViewContainerRef,
   afterNextRender,
   booleanAttribute,
+  computed,
   inject,
   input,
   output,
+  signal,
   viewChild
 } from '@angular/core';
 import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
@@ -40,14 +42,25 @@ export class SdSideDrawer extends SdBaseSecureComponent {
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
   disableBackdropClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
 
-  // Custom CSS class added to the root side-drawer container 
+  // Custom CSS class added to the root side-drawer container
   drawerClass = input<any>('');
+
+  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
+  readonly autoId = computed(() =>
+    this.autoIdInput() ? `components-side-drawer-${this.autoIdInput()}` : undefined
+  );
 
   sdClosed = output<void>();
 
   #embeddedViewRef!: EmbeddedViewRef<any>;
-  isOpened = false;
-  isLoading = false;
+
+  readonly #isOpenedSignal = signal(false);
+  readonly #isLoadingSignal = signal(false);
+  readonly isOpened = this.#isOpenedSignal.asReadonly();
+  readonly isLoading = this.#isLoadingSignal.asReadonly();
+  readonly dataOpened = computed(() => (this.#isOpenedSignal() ? 'true' : 'false'));
+  readonly dataLoading = computed(() => (this.#isLoadingSignal() ? 'true' : 'false'));
+
   isHovered$!: Observable<boolean>;
   #destroy$ = new Subject<void>();
   #previousBodyOverflow: string | null = null;
@@ -81,7 +94,7 @@ export class SdSideDrawer extends SdBaseSecureComponent {
         this.#embeddedViewRef.destroy();
       }
       
-      if (this.isOpened) {
+      if (this.#isOpenedSignal()) {
         if (this.#previousBodyOverflow !== null) {
           document.body.style.overflow = this.#previousBodyOverflow;
         } else {
@@ -93,8 +106,8 @@ export class SdSideDrawer extends SdBaseSecureComponent {
 
   open = () => {
     this.#ref.markForCheck();
-    this.isOpened = true;
-    
+    this.#isOpenedSignal.set(true);
+
     // Cháº·n scroll á»Ÿ document body
     this.#previousBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -102,7 +115,7 @@ export class SdSideDrawer extends SdBaseSecureComponent {
 
   close = () => {
     this.#ref.markForCheck();
-    this.isOpened = false;
+    this.#isOpenedSignal.set(false);
     this.sdClosed.emit();
     this.stopLoading();
     
@@ -116,13 +129,13 @@ export class SdSideDrawer extends SdBaseSecureComponent {
   };
 
   startLoading = () => {
-    this.isLoading = true;
+    this.#isLoadingSignal.set(true);
     this.#loadingService.stop(`#${this.id}`);
     this.#loadingService.start(`#${this.id}`);
   };
 
   stopLoading = () => {
-    this.isLoading = false;
+    this.#isLoadingSignal.set(false);
     this.#loadingService.stop(`#${this.id}`);
   };
 

@@ -1,19 +1,18 @@
 import { Directive, TemplateRef, booleanAttribute, inject, input } from '@angular/core';
 
 interface Context {
-  externalFilter?: Record<string, any>;
+  externalFilter?: Record<string, unknown>;
 }
 
 @Directive({
   selector: '[sdTableFilterDef]',
 })
 export class SdTableFilterDefDirective {
-  static ngTemplateContextGuard(dir: Context, ctx: unknown): ctx is Context {
+  static ngTemplateContextGuard(_dir: SdTableFilterDefDirective, _ctx: unknown): _ctx is Context {
     return true;
   }
-  
-  sdTableFilterDef = input<string>();
+
+  sdTableFilterDef = input.required<string>();
   defaultShowing = input(false, { transform: booleanAttribute });
-  
-  templateRef = inject(TemplateRef<any>, { optional: true });
+  templateRef: TemplateRef<Context> | null = inject(TemplateRef, { optional: true });
 }

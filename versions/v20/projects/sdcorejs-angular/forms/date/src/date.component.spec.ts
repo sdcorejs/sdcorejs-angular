@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdDate } from './date.component';
 import { queryByCss } from '../../../testing/test-utils';
@@ -305,20 +305,61 @@ describe('SdDate', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage', () => {
+  describe('errorMessage', () => {
     it('returns "Vui lòng nhập thông tin" for required error', () => {
       host.model = '2026/05/15';
       host.required = true;
       fixture.detectChanges();
-      comp.formControl.setValue(null, { emitEvent: false });
-      comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBe('Vui lòng nhập thông tin');
+      comp.formControl.setValue(null);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns undefined when no errors', () => {
       host.model = '2026/05/15';
       fixture.detectChanges();
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      comp.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-empty toggling with value', () => {
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-empty')).toBe('true');
+      comp.formControl.setValue(new Date('2026-05-24T00:00:00.000Z'));
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
+    });
+
+    it('renders data-value as ISO string for Date', () => {
+      const d = new Date('2026-05-24T00:00:00.000Z');
+      comp.formControl.setValue(d);
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-value')).toBe('2026-05-24T00:00:00.000Z');
+    });
+
+    it('renders data-invalid=true only after touched + invalid', () => {
+      comp.formControl.setValidators([Validators.required]);
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      const el: HTMLInputElement = fixture.nativeElement.querySelector('input');
+      expect(el.getAttribute('data-invalid')).toBe('false');
+      comp.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-invalid')).toBe('true');
     });
   });
 });
@@ -372,4 +413,52 @@ describe('SdDate (NgForm extraction)', () => {
     expect(ngForm).toBeTruthy();
     expect(ngForm.form.contains('dob')).toBe(true);
   }));
+});
+
+// ---------------------------------------------------------------------------
+// bare + open()
+// ---------------------------------------------------------------------------
+
+describe('SdDate (bare + open)', () => {
+  let fixture: ComponentFixture<SdDate>;
+  let component: SdDate;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [SdDate, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdDate);
+    component = fixture.componentInstance;
+  });
+
+  it('bare defaults false; bare=true adds .sd-bare host class', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(false);
+    fixture.componentRef.setInput('bare', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  });
+
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'Ngày sinh');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
+  });
+
+  it('open() opens the datepicker', () => {
+    fixture.detectChanges();
+    component.open();
+    expect(component.datePicker()?.opened).toBe(true);
+  });
 });

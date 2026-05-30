@@ -1,7 +1,7 @@
 ﻿import { Injectable, inject, signal } from '@angular/core';
 import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
@@ -125,13 +125,13 @@ export class TableExportService {
           const obj: any = {};
 
           const handle = async (exportColumn: SdExcelColumn) => {
-            obj[exportColumn.field] = SdUtilities.getNestedValue(item, exportColumn.field);
+            obj[exportColumn.field] = Utilities.getNestedValue(item, exportColumn.field);
 
             const column = allColumns.find(e => e.field === exportColumn.field);
             const exportedColumn = allExportedColumns.find(e => e.field === exportColumn.field);
 
             if (exportedColumn?.transform) {
-              obj[exportedColumn.field] = exportedColumn.transform(SdUtilities.getNestedValue(item, exportedColumn.field), item);
+              obj[exportedColumn.field] = exportedColumn.transform(Utilities.getNestedValue(item, exportedColumn.field), item);
               return;
             }
             if (!column) return;
@@ -148,7 +148,7 @@ export class TableExportService {
             }
             if (!columns.some(e => e.field === column.field)) return;
 
-            const itemValue = SdUtilities.getNestedValue(item, column.field as string);
+            const itemValue = Utilities.getNestedValue(item, column.field as string);
             const fieldStr = column.field as string;
 
             if (column.transform) {

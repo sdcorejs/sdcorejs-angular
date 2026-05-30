@@ -1,4 +1,4 @@
-import { Component, Injector } from '@angular/core';
+import { Component, Injector, ViewContainerRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
@@ -401,6 +401,88 @@ describe('SdModal', () => {
       aFixture.componentInstance.autoId = 'dialog1';
       aFixture.detectChanges();
       expect(aModal.closeButtonAutoId()).toBe('components-modal-dialog1-close');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // E2E attributes — .sd-modal-root wrapper with data-autoId + data-opened
+  // -------------------------------------------------------------------------
+  //
+  // NOTE: The fake MatDialog.open() spy does NOT render the <ng-template> into
+  // the real CDK overlay, so document.querySelector('.sd-modal-root') returns
+  // null in unit tests. Instead we exercise the template via a host that sets
+  // [lazyLoadContent]="false" so the @if block renders immediately, and we
+  // read the TemplateRef's embedded view via ViewContainerRef to confirm the
+  // wrapper element and its attributes. isOpened / dataOpened are verified
+  // directly via the SdModal instance.
+  // -------------------------------------------------------------------------
+
+  describe('E2E attributes', () => {
+    @Component({
+      standalone: true,
+      imports: [SdModal],
+      template: `
+        <sd-modal
+          view="dialog"
+          [autoId]="autoId"
+          [title]="'E2E Test'"
+          [lazyLoadContent]="false"
+        ></sd-modal>
+      `,
+    })
+    class E2EHost {
+      autoId = 'confirm';
+    }
+
+    let eFixture: ComponentFixture<E2EHost>;
+    let eModal: SdModal;
+    let eDialogSpy: jasmine.Spy;
+    let eAfterClosed$: Subject<void>;
+
+    beforeEach(() => {
+      eFixture = TestBed.createComponent(E2EHost);
+      eFixture.detectChanges();
+      eModal = eFixture.debugElement.query(By.directive(SdModal)).componentInstance as SdModal;
+
+      const eDialog = eFixture.debugElement.query(By.directive(SdModal)).injector.get(MatDialog);
+      const { ref, afterClosed$ } = makeFakeDialogRef();
+      eAfterClosed$ = afterClosed$;
+      eDialogSpy = spyOn(eDialog, 'open').and.returnValue(ref);
+    });
+
+    it('dataOpened() returns "false" before open()', () => {
+      expect(eModal.dataOpened()).toBe('false');
+    });
+
+    it('dataOpened() returns "true" after open()', () => {
+      eModal.open();
+      expect(eModal.dataOpened()).toBe('true');
+    });
+
+    it('dataOpened() returns "false" again after afterClosed$ emits', () => {
+      eModal.open();
+      expect(eModal.dataOpened()).toBe('true');
+
+      eAfterClosed$.next();
+      expect(eModal.dataOpened()).toBe('false');
+    });
+
+    it('renders .sd-modal-root wrapper element inside the TemplateRef', () => {
+      // Create an embedded view from the templateRef so we can inspect the DOM
+      // without needing a real CDK overlay. This is equivalent to what MatDialog
+      // does when it opens the template — it calls templateRef.createEmbeddedView().
+      const vcr = eFixture.debugElement.query(By.directive(SdModal)).injector.get(ViewContainerRef);
+      const view = eModal.templateRef().createEmbeddedView({});
+      vcr.insert(view);
+      eFixture.detectChanges();
+
+      const root = view.rootNodes[0] as HTMLElement;
+      expect(root).toBeTruthy();
+      expect(root.classList.contains('sd-modal-root')).toBeTrue();
+    });
+
+    it('autoId() computes to "components-modal-confirm"', () => {
+      expect(eModal.autoId()).toBe('components-modal-confirm');
     });
   });
 });

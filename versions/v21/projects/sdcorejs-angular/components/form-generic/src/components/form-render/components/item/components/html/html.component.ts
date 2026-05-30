@@ -1,8 +1,8 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { SdUtilities, StringUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities, StringUtilities } from '@sdcorejs/utils/fns';
 // import { sha1 } from 'object-hash';
 import { debounceTime, filter, startWith, Subject, Subscription } from 'rxjs';
 import { SdFormGenericHtml } from '../../../../../../models';
@@ -35,8 +35,8 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // Khi 1 giÃ¡ trá»‹ trong entity thay Ä‘á»•i thÃ¬ hashedValues sáº½ thay Ä‘á»•i
-  // Mong muá»‘n khi hashedValues thay Ä‘á»•i thÃ¬ trigger changes Ä‘á»ƒ trigger láº¡i hÃ m láº¥y thÃ´ng tin items
+  // Khi 1 giá trị trong entity thay đổi thì hashedValues sẽ thay đổi
+  // Mong muốn khi hashedValues thay đổi thì trigger changes để trigger lại hàm lấy thông tin items
   @Input('hashedValues') set _hashedValues(val: string | undefined) {
     this.#inputChanges.next();
   }
@@ -63,7 +63,7 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
   hashedValues?: string;
   #generateQuery = (query: string | Record<string, any> | undefined, data: Record<string, any>): Record<string, any> => {
     let result: Record<string, any> = {};
-    // Náº¿u query Ä‘Æ°á»£c cáº¥u hÃ¬nh tá»« Form Builder cá»§a Camunda thÃ¬ JSON nÃ³ sáº½ lÃ  string, cáº§n thá»±c hiá»‡n parse
+    // Nếu query được cấu hình từ Form Builder của Camunda thì JSON nó sẽ là string, cần thực hiện parse
     if (typeof query === 'string') {
       try {
         result = JSON.parse(query);
@@ -76,10 +76,10 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
     } else {
       result = { ...query };
     }
-    // Xá»­ lÃ½ query,
-    // VÃ­ dá»¥: {"a": "1", "b": "true", "c": "${key}"} => {"a": "1", "b": true, "c": "Dá»¯ liá»‡u tÆ°Æ¡ng á»©ng vá»›i key trong data"}
+    // Xử lý query,
+    // Ví dụ: {"a": "1", "b": "true", "c": "${key}"} => {"a": "1", "b": true, "c": "Dữ liệu tương ứng với key trong data"}
     for (const key of Object.keys({ ...result })) {
-      // Xá»­ ly
+      // Xử ly
       result[key] = StringUtilities.templateToDisplay(result[key], data);
       if (result[key] === 'true') {
         result[key] = true;
@@ -102,25 +102,25 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
       })
     );
     if (!this.component.template) {
-      // Náº¿u HTML khÃ´ng pháº£i tá»« template thÃ¬ giÃ¡ trá»‹ = content
+      // Nếu HTML không phải từ template thì giá trị = content
       this.entity[this.key] = this.component.content;
     } else if (!this.component.properties?.queries?.length) {
-      // Náº¿u HTML tá»« static template (khÃ´ng cÃ³ queries)
+      // Nếu HTML từ static template (không có queries)
       this.entity[this.key] = await this.formRenderService.html.getContent(this.component.template);
       this.ref.markForCheck();
     } else if (this.viewed || this.component?.properties?.viewed) {
-      // ÄÃ¢y lÃ  tráº¡ng thÃ¡i view cá»§a HTML tá»« template cÃ³ query
-      // Náº¿u á»Ÿ tráº¡ng thÃ¡i viewed thÃ¬ láº¥y entity hiá»ƒn thá»‹, náº¿u khÃ´ng cÃ³ thÃ¬ dÃ¹ng content cá»§a component
+      // Đây là trạng thái view của HTML từ template có query
+      // Nếu ở trạng thái viewed thì lấy entity hiển thị, nếu không có thì dùng content của component
       this.entity[this.key] = this.entity[this.key] || this.component.content;
       /* const values = { ...this.entity, ...this.form.value };
       const query = this.#generateQuery(this.component?.properties?.query, values);
       this.entity[this.key] = await this.formRenderService.html.getContent(this.component.template, query);
       this.ref.markForCheck(); */
     } else {
-      // Náº¿u cÃ³ queries thÃ¬ láº¯ng nghe thay Ä‘á»•i cá»§a form
+      // Nếu có queries thì lắng nghe thay đổi của form
       this.#subscription.add(
         this.form.valueChanges.pipe(debounceTime(500), startWith(this.form.value)).subscribe(values => {
-          const hashedValues = SdUtilities.hash(values);
+          const hashedValues = Utilities.hash(values);
           if (this.hashedValues !== hashedValues) {
             this.hashedValues = hashedValues;
             this.#inputChanges.next();
@@ -131,8 +131,8 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
         this.#inputChanges.pipe(startWith('')).subscribe(async () => {
           const values = { ...this.entity, ...this.form.value };
           const query = this.#generateQuery(this.component?.properties?.query, values);
-          const hashedQuery = SdUtilities.hash(query);
-          // Náº¿u query cÃ³ thay Ä‘á»•i thÃ¬ thá»±c hiá»‡n gÃ¡n láº¡i items
+          const hashedQuery = Utilities.hash(query);
+          // Nếu query có thay đổi thì thực hiện gán lại items
           if (hashedQuery !== this.#hashedQuery) {
             this.#hashedQuery = hashedQuery;
             this.entity[this.key] = await this.formRenderService.html.getContent(this.component.template!, query)
@@ -149,4 +149,3 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
     this.#subscription.unsubscribe();
   }
 }
-

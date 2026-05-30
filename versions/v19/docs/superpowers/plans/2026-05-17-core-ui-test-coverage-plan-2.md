@@ -1005,8 +1005,8 @@ After Plan 1 completed, 10 form primitives still need test coverage (autocomplet
 
 ### 2.2. Out of scope
 
-- Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, anchor-v2, history, preview, upload-file, mini-editor)
-- Skipped per user direction: anchor-v2, workflow, query-builder, document-builder, history, modules/generic (not in forms folder anyway)
+- Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, anchor, history, preview, upload-file, mini-editor)
+- Skipped per user direction: workflow, query-builder, document-builder, history, modules/generic (not in forms folder anyway)
 - Services, modules, handlers, interceptors (Plan 5+)
 
 ## 3. Approach
@@ -1082,7 +1082,7 @@ Append to `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` af
 
 ### Plan 3+ deferred items
 
-- Plan 3 components (modal, side-drawer, etc. â€” excluding skipped: anchor-v2, workflow, etc.)
+- Plan 3 components (modal, side-drawer, etc. â€” excluding skipped: workflow, etc.)
 - Plan 4 directives (sd-desktop, sd-href, sd-hover-copy, sd-scroll)
 - Plan 5 services
 - Plan 6 heavy components (chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow) â€” **skipped per user direction until those features are finalized**

@@ -2,7 +2,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { lastValueFrom, Observable } from 'rxjs';
 import { catchError, map, shareReplay, timeout } from 'rxjs/operators';
 import { v4 } from 'uuid';
@@ -55,7 +55,7 @@ export class SdApiService {
 
   // Upload file logic giá»¯ nguyÃªn nhÆ°ng refactor nháº¹
   upload = async (url: string, option?: { extensions?: string[]; maxSizeInMb?: number }): Promise<any> => {
-    const file = await SdUtilities.upload(option);
+    const file = await BrowserUtilities.upload(option);
     if (!Array.isArray(file) && file) {
       return this.uploadFile(url, file);
     }
@@ -170,7 +170,7 @@ export class SdApiService {
     if (body instanceof FormData || option?.autoCache === false) {
       return v4();
     }
-    return SdUtilities.hash({
+    return Utilities.hash({
       url,
       method,
       params: option?.params,

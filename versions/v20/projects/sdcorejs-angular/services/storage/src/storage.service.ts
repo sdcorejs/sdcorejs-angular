@@ -1,6 +1,6 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Inject, Injectable, Optional } from '@angular/core';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ISdStorageConfiguration, SD_STORAGE_CONFIG, SdStorage, SdStorageOption } from './storage.model';
@@ -14,7 +14,7 @@ interface StorageCacheEntry<T> {
   providedIn: 'root',
 })
 export class SdStorageService {
-  // DÃ¹ng Map Ä‘á»ƒ quáº£n lÃ½ bá»™ nhá»› tá»‘t hÆ¡n Record
+  // Dùng Map để quản lý bộ nhớ tốt hơn Record
   #memoryCache = new Map<string, StorageCacheEntry<any>>();
   #subjects = new Map<string, BehaviorSubject<any>>();
 
@@ -27,12 +27,12 @@ export class SdStorageService {
   create<T = any>(key: string | object, option?: SdStorageOption<T>): SdStorage<T> {
     if (!key) throw new Error('Key is required');
 
-    // 1. Xá»­ lÃ½ Key
+    // 1. Xử lý Key
     let hashKey: string;
     if (typeof key === 'string') {
       hashKey = key;
     } else if (typeof key === 'object') {
-      hashKey = SdUtilities.hash(key);
+      hashKey = Utilities.hash(key);
     } else {
       throw new Error('Invalid key type');
     }
@@ -41,7 +41,7 @@ export class SdStorageService {
       hashKey = this.configuration.key(hashKey);
     }
 
-    // 2. Init Subject: Äá»c dá»¯ liá»‡u tá»« Storage ngay láº­p tá»©c Ä‘á»ƒ Subject cÃ³ giÃ¡ trá»‹ Ä‘Ãºng
+    // 2. Init Subject: Đọc dữ liệu từ Storage ngay lập tức để Subject có giá trị đúng
     if (!this.#subjects.has(hashKey)) {
       const existingData = this.#internalGet<T>(hashKey, option);
       // Fix Type: as T | undefined
@@ -63,7 +63,7 @@ export class SdStorageService {
 
     const setSilent = (data: T) => {
       this.#internalSet(hashKey, data, option);
-      // Cá»‘ tÃ¬nh KHÃ”NG gá»i subject.next â€” consumer dÃ¹ng kÃªnh riÃªng Ä‘á»ƒ thÃ´ng bÃ¡o
+      // Cố tình KHÔNG gọi subject.next — consumer dùng kênh riêng để thông báo
     };
 
     const has = () => {
@@ -75,7 +75,7 @@ export class SdStorageService {
       subject.next(undefined);
     };
 
-    // HÃ m dá»n dáº¹p bá»™ nhá»› (quan trá»ng)
+    // Hàm dọn dẹp bộ nhớ (quan trọng)
     const destroy = () => {
       subject.complete();
       this.#subjects.delete(hashKey);
@@ -88,7 +88,7 @@ export class SdStorageService {
       setSilent,
       has,
       remove,
-      // @ts-ignore: Bá»• sung vÃ o interface náº¿u cáº§n
+      // @ts-ignore: Bổ sung vào interface nếu cần
       destroy,
       subject: subject,
       observer: subject.asObservable().pipe(map(() => get())),
@@ -98,36 +98,36 @@ export class SdStorageService {
   // --- PRIVATE CORE LOGIC ---
 
   /**
-   * Helper xÃ¡c Ä‘á»‹nh loáº¡i Storage Ä‘ang dÃ¹ng
+   * Helper xác định loại Storage đang dùng
    */
   #getStorage(option?: SdStorageOption<any>): Storage {
     return option?.type === 'session' ? sessionStorage : localStorage;
   }
 
   /**
-   * Äá»c dá»¯ liá»‡u: Memory -> Storage -> Parse
+   * Đọc dữ liệu: Memory -> Storage -> Parse
    */
   #internalGet<T>(key: string, option?: SdStorageOption<T>): T | undefined {
-    // 1. Check Memory (Nhanh nháº¥t)
+    // 1. Check Memory (Nhanh nhất)
     let entry = this.#memoryCache.get(key);
 
-    // 2. Check Storage (Náº¿u memory chÆ°a cÃ³ hoáº·c má»›i F5)
+    // 2. Check Storage (Nếu memory chưa có hoặc mới F5)
     if (!entry) {
       const storage = this.#getStorage(option);
       const raw = storage.getItem(key);
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
-          // Convert string date back to Date object náº¿u cáº§n
+          // Convert string date back to Date object nếu cần
           entry = {
             data: parsed.data,
             createdOn: new Date(parsed.createdOn)
           };
-          // Sync ngÆ°á»£c vÃ o RAM
+          // Sync ngược vào RAM
           this.#memoryCache.set(key, entry);
         } catch (e) {
           console.warn('Storage parse error', e);
-          this.#internalRemove(key, option); // Dá»¯ liá»‡u lá»—i -> XÃ³a
+          this.#internalRemove(key, option); // Dữ liệu lỗi -> Xóa
         }
       }
     }
@@ -138,7 +138,7 @@ export class SdStorageService {
   }
 
   /**
-   * Ghi dá»¯ liá»‡u: Memory -> Storage
+   * Ghi dữ liệu: Memory -> Storage
    */
   #internalSet<T>(key: string, data: T, option?: SdStorageOption<T>): void {
     const clonedData = this.#deepClone(data);
@@ -148,10 +148,10 @@ export class SdStorageService {
       createdOn: new Date(),
     };
 
-    // 1. LÆ°u Memory
+    // 1. Lưu Memory
     this.#memoryCache.set(key, entry);
 
-    // 2. LÆ°u Storage
+    // 2. Lưu Storage
     const storage = this.#getStorage(option);
     try {
       storage.setItem(key, JSON.stringify(entry));
@@ -161,7 +161,7 @@ export class SdStorageService {
   }
 
   /**
-   * XÃ³a dá»¯ liá»‡u
+   * Xóa dữ liệu
    */
   #internalRemove(key: string, option?: SdStorageOption<any>): void {
     this.#memoryCache.delete(key);
@@ -170,7 +170,7 @@ export class SdStorageService {
   }
 
   /**
-   * Deep Clone an toÃ n
+   * Deep Clone an toàn
    */
   #deepClone<T>(val: T): T {
     if (val === undefined || val === null) return val;

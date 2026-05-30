@@ -1,4 +1,4 @@
-﻿import { SdNestedKeyOf } from '@sdcorejs/angular/utilities';
+import { NestedKeyOf } from '@sdcorejs/utils/models';
 import { SdTableFilterRequest } from '../services/table-filter/table-filter.model';
 
 export type SdTableOptionExport<T = any> = SdTableOptionExportDefault<T> | SdTableOptionExportCustom;
@@ -6,14 +6,14 @@ export type SdTableOptionExport<T = any> = SdTableOptionExportDefault<T> | SdTab
 export interface SdTableOptionExportDefault<T = any> {
   type?: 'default';
   key?: string;
-  visible?: 'ALL' | 'EXCEL' | 'CSV'; // Máº·c Ä‘á»‹nh lÃ  ALL
+  visible?: 'ALL' | 'EXCEL' | 'CSV'; // Mặc định là ALL
   enableUpload?: boolean;
   fileName?: string;
-  max?: number; // Sá»‘ dÃ²ng dá»¯ liá»‡u tá»‘i Ä‘a cho phÃ©p export
+  max?: number; // Số dòng dữ liệu tối đa cho phép export
   maxItemsPerRequest?: number; // Page size, default: 1000
-  batch?: number; // Sá»‘ lÆ°á»£ng request má»—i láº§n gá»i, default: 1
+  batch?: number; // Số lượng request mỗi lần gọi, default: 1
   items?: (filterRequest: SdTableFilterRequest) => T[] | Promise<T[]> | Promise<{ items: any[]; total: number }>;
-  // Trong trÆ°á»ng há»£p cÃ³ xá»­ lÃ½ logic vÃ  sá»‘ dÃ²ng render <> sá»‘ dÃ²ng tráº£ vá»
+  // Trong trường hợp có xử lý logic và số dòng render <> số dòng trả về
   mapping?: (items: T[], fileName?: string) => T[] | Promise<T[]>;
   columns?: SdTableOptionExportColumn<T>[];
   sheets?: SdTableOptionExportSheet[];
@@ -25,7 +25,7 @@ export interface SdTableOptionExportCustom {
 }
 
 export interface SdTableOptionExportColumn<T = any> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   title: string;
   description?: string;
   width?: string;
@@ -38,6 +38,5 @@ export interface SdTableOptionExportColumn<T = any> {
 export interface SdTableOptionExportSheet<T = any> {
   name: string;
   items: T[] | (() => T[] | Promise<T[]>);
-  headers: { value: SdNestedKeyOf<T>; display: string }[];
+  headers: { value: NestedKeyOf<T>; display: string }[];
 }
-

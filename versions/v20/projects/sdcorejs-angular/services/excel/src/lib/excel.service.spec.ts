@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SdExcelService spec
  *
  * Scope reductions (due to heavy exceljs dependency):
@@ -6,7 +6,7 @@
  *   (requires real exceljs Workbook + browser Blob/download). Public-API existence
  *   and validation branches are tested instead; workbook side-effects are mocked.
  * - `upload()` end-to-end is not tested (requires a real file-picker gesture and
- *   SdUtilities.upload). Public-API existence is verified only.
+ *   BrowserUtilities.upload). Public-API existence is verified only.
  * - `parse()` tests use a lightweight fake Workbook that returns pre-built sheet rows
  *   without loading any actual .xlsx binary.
  * - `exportCSV()` now uses a self-written CSV generator (no third-party library);
@@ -16,11 +16,11 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { SdExcelService } from './excel.service';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeColumn(
   overrides: Partial<{ field: string; title: string; description: string; required: boolean }> = {},
@@ -81,7 +81,7 @@ function makeWorkbookFake() {
   };
 }
 
-// â”€â”€â”€ Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('SdExcelService', () => {
   let service: SdExcelService;
@@ -91,13 +91,13 @@ describe('SdExcelService', () => {
     service = TestBed.inject(SdExcelService);
   });
 
-  // â”€â”€â”€ 1. Instantiation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 1. Instantiation ─────────────────────────────────────────────────────
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  // â”€â”€â”€ 2. Public API surface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. Public API surface ────────────────────────────────────────────────
 
   it('exposes a "generateTemplate" method', () => {
     expect(typeof service.generateTemplate).toBe('function');
@@ -119,7 +119,7 @@ describe('SdExcelService', () => {
     expect(typeof service.parse).toBe('function');
   });
 
-  // â”€â”€â”€ 3. generateTemplate â€” validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 3. generateTemplate — validation ────────────────────────────────────
 
   it('generateTemplate throws when columns is not an array', async () => {
     await expectAsync(
@@ -152,7 +152,7 @@ describe('SdExcelService', () => {
     ).toBeRejectedWithError('Column 2: Field is required');
   });
 
-  // â”€â”€â”€ 4. export â€” validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 4. export — validation ───────────────────────────────────────────────
 
   it('export throws when a column is missing "field"', async () => {
     await expectAsync(
@@ -166,7 +166,7 @@ describe('SdExcelService', () => {
     ).toBeRejectedWithError('Column 1: Title is required');
   });
 
-  // â”€â”€â”€ 5. parse â€” happy path (mocked FileReader + Workbook) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 5. parse — happy path (mocked FileReader + Workbook) ────────────────
 
   it('parse returns items keyed by header row values', async () => {
     // Spy on parse directly to avoid real exceljs / FileReader in test runner
@@ -208,7 +208,7 @@ describe('SdExcelService', () => {
     expect(result.file).toBeNull();
   });
 
-  // â”€â”€â”€ 6. generateTemplate â€” workbook construction (mocked exceljs) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 6. generateTemplate — workbook construction (mocked exceljs) ─────────
 
   it('generateTemplate builds a workbook and calls writeBuffer', async () => {
     const wb = makeWorkbookFake();
@@ -246,7 +246,7 @@ describe('SdExcelService', () => {
     expect(wb.addWorksheet).toHaveBeenCalledWith('Lookup');
   });
 
-  // â”€â”€â”€ 7. export â€” workbook construction (mocked) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 7. export — workbook construction (mocked) ───────────────────────────
 
   it('export builds a workbook with a "data" sheet and calls writeBuffer', async () => {
     const wb = makeWorkbookFake();
@@ -265,11 +265,11 @@ describe('SdExcelService', () => {
     expect(wb.xlsx.writeBuffer).toHaveBeenCalled();
   });
 
-  // â”€â”€â”€ 8. exportCSV â€” self-written generator (BOM + CRLF + escape) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 8. exportCSV — self-written generator (BOM + CRLF + escape) ─────────
 
   it('exportCSV produces CSV with BOM + CRLF + escaped commas', async () => {
-    // Mock SdUtilities.downloadBlob to capture the blob without triggering a real download.
-    const blobSpy = spyOn(SdUtilities, 'downloadBlob');
+    // Mock BrowserUtilities.downloadBlob to capture the blob without triggering a real download.
+    const blobSpy = spyOn(BrowserUtilities, 'downloadBlob');
     await service.exportCSV({
       fileName: 'test',
       columns: [
@@ -284,17 +284,16 @@ describe('SdExcelService', () => {
     });
     expect(blobSpy).toHaveBeenCalled();
     const blob: Blob = blobSpy.calls.mostRecent().args[0];
-    // Äá»c qua arrayBuffer + decode KHÃ”NG strip BOM Ä‘á»ƒ verify Ä‘Æ°á»£c 3 byte 0xEF 0xBB 0xBF má»Ÿ Ä‘áº§u.
-    // (Blob.text() / TextDecoder máº·c Ä‘á»‹nh sáº½ tá»± bá» BOM, lÃ m assertion BOM tháº¥t báº¡i.)
+    // Đọc qua arrayBuffer + decode KHÔNG strip BOM để verify được 3 byte 0xEF 0xBB 0xBF mở đầu.
+    // (Blob.text() / TextDecoder mặc định sẽ tự bỏ BOM, làm assertion BOM thất bại.)
     const bytes = new Uint8Array(await blob.arrayBuffer());
     expect(bytes[0]).toBe(0xef);                                      // BOM byte 1
     expect(bytes[1]).toBe(0xbb);                                      // BOM byte 2
     expect(bytes[2]).toBe(0xbf);                                      // BOM byte 3
     const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes);
-    expect(text.startsWith('ï»¿')).toBe(true);                     // BOM char survives when ignoreBOM=true
+    expect(text.startsWith('﻿')).toBe(true);                     // BOM char survives when ignoreBOM=true
     expect(text).toContain('Name,Note\r\n');                          // CRLF header
     expect(text).toContain('"B,C","has ""quotes"""');                 // comma + quote escape
     expect(text).toContain('"multi\nline"');                          // newline inside cell
   });
 });
-

@@ -19,6 +19,9 @@
         (click)="onUpload()"
         aria-hidden="true"
         [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-count]="dataCount()"
         #dropElement>
         <mat-icon class="c-upload" fontSet="material-icons-outlined"> file_upload </mat-icon>
       </div>
@@ -42,7 +45,7 @@
               (click)="onSelect(image)"
               aria-hidden="true">
               @if (image.isImgError) {
-                <img class="c-img-error" alt="Image Error" [style.max-height]="previewHeight()" />
+                <img class="sd-image-image-error" alt="Image Error" style="max-width: 100%;" [style.max-height]="previewHeight()" />
               } @else if(image.previewSrc) {
                 <img class="c-img" [src]="image.previewSrc" alt="Preview" [style.max-height]="previewHeight()" (error)="onImgError(image)" />
               } @else if(image.src) {

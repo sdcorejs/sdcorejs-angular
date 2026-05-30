@@ -6,21 +6,58 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.common.reload': '重新加载页面',
   'core.test.greet': '你好 {name}',
 
-  // ---- Validators (pattern.model.ts) ----
+  // ---- Validators (VALIDATION_PATTERNS in @sdcorejs/utils/constants) ----
   'core.validator.email.name': '邮箱',
   'core.validator.email.error': '邮箱格式不正确',
   'core.validator.phone.name': '电话',
   'core.validator.phone.error': '电话号码格式不正确',
+  // Legacy aliases
   'core.validator.phone-vn.name': '越南电话',
-  'core.validator.phone-vn.error': '电话号码格式不正确',
+  'core.validator.phone-vn.error': '越南电话号码格式不正确',
   'core.validator.cccd.name': '身份证号',
   'core.validator.cccd.error': '身份证号格式不正确（12位数字）',
-  'core.validator.passport.name': '护照',
-  'core.validator.passport.error': '护照号码格式不正确（1个字母 + 7位数字）',
   'core.validator.id-vn.name': '身份证 / 护照',
   'core.validator.id-vn.error': '身份证或护照号码格式不正确',
+  'core.validator.vn-phone.name': '越南电话',
+  'core.validator.vn-phone.error': '越南电话号码格式不正确',
+  'core.validator.vn-id.name': '身份证号',
+  'core.validator.vn-id.error': '身份证号格式不正确（12位数字）',
+  'core.validator.passport.name': '护照',
+  'core.validator.passport.error': '护照号码格式不正确（1个字母 + 7位数字）',
+  'core.validator.vn-id-or-passport.name': '身份证 / 护照',
+  'core.validator.vn-id-or-passport.error': '身份证或护照号码格式不正确',
   'core.validator.time.name': '时间',
   'core.validator.time.error': '时间格式不正确（HH:mm 格式）',
+  'core.validator.url.name': 'URL',
+  'core.validator.url.error': 'URL 格式不正确',
+  'core.validator.domain.name': '域名',
+  'core.validator.domain.error': '域名格式不正确',
+  'core.validator.ipv4.name': 'IPv4',
+  'core.validator.ipv4.error': 'IPv4 地址格式不正确',
+  'core.validator.ipv6.name': 'IPv6',
+  'core.validator.ipv6.error': 'IPv6 地址格式不正确',
+  'core.validator.image-url.name': '图片 URL',
+  'core.validator.image-url.error': '图片 URL 格式不正确',
+  'core.validator.slug.name': 'Slug',
+  'core.validator.slug.error': 'Slug 格式不正确',
+  'core.validator.number.name': '数字',
+  'core.validator.number.error': '数字格式不正确',
+  'core.validator.integer.name': '整数',
+  'core.validator.integer.error': '整数格式不正确',
+  'core.validator.decimal.name': '小数',
+  'core.validator.decimal.error': '小数格式不正确',
+  'core.validator.positive-number.name': '正数',
+  'core.validator.positive-number.error': '必须为正数',
+  'core.validator.uuid.name': 'UUID',
+  'core.validator.uuid.error': 'UUID 格式不正确',
+  'core.validator.code-16.name': '16 位代码',
+  'core.validator.code-16.error': '16 位代码格式不正确',
+  'core.validator.code-32.name': '32 位代码',
+  'core.validator.code-32.error': '32 位代码格式不正确',
+  'core.validator.hex-color.name': 'HEX 颜色',
+  'core.validator.hex-color.error': 'HEX 颜色格式不正确',
+  'core.validator.base64.name': 'Base64',
+  'core.validator.base64.error': 'Base64 字符串格式不正确',
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': '等于',
@@ -35,6 +72,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.operator.end-with.display': '结束于',
   'core.operator.in.display': '属于',
   'core.operator.not-in.display': '不属于',
+  'core.operator.between.display': '介于之间',
   'core.operator.null.display': '为空',
   'core.operator.not-null.display': '不为空',
 
@@ -134,6 +172,14 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: radio ----
   'core.form.radio.required': '请选择',
+
+  // ---- Forms: switch ----
+  'core.form.switch.on': '开',
+  'core.form.switch.off': '关',
+
+  // ---- Forms: checkbox ----
+  'core.form.checkbox.checked': '是',
+  'core.form.checkbox.unchecked': '否',
 
   // ---- Forms: select ----
   'core.form.select.required': '请选择',
@@ -254,6 +300,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.default': '默认',
   'core.component.form-builder.show-more': '查看更多',
   'core.component.form-builder.show-less': '收起',
+  'core.component.inform.show-more': '展开',
+  'core.component.inform.show-less': '收起',
   'core.component.form-builder.row-overflow': '无法移动到该行，因为总宽度超过 12 列',
   'core.component.form-builder.upload-source.all': '全部',
   'core.component.form-builder.upload-source.photo-library': '从相册选择',

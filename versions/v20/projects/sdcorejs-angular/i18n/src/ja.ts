@@ -6,21 +6,58 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.common.reload': 'ページを再読み込み',
   'core.test.greet': 'こんにちは {name}さん',
 
-  // ---- Validators (pattern.model.ts) ----
+  // ---- Validators (VALIDATION_PATTERNS in @sdcorejs/utils/constants) ----
   'core.validator.email.name': 'メールアドレス',
   'core.validator.email.error': 'メールアドレスの形式が正しくありません',
   'core.validator.phone.name': '電話番号',
   'core.validator.phone.error': '電話番号の形式が正しくありません',
+  // Legacy aliases
   'core.validator.phone-vn.name': 'VN電話番号',
-  'core.validator.phone-vn.error': '電話番号の形式が正しくありません',
+  'core.validator.phone-vn.error': 'ベトナムの電話番号の形式が正しくありません',
   'core.validator.cccd.name': '個人番号',
   'core.validator.cccd.error': '個人番号の形式が正しくありません（12桁）',
-  'core.validator.passport.name': 'パスポート',
-  'core.validator.passport.error': 'パスポート番号の形式が正しくありません（英字1文字 + 数字7桁）',
   'core.validator.id-vn.name': '個人番号 / パスポート',
   'core.validator.id-vn.error': '個人番号またはパスポート番号の形式が正しくありません',
+  'core.validator.vn-phone.name': 'VN電話番号',
+  'core.validator.vn-phone.error': 'ベトナムの電話番号の形式が正しくありません',
+  'core.validator.vn-id.name': '個人番号',
+  'core.validator.vn-id.error': '個人番号の形式が正しくありません（12桁）',
+  'core.validator.passport.name': 'パスポート',
+  'core.validator.passport.error': 'パスポート番号の形式が正しくありません（英字1文字 + 数字7桁）',
+  'core.validator.vn-id-or-passport.name': '個人番号 / パスポート',
+  'core.validator.vn-id-or-passport.error': '個人番号またはパスポート番号の形式が正しくありません',
   'core.validator.time.name': '時刻',
   'core.validator.time.error': '時刻の形式が正しくありません（HH:mm 形式）',
+  'core.validator.url.name': 'URL',
+  'core.validator.url.error': 'URLの形式が正しくありません',
+  'core.validator.domain.name': 'ドメイン',
+  'core.validator.domain.error': 'ドメインの形式が正しくありません',
+  'core.validator.ipv4.name': 'IPv4',
+  'core.validator.ipv4.error': 'IPv4アドレスの形式が正しくありません',
+  'core.validator.ipv6.name': 'IPv6',
+  'core.validator.ipv6.error': 'IPv6アドレスの形式が正しくありません',
+  'core.validator.image-url.name': '画像URL',
+  'core.validator.image-url.error': '画像URLの形式が正しくありません',
+  'core.validator.slug.name': 'スラッグ',
+  'core.validator.slug.error': 'スラッグの形式が正しくありません',
+  'core.validator.number.name': '数値',
+  'core.validator.number.error': '数値の形式が正しくありません',
+  'core.validator.integer.name': '整数',
+  'core.validator.integer.error': '整数の形式が正しくありません',
+  'core.validator.decimal.name': '小数',
+  'core.validator.decimal.error': '小数の形式が正しくありません',
+  'core.validator.positive-number.name': '正の数',
+  'core.validator.positive-number.error': '正の数を入力してください',
+  'core.validator.uuid.name': 'UUID',
+  'core.validator.uuid.error': 'UUIDの形式が正しくありません',
+  'core.validator.code-16.name': '16文字コード',
+  'core.validator.code-16.error': '16文字コードの形式が正しくありません',
+  'core.validator.code-32.name': '32文字コード',
+  'core.validator.code-32.error': '32文字コードの形式が正しくありません',
+  'core.validator.hex-color.name': 'HEXカラー',
+  'core.validator.hex-color.error': 'HEXカラーの形式が正しくありません',
+  'core.validator.base64.name': 'Base64',
+  'core.validator.base64.error': 'Base64文字列の形式が正しくありません',
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': '等しい',
@@ -35,6 +72,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.operator.end-with.display': 'で終わる',
   'core.operator.in.display': 'いずれかに一致',
   'core.operator.not-in.display': 'いずれにも一致しない',
+  'core.operator.between.display': '範囲内',
   'core.operator.null.display': '空である',
   'core.operator.not-null.display': '空でない',
 
@@ -134,6 +172,14 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: radio ----
   'core.form.radio.required': '選択してください',
+
+  // ---- Forms: switch ----
+  'core.form.switch.on': 'オン',
+  'core.form.switch.off': 'オフ',
+
+  // ---- Forms: checkbox ----
+  'core.form.checkbox.checked': 'はい',
+  'core.form.checkbox.unchecked': 'いいえ',
 
   // ---- Forms: select ----
   'core.form.select.required': '選択してください',
@@ -254,6 +300,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.default': 'デフォルト',
   'core.component.form-builder.show-more': 'もっと見る',
   'core.component.form-builder.show-less': '折りたたむ',
+  'core.component.inform.show-more': 'もっと見る',
+  'core.component.inform.show-less': '折りたたむ',
   'core.component.form-builder.row-overflow': '合計サイズが12列を超えるため、この行に移動できません',
   'core.component.form-builder.upload-source.all': 'すべて',
   'core.component.form-builder.upload-source.photo-library': 'ライブラリから選択',

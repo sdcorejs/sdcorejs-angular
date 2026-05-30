@@ -1,6 +1,6 @@
 ﻿import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdTextarea } from './textarea.component';
@@ -298,30 +298,32 @@ describe('SdTextarea', () => {
   });
 
   // -------------------------------------------------------------------------
-  // errorTooltipMessage getter
+  // errorMessage getter
   // -------------------------------------------------------------------------
 
-  describe('errorTooltipMessage getter', () => {
+  describe('errorMessage getter', () => {
     it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', () => {
       host.model = 'seed';
       host.required = true;
       fixture.detectChanges();
-      textarea.formControl.setValue('', { emitEvent: false });
-      textarea.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(textarea.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      textarea.formControl.setValue('');
+      textarea.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(textarea.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
     });
 
     it('returns maxlength message with the configured limit', () => {
       host.maxlength = 5;
       fixture.detectChanges();
-      textarea.formControl.setValue('abcdef', { emitEvent: false });
-      textarea.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(textarea.errorTooltipMessage).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 5');
+      textarea.formControl.setValue('abcdef');
+      textarea.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      expect(textarea.errorMessage()).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 5');
     });
 
     it('returns undefined when no errors present', () => {
       textarea.formControl.setValue('valid');
-      expect(textarea.errorTooltipMessage).toBeUndefined();
+      expect(textarea.errorMessage()).toBeUndefined();
     });
   });
 
@@ -367,6 +369,44 @@ describe('SdTextarea', () => {
     it('isMaxlengthExceeded returns false when no maxlength is set', () => {
       textarea.formControl.setValue('any text here');
       expect(textarea.isMaxlengthExceeded()).toBe(false);
+    });
+  });
+
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea[matInput]');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      textarea.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-empty=true when value is null/empty', () => {
+      fixture.detectChanges();
+      const el: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea[matInput]');
+      expect(el.getAttribute('data-empty')).toBe('true');
+      textarea.formControl.setValue('hello');
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
+    });
+
+    it('renders data-value reflecting FormControl value', () => {
+      textarea.formControl.setValue('hello');
+      fixture.detectChanges();
+      const el: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea[matInput]');
+      expect(el.getAttribute('data-value')).toBe('hello');
+    });
+
+    it('renders data-invalid=true only after touched + invalid', () => {
+      textarea.formControl.setValidators([Validators.required]);
+      textarea.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+      const el: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea[matInput]');
+      expect(el.getAttribute('data-invalid')).toBe('false');
+      textarea.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-invalid')).toBe('true');
     });
   });
 });
@@ -450,6 +490,37 @@ describe('SdTextarea (with SD_FORM_CONFIGURATION fill)', () => {
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {
     expect(textarea.appearance()).toBe('fill');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// host classes
+// ---------------------------------------------------------------------------
+
+describe('SdTextarea (host classes)', () => {
+  let fixture: ComponentFixture<SdTextarea>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [SdTextarea, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(SdTextarea);
+  });
+
+  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
+    fixture.componentRef.setInput('label', 'MÃ´ táº£');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
+  });
+
+  it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(false);
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
 

@@ -2,7 +2,7 @@
 import { Signal, TemplateRef } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdSearch } from '@sdcorejs/angular/forms';
-import { SdNestedKeyOf, SdOperator } from '@sdcorejs/angular/utilities';
+import { NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 
 export type SdTableColumn<T = any> =
@@ -73,9 +73,9 @@ interface SdTableColumnBase<T = any> {
     default?: any;
     // Chá»‰ dÃ nh cho filter inline column
     operator?: {
-      default?: SdOperator;
+      default?: Operator;
       enable?: boolean;
-      list?: SdOperator[];
+      list?: Operator[];
     };
     filterDef?: TemplateRef<any>
   };
@@ -86,20 +86,20 @@ interface SdTableColumnBase<T = any> {
 }
 
 interface SdTableColumnText<T = any> extends SdTableColumnBase<T> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   type: 'string';
   useBadge?: UseBadgeFunc<T>;
 }
 
 interface SdTableColumnNumber<T = any> extends SdTableColumnBase<T> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   type: 'number';
   useBadge?: UseBadgeFunc<T>;
   filter?: SdTableColumnBase['filter'] & { type?: 'split-number' };
 }
 
 interface SdTableColumnBool<T = any> extends SdTableColumnBase<T> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   type: 'boolean';
   useBadge?: UseBadgeFunc<T>;
   option?: {
@@ -109,7 +109,7 @@ interface SdTableColumnBool<T = any> extends SdTableColumnBase<T> {
 }
 
 interface SdTableColumnDate<T = any> extends SdTableColumnBase<T> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   type: 'date' | 'datetime' | 'time';
   useBadge?: UseBadgeFunc<T>;
   filter?: SdTableColumnBase['filter'] & { type?: 'daterange' | 'date' | 'split-date' };
@@ -117,29 +117,29 @@ interface SdTableColumnDate<T = any> extends SdTableColumnBase<T> {
 
 // ThÃªm Generic K (máº·c Ä‘á»‹nh lÃ  any hoáº·c Record<string, any> Ä‘á»ƒ khÃ´ng lá»—i code cÅ©)
 export interface SdTableColumnValues<T = any, K = Record<string, any>> extends SdTableColumnBase<T> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   type: 'values';
   useBadge?: UseBadgeValuesFunc<T, K>;
   option: {
     // items bÃ¢y giá» sáº½ nháº­n máº£ng kiá»ƒu K
     items: K[] | Signal<K[]> | (() => Promise<K[]>);
     // Ã‰p kiá»ƒu: Chá»‰ Ä‘Æ°á»£c phÃ©p nháº­p cÃ¡c key cá»§a K (lÃ  chuá»—i)
-    valueField: SdNestedKeyOf<K>;
-    displayField: SdNestedKeyOf<K>;
+    valueField: NestedKeyOf<K>;
+    displayField: NestedKeyOf<K>;
     selection?: 'MULTIPLE';
   };
 }
 
 export interface SdTableColumnLazyValues<T = any, K = Record<string, any>> extends SdTableColumnBase<T> {
-  field: SdNestedKeyOf<T>;
+  field: NestedKeyOf<T>;
   type: 'lazy-values';
   useBadge?: UseBadgeFunc<T>;
   option: {
     // items (Filter) sáº½ tráº£ vá» dá»¯ liá»‡u kiá»ƒu K
     items: SdSearch<K>;
     // Ã‰p kiá»ƒu: Chá»‰ Ä‘Æ°á»£c nháº­p cÃ¡c key cÃ³ trong K
-    valueField: SdNestedKeyOf<K>;
-    displayField: SdNestedKeyOf<K>;
+    valueField: NestedKeyOf<K>;
+    displayField: NestedKeyOf<K>;
     // views (Hiá»ƒn thá»‹) cÅ©ng pháº£i tráº£ vá» máº£ng cÃ¡c object kiá»ƒu K
     // Náº¿u khÃ´ng cÃ³ tranform hay htmlTemplate cáº§n khai bÃ¡o views
     views?: (values: string[]) => Promise<K[]>;

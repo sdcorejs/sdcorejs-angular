@@ -13,14 +13,16 @@ import { SdSwitch } from './switch.component';
     [color]="color"
     [disabled]="disabled"
     [required]="required"
+    [viewed]="viewed"
     [(model)]="model"
     (sdChange)="onSdChange($event)"></sd-switch>`,
 })
 class HostComponent {
   label?: string;
-  color: 'primary' | 'warn' | 'accent' | null = 'primary';
+  color: any = 'primary';
   disabled: boolean | '' | null | undefined = false;
   required: boolean | '' | null | undefined = false;
+  viewed = false;
   model: boolean | null | undefined = false;
   changes: any[] = [];
   onSdChange(v: any) {
@@ -112,13 +114,44 @@ describe('SdSwitch', () => {
     it('defaults to "primary" when color is null', () => {
       host.color = null;
       fixture.detectChanges();
-      expect(switchInstance.color).toBe('primary');
+      expect(switchInstance.color()).toBe('primary');
     });
 
-    it('uses provided color', () => {
-      host.color = 'warn';
+    it('uses provided color from Color enum', () => {
+      host.color = 'success';
       fixture.detectChanges();
-      expect(switchInstance.color as string).toBe('warn');
+      expect(switchInstance.color()).toBe('success');
+    });
+
+    it('drives host class .sd-c-<color>', () => {
+      host.color = 'error';
+      fixture.detectChanges();
+      const hostEl = fixture.debugElement.query(el => el.componentInstance instanceof SdSwitch).nativeElement as HTMLElement;
+      expect(hostEl.classList.contains('sd-c-error')).toBe(true);
+      expect(hostEl.classList.contains('sd-c-primary')).toBe(false);
+    });
+
+    // why: bug "luôn ăn màu success" do theme set `.mat-mdc-slide-toggle.mat-accent {
+    // --mat-slide-toggle-selected-handle-color: green }` ở specificity (0,2,1) > host
+    // attr cũ. Fix bằng cách override CẢ `--mat-slide-toggle-*` LẪN `--mdc-switch-*`
+    // với `!important`. Spec gán --sd-primary giả lập trên html root, sau đó kiểm tra
+    // token đã propagate qua chain `--sd-c → --sd-primary → red` xuống mat-mdc-slide-toggle.
+    it('overrides --mat-slide-toggle-* and --mdc-switch-* tokens via --sd-c chain', () => {
+      const root = document.documentElement;
+      const prev = root.style.getPropertyValue('--sd-primary');
+      root.style.setProperty('--sd-primary', 'rgb(0, 92, 187)');
+      try {
+        host.color = 'primary';
+        fixture.detectChanges();
+        const inner = fixture.nativeElement.querySelector('.mat-mdc-slide-toggle') as HTMLElement;
+        expect(inner).not.toBeNull();
+        const cs = getComputedStyle(inner);
+        expect(cs.getPropertyValue('--mat-slide-toggle-selected-handle-color').trim()).toBe('rgb(0, 92, 187)');
+        expect(cs.getPropertyValue('--mdc-switch-selected-handle-color').trim()).toBe('rgb(0, 92, 187)');
+      } finally {
+        if (prev) root.style.setProperty('--sd-primary', prev);
+        else root.style.removeProperty('--sd-primary');
+      }
     });
   });
 
@@ -141,15 +174,70 @@ describe('SdSwitch', () => {
   });
 
   describe('output events', () => {
-    it('emits sdChange + modelChange on user toggle (via formControl valueChanges)', () => {
+    it('emits sdChange + propagates to host via [(model)] two-way binding on user toggle', () => {
       const sdSpy = spyOn(switchInstance.sdChange, 'emit').and.callThrough();
-      const modelSpy = spyOn(switchInstance.modelChange, 'emit').and.callThrough();
 
       switchInstance.formControl.setValue(true);
       fixture.detectChanges();
 
       expect(sdSpy).toHaveBeenCalled();
-      expect(modelSpy).toHaveBeenCalled();
+      // host's `model` is updated through the auto-generated `modelChange` of the `model()` signal
+      expect(host.model).toBe(true);
+    });
+  });
+
+  describe('viewed mode', () => {
+    it('viewed=false renders mat-slide-toggle (editable)', () => {
+      expect(fixture.nativeElement.querySelector('mat-slide-toggle')).toBeTruthy();
+    });
+
+    it('viewed=true hides mat-slide-toggle and renders on/off text', () => {
+      host.viewed = true;
+      host.model = true;
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('mat-slide-toggle')).toBeNull();
+      const txt = (fixture.nativeElement.textContent as string);
+      // i18n keys core.form.switch.on/off; default locale fallback could be the raw key — accept either.
+      expect(/Bật|On|オン|开|켜짐|core\.form\.switch\.on/.test(txt)).toBe(true);
+    });
+
+    it('viewed=true with model=false shows off text', () => {
+      host.viewed = true;
+      host.model = false;
+      fixture.detectChanges();
+      const txt = (fixture.nativeElement.textContent as string);
+      expect(/Tắt|Off|オフ|关|꺼짐|core\.form\.switch\.off/.test(txt)).toBe(true);
+    });
+  });
+
+  describe('E2E attributes', () => {
+    it('renders data-disabled reflecting FormControl state', () => {
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement.querySelector('mat-slide-toggle');
+      expect(el.getAttribute('data-disabled')).toBe('false');
+      switchInstance.formControl.disable();
+      fixture.detectChanges();
+      expect(el.getAttribute('data-disabled')).toBe('true');
+    });
+
+    it('renders data-value as "true"/"false"', () => {
+      switchInstance.formControl.setValue(true);
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement.querySelector('mat-slide-toggle');
+      expect(el.getAttribute('data-value')).toBe('true');
+      switchInstance.formControl.setValue(false);
+      fixture.detectChanges();
+      expect(el.getAttribute('data-value')).toBe('false');
+    });
+
+    it('renders data-empty true for null, false for any boolean value', () => {
+      switchInstance.formControl.setValue(null);
+      fixture.detectChanges();
+      const el: HTMLElement = fixture.nativeElement.querySelector('mat-slide-toggle');
+      expect(el.getAttribute('data-empty')).toBe('true');
+      switchInstance.formControl.setValue(false);
+      fixture.detectChanges();
+      expect(el.getAttribute('data-empty')).toBe('false');
     });
   });
 });

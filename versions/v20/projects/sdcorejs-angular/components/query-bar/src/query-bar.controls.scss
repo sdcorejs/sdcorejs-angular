@@ -1,0 +1,78 @@
+// ---------------------------------------------------------------------------
+// query-bar — control skin
+// Re-skins the Core UI form controls (sd-input / sd-select / sd-date / sd-datetime
+// / sd-input-number) used inside the query-bar so they read as one cohesive set
+// matching the design. ONLY border / color / radius are touched — never size,
+// height, padding, or font-size (those stay owned by the Core UI components).
+//
+// Two reach points:
+//   1. `.c-query-bar` — inline-mode controls live in the component DOM.
+//   2. `.c-chip-popover` / `.c-field-picker-menu` — popover controls render in a
+//      CDK overlay attached to <body>, outside the host, so they need their own
+//      panel-class selector.
+// ---------------------------------------------------------------------------
+
+$qbc-border:       #d6d8db;
+$qbc-border-hover: #b9bdc3;
+$qbc-primary:      var(--sd-primary);
+$qbc-primary-dark: var(--sd-primary-dark);
+$qbc-radius:       6px;
+
+@mixin qb-control-skin {
+  .mat-mdc-form-field {
+    // Soft, unified outline border (overrides the global black200 notch color)
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: $qbc-border !important;
+      transition: border-color 120ms ease;
+    }
+    // Rounded corners to match chips / popover inputs
+    .mdc-notched-outline__leading {
+      border-radius: $qbc-radius 0 0 $qbc-radius !important;
+    }
+    .mdc-notched-outline__trailing {
+      border-radius: 0 $qbc-radius $qbc-radius 0 !important;
+    }
+
+    // Hover — slightly darker border
+    &:hover:not(.mat-focused):not(.mat-form-field-disabled) {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: $qbc-border-hover !important;
+      }
+    }
+
+    // Focus — primary border, single-width (kill Material's 2px bump look)
+    &.mat-focused {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: $qbc-primary !important;
+        border-width: 1px !important;
+      }
+    }
+
+    // Trailing chevron / clear icons → neutral, primary on focus
+    .mat-mdc-select-arrow,
+    .mat-mdc-form-field-icon-suffix .mat-icon {
+      color: #5f6368;
+    }
+    &.mat-focused .mat-mdc-select-arrow {
+      color: $qbc-primary;
+    }
+  }
+}
+
+.c-query-bar {
+  ::ng-deep {
+    @include qb-control-skin;
+  }
+}
+
+// Popover controls live in the overlay — reach them via the panel classes.
+::ng-deep .mat-mdc-menu-panel.c-chip-popover,
+::ng-deep .mat-mdc-menu-panel.c-field-picker-menu {
+  @include qb-control-skin;
+}

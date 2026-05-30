@@ -22,7 +22,8 @@ The standard list/table component of SDCoreJS â€” renders tabular data with
 ## When NOT to use
 - For â‰¤ 5 simple cards / a small read-only list â†’ use a regular Angular `@for` with custom layout
 - For "key-value detail" display â†’ use `<sd-view>`, not a 1-row table
-- For tree-structured infinite-depth data â†’ this only supports header grouping (column-children) and one level of row expansion, not recursive trees
+- For tree-structured data with inline child rows â†’ use `option.tree` (configurable depth via `maxDepth`)
+- For master-detail panel below a row â†’ use `option.expand` + `[sdTableExpandDef]`
 - For editable spreadsheets â€” cell editing is not first-class; use a different grid library if heavy in-place editing is required
 
 ## The contract: `[option]` is the only required input
@@ -42,6 +43,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `config` | `TableOptionConfig` | no | `{ visible?, resizable?, onResize? }` â€” gear button, drag-to-resize, resize callback. See **Column resize** section. |
 | `selector` | `SdTableOptionSelector<T>` | no | Multi-select + bulk actions. |
 | `expand` | `SdTableOptionExpand<T>` | no | Per-row expansion (master-detail). |
+| `tree` | `SdTableOptionTree<T>` | no | Tree rows â€” inline child rows with expand/collapse. |
 | `sort` | `{ enable?: boolean }` | no | Master switch for sortable headers. |
 | `paginate` | `SdTableOptionPaginate` | no | `{ pageSize?, pages?, showFirstLastButtons?, hidePageSize?, hidden? }`. |
 | `reload` | `{ visible?, onReload? }` | no | Show reload button + callback when data refreshes. |
@@ -52,6 +54,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `command` | `{ align?: 'left' \| 'right'; commands?: SdTableCommand<T>[] }` | no | Newer per-row commands API with alignment. |
 | `style` | `{ shadow?, maxHeight?, minHeight?, rowCss? }` | no | Shadow toggle, scroll bounds, per-row CSS. |
 | `rowReorder` | `{ enabled?, onChange?, icon?, disabled?(row,i) }` | no | Drag-and-drop row reordering. Respects groups. |
+| `index` | `{ enabled?, title?, width? }` | no | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages â€” `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
 
 ### Column schema (`SdTableColumn<T>`)
 
@@ -103,7 +106,7 @@ export interface TableOptionConfig {
 | Field | Type | Notes |
 | --- | --- | --- |
 | `visible` | `boolean` | Shows the column-config (âš™) button in the toolbar. The dialog lets users toggle visibility, drag-reorder columns, and rename headers. |
-| `resizable` | `boolean` | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdSubInformation`, `reorder`, and `type: 'children'` parent header cells. |
+| `resizable` | `boolean` | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdTreeToggle`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
 | `onResize` | `(field, width, columnWidth) => void` | Fires once per `mouseup`. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics. |
 
 **Persistence:** When `option.key` is provided, resize writes to the same storage entry used by the column-config dialog (under the prefix `TABLE_CONFIG`). Without a key it falls back to session storage keyed by `Utilities.hash(option)`.
@@ -111,6 +114,21 @@ export interface TableOptionConfig {
 **Reload semantics:** Resizing does **NOT** trigger a data reload, value cache refresh, or filter re-register â€” it only updates the configuration signal locally and writes storage silently (via the new `SdStorage.setSilent`). Safe to use on heavy server-mode tables.
 
 **Width clamp:** During drag, width is clamped to `[column.minWidth, column.maxWidth]`. If either is unset or not a `'NNpx'` string, defaults apply: `minWidth = 40px`, `maxWidth = âˆž`. Other units (`%`, `rem`, â€¦) are ignored by the clamp parser.
+
+### Reserved column names (internal `matColumnDef`)
+
+The table adds these special columns conditionally â€” **do not** define a data column with the same `field`:
+
+| Name | When rendered | Position |
+| --- | --- | --- |
+| `sdReorder` | `rowReorder.enabled` | very first (unshifted) |
+| `sdSelection` | `selector.visible` | left, sticky |
+| `sdTreeToggle` | `tree` configured | left |
+| `sdCommand` | `commands` / `command.commands` | left if `command.align !== 'right'`, else right (stickyEnd) |
+| `sdGroup` | `group.fields.length` | left |
+| `sdIndex` | `index.enabled` | after group, before data columns (sticky) |
+| `sdSubInformation` | `expand` configured | render under each row |
+| `sdSubInformationAction` | `expand` configured | right (stickyEnd) |
 
 ### Selector option (`SdTableOptionSelector<T>`)
 
@@ -128,8 +146,41 @@ export interface TableOptionConfig {
 ### Expand option (`SdTableOptionExpand<T>`)
 `{ disabled?(row), onExpand?(row) => any \| Promise<any>, multiple?, always? }` â€” `always: true` keeps every row expanded; `multiple` allows multiple expanded simultaneously.
 
+### Tree option (`SdTableOptionTree<T>`)
+Inline child rows rendered beneath parent rows (tree table).
+
+```typescript
+tree?: {
+  childrenKey?: string;           // default 'children'
+  maxDepth?: number;              // undefined = unlimited
+  defaultExpanded?: boolean | number; // false | true | open to depth N
+  onExpandChildren?: (row) => Promise<T[]> | T[];  // lazy load
+  indentSize?: number;              // default 20px per level
+}
+```
+
+- **Embedded (default):** each row may contain nested array at `childrenKey`.
+- **Lazy:** if no embedded children, `onExpandChildren` is called on expand; result cached on row.
+- **Pagination (server):** only root rows are paginated; `total` = root count.
+- **Coexist** with `expand` (master-detail). **Cannot combine** with `group`.
+- **Row reorder:** only root rows (level 0) are draggable.
+
+Example:
+```typescript
+tree: { maxDepth: 3, defaultExpanded: 1 },
+items: () => [
+  { id: 1, name: 'Parent', children: [{ id: 2, name: 'Child' }] },
+],
+```
+
 ### Filter option (`SdTableOptionFilter`)
 `externalFilters?: { field, type: 'string' \| 'boolean' \| 'date' \| 'datetime' \| 'daterange' \| 'select' \| ...; defaultOperator?: Operator; required? }[]` controls the toolbar filter form.
+
+#### Inline column filter â€” commit semantics
+- **Enter** trÃªn `sd-input` / `sd-input-number` â†’ commit value vÃ o `filterRegister` **vÃ ** trigger reload (debounce 500ms + 200ms).
+- **Blur** (focus rá»i input) â†’ commit value vÃ o `filterRegister` vá»›i `notReload: true` â€” **khÃ´ng** gá»i API. Äáº£m báº£o giÃ¡ trá»‹ typed-but-not-entered khÃ´ng bá»‹ máº¥t náº¿u user chuyá»ƒn sang filter khÃ¡c hoáº·c báº¥m Reload.
+- **Click nÃºt Reload** (`reload()`) â†’ table tá»± commit `this.columnFilter` snapshot vÃ o `filterRegister` (notReload:true) trÆ°á»›c khi build filter request â€” Ä‘áº£m báº£o giÃ¡ trá»‹ input váº«n cÃ²n focus cÅ©ng Ä‘Æ°á»£c gá»­i lÃªn.
+- **`sd-select` / `sd-date-range` / `sd-date`** váº«n dÃ¹ng `(sdChange)` â†’ commit + reload tá»©c thÃ¬.
 
 ### Commands (`SdTableCommandNormal<T>`)
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.
@@ -167,14 +218,15 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 ## Visual cues (helps agent map screenshots â†’ component)
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
-- **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Expand caret on the leftmost column when `expand` configured.
+- **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle in `sdTreeToggle` column when `tree` configured. Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: shows blank body; loading state shows centered Material spinner.
 - **Pagination bar** (bottom): "Äang hiá»ƒn thá»‹ 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `MatPaginatorIntlCro`.
-- **Drag handle** (when `rowReorder.enabled`): leftmost icon column with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
-- **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/expand/reorder columns or on `type: 'children'` parent headers.
+- **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
+- **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
+- **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdTreeToggle`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.
 
 ## Configuration provider
 ```ts
@@ -392,6 +444,21 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - âŒ Using `column.minWidth: '30%'` (or any non-`px` unit) and expecting the resize clamp to honor it â€” the directive's parser only accepts `'NNpx'`. Other units render fine for static width but are treated as "no clamp" by the resize logic (falls back to default `min = 40px`).
 - âŒ Writing to `column.width` programmatically while `config.resizable: true` on a table that already has `option.key` â€” the persisted user width takes precedence over `column.width` in `option`. Reset via the gear dialog â†’ "ÄÆ°a vá» máº·c Ä‘á»‹nh" if you want option-defined widths back.
 - âŒ Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering â€” the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
+
+## E2E test attributes
+
+Rendered directly on the `<sd-table>` host element:
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `components-table-<autoId>` | input `autoId` |
+| `data-loading` | `"true"` / `"false"` | `loading` signal (toggled by paging + external-filter submit) |
+
+Selector example:
+
+```ts
+await expect(page.locator('sd-table[data-autoid="components-table-employees"]')).toHaveAttribute('data-loading', 'false');
+```
 
 ## Related
 - `<sd-button>`, `<sd-quick-action>` â€” used in toolbar / per-row commands

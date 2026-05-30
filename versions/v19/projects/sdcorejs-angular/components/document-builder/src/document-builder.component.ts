@@ -1,6 +1,7 @@
 ﻿import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import {
   Alignment,
@@ -39,7 +40,7 @@ import {
   Undo,
 } from 'ckeditor5';
 import { throttleTime, Subject, Subscription } from 'rxjs';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import {
   PageOrientation,
   TableCustom,
@@ -54,13 +55,13 @@ import {
   CkCommentPlugin,
 } from './plugins';
 import { getPresetColors, getColorPickerConfig, getFontSizeOptions, getHeadingOptions } from './document-builder.config';
-import { DocumentBuilderOption, SdDocumentBuilderHeading, SdDocumentBuilderOption, SdDocumentBuilderVariable } from './document-builder.model';
+import { DocumentBuilderI18n, DocumentBuilderOption, SdDocumentBuilderHeading, SdDocumentBuilderOption } from './document-builder.model';
 import { normalize } from './document-builder.utils';
 
 @Component({
   selector: 'sd-document-builder',
   standalone: true,
-  imports: [CommonModule, CKEditorModule],
+  imports: [CommonModule, CKEditorModule, SdCKEditorStyles],
   templateUrl: './document-builder.component.html',
   styleUrls: [
     './document-builder.component.scss',
@@ -72,12 +73,15 @@ import { normalize } from './document-builder.utils';
 })
 export class SdDocumentBuilder {
   readonly #i18n = inject(I18nService);
+
   @Input({ required: true }) option!: SdDocumentBuilderOption;
+
   disabled = false;
   @Input('disabled') set _disabled(val: boolean | '' | undefined | null) {
     this.disabled = val === '' || !!val;
     this.#updateState();
   }
+
   @Output() contentChange = new EventEmitter<string>(); // Emit HTML content
 
   Editor = ClassicEditor;
@@ -93,11 +97,15 @@ export class SdDocumentBuilder {
   #idTimeOutScrollHeading: ReturnType<typeof setTimeout> | null = null;
   #headingElementsMap = new Map<string, ModelElement>(); // Hash lÆ°u trá»¯ cÃ¡c heading
 
+  // Wrapper giá»¯ `this` cá»§a I18nService â€” CKEditor config khÃ´ng truyá»n Ä‘Æ°á»£c class instance cÃ³ private fields.
+  readonly #editorI18n: DocumentBuilderI18n = {
+    t: (key, params) => this.#i18n.t(key, params),
+  };
+
   // Config
   config: DocumentBuilderOption = {
     getOption: () => this.option,
-    // Truyá»n i18n service xuá»‘ng CKEditor plugin (ngoÃ i DI tree) Ä‘á»ƒ dá»‹ch label/error
-    _i18n: this.#i18n,
+    _i18n: this.#editorI18n,
     licenseKey: 'GPL', // Hoáº·c key thÆ°Æ¡ng máº¡i náº¿u cÃ³
     plugins: [
       FontSize,
@@ -584,8 +592,6 @@ export class SdDocumentBuilder {
     }
   }
 
-
-
   // ========================================================================
   // 4. HÃ€M EXPORT DOCX (FULL HEADER/FOOTER + PAGE NUMBER)
   // ========================================================================
@@ -692,7 +698,7 @@ export class SdDocumentBuilder {
     // LÆ°u Ã½: DÃ¹ng type 'application/msword' thay vÃ¬ dÃ¹ng thÆ° viá»‡n html-docx-js
     // ThÃªm '\ufeff' (BOM) Ä‘á»ƒ fix lá»—i font tiáº¿ng Viá»‡t
     const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
-    SdUtilities.downloadBlob(blob, fileName);
+    BrowserUtilities.downloadBlob(blob, fileName);
   }
 
   hightSelectRange = (range: ModelRange): void => {

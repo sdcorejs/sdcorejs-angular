@@ -712,6 +712,12 @@ ThÆ° viá»‡n tuÃ¢n theo [Semantic Versioning](https://semver.org):
 
 ---
 
+## QA / E2E
+
+Core UI components expose runtime state via lowercase `data-*` attributes. See [`docs/E2E-ATTRIBUTES.md`](docs/E2E-ATTRIBUTES.md) for the full catalog, component matrix, selector cookbook, and YAML schema for AI agents.
+
+---
+
 ## License
 
 Internal use only â€” Â© SD Team

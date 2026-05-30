@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -16,14 +15,13 @@ import {
   input,
   isSignal,
   model,
-  OnDestroy,
   OnInit,
   output,
   signal, // THÃŠM IMPORT NÃ€Y
   Signal,
   TemplateRef,
   untracked,
-  viewChild,
+  viewChild
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import {
@@ -52,12 +50,15 @@ import {
   SD_FORM_CONFIGURATION,
   SdCustomValidator,
   SdFormControl,
+  sdFormControlState,
+  SdInlineErrorValidator,
   SdSearch,
   SdSelectionData,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
-import { ArrayUtilities, SdUtilities, StringUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { SdNestedKeyOf, SdSize } from '@sdcorejs/angular/utilities/models';
+import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
+import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/angular/utilities/extensions';
+import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';
 import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
@@ -68,6 +69,7 @@ import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
   styleUrls: ['./select.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -84,7 +86,7 @@ import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit {
-  id = `I${SdUtilities.generateUuid()}`;
+  id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
   // 1. SIGNAL QUERIES & INJECTS
@@ -107,9 +109,25 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => (this.autoIdInput() ? `forms-select-${this.autoIdInput()}` : undefined));
-  name = input<string>(SdUtilities.generateUuid());
 
-  size = input<SdSize>('md');
+  // E2E data-* attributes
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+  readonly dataLoading = computed(() => (this.loading() ? 'true' : 'false'));
+
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly dataErrorMessage = computed(() => {
+    void this.#state();
+    const msg = this.errorMessage();
+    return msg && msg.length > 0 ? msg : null;
+  });
+
+  name = input<string>(Utilities.generateUuid());
+
+  size = input<Size>('md');
   // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -127,9 +145,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   helperText = input<string | undefined>();
   placeholder = input<string | undefined>();
 
-  valueField = input.required<SdNestedKeyOf<T>>();
-  displayField = input.required<SdNestedKeyOf<T>>();
-  disabledField = input<SdNestedKeyOf<T> | ''>('');
+  valueField = input.required<NestedKeyOf<T>>();
+  displayField = input.required<NestedKeyOf<T>>();
+  disabledField = input<NestedKeyOf<T> | ''>('');
   cacheChecksum = input<any>();
 
   limit = input<number>(50);
@@ -144,15 +162,17 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   disabled = input(false, { transform: booleanAttribute });
   viewed = input(false, { transform: booleanAttribute });
   multiple = input(false, { transform: booleanAttribute });
+  /** Flatten the field chrome to a chip-friendly trigger (value + caret only). */
+  bare = input(false, { transform: booleanAttribute });
 
   validator = input<SdCustomValidator | undefined>();
   inlineError = input<string | undefined>();
 
   /**
    * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
-   * DÃ¹ng getter (khÃ´ng pháº£i computed) vÃ¬ formControl.errors khÃ´ng pháº£i Angular signal.
    */
-  get errorTooltipMessage(): string | undefined {
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -160,7 +180,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
-  }
+  });
 
   appearanceInput = input<MatFormFieldAppearance | undefined>(undefined, { alias: 'appearance' });
   appearance = computed(() => this.appearanceInput() ?? this.#formConfiguration?.appearance ?? 'outline');
@@ -235,19 +255,19 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   itemValue = (item: T): unknown => {
     const path = this.valueField();
     if (!path || item == null) return item;
-    return SdUtilities.getNestedValue(item, path as string);
+    return Utilities.getNestedValue(item, path as string);
   };
 
   itemDisplay = (item: T): string => {
     const path = this.displayField();
     if (!path || item == null) return String(item ?? '');
-    return String(SdUtilities.getNestedValue(item, path as string) ?? '');
+    return String(Utilities.getNestedValue(item, path as string) ?? '');
   };
 
   itemDisabled = (item: T): boolean => {
     const path = this.disabledField();
     if (!path || item == null) return false;
-    return Boolean(SdUtilities.getNestedValue(item, path as string));
+    return Boolean(Utilities.getNestedValue(item, path as string));
   };
 
   setNestedValue = (obj: any, path: string, value: any) => {
@@ -486,16 +506,12 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
     if (req) validators.push(Validators.required);
     if (val) asyncValidators.push(HandleSdCustomValidator(val));
-    if (inl) validators.push(this.customInlineErrorValidator());
+    if (inl) validators.push(SdInlineErrorValidator);
 
     this.formControl.setValidators(validators.length ? validators : null);
     this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
     this.formControl.updateValueAndValidity({ emitEvent: false });
   };
-
-  customInlineErrorValidator(): ValidatorFn {
-    return (): Record<string, any> | null => ({ inlineError: true });
-  }
 
   #loadSelectedItems = async (value: any, items: SdSearch) => {
     if (value === undefined || value === null || value === '') return [];
@@ -532,7 +548,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   #loadItems = async (searchText: string | undefined | null, items: SdSearch) => {
     searchText = searchText?.toString() || '';
-    const key = SdUtilities.hash({ checksum: this.cacheChecksum() || null, searchText });
+    const key = Utilities.hash({ checksum: this.cacheChecksum() || null, searchText });
 
     this.#searchRequestId++;
     const currentRequestId = this.#searchRequestId;
@@ -618,6 +634,19 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     }, 100);
   };
 
+  /** Open the select panel programmatically (anchors to the mat-select trigger). */
+  open = () => {
+    if (this.formControl.disabled) return;
+    // why: signal write tá»« updatePanelWidth() chÆ°a qua CD trong cÃ¹ng tick â†’ mat-select
+    // sáº½ Ä‘á»c [panelWidth] cÅ© vÃ  panel co láº¡i theo bare trigger. GÃ¡n trá»±c tiáº¿p panelWidth
+    // lÃªn mat-select instance Ä‘á»ƒ open() tháº¥y giÃ¡ trá»‹ má»›i ngay, khÃ´ng pháº£i chá» CD.
+    this.updatePanelWidth();
+    const ref = this.selectRef();
+    if (!ref) return;
+    (ref as { panelWidth: string | number }).panelWidth = this.calculatedPanelWidth();
+    ref.open();
+  };
+
   onOpenedChange = (isOpened: boolean) => {
     if (isOpened) {
       this.focused.set(true);
@@ -628,11 +657,11 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
           input.focus();
         }
       }, 100);
-      this.#hashedValue = SdUtilities.hash({ value: this.formControl.value });
+      this.#hashedValue = Utilities.hash({ value: this.formControl.value });
       this.inputControl.setValue('');
     } else {
       this.focused.set(false);
-      const hashedValue = SdUtilities.hash({ value: this.formControl.value });
+      const hashedValue = Utilities.hash({ value: this.formControl.value });
 
       if (this.#hashedValue !== hashedValue) {
         this.sdChange.emit(this.formControl.value);

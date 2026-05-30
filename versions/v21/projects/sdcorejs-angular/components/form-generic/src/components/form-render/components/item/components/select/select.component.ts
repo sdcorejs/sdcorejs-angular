@@ -5,7 +5,7 @@ import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, I
 import { FormGroup } from '@angular/forms';
 import { SdAutocomplete, SdSearch, SdSelect } from '@sdcorejs/angular/forms';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
-import { SdUtilities, StringUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities, StringUtilities } from '@sdcorejs/utils/fns';
 // import { sha1 } from 'object-hash';
 import { debounceTime, filter, startWith, Subject, Subscription } from 'rxjs';
 import { SdFormGenericSelect, SdFormGenericSelectionItem } from '../../../../../../models';
@@ -132,7 +132,7 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit() {
     this.#subscription.add(
       this.form.valueChanges.pipe(debounceTime(500), startWith(this.form.value)).subscribe(values => {
-        const hashedValues = SdUtilities.hash(values);
+        const hashedValues = Utilities.hash(values);
         if (this.hashedValues !== hashedValues) {
           this.hashedValues = hashedValues;
           this.#inputChanges.next();
@@ -145,7 +145,7 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
         if (!this.viewed && this.component && !this.component?.properties?.viewed) {
           const values = { ...this.entity, ...this.form.value };
           const query = this.#generateQuery(this.component?.properties?.query, values);
-          const hashedQuery = SdUtilities.hash(query);
+          const hashedQuery = Utilities.hash(query);
           // Náº¿u query cÃ³ thay Ä‘á»•i thÃ¬ thá»±c hiá»‡n gÃ¡n láº¡i items
           if (hashedQuery !== this.#hashedQuery) {
             this.#hashedQuery = hashedQuery;
@@ -200,7 +200,7 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
       window.open(url);
     } else {
       const [path, queryString] = url?.split('?');
-      const queryParams = SdUtilities.parseQueryParams(queryString);
+      const queryParams = Utilities.parseQueryParams(queryString);
       this.router.navigate([path], { queryParams });
     }
   };

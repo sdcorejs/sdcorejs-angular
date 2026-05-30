@@ -1,0 +1,32 @@
+<mat-stepper
+  class="sd-stepper"
+  [(selectedIndex)]="selectedIndex"
+  [linear]="linear()"
+  [orientation]="orientation()"
+  [labelPosition]="labelPosition()"
+  [headerPosition]="headerPosition()"
+  [animationDuration]="animationDuration()"
+  [disableRipple]="disableRipple()"
+  (selectionChange)="onSelectionChange($event)">
+  @for (step of steps(); track step; let i = $index) {
+    <mat-step
+      [stepControl]="step.stepControl() ?? undefined!"
+      [optional]="step.optional()"
+      [editable]="step.editable()"
+      [state]="step.state() ?? ''"
+      [errorMessage]="step.errorMessage() ?? ''">
+      <ng-template matStepLabel>
+        <span class="sd-step__label">
+          @if (step.icon(); as ic) {
+            <mat-icon class="sd-step__icon">{{ ic }}</mat-icon>
+          }
+          <span class="sd-step__text">{{ step.label() }}</span>
+        </span>
+      </ng-template>
+
+      <ng-template matStepContent>
+        <ng-container [ngTemplateOutlet]="step.bodyTpl()"></ng-container>
+      </ng-template>
+    </mat-step>
+  }
+</mat-stepper>

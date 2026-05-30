@@ -2,7 +2,7 @@
 import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
-import { SdColor } from '@sdcorejs/angular/utilities';
+import { Color } from '@sdcorejs/utils/models';
 
 @Component({
   selector: 'sd-section',
@@ -16,7 +16,7 @@ export class SdSection extends SdBaseSecureComponent {
   title = input<string | undefined | null>(undefined);
   subTitle = input<string | undefined | null>(undefined);
   icon = input<string | undefined | null>(undefined);
-  iconColor = input<SdColor>('primary', { alias: 'iconColor' });
+  iconColor = input<Color>('primary', { alias: 'iconColor' });
 
   collapsed = model<boolean>(false, { alias: 'collapsed' });
   collapsable = input(false, { transform: booleanAttribute });

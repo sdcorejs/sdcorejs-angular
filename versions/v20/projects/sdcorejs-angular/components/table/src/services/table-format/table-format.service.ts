@@ -1,6 +1,7 @@
 ﻿import { Injectable, inject, isSignal } from '@angular/core';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
-import { SD_EMPTY_STR, SdUtilities } from '@sdcorejs/angular/utilities';
+import { EMPTY_STR } from '@sdcorejs/utils/constants';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
@@ -40,8 +41,8 @@ export class TableFormatService {
 
           cacheValues[column.field] = (Array.isArray(data) ? data : []).map(e => ({
             ...e,
-            [column.option.valueField]: SdUtilities.getNestedValue(e, column.option.valueField),
-            [column.option.displayField]: SdUtilities.getNestedValue(e, column.option.displayField),
+            [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
+            [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
           }));
 
           cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
@@ -63,8 +64,8 @@ export class TableFormatService {
         else {
           cacheValues[column.field] = column.option.items.map(e => ({
             ...e,
-            [column.option.valueField]: SdUtilities.getNestedValue(e, column.option.valueField),
-            [column.option.displayField]: SdUtilities.getNestedValue(e, column.option.displayField),
+            [column.option.valueField]: Utilities.getNestedValue(e, column.option.valueField),
+            [column.option.displayField]: Utilities.getNestedValue(e, column.option.displayField),
           }));
 
           cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
@@ -77,8 +78,8 @@ export class TableFormatService {
       for (const result of results) {
         cacheValues[result.key] = result.data.map(e => ({
           ...e,
-          [result.valueField]: SdUtilities.getNestedValue(e, result.valueField),
-          [result.displayField]: SdUtilities.getNestedValue(e, result.displayField),
+          [result.valueField]: Utilities.getNestedValue(e, result.valueField),
+          [result.displayField]: Utilities.getNestedValue(e, result.displayField),
         }));
         cacheObjValues[result.key] = ArrayUtilities.toObject(result.valueField, cacheValues[result.key]);
       }
@@ -109,7 +110,7 @@ export class TableFormatService {
 
         const values = ArrayUtilities.distinct(
           items
-            .map(item => SdUtilities.getNestedValue(item.data, fieldStr))
+            .map(item => Utilities.getNestedValue(item.data, fieldStr))
             .filter(val => val?.toString())
             .reduce<string[]>((current, next) => [...current, ...(Array.isArray(next) ? next : [next])], [])
             .filter(val => !Object.keys(cacheObjValues[fieldStr]).includes(val))
@@ -122,10 +123,10 @@ export class TableFormatService {
               return [];
             })
           )
-            .filter((item: any) => values.includes(SdUtilities.getNestedValue(item, valueField)))
+            .filter((item: any) => values.includes(Utilities.getNestedValue(item, valueField)))
             .map((e: any) => ({
-              [valueField]: SdUtilities.getNestedValue(e, valueField),
-              [displayField]: SdUtilities.getNestedValue(e, displayField),
+              [valueField]: Utilities.getNestedValue(e, valueField),
+              [displayField]: Utilities.getNestedValue(e, displayField),
             }));
           Object.assign(cacheObjValues[fieldStr], ArrayUtilities.toObject(valueField, lazyItems) || {});
         }
@@ -134,7 +135,7 @@ export class TableFormatService {
       // Format dá»¯ liá»‡u cho tá»«ng hÃ ng
       for (const item of items) {
         const rowData = item.data;
-        const value = SdUtilities.getNestedValue(rowData, fieldStr);
+        const value = Utilities.getNestedValue(rowData, fieldStr);
         item.meta.display[fieldStr] = {
           badge: undefined,
           cellStyle: column.align === 'right' ? { 'text-align': 'right!important' } : undefined,
@@ -183,7 +184,7 @@ export class TableFormatService {
           }
 
           if (display.data === null || display.data === undefined || display.data === '') {
-            display.data = SD_EMPTY_STR;
+            display.data = EMPTY_STR;
             display.badge = undefined;
           }
         }

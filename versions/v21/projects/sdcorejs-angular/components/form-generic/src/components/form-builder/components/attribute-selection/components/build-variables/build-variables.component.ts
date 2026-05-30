@@ -5,7 +5,7 @@ import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
 import {
   GetComponentAttributes,
   GetVariableAttributes,
@@ -53,7 +53,7 @@ export class BuildVariables {
     // Parse JSON -> STRING Ä‘á»ƒ hiá»ƒn thá»‹ trÃªn UI
     this.queryString = JSON.stringify(this.#model);
     this.items = Object.keys(this.#model).map(key => ({
-      id: SdUtilities.randomId(),
+      id: Utilities.randomId(),
       key,
       value: this.#model?.[key],
     }));
@@ -92,7 +92,7 @@ export class BuildVariables {
 
   addField = () => {
     this.items.push({
-      id: SdUtilities.randomId(),
+      id: Utilities.randomId(),
       key: '',
       value: '',
     });

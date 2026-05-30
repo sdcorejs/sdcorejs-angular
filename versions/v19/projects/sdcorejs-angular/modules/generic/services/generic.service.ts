@@ -1,6 +1,7 @@
 ﻿import { Inject, Injectable } from '@angular/core';
 import { SdApiService } from '@sdcorejs/angular/services/api';
-import { ArrayUtilities, SdUtilities, StringUtilities } from '@sdcorejs/angular/utilities';
+import { ArrayUtilities, StringUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { Subject } from 'rxjs';
 import { ISdGenericConfiguration, SD_GENERIC_CONFIGURATION } from '../configurations';
 import { SdRegister, SdRegisterArgs } from '../models';
@@ -40,7 +41,7 @@ export class SdGenericService {
       }
       const { properties } = await schema();
       // Náº¿u khÃ´ng cÃ³ phÆ°Æ¡ng thá»©c all thÃ¬ sá»­ dá»¥ng phÆ°Æ¡ng thá»©c paging Ä‘á»ƒ láº¥y táº¥t cáº£ dá»¯ liá»‡u
-      return await SdUtilities.allWithPaging(async (pageSize, pageNumber) => {
+      return await Utilities.fetchAllByPaging(async (pageSize, pageNumber) => {
         const res = await paging({
           ...req,
           pageSize,

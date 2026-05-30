@@ -1,5 +1,5 @@
-﻿import { Plugin, ContextualBalloon, ButtonView, ModelRange, View } from 'ckeditor5';
-import { I18nService } from '@sdcorejs/angular/i18n';
+import { Plugin, ContextualBalloon, ButtonView, ModelRange, View } from 'ckeditor5';
+import { DocumentBuilderI18n } from '../../document-builder.model';
 import { CkComment, CkCommentConfig, CkCommentColors, CkCommentSelection } from './ck-comment.plugin.model';
 
 export class CkCommentPlugin extends Plugin {
@@ -12,27 +12,27 @@ export class CkCommentPlugin extends Plugin {
   }
 
   #comments: Map<string | number, CkComment> = new Map();
-  // i18n Ä‘á»c tá»« editor.config â€” plugin khÃ´ng cÃ³ DI nÃªn dÃ¹ng pattern nÃ y; fallback giá»¯ VI Ä‘á»ƒ consumer chÆ°a setup váº«n cháº¡y
-  #getI18n(): I18nService | undefined {
-    return (this.editor.config as { get(key: string): unknown }).get('_i18n') as I18nService | undefined;
+  // i18n đọc từ editor.config — plugin không có DI nên dùng pattern này; fallback giữ VI để consumer chưa setup vẫn chạy
+  #getI18n(): DocumentBuilderI18n | undefined {
+    return (this.editor.config as { get(key: string): unknown }).get('_i18n') as DocumentBuilderI18n | undefined;
   }
   #selectedId: string | number | null = null;
   #pendingId: string | null = null; // ID cho pending highlight
-  #isCreatingPending: boolean = false; // Flag Ä‘á»ƒ prevent clearing pending khi Ä‘ang táº¡o
-  #isProcessingClick: boolean = false; // Flag Ä‘á»ƒ prevent duplicate click events
+  #isCreatingPending: boolean = false; // Flag để prevent clearing pending khi đang tạo
+  #isProcessingClick: boolean = false; // Flag để prevent duplicate click events
   #balloon!: ContextualBalloon;
   #config: CkCommentConfig = {};
 
-  // Háº±ng sá»‘ ID cho pending marker
+  // Hằng số ID cho pending marker
   static readonly PENDING_MARKER_ID = '__pending_comment__';
 
-  // Sá»‘ node tÃ¬m kiáº¿m máº·c Ä‘á»‹nh khi path khÃ´ng chÃ­nh xÃ¡c
+  // Số node tìm kiếm mặc định khi path không chính xác
   static readonly DEFAULT_SEARCH_RANGE = 5;
 
-  // Äá»™ dÃ i text tá»‘i Ä‘a Ä‘á»ƒ táº¡o marker
+  // Độ dài text tối đa để tạo marker
   static readonly DEFAULT_MAX_TEXT_LENGTH = 1000;
 
-  // MÃ u sáº¯c máº·c Ä‘á»‹nh cho markers
+  // Màu sắc mặc định cho markers
   static readonly DEFAULT_COLORS: CkCommentColors = {
     marker: 'rgba(59, 130, 246, 0.2)',
     markerSelected: 'rgba(59, 130, 246, 0.5)',
@@ -41,7 +41,7 @@ export class CkCommentPlugin extends Plugin {
   };
 
   /**
-   * Debug log - chá»‰ log khi debug config lÃ  true
+   * Debug log - chỉ log khi debug config là true
    */
   #log(...args: any[]): void {
     if (this.#config.debug) {
@@ -50,7 +50,7 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * Debug warn - chá»‰ warn khi debug config lÃ  true
+   * Debug warn - chỉ warn khi debug config là true
    */
   #warn(...args: any[]): void {
     if (this.#config.debug) {
@@ -59,7 +59,7 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * Láº¥y mÃ u sáº¯c Ä‘Ã£ merge vá»›i default
+   * Lấy màu sắc đã merge với default
    */
   #getColors(): CkCommentColors {
     return { ...CkCommentPlugin.DEFAULT_COLORS, ...this.#config.colors };
@@ -71,19 +71,19 @@ export class CkCommentPlugin extends Plugin {
 
     this.#log('init() called');
 
-    // Thiáº¿t láº­p marker to highlight conversion
+    // Thiết lập marker to highlight conversion
     this.#setupMarkerConversion();
 
-    // Thiáº¿t láº­p click handler cho markers
+    // Thiết lập click handler cho markers
     this.#setupMarkerClickHandler();
 
-    // Thiáº¿t láº­p toolbar button
+    // Thiết lập toolbar button
     this.#setupToolbarButton();
 
-    // Thiáº¿t láº­p ContextualBalloon cho text selection (tÃ¹y chá»n)
+    // Thiết lập ContextualBalloon cho text selection (tùy chọn)
     this.#setupContextualBalloon();
 
-    // Theo dÃµi thay Ä‘á»•i ná»™i dung Ä‘á»ƒ cáº­p nháº­t tráº¡ng thÃ¡i comment
+    // Theo dõi thay đổi nội dung để cập nhật trạng thái comment
     this.#setupChangeTracking();
   }
 
@@ -105,7 +105,7 @@ export class CkCommentPlugin extends Plugin {
         isEnabled: false,
       });
 
-      // Enable khi cÃ³ selection, khÃ´ng pháº£i chá»‰ khoáº£ng tráº¯ng, vÃ  allowCreating = true
+      // Enable khi có selection, không phải chỉ khoảng trắng, và allowCreating = true
       const selection = editor.model.document.selection;
       this.listenTo(selection, 'change', () => {
         // Disabled ngay khi allowCreating = false
@@ -117,30 +117,30 @@ export class CkCommentPlugin extends Plugin {
         const isCollapsed = selection.isCollapsed;
         const range = selection.getFirstRange();
 
-        // Kiá»ƒm tra xem selection cÃ³ content khÃ´ng pháº£i khoáº£ng tráº¯ng khÃ´ng
+        // Kiểm tra xem selection có content không phải khoảng trắng không
         let hasValidContent = false;
         if (range && !isCollapsed) {
           const text = this.#getTextFromRange(range);
           const trimmedText = text.trim();
           const maxTextLength = this.#config.maxTextLength ?? CkCommentPlugin.DEFAULT_MAX_TEXT_LENGTH;
-          // Kiá»ƒm tra: cÃ³ content, khÃ´ng pháº£i chá»‰ khoáº£ng tráº¯ng, vÃ  khÃ´ng vÆ°á»£t quÃ¡ max length
+          // Kiểm tra: có content, không phải chỉ khoảng trắng, và không vượt quá max length
           hasValidContent = trimmedText.length > 0 && trimmedText.length <= maxTextLength;
 
           if (trimmedText.length > maxTextLength) {
-            // @i18n-ignore â€” dev-only debug log, khÃ´ng hiá»ƒn thá»‹ cho ngÆ°á»i dÃ¹ng
-            this.#log(`Äá»™ dÃ i text vÆ°á»£t quÃ¡ giá»›i háº¡n: ${trimmedText.length} > ${maxTextLength}`);
+            // @i18n-ignore — dev-only debug log, không hiển thị cho người dùng
+            this.#log(`Độ dài text vượt quá giới hạn: ${trimmedText.length} > ${maxTextLength}`);
           }
         }
 
         view.isEnabled = hasValidContent;
       });
 
-      // Xá»­ lÃ½ khi click button
+      // Xử lý khi click button
       this.listenTo(view, 'execute', () => {
         this.#log('Toolbar button clicked');
         const selectionData = this.#getSelectionData();
         if (selectionData) {
-          // Set flag Ä‘á»ƒ prevent clearing pending khi selection change
+          // Set flag để prevent clearing pending khi selection change
           this.#isCreatingPending = true;
 
           this.#log('Calling onPendingComment callback');
@@ -153,7 +153,7 @@ export class CkCommentPlugin extends Plugin {
             status: 'normal',
           });
 
-          // Reset flag sau má»™t khoáº£ng ngáº¯n Ä‘á»ƒ cho phÃ©p clear náº¿u selection thá»±c sá»± thay Ä‘á»•i
+          // Reset flag sau một khoảng ngắn để cho phép clear nếu selection thực sự thay đổi
           setTimeout(() => {
             this.#isCreatingPending = false;
           }, 100);
@@ -179,7 +179,7 @@ export class CkCommentPlugin extends Plugin {
         const classes = ['ck-comment-marker'];
         const colors = self.#getColors();
 
-        // Kiá»ƒm tra xem cÃ³ pháº£i pending marker khÃ´ng
+        // Kiểm tra xem có phải pending marker không
         if (commentId === CkCommentPlugin.PENDING_MARKER_ID) {
           classes.push('ck-comment-pending');
           return {
@@ -238,7 +238,7 @@ export class CkCommentPlugin extends Plugin {
   #setupMarkerClickHandler() {
     const viewDocument = this.editor.editing.view.document;
 
-    // Láº¯ng nghe cáº£ click vÃ  mousedown trÃªn CKEditor view
+    // Lắng nghe cả click và mousedown trên CKEditor view
     viewDocument.on('mousedown', (evt: any, data: any) => {
       this.#log('Mousedown event triggered, data:', data);
       this.#handleMarkerClick(evt, data);
@@ -249,8 +249,8 @@ export class CkCommentPlugin extends Plugin {
       this.#handleMarkerClick(evt, data);
     });
 
-    // ThÃªm DOM event listener nhÆ° fallback Ä‘á»ƒ Ä‘áº£m báº£o báº¯t Ä‘Æ°á»£c click
-    // Sá»­ dá»¥ng editor's editable DOM element
+    // Thêm DOM event listener như fallback để đảm bảo bắt được click
+    // Sử dụng editor's editable DOM element
     const editableElement = this.editor.ui.getEditableElement();
     if (editableElement) {
       editableElement.addEventListener('click', (domEvent: Event) => {
@@ -313,7 +313,7 @@ export class CkCommentPlugin extends Plugin {
 
     this.#log('Target element:', element, 'hasClass:', typeof element?.hasClass);
 
-    // Duyá»‡t lÃªn cÃ¢y Ä‘á»ƒ tÃ¬m comment marker
+    // Duyệt lên cây để tìm comment marker
     while (element) {
       const hasMarkerClass = element.hasClass?.('ck-comment-marker');
       this.#log('Checking element, hasMarkerClass:', hasMarkerClass);
@@ -334,7 +334,7 @@ export class CkCommentPlugin extends Plugin {
       element = element.parent;
     }
 
-    // Click ngoÃ i markers - xÃ³a selection
+    // Click ngoài markers - xóa selection
     if (this.#selectedId) {
       this.#log('Click outside markers, clearing selection');
       this.#selectedId = null;
@@ -352,12 +352,12 @@ export class CkCommentPlugin extends Plugin {
 
     this.#log('#setupContextualBalloon initialized');
 
-    // Láº¯ng nghe selection changes
+    // Lắng nghe selection changes
     this.listenTo(selection, 'change:range', () => {
       this.#log('Selection change:range, isCollapsed:', selection.isCollapsed);
 
-      // XÃ³a pending náº¿u selection thay Ä‘á»•i sang text khÃ¡c
-      // NHÆ¯NG khÃ´ng xÃ³a náº¿u Ä‘ang trong quÃ¡ trÃ¬nh táº¡o pending
+      // Xóa pending nếu selection thay đổi sang text khác
+      // NHƯNG không xóa nếu đang trong quá trình tạo pending
       if (this.#pendingId && !this.#isCreatingPending) {
         this.#log('Selection changed, clearing pending');
         this.clearPendingSelection();
@@ -366,7 +366,7 @@ export class CkCommentPlugin extends Plugin {
       }
 
       if (!selection.isCollapsed) {
-        // Chá»‰ hiá»‡n balloon khi allowCreating = true (máº·c Ä‘á»‹nh)
+        // Chỉ hiện balloon khi allowCreating = true (mặc định)
         if (!(this.#config.allowCreating ?? true)) {
           this.#hideBalloon();
           return;
@@ -374,7 +374,7 @@ export class CkCommentPlugin extends Plugin {
 
         const range = selection.getFirstRange();
         if (range) {
-          // Chá»‰ hiá»‡n balloon khi selection cÃ³ content khÃ´ng pháº£i khoáº£ng tráº¯ng vÃ  khÃ´ng vÆ°á»£t quÃ¡ max length
+          // Chỉ hiện balloon khi selection có content không phải khoảng trắng và không vượt quá max length
           const text = this.#getTextFromRange(range);
           const trimmedText = text.trim();
           const maxTextLength = this.#config.maxTextLength ?? CkCommentPlugin.DEFAULT_MAX_TEXT_LENGTH;
@@ -389,7 +389,7 @@ export class CkCommentPlugin extends Plugin {
       }
     });
 
-    // áº¨n balloon khi focus thay Ä‘á»•i
+    // Ẩn balloon khi focus thay đổi
     this.listenTo(editor.ui, 'update', () => {
       if (selection.isCollapsed) {
         this.#hideBalloon();
@@ -401,10 +401,10 @@ export class CkCommentPlugin extends Plugin {
     this.#log('#showBalloon called, range:', range);
     const editor = this.editor;
 
-    // áº¨n balloon hiá»‡n táº¡i trÆ°á»›c
+    // Ẩn balloon hiện tại trước
     this.#hideBalloon();
 
-    // Táº¡o balloon button
+    // Tạo balloon button
     const buttonView = new ButtonView(editor.locale);
     const balloonI18n = this.#getI18n();
     buttonView.set({
@@ -414,13 +414,13 @@ export class CkCommentPlugin extends Plugin {
       withText: true,
     });
 
-    // Xá»­ lÃ½ khi click button
+    // Xử lý khi click button
     this.listenTo(buttonView, 'execute', () => {
       this.#log('Balloon button clicked');
       const selection = this.#getSelectionData();
       this.#log('Selection data:', selection);
       if (selection) {
-        // Set flag Ä‘á»ƒ prevent clearing pending khi selection change
+        // Set flag để prevent clearing pending khi selection change
         this.#isCreatingPending = true;
 
         this.#log('Calling onPendingComment callback');
@@ -433,7 +433,7 @@ export class CkCommentPlugin extends Plugin {
           status: 'normal',
         });
 
-        // Reset flag sau má»™t khoáº£ng ngáº¯n
+        // Reset flag sau một khoảng ngắn
         setTimeout(() => {
           this.#isCreatingPending = false;
         }, 100);
@@ -441,7 +441,7 @@ export class CkCommentPlugin extends Plugin {
       this.#hideBalloon();
     });
 
-    // ThÃªm vÃ o balloon
+    // Thêm vào balloon
     try {
       this.#balloon.add({
         view: buttonView,
@@ -475,12 +475,12 @@ export class CkCommentPlugin extends Plugin {
   #setupChangeTracking() {
     const editor = this.editor;
 
-    // Láº¯ng nghe thay Ä‘á»•i dá»¯ liá»‡u
+    // Lắng nghe thay đổi dữ liệu
     editor.model.document.on('change:data', () => {
       this.#updateCommentStatuses();
     });
 
-    // Láº¯ng nghe thay Ä‘á»•i marker
+    // Lắng nghe thay đổi marker
     editor.model.document.on('change:markers', () => {
       this.#updateCommentStatuses();
     });
@@ -496,7 +496,7 @@ export class CkCommentPlugin extends Plugin {
         const range = marker.getRange();
         const currentText = this.#getTextFromRange(range);
 
-        // Tá»± Ä‘á»™ng cáº­p nháº­t paths (CKEditor duy trÃ¬ chÃºng)
+        // Tự động cập nhật paths (CKEditor duy trì chúng)
         const newStartPath = Array.from(range.start.path);
         const newEndPath = Array.from(range.end.path);
 
@@ -513,7 +513,7 @@ export class CkCommentPlugin extends Plugin {
           comment.endPath = newEndPath;
           comment.currentText = currentText;
 
-          // Cáº­p nháº­t tráº¡ng thÃ¡i
+          // Cập nhật trạng thái
           if (currentText === comment.originalText) {
             comment.status = 'normal';
           } else if (currentText.length === 0) {
@@ -530,7 +530,7 @@ export class CkCommentPlugin extends Plugin {
           );
         }
       } else {
-        // KhÃ´ng tÃ¬m tháº¥y marker - bá»‹ há»ng
+        // Không tìm thấy marker - bị hỏng
         if (comment.status !== 'broken') {
           const oldStatus = comment.status;
           hasChanges = true;
@@ -551,14 +551,14 @@ export class CkCommentPlugin extends Plugin {
   // ========================================================================
 
   /**
-   * Thiáº¿t láº­p config vá»›i callbacks
+   * Thiết lập config với callbacks
    */
   setConfig(config: CkCommentConfig) {
     this.#config = config;
   }
 
   /**
-   * ThÃªm comment vÃ  táº¡o marker
+   * Thêm comment và tạo marker
    */
   addComment(comment: CkComment): boolean {
     if (this.#comments.has(comment.id)) {
@@ -566,17 +566,17 @@ export class CkCommentPlugin extends Plugin {
       return false;
     }
 
-    // Táº¡o marker
+    // Tạo marker
     const success = this.#createMarker(comment);
 
-    // LÆ°u comment (vá»›i tráº¡ng thÃ¡i broken náº¿u marker tháº¥t báº¡i)
+    // Lưu comment (với trạng thái broken nếu marker thất bại)
     const storedComment = success ? { ...comment } : { ...comment, status: 'broken' as const };
     this.#comments.set(comment.id, storedComment);
 
     this.#refreshView();
     this.#fireOnChange();
 
-    // Chá»‰ fire onAddComment callback KHI thÃªm thÃ nh cÃ´ng (khÃ´ng pháº£i broken)
+    // Chỉ fire onAddComment callback KHI thêm thành công (không phải broken)
     if (success) {
       this.#config.onAddComment?.(storedComment);
     }
@@ -585,7 +585,7 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * XÃ³a comment theo id
+   * Xóa comment theo id
    */
   removeComment(id: string | number): boolean {
     const comment = this.#comments.get(id);
@@ -593,15 +593,15 @@ export class CkCommentPlugin extends Plugin {
       return false;
     }
 
-    // XÃ³a marker
+    // Xóa marker
     this.editor.model.change(writer => {
       writer.removeMarker(`comment:${id}`);
     });
 
-    // XÃ³a khá»i map
+    // Xóa khỏi map
     this.#comments.delete(id);
 
-    // XÃ³a selection náº¿u bá»‹ xÃ³a
+    // Xóa selection nếu bị xóa
     if (this.#selectedId === id) {
       this.#selectedId = null;
     }
@@ -613,7 +613,7 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * Chá»n comment theo id - chá»‰ thÃªm class highlight, khÃ´ng bÃ´i Ä‘en text
+   * Chọn comment theo id - chỉ thêm class highlight, không bôi đen text
    */
   selectComment(id: string | number, scrollIntoView: boolean = true): void {
     this.#log('selectComment called with id:', id, 'hasComment:', this.#comments.has(id));
@@ -634,12 +634,12 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * Thiáº¿t láº­p táº¥t cáº£ comments (khÃ´i phá»¥c tá»« dá»¯ liá»‡u)
+   * Thiết lập tất cả comments (khôi phục từ dữ liệu)
    */
   setComments(comments: CkComment[]): void {
     this.#log('setComments called with', comments.length, 'comments');
 
-    // XÃ³a comments hiá»‡n táº¡i
+    // Xóa comments hiện tại
     this.#log('Clearing existing comments, count:', this.#comments.size);
     this.#comments.forEach((_, id) => {
       const markerName = `comment:${id}`;
@@ -655,10 +655,10 @@ export class CkCommentPlugin extends Plugin {
     this.#comments.clear();
     this.#selectedId = null;
 
-    // ThÃªm comments má»›i - status sáº½ Ä‘Æ°á»£c tÃ­nh toÃ¡n Ä‘á»™ng tá»« editor
+    // Thêm comments mới - status sẽ được tính toán động từ editor
     comments.forEach(comment => {
       const success = this.#createMarker(comment);
-      // LÆ°u comment vá»›i status máº·c Ä‘á»‹nh, sáº½ Ä‘Æ°á»£c cáº­p nháº­t bá»Ÿi #updateCommentStatuses
+      // Lưu comment với status mặc định, sẽ được cập nhật bởi #updateCommentStatuses
       const storedComment = {
         ...comment,
         status: success ? ('normal' as const) : ('broken' as const),
@@ -672,17 +672,17 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * Láº¥y táº¥t cáº£ comments
+   * Lấy tất cả comments
    */
   get comments(): CkComment[] {
     return Array.from(this.#comments.values());
   }
 
   /**
-   * Thiáº¿t láº­p pending highlight cho selection (khi user Ä‘ang nháº­p ná»™i dung comment)
+   * Thiết lập pending highlight cho selection (khi user đang nhập nội dung comment)
    */
   setPendingSelection(startPath: number[], endPath: number[]): boolean {
-    // XÃ³a pending marker hiá»‡n táº¡i MÃ€ KHÃ”NG fire callback
+    // Xóa pending marker hiện tại MÀ KHÔNG fire callback
     this.#clearPendingMarker();
 
     const model = this.editor.model;
@@ -714,7 +714,7 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * XÃ³a pending marker mÃ  khÃ´ng fire callback (dÃ¹ng ná»™i bá»™)
+   * Xóa pending marker mà không fire callback (dùng nội bộ)
    */
   #clearPendingMarker(): void {
     if (!this.#pendingId) return;
@@ -728,20 +728,20 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * XÃ³a pending highlight vÃ  fire onCancelPending callback
+   * Xóa pending highlight và fire onCancelPending callback
    */
   clearPendingSelection(): void {
     if (!this.#pendingId) return;
 
     this.#clearPendingMarker();
 
-    // Fire callback Ä‘á»ƒ thÃ´ng bÃ¡o UI
+    // Fire callback để thông báo UI
     this.#config.onCancelPending?.();
   }
 
   /**
-   * Láº¥y dá»¯ liá»‡u selection hiá»‡n táº¡i Ä‘á»ƒ táº¡o comment
-   * Trim khoáº£ng tráº¯ng Ä‘á»ƒ trÃ¡nh sai vá»‹ trÃ­ khi lÆ°u
+   * Lấy dữ liệu selection hiện tại để tạo comment
+   * Trim khoảng trắng để tránh sai vị trí khi lưu
    */
   #getSelectionData(): CkCommentSelection | null {
     const selection = this.editor.model.document.selection;
@@ -751,8 +751,8 @@ export class CkCommentPlugin extends Plugin {
       return null;
     }
 
-    // Validate: start/end khÃ´ng Ä‘Æ°á»£c náº±m bÃªn trong isObject element (path.length > 2)
-    // TrÆ°á»ng há»£p xáº£y ra khi user drag-select qua bound variable widget
+    // Validate: start/end không được nằm bên trong isObject element (path.length > 2)
+    // Trường hợp xảy ra khi user drag-select qua bound variable widget
     if (range.start.path.length > 2 || range.end.path.length > 2) {
       this.#warn('Selection contains invalid path (inside isObject element) - aborting comment creation', {
         startPath: Array.from(range.start.path),
@@ -768,7 +768,7 @@ export class CkCommentPlugin extends Plugin {
       return null;
     }
 
-    // Kiá»ƒm tra Ä‘á»™ dÃ i text tá»‘i Ä‘a
+    // Kiểm tra độ dài text tối đa
     const maxTextLength = this.#config.maxTextLength ?? CkCommentPlugin.DEFAULT_MAX_TEXT_LENGTH;
     if (trimmedText.length > maxTextLength) {
       this.#warn(`Text too long: ${trimmedText.length} > ${maxTextLength}`);
@@ -782,17 +782,17 @@ export class CkCommentPlugin extends Plugin {
       return null;
     }
 
-    // TÃ­nh toÃ¡n sá»‘ kÃ½ tá»± cáº§n trim á»Ÿ Ä‘áº§u vÃ  cuá»‘i
+    // Tính toán số ký tự cần trim ở đầu và cuối
     const leadingWhitespace = text.length - text.trimStart().length;
     const trailingWhitespace = text.length - text.trimEnd().length;
 
-    // Äiá»u chá»‰nh range Ä‘á»ƒ loáº¡i bá» khoáº£ng tráº¯ng
+    // Điều chỉnh range để loại bỏ khoảng trắng
     let adjustedRange = range;
     if (leadingWhitespace > 0 || trailingWhitespace > 0) {
       adjustedRange = this.#adjustRangeForTrim(range, leadingWhitespace, trailingWhitespace);
     }
 
-    // Validate láº¡i sau khi trim
+    // Validate lại sau khi trim
     if (adjustedRange.start.path.length > 2 || adjustedRange.end.path.length > 2) {
       this.#warn('Adjusted range has invalid path depth - aborting');
       return null;
@@ -808,23 +808,23 @@ export class CkCommentPlugin extends Plugin {
 
 
   /**
-   * Äiá»u chá»‰nh range Ä‘á»ƒ loáº¡i bá» khoáº£ng tráº¯ng Ä‘áº§u/cuá»‘i.
-   * Äáº£m báº£o cÃ¡c vá»‹ trÃ­ sau khi dá»‹ch chuyá»ƒn khÃ´ng rÆ¡i vÃ o bÃªn trong isObject element
-   * (vÃ­ dá»¥: variable widget Ä‘Ã£ bound) Ä‘á»ƒ trÃ¡nh lá»—i document-selection-wrong-position.
+   * Điều chỉnh range để loại bỏ khoảng trắng đầu/cuối.
+   * Đảm bảo các vị trí sau khi dịch chuyển không rơi vào bên trong isObject element
+   * (ví dụ: variable widget đã bound) để tránh lỗi document-selection-wrong-position.
    */
   #adjustRangeForTrim(range: ModelRange, leadingTrim: number, trailingTrim: number): ModelRange {
     const model = this.editor.model;
 
-    /** Kiá»ƒm tra pos cÃ³ há»£p lá»‡ (khÃ´ng náº±m bÃªn trong isObject element) */
+    /** Kiểm tra pos có hợp lệ (không nằm bên trong isObject element) */
     const isValidPosition = (pos: any): boolean => {
       try {
-        // path.length > 2 nghÄ©a lÃ  position náº±m sÃ¢u hÆ¡n paragraph â†’ bÃªn trong element
+        // path.length > 2 nghĩa là position nằm sâu hơn paragraph → bên trong element
         if (pos.path && pos.path.length > 2) return false;
-        // Kiá»ƒm tra node táº¡i vá»‹ trÃ­ Ä‘Ã³
+        // Kiểm tra node tại vị trí đó
         const nodeAfter = pos.nodeAfter;
         const nodeBefore = pos.nodeBefore;
-        // KhÃ´ng cho phÃ©p position báº¯t Ä‘áº§u/káº¿t thÃºc bÃªn trong isObject
-        if (nodeAfter && model.schema.isObject(nodeAfter)) return true; // trÆ°á»›c object = ok
+        // Không cho phép position bắt đầu/kết thúc bên trong isObject
+        if (nodeAfter && model.schema.isObject(nodeAfter)) return true; // trước object = ok
         if (nodeBefore && model.schema.isObject(nodeBefore)) return true; // sau object = ok
         return model.schema.checkChild(pos, '$text') || true;
       } catch {
@@ -836,7 +836,7 @@ export class CkCommentPlugin extends Plugin {
       let startPos = range.start;
       let endPos = range.end;
 
-      // Dá»‹ch start position forward Ä‘á»ƒ bá» khoáº£ng tráº¯ng Ä‘áº§u
+      // Dịch start position forward để bỏ khoảng trắng đầu
       if (leadingTrim > 0) {
         for (let i = 0; i < leadingTrim && startPos; i++) {
           const nextPos = startPos.getShiftedBy(1);
@@ -848,7 +848,7 @@ export class CkCommentPlugin extends Plugin {
         }
       }
 
-      // Dá»‹ch end position backward Ä‘á»ƒ bá» khoáº£ng tráº¯ng cuá»‘i
+      // Dịch end position backward để bỏ khoảng trắng cuối
       if (trailingTrim > 0) {
         for (let i = 0; i < trailingTrim && endPos; i++) {
           const prevPos = endPos.getShiftedBy(-1);
@@ -883,7 +883,7 @@ export class CkCommentPlugin extends Plugin {
         const endPos = writer.createPositionFromPath(root, comment.endPath);
         const range = writer.createRange(startPos, endPos);
 
-        // Validate: kiá»ƒm tra text táº¡i range cÃ³ khá»›p vá»›i originalText khÃ´ng
+        // Validate: kiểm tra text tại range có khớp với originalText không
         const rangeText = this.#getTextFromRange(range);
         this.#log('Range text:', rangeText, 'range:', range);
 
@@ -895,13 +895,13 @@ export class CkCommentPlugin extends Plugin {
             `\n  Trying to find text near original path...`
           );
 
-          // Thá»­ tÃ¬m text gáº§n path gá»‘c
+          // Thử tìm text gần path gốc
           const searchRange = this.#config.searchRange ?? CkCommentPlugin.DEFAULT_SEARCH_RANGE;
           const foundRange = this.#findTextNearPath(comment.originalText, comment.startPath, comment.endPath, searchRange);
 
           if (foundRange) {
             this.#log('Found text at new position, updating paths');
-            // Cáº­p nháº­t paths cho comment
+            // Cập nhật paths cho comment
             comment.startPath = Array.from(foundRange.start.path);
             comment.endPath = Array.from(foundRange.end.path);
 
@@ -918,7 +918,7 @@ export class CkCommentPlugin extends Plugin {
 
         writer.addMarker(`comment:${comment.id}`, {
           range,
-          usingOperation: true, // CKEditor tá»± Ä‘á»™ng cáº­p nháº­t vá»‹ trÃ­
+          usingOperation: true, // CKEditor tự động cập nhật vị trí
           affectsData: false,
         });
       });
@@ -931,7 +931,7 @@ export class CkCommentPlugin extends Plugin {
   }
 
   /**
-   * TÃ¬m text trong document trong pháº¡m vi Â±searchRange nodes tá»« path gá»‘c
+   * Tìm text trong document trong phạm vi ±searchRange nodes từ path gốc
    */
   #findTextNearPath(searchText: string, startPath: number[], endPath: number[], searchRange: number): ModelRange | null {
     if (!searchText) return null;
@@ -941,9 +941,9 @@ export class CkCommentPlugin extends Plugin {
     if (!root) return null;
 
     // TODO: Implement text search logic here
-    // 1. Láº¥y vá»‹ trÃ­ start vÃ  end tá»« cÃ¡c path gá»‘c
-    // 2. TÃ¬m kiáº¿m trong pháº¡m vi Â±searchRange nodes tá»« cÃ¡c vá»‹ trÃ­ Ä‘Ã³
-    // 3. Tráº£ vá» range náº¿u tÃ¬m tháº¥y text, null náº¿u khÃ´ng tÃ¬m tháº¥y
+    // 1. Lấy vị trí start và end từ các path gốc
+    // 2. Tìm kiếm trong phạm vi ±searchRange nodes từ các vị trí đó
+    // 3. Trả về range nếu tìm thấy text, null nếu không tìm thấy
 
     return null;
   }
@@ -1020,8 +1020,8 @@ export class CkCommentPlugin extends Plugin {
   }
 
   #refreshView(): void {
-    // Force view refresh Ä‘á»ƒ cáº­p nháº­t marker classes
-    // Reconvert táº¥t cáº£ comment markers Ä‘á»ƒ cáº­p nháº­t classes cá»§a chÃºng
+    // Force view refresh để cập nhật marker classes
+    // Reconvert tất cả comment markers để cập nhật classes của chúng
     const markers = this.editor.model.markers;
     for (const marker of markers) {
       if (marker.name.startsWith('comment:')) {
@@ -1034,4 +1034,3 @@ export class CkCommentPlugin extends Plugin {
     this.#config.onChange?.(this.comments);
   }
 }
-

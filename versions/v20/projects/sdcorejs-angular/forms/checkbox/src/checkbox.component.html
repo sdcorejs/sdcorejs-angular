@@ -1,6 +1,20 @@
-<mat-checkbox [formControl]="formControl" [attr.data-autoId]="autoId()" [color]="color">{{ label }}</mat-checkbox>
-@if (formControl.errors?.['inlineError'] && formControl.touched) {
-  <mat-error>
-    {{ inlineError }}
-  </mat-error>
+@if (viewed()) {
+  @if (label()) {
+    <div class="T14R text-black400">{{ label() }}</div>
+  }
+  <div class="T14M">{{ (model() ? 'core.form.checkbox.checked' : 'core.form.checkbox.unchecked') | translate }}</div>
+} @else {
+  <mat-checkbox
+    [formControl]="formControl"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()">
+    {{ label() }}
+  </mat-checkbox>
+  @if (formControl.errors?.['inlineError'] && formControl.touched) {
+    <mat-error>
+      {{ inlineError() }}
+    </mat-error>
+  }
 }

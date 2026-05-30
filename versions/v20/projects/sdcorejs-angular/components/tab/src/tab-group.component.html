@@ -1,0 +1,39 @@
+<mat-tab-group
+  class="sd-tab-group"
+  [(selectedIndex)]="selectedIndex"
+  [headerPosition]="headerPosition()"
+  [mat-align-tabs]="alignTabs()"
+  [mat-stretch-tabs]="stretchTabs()"
+  [animationDuration]="animationDuration()"
+  [disableRipple]="disableRipple()"
+  [dynamicHeight]="dynamicHeight()">
+  @for (tab of tabs(); track tab; let i = $index) {
+    <mat-tab [disabled]="tab.disabled()">
+      <ng-template mat-tab-label>
+        <span class="sd-tab__label">
+          @if (tab.icon(); as ic) {
+            <mat-icon class="sd-tab__icon">{{ ic }}</mat-icon>
+          }
+          <span class="sd-tab__text">{{ tab.label() }}</span>
+          @let _badge = tab.badge();
+          @if (_badge !== null && _badge !== undefined) {
+            <span class="sd-tab__badge">{{ _badge }}</span>
+          }
+          @if (tab.closable()) {
+            <mat-icon
+              class="sd-tab__close"
+              role="button"
+              aria-label="Close tab"
+              (click)="onClose(tab, i, $event)">
+              close
+            </mat-icon>
+          }
+        </span>
+      </ng-template>
+
+      <ng-template matTabContent>
+        <ng-container [ngTemplateOutlet]="tab.bodyTpl()"></ng-container>
+      </ng-template>
+    </mat-tab>
+  }
+</mat-tab-group>

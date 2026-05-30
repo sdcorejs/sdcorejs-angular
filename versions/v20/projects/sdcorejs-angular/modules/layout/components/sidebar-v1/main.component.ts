@@ -1,9 +1,9 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 
-// NOTE: Import ná»™i bá»™ trong module layout
+// NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../services';
 import { SidebarComponent } from './components/sidebar/sidebar.component';
@@ -32,13 +32,13 @@ export class SidebarV1Component {
   // ==========================================
   // STATE SIGNALS
   // ==========================================
-  isMobileOrTablet = signal<boolean>(SdUtilities.isMobile());
+  isMobileOrTablet = signal<boolean>(BrowserUtilities.isMobile());
 
-  // Tráº¡ng thÃ¡i khÃ³a menu (luÃ´n má»Ÿ rá»™ng hay khÃ´ng)
+  // Trạng thái khóa menu (luôn mở rộng hay không)
   isMenuLock = signal<boolean>(this.#layoutStorageService.menuLockStatus?.get() ?? true);
 
-  // Tráº¡ng thÃ¡i hiá»ƒn thá»‹ (má»Ÿ/Ä‘Ã³ng) cá»§a Sidenav
-  isShowSidebar = signal<boolean>(SdUtilities.isMobile() ? false : (this.#layoutStorageService.menuLockStatus?.get() ?? true));
+  // Trạng thái hiển thị (mở/đóng) của Sidenav
+  isShowSidebar = signal<boolean>(BrowserUtilities.isMobile() ? false : (this.#layoutStorageService.menuLockStatus?.get() ?? true));
 
   onhover = signal<boolean>(false);
 
@@ -48,7 +48,7 @@ export class SidebarV1Component {
   #timerMouseInMenu: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    // EFFECT: Tá»± Ä‘á»™ng Ä‘á»“ng bá»™ isShowSidebar vÃ o storage service má»—i khi nÃ³ thay Ä‘á»•i
+    // EFFECT: Tự động đồng bộ isShowSidebar vào storage service mỗi khi nó thay đổi
     effect(() => {
       const isShow = this.isShowSidebar();
       untracked(() => {
@@ -145,4 +145,3 @@ export class SidebarV1Component {
     }
   };
 }
-

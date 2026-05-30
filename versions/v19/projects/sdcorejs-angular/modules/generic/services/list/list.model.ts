@@ -1,5 +1,5 @@
 ﻿import { SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
-import { SdFilter, SdOrder } from '@sdcorejs/angular/utilities';
+import { Filter, Order } from '@sdcorejs/utils/models';
 import { SdSchemaProperty, SdRegisterArgs } from '../../models';
 
 // Vá» nguyÃªn táº¯c thÃ¬ tá»« Schema -> GenericListOption (máº·c Ä‘á»‹nh)
@@ -20,8 +20,8 @@ export interface GenericListOption<T = any> {
   filter?: SdTableOption<TList<T>>['filter'];
   sort?: SdTableOption<TList<T>>['sort'];
   fields?: string[];
-  filters?: SdFilter<TList<T>>[];
-  orders?: SdOrder<TList<T>>[];
+  filters?: Filter<TList<T>>[];
+  orders?: Order<TList<T>>[];
 }
 
 // sdList sáº½ chá»©a nhá»¯ng dá»¯ liá»‡u do Generic Sinh ra

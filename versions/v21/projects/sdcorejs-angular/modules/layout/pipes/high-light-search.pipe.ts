@@ -1,5 +1,5 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Pipe, PipeTransform } from '@angular/core';
+import { StringUtilities } from '@sdcorejs/utils/fns';
 
 @Pipe({
   name: 'highLightSearch',
@@ -18,8 +18,8 @@ export class HighlightSearchPipe implements PipeTransform {
       return value;
     }
     value = value?.trim() || '';
-    const regex = new RegExp(SdUtilities.changeAliasLowerCase(keyword), 'gi'); //'gi' for case insensitive and can use 'g' if you want the search to be case sensitive.
-    const aliasLowerCaseStr = SdUtilities.changeAliasLowerCase(value);
+    const regex = new RegExp(StringUtilities.changeAliasLowerCase(keyword), 'gi'); //'gi' for case insensitive and can use 'g' if you want the search to be case sensitive.
+    const aliasLowerCaseStr = StringUtilities.changeAliasLowerCase(value);
     const strs: string[] = [];
     let previousOffset = 0;
     aliasLowerCaseStr.replace(regex, (_, offset) => {
@@ -41,4 +41,3 @@ export class HighlightSearchPipe implements PipeTransform {
     return str;
   };
 }
-

@@ -1,7 +1,7 @@
 ﻿import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
-import { SdColor } from '@sdcorejs/angular/utilities/models';
+import { Color } from '@sdcorejs/utils/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
 @Injectable({
@@ -18,8 +18,8 @@ export class SdConfirmService {
       title?: string;
       yesTitle?: string;
       noTitle?: string;
-      yesButtonColor?: SdColor;
-      noButtonColor?: SdColor;
+      yesButtonColor?: Color;
+      noButtonColor?: Color;
       width?: string;
       disableBackdropClose?: boolean;
     } = {}
@@ -57,8 +57,8 @@ export class SdConfirmService {
       noTitle?: string;
       required?: boolean;
       maxlength?: number;
-      yesButtonColor?: SdColor;
-      noButtonColor?: SdColor;
+      yesButtonColor?: Color;
+      noButtonColor?: Color;
       defaultValue?: string;
       disableBackdropClose?: boolean;
     }
@@ -100,8 +100,8 @@ export class SdConfirmService {
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
-      yesButtonColor?: SdColor;
-      noButtonColor?: SdColor;
+      yesButtonColor?: Color;
+      noButtonColor?: Color;
       defaultValue?: string | number;
       items: any[];
       valueField: string;
@@ -151,8 +151,8 @@ export class SdConfirmService {
       yesTitle?: string;
       noTitle?: string;
       required?: boolean;
-      yesButtonColor?: SdColor;
-      noButtonColor?: SdColor;
+      yesButtonColor?: Color;
+      noButtonColor?: Color;
       defaultValue?: string | Date;
       placeholder?: string;
       disableBackdropClose?: boolean;

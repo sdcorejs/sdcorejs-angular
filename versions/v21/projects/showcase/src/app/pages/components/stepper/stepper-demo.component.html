@@ -1,0 +1,240 @@
+<demo-page
+  title="Stepper"
+  description="Component dẫn dắt người dùng qua chuỗi bước tuần tự. Hỗ trợ horizontal/vertical, linear gate qua FormGroup, optional step, error state, custom labelPosition, color palette Core.">
+
+  <demo-section heading="Cơ bản: horizontal, 3 bước">
+    <div class="full">
+      <sd-stepper [(selectedIndex)]="basicIndex">
+        <sd-step label="Chọn dịch vụ" icon="storefront">
+          <div class="step-body">
+            <p>Khách hàng chọn dịch vụ muốn đăng ký.</p>
+            <button mat-flat-button color="primary" (click)="basicIndex.set(1)">Tiếp tục</button>
+          </div>
+        </sd-step>
+        <sd-step label="Cung cấp thông tin" icon="person">
+          <div class="step-body">
+            <p>Nhập thông tin liên hệ.</p>
+            <div class="row">
+              <button mat-stroked-button (click)="basicIndex.set(0)">Quay lại</button>
+              <button mat-flat-button color="primary" (click)="basicIndex.set(2)">Tiếp tục</button>
+            </div>
+          </div>
+        </sd-step>
+        <sd-step label="Xác nhận" icon="check_circle">
+          <div class="step-body">
+            <p>Kiểm tra thông tin trước khi xác nhận.</p>
+            <button mat-stroked-button (click)="basicIndex.set(0)">Bắt đầu lại</button>
+          </div>
+        </sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Hướng dọc (orientation=vertical)">
+    <div class="full">
+      <sd-stepper orientation="vertical" [(selectedIndex)]="verticalIndex">
+        <sd-step label="Tạo tài khoản" icon="account_circle">
+          <p>Form tạo tài khoản đặt ở đây.</p>
+        </sd-step>
+        <sd-step label="Liên kết ngân hàng" icon="account_balance">
+          <p>Form liên kết tài khoản ngân hàng.</p>
+        </sd-step>
+        <sd-step label="Hoàn tất" icon="done_all">
+          <p>Setup xong, bắt đầu sử dụng.</p>
+        </sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Linear wizard + FormGroup gating"
+                note="Linear=true: chỉ qua được step sau khi step trước hợp lệ. Mỗi sd-step bind stepControl tới 1 FormGroup.">
+    <div class="full">
+      <sd-stepper #linear linear="true" color="primary">
+        <sd-step label="Tài khoản" icon="badge" [stepControl]="accountForm">
+          <form [formGroup]="accountForm" class="step-form">
+            <label>Tên đăng nhập</label>
+            <input formControlName="username" placeholder="ít nhất 3 ký tự" />
+            <label>Email</label>
+            <input formControlName="email" placeholder="user@onemount.com" />
+            <div class="row">
+              <button mat-flat-button color="primary" (click)="linear.next()" [disabled]="accountForm.invalid">
+                Tiếp tục
+              </button>
+            </div>
+          </form>
+        </sd-step>
+
+        <sd-step label="Hồ sơ" icon="contact_page" [stepControl]="profileForm">
+          <form [formGroup]="profileForm" class="step-form">
+            <label>Họ và tên</label>
+            <input formControlName="fullName" />
+            <label>Số điện thoại</label>
+            <input formControlName="phone" placeholder="09xx xxx xxx" />
+            <div class="row">
+              <button mat-stroked-button (click)="linear.previous()">Quay lại</button>
+              <button mat-flat-button color="primary" (click)="linear.next()" [disabled]="profileForm.invalid">
+                Tiếp tục
+              </button>
+            </div>
+          </form>
+        </sd-step>
+
+        <sd-step label="Xác nhận" icon="task_alt" [stepControl]="confirmForm">
+          <form [formGroup]="confirmForm" class="step-form">
+            <label>
+              <input type="checkbox" formControlName="agree" />
+              Tôi đồng ý với điều khoản dịch vụ
+            </label>
+            <div class="row">
+              <button mat-stroked-button (click)="linear.previous()">Quay lại</button>
+              <button mat-flat-button color="primary" (click)="submitWizard()" [disabled]="confirmForm.invalid">
+                Hoàn tất
+              </button>
+              <button mat-stroked-button (click)="resetWizard()">Bắt đầu lại</button>
+            </div>
+          </form>
+        </sd-step>
+
+        <sd-step label="Kết quả" icon="celebration">
+          <div class="step-body">
+            @if (submittedData()) {
+              <p>Đã gửi dữ liệu:</p>
+              <pre class="output">{{ submittedData() | json }}</pre>
+              <button mat-stroked-button (click)="resetWizard()">Bắt đầu lại</button>
+            } @else {
+              <p class="hint">Bấm Hoàn tất ở bước Xác nhận để xem dữ liệu tổng hợp.</p>
+            }
+          </div>
+        </sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Optional step (cho phép bỏ qua)"
+                note="Step 2 đánh dấu optional — user có thể qua step 3 mà không cần điền.">
+    <div class="full">
+      <sd-stepper [(selectedIndex)]="optionalIndex">
+        <sd-step label="Cơ bản" icon="info">
+          <div class="step-body">
+            <p>Thông tin bắt buộc.</p>
+            <button mat-flat-button color="primary" (click)="optionalIndex.set(1)">Tiếp tục</button>
+          </div>
+        </sd-step>
+        <sd-step label="Khuyến mãi" icon="local_offer" [optional]="true">
+          <div class="step-body">
+            <p>Mã giới thiệu (tùy chọn — có thể bỏ qua).</p>
+            <div class="row">
+              <button mat-stroked-button (click)="optionalIndex.set(0)">Quay lại</button>
+              <button mat-stroked-button (click)="optionalIndex.set(2)">Bỏ qua</button>
+              <button mat-flat-button color="primary" (click)="optionalIndex.set(2)">Áp dụng</button>
+            </div>
+          </div>
+        </sd-step>
+        <sd-step label="Hoàn tất" icon="done">
+          <p>Xong.</p>
+        </sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Error state"
+                note="Step có thể override state='error' để hiện icon X đỏ + errorMessage.">
+    <div class="row" style="margin-bottom: 12px;">
+      <button mat-stroked-button color="warn" (click)="toggleError()">
+        {{ errorState() === 'error' ? 'Bỏ lỗi step 2' : 'Đặt lỗi step 2' }}
+      </button>
+    </div>
+    <div class="full">
+      <sd-stepper [(selectedIndex)]="errorIndex" color="error">
+        <sd-step label="Step OK" icon="check">
+          <p>OK.</p>
+        </sd-step>
+        <sd-step label="Validate fail" icon="warning" [state]="errorState()" errorMessage="Mã đơn không hợp lệ">
+          <div class="step-body">
+            <p>Mã đơn không khớp với hệ thống. Vui lòng kiểm tra lại.</p>
+            <button mat-stroked-button (click)="errorIndex.set(0)">Quay lại</button>
+          </div>
+        </sd-step>
+        <sd-step label="Step 3" icon="done">
+          <p>Step cuối.</p>
+        </sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Vị trí nhãn (labelPosition)">
+    <div class="row" style="margin-bottom: 12px;">
+      <button mat-stroked-button (click)="labelPos.set('end')">end</button>
+      <button mat-stroked-button (click)="labelPos.set('bottom')">bottom</button>
+      <span class="hint">Đang chọn: <code>{{ labelPos() }}</code></span>
+    </div>
+    <div class="full">
+      <sd-stepper [labelPosition]="labelPos()">
+        <sd-step label="Đăng ký"><p>Bước 1.</p></sd-step>
+        <sd-step label="Xác minh"><p>Bước 2.</p></sd-step>
+        <sd-step label="Thanh toán"><p>Bước 3.</p></sd-step>
+        <sd-step label="Hoàn tất"><p>Xong.</p></sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Bảng màu (color)"
+                note="primary / success / warning / error — driving indicator + connector màu.">
+    <div class="color-stack">
+      <sd-stepper color="primary">
+        <sd-step label="primary"><p>...</p></sd-step>
+        <sd-step label="primary"><p>...</p></sd-step>
+        <sd-step label="primary"><p>...</p></sd-step>
+      </sd-stepper>
+      <sd-stepper color="success">
+        <sd-step label="success"><p>...</p></sd-step>
+        <sd-step label="success"><p>...</p></sd-step>
+        <sd-step label="success"><p>...</p></sd-step>
+      </sd-stepper>
+      <sd-stepper color="warning">
+        <sd-step label="warning"><p>...</p></sd-step>
+        <sd-step label="warning"><p>...</p></sd-step>
+        <sd-step label="warning"><p>...</p></sd-step>
+      </sd-stepper>
+      <sd-stepper color="error">
+        <sd-step label="error"><p>...</p></sd-step>
+        <sd-step label="error"><p>...</p></sd-step>
+        <sd-step label="error"><p>...</p></sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Điều khiển từ bên ngoài (next / previous / goTo / reset)">
+    <div class="row" style="margin-bottom: 12px;">
+      <button mat-stroked-button (click)="externalPrev()">Prev</button>
+      <button mat-stroked-button (click)="externalNext()">Next</button>
+      <button mat-stroked-button (click)="externalGoLast()">Đến cuối</button>
+      <button mat-stroked-button color="warn" (click)="externalReset()">Reset</button>
+    </div>
+    <div class="full">
+      <sd-stepper #external [(selectedIndex)]="externalIndex">
+        <sd-step label="Step A"><p>Step A.</p></sd-step>
+        <sd-step label="Step B"><p>Step B.</p></sd-step>
+        <sd-step label="Step C"><p>Step C.</p></sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+  <demo-section heading="Editable = false (đã đi qua, không quay lại được)"
+                note="Step 1 đặt editable=false. Sau khi qua step 2, click vào step 1 sẽ không trở lại.">
+    <div class="full">
+      <sd-stepper [(selectedIndex)]="nonEditableIndex">
+        <sd-step label="Bước 1 (locked sau khi qua)" icon="lock" [editable]="false">
+          <div class="step-body">
+            <p>Sau khi bấm Tiếp tục, bước này sẽ không click lại được.</p>
+            <button mat-flat-button color="primary" (click)="nonEditableIndex.set(1)">Tiếp tục</button>
+          </div>
+        </sd-step>
+        <sd-step label="Bước 2">
+          <p>Đã ở bước 2. Thử click vào bước 1 trên header — sẽ không quay lại được.</p>
+        </sd-step>
+      </sd-stepper>
+    </div>
+  </demo-section>
+
+</demo-page>

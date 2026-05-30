@@ -1,0 +1,156 @@
+<!--
+  Chip popover — operator + value editor for the popover-mode chip.
+  Visual layout mirrors the previous inline `<mat-menu #chipPopover>` in query-bar.
+  Body branches on operator + field.type — 8 paths preserved exactly.
+-->
+<mat-menu #menu="matMenu" class="c-chip-popover" xPosition="after" yPosition="below" (closed)="onMenuClosed()">
+  <ng-template matMenuContent>
+    @let _field = field();
+    @let _op = editingOperator();
+    @let _val = editingValue();
+    @let _options = editingOptions();
+    @let _loading = editingOptionsLoading();
+    @let _switchMenu = switchPickerMenu();
+
+    @if (_field) {
+      <div class="c-pop-header" (click)="$event.stopPropagation()">
+        <mat-icon fontSet="material-icons-outlined">{{ iconFor(_field) }}</mat-icon>
+        <!-- why: nested mat-menu trigger to swap the chip's field — parent provides
+             the field-picker MatMenu via [switchPickerMenu]. -->
+        @if (_switchMenu) {
+          <button
+            type="button"
+            class="c-pop-header-field"
+            [matMenuTriggerFor]="_switchMenu"
+            matTooltip="Đổi field">
+            <span>{{ _field.label }}</span>
+            <mat-icon fontSet="material-icons-outlined">unfold_more</mat-icon>
+          </button>
+        } @else {
+          <span class="c-pop-header-field">{{ _field.label }}</span>
+        }
+        <!-- Operator selector (right-aligned). Disabled when field has ≤1 operator. -->
+        <sd-operator
+          class="c-pop-header-operator"
+          [autoId]="chipAutoId('operator')"
+          [operators]="allowedOperators()"
+          [model]="_op"
+          [disabled]="!showOperatorSelector()"
+          (modelChange)="onEditingOperatorChange($any($event))" />
+      </div>
+
+      <div class="c-pop-body" (click)="$event.stopPropagation()">
+        @if (!isNoDataOperator(_op)) {
+          @if (_op === 'BETWEEN') {
+            @if (_field.type === 'date') {
+              <div class="c-pop-between">
+                <sd-date size="sm" hideInlineError
+                  [autoId]="chipAutoId('value-from')"
+                  placeholder="Từ"
+                  [model]="$any(_val)?.from"
+                  (sdChange)="onEditingRangeFrom($event)">
+                </sd-date>
+                <sd-date size="sm" hideInlineError
+                  [autoId]="chipAutoId('value-to')"
+                  placeholder="Đến"
+                  [model]="$any(_val)?.to"
+                  (sdChange)="onEditingRangeTo($event)">
+                </sd-date>
+              </div>
+            } @else if (_field.type === 'datetime') {
+              <div class="c-pop-between">
+                <sd-datetime size="sm" hideInlineError
+                  [autoId]="chipAutoId('value-from')"
+                  placeholder="Từ"
+                  [model]="$any(_val)?.from"
+                  (sdChange)="onEditingRangeFrom($event)">
+                </sd-datetime>
+                <sd-datetime size="sm" hideInlineError
+                  [autoId]="chipAutoId('value-to')"
+                  placeholder="Đến"
+                  [model]="$any(_val)?.to"
+                  (sdChange)="onEditingRangeTo($event)">
+                </sd-datetime>
+              </div>
+            } @else {
+              <div class="c-pop-between">
+                <sd-input-number size="sm" hideInlineError
+                  [autoId]="chipAutoId('value-from')"
+                  placeholder="Từ"
+                  [model]="$any(_val)?.from"
+                  (sdChange)="onEditingRangeFrom($event)">
+                </sd-input-number>
+                <sd-input-number size="sm" hideInlineError
+                  [autoId]="chipAutoId('value-to')"
+                  placeholder="Đến"
+                  [model]="$any(_val)?.to"
+                  (sdChange)="onEditingRangeTo($event)">
+                </sd-input-number>
+              </div>
+            }
+          } @else if (_field.type === 'boolean') {
+            <div class="c-pop-boolean c-bool-toggle">
+              <sd-button
+                [autoId]="chipAutoId('value-true')"
+                [type]="_val === true ? 'fill' : 'outline'"
+                color="success"
+                [title]="$any(_field).trueLabel || 'Có'"
+                (click)="onEditingValueInput(true)">
+              </sd-button>
+              <sd-button
+                [autoId]="chipAutoId('value-false')"
+                [type]="_val === false ? 'fill' : 'outline'"
+                color="warning"
+                [title]="$any(_field).falseLabel || 'Không'"
+                (click)="onEditingValueInput(false)">
+              </sd-button>
+            </div>
+          } @else if (_field.type === 'values' || _field.type === 'lazy-values') {
+            @let _opt = $any(_field).option;
+            <sd-select size="sm" hideInlineError
+              [autoId]="chipAutoId('value')"
+              placeholder="Chọn giá trị"
+              [items]="_options"
+              [valueField]="_opt.valueField"
+              [displayField]="_opt.displayField"
+              [multiple]="multiple()"
+              [model]="$any(_val)"
+              (sdChange)="onEditingValueInput($event)">
+            </sd-select>
+            @if (_loading) {
+              <div class="c-pop-values-loading">Đang tải...</div>
+            }
+          } @else if (_field.type === 'date') {
+            <sd-date size="sm" hideInlineError
+              [autoId]="chipAutoId('value')"
+              placeholder="Chọn giá trị"
+              [model]="$any(_val)"
+              (sdChange)="onEditingValueInput($event)">
+            </sd-date>
+          } @else if (_field.type === 'datetime') {
+            <sd-datetime size="sm" hideInlineError
+              [autoId]="chipAutoId('value')"
+              placeholder="Chọn giá trị"
+              [model]="$any(_val)"
+              (sdChange)="onEditingValueInput($event)">
+            </sd-datetime>
+          } @else if (_field.type === 'number') {
+            <sd-input-number size="sm" hideInlineError
+              [autoId]="chipAutoId('value')"
+              placeholder="Nhập giá trị"
+              [model]="$any(_val)"
+              (sdChange)="onEditingValueInput($event)">
+            </sd-input-number>
+          } @else {
+            <sd-input size="sm" hideInlineError
+              [autoId]="chipAutoId('value')"
+              placeholder="Nhập giá trị"
+              [model]="$any(_val)"
+              (sdChange)="onEditingValueInput($event)">
+            </sd-input>
+          }
+        }
+      </div>
+    }
+  </ng-template>
+</mat-menu>

@@ -51,10 +51,13 @@ import {
   SD_FORM_CONFIGURATION,
   SdCustomValidator,
   SdFormControl,
+  SdInlineErrorValidator,
+  sdFormControlState,
 } from '@sdcorejs/angular/forms/models';
+import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { SdSize } from '@sdcorejs/angular/utilities/models';
+import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 
 class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
@@ -71,6 +74,7 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./input-number.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -111,9 +115,23 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => (this.autoIdInput() ? `forms-input-number-${this.autoIdInput()}` : undefined));
+
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+
+  readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly dataErrorMessage = computed(() => {
+    void this.#state();
+    const msg = this.errorMessage();
+    return msg && msg.length > 0 ? msg : null;
+  });
+
   name = input<string>(uuid.v4());
 
-  size = input<SdSize>('md');
+  size = input<Size>('md');
   // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
@@ -151,9 +169,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
 
   /**
    * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
-   * DÃ¹ng getter (khÃ´ng pháº£i computed) vÃ¬ formControl.errors khÃ´ng pháº£i Angular signal.
    */
-  get errorTooltipMessage(): string | undefined {
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -163,7 +181,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
     return undefined;
-  }
+  });
 
   hyperlink = input<string | null | undefined>();
 
@@ -181,6 +199,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   sdFocus = output<void>();
   sdBlur = output<any>();
   keyupEnter = output<any>();
+  // why: same lÃ½ do nhÆ° sd-input â€” sdChange fire per-keystroke. `cleared` lÃ 
+  // intent dedicated cho X (clear button), consumer dÃ¹ng Ä‘á»ƒ trigger reload ngay.
+  cleared = output<void>();
 
   @Output() sdFocusForceBlur = new EventEmitter<void>();
 
@@ -350,21 +371,36 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (minVal != null) validators.push(Validators.min(minVal));
     if (maxVal != null) validators.push(Validators.max(maxVal));
     if (val) asyncValidators.push(HandleSdCustomValidator(val));
-    if (inl) validators.push(this.customInlineErrorValidator());
+    if (inl) validators.push(SdInlineErrorValidator);
 
     this.formControl.setValidators(validators.length ? validators : null);
     this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
     this.formControl.updateValueAndValidity({ emitEvent: false });
   };
 
-  customInlineErrorValidator(): ValidatorFn {
-    return (): Record<string, any> | null => ({ inlineError: true });
-  }
-
   #onChange = (value: any) => {
     this.valueModel.set(value ?? null);
     this.sdChange.emit(value ?? null);
     this.formControl.setValue(value ?? null, { emitEvent: false });
+  };
+
+  // why: method (khÃ´ng pháº£i computed) Ä‘á»ƒ template re-eval má»—i change-detection.
+  // Required khÃ´ng Ä‘Æ°á»£c clear; disabled/readonly áº©n nÃºt.
+  showClear = (): boolean => {
+    if (this.required() || this.disabled() || this.readonly()) return false;
+    return !sdIsEmpty(this.valueModel());
+  };
+
+  clear = ($event?: Event) => {
+    $event?.stopPropagation();
+    if (sdIsEmpty(this.formControl.value)) return;
+    // Reset cáº£ Ã´ hiá»ƒn thá»‹ (inputControl) láº«n giÃ¡ trá»‹ tháº­t (formControl), rá»“i
+    // Ä‘á»“ng bá»™ model + sdChange má»™t láº§n.
+    this.inputControl.setValue('', { emitEvent: false });
+    this.formControl.setValue(null, { emitEvent: false });
+    this.valueModel.set(null);
+    this.sdChange.emit(null);
+    this.cleared.emit();
   };
 
   onKeyupEnter = () => {

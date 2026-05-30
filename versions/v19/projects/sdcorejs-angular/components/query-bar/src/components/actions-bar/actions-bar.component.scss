@@ -1,0 +1,86 @@
+// Local tokens (in sync with query-bar.component.scss).
+$qb-primary:        var(--sd-primary);
+$qb-text-secondary: #5f6368;
+$qb-border:         #d6d8db;
+$qb-border-soft:    #e2e4e7;
+$qb-bg:             #ffffff;
+$qb-bg-soft:        #f5f6f7;
+$qb-danger:         #dc2626;
+$qb-radius-input:   6px;
+
+// why: host is `display: contents` so the divider + actions row sit as direct flex
+// items of the parent `.c-query-bar` row (which is a flex container).
+:host { display: contents; }
+
+.c-bar-divider {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: 1px;
+  min-height: 28px;
+  background: $qb-border-soft;
+}
+
+.c-query-bar__actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// AND / OR toggle
+.c-logic-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  background: $qb-bg-soft;
+  border: 1px solid $qb-border-soft;
+  border-radius: $qb-radius-input;
+
+  :host-context(.c-density-compact) & { height: 28px; }
+  :host-context(.c-density-comfortable) & { height: 32px; }
+
+  .c-logic-segment {
+    height: 100%;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    color: $qb-text-secondary;
+    cursor: pointer;
+    border-radius: calc(#{$qb-radius-input} - 2px);
+
+    &.c-logic-active {
+      background: $qb-bg;
+      color: $qb-primary;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// Compact square icon button in the toolbar — clear-all + search-trigger share the look.
+.c-clear-all,
+.c-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $qb-border;
+  border-radius: $qb-radius-input;
+  background: $qb-bg;
+  color: $qb-text-secondary;
+  cursor: pointer;
+  padding: 0;
+
+  :host-context(.c-density-compact) & { width: 28px; height: 28px; }
+  :host-context(.c-density-comfortable) & { width: 32px; height: 32px; }
+
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+
+  &:hover:not([disabled]) { border-color: $qb-primary; color: $qb-primary; }
+  &[disabled] { opacity: 0.5; cursor: not-allowed; }
+}
+
+// Clear-all hover → danger tint (overrides the generic primary above).
+.c-clear-all:hover { border-color: $qb-danger; color: $qb-danger; }

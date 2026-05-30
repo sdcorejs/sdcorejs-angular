@@ -1,13 +1,13 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Type } from '@angular/core';
-import { SdColor } from '@sdcorejs/angular/utilities/models';
+import { Color } from '@sdcorejs/utils/models';
 import { Subject } from 'rxjs';
 
 export interface SdTabInfo {
   name: string;
   icon?: string;
   tooltip?: string;
-  color?: SdColor;
+  color?: Color;
 }
 
 export interface SdTab {
@@ -20,6 +20,5 @@ export interface SdTab {
   queryParams?: Record<string, string | number>;
   data?: Record<string, any>;
   tabInfoChanges: Subject<SdTabInfo>;
-  beforeClose?: () => boolean | Promise<boolean>; // Return true thÃ¬ má»›i Ä‘Æ°á»£c close
+  beforeClose?: () => boolean | Promise<boolean>; // Return true thì mới được close
 }
-

@@ -13,7 +13,7 @@
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AsyncValidatorFn, FormGroup, NgForm, ValidatorFn } from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, NgForm, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -38,9 +38,11 @@ import * as uuid from 'uuid';
 import { ISdEditorConfiguration, SD_EDITOR_CONFIGURATION, SdEditorUploadFileFuncUpload } from './configurations';
 import { SdNotifyService } from '@sdcorejs/angular/services';
 import { I18nService } from '@sdcorejs/angular/i18n';
+import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { EditorImageUploadPlugin } from './plugins/image-upload/image-upload.plugin';
 import { EditorOption, SdEditorOption } from './models';
 import { HandleSdCustomValidator, SdCustomValidator, SdFormControl } from '@sdcorejs/angular/forms/models';
+import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
   applyReplacementsToEditor,
@@ -49,6 +51,7 @@ import {
   getActiveBlobUrls,
   getBatchConfig,
   imageClassesToInlineStyles,
+  imageInlineStylesToClasses,
   runBatchUploads,
 } from './plugins/image-upload/utils';
 
@@ -56,7 +59,7 @@ import {
   selector: 'sd-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CKEditorModule, SdLabel, MatFormFieldModule, MatIconModule, MatTooltipModule],
+  imports: [CKEditorModule, SdLabel, SdCKEditorStyles, MatFormFieldModule, MatIconModule, MatTooltipModule],
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.scss', './plugins/image-upload/image-upload.plugin.scss'],
 })
@@ -70,8 +73,8 @@ export class SdEditor {
 
   // Input
   readonly option = input<SdEditorOption>({});
-  readonly height = input<string>('250px');
-  readonly maxHeight = input<string>('250px');
+  readonly height = input<string>('250px'); // Chiá»u dÃ i height hiá»ƒn thá»‹ máº·c Ä‘á»‹nh
+  readonly maxHeight = input<string>('250px'); // Chiá»u dÃ i tá»‘i Ä‘a má»Ÿ rá»™ng náº¿u ná»™i dung vÆ°á»£t quÃ¡ height máº·c Ä‘á»‹nh
   readonly maxlength = input<number | undefined>(undefined);
   readonly label = input<string | undefined>();
   readonly helperText = input<string | undefined>();
@@ -94,6 +97,8 @@ export class SdEditor {
   readonly key = input<string | undefined>(undefined);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `components-editor-${this.autoIdInput()}` : undefined));
+  readonly dataDisabled = computed(() => (this.disabled() ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.valueModel()) ? 'true' : 'false'));
   readonly name = input<string>(uuid.v4());
   readonly valueModel = model<string>('', { alias: 'model' });
 
@@ -190,14 +195,19 @@ export class SdEditor {
     this.#setupDestroy();
   }
 
-  // Public API
   onReady = (editor: ClassicEditor) => {
     this.#editor = editor;
 
     const currentValue = this.valueModel();
-    if (currentValue) this.#setContent(currentValue);
-    if (this.formControl.disabled) editor.enableReadOnlyMode('sd-editor');
-    if (this.readonly()) editor.enableReadOnlyMode('sd-editor-readonly');
+    if (currentValue) {
+      this.#setToEditor(currentValue);
+    }
+    if (this.formControl.disabled) {
+      editor.enableReadOnlyMode('sd-editor');
+    }
+    if (this.readonly()) {
+      editor.enableReadOnlyMode('sd-editor-readonly');
+    }
 
     editor.model.document.registerPostFixer(writer => {
       let changed = false;
@@ -224,6 +234,184 @@ export class SdEditor {
 
   focusEditor = () => this.#editor?.editing?.view?.focus?.();
 
+  /**
+   * Xá»­ lÃ½ táº£i lÃªn cÃ¡c file vÃ  tráº£ vá» ná»™i dung dá»¯ liá»‡u cuá»‘i cÃ¹ng.
+   * * @description
+   * - Äá»‘i vá»›i cÃ¡c file upload cháº¿ Ä‘á»™ 'deferred' (chá»‰ xá»­ lÃ½ khi submit), cáº§n @ViewChild component vÃ  gá»i hÃ m upload() nÃ y.
+   * - Há»— trá»£ two-way binding.
+   * - HÃ m há»— trá»£ tráº£ ra data cuá»‘i cÃ¹ng.
+   * * @returns {Promise<string>} Ná»™i dung cuá»‘i cÃ¹ng Ä‘Æ°á»£c trÃ­ch xuáº¥t tá»« sd-editor.
+   */
+  upload = async (): Promise<string> => {
+    await this.#uploadImages();
+    return this.#getFromEditor();
+  };
+
+  // Editor Content
+  #setToEditor(html: string): void {
+    this.#editor?.setData?.(this.#normalizeHtmlForEditor(html));
+  }
+
+  #getFromEditor(): string {
+    return this.#editor ? this.#normalizeEditorToHtml(this.#editor.getData()) : '';
+  }
+
+  // Normalize HTML tá»« bÃªn ngoÃ i -> format CKEditor.
+  #normalizeHtmlForEditor = (html: string): string => {
+    if (!html) {
+      return '';
+    }
+
+    let result = html;
+    result = imageInlineStylesToClasses(result);
+    return result;
+  };
+
+  // Normalize HTML tá»« CKEditor â†’ format HTML.
+  #normalizeEditorToHtml = (html: string): string => {
+    if (!html) {
+      return '';
+    }
+
+    let result = html;
+    result = imageClassesToInlineStyles(result);
+    return result;
+  };
+
+  // Xá»­ lÃ½ binding 2 chiá»u
+  #onModelSignalChange(html: string): void {
+    const v = html ?? '';
+    if (this.formControl.value === v) {
+      return;
+    }
+    this.formControl.setValue(v, { emitEvent: false });
+    this._textLength.set(countTextLength(v));
+    if (this.#editor) {
+      this.#setToEditor(v);
+    }
+  }
+
+  // Xá»­ lÃ½ khi user soáº¡n tháº£o
+  #onEditorUserInput(rawHtml: string): void {
+    const out = imageClassesToInlineStyles(rawHtml);
+    this._textLength.set(countTextLength(out));
+    if (this.formControl.value !== out) {
+      this.formControl.setValue(out, { emitEvent: false });
+    }
+    this.formControl.updateValueAndValidity({ emitEvent: false });
+    this.formControl.sdChanges.next(true);
+    this.valueModel.set(out);
+    this.sdChange.emit(out);
+  }
+
+  // Xá»­ lÃ½ náº¿u dev sá»­ dá»¥ng form vÃ  set trá»±c tiáº¿p data
+  #onFormGroupExternalChange(html: string): void {
+    const v = html ?? '';
+    this.valueModel.set(v);
+    this._textLength.set(countTextLength(v));
+    if (this.#editor) {
+      this.#setToEditor(v);
+    }
+  }
+
+  // Validators
+  #requiredValidator(): ValidatorFn {
+    return (): ValidationErrors | null => (this._textLength() ? null : { required: true });
+  }
+
+  #maxLengthValidator(): ValidatorFn {
+    return (): ValidationErrors | null => {
+      const max = this.maxlength()!;
+      const len = this._textLength();
+      return len > max ? { maxlength: { requiredLength: max, actualLength: len } } : null;
+    };
+  }
+
+  #inlineErrorValidator(): ValidatorFn {
+    return (): ValidationErrors | null => ({ inlineError: true });
+  }
+
+  #updateValidators(): void {
+    const validators: ValidatorFn[] = [];
+    const asyncValidators: AsyncValidatorFn[] = [];
+
+    if (this.required()) {
+      validators.push(this.#requiredValidator());
+    }
+    if (this.maxlength() !== undefined) {
+      validators.push(this.#maxLengthValidator());
+    }
+    if (this.inlineError()) {
+      validators.push(this.#inlineErrorValidator());
+    }
+
+    const val = this.validator();
+    if (val) {
+      asyncValidators.push(HandleSdCustomValidator(val));
+    }
+
+    this.formControl.setValidators(validators.length ? validators : null);
+    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
+    this.formControl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  // Setup
+  #setupEffects(): void {
+    // Láº¯ng nghe disabled
+    effect(() => {
+      this.disabled() ? this.formControl.disable({ emitEvent: false }) : this.formControl.enable({ emitEvent: false });
+    });
+
+    // Láº¯ng nghe readonly
+    effect(() => {
+      if (!this.#editor) {
+        return;
+      }
+      if (this.readonly()) {
+        this.#editor.enableReadOnlyMode('sd-editor-readonly');
+      } else {
+        this.#editor.disableReadOnlyMode('sd-editor-readonly');
+      }
+    });
+
+    // Láº¯ng nghe binÄ‘ing 2 chiá»u model
+    effect(() => this.#onModelSignalChange(this.valueModel()));
+
+    // Láº¯ng nghe name form
+    effect(() => this.form()?.addControl(this.name(), this.formControl));
+
+    // Láº¯ng nghe validators
+    effect(() => {
+      this.required();
+      this.maxlength();
+      this.inlineError();
+      this.validator();
+      this.#updateValidators();
+    });
+  }
+
+  #setupSubscriptions(): void {
+    // ÄÄƒng kÃ½ náº¿u dev sá»­ dá»¥ng form Ä‘á»ƒ set data trá»±c tiáº¿p tá»« bÃªn ngoÃ i vÃ o
+    this.formControl.valueChanges
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe((val: string) => this.#onFormGroupExternalChange(val));
+
+    this.formControl.sdChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#cdRef.markForCheck());
+
+    // ÄÄƒng kÃ½ user gÃµ trong editor
+    this.#contentChangeSubject
+      .pipe(debounceTime(100), takeUntilDestroyed(this.#destroyRef))
+      .subscribe(rawHtml => this.#onEditorUserInput(rawHtml));
+  }
+
+  #setupDestroy(): void {
+    this.#destroyRef.onDestroy(() => {
+      this.form()?.removeControl(this.name());
+      this.#editor?.destroy?.();
+    });
+  }
+
+  // Helpers
   #uploadImages = async (): Promise<void> => {
     const uploadMode = this.option()?.imageConfig?.uploadMode ?? 'deferred';
     // Early return náº¿u khÃ´ng pháº£i 'deferred' mode.
@@ -268,86 +456,19 @@ export class SdEditor {
     }
   };
 
-  upload = async (): Promise<string> => {
-    await this.#uploadImages();
-    return this.#getContent();
-  };
-
-  // Setup
-  #setupEffects = () => {
-    effect(() => {
-      this.disabled() ? this.formControl.disable({ emitEvent: false }) : this.formControl.enable({ emitEvent: false });
-    });
-
-    effect(() => {
-      if (!this.#editor) return;
-      this.readonly() ? this.#editor.enableReadOnlyMode('sd-editor-readonly') : this.#editor.disableReadOnlyMode('sd-editor-readonly');
-    });
-
-    effect(() => {
-      const val = this.valueModel();
-      if (this.formControl.value !== val) {
-        this.formControl.setValue(val, { emitEvent: false });
-        if (this.#editor) this.#setContent(val);
-      }
-    });
-
-    effect(() => this.form()?.addControl(this.name(), this.formControl));
-
-    effect(() => {
-      this.required();
-      this.maxlength();
-      this.inlineError();
-      this.validator();
-      this.#updateValidators();
-    });
-  };
-
-  #setupSubscriptions = () => {
-    this.formControl.valueChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe((val: string) => {
-      const v = val ?? '';
-      this.valueModel.set(v);
-      this._textLength.set(countTextLength(v));
-      if (this.#editor) {
-        this.#setContent(v);
-      }
-    });
-
-    this.formControl.sdChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#cdRef.markForCheck());
-
-    this.#contentChangeSubject.pipe(debounceTime(100), takeUntilDestroyed(this.#destroyRef)).subscribe(content => {
-      const out = imageClassesToInlineStyles(content);
-      this._textLength.set(countTextLength(out));
-
-      if (this.formControl.value !== out) this.formControl.setValue(out, { emitEvent: false });
-      this.formControl.updateValueAndValidity({ emitEvent: false });
-      this.formControl.sdChanges.next(true);
-      this.valueModel.set(out);
-      this.sdChange.emit(out);
-    });
-  };
-
-  #setupDestroy = () => {
-    this.#destroyRef.onDestroy(() => {
-      this.form()?.removeControl(this.name());
-      this.#editor?.destroy?.();
-    });
-  };
-
-  // Helpers
-  #setContent = (content: string) => this.#editor?.setData?.(content);
-
-  #getContent = (): string => (this.#editor ? imageClassesToInlineStyles(this.#editor.getData()) : '');
-
   #getConfigurations = (): ISdEditorConfiguration[] => {
     const config = this.#uploadConfig;
-    if (!config) return [];
+    if (!config) {
+      return [];
+    }
     return Array.isArray(config) ? config : [config];
   };
 
-  #validateDuplicateConfigKeys(): void {
+  #validateDuplicateConfigKeys = (): void => {
     const config = this.#uploadConfig;
-    if (!config) return;
+    if (!config) {
+      return;
+    }
     const configurations = Array.isArray(config) ? config : [config];
     const seen = new Set<string>();
     for (const cfg of configurations) {
@@ -358,43 +479,19 @@ export class SdEditor {
       }
       seen.add(normalizedKey);
     }
-  }
+  };
 
   #getSelectedConfig = (): ISdEditorConfiguration | undefined => {
     const configurations = this.#getConfigurations();
-    if (!configurations.length) return undefined;
+    if (!configurations.length) {
+      return undefined;
+    }
+
     return configurations.find(cfg => cfg.key === this.key());
   };
 
-  #buildUploadFn = (): SdEditorUploadFileFuncUpload | undefined =>
-    this.option()?.imageConfig?.uploadFn ?? this.#getSelectedConfig()?.upload;
-
-  #updateValidators = () => {
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-
-    if (this.required()) {
-      validators.push(() => (this._textLength() ? null : { required: true }));
-    }
-
-    const max = this.maxlength();
-    if (max !== undefined) {
-      validators.push(() => (this._textLength() > max ? { maxlength: { requiredLength: max, actualLength: this._textLength() } } : null));
-    }
-
-    const inl = this.inlineError();
-    if (inl) {
-      validators.push(() => ({ inlineError: true }));
-    }
-
-    const val = this.validator();
-    if (val) {
-      asyncValidators.push(HandleSdCustomValidator(val));
-    }
-
-    this.formControl.setValidators(validators.length ? validators : null);
-    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
-    this.formControl.updateValueAndValidity({ emitEvent: false });
+  #buildUploadFn = (): SdEditorUploadFileFuncUpload | undefined => {
+    return this.option()?.imageConfig?.uploadFn ?? this.#getSelectedConfig()?.upload;
   };
 }
 

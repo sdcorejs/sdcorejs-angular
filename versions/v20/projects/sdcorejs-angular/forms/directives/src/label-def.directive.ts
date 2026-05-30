@@ -1,10 +1,11 @@
-import { Directive, TemplateRef } from '@angular/core';
+import { Directive, TemplateRef, inject } from '@angular/core';
+
+type Context = Record<string, never>;
 
 @Directive({
   selector: '[sdLabelDef]',
   standalone: true,
 })
 export class SdLabelDefDirective {
-  // @Input() sdLableDef: string;
-  constructor(public templateRef: TemplateRef<any>) {}
+  readonly templateRef: TemplateRef<Context> = inject(TemplateRef);
 }

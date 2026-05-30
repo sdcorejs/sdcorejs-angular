@@ -128,6 +128,27 @@ async onSave() {
 }
 ```
 
+## E2E test attributes
+
+Rendered on the editor host element (the outer `div.sd-editor`):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `components-editor-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | input `disabled` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(model())` |
+
+> **Not exposed:**
+> - `data-value` â€” editor content may be MB-sized; use `data-empty` to check whether the editor has any content.
+> - `data-loading` â€” the component does not currently expose a loading signal; may be added if Monaco init becomes observable.
+
+Selector example:
+
+```ts
+const ed = page.locator('[data-autoid="components-editor-bio"]');
+await expect(ed).toHaveAttribute('data-empty', 'false');
+```
+
 ## Anti-patterns
 - DON'T use `<sd-editor>` for short comments â€” toolbar is too heavy; use `<sd-mini-editor>`
 - DON'T set `maxlength` against HTML length â€” it counts plain text

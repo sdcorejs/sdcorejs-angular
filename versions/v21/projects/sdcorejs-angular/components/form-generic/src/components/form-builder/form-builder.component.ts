@@ -13,7 +13,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { debounceTime, startWith, Subject, Subscription } from 'rxjs';
 import {
   COMPONENT_ICONS,
@@ -783,7 +783,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
 
   addVariables = () => {
     this.clonedVariables.push({
-      id: SdUtilities.randomId(),
+      id: Utilities.randomId(),
       key: '',
       label: '',
     });

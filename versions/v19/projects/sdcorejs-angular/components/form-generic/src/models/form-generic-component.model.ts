@@ -2,9 +2,8 @@
 // Äá»‹nh nghÄ©a cÃ¡c Components cá»§a Form Render
 import { SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
-import { SdColor } from '@sdcorejs/angular/utilities';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { SdPatternType } from '@sdcorejs/angular/utilities/models';
+import { Color, ValidationPatternType } from '@sdcorejs/utils/models';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { SdFormGenericSelectionStaticItem } from './form-generic-definition-selection.model';
 import { SdFormGenericExpression } from './form-generic-expression.model';
 import { SdFormGeneric } from './form-generic.model';
@@ -49,11 +48,11 @@ export interface SdFormGenericLayout {
 }
 
 export const GenerateId = () => {
-  return SdUtilities.randomId('id');
+  return Utilities.randomId('id');
 };
 
 export const GenerateKey = () => {
-  return SdUtilities.randomId('key');
+  return Utilities.randomId('key');
 };
 
 export const SdFormatComponent = (component: SdFormGenericComponent | SdFormGenericGroup) => {
@@ -180,7 +179,7 @@ export interface SdFormGenericTextfield extends SdFormGenericComponentBase {
   validate?: {
     maxlength?: number;
     minlength?: number;
-    pattern?: SdPatternType | string; // Regex
+    pattern?: ValidationPatternType | string; // Regex
     patternErrorMessage?: string; // Message lá»—i khi invalid pattern
   } & SdFormGenericComponentBase['validate'];
 }
@@ -191,7 +190,7 @@ export interface SdFormGenericChipString extends SdFormGenericComponentBase {
   validate?: {
     maxlength?: number;
     minlength?: number;
-    pattern?: SdPatternType | string; // Regex
+    pattern?: ValidationPatternType | string; // Regex
     patternErrorMessage?: string; // Message lá»—i khi invalid pattern
     maxOfItems?: number; // Sá»‘ lÆ°á»£ng item tá»‘i Ä‘a
   } & SdFormGenericComponentBase['validate'];
@@ -202,7 +201,7 @@ export interface SdFormGenericChipCalendar extends SdFormGenericComponentBase {
   validate?: {
     maxlength?: number;
     minlength?: number;
-    pattern?: SdPatternType | string; // Regex
+    pattern?: ValidationPatternType | string; // Regex
     patternErrorMessage?: string; // Message lá»—i khi invalid pattern
     maxOfItems?: number; // Sá»‘ lÆ°á»£ng item tá»‘i Ä‘a
   } & SdFormGenericComponentBase['validate'];
@@ -276,7 +275,7 @@ export interface SdFormGenericGroup {
   components: SdFormGenericComponent[];
   properties: {
     icon: string;
-    color: SdColor;
+    color: Color;
     hidden?: boolean;
     hiddenWhenExpression?: SdFormGenericExpression;
     visibleWhenExpression?: SdFormGenericExpression;

@@ -1,10 +1,9 @@
 @use '../fonts/fonts.scss';
-// Tạm thời giữ bootstrap.scss để so sánh — xóa sau khi confirm _base.scss OK
-// @use './core/bootstrap.scss';
 @use './core/utilities/base';  // Reset / Reboot — phải load trước tất cả
 @use './core/utilities';
 @use './core/color.scss';
 @use './core/form.scss';
+@use './core/image.scss';
 @use './core/scrollbar.scss';
 @use './themes/default.scss';
 @use './themes/material-theme.scss';

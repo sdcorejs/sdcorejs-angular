@@ -1,5 +1,5 @@
-﻿import { Injectable } from '@angular/core';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Injectable } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Injectable({ providedIn: 'root' })
 export class UploadFileService {
@@ -9,7 +9,7 @@ export class UploadFileService {
     if (!file) {
       return null;
     }
-    return SdUtilities.hash(file);
+    return Utilities.hash(file);
   };
 
   isHashedKey = (key: string) => {
@@ -50,4 +50,3 @@ export class UploadFileService {
     }
   };
 }
-

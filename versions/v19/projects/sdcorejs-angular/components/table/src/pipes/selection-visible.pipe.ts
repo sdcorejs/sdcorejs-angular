@@ -1,8 +1,8 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 // import hash from 'object-hash';
 import { SdTableOptionSelector } from '../models/table-option-selector.model';
 import { SdTableItem } from '../models/table-item.model';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Pipe({
   name: 'selectionVisible',
@@ -21,7 +21,7 @@ export class SdSelectionVisiblePipe implements PipeTransform {
         let hasGroup = false;
         for (const child of action.children) {
           const { hidden, isGrouped } = child;
-          const key = SdUtilities.hash(child);
+          const key = Utilities.hash(child);
           if (isGrouped) {
             hasGroup = true;
           }
@@ -42,14 +42,14 @@ export class SdSelectionVisiblePipe implements PipeTransform {
           }
         }
         if (flag) {
-          rowData.meta.selector!.actions.push(SdUtilities.hash(action));
+          rowData.meta.selector!.actions.push(Utilities.hash(action));
           if (hasGroup) {
-            groupedActions.push(SdUtilities.hash(action));
+            groupedActions.push(Utilities.hash(action));
           }
         }
       } else {
         const { hidden, isGrouped } = action;
-        const key = SdUtilities.hash(action);
+        const key = Utilities.hash(action);
         if (typeof hidden === 'function') {
           if (!hidden(rowData.data)) {
             rowData.meta.selector!.actions.push(key);
@@ -69,9 +69,8 @@ export class SdSelectionVisiblePipe implements PipeTransform {
     if (!rowData.meta.selector!.selectable || !groupedActions.length || rowData?.meta.group?.items?.length) {
       return rowData.meta.selector!.selectable;
     }
-    // Äá»‘i vá»›i trÆ°á»ng há»£p grouped, tuy selectable lÃ  true nhÆ°ng váº«n áº©n Ä‘i checkbox
-    // náº¿u cÃ¡c action Ä‘á»u thuá»™c groupedActions vÃ  rowData ko pháº£i lÃ  dÃ²ng group
+    // Đối với trường hợp grouped, tuy selectable là true nhưng vẫn ẩn đi checkbox
+    // nếu các action đều thuộc groupedActions và rowData ko phải là dòng group
     return rowData.meta.selector!.actions.some(action => !groupedActions.includes(action));
   };
 }
-

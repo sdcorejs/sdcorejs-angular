@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdSideDrawer } from './side-drawer.component';
@@ -19,6 +19,7 @@ import { setInput } from '../../../testing/test-utils';
       [hideClose]="hideClose"
       [disableBackdropClose]="disableBackdropClose"
       [drawerClass]="drawerClass"
+      [autoId]="autoId"
       (sdClosed)="onClosed()"
     >
       <span id="body-content">drawer body</span>
@@ -32,6 +33,7 @@ class HostComponent {
   hideClose = false;
   disableBackdropClose = false;
   drawerClass: any = '';
+  autoId: string | undefined = undefined;
   closedCount = 0;
   onClosed(): void { this.closedCount++; }
 }
@@ -79,11 +81,11 @@ describe('SdSideDrawer', () => {
     });
 
     it('starts with isOpened = false', () => {
-      expect(component.isOpened).toBeFalse();
+      expect(component.isOpened()).toBeFalse();
     });
 
     it('starts with isLoading = false', () => {
-      expect(component.isLoading).toBeFalse();
+      expect(component.isLoading()).toBeFalse();
     });
 
     it('generates a unique id starting with "I"', () => {
@@ -210,7 +212,7 @@ describe('SdSideDrawer', () => {
   describe('open() — lifecycle', () => {
     it('sets isOpened to true after open()', () => {
       component.open();
-      expect(component.isOpened).toBeTrue();
+      expect(component.isOpened()).toBeTrue();
     });
 
     it('sets document.body.overflow to "hidden" after open()', () => {
@@ -221,7 +223,7 @@ describe('SdSideDrawer', () => {
     it('open() is idempotent — calling twice keeps isOpened true', () => {
       component.open();
       component.open();
-      expect(component.isOpened).toBeTrue();
+      expect(component.isOpened()).toBeTrue();
     });
   });
 
@@ -233,7 +235,7 @@ describe('SdSideDrawer', () => {
     it('sets isOpened to false after close()', () => {
       component.open();
       component.close();
-      expect(component.isOpened).toBeFalse();
+      expect(component.isOpened()).toBeFalse();
     });
 
     it('restores document.body.overflow after close()', () => {
@@ -246,9 +248,9 @@ describe('SdSideDrawer', () => {
     it('sets isLoading to false after close()', () => {
       component.open();
       component.startLoading();
-      expect(component.isLoading).toBeTrue();
+      expect(component.isLoading()).toBeTrue();
       component.close();
-      expect(component.isLoading).toBeFalse();
+      expect(component.isLoading()).toBeFalse();
     });
   });
 
@@ -259,13 +261,13 @@ describe('SdSideDrawer', () => {
   describe('startLoading() / stopLoading()', () => {
     it('sets isLoading to true on startLoading()', () => {
       component.startLoading();
-      expect(component.isLoading).toBeTrue();
+      expect(component.isLoading()).toBeTrue();
     });
 
     it('sets isLoading to false on stopLoading()', () => {
       component.startLoading();
       component.stopLoading();
-      expect(component.isLoading).toBeFalse();
+      expect(component.isLoading()).toBeFalse();
     });
   });
 
@@ -329,5 +331,79 @@ describe('SdSideDrawer', () => {
     it('does not throw on destroy when drawer was never opened', () => {
       expect(() => fixture.destroy()).not.toThrow();
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // 13. E2E attributes
+  // -------------------------------------------------------------------------
+
+  describe('E2E attributes', () => {
+    /**
+     * Helper: get the .sd-side-drawer root element from document.body
+     * (the drawer is mounted via CdkPortal into document.body, so it does
+     *  not live inside the fixture's native element).
+     */
+    function getDrawerRoot(): HTMLElement | null {
+      return document.body.querySelector('.sd-side-drawer');
+    }
+
+    it('renders data-autoid on .sd-side-drawer root when autoId input is set', fakeAsync(() => {
+      host.autoId = 'filters';
+      fixture.detectChanges();
+      tick(); // flush any micro-tasks from afterNextRender
+
+      const root = getDrawerRoot();
+      // Browsers lowercase HTML attribute names, so data-autoId → data-autoid
+      expect(root?.getAttribute('data-autoid')).toBe('components-side-drawer-filters');
+    }));
+
+    it('does NOT render data-autoid when autoId is not set', fakeAsync(() => {
+      host.autoId = undefined;
+      fixture.detectChanges();
+      tick();
+
+      const root = getDrawerRoot();
+      // autoId() returns undefined → Angular renders no attribute (null)
+      expect(root?.getAttribute('data-autoid')).toBeNull();
+    }));
+
+    it('renders data-opened toggling with open() / close()', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      const root = getDrawerRoot();
+      // Initial state: closed → 'false'
+      expect(root?.getAttribute('data-opened')).toBe('false');
+
+      component.open();
+      fixture.detectChanges();
+      tick();
+      expect(root?.getAttribute('data-opened')).toBe('true');
+
+      component.close();
+      fixture.detectChanges();
+      tick();
+      expect(root?.getAttribute('data-opened')).toBe('false');
+    }));
+
+    it('renders data-loading toggling with startLoading() / stopLoading()', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      const root = getDrawerRoot();
+      // Initial state: not loading → 'false'
+      expect(root?.getAttribute('data-loading')).toBe('false');
+
+      component.open();
+      component.startLoading();
+      fixture.detectChanges();
+      tick();
+      expect(root?.getAttribute('data-loading')).toBe('true');
+
+      component.stopLoading();
+      fixture.detectChanges();
+      tick();
+      expect(root?.getAttribute('data-loading')).toBe('false');
+    }));
   });
 });

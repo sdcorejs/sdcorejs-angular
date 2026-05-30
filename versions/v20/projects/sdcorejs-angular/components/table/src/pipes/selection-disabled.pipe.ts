@@ -1,8 +1,8 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 // import hash from 'object-hash';
 import { SdTableOptionSelector } from '../models/table-option-selector.model';
 import { SdTableItem } from '../models/table-item.model';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 @Pipe({
   name: 'selectionDisabled',
 })
@@ -17,39 +17,39 @@ export class SdSelectionDisabledPipe implements PipeTransform {
       rowData.meta.selector!.selectable = !disabled(rowData, selectedItems);
       return !rowData.meta.selector!.selectable;
     }
-    // Kiá»ƒm tra cÃ³ bá»‹ disabled theo function khÃ´ng
-    // Dá»¯ liá»‡u chÆ°a Ä‘Æ°á»£c check thÃ¬ kiá»ƒm tra hÃ m disable náº¿u cÃ³
+    // Kiểm tra có bị disabled theo function không
+    // Dữ liệu chưa được check thì kiểm tra hàm disable nếu có
     if (disabled && !rowData.meta.selector!.isSelected) {
-      // Náº¿u disabled vÃ  dá»¯ liá»‡u chÆ°a Ä‘Æ°á»£c check
+      // Nếu disabled và dữ liệu chưa được check
       if(disabled(rowData, selectedItems)) {
         return true;
       }
     }
-    // Lá»c cÃ¡c action theo selectedItems hiá»‡n táº¡i
+    // Lọc các action theo selectedItems hiện tại
     const availableActions = actions.filter(action => {
       if ('children' in action) {
         for (const childAction of action.children) {
-          const key = SdUtilities.hash(childAction);
+          const key = Utilities.hash(childAction);
           if (selectedItems.every(e => e.meta.selector?.actions?.includes(key))) {
             return true;
           }
         }
         return false;
       } else {
-        const key = SdUtilities.hash(action);
+        const key = Utilities.hash(action);
         return selectedItems.every(e => e.meta.selector?.actions?.includes(key));
       }
     });
-    // Kiá»ƒm tra rowData cÃ³ action nÃ o thá»a hay ko, náº¿u ko thÃ¬ disabled
+    // Kiểm tra rowData có action nào thỏa hay ko, nếu ko thì disabled
     for (const action of availableActions) {
       if ('children' in action) {
         for (const childAction of action.children) {
-          if (rowData.meta.selector?.actions?.includes(SdUtilities.hash(childAction))) {
+          if (rowData.meta.selector?.actions?.includes(Utilities.hash(childAction))) {
             return false;
           }
         }
       } else {
-        if (rowData.meta.selector?.actions?.includes(SdUtilities.hash(action))) {
+        if (rowData.meta.selector?.actions?.includes(Utilities.hash(action))) {
           return false;
         }
       }
@@ -57,4 +57,3 @@ export class SdSelectionDisabledPipe implements PipeTransform {
     return true;
   };
 }
-

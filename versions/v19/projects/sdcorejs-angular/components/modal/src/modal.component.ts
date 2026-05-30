@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -19,8 +19,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
-import { SdColor, SdSize } from '@sdcorejs/angular/utilities/models';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { Color, Size } from '@sdcorejs/utils/models';
 
 @Component({
   selector: 'sd-modal',
@@ -37,15 +37,16 @@ export class SdModal {
   templateRef = viewChild.required<TemplateRef<any>>('templateRef');
   modal = viewChild<ElementRef>('modal');
 
-  // autoId prefix `modal-`. LÆ°u Ã½: footer/body buttons render qua <ng-content> nÃªn consumer pháº£i
-  // tá»± Ä‘áº·t [attr.data-autoId] cho cÃ¡c nÃºt Ä‘Ã³. Component chá»‰ tá»± bind autoId cho NÃšT ÄÃ“NG (X icon).
+  // autoId prefix `modal-`. Lưu ý: footer/body buttons render qua <ng-content> nên consumer phải
+  // tự đặt [attr.data-autoId] cho các nút đó. Component chỉ tự bind autoId cho NÚT ĐÓNG (X icon).
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `components-modal-${this.autoIdInput()}` : undefined));
   readonly closeButtonAutoId = computed(() => (this.autoId() ? `${this.autoId()}-close` : undefined));
+  readonly dataOpened = computed(() => (this.isOpened() ? 'true' : 'false'));
 
   title = input<string, string | null | undefined>('', { transform: (v) => v ?? '' });
-  color = input<SdColor, SdColor | null | undefined>('primary', { transform: (v) => v ?? 'primary' });
-  width = input<SdSize | string, SdSize | string | null | undefined>('md', { transform: (v) => v ?? 'md' });
+  color = input<Color, Color | null | undefined>('primary', { transform: (v) => v ?? 'primary' });
+  width = input<Size | string, Size | string | null | undefined>('md', { transform: (v) => v ?? 'md' });
   height = input<string, string | null | undefined>('auto', { transform: (v) => v ?? 'auto' });
   view = input<'dialog' | 'bottom-sheet' | undefined, 'dialog' | 'bottom-sheet' | null | undefined>(undefined, { transform: (v) => v ?? undefined });
   modalClass = input<string | string[] | Record<string, boolean>, string | string[] | Record<string, boolean> | null | undefined>('', { transform: (v) => v ?? '' });
@@ -68,7 +69,7 @@ export class SdModal {
   #destroyRef = inject(DestroyRef);
 
   constructor() {
-    this.#isMobile = SdUtilities.isMobile();
+    this.#isMobile = BrowserUtilities.isMobile();
   }
 
   #resolveWidth(): string {
@@ -123,4 +124,3 @@ export class SdModal {
     this.#dialogRef?.close();
   };
 }
-

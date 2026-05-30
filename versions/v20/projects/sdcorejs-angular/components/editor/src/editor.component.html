@@ -1,3 +1,4 @@
+<sd-ckeditor-styles />
 @let lbl = label();
 @let hText = helperText();
 @let hideErr = hideInlineError();
@@ -17,7 +18,9 @@
   [class.has-counter]="showCounter"
   [style.--sd-editor-content-min-height]="height()"
   [style.--sd-editor-content-max-height]="maxHeight()"
-  [attr.data-autoId]="autoId()">
+  [attr.data-autoId]="autoId()"
+  [attr.data-disabled]="dataDisabled()"
+  [attr.data-empty]="dataEmpty()">
   <ckeditor [editor]="Editor" [config]="editorConfig()" [disabled]="formControl.disabled" (ready)="onReady($event)"></ckeditor>
 
   @if (showCounter) {

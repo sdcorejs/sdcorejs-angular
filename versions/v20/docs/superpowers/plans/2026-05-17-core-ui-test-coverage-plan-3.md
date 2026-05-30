@@ -10,7 +10,7 @@
 
 **Branch**: `feature/plan-3-components-tests` (Ä‘Ã£ checkout tá»« `feature/plan-2-forms-tests` â€” Plan 2 chÆ°a merge nhÆ°ng cÃ³ trÃªn branch nÃ y).
 
-**Skipped per user direction**: chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder, import-excel. (`code-editor` Ä‘Æ°á»£c include).
+**Skipped per user direction**: chart, document-builder, editor, workflow, form-generic, history, query-builder, import-excel. (`code-editor` Ä‘Æ°á»£c include).
 
 ---
 
@@ -548,7 +548,7 @@ After Plans 1+2 (20 spec files), 10 component primitives remain. Plan 3 covers n
 
 ### 2.2. Out of scope (per user direction)
 
-- chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder, import-excel (deferred â€” unfinished components or large enough for own plan)
+- chart, document-builder, editor, workflow, form-generic, history, query-builder, import-excel (deferred â€” unfinished components or large enough for own plan)
 
 ## 3. Approach
 
@@ -598,7 +598,7 @@ Same as Plan 1+2. Plan 3 components are non-form â†’ no FgHost/NgFormHost. 
 - Plan 4: 4 directives (sd-desktop, sd-href, sd-hover-copy, sd-scroll)
 - Plan 5: 9 services (api, cache, confirm, docx, excel, firebase, license, loading, notify)
 - Plan 6 deferred: import-excel, table sub-components beyond Plan 1 coverage
-- Permanently skipped (user direction): chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder
+- Permanently skipped (user direction): chart, document-builder, editor, workflow, form-generic, history, query-builder
 ```
 
 **Steps:**

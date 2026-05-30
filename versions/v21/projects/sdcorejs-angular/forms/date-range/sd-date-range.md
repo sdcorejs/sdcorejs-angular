@@ -38,7 +38,7 @@ Two-date range picker â€” user picks a start date AND an end date through a
 | `max` | `Date \| string \| 'TODAY'` | `undefined` | Latest allowed end date. |
 | `required` | `boolean` | `false` | Adds `Validators.required` to BOTH internal controls and the outer aggregate control. |
 | `disabled` | `boolean` | `false` | Disables both date inputs and the picker trigger. |
-| `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorTooltipMessage` instead. |
+| `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorMessage` instead. |
 | `model` | `{ from?: string \| null; to?: string \| null } \| null \| undefined` | `undefined` | Two-way bound range value (use `[(model)]`). Both ends are ISO-style date strings (`yyyy/MM/dd`). |
 
 > **Coerce**: `required`, `disabled`, `hideInlineError` use `booleanAttribute` â€” bare attribute = `true`.
@@ -47,6 +47,15 @@ Two-date range picker â€” user picks a start date AND an end date through a
 | Name | Type | Notes |
 | --- | --- | --- |
 | `sdChange` | `{ from, to } \| null` | Emitted on blur, Enter, picker-close, and clear. Same shape as `model`. |
+
+## Host classes
+Applied automatically on `<sd-date-range>` for styling hooks:
+
+| Class | Condition | Effect |
+| --- | --- | --- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
+| `sd-bare` | `[bare]="true"` | Strips the mat-form-field shell for inline contexts (chip, token). |
 
 ## Content projection (slots)
 - `<ng-template sdLabelDef>` â€” custom label rendering (replaces the plain `label` text). The component uses `SdLabelDefDirective` content child.
@@ -62,7 +71,7 @@ Two-date range picker â€” user picks a start date AND an end date through a
 
 | Member | Kind | Description |
 | --- | --- | --- |
-| `errorTooltipMessage` | getter `string \| undefined` | Returns a Vietnamese error message for the first active error across `formControl`, `control1`, `control2` (`required`, `matDatepickerMin`, `matDatepickerMax`). `undefined` when valid. |
+| `errorMessage` | getter `string \| undefined` | Returns a Vietnamese error message for the first active error across `formControl`, `control1`, `control2` (`required`, `matDatepickerMin`, `matDatepickerMax`). `undefined` when valid. |
 | `clear()` | method | Clears both `control1` and `control2` to `null`, resets the aggregate `formControl`, sets `valueModel` to `{ from: null, to: null }`, and emits `sdChange`. |
 | `onEnter()` | event handler | Triggers `#emit()` then immediately emits `sdChange` with the current `valueModel`. Bound to `keyup.enter` on both date inputs. |
 | `onFocus()` | event handler | Sets `#isFocus = true` and resets transient flags for enter/clear/model-change tracking. |
@@ -121,6 +130,34 @@ Two-date range picker â€” user picks a start date AND an end date through a
 - âŒ Treating the model as two separate strings â€” it is `{ from, to }`. Splitting it across two `<sd-date>` defeats the purpose (no shared calendar, no aggregate validation).
 - âŒ Mutating `model.from` / `model.to` directly â€” assign a new object literal so the `effect` re-runs.
 - âŒ Using this for date-and-time intervals â€” neither end carries time. Use two `<sd-datetime>` if you need that.
+
+## E2E test attributes
+
+All five attributes live on the **`<mat-date-range-input>`** element â€” the single QA anchor for the whole control. The two inner date inputs retain their own per-side `data-autoid` (`-from` / `-to`) and are unchanged.
+
+| Attribute | Element | Values | Notes |
+| --- | --- | --- | --- |
+| `data-autoid` | `<mat-date-range-input>` | `forms-date-range-<autoId>` | Present only when `[autoId]` input is provided. Prefix `forms-date-range-`. |
+| `data-disabled` | `<mat-date-range-input>` | `"true"` / `"false"` | Reflects `formControl.disabled`. |
+| `data-invalid` | `<mat-date-range-input>` | `"true"` / `"false"` | `"true"` only when the aggregate `formControl` is both invalid AND touched or dirty. |
+| `data-empty` | `<mat-date-range-input>` | `"true"` / `"false"` | `"true"` if `value` is `null` / `undefined`, OR if either `value.from` or `value.to` is missing / falsy. |
+| `data-value` | `<mat-date-range-input>` | JSON string or `""` | `sdSerializeDataValue` of the aggregate `{ from: Date, to: Date }` object. Empty string when value is null. |
+| `data-required` | `<mat-date-range-input>` | `"true"` / `"false"` | Reflects `required` input; always present. |
+| `data-error-message` | `<mat-date-range-input>` | string | Present only when the component is currently showing an error tooltip message. |
+
+> **Note**: `sd-date-range` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
+
+## Bare / viewed / programmatic open
+
+| API | Type | Notes |
+|---|---|---|
+| `[bare]` | `boolean` | Strips the form-field shell so the control fits inline in a chip / token. Use inside `<sd-query-bar>` BETWEEN or other inline editors. Default `false`. |
+| `[viewed]` | `boolean` | Read-only mode â€” renders `<sd-view>` showing `dd/MM/yyyy â†’ dd/MM/yyyy`. Project an `<ng-template #sdValue>` inside `<sd-date-range>` to override the display. Default `false`. |
+| `open()` | method | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode. |
+
+`bare` and `viewed` are independent and complementary:
+- `viewed=true` â†’ text-only `<sd-view>`, no form-field.
+- `bare=true, viewed=false` â†’ editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
 
 ## Related
 - `<sd-date>` â€” single-date picker

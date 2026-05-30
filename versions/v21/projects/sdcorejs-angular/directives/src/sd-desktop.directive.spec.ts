@@ -1,6 +1,6 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { SdDesktopDirective } from './sd-desktop.directive';
 
 @Component({
@@ -26,7 +26,7 @@ describe('SdDesktopDirective', () => {
 
   describe('when isMobile() returns false (desktop)', () => {
     beforeEach(() => {
-      spyOn(SdUtilities, 'isMobile').and.returnValue(false);
+      spyOn(BrowserUtilities, 'isMobile').and.returnValue(false);
       fixture = createFixture();
     });
 
@@ -39,7 +39,7 @@ describe('SdDesktopDirective', () => {
 
   describe('when isMobile() returns true (mobile)', () => {
     beforeEach(() => {
-      spyOn(SdUtilities, 'isMobile').and.returnValue(true);
+      spyOn(BrowserUtilities, 'isMobile').and.returnValue(true);
       fixture = createFixture();
     });
 
@@ -51,10 +51,9 @@ describe('SdDesktopDirective', () => {
 
   describe('constructor evaluation', () => {
     it('calls isMobile() exactly once per construction', () => {
-      const spy = spyOn(SdUtilities, 'isMobile').and.returnValue(false);
+      const spy = spyOn(BrowserUtilities, 'isMobile').and.returnValue(false);
       fixture = createFixture();
       expect(spy).toHaveBeenCalledTimes(1);
     });
   });
 });
-

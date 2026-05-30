@@ -9,7 +9,7 @@ import { SdFormGenericRadio, SdFormGenericSelectionItem } from '../../../../../.
 import { ComponentViewedPipe, HyperlinkPipe } from '../../../../../../pipes';
 import { FormGenericService } from '../../../../../../services';
 import { Router } from '@angular/router';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'lib-radio',
@@ -123,7 +123,7 @@ export class RadioComponent implements AfterViewInit, OnDestroy {
       window.open(url);
     } else {
       const [path, queryString] = url?.split('?');
-      const queryParams = SdUtilities.parseQueryParams(queryString);
+      const queryParams = Utilities.parseQueryParams(queryString);
       this.router.navigate([path], { queryParams });
     }
   };

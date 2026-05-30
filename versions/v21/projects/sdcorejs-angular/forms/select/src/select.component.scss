@@ -2,11 +2,18 @@
 @use 'sass:map';
 
 :host {
-  padding-top: 5px;
   display: block;
   // [NEW]: Ngăn host phình to ngoài mức kiểm soát
   max-width: 100%;
 }
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → không cần đệm trên cho form-field.
+:host(.sd-viewed) { padding-top: 0; }
 
 // Start: Xử lý loading
 ::ng-deep {
@@ -163,10 +170,6 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      .sd-empty-img {
-        width: 95px;
-        content: url('../assets/empty.svg');
-      }
     }
   }
 }
@@ -197,4 +200,57 @@
     word-break: break-word;
     line-height: 1.4;
   }
+}
+
+// =============================================================================
+// Bare mode — "không khung": bóc hết shell mat-form-field để control nằm phẳng
+// trong context inline (vd. chip query-bar khi user click vào để chỉnh giá trị).
+// -----------------------------------------------------------------------------
+// Khi dùng <sd-select bare>:
+//   - Trong chip / token / inline editor — nơi đã có viền riêng & layout chặt.
+// Khi KHÔNG dùng:
+//   - Form thông thường (cần outline + label + subscript hint/error).
+//   - State chỉ-đọc: dùng [viewed]=true để render <sd-view> (text only).
+//
+// bare và viewed bù nhau, không chồng:
+//   - viewed=true               → hiển thị text qua <sd-view>, không có form-field.
+//   - bare=true + viewed=false  → form-field bị bóc khung, vẫn tương tác được.
+// =============================================================================
+
+// Host: inline-flex để control ngồi cùng dòng với chữ/icon xung quanh chip.
+:host(.sd-bare) {
+  display: inline-flex;
+  align-items: center;
+}
+
+// Bóc từng lớp visual quanh trigger của mat-select.
+:host(.sd-bare) ::ng-deep {
+  // Mặc định form-field rộng 100% — co về auto để vừa nội dung.
+  .mat-mdc-form-field { width: auto; }
+
+  // Wrapper outline/nền: bỏ đệm + nền để text ngồi sát viền chip.
+  .mat-mdc-text-field-wrapper { padding: 0; background: transparent; }
+
+  // Flex row chứa prefix/infix/suffix: bỏ đệm, canh giữa dọc.
+  .mat-mdc-form-field-flex { padding: 0; align-items: center; }
+
+  // Viền outline ("notched"): ẩn — chip đã có viền riêng.
+  .mdc-notched-outline { display: none; }
+
+  // Vùng hint/error dưới control: ẩn — chip không có chỗ cho subscript.
+  .mat-mdc-form-field-subscript-wrapper { display: none; }
+
+  // Infix là vùng input thật: bỏ đệm + min-height, canh giữa, bỏ border.
+  .mat-mdc-form-field-infix {
+    padding: 0;
+    min-height: 0;
+    width: auto;
+    border: 0;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  // Mũi tên dropdown của mat-select: ẩn — chip có affordance × riêng để xóa,
+  // và panel mở qua click toàn vùng trigger.
+  .mat-mdc-select-arrow-wrapper { display: none; }
 }

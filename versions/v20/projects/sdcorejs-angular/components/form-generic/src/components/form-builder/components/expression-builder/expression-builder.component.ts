@@ -10,7 +10,8 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import { ArrayUtilities, DateUtilities, SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
+import { ArrayUtilities, DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import {
   Attribute,
   AttributeOperators,
@@ -73,13 +74,13 @@ export class ExpressionBuilderComponent {
   }
 
   expression?: SdFormGenericExpression = {
-    key: SdUtilities.randomId(),
+    key: Utilities.randomId(),
     type: 'combinator',
     combinator: '&&',
     conditions: [],
   };
   model?: SdFormGenericExpression = {
-    key: SdUtilities.randomId(),
+    key: Utilities.randomId(),
     type: 'combinator',
     combinator: '&&',
     conditions: [],
@@ -89,7 +90,7 @@ export class ExpressionBuilderComponent {
       this.model = model;
     }
     this.model = this.model || {
-      key: SdUtilities.randomId(),
+      key: Utilities.randomId(),
       type: 'combinator',
       combinator: '&&',
       conditions: [],
@@ -114,7 +115,7 @@ export class ExpressionBuilderComponent {
 
   addCondition = (conditions: SdFormGenericExpression['conditions']) => {
     conditions.push({
-      key: SdUtilities.randomId(),
+      key: Utilities.randomId(),
       type: 'condition',
       field: undefined,
       operator: 'EQUAL',
@@ -126,7 +127,7 @@ export class ExpressionBuilderComponent {
 
   addCombinator = (conditions: SdFormGenericExpression['conditions']) => {
     conditions.push({
-      key: SdUtilities.randomId(),
+      key: Utilities.randomId(),
       type: 'combinator',
       combinator: '&&',
       conditions: [],

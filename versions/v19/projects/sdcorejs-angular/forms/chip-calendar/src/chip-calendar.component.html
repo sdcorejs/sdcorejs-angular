@@ -6,7 +6,7 @@
 @let _viewDef = sdViewDef();
 @let _labelTemplate = (sdLabelTemplate() ?? sdLabelDef()?.templateRef) || undefined;
 @let _valueTemplate = (sdValueTemplate() ?? _viewDef?.templateRef) || undefined;
-@let _errMsg = errorTooltipMessage;
+@let _errMsg = errorMessage();
 
 @if (_viewed) {
   <sd-view
@@ -74,6 +74,12 @@
             [required]="_req"
             matInput
             [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-count]="dataCount()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-error-message]="dataErrorMessage()"
             readonly
             #input />
         </mat-chip-grid>

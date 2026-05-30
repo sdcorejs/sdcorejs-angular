@@ -4,7 +4,7 @@ import { Subject } from 'rxjs';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
 import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Injectable()
 export class ConfigService {
@@ -13,7 +13,10 @@ export class ConfigService {
     COMMAND: 'sdCommand',
     SELECTION: 'sdSelection',
     GROUP: 'sdGroup',
-    REORDER: 'reorder',
+    REORDER: 'sdReorder',
+    INDEX: 'sdIndex',
+    TREE_TOGGLE: 'sdTreeToggle',
+    FILLER: 'sdFiller',
   };
   #prefix = 'TABLE_CONFIG';
   #storage?: SdStorage<ConfiguredTable>;
@@ -28,7 +31,7 @@ export class ConfigService {
   #loadConfiguredTable = (option: SdTableOption): SdStorage<ConfiguredTable> => {
     // Náº¿u khÃ´ng cÃ³ key thÃ¬ khÃ´ng láº¥y Ä‘Æ°á»£c setting
     if (!option?.key) {
-      return this.storageService.create<ConfiguredTable>(SdUtilities.hash(option), {
+      return this.storageService.create<ConfiguredTable>(Utilities.hash(option), {
         type: 'session', // Náº¿u khÃ´ng cÃ³ key thÃ¬ lÆ°u theo session
         default: this.#default(option),
       });
@@ -71,14 +74,23 @@ export class ConfigService {
       result.firstHeaders.push(this.#COLUMNS.SELECTION);
       result.displayedColumns.push(this.#COLUMNS.SELECTION);
     }
+    if (option.tree) {
+      result.firstHeaders.push(this.#COLUMNS.TREE_TOGGLE);
+      result.displayedColumns.push(this.#COLUMNS.TREE_TOGGLE);
+    }
     // ðŸ‘‡ Chá»‰ push vÃ o Ä‘áº§u náº¿u lÃ  left (máº·c Ä‘á»‹nh)
     if (commands?.length && !isCommandRight) {
       result.firstHeaders.push(this.#COLUMNS.COMMAND);
       result.displayedColumns.push(this.#COLUMNS.COMMAND);
     }
-    if (group?.fields?.length) {
-      result.firstHeaders.push(this.#COLUMNS.GROUP);
-      result.displayedColumns.push(this.#COLUMNS.GROUP);
+    // why: group header row dÃ¹ng matRowDef RIÃŠNG vá»›i column list ['sdGroupHeader'] qua predicate
+    // when:isGroupHeader â€” KHÃ”NG inject vÃ o displayedColumns/firstHeaders Ä‘á»ƒ trÃ¡nh colspan trick
+    // (TDs khÃ¡c váº«n render gÃ¢y overflow row). Data row dÃ¹ng displayedColumns nguyÃªn váº¹n.
+    // group option váº«n cáº§n khai bÃ¡o (qua option.group) Ä‘á»ƒ SdGroupPipe biáº¿t bucket items.
+    // sdIndex Ä‘áº·t sau selector / tree / command-left / group, ngay trÆ°á»›c data columns
+    if (option.index?.enabled) {
+      result.firstHeaders.push(this.#COLUMNS.INDEX);
+      result.displayedColumns.push(this.#COLUMNS.INDEX);
     }
     configuration?.columns
       ?.filter(col => !col.invisible)
@@ -155,9 +167,21 @@ export class ConfigService {
       result.firstHeaders.push(this.#COLUMNS.COMMAND);
       result.displayedColumns.push(this.#COLUMNS.COMMAND);
     }
+    // why: filler column á»Ÿ cuá»‘i háº¥p thá»¥ leftover space â€” opt-in qua option.filler.enabled.
+    // Khi báº­t, ngÄƒn cÃ¡c cá»™t utility (selection, index, command) bá»‹ table-layout auto stretch trÃªn mÃ n rá»™ng.
+    if (option.filler?.enabled) {
+      result.firstHeaders.push(this.#COLUMNS.FILLER);
+      result.displayedColumns.push(this.#COLUMNS.FILLER);
+    }
     result.multipleHeader = result.secondHeaders.length > 0;
-    // Sub infomation khÃ´ng thá»ƒ cÃ³ footer
-    result.displayedFooters = result.displayedColumns.filter(val => val !== this.#COLUMNS.SUBINFORMATION);
+    // Sub infomation khÃ´ng thá»ƒ cÃ³ footer; filler cÅ©ng khÃ´ng cáº§n footer cell.
+    result.displayedFooters = result.displayedColumns.filter(
+      val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.TREE_TOGGLE && val !== this.#COLUMNS.FILLER
+    );
+    if (option.filler?.enabled) {
+      // Footer cÅ©ng cáº§n filler cuá»‘i Ä‘á»ƒ giá»¯ width Ä‘á»“ng bá»™ vá»›i data row
+      result.displayedFooters.push(this.#COLUMNS.FILLER);
+    }
     if (option?.rowReorder?.enabled) {
       result.displayedColumns.unshift(this.#COLUMNS.REORDER);
       result.firstHeaders.unshift(this.#COLUMNS.REORDER);

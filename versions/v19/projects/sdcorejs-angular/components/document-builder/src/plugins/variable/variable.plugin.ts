@@ -1,10 +1,10 @@
-﻿import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import { Config, Plugin, Widget, toWidget } from 'ckeditor5';
 import { DocumentBuilderOption, SdDocumentBuilderVariable } from '../../document-builder.model';
-import { SdResolveMaybeAsync } from '@sdcorejs/angular/utilities';
+import { resolveMaybeAsync } from '@sdcorejs/utils/models';
 
 export class VariablePlugin extends Plugin {
-  // TÃªn plugin Ä‘Äƒng kÃ½ vá»›i CKEditor â€” báº¯t buá»™c Ä‘á»ƒ tÃ¬m kiáº¿m báº±ng string vÃ  á»•n Ä‘á»‹nh trong build minified
+  // Tên plugin đăng ký với CKEditor — bắt buộc để tìm kiếm bằng string và ổn định trong build minified
   static get pluginName() {
     return 'VariablePlugin' as const;
   }
@@ -19,14 +19,14 @@ export class VariablePlugin extends Plugin {
     const conversion = editor.conversion;
     const editingView = editor.editing.view;
 
-    // Cá» Ä‘Ã¡nh dáº¥u Ä‘ang trong quÃ¡ trÃ¬nh xá»­ lÃ½ paste
+    // Cờ đánh dấu đang trong quá trình xử lý paste
     let isPasting = false;
     this.listenTo(
       editingView.document,
       'clipboardInput',
       () => {
         isPasting = true;
-        // Reset cá» sau khi quÃ¡ trÃ¬nh paste (ngay trong cÃ¹ng event loop/tick) hoÃ n táº¥t
+        // Reset cờ sau khi quá trình paste (ngay trong cùng event loop/tick) hoàn tất
         setTimeout(() => {
           isPasting = false;
         }, 0);
@@ -34,7 +34,7 @@ export class VariablePlugin extends Plugin {
       { priority: 'highest' }
     );
 
-    // 1. Äá»‹nh nghÄ©a Schema (Model)
+    // 1. Định nghĩa Schema (Model)
     schema.register('variable', {
       inheritAllFrom: '$inlineObject',
       allowWhere: '$text',
@@ -44,8 +44,8 @@ export class VariablePlugin extends Plugin {
     });
 
     // 2. Model -> HTML
-    // model lÃ  string 'variable' â†’ chá»‰ cháº¡y khi element Ä‘Æ°á»£c Táº O Má»šI (khÃ´ng reconvert khi attribute Ä‘á»•i)
-    // LuÃ´n render tráº¡ng thÃ¡i UNBOUND táº¡i Ä‘Ã¢y â€” binding state Ä‘Æ°á»£c xá»­ lÃ½ riÃªng bá»Ÿi converter bÃªn dÆ°á»›i
+    // model là string 'variable' → chỉ chạy khi element được TẠO MỚI (không reconvert khi attribute đổi)
+    // Luôn render trạng thái UNBOUND tại đây — binding state được xử lý riêng bởi converter bên dưới
     conversion.for('downcast').elementToElement({
       model: 'variable',
       view: (modelItem, { writer: viewWriter }) => {
@@ -59,7 +59,7 @@ export class VariablePlugin extends Plugin {
           'data-id': id,
           'data-value': value,
           'data-display': display,
-          'data-binding': 'false', // LuÃ´n báº¯t Ä‘áº§u unbound â€” binding chá»‰ set qua bindValue()
+          'data-binding': 'false', // Luôn bắt đầu unbound — binding chỉ set qua bindValue()
         });
 
         const innerText = viewWriter.createText(`{{${display}}}`);
@@ -68,10 +68,10 @@ export class VariablePlugin extends Plugin {
       },
     });
 
-    // 2b. bindingValue â†’ view
-    // - editingDowncast: HTML bind dÃ¹ng createRawElement Ä‘á»ƒ hiá»ƒn thá»‹ table/section trong editor.
-    // - dataDowncast (getData): CHá»ˆ lÆ°u data-binding-value (URI), khÃ´ng chÃ¨n block HTML vÃ o <span> â€”
-    //   trÃ¡nh HTML lÆ°u dáº¡ng <p><span>â€¦<table>â€¦ (invalid / upcast CKEditor lá»—i null.start).
+    // 2b. bindingValue → view
+    // - editingDowncast: HTML bind dùng createRawElement để hiển thị table/section trong editor.
+    // - dataDowncast (getData): CHỈ lưu data-binding-value (URI), không chèn block HTML vào <span> —
+    //   tránh HTML lưu dạng <p><span>…<table>… (invalid / upcast CKEditor lỗi null.start).
     const applyBindingValueAttributeToView = (isDataPipeline: boolean) => {
       return (evt: any, data: any, conversionApi: any) => {
         if (!conversionApi.consumable.consume(data.item, evt.name)) return;
@@ -100,7 +100,7 @@ export class VariablePlugin extends Plugin {
           viewWriter.setAttribute('data-binding', 'html', viewElement);
           viewWriter.setAttribute('data-binding-value', encodeURIComponent(raw), viewElement);
           if (isDataPipeline) {
-            // KhÃ´ng nhÃ©t DOM con vÃ o serialized HTML; upcast Ä‘á»c binding tá»« data-binding-value.
+            // Không nhét DOM con vào serialized HTML; upcast đọc binding từ data-binding-value.
             return;
           }
           const htmlHost = viewWriter.createRawElement(
@@ -128,10 +128,10 @@ export class VariablePlugin extends Plugin {
 
     // 3. HTML -> Model
     conversion.for('upcast').elementToElement({
-      // NOTE: Chá»‰ khai bÃ¡o cÃ¡c attribute Cáº¦N THIáº¾T Ä‘á»ƒ nháº­n biáº¿t variable widget.
-      // - data-binding KHÃ”NG Ä‘Æ°á»£c Ä‘Æ°a vÃ o required attributes (HTML cÅ© khÃ´ng cÃ³ sáº½ khÃ´ng Ä‘Æ°á»£c nháº­n biáº¿t).
-      // - data-binding="true" â†’ Ä‘á»c text child lÃ m bindingValue (plain text).
-      // - data-binding="html" â†’ Ä‘á»c data-binding-value (URI-encoded) lÃ m bindingValue.
+      // NOTE: Chỉ khai báo các attribute CẦN THIẾT để nhận biết variable widget.
+      // - data-binding KHÔNG được đưa vào required attributes (HTML cũ không có sẽ không được nhận biết).
+      // - data-binding="true" → đọc text child làm bindingValue (plain text).
+      // - data-binding="html" → đọc data-binding-value (URI-encoded) làm bindingValue.
       view: {
         name: 'span',
         classes: 'variable-widget ck-widget',
@@ -156,7 +156,7 @@ export class VariablePlugin extends Plugin {
             }
           }
         } else if (bindingMode === 'true') {
-          // Äá»c text content lÃ m bindingValue (bound value Ä‘Æ°á»£c lÆ°u trá»±c tiáº¿p vÃ o inner text)
+          // Đọc text content làm bindingValue (bound value được lưu trực tiếp vào inner text)
           for (const child of viewElement.getChildren()) {
             if (child.is('$text')) {
               bindingValue = (child as any).data as string;
@@ -167,7 +167,7 @@ export class VariablePlugin extends Plugin {
 
         return modelWriter.createElement('variable', {
           id: viewElement.getAttribute('data-id'),
-          // Fix trÃ¹ng uuid: Náº¿u Ä‘ang paste, Táº O Má»šI uuid thay vÃ¬ dÃ¹ng uuid cÅ© tá»« HTML
+          // Fix trùng uuid: Nếu đang paste, TẠO MỚI uuid thay vì dùng uuid cũ từ HTML
           uuid: isPasting ? uuidv4() : (viewElement.getAttribute('data-uuid') ?? uuidv4()),
           value: viewElement.getAttribute('data-value'),
           display: viewElement.getAttribute('data-display'),
@@ -176,13 +176,13 @@ export class VariablePlugin extends Plugin {
       },
     });
 
-    // 4. Xá»­ lÃ½ sá»± kiá»‡n Drop
+    // 4. Xử lý sự kiện Drop
     this.listenTo(editingView.document, 'drop', async (evt, data) => {
       const dataTransfer = (data as any).dataTransfer;
       const jsonData = dataTransfer.getData('ck-variable');
       if (!jsonData) return;
 
-      // data.dropRange lÃ  vá»‹ trÃ­ con chuá»™t trÃªn View khi tháº£
+      // data.dropRange là vị trí con chuột trên View khi thả
       const viewRange = (data as any).dropRange;
       const modelRange = editor.editing.mapper.toModelRange(viewRange);
       evt.stop();
@@ -193,18 +193,18 @@ export class VariablePlugin extends Plugin {
         const getOption = config.get('getOption') as DocumentBuilderOption['getOption'];
         const option = getOption?.();
         if (option?.onDropVariable) {
-          // Bug 4 Fix (Q2-A): XÃ³a tham sá»‘ dropIndex â€” khÃ´ng cÃ²n tryá»n giÃ¡ trá»‹ hardcode 0
-          const result = await SdResolveMaybeAsync<boolean | SdDocumentBuilderVariable>(option.onDropVariable(variable));
+          // Bug 4 Fix (Q2-A): Xóa tham số dropIndex — không còn tryền giá trị hardcode 0
+          const result = await resolveMaybeAsync<boolean | SdDocumentBuilderVariable>(option.onDropVariable(variable));
 
-          // * Há»— trá»£ dá»¯ liá»‡u cÃ³ sáºµn sáº½ chá»‰ cáº§n nháº­n vÃ o boolean cÃ³ cho phÃ©p tháº£ hay khÃ´ng?
-          // i18n náº±m trong editor.config â€” plugin khÃ´ng cÃ³ DI nÃªn Ä‘á»c qua config; Angular wrapper luÃ´n truyá»n _i18n
+          // * Hỗ trợ dữ liệu có sẵn sẽ chỉ cần nhận vào boolean có cho phép thả hay không?
+          // i18n nằm trong editor.config — plugin không có DI nên đọc qua config; Angular wrapper luôn truyền _i18n
           const i18n = (editor.config as Config<DocumentBuilderOption>).get('_i18n') as DocumentBuilderOption['_i18n'];
           if (typeof result === 'boolean') {
             if (!result) {
               throw new Error(i18n?.t('core.component.document-builder.variable.not-allowed') ?? '');
             }
           } else {
-            // * Há»— trá»£ dá»¯ liá»‡u láº¥y tá»« API (Kiá»ƒm tra xem result cÃ³ Ä‘Ãºng Ä‘á»‹nh dáº¡ng interface SdDocumentBuilderVariable hay khÃ´ng?)
+            // * Hỗ trợ dữ liệu lấy từ API (Kiểm tra xem result có đúng định dạng interface SdDocumentBuilderVariable hay không?)
             if (this.#isSdDocumentBuilderVariableResult(result)) {
               variable = result;
             } else {
@@ -215,7 +215,7 @@ export class VariablePlugin extends Plugin {
 
         let insertedUuid = '';
         editor.model.change(writer => {
-          // 4.1. ChÃ¨n biáº¿n
+          // 4.1. Chèn biến
           insertedUuid = uuidv4();
           const variableElem = writer.createElement('variable', {
             id: variable.id,
@@ -225,15 +225,15 @@ export class VariablePlugin extends Plugin {
           });
 
           editor.model.insertContent(variableElem, modelRange);
-          // 4.2. Äáº·t con trá» ra sau biáº¿n
+          // 4.2. Đặt con trỏ ra sau biến
           writer.setSelection(variableElem, 'after');
         });
 
-        // onAfterDropVariable: fires SAU model.change() â†’ variable Ä‘Ã£ cÃ³ trong model
-        // Consumer cÃ³ thá»ƒ gá»i variable.all() táº¡i Ä‘Ã¢y vÃ  tháº¥y biáº¿n má»›i nháº¥t
+        // onAfterDropVariable: fires SAU model.change() → variable đã có trong model
+        // Consumer có thể gọi variable.all() tại đây và thấy biến mới nhất
         option?.onAfterDropVariable?.({ ...variable, uuid: insertedUuid });
       } catch (e) {
-        // Äáº·t con trá» ngay táº¡i vá»‹ trÃ­ lá»—i
+        // Đặt con trỏ ngay tại vị trí lỗi
         if (modelRange) {
           editor.model.change(writer => {
             writer.setSelection(modelRange);
@@ -241,7 +241,7 @@ export class VariablePlugin extends Plugin {
         }
         console.error(e);
       } finally {
-        // 5. Dá»n dáº¹p drop-target dÃ¹ thÃ nh cÃ´ng hay lá»—i
+        // 5. Dọn dẹp drop-target dù thành công hay lỗi
         editor.model.change(writer => {
           for (const marker of editor.model.markers) {
             if (marker.name.startsWith('drop-target')) {
@@ -256,12 +256,12 @@ export class VariablePlugin extends Plugin {
     // 5 & 6. Navigation (Arrow keys + Mouse) + Cursor spacing sau variable
     // -------------------------------------------------------------------------
 
-    // Bug 1 Fix: isNavigating cáº§n Ä‘Æ°á»£c reset sau má»—i láº§n change:range xá»­ lÃ½ xong
-    // Ä‘á»ƒ trÃ¡nh logic chÃ¨n \u00A0 cháº¡y láº·p khi cÃ³ selection change programmatic.
+    // Bug 1 Fix: isNavigating cần được reset sau mỗi lần change:range xử lý xong
+    // để tránh logic chèn \u00A0 chạy lặp khi có selection change programmatic.
     let isNavigating = false;
 
-    // Opt 1: Gá»™p arrow-key detection + Backspace/Delete handler vÃ o 1 listener keydown
-    // Bug 3 Fix: DÃ¹ng this.listenTo() thay .on() Ä‘á»ƒ CKEditor tá»± cleanup khi plugin destroy
+    // Opt 1: Gộp arrow-key detection + Backspace/Delete handler vào 1 listener keydown
+    // Bug 3 Fix: Dùng this.listenTo() thay .on() để CKEditor tự cleanup khi plugin destroy
     this.listenTo(
       editingView.document,
       'keydown',
@@ -269,14 +269,14 @@ export class VariablePlugin extends Plugin {
         const keyCode = data.keyCode;
 
         // --- Arrow key navigation detection (priority: high) ---
-        // MÃ£ phÃ­m mÅ©i tÃªn: 37 (Left), 38 (Up), 39 (Right), 40 (Down)
+        // Mã phím mũi tên: 37 (Left), 38 (Up), 39 (Right), 40 (Down)
         const isArrowKey = keyCode >= 37 && keyCode <= 40;
         if (isArrowKey) {
           isNavigating = true;
-          return; // khÃ´ng xá»­ lÃ½ thÃªm cho arrow key á»Ÿ Ä‘Ã¢y
+          return; // không xử lý thêm cho arrow key ở đây
         }
 
-        // Reset flag náº¿u nháº¥n phÃ­m khÃ¡c (khÃ´ng pháº£i arrow, khÃ´ng pháº£i Backspace/Delete)
+        // Reset flag nếu nhấn phím khác (không phải arrow, không phải Backspace/Delete)
         const btnBackspace = keyCode === 8;
         const btnDelete = keyCode === 46;
         if (!btnBackspace && !btnDelete) {
@@ -284,15 +284,15 @@ export class VariablePlugin extends Plugin {
           return;
         }
 
-        // --- Opt 1: Backspace / Delete handler (Ä‘Ã£ gá»™p vÃ o cÃ¹ng listener) ---
-        // priority: highest â€” cháº¡y trÆ°á»›c má»i handler khÃ¡c Ä‘á»ƒ báº¯t xÃ³a variable 2 bÆ°á»›c
+        // --- Opt 1: Backspace / Delete handler (đã gộp vào cùng listener) ---
+        // priority: highest — chạy trước mọi handler khác để bắt xóa variable 2 bước
         const selection = editor.model.document.selection;
         const model = editor.model;
 
-        // CASE 1: Náº¿u con trá» Ä‘ang nháº¥p nhÃ¡y (Collapsed)
+        // CASE 1: Nếu con trỏ đang nhấp nháy (Collapsed)
         if (selection.isCollapsed) {
           const position = selection.getFirstPosition();
-          // Vá»›i Backspace ta kiá»ƒm tra nodeBefore, vá»›i Delete ta kiá»ƒm tra nodeAfter
+          // Với Backspace ta kiểm tra nodeBefore, với Delete ta kiểm tra nodeAfter
           const targetNode = btnBackspace ? position?.nodeBefore : position?.nodeAfter;
 
           if (targetNode && targetNode.is('element', 'variable')) {
@@ -300,17 +300,17 @@ export class VariablePlugin extends Plugin {
             evt.stop();
 
             model.change(writer => {
-              // Chá»n bao quanh Variable Ä‘Ã³ (láº§n báº¥m tiáº¿p theo sáº½ xÃ³a)
+              // Chọn bao quanh Variable đó (lần bấm tiếp theo sẽ xóa)
               writer.setSelection(targetNode, 'on');
             });
             return;
           }
         }
-        // CASE 2: Náº¿u Ä‘ang cÃ³ má»™t vÃ¹ng chá»n (Ä‘Ã£ Ä‘Æ°á»£c highlight tá»« láº§n báº¥m trÆ°á»›c)
+        // CASE 2: Nếu đang có một vùng chọn (đã được highlight từ lần bấm trước)
         else {
           const selectedElement = selection.getSelectedElement();
 
-          // Náº¿u pháº§n tá»­ Ä‘ang Ä‘Æ°á»£c chá»n chÃ­nh lÃ  variable â†’ xÃ³a háº³n
+          // Nếu phần tử đang được chọn chính là variable → xóa hẳn
           if (selectedElement && selectedElement.is('element', 'variable')) {
             data.preventDefault();
             evt.stop();
@@ -321,23 +321,23 @@ export class VariablePlugin extends Plugin {
           }
         }
       },
-      // priority: highest â€” Backspace/Delete pháº£i cháº¡y trÆ°á»›c CKEditor default Ä‘á»ƒ báº¯t 2-step deletion
+      // priority: highest — Backspace/Delete phải chạy trước CKEditor default để bắt 2-step deletion
       { priority: 'highest' }
     );
 
-    // Bug 3 Fix: mousedown cÅ©ng dÃ¹ng this.listenTo() Ä‘á»ƒ trÃ¡nh memory leak
+    // Bug 3 Fix: mousedown cũng dùng this.listenTo() để tránh memory leak
     this.listenTo(editingView.document, 'mousedown', () => {
       isNavigating = true;
     });
 
     this.listenTo(editor.model.document.selection, 'change:range', () => {
-      // Náº¿u khÃ´ng pháº£i lÃ  hÃ nh Ä‘á»™ng click hoáº·c mÅ©i tÃªn thÃ¬ thoÃ¡t hÃ m.
+      // Nếu không phải là hành động click hoặc mũi tên thì thoát hàm.
       if (!isNavigating) {
         return;
       }
 
-      // Bug 1 Fix: Reset ngay sau khi vÃ o handler Ä‘á»ƒ trÃ¡nh cháº¡y láº·p
-      // khi cÃ³ thÃªm selection change programmatic (VD: writer.insertText bÃªn dÆ°á»›i tá»± trigger láº¡i)
+      // Bug 1 Fix: Reset ngay sau khi vào handler để tránh chạy lặp
+      // khi có thêm selection change programmatic (VD: writer.insertText bên dưới tự trigger lại)
       isNavigating = false;
 
       const model = editor.model;
@@ -348,18 +348,18 @@ export class VariablePlugin extends Plugin {
       const nodeBefore = position?.nodeBefore;
       if (!position) return;
 
-      // Kiá»ƒm tra: Node Ä‘á»©ng trÆ°á»›c con trá» lÃ  variable
+      // Kiểm tra: Node đứng trước con trỏ là variable
       if (nodeBefore && nodeBefore.is('element', 'variable')) {
-        // Láº¥y node ngay sau variable Ä‘á»ƒ kiá»ƒm tra
+        // Lấy node ngay sau variable để kiểm tra
         const nextNode = nodeBefore.nextSibling;
 
-        // Logic: Náº¿u phÃ­a sau KHÃ”NG CÃ“ GÃŒ hoáº·c KHÃ”NG PHáº¢I LÃ€ TEXT â†’ chÃ¨n \u00A0 Ä‘á»ƒ cÃ³ thá»ƒ gÃµ tiáº¿p
+        // Logic: Nếu phía sau KHÔNG CÓ GÌ hoặc KHÔNG PHẢI LÀ TEXT → chèn \u00A0 để có thể gõ tiếp
         if (!nextNode || !nextNode.is('$text')) {
           model.change(writer => {
             writer.insertText('\u00A0', nodeBefore, 'after');
-            // Láº¥y vá»‹ trÃ­ ngay sau variable (lÃºc nÃ y Ä‘ang lÃ  Ä‘áº§u cá»§a text node má»›i)
+            // Lấy vị trí ngay sau variable (lúc này đang là đầu của text node mới)
             const posAfterVariable = writer.createPositionAfter(nodeBefore);
-            // Dá»‹ch chuyá»ƒn vá»‹ trÃ­ Ä‘Ã³ sang pháº£i 1 Ä‘Æ¡n vá»‹ (bá» qua kÃ½ tá»± vá»«a thÃªm)
+            // Dịch chuyển vị trí đó sang phải 1 đơn vị (bỏ qua ký tự vừa thêm)
             const targetPos = posAfterVariable.getShiftedBy(1);
             writer.setSelection(targetPos);
           });
@@ -368,9 +368,9 @@ export class VariablePlugin extends Plugin {
     });
 
     // -------------------------------------------------------------------------
-    // 8. Xá»­ lÃ½ sá»± kiá»‡n Copy / Cut (Clipboard Output)
+    // 8. Xử lý sự kiện Copy / Cut (Clipboard Output)
     // -------------------------------------------------------------------------
-    // priority: low â€” cháº¡y sau CKEditor Ä‘á»ƒ bá»• sung text/plain fallback, khÃ´ng can thiá»‡p HTML
+    // priority: low — chạy sau CKEditor để bổ sung text/plain fallback, không can thiệp HTML
     this.listenTo(
       editor.editing.view.document,
       'clipboardOutput',
@@ -381,7 +381,7 @@ export class VariablePlugin extends Plugin {
         const dataTransfer = data.dataTransfer;
         const content = data.content;
 
-        // Opt 3: Chá»‰ visit element nodes, bá» qua cÃ¡c node khÃ´ng liÃªn quan
+        // Opt 3: Chỉ visit element nodes, bỏ qua các node không liên quan
         let plainText = '';
         const viewRange = editor.editing.view.createRangeIn(content);
         for (const item of viewRange.getItems()) {
@@ -397,34 +397,34 @@ export class VariablePlugin extends Plugin {
           dataTransfer.setData('text/plain', plainText);
         }
 
-        // HTML content giá»¯ nguyÃªn â€” CKEditor sáº½ tá»± xá»­ lÃ½ upcast khi paste láº¡i
+        // HTML content giữ nguyên — CKEditor sẽ tự xử lý upcast khi paste lại
       },
       { priority: 'low' }
     );
 
     // -------------------------------------------------------------------------
-    // 9. Xá»­ lÃ½ sá»± kiá»‡n Paste (Clipboard Input)
+    // 9. Xử lý sự kiện Paste (Clipboard Input)
     // -------------------------------------------------------------------------
-    // Náº¿u paste tá»« external source (chá»‰ cÃ³ text, khÃ´ng cÃ³ HTML variable)
-    // thÃ¬ chuyá»ƒn {{text}} thÃ nh variable widget
+    // Nếu paste từ external source (chỉ có text, không có HTML variable)
+    // thì chuyển {{text}} thành variable widget
     this.listenTo(
       editor.editing.view.document,
       'clipboardInput',
       async (evt, data: any) => {
         const dataTransfer = data.dataTransfer;
 
-        // Náº¿u cÃ³ HTML chá»©a variable-widget thÃ¬ Ä‘á»ƒ CKEditor xá»­ lÃ½ (upcast converter)
-        // Viá»‡c chá»‘ng trÃ¹ng uuid (regenerate) Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½ á»Ÿ upcast converter dá»±a vÃ o biáº¿n isPasting
+        // Nếu có HTML chứa variable-widget thì để CKEditor xử lý (upcast converter)
+        // Việc chống trùng uuid (regenerate) đã được xử lý ở upcast converter dựa vào biến isPasting
         let html = dataTransfer.getData('text/html');
         if (html && html.includes('variable-widget')) {
           return;
         }
 
-        // Chá»‰ xá»­ lÃ½ náº¿u chá»‰ cÃ³ plain text vá»›i pattern {{text}}
+        // Chỉ xử lý nếu chỉ có plain text với pattern {{text}}
         const text = dataTransfer.getData('text/plain');
         if (!text) return;
 
-        // Kiá»ƒm tra cÃ³ chá»©a pattern {{text}} khÃ´ng
+        // Kiểm tra có chứa pattern {{text}} không
         const variablePattern = /\{\{([^}]+)\}\}/g;
         if (!variablePattern.test(text)) {
           return;
@@ -435,18 +435,18 @@ export class VariablePlugin extends Plugin {
 
         evt.stop();
 
-        // Bug 2 Fix (Q1-A): Láº¥y option Ä‘á»ƒ gá»i onPasteVariable callback náº¿u cÃ³
+        // Bug 2 Fix (Q1-A): Lấy option để gọi onPasteVariable callback nếu có
         const config = editor.config as Config<DocumentBuilderOption>;
         const getOption = config.get('getOption') as DocumentBuilderOption['getOption'];
         const option = getOption?.();
 
-        // TÃ¡ch text thÃ nh cÃ¡c pháº§n: normal text vÃ  variables
+        // Tách text thành các phần: normal text và variables
         let lastIndex = 0;
         let match;
         const fragments: Array<{ type: 'text' | 'variable'; content: string; display?: string }> = [];
 
         while ((match = variablePattern.exec(text)) !== null) {
-          // ThÃªm text trÆ°á»›c variable
+          // Thêm text trước variable
           if (match.index > lastIndex) {
             fragments.push({ type: 'text', content: text.slice(lastIndex, match.index) });
           }
@@ -454,17 +454,17 @@ export class VariablePlugin extends Plugin {
           lastIndex = match.index + match[0].length;
         }
 
-        // ThÃªm text cÃ²n láº¡i sau variable cuá»‘i cÃ¹ng
+        // Thêm text còn lại sau variable cuối cùng
         if (lastIndex < text.length) {
           fragments.push({ type: 'text', content: text.slice(lastIndex) });
         }
 
-        // Bug 2 Fix: Resolve táº¥t cáº£ variable fragments trÆ°á»›c khi thá»±c hiá»‡n model.change
-        // TrÃ¡nh async operation bÃªn trong model.change (CKEditor khÃ´ng há»— trá»£ async writer)
+        // Bug 2 Fix: Resolve tất cả variable fragments trước khi thực hiện model.change
+        // Tránh async operation bên trong model.change (CKEditor không hỗ trợ async writer)
 
-        // XÃ¢y dá»±ng lookup map tá»« variables Ä‘ang cÃ³ trong document (theo display name)
-        // DÃ¹ng Ä‘á»ƒ fallback khi khÃ´ng cÃ³ onPasteVariable â€” giá»¯ láº¡i Ä‘áº§y Ä‘á»§ id/value cá»§a biáº¿n gá»‘c
-        // khi copy-paste ná»™i bá»™ bá»‹ máº¥t HTML (chá»‰ cÃ²n plain text {{display}})
+        // Xây dựng lookup map từ variables đang có trong document (theo display name)
+        // Dùng để fallback khi không có onPasteVariable — giữ lại đầy đủ id/value của biến gốc
+        // khi copy-paste nội bộ bị mất HTML (chỉ còn plain text {{display}})
         const existingVariableMap = this.#buildDisplayMap();
 
         const resolvedFragments: Array<{ type: 'text' | 'variable'; content: string; variable?: SdDocumentBuilderVariable }> = [];
@@ -474,21 +474,21 @@ export class VariablePlugin extends Plugin {
 
             if (option?.onPasteVariable) {
               try {
-                resolved = await SdResolveMaybeAsync<SdDocumentBuilderVariable | null>(option.onPasteVariable(fragment.display));
+                resolved = await resolveMaybeAsync<SdDocumentBuilderVariable | null>(option.onPasteVariable(fragment.display));
               } catch (e) {
-                // @i18n-ignore â€” dev console warning
-                console.warn(`[VariablePlugin] onPasteVariable("${fragment.display}") tháº¥t báº¡i:`, e);
+                // @i18n-ignore — dev console warning
+                console.warn(`[VariablePlugin] onPasteVariable("${fragment.display}") thất bại:`, e);
               }
             }
 
-            // Fallback 1: Tra cá»©u variable Ä‘ang cÃ³ trong document theo display name
-            // â†’ Giá»¯ láº¡i Ä‘áº§y Ä‘á»§ id/value khi copy-paste ná»™i bá»™ bá»‹ máº¥t HTML
+            // Fallback 1: Tra cứu variable đang có trong document theo display name
+            // → Giữ lại đầy đủ id/value khi copy-paste nội bộ bị mất HTML
             if (!resolved) {
               resolved = existingVariableMap.get(fragment.display) ?? null;
             }
 
-            // Fallback 2: KhÃ´ng tÃ¬m tháº¥y â†’ táº¡o variable sentinel vá»›i id = ''
-            // Consumer cÃ³ thá»ƒ filter qua variable.all() vÃ  nháº­n biáº¿t báº±ng id === ''
+            // Fallback 2: Không tìm thấy → tạo variable sentinel với id = ''
+            // Consumer có thể filter qua variable.all() và nhận biết bằng id === ''
             resolvedFragments.push({
               type: 'variable',
               content: fragment.content,
@@ -504,7 +504,7 @@ export class VariablePlugin extends Plugin {
           }
         }
 
-        // ChÃ¨n tá»«ng fragment vÃ o document
+        // Chèn từng fragment vào document
         editor.model.change(writer => {
           const selection = editor.model.document.selection;
           const position = selection.getFirstPosition();
@@ -528,7 +528,7 @@ export class VariablePlugin extends Plugin {
             }
           }
 
-          // Äáº·t con trá» sau ná»™i dung vá»«a paste
+          // Đặt con trỏ sau nội dung vừa paste
           writer.setSelection(currentPosition);
         });
       },
@@ -549,10 +549,10 @@ export class VariablePlugin extends Plugin {
   };
 
   /**
-   * QuÃ©t táº¥t cáº£ variable elements trong document hiá»‡n táº¡i, tráº£ vá» Map<display, SdDocumentBuilderVariable>.
-   * DÃ¹ng lÃ m fallback khi paste {{display}} mÃ  khÃ´ng cÃ³ onPasteVariable callback:
-   * náº¿u document Ä‘Ã£ cÃ³ variable cÃ¹ng display â†’ tÃ¡i sá»­ dá»¥ng id/value cá»§a biáº¿n gá»‘c.
-   * Náº¿u cÃ³ nhiá»u variable cÃ¹ng display â†’ láº¥y cÃ¡i Ä‘áº§u tiÃªn tÃ¬m Ä‘Æ°á»£c.
+   * Quét tất cả variable elements trong document hiện tại, trả về Map<display, SdDocumentBuilderVariable>.
+   * Dùng làm fallback khi paste {{display}} mà không có onPasteVariable callback:
+   * nếu document đã có variable cùng display → tái sử dụng id/value của biến gốc.
+   * Nếu có nhiều variable cùng display → lấy cái đầu tiên tìm được.
    */
   #buildDisplayMap = (): Map<string, SdDocumentBuilderVariable> => {
     const map = new Map<string, SdDocumentBuilderVariable>();
@@ -563,7 +563,7 @@ export class VariablePlugin extends Plugin {
     for (const item of range.getItems()) {
       if (item.is('element', 'variable')) {
         const display = item.getAttribute('display') as string;
-        // Chá»‰ lÆ°u láº§n Ä‘áº§u tiÃªn gáº·p display nÃ y
+        // Chỉ lưu lần đầu tiên gặp display này
         if (display && !map.has(display)) {
           map.set(display, {
             id: item.getAttribute('id') as string,
@@ -579,12 +579,12 @@ export class VariablePlugin extends Plugin {
   };
 
   // =========================================================================
-  // PUBLIC API â€” Variable management
+  // PUBLIC API — Variable management
   // =========================================================================
 
   /**
-   * Láº¥y táº¥t cáº£ variables trong document.
-   * @returns Danh sÃ¡ch táº¥t cáº£ variables (bao gá»“m bindingValue náº¿u Ä‘Ã£ binding)
+   * Lấy tất cả variables trong document.
+   * @returns Danh sách tất cả variables (bao gồm bindingValue nếu đã binding)
    */
   all<T = any>(): SdDocumentBuilderVariable<T>[] {
     const model = this.editor.model;
@@ -613,8 +613,8 @@ export class VariablePlugin extends Plugin {
   }
 
   /**
-   * Scroll tá»›i vá»‹ trÃ­ cá»§a variable theo uuid.
-   * @param uuid - uuid cá»§a variable (FE tá»± sinh sau má»—i láº§n drop)
+   * Scroll tới vị trí của variable theo uuid.
+   * @param uuid - uuid của variable (FE tự sinh sau mỗi lần drop)
    */
   scroll(uuid: string): void {
     const model = this.editor.model;
@@ -642,17 +642,17 @@ export class VariablePlugin extends Plugin {
         }
       }
     } else {
-      // @i18n-ignore â€” dev console warning
-      console.warn(`Variable vá»›i uuid "${uuid}" khÃ´ng tÃ¬m tháº¥y trong tÃ i liá»‡u.`);
+      // @i18n-ignore — dev console warning
+      console.warn(`Variable với uuid "${uuid}" không tìm thấy trong tài liệu.`);
     }
   }
 
   /**
-   * GÃ¡n giÃ¡ trá»‹ cho Táº¤T Cáº¢ variable cÃ³ cÃ¹ng id trong document.
-   * Náº¿u value rá»—ng â†’ tá»± Ä‘á»™ng gá»i clearValue(id).
-   * @param id    - id cá»§a variable definition
-   * @param value - giÃ¡ trá»‹ binding cáº§n hiá»ƒn thá»‹
-   * @returns sá»‘ instance Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t
+   * Gán giá trị cho TẤT CẢ variable có cùng id trong document.
+   * Nếu value rỗng → tự động gọi clearValue(id).
+   * @param id    - id của variable definition
+   * @param value - giá trị binding cần hiển thị
+   * @returns số instance đã được cập nhật
    */
   bindValue(id: string, value: string): number {
     if (!value) return this.clearValue(id);
@@ -674,9 +674,9 @@ export class VariablePlugin extends Plugin {
   }
 
   /**
-   * XÃ³a binding value cá»§a Táº¤T Cáº¢ variable cÃ³ cÃ¹ng id.
-   * @param id - id cá»§a variable definition
-   * @returns sá»‘ instance Ä‘Ã£ Ä‘Æ°á»£c cáº­p nháº­t
+   * Xóa binding value của TẤT CẢ variable có cùng id.
+   * @param id - id của variable definition
+   * @returns số instance đã được cập nhật
    */
   clearValue(id: string): number {
     const model = this.editor.model;
@@ -697,8 +697,8 @@ export class VariablePlugin extends Plugin {
   }
 
   /**
-   * Batch bind nhiá»u variables theo map { id â†’ value }.
-   * ToÃ n bá»™ thá»±c hiá»‡n trong 1 model.change() â†’ 1 undo step duy nháº¥t.
+   * Batch bind nhiều variables theo map { id → value }.
+   * Toàn bộ thực hiện trong 1 model.change() → 1 undo step duy nhất.
    * @param map - { [id]: boundValue }
    */
   bindValues(map: Record<string, string>): void {
@@ -725,8 +725,8 @@ export class VariablePlugin extends Plugin {
   }
 
   /**
-   * Batch clear binding cá»§a nhiá»u variables.
-   * @param ids - danh sÃ¡ch id cáº§n clear; náº¿u khÃ´ng truyá»n/rá»—ng â†’ clear Táº¤T Cáº¢
+   * Batch clear binding của nhiều variables.
+   * @param ids - danh sách id cần clear; nếu không truyền/rỗng → clear TẤT CẢ
    */
   clearValues(ids?: string[]): void {
     const model = this.editor.model;
@@ -747,16 +747,16 @@ export class VariablePlugin extends Plugin {
     });
   }
 
-  /** XÃ³a toÃ n bá»™ binding values trong document. Shorthand cá»§a clearValues(). */
+  /** Xóa toàn bộ binding values trong document. Shorthand của clearValues(). */
   clearAllValues(): void {
     this.clearValues();
   }
 }
 
 /**
- * HTML tá»« getData() phiÃªn báº£n cÅ© cÃ³ thá»ƒ chá»©a block (vd. table) bÃªn trong `span.variable-widget[data-binding="html"]`,
- * khiáº¿n setData/upcast CKEditor lá»—i (unexpected-error, null.start). Gá»i trÆ°á»›c `setData` Ä‘á»ƒ giá»¯ chá»‰
- * `data-binding-value` vÃ  bá» cÃ¡c node con.
+ * HTML từ getData() phiên bản cũ có thể chứa block (vd. table) bên trong `span.variable-widget[data-binding="html"]`,
+ * khiến setData/upcast CKEditor lỗi (unexpected-error, null.start). Gọi trước `setData` để giữ chỉ
+ * `data-binding-value` và bỏ các node con.
  */
 export function sanitizeVariableHtmlBoundSerializedHtml(html: string): string {
   if (!html || !html.includes('variable-widget')) return html;
@@ -774,4 +774,3 @@ export function sanitizeVariableHtmlBoundSerializedHtml(html: string): string {
     return html;
   }
 }
-

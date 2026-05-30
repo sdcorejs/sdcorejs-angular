@@ -9,7 +9,7 @@ import { SdFormGenericDatetime } from '../../../../../../models';
 import { ComponentViewedPipe, HyperlinkPipe } from '../../../../../../pipes';
 import { filter, Subject, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'lib-datetime',
@@ -85,7 +85,7 @@ export class DatetimeComponent {
       window.open(url);
     } else {
       const [path, queryString] = url?.split('?');
-      const queryParams = SdUtilities.parseQueryParams(queryString);
+      const queryParams = Utilities.parseQueryParams(queryString);
       this.router.navigate([path], { queryParams });
     }
   };

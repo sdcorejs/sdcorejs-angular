@@ -289,14 +289,14 @@ describe('SdChipCalendar', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('errorTooltipMessage', () => {
+  describe('errorMessage', () => {
     it('returns a non-undefined message when required error is present', () => {
       host.required = true;
       fixture.detectChanges();
       comp.formControl.setValue([]);
       comp.formControl.updateValueAndValidity({ emitEvent: false });
       // Source file has encoding issue; verify message is defined & non-empty
-      expect(comp.errorTooltipMessage).toBeTruthy();
+      expect(comp.errorMessage()).toBeTruthy();
     });
 
     it('returns a message containing the min count for minlength error', () => {
@@ -304,7 +304,7 @@ describe('SdChipCalendar', () => {
       fixture.detectChanges();
       comp.formControl.setValue(['2026/05/01']);
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      const msg = comp.errorTooltipMessage ?? '';
+      const msg = comp.errorMessage() ?? '';
       expect(msg).toContain('2');
     });
 
@@ -313,14 +313,14 @@ describe('SdChipCalendar', () => {
       fixture.detectChanges();
       comp.formControl.setValue(['2026/05/01', '2026/05/02']);
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      const msg = comp.errorTooltipMessage ?? '';
+      const msg = comp.errorMessage() ?? '';
       expect(msg).toContain('1');
     });
 
     it('returns undefined when no errors', () => {
       comp.formControl.setValue(['2026/05/01']);
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorTooltipMessage).toBeUndefined();
+      expect(comp.errorMessage()).toBeUndefined();
     });
   });
 
@@ -370,6 +370,27 @@ describe('SdChipCalendar', () => {
       const before = comp.formControl.value ?? [];
       comp.onSelectDate(null);
       expect(comp.formControl.value ?? []).toEqual(before);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  describe('host classes', () => {
+    it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
+      host.label = '';
+      fixture.detectChanges();
+      const hostEl = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar).nativeElement as HTMLElement;
+      expect(hostEl.classList.contains('sd-has-label')).toBe(false);
+      host.label = 'Off Days';
+      fixture.detectChanges();
+      expect(hostEl.classList.contains('sd-has-label')).toBe(true);
+    });
+
+    it('viewed defaults false; viewed=true adds .sd-viewed host class', () => {
+      const hostEl = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar).nativeElement as HTMLElement;
+      expect(hostEl.classList.contains('sd-viewed')).toBe(false);
+      host.viewed = true;
+      fixture.detectChanges();
+      expect(hostEl.classList.contains('sd-viewed')).toBe(true);
     });
   });
 });
@@ -468,5 +489,60 @@ describe('SdChipCalendar — autoId', () => {
     fixture.detectChanges();
     const input = fixture.nativeElement.querySelector('input.sd-chip-input');
     expect(input?.getAttribute('data-autoid')).toBe('forms-chip-calendar-dates');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// E2E attributes
+// ---------------------------------------------------------------------------
+
+describe('SdChipCalendar — E2E attributes', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdChipCalendar;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)
+      ?.componentInstance as SdChipCalendar;
+    if (!comp) throw new Error('SdChipCalendar not found in fixture');
+  });
+
+  it('renders data-disabled reflecting FormControl state', () => {
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-disabled')).toBe('false');
+    comp.formControl.disable();
+    fixture.detectChanges();
+    expect(el.getAttribute('data-disabled')).toBe('true');
+  });
+
+  it('renders data-value as JSON-stringified array', () => {
+    comp.formControl.setValue(['2026/05/01', '2026/05/15']);
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-value')).toBe('["2026/05/01","2026/05/15"]');
+  });
+
+  it('renders data-empty true for [] / false for non-empty', () => {
+    comp.formControl.setValue([]);
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-empty')).toBe('true');
+    comp.formControl.setValue(['2026/05/01']);
+    fixture.detectChanges();
+    expect(el.getAttribute('data-empty')).toBe('false');
+  });
+
+  it('renders data-count reflecting array length', () => {
+    comp.formControl.setValue(['2026/05/01', '2026/05/02', '2026/05/03']);
+    fixture.detectChanges();
+    const el: HTMLInputElement = fixture.nativeElement.querySelector('input.sd-chip-input');
+    expect(el.getAttribute('data-count')).toBe('3');
   });
 });

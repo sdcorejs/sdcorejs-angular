@@ -6,7 +6,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput, SdLabel, SdSelect } from '@sdcorejs/angular/forms';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../../../configurations';
 import { Attribute, GetAttributes } from '../../../../models';
 import { SdFormGenericValidation, SdFormGenericValidationFunction, ValidationAlerts } from '../../../../models/form-generic-validation.model';
@@ -68,7 +68,7 @@ export class ConfigureValidationComponent {
         alert: 'error',
         type,
         expression: {
-          key: SdUtilities.randomId(),
+          key: Utilities.randomId(),
           type: 'combinator',
           combinator: '&&',
           conditions: [],

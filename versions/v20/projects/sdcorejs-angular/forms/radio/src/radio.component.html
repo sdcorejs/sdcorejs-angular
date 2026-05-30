@@ -1,31 +1,35 @@
-@if (viewed) {
-  @if (sdLabelDef?.templateRef) {
-    <ng-container *ngTemplateOutlet="sdLabelDef!.templateRef"> </ng-container>
-  } @else if (label) {
-    <div class="T14R text-black400">{{ label }}</div>
+@if (viewed()) {
+  @if (sdLabelDef()?.templateRef) {
+    <ng-container *ngTemplateOutlet="sdLabelDef()!.templateRef"> </ng-container>
+  } @else if (label()) {
+    <div class="T14R text-black400">{{ label() }}</div>
   }
-  @if (hyperlink) {
+  @if (hyperlink()) {
     <!-- Nếu có hyperlink thì dùng thẻ a -->
-    <a [sdHref]="hyperlink">{{ viewedText }}</a>
+    <a [sdHref]="hyperlink()!">{{ viewedText() }}</a>
   } @else {
     <!-- Ngoài ra dùng thẻ mặc định -->
-    <div class="T14M">{{ viewedText | sdEmpty }}</div>
+    <div class="T14M">{{ viewedText() | sdEmpty }}</div>
   }
 } @else {
-  <section [ngClass]="{ 'c-section': display === 'row' }">
-    @if (sdLabelDef?.templateRef) {
-      <ng-container *ngTemplateOutlet="sdLabelDef!.templateRef"> </ng-container>
-    } @else if (label) {
-      <sd-label [label]="label" [required]="required"></sd-label>
+  <section [ngClass]="{ 'c-section': display() === 'row' }">
+    @if (sdLabelDef()?.templateRef) {
+      <ng-container *ngTemplateOutlet="sdLabelDef()!.templateRef"> </ng-container>
+    } @else if (label()) {
+      <sd-label [label]="label()!" [required]="required()"></sd-label>
     }
     <mat-radio-group
-      [class.c-radio-group-column]="display === 'column'"
-      [class.c-radio-group-row]="display === 'row'"
+      [class.c-radio-group-column]="display() === 'column'"
+      [class.c-radio-group-row]="display() === 'row'"
       [formControl]="formControl"
-      [attr.data-autoId]="autoId()">
-      @for (item of items; track item[valueField]) {
-        <mat-radio-button color="primary" [class.m-0]="display === 'column'" [class.mr-16]="display === 'row'" [value]="item[valueField]">
-          {{ item[displayField] }}
+      [attr.data-autoId]="autoId()"
+      [attr.data-disabled]="dataDisabled()"
+      [attr.data-empty]="dataEmpty()"
+      [attr.data-value]="dataValue()"
+      [attr.data-required]="dataRequired()">
+      @for (item of normalizedItems(); track item[valueField()]) {
+        <mat-radio-button [class.m-0]="display() === 'column'" [class.mr-16]="display() === 'row'" [value]="item[valueField()]">
+          {{ item[displayField()] }}
         </mat-radio-button>
       }
     </mat-radio-group>
@@ -36,7 +40,7 @@
       </mat-error>
     } @else if (formControl.errors?.['inlineError'] && formControl.touched) {
       <mat-error>
-        {{ inlineError }}
+        {{ inlineError() }}
       </mat-error>
     }
   </section>

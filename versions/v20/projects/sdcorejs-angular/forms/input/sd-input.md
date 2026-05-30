@@ -26,7 +26,7 @@ Workhorse text input â€” single-line `text`/`email`/`password`/`number` fie
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-input-<value>"` for E2E selectors. |
+| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoid="forms-input-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
 | `appearance` | `MatFormFieldAppearance` | from `SD_FORM_CONFIGURATION` ?? `'outline'` | Material form-field style. |
 | `floatLabel` | `FloatLabelType` | `'auto'` | Material float-label behaviour. |
@@ -49,7 +49,7 @@ Workhorse text input â€” single-line `text`/`email`/`password`/`number` fie
 | `disabled` | `boolean` | `false` | Disables the control. |
 | `viewed` | `boolean` | `false` | Read-only DETAIL mode â€” hides input, renders value (or `<ng-template sdViewDef>`). |
 | `blurOnEnter` | `boolean` | `false` | If `true`, pressing Enter blurs the field after emitting `keyupEnter`. |
-| `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorTooltipMessage`. |
+| `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorMessage`. |
 | `model` | `any` | `undefined` | Two-way bound value (use `[(model)]`). |
 
 > **Coerce**: `required`, `readonly`, `disabled`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` â€” bare attribute = `true`.
@@ -62,6 +62,22 @@ Workhorse text input â€” single-line `text`/`email`/`password`/`number` fie
 | `sdBlur` | `any` | Fires on blur, payload = trimmed value. |
 | `keyupEnter` | `any` | Fires on Enter keyup, payload = trimmed value. |
 | `sdFocusForceBlur` | `void` (EventEmitter) | When a parent subscribes, focusing the input immediately blurs it and emits â€” used to delegate focus elsewhere (e.g. open a side picker on click). |
+
+## Public methods
+| Name | Signature | Notes |
+| --- | --- | --- |
+| `clear($event?)` | `(Event?) => void` | Resets the value to `null` and emits `sdChange(null)`. No-op when already empty. Backs the built-in clear button. |
+| `showClear()` | `() => boolean` | Whether the built-in clear button should render: there is a value AND not `required`/`disabled`/`readonly`. |
+| `focus()` / `blur()` | `() => void` | Programmatic focus / blur of the native input. |
+| `reValidate()` | `() => void` | Re-runs validators on the underlying control. |
+
+## Host classes
+Applied automatically on `<sd-input>` for styling hooks:
+
+| Class | Condition | Effect |
+| --- | --- | --- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `#sdLabel` template â€” custom label rendering
@@ -102,7 +118,8 @@ Workhorse text input â€” single-line `text`/`email`/`password`/`number` fie
 ## Visual cues (helps agent map screenshots â†’ component)
 - A standard outlined Material input field with optional label (floats above on focus or when filled)
 - Required marker shows as a red `*` next to the label
-- Optional suffix slot (`sdSuffixDef`) for an icon button at the trailing edge â€” common patterns: clear button, search icon, eye-toggle for password
+- Built-in **slim clear button** (`.sd-clear-btn`, thin `close` icon) at the trailing edge when the field has a value AND is not `required`/`disabled`/`readonly`. It is **hover-gated** (`sd-hover`) â€” hidden until the field is hovered or focused. Click resets the value to `null` and emits `sdChange(null)` (clear is an explicit action â†’ `null`, never `''`/`undefined`; `undefined` is reserved for the pristine never-touched state). Shared style/behavior with `sd-input-number`/`sd-input-color`/`sd-date`/`sd-datetime`.
+- Optional suffix slot (`sdSuffixDef`) for an extra icon button at the trailing edge â€” common patterns: search icon, eye-toggle for password. Renders to the right of the built-in clear button.
 - Inline error message appears below the field in red â€” unless `[hideInlineError]="true"`, in which case the field gets a red outline + error tooltip
 - Helper text shows as light-gray text below the field (or as an info icon next to the label, depending on layout)
 - In `[viewed]="true"` mode: no input chrome â€” just the value as plain text (or as a hyperlink if `hyperlink` is set)
@@ -164,13 +181,46 @@ Workhorse text input â€” single-line `text`/`email`/`password`/`number` fie
 </sd-input>
 ```
 
+## E2E test attributes
+
+Rendered on the inner `<input matInput>` element (same anchor as `data-autoid`):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `forms-input-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
+| `data-invalid` | `"true"` / `"false"` | `formControl.invalid && (touched \|\| dirty)` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` |
+| `data-value` | string (omitted when `type="password"`) | `sdSerializeDataValue(formControl.value)` |
+| `data-required` | `"true"` / `"false"` | `required` input; always present |
+| `data-maxlength` | numeric string | present only when `[maxlength]` is defined |
+| `data-minlength` | numeric string | present only when `[minlength]` is defined |
+| `data-pattern` | string | present only when `[pattern]` is non-empty |
+| `data-error-message` | string | present only when the component is currently showing an error tooltip message |
+
+Selector example:
+
+```ts
+const el = page.locator('[data-autoid="forms-input-username"]');
+await expect(el).toHaveAttribute('data-empty', 'false');
+await expect(el).toHaveAttribute('data-invalid', 'false');
+await expect(el).toHaveAttribute('data-value', 'someuser');
+// validation meta (when set)
+await expect(el).toHaveAttribute('data-required', 'true');
+await expect(el).toHaveAttribute('data-maxlength', '100');
+await expect(el).toHaveAttribute('data-minlength', '3');
+await expect(el).toHaveAttribute('data-pattern', 'EMAIL');
+// error message â€” only when field is in error state
+await expect(el).toHaveAttribute('data-error-message', 'Vui lÃ²ng nháº­p thÃ´ng tin');
+```
+
 ## Anti-patterns
 - âŒ Using `formControlName` / `[(ngModel)]` â€” not wired; use `[form]+[name]` and `[(model)]`.
 - âŒ Using `[disabled]="true"` to express read-only DETAIL state â€” use `[viewed]="true"` instead so labels/links render correctly.
 - âŒ Using `type="number"` for VND amounts â€” use `<sd-input-number>` for proper thousand-separator formatting.
 - âŒ Wiring up trim logic in the parent â€” the component already trims on blur/Enter.
 - âŒ Hard-coding regex for common patterns â€” check `VALIDATION_PATTERNS` first (`EMAIL`, `PHONE`, `TAX_CODE`, â€¦) so error messages stay consistent.
-- âŒ Hand-rolling a "clear" suffix â€” most layouts prefer letting the user select-all / delete; only add an explicit clear button when the field is critical (search bars, filters).
+- âŒ Hand-rolling a "clear" suffix via `sdSuffixDef` â€” a hover-gated clear button is now **built in** (auto-shows when there's a value and the field is editable). Use `sdSuffixDef` only for additional affordances (search, password toggle, swatch â€¦).
 
 ## Related
 - `<sd-input-number>` â€” numeric input with thousand-separator / decimal handling
@@ -181,5 +231,4 @@ Workhorse text input â€” single-line `text`/`email`/`password`/`number` fie
 - `SdViewDefDirective` â€” DETAIL-mode template projection
 - `VALIDATION_PATTERNS` / `ValidationPatternType` â€” pattern presets registry
 - `SD_FORM_CONFIGURATION` token â€” global default `appearance`
-- `backendErrorValidator(msg)` â€” exported helper to surface a backend error message as a validator
 

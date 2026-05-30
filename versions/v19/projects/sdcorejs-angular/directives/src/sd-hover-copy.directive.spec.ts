@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SdHoverCopyDirective spec
  *
  * Note: the directive creates its copy button both in `ngOnChanges` (for the
@@ -11,7 +11,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { SdHoverCopyDirective } from './sd-hover-copy.directive';
 
 @Component({
@@ -44,7 +44,7 @@ describe('SdHoverCopyDirective', () => {
       imports: [HostComponent],
     }).compileComponents();
 
-    copyToClipboardSpy = spyOn(SdUtilities, 'copyToClipboard');
+    copyToClipboardSpy = spyOn(BrowserUtilities, 'copyToClipboard');
 
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
@@ -70,7 +70,7 @@ describe('SdHoverCopyDirective', () => {
     return btn ? (btn.querySelector('span') as HTMLElement) : null;
   }
 
-  // â”€â”€â”€ creation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── creation ────────────────────────────────────────────────────────────────
 
   describe('creation', () => {
     it('creates the host component', () => {
@@ -94,16 +94,16 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 
-  // â”€â”€â”€ inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── inputs ──────────────────────────────────────────────────────────────────
 
   describe('inputs', () => {
-    it('sdHoverCopyDisabled=false â€” directive-managed button exists in DOM', () => {
+    it('sdHoverCopyDisabled=false — directive-managed button exists in DOM', () => {
       host.disabled = false;
       fixture.detectChanges();
       expect(getDirectiveButton()).not.toBeNull();
     });
 
-    it('sdHoverCopyDisabled=true â€” directive removes its managed button from DOM', () => {
+    it('sdHoverCopyDisabled=true — directive removes its managed button from DOM', () => {
       const btnBefore = getDirectiveButton()!;
       expect(btnBefore).not.toBeNull();
       host.disabled = true;
@@ -113,7 +113,7 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 
-  // â”€â”€â”€ mouseenter / mouseleave â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── mouseenter / mouseleave ──────────────────────────────────────────────────
 
   describe('mouseenter shows copy button', () => {
     it('directive-managed button is hidden (display:none) before mouseenter', () => {
@@ -144,10 +144,10 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 
-  // â”€â”€â”€ click copies value to clipboard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── click copies value to clipboard ─────────────────────────────────────────
 
   describe('click copies value to clipboard', () => {
-    it('calls SdUtilities.copyToClipboard with the bound copyText', () => {
+    it('calls BrowserUtilities.copyToClipboard with the bound copyText', () => {
       directiveInstance.onMouseEnter();
       getDirectiveButton()!.click();
       expect(copyToClipboardSpy).toHaveBeenCalledWith('hello-world');
@@ -169,11 +169,11 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 
-  // â”€â”€â”€ tooltip feedback â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── tooltip feedback ─────────────────────────────────────────────────────────
 
   describe('tooltip behavior', () => {
-    it('tooltip has default text "Sao chÃ©p" before any interaction', () => {
-      expect(getTooltip()!.innerText).toBe('Sao chÃ©p');
+    it('tooltip has default text "Sao chép" before any interaction', () => {
+      expect(getTooltip()!.innerText).toBe('Sao chép');
     });
 
     it('tooltip opacity is 0 initially', () => {
@@ -187,12 +187,12 @@ describe('SdHoverCopyDirective', () => {
       expect(getTooltip()!.style.opacity).toBe('1');
     });
 
-    it('tooltip resets to "Sao chÃ©p" and opacity 0 after 1000ms', fakeAsync(() => {
+    it('tooltip resets to "Sao chép" and opacity 0 after 1000ms', fakeAsync(() => {
       directiveInstance.onMouseEnter();
       getDirectiveButton()!.click();
       tick(1000);
       expect(getTooltip()!.style.opacity).toBe('0');
-      expect(getTooltip()!.innerText).toBe('Sao chÃ©p');
+      expect(getTooltip()!.innerText).toBe('Sao chép');
     }));
 
     it('mouseleave resets tooltip opacity to 0', () => {
@@ -203,9 +203,9 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 
-  // â”€â”€â”€ ngOnChanges â€” dynamic enable/disable â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── ngOnChanges — dynamic enable/disable ────────────────────────────────────
 
-  describe('ngOnChanges â€” dynamic enable/disable', () => {
+  describe('ngOnChanges — dynamic enable/disable', () => {
     it('disabling removes the directive-managed button from the DOM', () => {
       const btn = getDirectiveButton()!;
       expect(btn).not.toBeNull();
@@ -223,4 +223,3 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 });
-

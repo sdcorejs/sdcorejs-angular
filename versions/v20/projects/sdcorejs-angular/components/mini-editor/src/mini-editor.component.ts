@@ -1,6 +1,7 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostBinding, Input, Output, forwardRef } from '@angular/core';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import {
   Bold,
   ClassicEditor,
@@ -23,9 +24,9 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from './mini-editor.model';
 
 /**
- * Component sd-mini-editor - Editor đơn giản cho comment input
- * Sử dụng CKEditor với chế độ đơn giản (bold, italic, link)
- * Hỗ trợ mention và output format (html/markdown)
+ * Component sd-mini-editor - Editor Ä‘Æ¡n giáº£n cho comment input
+ * Sá»­ dá»¥ng CKEditor vá»›i cháº¿ Ä‘á»™ Ä‘Æ¡n giáº£n (bold, italic, link)
+ * Há»— trá»£ mention vÃ  output format (html/markdown)
  *
  * @example
  * ```html
@@ -40,7 +41,7 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
 @Component({
   selector: 'sd-mini-editor',
   standalone: true,
-  imports: [CommonModule, CKEditorModule],
+  imports: [CommonModule, CKEditorModule, SdCKEditorStyles],
   templateUrl: './mini-editor.component.html',
   styleUrls: ['./mini-editor.component.scss'],
   providers: [
@@ -52,7 +53,7 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
   ],
 })
 export class SdMiniEditor implements ControlValueAccessor {
-  /** Cấu hình option cho editor */
+  /** Cáº¥u hÃ¬nh option cho editor */
   @Input({ required: true }) option!: SdMiniEditorOption;
 
   @HostBinding('style.--sd-mini-editor-max-height')
@@ -60,11 +61,11 @@ export class SdMiniEditor implements ControlValueAccessor {
     return this.option?.maxHeight;
   }
 
-  /** NgModel binding - nội dung HTML/Markdown */
+  /** NgModel binding - ná»™i dung HTML/Markdown */
   @Input() value = '';
   @Output() valueChange = new EventEmitter<string>();
 
-  /** Event emitter khi content thay đổi */
+  /** Event emitter khi content thay Ä‘á»•i */
   @Output() contentChange = new EventEmitter<string>();
 
   /** Event emitter khi blur */
@@ -148,14 +149,14 @@ export class SdMiniEditor implements ControlValueAccessor {
   }
 
   /**
-   * Kiểm tra có nên enable mention plugin không
+   * Kiá»ƒm tra cÃ³ nÃªn enable mention plugin khÃ´ng
    */
   #shouldEnableMention(): boolean {
     return this.option?.enableMention ?? false;
   }
 
   /**
-   * Xử lý khi editor ready
+   * Xá»­ lÃ½ khi editor ready
    */
   onReady(editor: ClassicEditor) {
     this.#editor = editor;
@@ -165,13 +166,13 @@ export class SdMiniEditor implements ControlValueAccessor {
       this.setContent(this.value);
     }
 
-    // Lắng nghe sự kiện thay đổi nội dung
+    // Láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i ná»™i dung
     editor.model.document.on('change:data', () => {
       const content = editor.getData();
       this.#contentChangeSubject.next(content);
     });
 
-    // Lắng nghe focus/blur events
+    // Láº¯ng nghe focus/blur events
     editor.editing.view.document.on('focus', evt => {
       const domEvent = (evt as any).domEvent as FocusEvent;
       this.focus.emit(domEvent);
@@ -184,7 +185,7 @@ export class SdMiniEditor implements ControlValueAccessor {
       this.option?.onBlur?.(domEvent);
     });
 
-    // Lắng nghe sự kiện mention được chọn
+    // Láº¯ng nghe sá»± kiá»‡n mention Ä‘Æ°á»£c chá»n
     if (this.#shouldEnableMention()) {
       editor.commands.get('mention')?.on('execute', (_evt, data: any) => {
         const mentionData = data[0];
@@ -194,7 +195,7 @@ export class SdMiniEditor implements ControlValueAccessor {
         this.#contentChangeSubject.next(content);
       });
 
-      // Custom downcast converter để thay đổi cấu trúc mention HTML
+      // Custom downcast converter Ä‘á»ƒ thay Ä‘á»•i cáº¥u trÃºc mention HTML
       editor.conversion.for('downcast').attributeToElement({
         model: 'mention',
         view: (mentionData, { writer }) => {
@@ -213,22 +214,22 @@ export class SdMiniEditor implements ControlValueAccessor {
         converterPriority: 'highest',
       });
 
-      // Xử lý keyboard để xóa mention 1 lần
+      // Xá»­ lÃ½ keyboard Ä‘á»ƒ xÃ³a mention 1 láº§n
       editor.editing.view.document.on('keydown', (evt, data) => {
         const keyEvent = data as { keyCode: number; domEvent: KeyboardEvent };
-        // Delete (46) hoặc Backspace (8)
+        // Delete (46) hoáº·c Backspace (8)
         if (keyEvent.keyCode === 46 || keyEvent.keyCode === 8) {
           const model = editor.model;
           const selection = model.document.selection;
           const position = selection.getFirstPosition();
           if (!position) return;
 
-          // Tìm text node có mention attribute
+          // TÃ¬m text node cÃ³ mention attribute
           const node = position.textNode || position.nodeBefore || position.nodeAfter;
           if (node && node.is('$text')) {
             const mentionAttr = node.getAttribute('mention');
             if (mentionAttr) {
-              // Xóa toàn bộ text node chứa mention
+              // XÃ³a toÃ n bá»™ text node chá»©a mention
               model.change(writer => {
                 writer.remove(node);
               });
@@ -241,24 +242,24 @@ export class SdMiniEditor implements ControlValueAccessor {
   }
 
   /**
-   * Convert output theo format (html hoặc markdown)
-   * Khi sử dụng CKEditor Markdown plugin, getData() tự động trả về Markdown
+   * Convert output theo format (html hoáº·c markdown)
+   * Khi sá»­ dá»¥ng CKEditor Markdown plugin, getData() tá»± Ä‘á»™ng tráº£ vá» Markdown
    */
   #convertOutput(content: string): string {
-    // CKEditor Markdown plugin tự động xử lý conversion
-    // Không cần manual conversion nữa
+    // CKEditor Markdown plugin tá»± Ä‘á»™ng xá»­ lÃ½ conversion
+    // KhÃ´ng cáº§n manual conversion ná»¯a
     return content;
   }
 
   /**
-   * Set nội dung cho editor
+   * Set ná»™i dung cho editor
    */
   setContent(content: string) {
     this.#editor?.setData?.(content);
   }
 
   /**
-   * Get nội dung từ editor
+   * Get ná»™i dung tá»« editor
    */
   getContent(): string {
     if (this.#editor) {
@@ -269,21 +270,21 @@ export class SdMiniEditor implements ControlValueAccessor {
   }
 
   /**
-   * Get nội dung HTML gốc (không convert)
+   * Get ná»™i dung HTML gá»‘c (khÃ´ng convert)
    */
   getHtmlContent(): string {
     return this.#editor?.getData?.() || '';
   }
 
   /**
-   * Focus vào editor
+   * Focus vÃ o editor
    */
   focusEditor() {
     this.#editor?.editing?.view?.focus?.();
   }
 
   /**
-   * Insert mention vào vị trí con trỏ hiện tại
+   * Insert mention vÃ o vá»‹ trÃ­ con trá» hiá»‡n táº¡i
    */
   insertMention(item: { id: string; name: string; marker?: string }) {
     if (!this.#editor) return;
@@ -291,7 +292,7 @@ export class SdMiniEditor implements ControlValueAccessor {
     const firstFeed = this.option?.mentionConfig?.feeds?.[0];
     const marker = item.marker || (firstFeed as any)?.marker || '@';
 
-    // Sử dụng CKEditor mention command
+    // Sá»­ dá»¥ng CKEditor mention command
     this.#editor.execute('mention', {
       marker,
       mention: {
@@ -302,7 +303,7 @@ export class SdMiniEditor implements ControlValueAccessor {
   }
 
   /**
-   * Get danh sách mentions trong nội dung
+   * Get danh sÃ¡ch mentions trong ná»™i dung
    */
   getMentions(): Array<{ id: string; name: string; marker: string }> {
     if (!this.#editor) return [];
@@ -358,3 +359,4 @@ export class SdMiniEditor implements ControlValueAccessor {
   #onChange: (value: string) => void = () => {};
   #onTouched: () => void = () => {};
 }
+

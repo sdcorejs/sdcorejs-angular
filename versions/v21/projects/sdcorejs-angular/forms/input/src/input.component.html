@@ -3,9 +3,8 @@
 @let _hideInlineError = hideInlineError();
 @let _viewDef = sdViewDef();
 @let _helperText = helperText();
-@let _tooltip = tooltip();
 @let _maxLength = maxlength();
-@let _errorMessage = errorTooltipMessage;
+@let _errorMessage = errorMessage();
 @let _required = required();
 
 @if (viewed()) {
@@ -41,7 +40,6 @@
           [class.sd-md]="size() === 'md'"
           [class.sd-sm]="size() === 'sm'"
           [class.hide-inline-error]="_hideInlineError"
-          [class.sd-form-tooltip]="!!_tooltip"
           [appearance]="_appearance!"
           [floatLabel]="floatLabel()">
           @if (_appearance && _label) {
@@ -71,7 +69,16 @@
             [autocomplete]="id"
             autocorrect="off"
             [step]="1"
-            [attr.data-autoId]="autoId()" />
+            [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-invalid]="dataInvalid()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-maxlength]="dataMaxLength()"
+            [attr.data-minlength]="dataMinLength()"
+            [attr.data-pattern]="dataPattern()"
+            [attr.data-error-message]="dataErrorMessage()" />
 
           @if (_hideInlineError && _errorMessage && formControl.touched) {
             <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
@@ -79,6 +86,12 @@
 
           @if (!_hideInlineError && _errorMessage && formControl.touched) {
             <mat-error>{{ _errorMessage }}</mat-error>
+          }
+
+          @if (showClear()) {
+            <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+              <mat-icon>close</mat-icon>
+            </button>
           }
 
           @if (sdSuffixDef()?.templateRef; as suffixRef) {
@@ -102,11 +115,6 @@
         }
       </div>
 
-      @if (_tooltip) {
-        <div class="sd-tooltip">
-          <mat-icon (click)="sdTooltip.toggle()" [matTooltip]="formControl.value || _tooltip" matSuffix #sdTooltip="matTooltip">info</mat-icon>
-        </div>
-      }
     }
   </div>
 }

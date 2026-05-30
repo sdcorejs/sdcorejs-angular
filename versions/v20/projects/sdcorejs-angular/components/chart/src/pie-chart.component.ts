@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, effect, input, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, InputSignal, OnDestroy, OnInit, effect, input, viewChild } from '@angular/core';
 import { Chart, ChartData, ChartOptions, Plugin, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -16,9 +16,9 @@ Chart.register(...registerables);
 export class SdPieChartComponent implements OnInit, OnDestroy {
   canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
 
-  data = input.required<ChartData<'pie'>>();
-  options = input<ChartOptions<'pie'>>();
-  plugins = input<Plugin<'pie'>[]>([]);
+  data: InputSignal<ChartData<'pie'>> = input.required<ChartData<'pie'>>();
+  options: InputSignal<ChartOptions<'pie'> | undefined> = input<ChartOptions<'pie'>>();
+  plugins: InputSignal<Plugin<'pie'>[]> = input<Plugin<'pie'>[]>([]);
 
   chart: Chart<'pie'> | undefined;
 

@@ -1,11 +1,15 @@
 ﻿import { EditorConfig, EventInfo, ModelDocumentSelection, ViewDataTransfer } from 'ckeditor5';
-import { I18nService } from '@sdcorejs/angular/i18n';
+import { I18nParams } from '@sdcorejs/angular/i18n';
 import { CkCommentConfig } from './plugins/ck-comment/ck-comment.plugin.model';
+
+/** Plain translator cho CKEditor plugin â€” trÃ¡nh truyá»n tháº³ng I18nService (private fields máº¥t `this` qua config). */
+export interface DocumentBuilderI18n {
+  t(key: string, params?: I18nParams): string;
+}
 
 export type DocumentBuilderOption = EditorConfig & {
   getOption?: () => SdDocumentBuilderOption;
-  // i18n service Ä‘Æ°á»£c Angular component inject vÃ o Ä‘á»ƒ CKEditor plugin (vá»‘n náº±m ngoÃ i DI tree) cÃ³ thá»ƒ dá»‹ch
-  _i18n?: I18nService;
+  _i18n?: DocumentBuilderI18n;
 };
 
 export interface SdDocumentBuilderOption {

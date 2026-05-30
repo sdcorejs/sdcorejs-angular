@@ -6,21 +6,58 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.common.reload': 'Tải lại trang',
   'core.test.greet': 'Xin chào {name}',
 
-  // ---- Validators (pattern.model.ts) ----
+  // ---- Validators (VALIDATION_PATTERNS in @sdcorejs/utils/constants) ----
   'core.validator.email.name': 'Email',
   'core.validator.email.error': 'Email không hợp lệ',
   'core.validator.phone.name': 'SĐT',
   'core.validator.phone.error': 'Số điện thoại không hợp lệ',
+  // Legacy aliases — pattern.model.ts cũ vẫn dùng các key này
   'core.validator.phone-vn.name': 'SĐT VN',
-  'core.validator.phone-vn.error': 'Số điện thoại không hợp lệ',
+  'core.validator.phone-vn.error': 'SĐT Việt Nam không hợp lệ',
   'core.validator.cccd.name': 'CCCD',
   'core.validator.cccd.error': 'CCCD không hợp lệ (12 chữ số)',
+  'core.validator.id-vn.name': 'CCCD / Hộ chiếu',
+  'core.validator.id-vn.error': 'CCCD hoặc Hộ chiếu không hợp lệ',
+  'core.validator.vn-phone.name': 'SĐT VN',
+  'core.validator.vn-phone.error': 'SĐT Việt Nam không hợp lệ',
+  'core.validator.vn-id.name': 'CCCD',
+  'core.validator.vn-id.error': 'CCCD không hợp lệ (12 chữ số)',
   'core.validator.passport.name': 'Hộ chiếu',
   'core.validator.passport.error': 'Hộ chiếu không hợp lệ (1 chữ cái + 7 chữ số)',
-  'core.validator.id-vn.name': 'CCCD/Hộ chiếu',
-  'core.validator.id-vn.error': 'CCCD/CMND hoặc Hộ chiếu không hợp lệ',
+  'core.validator.vn-id-or-passport.name': 'CCCD / Hộ chiếu',
+  'core.validator.vn-id-or-passport.error': 'CCCD hoặc Hộ chiếu không hợp lệ',
   'core.validator.time.name': 'Giờ',
   'core.validator.time.error': 'Giờ không hợp lệ (định dạng HH:mm)',
+  'core.validator.url.name': 'URL',
+  'core.validator.url.error': 'URL không hợp lệ',
+  'core.validator.domain.name': 'Tên miền',
+  'core.validator.domain.error': 'Tên miền không hợp lệ',
+  'core.validator.ipv4.name': 'IPv4',
+  'core.validator.ipv4.error': 'Địa chỉ IPv4 không hợp lệ',
+  'core.validator.ipv6.name': 'IPv6',
+  'core.validator.ipv6.error': 'Địa chỉ IPv6 không hợp lệ',
+  'core.validator.image-url.name': 'URL ảnh',
+  'core.validator.image-url.error': 'URL ảnh không hợp lệ',
+  'core.validator.slug.name': 'Slug',
+  'core.validator.slug.error': 'Slug không hợp lệ',
+  'core.validator.number.name': 'Số',
+  'core.validator.number.error': 'Số không hợp lệ',
+  'core.validator.integer.name': 'Số nguyên',
+  'core.validator.integer.error': 'Số nguyên không hợp lệ',
+  'core.validator.decimal.name': 'Số thập phân',
+  'core.validator.decimal.error': 'Số thập phân không hợp lệ',
+  'core.validator.positive-number.name': 'Số dương',
+  'core.validator.positive-number.error': 'Phải là số dương',
+  'core.validator.uuid.name': 'UUID',
+  'core.validator.uuid.error': 'UUID không hợp lệ',
+  'core.validator.code-16.name': 'Mã 16 ký tự',
+  'core.validator.code-16.error': 'Mã 16 ký tự không hợp lệ',
+  'core.validator.code-32.name': 'Mã 32 ký tự',
+  'core.validator.code-32.error': 'Mã 32 ký tự không hợp lệ',
+  'core.validator.hex-color.name': 'Mã màu HEX',
+  'core.validator.hex-color.error': 'Mã màu HEX không hợp lệ',
+  'core.validator.base64.name': 'Base64',
+  'core.validator.base64.error': 'Chuỗi Base64 không hợp lệ',
 
   // ---- Operators (operator.model.ts) ----
   'core.operator.equal.display': 'Bằng',
@@ -35,6 +72,7 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.operator.end-with.display': 'Kết thúc bởi',
   'core.operator.in.display': 'Nằm trong',
   'core.operator.not-in.display': 'Không nằm trong',
+  'core.operator.between.display': 'Trong khoảng',
   'core.operator.null.display': 'Là rỗng',
   'core.operator.not-null.display': 'Không rỗng',
 
@@ -134,6 +172,14 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: radio ----
   'core.form.radio.required': 'Vui lòng nhập thông tin',
+
+  // ---- Forms: switch ----
+  'core.form.switch.on': 'Bật',
+  'core.form.switch.off': 'Tắt',
+
+  // ---- Forms: checkbox ----
+  'core.form.checkbox.checked': 'Có',
+  'core.form.checkbox.unchecked': 'Không',
 
   // ---- Forms: select ----
   'core.form.select.required': 'Vui lòng nhập thông tin',
@@ -254,6 +300,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.default': 'Mặc định',
   'core.component.form-builder.show-more': 'Xem thêm',
   'core.component.form-builder.show-less': 'Thu gọn',
+  'core.component.inform.show-more': 'Xem thêm',
+  'core.component.inform.show-less': 'Thu gọn',
   'core.component.form-builder.row-overflow': 'Không thể di chuyển tới dòng này vì tổng kích thước vượt quá 12 cột',
   'core.component.form-builder.upload-source.all': 'Tất cả',
   'core.component.form-builder.upload-source.photo-library': 'Chọn từ thư viện',

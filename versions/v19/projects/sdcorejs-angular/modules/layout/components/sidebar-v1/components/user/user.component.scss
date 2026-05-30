@@ -76,9 +76,11 @@
       align-items: center;
       gap: 8px;
 
-      img {
-        scale: 0.875;
-        content: url('../../assets/images/lock.svg');
+      mat-icon {
+        font-size: 21px;
+        width: 21px;
+        height: 21px;
+        color: #8c8c8c;
       }
     }
 

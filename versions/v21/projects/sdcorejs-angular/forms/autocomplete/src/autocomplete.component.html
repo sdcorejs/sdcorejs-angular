@@ -1,7 +1,7 @@
 @let lbl = label();
 @let app = appearance();
 @let hideErr = hideInlineError();
-@let errMsg = errorTooltipMessage;
+@let errMsg = errorMessage();
 @let viewDef = sdViewDef();
 @let hText = helperText();
 @let req = required();
@@ -80,10 +80,19 @@
           #input
           #autocompleteTrigger="matAutocompleteTrigger"
           [attr.data-autoId]="autoId()"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-loading]="dataLoading()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-error-message]="dataErrorMessage()"
           aria-hidden="true" />
 
         @if (!isLoad && nVal && !inputControl.disabled) {
-          <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear($event)" matSuffix>cancel</mat-icon>
+          <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+            <mat-icon>close</mat-icon>
+          </button>
         } @else if (isLoad) {
           <mat-spinner [diameter]="20" matSuffix></mat-spinner>
         } @else {

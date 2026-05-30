@@ -11,11 +11,17 @@
     matTooltipPosition="above"
     [matTooltip]="tt || ''"
     matTooltipClass="sd-multiline-tooltip"
-    [ngClass]="baseColorClasses()"
+    [ngClass]="containerCombinedClasses()"
+    [class.c-badge--has-icon]="!!icon()"
     [class.pointer]="isPointer"
     (click)="onClick($event)"
     aria-hidden="true">
-    {{ titleText }}
+    @if (icon()) {
+      <span class="c-material-icon" [ngClass]="tagIconCombinedClasses()">
+        {{ iconName }}
+      </span>
+    }
+    <span class="c-badge-title">{{ titleText }}</span>
   </div>
 } @else if (badgeType === 'tag') {
   <div
@@ -23,7 +29,7 @@
     matTooltipPosition="above"
     [matTooltip]="tt || ''"
     matTooltipClass="sd-multiline-tooltip"
-    [ngClass]="baseColorClasses()"
+    [ngClass]="containerCombinedClasses()"
     [class.pointer]="isPointer"
     (click)="onClick($event)"
     aria-hidden="true">

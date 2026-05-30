@@ -1,7 +1,7 @@
 @let _label = label();
 @let _appearance = appearance();
 @let _hideInlineError = hideInlineError();
-@let _errorMessage = errorTooltipMessage;
+@let _errorMessage = errorMessage();
 @let _viewDef = sdViewDef();
 @let _labelDef = sdLabelDef();
 @let _helperText = helperText();
@@ -61,6 +61,14 @@
             (blur)="onBlur()"
             [rows]="rows()"
             [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-invalid]="dataInvalid()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-maxlength]="dataMaxLength()"
+            [attr.data-pattern]="dataPattern()"
+            [attr.data-error-message]="dataErrorMessage()"
             spellcheck="false"
             #textarea>
           </textarea>

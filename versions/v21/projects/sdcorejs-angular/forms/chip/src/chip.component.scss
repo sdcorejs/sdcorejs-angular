@@ -1,7 +1,14 @@
 :host {
-  padding-top: 5px;
   display: block;
 }
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
+:host(.sd-viewed) { padding-top: 0; }
 
 .sd-chip-input {
   margin-top: 0 !important;

@@ -41,6 +41,16 @@ export class HomePageComponent {
   readonly #layoutService = inject(SdLayoutService);
   readonly #i18n = inject(I18nService);
 
+  // Map Language code â†’ BCP 47 locale tag dÃ¹ng cho Intl date formatting
+  // WHY: must be declared before todayInfo â€” field init runs top-to-bottom; #getTodayInfo reads #localeMap.
+  readonly #localeMap: Record<Language, string> = {
+    vi: 'vi-VN',
+    en: 'en-US',
+    ja: 'ja-JP',
+    ko: 'ko-KR',
+    zh: 'zh-CN',
+  };
+
   // ==========================================
   // SIGNALS (STATE)
   // ==========================================
@@ -61,15 +71,6 @@ export class HomePageComponent {
   // ==========================================
   // PRIVATE METHODS
   // ==========================================
-
-  // Map Language code â†’ BCP 47 locale tag dÃ¹ng cho Intl date formatting
-  readonly #localeMap: Record<Language, string> = {
-    vi: 'vi-VN',
-    en: 'en-US',
-    ja: 'ja-JP',
-    ko: 'ko-KR',
-    zh: 'zh-CN',
-  };
 
   #getTimezone() {
     const now = new Date();

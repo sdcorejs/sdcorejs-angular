@@ -39,7 +39,7 @@ Multi-value tag input â€” user types and presses Enter/comma to add a chip;
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables both the chip strip and the input. |
 | `viewed` | `boolean` | `false` | DETAIL read-only mode â€” chips render but are not editable; `<ng-template sdViewDef>` (if present) overrides the rendering. |
-| `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorTooltipMessage`. |
+| `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorMessage`. |
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Used in `[viewed]` mode to link the chip text. |
 
 > **Coerce**: `addable`, `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` â€” bare attribute = `true`.
@@ -49,6 +49,14 @@ Multi-value tag input â€” user types and presses Enter/comma to add a chip;
 | --- | --- | --- |
 | `modelChange` | `any[]` | Emits the new chip array on add/remove/clear. |
 | `sdChange` | `any[]` | SDCoreJS-standard change event (same payload as `modelChange`). |
+
+## Host classes
+Applied automatically on `<sd-chip>` for styling hooks:
+
+| Class | Condition | Effect |
+| --- | --- | --- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `#sdLabel` template â€” custom label rendering
@@ -141,6 +149,30 @@ canRemoveRecipient = (email: string) => email !== this.currentUserEmail;
   label="Tags" [model]="model.tags"
   [viewed]="true">
 </sd-chip>
+```
+
+## E2E test attributes
+
+Rendered on the `<input class="sd-chip-input">` element (same anchor as `data-autoid`):
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `forms-chip-<autoId>` | input `autoId` |
+| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
+| `data-invalid` | `"true"` / `"false"` | `formControl.invalid && (touched \|\| dirty)` |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` |
+| `data-value` | string | `sdSerializeDataValue(formControl.value)` |
+| `data-required` | `"true"` / `"false"` | `required` input; always present |
+| `data-error-message` | string | present only when the component is currently showing an error tooltip message |
+
+> **Note**: `sd-chip` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
+
+Selector example:
+
+```ts
+const el = page.locator('[data-autoid="forms-chip-tags"]');
+await expect(el).toHaveAttribute('data-empty', 'false');
+await expect(el).toHaveAttribute('data-required', 'false');
 ```
 
 ## Anti-patterns

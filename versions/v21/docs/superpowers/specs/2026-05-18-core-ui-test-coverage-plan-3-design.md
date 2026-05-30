@@ -28,7 +28,7 @@ After Plan 2 (forms) completed, 10 component primitives still needed test covera
 ### 2.2. Out of scope â€” Plan 4+
 
 - **Deferred per user direction**: import-excel (Plan 4 candidate)
-- **Skipped indefinitely per user direction**: chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder
+- **Skipped indefinitely per user direction**: chart, document-builder, editor, workflow, form-generic, history, query-builder
 
 These features are unfinished / heavy / under reconstruction. Tests will be revisited after the source is finalized.
 

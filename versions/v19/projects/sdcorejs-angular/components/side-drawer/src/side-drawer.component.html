@@ -4,9 +4,12 @@
     class="sd-side-drawer"
     [ngStyle]="{ width: width() }"
     [ngClass]="drawerClass()"
-    [class.sd-side-drawer-active]="isOpened"
+    [class.sd-side-drawer-active]="isOpened()"
+    [attr.data-autoId]="autoId()"
+    [attr.data-opened]="dataOpened()"
+    [attr.data-loading]="dataLoading()"
     #drawerContainer>
-    @if (isOpened) {
+    @if (isOpened()) {
       <ng-container>
         <div class="sd-side-drawer-header">
           <div class="sd-side-drawer-title">
@@ -34,7 +37,7 @@
             }
           </div>
         </div>
-        @if (isOpened) {
+        @if (isOpened()) {
           <div class="sd-side-drawer-body">
             <div class="sd-side-drawer-content">
               <ng-content></ng-content>
@@ -47,7 +50,7 @@
       </ng-container>
     }
   </div>
-  @if (isOpened) {
+  @if (isOpened()) {
     <div
       aria-hidden="true"
       class="sd-side-drawer-backdrop"

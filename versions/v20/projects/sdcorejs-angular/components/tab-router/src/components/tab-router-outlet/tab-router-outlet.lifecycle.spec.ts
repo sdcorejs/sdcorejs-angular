@@ -38,7 +38,7 @@ const counters = {
   },
 };
 
-@Component({ standalone: true, template: '<span>page A</span>' })
+@Component({ standalone: true, template: '<span data-cy="page-a">page A</span>' })
 class PageAComponent implements OnInit, OnDestroy {
   constructor() { counters.pageA.ctor++; }
   ngOnInit(): void { counters.pageA.init++; }
@@ -109,13 +109,14 @@ describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
       .componentInstance as SdTabRouterOutletComponent;
   });
 
-  it('instantiates page exactly once on first navigation (no double-render from Scroll-wrapped NavigationEnd)', async () => {
+  it('instantiates page exactly once on first navigation (even with withInMemoryScrolling enabled)', async () => {
     await router.navigateByUrl('/a');
     await settle(fixture);
 
     expect(counters.pageA.ctor).toBe(1);
     expect(counters.pageA.init).toBe(1);
     expect(counters.pageA.destroy).toBe(0);
+    expect(fixture.nativeElement.querySelector('[data-cy="page-a"]')).not.toBeNull();
   });
 
   it('does NOT re-instantiate when revisiting the same tab key', async () => {
@@ -219,6 +220,121 @@ describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
     expect(outletCmp.tabs().length).toBe(1);
     expect(counters.pageA.ctor).toBe(1);
     expect(counters.pageA.init).toBe(1);
+  });
+});
+
+describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct URL)', () => {
+  beforeEach(async () => {
+    counters.reset();
+
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter(
+          [
+            { path: '', redirectTo: 'a', pathMatch: 'full' },
+            { path: 'a', component: PageAComponent },
+          ],
+          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+        ),
+        SdTabRouterService,
+        SdTabDecoratorService,
+        {
+          provide: SdNotifyService,
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(),
+            error: jasmine.createSpy(), info: jasmine.createSpy() },
+        },
+        { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
+      ],
+    }).compileComponents();
+  });
+
+  it('renders tab content on first app load without an explicit navigateByUrl call', async () => {
+    const initialFixture = TestBed.createComponent(HostComponent);
+    const router = TestBed.inject(Router);
+
+    // TestBed khÃ´ng luÃ´n cháº¡y initial navigation tá»± Ä‘á»™ng â€” mÃ´ phá»ng F5 táº¡i "/".
+    if (!router.navigated) {
+      await router.navigateByUrl('/');
+    }
+    await settle(initialFixture);
+
+    const initialOutlet = initialFixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+
+    expect(initialOutlet.tabs().length).toBe(1);
+    expect(initialOutlet.tabs()[0].url).toBe('/a');
+    expect(initialFixture.nativeElement.querySelector('[data-cy="page-a"]')).not.toBeNull();
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+  });
+
+  it('F5 trÃªn URL trá»±c tiáº¿p /a (khÃ´ng qua redirect) â€” tab catch-up Ä‘Ãºng url + render PageA', async () => {
+    const router = TestBed.inject(Router);
+    // Nav TRÆ¯á»šC khi táº¡o fixture: mÃ´ phá»ng app load vá»›i router Ä‘Ã£ navigate xong
+    // vÃ  outlet mount sau (do blocking init hoáº·c lazy app shell).
+    await router.navigateByUrl('/a');
+    const lateFixture = TestBed.createComponent(HostComponent);
+    await settle(lateFixture);
+
+    const outlet = lateFixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+
+    expect(outlet.tabs().length).toBe(1);
+    expect(outlet.tabs()[0].url).toBe('/a');
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+  });
+
+  it('syncCurrentRoute idempotent â€” initial nav + afterNextRender catch-up khÃ´ng táº¡o 2 tab', async () => {
+    const router = TestBed.inject(Router);
+    // Sync nav trÆ°á»›c, sau Ä‘Ã³ mount outlet â†’ cáº£ `router.events` subscribe path vÃ 
+    // `afterNextRender(#syncCurrentRoute)` Ä‘á»u cÃ³ cÆ¡ há»™i cháº¡y. Pháº£i dedupe.
+    await router.navigateByUrl('/a');
+    const fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+    // Trigger thÃªm láº§n navigate cÃ¹ng URL Ä‘á»ƒ cháº¯c cháº¯n khÃ´ng táº¡o duplicate.
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+    expect(outlet.tabs().length).toBe(1);
+    expect(counters.pageA.ctor).toBe(1);
+  });
+
+  it('F5 trÃªn URL cÃ³ queryParams â€” tab key hash gá»“m queryParams, khÃ´ng táº¡o tab thá»© hai khi nav láº¡i cÃ¹ng url+queryParams', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/a?x=1');
+    const fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+
+    expect(outlet.tabs().length).toBe(1);
+    expect(outlet.tabs()[0].url).toBe('/a');
+    expect(outlet.tabs()[0].queryParams).toEqual({ x: '1' });
+
+    await router.navigateByUrl('/a?x=1');
+    await settle(fixture);
+    expect(outlet.tabs().length).toBe(1);
+    expect(counters.pageA.ctor).toBe(1);
+  });
+
+  it('F5 rá»“i nav qua URL khÃ¡c cÃ¹ng query khÃ¡c â€” táº¡o 2 tab Ä‘á»™c láº­p (tab key khÃ¡c)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/a?x=1');
+    const fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+
+    await router.navigateByUrl('/a?x=2');
+    await settle(fixture);
+
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+    expect(outlet.tabs().length).toBe(2);
+    expect(outlet.tabs().map(t => t.queryParams?.['x']).sort()).toEqual(['1', '2']);
+    expect(counters.pageA.ctor).toBe(2);
   });
 });
 

@@ -4,7 +4,9 @@ import { GenericListOption, TList } from './list.model';
 import { SdGenericService } from '../generic.service';
 import { SdSchema } from '../../models';
 import { SdTableColumn, SdTableExternalFilter, SdTableOption } from '@sdcorejs/angular/components/table';
-import { ArrayUtilities, DateUtilities, NumberUtilities, SdFilter, SdOperator, SdOrder, SdUtilities } from '@sdcorejs/angular/utilities';
+import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
+import { Filter, Operator, Order } from '@sdcorejs/utils/models';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Injectable({
   providedIn: 'root',
@@ -19,7 +21,7 @@ export class SdGenericListService {
     const schema = await register.schema();
     const columns = await this.#loadColumns(option);
     // Láº¥y thÃ´ng tin externalFilters tá»« schema
-    const key = SdUtilities.hash({
+    const key = Utilities.hash({
       generic: 'configuration',
       module,
       typeCode,
@@ -253,8 +255,8 @@ export class SdGenericListService {
   #loadFilter = (args: {
     columnOrExternalFilter: SdTableColumn | SdTableExternalFilter;
     value: any;
-    operator?: SdOperator;
-  }): SdFilter | undefined => {
+    operator?: Operator;
+  }): Filter | undefined => {
     const { columnOrExternalFilter: column, operator, value } = args;
     const { field, type } = column;
     if (operator === 'NULL' || operator === 'NOT_NULL') {
@@ -410,7 +412,7 @@ export class SdGenericListService {
     };
   };
 
-  #loadOrders = <T>(orderBy: string, orderDirection: 'asc' | 'desc' | '', orders?: SdOrder[]): SdOrder<T>[] => {
+  #loadOrders = <T>(orderBy: string, orderDirection: 'asc' | 'desc' | '', orders?: Order[]): Order<T>[] => {
     if (orders?.length) {
       return orders;
     }

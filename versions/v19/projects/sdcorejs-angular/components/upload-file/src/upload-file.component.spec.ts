@@ -78,6 +78,62 @@ describe('SdUploadFile', () => {
     });
   });
 
+  // â”€â”€â”€ Centralized state-image classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // why: state images (data-empty, image-error, etc.) live in @sdcorejs/angular
+  // assets/scss/core/image.scss as `.sd-image-<name>`. Each consumer applies the
+  // central class on the rendered <img>; local `content: url(...)` rules were
+  // removed. These tests guard the contract â€” a stylesheet refactor that drops
+  // a class name from image.scss must keep the template attachment in sync.
+
+  describe('centralized image classes', () => {
+    it('renders the sd-image-image-error class on the error <img> when isImgError=true', async () => {
+      setInput(fixture, 'type', 'image');
+      fixture.detectChanges();
+      // wait for the modelâ†’previewFiles effect's async #details() to settle so
+      // it does not later overwrite the manual previewFiles.set() below
+      await fixture.whenStable();
+
+      component.previewFiles.set([
+        makeImagePreviewFile({ isImgError: true }),
+      ]);
+      fixture.detectChanges();
+
+      const errImg = fixture.nativeElement.querySelector('img.sd-image-image-error');
+      expect(errImg).not.toBeNull();
+      // legacy class name must be gone â€” guard against accidental revert
+      expect(fixture.nativeElement.querySelector('img.c-img-error')).toBeNull();
+    });
+
+    it('renders the c-area-error toggle on the wrapper when isImgError=true', async () => {
+      setInput(fixture, 'type', 'image');
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.previewFiles.set([
+        makeImagePreviewFile({ isImgError: true }),
+      ]);
+      fixture.detectChanges();
+
+      const wrapper = fixture.nativeElement.querySelector('.c-area.c-area-error');
+      expect(wrapper).not.toBeNull();
+    });
+
+    it('omits the sd-image-image-error class when the image is healthy', async () => {
+      setInput(fixture, 'type', 'image');
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      component.previewFiles.set([
+        makeImagePreviewFile({ isImgError: false }),
+      ]);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('img.sd-image-image-error')).toBeNull();
+      // healthy path renders .c-img
+      expect(fixture.nativeElement.querySelector('img.c-img')).not.toBeNull();
+    });
+  });
+
   // â”€â”€â”€ Input: disabled â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   describe('input: disabled', () => {
@@ -107,6 +163,58 @@ describe('SdUploadFile', () => {
       setInput(fixture, 'disabled', true);
       setInput(fixture, 'disabled', false);
       expect(component.formControl.enabled).toBeTrue();
+    });
+  });
+
+  // â”€â”€â”€ Input: required â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // why: bug "required khÃ´ng báº¯t lá»—i" â€” #updateValidator bá»‹ comment, validator
+  // khÃ´ng bao giá» Ä‘Æ°á»£c Ä‘Äƒng kÃ½ lÃªn formControl. Fix báº±ng effect Ä‘Äƒng kÃ½
+  // Validators.required (nháº­n empty array lÃ  invalid). Specs Ä‘áº£m báº£o behavior.
+  describe('input: required', () => {
+    it('attaches Validators.required when required=true (empty value â†’ required error)', () => {
+      setInput(fixture, 'required', true);
+      fixture.detectChanges();
+      expect(component.formControl.hasError('required')).toBeTrue();
+    });
+
+    it('clears the required error once a file is added', () => {
+      setInput(fixture, 'required', true);
+      fixture.detectChanges();
+      expect(component.formControl.hasError('required')).toBeTrue();
+
+      setInput(fixture, 'model', [new File(['x'], 'a.txt')]);
+      fixture.detectChanges();
+      expect(component.formControl.hasError('required')).toBeFalse();
+    });
+
+    it('treats empty array as required-invalid (Validators.required honors length===0)', () => {
+      setInput(fixture, 'required', true);
+      setInput(fixture, 'model', []);
+      fixture.detectChanges();
+      expect(component.formControl.hasError('required')).toBeTrue();
+    });
+
+    it('clears validator when required switches back to false', () => {
+      setInput(fixture, 'required', true);
+      fixture.detectChanges();
+      expect(component.formControl.hasError('required')).toBeTrue();
+
+      setInput(fixture, 'required', false);
+      fixture.detectChanges();
+      expect(component.formControl.hasError('required')).toBeFalse();
+      expect(component.formControl.valid).toBeTrue();
+    });
+
+    it('exposes the required error to the template (template guards: !disabled && touched && errors.required)', () => {
+      setInput(fixture, 'required', true);
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+      // why: chá»‰ assert state cáº§n thiáº¿t Ä‘á»ƒ template render error â€” visual matcher
+      // bá»‹ áº£nh hÆ°á»Ÿng bá»Ÿi async effect (#details) nÃªn fragile, dÃ¹ng state assert.
+      expect(component.formControl.disabled).toBeFalse();
+      expect(component.formControl.touched).toBeTrue();
+      expect(component.formControl.errors?.['required']).toBeTrue();
     });
   });
 
@@ -487,6 +595,73 @@ describe('SdUploadFile', () => {
       expect(comp.removeAutoId(2)).toBe('components-upload-file-docs-remove-2');
     });
   });
+
+  // â”€â”€â”€ E2E attributes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+  describe('E2E attributes', () => {
+    @Component({
+      standalone: true,
+      imports: [SdUploadFile],
+      template: `<sd-upload-file [autoId]="autoId" [disabled]="disabled" [label]="'Files'"></sd-upload-file>`,
+    })
+    class E2eHost {
+      autoId = 'docs';
+      disabled = false;
+    }
+
+    let hostFixture: ComponentFixture<E2eHost>;
+    let comp: SdUploadFile;
+
+    beforeEach(async () => {
+      await TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [E2eHost, NoopAnimationsModule],
+      }).compileComponents();
+      hostFixture = TestBed.createComponent(E2eHost);
+      hostFixture.detectChanges();
+      comp = hostFixture.debugElement.query(el => el.componentInstance instanceof SdUploadFile)
+        ?.componentInstance as SdUploadFile;
+      if (!comp) throw new Error('SdUploadFile not found');
+    });
+
+    it('renders data-disabled reflecting disabled input', () => {
+      hostFixture.detectChanges();
+      let dropZone = hostFixture.nativeElement.querySelector('.c-area-upload');
+
+      // Initial: disabled=false â†’ data-disabled="false"
+      expect(dropZone?.getAttribute('data-disabled')).toBe('false');
+      expect(comp.dataDisabled()).toBe('false');
+
+      // Change to disabled=true
+      hostFixture.componentInstance.disabled = true;
+      hostFixture.detectChanges();
+
+      // data-disabled should reflect the change to "true"
+      expect(comp.dataDisabled()).toBe('true');
+      // Note: dropZone element is removed from DOM when disabled=true because of the *@if in template,
+      // so we verify the signal value instead.
+    });
+
+    it('renders data-empty + data-count reflecting previewFiles', () => {
+      hostFixture.detectChanges();
+      const dropZone = hostFixture.nativeElement.querySelector('.c-area-upload');
+
+      // Initially previewFiles is empty
+      expect(dropZone?.getAttribute('data-empty')).toBe('true');
+      expect(dropZone?.getAttribute('data-count')).toBe('0');
+
+      // Add 2 mock preview files
+      comp.previewFiles.set([
+        makePreviewFile({ fileName: 'file1.pdf' }),
+        makePreviewFile({ fileName: 'file2.pdf' }),
+      ]);
+      hostFixture.detectChanges();
+
+      // After adding 2 files: data-empty should be "false", data-count should be "2"
+      expect(dropZone?.getAttribute('data-empty')).toBe('false');
+      expect(dropZone?.getAttribute('data-count')).toBe('2');
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -645,6 +820,56 @@ describe('SdUploadFilePreview', () => {
       component.onClose();
 
       expect(emitted).toBe(1);
+    });
+  });
+
+  // â”€â”€â”€ Centralized state-image classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // why: PreviewComponent toggles `c-image-error` on the parent button + renders
+  // the central `sd-image-image-error` class on the failed thumbnail; main view
+  // shows a `<div class="c-image-error">` with a mat-icon warning. Tests guard
+  // the contract with the central image.scss (renamed from c-img-error).
+  // The component template is projected through SdModal, so we open the modal
+  // via the public `open(files, index)` method before querying the DOM.
+
+  describe('centralized image classes', () => {
+    async function openWith(files: PreviewFile[], index = 0) {
+      await component.open(files, index);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it('toggles c-image-error on the thumbnail button when file.isImgError=true', async () => {
+      await openWith([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile]);
+
+      const btn = document.querySelector('button.thumbnail-wrapper.c-image-error');
+      expect(btn).not.toBeNull();
+      // legacy class is gone
+      expect(document.querySelector('.thumbnail-wrapper.c-img-error')).toBeNull();
+    });
+
+    it('renders the sd-image-image-error class on the failed thumbnail <img>', async () => {
+      await openWith([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile]);
+
+      const img = document.querySelector('img.thumbnail-img.sd-image-image-error');
+      expect(img).not.toBeNull();
+    });
+
+    it('renders the c-image-error main view with a warning mat-icon when active file is errored', async () => {
+      await openWith([{ ...mockPreviewFiles[0], isImgError: true } as PreviewFile], 0);
+
+      const mainErr = document.querySelector('.main-image-container .c-image-error');
+      expect(mainErr).not.toBeNull();
+      const icon = mainErr!.querySelector('mat-icon');
+      expect(icon?.textContent?.trim()).toBe('warning_amber');
+    });
+
+    it('does not render image-error markers when file is healthy', async () => {
+      await openWith([{ ...mockPreviewFiles[0], isImgError: false } as PreviewFile], 0);
+
+      expect(document.querySelector('button.thumbnail-wrapper.c-image-error')).toBeNull();
+      expect(document.querySelector('img.thumbnail-img.sd-image-image-error')).toBeNull();
+      expect(document.querySelector('.main-image-container .c-image-error')).toBeNull();
     });
   });
 });

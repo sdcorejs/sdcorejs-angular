@@ -1,8 +1,8 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
+// why: 'xs' đã bị loại khỏi Size/SdSize (utils >=1.1.0); giữ lại sm/md/lg đồng bộ với các sd-* khác.
 $badgeIconSize:
-  'xs' 14,
   'sm' 16,
   'md' 18,
   'lg' 24;
@@ -17,6 +17,29 @@ $badgeIconColor:
   'warning' map.get(color.$color_map, 'warning');
 
 $badgeDescriptionColor: map.get(color.$color_map, 'black400');
+
+// why: size map cho container .c-badge — round (pill) và tag dùng chung biến này
+// (sm = giữ giá trị hiện tại để không vỡ UI hiện hữu; md/lg là mới).
+$badgeRoundPadding:
+  'sm' 2px 10px,
+  'md' 4px 12px,
+  'lg' 6px 16px;
+
+$badgeTagPadding:
+  'sm' 1px 7px,
+  'md' 2px 10px,
+  'lg' 4px 12px;
+
+$badgeFontSize:
+  'sm' 14px,
+  'md' 16px,
+  'lg' 18px;
+
+$badgeDescFontSize:
+  'sm' 12px,
+  'md' 13px,
+  'lg' 14px;
+
 $badges: '';
 .c-badge {
   border-radius: 20px;
@@ -24,6 +47,46 @@ $badges: '';
   display: inline-block;
   text-align: center;
   overflow-wrap: break-word;
+
+  // why: round + icon → cần flex để icon-title canh giữa, gap nhỏ.
+  &.c-badge--has-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  // why: icon size áp dụng cho cả tag VÀ round-có-icon (cùng nằm trong .c-badge).
+  // Trước đây chỉ scope dưới .c-badge--tag → round không có font-size icon.
+  .c-material-icon {
+    padding: 0;
+    @each $name, $size in $badgeIconSize {
+      &.c-#{$name} {
+        font-size: #{$size}px;
+        width: #{$size}px;
+        height: #{$size}px;
+        line-height: #{$size}px;
+      }
+    }
+  }
+
+  // size modifier cho round (chỉ áp dụng khi KHÔNG có .c-badge--tag)
+  @each $name, $py, $px in $badgeRoundPadding {
+    &.c-badge--#{$name}:not(.c-badge--tag) {
+      padding: $py $px;
+    }
+  }
+
+  // font-size container (áp cho cả round + tag)
+  @each $name, $fs in $badgeFontSize {
+    &.c-badge--#{$name} .c-badge-title {
+      font-size: $fs;
+    }
+  }
+  @each $name, $fs in $badgeDescFontSize {
+    &.c-badge--#{$name} .c-badge-description {
+      font-size: $fs;
+    }
+  }
 
   &.c-primary {
     background: map.get(color.$color_map, 'primary-light');
@@ -72,12 +135,10 @@ $badges: '';
     border-radius: 4px;
     padding: 1px 7px;
 
-    .c-material-icon {
-      @each $name, $size in $badgeIconSize {
-        padding: 0;
-        &.c-#{$name} {
-          line-height: 20px;
-        }
+    // size modifier cho tag — override padding mặc định
+    @each $name, $py, $px in $badgeTagPadding {
+      &.c-badge--#{$name} {
+        padding: $py $px;
       }
     }
   }

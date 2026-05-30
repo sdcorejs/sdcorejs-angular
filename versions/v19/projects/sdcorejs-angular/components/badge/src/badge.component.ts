@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttribute, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { SdColor, SdSize } from '@sdcorejs/angular/utilities/models';
+import { Color, Size } from '@sdcorejs/utils/models';
 import { MaterialIconFontSet, DefaultMaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 
 // Export cÃ¡c Type Ä‘á»ƒ dÃ¹ng chung
@@ -27,7 +27,7 @@ export class SdBadge {
     transform: value => value || 'icon',
   });
 
-  color = input<SdColor, SdColor | undefined | null>('secondary', {
+  color = input<Color, Color | undefined | null>('secondary', {
     transform: value => value || 'secondary',
   });
 
@@ -47,7 +47,7 @@ export class SdBadge {
   tooltip = input<string | undefined | null>();
   icon = input<string | undefined | null>();
 
-  size = input<SdSize, SdSize | undefined | null>('sm', {
+  size = input<Size, Size | undefined | null>('sm', {
     transform: value => value || 'sm',
   });
 
@@ -113,10 +113,27 @@ export class SdBadge {
     };
   });
 
-  // Gá»˜P CLASS CHO BADGE TYPE = 'TAG'
+  // why: size modifier cho container .c-badge (round + tag). TÃ¡ch prefix c-badge--<size>
+  // Ä‘á»ƒ khÃ´ng Ä‘á»¥ng class .c-sm/.c-md/.c-lg Ä‘ang dÃ¹ng trÃªn icon span.
+  containerSizeClasses = computed(() => {
+    const s = this.size();
+    return {
+      'c-badge--sm': s === 'sm',
+      'c-badge--md': s === 'md',
+      'c-badge--lg': s === 'lg',
+    };
+  });
+
+  // Gá»˜P CLASS CHO BADGE TYPE = 'TAG' (cÅ©ng dÃ¹ng láº¡i cho 'ROUND' khi cÃ³ icon)
   tagIconCombinedClasses = computed(() => ({
     ...this.iconSizeAndFontClasses(),
     ...this.baseColorClasses(),
+  }));
+
+  // Gá»˜P CLASS CHO CONTAINER round/tag (color tint + size modifier)
+  containerCombinedClasses = computed(() => ({
+    ...this.baseColorClasses(),
+    ...this.containerSizeClasses(),
   }));
 
   // Gá»˜P CLASS CHO BADGE TYPE = 'ICON'

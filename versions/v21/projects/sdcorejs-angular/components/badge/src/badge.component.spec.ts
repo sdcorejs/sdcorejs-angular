@@ -158,4 +158,217 @@ describe('SdBadge', () => {
       expect(queryByCss(fixture, 'span.c-material-icon').textContent?.trim()).toBe('check_circle');
     });
   });
+
+  // ===========================================================================
+  // Branch-coverage extensions (batch 4)
+  // ===========================================================================
+  describe('boolean color shortcuts — remaining precedence branches', () => {
+    it('info wins over warning/error/color (no primary/secondary/success)', () => {
+      setInput(fixture, 'info', true);
+      setInput(fixture, 'warning', true);
+      setInput(fixture, 'color', 'error');
+      expect(fixture.componentInstance.effectiveColor()).toBe('info');
+    });
+
+    it('warning wins over error/color (no other shortcut)', () => {
+      setInput(fixture, 'warning', true);
+      setInput(fixture, 'error', true);
+      setInput(fixture, 'color', 'primary');
+      expect(fixture.componentInstance.effectiveColor()).toBe('warning');
+    });
+
+    it('error wins over color (last in chain)', () => {
+      setInput(fixture, 'error', true);
+      setInput(fixture, 'color', 'primary');
+      expect(fixture.componentInstance.effectiveColor()).toBe('error');
+    });
+  });
+
+  describe('class bindings — remaining color branches', () => {
+    it('applies c-info when effective color is info (round type)', () => {
+      setInput(fixture, 'info', true);
+      setInput(fixture, 'type', 'round');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-info')).toBe(true);
+    });
+
+    it('applies c-warning when effective color is warning (round type)', () => {
+      setInput(fixture, 'warning', true);
+      setInput(fixture, 'type', 'round');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-warning')).toBe(true);
+    });
+
+    it('applies c-error when effective color is error (round type)', () => {
+      setInput(fixture, 'error', true);
+      setInput(fixture, 'type', 'round');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-error')).toBe(true);
+    });
+
+    it('iconColorClasses: secondary → c-black400 (icon type, default color)', () => {
+      setInput(fixture, 'type', 'icon');
+      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      expect(icon.classList.contains('c-black400')).toBe(true);
+    });
+
+    it('iconColorClasses: info → c-info (icon type)', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'info', true);
+      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      expect(icon.classList.contains('c-info')).toBe(true);
+    });
+
+    it('iconColorClasses: warning → c-warning (icon type)', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'warning', true);
+      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      expect(icon.classList.contains('c-warning')).toBe(true);
+    });
+
+    it('iconColorClasses: error → c-error (icon type)', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'error', true);
+      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      expect(icon.classList.contains('c-error')).toBe(true);
+    });
+  });
+
+  describe('size variants', () => {
+    it('size="sm" → c-sm on icon span (default)', () => {
+      setInput(fixture, 'type', 'icon');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-sm')).toBe(true);
+    });
+
+    it('size="md" → c-md on icon span', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'size', 'md');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-md')).toBe(true);
+    });
+
+    it('size="lg" → c-lg on icon span', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'size', 'lg');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-lg')).toBe(true);
+    });
+
+    it('coerces falsy size back to "sm"', () => {
+      setInput(fixture, 'size', null);
+      expect(fixture.componentInstance.size()).toBe('sm');
+    });
+  });
+
+  describe('container size modifier (round + tag)', () => {
+    it('round size="sm" → c-badge--sm on container (default)', () => {
+      setInput(fixture, 'type', 'round');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--sm')).toBe(true);
+    });
+
+    it('round size="md" → c-badge--md on container', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'size', 'md');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--md')).toBe(true);
+    });
+
+    it('round size="lg" → c-badge--lg on container', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'size', 'lg');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--lg')).toBe(true);
+    });
+
+    it('tag size="lg" → c-badge--lg on container', () => {
+      setInput(fixture, 'type', 'tag');
+      setInput(fixture, 'size', 'lg');
+      const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge--tag');
+      expect(el.classList.contains('c-badge--lg')).toBe(true);
+    });
+  });
+
+  describe('round type — icon support', () => {
+    it('does NOT render icon span when icon input is not set', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'title', 'X');
+      expect(fixture.nativeElement.querySelector('span.c-material-icon')).toBeNull();
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--has-icon')).toBe(false);
+    });
+
+    it('renders icon span when icon is set on round type', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'icon', 'check_circle');
+      setInput(fixture, 'title', 'OK');
+      const iconSpan = fixture.nativeElement.querySelector('span.c-material-icon');
+      expect(iconSpan).not.toBeNull();
+      expect(iconSpan.textContent?.trim()).toBe('check_circle');
+      expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--has-icon')).toBe(true);
+    });
+
+    it('round icon span gets size class (c-md) matching size input', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'icon', 'check_circle');
+      setInput(fixture, 'size', 'md');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-md')).toBe(true);
+    });
+
+    it('round icon span gets color class (success) from baseColorClasses', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'icon', 'check_circle');
+      setInput(fixture, 'success', true);
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-success')).toBe(true);
+    });
+  });
+
+  describe('fontSet variants', () => {
+    it('fontSet="material-icons" by default → material-icons class', () => {
+      setInput(fixture, 'type', 'icon');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons')).toBe(true);
+    });
+
+    it('fontSet="material-icons-outlined" → material-icons-outlined class', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'fontSet', 'material-icons-outlined');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons-outlined')).toBe(true);
+    });
+
+    it('fontSet="material-icons-round" → material-icons-round class', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'fontSet', 'material-icons-round');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons-round')).toBe(true);
+    });
+
+    it('fontSet="material-icons-sharp" → material-icons-sharp class', () => {
+      setInput(fixture, 'type', 'icon');
+      setInput(fixture, 'fontSet', 'material-icons-sharp');
+      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons-sharp')).toBe(true);
+    });
+
+    it('coerces falsy fontSet back to "material-icons"', () => {
+      setInput(fixture, 'fontSet', null);
+      expect(fixture.componentInstance.fontSet()).toBe('material-icons');
+    });
+  });
+
+  describe('tag type — icon visibility branch', () => {
+    it('renders icon span ONLY when icon input is set', () => {
+      setInput(fixture, 'type', 'tag');
+      setInput(fixture, 'title', 'T');
+      // No icon input → @if (icon()) branch false
+      expect(fixture.nativeElement.querySelector('span.c-material-icon')).toBeNull();
+    });
+
+    it('renders icon span in tag type when icon is set', () => {
+      setInput(fixture, 'type', 'tag');
+      setInput(fixture, 'title', 'T');
+      setInput(fixture, 'icon', 'label');
+      expect(fixture.nativeElement.querySelector('span.c-material-icon')).not.toBeNull();
+    });
+  });
+
+  describe('tooltip', () => {
+    it('reads tooltip() input value', () => {
+      setInput(fixture, 'tooltip', 'My tooltip');
+      expect(fixture.componentInstance.tooltip()).toBe('My tooltip');
+    });
+
+    it('handles null tooltip (template falls back to empty string)', () => {
+      setInput(fixture, 'tooltip', null);
+      expect(fixture.componentInstance.tooltip()).toBeNull();
+    });
+  });
 });

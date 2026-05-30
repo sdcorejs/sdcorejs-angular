@@ -335,7 +335,7 @@ Sáº½ Ä‘iá»n khi thá»±c hiá»‡n. Format:
 
 Sau Plan 1, cÃ¡c batch dá»± kiáº¿n:
 - **Plan 2**: 8-10 form cÃ²n láº¡i (autocomplete, chip, chip-calendar, date, date-range, datetime, input-number, radio, select, textarea).
-- **Plan 3**: 10-12 component primitives cÃ²n láº¡i (modal, side-drawer, section, tab-router, quick-action, anchor-v2, view, history, preview, upload-file).
+- **Plan 3**: 10-12 component primitives cÃ²n láº¡i (modal, side-drawer, section, tab-router, quick-action, anchor, view, history, preview, upload-file).
 - **Plan 4**: 4 directive cÃ²n láº¡i (sd-desktop, sd-href, sd-hover-copy, sd-scroll).
 - **Plan 5**: 9 service (api, cache, confirm, docx, excel, firebase, license, loading, notify).
 - **Plan 6**: components náº·ng (chart, code-editor, document-builder, editor, mini-editor, import-excel, query-builder, table sub-components, workflow).
@@ -391,7 +391,7 @@ Má»—i plan cÃ³ spec + plan riÃªng theo quy trÃ¬nh superpowers.
 ### Out-of-scope deferred to future plans
 
 - Plan 2: 14 forms (autocomplete, chip, chip-calendar, date, date-range, datetime, input-number, radio, select, textarea).
-- Plan 3: 12+ component primitives (modal, side-drawer, section, tab-router, quick-action, anchor-v2, view, history, preview, upload-file, mini-editor).
+- Plan 3: 12+ component primitives (modal, side-drawer, section, tab-router, quick-action, anchor, view, history, preview, upload-file, mini-editor).
 - Plan 4: 4 directives (sd-desktop, sd-href, sd-hover-copy, sd-scroll).
 - Plan 5: 9 services (api, cache, confirm, docx, excel, firebase, license, loading, notify).
 - Plan 6: heavy components (chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow).
@@ -460,10 +460,10 @@ Plan 2 form files (estimated, individually well above global thresholds â€”
 
 ### Plan 3+ deferred items
 
-- Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, preview, upload-file, mini-editor, anchor-v2)
+- Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, preview, upload-file, mini-editor, anchor)
 - Plan 4 directives (sd-desktop, sd-href, sd-hover-copy, sd-scroll)
 - Plan 5 services (api, cache, confirm, docx, excel, firebase, license, loading, notify)
-- Plan 6 heavy components â€” **skipped per user direction until those features are finalized** (anchor-v2, workflow, query-builder, document-builder, history, form-generic module, chart, code-editor, editor, import-excel, mini-editor, table sub-components beyond what Plan 1 covered)
+- Plan 6 heavy components â€” **skipped per user direction until those features are finalized** (workflow, query-builder, document-builder, history, form-generic module, chart, code-editor, editor, import-excel, mini-editor, table sub-components beyond what Plan 1 covered)
 
 ## 6.3 Gap report â€” Plan 3 implementation results
 
@@ -517,7 +517,6 @@ Plan 2 form files (estimated, individually well above global thresholds â€”
 - `editor` (heavy CKEditor wrapper)
 - `workflow`
 - `form-generic` module
-- `anchor-v2`
 - `history`
 - `query-builder`
 
@@ -575,7 +574,7 @@ Plan 2 form files (estimated, individually well above global thresholds â€”
 - `import-excel` â€” heavy XLSX wrapper, Plan 5 candidate
 
 **Skipped permanently per user direction (features not finalized)**:
-- chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder
+- chart, document-builder, editor, workflow, form-generic, history, query-builder
 
 **Plan 5 candidates**:
 - import-excel (if user signals readiness)
@@ -633,7 +632,7 @@ Plan 2 form files (estimated, individually well above global thresholds â€”
 - `import-excel` â€” heavy XLSX wrapper, Plan 6 candidate
 - `modules/layout/` â€” UI-heavy components, Plan 6 candidate
 
-**Skipped permanently per user direction**: chart, document-builder, editor, workflow, form-generic, anchor-v2, history, query-builder.
+**Skipped permanently per user direction**: chart, document-builder, editor, workflow, form-generic, history, query-builder.
 
 **Plan 6 candidates**:
 - modules/layout (page, sidebar-mobile-v1, sidebar-v1, layout-main)

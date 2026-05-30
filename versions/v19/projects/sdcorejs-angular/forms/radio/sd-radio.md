@@ -284,6 +284,32 @@ items = [
 ```
 Lookup dÃ¹ng `item[valueField]`; primitive trong array sáº½ tráº£ vá» `undefined`.
 
+## E2E test attributes
+
+The `<mat-radio-group>` element carries the following data attributes for E2E selector consistency:
+
+| Attribute | Values | Anchor | Prefix | Notes |
+| --- | --- | --- | --- | --- |
+| `data-autoid` | `forms-radio-<autoId>` | `mat-radio-group` | `forms-radio-` | Set when `[autoId]` input is provided. |
+| `data-disabled` | `'true' \| 'false'` | `mat-radio-group` | â€” | Reflects current FormControl disabled state. |
+| `data-empty` | `'true' \| 'false'` | `mat-radio-group` | â€” | `'true'` when value is null/undefined; `'false'` when a selection is active. |
+| `data-value` | `<selected-key>` | `mat-radio-group` | â€” | Serialized selected key (string); matches one of the item's `valueField`. |
+| `data-required` | `'true' \| 'false'` | `mat-radio-group` | â€” | Reflects `required` input; always present. |
+
+> **Note**: `sd-radio` emits only `data-required` from the new validation-meta set. It has no maxlength / minlength / pattern / errorMessage support.
+
+Example:
+```html
+<!-- When autoId="gender", disabled=false, value='M', items show gender options -->
+<mat-radio-group
+  data-autoid="forms-radio-gender"
+  data-disabled="false"
+  data-empty="false"
+  data-value="M">
+  <!-- ... -->
+</mat-radio-group>
+```
+
 ## Related
 - `<sd-select>` â€” dropdown picker for longer or API-loaded lists
 - `<sd-checkbox>` â€” multi-select group / boolean

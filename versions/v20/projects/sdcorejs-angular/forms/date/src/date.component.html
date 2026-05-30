@@ -1,7 +1,7 @@
 @let lbl = label();
 @let app = appearance();
 @let hideErr = hideInlineError();
-@let errMsg = errorTooltipMessage;
+@let errMsg = errorMessage();
 @let viewDef = sdViewDef();
 @let hText = helperText();
 @let req = required();
@@ -73,6 +73,12 @@
           (focus)="onFocus()"
           (blur)="onBlur()"
           [attr.data-autoId]="autoId()"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-error-message]="dataErrorMessage()"
           #input
           [maxLength]="10" />
 
@@ -87,7 +93,15 @@
         }
 
         @if (formControl.value && !req && !formControl.disabled) {
-          <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear($event)" matSuffix>cancel</mat-icon>
+          <button
+            type="button"
+            class="sd-clear-btn sd-hover"
+            matSuffix
+            (click)="clear($event)"
+            title="Xóa"
+            aria-label="Xóa">
+            <mat-icon>close</mat-icon>
+          </button>
         }
 
         <mat-icon class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && picker.open()" #btn matSuffix>today</mat-icon>

@@ -1,6 +1,6 @@
 ﻿import { Pipe, PipeTransform } from '@angular/core';
 // import hash from 'object-hash';
-import { SdUtilities } from '@sdcorejs/angular/utilities';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableAction, SdTableActionNormal } from '../../models/table-option-selector.model';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -51,7 +51,7 @@ export class ActionFilterPipe implements PipeTransform {
       if ('children' in action) {
         const children: SdTableActionNormal[] = [];
         for (const childAction of action.children) {
-          const key = SdUtilities.hash(childAction);
+          const key = Utilities.hash(childAction);
           if (selectedItems.every(e => e?.meta?.selector?.actions?.includes(key))) {
             children.push(childAction);
           }
@@ -60,7 +60,7 @@ export class ActionFilterPipe implements PipeTransform {
           results.push({ ...action, children });
         }
       } else {
-        const key = SdUtilities.hash(action);
+        const key = Utilities.hash(action);
         if (selectedItems.every(e => e?.meta?.selector?.actions?.includes(key))) {
           results.push(action);
         }

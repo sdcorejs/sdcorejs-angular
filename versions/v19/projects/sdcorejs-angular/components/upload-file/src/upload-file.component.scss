@@ -25,7 +25,7 @@
       }
     }
 
-    .c-img-error {
+    .c-image-error {
       width: 100%;
       height: 100%;
       padding: 5px 10px 0px 10px;
@@ -109,12 +109,6 @@
         .c-img {
           max-width: 100%;
           max-height: calc(100% - 5px);
-        }
-
-        .c-img-error {
-          max-width: 100%;
-          max-height: calc(100% - 5px);
-          content: url('./assets/img-error.svg') !important;
         }
 
         .c-overlay-count {

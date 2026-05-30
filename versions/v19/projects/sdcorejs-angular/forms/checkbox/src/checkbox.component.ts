@@ -1,8 +1,24 @@
-import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectorRef, Component, computed, EventEmitter, Input, input, OnDestroy, OnInit, Output } from '@angular/core';
-import { AbstractControl, FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
+﻿import { CommonModule } from '@angular/common';
+import {
+  AfterViewInit,
+  booleanAttribute,
+  ChangeDetectorRef,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  model,
+  OnDestroy,
+  output,
+} from '@angular/core';
+import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
+import { sdFormControlState, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { Color } from '@sdcorejs/utils/models';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Subscription } from 'rxjs';
 import * as uuid from 'uuid';
 
@@ -11,91 +27,125 @@ import * as uuid from 'uuid';
   templateUrl: './checkbox.component.html',
   styleUrl: './checkbox.component.scss',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatCheckboxModule],
+  host: {
+    // why: host class .sd-c-<x> + default sd-c-primary cho fallback. Thay data-sd-color
+    // Ä‘á»ƒ trÃ¡nh edge case host-attr-binding khÃ´ng reactive trong vÃ i cáº£nh build pipeline.
+    '[class.sd-c-primary]': "color() === 'primary'",
+    '[class.sd-c-secondary]': "color() === 'secondary'",
+    '[class.sd-c-info]': "color() === 'info'",
+    '[class.sd-c-success]': "color() === 'success'",
+    '[class.sd-c-warning]': "color() === 'warning'",
+    '[class.sd-c-error]': "color() === 'error'",
+  },
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatCheckboxModule, TranslatePipe],
 })
-export class SdCheckbox implements OnDestroy, OnInit, AfterViewInit {
+export class SdCheckbox implements OnDestroy, AfterViewInit {
+  readonly #ref = inject(ChangeDetectorRef);
+
   id = `I${uuid.v4()}`;
   #name = uuid.v4();
-
-  readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  readonly autoId = computed(() => (this.autoIdInput() ? `forms-checkbox-${this.autoIdInput()}` : undefined));
-  @Input() set name(val: string) {
-    if (val) {
-      this.#name = val;
-    }
-  }
-  #form?: FormGroup;
-  @Input() set form(val: NgForm | FormGroup) {
-    if (val) {
-      if (val instanceof NgForm) {
-        this.#form = val.form;
-      } else {
-        this.#form = val;
-      }
-    }
-  }
   formControl = new FormControl();
   #subscription = new Subscription();
-  @Input() label?: string;
-  @Input() color: 'primary' | 'warn' = 'primary';
-  @Input() set disabled(val: boolean | '' | undefined | null) {
-    val = val === '' || !!val;
-    if (val) {
-      this.formControl.disable();
-    } else {
-      this.formControl.enable();
-    }
-  }
-  #model: any;
-  @Input() set model(value: any) {
-    if (this.#model !== value) {
-      this.#model = value;
-      this.formControl.setValue(value, {
-        emitEvent: false,
-      });
-    }
-  }
-  inlineError?: string;
-  @Input('inlineError') set _inlineError(val: string) {
-    this.inlineError = val;
-    this.#updateValidator();
-  }
+  #model: unknown;
 
-  @Output() modelChange = new EventEmitter();
-  @Output() sdChange = new EventEmitter<any>();
-  constructor(private ref: ChangeDetectorRef) {}
+  // Inputs â€” all accept null|undefined at the boundary, transform to canonical shape
+  readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
+    alias: 'autoId',
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  readonly name = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  // why: parent may bind NgForm (template-driven), FormGroup (reactive), or a wrapper with `.form`.
+  // Transform once at the input boundary so the rest of the component only deals with FormGroup.
+  readonly form = input<FormGroup | undefined, any>(undefined, {
+    transform: (val: any): FormGroup | undefined => {
+      if (!val) return undefined;
+      if (val instanceof NgForm) return val.form;
+      if (val instanceof FormGroup) return val;
+      if (val?.form instanceof FormGroup) return val.form;
+      return undefined;
+    },
+  });
+  readonly label = input<string | undefined, string | null | undefined>(undefined, {
+    transform: (v): string | undefined => v ?? undefined,
+  });
+  // why: full Color enum, Ã¡p dá»¥ng qua [data-sd-color] + SCSS override MDC vars.
+  readonly color = input<Color, Color | null | undefined>('primary', {
+    transform: (v): Color => v || 'primary',
+  });
+  readonly disabled = input(false, { transform: booleanAttribute });
+  readonly viewed = input(false, { transform: booleanAttribute });
+  readonly inlineError = input<string, string | null | undefined>('', {
+    transform: (v): string => v ?? '',
+  });
 
-  ngOnInit() {}
+  // Two-way model
+  readonly model = model<unknown>(undefined);
+
+  // Outputs (sdChange is in addition to auto-generated modelChange from `model` signal)
+  readonly sdChange = output<unknown>();
+
+  // Computed (template bindings)
+  readonly autoId = computed(() => (this.autoIdInput() ? `forms-checkbox-${this.autoIdInput()}` : undefined));
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
+  readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
+  readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
+
+  constructor() {
+    // why: external [name] override falls back to generated uuid only when truthy
+    effect(() => {
+      const val = this.name();
+      if (val) this.#name = val;
+    });
+
+    effect(() => {
+      if (this.disabled()) this.formControl.disable();
+      else this.formControl.enable();
+    });
+
+    effect(() => {
+      const value = this.model();
+      if (this.#model !== value) {
+        this.#model = value;
+        this.formControl.setValue(value, { emitEvent: false });
+      }
+    });
+
+    effect(() => {
+      // touch dependency so validator re-attaches when inlineError changes
+      this.inlineError();
+      this.#updateValidator();
+    });
+  }
 
   ngAfterViewInit() {
     this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-    this.#form?.addControl(this.#name, this.formControl);
-    this.ref.detectChanges();
+    this.form()?.addControl(this.#name, this.formControl);
+    this.#ref.detectChanges();
   }
 
   ngOnDestroy() {
-    this.#form?.removeControl(this.#name);
+    this.form()?.removeControl(this.#name);
     this.#subscription.unsubscribe();
   }
 
-  #onChange = (value: any) => {
-    this.modelChange.emit(value);
+  #onChange = (value: unknown) => {
+    this.#model = value;
+    this.model.set(value);
     this.sdChange.emit(value);
   };
+
   #updateValidator = () => {
     this.formControl.clearValidators();
     const validators: ValidatorFn[] = [];
 
-    if (this.inlineError) {
-      validators.push(this.customInlineErrorValidator());
+    if (this.inlineError()) {
+      validators.push(SdInlineErrorValidator);
     }
     this.formControl.setValidators(validators);
     this.formControl.updateValueAndValidity();
   };
-  // Hàm tạo Validators tùy chỉnh cho inlineError
-  customInlineErrorValidator(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } | null => {
-      return { inlineError: true };
-    };
-  }
 }
+

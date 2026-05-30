@@ -1,0 +1,114 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+$informColors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
+
+.c-inform {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: #fff;
+
+  // why: tint nền + viền + chữ theo color token, mượn pattern sd-badge.
+  @each $name in $informColors {
+    &.c-#{$name} {
+      border-color: map.get(color.$color_map, $name);
+      background: map.get(color.$color_map, '#{$name}-light');
+
+      .c-inform-icon,
+      .c-inform-title {
+        color: map.get(color.$color_map, $name);
+      }
+    }
+  }
+
+  .c-inform-icon {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+    line-height: 20px;
+  }
+
+  .c-inform-content {
+    flex: 1 1 auto;
+    min-width: 0; // cho phép clamp/wrap đúng trong flex
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .c-inform-title {
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .c-inform-body {
+    font-size: 14px;
+    line-height: 20px;
+    color: map.get(color.$color_map, 'black500');
+    overflow-wrap: break-word;
+
+    &.is-clamped {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+
+  .c-inform-toggle,
+  .c-inform-action-link {
+    align-self: flex-start;
+    margin-top: 4px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  // why: action + toggle luôn dùng màu link xanh cố định (info), không theo color inform;
+  // không dùng primary vì primary hay bị custom theme.
+  .c-inform-toggle,
+  .c-inform-action-link {
+    color: map.get(color.$color_map, 'info');
+  }
+
+  .c-inform-action-link:hover {
+    text-decoration: underline;
+  }
+
+  // why: hover mới hiện nền xám + chuyển đỏ, mượn pattern .sd-clear-btn (form.scss).
+  .c-inform-close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: map.get(color.$color_map, 'black400');
+    transition: background-color 80ms ease, color 80ms ease;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.06);
+      color: map.get(color.$color_map, 'error');
+    }
+
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+      line-height: 18px;
+    }
+  }
+}
