@@ -1,4 +1,4 @@
-﻿# SdExcelService
+�# SdExcelService
 
 **Type**: Service (Angular `@Injectable`)
 **Class**: `SdExcelService`
@@ -6,7 +6,7 @@
 **Import path**: `@sdcorejs/angular/services/excel`
 
 ## One-line purpose
-Browser-side Excel/CSV utilities â€” generate a styled `.xlsx` import-template, export tabular data to `.xlsx` or `.csv`, and parse a user-uploaded `.xlsx` back to plain JS objects.
+Browser-side Excel/CSV utilities � generate a styled `.xlsx` import-template, export tabular data to `.xlsx` or `.csv`, and parse a user-uploaded `.xlsx` back to plain JS objects.
 
 ## When to use
 - Producing an "Import template" file with column headers, descriptions, required/highlight styling, and ancillary lookup sheets.
@@ -15,9 +15,9 @@ Browser-side Excel/CSV utilities â€” generate a styled `.xlsx` import-templ
 - Parsing a user-uploaded `.xlsx` (selected via file picker) into `Record<string, any>[]` keyed by the first row's header values.
 
 ## When NOT to use
-- For server-generated reports â€” use a backend Excel pipeline; the service runs entirely in the browser via `exceljs`.
-- For huge files (>~50k rows) â€” `exceljs` + the deep-clone-style writes here are memory-heavy.
-- For non-tabular workbooks (charts, pivot tables, complex formulas) â€” the service writes plain values only.
+- For server-generated reports � use a backend Excel pipeline; the service runs entirely in the browser via `exceljs`.
+- For huge files (>~50k rows) � `exceljs` + the deep-clone-style writes here are memory-heavy.
+- For non-tabular workbooks (charts, pivot tables, complex formulas) � the service writes plain values only.
 
 ## Public API
 
@@ -34,8 +34,8 @@ interface SdExcelTemplate {
 }
 
 interface SdExcelColumn {
-  field: string;       // required â€” used as header row 1 (technical key)
-  title: string;       // required â€” used as header row 2 (display label)
+  field: string;       // required � used as header row 1 (technical key)
+  title: string;       // required � used as header row 2 (display label)
   description?: string;
   width?: string;      // e.g. '120px' (converted to ~width/7 chars; falls back to 20)
 }
@@ -99,9 +99,9 @@ parse(file: File): Promise<{ items: Record<string, any>[]; file: File | null }>;
 - RichText / hyperlink / formula cells are unwrapped to plain text via `richText.map(t => t.text).join('')` / `value.text` / `value.result`.
 - Strings are trimmed.
 - `''` and `undefined` become `null`.
-- Sentinel values `'SET_NULL'` â†’ `null`, `'SET_EMPTY'` â†’ `''`.
+- Sentinel values `'SET_NULL'` �  `null`, `'SET_EMPTY'` �  `''`.
 
-**Throws**: `'KhÃ´ng Ä‘á»c Ä‘Æ°á»£c ná»™i dung file'` if the buffer is empty; `'File Excel khÃ´ng cÃ³ sheet dá»¯ liá»‡u'` if the workbook has no sheets.
+**Throws**: `'Không �ọc �ược n�"i dung file'` if the buffer is empty; `'File Excel không có sheet dữ li�!u'` if the workbook has no sheets.
 
 ## Configuration / DI tokens
 None.
@@ -109,7 +109,7 @@ None.
 ## Behavior notes
 - **Download mechanism**: generated workbooks go through `BrowserUtilities.downloadBlob(blob, fileName)` (`.xlsx` MIME type). CSV path uses a self-written RFC 4180 generator (UTF-8 BOM + CRLF + double-quote escaping) and the same `BrowserUtilities.downloadBlob` helper (`text/csv;charset=utf-8;`).
 - **Header styling** is fixed (border `thin`, dark-blue fill `#143180` with white font for titles, `#FAFAFA` light fill for field row, `#FF1744` red highlight for required, `#CFD8DC` light grey for descriptions). Override via `column.fill` / `column.fontColor`.
-- **Column width**: `width: '120px'` is converted to `120 / 7 â‰ˆ 17` Excel character units; missing/invalid â†’ 20.
+- **Column width**: `width: '120px'` is converted to `120 / 7 �0� 17` Excel character units; missing/invalid �  20.
 - **Header layout**: row 1 = field code, row 2 = title, row 3 = description (only if any column has `description`), then data rows.
 - **Lookup sheets**: each `SdExcelSheet` becomes a separate worksheet, headers in rows 1+2, items from row 3 down.
 - **CSV header row**: `column.title` values are written as the first CSV row (human-readable labels). Subsequent rows are built by reading `column.field` keys from each item.
@@ -153,7 +153,7 @@ await excel.export({
 ### 3. Export the same grid as CSV
 ```typescript
 await excel.exportCSV({
-  fileName: 'orders',  // â†’ orders_2026-05-10-14-23-04.csv
+  fileName: 'orders',  // �  orders_2026-05-10-14-23-04.csv
   columns: [...],
   items: orders,
 });
@@ -168,13 +168,13 @@ if (file && items.length) {
 ```
 
 ## Anti-patterns
-- Do NOT pass styled `Cell` objects in `items` â€” the service expects plain JS values keyed by `column.field`.
-- Do NOT use this for very large exports â€” accumulate batches server-side instead.
-- Do NOT assume the parsed `items` keys come from `column.title` â€” they come from row-1 cell values, which by template design are `column.field` codes.
-- Do NOT include `#` in `fill` / `fontColor` â€” these are passed as raw ARGB hex strings to ExcelJS (e.g., `'FF1744'`, not `'#FF1744'`).
+- Do NOT pass styled `Cell` objects in `items` � the service expects plain JS values keyed by `column.field`.
+- Do NOT use this for very large exports � accumulate batches server-side instead.
+- Do NOT assume the parsed `items` keys come from `column.title` � they come from row-1 cell values, which by template design are `column.field` codes.
+- Do NOT include `#` in `fill` / `fontColor` � these are passed as raw ARGB hex strings to ExcelJS (e.g., `'FF1744'`, not `'#FF1744'`).
 
 ## Related
-- `exceljs` (peer dep) â€” workbook driver. Loaded dynamically via `await import('exceljs')` inside `generateTemplate` / `export` / `parse` to keep it out of the main bundle.
-- `BrowserUtilities.upload` / `BrowserUtilities.downloadBlob` (`@sdcorejs/utils/fns`) â€” file picker + download trigger.
-- `DateUtilities.toFormat` â€” used to suffix CSV filenames.
+- `exceljs` (peer dep) � workbook driver. Loaded dynamically via `await import('exceljs')` inside `generateTemplate` / `export` / `parse` to keep it out of the main bundle.
+- `BrowserUtilities.upload` / `BrowserUtilities.downloadBlob` (`@sdcorejs/utils/fns`) � file picker + download trigger.
+- `DateUtilities.toFormat` � used to suffix CSV filenames.
 

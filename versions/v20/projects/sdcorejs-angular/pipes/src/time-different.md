@@ -1,16 +1,16 @@
-﻿# `sdTimeDifferent` pipe (`| sdTimeDifferent`)
+�# `sdTimeDifferent` pipe (`| sdTimeDifferent`)
 
 **Type**: Pipe
-**Pure**: yes (default) â€” but returns an `Observable<string>`, so use with `| async`
+**Pure**: yes (default) � but returns an `Observable<string>`, so use with `| async`
 **Class**: `SdTimeDifferentPipe`
 **Standalone**: yes
 **Import path**: `@sdcorejs/angular/pipes` (or direct: `@sdcorejs/angular/pipes/time-different`)
 
 ## One-line purpose
-Streams a relative time string ("2 phÃºt trÆ°á»›c") that updates every second while within the chosen threshold; falls back to absolute formatted date once the threshold is exceeded or the input is in the future.
+Streams a relative time string ("2 phút trư�:c") that updates every second while within the chosen threshold; falls back to absolute formatted date once the threshold is exceeded or the input is in the future.
 
 ## When to use
-- Activity feeds, comment lists, audit logs â€” recency display that auto-ticks
+- Activity feeds, comment lists, audit logs � recency display that auto-ticks
 - "Last seen" / "updated N ago" badges
 - Anywhere you want the current relative time to stay accurate without manual change-detection
 
@@ -27,7 +27,7 @@ transform(
 | --- | --- | --- |
 | `value` | `any` | A date-like input. If `DateUtilities.isDate(value)` is false, returns `of('')`. |
 | `format` | `string` | Date format pattern used by `DateUtilities.toFormat` for the absolute fallback (after threshold). |
-| `different` | `'second' \| 'minute' \| 'hour' \| 'day' \| 'month'` | Threshold. While `now - value` is below the threshold (60s / 60min / 24h / 30d / 365h respectively per source â€” note `month` constant is `maxHour * 365` in the implementation), shows the relative `DateUtilities.timeDifference`. Past the threshold, shows absolute `format`. |
+| `different` | `'second' \| 'minute' \| 'hour' \| 'day' \| 'month'` | Threshold. While `now - value` is below the threshold (60s / 60min / 24h / 30d / 365h respectively per source � note `month` constant is `maxHour * 365` in the implementation), shows the relative `DateUtilities.timeDifference`. Past the threshold, shows absolute `format`. |
 
 ## Examples
 
@@ -38,7 +38,7 @@ transform(
 
 ### 2. "Updated N ago" up to a day, then absolute date
 ```html
-<span>Cáº­p nháº­t {{ row.updatedAt | sdTimeDifferent : 'dd/MM/yyyy' : 'day' | async }}</span>
+<span>Cập nhật {{ row.updatedAt | sdTimeDifferent : 'dd/MM/yyyy' : 'day' | async }}</span>
 ```
 
 ### 3. Within last hour only
@@ -47,17 +47,17 @@ transform(
 ```
 
 ## Edge cases / null behavior
-- Non-date / `null` / `undefined` input â†’ emits `''`.
-- `different` falsy â†’ emits a single absolute formatted value (no interval).
-- Future date (`now - value < 0`) â†’ emits a single absolute formatted value.
-- The pipe sets up `interval(1000)` and emits each tick â€” combine with `| async` so Angular auto-subscribes/unsubscribes.
+- Non-date / `null` / `undefined` input �  emits `''`.
+- `different` falsy �  emits a single absolute formatted value (no interval).
+- Future date (`now - value < 0`) �  emits a single absolute formatted value.
+- The pipe sets up `interval(1000)` and emits each tick � combine with `| async` so Angular auto-subscribes/unsubscribes.
 
 ## Anti-patterns
-- Forgetting `| async` â€” you'd render `[object Object]` (an `Observable`).
-- Using thousand instances on a long list â€” each spins up its own `interval(1000)` subscription. For very large lists, consider a single ticker service that fans out updates.
-- Confusing the `month` threshold â€” in source, `maxMonth = maxHour * 365` (i.e. ~365 hours, not 365 days). If you need a true month boundary, verify against `DateUtilities.timeDifference`'s output.
+- Forgetting `| async` � you'd render `[object Object]` (an `Observable`).
+- Using thousand instances on a long list � each spins up its own `interval(1000)` subscription. For very large lists, consider a single ticker service that fans out updates.
+- Confusing the `month` threshold � in source, `maxMonth = maxHour * 365` (i.e. ~365 hours, not 365 days). If you need a true month boundary, verify against `DateUtilities.timeDifference`'s output.
 
 ## Related
-- `DateUtilities.timeDifference` / `DateUtilities.toFormat` â€” underlying helpers from `@sdcorejs/angular/utilities/extensions`.
-- Angular `| async` â€” required consumer for the emitted `Observable<string>`.
+- `DateUtilities.timeDifference` / `DateUtilities.toFormat` � underlying helpers from `@sdcorejs/angular/utilities/extensions`.
+- Angular `| async` � required consumer for the emitted `Observable<string>`.
 

@@ -1,4 +1,4 @@
-﻿# `<sd-textarea>`
+�# `<sd-textarea>`
 
 **Type**: Component (form input)
 **Selector**: `sd-textarea`
@@ -8,19 +8,19 @@
 **Change detection**: default (no `OnPush` declared)
 
 ## One-line purpose
-Multi-line text input â€” `<textarea>` with label, validators (required/maxlength/pattern/custom), an optional auto-grow mode, a built-in `count/max` suffix counter when `maxlength` is set, and DETAIL `[viewed]` read-only mode.
+Multi-line text input � `<textarea>` with label, validators (required/maxlength/pattern/custom), an optional auto-grow mode, a built-in `count/max` suffix counter when `maxlength` is set, and DETAIL `[viewed]` read-only mode.
 
 ## When to use
 - Free-form descriptions, comments, notes, addresses spanning multiple lines
 - Form fields that may legitimately need 50+ characters (description, reason, remark)
 - DETAIL state via `[viewed]="true"` to render the saved value instead of the input chrome
-- Forms where the user benefits from seeing the character budget â€” set `[maxlength]` for the live counter
+- Forms where the user benefits from seeing the character budget � set `[maxlength]` for the live counter
 
 ## When NOT to use
-- Single-line text â†’ use `<sd-input>`
-- Numbers / amounts â†’ use `<sd-input-number>`
-- Code / syntax-highlighted text â†’ use the project's code editor component (out of scope for `forms/`)
-- Rich text (bold, lists, ...) â†’ use the project's rich-text editor component
+- Single-line text �  use `<sd-input>`
+- Numbers / amounts �  use `<sd-input-number>`
+- Code / syntax-highlighted text �  use the project's code editor component (out of scope for `forms/`)
+- Rich text (bold, lists, ...) �  use the project's rich-text editor component
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -46,7 +46,7 @@ Multi-line text input â€” `<textarea>` with label, validators (required/max
 | `autoHeight` | `boolean` | `false` | Auto-grow: textarea height tracks content (`scrollHeight`). Disables vertical scroll. Bare attribute = `true`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline `<mat-error>`; surface error via tooltip on a red error icon suffix. Bare attribute = `true`. |
 
-> **Coerce note**: `required`, `disabled`, `viewed`, `autoHeight`, `hideInlineError` use the `booleanAttribute` transform â€” bare attribute presence (e.g. `<sd-textarea autoHeight>`) is treated as `true`.
+> **Coerce note**: `required`, `disabled`, `viewed`, `autoHeight`, `hideInlineError` use the `booleanAttribute` transform � bare attribute presence (e.g. `<sd-textarea autoHeight>`) is treated as `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -69,7 +69,7 @@ Rendered on the inner `<textarea matInput>` element (same anchor as `data-autoid
 | `data-pattern` | string | present only when `[pattern]` is non-empty |
 | `data-error-message` | string | present only when the component is currently showing an error tooltip message |
 
-> **Note**: `sd-textarea` does not support `minlength` â€” no `data-minlength` attribute is emitted.
+> **Note**: `sd-textarea` does not support `minlength` � no `data-minlength` attribute is emitted.
 
 Selector example:
 
@@ -81,8 +81,8 @@ await expect(el).toHaveAttribute('data-value', 'some text');
 await expect(el).toHaveAttribute('data-required', 'true');
 await expect(el).toHaveAttribute('data-maxlength', '500');
 await expect(el).toHaveAttribute('data-pattern', '^[A-Za-z]+$');
-// error message â€” only when field is in error state
-await expect(el).toHaveAttribute('data-error-message', 'Vui lÃ²ng nháº­p thÃ´ng tin');
+// error message � only when field is in error state
+await expect(el).toHaveAttribute('data-error-message', 'Vui lòng nhập thông tin');
 ```
 
 ## Host classes
@@ -90,38 +90,38 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 
 | Class | Condition | Effect |
 | --- | --- | --- |
-| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent �  no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
-- `<ng-template sdLabelDef>` â€” custom label rendering (used only when `[appearance]` is null/falsy)
-- `<ng-template sdSuffixDef>` â€” custom suffix (e.g. icon button) rendered as `matSuffix`
-- `<ng-template sdViewDef>` â€” custom DETAIL display (receives `{ value }` as context)
+- `<ng-template sdLabelDef>` � custom label rendering (used only when `[appearance]` is null/falsy)
+- `<ng-template sdSuffixDef>` � custom suffix (e.g. icon button) rendered as `matSuffix`
+- `<ng-template sdViewDef>` � custom DETAIL display (receives `{ value }` as context)
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. In `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: textarea is hidden, value is rendered as plain text (or via `<ng-template sdLabelDef>` for the label and `<ng-template sdViewDef>` for the value); falls back to em-dash via `sdEmpty` when empty.
-- **Validators**: `[required]` â†’ `Validators.required`. `[maxlength]` â†’ `Validators.maxLength`. `[pattern]` â†’ `Validators.pattern` (raw regex string). `[validator]` â†’ async custom validator. `[inlineError]="msg"` â†’ synthetic `inlineError` validator. Error tooltip messages: required â†’ "Vui lÃ²ng nháº­p thÃ´ng tin"; maxlength â†’ "Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: N"; pattern â†’ "Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡"; customValidator â†’ message returned by validator; inlineError â†’ echoes `inlineError`.
-- **Reactive validator updates** â€” validator inputs (`required` / `maxlength` / `pattern` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip `required` on/off at runtime and the control re-validates automatically.
-- **`[disabled]` reactive** â€” toggling `disabled` calls `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges` emitted).
-- **`[(model)]` two-way** â€” host-side writes propagate via a signal effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing â†’ `valueChanges` â†’ `valueModel.set()` â†’ `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
-- **Auto-trim on blur** â€” leading/trailing whitespace is stripped when the user blurs the field. This triggers a `setValue` which propagates to `sdChange` if the value actually changed.
-- **Default `appearance`** â€” when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at application bootstrap to flip ALL form fields to `'fill'` (or any other appearance). Falls back to `'outline'` if the token is not provided.
+- **Validators**: `[required]` �  `Validators.required`. `[maxlength]` �  `Validators.maxLength`. `[pattern]` �  `Validators.pattern` (raw regex string). `[validator]` �  async custom validator. `[inlineError]="msg"` �  synthetic `inlineError` validator. Error tooltip messages: required �  "Vui lòng nhập thông tin"; maxlength �  "S� ký tự t�i �a: N"; pattern �  "Đ�9nh dạng không hợp l�!"; customValidator �  message returned by validator; inlineError �  echoes `inlineError`.
+- **Reactive validator updates** � validator inputs (`required` / `maxlength` / `pattern` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip `required` on/off at runtime and the control re-validates automatically.
+- **`[disabled]` reactive** � toggling `disabled` calls `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges` emitted).
+- **`[(model)]` two-way** � host-side writes propagate via a signal effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing �  `valueChanges` �  `valueModel.set()` �  `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
+- **Auto-trim on blur** � leading/trailing whitespace is stripped when the user blurs the field. This triggers a `setValue` which propagates to `sdChange` if the value actually changed.
+- **Default `appearance`** � when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at application bootstrap to flip ALL form fields to `'fill'` (or any other appearance). Falls back to `'outline'` if the token is not provided.
 
 ### Three ways to integrate
 
 ```html
 <!-- 1. Standalone two-way binding (no FormGroup) -->
 <sd-textarea
-  label="Ghi chÃº"
+  label="Ghi chú"
   [(model)]="model.note">
 </sd-textarea>
 
 <!-- 2. Reactive FormGroup (self-registers via addControl) -->
 <form [formGroup]="form">
   <sd-textarea
-    label="MÃ´ táº£" name="description"
+    label="Mô tả" name="description"
     [form]="form" required
     [maxlength]="500"
     [(model)]="model.description">
@@ -131,23 +131,23 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 <!-- 3. Template-driven NgForm -->
 <form #f="ngForm">
   <sd-textarea
-    label="LÃ½ do" name="reason"
+    label="Lý do" name="reason"
     [form]="f" required
     [(model)]="model.reason">
   </sd-textarea>
 </form>
 ```
 
-> **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` â€” unwraps `.form`) and `FormGroup` (used directly). It also accepts an object literal of shape `{ form: FormGroup }` as a safety fallback. In all three patterns the component manages `addControl` / `removeControl` lifecycle internally â€” never call them yourself.
+> **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` � unwraps `.form`) and `FormGroup` (used directly). It also accepts an object literal of shape `{ form: FormGroup }` as a safety fallback. In all three patterns the component manages `addControl` / `removeControl` lifecycle internally � never call them yourself.
 
-## Visual cues (helps agent map screenshots â†’ component)
+## Visual cues (helps agent map screenshots �  component)
 - A multi-line text box, default 5 rows tall, with the standard outlined Material chrome (label floats above on focus / when filled)
-- A small resize handle in the bottom-right corner (browser default for `<textarea>`) â€” UNLESS `[autoHeight]="true"`, which disables vertical scroll and grows the box as the user types
+- A small resize handle in the bottom-right corner (browser default for `<textarea>`) � UNLESS `[autoHeight]="true"`, which disables vertical scroll and grows the box as the user types
 - When `[maxlength]` is set: a small `123/500` counter appears as a suffix at the bottom-right inside the field
 - Required marker shows as a red `*` next to the label
 - When `[hideInlineError]="true"`: red error-icon suffix with hover-tooltip; otherwise inline `<mat-error>` below the field
 - Helper text shows as an info icon (`info_outline`) next to the label, with the helper text in a tooltip
-- In `[viewed]="true"` mode: just plain text â€” the saved value (or via `<ng-template sdViewDef>`); empty values render as em-dash via `sdEmpty`
+- In `[viewed]="true"` mode: just plain text � the saved value (or via `<ng-template sdViewDef>`); empty values render as em-dash via `sdEmpty`
 
 ## Examples
 
@@ -155,7 +155,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 ```html
 <sd-textarea
   [form]="form" name="description"
-  label="MÃ´ táº£" required
+  label="Mô tả" required
   [maxlength]="500"
   [(model)]="model.description">
 </sd-textarea>
@@ -165,9 +165,9 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 ```html
 <sd-textarea
   [form]="form" name="comment"
-  label="Ghi chÃº"
+  label="Ghi chú"
   autoHeight rows="3"
-  placeholder="Nháº­p ghi chÃº..."
+  placeholder="Nhập ghi chú..."
   [(model)]="model.comment">
 </sd-textarea>
 ```
@@ -176,7 +176,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 ```html
 <sd-textarea
   [form]="form" name="address"
-  label="Äá»‹a chá»‰" required
+  label="Đ�9a ch�0" required
   [pattern]="addressRegex"
   [validator]="checkAddressOnServer"
   [(model)]="model.address">
@@ -186,7 +186,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 ### 4. DETAIL state with custom view template
 ```html
 <sd-textarea
-  label="LÃ½ do tá»« chá»‘i"
+  label="Lý do từ ch�i"
   [model]="model.rejectReason"
   [viewed]="true">
   <ng-template sdViewDef let-value>
@@ -197,7 +197,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 
 ### 5. Custom suffix (clear button)
 ```html
-<sd-textarea label="Ghi chÃº" [(model)]="note">
+<sd-textarea label="Ghi chú" [(model)]="note">
   <ng-template sdSuffixDef>
     <sd-button type="link" prefixIcon="close" (click)="note = ''"></sd-button>
   </ng-template>
@@ -205,17 +205,17 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 ```
 
 ## Anti-patterns
-- âŒ Using `formControlName` / `[(ngModel)]` â€” not wired; use `[form]+[name]` and `[(model)]`.
-- âŒ Using `<sd-textarea>` for single-line text â€” use `<sd-input>` (visual convention + Enter-to-submit semantics).
-- âŒ Combining `[autoHeight]="true"` with a tall fixed `[rows]` â€” the row attribute only sets the initial height before auto-grow kicks in; large `rows` defeats the auto-grow effect.
-- âŒ Wiring up trim logic in the parent â€” the component already trims on blur.
-- âŒ Using `[disabled]="true"` to express read-only DETAIL state â€” use `[viewed]="true"` so the saved value renders as text.
-- âŒ Setting `[maxlength]` to a non-positive integer â€” the input transform coerces it to `null` (validator + counter both vanish). Use a positive integer.
+- �R Using `formControlName` / `[(ngModel)]` � not wired; use `[form]+[name]` and `[(model)]`.
+- �R Using `<sd-textarea>` for single-line text � use `<sd-input>` (visual convention + Enter-to-submit semantics).
+- �R Combining `[autoHeight]="true"` with a tall fixed `[rows]` � the row attribute only sets the initial height before auto-grow kicks in; large `rows` defeats the auto-grow effect.
+- �R Wiring up trim logic in the parent � the component already trims on blur.
+- �R Using `[disabled]="true"` to express read-only DETAIL state � use `[viewed]="true"` so the saved value renders as text.
+- �R Setting `[maxlength]` to a non-positive integer � the input transform coerces it to `null` (validator + counter both vanish). Use a positive integer.
 
 ## Related
-- `<sd-input>` â€” single-line text
-- `<sd-input-number>` â€” numeric input with thousand-separator
-- `<sd-label>` â€” label primitive
-- `SdSuffixDefDirective` / `SdLabelDefDirective` / `SdViewDefDirective` â€” content-projection slots
-- `SD_FORM_CONFIGURATION` token â€” global default `appearance`
+- `<sd-input>` � single-line text
+- `<sd-input-number>` � numeric input with thousand-separator
+- `<sd-label>` � label primitive
+- `SdSuffixDefDirective` / `SdLabelDefDirective` / `SdViewDefDirective` � content-projection slots
+- `SD_FORM_CONFIGURATION` token � global default `appearance`
 

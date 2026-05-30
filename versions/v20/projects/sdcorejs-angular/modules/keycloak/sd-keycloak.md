@@ -1,4 +1,4 @@
-﻿# Keycloak Module
+�# Keycloak Module
 
 - **Type:** `EnvironmentProviders` (`provideSdKeycloak`) **or** `NgModule.forRoot` (`SdKeycloakModule`)
 - **Import path:** `@sdcorejs/angular/modules/keycloak`
@@ -13,7 +13,7 @@ Thin wrapper around the official `keycloak-js` SDK: bootstraps Keycloak at app-i
 - Your app authenticates against a Keycloak realm (self-hosted or RH SSO).
 - You want `keycloak-js` initialized as part of `APP_INITIALIZER` so routes never activate before SSO check completes.
 - You need automatic 30-second-ahead silent token refresh, with auto-redirect to login on refresh failure.
-- Differs from `authom`: this module uses the canonical `keycloak-js` SDK (full Keycloak feature set: `loginRequired`, account console, role mappings) â€” not a hand-rolled OAuth/PKCE implementation.
+- Differs from `authom`: this module uses the canonical `keycloak-js` SDK (full Keycloak feature set: `loginRequired`, account console, role mappings) � not a hand-rolled OAuth/PKCE implementation.
 
 ## What it provides
 
@@ -42,12 +42,12 @@ interface ISdKeycloakConfiguration {
 }
 ```
 
-`loadTenantConfig` is called once at `APP_INITIALIZER` â€” fetch realm config from your backend or return a static object.
+`loadTenantConfig` is called once at `APP_INITIALIZER` � fetch realm config from your backend or return a static object.
 
 ## Setup
 
 **Required app-side files:**
-- `silent-renew.html` in app `public/` â€” Keycloak silent SSO redirect target (referenced as `${origin}/silent-renew.html`).
+- `silent-renew.html` in app `public/` � Keycloak silent SSO redirect target (referenced as `${origin}/silent-renew.html`).
 
 **Standalone (`app.config.ts`):**
 ```ts
@@ -87,21 +87,21 @@ export class AppModule {}
 ## Public API
 
 - **`SdKeycloakService`**
-  - `keycloak: Keycloak` â€” the underlying `keycloak-js` instance (use for advanced calls: `hasRealmRole`, `loadUserProfile`, etc.)
-  - `config: SdKeycloakTenantConfig` â€” resolved tenant config
-  - `init(config)` â€” called by `APP_INITIALIZER`; returns `Promise<boolean>` (`authenticated`)
-  - `login()`, `logout()` â€” convenience wrappers (logout returns to `window.location.origin`)
-  - `getToken(): string | undefined` â€” current access token
-  - `getIsAuthenticated(): boolean | undefined` â€” current auth state
-- **`SdKeycloakInterceptor`** â€” registered via `withInterceptors([...])`. No setup beyond that.
+  - `keycloak: Keycloak` � the underlying `keycloak-js` instance (use for advanced calls: `hasRealmRole`, `loadUserProfile`, etc.)
+  - `config: SdKeycloakTenantConfig` � resolved tenant config
+  - `init(config)` � called by `APP_INITIALIZER`; returns `Promise<boolean>` (`authenticated`)
+  - `login()`, `logout()` � convenience wrappers (logout returns to `window.location.origin`)
+  - `getToken(): string | undefined` � current access token
+  - `getIsAuthenticated(): boolean | undefined` � current auth state
+- **`SdKeycloakInterceptor`** � registered via `withInterceptors([...])`. No setup beyond that.
 
 ## Behavior notes
 
-- **Init mode:** `keycloak.init({ onLoad: 'check-sso', silentCheckSsoRedirectUri: '${origin}/silent-renew.html', checkLoginIframe: false })`. The `check-sso` mode does NOT force login â€” unauthenticated users see the app as anonymous; the app itself decides when to call `login()`.
+- **Init mode:** `keycloak.init({ onLoad: 'check-sso', silentCheckSsoRedirectUri: '${origin}/silent-renew.html', checkLoginIframe: false })`. The `check-sso` mode does NOT force login � unauthenticated users see the app as anonymous; the app itself decides when to call `login()`.
 - **`checkLoginIframe: false`** is set deliberately to prevent the Keycloak iframe loop bug. SSO state is therefore only validated at refresh time, not continuously.
-- **Auto-refresh:** `onTokenExpired` triggers `updateToken(30)` (refresh if expiry within 30s). On failure, `keycloak.login()` runs â€” full-page redirect.
-- **Interceptor refresh:** before each secured request, `keycloak.updateToken(30)` is awaited â€” guarantees the request never carries a token expiring in <30s.
-- **`secureRoutes` matching is substring-based** (`req.url.includes(route)`), NOT glob. `'/api'` will match `https://thirdparty.com/api/x` â€” be specific.
+- **Auto-refresh:** `onTokenExpired` triggers `updateToken(30)` (refresh if expiry within 30s). On failure, `keycloak.login()` runs � full-page redirect.
+- **Interceptor refresh:** before each secured request, `keycloak.updateToken(30)` is awaited � guarantees the request never carries a token expiring in <30s.
+- **`secureRoutes` matching is substring-based** (`req.url.includes(route)`), NOT glob. `'/api'` will match `https://thirdparty.com/api/x` � be specific.
 - **Anonymous requests pass through:** if `keycloak.authenticated` is falsy, the interceptor calls `next(req)` unmodified.
 - **No SSR guard.** This service assumes a browser. Importing it server-side will throw on `keycloak-js` browser globals.
 
@@ -122,7 +122,7 @@ export class HeaderUser {
 }
 ```
 
-**Wire into auth faÃ§ade for the layout module:**
+**Wire into auth façade for the layout module:**
 ```ts
 {
   provide: SD_AUTH_CONFIGURATION,
@@ -161,16 +161,16 @@ export class HeaderUser {
 
 ## Anti-patterns
 
-- Do NOT call `kc.keycloak.init(...)` yourself â€” `provideSdKeycloak` already wires it as `APP_INITIALIZER`. A second `init` throws.
-- Do NOT use vague `secureRoutes` like `['/api']` if your app calls third-party APIs containing `/api/` â€” use unique segments (`'/api/v1/myproduct'`) or full origin substrings.
-- Do NOT remove `silent-renew.html` from `public/` â€” silent SSO check fails and `init` resolves `false` unexpectedly.
-- Do NOT inject `SdKeycloakService` inside the `loadTenantConfig` factory â€” that creates a DI cycle. Inject `HttpClient` if you need to fetch config.
-- Do NOT enable `checkLoginIframe: true` without testing â€” known to cause infinite reload loops in some browsers.
+- Do NOT call `kc.keycloak.init(...)` yourself � `provideSdKeycloak` already wires it as `APP_INITIALIZER`. A second `init` throws.
+- Do NOT use vague `secureRoutes` like `['/api']` if your app calls third-party APIs containing `/api/` � use unique segments (`'/api/v1/myproduct'`) or full origin substrings.
+- Do NOT remove `silent-renew.html` from `public/` � silent SSO check fails and `init` resolves `false` unexpectedly.
+- Do NOT inject `SdKeycloakService` inside the `loadTenantConfig` factory � that creates a DI cycle. Inject `HttpClient` if you need to fetch config.
+- Do NOT enable `checkLoginIframe: true` without testing � known to cause infinite reload loops in some browsers.
 
 ## Related
 
-- [authom module](./sd-authom.md) â€” alternative SSO provider (Auth0/AuthOM via PKCE).
-- [auth module](./sd-auth.md) â€” generic faÃ§ade you can layer on top to expose `SdAuthService`.
-- [permission module](./sd-permission.md) â€” `getToken` callback can return `kc.getToken()` so permission decoding works.
-- [layout module](./sd-layout.md) â€” `SdLayoutService` consumes user info / signout that you wire from this service.
+- [authom module](./sd-authom.md) � alternative SSO provider (Auth0/AuthOM via PKCE).
+- [auth module](./sd-auth.md) � generic façade you can layer on top to expose `SdAuthService`.
+- [permission module](./sd-permission.md) � `getToken` callback can return `kc.getToken()` so permission decoding works.
+- [layout module](./sd-layout.md) � `SdLayoutService` consumes user info / signout that you wire from this service.
 

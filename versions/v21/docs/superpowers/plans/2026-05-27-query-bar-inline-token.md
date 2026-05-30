@@ -1,8 +1,8 @@
-﻿# query-bar inline token builder â€” Implementation Plan
+�# query-bar inline token builder � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Rework query-bar **inline mode** into a GitLab-style progressive token builder â€” flat completed chips (field text Â· operator icon Â· value text Â· Ã—), step-by-step build (field â†’ operator â†’ value), inline value-only editing, query emitted only on Search. Popover mode unchanged.
+**Goal:** Rework query-bar **inline mode** into a GitLab-style progressive token builder � flat completed chips (field text · operator icon · value text · �), step-by-step build (field �  operator �  value), inline value-only editing, query emitted only on Search. Popover mode unchanged.
 
 **Architecture:** Add a small state machine to `SdQueryBar`: a `#building` signal for the single in-progress chip (held outside `filters` until complete) and an `#editingValueIndex` signal for inline value edits. Completed chips live in the existing `filters` model. Inline mutations update `filters` for rendering but do NOT emit `queryChange`; only the Search button emits (`apply`). The collapsed `sd-operator` gains a public `open()` so the build flow can auto-open the operator menu.
 
@@ -27,11 +27,11 @@ All work is on branch `query-bar`. Commit at each task's commit step. English co
 
 ## File Structure
 
-- Modify: `projects/sdcorejs-angular/components/operator/src/operator.component.ts` (+ `.spec.ts`) â€” add `open()`.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` â€” build/edit state machine + emit gating.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` â€” inline-mode template rewrite.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` â€” flat token styling.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` â€” state-machine + DOM tests.
+- Modify: `projects/sdcorejs-angular/components/operator/src/operator.component.ts` (+ `.spec.ts`) � add `open()`.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` � build/edit state machine + emit gating.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` � inline-mode template rewrite.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` � flat token styling.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` � state-machine + DOM tests.
 
 ---
 
@@ -65,7 +65,7 @@ All work is on branch `query-bar`. Commit at each task's commit step. English co
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/operator/src/operator.component.spec.ts'`
-Expected: FAIL â€” `component.open is not a function`.
+Expected: FAIL � `component.open is not a function`.
 
 - [ ] **Step 3: Implement `open()`**
 
@@ -86,7 +86,7 @@ Add `viewChild` to the `@angular/core` import list (alongside the existing impor
   }
 ```
 
-The template already has `[matMenuTriggerFor]="menu"` on the trigger button, so `viewChild(MatMenuTrigger)` resolves to it â€” no template change needed.
+The template already has `[matMenuTriggerFor]="menu"` on the trigger button, so `viewChild(MatMenuTrigger)` resolves to it � no template change needed.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -122,7 +122,7 @@ git commit -m "feat(operator): expose open() to trigger the menu programmaticall
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `component.building is not a function`.
+Expected: FAIL � `component.building is not a function`.
 
 - [ ] **Step 3: Add the state + emit flag**
 
@@ -165,7 +165,7 @@ Refactor `updateFilter` to make emission optional (so inline callers can skip `q
   }
 ```
 
-(Existing popover callers keep calling `updateFilter(i, patch)` â€” `emit` defaults to `true`, behavior unchanged.)
+(Existing popover callers keep calling `updateFilter(i, patch)` � `emit` defaults to `true`, behavior unchanged.)
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -217,7 +217,7 @@ git commit -m "feat(query-bar): add inline build/edit state signals + emit-gated
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `component.beginBuild is not a function`.
+Expected: FAIL � `component.beginBuild is not a function`.
 
 - [ ] **Step 3: Implement `beginBuild` + the shared finish helper**
 
@@ -237,7 +237,7 @@ Add these methods to `query-bar.component.ts` (inline-mode section). `#pushCompl
     this.filters.set([...this.filters(), next]);
   }
 
-  /** Entry point from the field picker â€” start building a chip for `field`. */
+  /** Entry point from the field picker � start building a chip for `field`. */
   beginBuild(field: SdQueryField): void {
     this.#editingValueIndex.set(null);
     const allowed = sdQueryAllowedOperators(field);
@@ -319,12 +319,12 @@ git commit -m "feat(query-bar): beginBuild starts the inline chip build flow"
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `component.pickBuildOperator is not a function`.
+Expected: FAIL � `component.pickBuildOperator is not a function`.
 
 - [ ] **Step 3: Implement the methods**
 
 ```ts
-  /** Operator chosen during build â€” finish (no-data) or advance to the value step. */
+  /** Operator chosen during build � finish (no-data) or advance to the value step. */
   pickBuildOperator(op: Operator): void {
     const b = this.#building();
     if (!b) return;
@@ -337,7 +337,7 @@ Expected: FAIL â€” `component.pickBuildOperator is not a function`.
     this.#building.set({ ...b, operator: op, step: 'value' });
   }
 
-  /** Value committed during build â€” push the completed chip, clear building. No emit. */
+  /** Value committed during build � push the completed chip, clear building. No emit. */
   commitBuildValue(value: unknown): void {
     const b = this.#building();
     if (!b || !b.operator) return;
@@ -424,7 +424,7 @@ git commit -m "feat(query-bar): pickBuildOperator + commitBuildValue + cancelBui
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `component.beginEditValue is not a function` (and the emit-gating test fails because `removeFilter` currently emits).
+Expected: FAIL � `component.beginEditValue is not a function` (and the emit-gating test fails because `removeFilter` currently emits).
 
 - [ ] **Step 3: Implement edit methods + gate `removeFilter`**
 
@@ -440,7 +440,7 @@ Add:
     this.#editingValueIndex.set(i);
   }
 
-  /** Commit an inline value edit â€” change only `data`, no emit. */
+  /** Commit an inline value edit � change only `data`, no emit. */
   commitEditValue(i: number, value: unknown): void {
     this.updateFilter(i, { data: value } as Partial<Filter>, false);
     this.#editingValueIndex.set(i === this.#editingValueIndex() ? null : this.#editingValueIndex());
@@ -478,7 +478,7 @@ git commit -m "feat(query-bar): inline value editing + emit gated to Search"
 
 ---
 
-## Task 6: Inline template rewrite â€” flat chips + build chip + value editors
+## Task 6: Inline template rewrite � flat chips + build chip + value editors
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html`
@@ -525,11 +525,11 @@ git commit -m "feat(query-bar): inline value editing + emit gated to Search"
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `.c-token` not found (old inline markup).
+Expected: FAIL � `.c-token` not found (old inline markup).
 
 - [ ] **Step 3: Rewrite the inline block**
 
-In `query-bar.component.html`, replace the entire inline branch (currently the `@for ... c-inline-filter ...` chips, the "ThÃªm filter" button, and the inline search button â€” from `@for (filter of _filters; track $index; let i = $index) {` down to the `</sd-button>` of `c-inline-search`, inside the `@if (mode() === 'inline')` block) with the markup below. Reuse the existing value-editor `@if (_field.kind ...)` ladder, but route its outputs to the build/edit commit methods. Define a reusable value-editor template `#valueEditor` to avoid duplicating the ladder between the building chip and the editing chip.
+In `query-bar.component.html`, replace the entire inline branch (currently the `@for ... c-inline-filter ...` chips, the "Thêm filter" button, and the inline search button � from `@for (filter of _filters; track $index; let i = $index) {` down to the `</sd-button>` of `c-inline-search`, inside the `@if (mode() === 'inline')` block) with the markup below. Reuse the existing value-editor `@if (_field.kind ...)` ladder, but route its outputs to the build/edit commit methods. Define a reusable value-editor template `#valueEditor` to avoid duplicating the ladder between the building chip and the editing chip.
 
 ```html
   @if (mode() === 'inline') {
@@ -540,8 +540,8 @@ In `query-bar.component.html`, replace the entire inline branch (currently the `
          by `enter`; selection-style controls (select/date/boolean) stash + finalize in one action. -->
     <ng-template #valueEditor let-field="field" let-data="data" let-isMulti="isMulti" let-change="change" let-enter="enter" let-autoId="autoId">
       @if (field.kind === 'boolean') {
-        <sd-button [autoId]="autoId + '-true'" [type]="data === true ? 'fill' : 'outline'" color="primary" [title]="$any(field).trueLabel || 'CÃ³'" (click)="change(true); enter()"></sd-button>
-        <sd-button [autoId]="autoId + '-false'" [type]="data === false ? 'fill' : 'outline'" color="primary" [title]="$any(field).falseLabel || 'KhÃ´ng'" (click)="change(false); enter()"></sd-button>
+        <sd-button [autoId]="autoId + '-true'" [type]="data === true ? 'fill' : 'outline'" color="primary" [title]="$any(field).trueLabel || 'Có'" (click)="change(true); enter()"></sd-button>
+        <sd-button [autoId]="autoId + '-false'" [type]="data === false ? 'fill' : 'outline'" color="primary" [title]="$any(field).falseLabel || 'Không'" (click)="change(false); enter()"></sd-button>
       } @else if (field.kind === 'values' || field.kind === 'lazy-values') {
         @let _opt = $any(field).option;
         <sd-select size="sm" [autoId]="autoId" [items]="optionsFor($any(field.key))" [valueField]="_opt.valueField" [displayField]="_opt.displayField" [multiple]="isMulti" [model]="data" (sdChange)="change($event); enter()"></sd-select>
@@ -610,9 +610,9 @@ In `query-bar.component.html`, replace the entire inline branch (currently the `
       class="c-add-filter"
       [matMenuTriggerFor]="fieldPicker"
       [disabled]="_fields.length === 0 || _used.size >= _fields.length"
-      [matTooltip]="_fields.length === 0 ? 'ChÆ°a cáº¥u hÃ¬nh fields' : 'ThÃªm filter'">
+      [matTooltip]="_fields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
       <mat-icon fontSet="material-icons-outlined">add</mat-icon>
-      <span>ThÃªm filter</span>
+      <span>Thêm filter</span>
     </button>
 
     <!-- Search -->
@@ -622,7 +622,7 @@ In `query-bar.component.html`, replace the entire inline branch (currently the `
       type="fill"
       color="primary"
       prefixIcon="search"
-      title="TÃ¬m kiáº¿m"
+      title="Tìm kiếm"
       (click)="triggerApply()">
     </sd-button>
   } @else {
@@ -657,7 +657,7 @@ Add the draft signals + curried `change`/`enter` factories to `query-bar.compone
   }
 ```
 
-Extend the `BuildingChip` interface (Task 2) with `value?: unknown` â€” update its declaration:
+Extend the `BuildingChip` interface (Task 2) with `value?: unknown` � update its declaration:
 
 ```ts
 interface BuildingChip {
@@ -682,7 +682,7 @@ On entering the edit state, seed `#editDraft` with the current value. Update `be
   }
 ```
 
-> Note on BETWEEN: the `valueEditor` template above commits a single value; BETWEEN range editing keeps the existing two-input pattern. For this iteration, BETWEEN in inline mode is built/edited via the existing `setFilterRangeFrom/To` handlers â€” if a field's default/allowed operators include BETWEEN, render the two range inputs inside the `@else` of the value step instead of `#valueEditor`. Since the spec's display rule only requires `"from â†’ to"` text for completed BETWEEN chips (handled by `chipValueText`), and most inline fields are string/number/select, wire BETWEEN range inputs only if the configured fields use it. Keep `setFilterRangeFrom/To` available.
+> Note on BETWEEN: the `valueEditor` template above commits a single value; BETWEEN range editing keeps the existing two-input pattern. For this iteration, BETWEEN in inline mode is built/edited via the existing `setFilterRangeFrom/To` handlers � if a field's default/allowed operators include BETWEEN, render the two range inputs inside the `@else` of the value step instead of `#valueEditor`. Since the spec's display rule only requires `"from �  to"` text for completed BETWEEN chips (handled by `chipValueText`), and most inline fields are string/number/select, wire BETWEEN range inputs only if the configured fields use it. Keep `setFilterRangeFrom/To` available.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -762,7 +762,7 @@ Remove the old `.c-inline-filter`, `.c-inline-field`, `.c-inline-operator`, `.c-
     &:hover { color: $qb-text; text-decoration: underline; }
   }
 
-  // Active editor (building value step / editing-value) â€” the only place borders show.
+  // Active editor (building value step / editing-value) � the only place borders show.
   .c-token-value-edit {
     display: inline-flex;
     align-items: center;
@@ -786,7 +786,7 @@ Remove the old `.c-inline-filter`, `.c-inline-field`, `.c-inline-operator`, `.c-
   }
 ```
 
-> The control-skin in `query-bar.controls.scss` already scopes input/select borders; verify the completed chip's `c-token-value` (a plain `<button>`) has no border. The skin only applies to `sd-*` controls, which appear only in the edit/build value editor â€” exactly where borders are wanted.
+> The control-skin in `query-bar.controls.scss` already scopes input/select borders; verify the completed chip's `c-token-value` (a plain `<button>`) has no border. The skin only applies to `sd-*` controls, which appear only in the edit/build value editor � exactly where borders are wanted.
 
 - [ ] **Step 2: Build to verify styles compile**
 
@@ -812,7 +812,7 @@ git commit -m "style(query-bar): flat token chips for inline mode"
 grep -rn "c-inline-filter\|c-inline-field\|c-inline-value\|c-inline-remove\|addFilter(" projects/sdcorejs-angular/components/query-bar/src
 ```
 
-Expected: no references to the removed classes; `addFilter` only remains if popover still uses it â€” verify the popover branch. If `addFilter` is now unused (popover uses a different add path), remove it; otherwise leave it. `setFilterValue` / `setFilterOperator` / `setFilterRangeFrom` / `setFilterRangeTo` / `inlineAutoId` / `onInlineEnter` â€” check usage with grep and remove any now-orphaned by the template rewrite.
+Expected: no references to the removed classes; `addFilter` only remains if popover still uses it � verify the popover branch. If `addFilter` is now unused (popover uses a different add path), remove it; otherwise leave it. `setFilterValue` / `setFilterOperator` / `setFilterRangeFrom` / `setFilterRangeTo` / `inlineAutoId` / `onInlineEnter` � check usage with grep and remove any now-orphaned by the template rewrite.
 
 - [ ] **Step 2: Full lib build**
 
@@ -840,9 +840,9 @@ git commit -m "refactor(query-bar): remove dead inline-mode code after token rew
 
 ## Self-Review notes
 
-- **Spec coverage:** flat completed chip (Task 6 DOM + Task 7 style); build flow fieldâ†’operatorâ†’value (Tasks 3,4,6); skip-operator single-op (Task 3); no-data immediate finish (Tasks 3,4); inline value-only edit (Task 5,6); emit only on Search (Tasks 2,5); multi/range display via `chipValueText` (reused; BETWEEN range editing noted in Task 6); auto-open operator menu (Task 1 `open()` + Task 6 Step 5). All spec sections mapped.
-- **Type consistency:** `BuildingChip { field, operator?, step }`; `beginBuild(field)`, `pickBuildOperator(op: Operator)`, `commitBuildValue(value)`, `beginEditValue(i)`, `commitEditValue(i, value)`, `building()`, `editingValueIndex()`, `isEditingValue(i)`, `buildValueCommitFn()`, `editValueCommitFn(i)` â€” names consistent across tasks and template.
-- **Reuse:** the `#valueEditor` template is shared by the building value step and the editing-value segment (DRY). `#pushComplete` centralizes data reshaping. `updateFilter(â€¦, emit=false)` reused for no-emit edits.
-- **Risk:** auto-open + focus rely on `afterNextRender`; if flaky in tests, the state-machine tests (Tasks 2â€“5) don't depend on DOM and stay green. `sd-input` commit uses `(keyupEnter)` (matches existing inline usage at the old line 296).
+- **Spec coverage:** flat completed chip (Task 6 DOM + Task 7 style); build flow field� operator� value (Tasks 3,4,6); skip-operator single-op (Task 3); no-data immediate finish (Tasks 3,4); inline value-only edit (Task 5,6); emit only on Search (Tasks 2,5); multi/range display via `chipValueText` (reused; BETWEEN range editing noted in Task 6); auto-open operator menu (Task 1 `open()` + Task 6 Step 5). All spec sections mapped.
+- **Type consistency:** `BuildingChip { field, operator?, step }`; `beginBuild(field)`, `pickBuildOperator(op: Operator)`, `commitBuildValue(value)`, `beginEditValue(i)`, `commitEditValue(i, value)`, `building()`, `editingValueIndex()`, `isEditingValue(i)`, `buildValueCommitFn()`, `editValueCommitFn(i)` � names consistent across tasks and template.
+- **Reuse:** the `#valueEditor` template is shared by the building value step and the editing-value segment (DRY). `#pushComplete` centralizes data reshaping. `updateFilter(⬦, emit=false)` reused for no-emit edits.
+- **Risk:** auto-open + focus rely on `afterNextRender`; if flaky in tests, the state-machine tests (Tasks 2�5) don't depend on DOM and stay green. `sd-input` commit uses `(keyupEnter)` (matches existing inline usage at the old line 296).
 ```
 

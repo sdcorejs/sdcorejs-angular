@@ -1,4 +1,4 @@
-﻿# chip multi "head +N" view + sd-date-range bare/viewed + BETWEEN unify â€” Implementation Plan
+�# chip multi "head +N" view + sd-date-range bare/viewed + BETWEEN unify � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -19,18 +19,18 @@ Branch `query-bar`. Every commit starts with `SM-00:` (pre-receive hook). Vietna
 
 ## File Structure
 
-- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.ts` â€” add `bare`, `viewed` inputs + `sdValueTemplate` contentChild + public `open()` + `formatted()` computed.
-- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.html` â€” viewed branch with `<sd-view>`.
-- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.scss` â€” `:host(.sd-viewed) { padding-top: 0 }` + the documented bare block (mirror sd-date).
-- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.spec.ts` â€” bare/viewed/open() tests.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` â€” chip sd-select `#sdValue` template + BETWEEN sd-date-range.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` â€” `setFilterRange(i, ev)` helper; remove unused `setFilterRangeFrom/To` + `setBuildRangeFrom/To`. Import `SdDateRange`, add to component imports.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` â€” multi "head +N" + sd-date-range chip DOM + setFilterRange behavior.
+- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.ts` � add `bare`, `viewed` inputs + `sdValueTemplate` contentChild + public `open()` + `formatted()` computed.
+- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.html` � viewed branch with `<sd-view>`.
+- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.scss` � `:host(.sd-viewed) { padding-top: 0 }` + the documented bare block (mirror sd-date).
+- Modify: `projects/sdcorejs-angular/forms/date-range/src/date-range.component.spec.ts` � bare/viewed/open() tests.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` � chip sd-select `#sdValue` template + BETWEEN sd-date-range.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` � `setFilterRange(i, ev)` helper; remove unused `setFilterRangeFrom/To` + `setBuildRangeFrom/To`. Import `SdDateRange`, add to component imports.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` � multi "head +N" + sd-date-range chip DOM + setFilterRange behavior.
 - Update docs: `projects/sdcorejs-angular/forms/date-range/sd-date-range.md`, `projects/sdcorejs-angular/components/query-bar/sd-query-bar.md` (or `HANDOFF.md`), `CLAUDE.md`.
 
 ---
 
-## Task 1: sd-date-range â€” add `[bare]`, `[viewed]`, public `open()` (+ tests)
+## Task 1: sd-date-range � add `[bare]`, `[viewed]`, public `open()` (+ tests)
 
 **Files:** `date-range.component.ts`, `.html`, `.scss`, `.spec.ts`
 
@@ -72,7 +72,7 @@ Add `bare` + `viewed` pass-through inputs to the existing `StubHost` (or whichev
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/forms/date-range/src/date-range.component.spec.ts'`
-Expected: FAIL â€” `[bare]`/`[viewed]` not bindable; `open()` not a method.
+Expected: FAIL � `[bare]`/`[viewed]` not bindable; `open()` not a method.
 
 - [ ] **Step 3: Add inputs + host bindings + open() + formatted() to TS**
 
@@ -89,18 +89,18 @@ host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()' },
 Inside the class, add inputs + a `sdValueTemplate` content-child + a `formatted()` computed + the public `open()` method. Place them near the other inputs (e.g. after `disabled`):
 
 ```ts
-  /** Bare mode â€” strip the form-field shell to fit inline in a chip / token. */
+  /** Bare mode � strip the form-field shell to fit inline in a chip / token. */
   bare = input(false, { transform: booleanAttribute });
 
-  /** Viewed mode â€” render a read-only <sd-view> instead of the editable form-field. */
+  /** Viewed mode � render a read-only <sd-view> instead of the editable form-field. */
   viewed = input(false, { transform: booleanAttribute });
 
   /** Optional <ng-template #sdValue> projected by consumer to override the viewed text. */
   sdValueTemplate = contentChild<TemplateRef<unknown>>('sdValue');
 
   /**
-   * Formatted "dd/MM/yyyy â†’ dd/MM/yyyy" string for the viewed-mode display.
-   * Returns empty when both ends are blank, "from â†’" when only from is set, and so on.
+   * Formatted "dd/MM/yyyy �  dd/MM/yyyy" string for the viewed-mode display.
+   * Returns empty when both ends are blank, "from � " when only from is set, and so on.
    */
   formatted = computed<string>(() => {
     const m = this.valueModel();
@@ -115,7 +115,7 @@ Inside the class, add inputs + a `sdValueTemplate` content-child + a `formatted(
     const a = fmt(m?.from);
     const b = fmt(m?.to);
     if (!a && !b) return '';
-    return `${a} â†’ ${b}`;
+    return `${a} �  ${b}`;
   });
 
   /** Open the range picker panel programmatically (for query-bar chip auto-open). */
@@ -125,7 +125,7 @@ Inside the class, add inputs + a `sdValueTemplate` content-child + a `formatted(
   };
 ```
 
-`TemplateRef` is already a separate import â€” add to the existing `@angular/core` import: `TemplateRef`. `computed` may already be imported.
+`TemplateRef` is already a separate import � add to the existing `@angular/core` import: `TemplateRef`. `computed` may already be imported.
 
 - [ ] **Step 4: Add the viewed branch to the template**
 
@@ -145,29 +145,29 @@ In `date-range.component.html`, wrap the existing `<mat-form-field>` (and any ot
 
 Then add a matching `}` at the end of the file (after the closing `</mat-form-field>` and its hint/error siblings).
 
-Add `SdView` to the `imports` array of `@Component({...})` if not already present. (`sd-date` / `sd-datetime` already import it â€” match their pattern.)
+Add `SdView` to the `imports` array of `@Component({...})` if not already present. (`sd-date` / `sd-datetime` already import it � match their pattern.)
 
-- [ ] **Step 5: Add SCSS â€” viewed padding zero + the documented bare block**
+- [ ] **Step 5: Add SCSS � viewed padding zero + the documented bare block**
 
-In `date-range.component.scss`, change the existing `padding-top: 5px;` â†’ `padding-top: 4px;` on `:host` (consistency with sd-select/sd-date/sd-datetime). Then add the rules at the END of the file:
+In `date-range.component.scss`, change the existing `padding-top: 5px;` �  `padding-top: 4px;` on `:host` (consistency with sd-select/sd-date/sd-datetime). Then add the rules at the END of the file:
 
 ```scss
-// why: viewed mode hiá»ƒn thá»‹ sd-view (text only) â†’ bá» Ä‘á»‡m trÃªn.
+// why: viewed mode hiỒn th�9 sd-view (text only) �  bỏ ��!m trên.
 :host(.sd-viewed) { padding-top: 0; }
 
 // =============================================================================
-// Bare mode â€” "khÃ´ng khung": bÃ³c háº¿t shell mat-form-field Ä‘á»ƒ control náº±m pháº³ng
+// Bare mode � "không khung": bóc hết shell mat-form-field �Ồ control nằm phẳng
 // trong context inline (vd. chip query-bar BETWEEN date/datetime).
 // -----------------------------------------------------------------------------
-// Khi dÃ¹ng <sd-date-range bare>:
-//   - Trong chip / token / inline editor â€” nÆ¡i Ä‘Ã£ cÃ³ viá»n riÃªng & layout cháº·t.
-// Khi KHÃ”NG dÃ¹ng:
-//   - Form thÃ´ng thÆ°á»ng (cáº§n outline + label + subscript).
-//   - State chá»‰-Ä‘á»c: dÃ¹ng [viewed]=true Ä‘á»ƒ render <sd-view> (text only).
+// Khi dùng <sd-date-range bare>:
+//   - Trong chip / token / inline editor � nơi �ã có viền riêng & layout chặt.
+// Khi KH�NG dùng:
+//   - Form thông thường (cần outline + label + subscript).
+//   - State ch�0-�ọc: dùng [viewed]=true �Ồ render <sd-view> (text only).
 //
-// bare vÃ  viewed bÃ¹ nhau:
-//   - viewed=true               â†’ text qua <sd-view>, khÃ´ng cÃ³ form-field.
-//   - bare=true + viewed=false  â†’ form-field bá»‹ bÃ³c khung, váº«n má»Ÿ Ä‘Æ°á»£c range picker.
+// bare và viewed bù nhau:
+//   - viewed=true               �  text qua <sd-view>, không có form-field.
+//   - bare=true + viewed=false  �  form-field b�9 bóc khung, vẫn m�x �ược range picker.
 // =============================================================================
 
 :host(.sd-bare) {
@@ -176,22 +176,22 @@ In `date-range.component.scss`, change the existing `padding-top: 5px;` â†’
 }
 
 :host(.sd-bare) ::ng-deep {
-  // Form-field máº·c Ä‘á»‹nh 100% width â€” co vá» auto.
+  // Form-field mặc ��9nh 100% width � co về auto.
   .mat-mdc-form-field { width: auto; }
 
-  // Wrapper outline/ná»n: bá» Ä‘á»‡m + ná»n Ä‘á»ƒ text ngá»“i sÃ¡t viá»n chip.
+  // Wrapper outline/nền: bỏ ��!m + nền �Ồ text ng�i sát viền chip.
   .mat-mdc-text-field-wrapper { padding: 0; background: transparent; }
 
-  // Flex row chá»©a prefix/infix/suffix: bá» Ä‘á»‡m, canh giá»¯a dá»c.
+  // Flex row chứa prefix/infix/suffix: bỏ ��!m, canh giữa dọc.
   .mat-mdc-form-field-flex { padding: 0; align-items: center; }
 
-  // Viá»n outline ("notched"): áº©n â€” chip Ä‘Ã£ cÃ³ viá»n riÃªng.
+  // Viền outline ("notched"): ẩn � chip �ã có viền riêng.
   .mdc-notched-outline { display: none; }
 
-  // VÃ¹ng hint/error dÆ°á»›i control: áº©n â€” chip khÃ´ng cÃ³ chá»— cho subscript.
+  // Vùng hint/error dư�:i control: ẩn � chip không có ch� cho subscript.
   .mat-mdc-form-field-subscript-wrapper { display: none; }
 
-  // Infix lÃ  vÃ¹ng input tháº­t: bá» Ä‘á»‡m + min-height, canh giá»¯a, bá» border.
+  // Infix là vùng input thật: bỏ ��!m + min-height, canh giữa, bỏ border.
   .mat-mdc-form-field-infix {
     padding: 0;
     min-height: 0;
@@ -212,12 +212,12 @@ Expected: PASS.
 
 ```bash
 git add projects/sdcorejs-angular/forms/date-range
-git commit -m "SM-00: feat(date-range): add [bare] / [viewed] / open() â€” mirror sd-date pattern"
+git commit -m "SM-00: feat(date-range): add [bare] / [viewed] / open() � mirror sd-date pattern"
 ```
 
 ---
 
-## Task 2: query-bar chip sd-select â€” `#sdValue` template "head +N"
+## Task 2: query-bar chip sd-select � `#sdValue` template "head +N"
 
 **Files:** `query-bar.component.html`, `query-bar.component.spec.ts`
 
@@ -261,7 +261,7 @@ git commit -m "SM-00: feat(date-range): add [bare] / [viewed] / open() â€” 
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” chip currently renders all labels comma-joined.
+Expected: FAIL � chip currently renders all labels comma-joined.
 
 - [ ] **Step 3: Project `#sdValue` template inside the completed-chip sd-select**
 
@@ -295,8 +295,8 @@ Add a `<ng-template #sdValue>` projection INSIDE the `<sd-select>` (before the c
                     [viewed]="!isEditingValue(i)"
                     [model]="_data"
                     (sdChange)="_op === 'IN' || _op === 'NOT_IN' ? editValueFn(i)($event) : onChipSingleCommit(i, $event)">
-                    <!-- why: viewed mode máº·c Ä‘á»‹nh dÃ¹ng comma-joined cho multi â€” quÃ¡ dÃ i cho chip.
-                         Override báº±ng template "head +N" giá»‘ng popover chipValueText. -->
+                    <!-- why: viewed mode mặc ��9nh dùng comma-joined cho multi � quá dài cho chip.
+                         Override bằng template "head +N" gi�ng popover chipValueText. -->
                     <ng-template #sdValue let-selectedItems="selectedItems">
                       @if ((selectedItems?.length ?? 0) > 1) {
                         {{ $any(selectedItems)[0][_opt.displayField] }} +{{ selectedItems.length - 1 }}
@@ -309,7 +309,7 @@ Add a `<ng-template #sdValue>` projection INSIDE the `<sd-select>` (before the c
 
 - [ ] **Step 4: Do the same for the build chip sd-select**
 
-The build chip sd-select (around line 386 in `query-bar.component.html`) â€” same treatment. Replace its self-closing form with an open/close pair and project the template:
+The build chip sd-select (around line 386 in `query-bar.component.html`) � same treatment. Replace its self-closing form with an open/close pair and project the template:
 
 ```html
               <sd-select #bPicker bare size="sm" minWidthPanel="300px" autoId="qb-build-value"
@@ -372,7 +372,7 @@ git commit -m "SM-00: feat(query-bar): chip multi sd-select view shows 'head +N'
 
 ---
 
-## Task 3: query-bar BETWEEN â€” replace dual pickers with sd-date-range
+## Task 3: query-bar BETWEEN � replace dual pickers with sd-date-range
 
 **Files:** `query-bar.component.html`, `query-bar.component.ts`, `query-bar.component.spec.ts`
 
@@ -423,7 +423,7 @@ git commit -m "SM-00: feat(query-bar): chip multi sd-select view shows 'head +N'
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” chips still render dual sd-date / sd-datetime; `setFilterRange` not a method.
+Expected: FAIL � chips still render dual sd-date / sd-datetime; `setFilterRange` not a method.
 
 - [ ] **Step 3: Add `setFilterRange` + import `SdDateRange` in TS**
 
@@ -440,7 +440,7 @@ Add the helper next to the existing `updateFilter`:
 ```ts
   /**
    * Commit both ends of a BETWEEN range at once.
-   * why: sd-date-range emits {from,to} via (sdChange) â€” single call replaces the old
+   * why: sd-date-range emits {from,to} via (sdChange) � single call replaces the old
    * setFilterRangeFrom / setFilterRangeTo pair.
    */
   setFilterRange(i: number, ev: { from: unknown; to: unknown } | null): void {
@@ -452,15 +452,15 @@ Add the helper next to the existing `updateFilter`:
 
 In `query-bar.component.html`:
 
-**Build chip â€” date branch (current dual `<sd-date>` for BETWEEN):**
+**Build chip � date branch (current dual `<sd-date>` for BETWEEN):**
 
-Replace the `@if (_b.operator === 'BETWEEN') { â€¦two sd-date with dashâ€¦ } @else { â€¦singleâ€¦ }` markup inside the `_b.field.kind === 'date'` block with:
+Replace the `@if (_b.operator === 'BETWEEN') { ⬦two sd-date with dash⬦ } @else { ⬦single⬦ }` markup inside the `_b.field.kind === 'date'` block with:
 
 ```html
           } @else if (_b.field.kind === 'date') {
             <span class="c-token-value c-token-value-edit">
               @if (_b.operator === 'BETWEEN') {
-                <!-- why: 1 control sd-date-range thay 2 sd-date â€” gá»n hÆ¡n, behavior thá»‘ng nháº¥t. -->
+                <!-- why: 1 control sd-date-range thay 2 sd-date � gọn hơn, behavior th�ng nhất. -->
                 <sd-date-range #bPicker bare size="sm"
                   [autoId]="'qb-build-value'"
                   [model]="$any(_b.value)"
@@ -471,13 +471,13 @@ Replace the `@if (_b.operator === 'BETWEEN') { â€¦two sd-date with dashâ€
             </span>
 ```
 
-**Build chip â€” datetime branch:** mirror exactly, swap `sd-datetime` for the single case but use `sd-date-range` for BETWEEN (datetime downgrades to date precision):
+**Build chip � datetime branch:** mirror exactly, swap `sd-datetime` for the single case but use `sd-date-range` for BETWEEN (datetime downgrades to date precision):
 
 ```html
           } @else if (_b.field.kind === 'datetime') {
             <span class="c-token-value c-token-value-edit">
               @if (_b.operator === 'BETWEEN') {
-                <!-- why: datetime BETWEEN downgrade vá» date-range (máº¥t time precision, Ä‘Ã£ thá»‘ng nháº¥t). -->
+                <!-- why: datetime BETWEEN downgrade về date-range (mất time precision, �ã th�ng nhất). -->
                 <sd-date-range #bPicker bare size="sm"
                   [autoId]="'qb-build-value'"
                   [model]="$any(_b.value)"
@@ -488,13 +488,13 @@ Replace the `@if (_b.operator === 'BETWEEN') { â€¦two sd-date with dashâ€
             </span>
 ```
 
-**Completed-chip BETWEEN edit (date or datetime) â€” collapse to one branch:**
+**Completed-chip BETWEEN edit (date or datetime) � collapse to one branch:**
 
-Replace the existing `@else if ((_field.kind === 'date' || _field.kind === 'datetime') && _op === 'BETWEEN') { â€¦dualâ€¦ }` block with:
+Replace the existing `@else if ((_field.kind === 'date' || _field.kind === 'datetime') && _op === 'BETWEEN') { ⬦dual⬦ }` block with:
 
 ```html
               } @else if ((_field.kind === 'date' || _field.kind === 'datetime') && _op === 'BETWEEN') {
-                <!-- why: dÃ¹ng sd-date-range thá»‘ng nháº¥t cho cáº£ date + datetime BETWEEN (datetime downgrade vá» date). -->
+                <!-- why: dùng sd-date-range th�ng nhất cho cả date + datetime BETWEEN (datetime downgrade về date). -->
                 <span class="c-token-value c-token-value-edit">
                   <sd-date-range bare size="sm"
                     [autoId]="inlineAutoId(i, 'value')"
@@ -530,7 +530,7 @@ git commit -m "SM-00: feat(query-bar): BETWEEN uses one sd-date-range (date + da
 
 ## Task 4: Docs refresh
 
-**Files:** `sd-date-range.md`, `sd-query-bar.md` (or `HANDOFF.md` â€” whichever exists), `CLAUDE.md`
+**Files:** `sd-date-range.md`, `sd-query-bar.md` (or `HANDOFF.md` � whichever exists), `CLAUDE.md`
 
 - [ ] **Step 1: Refresh `sd-date-range.md`**
 
@@ -542,23 +542,23 @@ In `projects/sdcorejs-angular/forms/date-range/sd-date-range.md`, add (or update
 | API | Type | Notes |
 |---|---|---|
 | `[bare]` | `boolean` | Strips the form-field shell so the control fits inline in a chip / token. Use inside `<sd-query-bar>` BETWEEN or other inline editors. Default `false`. |
-| `[viewed]` | `boolean` | Read-only mode â€” renders `<sd-view>` showing `dd/MM/yyyy â†’ dd/MM/yyyy`. Project an `<ng-template #sdValue>` inside `<sd-date-range>` to override the display. Default `false`. |
+| `[viewed]` | `boolean` | Read-only mode � renders `<sd-view>` showing `dd/MM/yyyy �  dd/MM/yyyy`. Project an `<ng-template #sdValue>` inside `<sd-date-range>` to override the display. Default `false`. |
 | `open()` | method | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode. |
 
 `bare` and `viewed` are independent and complementary:
-- `viewed=true` â†’ text-only `<sd-view>`, no form-field.
-- `bare=true, viewed=false` â†’ editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
+- `viewed=true` �  text-only `<sd-view>`, no form-field.
+- `bare=true, viewed=false` �  editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
 ```
 
 - [ ] **Step 2: Refresh `sd-query-bar.md` (or `HANDOFF.md`)**
 
-In `projects/sdcorejs-angular/components/query-bar/sd-query-bar.md` (or `HANDOFF.md` if that's the kept doc â€” pick the one that exists), add a "Inline chip rendering rules" subsection if missing:
+In `projects/sdcorejs-angular/components/query-bar/sd-query-bar.md` (or `HANDOFF.md` if that's the kept doc � pick the one that exists), add a "Inline chip rendering rules" subsection if missing:
 
 ```markdown
 ## Inline chip rendering rules
 
 - **Multi sd-select (`IN` / `NOT_IN`):** the chip projects a `<ng-template #sdValue>` so the viewed display renders `"<first label> +<N-1>"` instead of the comma-joined default. Mirrors the popover-mode `chipValueText` pattern.
-- **`BETWEEN` (date / datetime):** uses one `<sd-date-range bare>` for both the build chip and the completed-chip edit. The `datetime` kind downgrades to date precision (no time picker on the range panel) â€” committed `{from, to}` carries date values only.
+- **`BETWEEN` (date / datetime):** uses one `<sd-date-range bare>` for both the build chip and the completed-chip edit. The `datetime` kind downgrades to date precision (no time picker on the range panel) � committed `{from, to}` carries date values only.
 - **viewed-by-default:** completed chips for `values` / `lazy-values` / `date` / `datetime` render their picker with `[viewed]="!isEditingValue(i)"`. Click flips to editable + auto-opens the panel; focusout exits edit.
 ```
 
@@ -567,7 +567,7 @@ In `projects/sdcorejs-angular/components/query-bar/sd-query-bar.md` (or `HANDOFF
 In `CLAUDE.md` (root `vn-angular/`), append a line under "Recent work" (or whichever heading lists the query-bar iterations):
 
 ```markdown
-- **2026-05-28** â€” chip multi sd-select shows "head +N" via projected `#sdValue` template; BETWEEN (date + datetime) uses one `<sd-date-range bare>` (added `bare` / `viewed` / `open()` to sd-date-range). Datetime BETWEEN downgrades to date precision. See `docs/superpowers/specs/2026-05-28-query-bar-multi-view-and-date-range-design.md`.
+- **2026-05-28** � chip multi sd-select shows "head +N" via projected `#sdValue` template; BETWEEN (date + datetime) uses one `<sd-date-range bare>` (added `bare` / `viewed` / `open()` to sd-date-range). Datetime BETWEEN downgrades to date precision. See `docs/superpowers/specs/2026-05-28-query-bar-multi-view-and-date-range-design.md`.
 ```
 
 If the open follow-ups list mentions BETWEEN inline editing as deferred, remove that bullet (it's now shipped).
@@ -579,7 +579,7 @@ git add projects/sdcorejs-angular/forms/date-range/sd-date-range.md projects/sdc
 git commit -m "SM-00: docs: chip multi 'head +N' + sd-date-range bare/viewed/open"
 ```
 
-(`git add` will silently ignore any file that doesn't exist â€” fine.)
+(`git add` will silently ignore any file that doesn't exist � fine.)
 
 ---
 
@@ -618,9 +618,9 @@ git commit -m "SM-00: test(query-bar,date-range): green build + sweep for multi 
 ## Self-Review notes
 
 - **Spec coverage:**
-  - A. Multi "head +N" â†’ Task 2 (template projection in 4 sd-select sites).
-  - B. sd-date-range bare / viewed / open() â†’ Task 1; BETWEEN unify â†’ Task 3; datetime downgrade documented in Task 3 code comment + Task 4 doc.
-  - Docs â†’ Task 4. Build/sweep â†’ Task 5.
+  - A. Multi "head +N" �  Task 2 (template projection in 4 sd-select sites).
+  - B. sd-date-range bare / viewed / open() �  Task 1; BETWEEN unify �  Task 3; datetime downgrade documented in Task 3 code comment + Task 4 doc.
+  - Docs �  Task 4. Build/sweep �  Task 5.
 - **Type consistency:** `setFilterRange(i, { from, to } | null)` matches sd-date-range's `(sdChange)` payload `{from,to}`. `open()` method signature matches `sd-date` / `sd-select` shape. `bare` / `viewed` typed `boolean` with `booleanAttribute` transform. `formatted(): string` consistent.
 - **Risk:** the test at Task 1 Step 1 assumes `picker()` is a non-null viewChild after detectChanges. If the spec's existing `StubHost` doesn't include `<sd-date-range>` in its template, add it (or use direct `createComponent(SdDateRange)`). Adapt minimally if the host shape differs.
 - **Out of scope:** sd-select / sd-date / sd-datetime source; popover-mode BETWEEN (its 2-control panel layout stays); a datetime-range with time precision.

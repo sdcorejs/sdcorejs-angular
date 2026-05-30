@@ -1,4 +1,4 @@
-﻿# `<sd-checkbox>`
+�# `<sd-checkbox>`
 
 **Type**: Component (form input)
 **Selector**: `sd-checkbox`
@@ -8,18 +8,18 @@
 **Change detection**: default (no `OnPush` set)
 
 ## One-line purpose
-Boolean toggle â€” a single labeled checkbox bound to a form/model. Wraps Angular Material `mat-checkbox` with SDCoreJS form-group registration and `inlineError` support.
+Boolean toggle � a single labeled checkbox bound to a form/model. Wraps Angular Material `mat-checkbox` with SDCoreJS form-group registration and `inlineError` support.
 
 ## When to use
-- A standalone boolean field (e.g. "Äá»“ng Ã½ Ä‘iá»u khoáº£n", "Hoáº¡t Ä‘á»™ng", "Máº·c Ä‘á»‹nh")
+- A standalone boolean field (e.g. "Đ�ng ý �iều khoản", "Hoạt ��"ng", "Mặc ��9nh")
 - Inside a `<form>` group, registered automatically when `[form]` is bound
 - Quick filter toggles on toolbars when an explicit ON/OFF look is desired
 
 ## When NOT to use
-- Three or more mutually exclusive options â†’ use `<sd-radio>`
-- An on/off toggle with switch-look (large emphasis, settings panes) â†’ use `<sd-switch>`
-- A list of multi-select string values rendered as pills â†’ use `<sd-chip>`
-- Boolean tied to a tabular row selection â†’ use list/grid built-in selection, not standalone checkboxes
+- Three or more mutually exclusive options �  use `<sd-radio>`
+- An on/off toggle with switch-look (large emphasis, settings panes) �  use `<sd-switch>`
+- A list of multi-select string values rendered as pills �  use `<sd-chip>`
+- Boolean tied to a tabular row selection �  use list/grid built-in selection, not standalone checkboxes
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -31,9 +31,9 @@ Boolean toggle â€” a single labeled checkbox bound to a form/model. Wraps A
 | `color` | `'primary' \| 'warn'` | `'primary'` | Material color of the checked state. |
 | `disabled` | `boolean \| ''` | `false` | Disables interaction. Empty string presence = `true`. |
 | `model` | `any` | `undefined` | Two-way bound boolean. Use `[(model)]`. |
-| `inlineError` | `string` | `undefined` | When set, attaches a synthetic `inlineError` validator â†’ field renders invalid until cleared. |
+| `inlineError` | `string` | `undefined` | When set, attaches a synthetic `inlineError` validator �  field renders invalid until cleared. |
 
-> **Coerce**: `disabled` accepts `''` / truthy / nullish â€” bare attribute = `true`.
+> **Coerce**: `disabled` accepts `''` / truthy / nullish � bare attribute = `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -42,7 +42,7 @@ Boolean toggle â€” a single labeled checkbox bound to a form/model. Wraps A
 | `sdChange` | `any` | SDCoreJS-standard change event (same payload as `modelChange`). |
 
 ## Content projection (slots)
-None â€” text comes from the `label` input.
+None � text comes from the `label` input.
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** SDCoreJS pattern: pass `[form]` + `name`; the component appends its internal `FormControl` to that group on `ngAfterViewInit` and removes it in `ngOnDestroy`.
@@ -54,19 +54,19 @@ None â€” text comes from the `label` input.
 ### Three ways to integrate
 
 ```html
-<!-- 1. Template-driven vá»›i [(model)] only (no FormGroup) -->
-<sd-checkbox label="Hoáº¡t Ä‘á»™ng" [(model)]="model.isActive"></sd-checkbox>
+<!-- 1. Template-driven v�:i [(model)] only (no FormGroup) -->
+<sd-checkbox label="Hoạt ��"ng" [(model)]="model.isActive"></sd-checkbox>
 
-<!-- 2. Reactive FormGroup (truyá»n form vÃ o Ä‘á»ƒ checkbox tá»± addControl) -->
+<!-- 2. Reactive FormGroup (truyền form vào �Ồ checkbox tự addControl) -->
 <form [formGroup]="form">
   <sd-checkbox name="agree" [form]="form"
-    label="TÃ´i Ä‘á»“ng Ã½" [(model)]="model.agree"></sd-checkbox>
+    label="Tôi ��ng ý" [(model)]="model.agree"></sd-checkbox>
 </form>
 
 <!-- 3. NgForm (template-driven group) -->
 <form #f="ngForm">
   <sd-checkbox name="agree" [form]="f"
-    label="TÃ´i Ä‘á»“ng Ã½" [(model)]="model.agree"></sd-checkbox>
+    label="Tôi ��ng ý" [(model)]="model.agree"></sd-checkbox>
 </form>
 ```
 
@@ -76,7 +76,7 @@ None â€” text comes from the `label` input.
 
 Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator()` call that attaches the shared `SdInlineErrorValidator` (from `@sdcorejs/angular/forms/models`) returning `{ inlineError: true }`. The template then shows `<mat-error>{{ inlineError }}</mat-error>` when `formControl.errors?.['inlineError'] && formControl.touched`. Clearing `[inlineError]` to an empty string removes the validator and calls `updateValueAndValidity()`.
 
-## Visual cues (helps agent map screenshots â†’ component)
+## Visual cues (helps agent map screenshots �  component)
 - A square box on the left + label text on the right
 - Unchecked: empty square (Material grey outline)
 - Checked: filled square in `color` with a white checkmark
@@ -89,7 +89,7 @@ Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator(
 ```html
 <sd-checkbox
   [form]="form" name="isActive"
-  label="Äang hoáº¡t Ä‘á»™ng"
+  label="Đang hoạt ��"ng"
   [(model)]="model.isActive"
   (sdChange)="onActiveToggle($event)">
 </sd-checkbox>
@@ -99,23 +99,23 @@ Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator(
 ```html
 <sd-checkbox
   [form]="form" name="agree"
-  label="TÃ´i Ä‘á»“ng Ã½ vá»›i Ä‘iá»u khoáº£n"
+  label="Tôi ��ng ý v�:i �iều khoản"
   [(model)]="model.agree"
-  [inlineError]="model.agree ? '' : 'Báº¡n pháº£i Ä‘á»“ng Ã½ Ä‘iá»u khoáº£n'">
+  [inlineError]="model.agree ? '' : 'Bạn phải ��ng ý �iều khoản'">
 </sd-checkbox>
 ```
 
 ### 3. Disabled (read-only) for DETAIL state
 ```html
-<sd-checkbox label="Máº·c Ä‘á»‹nh" [model]="model.isDefault" disabled></sd-checkbox>
+<sd-checkbox label="Mặc ��9nh" [model]="model.isDefault" disabled></sd-checkbox>
 ```
 
 ## Anti-patterns
-- âŒ Using `formControlName` or `[(ngModel)]` â€” not wired in this component.
-- âŒ Using `[viewed]="true"` â€” input is not exposed; rely on `[disabled]` for read-only display, or render `{{ model.isActive ? 'CÃ³' : 'KhÃ´ng' }}` in DETAIL templates.
-- âŒ Using a checkbox for a single ON/OFF setting in a settings page â€” prefer `<sd-switch>` for that visual idiom.
-- âŒ Stacking many checkboxes for mutually exclusive options â€” use `<sd-radio>`.
-- âŒ Forgetting `[form]` and trying to validate via the parent FormGroup â€” control won't be registered.
+- �R Using `formControlName` or `[(ngModel)]` � not wired in this component.
+- �R Using `[viewed]="true"` � input is not exposed; rely on `[disabled]` for read-only display, or render `{{ model.isActive ? 'Có' : 'Không' }}` in DETAIL templates.
+- �R Using a checkbox for a single ON/OFF setting in a settings page � prefer `<sd-switch>` for that visual idiom.
+- �R Stacking many checkboxes for mutually exclusive options � use `<sd-radio>`.
+- �R Forgetting `[form]` and trying to validate via the parent FormGroup � control won't be registered.
 
 ## E2E test attributes
 
@@ -129,7 +129,7 @@ Anchor: `<mat-checkbox>`, Prefix: `forms-checkbox-`
 | `data-value` | `'true'` \| `'false'` | Serialized boolean (string form). |
 
 ## Related
-- `<sd-switch>` â€” toggle-style boolean
-- `<sd-radio>` â€” mutually exclusive options
-- `<sd-chip>` â€” multi-value tag input
+- `<sd-switch>` � toggle-style boolean
+- `<sd-radio>` � mutually exclusive options
+- `<sd-chip>` � multi-value tag input
 

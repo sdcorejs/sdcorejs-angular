@@ -1,27 +1,27 @@
-﻿# Core UI Test Coverage Plan 3 â€” Implementation Plan
+�# Core UI Test Coverage Plan 3 � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Má»Ÿ rá»™ng test coverage cho 10 component primitives cá»§a `@sdcorejs/angular` (quick-action, view, section, preview, modal, code-editor, side-drawer, mini-editor, tab-router, upload-file).
+**Goal:** M�x r�"ng test coverage cho 10 component primitives của `@sdcorejs/angular` (quick-action, view, section, preview, modal, code-editor, side-drawer, mini-editor, tab-router, upload-file).
 
-**Architecture:** TÃ¡i sá»­ dá»¥ng pattern Plan 1+2 (TestBed-driven integration + HostComponent wrapper). Components Plan 3 khÃ´ng pháº£i form-input â†’ KHÃ”NG cáº§n FgHost/NgFormHost lifecycle describes. Táº­p trung vÃ o: rendering, inputs, output events, content projection (náº¿u cÃ³ slot), behavior states (open/close cho modal/drawer, navigation cho tab-router, etc.).
+**Architecture:** Tái sử dụng pattern Plan 1+2 (TestBed-driven integration + HostComponent wrapper). Components Plan 3 không phải form-input �  KH�NG cần FgHost/NgFormHost lifecycle describes. Tập trung vào: rendering, inputs, output events, content projection (nếu có slot), behavior states (open/close cho modal/drawer, navigation cho tab-router, etc.).
 
 **Tech Stack:** Angular 19.2.x, Karma 6.4.x, Jasmine 5.5.x, `@angular/material` (MatDialog, MatSidenav, MatTabsModule, MatButtonToggle), `@angular/cdk/portal`, `prismjs` (code-editor highlighter).
 
-**Branch**: `feature/plan-3-components-tests` (Ä‘Ã£ checkout tá»« `feature/plan-2-forms-tests` â€” Plan 2 chÆ°a merge nhÆ°ng cÃ³ trÃªn branch nÃ y).
+**Branch**: `feature/plan-3-components-tests` (�ã checkout từ `feature/plan-2-forms-tests` � Plan 2 chưa merge nhưng có trên branch này).
 
-**Skipped per user direction**: chart, document-builder, editor, workflow, form-generic, history, query-builder, import-excel. (`code-editor` Ä‘Æ°á»£c include).
+**Skipped per user direction**: chart, document-builder, editor, workflow, form-generic, history, query-builder, import-excel. (`code-editor` �ược include).
 
 ---
 
-## Conventions (carry-over tá»« Plan 1+2)
+## Conventions (carry-over từ Plan 1+2)
 
 **Import paths trong spec**:
-- Test utilities: `import { queryByCss, setInput } from '<RELATIVE>/testing/test-utils';` (Ä‘áº¿m sá»‘ `../` tá»« vá»‹ trÃ­ spec)
-- Source ná»™i bá»™ trong cÃ¹ng entry point: relative path OK
-- Cross-entry-point: `@sdcorejs/angular/*` alias (ng-packagr yÃªu cáº§u)
+- Test utilities: `import { queryByCss, setInput } from '<RELATIVE>/testing/test-utils';` (�ếm s� `../` từ v�9 trí spec)
+- Source n�"i b�" trong cùng entry point: relative path OK
+- Cross-entry-point: `@sdcorejs/angular/*` alias (ng-packagr yêu cầu)
 
-**Pattern test cho component thÆ°á»ng (non-form)**:
+**Pattern test cho component thường (non-form)**:
 
 ```typescript
 import { Component } from '@angular/core';
@@ -60,9 +60,9 @@ describe('Sd<Name>', () => {
 });
 ```
 
-**Output subscription hygiene**: `const sub = comp.<output>.subscribe(...)` + `sub.unsubscribe()` at end of test, hoáº·c push-to-array trÃªn host.
+**Output subscription hygiene**: `const sub = comp.<output>.subscribe(...)` + `sub.unsubscribe()` at end of test, hoặc push-to-array trên host.
 
-**Coverage target**: má»—i file â‰¥ 70% lines / â‰¥ 50% branches (global gate hiá»‡n táº¡i 74/55).
+**Coverage target**: m�i file �0� 70% lines / �0� 50% branches (global gate hi�!n tại 74/55).
 
 ---
 
@@ -80,7 +80,7 @@ describe('Sd<Name>', () => {
 | 8 | `components/mini-editor/src/mini-editor.component.spec.ts` | 360 | Medium |
 | 9 | `components/tab-router/src/components/*.spec.ts` (3 files for nav, item, outlet) | 479 | Complex |
 | 10 | `components/upload-file/src/upload-file.component.spec.ts` (+ preview sub-component) | 827 | Complex |
-| 11 | Gap report + Plan 3 design doc | â€” | â€” |
+| 11 | Gap report + Plan 3 design doc | � | � |
 
 Plus per-task MD audit + update of corresponding `sd-<name>.md`.
 
@@ -140,7 +140,7 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="
 
 Expected: 8-12 specs pass.
 
-- [ ] **Step 4: Audit `sd-quick-action.md`** per 14-má»¥c checklist.
+- [ ] **Step 4: Audit `sd-quick-action.md`** per 14-mục checklist.
 
 - [ ] **Step 5: Commit**
 
@@ -174,7 +174,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Read source + html + md**
 - [ ] **Step 2: Create spec file**
-- [ ] **Step 3: Run test** â€” expect 8-10 specs pass
+- [ ] **Step 3: Run test** � expect 8-10 specs pass
 - [ ] **Step 4: Audit md**
 - [ ] **Step 5: Commit**
 
@@ -206,11 +206,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 Tests can cover both `SdSection` and `SdSectionItem` in single file (per existing pattern in repo for parent/child components).
 
-- [ ] **Step 1: Read source + html + md** â€” both `section.component.ts` and `section-item/section-item.component.ts`
+- [ ] **Step 1: Read source + html + md** � both `section.component.ts` and `section-item/section-item.component.ts`
 
 - [ ] **Step 2: Create spec file** with parent + child host
 
-- [ ] **Step 3: Run test** â€” expect 10-12 specs pass
+- [ ] **Step 3: Run test** � expect 10-12 specs pass
 
 - [ ] **Step 4: Audit md**
 
@@ -245,7 +245,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Read source + html + md**
 - [ ] **Step 2: Create spec file**
-- [ ] **Step 3: Run test** â€” expect 12-15 specs pass
+- [ ] **Step 3: Run test** � expect 12-15 specs pass
 - [ ] **Step 4: Audit md**
 - [ ] **Step 5: Commit**
 
@@ -279,8 +279,8 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 **Material dialog testing**: use `MatDialogRef` mocking OR test via `TestBed.inject(MatDialog).open()`. Spec may need extra setup.
 
 - [ ] **Step 1: Read source + html + md**
-- [ ] **Step 2: Create spec file** â€” likely needs `NoopAnimationsModule` + Material dialog harness
-- [ ] **Step 3: Run test** â€” expect 12-18 specs pass
+- [ ] **Step 2: Create spec file** � likely needs `NoopAnimationsModule` + Material dialog harness
+- [ ] **Step 3: Run test** � expect 12-18 specs pass
 - [ ] **Step 4: Audit md**
 - [ ] **Step 5: Commit**
 
@@ -315,7 +315,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Read source + html + md**
 - [ ] **Step 2: Create spec file**
-- [ ] **Step 3: Run test** â€” expect 15-18 specs pass
+- [ ] **Step 3: Run test** � expect 15-18 specs pass
 - [ ] **Step 4: Audit md**
 - [ ] **Step 5: Commit**
 
@@ -335,7 +335,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Modify: `projects/sdcorejs-angular/components/side-drawer/sd-side-drawer.md`
 
 **Source notes**:
-- Side drawer/panel â€” slides in from side (left/right). Likely wraps `MatSidenav` or custom CDK overlay (156 LoC).
+- Side drawer/panel � slides in from side (left/right). Likely wraps `MatSidenav` or custom CDK overlay (156 LoC).
 - Inputs: `open` (signal/setter), `position` (left/right), `width`, `title`, `closable`.
 - Outputs: `openChange`, `close`.
 
@@ -350,7 +350,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 1: Read source + html + md**
 - [ ] **Step 2: Create spec file**
-- [ ] **Step 3: Run test** â€” expect 15-18 specs pass
+- [ ] **Step 3: Run test** � expect 15-18 specs pass
 - [ ] **Step 4: Audit md**
 - [ ] **Step 5: Commit**
 
@@ -387,9 +387,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 **Scope reduction acceptable**: actual rich-text formatting via `document.execCommand` is browser-dependent and may not work reliably in headless. Focus on input/output contracts + state transitions.
 
-- [ ] **Step 1: Read source + html + md** â€” verify if uses TinyMCE wrapper or custom
+- [ ] **Step 1: Read source + html + md** � verify if uses TinyMCE wrapper or custom
 - [ ] **Step 2: Create spec file**
-- [ ] **Step 3: Run test** â€” expect 18-22 specs pass
+- [ ] **Step 3: Run test** � expect 18-22 specs pass
 - [ ] **Step 4: Audit md**
 - [ ] **Step 5: Commit**
 
@@ -469,7 +469,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/components/upload-file/src/components/preview/preview.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/components/upload-file/sd-upload-file.md`
 
-**Source notes** (827 LoC â€” largest in Plan 3):
+**Source notes** (827 LoC � largest in Plan 3):
 - File upload with preview, multi-file, drag & drop, validation (type/size).
 - Inputs: `model` (File[] or value), `multiple`, `accept` (mime), `maxSize`, `maxFiles`, `disabled`, `placeholder`.
 - Outputs: `(filesAdded)`, `(fileRemoved)`, `(error)` (invalid file).
@@ -524,17 +524,17 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 **Files:**
 - Create: `docs/superpowers/specs/2026-05-17-core-ui-test-coverage-plan-3-design.md`
-- Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append Â§6.3)
+- Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append §6.3)
 
-**Plan 3 spec doc** (brief â€” same structure as Plan 2 design):
+**Plan 3 spec doc** (brief � same structure as Plan 2 design):
 
 ```markdown
-# Core UI Test Coverage â€” Plan 3 Design
+# Core UI Test Coverage � Plan 3 Design
 
 **Date**: 2026-05-17
 **Scope**: vn-angular (`projects/sdcorejs-angular`)
 **Owner**: nghiatt15@onemount.com
-**Batch**: Plan 3 â€” 10 component primitives
+**Batch**: Plan 3 � 10 component primitives
 
 ## 1. Problem statement
 
@@ -548,29 +548,29 @@ After Plans 1+2 (20 spec files), 10 component primitives remain. Plan 3 covers n
 
 ### 2.2. Out of scope (per user direction)
 
-- chart, document-builder, editor, workflow, form-generic, history, query-builder, import-excel (deferred â€” unfinished components or large enough for own plan)
+- chart, document-builder, editor, workflow, form-generic, history, query-builder, import-excel (deferred � unfinished components or large enough for own plan)
 
 ## 3. Approach
 
-Same as Plan 1+2. Plan 3 components are non-form â†’ no FgHost/NgFormHost. Focus on rendering + behavior states + outputs.
+Same as Plan 1+2. Plan 3 components are non-form �  no FgHost/NgFormHost. Focus on rendering + behavior states + outputs.
 
 ## 4. Acceptance criteria
 
 1. 10+ new spec files created (12 if counting tab-router x3 and upload-file x2).
 2. All tests pass.
-3. Per-file coverage â‰¥ 70% lines / â‰¥ 50% branches.
+3. Per-file coverage �0� 70% lines / �0� 50% branches.
 4. 10 MD files audited.
 5. No source `.ts` changes (except trivial typos).
 ```
 
-**Gap report append to Plan 1 design doc Â§6.3** (template â€” fill commit SHAs + test counts during execution):
+**Gap report append to Plan 1 design doc §6.3** (template � fill commit SHAs + test counts during execution):
 
 ```markdown
-## 6.3 Gap report â€” Plan 3 implementation results
+## 6.3 Gap report � Plan 3 implementation results
 
 **Implementation completed**: 2026-MM-DD
 **Branch**: `feature/plan-3-components-tests`
-**Test counts**: Plan 2 final (820) â†’ After Plan 3: ~XXX
+**Test counts**: Plan 2 final (820) �  After Plan 3: ~XXX
 
 ### Per-file summary
 
@@ -605,7 +605,7 @@ Same as Plan 1+2. Plan 3 components are non-form â†’ no FgHost/NgFormHost. 
 
 - [ ] **Step 1: Create Plan 3 spec doc** at `docs/superpowers/specs/2026-05-17-core-ui-test-coverage-plan-3-design.md` (content above)
 
-- [ ] **Step 2: Append Â§6.3 to Plan 1 design doc** with actual commit SHAs and test counts (fill in template above with real data from Tasks 1-10)
+- [ ] **Step 2: Append §6.3 to Plan 1 design doc** with actual commit SHAs and test counts (fill in template above with real data from Tasks 1-10)
 
 - [ ] **Step 3: Final verification**
 
@@ -621,7 +621,7 @@ Expected: all tests pass, build pass.
 
 ```bash
 git add docs/superpowers/
-git commit -m "SM-00: Plan 3 finalize â€” design doc + gap report aggregate
+git commit -m "SM-00: Plan 3 finalize � design doc + gap report aggregate
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ```
@@ -631,11 +631,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Done criteria
 
 - [ ] 10 component spec sets created (12 spec files counting sub-components).
-- [ ] All tests pass (Plan 1+2+3 â‰ˆ 950-1000+ tests total).
+- [ ] All tests pass (Plan 1+2+3 �0� 950-1000+ tests total).
 - [ ] Coverage global gates still met after Plan 3.
-- [ ] 10 MD files audited per 14-má»¥c checklist.
-- [ ] No source `.ts` changes (lesson learned from Plan 2 Task 11 â€” alias is required for ng-packagr).
-- [ ] Plan 3 design doc + Â§6.3 gap report committed.
+- [ ] 10 MD files audited per 14-mục checklist.
+- [ ] No source `.ts` changes (lesson learned from Plan 2 Task 11 � alias is required for ng-packagr).
+- [ ] Plan 3 design doc + §6.3 gap report committed.
 - [ ] Branch pushable.
 
 ---
@@ -644,13 +644,13 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 **Module identity issue**: NEVER change source `.ts` import paths. Source must use `@sdcorejs/angular/*` alias for ng-packagr to compile FESM bundles correctly. Specs use the same alias for consistency.
 
-**Material harness**: for MatDialog, MatSidenav, MatTabs â€” prefer programmatic API (`dialog.open()`, `sidenav.open()`) over simulating clicks on overlay backdrops.
+**Material harness**: for MatDialog, MatSidenav, MatTabs � prefer programmatic API (`dialog.open()`, `sidenav.open()`) over simulating clicks on overlay backdrops.
 
 **Router testing**: use `provideRouter([])` in TestBed providers + `RouterTestingHarness` for navigation specs. Mock `ActivatedRoute` with `BehaviorSubject` for params.
 
 **File API**: `new File([...], 'name', { type })` creates a real File object. `new DataTransfer().items.add(file)` simulates drag/drop.
 
-**PrismJS / contenteditable**: prefer asserting on input/output rather than internal highlight tokens or DOM mutations from `execCommand` â€” those are browser-dependent.
+**PrismJS / contenteditable**: prefer asserting on input/output rather than internal highlight tokens or DOM mutations from `execCommand` � those are browser-dependent.
 
 **Coverage gate failures**: if a complex file (mini-editor, tab-router, upload-file) falls below 70% lines, document the trade-off in the spec commit message and adjust global gate if needed (currently 74% lines).
 

@@ -1,16 +1,16 @@
-﻿# Core UI Test Coverage Plan 5 â€” Implementation Plan
+�# Core UI Test Coverage Plan 5 � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Test coverage cho 1 global error handler + 2 HTTP interceptors + 10 module service/guard/directive files (permission, auth, authom, keycloak) cá»§a `@sdcorejs/angular`.
+**Goal:** Test coverage cho 1 global error handler + 2 HTTP interceptors + 10 module service/guard/directive files (permission, auth, authom, keycloak) của `@sdcorejs/angular`.
 
-**Architecture:** Reuse Plan 1-4 pattern. Services/handlers/interceptors test báº±ng `TestBed.inject()`. HTTP interceptors test báº±ng `HttpClientTestingModule` + provider interceptor. Guards test báº±ng `TestBed.runInInjectionContext()` + mocked Router.
+**Architecture:** Reuse Plan 1-4 pattern. Services/handlers/interceptors test bằng `TestBed.inject()`. HTTP interceptors test bằng `HttpClientTestingModule` + provider interceptor. Guards test bằng `TestBed.runInInjectionContext()` + mocked Router.
 
 **Tech Stack:** Plan 1-4 stack + `@angular/common/http/testing` cho interceptors.
 
 **References:** 
 - Plan 1-4 plans + designs
-- Plan 4 API service spec (SdApiService) â€” interceptor + HTTP test pattern reference
+- Plan 4 API service spec (SdApiService) � interceptor + HTTP test pattern reference
 
 **Branch:** `feature/plan-5-modules-handlers-interceptors-tests` (already created).
 
@@ -21,7 +21,7 @@
 **File location:**
 - Handler spec: `projects/sdcorejs-angular/handlers/<name>.handler.spec.ts`
 - Interceptor specs: `projects/sdcorejs-angular/interceptors/<name>/<name>.interceptor.spec.ts`
-- Module service/guard/directive specs: cáº¡nh source `.ts` file (e.g., `modules/permission/src/services/permission.service.spec.ts`)
+- Module service/guard/directive specs: cạnh source `.ts` file (e.g., `modules/permission/src/services/permission.service.spec.ts`)
 
 **Import paths:** alias `@sdcorejs/angular/*` for cross-entry imports (preserve ng-packagr).
 
@@ -117,7 +117,7 @@ describe('unauthorizedInterceptor', () => {
 | 11 | `modules/authom/authom.service.spec.ts` | 274 | Complex |
 | 12 | `modules/keycloak/keycloak.interceptor.spec.ts` | 29 | Trivial |
 | 13 | `modules/keycloak/keycloak.service.spec.ts` | 41 | Simple |
-| 14 | Plan 5 design doc + gap report aggregate | â€” | â€” |
+| 14 | Plan 5 design doc + gap report aggregate | � | � |
 
 ---
 
@@ -142,7 +142,7 @@ For each file, the implementer follows the same flow:
 1. Read source `.ts` + corresponding `.md` (if exists)
 2. Create spec file using appropriate pattern (service/guard/interceptor)
 3. Run focused test: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="**/<name>.spec.ts"`
-4. Audit `.md` per 14-má»¥c checklist if MD exists
+4. Audit `.md` per 14-mục checklist if MD exists
 5. Commit with format: `SM-00: add <Name> spec + audit <name>.md`
 
 Each task should target ~5-20 specs depending on tier:
@@ -157,7 +157,7 @@ Each task should target ~5-20 specs depending on tier:
 
 **Files:**
 - Create: `docs/superpowers/specs/2026-05-18-core-ui-test-coverage-plan-5-design.md`
-- Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append Â§6.5 gap report)
+- Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append §6.5 gap report)
 
 Same finalize pattern as Plan 1-4.
 
@@ -167,7 +167,7 @@ Same finalize pattern as Plan 1-4.
 
 - [ ] 13 new spec files.
 - [ ] `npm run test:ci` pass with coverage threshold met.
-- [ ] MD files audited (if exist; some interceptor/guard files may have no MD â€” note in gap report).
+- [ ] MD files audited (if exist; some interceptor/guard files may have no MD � note in gap report).
 - [ ] No source `.ts` changes (preserve ng-packagr alias).
 - [ ] Build pass.
 - [ ] Gap report aggregated.
@@ -176,9 +176,9 @@ Same finalize pattern as Plan 1-4.
 
 ## Out of scope
 
-- `modules/layout/` â€” heavy UI components (page, sidebar-mobile, sidebar-v1, layout-main); deferred to Plan 6.
-- `modules/generic/` â€” skipped permanently per user direction (unfinished form-generic).
-- `modules/auth/configurations/`, `modules/permission/src/configurations/` â€” pure config interface files (no logic to test).
+- `modules/layout/` � heavy UI components (page, sidebar-mobile, sidebar-v1, layout-main); deferred to Plan 6.
+- `modules/generic/` � skipped permanently per user direction (unfinished form-generic).
+- `modules/auth/configurations/`, `modules/permission/src/configurations/` � pure config interface files (no logic to test).
 
 ---
 

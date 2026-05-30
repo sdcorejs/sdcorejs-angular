@@ -1,4 +1,4 @@
-﻿# SdDocxService
+�# SdDocxService
 
 **Type**: Service (Angular `@Injectable`)
 **Class**: `SdDocxService`
@@ -14,9 +14,9 @@ Converts `.doc` / `.docx` files to standalone HTML in the browser by lazily load
 - Letting users drag/select a `.docx` and getting back an HTML string + warning messages.
 
 ## When NOT to use
-- For server-side rendering â€” this relies on browser `fetch` of `https://pandoc.github.io/pandoc-wasm/pandoc.wasm` and a browser `File`/`Blob`/`ArrayBuffer`.
-- For format conversions other than `.doc`/`.docx` â†’ HTML (the service hard-codes Pandoc args `from: 'docx', to: 'html'`).
-- When the network blocks `pandoc.github.io` â€” the WASM fetch will fail.
+- For server-side rendering � this relies on browser `fetch` of `https://pandoc.github.io/pandoc-wasm/pandoc.wasm` and a browser `File`/`Blob`/`ArrayBuffer`.
+- For format conversions other than `.doc`/`.docx` �  HTML (the service hard-codes Pandoc args `from: 'docx', to: 'html'`).
+- When the network blocks `pandoc.github.io` � the WASM fetch will fail.
 
 ## Public API
 
@@ -59,9 +59,9 @@ interface SdDocxConvertResult {
 
 **Parameters**:
 - `input` (`File | Blob | ArrayBuffer`): the document to convert.
-  - `File` â€” extension and size are checked when validation flags are enabled.
-  - `Blob` â€” size is checked; format validation is skipped (no file name).
-  - `ArrayBuffer` â€” both format and size validation are skipped.
+  - `File` � extension and size are checked when validation flags are enabled.
+  - `Blob` � size is checked; format validation is skipped (no file name).
+  - `ArrayBuffer` � both format and size validation are skipped.
 - `options` (`SdDocxConvertOptions`, optional): see interface above.
 
 **Returns**:
@@ -78,7 +78,7 @@ convertToHtmlString(
 ): Promise<string | null>;
 ```
 
-**Parameters**: same as `convertToHtml` â€” `input` and `options` are forwarded unchanged.
+**Parameters**: same as `convertToHtml` � `input` and `options` are forwarded unchanged.
 
 **Returns**:
 - The `html` string from `SdDocxConvertResult` on success.
@@ -91,11 +91,11 @@ None. Constructor injects `SdNotifyService` and `SdLoadingService` for UX feedba
 - **WASM source**: hard-coded to `https://pandoc.github.io/pandoc-wasm/pandoc.wasm`. Fetched once and cached on the service instance (`#pandocInstance`). First call is slow (network + WASM init); subsequent calls reuse the instance.
 - **Pandoc args**: `{ from: 'docx', to: 'html', 'input-files': ['document.docx'], standalone: true, 'embed-resources': true }`. The output is a full HTML document, not a fragment.
 - **Validation messages** (Vietnamese):
-  - Invalid format: `"Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡. Vui lÃ²ng chá»n Máº«u cÃ³ Ä‘á»‹nh dáº¡ng DOC hoáº·c DOCX"`
-  - Size exceeded: `"KÃ­ch thÆ°á»›c tá»‡p máº«u vÆ°á»£t quÃ¡ tiÃªu chuáº©n há»— trá»£ cá»§a há»‡ thá»‘ng. Vui lÃ²ng thá»­ láº¡i"`
-  - Conversion error: `"CÃ³ lá»—i xáº£y ra khi chuyá»ƒn Ä‘á»•i file DOCX"`
+  - Invalid format: `"Đ�9nh dạng không hợp l�!. Vui lòng chọn Mẫu có ��9nh dạng DOC hoặc DOCX"`
+  - Size exceeded: `"Kích thư�:c t�!p mẫu vượt quá tiêu chuẩn h� trợ của h�! th�ng. Vui lòng thử lại"`
+  - Conversion error: `"Có l�i xảy ra khi chuyỒn ��"i file DOCX"`
 - **Format check** runs only when a file name is known (`input instanceof File`). Raw `Blob`/`ArrayBuffer` skip the extension check.
-- **Loading spinner**: `open()` calls `SdLoadingService.start()` / `stop()`. `convertToHtml()` does NOT â€” call those yourself if needed.
+- **Loading spinner**: `open()` calls `SdLoadingService.start()` / `stop()`. `convertToHtml()` does NOT � call those yourself if needed.
 - **Logging**: the service logs `[SdDocxService] ...` debug info to `console`. Filter or strip in production builds if noisy.
 
 ## Examples
@@ -131,13 +131,13 @@ await docx.convertToHtml(blob, { validateFormat: false, validateSize: false });
 ```
 
 ## Anti-patterns
-- Do NOT call `convertToHtml` in a tight loop â€” the first call fetches ~30+ MB of WASM. Reuse the singleton service.
-- Do NOT expect a fragment â€” the result is a full HTML document; if injecting into a host page, sanitize and/or extract `<body>` content first.
-- Do NOT rely on the network in offline-first apps â€” host the WASM yourself and (until the constant is configurable) fork the service if needed.
-- Do NOT call `open()` from non-user-gesture code paths â€” browsers may block the synthetic file picker click.
+- Do NOT call `convertToHtml` in a tight loop � the first call fetches ~30+ MB of WASM. Reuse the singleton service.
+- Do NOT expect a fragment � the result is a full HTML document; if injecting into a host page, sanitize and/or extract `<body>` content first.
+- Do NOT rely on the network in offline-first apps � host the WASM yourself and (until the constant is configurable) fork the service if needed.
+- Do NOT call `open()` from non-user-gesture code paths � browsers may block the synthetic file picker click.
 
 ## Related
-- `SdLoadingService` (`@sdcorejs/angular/services/loading`) â€” global spinner toggled around `open()`.
-- `SdNotifyService` (`@sdcorejs/angular/services/notify`) â€” error toasts on validation/conversion failure.
-- `pandoc-core` (sibling file) â€” thin wrapper around the Pandoc WASM module.
+- `SdLoadingService` (`@sdcorejs/angular/services/loading`) � global spinner toggled around `open()`.
+- `SdNotifyService` (`@sdcorejs/angular/services/notify`) � error toasts on validation/conversion failure.
+- `pandoc-core` (sibling file) � thin wrapper around the Pandoc WASM module.
 

@@ -1,9 +1,9 @@
-﻿# Core UI Test Coverage â€” Plan 5 Design
+�# Core UI Test Coverage � Plan 5 Design
 
 **Date**: 2026-05-19
 **Scope**: vn-angular (`projects/sdcorejs-angular`)
 **Owner**: nghiatt15@onemount.com
-**Batch**: Plan 5 â€” 1 handler + 2 interceptors + 8 module files (auth/permission/keycloak)
+**Batch**: Plan 5 � 1 handler + 2 interceptors + 8 module files (auth/permission/keycloak)
 
 ## 1. Problem statement
 
@@ -20,8 +20,8 @@ Per File Map in `plans/2026-05-18-core-ui-test-coverage-plan-5.md`.
 
 ### 2.2. Out of scope
 
-- **Skipped per user direction**: `modules/authom/` (authom.service + authom.interceptor) â€” features not finalized.
-- **Layout module** â€” UI-heavy components, Plan 6 candidate.
+- **Skipped per user direction**: `modules/authom/` (authom.service + authom.interceptor) � features not finalized.
+- **Layout module** � UI-heavy components, Plan 6 candidate.
 - **Skipped indefinitely per user direction (carried from prior plans)**: chart, document-builder, editor, workflow, form-generic, history, query-builder.
 - **Deferred (carried)**: import-excel.
 
@@ -35,8 +35,8 @@ mocking).
 
 ## 4. Acceptance criteria
 
-1. 11 new spec files (1 handler + 2 interceptors + 8 module files) â€” tests pass.
-2. MD files audited per 14-má»¥c checklist.
+1. 11 new spec files (1 handler + 2 interceptors + 8 module files) � tests pass.
+2. MD files audited per 14-mục checklist.
 3. No source `.ts` changes (preserve ng-packagr alias).
 4. Coverage thresholds met or re-floored if denominator growth.
 5. Gap report aggregated.

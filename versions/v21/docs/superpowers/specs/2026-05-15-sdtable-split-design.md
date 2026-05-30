@@ -1,4 +1,4 @@
-﻿# SdTable Split â€” Design Spec (Conservative)
+�# SdTable Split � Design Spec (Conservative)
 
 **Date:** 2026-05-15
 **Component:** `@sd-angular/components/table` (SdTable)
@@ -6,37 +6,37 @@
 
 ## 1. Goal
 
-TÃ¡ch nhá»¯ng pháº§n cá»§a `SdTable` template cÃ³ thá»ƒ tÃ¡ch an toÃ n thÃ nh sub-components Ä‘á»ƒ giáº£m kÃ­ch thÆ°á»›c file, lÃ m rÃµ trÃ¡ch nhiá»‡m vÃ  má»Ÿ Ä‘Æ°á»ng cho test coverage. **KHÃ”NG Ä‘á»¥ng Ä‘áº¿n** cÃ¡c pháº§n ká»¹ thuáº­t bá»‹ cháº·n bá»Ÿi Angular CDK Table contract.
+Tách những phần của `SdTable` template có thỒ tách an toàn thành sub-components �Ồ giảm kích thư�:c file, làm rõ trách nhi�!m và m�x �ường cho test coverage. **KH�NG �ụng �ến** các phần kỹ thuật b�9 chặn b�xi Angular CDK Table contract.
 
-**KHÃ”NG thay Ä‘á»•i public API:** `<sd-table>` selector, `SdTable` class, `SdTableOption`/`SdTableColumn` interfaces, content-projection directives, vÃ  toÃ n bá»™ method qua `@ViewChild` â€” táº¥t cáº£ giá»¯ nguyÃªn 100%.
+**KH�NG thay ��"i public API:** `<sd-table>` selector, `SdTable` class, `SdTableOption`/`SdTableColumn` interfaces, content-projection directives, và toàn b�" method qua `@ViewChild` � tất cả giữ nguyên 100%.
 
-## 2. Váº¥n Ä‘á» ká»¹ thuáº­t & quyáº¿t Ä‘á»‹nh scope
+## 2. Vấn �ề kỹ thuật & quyết ��9nh scope
 
-**Bá»‹ cháº·n (khÃ´ng tÃ¡ch):**
+**B�9 chặn (không tách):**
 - Cell column definitions inside `<table mat-table>` (selection/command/group/expand/reorder + data column loop)
 - Header rows (`<tr matHeaderRowDef>`) and data rows (`<tr matRowDef>`)
 
-**LÃ½ do:** `CdkTable` (`mat-table`) dÃ¹ng `@ContentChildren(CdkColumnDef, { descendants: true })` Ä‘á»ƒ register column definitions. ContentChildren chá»‰ tháº¥y content projection (`<ng-content>`), khÃ´ng tháº¥y children trong view cá»§a sub-component. Náº¿u Ä‘áº·t `<table-header>` bÃªn trong `<table mat-table>`, cÃ¡c `<ng-container matColumnDef>` trong template cá»§a nÃ³ KHÃ”NG Ä‘Æ°á»£c mat-table pick up â†’ header vÃ  rows trá»‘ng.
+**Lý do:** `CdkTable` (`mat-table`) dùng `@ContentChildren(CdkColumnDef, { descendants: true })` �Ồ register column definitions. ContentChildren ch�0 thấy content projection (`<ng-content>`), không thấy children trong view của sub-component. Nếu �ặt `<table-header>` bên trong `<table mat-table>`, các `<ng-container matColumnDef>` trong template của nó KH�NG �ược mat-table pick up �  header và rows tr�ng.
 
-**Workaround manual `_table.addColumnDef(...)`** phá»¥ thuá»™c CDK internal API, rá»§i ro break khi update version â†’ loáº¡i khá»i scope nÃ y.
+**Workaround manual `_table.addColumnDef(...)`** phụ thu�"c CDK internal API, rủi ro break khi update version �  loại khỏi scope này.
 
-**TÃ¡ch an toÃ n (trong scope):**
-- Toolbar region (paginator + reload/export/config buttons) â€” náº±m NGOÃ€I `<table mat-table>`
-- Empty state region â€” náº±m NGOÃ€I `<table mat-table>`
-- Cell render component (Ä‘Ã£ tÃ¡ch sáºµn dÆ°á»›i tÃªn `desktop-cell` â€” chá»‰ rename)
+**Tách an toàn (trong scope):**
+- Toolbar region (paginator + reload/export/config buttons) � nằm NGOìI `<table mat-table>`
+- Empty state region � nằm NGOìI `<table mat-table>`
+- Cell render component (�ã tách sẵn dư�:i tên `desktop-cell` � ch�0 rename)
 - Internal directive `SdColumnResizeDirective` (rename)
 
 ## 3. Naming rule
 
-Theo nguyÃªn táº¯c cá»§a user:
+Theo nguyên tắc của user:
 
-| Loáº¡i | Public (dev sá»­ dá»¥ng) | Internal (chá»‰ ná»™i bá»™ lib) |
+| Loại | Public (dev sử dụng) | Internal (ch�0 n�"i b�" lib) |
 |---|---|---|
 | Selector | `sd-table` | `table-toolbar`, `table-empty-state`, `table-cell` |
 | Class | `SdTable`, `SdTableOption`, ... | `TableToolbar`, `TableEmptyState`, `TableCell` |
-| Directives | `SdTabelCellDefDirective`, `SdTableTitleDefDirective`, `SdMaterialFooterDefDirective`, `SdMaterialSubInformationDefDirective`, `SdTableFilterDefDirective`, `SdTableColumnFilterDefDirective` (consumer dÃ¹ng qua `<ng-template>`) | `ColumnResizeDirective` (rename tá»« `SdColumnResizeDirective`), `StickyShadowDirective` (Ä‘Ã£ khÃ´ng cÃ³ Sd âœ“) |
+| Directives | `SdTabelCellDefDirective`, `SdTableTitleDefDirective`, `SdMaterialFooterDefDirective`, `SdMaterialSubInformationDefDirective`, `SdTableFilterDefDirective`, `SdTableColumnFilterDefDirective` (consumer dùng qua `<ng-template>`) | `ColumnResizeDirective` (rename từ `SdColumnResizeDirective`), `StickyShadowDirective` (�ã không có Sd �S) |
 
-**Tech debt out of scope:** TÃªn class `SdMaterialFooterDefDirective` vÃ  `SdMaterialSubInformationDefDirective` (dÃ¹ng "Material" thay vÃ¬ "Table") legacy, KHÃ”NG Ä‘á»•i vÃ¬ sáº½ break import cá»§a consumer.
+**Tech debt out of scope:** Tên class `SdMaterialFooterDefDirective` và `SdMaterialSubInformationDefDirective` (dùng "Material" thay vì "Table") legacy, KH�NG ��"i vì sẽ break import của consumer.
 
 ## 4. Sub-components to extract
 
@@ -44,7 +44,7 @@ Theo nguyÃªn táº¯c cá»§a user:
 
 **File:** `projects/sdcorejs-angular/components/table/src/components/table-toolbar/table-toolbar.component.{ts,html,scss}`
 
-**TrÃ¡ch nhiá»‡m:** Render hÃ ng dÆ°á»›i table â€” paginator + reload/export/config buttons.
+**Trách nhi�!m:** Render hàng dư�:i table � paginator + reload/export/config buttons.
 
 **Inputs:**
 ```typescript
@@ -63,16 +63,16 @@ reload = output<void>();
 exportExcel = output<void>();
 exportCSV = output<void>();
 exportCustom = output<void>();
-paginatorRef = output<MatPaginator>();   // emit khi viewInit Ä‘á»ƒ SdTable subscribe page event
+paginatorRef = output<MatPaginator>();   // emit khi viewInit �Ồ SdTable subscribe page event
 ```
 
-**Template:** Block hiá»‡n táº¡i tá»« `table.component.html` line 326-385 (paginator + actions).
+**Template:** Block hi�!n tại từ `table.component.html` line 326-385 (paginator + actions).
 
 ### 4.2 `<table-empty-state>` (NEW)
 
 **File:** `projects/sdcorejs-angular/components/table/src/components/table-empty-state/table-empty-state.component.{ts,html,scss}`
 
-**TrÃ¡ch nhiá»‡m:** Render block "ChÆ°a cÃ³ dá»¯ liá»‡u" / "KhÃ´ng cÃ³ káº¿t quáº£ phÃ¹ há»£p" / "Vui lÃ²ng chá»n bá»™ lá»c".
+**Trách nhi�!m:** Render block "Chưa có dữ li�!u" / "Không có kết quả phù hợp" / "Vui lòng chọn b�" lọc".
 
 **Inputs:**
 ```typescript
@@ -83,51 +83,51 @@ requireFiltered = input.required<boolean>();
 tableConfiguration = input<ISdTableConfiguration | null>();
 ```
 
-**Outputs:** none â€” pure presentation.
+**Outputs:** none � pure presentation.
 
-**Template:** Block hiá»‡n táº¡i tá»« `table.component.html` line 296-324.
+**Template:** Block hi�!n tại từ `table.component.html` line 296-324.
 
-### 4.3 `<table-cell>` (RENAME tá»« `desktop-cell`)
+### 4.3 `<table-cell>` (RENAME từ `desktop-cell`)
 
-**Thay Ä‘á»•i:**
-- Folder rename: `components/desktop-cell/` â†’ `components/table-cell/`
-- File rename: `desktop-cell.component.{ts,html,scss}` â†’ `table-cell.component.{ts,html,scss}`
-- Selector: `desktop-cell` â†’ `table-cell`
-- Class: `DesktopCellComponent` â†’ `TableCellComponent`
-- Sub-folder `view/` (chá»©a `ViewComponent`) á»Ÿ trong: giá»¯ nguyÃªn tÃªn (internal sub-helper)
+**Thay ��"i:**
+- Folder rename: `components/desktop-cell/` �  `components/table-cell/`
+- File rename: `desktop-cell.component.{ts,html,scss}` �  `table-cell.component.{ts,html,scss}`
+- Selector: `desktop-cell` �  `table-cell`
+- Class: `DesktopCellComponent` �  `TableCellComponent`
+- Sub-folder `view/` (chứa `ViewComponent`) �x trong: giữ nguyên tên (internal sub-helper)
 - Update import trong `table.component.ts`
 - Update `components/index.ts` re-export
 
-### 4.4 `ColumnResizeDirective` (RENAME tá»« `SdColumnResizeDirective`)
+### 4.4 `ColumnResizeDirective` (RENAME từ `SdColumnResizeDirective`)
 
-**Thay Ä‘á»•i:**
-- File rename: `directives/sd-column-resize.directive.ts` â†’ `directives/column-resize.directive.ts`
-- Test file rename: `sd-column-resize.directive.spec.ts` â†’ `column-resize.directive.spec.ts`
-- Selector: `[sdColumnResize]` â†’ `[columnResize]`
-- Class: `SdColumnResizeDirective` â†’ `ColumnResizeDirective`
-- Input rename: `sdColumnResize` â†’ `columnResize`
+**Thay ��"i:**
+- File rename: `directives/sd-column-resize.directive.ts` �  `directives/column-resize.directive.ts`
+- Test file rename: `sd-column-resize.directive.spec.ts` �  `column-resize.directive.spec.ts`
+- Selector: `[sdColumnResize]` �  `[columnResize]`
+- Class: `SdColumnResizeDirective` �  `ColumnResizeDirective`
+- Input rename: `sdColumnResize` �  `columnResize`
 - Update `directives/index.ts` re-export
 - Update `table.component.html` (binding `[columnResize]` thay `[sdColumnResize]`)
 - Update `table.component.ts` import
 - Update test imports
 
-## 5. SdTable orchestrator (gáº§n nhÆ° khÃ´ng Ä‘á»•i)
+## 5. SdTable orchestrator (gần như không ��"i)
 
-SdTable giá»¯ nguyÃªn:
-- Táº¥t cáº£ signals, effects, subscriptions, public methods
-- ToÃ n bá»™ `<table mat-table>` block vÃ  cÃ¡c `<ng-container matColumnDef>` bÃªn trong (selection/command/group/expand/reorder/data columns)
+SdTable giữ nguyên:
+- Tất cả signals, effects, subscriptions, public methods
+- Toàn b�" `<table mat-table>` block và các `<ng-container matColumnDef>` bên trong (selection/command/group/expand/reorder/data columns)
 - Header rows + data rows + footer row
-- External-filter, config, selector-action component mounts (Ä‘Ã£ tÃ¡ch sáºµn tá»« trÆ°á»›c)
+- External-filter, config, selector-action component mounts (�ã tách sẵn từ trư�:c)
 
-**Thay Ä‘á»•i duy nháº¥t:**
-- Thay 2 block trong template báº±ng `<table-toolbar>` vÃ  `<table-empty-state>` mount
-- Äá»•i `<desktop-cell>` thÃ nh `<table-cell>`
-- Äá»•i `[sdColumnResize]` thÃ nh `[columnResize]`
-- Láº¥y `MatPaginator` instance tá»« output `(paginatorRef)` cá»§a `<table-toolbar>` thay vÃ¬ `viewChild(MatPaginator)` (vÃ¬ paginator giá» á»Ÿ trong sub-component)
+**Thay ��"i duy nhất:**
+- Thay 2 block trong template bằng `<table-toolbar>` và `<table-empty-state>` mount
+- Đ�"i `<desktop-cell>` thành `<table-cell>`
+- Đ�"i `[sdColumnResize]` thành `[columnResize]`
+- Lấy `MatPaginator` instance từ output `(paginatorRef)` của `<table-toolbar>` thay vì `viewChild(MatPaginator)` (vì paginator giờ �x trong sub-component)
 
 **Code change cho paginator:**
 
-Hiá»‡n táº¡i (line 167 `table.component.ts`):
+Hi�!n tại (line 167 `table.component.ts`):
 ```typescript
 paginator = viewChild(MatPaginator);
 ```
@@ -144,51 +144,51 @@ effect(() => {
 });
 ```
 
-Sau refactor: thay `viewChild(MatPaginator)` báº±ng signal `paginatorInstance = signal<MatPaginator | undefined>(undefined)`. `onPaginatorReady(p)` setter Ä‘Æ°á»£c gá»i tá»« output cá»§a `<table-toolbar>`. Effect subscribe váº«n dÃ¹ng tÆ°Æ¡ng tá»±.
+Sau refactor: thay `viewChild(MatPaginator)` bằng signal `paginatorInstance = signal<MatPaginator | undefined>(undefined)`. `onPaginatorReady(p)` setter �ược gọi từ output của `<table-toolbar>`. Effect subscribe vẫn dùng tương tự.
 
 ## 6. File map
 
 | File | Action | Notes |
 |---|---|---|
 | `components/table-toolbar/table-toolbar.component.ts` | NEW | Component class |
-| `components/table-toolbar/table-toolbar.component.html` | NEW | Cut tá»« table.component.html L326-385 |
-| `components/table-toolbar/table-toolbar.component.scss` | NEW | Cut style liÃªn quan tá»« table.component.scss |
+| `components/table-toolbar/table-toolbar.component.html` | NEW | Cut từ table.component.html L326-385 |
+| `components/table-toolbar/table-toolbar.component.scss` | NEW | Cut style liên quan từ table.component.scss |
 | `components/table-toolbar/index.ts` | NEW | Re-export |
-| `components/table-toolbar/ng-package.json` | NEW (optional) | Náº¿u muá»‘n entry point riÃªng â€” KHÃ”NG cáº§n, internal-only |
+| `components/table-toolbar/ng-package.json` | NEW (optional) | Nếu mu�n entry point riêng � KH�NG cần, internal-only |
 | `components/table-empty-state/table-empty-state.component.ts` | NEW | |
-| `components/table-empty-state/table-empty-state.component.html` | NEW | Cut tá»« L296-324 |
+| `components/table-empty-state/table-empty-state.component.html` | NEW | Cut từ L296-324 |
 | `components/table-empty-state/table-empty-state.component.scss` | NEW | Cut style |
-| `components/desktop-cell/` | RENAME â†’ `components/table-cell/` | git mv folder |
-| `components/desktop-cell/desktop-cell.component.{ts,html,scss}` | RENAME â†’ `table-cell.component.{ts,html,scss}` | + class + selector rename |
+| `components/desktop-cell/` | RENAME �  `components/table-cell/` | git mv folder |
+| `components/desktop-cell/desktop-cell.component.{ts,html,scss}` | RENAME �  `table-cell.component.{ts,html,scss}` | + class + selector rename |
 | `components/index.ts` | UPDATE | Re-exports update |
-| `directives/sd-column-resize.directive.ts` | RENAME â†’ `column-resize.directive.ts` | + class + selector + input rename |
-| `directives/sd-column-resize.directive.spec.ts` | RENAME â†’ `column-resize.directive.spec.ts` | + update imports |
+| `directives/sd-column-resize.directive.ts` | RENAME �  `column-resize.directive.ts` | + class + selector + input rename |
+| `directives/sd-column-resize.directive.spec.ts` | RENAME �  `column-resize.directive.spec.ts` | + update imports |
 | `directives/index.ts` | UPDATE | Re-export |
-| `table.component.ts` | MODIFY | Import sub-components; thay viewChild(MatPaginator) báº±ng signal + setter; method `onPaginatorReady` |
-| `table.component.html` | MODIFY | Giáº£m tá»« ~390 LOC â†’ ~290 LOC. Thay 2 blocks báº±ng sub-components. Äá»•i cell selector + directive selector. |
-| `table.component.scss` | MODIFY | Cut style cá»§a toolbar + empty-state xuá»‘ng file SCSS riÃªng |
+| `table.component.ts` | MODIFY | Import sub-components; thay viewChild(MatPaginator) bằng signal + setter; method `onPaginatorReady` |
+| `table.component.html` | MODIFY | Giảm từ ~390 LOC �  ~290 LOC. Thay 2 blocks bằng sub-components. Đ�"i cell selector + directive selector. |
+| `table.component.scss` | MODIFY | Cut style của toolbar + empty-state xu�ng file SCSS riêng |
 
-## 7. Internal sub-components reference (ná»™i bá»™, khÃ´ng export cÃ´ng khai)
+## 7. Internal sub-components reference (n�"i b�", không export công khai)
 
-Internal sub-components KHÃ”NG cáº§n `ng-package.json` riÃªng â€” chÃºng chá»‰ Ä‘Æ°á»£c dÃ¹ng trong template cá»§a SdTable, khÃ´ng export ra public API cá»§a package. Re-export qua `components/table/src/components/index.ts` chá»‰ phá»¥c vá»¥ import ná»™i bá»™.
+Internal sub-components KH�NG cần `ng-package.json` riêng � chúng ch�0 �ược dùng trong template của SdTable, không export ra public API của package. Re-export qua `components/table/src/components/index.ts` ch�0 phục vụ import n�"i b�".
 
 ## 8. Comment & doc convention
 
-Theo yÃªu cáº§u user (full comment + diá»…n giáº£i cháº·t cháº½):
+Theo yêu cầu user (full comment + di�&n giải chặt chẽ):
 
-1. **JSDoc class:** mÃ´ táº£ trÃ¡ch nhiá»‡m sub-component (2-3 cÃ¢u) â€” context: nÃ³ náº±m trong sd-table nhÆ° tháº¿ nÃ o, dÃ¹ng Ä‘á»ƒ lÃ m gÃ¬.
-2. **JSDoc cho má»—i `input()`/`output()` public:** giáº£i thÃ­ch Ã½ nghÄ©a nghiá»‡p vá»¥, khÃ´ng chá»‰ kiá»ƒu dá»¯ liá»‡u.
-3. **Inline comment Vietnamese cho logic khÃ´ng hiá»ƒn nhiÃªn** (theo memory user). KHÃ”NG comment cho code self-explanatory (per default rule).
-4. **Má»—i file `.html`/`.scss`** khÃ´ng cáº§n comment trá»« khi cÃ³ magic value/CSS hack.
+1. **JSDoc class:** mô tả trách nhi�!m sub-component (2-3 câu) � context: nó nằm trong sd-table như thế nào, dùng �Ồ làm gì.
+2. **JSDoc cho m�i `input()`/`output()` public:** giải thích ý nghĩa nghi�!p vụ, không ch�0 kiỒu dữ li�!u.
+3. **Inline comment Vietnamese cho logic không hiỒn nhiên** (theo memory user). KH�NG comment cho code self-explanatory (per default rule).
+4. **M�i file `.html`/`.scss`** không cần comment trừ khi có magic value/CSS hack.
 
-VÃ­ dá»¥ class doc:
+Ví dụ class doc:
 ```typescript
 /**
- * Render toolbar náº±m DÆ¯á»šI table â€” gá»“m cÃ¡c nÃºt reload/export/config vÃ  Material
- * paginator. Component nÃ y tá»“n táº¡i Ä‘á»ƒ tÃ¡ch logic trÃ¬nh bÃ y khá»i SdTable
- * orchestrator (chá»‰ pass state qua input vÃ  emit user action qua output).
+ * Render toolbar nằm DƯ�aI table � g�m các nút reload/export/config và Material
+ * paginator. Component này t�n tại �Ồ tách logic trình bày khỏi SdTable
+ * orchestrator (ch�0 pass state qua input và emit user action qua output).
  *
- * @internal Sub-component chá»‰ dÃ¹ng trong template cá»§a `<sd-table>`.
+ * @internal Sub-component ch�0 dùng trong template của `<sd-table>`.
  */
 @Component({ selector: 'table-toolbar', ... })
 export class TableToolbar { ... }
@@ -196,30 +196,30 @@ export class TableToolbar { ... }
 
 ## 9. Migration & backward compatibility
 
-- **Public API:** khÃ´ng Ä‘á»•i 100%
-- **Internal rename:** `desktop-cell` â†’ `table-cell` vÃ  `[sdColumnResize]` â†’ `[columnResize]` chá»‰ áº£nh hÆ°á»Ÿng ná»™i bá»™ lib, khÃ´ng break consumer
+- **Public API:** không ��"i 100%
+- **Internal rename:** `desktop-cell` �  `table-cell` và `[sdColumnResize]` �  `[columnResize]` ch�0 ảnh hư�xng n�"i b�" lib, không break consumer
 - **Version bump:** `19.0.0-beta.94` (internal refactor only)
-- **CHANGELOG:** ghi rÃµ "Internal: extract table-toolbar + table-empty-state from SdTable template; rename desktop-cell â†’ table-cell; rename SdColumnResizeDirective â†’ ColumnResizeDirective. No public API change."
+- **CHANGELOG:** ghi rõ "Internal: extract table-toolbar + table-empty-state from SdTable template; rename desktop-cell �  table-cell; rename SdColumnResizeDirective �  ColumnResizeDirective. No public API change."
 
 ## 10. Testing strategy (sau refactor)
 
 **Per sub-component:**
-- `table-toolbar.spec.ts`: render vá»›i options khÃ¡c nhau (visible flags), click â†’ emit Ä‘Ãºng output
-- `table-empty-state.spec.ts`: render Ä‘Ãºng image/text theo state (loading/filtered/required-filter/empty)
-- `table-cell.spec.ts`: render Ä‘Ãºng theo column.type + cell template
+- `table-toolbar.spec.ts`: render v�:i options khác nhau (visible flags), click �  emit �úng output
+- `table-empty-state.spec.ts`: render �úng image/text theo state (loading/filtered/required-filter/empty)
+- `table-cell.spec.ts`: render �úng theo column.type + cell template
 
-**Note:** Test cho `SdTable` orchestrator (god component) váº«n khÃ³ vÃ¬ giá»¯ nguyÃªn kÃ­ch thÆ°á»›c. Sáº½ lÃ m sau, cÃ³ thá»ƒ qua TestBed + stub providers + ViewChild API.
+**Note:** Test cho `SdTable` orchestrator (god component) vẫn khó vì giữ nguyên kích thư�:c. Sẽ làm sau, có thỒ qua TestBed + stub providers + ViewChild API.
 
 ## 11. Risk mitigation
 
-1. **Má»—i sub-component extract = 1 commit:** build + existing 214 tests pass sau má»—i commit
-2. **Manual smoke test** trÃªn demo app sau khi xong táº¥t cáº£: render table, filter, sort, paginate, select, expand, resize, export, paginator chuyá»ƒn trang
-3. **Template diff trÆ°á»›c/sau** qua git diff Ä‘á»ƒ verify khÃ´ng miss block nÃ o
+1. **M�i sub-component extract = 1 commit:** build + existing 214 tests pass sau m�i commit
+2. **Manual smoke test** trên demo app sau khi xong tất cả: render table, filter, sort, paginate, select, expand, resize, export, paginator chuyỒn trang
+3. **Template diff trư�:c/sau** qua git diff �Ồ verify không miss block nào
 
 ## 12. Out of scope
 
-- TÃ¡ch `<table-header>` / `<table-body>` (bá»‹ cháº·n bá»Ÿi CDK contentChildren â€” Ä‘Ã£ giáº£i thÃ­ch section 2)
+- Tách `<table-header>` / `<table-body>` (b�9 chặn b�xi CDK contentChildren � �ã giải thích section 2)
 - Refactor state management ra service (sau)
-- Test coverage cho services (`ConfigService`, `TableFormatService`, ...) â€” task riÃªng
+- Test coverage cho services (`ConfigService`, `TableFormatService`, ...) � task riêng
 - Rename `SdMaterialFooterDefDirective` / `SdMaterialSubInformationDefDirective` (breaking change)
 

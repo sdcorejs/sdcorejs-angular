@@ -1,4 +1,4 @@
-﻿# `<sd-modal>`
+�# `<sd-modal>`
 
 **Type**: Component
 **Selector**: `sd-modal`
@@ -18,18 +18,18 @@ Centered dialog (or mobile bottom-sheet) with optional title/header/footer slots
 - Mobile-friendly: automatically converts to a bottom-sheet on phone-sized viewports (when `view` is left empty)
 
 ## When NOT to use
-- For full-page workflows â†’ use a routed `<sd-page>` instead
-- For non-blocking inline notifications â†’ use `SdNotifyService` (toasts)
-- For side-panel / drawer style UIs â†’ use `<sd-drawer>` (if available) or a fixed-position panel
-- For tooltip/hover popovers â†’ use `<sd-quick-action>` or Material tooltip
+- For full-page workflows �  use a routed `<sd-page>` instead
+- For non-blocking inline notifications �  use `SdNotifyService` (toasts)
+- For side-panel / drawer style UIs �  use `<sd-drawer>` (if available) or a fixed-position panel
+- For tooltip/hover popovers �  use `<sd-quick-action>` or Material tooltip
 
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `autoId` | `string \| null \| undefined` | `undefined` | E2E test hook. Computed prefix `components-modal-{autoId}`. The close (X) button automatically gets `components-modal-{autoId}-close`. Footer/body buttons live inside `<ng-content>` â€” consumer must set their own `[attr.data-autoId]` on those. |
-| `title` | `string` | `''` | Optional dialog title. When empty, the entire header row is hidden â€” use slots only. |
+| `autoId` | `string \| null \| undefined` | `undefined` | E2E test hook. Computed prefix `components-modal-{autoId}`. The close (X) button automatically gets `components-modal-{autoId}-close`. Footer/body buttons live inside `<ng-content>` � consumer must set their own `[attr.data-autoId]` on those. |
+| `title` | `string` | `''` | Optional dialog title. When empty, the entire header row is hidden � use slots only. |
 | `color` | `Color` | `'primary'` | Reserved for future header tinting. |
-| `width` | `'sx' \| 'sm' \| 'md' \| 'lg' \| string` | `'md'` | Token â†’ `sx`â‰ˆ20vw, `sm`â‰ˆ40vw, `lg`â‰ˆ80vw, `md`â‰ˆ60vw. Any CSS value (e.g. `'600px'`) passes through. On mobile, the raw value is used. |
+| `width` | `'sx' \| 'sm' \| 'md' \| 'lg' \| string` | `'md'` | Token �  `sx`�0�20vw, `sm`�0�40vw, `lg`�0�80vw, `md`�0�60vw. Any CSS value (e.g. `'600px'`) passes through. On mobile, the raw value is used. |
 | `height` | `string` | `'auto'` | CSS height. Reserved (Material dialog auto-sizes by default). |
 | `view` | `'dialog' \| 'bottom-sheet' \| undefined` | `undefined` | `undefined` = auto (dialog on desktop, bottom-sheet on mobile). Force a mode by setting explicitly. |
 | `modalClass` | `string \| string[] \| Record<string, boolean>` | `''` | Extra panel CSS class(es) for the underlying Material dialog/bottom-sheet. |
@@ -37,7 +37,7 @@ Centered dialog (or mobile bottom-sheet) with optional title/header/footer slots
 | `hideClose` | `boolean` | `false` | Hide the top-right `close` icon. Bare attribute = true. |
 | `disableBackdropClose` | `boolean` | `true` | If `true`, clicking the backdrop or pressing ESC does NOT close the modal. Default keeps users from losing form input. Bare attribute = true. |
 
-> **Coerce note**: `lazyLoadContent`, `hideClose`, `disableBackdropClose` use `booleanAttribute` â€” bare attribute presence is treated as `true`.
+> **Coerce note**: `lazyLoadContent`, `hideClose`, `disableBackdropClose` use `booleanAttribute` � bare attribute presence is treated as `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -45,18 +45,18 @@ Centered dialog (or mobile bottom-sheet) with optional title/header/footer slots
 | `sdClosed` | `void` | Fires once after the dialog (or bottom-sheet) finishes closing, regardless of cause (close button, backdrop, ESC, programmatic `close()`). |
 
 ## Public methods
-- `open(): void` â€” opens the modal. No-op if already open.
-- `close(): void` â€” closes the modal (dismisses both dialog and bottom-sheet refs).
+- `open(): void` � opens the modal. No-op if already open.
+- `close(): void` � closes the modal (dismisses both dialog and bottom-sheet refs).
 
 These are typically called via a `#modal` template reference: `<sd-modal #modal> ... </sd-modal>` and `modal.open()`.
 
 ## Content projection (slots)
 | Selector | Where it renders | Notes |
 | --- | --- | --- |
-| (default) | Body â€” scrollable, `max-height: 80vh` | Main content, forms, tables, etc. |
+| (default) | Body � scrollable, `max-height: 80vh` | Main content, forms, tables, etc. |
 | `[sdHeaderLeft]` | Replaces the title cell | Only renders when `title` is non-empty. |
 | `[sdHeaderRight]` / `[sdHeader]` | Right side of header, before close icon | For action buttons in the header. |
-| `[sdFooterLeft]` | Bottom-left of footer | E.g. secondary action ("Táº£i lÃªn"). |
+| `[sdFooterLeft]` | Bottom-left of footer | E.g. secondary action ("Tải lên"). |
 | `[sdFooterRight]` / `[sdFooter]` | Bottom-right of footer | E.g. primary confirm + cancel buttons. |
 
 > The header is only rendered when `title` is truthy. To use header slots without a title, pass `title=" "` (a space).
@@ -73,39 +73,39 @@ These are typically called via a `#modal` template reference: `<sd-modal #modal>
 
 ### 1. Imperative open from a template reference
 ```html
-<sd-button title="Má»Ÿ chi tiáº¿t" type="fill" color="primary" (click)="modal.open()"></sd-button>
+<sd-button title="M�x chi tiết" type="fill" color="primary" (click)="modal.open()"></sd-button>
 
-<sd-modal #modal title="Chi tiáº¿t khÃ¡ch hÃ ng" width="md">
-  <p>ThÃ´ng tin chi tiáº¿t cá»§a khÃ¡ch hÃ ng...</p>
+<sd-modal #modal title="Chi tiết khách hàng" width="md">
+  <p>Thông tin chi tiết của khách hàng...</p>
 
-  <sd-button sdFooterRight title="ÄÃ³ng" (click)="modal.close()"></sd-button>
+  <sd-button sdFooterRight title="Đóng" (click)="modal.close()"></sd-button>
 </sd-modal>
 ```
 
 ### 2. Confirm dialog with header + footer slots
 ```html
-<sd-modal #confirm title="XÃ¡c nháº­n xÃ³a" width="sm" (sdClosed)="onClosed()">
-  <p>Báº¡n cÃ³ cháº¯c muá»‘n xÃ³a khÃ¡ch hÃ ng <strong>{{ name }}</strong>?</p>
+<sd-modal #confirm title="Xác nhận xóa" width="sm" (sdClosed)="onClosed()">
+  <p>Bạn có chắc mu�n xóa khách hàng <strong>{{ name }}</strong>?</p>
 
-  <sd-button sdFooterLeft title="Há»§y" type="outline" (click)="confirm.close()"></sd-button>
-  <sd-button sdFooterRight title="XÃ³a" type="fill" color="error" (click)="onConfirmDelete()"></sd-button>
+  <sd-button sdFooterLeft title="Hủy" type="outline" (click)="confirm.close()"></sd-button>
+  <sd-button sdFooterRight title="Xóa" type="fill" color="error" (click)="onConfirmDelete()"></sd-button>
 </sd-modal>
 ```
 
 ### 3. Force bottom-sheet view on all platforms
 ```html
-<sd-modal #sheet title="TÃ¹y chá»n" view="bottom-sheet" width="100%">
+<sd-modal #sheet title="Tùy chọn" view="bottom-sheet" width="100%">
   <ul>
-    <li (click)="onEdit()">Chá»‰nh sá»­a</li>
-    <li (click)="onShare()">Chia sáº»</li>
+    <li (click)="onEdit()">Ch�0nh sửa</li>
+    <li (click)="onShare()">Chia sẻ</li>
   </ul>
 </sd-modal>
 ```
 
 ### 4. Custom header-right action
 ```html
-<sd-modal #m title="Lá»‹ch sá»­ thay Ä‘á»•i" width="lg">
-  <sd-button sdHeaderRight type="link" prefixIcon="refresh" tooltip="Táº£i láº¡i" (click)="reload()"></sd-button>
+<sd-modal #m title="L�9ch sử thay ��"i" width="lg">
+  <sd-button sdHeaderRight type="link" prefixIcon="refresh" tooltip="Tải lại" (click)="reload()"></sd-button>
 
   <sd-history [items]="logs"></sd-history>
 </sd-modal>
@@ -113,23 +113,23 @@ These are typically called via a `#modal` template reference: `<sd-modal #modal>
 
 ## Accessibility
 - Always provide a meaningful `title` (or `[sdHeaderLeft]` slot) so screen readers announce the dialog name
-- `disableBackdropClose` defaults to `true` â€” this prevents accidental data loss for forms; disable only for read-only modals where no input is at risk
-- Add a visible "ÄÃ³ng" / "Cancel" button in the footer so keyboard users can exit without relying on ESC; ESC is suppressed when `disableBackdropClose="true"`
-- Do not place focus-trap-breaking elements (e.g. iframes without `tabindex`) inside the modal body â€” Angular CDK Dialog already manages focus trap automatically
+- `disableBackdropClose` defaults to `true` � this prevents accidental data loss for forms; disable only for read-only modals where no input is at risk
+- Add a visible "Đóng" / "Cancel" button in the footer so keyboard users can exit without relying on ESC; ESC is suppressed when `disableBackdropClose="true"`
+- Do not place focus-trap-breaking elements (e.g. iframes without `tabindex`) inside the modal body � Angular CDK Dialog already manages focus trap automatically
 - Avoid very long un-scrollable content; the body region caps at `max-height: 80vh` and is `overflow-auto`, but headings and landmarks inside should be meaningful
 
 ## Anti-patterns
-- DON'T render `<sd-modal>` only when `*ngIf="open"` â€” keep it permanently in the template and toggle via `open()` / `close()` so animations and refs work
-- DON'T use `[disableBackdropClose]="false"` when the body contains a form â€” users will lose input on accidental backdrop click
-- DON'T nest two `<sd-modal>` for "wizard" flows â€” replace content inside one modal, or use a routed wizard
-- DON'T put long-running async work inside `(sdClosed)` â€” by then the dialog ref is gone; do work BEFORE calling `close()`
-- DON'T omit `title` AND header slots â€” users lose context for what the dialog is
+- DON'T render `<sd-modal>` only when `*ngIf="open"` � keep it permanently in the template and toggle via `open()` / `close()` so animations and refs work
+- DON'T use `[disableBackdropClose]="false"` when the body contains a form � users will lose input on accidental backdrop click
+- DON'T nest two `<sd-modal>` for "wizard" flows � replace content inside one modal, or use a routed wizard
+- DON'T put long-running async work inside `(sdClosed)` � by then the dialog ref is gone; do work BEFORE calling `close()`
+- DON'T omit `title` AND header slots � users lose context for what the dialog is
 
 ## Related
-- `<sd-import-excel>` â€” wraps `<sd-modal>` internally for the upload UI
-- `<sd-button>` â€” typical content of the footer slots
-- `<sd-history>` â€” common modal body for audit logs
-- `SdNotifyService` â€” non-blocking toast/snackbar alternative
+- `<sd-import-excel>` � wraps `<sd-modal>` internally for the upload UI
+- `<sd-button>` � typical content of the footer slots
+- `<sd-history>` � common modal body for audit logs
+- `SdNotifyService` � non-blocking toast/snackbar alternative
 
 ## E2E test attributes
 

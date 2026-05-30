@@ -1,4 +1,4 @@
-﻿# Auth Module
+�# Auth Module
 
 - **Type:** Tree-shakable services + guards (no `@NgModule`, providers via `providedIn: 'root'`)
 - **Import path:** `@sdcorejs/angular/modules/auth`
@@ -12,7 +12,7 @@ Provider-agnostic auth abstraction: app supplies sign-out / change-password acti
 
 - App already owns its auth flow (Keycloak, AuthOM, custom backend) and just wants a uniform `SdAuthService` for the layout/header to call `signout()` / `changePassword()` and read `getAuthInfo()`.
 - Need `SdAuthGuard` / `SdPortalGuard` route guards that an app can wire into `canActivate` / `canActivateChild` without coupling to a specific auth library.
-- Pair with `@sdcorejs/angular/modules/keycloak` or `@sdcorejs/angular/modules/authom` â€” those modules implement the actual sign-in / token logic, while this module gives the app shell a stable surface to consume.
+- Pair with `@sdcorejs/angular/modules/keycloak` or `@sdcorejs/angular/modules/authom` � those modules implement the actual sign-in / token logic, while this module gives the app shell a stable surface to consume.
 
 ## What it provides
 
@@ -54,7 +54,7 @@ If `SD_AUTH_CONFIGURATION` is not provided, `SdAuthService` falls back to a `gue
 
 ## Setup
 
-Standalone (Angular 19) â€” `app.config.ts`:
+Standalone (Angular 19) � `app.config.ts`:
 
 ```ts
 import { ApplicationConfig } from '@angular/core';
@@ -91,24 +91,24 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-NgModule fallback â€” provide the same value in `AppModule.providers`.
+NgModule fallback � provide the same value in `AppModule.providers`.
 
 ## Public API
 
-- **`SdAuthService`** â€” inject anywhere. Read user with `authService.getAuthInfo()` (Signal). Call `authService.signout()` / `authService.changePassword()`. Subscribe to `signout$` / `changePassword$` for cross-component side effects (e.g. clear app state on sign-out).
-- **`SdAuthGuard`** â€” register on protected routes:
+- **`SdAuthService`** � inject anywhere. Read user with `authService.getAuthInfo()` (Signal). Call `authService.signout()` / `authService.changePassword()`. Subscribe to `signout$` / `changePassword$` for cross-component side effects (e.g. clear app state on sign-out).
+- **`SdAuthGuard`** � register on protected routes:
   ```ts
   { path: 'admin', canActivate: [SdAuthGuard], loadChildren: ... }
   ```
-- **`SdPortalGuard`** â€” separate guard slot for portal-level checks (typical use: redirect from portal root after auth, distinct from per-feature `auth`).
+- **`SdPortalGuard`** � separate guard slot for portal-level checks (typical use: redirect from portal root after auth, distinct from per-feature `auth`).
 
 ## Behavior notes
 
-- **No built-in token storage / refresh.** This module is intentionally a thin faÃ§ade â€” the actual sign-in / token lifecycle lives in `keycloak` or `authom` (or an app-owned service).
+- **No built-in token storage / refresh.** This module is intentionally a thin façade � the actual sign-in / token lifecycle lives in `keycloak` or `authom` (or an app-owned service).
 - `getAuthInfo` is always defined: it is `toSignal(authInfo())` if a callback is configured, otherwise `signal(defaultGuestUser)`.
-- `signout()` only fires `signout$` after the configured `action.signout` Promise resolves â€” subscribers get a clean "post-signout" hook.
-- Guards default to `true` when not configured â€” they NEVER block by default. You must wire `guard.auth` / `guard.portal` for them to gate anything.
-- `signout$` and `changePassword$` are exposed as RxJS Observables (not signals) â€” they emit only on action completion, not initial subscription.
+- `signout()` only fires `signout$` after the configured `action.signout` Promise resolves � subscribers get a clean "post-signout" hook.
+- Guards default to `true` when not configured � they NEVER block by default. You must wire `guard.auth` / `guard.portal` for them to gate anything.
+- `signout$` and `changePassword$` are exposed as RxJS Observables (not signals) � they emit only on action completion, not initial subscription.
 
 ## Examples
 
@@ -162,20 +162,20 @@ export const routes: Routes = [
 | File | Specs | Notes |
 |---|---|---|
 | `guards/auth.guard.spec.ts` | 6 | no-config pass-through, no-callback pass-through, delegate true/false/UrlTree |
-| `guards/portal.guard.spec.ts` | 6 | same pattern â€” delegates to `config.guard.portal` |
+| `guards/portal.guard.spec.ts` | 6 | same pattern � delegates to `config.guard.portal` |
 | `services/auth.service.spec.ts` | 14 | constructor defaults, `getAuthInfo` signal, `signout()`, `changePassword()`, observable streams |
 
 ## Anti-patterns
 
-- Do NOT call `keycloak.logout()` directly from a header component â€” go through `SdAuthService.signout()` so `signout$` subscribers also fire.
-- Do NOT implement token-refresh inside `action.signout` â€” that belongs in the underlying provider (keycloak / authom interceptor).
-- Do NOT inject `SdAuthService` inside `SD_AUTH_CONFIGURATION`'s factory â€” circular DI. Inject the underlying provider service instead (e.g. `SdKeycloakService`).
-- Do NOT skip providing `SD_AUTH_CONFIGURATION` if you rely on guards â€” they will silently pass everything through.
+- Do NOT call `keycloak.logout()` directly from a header component � go through `SdAuthService.signout()` so `signout$` subscribers also fire.
+- Do NOT implement token-refresh inside `action.signout` � that belongs in the underlying provider (keycloak / authom interceptor).
+- Do NOT inject `SdAuthService` inside `SD_AUTH_CONFIGURATION`'s factory � circular DI. Inject the underlying provider service instead (e.g. `SdKeycloakService`).
+- Do NOT skip providing `SD_AUTH_CONFIGURATION` if you rely on guards � they will silently pass everything through.
 
 ## Related
 
-- [keycloak module](./sd-keycloak.md) â€” typical `action.signout` / `guard.authInfo` source for Keycloak SSO.
-- [authom module](./sd-authom.md) â€” alternative source backed by AuthOM (Auth0).
-- [permission module](./sd-permission.md) â€” runs on top of auth; uses `getToken` to call your permission API.
-- [layout module](./sd-layout.md) â€” `SdLayoutService` consumes `SdAuthService` indirectly via its own `signout` / `userInfo` config (not auto-wired).
+- [keycloak module](./sd-keycloak.md) � typical `action.signout` / `guard.authInfo` source for Keycloak SSO.
+- [authom module](./sd-authom.md) � alternative source backed by AuthOM (Auth0).
+- [permission module](./sd-permission.md) � runs on top of auth; uses `getToken` to call your permission API.
+- [layout module](./sd-layout.md) � `SdLayoutService` consumes `SdAuthService` indirectly via its own `signout` / `userInfo` config (not auto-wired).
 

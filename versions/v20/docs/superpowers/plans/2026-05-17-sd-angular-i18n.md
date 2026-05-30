@@ -1,10 +1,10 @@
-﻿# sd-angular i18n (VI/EN) Implementation Plan
+�# sd-angular i18n (VI/EN) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add bilingual VI/EN support to `@sdcorejs/angular` via a new `@sdcorejs/angular/i18n` secondary entry point, then migrate all hardcoded VI strings in the library to use i18n keys.
 
-**Architecture:** Custom signal-based `SdI18nService` with two TS-static-imported message maps (`vi.ts`, `en.ts`). Pipe `| sdT` and function `i18n.t(key, params?)` consume the service. Initial language resolves from localStorage â†’ `ISdCoreConfiguration.language` â†’ `'vi'`. Runtime `setLanguage()` persists to localStorage.
+**Architecture:** Custom signal-based `SdI18nService` with two TS-static-imported message maps (`vi.ts`, `en.ts`). Pipe `| sdT` and function `i18n.t(key, params?)` consume the service. Initial language resolves from localStorage �  `ISdCoreConfiguration.language` �  `'vi'`. Runtime `setLanguage()` persists to localStorage.
 
 **Tech Stack:** Angular 19, TypeScript strict, ng-packagr secondary entry points, Jasmine/Karma specs (existing setup).
 
@@ -12,7 +12,7 @@
 
 ---
 
-## Phase 1 â€” i18n infrastructure (TDD)
+## Phase 1 � i18n infrastructure (TDD)
 
 ### Task 1: Create secondary entry point skeleton
 
@@ -42,7 +42,7 @@ export * from './src/sd-i18n.service';
 export * from './src/sd-i18n.pipe';
 ```
 
-(Files referenced will exist after Task 2-6. Build will fail until then â€” that's expected.)
+(Files referenced will exist after Task 2-6. Build will fail until then � that's expected.)
 
 - [ ] **Step 3: Create sd-i18n.token.ts**
 
@@ -71,9 +71,9 @@ git commit -m "SM-00: scaffold @sdcorejs/angular/i18n entry point"
 
 ```ts
 export const VI_MESSAGES = {
-  'core.common.cancel': 'Há»§y',
-  'core.common.close': 'ÄÃ³ng',
-  'core.test.greet': 'Xin chÃ o {name}',
+  'core.common.cancel': 'Hủy',
+  'core.common.close': 'Đóng',
+  'core.test.greet': 'Xin chào {name}',
 } as const;
 ```
 
@@ -124,7 +124,7 @@ git commit -m "SM-00: i18n types + vi/en seed messages"
 
 ---
 
-### Task 3: SdI18nService â€” initial language resolution (TDD)
+### Task 3: SdI18nService � initial language resolution (TDD)
 
 **Files:**
 - Create: `projects/sdcorejs-angular/i18n/src/sd-i18n.service.ts`
@@ -138,7 +138,7 @@ import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SD_I18N_STORAGE_KEY } from './sd-i18n.token';
 import { SdI18nService } from './sd-i18n.service';
 
-describe('SdI18nService â€” initial resolution', () => {
+describe('SdI18nService � initial resolution', () => {
   beforeEach(() => localStorage.removeItem(SD_I18N_STORAGE_KEY));
 
   it('uses localStorage when valid', () => {
@@ -171,7 +171,7 @@ describe('SdI18nService â€” initial resolution', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests â€” expect FAIL (service not implemented)**
+- [ ] **Step 2: Run tests � expect FAIL (service not implemented)**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --include="**/sd-i18n.service.spec.ts"
@@ -217,7 +217,7 @@ export class SdI18nService {
 }
 ```
 
-- [ ] **Step 4: Run tests â€” expect PASS**
+- [ ] **Step 4: Run tests � expect PASS**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --include="**/sd-i18n.service.spec.ts"
@@ -232,7 +232,7 @@ git commit -m "SM-00: SdI18nService - initial language resolution"
 
 ---
 
-### Task 4: SdI18nService â€” setLanguage + persist (TDD)
+### Task 4: SdI18nService � setLanguage + persist (TDD)
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/i18n/src/sd-i18n.service.spec.ts`
@@ -240,7 +240,7 @@ git commit -m "SM-00: SdI18nService - initial language resolution"
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-describe('SdI18nService â€” setLanguage', () => {
+describe('SdI18nService � setLanguage', () => {
   beforeEach(() => localStorage.removeItem(SD_I18N_STORAGE_KEY));
 
   it('updates signal', () => {
@@ -259,7 +259,7 @@ describe('SdI18nService â€” setLanguage', () => {
   it('messages signal swaps when language changes', () => {
     TestBed.configureTestingModule({ providers: [] });
     const svc = TestBed.inject(SdI18nService);
-    expect(svc.messages()['core.common.cancel']).toBe('Há»§y');
+    expect(svc.messages()['core.common.cancel']).toBe('Hủy');
     svc.setLanguage('en');
     expect(svc.messages()['core.common.cancel']).toBe('Cancel');
   });
@@ -273,7 +273,7 @@ describe('SdI18nService â€” setLanguage', () => {
 });
 ```
 
-- [ ] **Step 2: Run â€” expect PASS (logic already implemented in Task 3)**
+- [ ] **Step 2: Run � expect PASS (logic already implemented in Task 3)**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --include="**/sd-i18n.service.spec.ts"
@@ -288,7 +288,7 @@ git commit -m "SM-00: SdI18nService - setLanguage + persist tests"
 
 ---
 
-### Task 5: SdI18nService â€” t() with fallback + interpolation (TDD)
+### Task 5: SdI18nService � t() with fallback + interpolation (TDD)
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/i18n/src/sd-i18n.service.ts`
@@ -297,22 +297,22 @@ git commit -m "SM-00: SdI18nService - setLanguage + persist tests"
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-describe('SdI18nService â€” t()', () => {
+describe('SdI18nService � t()', () => {
   beforeEach(() => localStorage.removeItem(SD_I18N_STORAGE_KEY));
 
   it('returns value for existing key', () => {
     TestBed.configureTestingModule({ providers: [] });
-    expect(TestBed.inject(SdI18nService).t('core.common.cancel')).toBe('Há»§y');
+    expect(TestBed.inject(SdI18nService).t('core.common.cancel')).toBe('Hủy');
   });
 
   it('interpolates {name} params', () => {
     TestBed.configureTestingModule({ providers: [] });
-    expect(TestBed.inject(SdI18nService).t('core.test.greet', { name: 'Bob' })).toBe('Xin chÃ o Bob');
+    expect(TestBed.inject(SdI18nService).t('core.test.greet', { name: 'Bob' })).toBe('Xin chào Bob');
   });
 
   it('keeps placeholder when param missing', () => {
     TestBed.configureTestingModule({ providers: [] });
-    expect(TestBed.inject(SdI18nService).t('core.test.greet')).toBe('Xin chÃ o {name}');
+    expect(TestBed.inject(SdI18nService).t('core.test.greet')).toBe('Xin chào {name}');
   });
 
   it('falls back to VI when EN key missing', () => {
@@ -340,7 +340,7 @@ describe('SdI18nService â€” t()', () => {
 });
 ```
 
-- [ ] **Step 2: Run â€” expect FAIL on most**
+- [ ] **Step 2: Run � expect FAIL on most**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --include="**/sd-i18n.service.spec.ts"
@@ -377,7 +377,7 @@ t(key: string, params?: SdI18nParams): string {
 }
 ```
 
-- [ ] **Step 4: Run â€” expect PASS**
+- [ ] **Step 4: Run � expect PASS**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --include="**/sd-i18n.service.spec.ts"
@@ -419,7 +419,7 @@ describe('SdTPipe', () => {
   it('renders translation', () => {
     const fix = TestBed.createComponent(Host);
     fix.detectChanges();
-    expect(fix.nativeElement.textContent.trim()).toBe('Há»§y');
+    expect(fix.nativeElement.textContent.trim()).toBe('Hủy');
   });
 
   it('re-renders after setLanguage', () => {
@@ -435,12 +435,12 @@ describe('SdTPipe', () => {
     fix.componentInstance.key.set('core.test.greet');
     fix.componentInstance.params.set({ name: 'Ada' });
     fix.detectChanges();
-    expect(fix.nativeElement.textContent.trim()).toBe('Xin chÃ o Ada');
+    expect(fix.nativeElement.textContent.trim()).toBe('Xin chào Ada');
   });
 });
 ```
 
-- [ ] **Step 2: Run â€” expect FAIL (no SdTPipe)**
+- [ ] **Step 2: Run � expect FAIL (no SdTPipe)**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --include="**/sd-i18n.pipe.spec.ts"
@@ -462,7 +462,7 @@ export class SdTPipe implements PipeTransform {
 }
 ```
 
-- [ ] **Step 4: Run â€” expect PASS**
+- [ ] **Step 4: Run � expect PASS**
 
 - [ ] **Step 5: Commit**
 
@@ -486,9 +486,9 @@ Edit `projects/sdcorejs-angular/configurations/src/sd-core.configuration.ts` fro
 import { InjectionToken } from "@angular/core";
 
 export interface ISdCoreConfiguration {
-  // License Key Ä‘Æ°á»£c cáº¥p theo domain/sub domain, vÃ­ dá»¥: domain.com, sub.domain.com
-  // Domain localhost, 127.0.0.1 khÃ´ng cáº§n key
-  // CÃ¡c domain DEV/QC/UAT/PROD ... cáº§n key tÆ°Æ¡ng á»©ng cho tá»«ng domain
+  // License Key �ược cấp theo domain/sub domain, ví dụ: domain.com, sub.domain.com
+  // Domain localhost, 127.0.0.1 không cần key
+  // Các domain DEV/QC/UAT/PROD ... cần key tương ứng cho từng domain
   licenseKey?: string | string[]; 
   format?: {
     number?: '1,234,567.89' | '1.234.567,89'; // Default: '1,234,567.89'
@@ -505,14 +505,14 @@ import { InjectionToken } from "@angular/core";
 import type { SdLanguage } from "@sdcorejs/angular/i18n";
 
 export interface ISdCoreConfiguration {
-  // License Key Ä‘Æ°á»£c cáº¥p theo domain/sub domain, vÃ­ dá»¥: domain.com, sub.domain.com
-  // Domain localhost, 127.0.0.1 khÃ´ng cáº§n key
-  // CÃ¡c domain DEV/QC/UAT/PROD ... cáº§n key tÆ°Æ¡ng á»©ng cho tá»«ng domain
+  // License Key �ược cấp theo domain/sub domain, ví dụ: domain.com, sub.domain.com
+  // Domain localhost, 127.0.0.1 không cần key
+  // Các domain DEV/QC/UAT/PROD ... cần key tương ứng cho từng domain
   licenseKey?: string | string[];
   format?: {
     number?: '1,234,567.89' | '1.234.567,89'; // Default: '1,234,567.89'
   };
-  // NgÃ´n ngá»¯ máº·c Ä‘á»‹nh cho cÃ¡c message cá»§a Core; cÃ³ thá»ƒ Ä‘Æ°á»£c override bá»Ÿi localStorage
+  // Ngôn ngữ mặc ��9nh cho các message của Core; có thỒ �ược override b�xi localStorage
   // Default: 'vi'
   language?: SdLanguage;
 }
@@ -579,7 +579,7 @@ git commit -m "SM-00: register @sdcorejs/angular/i18n in public-api"
 
 ---
 
-## Phase 2 â€” Tooling guards
+## Phase 2 � Tooling guards
 
 ### Task 9: `check:i18n-parity` script
 
@@ -608,7 +608,7 @@ if (missingInEn.length || extraInEn.length) {
 console.log(`i18n parity OK (${vi.length} keys)`);
 ```
 
-Note: running `.ts` directly needs `tsx` (already common). If `tsx` is not installed, the script can be rewritten as a `.spec.ts` running under Karma â€” but a Node script is fastest for CI. Add `tsx` as devDep if missing.
+Note: running `.ts` directly needs `tsx` (already common). If `tsx` is not installed, the script can be rewritten as a `.spec.ts` running under Karma � but a Node script is fastest for CI. Add `tsx` as devDep if missing.
 
 - [ ] **Step 2: Add devDep + npm script**
 
@@ -622,7 +622,7 @@ In `package.json` under `"scripts"` add:
 "check:i18n-parity": "tsx scripts/check-i18n-parity.mjs"
 ```
 
-- [ ] **Step 3: Run â€” expect PASS (3 seed keys match)**
+- [ ] **Step 3: Run � expect PASS (3 seed keys match)**
 
 ```bash
 npm run check:i18n-parity
@@ -651,7 +651,7 @@ import { readdirSync, readFileSync, statSync } from 'fs';
 import { join, relative } from 'path';
 
 const ROOT = 'projects/sdcorejs-angular';
-const VI_REGEX = /[Ã€Ãáº¢Ãƒáº áº°áº®áº²áº´áº¶Ã‚áº¦áº¤áº¨áºªáº¬Ä‚ÃˆÃ‰áººáº¼áº¸á»€áº¾á»‚á»„á»†ÃŠÃŒÃá»ˆÄ¨á»ŠÃ’Ã“á»ŽÃ•á»Œá»’á»á»”á»–á»˜Ã”á»œá»šá»žá» á»¢Æ Ã™Ãšá»¦Å¨á»¤á»ªá»¨á»¬á»®á»°Æ¯á»²Ãá»¶á»¸á»´ÄÃ Ã¡áº£Ã£áº¡áº±áº¯áº³áºµáº·Ã¢áº§áº¥áº©áº«áº­ÄƒÃ¨Ã©áº»áº½áº¹á»áº¿á»ƒá»…á»‡ÃªÃ¬Ã­á»‰Ä©á»‹Ã²Ã³á»Ãµá»á»“á»‘á»•á»—á»™Ã´á»á»›á»Ÿá»¡á»£Æ¡Ã¹Ãºá»§Å©á»¥á»«á»©á»­á»¯á»±Æ°á»³Ã½á»·á»¹á»µÄ‘]/;
+const VI_REGEX = /[ìÁẢÒẠẰẮẲẴẶ�ẦẤẨẪẬ����0ẺẼẸỬẾ��� �`�RÍ��Ĩ�`���}�"�R�Ố������S�a�~ỠỢƠ�"�aỦŨỤỪỨỬỮỰƯỲÝỶỸỴĐàáảãạằắẳẵặâầấẩẫậĒèéẻẽẹềếỒ�&�!êìí�0ĩ�9òóỏõọ���"��"ôờ�:�xỡợơùúủũụừứửữựưỳýỷỹỵ�]/;
 const WHITELIST = [
   /\/i18n\/src\/vi\.ts$/,
   /\.spec\.ts$/,
@@ -702,7 +702,7 @@ if (errors.length) {
 console.log('check:i18n OK');
 ```
 
-Note: stripping block comments line-by-line is naive â€” multi-line block comments containing VI may slip through; acceptable for guard purposes (false negatives, not false positives).
+Note: stripping block comments line-by-line is naive � multi-line block comments containing VI may slip through; acceptable for guard purposes (false negatives, not false positives).
 
 - [ ] **Step 2: Add npm script**
 
@@ -712,7 +712,7 @@ In `package.json`:
 "check:i18n": "node scripts/check-i18n.mjs"
 ```
 
-- [ ] **Step 3: Run â€” expect FAIL (current code has many VI strings)**
+- [ ] **Step 3: Run � expect FAIL (current code has many VI strings)**
 
 ```bash
 npm run check:i18n
@@ -729,13 +729,13 @@ git commit -m "SM-00: check:i18n hardcode guard (will pass after migration)"
 
 ---
 
-## Phase 3 â€” Migration batches
+## Phase 3 � Migration batches
 
-**Common procedure per batch (reuse for Tasks 11â€“17):**
+**Common procedure per batch (reuse for Tasks 11�17):**
 
 For each file in the batch:
 
-1. Open file. Identify every VI string literal (quoted `'â€¦'` / `"â€¦"` / backtick) AND every text-node/attribute in `.html`.
+1. Open file. Identify every VI string literal (quoted `'⬦'` / `"⬦"` / backtick) AND every text-node/attribute in `.html`.
 2. For each unique string, mint a key `core.<scope>.<descriptor>` per spec convention.
 3. Add entry to `projects/sdcorejs-angular/i18n/src/vi.ts` (VI = the original string).
 4. Add EN translation to `projects/sdcorejs-angular/i18n/src/en.ts` (use natural EN, not machine translation).
@@ -744,32 +744,32 @@ For each file in the batch:
    - TS constants (e.g., `pattern.model.ts` `name`/`errorMessage`): store the **key** as the value; update consumers to `i18n.t(value)`.
    - HTML text node: `{{ 'core.scope.key' | sdT }}`.
    - HTML attribute: `[attr]="'core.scope.key' | sdT"`.
-6. **Do not** translate `console.log` / `console.warn` / `console.error` arguments â€” these are dev logs.
-7. **Do** translate `throw new Error(...)` arguments â€” these can surface to UX.
-8. Update any spec file asserting the previous VI literal â€” assert the key OR `TestBed.inject(SdI18nService).t(...)`.
+6. **Do not** translate `console.log` / `console.warn` / `console.error` arguments � these are dev logs.
+7. **Do** translate `throw new Error(...)` arguments � these can surface to UX.
+8. Update any spec file asserting the previous VI literal � assert the key OR `TestBed.inject(SdI18nService).t(...)`.
 
 After batch:
-- Run `npm run check:i18n-parity` â†’ must PASS.
-- Run `npx ng test sdcorejs-angular --watch=false` â†’ must PASS.
-- Run `npm run check:i18n` â†’ FAIL count must drop monotonically; record the new count in commit message.
+- Run `npm run check:i18n-parity` �  must PASS.
+- Run `npx ng test sdcorejs-angular --watch=false` �  must PASS.
+- Run `npm run check:i18n` �  FAIL count must drop monotonically; record the new count in commit message.
 - Commit: `git commit -m "SM-00: i18n migration batch N - <area>"`.
 
 ---
 
-### Task 11: Batch 1 â€” utilities + handlers (5 files)
+### Task 11: Batch 1 � utilities + handlers (5 files)
 
-**Files to migrate** (run `grep -lE "'[^']*[Ã€-á»¹][^']*'" projects/sdcorejs-angular/{utilities,handlers} --include="*.ts" -r | grep -v spec.ts` to confirm before starting):
+**Files to migrate** (run `grep -lE "'[^']*[ì-ỹ][^']*'" projects/sdcorejs-angular/{utilities,handlers} --include="*.ts" -r | grep -v spec.ts` to confirm before starting):
 
 - `projects/sdcorejs-angular/utilities/models/src/pattern.model.ts`
-- `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts` (verify â€” may only have VI in comments)
+- `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts` (verify � may only have VI in comments)
 - `projects/sdcorejs-angular/utilities/models/src/pattern.model.spec.ts` (test update only)
 - `projects/sdcorejs-angular/handlers/global-error.handler.ts`
 
-- [ ] **Step 1: For `pattern.model.ts` â€” convert `name` + `errorMessage` fields to i18n keys**
+- [ ] **Step 1: For `pattern.model.ts` � convert `name` + `errorMessage` fields to i18n keys**
 
 Before:
 ```ts
-{ name: 'Email', errorMessage: 'Email khÃ´ng há»£p lá»‡', ... }
+{ name: 'Email', errorMessage: 'Email không hợp l�!', ... }
 ```
 
 After:
@@ -780,19 +780,19 @@ After:
 Add to `vi.ts`:
 ```ts
 'core.validator.email.name': 'Email',
-'core.validator.email.error': 'Email khÃ´ng há»£p lá»‡',
-'core.validator.phone.name': 'SÄT',
-'core.validator.phone.error': 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡',
-'core.validator.phone-vn.name': 'SÄT VN',
-'core.validator.phone-vn.error': 'Sá»‘ Ä‘iá»‡n thoáº¡i khÃ´ng há»£p lá»‡',
+'core.validator.email.error': 'Email không hợp l�!',
+'core.validator.phone.name': 'SĐT',
+'core.validator.phone.error': 'S� �i�!n thoại không hợp l�!',
+'core.validator.phone-vn.name': 'SĐT VN',
+'core.validator.phone-vn.error': 'S� �i�!n thoại không hợp l�!',
 'core.validator.cccd.name': 'CCCD',
-'core.validator.cccd.error': 'CCCD khÃ´ng há»£p lá»‡ (12 chá»¯ sá»‘)',
-'core.validator.passport.name': 'Há»™ chiáº¿u',
-'core.validator.passport.error': 'Há»™ chiáº¿u khÃ´ng há»£p lá»‡ (1 chá»¯ cÃ¡i + 7 chá»¯ sá»‘)',
-'core.validator.id-vn.name': 'CCCD/Há»™ chiáº¿u',
-'core.validator.id-vn.error': 'CCCD/CMND hoáº·c Há»™ chiáº¿u khÃ´ng há»£p lá»‡',
-'core.validator.time.name': 'Giá»',
-'core.validator.time.error': 'Giá» khÃ´ng há»£p lá»‡ (Ä‘á»‹nh dáº¡ng HH:mm)',
+'core.validator.cccd.error': 'CCCD không hợp l�! (12 chữ s�)',
+'core.validator.passport.name': 'H�" chiếu',
+'core.validator.passport.error': 'H�" chiếu không hợp l�! (1 chữ cái + 7 chữ s�)',
+'core.validator.id-vn.name': 'CCCD/H�" chiếu',
+'core.validator.id-vn.error': 'CCCD/CMND hoặc H�" chiếu không hợp l�!',
+'core.validator.time.name': 'Giờ',
+'core.validator.time.error': 'Giờ không hợp l�! (��9nh dạng HH:mm)',
 ```
 
 Add parity to `en.ts` (natural EN):
@@ -826,8 +826,8 @@ For each consumer that currently displays `pattern.name` or `pattern.errorMessag
 
 Before:
 ```ts
-expect(pattern?.name).toBe('SÄT');
-expect(pattern?.errorMessage).toContain('12 chá»¯ sá»‘');
+expect(pattern?.name).toBe('SĐT');
+expect(pattern?.errorMessage).toContain('12 chữ s�');
 ```
 
 After:
@@ -836,7 +836,7 @@ expect(pattern?.name).toBe('core.validator.phone.name');
 expect(pattern?.errorMessage).toBe('core.validator.cccd.error');
 ```
 
-- [ ] **Step 4: For `global-error.handler.ts` â€” migrate any user-facing strings**
+- [ ] **Step 4: For `global-error.handler.ts` � migrate any user-facing strings**
 
 Read the file, identify VI strings used in toast / snackbar / dialog calls. Replace with `i18n.t(...)`. Inject service with `readonly #i18n = inject(SdI18nService);`.
 
@@ -857,7 +857,7 @@ git commit -m "SM-00: i18n migration batch 1 - utilities + handlers"
 
 ---
 
-### Task 12: Batch 2 â€” interceptors (1 file)
+### Task 12: Batch 2 � interceptors (1 file)
 
 **Files:**
 - `projects/sdcorejs-angular/interceptors/no-internet/no-internet.interceptor.ts`
@@ -866,16 +866,16 @@ git commit -m "SM-00: i18n migration batch 1 - utilities + handlers"
 - [ ] **Step 1: Migrate `no-internet.interceptor.ts`**
 
 Strings to extract (from line refs in source):
-- `'KhÃ´ng cÃ³ káº¿t ná»‘i máº¡ng. Äang chá» káº¿t ná»‘i...'` â†’ `core.interceptor.no-internet.offline`
-- `'KhÃ´ng thá»ƒ káº¿t ná»‘i Ä‘áº¿n mÃ¡y chá»§ (Lá»—i CORS hoáº·c cáº¥u hÃ¬nh).'` â†’ `core.interceptor.no-internet.cors-error`
-- `'ÄÃ³ng'` â†’ `core.common.close`
-- `'MÃ¡y chá»§ Ä‘ang báº£o trÃ¬. Vui lÃ²ng thá»­ láº¡i sau!'` â†’ `core.interceptor.maintenance`
-- `'Táº£i láº¡i trang'` â†’ `core.common.reload`
-- `'Káº¿t ná»‘i Ä‘Ã£ Ä‘Æ°á»£c khÃ´i phá»¥c!'` â†’ `core.interceptor.no-internet.restored`
+- `'Không có kết n�i mạng. Đang chờ kết n�i...'` �  `core.interceptor.no-internet.offline`
+- `'Không thỒ kết n�i �ến máy chủ (L�i CORS hoặc cấu hình).'` �  `core.interceptor.no-internet.cors-error`
+- `'Đóng'` �  `core.common.close`
+- `'Máy chủ �ang bảo trì. Vui lòng thử lại sau!'` �  `core.interceptor.maintenance`
+- `'Tải lại trang'` �  `core.common.reload`
+- `'Kết n�i �ã �ược khôi phục!'` �  `core.interceptor.no-internet.restored`
 
-Leave `console.log('--- Báº¯t Ä‘áº§u cháº¿ Ä‘á»™ theo dÃµi máº¡ng ---')` and similar `console.*` unchanged.
+Leave `console.log('--- Bắt �ầu chế ��" theo dõi mạng ---')` and similar `console.*` unchanged.
 
-Inject `SdI18nService`, replace string literals with `this.#i18n.t('core.â€¦')`. Add VI keys to `vi.ts`, EN parity to `en.ts`.
+Inject `SdI18nService`, replace string literals with `this.#i18n.t('core.⬦')`. Add VI keys to `vi.ts`, EN parity to `en.ts`.
 
 - [ ] **Step 2: Migrate `unauthorized.interceptor.ts`** following same procedure.
 
@@ -889,7 +889,7 @@ git commit -m "SM-00: i18n migration batch 2 - interceptors"
 
 ---
 
-### Task 13: Batch 3 â€” services + directives (4 files)
+### Task 13: Batch 3 � services + directives (4 files)
 
 **Files (verify each):**
 - `projects/sdcorejs-angular/services/excel/src/lib/excel.service.ts`
@@ -903,7 +903,7 @@ Note: auth services live under `modules/` but spec groups them as services. Trea
 - [ ] **Step 1: Migrate each file using common procedure**
 
 Known strings:
-- `excel.service.ts`: `'KhÃ´ng Ä‘á»c Ä‘Æ°á»£c ná»™i dung file'` â†’ `core.excel.cannot-read-file`; `'File Excel khÃ´ng cÃ³ sheet dá»¯ liá»‡u'` â†’ `core.excel.no-sheet`.
+- `excel.service.ts`: `'Không �ọc �ược n�"i dung file'` �  `core.excel.cannot-read-file`; `'File Excel không có sheet dữ li�!u'` �  `core.excel.no-sheet`.
 - For tooltip/scroll directives: identify any displayed strings and migrate.
 
 - [ ] **Step 2: Run checks + commit**
@@ -916,12 +916,12 @@ git commit -m "SM-00: i18n migration batch 3 - services + directives"
 
 ---
 
-### Task 14: Batch 4a â€” forms (11 files)
+### Task 14: Batch 4a � forms (11 files)
 
 **Files:** All `.ts` files under `projects/sdcorejs-angular/forms/` containing VI string literals. Confirm list with:
 
 ```bash
-grep -lE "'[^']*[Ã€-á»¹][^']*'|\"[^\"]*[Ã€-á»¹][^\"]*\"" projects/sdcorejs-angular/forms --include="*.ts" -r | grep -v ".spec.ts"
+grep -lE "'[^']*[ì-ỹ][^']*'|\"[^\"]*[ì-ỹ][^\"]*\"" projects/sdcorejs-angular/forms --include="*.ts" -r | grep -v ".spec.ts"
 ```
 
 - [ ] **Step 1: Migrate each file using common procedure**
@@ -938,12 +938,12 @@ git commit -m "SM-00: i18n migration batch 4a - forms"
 
 ---
 
-### Task 15: Batch 4b â€” components TS (33 files)
+### Task 15: Batch 4b � components TS (33 files)
 
 **Files:** All `.ts` files under `projects/sdcorejs-angular/components/` containing VI string literals (excluding specs). Run inventory:
 
 ```bash
-grep -lE "'[^']*[Ã€-á»¹][^']*'|\"[^\"]*[Ã€-á»¹][^\"]*\"" projects/sdcorejs-angular/components --include="*.ts" -r | grep -v ".spec.ts" > /tmp/batch4b.txt
+grep -lE "'[^']*[ì-ỹ][^']*'|\"[^\"]*[ì-ỹ][^\"]*\"" projects/sdcorejs-angular/components --include="*.ts" -r | grep -v ".spec.ts" > /tmp/batch4b.txt
 cat /tmp/batch4b.txt
 ```
 
@@ -967,12 +967,12 @@ git commit -m "SM-00: i18n migration batch 4b - components TS"
 
 ---
 
-### Task 16: Batch 4c â€” components HTML (71 files)
+### Task 16: Batch 4c � components HTML (71 files)
 
 **Files:** All `.html` files under `projects/sdcorejs-angular/components/`. Run inventory:
 
 ```bash
-grep -lE "[Ã€-á»¹]" projects/sdcorejs-angular/components --include="*.html" -r > /tmp/batch4c.txt
+grep -lE "[ì-ỹ]" projects/sdcorejs-angular/components --include="*.html" -r > /tmp/batch4c.txt
 cat /tmp/batch4c.txt
 ```
 
@@ -996,13 +996,13 @@ git commit -m "SM-00: i18n migration batch 4c - components HTML"
 
 ---
 
-### Task 17: Batch 5 â€” modules TS + HTML (16 files)
+### Task 17: Batch 5 � modules TS + HTML (16 files)
 
 **Files:** All `.ts` and `.html` under `projects/sdcorejs-angular/modules/` (excluding `auth/`, `authom/` already done in Task 13) containing VI:
 
 ```bash
-grep -lE "'[^']*[Ã€-á»¹][^']*'|\"[^\"]*[Ã€-á»¹][^\"]*\"" projects/sdcorejs-angular/modules --include="*.ts" -r | grep -v ".spec.ts" | grep -vE "/(auth|authom)/"
-grep -lE "[Ã€-á»¹]" projects/sdcorejs-angular/modules --include="*.html" -r
+grep -lE "'[^']*[ì-ỹ][^']*'|\"[^\"]*[ì-ỹ][^\"]*\"" projects/sdcorejs-angular/modules --include="*.ts" -r | grep -v ".spec.ts" | grep -vE "/(auth|authom)/"
+grep -lE "[ì-ỹ]" projects/sdcorejs-angular/modules --include="*.html" -r
 ```
 
 Known critical files:
@@ -1023,7 +1023,7 @@ git commit -m "SM-00: i18n migration batch 5 - modules"
 
 ---
 
-## Phase 4 â€” Final verification
+## Phase 4 � Final verification
 
 ### Task 18: Final sweep & acceptance
 
@@ -1033,7 +1033,7 @@ git commit -m "SM-00: i18n migration batch 5 - modules"
 npm run check:i18n
 ```
 
-Expected: `check:i18n OK`. If any remain, inspect â€” likely false positives in block comments (acceptable, add whitelist) OR genuine misses (migrate).
+Expected: `check:i18n OK`. If any remain, inspect � likely false positives in block comments (acceptable, add whitelist) OR genuine misses (migrate).
 
 - [ ] **Step 2: Run full test suite**
 
@@ -1054,10 +1054,10 @@ Expected: PASS, no warnings about missing entry point.
 - [ ] **Step 4: Manual smoke (consumer side)**
 
 In a consumer portal app (`src/app.config.ts`):
-1. Set `SD_CORE_CONFIGURATION = { language: 'vi' }` â†’ reload â†’ UI VI.
-2. Call `inject(SdI18nService).setLanguage('en')` from a button â†’ UI flips to EN instantly.
-3. Reload tab â†’ still EN (localStorage).
-4. Clear localStorage â†’ reload â†’ falls back to config (`vi`).
+1. Set `SD_CORE_CONFIGURATION = { language: 'vi' }` �  reload �  UI VI.
+2. Call `inject(SdI18nService).setLanguage('en')` from a button �  UI flips to EN instantly.
+3. Reload tab �  still EN (localStorage).
+4. Clear localStorage �  reload �  falls back to config (`vi`).
 
 - [ ] **Step 5: Build-size sanity check**
 
@@ -1079,16 +1079,16 @@ git commit -m "SM-00: i18n migration - final sweep"
 ## Risks recap (from spec)
 
 - **Pipe `pure: false`** invalidates per CD cycle. If table cells / list items render slowly, add per-key memoization inside `SdI18nService.t()` keyed on `(language, key, JSON.stringify(params))`.
-- **`pattern.errorMessage` consumers** outside the library (in dependent portals) may still expect raw VI. Those repos must update concurrently â€” flag in PR description.
-- **EN translation quality** â€” native-English review pending; round-1 translations accepted.
-- **localStorage flakiness in tests** â€” every spec must `localStorage.removeItem(SD_I18N_STORAGE_KEY)` in `beforeEach`.
+- **`pattern.errorMessage` consumers** outside the library (in dependent portals) may still expect raw VI. Those repos must update concurrently � flag in PR description.
+- **EN translation quality** � native-English review pending; round-1 translations accepted.
+- **localStorage flakiness in tests** � every spec must `localStorage.removeItem(SD_I18N_STORAGE_KEY)` in `beforeEach`.
 
 ---
 
 ## Self-review
 
-- âœ… Spec coverage: language config (Task 7), localStorage (Task 3-5), pipe (Task 6), parity script (Task 9), guard script (Task 10), pattern.model migration (Task 11), HTML batch (Task 16), exception messages (covered in common procedure), console.log left alone (common procedure), spec test updates (Task 11 + procedure note).
-- âœ… No `TBD` / `TODO` placeholders.
-- âœ… Type consistency: `SdI18nService`, `SdTPipe`, `SdLanguage`, `SdI18nParams`, `SD_I18N_STORAGE_KEY`, `SD_SUPPORTED_LANGUAGES`, `VI_MESSAGES`, `EN_MESSAGES`, `SD_MESSAGES` consistent across tasks.
-- âœ… Each task ends with commit step; commit messages follow repo's `SM-00:` convention from recent history.
+- �S& Spec coverage: language config (Task 7), localStorage (Task 3-5), pipe (Task 6), parity script (Task 9), guard script (Task 10), pattern.model migration (Task 11), HTML batch (Task 16), exception messages (covered in common procedure), console.log left alone (common procedure), spec test updates (Task 11 + procedure note).
+- �S& No `TBD` / `TODO` placeholders.
+- �S& Type consistency: `SdI18nService`, `SdTPipe`, `SdLanguage`, `SdI18nParams`, `SD_I18N_STORAGE_KEY`, `SD_SUPPORTED_LANGUAGES`, `VI_MESSAGES`, `EN_MESSAGES`, `SD_MESSAGES` consistent across tasks.
+- �S& Each task ends with commit step; commit messages follow repo's `SM-00:` convention from recent history.
 

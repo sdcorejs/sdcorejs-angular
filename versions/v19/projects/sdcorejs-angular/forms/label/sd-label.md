@@ -1,6 +1,6 @@
-﻿# `<sd-label>`
+�# `<sd-label>`
 
-**Type**: Component (presentational â€” NOT a form control)
+**Type**: Component (presentational � NOT a form control)
 **Selector**: `sd-label`
 **Import path**: `@sdcorejs/angular/forms/label` (or barrel: `@sdcorejs/angular/forms`)
 **Class**: `SdLabel`
@@ -8,7 +8,7 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Tiny presentational label primitive â€” renders the standard SDCoreJS field label row: `<text> [info-icon-with-tooltip] [*]` plus an optional description. Used internally by every `<sd-input>` / `<sd-select>` / `<sd-autocomplete>` / `<sd-date>` / etc. â€” and exposed for places where you need the same label styling without a form field.
+Tiny presentational label primitive � renders the standard SDCoreJS field label row: `<text> [info-icon-with-tooltip] [*]` plus an optional description. Used internally by every `<sd-input>` / `<sd-select>` / `<sd-autocomplete>` / `<sd-date>` / etc. � and exposed for places where you need the same label styling without a form field.
 
 ## When to use
 - Custom layouts where you need the canonical SDCoreJS label styling (font size T14M, required asterisk, helper-text info icon) but no input control follows it
@@ -16,10 +16,10 @@ Tiny presentational label primitive â€” renders the standard SDCoreJS field
 - Inside a form-field replacement where you want to keep label-area markup consistent with other form controls
 
 ## When NOT to use
-- As a form control â€” `<sd-label>` does NOT take input from the user, has no `[form]`/`[name]`/`[(model)]`, and registers nothing on a parent FormGroup
-- For section headings â€” use a normal heading element with the appropriate typography class
-- For inline form fields that already render their own label â€” passing `[label]` to `<sd-input>` etc. is enough; do not stack a separate `<sd-label>`
-- For tooltips that aren't tied to a label â€” use Material `matTooltip` directly
+- As a form control � `<sd-label>` does NOT take input from the user, has no `[form]`/`[name]`/`[(model)]`, and registers nothing on a parent FormGroup
+- For section headings � use a normal heading element with the appropriate typography class
+- For inline form fields that already render their own label � passing `[label]` to `<sd-input>` etc. is enough; do not stack a separate `<sd-label>`
+- For tooltips that aren't tied to a label � use Material `matTooltip` directly
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -29,32 +29,32 @@ Tiny presentational label primitive â€” renders the standard SDCoreJS field
 | `helperText` | `string \| undefined` | `undefined` | When set, renders an `info_outline` icon next to the label; tooltip on hover shows this text. |
 | `required` | `boolean \| ''` | `false` | Renders a red `*` after the label. Bare attribute (`required`) and string `''` both coerce to `true`. |
 
-> **Coerce**: `required` is treated as `true` for empty-string or any truthy value (custom setter â€” NOT `booleanAttribute`).
+> **Coerce**: `required` is treated as `true` for empty-string or any truthy value (custom setter � NOT `booleanAttribute`).
 
 ## Outputs
 None.
 
 ## Content projection (slots)
-None â€” all rendering is driven by the four inputs.
+None � all rendering is driven by the four inputs.
 
 ## Form integration
 - **Not a form control. No CVA, no `[form]+[name]` pattern, no model.** Pure presentation.
-- Internally consumed by `<sd-input>`, `<sd-input-number>`, `<sd-select>`, `<sd-autocomplete>`, `<sd-chip>`, `<sd-checkbox>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-textarea>` â€” those components forward their `[label]`, `[helperText]`, `[required]` props to an internal `<sd-label>`.
+- Internally consumed by `<sd-input>`, `<sd-input-number>`, `<sd-select>`, `<sd-autocomplete>`, `<sd-chip>`, `<sd-checkbox>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-textarea>` � those components forward their `[label]`, `[helperText]`, `[required]` props to an internal `<sd-label>`.
 - For the rare case you build a hand-rolled "field" outside the standard form components, use this directly so the label area matches everything else on the page.
 
-## Visual cues (helps agent map screenshots â†’ component)
-- Single line: `<bold-ish T14M label text> [info â“˜] *` â€” required asterisk in error/red color (`text-error`)
-- The info icon is small (1rem Ã— 1rem), `info_outline` from Material font set; tooltip appears below on hover
+## Visual cues (helps agent map screenshots �  component)
+- Single line: `<bold-ish T14M label text> [info ��] *` � required asterisk in error/red color (`text-error`)
+- The info icon is small (1rem � 1rem), `info_outline` from Material font set; tooltip appears below on hover
 - If `description` is set, a second line below the label in muted gray small text (`T12R`)
-- Renders nothing at all when `label` is empty â€” safe to use defensively without `*ngIf`
+- Renders nothing at all when `label` is empty � safe to use defensively without `*ngIf`
 
 ## Examples
 
-### 0. Import vÃ o component
+### 0. Import vào component
 
 ```ts
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-// hoáº·c barrel:
+// hoặc barrel:
 // import { SdLabel } from '@sdcorejs/angular/forms';
 
 @Component({
@@ -64,55 +64,55 @@ import { SdLabel } from '@sdcorejs/angular/forms/label';
 })
 export class MyComponent {
   required = true;
-  helperText = 'Giáº£i thÃ­ch thÃªm vá» trÆ°á»ng nÃ y';
+  helperText = 'Giải thích thêm về trường này';
 }
 ```
 
 ### 1. Standalone label above a read-only computed value
 
-`helperText` hiá»ƒn thá»‹ icon â“˜; hover vÃ o sáº½ tháº¥y tooltip phÃ­a dÆ°á»›i.
+`helperText` hiỒn th�9 icon ��; hover vào sẽ thấy tooltip phía dư�:i.
 
 ```html
 <div class="form-field">
   <sd-label
-    label="Sá»‘ dÆ° kháº£ dá»¥ng"
-    helperText="ÄÃ£ trá»« cÃ¡c giao dá»‹ch Ä‘ang chá» duyá»‡t">
+    label="S� dư khả dụng"
+    helperText="Đã trừ các giao d�9ch �ang chờ duy�!t">
   </sd-label>
-  <div class="T16M">{{ availableBalance | sdFormatNumber }} Ä‘</div>
+  <div class="T16M">{{ availableBalance | sdFormatNumber }} �</div>
 </div>
 ```
 
 ### 2. Required + description
 
-`required` cÃ³ thá»ƒ truyá»n dÆ°á»›i dáº¡ng bare attribute (khÃ´ng cáº§n `[required]="true"`). `description` xuáº¥t hiá»‡n á»Ÿ dÃ²ng thá»© hai bÃªn dÆ°á»›i label, dÃ¹ng style muted `T12R`.
+`required` có thỒ truyền dư�:i dạng bare attribute (không cần `[required]="true"`). `description` xuất hi�!n �x dòng thứ hai bên dư�:i label, dùng style muted `T12R`.
 
 ```html
 <sd-label
-  label="MÃ£ khÃ¡ch hÃ ng"
-  description="Tá»± Ä‘á»™ng sinh náº¿u Ä‘á»ƒ trá»‘ng"
+  label="Mã khách hàng"
+  description="Tự ��"ng sinh nếu �Ồ tr�ng"
   required>
 </sd-label>
 ```
 
 ### 3. Inside a custom widget panel
 
-DÃ¹ng `<sd-label>` Ä‘á»ƒ Ä‘á»“ng nháº¥t styling vá»›i cÃ¡c form control khÃ¡c trÃªn cÃ¹ng trang, dÃ¹ khÃ´ng cÃ³ input ngay bÃªn dÆ°á»›i.
+Dùng `<sd-label>` �Ồ ��ng nhất styling v�:i các form control khác trên cùng trang, dù không có input ngay bên dư�:i.
 
 ```html
 <div class="panel">
-  <sd-label label="TÃ i liá»‡u Ä‘Ã­nh kÃ¨m" helperText="Tá»‘i Ä‘a 10 file, má»—i file â‰¤ 10MB"></sd-label>
+  <sd-label label="Tài li�!u �ính kèm" helperText="T�i �a 10 file, m�i file �0� 10MB"></sd-label>
   <app-attachment-uploader [(files)]="files"></app-attachment-uploader>
 </div>
 ```
 
 ## Anti-patterns
-- âŒ Wrapping `<sd-input [label]="...">` inside its own `<sd-label>` â€” duplicate labels.
-- âŒ Trying `[(model)]` / `[form]` / `[name]` â€” none exist on this component.
-- âŒ Using `<sd-label>` as a section heading â€” it is for FIELD labels (T14M); use proper headings with appropriate typography for sections.
-- âŒ Hard-coding the same markup elsewhere â€” use `<sd-label>` so future label-style tweaks apply globally.
-- âŒ Passing translated text via interpolation when you also want a tooltip â€” `helperText` IS the tooltip content; do not also wrap the component in `matTooltip`.
+- �R Wrapping `<sd-input [label]="...">` inside its own `<sd-label>` � duplicate labels.
+- �R Trying `[(model)]` / `[form]` / `[name]` � none exist on this component.
+- �R Using `<sd-label>` as a section heading � it is for FIELD labels (T14M); use proper headings with appropriate typography for sections.
+- �R Hard-coding the same markup elsewhere � use `<sd-label>` so future label-style tweaks apply globally.
+- �R Passing translated text via interpolation when you also want a tooltip � `helperText` IS the tooltip content; do not also wrap the component in `matTooltip`.
 
 ## Related
-- `<sd-input>`, `<sd-input-number>`, `<sd-textarea>`, `<sd-select>`, `<sd-autocomplete>`, `<sd-chip>`, `<sd-checkbox>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>` â€” all use `<sd-label>` internally
-- `SdLabelDefDirective` â€” used by some form components (e.g. `<sd-date-range>`) when you need to project a custom label template
+- `<sd-input>`, `<sd-input-number>`, `<sd-textarea>`, `<sd-select>`, `<sd-autocomplete>`, `<sd-chip>`, `<sd-checkbox>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>` � all use `<sd-label>` internally
+- `SdLabelDefDirective` � used by some form components (e.g. `<sd-date-range>`) when you need to project a custom label template
 

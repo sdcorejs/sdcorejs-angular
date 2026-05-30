@@ -1,4 +1,4 @@
-﻿# sd-angular i18n (VI/EN) design
+�# sd-angular i18n (VI/EN) design
 
 Date: 2026-05-17
 Status: approved (pending implementation plan)
@@ -6,30 +6,30 @@ Target: `@sdcorejs/angular` library (`projects/sdcorejs-angular/`)
 
 ## Goal
 
-Ãp dá»¥ng song ngá»¯ Vietnamese-English cho toÃ n bá»™ `@sdcorejs/angular`. Má»i message/label/title/error trong library hiá»‡n Ä‘ang hardcode tiáº¿ng Viá»‡t sáº½ Ä‘Æ°á»£c gom vÃ o má»™t thÆ° má»¥c i18n, lÆ°u key thay vÃ¬ chuá»—i raw. Consumer (portal) cÃ³ thá»ƒ switch language runtime; lá»±a chá»n Ä‘Æ°á»£c persist vÃ o localStorage.
+Áp dụng song ngữ Vietnamese-English cho toàn b�" `@sdcorejs/angular`. Mọi message/label/title/error trong library hi�!n �ang hardcode tiếng Vi�!t sẽ �ược gom vào m�"t thư mục i18n, lưu key thay vì chu�i raw. Consumer (portal) có thỒ switch language runtime; lựa chọn �ược persist vào localStorage.
 
 ## Non-goals
 
-- KhÃ´ng i18n hÃ³a `console.log` / `console.warn` debug log (khÃ´ng pháº£i UX).
-- KhÃ´ng i18n hÃ³a comment trong code.
-- KhÃ´ng cung cáº¥p UI toggle component sáºµn â€” consumer tá»± dá»±ng.
-- KhÃ´ng há»— trá»£ ngÃ´n ngá»¯ ngoÃ i VI/EN á»Ÿ vÃ²ng nÃ y (cáº¥u trÃºc cho phÃ©p má»Ÿ rá»™ng sau).
-- KhÃ´ng dÃ¹ng third-party library (`ngx-translate`, `@angular/localize`).
-- KhÃ´ng dÃ¹ng HTTP load lazy â€” messages bundle sáºµn trong library qua TS static import.
+- Không i18n hóa `console.log` / `console.warn` debug log (không phải UX).
+- Không i18n hóa comment trong code.
+- Không cung cấp UI toggle component sẵn � consumer tự dựng.
+- Không h� trợ ngôn ngữ ngoài VI/EN �x vòng này (cấu trúc cho phép m�x r�"ng sau).
+- Không dùng third-party library (`ngx-translate`, `@angular/localize`).
+- Không dùng HTTP load lazy � messages bundle sẵn trong library qua TS static import.
 
 ## Architecture
 
 ### Library approach
 
-Custom lightweight i18n service, signal-based. LÃ½ do:
-- Library context: khÃ´ng muá»‘n Ã©p consumer pháº£i cÃ i thÃªm dependency.
-- Sá»‘ lÆ°á»£ng key giá»›i háº¡n (~150-250) â†’ bundle sáºµn khÃ´ng gÃ¢y bloat Ä‘Ã¡ng ká»ƒ.
-- Signal-based â†’ reactive update tá»± Ä‘á»™ng khi `setLanguage()`, khÃ´ng cáº§n observable boilerplate.
-- TS static import â†’ type-safe key qua `keyof typeof VI_MESSAGES`.
+Custom lightweight i18n service, signal-based. Lý do:
+- Library context: không mu�n ép consumer phải cài thêm dependency.
+- S� lượng key gi�:i hạn (~150-250) �  bundle sẵn không gây bloat �áng kỒ.
+- Signal-based �  reactive update tự ��"ng khi `setLanguage()`, không cần observable boilerplate.
+- TS static import �  type-safe key qua `keyof typeof VI_MESSAGES`.
 
 ### New secondary entry point
 
-`projects/sdcorejs-angular/i18n/` â€” sibling cá»§a `configurations/`, `utilities/`, etc.
+`projects/sdcorejs-angular/i18n/` � sibling của `configurations/`, `utilities/`, etc.
 
 ```
 projects/sdcorejs-angular/i18n/
@@ -39,11 +39,11 @@ projects/sdcorejs-angular/i18n/
     sd-i18n.types.ts             # SdLanguage, SdI18nKey, SdI18nParams
     sd-i18n.messages.ts          # re-export VI/EN, derive SdI18nKey
     vi.ts                        # VI_MESSAGES = { 'core.xxx': '...' }
-    en.ts                        # EN_MESSAGES, parity 1-1 vá»›i vi
+    en.ts                        # EN_MESSAGES, parity 1-1 v�:i vi
     sd-i18n.token.ts             # SD_I18N_STORAGE_KEY = 'sd-core.language'
     sd-i18n.service.ts           # SdI18nService (providedIn: 'root')
     sd-i18n.service.spec.ts
-    sd-i18n.pipe.ts              # SdTPipe (pure: false Ä‘á»ƒ track signal)
+    sd-i18n.pipe.ts              # SdTPipe (pure: false �Ồ track signal)
     sd-i18n.pipe.spec.ts
 ```
 
@@ -57,7 +57,7 @@ import { SdLanguage } from '@sdcorejs/angular/i18n';
 export interface ISdCoreConfiguration {
   licenseKey?: string | string[];
   format?: { number?: '1,234,567.89' | '1.234.567,89' };
-  language?: SdLanguage;   // má»›i â€” default 'vi'
+  language?: SdLanguage;   // m�:i � default 'vi'
 }
 ```
 
@@ -87,38 +87,38 @@ export class SdTPipe implements PipeTransform {
 
 ## Service behavior
 
-### Initial language resolution (theo thá»© tá»± Æ°u tiÃªn)
+### Initial language resolution (theo thứ tự ưu tiên)
 
-1. `localStorage.getItem(SD_I18N_STORAGE_KEY)` â€” náº¿u giÃ¡ trá»‹ há»£p lá»‡ trong `SD_SUPPORTED_LANGUAGES` â†’ dÃ¹ng.
-2. `SD_CORE_CONFIGURATION.language` â€” náº¿u cÃ³ â†’ dÃ¹ng.
+1. `localStorage.getItem(SD_I18N_STORAGE_KEY)` � nếu giá tr�9 hợp l�! trong `SD_SUPPORTED_LANGUAGES` �  dùng.
+2. `SD_CORE_CONFIGURATION.language` � nếu có �  dùng.
 3. Fallback `'vi'`.
 
 ### `setLanguage(lang)`
 
-- Update `WritableSignal<SdLanguage>` ná»™i bá»™.
-- Swap `messages` signal sang map tÆ°Æ¡ng á»©ng (`VI_MESSAGES` hoáº·c `EN_MESSAGES`).
+- Update `WritableSignal<SdLanguage>` n�"i b�".
+- Swap `messages` signal sang map tương ứng (`VI_MESSAGES` hoặc `EN_MESSAGES`).
 - `localStorage.setItem(SD_I18N_STORAGE_KEY, lang)`.
-- Pipe `| sdT` reactive theo `messages()` â†’ toÃ n UI re-render tá»± Ä‘á»™ng.
+- Pipe `| sdT` reactive theo `messages()` �  toàn UI re-render tự ��"ng.
 
 ### `t(key, params?)`
 
-1. TÃ¬m `messages()[key]`. CÃ³ â†’ interpolate â†’ tráº£ vá».
-2. Miss â†’ tÃ¬m trong `VI_MESSAGES` (fallback chÃ­nh). CÃ³ â†’ tráº£ + `console.warn` 1 láº§n per key (Set Ä‘á»ƒ dedup).
-3. Váº«n miss â†’ tráº£ vá» chÃ­nh `key` (string), `console.warn('[SdI18n] Missing key: ' + key)`.
+1. Tìm `messages()[key]`. Có �  interpolate �  trả về.
+2. Miss �  tìm trong `VI_MESSAGES` (fallback chính). Có �  trả + `console.warn` 1 lần per key (Set �Ồ dedup).
+3. Vẫn miss �  trả về chính `key` (string), `console.warn('[SdI18n] Missing key: ' + key)`.
 
 ### Interpolation
 
-- CÃº phÃ¡p `{name}` (single curly). LÃ½ do: trÃ¡nh Ä‘á»¥ng vá»›i Angular template `{{ }}`.
-- Regex: `\{(\w+)\}` â†’ thay báº±ng `params[name]`.
-- Param khÃ´ng cÃ³ â†’ giá»¯ nguyÃªn `{name}` raw.
-- VÃ­ dá»¥: `t('core.validator.min-length', { min: 5 })` vá»›i template `'Tá»‘i thiá»ƒu {min} kÃ½ tá»±'` â†’ `'Tá»‘i thiá»ƒu 5 kÃ½ tá»±'`.
+- Cú pháp `{name}` (single curly). Lý do: tránh �ụng v�:i Angular template `{{ }}`.
+- Regex: `\{(\w+)\}` �  thay bằng `params[name]`.
+- Param không có �  giữ nguyên `{name}` raw.
+- Ví dụ: `t('core.validator.min-length', { min: 5 })` v�:i template `'T�i thiỒu {min} ký tự'` �  `'T�i thiỒu 5 ký tự'`.
 
 ## Key naming convention
 
-- Flat namespaced, dot-separated, lowercase, kebab cho segment ná»™i bá»™.
-- Báº¯t buá»™c prefix `core.` (trÃ¡nh Ä‘á»¥ng key cá»§a portal consumer sau nÃ y).
+- Flat namespaced, dot-separated, lowercase, kebab cho segment n�"i b�".
+- Bắt bu�"c prefix `core.` (tránh �ụng key của portal consumer sau này).
 - Pattern: `core.<scope>.<descriptor>[.<sub>]`.
-- VÃ­ dá»¥:
+- Ví dụ:
   - `core.common.cancel`, `core.common.close`, `core.common.search`
   - `core.validator.email.error`, `core.validator.phone-vn.name`
   - `core.interceptor.no-internet.offline`, `core.interceptor.no-internet.cors-error`
@@ -145,19 +145,19 @@ this.snackBar.open(this.i18n.t('core.interceptor.no-internet.offline'),
                    this.i18n.t('core.common.close'));
 ```
 
-### TypeScript (constant array â€” `pattern.model.ts` pattern)
+### TypeScript (constant array � `pattern.model.ts` pattern)
 
-`pattern.model.ts` Ä‘ang lÆ°u `name`, `errorMessage` lÃ  chuá»—i VI hardcode. Äá»•i thÃ nh i18n key:
+`pattern.model.ts` �ang lưu `name`, `errorMessage` là chu�i VI hardcode. Đ�"i thành i18n key:
 
 ```ts
-// trÆ°á»›c
-{ name: 'Email', errorMessage: 'Email khÃ´ng há»£p lá»‡', ... }
+// trư�:c
+{ name: 'Email', errorMessage: 'Email không hợp l�!', ... }
 
 // sau
 { name: 'core.validator.email.name', errorMessage: 'core.validator.email.error', ... }
 ```
 
-Consumer cá»§a `name` / `errorMessage` (form-generic, validators) pháº£i `i18n.t(pattern.errorMessage)` khi render. TÃ¬m táº¥t cáº£ consumer khi migrate batch 1.
+Consumer của `name` / `errorMessage` (form-generic, validators) phải `i18n.t(pattern.errorMessage)` khi render. Tìm tất cả consumer khi migrate batch 1.
 
 ### Consumer language toggle
 
@@ -169,93 +169,93 @@ toggle() {
 
 ## Migration strategy
 
-193 file `.ts` + 3 file `.html` chá»©a VI hardcode. Chia 5 batch Ä‘á»ƒ control diff size:
+193 file `.ts` + 3 file `.html` chứa VI hardcode. Chia 5 batch �Ồ control diff size:
 
-1. **utilities + handlers** â€” `pattern.model.ts`, `global-error.handler.ts`, validators. BÆ°á»›c nÃ y phÃ¡t hiá»‡n consumer cá»§a `pattern.errorMessage` Ä‘á»ƒ migrate Ä‘á»“ng bá»™.
-2. **interceptors** â€” `no-internet`, `unauthorized`.
-3. **services** â€” `excel.service.ts`, `auth.service.ts`, `authom.service.ts`, `storage.service`...
-4. **directives + pipes** â€” `sd-tooltip.directive`, `sd-scroll.directive`...
-5. **components + modules + HTML templates** â€” `section.component.html`, `layout/forbidden`, `layout/not-found`, `form-generic`, `splitter`...
+1. **utilities + handlers** � `pattern.model.ts`, `global-error.handler.ts`, validators. Bư�:c này phát hi�!n consumer của `pattern.errorMessage` �Ồ migrate ��ng b�".
+2. **interceptors** � `no-internet`, `unauthorized`.
+3. **services** � `excel.service.ts`, `auth.service.ts`, `authom.service.ts`, `storage.service`...
+4. **directives + pipes** � `sd-tooltip.directive`, `sd-scroll.directive`...
+5. **components + modules + HTML templates** � `section.component.html`, `layout/forbidden`, `layout/not-found`, `form-generic`, `splitter`...
 
-Má»—i batch:
-- Liá»‡t kÃª chuá»—i VI cáº§n migrate.
-- ThÃªm key vÃ o `vi.ts` + `en.ts` (translate luÃ´n EN).
-- Replace chuá»—i raw báº±ng `i18n.t(key)` hoáº·c `| sdT`.
-- Cáº­p nháº­t spec test tÆ°Æ¡ng á»©ng.
+M�i batch:
+- Li�!t kê chu�i VI cần migrate.
+- Thêm key vào `vi.ts` + `en.ts` (translate luôn EN).
+- Replace chu�i raw bằng `i18n.t(key)` hoặc `| sdT`.
+- Cập nhật spec test tương ứng.
 - Run `npm run check:i18n` + `npm run check:i18n-parity`.
 
 ### Replacement patterns
 
-| TrÆ°á»ng há»£p | TrÆ°á»›c | Sau |
+| Trường hợp | Trư�:c | Sau |
 | --- | --- | --- |
-| TS eager string | `'KhÃ´ng Ä‘á»c Ä‘Æ°á»£c file'` | `this.#i18n.t('core.excel.cannot-read-file')` |
-| TS constant value | `errorMessage: 'Email khÃ´ng há»£p lá»‡'` | `errorMessage: 'core.validator.email.error'` (+ resolve site consumer) |
-| HTML text node | `<div>KhÃ´ng cÃ³ quyá»n truy cáº­p</div>` | `<div>{{ 'core.layout.forbidden.title' \| sdT }}</div>` |
-| HTML attribute | `placeholder="TÃ¬m kiáº¿m"` | `[placeholder]="'core.common.search' \| sdT"` |
-| `throw new Error('...')` | `throw new Error('KhÃ´ng Ä‘á»c...')` | `throw new Error(this.#i18n.t('core.excel.cannot-read-file'))` |
+| TS eager string | `'Không �ọc �ược file'` | `this.#i18n.t('core.excel.cannot-read-file')` |
+| TS constant value | `errorMessage: 'Email không hợp l�!'` | `errorMessage: 'core.validator.email.error'` (+ resolve site consumer) |
+| HTML text node | `<div>Không có quyền truy cập</div>` | `<div>{{ 'core.layout.forbidden.title' \| sdT }}</div>` |
+| HTML attribute | `placeholder="Tìm kiếm"` | `[placeholder]="'core.common.search' \| sdT"` |
+| `throw new Error('...')` | `throw new Error('Không �ọc...')` | `throw new Error(this.#i18n.t('core.excel.cannot-read-file'))` |
 
 ### Out-of-scope cho i18n migration
 
-- `console.log` / `console.warn` dev â€” giá»¯ nguyÃªn (khÃ´ng pháº£i UX).
-- Comment trong code â€” giá»¯ nguyÃªn.
-- File `*.spec.ts` â€” khÃ´ng i18n hÃ³a string trong test setup; nhÆ°ng náº¿u spec assert chuá»—i VI cá»¥ thá»ƒ thÃ¬ update Ä‘á»ƒ assert key hoáº·c inject `SdI18nService` mock.
+- `console.log` / `console.warn` dev � giữ nguyên (không phải UX).
+- Comment trong code � giữ nguyên.
+- File `*.spec.ts` � không i18n hóa string trong test setup; nhưng nếu spec assert chu�i VI cụ thỒ thì update �Ồ assert key hoặc inject `SdI18nService` mock.
 
 ## Testing
 
 ### Unit tests
 
 - `sd-i18n.service.spec.ts`:
-  - Init tá»« localStorage há»£p lá»‡.
-  - Init fallback config khi localStorage trá»‘ng/invalid.
-  - Init fallback `'vi'` khi cáº£ hai trá»‘ng.
+  - Init từ localStorage hợp l�!.
+  - Init fallback config khi localStorage tr�ng/invalid.
+  - Init fallback `'vi'` khi cả hai tr�ng.
   - `setLanguage()` update signal + persist localStorage.
   - `t()` happy path.
   - `t()` interpolation `{name}`.
-  - `t()` interpolation param thiáº¿u â†’ giá»¯ nguyÃªn `{name}`.
-  - `t()` missing key â†’ return key + warn once.
-  - `t()` miss EN cÃ³ VI â†’ fallback VI + warn.
+  - `t()` interpolation param thiếu �  giữ nguyên `{name}`.
+  - `t()` missing key �  return key + warn once.
+  - `t()` miss EN có VI �  fallback VI + warn.
 - `sd-i18n.pipe.spec.ts`:
-  - Render Ä‘Ãºng cho key cÃ³ sáºµn.
+  - Render �úng cho key có sẵn.
   - Reactive khi `setLanguage()`.
   - Interpolation qua pipe args.
 
 ### Parity check
 
-- Script `npm run check:i18n-parity` (node script Ä‘Æ¡n giáº£n):
+- Script `npm run check:i18n-parity` (node script �ơn giản):
   - Import `VI_MESSAGES` + `EN_MESSAGES`.
   - Assert `Object.keys(vi).sort()` deep-equal `Object.keys(en).sort()`.
-  - Fail CI náº¿u lá»‡ch.
+  - Fail CI nếu l�!ch.
 
 ### Hardcode VI guard
 
 - Script `npm run check:i18n` (regex scan):
-  - QuÃ©t `projects/sdcorejs-angular/**/*.{ts,html}`.
-  - Regex chá»©a kÃ½ tá»± VI cÃ³ dáº¥u (`[Ã€Ãáº¢Ãƒáº ...á»¹Ä‚Ã‚ÄÃŠÃ”Æ Æ¯...]`).
+  - Quét `projects/sdcorejs-angular/**/*.{ts,html}`.
+  - Regex chứa ký tự VI có dấu (`[ìÁẢÒẠ...ỹ��Đ�`�ƠƯ...]`).
   - Whitelist: `projects/sdcorejs-angular/i18n/src/vi.ts`, `*.spec.ts`, doc comment (`/**`, `//`).
-  - Fail CI náº¿u match.
+  - Fail CI nếu match.
 
 ## Acceptance criteria
 
 1. `npm run build` xanh.
 2. `npm run check:i18n-parity` xanh.
-3. `npm run check:i18n` xanh â€” khÃ´ng cÃ²n VI hardcode ngoÃ i `vi.ts` + whitelist.
-4. Táº¥t cáº£ unit test xanh, bao gá»“m spec má»›i cho service + pipe.
-5. Toggle `i18n.setLanguage('en')` trong consumer demo â†’ toÃ n bá»™ UI Core chuyá»ƒn EN tá»©c thÃ¬.
-6. Reload trang â†’ ngÃ´n ngá»¯ giá»¯ nguyÃªn (Ä‘á»c localStorage).
-7. `ISdCoreConfiguration.language = 'en'` nhÆ°ng localStorage cÃ³ `'vi'` â†’ dÃ¹ng `'vi'` (localStorage tháº¯ng).
+3. `npm run check:i18n` xanh � không còn VI hardcode ngoài `vi.ts` + whitelist.
+4. Tất cả unit test xanh, bao g�m spec m�:i cho service + pipe.
+5. Toggle `i18n.setLanguage('en')` trong consumer demo �  toàn b�" UI Core chuyỒn EN tức thì.
+6. Reload trang �  ngôn ngữ giữ nguyên (�ọc localStorage).
+7. `ISdCoreConfiguration.language = 'en'` nhưng localStorage có `'vi'` �  dùng `'vi'` (localStorage thắng).
 8. Build size delta `< 30KB` gzipped cho 2 file message (sanity check).
 
 ## Risks
 
-- **Consumer cá»§a `pattern.errorMessage`** â€” khÃ´ng biáº¿t háº¿t caller, cÃ³ thá»ƒ cÃ³ chá»— Ä‘ang assert chuá»—i raw. Mitigation: grep `errorMessage` trÃªn cáº£ workspace trÆ°á»›c batch 1.
-- **Spec test cÃ³ chuá»—i VI hardcode** â€” sáº½ vá»¡. Mitigation: batch 1 update Ä‘á»“ng thá»i cÃ¡c spec liÃªn quan.
-- **Translation EN cháº¥t lÆ°á»£ng** â€” khÃ´ng cÃ³ native reviewer. Mitigation: cháº¥p nháº­n round 1, má»Ÿ issue cho native review.
-- **Pipe `pure: false`** â€” invalidate má»—i CD cycle. Mitigation: i18n trÃªn hot path (table cell, list item) cÃ³ thá»ƒ cáº§n cache; náº¿u performance Ä‘o Ä‘Æ°á»£c váº¥n Ä‘á» thÃ¬ cache trong service.
-- **Test cÃ³ thá»ƒ bá»‹ flaky do localStorage** â€” `beforeEach` clear `SD_I18N_STORAGE_KEY`.
+- **Consumer của `pattern.errorMessage`** � không biết hết caller, có thỒ có ch� �ang assert chu�i raw. Mitigation: grep `errorMessage` trên cả workspace trư�:c batch 1.
+- **Spec test có chu�i VI hardcode** � sẽ vỡ. Mitigation: batch 1 update ��ng thời các spec liên quan.
+- **Translation EN chất lượng** � không có native reviewer. Mitigation: chấp nhận round 1, m�x issue cho native review.
+- **Pipe `pure: false`** � invalidate m�i CD cycle. Mitigation: i18n trên hot path (table cell, list item) có thỒ cần cache; nếu performance �o �ược vấn �ề thì cache trong service.
+- **Test có thỒ b�9 flaky do localStorage** � `beforeEach` clear `SD_I18N_STORAGE_KEY`.
 
 ## File-level impact summary
 
-- **Táº¡o má»›i**: 9 file dÆ°á»›i `projects/sdcorejs-angular/i18n/src/` + 1 `ng-package.json`.
-- **Sá»­a**: `configurations/src/sd-core.configuration.ts`, `src/public-api.ts`, `tsconfig.lib.json` (paths), `package.json` (script `check:i18n*`), 193 file `.ts` + 3 file `.html` (Vietnamese strings).
-- **Sá»­a spec**: `pattern.model.spec.ts` (assert key thay vÃ¬ chuá»—i) + spec khÃ¡c bá»‹ áº£nh hÆ°á»Ÿng.
+- **Tạo m�:i**: 9 file dư�:i `projects/sdcorejs-angular/i18n/src/` + 1 `ng-package.json`.
+- **Sửa**: `configurations/src/sd-core.configuration.ts`, `src/public-api.ts`, `tsconfig.lib.json` (paths), `package.json` (script `check:i18n*`), 193 file `.ts` + 3 file `.html` (Vietnamese strings).
+- **Sửa spec**: `pattern.model.spec.ts` (assert key thay vì chu�i) + spec khác b�9 ảnh hư�xng.
 

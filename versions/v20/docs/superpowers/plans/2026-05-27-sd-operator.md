@@ -1,4 +1,4 @@
-﻿# sd-operator Implementation Plan
+�# sd-operator Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -12,7 +12,7 @@
 
 ## Conventions
 
-**Targeted test command** (used throughout â€” adjust `--include` per task):
+**Targeted test command** (used throughout � adjust `--include` per task):
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='<spec-path>'
@@ -26,13 +26,13 @@ npm run build
 
 ## File Structure
 
-- Create: `projects/sdcorejs-angular/components/operator/ng-package.json` â€” entry-point manifest.
-- Create: `projects/sdcorejs-angular/components/operator/index.ts` â€” public export.
-- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.ts` â€” component logic.
-- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.html` â€” template.
-- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.scss` â€” styles.
-- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.spec.ts` â€” tests.
-- Create: `projects/sdcorejs-angular/components/operator/sd-operator.md` â€” usage doc.
+- Create: `projects/sdcorejs-angular/components/operator/ng-package.json` � entry-point manifest.
+- Create: `projects/sdcorejs-angular/components/operator/index.ts` � public export.
+- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.ts` � component logic.
+- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.html` � template.
+- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.scss` � styles.
+- Create: `projects/sdcorejs-angular/components/operator/src/operator.component.spec.ts` � tests.
+- Create: `projects/sdcorejs-angular/components/operator/sd-operator.md` � usage doc.
 - Modify: `projects/sdcorejs-angular/components/table/src/components/filter/column-filter/column-filter.component.ts` / `.html` / `.scss` / `.spec.ts`.
 - Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` / `.html` / `.spec.ts`.
 
@@ -86,7 +86,7 @@ describe('SdOperator', () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/operator/src/operator.component.spec.ts'`
-Expected: FAIL â€” cannot find module `./operator.component` / `SdOperator` not exported.
+Expected: FAIL � cannot find module `./operator.component` / `SdOperator` not exported.
 
 - [ ] **Step 3: Write the entry-point files + minimal component**
 
@@ -133,25 +133,25 @@ interface OperatorItem {
   imports: [MatMenuModule, MatTooltipModule],
 })
 export class SdOperator {
-  // Inner SVG markup (hÃ¬nh phá»…u) dÃ¹ng khi chÆ°a chá»n operator.
+  // Inner SVG markup (hình ph�&u) dùng khi chưa chọn operator.
   static readonly FALLBACK_ICON = '<path d="M4 5h16l-6.5 7.5V19l-3 2v-8.5z"/>';
 
   readonly #i18n = inject(I18nService);
   readonly #sanitizer = inject(DomSanitizer);
 
-  /** Operator hiá»‡n táº¡i â€” binding hai chiá»u [(model)]. */
+  /** Operator hi�!n tại � binding hai chiều [(model)]. */
   model = model<Operator | undefined>();
 
-  /** Danh sÃ¡ch operator cho phÃ©p, giá»¯ nguyÃªn thá»© tá»± truyá»n vÃ o. */
+  /** Danh sách operator cho phép, giữ nguyên thứ tự truyền vào. */
   operators = input<Operator[]>([]);
 
-  /** VÃ´ hiá»‡u hÃ³a trigger (khÃ´ng má»Ÿ Ä‘Æ°á»£c menu). */
+  /** Vô hi�!u hóa trigger (không m�x �ược menu). */
   disabled = input(false, { transform: booleanAttribute });
 
   /** data-autoId cho e2e selector. */
   autoId = input<string>();
 
-  /** Allowed operators map sang { value, icon, display } theo thá»© tá»± input. */
+  /** Allowed operators map sang { value, icon, display } theo thứ tự input. */
   readonly items = computed<OperatorItem[]>(() => {
     const out: OperatorItem[] = [];
     for (const value of this.operators()) {
@@ -162,27 +162,27 @@ export class SdOperator {
     return out;
   });
 
-  /** Icon SVG á»Ÿ trigger â€” fallback phá»…u khi model chÆ°a set / khÃ´ng tÃ¬m tháº¥y. */
+  /** Icon SVG �x trigger � fallback ph�&u khi model chưa set / không tìm thấy. */
   readonly currentIcon = computed<SafeHtml>(() => {
     const entry = OPERATORS.find((o) => o.value === this.model());
     return this.#svg(entry?.icon ?? SdOperator.FALLBACK_ICON);
   });
 
-  /** Tooltip = i18n label cá»§a operator hiá»‡n táº¡i ('' khi chÆ°a chá»n). */
+  /** Tooltip = i18n label của operator hi�!n tại ('' khi chưa chọn). */
   readonly currentLabel = computed<string>(() => {
     const entry = OPERATORS.find((o) => o.value === this.model());
     return entry ? this.#i18n.t(entry.display) : '';
   });
 
-  // why: OPERATORS.icon lÃ  inner SVG (path/line/rect). Bá»c <svg> + bypass sanitizer
-  // (nguá»“n lÃ  háº±ng sá»‘ ná»™i bá»™, khÃ´ng pháº£i input ngÆ°á»i dÃ¹ng) Ä‘á»ƒ Angular khÃ´ng strip svg con.
+  // why: OPERATORS.icon là inner SVG (path/line/rect). Bọc <svg> + bypass sanitizer
+  // (ngu�n là hằng s� n�"i b�", không phải input người dùng) �Ồ Angular không strip svg con.
   #svg(inner: string): SafeHtml {
     return this.#sanitizer.bypassSecurityTrustHtml(
       `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`,
     );
   }
 
-  /** Chá»n operator tá»« menu. */
+  /** Chọn operator từ menu. */
   select(value: Operator): void {
     this.model.set(value);
   }
@@ -267,7 +267,7 @@ export class SdOperator {
 - [ ] **Step 4: Run test to verify it passes**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/operator/src/operator.component.spec.ts'`
-Expected: PASS â€” `creates the component`.
+Expected: PASS � `creates the component`.
 
 - [ ] **Step 5: Commit**
 
@@ -403,7 +403,7 @@ git commit -m "test(operator): cover select() two-way model"
 
 ---
 
-## Task 5: Trigger DOM â€” icon rendered, tooltip bound, disabled honored
+## Task 5: Trigger DOM � icon rendered, tooltip bound, disabled honored
 
 **Files:**
 - Test: `projects/sdcorejs-angular/components/operator/src/operator.component.spec.ts`
@@ -546,10 +546,10 @@ clicking opens a `matMenu` listing the allowed operators (icon + label + raw cod
 
 | Input        | Type                     | Default | Notes                                              |
 | ------------ | ------------------------ | ------- | -------------------------------------------------- |
-| `[(model)]`  | `Operator \| undefined`  | â€”       | Two-way bound current operator.                    |
+| `[(model)]`  | `Operator \| undefined`  | �       | Two-way bound current operator.                    |
 | `operators`  | `Operator[]`             | `[]`    | Allowed operators, in display order.               |
 | `disabled`   | `boolean`                | `false` | Disables the trigger (menu cannot open).           |
-| `autoId`     | `string`                 | â€”       | Emitted as `data-autoId` for e2e selectors.        |
+| `autoId`     | `string`                 | �       | Emitted as `data-autoId` for e2e selectors.        |
 
 Icons and labels are resolved from the canonical `OPERATORS` table in `@sdcorejs/utils`
 (icon = inline SVG, label = i18n key via `I18nService`). Operators not found in `OPERATORS`
@@ -579,13 +579,13 @@ git commit -m "docs(operator): add sd-operator usage doc"
 - Modify: `projects/sdcorejs-angular/components/table/src/components/filter/column-filter/column-filter.component.scss`
 - Test: `projects/sdcorejs-angular/components/table/src/components/filter/column-filter/column-filter.component.spec.ts`
 
-- [ ] **Step 1: Update the spec (failing) â€” replace the icon describes**
+- [ ] **Step 1: Update the spec (failing) � replace the icon describes**
 
 In `column-filter.component.spec.ts`:
 
 1. Remove the top-of-file `html()` helper and the imports `SecurityContext`, `DomSanitizer`, `OPERATORS` added previously (no longer needed here). Keep `By`.
-2. Delete the entire `describe('computed inlineIcon', â€¦)` and `describe('operatorIcon', â€¦)` blocks.
-3. In `describe('onChangeOperator', â€¦)`, the `onChangeOperator` method is being removed, so delete that whole describe block too.
+2. Delete the entire `describe('computed inlineIcon', ⬦)` and `describe('operatorIcon', ⬦)` blocks.
+3. In `describe('onChangeOperator', ⬦)`, the `onChangeOperator` method is being removed, so delete that whole describe block too.
 4. Add a new describe:
 
 ```ts
@@ -612,7 +612,7 @@ In `column-filter.component.spec.ts`:
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/table/src/components/filter/column-filter/column-filter.component.spec.ts'`
-Expected: FAIL â€” `operatorValues` not a function / `sd-operator` not rendered.
+Expected: FAIL � `operatorValues` not a function / `sd-operator` not rendered.
 
 - [ ] **Step 3: Update the component TS**
 
@@ -634,20 +634,20 @@ import { SdOperator } from '@sdcorejs/angular/components/operator';
 
 And remove `inject` from the `@angular/core` import list (verify it is unused elsewhere first; it is only used by `#sanitizer`).
 
-2. Add `SdOperator` to the component `imports` array (and remove `MatMenuModule` if the menu is gone â€” keep it only if still referenced; after this task it is not, so remove it).
+2. Add `SdOperator` to the component `imports` array (and remove `MatMenuModule` if the menu is gone � keep it only if still referenced; after this task it is not, so remove it).
 
 3. Delete the block:
 
 ```ts
-  // Inner SVG markup dÃ¹ng khi operator chÆ°a chá»n â€” hÃ¬nh phá»…u (funnel) trung tÃ­nh.
+  // Inner SVG markup dùng khi operator chưa chọn � hình ph�&u (funnel) trung tính.
   static readonly FALLBACK_ICON =
     '<path d="M4 5h16l-6.5 7.5V19l-3 2v-8.5z"/>';
 
   readonly #sanitizer = inject(DomSanitizer);
 
-  // why: OPERATORS.icon lÃ  inner SVG (path/line/rect), khÃ´ng pháº£i ligature. Bá»c báº±ng
-  // <svg> viewBox 0 0 24 24 + stroke=currentColor rá»“i bypass sanitizer (nguá»“n lÃ  háº±ng
-  // sá»‘ ná»™i bá»™, khÃ´ng pháº£i input ngÆ°á»i dÃ¹ng) Ä‘á»ƒ Angular khÃ´ng strip tháº» svg con.
+  // why: OPERATORS.icon là inner SVG (path/line/rect), không phải ligature. Bọc bằng
+  // <svg> viewBox 0 0 24 24 + stroke=currentColor r�i bypass sanitizer (ngu�n là hằng
+  // s� n�"i b�", không phải input người dùng) �Ồ Angular không strip thẻ svg con.
   #svg(inner: string): SafeHtml {
     return this.#sanitizer.bypassSecurityTrustHtml(
       `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`,
@@ -658,14 +658,14 @@ And remove `inject` from the `@angular/core` import list (verify it is unused el
 4. Delete `inlineIcon` and `operatorIcon`:
 
 ```ts
-  // SVG icon cá»§a operator Ä‘ang chá»n (fallback hÃ¬nh phá»…u khi chÆ°a chá»n).
+  // SVG icon của operator �ang chọn (fallback hình ph�&u khi chưa chọn).
   inlineIcon = computed<SafeHtml>(() => {
     const op = this.operator();
     const inner = OPERATORS.find(e => e.value === op)?.icon ?? ColumnFilterComponent.FALLBACK_ICON;
     return this.#svg(inner);
   });
 
-  // SVG icon cho má»™t operator báº¥t ká»³ trong menu.
+  // SVG icon cho m�"t operator bất kỳ trong menu.
   operatorIcon(op: { icon: string }): SafeHtml {
     return this.#svg(op.icon);
   }
@@ -674,7 +674,7 @@ And remove `inject` from the `@angular/core` import list (verify it is unused el
 5. Add a computed exposing the allowed operator values (place right after the existing `operators` computed):
 
 ```ts
-  // Chá»‰ cÃ¡c Operator value cho phÃ©p â€” truyá»n vÃ o <sd-operator [operators]>.
+  // Ch�0 các Operator value cho phép � truyền vào <sd-operator [operators]>.
   operatorValues = computed(() => this.operators().map(o => o.value));
 ```
 
@@ -690,7 +690,7 @@ And remove `inject` from the `@angular/core` import list (verify it is unused el
 
 In `column-filter.component.html`:
 
-1. Replace the `@let _inlineIcon = inlineIcon();` line â€” delete it.
+1. Replace the `@let _inlineIcon = inlineIcon();` line � delete it.
 2. Replace the whole operator block:
 
 ```html
@@ -749,11 +749,11 @@ git commit -m "refactor(column-filter): use sd-operator for operator picker"
 - Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html`
 - Test: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts`
 
-- [ ] **Step 1: Update the spec (failing) â€” replace the icon describe**
+- [ ] **Step 1: Update the spec (failing) � replace the icon describe**
 
 In `query-bar.component.spec.ts`:
 
-1. Remove the `describe('operator icons (OPERATORS.icon)', â€¦)` block added previously.
+1. Remove the `describe('operator icons (OPERATORS.icon)', ⬦)` block added previously.
 2. Remove now-unused imports `SecurityContext`, `DomSanitizer`, and the `html()` helper. Keep `OPERATORS` and `SdQueryField` (used below).
 3. Add:
 
@@ -779,7 +779,7 @@ In `query-bar.component.spec.ts`:
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” no `<sd-operator>` rendered (still `<sd-select>`).
+Expected: FAIL � no `<sd-operator>` rendered (still `<sd-select>`).
 
 - [ ] **Step 3: Update the component TS**
 
@@ -794,15 +794,15 @@ In `query-bar.component.ts`:
 ```ts
   readonly #sanitizer = inject(DomSanitizer);
 
-  // why: OPERATORS.icon lÃ  inner SVG (path/line/rect), khÃ´ng pháº£i ligature. Bá»c báº±ng
-  // <svg> + bypass sanitizer (nguá»“n lÃ  háº±ng sá»‘ ná»™i bá»™, khÃ´ng pháº£i input ngÆ°á»i dÃ¹ng).
+  // why: OPERATORS.icon là inner SVG (path/line/rect), không phải ligature. Bọc bằng
+  // <svg> + bypass sanitizer (ngu�n là hằng s� n�"i b�", không phải input người dùng).
   #svg(inner: string): SafeHtml {
     return this.#sanitizer.bypassSecurityTrustHtml(
       `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`,
     );
   }
 
-  /** SVG icon cho má»™t operator option (Ä‘Ã£ kÃ¨m sáºµn `icon` trong items). */
+  /** SVG icon cho m�"t operator option (�ã kèm sẵn `icon` trong items). */
   operatorIcon(op: { icon: string }): SafeHtml {
     return this.#svg(op.icon);
   }
@@ -846,7 +846,7 @@ In `query-bar.component.ts`:
 > delete `editingOperatorItems`, `#operatorItemsByKey`, and `operatorItemsFor` in a follow-up
 > step within this task and re-run the spec.
 
-- [ ] **Step 4: Update the template â€” replace both operator selects**
+- [ ] **Step 4: Update the template � replace both operator selects**
 
 In `query-bar.component.html`:
 
@@ -974,7 +974,7 @@ git commit -m "test(operator): green build + combined sweep for sd-operator adop
 ## Self-Review notes
 
 - **Spec coverage:** entry point (Task 1), API model/operators/disabled/autoId (Tasks 1,4,5), icon+i18n mapping (Task 2), fallback (Task 3), menu rows + code column + active + select (Task 6), doc (Task 7), column-filter adoption + cleanup (Task 8), query-bar adoption + cleanup (Task 9), build+test verification (Task 10). All spec sections covered.
-- **Type consistency:** `operators: Operator[]`, `model: Operator | undefined`, `select(value: Operator)`, `operatorValues()` â†’ `Operator[]`, `items(): OperatorItem[]` â€” consistent across tasks and consumers.
+- **Type consistency:** `operators: Operator[]`, `model: Operator | undefined`, `select(value: Operator)`, `operatorValues()` �  `Operator[]`, `items(): OperatorItem[]` � consistent across tasks and consumers.
 - **Consumer bindings:** column-filter uses `[(model)]` (two-way, signal model). query-bar uses `[model]` + `(modelChange)` (per-iteration `_editOp` / `_op` are not writable signals). Both valid.
 ```
 

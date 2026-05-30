@@ -1,24 +1,24 @@
-﻿# Core UI Test Coverage Plan 1 â€” Implementation Plan
+�# Core UI Test Coverage Plan 1 � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** TÄƒng test coverage cho 10 file primitives cá»§a `@sdcorejs/angular` (4 components, 4 forms, 2 directives) báº±ng cÃ¡ch thÃªm spec files vá»›i TestBed-driven integration tests, Ä‘á»“ng thá»i rÃ  soÃ¡t + cáº£i thiá»‡n .md docs Ä‘i kÃ¨m Ä‘á»ƒ agent/skill tÆ°Æ¡ng lai cÃ³ ngá»¯ cáº£nh Ä‘áº§y Ä‘á»§.
+**Goal:** TĒng test coverage cho 10 file primitives của `@sdcorejs/angular` (4 components, 4 forms, 2 directives) bằng cách thêm spec files v�:i TestBed-driven integration tests, ��ng thời rà soát + cải thi�!n .md docs �i kèm �Ồ agent/skill tương lai có ngữ cảnh �ầy �ủ.
 
-**Architecture:** Má»—i spec dÃ¹ng `TestBed` (Karma + Jasmine â€” Ä‘Ã£ sáºµn trong repo), render component qua `ComponentFixture`, query DOM báº±ng `By.css`/`By.directive`, simulate event qua `dispatchEvent`. Má»™t file utility chung `projects/sdcorejs-angular/testing/test-utils.ts` cung cáº¥p helper giáº£m boilerplate (`createHostFixture`, `queryByCss`, `dispatch`, `setInput`). Directives test qua inline `TestHostComponent`. Async/throttle test báº±ng `fakeAsync` + `tick`.
+**Architecture:** M�i spec dùng `TestBed` (Karma + Jasmine � �ã sẵn trong repo), render component qua `ComponentFixture`, query DOM bằng `By.css`/`By.directive`, simulate event qua `dispatchEvent`. M�"t file utility chung `projects/sdcorejs-angular/testing/test-utils.ts` cung cấp helper giảm boilerplate (`createHostFixture`, `queryByCss`, `dispatch`, `setInput`). Directives test qua inline `TestHostComponent`. Async/throttle test bằng `fakeAsync` + `tick`.
 
 **Tech Stack:** Angular 19.2.x, Angular Signals, Karma 6.4.x, Jasmine 5.5.x, `@angular/material`, `@angular/cdk/overlay` (cho tooltip).
 
 **Spec:** `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md`
 
-**âš ï¸ Import convention for `test-utils.ts`** (corrected after Task 2 implementation):
+**�a�️ Import convention for `test-utils.ts`** (corrected after Task 2 implementation):
 
-`@sdcorejs/angular/testing` alias **does NOT work** at Karma runtime â€” `dist/sdcorejs-angular/package.json` does not export a `testing` condition (testing is intentionally test-only, not a build entry point). All spec files MUST use relative import:
+`@sdcorejs/angular/testing` alias **does NOT work** at Karma runtime � `dist/sdcorejs-angular/package.json` does not export a `testing` condition (testing is intentionally test-only, not a build entry point). All spec files MUST use relative import:
 
 - From `forms/<name>/src/` or `components/<name>/src/` (3 levels up): `import { queryByCss } from '../../../testing/test-utils';`
 - From `components/anchor/src/components/anchor/` (5 levels up): `import { queryByCss } from '../../../../../testing/test-utils';`
 - From `directives/src/` (2 levels up): `import { queryByCss } from '../../testing/test-utils';`
 
-Plan code blocks below still reference the alias â€” replace with the correct relative path per spec file location.
+Plan code blocks below still reference the alias � replace with the correct relative path per spec file location.
 
 ---
 
@@ -26,8 +26,8 @@ Plan code blocks below still reference the alias â€” replace with the corre
 
 | File | Change |
 |---|---|
-| `projects/sdcorejs-angular/testing/test-utils.ts` | NEW â€” shared test helpers |
-| `projects/sdcorejs-angular/testing/index.ts` | NEW â€” barrel |
+| `projects/sdcorejs-angular/testing/test-utils.ts` | NEW � shared test helpers |
+| `projects/sdcorejs-angular/testing/index.ts` | NEW � barrel |
 | `projects/sdcorejs-angular/forms/label/src/label.component.spec.ts` | NEW |
 | `projects/sdcorejs-angular/directives/src/sd-mobile.directive.spec.ts` | NEW |
 | `projects/sdcorejs-angular/components/avatar/src/avatar.component.spec.ts` | NEW |
@@ -48,23 +48,23 @@ Plan code blocks below still reference the alias â€” replace with the corre
 | `projects/sdcorejs-angular/forms/input/sd-input.md` | Audit + update |
 | `projects/sdcorejs-angular/components/anchor/sd-anchor.md` | Audit + update |
 | `projects/sdcorejs-angular/directives/src/sd-tooltip.md` | Audit + update |
-| `karma.conf.js` (root hoáº·c project) | NEW/Modify â€” coverage threshold config |
-| `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` | Append â€” gap report aggregate |
+| `karma.conf.js` (root hoặc project) | NEW/Modify � coverage threshold config |
+| `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` | Append � gap report aggregate |
 
 ---
 
 ## Task ordering rationale
 
-Äi tá»« Ä‘Æ¡n giáº£n â†’ phá»©c táº¡p Ä‘á»ƒ pattern test stabilize trÆ°á»›c:
+Đi từ �ơn giản �  phức tạp �Ồ pattern test stabilize trư�:c:
 1. Setup (test-utils)
-2. Label (Ä‘Æ¡n giáº£n nháº¥t, khÃ´ng signal input, khÃ´ng form integration)
+2. Label (�ơn giản nhất, không signal input, không form integration)
 3. sd-mobile directive (1 IIFE-style logic)
-4. Avatar (signal + computed, khÃ´ng form)
+4. Avatar (signal + computed, không form)
 5. Badge (signal + boolean shortcuts)
 6. Button (signal + throttle + license service)
 7. Switch (form integration setter-based)
 8. Checkbox (form integration + validator)
-9. Input (form integration + signal + effects, phá»©c táº¡p nháº¥t trong forms)
+9. Input (form integration + signal + effects, phức tạp nhất trong forms)
 10. Anchor (RxJS + contentChildren + scroll DOM)
 11. sd-tooltip (CDK Overlay + static state)
 12. Coverage config + gap report aggregate
@@ -89,7 +89,7 @@ Expected: branch checked out fresh.
 npm run test:ci
 ```
 
-Expected: 17 spec files pass. Note tá»•ng sá»‘ test (baseline).
+Expected: 17 spec files pass. Note t�"ng s� test (baseline).
 
 ---
 
@@ -126,8 +126,8 @@ export interface HostFixtureResult<THost> {
 }
 
 /**
- * Táº¡o fixture tá»« má»™t host component Ä‘Æ°á»£c khai bÃ¡o inline.
- * DÃ¹ng khi cáº§n test directive hoáº·c component qua template wrapper.
+ * Tạo fixture từ m�"t host component �ược khai báo inline.
+ * Dùng khi cần test directive hoặc component qua template wrapper.
  *
  * @example
  * @Component({ template: '<sd-button title="X"></sd-button>', imports: [SdButton], standalone: true })
@@ -147,7 +147,7 @@ export function createHostFixture<THost>(hostType: Type<THost>): HostFixtureResu
 }
 
 /**
- * Query 1 element báº±ng By.css. Throw vá»›i message rÃµ rÃ ng náº¿u khÃ´ng tÃ¬m tháº¥y.
+ * Query 1 element bằng By.css. Throw v�:i message rõ ràng nếu không tìm thấy.
  */
 export function queryByCss<T extends HTMLElement = HTMLElement>(
   fixture: ComponentFixture<unknown>,
@@ -161,7 +161,7 @@ export function queryByCss<T extends HTMLElement = HTMLElement>(
 }
 
 /**
- * Query nhiá»u element báº±ng By.css.
+ * Query nhiều element bằng By.css.
  */
 export function queryAllByCss<T extends HTMLElement = HTMLElement>(
   fixture: ComponentFixture<unknown>,
@@ -171,7 +171,7 @@ export function queryAllByCss<T extends HTMLElement = HTMLElement>(
 }
 
 /**
- * Báº¯n DOM event lÃªn element vÃ  cháº¡y detectChanges.
+ * Bắn DOM event lên element và chạy detectChanges.
  */
 export function dispatch(
   fixture: ComponentFixture<unknown>,
@@ -185,7 +185,7 @@ export function dispatch(
 
 /**
  * Set signal input qua componentRef.setInput + detectChanges.
- * DÃ¹ng cho component standalone test (khÃ´ng qua host).
+ * Dùng cho component standalone test (không qua host).
  */
 export function setInput<TComponent>(
   fixture: ComponentFixture<TComponent>,
@@ -197,7 +197,7 @@ export function setInput<TComponent>(
 }
 
 /**
- * Component test wrapper rá»—ng â€” dÃ¹ng lÃ m anchor cho TestBed khi cáº§n Module-only config.
+ * Component test wrapper r�ng � dùng làm anchor cho TestBed khi cần Module-only config.
  */
 @Component({
   selector: 'sd-test-empty-host',
@@ -219,7 +219,7 @@ Expected: 0 errors.
 npm run test:ci
 ```
 
-Expected: existing 17 spec pass (chÆ°a cÃ³ spec má»›i).
+Expected: existing 17 spec pass (chưa có spec m�:i).
 
 - [ ] **Step 4: Commit**
 
@@ -238,11 +238,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/forms/label/src/label.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/label/sd-label.md`
 
-- [ ] **Step 1: Äá»c source `label.component.ts` + html + .md hiá»‡n cÃ³ Ä‘á»ƒ náº¯m API**
+- [ ] **Step 1: Đọc source `label.component.ts` + html + .md hi�!n có �Ồ nắm API**
 
-Verify class: `SdLabel` cÃ³ setter `_label`, `_description`, `_required`, `_helperText` (kiá»ƒu setter-based @Input). Template hiá»ƒn thá»‹ label / `*` / mat-icon `info_outline` tooltip / description.
+Verify class: `SdLabel` có setter `_label`, `_description`, `_required`, `_helperText` (kiỒu setter-based @Input). Template hiỒn th�9 label / `*` / mat-icon `info_outline` tooltip / description.
 
-- [ ] **Step 2: Táº¡o `label.component.spec.ts`**
+- [ ] **Step 2: Tạo `label.component.spec.ts`**
 
 ```typescript
 import { Component } from '@angular/core';
@@ -288,7 +288,7 @@ describe('SdLabel', () => {
 
     it('renders nothing when label is falsy', () => {
       fixture.detectChanges();
-      // Khi !label, template @if (label) skip toÃ n bá»™ output
+      // Khi !label, template @if (label) skip toàn b�" output
       const inner = fixture.nativeElement.querySelector('.T14M');
       expect(inner).toBeNull();
     });
@@ -296,10 +296,10 @@ describe('SdLabel', () => {
 
   describe('label input', () => {
     it('renders label text when provided', () => {
-      host.label = 'Há» vÃ  tÃªn';
+      host.label = 'Họ và tên';
       fixture.detectChanges();
       const span = queryByCss<HTMLSpanElement>(fixture, 'span.T14M');
-      expect(span.textContent?.trim()).toBe('Há» vÃ  tÃªn');
+      expect(span.textContent?.trim()).toBe('Họ và tên');
     });
 
     it('skips render when label set to null', () => {
@@ -350,11 +350,11 @@ describe('SdLabel', () => {
     });
 
     it('renders mat-icon info_outline with tooltip when helperText provided', () => {
-      host.helperText = 'Giáº£i thÃ­ch';
+      host.helperText = 'Giải thích';
       fixture.detectChanges();
       const icon = queryByCss(fixture, 'mat-icon');
       expect(icon.textContent?.trim()).toBe('info_outline');
-      expect(icon.getAttribute('ng-reflect-message')).toBe('Giáº£i thÃ­ch');
+      expect(icon.getAttribute('ng-reflect-message')).toBe('Giải thích');
     });
 
     it('does NOT render icon when helperText is undefined', () => {
@@ -370,10 +370,10 @@ describe('SdLabel', () => {
     });
 
     it('renders description below label when provided', () => {
-      host.description = 'MÃ´ táº£ chi tiáº¿t';
+      host.description = 'Mô tả chi tiết';
       fixture.detectChanges();
       const desc = queryByCss<HTMLDivElement>(fixture, 'div.text-black400');
-      expect(desc.textContent?.trim()).toBe('MÃ´ táº£ chi tiáº¿t');
+      expect(desc.textContent?.trim()).toBe('Mô tả chi tiết');
     });
 
     it('skips description when null', () => {
@@ -393,31 +393,31 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="
 
 Expected: 11 specs pass.
 
-- [ ] **Step 4: Audit `sd-label.md` vs checklist 14 má»¥c**
+- [ ] **Step 4: Audit `sd-label.md` vs checklist 14 mục**
 
-Má»Ÿ `projects/sdcorejs-angular/forms/label/sd-label.md`. Verify tá»«ng má»¥c checklist. Ghi gap notes vÃ o local scratch:
+M�x `projects/sdcorejs-angular/forms/label/sd-label.md`. Verify từng mục checklist. Ghi gap notes vào local scratch:
 
 ```
 ### sd-label.md gap notes
-- [ ] Má»¥c 1: Frontmatter â€” verify Ä‘á»§ Type/Class/Standalone/Import path/Library version
-- [ ] Má»¥c 5: Inputs table â€” verify Ä‘á»§ label/description/helperText/required vá»›i Type/Default/Notes
-- [ ] Má»¥c 6: Outputs table â€” ghi "None" vÃ¬ class khÃ´ng cÃ³ @Output
-- [ ] Má»¥c 9: Examples â‰¥3 â€” bá»• sung náº¿u thiáº¿u
-- [ ] Má»¥c 14: Code snippet vá»›i HTML hoÃ n chá»‰nh, khÃ´ng pseudo-code
+- [ ] Mục 1: Frontmatter � verify �ủ Type/Class/Standalone/Import path/Library version
+- [ ] Mục 5: Inputs table � verify �ủ label/description/helperText/required v�:i Type/Default/Notes
+- [ ] Mục 6: Outputs table � ghi "None" vì class không có @Output
+- [ ] Mục 9: Examples �0�3 � b�" sung nếu thiếu
+- [ ] Mục 14: Code snippet v�:i HTML hoàn ch�0nh, không pseudo-code
 ```
 
-- [ ] **Step 5: Update `sd-label.md` náº¿u cÃ³ gap**
+- [ ] **Step 5: Update `sd-label.md` nếu có gap**
 
-Náº¿u má»¥c nÃ o thiáº¿u, append/sá»­a táº¡i chá»—. Quy táº¯c cáº£i thiá»‡n format:
-- Heading thá»© tá»± theo checklist.
-- Code-fence prefix Ä‘Ãºng (`html` cho template, `ts` cho TypeScript).
-- Viá»‡t hoÃ¡ nháº¥t quÃ¡n.
+Nếu mục nào thiếu, append/sửa tại ch�. Quy tắc cải thi�!n format:
+- Heading thứ tự theo checklist.
+- Code-fence prefix �úng (`html` cho template, `ts` cho TypeScript).
+- Vi�!t hoá nhất quán.
 
-VÃ­ dá»¥ append náº¿u thiáº¿u Outputs section:
+Ví dụ append nếu thiếu Outputs section:
 
 ```markdown
 ## Outputs
-None â€” component chá»‰ hiá»ƒn thá»‹ (render-only), khÃ´ng emit event.
+None � component ch�0 hiỒn th�9 (render-only), không emit event.
 ```
 
 - [ ] **Step 6: Commit**
@@ -437,11 +437,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/directives/src/sd-mobile.directive.spec.ts`
 - Modify: `projects/sdcorejs-angular/directives/src/sd-mobile.md`
 
-- [ ] **Step 1: Äá»c `sd-mobile.directive.ts`**
+- [ ] **Step 1: Đọc `sd-mobile.directive.ts`**
 
-Verify: directive lÃ  structural (`<ng-template>` based), inject `TemplateRef` + `ViewContainerRef`, gá»i `SdUtilities.isMobile()` trong constructor.
+Verify: directive là structural (`<ng-template>` based), inject `TemplateRef` + `ViewContainerRef`, gọi `SdUtilities.isMobile()` trong constructor.
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { Component } from '@angular/core';
@@ -508,12 +508,12 @@ Expected: 2 specs pass.
 - [ ] **Step 4: Audit + update `sd-mobile.md`**
 
 Verify checklist:
-- Má»¥c 5 Inputs: directive khÃ´ng cÃ³ input â†’ ghi "None" hoáº·c skip.
-- Má»¥c 12 Directive-specific: viáº¿t vá» lifecycle (constructor-only, khÃ´ng cleanup), side-effect (render template hoáº·c skip).
-- Má»¥c 14: Code máº«u cho `<div *sdMobile>...</div>` + diá»…n giáº£i khi nÃ o nÃªn dÃ¹ng (so vá»›i `*ngIf="isMobile"`).
+- Mục 5 Inputs: directive không có input �  ghi "None" hoặc skip.
+- Mục 12 Directive-specific: viết về lifecycle (constructor-only, không cleanup), side-effect (render template hoặc skip).
+- Mục 14: Code mẫu cho `<div *sdMobile>...</div>` + di�&n giải khi nào nên dùng (so v�:i `*ngIf="isMobile"`).
 
-Bá»• sung Anti-pattern náº¿u thiáº¿u:
-- âŒ Äáº·t `*sdMobile` trÃªn component náº·ng â€” vÃ¬ directive evaluate ngay constructor, khÃ´ng reactive. Khi `isMobile()` Ä‘á»•i (xoay device), khÃ´ng re-render. NÃªn cáº§n pair vá»›i listener resize náº¿u cáº§n dynamic.
+B�" sung Anti-pattern nếu thiếu:
+- �R Đặt `*sdMobile` trên component nặng � vì directive evaluate ngay constructor, không reactive. Khi `isMobile()` ��"i (xoay device), không re-render. Nên cần pair v�:i listener resize nếu cần dynamic.
 
 - [ ] **Step 5: Commit**
 
@@ -532,9 +532,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/components/avatar/src/avatar.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/components/avatar/sd-avatar.md`
 
-- [ ] **Step 1: Äá»c source â€” `SdAvatar` dÃ¹ng signal `input.required<string|null|undefined>('src')`, signal `size` default 32. Computed `isUrl`/`bgColor`/`initials`. Effect reset error khi src Ä‘á»•i.**
+- [ ] **Step 1: Đọc source � `SdAvatar` dùng signal `input.required<string|null|undefined>('src')`, signal `size` default 32. Computed `isUrl`/`bgColor`/`initials`. Effect reset error khi src ��"i.**
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -553,29 +553,29 @@ describe('SdAvatar', () => {
   });
 
   describe('URL detection (isUrl)', () => {
-    it('detects http URL â†’ renders <img>', () => {
+    it('detects http URL �  renders <img>', () => {
       setInput(fixture, 'src', 'http://example.com/a.png');
       const img = queryByCss<HTMLImageElement>(fixture, 'img');
       expect(img.getAttribute('src')).toBe('http://example.com/a.png');
     });
 
-    it('detects https URL â†’ renders <img>', () => {
+    it('detects https URL �  renders <img>', () => {
       setInput(fixture, 'src', 'https://cdn.com/avatar.jpg');
       expect(fixture.nativeElement.querySelector('img')).not.toBeNull();
     });
 
-    it('detects data:image/ URL â†’ renders <img>', () => {
+    it('detects data:image/ URL �  renders <img>', () => {
       setInput(fixture, 'src', 'data:image/png;base64,AAA');
       expect(fixture.nativeElement.querySelector('img')).not.toBeNull();
     });
 
-    it('detects absolute path "/" â†’ renders <img>', () => {
+    it('detects absolute path "/" �  renders <img>', () => {
       setInput(fixture, 'src', '/assets/avatar.png');
       expect(fixture.nativeElement.querySelector('img')).not.toBeNull();
     });
 
-    it('treats free text as name â†’ renders initials span (no img)', () => {
-      setInput(fixture, 'src', 'Nguyá»…n VÄƒn An');
+    it('treats free text as name �  renders initials span (no img)', () => {
+      setInput(fixture, 'src', 'Nguy�&n VĒn An');
       expect(fixture.nativeElement.querySelector('img')).toBeNull();
       const span = queryByCss(fixture, 'span.sd-avatar-text');
       expect(span.textContent?.trim()).toBe('NA');
@@ -623,20 +623,20 @@ describe('SdAvatar', () => {
       expect(wrapper.style.backgroundColor).toBe('rgb(189, 195, 199)');
     });
 
-    it('returns deterministic color from name (same name â†’ same color)', () => {
-      setInput(fixture, 'src', 'Nguyá»…n VÄƒn A');
+    it('returns deterministic color from name (same name �  same color)', () => {
+      setInput(fixture, 'src', 'Nguy�&n VĒn A');
       const colorA = queryByCss<HTMLDivElement>(fixture, '.sd-avatar').style.backgroundColor;
 
       const fixture2 = TestBed.createComponent(SdAvatar);
-      fixture2.componentRef.setInput('src', 'Nguyá»…n VÄƒn A');
+      fixture2.componentRef.setInput('src', 'Nguy�&n VĒn A');
       fixture2.detectChanges();
       const colorB = (fixture2.nativeElement.querySelector('.sd-avatar') as HTMLDivElement).style.backgroundColor;
 
       expect(colorA).toBe(colorB);
     });
 
-    it('different names produce different color (statistically â€” sample one differing pair)', () => {
-      setInput(fixture, 'src', 'Nguyá»…n VÄƒn A');
+    it('different names produce different color (statistically � sample one differing pair)', () => {
+      setInput(fixture, 'src', 'Nguy�&n VĒn A');
       const colorA = queryByCss<HTMLDivElement>(fixture, '.sd-avatar').style.backgroundColor;
 
       setInput(fixture, 'src', 'Tran Thi Z');
@@ -678,10 +678,10 @@ describe('SdAvatar', () => {
       img.dispatchEvent(new Event('error'));
       fixture.detectChanges();
 
-      // sau error, fallback sang initials cá»§a literal URL string
+      // sau error, fallback sang initials của literal URL string
       expect(fixture.nativeElement.querySelector('img')).toBeNull();
       const span = queryByCss(fixture, 'span.sd-avatar-text');
-      // "https://broken.example.com/a.png" â€” khÃ´ng cÃ³ khoáº£ng tráº¯ng nÃªn 1 word â†’ 1 chá»¯ Ä‘áº§u "H"
+      // "https://broken.example.com/a.png" � không có khoảng trắng nên 1 word �  1 chữ �ầu "H"
       expect(span.textContent?.trim()).toBe('H');
     });
 
@@ -691,7 +691,7 @@ describe('SdAvatar', () => {
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('img')).toBeNull();
 
-      // Äá»•i src má»›i â†’ effect reset imageError, isUrl tráº£ vá» true vÃ¬ https
+      // Đ�"i src m�:i �  effect reset imageError, isUrl trả về true vì https
       setInput(fixture, 'src', 'https://newurl.com/b.png');
       expect(fixture.nativeElement.querySelector('img')).not.toBeNull();
     });
@@ -709,12 +709,12 @@ Expected: 17 specs pass.
 
 - [ ] **Step 4: Audit + update `sd-avatar.md`**
 
-`sd-avatar.md` Ä‘Ã£ ráº¥t Ä‘áº§y Ä‘á»§ (xem section spec). Verify:
-- Má»¥c 9 Examples â‰¥3 â€” Ä‘Ã£ cÃ³ 4 examples.
-- Má»¥c 10 Anti-patterns â‰¥3 â€” Ä‘Ã£ cÃ³ 5.
-- Má»¥c 14 Code snippet Ä‘áº§y Ä‘á»§ â€” verify má»—i snippet Ä‘á»u cÃ³ HTML Ä‘áº§y Ä‘á»§ binding.
+`sd-avatar.md` �ã rất �ầy �ủ (xem section spec). Verify:
+- Mục 9 Examples �0�3 � �ã có 4 examples.
+- Mục 10 Anti-patterns �0�3 � �ã có 5.
+- Mục 14 Code snippet �ầy �ủ � verify m�i snippet �ều có HTML �ầy �ủ binding.
 
-CÃ³ thá»ƒ chá»‰ cáº§n fix typo/format minor. Ghi "no gap" náº¿u Ä‘áº§y Ä‘á»§.
+Có thỒ ch�0 cần fix typo/format minor. Ghi "no gap" nếu �ầy �ủ.
 
 - [ ] **Step 5: Commit**
 
@@ -733,9 +733,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/components/badge/src/badge.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/components/badge/sd-badge.md`
 
-- [ ] **Step 1: Äá»c source â€” boolean shortcuts (primary/secondary/success/info/warning/error), computed `effectiveColor`, click stopPropagation.**
+- [ ] **Step 1: Đọc source � boolean shortcuts (primary/secondary/success/info/warning/error), computed `effectiveColor`, click stopPropagation.**
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -757,7 +757,7 @@ describe('SdBadge', () => {
   describe('default render', () => {
     it('defaults type to "icon" with default icon fiber_manual_record', () => {
       fixture.detectChanges();
-      // Máº·c Ä‘á»‹nh khÃ´ng cÃ³ title, nhÆ°ng template váº«n render span icon
+      // Mặc ��9nh không có title, nhưng template vẫn render span icon
       const icon = queryByCss(fixture, 'span.c-material-icon');
       expect(icon.textContent?.trim()).toBe('fiber_manual_record');
     });
@@ -779,7 +779,7 @@ describe('SdBadge', () => {
       setInput(fixture, 'title', 'Active');
       const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
       expect(el.textContent?.trim()).toBe('Active');
-      // khÃ´ng cÃ³ icon trong round mode
+      // không có icon trong round mode
       expect(fixture.nativeElement.querySelector('span.c-material-icon')).toBeNull();
     });
 
@@ -862,7 +862,7 @@ describe('SdBadge', () => {
     });
 
     it('applies pointer class only when click is observed', () => {
-      // ÄÄƒng kÃ½ subscriber Ä‘á»ƒ click.observed = true
+      // ĐĒng ký subscriber �Ồ click.observed = true
       fixture.componentInstance.click.subscribe(() => undefined);
       setInput(fixture, 'type', 'round');
       const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
@@ -911,7 +911,7 @@ npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="
 
 Expected: ~15 specs pass.
 
-- [ ] **Step 4: Audit `sd-badge.md`** â€” `sd-badge.md` Ä‘Ã£ ráº¥t Ä‘áº§y Ä‘á»§. Verify Note pháº§n boolean precedence chÃ­nh xÃ¡c (Ä‘Ã£ cÃ³ dÃ²ng `> Boolean color shortcuts take priority over color`).
+- [ ] **Step 4: Audit `sd-badge.md`** � `sd-badge.md` �ã rất �ầy �ủ. Verify Note phần boolean precedence chính xác (�ã có dòng `> Boolean color shortcuts take priority over color`).
 
 - [ ] **Step 5: Commit**
 
@@ -930,11 +930,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/components/button/src/button.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/components/button/sd-button.md`
 
-- [ ] **Step 1: Äá»c source â€” `SdButton extends SdBaseSecureComponent`. LÆ°u Ã½: license service Ä‘Æ°á»£c called trong constructor.**
+- [ ] **Step 1: Đọc source � `SdButton extends SdBaseSecureComponent`. Lưu ý: license service �ược called trong constructor.**
 
-Karma cháº¡y á»Ÿ `http://localhost:9876` â†’ `SdLicenseService.#isLocalhost` return true â†’ license auto-valid. KHÃ”NG cáº§n mock. NhÆ°ng Ä‘á»ƒ CI an toÃ n (náº¿u cháº¡y domain khÃ¡c), provide `SD_CORE_CONFIGURATION` vá»›i fake key OR mock service.
+Karma chạy �x `http://localhost:9876` �  `SdLicenseService.#isLocalhost` return true �  license auto-valid. KH�NG cần mock. Nhưng �Ồ CI an toàn (nếu chạy domain khác), provide `SD_CORE_CONFIGURATION` v�:i fake key OR mock service.
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
@@ -973,8 +973,8 @@ describe('SdButton', () => {
     });
 
     it('renders title text', () => {
-      setInput(fixture, 'title', 'LÆ°u');
-      expect(queryByCss(fixture, 'span.c-title').textContent?.trim()).toBe('LÆ°u');
+      setInput(fixture, 'title', 'Lưu');
+      expect(queryByCss(fixture, 'span.c-title').textContent?.trim()).toBe('Lưu');
     });
 
     it('renders prefix icon when provided', () => {
@@ -1133,7 +1133,7 @@ describe('SdButton', () => {
       const btn = queryByCss<HTMLButtonElement>(fixture, 'button.c-button');
       fixture.destroy();
 
-      // sau destroy, internal click khÃ´ng cÃ²n route â€” chá»‰ verify destroy khÃ´ng throw
+      // sau destroy, internal click không còn route � ch�0 verify destroy không throw
       expect(() => btn.click()).not.toThrow();
       tick(500);
       expect(received.length).toBe(0);
@@ -1148,7 +1148,7 @@ describe('SdButton', () => {
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="**/button.component.spec.ts"
 ```
 
-Expected: ~20 specs pass. Náº¿u fail liÃªn quan license, mock `SdLicenseService`:
+Expected: ~20 specs pass. Nếu fail liên quan license, mock `SdLicenseService`:
 
 ```typescript
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
@@ -1157,7 +1157,7 @@ import { SdLicenseService } from '@sdcorejs/angular/services/license';
 providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => undefined } }]
 ```
 
-- [ ] **Step 4: Audit `sd-button.md` â€” Ä‘Ã£ ráº¥t Ä‘áº§y Ä‘á»§ (xem section spec). Verify cÃ¢u "Throttled to 300ms (leading edge)" + verify Anti-patterns Ä‘áº§y Ä‘á»§.**
+- [ ] **Step 4: Audit `sd-button.md` � �ã rất �ầy �ủ (xem section spec). Verify câu "Throttled to 300ms (leading edge)" + verify Anti-patterns �ầy �ủ.**
 
 - [ ] **Step 5: Commit**
 
@@ -1176,11 +1176,11 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/forms/switch/src/switch.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/switch/sd-switch.md`
 
-- [ ] **Step 1: Äá»c `switch.component.ts` + html.**
+- [ ] **Step 1: Đọc `switch.component.ts` + html.**
 
-Note: `SdSwitch` dÃ¹ng setter-based `@Input`, `formControl = new SdFormControl()`. CÃ³ `model` setter sync formControl (no emit). User toggle â†’ emit `modelChange` + `sdChange`.
+Note: `SdSwitch` dùng setter-based `@Input`, `formControl = new SdFormControl()`. Có `model` setter sync formControl (no emit). User toggle �  emit `modelChange` + `sdChange`.
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { Component } from '@angular/core';
@@ -1260,7 +1260,7 @@ describe('SdSwitch', () => {
       fixture.detectChanges();
 
       expect(switchInstance.formControl.value).toBe(true);
-      // setValue vá»›i emitEvent: false â†’ valueChanges KHÃ”NG fire
+      // setValue v�:i emitEvent: false �  valueChanges KH�NG fire
       expect(received.length).toBe(0);
       sub.unsubscribe();
     });
@@ -1345,12 +1345,12 @@ describe('SdSwitch', () => {
     });
 
     it('extracts .form from NgForm if passed via setter', () => {
-      // SdSwitch.form lÃ  setter â€” verify giÃ¡n tiáº¿p qua addControl khi pass NgForm-like
+      // SdSwitch.form là setter � verify gián tiếp qua addControl khi pass NgForm-like
       const fg = new FormGroup({});
       const fakeNgForm = Object.create(NgForm.prototype, {
         form: { value: fg, configurable: true },
       });
-      // GÃ¡n qua setter â€” khÃ´ng throw, vÃ  addControl trÃªn fg.form Ä‘Æ°á»£c trigger qua ngAfterViewInit lifecycle
+      // Gán qua setter � không throw, và addControl trên fg.form �ược trigger qua ngAfterViewInit lifecycle
       expect(() => {
         switchInstance.form = fakeNgForm;
       }).not.toThrow();
@@ -1370,27 +1370,27 @@ Expected: ~13 specs pass.
 - [ ] **Step 4: Audit + update `sd-switch.md`**
 
 Verify:
-- Má»¥c 13 Form-specific: viáº¿t vá» `modelChange` vs `sdChange` (gáº§n nhÆ° Ä‘á»“ng nháº¥t, cÃ¹ng emit khi formControl.value Ä‘á»•i).
-- Má»¥c 14: Code máº«u cho cáº£ 3 cÃ¡ch dÃ¹ng (ngModel, NgForm, reactive FormGroup).
+- Mục 13 Form-specific: viết về `modelChange` vs `sdChange` (gần như ��ng nhất, cùng emit khi formControl.value ��"i).
+- Mục 14: Code mẫu cho cả 3 cách dùng (ngModel, NgForm, reactive FormGroup).
 
-Bá»• sung snippet form-integration náº¿u thiáº¿u:
+B�" sung snippet form-integration nếu thiếu:
 
 ```html
-<!-- Template-driven vá»›i [(ngModel)] -->
-<sd-switch label="Báº­t thÃ´ng bÃ¡o" [(model)]="settings.notify"></sd-switch>
+<!-- Template-driven v�:i [(ngModel)] -->
+<sd-switch label="Bật thông báo" [(model)]="settings.notify"></sd-switch>
 
-<!-- Reactive FormGroup (truyá»n form vÃ o Ä‘á»ƒ switch tá»± addControl) -->
+<!-- Reactive FormGroup (truyền form vào �Ồ switch tự addControl) -->
 <form [formGroup]="form">
-  <sd-switch label="Báº­t" name="notify" [form]="form"></sd-switch>
+  <sd-switch label="Bật" name="notify" [form]="form"></sd-switch>
 </form>
 
 <!-- NgForm (template-driven group) -->
 <form #f="ngForm">
-  <sd-switch label="Báº­t" name="notify" [form]="f"></sd-switch>
+  <sd-switch label="Bật" name="notify" [form]="f"></sd-switch>
 </form>
 ```
 
-Diá»…n giáº£i: "Cáº£ 3 cÃ¡ch Ä‘á»u hoáº¡t Ä‘á»™ng. Reactive `[formGroup]` cho phÃ©p validate Ä‘á»“ng bá»™. `[(model)]` dÃ¹ng cho local state Ä‘Æ¡n giáº£n. NgForm dÃ¹ng khi form scaffold báº±ng template-driven."
+Di�&n giải: "Cả 3 cách �ều hoạt ��"ng. Reactive `[formGroup]` cho phép validate ��ng b�". `[(model)]` dùng cho local state �ơn giản. NgForm dùng khi form scaffold bằng template-driven."
 
 - [ ] **Step 5: Commit**
 
@@ -1409,9 +1409,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/forms/checkbox/src/checkbox.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/checkbox/sd-checkbox.md`
 
-- [ ] **Step 1: Äá»c source â€” tÆ°Æ¡ng tá»± switch, nhÆ°ng cÃ³ thÃªm `inlineError` custom validator.**
+- [ ] **Step 1: Đọc source � tương tự switch, nhưng có thêm `inlineError` custom validator.**
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { Component } from '@angular/core';
@@ -1504,7 +1504,7 @@ describe('SdCheckbox', () => {
 
   describe('inlineError validator', () => {
     it('emits inlineError on formControl when inlineError set', () => {
-      host.inlineError = 'Sai rá»“i';
+      host.inlineError = 'Sai r�i';
       fixture.detectChanges();
       checkbox.formControl.updateValueAndValidity();
       expect(checkbox.formControl.hasError('inlineError')).toBe(true);
@@ -1580,7 +1580,7 @@ Expected: ~13 specs pass.
 
 - [ ] **Step 4: Audit + update `sd-checkbox.md`**
 
-Verify Form-specific (má»¥c 13): inlineError flow rÃµ rÃ ng. Bá»• sung anti-pattern + diá»…n giáº£i náº¿u thiáº¿u.
+Verify Form-specific (mục 13): inlineError flow rõ ràng. B�" sung anti-pattern + di�&n giải nếu thiếu.
 
 - [ ] **Step 5: Commit**
 
@@ -1599,9 +1599,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/forms/input/src/input.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/input/sd-input.md`
 
-- [ ] **Step 1: Äá»c source â€” `SdInput` lÃ  form phá»©c táº¡p nháº¥t. Signal `form` transform NgForm/FormGroup/null. Effect cáº­p nháº­t validator khi `required`/`minlength`/`maxlength`/`pattern`/`inlineError`/`validator` Ä‘á»•i. `valueModel = model()` sync `formControl.value` qua effect.**
+- [ ] **Step 1: Đọc source � `SdInput` là form phức tạp nhất. Signal `form` transform NgForm/FormGroup/null. Effect cập nhật validator khi `required`/`minlength`/`maxlength`/`pattern`/`inlineError`/`validator` ��"i. `valueModel = model()` sync `formControl.value` qua effect.**
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { Component } from '@angular/core';
@@ -1667,17 +1667,17 @@ describe('SdInput', () => {
     });
 
     it('renders label via SdLabel', () => {
-      host.label = 'Há» tÃªn';
+      host.label = 'Họ tên';
       fixture.detectChanges();
       const labelEl = fixture.nativeElement.querySelector('.T14M');
-      expect(labelEl?.textContent?.trim()).toContain('Há» tÃªn');
+      expect(labelEl?.textContent?.trim()).toContain('Họ tên');
     });
 
     it('renders placeholder on input', () => {
-      host.placeholder = 'Nháº­p...';
+      host.placeholder = 'Nhập...';
       fixture.detectChanges();
       const el = queryByCss<HTMLInputElement>(fixture, 'input');
-      expect(el.getAttribute('placeholder')).toBe('Nháº­p...');
+      expect(el.getAttribute('placeholder')).toBe('Nhập...');
     });
   });
 
@@ -1825,13 +1825,13 @@ describe('SdInput', () => {
   });
 
   describe('error tooltip message', () => {
-    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', fakeAsync(() => {
+    it('returns "Vui lòng nhập thông tin" for required error', fakeAsync(() => {
       host.required = true;
       fixture.detectChanges();
       tick();
       input.formControl.setValue('');
       input.formControl.updateValueAndValidity();
-      expect(input.errorTooltipMessage).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(input.errorTooltipMessage).toBe('Vui lòng nhập thông tin');
     }));
 
     it('returns maxlength message with limit', fakeAsync(() => {
@@ -1839,7 +1839,7 @@ describe('SdInput', () => {
       fixture.detectChanges();
       tick();
       input.formControl.setValue('abcd');
-      expect(input.errorTooltipMessage).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 3');
+      expect(input.errorTooltipMessage).toBe('S� ký tự t�i �a: 3');
     }));
   });
 
@@ -1886,15 +1886,15 @@ describe('SdInput', () => {
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="**/input.component.spec.ts"
 ```
 
-Expected: ~25 specs pass. **Note:** má»™t sá»‘ test cÃ³ thá»ƒ fail do reflective Material API render khÃ¡c trong test env. Khi Ä‘Ã³: dÃ¹ng `By.directive(MatInput)` hoáº·c giáº£m bá»›t DOM assertion, tÄƒng class-level assertion.
+Expected: ~25 specs pass. **Note:** m�"t s� test có thỒ fail do reflective Material API render khác trong test env. Khi �ó: dùng `By.directive(MatInput)` hoặc giảm b�:t DOM assertion, tĒng class-level assertion.
 
 - [ ] **Step 4: Audit + update `sd-input.md`**
 
 Verify:
-- Má»¥c 13 Form-specific: 3 cÃ¡ch dÃ¹ng (ngModel `[(model)]`, NgForm `[form]="ngForm"`, FormGroup `[form]="reactiveFG"`).
-- Má»¥c 14 Code: snippet cho má»—i error message scenario (required, maxlength, pattern, customValidator, inlineError).
+- Mục 13 Form-specific: 3 cách dùng (ngModel `[(model)]`, NgForm `[form]="ngForm"`, FormGroup `[form]="reactiveFG"`).
+- Mục 14 Code: snippet cho m�i error message scenario (required, maxlength, pattern, customValidator, inlineError).
 
-Bá»• sung note vá» `SD_FORM_CONFIGURATION` token náº¿u thiáº¿u.
+B�" sung note về `SD_FORM_CONFIGURATION` token nếu thiếu.
 
 - [ ] **Step 5: Commit**
 
@@ -1913,9 +1913,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/components/anchor/src/components/anchor/anchor.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/components/anchor/sd-anchor.md`
 
-- [ ] **Step 1: Äá»c source â€” `SdAnchor` dÃ¹ng viewChild wrapper, contentChildren `SdAnchorItem`, subscribe scroll via rxjs `auditTime`. `afterNextRender` set first section active.**
+- [ ] **Step 1: Đọc source � `SdAnchor` dùng viewChild wrapper, contentChildren `SdAnchorItem`, subscribe scroll via rxjs `auditTime`. `afterNextRender` set first section active.**
 
-- [ ] **Step 2: Táº¡o spec file (smoke-level + key behaviors)**
+- [ ] **Step 2: Tạo spec file (smoke-level + key behaviors)**
 
 ```typescript
 import { Component } from '@angular/core';
@@ -2000,7 +2000,7 @@ describe('SdAnchor', () => {
       tick();
       const a = f.debugElement.query(el => el.componentInstance instanceof SdAnchor)
         ?.componentInstance as SdAnchor;
-      // KHÃ”NG set activeSectionId â†’ váº«n rá»—ng
+      // KH�NG set activeSectionId �  vẫn r�ng
       expect(a.activeSectionId()).toBe('');
     }));
   });
@@ -2016,7 +2016,7 @@ describe('SdAnchor', () => {
     it('no-op when section id does not exist', fakeAsync(() => {
       tick();
       fixture.detectChanges();
-      // activeSectionId Ä‘Æ°á»£c set rá»“i return undefined cho targetSection â€” khÃ´ng throw
+      // activeSectionId �ược set r�i return undefined cho targetSection � không throw
       expect(() => anchor.scrollSectionByClick('unknown')).not.toThrow();
       expect(anchor.activeSectionId()).toBe('unknown');
     }));
@@ -2038,11 +2038,11 @@ describe('SdAnchor', () => {
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="**/anchor.component.spec.ts"
 ```
 
-Expected: ~8 specs pass. **Note:** scroll behavior thá»±c khÃ´ng test (cáº§n real DOM size + scroll). Cover dÆ°á»›i má»©c Full coverage. Document trade-off trong commit message.
+Expected: ~8 specs pass. **Note:** scroll behavior thực không test (cần real DOM size + scroll). Cover dư�:i mức Full coverage. Document trade-off trong commit message.
 
 - [ ] **Step 4: Audit + update `sd-anchor.md`**
 
-Bá»• sung Visual cues (vertical sidebar vs horizontal top bar), behavior cleanup (auto unsubscribe khi destroy).
+B�" sung Visual cues (vertical sidebar vs horizontal top bar), behavior cleanup (auto unsubscribe khi destroy).
 
 - [ ] **Step 5: Commit**
 
@@ -2064,9 +2064,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/directives/src/sd-tooltip.directive.spec.ts`
 - Modify: `projects/sdcorejs-angular/directives/src/sd-tooltip.md`
 
-- [ ] **Step 1: Äá»c source â€” CDK Overlay-based, static `activeTooltip`, mouseenter delay, mouseleave 300ms.**
+- [ ] **Step 1: Đọc source � CDK Overlay-based, static `activeTooltip`, mouseenter delay, mouseleave 300ms.**
 
-- [ ] **Step 2: Táº¡o spec file**
+- [ ] **Step 2: Tạo spec file**
 
 ```typescript
 import { Component, TemplateRef, ViewChild } from '@angular/core';
@@ -2149,11 +2149,11 @@ describe('SdTooltipDirective', () => {
       trigger.dispatchEvent(new MouseEvent('mouseleave'));
       tick(299);
       fixture.detectChanges();
-      // chÆ°a hide
+      // chưa hide
       expect(overlayContainerEl.querySelector('.c-sd-tooltip-container')).not.toBeNull();
       tick(2);
       fixture.detectChanges();
-      // Ä‘Ã£ hide
+      // �ã hide
       expect(overlayContainerEl.querySelector('.c-sd-tooltip-container')).toBeNull();
       flush();
     }));
@@ -2245,13 +2245,13 @@ describe('SdTooltipDirective', () => {
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="**/sd-tooltip.directive.spec.ts"
 ```
 
-Expected: ~7 specs pass. **Note:** Overlay test phá»¥ thuá»™c vÃ o Angular CDK fixture timing; náº¿u fail, dÃ¹ng `flush()` thay `tick(300)` á»Ÿ cuá»‘i má»—i test.
+Expected: ~7 specs pass. **Note:** Overlay test phụ thu�"c vào Angular CDK fixture timing; nếu fail, dùng `flush()` thay `tick(300)` �x cu�i m�i test.
 
 - [ ] **Step 4: Audit + update `sd-tooltip.md`**
 
 Verify:
-- Má»¥c 12 Directive-specific: ghi rÃµ static `activeTooltip` chá»‰ giá»¯ 1 tooltip cÃ¹ng lÃºc â†’ 2 trigger gáº§n nhau, tooltip A bá»‹ `forceHide` khi hover B.
-- Má»¥c 14 Code máº«u: snippet vá»›i TemplateRef + position + custom color.
+- Mục 12 Directive-specific: ghi rõ static `activeTooltip` ch�0 giữ 1 tooltip cùng lúc �  2 trigger gần nhau, tooltip A b�9 `forceHide` khi hover B.
+- Mục 14 Code mẫu: snippet v�:i TemplateRef + position + custom color.
 
 - [ ] **Step 5: Commit**
 
@@ -2267,24 +2267,24 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ## Task 12: Coverage config + final verification + gap report aggregate
 
 **Files:**
-- Modify/Create: `projects/sdcorejs-angular/karma.conf.js` (náº¿u chÆ°a cÃ³, generate)
+- Modify/Create: `projects/sdcorejs-angular/karma.conf.js` (nếu chưa có, generate)
 - Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append gap report)
 
-- [ ] **Step 1: Generate karma.conf náº¿u chÆ°a cÃ³**
+- [ ] **Step 1: Generate karma.conf nếu chưa có**
 
 ```bash
 ls projects/sdcorejs-angular/karma.conf.js
 ```
 
-Náº¿u thiáº¿u:
+Nếu thiếu:
 
 ```bash
 npx ng generate karma --project=sd-angular
 ```
 
-- [ ] **Step 2: ThÃªm coverage reporters trong karma.conf**
+- [ ] **Step 2: Thêm coverage reporters trong karma.conf**
 
-Trong `projects/sdcorejs-angular/karma.conf.js`, Ä‘áº£m báº£o cÃ³:
+Trong `projects/sdcorejs-angular/karma.conf.js`, �ảm bảo có:
 
 ```javascript
 module.exports = function (config) {
@@ -2313,38 +2313,38 @@ module.exports = function (config) {
 };
 ```
 
-- [ ] **Step 3: Run full suite vá»›i coverage**
+- [ ] **Step 3: Run full suite v�:i coverage**
 
 ```bash
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --code-coverage
 ```
 
 Expected:
-- Táº¥t cáº£ spec pass (17 cÅ© + 10 má»›i â‰ˆ 27 spec files, ~140+ tests).
-- Coverage report xuáº¥t táº¡i `coverage/sd-angular/`.
-- Náº¿u má»™t file dÆ°á»›i threshold, ghi vÃ o gap report rá»“i tÄƒng test hoáº·c giáº£m threshold (note in commit).
+- Tất cả spec pass (17 cũ + 10 m�:i �0� 27 spec files, ~140+ tests).
+- Coverage report xuất tại `coverage/sd-angular/`.
+- Nếu m�"t file dư�:i threshold, ghi vào gap report r�i tĒng test hoặc giảm threshold (note in commit).
 
-- [ ] **Step 4: Aggregate gap report â€” append vÃ o design doc**
+- [ ] **Step 4: Aggregate gap report � append vào design doc**
 
-Má»Ÿ `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md`. Append section sau má»¥c 6 (template) pháº§n 6.x â€” gap report thá»±c táº¿:
+M�x `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md`. Append section sau mục 6 (template) phần 6.x � gap report thực tế:
 
 ```markdown
-## 6.1 Gap report â€” Plan 1 implementation results
+## 6.1 Gap report � Plan 1 implementation results
 
-NgÃ y hoÃ n thÃ nh: 2026-MM-DD (Ä‘iá»n sau khi merge).
+Ngày hoàn thành: 2026-MM-DD (�iền sau khi merge).
 
 ### sd-label.md
-- [x] Frontmatter Ä‘áº§y Ä‘á»§
+- [x] Frontmatter �ầy �ủ
 - [x] Outputs section ghi "None"
-- [x] Examples â‰¥3
-- (note any gap Ä‘Ã£ fill)
+- [x] Examples �0�3
+- (note any gap �ã fill)
 
 ### sd-mobile.md
-- [x] Anti-pattern bá»• sung: khÃ´ng reactive khi resize device
+- [x] Anti-pattern b�" sung: không reactive khi resize device
 - [x] Visual cues N/A (directive)
 
 ### sd-avatar.md
-- (gap notes if any, hoáº·c "no gap")
+- (gap notes if any, hoặc "no gap")
 
 ### sd-badge.md
 ### sd-button.md
@@ -2376,7 +2376,7 @@ Expected: 100% pass.
 npm run lint
 ```
 
-Expected: 0 errors trÃªn file má»›i (allow existing warnings).
+Expected: 0 errors trên file m�:i (allow existing warnings).
 
 ```bash
 npm run build
@@ -2413,7 +2413,7 @@ git push -u origin feature/plan-1-core-ui-tests
 
 ## Troubleshooting notes
 
-**License service throw**: náº¿u test fail vá»›i `[Security] Unauthorized usage`, mock:
+**License service throw**: nếu test fail v�:i `[Security] Unauthorized usage`, mock:
 
 ```typescript
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
@@ -2421,11 +2421,11 @@ import { SdLicenseService } from '@sdcorejs/angular/services/license';
 { provide: SdLicenseService, useValue: { enforceLicense: () => undefined } }
 ```
 
-**Material/CDK animation errors**: thÃªm `NoopAnimationsModule` vÃ o imports.
+**Material/CDK animation errors**: thêm `NoopAnimationsModule` vào imports.
 
-**Signal input not reflecting**: dÃ¹ng `fixture.componentRef.setInput('key', value)` rá»“i `fixture.detectChanges()`. KhÃ´ng gÃ¡n trá»±c tiáº¿p `instance.signal()`.
+**Signal input not reflecting**: dùng `fixture.componentRef.setInput('key', value)` r�i `fixture.detectChanges()`. Không gán trực tiếp `instance.signal()`.
 
-**Effect not running**: signal effects fire async. Trong `fakeAsync`, gá»i `tick()` sau khi `setInput` Ä‘á»ƒ flush microtasks.
+**Effect not running**: signal effects fire async. Trong `fakeAsync`, gọi `tick()` sau khi `setInput` �Ồ flush microtasks.
 
-**FormGroup integration timing**: `ngAfterViewInit` má»›i `addControl`. Verify sau `fixture.detectChanges()` Ä‘áº§u tiÃªn.
+**FormGroup integration timing**: `ngAfterViewInit` m�:i `addControl`. Verify sau `fixture.detectChanges()` �ầu tiên.
 

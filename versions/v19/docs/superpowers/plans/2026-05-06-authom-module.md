@@ -1,10 +1,10 @@
-﻿# AuthOM Module Implementation Plan
+�# AuthOM Module Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Triá»ƒn khai module `authom` trong thÆ° viá»‡n `sd-angular`, mirror cáº¥u trÃºc module `keycloak` hiá»‡n cÃ³. Consumer khá»Ÿi táº¡o báº±ng `provideSdAuthOm({ useFactory: ... })`, login/logout/silent-refresh chuáº©n OAuth 2.0 + PKCE.
+**Goal:** TriỒn khai module `authom` trong thư vi�!n `sd-angular`, mirror cấu trúc module `keycloak` hi�!n có. Consumer kh�xi tạo bằng `provideSdAuthOm({ useFactory: ... })`, login/logout/silent-refresh chuẩn OAuth 2.0 + PKCE.
 
-**Architecture:** OAuth 2.0 Authorization Code Flow + PKCE, gá»i tháº³ng AuthOM (khÃ´ng cáº§n BE proxy). Silent refresh qua iframe áº©n + file `silent-authom.html` tÄ©nh + session cookie. Token chá»‰ lÆ°u RAM (Angular signals). Auto-refresh trÆ°á»›c khi JWT `exp` báº±ng `setTimeout`.
+**Architecture:** OAuth 2.0 Authorization Code Flow + PKCE, gọi thẳng AuthOM (không cần BE proxy). Silent refresh qua iframe ẩn + file `silent-authom.html` tĩnh + session cookie. Token ch�0 lưu RAM (Angular signals). Auto-refresh trư�:c khi JWT `exp` bằng `setTimeout`.
 
 **Tech Stack:** Angular 19 (standalone API + NgModule legacy), Web Crypto API (`crypto.subtle.digest`, `crypto.getRandomValues`, `crypto.randomUUID`), TypeScript, ng-packagr secondary entry point.
 
@@ -15,28 +15,28 @@
 ## File Structure
 
 **Create:**
-- `projects/sdcorejs-angular/modules/authom/authom.configuration.ts` â€” interface `SdAuthOmTenantConfig`, `ISdAuthOmConfiguration`, token `SD_AUTHOM_CONFIGURATION`.
-- `projects/sdcorejs-angular/modules/authom/authom.service.ts` â€” `SdAuthOmService` (init/login/logout/silentRefresh/handleCallback + auto-refresh timer + PKCE helpers).
-- `projects/sdcorejs-angular/modules/authom/authom.interceptor.ts` â€” `SdAuthOmInterceptor` (functional) + `matchGlob` helper.
-- `projects/sdcorejs-angular/modules/authom/authom.module.ts` â€” `provideSdAuthOm()` + `SdAuthOmModule.forRoot()`.
-- `projects/sdcorejs-angular/modules/authom/index.ts` â€” re-export public API.
-- `projects/sdcorejs-angular/modules/authom/ng-package.json` â€” secondary entry point cho ng-packagr.
-- `projects/sdcorejs-angular/modules/authom/silent-authom.html` â€” file tÄ©nh template, consumer copy vÃ o `public/`.
+- `projects/sdcorejs-angular/modules/authom/authom.configuration.ts` � interface `SdAuthOmTenantConfig`, `ISdAuthOmConfiguration`, token `SD_AUTHOM_CONFIGURATION`.
+- `projects/sdcorejs-angular/modules/authom/authom.service.ts` � `SdAuthOmService` (init/login/logout/silentRefresh/handleCallback + auto-refresh timer + PKCE helpers).
+- `projects/sdcorejs-angular/modules/authom/authom.interceptor.ts` � `SdAuthOmInterceptor` (functional) + `matchGlob` helper.
+- `projects/sdcorejs-angular/modules/authom/authom.module.ts` � `provideSdAuthOm()` + `SdAuthOmModule.forRoot()`.
+- `projects/sdcorejs-angular/modules/authom/index.ts` � re-export public API.
+- `projects/sdcorejs-angular/modules/authom/ng-package.json` � secondary entry point cho ng-packagr.
+- `projects/sdcorejs-angular/modules/authom/silent-authom.html` � file tĩnh template, consumer copy vào `public/`.
 
 **Modify:**
-- `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts` â€” thÃªm `sha256(input: string): Promise<string>` vÃ o `StringUtilities`.
-- `projects/sdcorejs-angular/modules/index.ts` â€” thÃªm `export * from '@sdcorejs/angular/modules/authom';`.
+- `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts` � thêm `sha256(input: string): Promise<string>` vào `StringUtilities`.
+- `projects/sdcorejs-angular/modules/index.ts` � thêm `export * from '@sdcorejs/angular/modules/authom';`.
 
 ---
 
-## Task 1: ThÃªm `sha256` vÃ o `StringUtilities`
+## Task 1: Thêm `sha256` vào `StringUtilities`
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts`
 
-- [ ] **Step 1: ThÃªm hÃ m `sha256` ngay trÆ°á»›c khá»‘i `export const StringUtilities`**
+- [ ] **Step 1: Thêm hàm `sha256` ngay trư�:c kh�i `export const StringUtilities`**
 
-Má»Ÿ `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts`, tÃ¬m dÃ²ng 198 (dÃ²ng trá»‘ng ngay trÆ°á»›c `export const StringUtilities = {`). ThÃªm hÃ m sau vÃ o dÃ²ng Ä‘Ã³:
+M�x `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts`, tìm dòng 198 (dòng tr�ng ngay trư�:c `export const StringUtilities = {`). Thêm hàm sau vào dòng �ó:
 
 ```ts
 const sha256 = async (input: string): Promise<string> => {
@@ -52,7 +52,7 @@ const sha256 = async (input: string): Promise<string> => {
 
 - [ ] **Step 2: Export `sha256` qua `StringUtilities`**
 
-Trong cÃ¹ng file, tÃ¬m khá»‘i `export const StringUtilities = { ... }` (dÃ²ng 199 trá»Ÿ Ä‘i). ThÃªm `sha256,` vÃ o cuá»‘i danh sÃ¡ch (sau `generateUniqueCode,`):
+Trong cùng file, tìm kh�i `export const StringUtilities = { ... }` (dòng 199 tr�x �i). Thêm `sha256,` vào cu�i danh sách (sau `generateUniqueCode,`):
 
 ```ts
 export const StringUtilities = {
@@ -79,31 +79,31 @@ export const StringUtilities = {
 };
 ```
 
-- [ ] **Step 3: Build sd-angular Ä‘á»ƒ verify thay Ä‘á»•i khÃ´ng phÃ¡ vá»¡ gÃ¬**
+- [ ] **Step 3: Build sd-angular �Ồ verify thay ��"i không phá vỡ gì**
 
 ```bash
 npx ng build sdcorejs-angular --configuration development
 ```
 
-Expected: build success, khÃ´ng cÃ³ TypeScript error.
+Expected: build success, không có TypeScript error.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts
-git commit -m "SM-00: ThÃªm StringUtilities.sha256 Ä‘á»ƒ há»— trá»£ PKCE"
+git commit -m "SM-00: Thêm StringUtilities.sha256 �Ồ h� trợ PKCE"
 ```
 
 ---
 
-## Task 2: Táº¡o `authom.configuration.ts`
+## Task 2: Tạo `authom.configuration.ts`
 
 **Files:**
 - Create: `projects/sdcorejs-angular/modules/authom/authom.configuration.ts`
 
-- [ ] **Step 1: Táº¡o file configuration**
+- [ ] **Step 1: Tạo file configuration**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/authom.configuration.ts` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/authom.configuration.ts` v�:i n�"i dung:
 
 ```ts
 import { InjectionToken } from '@angular/core';
@@ -135,19 +135,19 @@ export const SD_AUTHOM_CONFIGURATION = new InjectionToken<ISdAuthOmConfiguration
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.configuration.ts
-git commit -m "SM-00: ThÃªm authom configuration interface + injection token"
+git commit -m "SM-00: Thêm authom configuration interface + injection token"
 ```
 
 ---
 
-## Task 3: Táº¡o `silent-authom.html`
+## Task 3: Tạo `silent-authom.html`
 
 **Files:**
 - Create: `projects/sdcorejs-angular/modules/authom/silent-authom.html`
 
-- [ ] **Step 1: Táº¡o file HTML tÄ©nh cho silent refresh iframe**
+- [ ] **Step 1: Tạo file HTML tĩnh cho silent refresh iframe**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/silent-authom.html` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/silent-authom.html` v�:i n�"i dung:
 
 ```html
 <!DOCTYPE html>
@@ -182,19 +182,19 @@ Táº¡o file `projects/sdcorejs-angular/modules/authom/silent-authom.html` vá�
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/silent-authom.html
-git commit -m "SM-00: ThÃªm silent-authom.html template cho iframe refresh"
+git commit -m "SM-00: Thêm silent-authom.html template cho iframe refresh"
 ```
 
 ---
 
-## Task 4: Táº¡o skeleton `authom.service.ts` (state + getter)
+## Task 4: Tạo skeleton `authom.service.ts` (state + getter)
 
 **Files:**
 - Create: `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 
-- [ ] **Step 1: Táº¡o file service skeleton**
+- [ ] **Step 1: Tạo file service skeleton**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/authom.service.ts` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/authom.service.ts` v�:i n�"i dung:
 
 ```ts
 import { Injectable, PLATFORM_ID, computed, inject, signal } from '@angular/core';
@@ -227,7 +227,7 @@ export class SdAuthOmService {
 }
 ```
 
-- [ ] **Step 2: Build Ä‘á»ƒ verify**
+- [ ] **Step 2: Build �Ồ verify**
 
 ```bash
 npx ng build sdcorejs-angular --configuration development
@@ -239,28 +239,28 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.service.ts
-git commit -m "SM-00: Khá»Ÿi táº¡o SdAuthOmService skeleton vá»›i state signals"
+git commit -m "SM-00: Kh�xi tạo SdAuthOmService skeleton v�:i state signals"
 ```
 
 ---
 
-## Task 5: ThÃªm PKCE + URL helpers vÃ o service
+## Task 5: Thêm PKCE + URL helpers vào service
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 
-- [ ] **Step 1: ThÃªm import StringUtilities**
+- [ ] **Step 1: Thêm import StringUtilities**
 
-Sá»­a dÃ²ng `import { SdAuthOmTenantConfig } from './authom.configuration';` thÃ nh:
+Sửa dòng `import { SdAuthOmTenantConfig } from './authom.configuration';` thành:
 
 ```ts
 import { SdAuthOmTenantConfig } from './authom.configuration';
 import { StringUtilities } from '../../utilities/extensions/src/string.extension';
 ```
 
-- [ ] **Step 2: ThÃªm cÃ¡c private helper trong class**
+- [ ] **Step 2: Thêm các private helper trong class**
 
-ThÃªm cÃ¡c method sau vÃ o trong class `SdAuthOmService`, ngay sau method `getAccessToken()`:
+Thêm các method sau vào trong class `SdAuthOmService`, ngay sau method `getAccessToken()`:
 
 ```ts
   private base64UrlEncode(bytes: Uint8Array): string {
@@ -333,7 +333,7 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.service.ts
-git commit -m "SM-00: ThÃªm PKCE + URL helpers cho SdAuthOmService"
+git commit -m "SM-00: Thêm PKCE + URL helpers cho SdAuthOmService"
 ```
 
 ---
@@ -343,9 +343,9 @@ git commit -m "SM-00: ThÃªm PKCE + URL helpers cho SdAuthOmService"
 **Files:**
 - Modify: `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 
-- [ ] **Step 1: ThÃªm method `login` vÃ  `logout`**
+- [ ] **Step 1: Thêm method `login` và `logout`**
 
-ThÃªm cÃ¡c method sau vÃ o trong class `SdAuthOmService`, ngay sau `decodeJwtPayload`:
+Thêm các method sau vào trong class `SdAuthOmService`, ngay sau `decodeJwtPayload`:
 
 ```ts
   async login(options?: { returnTo?: string }): Promise<void> {
@@ -398,7 +398,7 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.service.ts
-git commit -m "SM-00: ThÃªm login() vÃ  logout() cho SdAuthOmService"
+git commit -m "SM-00: Thêm login() và logout() cho SdAuthOmService"
 ```
 
 ---
@@ -408,9 +408,9 @@ git commit -m "SM-00: ThÃªm login() vÃ  logout() cho SdAuthOmService"
 **Files:**
 - Modify: `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 
-- [ ] **Step 1: ThÃªm `exchangeCode` vÃ  `scheduleRefresh`**
+- [ ] **Step 1: Thêm `exchangeCode` và `scheduleRefresh`**
 
-ThÃªm cÃ¡c method sau vÃ o trong class `SdAuthOmService`, ngay sau `logout`:
+Thêm các method sau vào trong class `SdAuthOmService`, ngay sau `logout`:
 
 ```ts
   private async exchangeCode(code: string, codeVerifier: string, redirectUri: string): Promise<boolean> {
@@ -450,7 +450,7 @@ ThÃªm cÃ¡c method sau vÃ o trong class `SdAuthOmService`, ngay sau `logout
     const claims = this.decodeJwtPayload(token);
     const exp = claims?.['exp'];
     if (typeof exp !== 'number') {
-      console.warn('[SdAuthOmService] Token khÃ´ng cÃ³ exp â€” bá» qua auto-refresh');
+      console.warn('[SdAuthOmService] Token không có exp � bỏ qua auto-refresh');
       return;
     }
     const threshold = this.config.refreshThresholdSeconds ?? DEFAULT_REFRESH_THRESHOLD_SECONDS;
@@ -462,13 +462,13 @@ ThÃªm cÃ¡c method sau vÃ o trong class `SdAuthOmService`, ngay sau `logout
   }
 ```
 
-- [ ] **Step 2: Build verify (sáº½ bÃ¡o lá»—i `silentRefresh` chÆ°a tá»“n táº¡i â€” Ä‘Ã³ lÃ  expected, sáº½ thÃªm á»Ÿ Task 8)**
+- [ ] **Step 2: Build verify (sẽ báo l�i `silentRefresh` chưa t�n tại � �ó là expected, sẽ thêm �x Task 8)**
 
 ```bash
 npx ng build sdcorejs-angular --configuration development
 ```
 
-Expected: error `Property 'silentRefresh' does not exist on type 'SdAuthOmService'`. **KhÃ´ng commit** á»Ÿ task nÃ y â€” tiáº¿p tá»¥c Task 8.
+Expected: error `Property 'silentRefresh' does not exist on type 'SdAuthOmService'`. **Không commit** �x task này � tiếp tục Task 8.
 
 ---
 
@@ -477,9 +477,9 @@ Expected: error `Property 'silentRefresh' does not exist on type 'SdAuthOmServic
 **Files:**
 - Modify: `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 
-- [ ] **Step 1: ThÃªm method `silentRefresh`**
+- [ ] **Step 1: Thêm method `silentRefresh`**
 
-ThÃªm method sau vÃ o trong class `SdAuthOmService`, ngay sau `scheduleRefresh`:
+Thêm method sau vào trong class `SdAuthOmService`, ngay sau `scheduleRefresh`:
 
 ```ts
   silentRefresh(): Promise<boolean> {
@@ -547,11 +547,11 @@ npx ng build sdcorejs-angular --configuration development
 
 Expected: build success.
 
-- [ ] **Step 3: Commit gá»™p Task 7 + 8**
+- [ ] **Step 3: Commit g�"p Task 7 + 8**
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.service.ts
-git commit -m "SM-00: ThÃªm exchangeCode, scheduleRefresh, silentRefresh"
+git commit -m "SM-00: Thêm exchangeCode, scheduleRefresh, silentRefresh"
 ```
 
 ---
@@ -561,9 +561,9 @@ git commit -m "SM-00: ThÃªm exchangeCode, scheduleRefresh, silentRefresh"
 **Files:**
 - Modify: `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 
-- [ ] **Step 1: ThÃªm `handleCallback` vÃ  `init`**
+- [ ] **Step 1: Thêm `handleCallback` và `init`**
 
-ThÃªm 2 method sau vÃ o trong class `SdAuthOmService`, ngay sau `silentRefresh`:
+Thêm 2 method sau vào trong class `SdAuthOmService`, ngay sau `silentRefresh`:
 
 ```ts
   async handleCallback(): Promise<boolean> {
@@ -625,19 +625,19 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.service.ts
-git commit -m "SM-00: ThÃªm handleCallback vÃ  init cho SdAuthOmService"
+git commit -m "SM-00: Thêm handleCallback và init cho SdAuthOmService"
 ```
 
 ---
 
-## Task 10: Táº¡o `authom.interceptor.ts`
+## Task 10: Tạo `authom.interceptor.ts`
 
 **Files:**
 - Create: `projects/sdcorejs-angular/modules/authom/authom.interceptor.ts`
 
-- [ ] **Step 1: Táº¡o interceptor**
+- [ ] **Step 1: Tạo interceptor**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/authom.interceptor.ts` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/authom.interceptor.ts` v�:i n�"i dung:
 
 ```ts
 import { HttpInterceptorFn } from '@angular/common/http';
@@ -680,19 +680,19 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.interceptor.ts
-git commit -m "SM-00: ThÃªm SdAuthOmInterceptor vá»›i glob match cho secureRoutes"
+git commit -m "SM-00: Thêm SdAuthOmInterceptor v�:i glob match cho secureRoutes"
 ```
 
 ---
 
-## Task 11: Táº¡o `authom.module.ts`
+## Task 11: Tạo `authom.module.ts`
 
 **Files:**
 - Create: `projects/sdcorejs-angular/modules/authom/authom.module.ts`
 
-- [ ] **Step 1: Táº¡o module vá»›i `provideSdAuthOm` vÃ  `SdAuthOmModule.forRoot`**
+- [ ] **Step 1: Tạo module v�:i `provideSdAuthOm` và `SdAuthOmModule.forRoot`**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/authom.module.ts` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/authom.module.ts` v�:i n�"i dung:
 
 ```ts
 import {
@@ -775,20 +775,20 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/authom.module.ts
-git commit -m "SM-00: ThÃªm provideSdAuthOm vÃ  SdAuthOmModule.forRoot"
+git commit -m "SM-00: Thêm provideSdAuthOm và SdAuthOmModule.forRoot"
 ```
 
 ---
 
-## Task 12: Táº¡o `index.ts` + `ng-package.json` cho secondary entry
+## Task 12: Tạo `index.ts` + `ng-package.json` cho secondary entry
 
 **Files:**
 - Create: `projects/sdcorejs-angular/modules/authom/index.ts`
 - Create: `projects/sdcorejs-angular/modules/authom/ng-package.json`
 
-- [ ] **Step 1: Táº¡o `index.ts`**
+- [ ] **Step 1: Tạo `index.ts`**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/index.ts` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/index.ts` v�:i n�"i dung:
 
 ```ts
 export * from './authom.configuration';
@@ -797,9 +797,9 @@ export * from './authom.interceptor';
 export * from './authom.module';
 ```
 
-- [ ] **Step 2: Táº¡o `ng-package.json`**
+- [ ] **Step 2: Tạo `ng-package.json`**
 
-Táº¡o file `projects/sdcorejs-angular/modules/authom/ng-package.json` vá»›i ná»™i dung:
+Tạo file `projects/sdcorejs-angular/modules/authom/ng-package.json` v�:i n�"i dung:
 
 ```json
 {
@@ -816,31 +816,31 @@ Táº¡o file `projects/sdcorejs-angular/modules/authom/ng-package.json` vá»�
 npx ng build sdcorejs-angular --configuration development
 ```
 
-Expected: build success. Trong output dist sáº½ cÃ³ `dist/sdcorejs-angular/modules/authom/` vá»›i `.d.ts`/`.mjs`.
+Expected: build success. Trong output dist sẽ có `dist/sdcorejs-angular/modules/authom/` v�:i `.d.ts`/`.mjs`.
 
 - [ ] **Step 4: Commit**
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/index.ts projects/sdcorejs-angular/modules/authom/ng-package.json
-git commit -m "SM-00: ThÃªm secondary entry point cho module authom"
+git commit -m "SM-00: Thêm secondary entry point cho module authom"
 ```
 
 ---
 
-## Task 13: Re-export module authom tá»« `modules/index.ts`
+## Task 13: Re-export module authom từ `modules/index.ts`
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/modules/index.ts`
 
-- [ ] **Step 1: ThÃªm export cho authom**
+- [ ] **Step 1: Thêm export cho authom**
 
-Má»Ÿ `projects/sdcorejs-angular/modules/index.ts`. ThÃªm dÃ²ng sau vÃ o cuá»‘i file (sau `export * from '@sdcorejs/angular/modules/layout';`):
+M�x `projects/sdcorejs-angular/modules/index.ts`. Thêm dòng sau vào cu�i file (sau `export * from '@sdcorejs/angular/modules/layout';`):
 
 ```ts
 export * from '@sdcorejs/angular/modules/authom';
 ```
 
-File sau khi sá»­a sáº½ lÃ :
+File sau khi sửa sẽ là:
 
 ```ts
 export * from '@sdcorejs/angular/modules/keycloak';
@@ -862,7 +862,7 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/index.ts
-git commit -m "SM-00: Re-export module authom tá»« modules barrel"
+git commit -m "SM-00: Re-export module authom từ modules barrel"
 ```
 
 ---
@@ -877,7 +877,7 @@ git commit -m "SM-00: Re-export module authom tá»« modules barrel"
 npx ng build sdcorejs-angular --configuration production
 ```
 
-Expected: build success, khÃ´ng cÃ³ error.
+Expected: build success, không có error.
 
 - [ ] **Step 2: Lint**
 
@@ -885,7 +885,7 @@ Expected: build success, khÃ´ng cÃ³ error.
 npx ng lint sd-angular
 ```
 
-Expected: pass hoáº·c chá»‰ cÃ³ warnings khÃ´ng liÃªn quan tá»›i authom. Náº¿u cÃ³ error trong file authom â€” fix inline (Ä‘a sá»‘ sáº½ lÃ  `eslint-disable-next-line @typescript-eslint/no-explicit-any` Ä‘Ã£ cÃ³ sáºµn cho `useFactory` deps).
+Expected: pass hoặc ch�0 có warnings không liên quan t�:i authom. Nếu có error trong file authom � fix inline (�a s� sẽ là `eslint-disable-next-line @typescript-eslint/no-explicit-any` �ã có sẵn cho `useFactory` deps).
 
 - [ ] **Step 3: Verify dist artifacts**
 
@@ -893,7 +893,7 @@ Expected: pass hoáº·c chá»‰ cÃ³ warnings khÃ´ng liÃªn quan tá»›
 ls dist/sdcorejs-angular/modules/authom/
 ```
 
-Expected: tháº¥y cÃ³ `index.d.ts` (hoáº·c `*.d.ts`), `package.json`, `index.mjs` (hoáº·c tÆ°Æ¡ng tá»±). Cáº¥u trÃºc giá»‘ng `dist/sdcorejs-angular/modules/keycloak/`.
+Expected: thấy có `index.d.ts` (hoặc `*.d.ts`), `package.json`, `index.mjs` (hoặc tương tự). Cấu trúc gi�ng `dist/sdcorejs-angular/modules/keycloak/`.
 
 - [ ] **Step 4: Verify smoke test public-api**
 
@@ -901,11 +901,11 @@ Expected: tháº¥y cÃ³ `index.d.ts` (hoáº·c `*.d.ts`), `package.json`, `in
 npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless
 ```
 
-Expected: `public-api.spec.ts` pass (entry point load OK). Náº¿u test config khÃ´ng sáºµn ChromeHeadless â†’ bá» qua, khÃ´ng báº¯t buá»™c.
+Expected: `public-api.spec.ts` pass (entry point load OK). Nếu test config không sẵn ChromeHeadless �  bỏ qua, không bắt bu�"c.
 
-- [ ] **Step 5: Final commit (náº¿u cáº§n fix lint)**
+- [ ] **Step 5: Final commit (nếu cần fix lint)**
 
-Náº¿u cÃ³ thay Ä‘á»•i do lint fix:
+Nếu có thay ��"i do lint fix:
 
 ```bash
 git add -A
@@ -914,20 +914,20 @@ git commit -m "SM-00: Fix lint warnings cho module authom"
 
 ---
 
-## Task 15: Document cÃ¡ch dÃ¹ng (README inline trong file index hoáº·c commit separate)
+## Task 15: Document cách dùng (README inline trong file index hoặc commit separate)
 
 **Files:**
-- Modify: `projects/sdcorejs-angular/modules/authom/index.ts` (thÃªm header comment)
+- Modify: `projects/sdcorejs-angular/modules/authom/index.ts` (thêm header comment)
 
-- [ ] **Step 1: ThÃªm header comment vÃ o index.ts**
+- [ ] **Step 1: Thêm header comment vào index.ts**
 
-Má»Ÿ `projects/sdcorejs-angular/modules/authom/index.ts`. Thay tháº¿ ná»™i dung thÃ nh:
+M�x `projects/sdcorejs-angular/modules/authom/index.ts`. Thay thế n�"i dung thành:
 
 ```ts
 /**
- * Module `authom` â€” OAuth 2.0 + PKCE authentication client cho AuthOM (Auth0-based).
+ * Module `authom` � OAuth 2.0 + PKCE authentication client cho AuthOM (Auth0-based).
  *
- * CÃ¡ch dÃ¹ng (standalone):
+ * Cách dùng (standalone):
  * ```ts
  * import { provideHttpClient, withInterceptors } from '@angular/common/http';
  * import { provideSdAuthOm, SdAuthOmInterceptor } from '@sdcorejs/angular/modules/authom';
@@ -951,9 +951,9 @@ Má»Ÿ `projects/sdcorejs-angular/modules/authom/index.ts`. Thay tháº¿ ná»
  * };
  * ```
  *
- * YÃªu cáº§u setup thÃªm:
- * 1. Copy file `silent-authom.html` tá»« source module nÃ y vÃ o thÆ° má»¥c `public/` cá»§a app.
- * 2. App pháº£i cháº¡y trÃªn HTTPS (hoáº·c localhost) â€” Web Crypto API yÃªu cáº§u secure context.
+ * Yêu cầu setup thêm:
+ * 1. Copy file `silent-authom.html` từ source module này vào thư mục `public/` của app.
+ * 2. App phải chạy trên HTTPS (hoặc localhost) � Web Crypto API yêu cầu secure context.
  */
 export * from './authom.configuration';
 export * from './authom.service';
@@ -973,7 +973,7 @@ Expected: build success.
 
 ```bash
 git add projects/sdcorejs-angular/modules/authom/index.ts
-git commit -m "SM-00: ThÃªm hÆ°á»›ng dáº«n sá»­ dá»¥ng module authom vÃ o index.ts"
+git commit -m "SM-00: Thêm hư�:ng dẫn sử dụng module authom vào index.ts"
 ```
 
 ---
@@ -981,31 +981,31 @@ git commit -m "SM-00: ThÃªm hÆ°á»›ng dáº«n sá»­ dá»¥ng module a
 ## Self-Review
 
 **1. Spec coverage:**
-- âœ… Section 3 (cáº¥u trÃºc file) â†’ Tasks 2, 3, 4, 10, 11, 12.
-- âœ… Section 4 (configuration) â†’ Task 2.
-- âœ… Section 5.1 (init) â†’ Task 9.
-- âœ… Section 5.2 (login) â†’ Task 6.
-- âœ… Section 5.3 (logout) â†’ Task 6.
-- âœ… Section 5.4 (silentRefresh) â†’ Task 8.
-- âœ… Section 5.5 (handleCallback) â†’ Task 9.
-- âœ… Section 5.6 (auto-refresh timer / scheduleRefresh) â†’ Task 7.
-- âœ… Section 6 (interceptor + matchGlob) â†’ Task 10.
-- âœ… Section 7 (silent-authom.html) â†’ Task 3.
-- âœ… Section 8 (module providers) â†’ Task 11.
-- âœ… Section 9 (StringUtilities.sha256) â†’ Task 1.
-- âœ… Section 10 (edge cases) â†’ handled in Tasks 4, 6, 7, 8, 9 (`isBrowser` guard, state mismatch return false, timeout, JWT exp missing â†’ log warn).
-- âœ… Section 11 (public API export) â†’ Tasks 12, 13.
-- âœ… Section 12 (usage example) â†’ Task 15.
+- �S& Section 3 (cấu trúc file) �  Tasks 2, 3, 4, 10, 11, 12.
+- �S& Section 4 (configuration) �  Task 2.
+- �S& Section 5.1 (init) �  Task 9.
+- �S& Section 5.2 (login) �  Task 6.
+- �S& Section 5.3 (logout) �  Task 6.
+- �S& Section 5.4 (silentRefresh) �  Task 8.
+- �S& Section 5.5 (handleCallback) �  Task 9.
+- �S& Section 5.6 (auto-refresh timer / scheduleRefresh) �  Task 7.
+- �S& Section 6 (interceptor + matchGlob) �  Task 10.
+- �S& Section 7 (silent-authom.html) �  Task 3.
+- �S& Section 8 (module providers) �  Task 11.
+- �S& Section 9 (StringUtilities.sha256) �  Task 1.
+- �S& Section 10 (edge cases) �  handled in Tasks 4, 6, 7, 8, 9 (`isBrowser` guard, state mismatch return false, timeout, JWT exp missing �  log warn).
+- �S& Section 11 (public API export) �  Tasks 12, 13.
+- �S& Section 12 (usage example) �  Task 15.
 
-**2. Placeholder scan:** KhÃ´ng cÃ³ TBD/TODO/"implement later". Má»i step cÃ³ code cá»¥ thá»ƒ hoáº·c command cá»¥ thá»ƒ.
+**2. Placeholder scan:** Không có TBD/TODO/"implement later". Mọi step có code cụ thỒ hoặc command cụ thỒ.
 
 **3. Type consistency:**
-- `SdAuthOmTenantConfig`/`ISdAuthOmConfiguration`/`SD_AUTHOM_CONFIGURATION` â€” Ä‘á»‹nh nghÄ©a Task 2, dÃ¹ng nháº¥t quÃ¡n Tasks 9, 10, 11.
-- `SdAuthOmService.config`, `accessToken`, `getAccessToken` â€” Ä‘á»‹nh nghÄ©a Task 4, dÃ¹ng Tasks 5, 6, 7, 8, 9, 10.
-- `STORAGE_KEY_*` constants â€” Ä‘á»‹nh nghÄ©a Task 4, dÃ¹ng Tasks 6, 9.
-- `DEFAULT_*` constants â€” Ä‘á»‹nh nghÄ©a Task 4, dÃ¹ng Tasks 5, 7, 8.
-- Method signatures khá»›p giá»¯a task Ä‘á»‹nh nghÄ©a (5, 6, 7, 8, 9) vÃ  caller (Task 10 interceptor gá»i `getAccessToken`, Task 11 module gá»i `init`).
-- `AUTHOM_SILENT_SUCCESS` / `AUTHOM_SILENT_ERROR` â€” postMessage type khá»›p giá»¯a Task 3 (`silent-authom.html`) vÃ  Task 8 (service `onMessage`).
+- `SdAuthOmTenantConfig`/`ISdAuthOmConfiguration`/`SD_AUTHOM_CONFIGURATION` � ��9nh nghĩa Task 2, dùng nhất quán Tasks 9, 10, 11.
+- `SdAuthOmService.config`, `accessToken`, `getAccessToken` � ��9nh nghĩa Task 4, dùng Tasks 5, 6, 7, 8, 9, 10.
+- `STORAGE_KEY_*` constants � ��9nh nghĩa Task 4, dùng Tasks 6, 9.
+- `DEFAULT_*` constants � ��9nh nghĩa Task 4, dùng Tasks 5, 7, 8.
+- Method signatures kh�:p giữa task ��9nh nghĩa (5, 6, 7, 8, 9) và caller (Task 10 interceptor gọi `getAccessToken`, Task 11 module gọi `init`).
+- `AUTHOM_SILENT_SUCCESS` / `AUTHOM_SILENT_ERROR` � postMessage type kh�:p giữa Task 3 (`silent-authom.html`) và Task 8 (service `onMessage`).
 
-Plan hoÃ n chá»‰nh, sáºµn sÃ ng thá»±c thi.
+Plan hoàn ch�0nh, sẵn sàng thực thi.
 

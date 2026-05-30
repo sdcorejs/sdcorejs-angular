@@ -1,4 +1,4 @@
-﻿# `<sd-date>`
+�# `<sd-date>`
 
 **Type**: Component (form input)
 **Selector**: `sd-date`
@@ -8,7 +8,7 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Single-date picker â€” Material datepicker with date-fns adapter (`dd/MM/yyyy` parse/display) plus SDCoreJS form-group registration, `[viewed]` read-only mode, and built-in min/max date validation messages.
+Single-date picker � Material datepicker with date-fns adapter (`dd/MM/yyyy` parse/display) plus SDCoreJS form-group registration, `[viewed]` read-only mode, and built-in min/max date validation messages.
 
 ## When to use
 - Any single date field (birth date, expiry date, effective date)
@@ -16,9 +16,9 @@ Single-date picker â€” Material datepicker with date-fns adapter (`dd/MM/yy
 - DETAIL state read-only via `[viewed]="true"`
 
 ## When NOT to use
-- Date RANGE (start + end) â†’ use `<sd-date-range>`
-- Multi-date selection â†’ use `<sd-chip-calendar>`
-- Date + time combined â†’ use `<sd-datetime>`
+- Date RANGE (start + end) �  use `<sd-date-range>`
+- Multi-date selection �  use `<sd-chip-calendar>`
+- Date + time combined �  use `<sd-datetime>`
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -36,13 +36,13 @@ Single-date picker â€” Material datepicker with date-fns adapter (`dd/MM/yy
 | `max` / `maxDate` | `Date \| string \| 'TODAY' \| undefined` | `undefined` | Maximum allowed date. `'TODAY'` resolves to `new Date()`. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables the field. |
-| `viewed` | `boolean` | `false` | DETAIL read-only mode â€” input hidden, formatted date (or `<ng-template sdViewDef>`) rendered. |
+| `viewed` | `boolean` | `false` | DETAIL read-only mode � input hidden, formatted date (or `<ng-template sdViewDef>`) rendered. |
 | `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorMessage`. |
 | `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message. |
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Used in `[viewed]` mode to render the date as a link. |
 | `model` | `string \| number \| Date \| null \| undefined` | `undefined` | Two-way bound value (use `[(model)]`). Persisted as `'yyyy/MM/dd'` string internally. |
 
-> **Coerce**: `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` â€” bare attribute = `true`.
+> **Coerce**: `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` � bare attribute = `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -55,22 +55,22 @@ Applied automatically on `<sd-date>` for styling hooks:
 
 | Class | Condition | Effect |
 | --- | --- | --- |
-| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent �  no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 | `sd-bare` | `[bare]="true"` | Strips the mat-form-field shell for inline contexts (chip, token). |
 
 ## Content projection (slots)
-- `#sdLabel` template â€” custom label
-- `#sdValue` template â€” custom value rendering
-- `<ng-template sdLabelDef>` â€” alternate label
-- `<ng-template sdViewDef>` â€” read-only display template used in `[viewed]` mode
+- `#sdLabel` template � custom label
+- `#sdValue` template � custom value rendering
+- `<ng-template sdLabelDef>` � alternate label
+- `<ng-template sdViewDef>` � read-only display template used in `[viewed]` mode
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Standard SDCoreJS pattern: pass `[form]` + `name`, the internal `SdFormControl` registers into the group on `ngOnInit`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** = DETAIL read-only mode: input + calendar icon are hidden, the formatted date (or `<ng-template sdViewDef>`) is shown. With `hyperlink` it renders a clickable link.
 - **Date adapter**: providers include `provideDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage uses native `Date` objects; emitted values are `'yyyy/MM/dd'` strings.
-- **Validators**: `[required]` adds `Validators.required`. `[min]` / `[max]` flow into Material's `matDatepickerMin` / `matDatepickerMax` validators. Manual typed text is regex-validated (`dd/MM/yyyy`) and bad input sets a synthetic `date: 'Sai Ä‘á»‹nh dáº¡ng'` error. `[inlineError]` injects a synthetic `inlineError` validator. `errorMessage` gives Vietnamese messages for each error key.
+- **Validators**: `[required]` adds `Validators.required`. `[min]` / `[max]` flow into Material's `matDatepickerMin` / `matDatepickerMax` validators. Manual typed text is regex-validated (`dd/MM/yyyy`) and bad input sets a synthetic `date: 'Sai ��9nh dạng'` error. `[inlineError]` injects a synthetic `inlineError` validator. `errorMessage` gives Vietnamese messages for each error key.
 
 ## Public methods & getters
 
@@ -86,13 +86,13 @@ Applied automatically on `<sd-date>` for styling hooks:
 | `formControl` | `SdFormControl` | Underlying reactive control. Accessible for direct validator inspection in tests. |
 | `isFocused` | `boolean` | Current focus state (drives CSS classes and view-def toggle). |
 
-## Visual cues (helps agent map screenshots â†’ component)
+## Visual cues (helps agent map screenshots �  component)
 - Outlined input field showing `DD/MM/YYYY` formatted date
-- Trailing calendar icon button â†’ opens Material datepicker popup
-- Slim clear-button (`.sd-clear-btn` â€” round transparent button with a thin `close` icon, grey â†’ red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) â€” hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`).
+- Trailing calendar icon button �  opens Material datepicker popup
+- Slim clear-button (`.sd-clear-btn` � round transparent button with a thin `close` icon, grey �  red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) � hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`).
 - Min/max enforcement: dates outside the range are greyed-out and unselectable in the popup
-- Format error: red underline + tooltip "Sai Ä‘á»‹nh dáº¡ng" while the typed text doesn't match `D/M/YYYY` regex
-- In `[viewed]="true"` mode: no input, no icon â€” plain formatted date or hyperlink
+- Format error: red underline + tooltip "Sai ��9nh dạng" while the typed text doesn't match `D/M/YYYY` regex
+- In `[viewed]="true"` mode: no input, no icon � plain formatted date or hyperlink
 
 ## Examples
 
@@ -100,7 +100,7 @@ Applied automatically on `<sd-date>` for styling hooks:
 ```html
 <sd-date
   [form]="form" name="dob"
-  label="NgÃ y sinh"
+  label="Ngày sinh"
   [(model)]="model.dob"
   max="TODAY"
   required
@@ -112,7 +112,7 @@ Applied automatically on `<sd-date>` for styling hooks:
 ```html
 <sd-date
   [form]="form" name="effectiveDate"
-  label="NgÃ y hiá»‡u lá»±c"
+  label="Ngày hi�!u lực"
   [min]="contract.startDate"
   [max]="contract.endDate"
   [(model)]="model.effectiveDate"
@@ -123,7 +123,7 @@ Applied automatically on `<sd-date>` for styling hooks:
 ### 3. DETAIL read-only with hyperlink
 ```html
 <sd-date
-  label="NgÃ y táº¡o"
+  label="Ngày tạo"
   [model]="model.createdAt"
   [viewed]="true"
   hyperlink="/audit/{{ model.id }}">
@@ -155,16 +155,16 @@ await expect(el).toHaveAttribute('data-required', 'true');
 ```
 
 ## Anti-patterns
-- âŒ Using `formControlName` / `[(ngModel)]` â€” not wired; use `[(model)]` + `[form]+[name]`.
-- âŒ Setting `model` to a moment object â€” pass `Date`, ISO string, or `'yyyy/MM/dd'` string. Component normalizes via `DateUtilities`.
-- âŒ Trying `[disabled]` for DETAIL state â€” use `[viewed]="true"` for the proper read-only visual.
-- âŒ Bypassing `min`/`max` and validating manually â€” built-in validators surface localized tooltip messages.
-- âŒ Using `<sd-date>` for a date+time field â€” switch to `<sd-datetime>`.
+- �R Using `formControlName` / `[(ngModel)]` � not wired; use `[(model)]` + `[form]+[name]`.
+- �R Setting `model` to a moment object � pass `Date`, ISO string, or `'yyyy/MM/dd'` string. Component normalizes via `DateUtilities`.
+- �R Trying `[disabled]` for DETAIL state � use `[viewed]="true"` for the proper read-only visual.
+- �R Bypassing `min`/`max` and validating manually � built-in validators surface localized tooltip messages.
+- �R Using `<sd-date>` for a date+time field � switch to `<sd-datetime>`.
 
 ## Related
-- `<sd-date-range>` â€” start/end pair
-- `<sd-datetime>` â€” date + time
-- `<sd-chip-calendar>` â€” multi-date chip strip
-- `<sd-input>` â€” free text fallback
-- `SD_FORM_CONFIGURATION` token â€” global default `appearance`
+- `<sd-date-range>` � start/end pair
+- `<sd-datetime>` � date + time
+- `<sd-chip-calendar>` � multi-date chip strip
+- `<sd-input>` � free text fallback
+- `SD_FORM_CONFIGURATION` token � global default `appearance`
 

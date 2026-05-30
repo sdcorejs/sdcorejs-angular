@@ -1,10 +1,10 @@
-﻿# Table Column Resize Implementation Plan
+�# Table Column Resize Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Cho phÃ©p ngÆ°á»i dÃ¹ng kÃ©o border pháº£i header Ä‘á»ƒ resize cá»™t; lÆ°u width vÃ o `ConfiguredColumn.width` qua `ConfigService` mÃ  KHÃ”NG trigger reload data.
+**Goal:** Cho phép người dùng kéo border phải header �Ồ resize c�"t; lưu width vào `ConfiguredColumn.width` qua `ConfigService` mà KH�NG trigger reload data.
 
-**Architecture:** Má»™t `SdColumnResizeDirective` Ä‘áº·t trÃªn `<th>` header tá»± inject má»™t handle 6px á»Ÿ mÃ©p pháº£i; mousedown/mousemove update inline width trá»±c tiáº¿p qua Renderer2 (ngoÃ i Angular zone, khÃ´ng trigger CD); mouseup emit `(resizeEnd)` â†’ `SdTable.onColumnResize` â†’ `ConfigService.persistColumnWidth` ghi storage báº±ng method má»›i `SdStorage.setSilent` + phÃ¡t qua `widthChange$` subject. `SdTable` subscribe `widthChange$` vÃ  chá»‰ mutate `configuration()` signal â€” khÃ´ng gá»i `loadValues`/`#loadFilterRegister`/`#reload`.
+**Architecture:** M�"t `SdColumnResizeDirective` �ặt trên `<th>` header tự inject m�"t handle 6px �x mép phải; mousedown/mousemove update inline width trực tiếp qua Renderer2 (ngoài Angular zone, không trigger CD); mouseup emit `(resizeEnd)` �  `SdTable.onColumnResize` �  `ConfigService.persistColumnWidth` ghi storage bằng method m�:i `SdStorage.setSilent` + phát qua `widthChange$` subject. `SdTable` subscribe `widthChange$` và ch�0 mutate `configuration()` signal � không gọi `loadValues`/`#loadFilterRegister`/`#reload`.
 
 **Tech Stack:** Angular 19+, Angular Signals, Renderer2, RxJS Subject, Karma + Jasmine.
 
@@ -16,21 +16,21 @@
 
 | File | Change |
 |---|---|
-| `projects/sdcorejs-angular/services/storage/src/storage.model.ts` | ThÃªm `setSilent` vÃ o `SdStorage<T>` interface |
+| `projects/sdcorejs-angular/services/storage/src/storage.model.ts` | Thêm `setSilent` vào `SdStorage<T>` interface |
 | `projects/sdcorejs-angular/services/storage/src/storage.service.ts` | Implement `setSilent` trong `create()` |
-| `projects/sdcorejs-angular/services/storage/src/storage.service.spec.ts` | NEW â€” test `setSilent` khÃ´ng emit subject |
-| `projects/sdcorejs-angular/components/table/src/services/config.service.ts` | LÆ°u storage reference, thÃªm `persistColumnWidth` + `widthChange$` |
-| `projects/sdcorejs-angular/components/table/src/services/config.service.spec.ts` | NEW â€” test `persistColumnWidth` |
-| `projects/sdcorejs-angular/components/table/src/directives/sd-column-resize.directive.ts` | NEW â€” directive resize |
-| `projects/sdcorejs-angular/components/table/src/directives/sd-column-resize.directive.spec.ts` | NEW â€” test directive |
-| `projects/sdcorejs-angular/components/table/src/directives/index.ts` | Export directive má»›i |
-| `projects/sdcorejs-angular/components/table/src/table.component.ts` | Import directive, subscribe `widthChange$`, thÃªm `onColumnResize` |
-| `projects/sdcorejs-angular/components/table/src/table.component.html` | ThÃªm `[sdColumnResize]`, `(resizeEnd)` lÃªn `<th>` cá»§a loop firstColumns |
+| `projects/sdcorejs-angular/services/storage/src/storage.service.spec.ts` | NEW � test `setSilent` không emit subject |
+| `projects/sdcorejs-angular/components/table/src/services/config.service.ts` | Lưu storage reference, thêm `persistColumnWidth` + `widthChange$` |
+| `projects/sdcorejs-angular/components/table/src/services/config.service.spec.ts` | NEW � test `persistColumnWidth` |
+| `projects/sdcorejs-angular/components/table/src/directives/sd-column-resize.directive.ts` | NEW � directive resize |
+| `projects/sdcorejs-angular/components/table/src/directives/sd-column-resize.directive.spec.ts` | NEW � test directive |
+| `projects/sdcorejs-angular/components/table/src/directives/index.ts` | Export directive m�:i |
+| `projects/sdcorejs-angular/components/table/src/table.component.ts` | Import directive, subscribe `widthChange$`, thêm `onColumnResize` |
+| `projects/sdcorejs-angular/components/table/src/table.component.html` | Thêm `[sdColumnResize]`, `(resizeEnd)` lên `<th>` của loop firstColumns |
 | `projects/sdcorejs-angular/components/table/src/table.component.scss` | Style cho `.sd-col-resize-host`, `.sd-col-resize-handle`, `.sd-resizing` |
 
 ---
 
-## Task 1: Extend `SdStorage` interface vá»›i `setSilent`
+## Task 1: Extend `SdStorage` interface v�:i `setSilent`
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/services/storage/src/storage.model.ts`
@@ -44,7 +44,7 @@ Expected: build succeeds, no errors.
 
 - [ ] **Step 2: Add `setSilent` to `SdStorage` interface**
 
-Open `projects/sdcorejs-angular/services/storage/src/storage.model.ts` vÃ  thay block sau:
+Open `projects/sdcorejs-angular/services/storage/src/storage.model.ts` và thay block sau:
 
 ```typescript
 export interface SdStorage<T = any> {
@@ -57,14 +57,14 @@ export interface SdStorage<T = any> {
 }
 ```
 
-Báº±ng:
+Bằng:
 
 ```typescript
 export interface SdStorage<T = any> {
   get: () => T;
   set: (data: T) => void;
-  // Ghi vÃ o storage nhÆ°ng KHÃ”NG emit subject. DÃ¹ng cho thay Ä‘á»•i UI-only
-  // (vd: column width) Ä‘á»ƒ trÃ¡nh re-trigger cÃ¡c subscriber gÃ¢y reload data.
+  // Ghi vào storage nhưng KH�NG emit subject. Dùng cho thay ��"i UI-only
+  // (vd: column width) �Ồ tránh re-trigger các subscriber gây reload data.
   setSilent: (data: T) => void;
   has: () => boolean;
   remove: () => void;
@@ -78,7 +78,7 @@ export interface SdStorage<T = any> {
 ```bash
 npm run build
 ```
-Expected: build FAILS vá»›i error "Property 'setSilent' is missing" trong `storage.service.ts` (implementation chÆ°a cÃ³). ÄÃ¢y lÃ  ká»³ vá»ng.
+Expected: build FAILS v�:i error "Property 'setSilent' is missing" trong `storage.service.ts` (implementation chưa có). Đây là kỳ vọng.
 
 - [ ] **Step 4: Commit interface change**
 
@@ -96,7 +96,7 @@ git commit -m "SM-00: add setSilent to SdStorage interface"
 
 - [ ] **Step 1: Add `setSilent` trong `create()`**
 
-Trong file `storage.service.ts`, sau block `set` (khoáº£ng line 59-62):
+Trong file `storage.service.ts`, sau block `set` (khoảng line 59-62):
 
 ```typescript
 const set = (data: T) => {
@@ -105,18 +105,18 @@ const set = (data: T) => {
 };
 ```
 
-ThÃªm:
+Thêm:
 
 ```typescript
 const setSilent = (data: T) => {
   this.#internalSet(hashKey, data, option);
-  // Cá»‘ tÃ¬nh KHÃ”NG gá»i subject.next â€” consumer dÃ¹ng kÃªnh riÃªng Ä‘á»ƒ thÃ´ng bÃ¡o
+  // C� tình KH�NG gọi subject.next � consumer dùng kênh riêng �Ồ thông báo
 };
 ```
 
 - [ ] **Step 2: Expose `setSilent` trong return**
 
-TÃ¬m block return (khoáº£ng line 80-89):
+Tìm block return (khoảng line 80-89):
 
 ```typescript
 return {
@@ -124,14 +124,14 @@ return {
   set,
   has,
   remove,
-  // @ts-ignore: Bá»• sung vÃ o interface náº¿u cáº§n
+  // @ts-ignore: B�" sung vào interface nếu cần
   destroy,
   subject: subject,
   observer: subject.asObservable().pipe(map(() => get())),
 };
 ```
 
-Sá»­a thÃ nh:
+Sửa thành:
 
 ```typescript
 return {
@@ -140,7 +140,7 @@ return {
   setSilent,
   has,
   remove,
-  // @ts-ignore: Bá»• sung vÃ o interface náº¿u cáº§n
+  // @ts-ignore: B�" sung vào interface nếu cần
   destroy,
   subject: subject,
   observer: subject.asObservable().pipe(map(() => get())),
@@ -194,7 +194,7 @@ describe('SdStorageService', () => {
     storage.set({ v: 10 });
 
     expect(storage.get()).toEqual({ v: 10 });
-    // emissions[0] lÃ  initial undefined, emissions[1] lÃ  { v: 10 }
+    // emissions[0] là initial undefined, emissions[1] là { v: 10 }
     expect(emissions.length).toBe(2);
     expect(emissions[1]).toEqual({ v: 10 });
   });
@@ -207,11 +207,11 @@ describe('SdStorageService', () => {
     storage.setSilent({ v: 20 });
 
     expect(storage.get()).toEqual({ v: 20 });
-    // chá»‰ cÃ³ 1 emission ban Ä‘áº§u (undefined) â€” khÃ´ng cÃ³ emission cho setSilent
+    // ch�0 có 1 emission ban �ầu (undefined) � không có emission cho setSilent
     expect(emissions.length).toBe(1);
   });
 
-  it('setSilent() ghi localStorage giá»‘ng set()', () => {
+  it('setSilent() ghi localStorage gi�ng set()', () => {
     const storage = service.create<{ v: number }>('test-key-3');
     storage.setSilent({ v: 30 });
 
@@ -229,7 +229,7 @@ describe('SdStorageService', () => {
 npm run test:ci -- --include='**/storage.service.spec.ts'
 ```
 
-Note: Náº¿u `--include` khÃ´ng filter Ä‘Æ°á»£c, cháº¡y full suite:
+Note: Nếu `--include` không filter �ược, chạy full suite:
 ```bash
 npm run test:ci
 ```
@@ -244,16 +244,16 @@ git commit -m "SM-00: test SdStorage.setSilent does not emit subject"
 
 ---
 
-## Task 4: ThÃªm `persistColumnWidth` + `widthChange$` vÃ o `ConfigService`
+## Task 4: Thêm `persistColumnWidth` + `widthChange$` vào `ConfigService`
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/table/src/services/config.service.ts`
 
-- [ ] **Step 1: Add imports + properties + giá»¯ reference storage**
+- [ ] **Step 1: Add imports + properties + giữ reference storage**
 
 Trong file `config.service.ts`:
 
-(a) Thay Ä‘oáº¡n import (line 1-6):
+(a) Thay �oạn import (line 1-6):
 ```typescript
 import { Inject, Injectable, Optional } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
@@ -263,7 +263,7 @@ import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations
 import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 ```
 
-ThÃ nh:
+Thành:
 ```typescript
 import { Inject, Injectable, Optional } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
@@ -274,7 +274,7 @@ import { ISdTableConfiguration, SD_TABLE_CONFIGURATION } from '../configurations
 import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
 ```
 
-(b) Trong class `ConfigService`, ngay sau dÃ²ng `#prefix = 'TABLE_CONFIG';` (line 17) thÃªm:
+(b) Trong class `ConfigService`, ngay sau dòng `#prefix = 'TABLE_CONFIG';` (line 17) thêm:
 
 ```typescript
   #storage?: SdStorage<ConfiguredTable>;
@@ -282,9 +282,9 @@ import { SdUtilities } from '@sdcorejs/angular/utilities/extensions';
   widthChange$ = this.#widthChange.asObservable();
 ```
 
-- [ ] **Step 2: Sá»­a `init` Ä‘á»ƒ lÆ°u storage reference**
+- [ ] **Step 2: Sửa `init` �Ồ lưu storage reference**
 
-TÃ¬m block (line 164-166):
+Tìm block (line 164-166):
 
 ```typescript
   init = (tableOption: SdTableOption) => {
@@ -292,7 +292,7 @@ TÃ¬m block (line 164-166):
   };
 ```
 
-Sá»­a thÃ nh:
+Sửa thành:
 
 ```typescript
   init = (tableOption: SdTableOption) => {
@@ -303,7 +303,7 @@ Sá»­a thÃ nh:
 
 - [ ] **Step 3: Add `persistColumnWidth` method**
 
-Ngay trÆ°á»›c `#default` (line ~168), thÃªm:
+Ngay trư�:c `#default` (line ~168), thêm:
 
 ```typescript
   persistColumnWidth = (field: string, width: string) => {
@@ -312,8 +312,8 @@ Ngay trÆ°á»›c `#default` (line ~168), thÃªm:
     const columns = current?.columns ? [...current.columns] : [];
     const idx = columns.findIndex(c => c.origin.field === field);
     if (idx < 0) {
-      // Cá»™t chÆ°a cÃ³ trong storage (vd cá»™t má»›i thÃªm vÃ o option) â€” bá» qua;
-      // sáº½ Ä‘Æ°á»£c pick up qua flow loadConfigurationResult bÃ¬nh thÆ°á»ng.
+      // C�"t chưa có trong storage (vd c�"t m�:i thêm vào option) � bỏ qua;
+      // sẽ �ược pick up qua flow loadConfigurationResult bình thường.
       return;
     }
     columns[idx] = { ...columns[idx], width };
@@ -380,14 +380,14 @@ describe('ConfigService.persistColumnWidth', () => {
     service = TestBed.inject(ConfigService);
   });
 
-  it('does nothing if init() chÆ°a Ä‘Æ°á»£c gá»i', () => {
+  it('does nothing if init() chưa �ược gọi', () => {
     let emitted: any = null;
     service.widthChange$.subscribe(v => (emitted = v));
     service.persistColumnWidth('name', '200px');
     expect(emitted).toBeNull();
   });
 
-  it('cáº­p nháº­t width cá»§a Ä‘Ãºng field vÃ  emit widthChange\$', () => {
+  it('cập nhật width của �úng field và emit widthChange\$', () => {
     const storage = service.init(option);
     let emitted: any = null;
     service.widthChange$.subscribe(v => (emitted = v));
@@ -400,7 +400,7 @@ describe('ConfigService.persistColumnWidth', () => {
     expect(emitted).toEqual({ field: 'name', width: '200px' });
   });
 
-  it('KHÃ”NG emit qua storage.subject (silent)', () => {
+  it('KH�NG emit qua storage.subject (silent)', () => {
     const storage = service.init(option);
     const emissions: any[] = [];
     storage.subject.subscribe(v => emissions.push(v));
@@ -408,11 +408,11 @@ describe('ConfigService.persistColumnWidth', () => {
 
     service.persistColumnWidth('name', '180px');
 
-    // emissions.length giá»¯ nguyÃªn: setSilent khÃ´ng trigger subject
+    // emissions.length giữ nguyên: setSilent không trigger subject
     expect(emissions.length).toBe(baseline);
   });
 
-  it('bá» qua field khÃ´ng tá»“n táº¡i trong storage', () => {
+  it('bỏ qua field không t�n tại trong storage', () => {
     service.init(option);
     let emitted: any = null;
     service.widthChange$.subscribe(v => (emitted = v));
@@ -467,12 +467,12 @@ import {
   standalone: true,
 })
 export class SdColumnResizeDirective implements OnDestroy {
-  // Báº­t/táº¯t resize cho cell nÃ y
+  // Bật/tắt resize cho cell này
   sdColumnResize = input.required<boolean>();
-  // min/max width tÃ¹y chá»n (chuá»—i 'NNpx'); náº¿u khÃ´ng pháº£i px sáº½ bá» qua
+  // min/max width tùy chọn (chu�i 'NNpx'); nếu không phải px sẽ bỏ qua
   minWidth = input<string | undefined>();
   maxWidth = input<string | undefined>();
-  // Emit width cuá»‘i cÃ¹ng dáº¡ng 'NNpx' khi mouseup
+  // Emit width cu�i cùng dạng 'NNpx' khi mouseup
   resizeEnd = output<string>();
 
   #el = inject(ElementRef<HTMLElement>);
@@ -514,7 +514,7 @@ export class SdColumnResizeDirective implements OnDestroy {
     this.#renderer.appendChild(th, handle);
     this.#handle = handle;
 
-    // mousedown listen ngoÃ i Angular zone â€” drag khÃ´ng trigger CD
+    // mousedown listen ngoài Angular zone � drag không trigger CD
     this.#zone.runOutsideAngular(() => {
       this.#unlistenMousedown = this.#renderer.listen(handle, 'mousedown', (e: MouseEvent) =>
         this.#onMousedown(e)
@@ -535,7 +535,7 @@ export class SdColumnResizeDirective implements OnDestroy {
 
   #onMousedown = (event: MouseEvent) => {
     event.preventDefault();
-    // stopPropagation Ä‘á»ƒ khÃ´ng trigger mat-sort khi click vÃ o handle
+    // stopPropagation �Ồ không trigger mat-sort khi click vào handle
     event.stopPropagation();
 
     const th = this.#el.nativeElement;
@@ -551,7 +551,7 @@ export class SdColumnResizeDirective implements OnDestroy {
         this.#onMousemove(e)
       );
       this.#unlistenUp = this.#renderer.listen('document', 'mouseup', () => this.#onMouseup());
-      // Náº¿u user kÃ©o ra ngoÃ i window: cleanup an toÃ n
+      // Nếu user kéo ra ngoài window: cleanup an toàn
       this.#unlistenBlur = this.#renderer.listen('window', 'blur', () => this.#onMouseup());
     });
   };
@@ -573,7 +573,7 @@ export class SdColumnResizeDirective implements OnDestroy {
   #onMouseup = () => {
     const finalPx = `${Math.round(this.#currentWidth)}px`;
     this.#cleanupDrag();
-    // emit trong Angular zone Ä‘á»ƒ consumer cháº¡y CD bÃ¬nh thÆ°á»ng
+    // emit trong Angular zone �Ồ consumer chạy CD bình thường
     this.#zone.run(() => this.resizeEnd.emit(finalPx));
   };
 
@@ -598,9 +598,9 @@ export class SdColumnResizeDirective implements OnDestroy {
 }
 ```
 
-- [ ] **Step 2: Export tá»« directives index**
+- [ ] **Step 2: Export từ directives index**
 
-Sá»­a `projects/sdcorejs-angular/components/table/src/directives/index.ts`:
+Sửa `projects/sdcorejs-angular/components/table/src/directives/index.ts`:
 
 ```typescript
 export * from './sd-table-column-filter-def.directive';
@@ -609,7 +609,7 @@ export * from './sd-table-title-def.directive';
 export * from './sd-table-cell-def.directive';
 ```
 
-ThÃªm dÃ²ng:
+Thêm dòng:
 ```typescript
 export * from './sd-column-resize.directive';
 ```
@@ -692,7 +692,7 @@ describe('SdColumnResizeDirective', () => {
     host = fixture.componentInstance;
     fixture.detectChanges();
     thEl = fixture.debugElement.query(By.css('th')).nativeElement;
-    // bbox cá»‘ Ä‘á»‹nh cho test: stub getBoundingClientRect width = 100
+    // bbox c� ��9nh cho test: stub getBoundingClientRect width = 100
     spyOn(thEl, 'getBoundingClientRect').and.returnValue({
       x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 40,
       width: 100, height: 40, toJSON: () => ({}),
@@ -705,14 +705,14 @@ describe('SdColumnResizeDirective', () => {
     expect(thEl.classList.contains('sd-col-resize-host')).toBe(true);
   });
 
-  it('remove handle khi enabled chuyá»ƒn sang false', () => {
+  it('remove handle khi enabled chuyỒn sang false', () => {
     host.enabled.set(false);
     fixture.detectChanges();
     expect(thEl.querySelector('.sd-col-resize-handle')).toBeNull();
     expect(thEl.classList.contains('sd-col-resize-host')).toBe(false);
   });
 
-  it('mousedown + mousemove + mouseup â†’ emit width má»›i', () => {
+  it('mousedown + mousemove + mouseup �  emit width m�:i', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
     dispatchMouse(document, 'mousemove', 150);  // delta +50
@@ -721,38 +721,38 @@ describe('SdColumnResizeDirective', () => {
     expect(host.lastWidth).toBe('150px');
   });
 
-  it('clamp width vá» minWidth (default 40px)', () => {
+  it('clamp width về minWidth (default 40px)', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 0);    // delta -100 â†’ 100-100=0 â†’ clamp 40
+    dispatchMouse(document, 'mousemove', 0);    // delta -100 �  100-100=0 �  clamp 40
     dispatchMouse(document, 'mouseup', 0);
 
     expect(host.lastWidth).toBe('40px');
   });
 
-  it('clamp width vá» column.maxWidth náº¿u cÃ³', () => {
+  it('clamp width về column.maxWidth nếu có', () => {
     host.maxWidth.set('120px');
     fixture.detectChanges();
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 300); // delta +200 â†’ 300 â†’ clamp 120
+    dispatchMouse(document, 'mousemove', 300); // delta +200 �  300 �  clamp 120
     dispatchMouse(document, 'mouseup', 300);
 
     expect(host.lastWidth).toBe('120px');
   });
 
-  it('clamp width vá» column.minWidth náº¿u cÃ³ (lá»›n hÆ¡n default 40)', () => {
+  it('clamp width về column.minWidth nếu có (l�:n hơn default 40)', () => {
     host.minWidth.set('60px');
     fixture.detectChanges();
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 30);  // delta -70 â†’ 30 â†’ clamp 60
+    dispatchMouse(document, 'mousemove', 30);  // delta -70 �  30 �  clamp 60
     dispatchMouse(document, 'mouseup', 30);
 
     expect(host.lastWidth).toBe('60px');
   });
 
-  it('mousedown stopPropagation Ä‘á»ƒ khÃ´ng trigger sort', () => {
+  it('mousedown stopPropagation �Ồ không trigger sort', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     const thClickSpy = jasmine.createSpy('th-mousedown');
     thEl.addEventListener('mousedown', thClickSpy);
@@ -763,10 +763,10 @@ describe('SdColumnResizeDirective', () => {
     expect(thClickSpy).not.toHaveBeenCalled();
   });
 
-  it('update inline width cá»§a TH trong khi kÃ©o', () => {
+  it('update inline width của TH trong khi kéo', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 180); // â†’ 180px
+    dispatchMouse(document, 'mousemove', 180); // �  180px
 
     expect(thEl.style.width).toBe('180px');
     expect(thEl.style.minWidth).toBe('180px');
@@ -775,7 +775,7 @@ describe('SdColumnResizeDirective', () => {
     dispatchMouse(document, 'mouseup', 180);
   });
 
-  it('cleanup khi destroy giá»¯a drag', () => {
+  it('cleanup khi destroy giữa drag', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
     fixture.destroy();
@@ -807,7 +807,7 @@ git commit -m "SM-00: test SdColumnResizeDirective drag/clamp/cleanup"
 
 - [ ] **Step 1: Add resize styles trong nesting `.c-th`**
 
-Open `projects/sdcorejs-angular/components/table/src/table.component.scss`. TÃ¬m block `.c-th` hiá»‡n cÃ³ (line ~85-91):
+Open `projects/sdcorejs-angular/components/table/src/table.component.scss`. Tìm block `.c-th` hi�!n có (line ~85-91):
 
 ```scss
       .c-th {
@@ -819,7 +819,7 @@ Open `projects/sdcorejs-angular/components/table/src/table.component.scss`. TÃ�
       }
 ```
 
-Sá»­a thÃ nh:
+Sửa thành:
 
 ```scss
       .c-th {
@@ -876,20 +876,20 @@ git commit -m "SM-00: scss for column resize handle"
 - Modify: `projects/sdcorejs-angular/components/table/src/table.component.ts`
 - Modify: `projects/sdcorejs-angular/components/table/src/table.component.html`
 
-- [ ] **Step 1: Import directive vÃ o component imports**
+- [ ] **Step 1: Import directive vào component imports**
 
 Trong `table.component.ts`:
 
-(a) TÃ¬m dÃ²ng import directives hiá»‡n cÃ³ (line 63):
+(a) Tìm dòng import directives hi�!n có (line 63):
 ```typescript
 import { StickyShadowDirective } from './directives';
 ```
-Sá»­a thÃ nh:
+Sửa thành:
 ```typescript
 import { SdColumnResizeDirective, StickyShadowDirective } from './directives';
 ```
 
-(b) TÃ¬m máº£ng `imports:` cá»§a `@Component` decorator (line 118-147). ThÃªm `SdColumnResizeDirective` vÃ o cuá»‘i máº£ng (trÆ°á»›c dáº¥u `]`):
+(b) Tìm mảng `imports:` của `@Component` decorator (line 118-147). Thêm `SdColumnResizeDirective` vào cu�i mảng (trư�:c dấu `]`):
 ```typescript
     SelectorActionComponent,
     StickyShadowDirective,
@@ -899,16 +899,16 @@ import { SdColumnResizeDirective, StickyShadowDirective } from './directives';
 
 - [ ] **Step 2: Add `onColumnResize` method**
 
-Trong class `SdTable`, tÃ¬m method `detectChanges` hiá»‡n cÃ³ (line ~901):
+Trong class `SdTable`, tìm method `detectChanges` hi�!n có (line ~901):
 ```typescript
   detectChanges = () => this.#ref.detectChanges();
 ```
 
-ThÃªm method ngay sau:
+Thêm method ngay sau:
 ```typescript
   onColumnResize = (field: string, width: string) => {
-    // persistColumnWidth ghi storage (silent) vÃ  emit widthChange$;
-    // subscriber trong constructor Ä‘Ã£ update configuration() signal Ä‘á»“ng bá»™.
+    // persistColumnWidth ghi storage (silent) và emit widthChange$;
+    // subscriber trong constructor �ã update configuration() signal ��ng b�".
     this.#configService.persistColumnWidth(field, width);
 
     const onResize = this.tableOption()?.config?.onResize;
@@ -925,7 +925,7 @@ ThÃªm method ngay sau:
 
 - [ ] **Step 3: Subscribe `widthChange$` trong constructor**
 
-Trong `constructor()`, sau effect cuá»‘i cÃ¹ng (effect cho `items` line 310-314):
+Trong `constructor()`, sau effect cu�i cùng (effect cho `items` line 310-314):
 
 ```typescript
     effect(() => {
@@ -935,12 +935,12 @@ Trong `constructor()`, sau effect cuá»‘i cÃ¹ng (effect cho `items` line 31
     });
 ```
 
-ThÃªm subscription táº¡i cuá»‘i constructor (trÆ°á»›c `}` Ä‘Ã³ng constructor, line ~315):
+Thêm subscription tại cu�i constructor (trư�:c `}` �óng constructor, line ~315):
 
 ```typescript
     this.#subscription.add(
       this.#configService.widthChange$.subscribe(({ field, width }) => {
-        // Update configuration signal local â€” KHÃ”NG gá»i loadValues/reload
+        // Update configuration signal local � KH�NG gọi loadValues/reload
         const conf = this.configuration();
         if (!conf) return;
         const firstColumns = conf.firstColumns.map(c =>
@@ -959,9 +959,9 @@ ThÃªm subscription táº¡i cuá»‘i constructor (trÆ°á»›c `}` Ä‘Ã
     );
 ```
 
-- [ ] **Step 4: Wire directive vÃ o template**
+- [ ] **Step 4: Wire directive vào template**
 
-Trong `table.component.html`, tÃ¬m block (line 148-158):
+Trong `table.component.html`, tìm block (line 148-158):
 
 ```html
         @for (column of _configuration.firstColumns; track column.field) {
@@ -977,7 +977,7 @@ Trong `table.component.html`, tÃ¬m block (line 148-158):
               [attr.colspan]="column.type === 'children' ? column.children.length : 1">
 ```
 
-Sá»­a thÃ nh:
+Sửa thành:
 
 ```html
         @for (column of _configuration.firstColumns; track column.field) {
@@ -1009,7 +1009,7 @@ Expected: build succeeds.
 ```bash
 npm run test:ci
 ```
-Expected: táº¥t cáº£ tests PASS (storage + config + directive).
+Expected: tất cả tests PASS (storage + config + directive).
 
 - [ ] **Step 7: Commit**
 
@@ -1022,19 +1022,19 @@ git commit -m "SM-00: wire SdColumnResizeDirective into SdTable"
 
 ## Task 10: Manual smoke test trong app demo
 
-**Files:** khÃ´ng sá»­a, chá»‰ verify
+**Files:** không sửa, ch�0 verify
 
-- [ ] **Step 1: TÃ¬m app demo dÃ¹ng `sd-table`**
+- [ ] **Step 1: Tìm app demo dùng `sd-table`**
 
 ```bash
 grep -rl "sd-table" projects --include="*.html" | head -5
 ```
 
-Má»Ÿ 1 app demo cÃ³ `sd-table` (vÃ­ dá»¥ `projects/<demo-app>`).
+M�x 1 app demo có `sd-table` (ví dụ `projects/<demo-app>`).
 
-- [ ] **Step 2: Báº­t `config.resizable = true` trÃªn 1 table cÃ³ `key`**
+- [ ] **Step 2: Bật `config.resizable = true` trên 1 table có `key`**
 
-Trong file ts cá»§a 1 component demo, sá»­a option:
+Trong file ts của 1 component demo, sửa option:
 ```typescript
 option: SdTableOption = {
   key: 'demo-table-resize',
@@ -1043,26 +1043,26 @@ option: SdTableOption = {
 };
 ```
 
-- [ ] **Step 3: Cháº¡y dev server**
+- [ ] **Step 3: Chạy dev server**
 
 ```bash
 npm run start
 ```
 
-Hoáº·c lá»‡nh start app cá»¥ thá»ƒ cá»§a demo app Ä‘Ã³.
+Hoặc l�!nh start app cụ thỒ của demo app �ó.
 
-- [ ] **Step 4: Test thá»§ cÃ´ng trÃªn browser**
+- [ ] **Step 4: Test thủ công trên browser**
 
-Má»Ÿ app, kiá»ƒm tra checklist:
-1. Hover vÃ o mÃ©p pháº£i header cá»™t data â†’ cursor `col-resize`
-2. KÃ©o trÃ¡i/pháº£i â†’ cá»™t thay Ä‘á»•i width mÆ°á»£t, khÃ´ng tháº¥y reload data (spinner khÃ´ng hiá»‡n)
-3. Nháº£ chuá»™t â†’ width giá»¯ nguyÃªn
-4. Refresh page (F5) â†’ width váº«n Ä‘Æ°á»£c giá»¯
-5. Hover mÃ©p pháº£i cá»™t `sdSelection` / `sdCommand` â†’ KHÃ”NG cÃ³ cursor `col-resize`
-6. Cá»™t cÃ³ `type: 'children'` â†’ handle KHÃ”NG xuáº¥t hiá»‡n trÃªn cha; cá»™t con khÃ´ng cÃ³ handle (out of scope)
-7. Má»Ÿ config dialog â†’ Reset â†’ width quay vá» máº·c Ä‘á»‹nh
-8. Báº­t/táº¯t `config.resizable` runtime â†’ handle add/remove Ä‘Ãºng
-9. Set `option.columns[i].minWidth = '80px'`/`maxWidth = '300px'` â†’ kÃ©o bá»‹ clamp
+M�x app, kiỒm tra checklist:
+1. Hover vào mép phải header c�"t data �  cursor `col-resize`
+2. Kéo trái/phải �  c�"t thay ��"i width mượt, không thấy reload data (spinner không hi�!n)
+3. Nhả chu�"t �  width giữ nguyên
+4. Refresh page (F5) �  width vẫn �ược giữ
+5. Hover mép phải c�"t `sdSelection` / `sdCommand` �  KH�NG có cursor `col-resize`
+6. C�"t có `type: 'children'` �  handle KH�NG xuất hi�!n trên cha; c�"t con không có handle (out of scope)
+7. M�x config dialog �  Reset �  width quay về mặc ��9nh
+8. Bật/tắt `config.resizable` runtime �  handle add/remove �úng
+9. Set `option.columns[i].minWidth = '80px'`/`maxWidth = '300px'` �  kéo b�9 clamp
 
 - [ ] **Step 5: Rollback demo changes**
 
@@ -1075,20 +1075,20 @@ git checkout -- projects/<demo-app>
 ```bash
 npm run build
 ```
-Expected: build succeeds vá»›i toÃ n bá»™ thay Ä‘á»•i.
+Expected: build succeeds v�:i toàn b�" thay ��"i.
 
 ---
 
 ## Definition of Done
 
-- [x] `TableOptionConfig.resizable?: boolean` Ä‘Ã£ cÃ³ (user thÃªm trÆ°á»›c task nÃ y)
+- [x] `TableOptionConfig.resizable?: boolean` �ã có (user thêm trư�:c task này)
 - [ ] `SdStorage.setSilent` implement + test pass
 - [ ] `ConfigService.persistColumnWidth` + `widthChange$` implement + test pass
 - [ ] `SdColumnResizeDirective` implement + 9 tests pass
 - [ ] SCSS handle styled
-- [ ] Template gáº¯n directive vÃ o `<th>` cá»§a firstColumns (non-children only)
-- [ ] `SdTable` subscribe `widthChange$` cáº­p nháº­t configuration signal mÃ  KHÃ”NG trigger reload
+- [ ] Template gắn directive vào `<th>` của firstColumns (non-children only)
+- [ ] `SdTable` subscribe `widthChange$` cập nhật configuration signal mà KH�NG trigger reload
 - [ ] Manual smoke test pass full checklist
 - [ ] `npm run build` succeeds
-- [ ] `npm run test:ci` toÃ n bá»™ pass
+- [ ] `npm run test:ci` toàn b�" pass
 

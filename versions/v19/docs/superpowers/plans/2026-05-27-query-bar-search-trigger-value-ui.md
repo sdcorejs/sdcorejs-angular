@@ -1,4 +1,4 @@
-﻿# query-bar Search trigger + compact value UI â€” Implementation Plan
+�# query-bar Search trigger + compact value UI � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -19,10 +19,10 @@ Branch `query-bar`. Commit per task. English commit messages; keep Vietnamese `/
 
 ## File Structure
 
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` â€” emit gating, `triggerApply`, `canSearch`, value-popover state.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` â€” Search button, Enter handler, value-popover markup.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` â€” Search button + compact value styling.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` â€” emit/trigger + value-UI tests.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` � emit gating, `triggerApply`, `canSearch`, value-popover state.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` � Search button, Enter handler, value-popover markup.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` � Search button + compact value styling.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` � emit/trigger + value-UI tests.
 
 ---
 
@@ -101,17 +101,17 @@ Branch `query-bar`. Commit per task. English commit messages; keep Vietnamese `/
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `component.canSearch is not a function`; emit assertions fail (mutations still emit).
+Expected: FAIL � `component.canSearch is not a function`; emit assertions fail (mutations still emit).
 
 - [ ] **Step 3: Remove every `#emitQuery()` from mutations, rewrite `triggerApply`, add `canSearch`**
 
 In `query-bar.component.ts`:
 
-(a) `addFilter` â€” delete the `this.#emitQuery();` line (line ~467). Keep the rest (filters.set + afterNextRender open).
+(a) `addFilter` � delete the `this.#emitQuery();` line (line ~467). Keep the rest (filters.set + afterNextRender open).
 
-(b) `changeFilterField` â€” delete `this.#emitQuery();` (line ~488).
+(b) `changeFilterField` � delete `this.#emitQuery();` (line ~488).
 
-(c) `updateFilter` â€” drop the emit param entirely:
+(c) `updateFilter` � drop the emit param entirely:
 
 ```ts
   updateFilter(index: number, patch: Partial<Filter>): void {
@@ -131,15 +131,15 @@ And update its only caller `commitEditValue` to drop the `false` arg:
   }
 ```
 
-(d) `removeFilter` â€” delete the trailing `if (this.mode() !== 'inline') this.#emitQuery();` line entirely (keep the splice + filters.set + the editing-index cleanup above it).
+(d) `removeFilter` � delete the trailing `if (this.mode() !== 'inline') this.#emitQuery();` line entirely (keep the splice + filters.set + the editing-index cleanup above it).
 
-(e) `clearAll` â€” delete `this.#emitQuery();` (line ~527).
+(e) `clearAll` � delete `this.#emitQuery();` (line ~527).
 
-(f) `setLogic` â€” delete `this.#emitQuery();` (line ~533).
+(f) `setLogic` � delete `this.#emitQuery();` (line ~533).
 
-(g) `setSearch` â€” delete `this.#emitQuery();` (line ~539). Keeps just the guard + `this.search.set(value)`.
+(g) `setSearch` � delete `this.#emitQuery();` (line ~539). Keeps just the guard + `this.search.set(value)`.
 
-(h) `applyChipEdit` â€” delete BOTH `this.#emitQuery();` and `this.apply.emit(this.#buildQuery());` (lines ~639-640). It now only commits + closes:
+(h) `applyChipEdit` � delete BOTH `this.#emitQuery();` and `this.apply.emit(this.#buildQuery());` (lines ~639-640). It now only commits + closes:
 
 ```ts
   applyChipEdit(): void {
@@ -153,18 +153,18 @@ And update its only caller `commitEditValue` to drop the `false` arg:
     const list = [...this.filters()];
     list[idx] = next;
     this.filters.set(list);
-    // why: deferred model â€” the global Search button is the only thing that runs the
-    // query; Ãp dá»¥ng just commits the staged edit into `filters` and closes the panel.
+    // why: deferred model � the global Search button is the only thing that runs the
+    // query; Áp dụng just commits the staged edit into `filters` and closes the panel.
     this.chipTriggers()[idx]?.closeMenu();
     this.editingIndex.set(null);
   }
 ```
 
-(i) `triggerApply` â€” emit both outputs once, and remove the now-unused `#emitQuery`:
+(i) `triggerApply` � emit both outputs once, and remove the now-unused `#emitQuery`:
 
 ```ts
   triggerApply(): void {
-    // why: single deferred trigger â€” fire both the change notification and the reload
+    // why: single deferred trigger � fire both the change notification and the reload
     // signal once, from here only (mutations no longer emit).
     const q = this.#buildQuery();
     this.queryChange.emit(q);
@@ -172,7 +172,7 @@ And update its only caller `commitEditValue` to drop the `false` arg:
   }
 ```
 
-Delete the `#emitQuery()` method (lines ~663-665) â€” no remaining callers.
+Delete the `#emitQuery()` method (lines ~663-665) � no remaining callers.
 
 (j) Add the `canSearch` computed near the other derived signals (e.g. after `showOrConnector`):
 
@@ -254,7 +254,7 @@ git commit -m "feat(query-bar): defer query to single triggerApply + add canSear
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `.c-search-trigger` not found; old `.c-inline-search` still present.
+Expected: FAIL � `.c-search-trigger` not found; old `.c-inline-search` still present.
 
 - [ ] **Step 3: Update the template**
 
@@ -269,7 +269,7 @@ In `query-bar.component.html`:
         [ngModel]="search()"
         (ngModelChange)="setSearch($event)"
         (keydown.enter)="triggerApply()"
-        placeholder="TÃ¬m kiáº¿m..." />
+        placeholder="Tìm kiếm..." />
 ```
 
 (b) Remove the inline-only search button (the `<sd-button class="c-inline-search" ... (click)="triggerApply()">...</sd-button>` block, around lines 312-320). Delete it entirely.
@@ -287,12 +287,12 @@ with:
 
 ```html
     <div class="c-query-bar__actions">
-      <!-- Search â€” the single deferred trigger for both modes -->
+      <!-- Search � the single deferred trigger for both modes -->
       <button
         type="button"
         class="c-search-trigger"
         [disabled]="!canSearch()"
-        matTooltip="TÃ¬m kiáº¿m"
+        matTooltip="Tìm kiếm"
         (click)="triggerApply()">
         <mat-icon fontSet="material-icons-outlined">search</mat-icon>
       </button>
@@ -323,7 +323,7 @@ In `query-bar.component.scss`, add a `.c-search-trigger` rule mirroring `.c-clea
   }
 ```
 
-(Place this inside the same selector scope as `.c-clear-all` â€” i.e. as a sibling rule in the file, matching how `.c-clear-all` is nested.)
+(Place this inside the same selector scope as `.c-clear-all` � i.e. as a sibling rule in the file, matching how `.c-clear-all` is nested.)
 
 - [ ] **Step 5: Run test to verify it passes**
 
@@ -373,7 +373,7 @@ git commit -m "feat(query-bar): single Search action button + Enter-to-search; d
     });
 
     it('uses the value popover (mat-menu trigger) for a values field at the build value step', () => {
-      component.beginBuild(valuesField); // single op IN â†’ straight to value step
+      component.beginBuild(valuesField); // single op IN �  straight to value step
       fixture.detectChanges();
 
       const building = fixture.nativeElement.querySelector('.c-token-building');
@@ -397,14 +397,14 @@ git commit -m "feat(query-bar): single Search action button + Enter-to-search; d
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
-Expected: FAIL â€” `component.usesValuePopover is not a function`; `.c-token-value-trigger` not found.
+Expected: FAIL � `component.usesValuePopover is not a function`; `.c-token-value-trigger` not found.
 
 - [ ] **Step 3: Add the kind split + value-popover state (TS)**
 
 In `query-bar.component.ts`:
 
 ```ts
-  /** Kinds whose value control is too tall for the inline token â†’ edit in a popover. */
+  /** Kinds whose value control is too tall for the inline token �  edit in a popover. */
   usesValuePopover(kind: SdQueryFieldKind): boolean {
     return kind === 'values' || kind === 'lazy-values' || kind === 'date' || kind === 'datetime';
   }
@@ -419,7 +419,7 @@ Add value-popover context state + open/commit helpers:
   readonly #valueCtx = signal<{ mode: 'build' | 'edit'; index: number; field: SdQueryField } | null>(null);
   readonly valueCtx = this.#valueCtx.asReadonly();
 
-  /** Open the value popover for an existing chip (edit) â€” seeds the edit draft. */
+  /** Open the value popover for an existing chip (edit) � seeds the edit draft. */
   openEditValuePopover(i: number, field: SdQueryField): void {
     this.beginEditValue(i); // seeds #editDraft + #editingValueIndex, ensures options
     this.#valueCtx.set({ mode: 'edit', index: i, field });
@@ -435,11 +435,11 @@ Add value-popover context state + open/commit helpers:
   }
 ```
 
-- [ ] **Step 4: Update the template â€” split inline vs popover by kind**
+- [ ] **Step 4: Update the template � split inline vs popover by kind**
 
 In `query-bar.component.html`, the completed-chip value segment and the building value step currently always use `#valueEditor`. Gate them on `usesValuePopover(kind)`.
 
-(a) **Completed chip value segment** â€” replace the editing/else block (the `@if (isEditingValue(i)) { ... } @else { <button ... beginEditValue(i)>text</button> }`) with:
+(a) **Completed chip value segment** � replace the editing/else block (the `@if (isEditingValue(i)) { ... } @else { <button ... beginEditValue(i)>text</button> }`) with:
 
 ```html
             @if (usesValuePopover(_field.kind)) {
@@ -460,7 +460,7 @@ In `query-bar.component.html`, the completed-chip value segment and the building
             }
 ```
 
-(b) **Building value step** â€” replace the value-step `<span class="c-token-value c-token-value-edit"><ng-container *ngTemplateOutlet="valueEditor; ...building..."></span>` with a kind split:
+(b) **Building value step** � replace the value-step `<span class="c-token-value c-token-value-edit"><ng-container *ngTemplateOutlet="valueEditor; ...building..."></span>` with a kind split:
 
 ```html
           @if (usesValuePopover(_b.field.kind)) {
@@ -470,7 +470,7 @@ In `query-bar.component.html`, the completed-chip value segment and the building
               class="c-token-value c-token-value-trigger"
               [matMenuTriggerFor]="valuePopover"
               [matMenuTriggerData]="{ mode: 'build', index: -1, field: _b.field }">
-              {{ _b.value == null ? 'Chá»nâ€¦' : chipValueText($any({ field: _b.field.key, operator: _b.operator, data: _b.value })) }}
+              {{ _b.value == null ? 'Chọn⬦' : chipValueText($any({ field: _b.field.key, operator: _b.operator, data: _b.value })) }}
             </button>
           } @else {
             <span class="c-token-value c-token-value-edit">
@@ -479,7 +479,7 @@ In `query-bar.component.html`, the completed-chip value segment and the building
           }
 ```
 
-> Note: `chipValueText` takes a `Filter`. To render the building preview text, call it with `$any({ field: _b.field.key, operator: _b.operator, data: _b.value })`. Use `$any(...)` directly in the template (no custom pipe): replace the `{{ chipValueText(...) | sdAny }}` line with `{{ _b.value == null ? 'Chá»nâ€¦' : chipValueText($any({ field: _b.field.key, operator: _b.operator, data: _b.value })) }}`.
+> Note: `chipValueText` takes a `Filter`. To render the building preview text, call it with `$any({ field: _b.field.key, operator: _b.operator, data: _b.value })`. Use `$any(...)` directly in the template (no custom pipe): replace the `{{ chipValueText(...) | sdAny }}` line with `{{ _b.value == null ? 'Chọn⬦' : chipValueText($any({ field: _b.field.key, operator: _b.operator, data: _b.value })) }}`.
 
 (c) **Add the shared value popover** `<mat-menu>` once, near the other menus (after `#fieldPicker`). It renders the full control by kind, wired to `commitValuePopover`:
 
@@ -537,12 +537,12 @@ and where the build enters the value step (in `beginBuild`'s single-op value bra
 
 (In `pickBuildOperator` use `b.field.kind`.) `MatMenuTrigger` is already imported.
 
-- [ ] **Step 5: Styling â€” compact inline controls + popover panel**
+- [ ] **Step 5: Styling � compact inline controls + popover panel**
 
 In `query-bar.component.scss`, under the inline token rules, constrain inline editors and add the popover body:
 
 ```scss
-  // Inline text/number editor sits flush in the token â€” small + no extra frame.
+  // Inline text/number editor sits flush in the token � small + no extra frame.
   .c-token-value-edit {
     display: inline-flex;
     align-items: center;
@@ -562,7 +562,7 @@ In `query-bar.component.scss`, under the inline token rules, constrain inline ed
   }
 }
 
-// Value popover panel â€” minimal, just the full control.
+// Value popover panel � minimal, just the full control.
 .c-value-popover .c-value-popover-body {
   padding: 10px;
   min-width: 200px;
@@ -580,7 +580,7 @@ Expected: PASS.
 
 ```bash
 git add projects/sdcorejs-angular/components/query-bar
-git commit -m "feat(query-bar): compact inline value editing â€” inline text/number, popover for values/date"
+git commit -m "feat(query-bar): compact inline value editing � inline text/number, popover for values/date"
 ```
 
 ---
@@ -617,8 +617,8 @@ git commit -m "test(query-bar): green build + sweep for search-trigger + value-u
 ## Self-Review notes
 
 - **Spec coverage:** deferred single trigger + no live emit (Task 1); Search button placement/disabled/Enter (Task 2); compact text/number inline + values/date popover + build auto-open (Task 3); build+sweep (Task 4). All spec sections mapped. BETWEEN explicitly out of scope (unchanged).
-- **Type consistency:** `canSearch()`, `triggerApply()` (emits queryChange+apply), `usesValuePopover(kind: SdQueryFieldKind)`, `valueCtx()`, `openEditValuePopover(i, field)`, `commitValuePopover(value)`, `valuePopoverMulti()`, `buildValueTrigger` viewChild â€” consistent across TS + template.
-- **No-pipe rule:** the template uses `$any(...)` and component helpers (`valuePopoverMulti`) instead of inventing pipes (`sdAny`/`sdFilterOp` mentioned only as a thing to AVOID â€” Step 4 notes replace them with `$any` + helper).
-- **Risk:** the value popover commits on the control's `sdChange`; for `sd-select multiple` that fires per selection â€” acceptable (each change commits the array). Auto-open relies on `afterNextRender` + `MatMenuTrigger` viewChild; if the build value trigger isn't found (kind mismatch), open is a no-op.
+- **Type consistency:** `canSearch()`, `triggerApply()` (emits queryChange+apply), `usesValuePopover(kind: SdQueryFieldKind)`, `valueCtx()`, `openEditValuePopover(i, field)`, `commitValuePopover(value)`, `valuePopoverMulti()`, `buildValueTrigger` viewChild � consistent across TS + template.
+- **No-pipe rule:** the template uses `$any(...)` and component helpers (`valuePopoverMulti`) instead of inventing pipes (`sdAny`/`sdFilterOp` mentioned only as a thing to AVOID � Step 4 notes replace them with `$any` + helper).
+- **Risk:** the value popover commits on the control's `sdChange`; for `sd-select multiple` that fires per selection � acceptable (each change commits the array). Auto-open relies on `afterNextRender` + `MatMenuTrigger` viewChild; if the build value trigger isn't found (kind mismatch), open is a no-op.
 ```
 

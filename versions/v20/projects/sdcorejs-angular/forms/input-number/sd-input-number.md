@@ -1,4 +1,4 @@
-﻿# `<sd-input-number>`
+�# `<sd-input-number>`
 
 **Type**: Component (form input)
 **Selector**: `sd-input-number`
@@ -11,17 +11,17 @@
 Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.89`), keystroke filtering, optional negative/positive constraint, decimal precision, and min/max validators. Use for any monetary or quantity field.
 
 ## When to use
-- VND / USD / any currency amount field (price, total, balance, â€¦)
+- VND / USD / any currency amount field (price, total, balance, ⬦)
 - Quantity / count fields (stock qty, headcount, items)
-- Rates and percentages (entered as a number â€” pair with a `%` suffix label)
+- Rates and percentages (entered as a number � pair with a `%` suffix label)
 - Any numeric field where the user benefits from thousand-separator grouping while typing
 - DETAIL state via `[viewed]="true"` to render the formatted number (or a hyperlink)
 
 ## When NOT to use
-- Free text containing digits but not a quantity (phone number, tax code, IDs) â†’ use `<sd-input>` with appropriate `pattern`
-- Date / time â†’ use `<sd-date>` / `<sd-datetime>` / `<sd-date-range>`
-- A picker from a list of numeric codes â†’ use `<sd-select>` / `<sd-autocomplete>`
-- Sliders for ranges â†’ not in this component; use a Material slider directly
+- Free text containing digits but not a quantity (phone number, tax code, IDs) �  use `<sd-input>` with appropriate `pattern`
+- Date / time �  use `<sd-date>` / `<sd-datetime>` / `<sd-date-range>`
+- A picker from a list of numeric codes �  use `<sd-select>` / `<sd-autocomplete>`
+- Sliders for ranges �  not in this component; use a Material slider directly
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -43,14 +43,14 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message (synthetic `inlineError` validator). |
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Render value as a link in `[viewed]` mode. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
-| `readonly` | `boolean` | `false` | HTML `readonly` â€” input still focusable. |
+| `readonly` | `boolean` | `false` | HTML `readonly` � input still focusable. |
 | `disabled` | `boolean` | `false` | Disables the control. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode â€” hides input, renders formatted number (or `<ng-template sdViewDef>`). |
+| `viewed` | `boolean` | `false` | Read-only DETAIL mode � hides input, renders formatted number (or `<ng-template sdViewDef>`). |
 | `blurOnEnter` | `boolean` | `false` | If `true`, Enter blurs the field after emitting `keyupEnter`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorMessage`. |
 | `model` | `any` (`number \| null`) | `undefined` | Two-way bound numeric value (use `[(model)]`). Stored as a JS number; emitted as number on change. |
 
-> **Coerce**: `required`, `readonly`, `disabled`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` â€” bare attribute = `true`.
+> **Coerce**: `required`, `readonly`, `disabled`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` � bare attribute = `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -91,8 +91,8 @@ await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-value', '42');
 // validation meta
 await expect(el).toHaveAttribute('data-required', 'true');
-// error message â€” only when field is in error state
-await expect(el).toHaveAttribute('data-error-message', 'Vui lÃ²ng nháº­p thÃ´ng tin');
+// error message � only when field is in error state
+await expect(el).toHaveAttribute('data-error-message', 'Vui lòng nhập thông tin');
 ```
 
 ## Host classes
@@ -100,52 +100,52 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 
 | Class | Condition | Effect |
 | --- | --- | --- |
-| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent â†’ no top padding. |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent �  no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
-- `#sdLabel` template â€” custom label rendering
-- `#sdValue` template â€” custom display rendering
-- `<ng-template sdSuffixDef>` â€” custom suffix (e.g. currency symbol, unit) at the trailing edge
-- `<ng-template sdViewDef>` â€” read-only display template used in `[viewed]` mode
+- `#sdLabel` template � custom label rendering
+- `#sdValue` template � custom display rendering
+- `<ng-template sdSuffixDef>` � custom suffix (e.g. currency symbol, unit) at the trailing edge
+- `<ng-template sdViewDef>` � read-only display template used in `[viewed]` mode
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngAfterViewInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`. Internally there are TWO controls (`formControl` for the parsed numeric value; `inputControl` for the raw display string with separators) but only `formControl` is registered to the parent form.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: the input is hidden and the formatted number (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
-- **Validators**: `[required]` â†’ `Validators.required`. `[min]` / `[max]` â†’ Angular's `Validators.min` / `Validators.max`. `[validator]` accepts an async custom validator. Error tooltip messages: required â†’ "Vui lÃ²ng nháº­p thÃ´ng tin"; min â†’ "GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n N"; max â†’ "GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n N"; inlineError â†’ echoes `inlineError`.
-- **Reactive validator updates** â€” validator inputs (`required` / `min` / `max` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. Validators update automatically at runtime â€” no manual `reValidate()` needed.
-- **`[disabled]` reactive** â€” toggling `disabled` calls `inputControl.disable() / enable()` and `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
-- **`[(model)]` two-way** â€” host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` and syncs `inputControl` with the formatted display string so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing â†’ `inputControl.valueChanges` â†’ parse â†’ `valueModel.set()` â†’ `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
+- **Validators**: `[required]` �  `Validators.required`. `[min]` / `[max]` �  Angular's `Validators.min` / `Validators.max`. `[validator]` accepts an async custom validator. Error tooltip messages: required �  "Vui lòng nhập thông tin"; min �  "Giá tr�9 không �ược nhỏ hơn N"; max �  "Giá tr�9 không �ược l�:n hơn N"; inlineError �  echoes `inlineError`.
+- **Reactive validator updates** � validator inputs (`required` / `min` / `max` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. Validators update automatically at runtime � no manual `reValidate()` needed.
+- **`[disabled]` reactive** � toggling `disabled` calls `inputControl.disable() / enable()` and `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
+- **`[(model)]` two-way** � host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` and syncs `inputControl` with the formatted display string so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing �  `inputControl.valueChanges` �  parse �  `valueModel.set()` �  `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
 - **Locale formatting** is driven by `SD_CORE_CONFIGURATION.format.number`. When set to `'1.234.567,89'` (VN-style), thousands separator is `.` and decimal separator is `,`. Otherwise ISO-style: thousands `,` and decimal `.`. Keystrokes that would break the active regex are blocked; paste and IME composition are validated and rolled back if invalid.
-- **Blur clean-up** â€” on blur, a trailing decimal separator (e.g. `"123."`) is stripped; whitespace is trimmed; an empty or whitespace-only value resolves to `null`.
-- **Default `appearance`** â€” when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at application bootstrap to flip ALL form fields to `'fill'` (or any other appearance). Falls back to `'outline'` if the token is not provided.
+- **Blur clean-up** � on blur, a trailing decimal separator (e.g. `"123."`) is stripped; whitespace is trimmed; an empty or whitespace-only value resolves to `null`.
+- **Default `appearance`** � when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at application bootstrap to flip ALL form fields to `'fill'` (or any other appearance). Falls back to `'outline'` if the token is not provided.
 
 ### Three ways to integrate
 
 ```html
 <!-- 1. Template-driven with [(model)] (no FormGroup) -->
-<sd-input-number label="Sá»‘ tiá»n" [(model)]="model.amount"></sd-input-number>
+<sd-input-number label="S� tiền" [(model)]="model.amount"></sd-input-number>
 
 <!-- 2. Reactive FormGroup (pass the group in, the input self-registers via addControl) -->
 <form [formGroup]="form">
-  <sd-input-number label="Sá»‘ tiá»n" name="amount" [form]="form" required></sd-input-number>
+  <sd-input-number label="S� tiền" name="amount" [form]="form" required></sd-input-number>
 </form>
 
 <!-- 3. NgForm (template-driven group) -->
 <form #f="ngForm">
-  <sd-input-number label="Sá»‘ tiá»n" name="amount" [form]="f" required></sd-input-number>
+  <sd-input-number label="S� tiền" name="amount" [form]="f" required></sd-input-number>
 </form>
 ```
 
-> **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` â€” unwraps `.form`) and `FormGroup` (used directly). It also accepts an object literal of shape `{ form: FormGroup }` as a safety fallback. In all three patterns the component manages `addControl` / `removeControl` lifecycle internally â€” never call them yourself.
+> **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` � unwraps `.form`) and `FormGroup` (used directly). It also accepts an object literal of shape `{ form: FormGroup }` as a safety fallback. In all three patterns the component manages `addControl` / `removeControl` lifecycle internally � never call them yourself.
 
-## Visual cues (helps agent map screenshots â†’ component)
-- An outlined input field that visually looks like `<sd-input>` BUT typed digits are auto-grouped â€” typing `1234567` shows `1.234.567` (VN) or `1,234,567` (ISO)
-- Text often right-aligned (matches accountant convention) â€” actual alignment is set in the component CSS
-- Optional currency symbol or unit shows in the suffix slot via `sdSuffixDef` (e.g. `Ä‘`, `VND`, `%`)
-- Built-in **slim clear button** (`.sd-clear-btn`, thin `close` icon) when there's a value AND the field is not `required`/`disabled`/`readonly`. **Hover-gated** (`sd-hover`) â€” only visible on hover/focus. Click resets to `null` and emits `sdChange(null)`. Renders to the left of any `sdSuffixDef` unit symbol. Shared style with `sd-input`/`sd-input-color`/`sd-date`/`sd-datetime`.
-- In `[viewed]="true"` mode: no input chrome â€” just the formatted number as plain text (or as a hyperlink if `hyperlink` is set)
+## Visual cues (helps agent map screenshots �  component)
+- An outlined input field that visually looks like `<sd-input>` BUT typed digits are auto-grouped � typing `1234567` shows `1.234.567` (VN) or `1,234,567` (ISO)
+- Text often right-aligned (matches accountant convention) � actual alignment is set in the component CSS
+- Optional currency symbol or unit shows in the suffix slot via `sdSuffixDef` (e.g. `�`, `VND`, `%`)
+- Built-in **slim clear button** (`.sd-clear-btn`, thin `close` icon) when there's a value AND the field is not `required`/`disabled`/`readonly`. **Hover-gated** (`sd-hover`) � only visible on hover/focus. Click resets to `null` and emits `sdChange(null)`. Renders to the left of any `sdSuffixDef` unit symbol. Shared style with `sd-input`/`sd-input-color`/`sd-date`/`sd-datetime`.
+- In `[viewed]="true"` mode: no input chrome � just the formatted number as plain text (or as a hyperlink if `hyperlink` is set)
 
 ## Examples
 
@@ -153,11 +153,11 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 ```html
 <sd-input-number
   [form]="form" name="amount"
-  label="Sá»‘ tiá»n" required
+  label="S� tiền" required
   type="positive" [precision]="0"
   [(model)]="model.amount">
   <ng-template sdSuffixDef>
-    <span class="text-secondary">Ä‘</span>
+    <span class="text-secondary">�</span>
   </ng-template>
 </sd-input-number>
 ```
@@ -166,7 +166,7 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 ```html
 <sd-input-number
   [form]="form" name="quantity"
-  label="Sá»‘ lÆ°á»£ng"
+  label="S� lượng"
   type="positive" [precision]="0"
   [min]="1" [max]="999"
   [(model)]="model.quantity">
@@ -177,7 +177,7 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 ```html
 <sd-input-number
   [form]="form" name="rate"
-  label="LÃ£i suáº¥t (%)"
+  label="Lãi suất (%)"
   [precision]="2" [min]="0" [max]="100"
   [(model)]="model.rate">
 </sd-input-number>
@@ -186,26 +186,26 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 ### 4. DETAIL state read-only formatted display
 ```html
 <sd-input-number
-  label="Tá»•ng giÃ¡ trá»‹ há»£p Ä‘á»“ng"
+  label="T�"ng giá tr�9 hợp ��ng"
   [model]="contract.totalValue"
   [viewed]="true">
 </sd-input-number>
 ```
 
 ## Anti-patterns
-- âŒ Using `formControlName` / `[(ngModel)]` â€” not wired; use `[form]+[name]` and `[(model)]`.
-- âŒ Using `<sd-input type="number">` instead â€” that variant has no thousand-separator grouping and will not match the VN locale.
-- âŒ Storing the model as a formatted string â€” the component emits a JS `number`. Keep `model.amount: number | null` in the parent.
-- âŒ Setting `[precision]` higher than what the backend stores â€” display will round implicitly when the value comes back.
-- âŒ Using `[disabled]="true"` to express read-only DETAIL state â€” use `[viewed]="true"` instead so labels/links render correctly.
-- âŒ Using `type="positive"` AND a negative `[min]` simultaneously â€” the keystroke filter will block the minus sign and the validator will never trigger.
+- �R Using `formControlName` / `[(ngModel)]` � not wired; use `[form]+[name]` and `[(model)]`.
+- �R Using `<sd-input type="number">` instead � that variant has no thousand-separator grouping and will not match the VN locale.
+- �R Storing the model as a formatted string � the component emits a JS `number`. Keep `model.amount: number | null` in the parent.
+- �R Setting `[precision]` higher than what the backend stores � display will round implicitly when the value comes back.
+- �R Using `[disabled]="true"` to express read-only DETAIL state � use `[viewed]="true"` instead so labels/links render correctly.
+- �R Using `type="positive"` AND a negative `[min]` simultaneously � the keystroke filter will block the minus sign and the validator will never trigger.
 
 ## Related
-- `<sd-input>` â€” text input variant
-- `<sd-label>` â€” label primitive used internally
-- `SdSuffixDefDirective` â€” custom suffix template
-- `SdViewDefDirective` â€” DETAIL-mode template projection
-- `SdFormatNumberPipe` â€” display-only number formatter (used internally)
-- `SD_CORE_CONFIGURATION.format.number` â€” switches VN vs ISO locale formatting
-- `SD_FORM_CONFIGURATION` token â€” global default `appearance`
+- `<sd-input>` � text input variant
+- `<sd-label>` � label primitive used internally
+- `SdSuffixDefDirective` � custom suffix template
+- `SdViewDefDirective` � DETAIL-mode template projection
+- `SdFormatNumberPipe` � display-only number formatter (used internally)
+- `SD_CORE_CONFIGURATION.format.number` � switches VN vs ISO locale formatting
+- `SD_FORM_CONFIGURATION` token � global default `appearance`
 

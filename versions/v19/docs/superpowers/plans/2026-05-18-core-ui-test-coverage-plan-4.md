@@ -1,10 +1,10 @@
-﻿# Core UI Test Coverage Plan 4 â€” Implementation Plan
+�# Core UI Test Coverage Plan 4 � Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Test coverage cho 4 directives cÃ²n láº¡i + 9 services chÆ°a test cá»§a `@sdcorejs/angular` (sd-desktop, sd-href, sd-scroll, sd-hover-copy + license, loading, firebase, notify, cache, api, confirm, docx, excel).
+**Goal:** Test coverage cho 4 directives còn lại + 9 services chưa test của `@sdcorejs/angular` (sd-desktop, sd-href, sd-scroll, sd-hover-copy + license, loading, firebase, notify, cache, api, confirm, docx, excel).
 
-**Architecture:** Reuse Plan 1-3 pattern. Directives test qua HostComponent; services test báº±ng `TestBed.inject()` + Angular DI. HttpClient-based services dÃ¹ng `HttpClientTestingModule` + `HttpTestingController`. Firebase service test báº±ng cÃ¡ch stub external SDK. 
+**Architecture:** Reuse Plan 1-3 pattern. Directives test qua HostComponent; services test bằng `TestBed.inject()` + Angular DI. HttpClient-based services dùng `HttpClientTestingModule` + `HttpTestingController`. Firebase service test bằng cách stub external SDK. 
 
 **Tech Stack:** Same Plan 1-3 stack + `@angular/common/http/testing`, optional `firebase` SDK stub.
 
@@ -27,7 +27,7 @@
   - confirm, docx, excel: `projects/sdcorejs-angular/services/<name>/src/lib/<name>.service.spec.ts`
 
 **Import paths:**
-- `@sdcorejs/angular/*` alias for in-library imports (required for ng-packagr â€” never change source)
+- `@sdcorejs/angular/*` alias for in-library imports (required for ng-packagr � never change source)
 - Relative path for `testing/test-utils` if needed (from directives/src/ use `../../testing/test-utils` (2 levels up); from services/<name>/src/ use `../../../testing/test-utils` (3 levels up))
 - Most service tests won't need test-utils
 
@@ -110,7 +110,7 @@ describe('SdApiService', () => {
 | 11 | `services/api/src/api.service.spec.ts` | 191 | Complex |
 | 12 | `services/docx/src/lib/docx.service.spec.ts` | ? | Complex |
 | 13 | `services/excel/src/lib/excel.service.spec.ts` | ? | Complex |
-| 14 | Plan 4 design doc + gap report aggregate | â€” | â€” |
+| 14 | Plan 4 design doc + gap report aggregate | � | � |
 
 Plus MD audit for each via `sd-<name>.md` files.
 
@@ -137,7 +137,7 @@ Expected: on `feature/plan-4-directives-services-tests`, 1123 tests pass.
 - Create: `projects/sdcorejs-angular/directives/src/sd-desktop.directive.spec.ts`
 - Modify: `projects/sdcorejs-angular/directives/src/sd-desktop.md`
 
-**Behavior**: Mirror of sd-mobile â€” renders template only when NOT mobile (i.e., desktop).
+**Behavior**: Mirror of sd-mobile � renders template only when NOT mobile (i.e., desktop).
 
 **Test scope (~3-5 specs):**
 - Renders template when `SdUtilities.isMobile()` returns false (desktop)
@@ -168,14 +168,14 @@ EOF
 - Create: `projects/sdcorejs-angular/directives/src/sd-href.directive.spec.ts`
 - Modify: `projects/sdcorejs-angular/directives/src/sd-href.md`
 
-**Behavior** (read source first): Likely attaches `href` attribute with security/navigation handling â€” internal links use Angular Router, external open in new tab.
+**Behavior** (read source first): Likely attaches `href` attribute with security/navigation handling � internal links use Angular Router, external open in new tab.
 
 **Test scope (~8-12 specs):**
 - creation
 - inputs (href, target)
-- internal URL â†’ router navigation simulated
-- external URL (http://) â†’ opens new tab with rel="noopener"
-- empty href â†’ no-op
+- internal URL �  router navigation simulated
+- external URL (http://) �  opens new tab with rel="noopener"
+- empty href �  no-op
 - click handler stops propagation
 
 Use HostComponent + RouterTestingModule if needed for navigation. Mock `Router.navigateByUrl`.
@@ -244,7 +244,7 @@ Mock `navigator.clipboard.writeText` using `spyOn(navigator.clipboard, 'writeTex
 **Test scope (~10-12 specs)**:
 - create
 - show() / hide() toggle state
-- counter behavior (show 2x â†’ hide once still loading)
+- counter behavior (show 2x �  hide once still loading)
 - subscribers receive state changes
 - reset method (if exists)
 
@@ -262,8 +262,8 @@ Mock `navigator.clipboard.writeText` using `spyOn(navigator.clipboard, 'writeTex
 - localhost bypass (`window.location.hostname === 'localhost'`)
 - exact match with `SD_CORE_CONFIGURATION` licenseKey hash
 - wildcard match (`*.subdomain.com`)
-- no config â†’ throw
-- non-matching â†’ throw
+- no config �  throw
+- non-matching �  throw
 - enforceLicense() throws when invalid
 
 Use `TestBed.configureTestingModule({ providers: [{ provide: SD_CORE_CONFIGURATION, useValue: { licenseKey: '<hash>' } }] })` for valid case.
@@ -359,7 +359,7 @@ Use `HttpClientTestingModule` + `HttpTestingController.expectOne()`.
 - public methods
 - error cases
 
-Heavy dependencies (pandoc-core) â€” may need scope reduction.
+Heavy dependencies (pandoc-core) � may need scope reduction.
 
 ---
 
@@ -369,7 +369,7 @@ Heavy dependencies (pandoc-core) â€” may need scope reduction.
 - Create: `projects/sdcorejs-angular/services/excel/src/lib/excel.service.spec.ts`
 - Modify: `projects/sdcorejs-angular/services/excel/sd-excel.md`
 
-**Behavior**: Excel import/export using `exceljs`. There's already a `test.ts` file in this dir â€” may be unrelated to spec.
+**Behavior**: Excel import/export using `exceljs`. There's already a `test.ts` file in this dir � may be unrelated to spec.
 
 **Test scope (~15-20 specs)**:
 - create
@@ -378,7 +378,7 @@ Heavy dependencies (pandoc-core) â€” may need scope reduction.
 - format helpers
 - error cases
 
-Heavy `exceljs` dependency â€” may need scope reduction or mock layer.
+Heavy `exceljs` dependency � may need scope reduction or mock layer.
 
 ---
 
@@ -386,7 +386,7 @@ Heavy `exceljs` dependency â€” may need scope reduction or mock layer.
 
 **Files:**
 - Create: `docs/superpowers/specs/2026-05-18-core-ui-test-coverage-plan-4-design.md`
-- Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append Â§6.4 gap report)
+- Modify: `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (append §6.4 gap report)
 
 Same pattern as Plan 1-3 finalize tasks. Capture:
 - Per-file spec counts + commits
