@@ -2,7 +2,7 @@ name: Deploy showcase (v19) to GitHub Pages
 
 # Build showcase Angular app trong versions/v19 và deploy lên GitHub Pages.
 # Trigger:
-#   - Push lên branch chính (001 hiện tại) khi có thay đổi.
+#   - Push lên branch main khi có thay đổi.
 #   - Manual dispatch để re-build on demand.
 #
 # Setup yêu cầu trong repo Settings > Pages:
@@ -12,7 +12,7 @@ name: Deploy showcase (v19) to GitHub Pages
 on:
   push:
     branches:
-      - 001
+      - main
     paths:
       - 'versions/v19/projects/showcase/**'
       - 'versions/v19/projects/sdcorejs-angular/**'

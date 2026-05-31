@@ -102,7 +102,7 @@ Yêu cầu auth local: `npm login --scope=@sdcorejs`.
 Workflow: `.github/workflows/deploy-pages.yml`. Build showcase v19 → upload Pages artifact → deploy.
 
 **Trigger**:
-- Push lên branch `001` (mặc định hiện tại) khi đổi file trong `versions/v19/projects/{showcase,sdcorejs-angular}/**`, `angular.json`, `package*.json`, hoặc workflow.
+- Push lên `main` khi đổi file trong `versions/v19/projects/{showcase,sdcorejs-angular}/**`, `angular.json`, `package*.json`, hoặc workflow.
 - Manual dispatch.
 
 **Yêu cầu setup repo** (1 lần): Settings > Pages > Source = **"GitHub Actions"** (KHÔNG dùng branch source).
@@ -137,7 +137,7 @@ Workflow:
 
 ## Trees + git
 
-Branch hiện tại: `001` (sync với `origin/001`). Branch chính ngược lên main flow chưa thiết lập rõ — hỏi user trước khi push vào branch khác.
+Branch chính: `main`. Branch feature `001` dùng tạm để chuẩn bị PR vào main. Sau khi `main` ổn định, deploy-pages auto-trigger trên `main`. Hỏi user trước khi push vào branch khác.
 
 ## See also
 
