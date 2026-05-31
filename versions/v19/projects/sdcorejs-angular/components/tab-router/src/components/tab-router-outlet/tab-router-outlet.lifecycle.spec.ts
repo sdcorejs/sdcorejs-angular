@@ -1,0 +1,340 @@
+﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/**
+ * Lifecycle invariants for sd-tab-router-outlet.
+ *
+ * Bug regression: components rendered inside a tab pane MUST follow
+ *   constructor â†’ ngOnInit â†’ ngOnDestroy
+ * exactly once per tab instance. If a tab is reactivated (same key) we MUST
+ * NOT re-instantiate. If the tab is closed we MUST run ngOnDestroy so
+ * subscriptions/intervals inside the tab body do not leak.
+ */
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import {
+  NavigationEnd,
+  Router,
+  RoutesRecognized,
+  Scroll,
+  provideRouter,
+  withInMemoryScrolling,
+} from '@angular/router';
+
+import { SdTabRouterOutletComponent } from './tab-router-outlet.component';
+import { SdTabRouterService } from '../../services/tab-router.service';
+import { SdTabDecoratorService } from '../../services/tab-decorator.service';
+import { I18nService } from '@sdcorejs/angular/i18n';
+import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+
+// Shared counters across instances per class â€” we don't share state across tests though
+// (re-initialised in beforeEach via reset()).
+const counters = {
+  pageA: { ctor: 0, init: 0, destroy: 0 },
+  pageB: { ctor: 0, init: 0, destroy: 0 },
+  reset() {
+    this.pageA = { ctor: 0, init: 0, destroy: 0 };
+    this.pageB = { ctor: 0, init: 0, destroy: 0 };
+  },
+};
+
+@Component({ standalone: true, template: '<span data-cy="page-a">page A</span>' })
+class PageAComponent implements OnInit, OnDestroy {
+  constructor() { counters.pageA.ctor++; }
+  ngOnInit(): void { counters.pageA.init++; }
+  ngOnDestroy(): void { counters.pageA.destroy++; }
+}
+
+@Component({ standalone: true, template: '<span>page B</span>' })
+class PageBComponent implements OnInit, OnDestroy {
+  constructor() { counters.pageB.ctor++; }
+  ngOnInit(): void { counters.pageB.init++; }
+  ngOnDestroy(): void { counters.pageB.destroy++; }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTabRouterOutletComponent],
+  template: `<sd-tab-router-outlet></sd-tab-router-outlet>`,
+})
+class HostComponent {}
+
+const settle = async (fixture: ComponentFixture<HostComponent>) => {
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+};
+
+describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let router: Router;
+  let outletCmp: SdTabRouterOutletComponent;
+  let tabRouterService: SdTabRouterService;
+
+  beforeEach(async () => {
+    counters.reset();
+
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        // withInMemoryScrolling enables the RouterScroller â†’ emits Scroll events
+        // that wrap NavigationEnd. This is the bundle most production apps use.
+        provideRouter(
+          [
+            { path: 'a', component: PageAComponent },
+            { path: 'b', component: PageBComponent },
+          ],
+          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+        ),
+        SdTabRouterService,
+        SdTabDecoratorService,
+        {
+          provide: SdNotifyService,
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(),
+            error: jasmine.createSpy(), info: jasmine.createSpy() },
+        },
+        { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HostComponent);
+    router = TestBed.inject(Router);
+    tabRouterService = TestBed.inject(SdTabRouterService);
+
+    await settle(fixture);
+
+    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+  });
+
+  it('instantiates page exactly once on first navigation (even with withInMemoryScrolling enabled)', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+    expect(counters.pageA.destroy).toBe(0);
+    expect(fixture.nativeElement.querySelector('[data-cy="page-a"]')).not.toBeNull();
+  });
+
+  it('does NOT re-instantiate when revisiting the same tab key', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+    await router.navigateByUrl('/b');
+    await settle(fixture);
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    // PageA created exactly once, never destroyed (tab still open), never re-init
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+    expect(counters.pageA.destroy).toBe(0);
+
+    expect(counters.pageB.ctor).toBe(1);
+    expect(counters.pageB.init).toBe(1);
+    expect(counters.pageB.destroy).toBe(0);
+  });
+
+  it('destroys the tab component when its tab is closed (no leak)', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+    await router.navigateByUrl('/b');
+    await settle(fixture);
+
+    // Close /b (active tab)
+    const tabB = outletCmp.tabs().find(t => t.url === '/b')!;
+    tabRouterService.close(tabB);
+    await settle(fixture);
+
+    expect(counters.pageB.destroy).toBe(1);
+    // PageA still alive
+    expect(counters.pageA.destroy).toBe(0);
+  });
+
+  it('destroys an inactive tab without affecting the active one', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+    await router.navigateByUrl('/b');
+    await settle(fixture);
+
+    const tabA = outletCmp.tabs().find(t => t.url === '/a')!;
+    tabRouterService.close(tabA);
+    await settle(fixture);
+
+    expect(counters.pageA.destroy).toBe(1);
+    expect(counters.pageB.destroy).toBe(0);
+  });
+
+  it('manual Scroll event emission does not double-instantiate a tab page', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+    expect(counters.pageA.ctor).toBe(1);
+
+    // Simulate a stray Scroll wrapper firing AFTER a NavigationEnd is already
+    // processed. The outlet must dedupe and NOT re-trigger #activeRoute.
+    const navEnd = new NavigationEnd(1, '/a', '/a');
+    const scrollEvent = new Scroll(navEnd, null, null);
+    (router.events as any).next?.(scrollEvent);
+    await settle(fixture);
+
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+  });
+
+  it('destroys all remaining tab components when outlet itself is destroyed', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+    await router.navigateByUrl('/b');
+    await settle(fixture);
+
+    fixture.destroy();
+
+    expect(counters.pageA.destroy).toBe(1);
+    expect(counters.pageB.destroy).toBe(1);
+  });
+
+  it('RoutesRecognized alone (without NavigationEnd) does NOT instantiate a page', async () => {
+    // RoutesRecognized only captures pendingNavigationState. Activation happens
+    // at NavigationEnd. So emitting just RoutesRecognized must NOT create a tab.
+    const event = new RoutesRecognized(99, '/a', '/a', router.routerState.snapshot);
+    (router.events as any).next?.(event);
+    await settle(fixture);
+
+    expect(counters.pageA.ctor).toBe(0);
+    expect(outletCmp.tabs().length).toBe(0);
+  });
+
+  it('two back-to-back navigations to the same url collapse to ONE tab + ONE component instance', async () => {
+    // Reproduces the race condition pattern: when RouterScroller fires
+    // Scroll(NavigationEnd) right after raw NavigationEnd, the outlet handler
+    // was invoked twice and the await getBestInjector(...) yielded between calls,
+    // letting both invocations read this.tabs() = [] â†’ 2 new tabs with same key.
+    // concatMap on the events pipe must serialize and idempotently reuse the tab.
+    const p1 = router.navigateByUrl('/a');
+    const p2 = router.navigateByUrl('/a');
+    await Promise.all([p1, p2]);
+    await settle(fixture);
+
+    expect(outletCmp.tabs().length).toBe(1);
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+  });
+});
+
+describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct URL)', () => {
+  beforeEach(async () => {
+    counters.reset();
+
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter(
+          [
+            { path: '', redirectTo: 'a', pathMatch: 'full' },
+            { path: 'a', component: PageAComponent },
+          ],
+          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+        ),
+        SdTabRouterService,
+        SdTabDecoratorService,
+        {
+          provide: SdNotifyService,
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(),
+            error: jasmine.createSpy(), info: jasmine.createSpy() },
+        },
+        { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
+      ],
+    }).compileComponents();
+  });
+
+  it('renders tab content on first app load without an explicit navigateByUrl call', async () => {
+    const initialFixture = TestBed.createComponent(HostComponent);
+    const router = TestBed.inject(Router);
+
+    // TestBed khÃ´ng luÃ´n cháº¡y initial navigation tá»± Ä‘á»™ng â€” mÃ´ phá»ng F5 táº¡i "/".
+    if (!router.navigated) {
+      await router.navigateByUrl('/');
+    }
+    await settle(initialFixture);
+
+    const initialOutlet = initialFixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+
+    expect(initialOutlet.tabs().length).toBe(1);
+    expect(initialOutlet.tabs()[0].url).toBe('/a');
+    expect(initialFixture.nativeElement.querySelector('[data-cy="page-a"]')).not.toBeNull();
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+  });
+
+  it('F5 trÃªn URL trá»±c tiáº¿p /a (khÃ´ng qua redirect) â€” tab catch-up Ä‘Ãºng url + render PageA', async () => {
+    const router = TestBed.inject(Router);
+    // Nav TRÆ¯á»šC khi táº¡o fixture: mÃ´ phá»ng app load vá»›i router Ä‘Ã£ navigate xong
+    // vÃ  outlet mount sau (do blocking init hoáº·c lazy app shell).
+    await router.navigateByUrl('/a');
+    const lateFixture = TestBed.createComponent(HostComponent);
+    await settle(lateFixture);
+
+    const outlet = lateFixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+
+    expect(outlet.tabs().length).toBe(1);
+    expect(outlet.tabs()[0].url).toBe('/a');
+    expect(counters.pageA.ctor).toBe(1);
+    expect(counters.pageA.init).toBe(1);
+  });
+
+  it('syncCurrentRoute idempotent â€” initial nav + afterNextRender catch-up khÃ´ng táº¡o 2 tab', async () => {
+    const router = TestBed.inject(Router);
+    // Sync nav trÆ°á»›c, sau Ä‘Ã³ mount outlet â†’ cáº£ `router.events` subscribe path vÃ 
+    // `afterNextRender(#syncCurrentRoute)` Ä‘á»u cÃ³ cÆ¡ há»™i cháº¡y. Pháº£i dedupe.
+    await router.navigateByUrl('/a');
+    const fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+    // Trigger thÃªm láº§n navigate cÃ¹ng URL Ä‘á»ƒ cháº¯c cháº¯n khÃ´ng táº¡o duplicate.
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+    expect(outlet.tabs().length).toBe(1);
+    expect(counters.pageA.ctor).toBe(1);
+  });
+
+  it('F5 trÃªn URL cÃ³ queryParams â€” tab key hash gá»“m queryParams, khÃ´ng táº¡o tab thá»© hai khi nav láº¡i cÃ¹ng url+queryParams', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/a?x=1');
+    const fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+
+    expect(outlet.tabs().length).toBe(1);
+    expect(outlet.tabs()[0].url).toBe('/a');
+    expect(outlet.tabs()[0].queryParams).toEqual({ x: '1' });
+
+    await router.navigateByUrl('/a?x=1');
+    await settle(fixture);
+    expect(outlet.tabs().length).toBe(1);
+    expect(counters.pageA.ctor).toBe(1);
+  });
+
+  it('F5 rá»“i nav qua URL khÃ¡c cÃ¹ng query khÃ¡c â€” táº¡o 2 tab Ä‘á»™c láº­p (tab key khÃ¡c)', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/a?x=1');
+    const fixture = TestBed.createComponent(HostComponent);
+    await settle(fixture);
+
+    await router.navigateByUrl('/a?x=2');
+    await settle(fixture);
+
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
+      .componentInstance as SdTabRouterOutletComponent;
+    expect(outlet.tabs().length).toBe(2);
+    expect(outlet.tabs().map(t => t.queryParams?.['x']).sort()).toEqual(['1', '2']);
+    expect(counters.pageA.ctor).toBe(2);
+  });
+});
+

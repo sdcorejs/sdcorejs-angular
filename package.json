@@ -1,0 +1,12 @@
+{
+  "name": "sdcorejs-angular-orchestrator",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "sync": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-from-vn-angular.ps1",
+    "changeset": "changeset"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1"
+  }
+}

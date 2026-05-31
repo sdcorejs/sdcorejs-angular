@@ -1,0 +1,24 @@
+﻿.c-anchor-vertical {
+  position: relative;
+  display: flex;
+  height: 100%;
+  width: 100%;
+  gap: 16px;
+  overflow-y: auto;
+
+  &.c-stop-scroll-propagation {
+    overscroll-behavior: contain; /* chặn cuộn lan ra thẻ cha */
+  }
+
+  .c-anchor-content {
+    flex: 1 1 auto;
+    min-width: 0; // cho phép shrink khi content rộng
+  }
+
+  .c-anchor-list {
+    flex: 0 0 auto; // flex-basis truyền qua inline style từ sidebarWidth()
+    position: sticky;
+    top: 0px;
+    right: 6px; // Độ rộng của scroll-y lệch sang phải
+  }
+}

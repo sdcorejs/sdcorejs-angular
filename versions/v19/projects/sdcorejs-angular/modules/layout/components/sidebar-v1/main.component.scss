@@ -1,0 +1,43 @@
+:host ::ng-deep {
+  .c-layout-wrapper {
+    width: 100%;
+    .c-layout-sidebar {
+      margin-top: 0px;
+      width: 60px;
+
+      // Ghi đè css mặc định của mat-nav
+      height: 100vh !important;
+      transform: none !important;
+      overflow: hidden !important;
+      visibility: visible !important;
+      transition: width 0.15s !important;
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.2) !important;
+
+      .mat-drawer-inner-container {
+        position: relative;
+        overflow: visible;
+        display: block !important;
+      }
+
+      &.mat-drawer-opened {
+        width: 290px;
+        transition: width 0.15s;
+      }
+    }
+
+    .c-layout-content {
+      background-color: #fff;
+      box-sizing: border-box;
+      height: 100vh !important;
+      margin-left: 60px !important;
+
+      &.isShowSidebar {
+        margin-left: 290px !important;
+      }
+
+      .c-mat-drawer-container {
+        height: 100%;
+      }
+    }
+  }
+}

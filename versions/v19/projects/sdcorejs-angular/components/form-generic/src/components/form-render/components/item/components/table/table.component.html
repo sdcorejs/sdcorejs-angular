@@ -1,0 +1,125 @@
+@if(component && tableOption) {
+  <div style="width: 100%">
+    <sd-table [option]="tableOption">
+      @for(key of imageKeys; track key) {
+        <ng-template [sdTableCellDef]="key" let-item="item">
+          <sd-upload-file
+            type="image"
+           [model]="item[key]"
+           [args]="getArgs(key)"
+           (modelChange)="onFileUploadChange(item, key, $event)"
+            align="left"
+            disabled
+            previewWidth="50px"
+            previewHeight="50px"></sd-upload-file>
+        </ng-template>
+      }
+      @for(key of fileKeys; track key) {
+        <ng-template [sdTableCellDef]="key" let-item="item">
+          <sd-upload-file
+           [model]="item[key]"
+           [args]="getArgs(key)"
+           (modelChange)="onFileUploadChange(item, key, $event)"
+            align="left"
+            disabled
+            previewWidth="50px"
+            previewHeight="50px"></sd-upload-file>
+        </ng-template>
+      }
+    </sd-table>
+    @if(!viewed && !component.properties?.viewed) {
+      <sd-button
+      prefixIcon="add"
+      color="primary"
+      (click)="onDetail()"
+      [title]="component.properties?.titleButtonCreate || ('core.component.form-builder.add-new' | translate)"></sd-button>
+    }
+    @if(!viewed && !component.properties?.viewed) {
+      <sd-side-drawer [title]="'core.component.form-builder.detail' | translate" width="500px">
+        <div sdTitle>
+          <span>{{ 'core.component.form-builder.create-update' | translate }}</span>
+        </div>
+        <div sdBody class="c-table-create-update">
+          @if(!!component.columns?.length) {
+            <div class="row mx-0">
+              @for(column of component.columns;track column.key) {
+                @let validate = formRenderColumn[column.key].validate;
+                <div class="col-12 px-0 mt-16">
+                  @if(column.type === 'string') {
+                    <sd-input
+                    [form]="form"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"
+                    [pattern]="column.validate?.pattern"
+                    [patternErrorMessage]="column.validate?.patternErrorMessage"></sd-input>
+                  }@else if(column.type === 'number') {
+                    <sd-input-number
+                    [form]="form"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"
+                    [min]="column.validate?.min"></sd-input-number>
+                  }@else if(column.type === 'radio') {
+                    <sd-radio
+                    [form]="form"
+                    [label]="column.label"
+                    [name]="column.key"
+                    [items]="column.values"
+                    valueField="value"
+                    displayField="display"
+                    [required]="validate?.required"></sd-radio>
+                  }@else if(column.type === 'values') {
+                    <sd-autocomplete
+                      [form]="form"
+                      [label]="column.label"
+                      [(model)]="row[column.key]"
+                      [items]="columnValues[column.key]"
+                      valueField="value"
+                      displayField="display"
+                      [required]="validate?.required"></sd-autocomplete>
+                  }@else if(column.type === 'date') {
+                    <sd-date
+                    [form]="form"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"></sd-date>
+                  }@else if(column.type === 'datetime') {
+                    <sd-datetime
+                    [form]="form"
+                    [label]="column.label"
+                    [(model)]="row[column.key]"
+                    [required]="validate?.required"></sd-datetime>
+                  }@else if(column.type === 'image') {
+                    <sd-upload-file
+                    [label]="column.label"
+                    type="image"
+                    [(model)]="row[column.key]"
+                    [args]="column.args"
+                    previewWidth="50px"
+                    previewHeight="50px"
+                    align="left"></sd-upload-file>
+                  }@else if (column.type === 'file') {
+                    <sd-upload-file
+                    [label]="column.label"
+                    type="file"
+                    [(model)]="row[column.key]"
+                    [args]="column.args"
+                    previewWidth="50px"
+                    previewHeight="50px"
+                    align="left"></sd-upload-file>
+                  }
+                </div>
+              }
+            </div>
+          }
+          
+        </div>
+        <div sdFooter class="text-right pr-16">
+          <sd-button [title]="'core.component.form-builder.save' | translate" prefixIcon="save" color="primary" type="fill" (click)="onAccept()"></sd-button>
+        </div>
+      </sd-side-drawer>
+    }
+  </div>
+}
+

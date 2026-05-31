@@ -1,0 +1,128 @@
+﻿{
+    "$schema":  "./node_modules/@angular/cli/lib/config/schema.json",
+    "version":  1,
+    "newProjectRoot":  "projects",
+    "projects":  {
+                     "sdcorejs-angular":  {
+                                              "projectType":  "library",
+                                              "root":  "projects/sdcorejs-angular",
+                                              "sourceRoot":  "projects/sdcorejs-angular",
+                                              "prefix":  "lib",
+                                              "architect":  {
+                                                                "build":  {
+                                                                              "builder":  "@angular-devkit/build-angular:ng-packagr",
+                                                                              "options":  {
+                                                                                              "project":  "projects/sdcorejs-angular/ng-package.json"
+                                                                                          },
+                                                                              "configurations":  {
+                                                                                                     "production":  {
+                                                                                                                        "tsConfig":  "projects/sdcorejs-angular/tsconfig.lib.prod.json"
+                                                                                                                    },
+                                                                                                     "development":  {
+                                                                                                                         "tsConfig":  "projects/sdcorejs-angular/tsconfig.lib.json"
+                                                                                                                     }
+                                                                                                 },
+                                                                              "defaultConfiguration":  "production"
+                                                                          },
+                                                                "test":  {
+                                                                             "builder":  "@angular-devkit/build-angular:karma",
+                                                                             "options":  {
+                                                                                             "karmaConfig":  "projects/sdcorejs-angular/karma.conf.js",
+                                                                                             "tsConfig":  "projects/sdcorejs-angular/tsconfig.spec.json",
+                                                                                             "polyfills":  [
+                                                                                                               "zone.js",
+                                                                                                               "zone.js/testing"
+                                                                                                           ]
+                                                                                         }
+                                                                         },
+                                                                "lint":  {
+                                                                             "builder":  "@angular-eslint/builder:lint",
+                                                                             "options":  {
+                                                                                             "lintFilePatterns":  [
+                                                                                                                      "projects/sdcorejs-angular/**/*.ts",
+                                                                                                                      "projects/sdcorejs-angular/**/*.html"
+                                                                                                                  ],
+                                                                                             "eslintConfig":  "projects/sdcorejs-angular/eslint.config.js"
+                                                                                         }
+                                                                         }
+                                                            }
+                                          },
+                     "showcase":  {
+                                      "projectType":  "application",
+                                      "schematics":  {
+                                                         "@schematics/angular:component":  {
+                                                                                               "style":  "scss"
+                                                                                           }
+                                                     },
+                                      "root":  "projects/showcase",
+                                      "sourceRoot":  "projects/showcase/src",
+                                      "prefix":  "app",
+                                      "architect":  {
+                                                        "build":  {
+                                                                      "builder":  "@angular-devkit/build-angular:application",
+                                                                      "options":  {
+                                                                                      "outputPath":  "dist/showcase",
+                                                                                      "index":  "projects/showcase/src/index.html",
+                                                                                      "browser":  "projects/showcase/src/main.ts",
+                                                                                      "polyfills":  [
+                                                                                                        "zone.js"
+                                                                                                    ],
+                                                                                      "tsConfig":  "projects/showcase/tsconfig.app.json",
+                                                                                      "inlineStyleLanguage":  "scss",
+                                                                                      "assets":  [
+
+                                                                                                 ],
+                                                                                      "styles":  [
+                                                                                                     "projects/showcase/src/styles.scss",
+                                                                                                     "@sdcorejs/angular/assets/scss/sd-core.scss"
+                                                                                                 ],
+                                                                                      "scripts":  [
+
+                                                                                                  ]
+                                                                                  },
+                                                                      "configurations":  {
+                                                                                             "production":  {
+                                                                                                                "budgets":  [
+                                                                                                                                {
+                                                                                                                                    "type":  "initial",
+                                                                                                                                    "maximumWarning":  "1.5MB",
+                                                                                                                                    "maximumError":  "3MB"
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "type":  "anyComponentStyle",
+                                                                                                                                    "maximumWarning":  "6kB",
+                                                                                                                                    "maximumError":  "12kB"
+                                                                                                                                }
+                                                                                                                            ],
+                                                                                                                "outputHashing":  "all"
+                                                                                                            },
+                                                                                             "development":  {
+                                                                                                                 "optimization":  false,
+                                                                                                                 "extractLicenses":  false,
+                                                                                                                 "sourceMap":  true
+                                                                                                             }
+                                                                                         },
+                                                                      "defaultConfiguration":  "development"
+                                                                  },
+                                                        "serve":  {
+                                                                      "builder":  "@angular-devkit/build-angular:dev-server",
+                                                                      "configurations":  {
+                                                                                             "production":  {
+                                                                                                                "buildTarget":  "showcase:build:production"
+                                                                                                            },
+                                                                                             "development":  {
+                                                                                                                 "buildTarget":  "showcase:build:development"
+                                                                                                             }
+                                                                                         },
+                                                                      "defaultConfiguration":  "development"
+                                                                  }
+                                                    }
+                                  }
+                 },
+    "cli":  {
+                "schematicCollections":  [
+                                             "angular-eslint"
+                                         ],
+                "analytics":  false
+            }
+}

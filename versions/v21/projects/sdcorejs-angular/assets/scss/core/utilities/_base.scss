@@ -1,0 +1,333 @@
+// --------------------------------------------------------------------------
+// Base / Reboot — chuẩn hóa rendering giữa các browser, thiết lập baseline
+//   cho toàn bộ ứng dụng. Thuần CSS, không phụ thuộc 3rd-party reset.
+//
+//   Nguồn gốc rule: kế thừa từ Bootstrap 4 reboot + modern-normalize (đã được
+//   inline trực tiếp ở đây để dứt điểm phụ thuộc Bootstrap).
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+// 1. Box-sizing
+//    Đặt border-box toàn cục để width/height không bị cộng thêm padding/border.
+//    Đây là rule quan trọng nhất — thiếu là toàn bộ layout lệch.
+// --------------------------------------------------------------------------
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+// --------------------------------------------------------------------------
+// 2. Document
+// --------------------------------------------------------------------------
+html {
+  // Ngăn browser tự điều chỉnh font-size khi xoay màn hình (iOS)
+  -webkit-text-size-adjust: 100%;
+  // Bỏ tap highlight màu xám trên mobile
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.15;
+}
+
+// --------------------------------------------------------------------------
+// 3. Body
+// --------------------------------------------------------------------------
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  text-align: left;
+}
+
+// --------------------------------------------------------------------------
+// 4. Sectioning elements — IE10 fallback (display: block)
+// --------------------------------------------------------------------------
+article, aside, figcaption, figure, footer, header, hgroup, main, nav, section {
+  display: block;
+}
+
+// --------------------------------------------------------------------------
+// 5. Focus management
+//    Ẩn outline khi focus bằng chuột/touch; vẫn hiện khi dùng bàn phím.
+// --------------------------------------------------------------------------
+[tabindex="-1"]:focus:not(:focus-visible) {
+  outline: 0 !important;
+}
+
+// --------------------------------------------------------------------------
+// 6. Typography
+// --------------------------------------------------------------------------
+
+// Bỏ margin-top của heading để dễ kiểm soát spacing trong layouts
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+// Abbreviation với tooltip
+abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+  border-bottom: 0;
+  text-decoration-skip-ink: none;
+}
+
+address {
+  margin-bottom: 1rem;
+  font-style: normal;
+  line-height: inherit;
+}
+
+// List — xóa margin-top, giữ margin-bottom
+ol,
+ul,
+dl {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+ol ol, ul ul, ol ul, ul ol {
+  margin-bottom: 0;
+}
+
+dt { font-weight: 700; }
+
+dd {
+  margin-bottom: 0.5rem;
+  margin-left: 0;
+}
+
+blockquote { margin: 0 0 1rem; }
+
+// Bold & strong
+b,
+strong { font-weight: bolder; }
+
+small { font-size: 80%; }
+
+// Sub & sup — không ảnh hưởng line-height
+sub,
+sup {
+  position: relative;
+  font-size: 75%;
+  line-height: 0;
+  vertical-align: baseline;
+}
+sub { bottom: -0.25em; }
+sup { top: -0.5em; }
+
+// --------------------------------------------------------------------------
+// 7. Links
+// --------------------------------------------------------------------------
+a {
+  color: #007bff;
+  text-decoration: none;
+  background-color: transparent; // Xóa nền xám trên link active trong IE 10
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+// Link không có href (anchor thuần) — kế thừa màu cha, không gạch chân
+a:not([href]):not([class]),
+a:not([href]):not([class]):hover {
+  color: inherit;
+  text-decoration: none;
+}
+
+// --------------------------------------------------------------------------
+// 8. Code
+// --------------------------------------------------------------------------
+pre,
+code,
+kbd,
+samp {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 1em; // Sửa font-size lạ trên một số browser
+}
+
+pre {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  overflow: auto;
+  -ms-overflow-style: scrollbar;
+}
+
+// --------------------------------------------------------------------------
+// 9. Media
+// --------------------------------------------------------------------------
+figure { margin: 0 0 1rem; }
+
+img {
+  vertical-align: middle;
+  border-style: none; // Xóa border trên ảnh trong link (IE 10)
+}
+
+svg {
+  overflow: hidden; // Fix SVG overflow bug trong IE10/11
+  vertical-align: middle;
+}
+
+// --------------------------------------------------------------------------
+// 10. Tables
+// --------------------------------------------------------------------------
+table {
+  border-collapse: collapse; // Tránh double border khi dùng border trên td/th
+}
+
+caption {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  color: #6c757d;
+  text-align: left;
+  caption-side: bottom;
+}
+
+th {
+  font-weight: 600; // Không dùng bold mặc định của browser
+  text-align: inherit;
+  text-align: -webkit-match-parent;
+}
+
+// --------------------------------------------------------------------------
+// 11. Forms
+// --------------------------------------------------------------------------
+
+// label là inline-block để có thể set margin; margin-bottom mặc định 0.5rem
+// có thể override per-component (xem core/form.scss cho mat-checkbox).
+label {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+// Xóa border-radius mà macOS Chrome tự thêm vào button
+button { border-radius: 0; }
+
+// Ẩn outline trên button khi click (chỉ hiện khi dùng bàn phím)
+button:focus:not(:focus-visible) { outline: 0; }
+
+input,
+button,
+select,
+optgroup,
+textarea {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+// Hiển thị overflow trên Edge
+button,
+input { overflow: visible; }
+
+// Xóa text-transform kế thừa trong Firefox
+button,
+select { text-transform: none; }
+
+// Cursor pointer cho role="button"
+[role="button"] { cursor: pointer; }
+
+// Xóa word-wrap kỳ lạ trong Safari
+select { word-wrap: normal; }
+
+// Fix clickable types trên iOS/Safari
+button,
+[type="button"],
+[type="reset"],
+[type="submit"] {
+  -webkit-appearance: button;
+
+  &:not(:disabled) { cursor: pointer; }
+}
+
+// Xóa inner border/padding trong Firefox
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+  padding: 0;
+  border-style: none;
+}
+
+// Radio & checkbox
+input[type="radio"],
+input[type="checkbox"] {
+  box-sizing: border-box;
+  padding: 0;
+}
+
+textarea {
+  overflow: auto;    // Xóa scrollbar dọc mặc định trong IE
+  resize: vertical;  // Chỉ cho resize theo chiều dọc
+}
+
+fieldset {
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+legend {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  line-height: inherit;
+  color: inherit;
+  white-space: normal;
+}
+
+progress { vertical-align: baseline; }
+
+// Sửa cursor spinner trên Chrome
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button { height: auto; }
+
+// Sửa rounded corners trên search input trong iOS
+[type="search"] {
+  outline-offset: -2px;
+  -webkit-appearance: none;
+}
+
+[type="search"]::-webkit-search-decoration { -webkit-appearance: none; }
+
+// File upload button — kế thừa font
+::-webkit-file-upload-button {
+  font: inherit;
+  -webkit-appearance: button;
+}
+
+// --------------------------------------------------------------------------
+// 12. Misc
+// --------------------------------------------------------------------------
+output { display: inline-block; }
+
+summary {
+  display: list-item;
+  cursor: pointer;
+}
+
+template { display: none; }
+
+// Ẩn element có attribute [hidden] (bao gồm IE 10)
+[hidden] { display: none !important; }
+
+// Horizontal rule
+hr {
+  box-sizing: content-box;
+  height: 0;
+  overflow: visible;
+}

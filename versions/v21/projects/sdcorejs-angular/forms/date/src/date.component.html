@@ -1,0 +1,111 @@
+@let lbl = label();
+@let app = appearance();
+@let hideErr = hideInlineError();
+@let errMsg = errorMessage();
+@let viewDef = sdViewDef();
+@let hText = helperText();
+@let req = required();
+
+@let minD = resolvedMin();
+@let maxD = resolvedMax();
+
+@if (viewed()) {
+  <sd-view
+    [label]="lbl"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="formControl.value"
+    [display]="formControl.value | date: 'dd/MM/yyyy'"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="sdValueTemplate()">
+  </sd-view>
+} @else {
+  @if (!app) {
+    <ng-content select="[sdLabel]">
+      @if (lbl) {
+        <sd-label [label]="lbl" [required]="req"></sd-label>
+      }
+    </ng-content>
+  }
+
+  <div
+    class="d-flex align-items-center"
+    [class.sd-view]="viewDef?.templateRef"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled"
+    (click)="onClick()"
+    aria-hidden="true">
+    @if (viewDef?.templateRef && !isFocused && !datePicker()?.opened) {
+      <ng-container *ngTemplateOutlet="viewDef!.templateRef; context: { value: formControl.value }"> </ng-container>
+    } @else {
+      <mat-form-field
+        class="c-form-field-date-input"
+        [class.sd-md]="size() === 'md'"
+        [class.sd-sm]="size() === 'sm'"
+        [class.hide-inline-error]="hideErr"
+        [appearance]="app!"
+        [floatLabel]="floatLabel()">
+        @if (app && lbl) {
+          <mat-label style="display: inline-block">
+            <div style="display: flex; align-items: center; gap: 4px">
+              <span>{{ lbl }}</span>
+              @if (hText) {
+                <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+              }
+            </div>
+          </mat-label>
+        }
+
+        <input
+          aria-hidden="true"
+          [id]="id"
+          matInput
+          (keyup)="onKeyup($event)"
+          (keydown)="onKeyDown($event)"
+          (dateChange)="onChange($event)"
+          [autocomplete]="id"
+          autocorrect="off"
+          [formControl]="formControl"
+          [required]="req"
+          [matDatepicker]="picker"
+          [placeholder]="placeholder() || lbl || ''"
+          [min]="minD"
+          [max]="maxD"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          [attr.data-autoId]="autoId()"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-error-message]="dataErrorMessage()"
+          #input
+          [maxLength]="10" />
+
+        <mat-datepicker #picker [touchUi]="isMobileOrTablet"></mat-datepicker>
+
+        @if (hideErr && errMsg && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+        }
+
+        @if (!hideErr && errMsg && formControl.touched) {
+          <mat-error>{{ errMsg }}</mat-error>
+        }
+
+        @if (formControl.value && !req && !formControl.disabled) {
+          <button
+            type="button"
+            class="sd-clear-btn sd-hover"
+            matSuffix
+            (click)="clear($event)"
+            title="Xóa"
+            aria-label="Xóa">
+            <mat-icon>close</mat-icon>
+          </button>
+        }
+
+        <mat-icon class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && picker.open()" #btn matSuffix>today</mat-icon>
+      </mat-form-field>
+    }
+  </div>
+}

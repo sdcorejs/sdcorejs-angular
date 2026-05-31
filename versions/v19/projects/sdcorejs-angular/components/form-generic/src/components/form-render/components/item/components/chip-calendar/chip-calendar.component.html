@@ -1,0 +1,15 @@
+@if (component && entity) {
+  @if (viewed || component.properties?.viewed) {
+    <div class="text-black400">{{ component.label || component.key }}</div>
+    <div class="T14M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
+  } @else {
+    <sd-chip-calendar
+      [form]="form"
+      [label]="component.label || component.key"
+      [name]="component.key"
+      [autoId]="component.key"
+      [(model)]="entity[component.key!]"
+      [required]="required"
+      [disabled]="disabled"></sd-chip-calendar>
+  }
+}

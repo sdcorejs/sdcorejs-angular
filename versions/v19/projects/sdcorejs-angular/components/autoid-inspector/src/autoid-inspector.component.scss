@@ -1,0 +1,718 @@
+﻿// Sá»­ dá»¥ng CSS custom properties tá»« @sdcorejs/angular theme (--sd-*).
+// Fallback hex chá»‰ Ã¡p dá»¥ng khi consumer chÆ°a import sd-core.scss.
+$primary: var(--sd-primary, #2A66F4);
+$primary-light: var(--sd-primary-light, #EAF1FF);
+$primary-dark: var(--sd-primary-dark, #1C4AD9);
+$info: var(--sd-info, #2962FF);
+$info-light: var(--sd-info-light, #E7E9FF);
+$success: var(--sd-success, #4CAF50);
+$success-light: var(--sd-success-light, #DBEFDC);
+$success-dark: var(--sd-success-dark, #39833C);
+$warning: var(--sd-warning, #FF9600);
+$warning-light: var(--sd-warning-light, #FFEACC);
+$warning-dark: var(--sd-warning-dark, #BF7000);
+$error: var(--sd-error, #F82C13);
+$error-light: var(--sd-error-light, #FED5D0);
+$error-dark: var(--sd-error-dark, #BA200E);
+$black500: var(--sd-black500, #212121);
+$black400: var(--sd-black400, #757575);
+$black300: var(--sd-black300, #BFBFBF);
+$black200: var(--sd-black200, #E6E6E6);
+$black100: var(--sd-black100, #F2F2F2);
+
+:host {
+  position: fixed;
+  inset: auto 0 0 auto;
+  z-index: 100000;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: $black500;
+}
+
+.sd-autoid-inspector {
+  &__fab-wrap {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 100000;
+
+    &:hover .sd-autoid-inspector__fab-dismiss {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+  }
+
+  &__fab {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: $primary;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      background: $primary-dark;
+      transform: scale(1.08);
+      box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__fab-dismiss {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid $black200;
+    background: #fff;
+    color: $black400;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    transform: scale(0.7);
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, color 0.12s ease, background 0.12s ease;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+
+    &:hover {
+      background: $error-light;
+      color: $error-dark;
+      border-color: $error;
+    }
+
+    mat-icon {
+      font-size: 12px;
+      width: 12px;
+      height: 12px;
+      line-height: 12px;
+    }
+  }
+
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.32);
+    z-index: 100001;
+    backdrop-filter: blur(2px);
+  }
+
+  &__panel {
+    position: fixed;
+    right: 20px;
+    bottom: 80px;
+    width: min(860px, calc(100vw - 40px));
+    max-height: calc(100vh - 110px);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    display: flex;
+    flex-direction: column;
+    z-index: 100002;
+    overflow: hidden;
+    border: 1px solid $black200;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-bottom: 1px solid $black200;
+    background: $black100;
+    flex-shrink: 0;
+  }
+
+  &__segments {
+    display: inline-flex;
+    border: 1px solid $black200;
+    border-radius: 8px;
+    background: #fff;
+    overflow: hidden;
+
+    button {
+      border: none;
+      background: transparent;
+      padding: 5px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: $black400;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-right: 1px solid $black200;
+      transition: background 0.12s ease, color 0.12s ease;
+
+      &:last-child {
+        border-right: none;
+      }
+
+      &:hover:not(.is-active) {
+        background: $black100;
+        color: $black500;
+      }
+
+      &.is-active {
+        background: $primary;
+        color: #fff;
+      }
+    }
+  }
+
+  &__badge {
+    background: $black200;
+    color: $black500;
+    border-radius: 10px;
+    padding: 0 7px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
+
+    .is-active & {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+
+    &.is-warn {
+      background: $error;
+      color: #fff;
+    }
+  }
+
+  &__actions {
+    display: inline-flex;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  &__icon-btn {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    color: $black400;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover {
+      background: $black100;
+      color: $black500;
+    }
+
+    &.is-primary {
+      color: $primary;
+
+      &:hover {
+        background: $primary-light;
+        color: $primary-dark;
+      }
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__close-btn {
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    background: transparent;
+    color: $black400;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, color 0.12s ease;
+
+    &:hover {
+      background: $error-light;
+      color: $error-dark;
+    }
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__body {
+    padding: 14px;
+    overflow: auto;
+    flex: 1;
+    background: #fff;
+  }
+
+  &__toast {
+    position: absolute;
+    top: 56px;
+    right: 14px;
+    background: $success;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  }
+
+  // ==========================================
+  // AUDIT TAB
+  // ==========================================
+  &__audit-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  }
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid $black200;
+    background: #fff;
+    border-radius: 999px;
+    padding: 5px 12px 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: $black400;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: $primary;
+      color: $primary;
+    }
+
+    &.is-on {
+      border-color: $primary;
+      color: $primary;
+      background: $primary-light;
+    }
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+  }
+
+  &__toggle-state {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: $black200;
+    color: $black400;
+
+    .is-on & {
+      background: $primary;
+      color: #fff;
+    }
+  }
+
+  &__summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  &__stat {
+    background: $black100;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid transparent;
+
+    &.is-info {
+      background: $info-light;
+      border-color: $info;
+
+      .sd-autoid-inspector__stat-value {
+        color: $info;
+      }
+    }
+
+    &.is-success {
+      background: $success-light;
+      border-color: $success;
+
+      .sd-autoid-inspector__stat-value {
+        color: $success-dark;
+      }
+    }
+
+    &.is-warning {
+      background: $warning-light;
+      border-color: $warning;
+
+      .sd-autoid-inspector__stat-value {
+        color: $warning-dark;
+      }
+    }
+
+    &.is-error {
+      background: $error-light;
+      border-color: $error;
+
+      .sd-autoid-inspector__stat-value {
+        color: $error-dark;
+      }
+    }
+  }
+
+  &__stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  &__stat-label {
+    font-size: 11px;
+    color: $black400;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-weight: 600;
+  }
+
+  &__section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 14px 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $black500;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+
+      &.is-error {
+        color: $error;
+      }
+
+      &.is-warning {
+        color: $warning;
+      }
+
+      &.is-info {
+        color: $info;
+      }
+    }
+  }
+
+  &__success-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: $success-light;
+    border: 1px solid $success;
+    border-radius: 10px;
+    color: $success-dark;
+
+    mat-icon {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      color: $success;
+    }
+
+    strong {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+
+    small {
+      font-size: 11px;
+      opacity: 0.85;
+    }
+  }
+
+  // ==========================================
+  // TABLE â€” sticky header fix
+  // ==========================================
+  &__table-wrap {
+    border: 1px solid $black200;
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 60vh;
+    background: #fff;
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: middle;
+      border-bottom: 1px solid $black200;
+    }
+
+    // Sticky header: pháº£i cÃ³ background SOLID + box-shadow + z-index Ä‘á»ƒ
+    // row scroll dÆ°á»›i khÃ´ng lá»™ ra phÃ­a sau. border-bottom cá»§a <th> khÃ´ng
+    // sticky theo, nÃªn dÃ¹ng box-shadow inset bottom thay tháº¿.
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: $black100;
+      font-weight: 600;
+      color: $black500;
+      text-transform: none;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+      border-bottom: none;
+      box-shadow: inset 0 -1px 0 $black200, 0 2px 4px rgba(0, 0, 0, 0.04);
+      white-space: nowrap;
+
+      &.is-num {
+        text-align: right;
+        width: 50px;
+      }
+    }
+
+    tbody tr {
+      transition: background 0.1s ease;
+
+      &:hover {
+        background: $primary-light;
+      }
+
+      &:last-child td {
+        border-bottom: none;
+      }
+
+      &.is-error {
+        background: $error-light;
+
+        &:hover {
+          background: $error-light;
+          filter: brightness(0.98);
+        }
+      }
+
+      &.is-warning {
+        background: $warning-light;
+
+        &:hover {
+          background: $warning-light;
+          filter: brightness(0.98);
+        }
+      }
+    }
+
+    td.is-num {
+      text-align: right;
+      color: $black400;
+      font-variant-numeric: tabular-nums;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 11px;
+      background: $black100;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: $primary-dark;
+      border: 1px solid $black200;
+    }
+  }
+
+  &__autoid-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__tag-chip {
+    display: inline-block;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 11px;
+    background: $info-light;
+    color: $info;
+    border: 1px solid $info;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  &__value {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: $black400;
+    font-style: italic;
+  }
+
+  &__state-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  &__state-chip {
+    display: inline-block;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 10px;
+    background: $black100;
+    color: $black400;
+    border: 1px solid $black200;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &.is-error {
+      background: $error-light;
+      color: $error-dark;
+      border-color: $error;
+    }
+
+    &.is-warning {
+      background: $warning-light;
+      color: $warning-dark;
+      border-color: $warning;
+    }
+
+    &.is-info {
+      background: $info-light;
+      color: $info;
+      border-color: $info;
+    }
+  }
+
+  &__empty {
+    text-align: center;
+    color: $black400;
+    padding: 24px;
+    font-style: italic;
+  }
+
+  // ==========================================
+  // FILTER + EXPORT
+  // ==========================================
+  &__filter {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: $black100;
+    border: 1px solid $black200;
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 12px;
+    transition: border-color 0.15s ease;
+
+    &:focus-within {
+      border-color: $primary;
+      background: #fff;
+    }
+
+    input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 13px;
+      color: $black500;
+
+      &::placeholder {
+        color: $black300;
+      }
+    }
+
+    > mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: $black400;
+    }
+  }
+
+  &__export-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+
+    button {
+      border: 1px solid $black200;
+      background: #fff;
+      border-radius: 10px;
+      padding: 12px 10px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.12s ease;
+      text-align: center;
+
+      &:hover {
+        border-color: $primary;
+        background: $primary-light;
+        transform: translateY(-1px);
+      }
+
+      span {
+        font-size: 12px;
+        font-weight: 600;
+        color: $black500;
+        line-height: 1.25;
+      }
+
+      small {
+        font-size: 10px;
+        color: $black400;
+        line-height: 1.2;
+      }
+
+      mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        color: $primary;
+      }
+    }
+  }
+}
+

@@ -1,0 +1,57 @@
+@let _autoId = autoId();
+@let _item = item();
+@let filteredCommands = _item | filter: _commands() | async;
+
+@if (filteredCommands?.length) {
+  @for (command of filteredCommands; track command.key) {
+    @let _meta = _item | command: command;
+    @if (command.type === 'normal') {
+      <button
+        [attr.data-autoid]="_autoId + '-' + command.key"
+        (click)="command.click(_item.data)"
+        [matTooltip]="_meta.title"
+        aria-hidden="true"
+        [disabled]="_meta.disabled"
+        mat-icon-button>
+        <mat-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet!">
+          {{ _meta.icon }}
+        </mat-icon>
+      </button>
+    } @else {
+      <button
+        [attr.data-autoid]="_autoId + '-' + command.key"
+        [matMenuTriggerFor]="menu"
+        aria-hidden="true"
+        mat-icon-button>
+        @if (_meta.icon) {
+          <mat-icon class="c-icon" [fontSet]="command.fontSet!">{{ _meta.icon }}</mat-icon>
+        } @else {
+          <mat-icon class="c-icon">more_vert</mat-icon>
+        }
+      </button>
+      <mat-menu #menu="matMenu" [attr.data-autoid]="_autoId + '-' + command.key + '-menu'">
+        <span>
+          @for (childCommand of command.children; track childCommand.key) {
+            @let _childMeta = _item | command: childCommand;
+            <button
+              [attr.data-autoid]="_autoId + '-' + command.key + '-' + childCommand.key"
+              mat-menu-item
+              (click)="childCommand.click(_item.data)"
+              [disabled]="_childMeta.disabled">
+              @if (_childMeta.htmlTemplate) {
+                <div [innerHTML]="_childMeta.htmlTemplate"></div>
+              } @else {
+                <div>
+                  <mat-icon [color]="childCommand.color || 'secondary'" [fontSet]="command.fontSet!">
+                    {{ _childMeta.icon }}
+                  </mat-icon>
+                  <span> {{ _childMeta.title }}</span>
+                </div>
+              }
+            </button>
+          }
+        </span>
+      </mat-menu>
+    }
+  }
+}

@@ -1,0 +1,84 @@
+name: Deploy showcase (v19) to GitHub Pages
+
+# Build showcase Angular app trong versions/v19 và deploy lên GitHub Pages.
+# Trigger:
+#   - Push lên branch main khi có thay đổi.
+#   - Manual dispatch để re-build on demand.
+#
+# Setup yêu cầu trong repo Settings > Pages:
+#   Source = "GitHub Actions" (KHÔNG dùng branch source).
+#   Workflow này tự upload artifact + deploy qua deploy-pages action.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'versions/v19/projects/showcase/**'
+      - 'versions/v19/projects/sdcorejs-angular/**'
+      - 'versions/v19/angular.json'
+      - 'versions/v19/package.json'
+      - 'versions/v19/package-lock.json'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: versions/v19/package-lock.json
+
+      - name: Install dependencies (v19)
+        run: npm ci --legacy-peer-deps
+        working-directory: versions/v19
+
+      - name: Build sdcorejs-angular library
+        # Showcase import từ @sdcorejs/angular qua tsconfig path → dist phải có trước.
+        run: node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular
+        working-directory: versions/v19
+
+      - name: Build showcase (production)
+        # base-href phải khớp repo name vì Pages URL là <user>.github.io/<repo>/.
+        run: |
+          node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase \
+            --configuration production \
+            --base-href=/sdcorejs-angular/
+        working-directory: versions/v19
+
+      - name: SPA fallback — copy index.html → 404.html
+        # Angular SPA: deep links phải fallback về index. GitHub Pages serve 404.html khi route không tồn tại.
+        run: cp dist/showcase/browser/index.html dist/showcase/browser/404.html
+        working-directory: versions/v19
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: versions/v19/dist/showcase/browser
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,38 @@
+<ng-template #templateRef>
+  <div class="sd-modal-root"
+       [attr.data-autoId]="autoId()"
+       [attr.data-opened]="dataOpened()">
+    @if (!lazyLoadContent() || alreadyOpened()) {
+      <!-- Header -->
+      <!-- Dùng scss thuần -->
+      @if (title()) {
+        <div class="d-flex align-items-center p-16">
+          <ng-content select="[sdHeaderLeft]">
+            <div class="T18M">{{ title() }}</div>
+          </ng-content>
+          <div class="d-flex align-items-center ml-auto">
+            <ng-content select="[sdHeaderRight]"></ng-content>
+            <ng-content select="[sdHeader]"></ng-content>
+            @if (!hideClose()) {
+              <mat-icon class="text-secondary cursor-pointer" fontIcon="close" (click)="close()" [attr.data-autoId]="closeButtonAutoId()"></mat-icon>
+            }
+          </div>
+        </div>
+      }
+      <!-- <mat-divider></mat-divider> -->
+      <!-- Body -->
+      <div class="overflow-auto w-full px-16" style="max-height: 80vh">
+        <ng-content></ng-content>
+      </div>
+      <!-- Footer -->
+      <!-- <mat-divider></mat-divider> -->
+      <div class="d-flex align-items-center p-8" #footer>
+        <ng-content select="[sdFooterLeft]"></ng-content>
+        <div class="ml-auto">
+          <ng-content select="[sdFooterRight]"></ng-content>
+          <ng-content select="[sdFooter]"></ng-content>
+        </div>
+      </div>
+    }
+  </div>
+</ng-template>

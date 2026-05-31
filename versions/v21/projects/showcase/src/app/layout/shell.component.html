@@ -1,0 +1,48 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/">
+      <mat-icon class="brand-icon">dashboard</mat-icon>
+      <span class="brand-text">&#64;sd-angular/core</span>
+    </a>
+
+    <div class="search">
+      <mat-icon class="search-icon">search</mat-icon>
+      <input
+        type="text"
+        placeholder="Tìm component / form / service..."
+        [value]="query()"
+        (input)="query.set($any($event.target).value)" />
+    </div>
+
+    <nav class="nav">
+      @for (group of filteredGroups(); track group.title) {
+        <div class="group">
+          <button class="group-header" type="button" (click)="toggleGroup(group.title)">
+            <mat-icon class="group-icon">{{ group.icon }}</mat-icon>
+            <span class="group-title">{{ group.title }}</span>
+            <span class="group-count">{{ group.items.length }}</span>
+            <mat-icon class="group-chevron">{{ isCollapsed(group.title) ? 'expand_more' : 'expand_less' }}</mat-icon>
+          </button>
+          @if (!isCollapsed(group.title)) {
+            <ul class="items">
+              @for (item of group.items; track trackItem($index, item)) {
+                <li>
+                  <a
+                    [routerLink]="'/' + item.path"
+                    routerLinkActive="active"
+                    [routerLinkActiveOptions]="{ exact: false }">
+                    {{ item.label }}
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+      }
+    </nav>
+  </aside>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

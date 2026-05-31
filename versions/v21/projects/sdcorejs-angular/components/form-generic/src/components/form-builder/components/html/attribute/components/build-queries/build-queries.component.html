@@ -1,0 +1,32 @@
+@if (!!leftProperties?.length) {
+  <div class="d-flex align-items-center py-4">
+    @if (label) {
+      <div class="T14R" style="flex: 1">{{ label }}</div>
+    }
+    <div style="width: 200px" class="d-flex align-items-center">
+      <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
+    </div>
+  </div>
+  <sd-modal [title]="'core.component.form-builder.set-query-value' | translate" width="400px">
+    <div class="c-builder">
+      @for (property of leftProperties; track property.value) {
+        <div class="d-flex align-items-center py-8" style="gap: 8px">
+          <div class="T14M" style="width: 150px">{{ property.display }}</div>
+          <sd-autocomplete
+            [label]="'core.component.form-builder.value-source-field' | translate"
+            [form]="form"
+            style="flex: 1"
+            [(model)]="model![property.value]"
+            [items]="rightProperties"
+            valueField="value"
+            displayField="display"
+            required
+            hideInlineError></sd-autocomplete>
+        </div>
+      }
+    </div>
+    <ng-container sdFooter>
+      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
+    </ng-container>
+  </sd-modal>
+}

@@ -1,0 +1,27 @@
+@if (component.properties?.viewed) {
+  <div class="d-block T12R text-secondary">
+    {{ component.label }}
+  </div>
+  <div class="T14M">Your radio selection</div>
+} @else {
+  <div class="d-block mb-0 T14M">
+    {{ component.label }}
+    @if (component.validate?.required) {
+      <span class="text-error mb-2">*</span>
+    }
+  </div>
+  <div class="c-radio-item d-flex flex-wrap align-items-center">
+    @if (component.values?.length) {
+      <div class="d-flex" [class.flex-column]="component.properties?.direction === 'column'" style="gap: 8px">
+        @for (item of component.values; track item.value) {
+          <div class="d-flex align-items-center my-4">
+            <div class="c-rd-ip mr-4"></div>
+            <div class="T12M">{{ item.label }}</div>
+          </div>
+        }
+      </div>
+    } @else if (component.valuesKey) {
+      <div class="T12R text-secondary">{{ component.valuesKey }}</div>
+    }
+  </div>
+}

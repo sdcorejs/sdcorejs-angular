@@ -1,0 +1,143 @@
+// --------------------------------------------------------------------------
+// Grid — row/col 12-column flexbox + native CSS Grid container
+//   Thuần CSS Flexbox / CSS Grid, không phụ thuộc framework ngoài.
+//   Breakpoint convention (sm/md/lg/xl) trùng Bootstrap để host app dễ migrate.
+// --------------------------------------------------------------------------
+
+// --------------------------------------------------------------------------
+// 1. Flexbox row/col  (.row, .col-{1-12})
+// --------------------------------------------------------------------------
+$grid-columns: 12;
+$grid-gutter: 16px;
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: calc(-1 * $grid-gutter / 2);
+  margin-right: calc(-1 * $grid-gutter / 2);
+
+  > * {
+    box-sizing: border-box;
+    padding-left: calc($grid-gutter / 2);
+    padding-right: calc($grid-gutter / 2);
+  }
+}
+
+// Gutter variants
+.row-md {
+  @extend .row;
+  margin-left: -8px;
+  margin-right: -8px;
+  > * { padding-left: 8px; padding-right: 8px; }
+}
+
+.row-sm {
+  @extend .row;
+  margin-left: -4px;
+  margin-right: -4px;
+  > * { padding-left: 4px; padding-right: 4px; }
+}
+
+.row-xs {
+  @extend .row;
+  margin-left: -2px;
+  margin-right: -2px;
+  > * { padding-left: 2px; padding-right: 2px; }
+}
+
+// .col-1 … .col-12
+@for $i from 1 through $grid-columns {
+  .col-#{$i} {
+    box-sizing: border-box;
+    width: percentage(calc($i / $grid-columns));
+    flex: 0 0 percentage(calc($i / $grid-columns));
+    max-width: percentage(calc($i / $grid-columns));
+    padding-left: calc($grid-gutter / 2);
+    padding-right: calc($grid-gutter / 2);
+  }
+}
+
+.col {
+  flex: 1 1 0%;
+  padding-left: calc($grid-gutter / 2);
+  padding-right: calc($grid-gutter / 2);
+}
+
+// --------------------------------------------------------------------------
+// 1b. Responsive columns
+//   col-sm-{1-12} : ≥ 576px
+//   col-md-{1-12} : ≥ 768px
+//   col-lg-{1-12} : ≥ 992px
+//   col-xl-{1-12} : ≥ 1200px
+//
+//   Mobile-first: mặc định width: 100%, áp dụng kích thước khi đủ rộng.
+// --------------------------------------------------------------------------
+$grid-breakpoints: (
+  'sm': 576px,
+  'md': 768px,
+  'lg': 992px,
+  'xl': 1200px,
+);
+
+// col-{bp} — chiếm hết chiều rộng tại breakpoint đó
+@each $bp, $min-width in $grid-breakpoints {
+  @media (min-width: $min-width) {
+    .col-#{$bp} {
+      flex: 1 1 0%;
+      padding-left: calc($grid-gutter / 2);
+      padding-right: calc($grid-gutter / 2);
+    }
+  }
+}
+
+// col-{bp}-{1-12} — chiếm n/12 chiều rộng tại breakpoint đó
+@each $bp, $min-width in $grid-breakpoints {
+  @media (min-width: $min-width) {
+    @for $i from 1 through $grid-columns {
+      .col-#{$bp}-#{$i} {
+        box-sizing: border-box;
+        width: percentage(calc($i / $grid-columns));
+        flex: 0 0 percentage(calc($i / $grid-columns));
+        max-width: percentage(calc($i / $grid-columns));
+        padding-left: calc($grid-gutter / 2);
+        padding-right: calc($grid-gutter / 2);
+      }
+    }
+  }
+}
+
+// --------------------------------------------------------------------------
+// 2. CSS Grid container  (.grid-container)
+//    grid-container + grid-cols-{1-12} + col-span-{1-12}
+// --------------------------------------------------------------------------
+.grid-container {
+  display: grid;
+  column-gap: 8px;
+  row-gap: 0;
+
+  @for $i from 1 through 12 {
+    &.grid-cols-#{$i} {
+      grid-template-columns: repeat($i, minmax(0, 1fr));
+    }
+  }
+
+  @for $i from 1 through 12 {
+    .col-span-#{$i} {
+      grid-column: span #{$i} / span #{$i};
+    }
+  }
+
+  .col-span-full {
+    grid-column: 1 / -1;
+  }
+
+  @for $i from 1 through 12 {
+    .row-span-#{$i} {
+      grid-row: span #{$i} / span #{$i};
+    }
+  }
+
+  .row-span-full {
+    grid-row: 1 / -1;
+  }
+}

@@ -1,0 +1,31 @@
+// --------------------------------------------------------------------------
+// Spacing – Margin & Padding  (px-based, 0–200)
+//   m-0 … m-200 | mt-* | mr-* | mb-* | ml-* | mx-* | my-*
+//   p-0 … p-200 | pt-* | pr-* | pb-* | pl-* | px-* | py-*
+// --------------------------------------------------------------------------
+@for $i from 0 through 200 {
+  .m-#{$i}  { margin: #{$i}px !important; }
+  .mt-#{$i} { margin-top: #{$i}px !important; }
+  .mr-#{$i} { margin-right: #{$i}px !important; }
+  .mb-#{$i} { margin-bottom: #{$i}px !important; }
+  .ml-#{$i} { margin-left: #{$i}px !important; }
+  .mx-#{$i} { margin-left: #{$i}px !important; margin-right: #{$i}px !important; }
+  .my-#{$i} { margin-top: #{$i}px !important; margin-bottom: #{$i}px !important; }
+
+  .p-#{$i}  { padding: #{$i}px !important; }
+  .pt-#{$i} { padding-top: #{$i}px !important; }
+  .pr-#{$i} { padding-right: #{$i}px !important; }
+  .pb-#{$i} { padding-bottom: #{$i}px !important; }
+  .pl-#{$i} { padding-left: #{$i}px !important; }
+  .px-#{$i} { padding-left: #{$i}px !important; padding-right: #{$i}px !important; }
+  .py-#{$i} { padding-top: #{$i}px !important; padding-bottom: #{$i}px !important; }
+}
+
+// Auto margin helpers
+.m-auto  { margin: auto !important; }
+.mt-auto { margin-top: auto !important; }
+.mr-auto { margin-right: auto !important; }
+.mb-auto { margin-bottom: auto !important; }
+.ml-auto { margin-left: auto !important; }
+.mx-auto { margin-left: auto !important; margin-right: auto !important; }
+.my-auto { margin-top: auto !important; margin-bottom: auto !important; }

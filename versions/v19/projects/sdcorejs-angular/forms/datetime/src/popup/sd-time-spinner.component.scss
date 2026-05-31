@@ -1,0 +1,103 @@
+// Time spinner — compact, modern, không AM/PM
+// UI: 2-3 ô số to ở giữa, dấu ":" phân cách, nút ▲▼ chỉ hiện rõ khi hover
+
+:host {
+  display: block;
+}
+
+.sd-time-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+
+  // Disabled — làm mờ toàn bộ
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  .unit {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+
+    .step {
+      // Nút ▲▼ — ẩn nhẹ ở trạng thái thường, hiện rõ khi hover toàn unit
+      width: 32px;
+      height: 20px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--sd-black300);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+
+      svg {
+        width: 14px;
+        height: 14px;
+        display: block;
+      }
+
+      &:hover {
+        background: var(--sd-primary-light);
+        color: var(--sd-primary);
+      }
+
+      &:active {
+        transform: scale(0.92);
+      }
+    }
+
+    .value {
+      width: 44px;
+      height: 36px;
+      padding: 0;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1;
+      color: var(--sd-black500);
+      font-variant-numeric: tabular-nums; // Số đều nhau, không nhảy chiều rộng
+      background: transparent;
+      border: 1.5px solid transparent;
+      border-radius: 6px;
+      outline: none;
+      cursor: text;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+
+      &:hover:not(:focus) {
+        background: var(--sd-black100);
+      }
+
+      &:focus {
+        border-color: var(--sd-primary);
+        background: #fff;
+      }
+
+      &:disabled {
+        color: var(--sd-black400);
+        cursor: not-allowed;
+      }
+    }
+
+    // Khi unit được hover, nút ▲▼ rõ hơn
+    &:hover .step {
+      color: var(--sd-black400);
+    }
+  }
+
+  .sep {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--sd-black400);
+    padding-bottom: 2px; // canh giữa với số (vì số có border-box)
+    user-select: none;
+  }
+}

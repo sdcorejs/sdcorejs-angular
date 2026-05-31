@@ -1,0 +1,90 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+:host {
+  display: block;
+}
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
+:host(.sd-viewed) { padding-top: 0; }
+
+:host ::ng-deep {
+  .mat-mdc-form-field {
+    // Bỏ padding nếu disableError
+    &.no-padding-wrapper {
+      .mat-mdc-text-field-wrapper {
+        padding-bottom: 0;
+      }
+    }
+  }
+
+  mat-form-field {
+    &.c-md {
+      .mat-mdc-standard-chip {
+        padding: 7px 10px;
+        min-height: 26px;
+
+        .mat-mdc-chip-trailing-icon {
+          padding-top: 7px;
+          padding-bottom: 7px;
+          padding-right: 7px;
+          padding-left: 10px;
+        }
+      }
+    }
+  }
+
+  // Size normal (md) for mat-chip-grid
+  .mat-mdc-chip-row {
+    &.sd-md {
+      // Add styles for md size if needed
+    }
+
+    &.sd-sm {
+      --mdc-chip-label-text-size: 12px;
+      --mdc-chip-container-height: 20px;
+    }
+  }
+
+  .mat-mdc-chip-set {
+    &.sd-md {
+      margin-top: 10px;
+    }
+
+    &.sd-sm {
+      margin-top: 2px;
+    }
+  }
+}
+
+/* CSS sdViewDef */
+.sd-view {
+  &:not(.c-focused):not(.c-disabled) {
+    &:hover {
+      background-color: #ebecf0;
+    }
+  }
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+mat-chip-listbox {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* ✅ Highlight màu nền ngày được chọn */
+// Đặt tên class dài để tránh bị ảnh hưởng vì cái này phải bọc ::ng-deep
+::ng-deep .sd-chip-calendar-selected-date .mat-calendar-body-cell-content {
+  background-color: map.get(color.$color_map, 'primary-light') !important;
+  color: map.get(color.$color_map, 'primary') !important;
+  border-radius: 50%;
+}

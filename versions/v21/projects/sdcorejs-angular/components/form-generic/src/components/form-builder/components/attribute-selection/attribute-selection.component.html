@@ -1,0 +1,51 @@
+<sd-section class="mt-8" [title]="'core.component.form-builder.data' | translate" icon="format_list_bulleted">
+  @if (selections.length) {
+    <div class="d-flex align-items-center py-4">
+      <div class="T14M" style="flex: 1">{{ 'core.component.form-builder.data-api' | translate }}</div>
+      <sd-autocomplete
+        style="width: 200px"
+        size="sm"
+        [(model)]="valuesKey"
+        [items]="selections"
+        valueField="value"
+        displayField="display"
+        (sdChange)="onChangeValuesKey($event)"
+        hideInlineError></sd-autocomplete>
+    </div>
+    <!-- Nếu là select từ API thì cho phép truyền thêm Query -->
+
+    @if (component.type === 'select' && !!valuesKey) {
+      <build-queries
+        [label]="'core.component.form-builder.query-condition' | translate"
+        [selections]="selections"
+        [valuesKey]="valuesKey"
+        [components]="components"
+        [variables]="variables"
+        [(model)]="component.properties!.query"></build-queries>
+      <build-variables
+        [label]="'core.component.form-builder.assign-value' | translate"
+        [selections]="selections"
+        [valuesKey]="valuesKey"
+        [components]="components"
+        [variables]="variables"
+        [(model)]="component.properties!.setVariables"></build-variables>
+      <!-- <div class="d-flex align-items-center py-4">
+        <div class="T14M" style="flex: 1">Điều kiện truy vấn</div>
+        <sd-input style="width: 200px" size="sm" [(model)]="component.properties!.query" hideInlineError></sd-input>
+      </div> -->
+    }
+  }
+  @if (!valuesKey) {
+    <div class="d-flex flex-column" style="gap: 4px">
+      <div class="T14M">{{ 'core.component.form-builder.data-static' | translate }}</div>
+      @for (item of values; track item.value; let idx = $index) {
+        <div class="d-flex align-items-end py-4" style="gap: 4px">
+          <sd-input style="width: 200px" size="sm" [(model)]="item.value" (sdChange)="onChangeValues()" hideInlineError></sd-input>
+          <sd-input style="width: 200px" size="sm" [(model)]="item.label" (sdChange)="onChangeValues()" hideInlineError></sd-input>
+          <sd-button prefixIcon="delete" (click)="removeItem(idx)" color="error"></sd-button>
+        </div>
+      }
+      <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-data' | translate" (click)="addItem()" color="primary"></sd-button>
+    </div>
+  }
+</sd-section>

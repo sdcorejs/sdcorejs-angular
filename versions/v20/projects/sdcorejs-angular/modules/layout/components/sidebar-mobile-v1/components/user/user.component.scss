@@ -1,0 +1,204 @@
+// Desktop only: offset the mat-menu pane to account for the 277px sidebar width
+::ng-deep {
+  @media (min-width: 1024px) {
+    .c-user-menu-backdrop-f90ce131-fa4c-4f71-a49b-ab7fa374fdd0 + * .cdk-overlay-pane {
+      transform: translate(277px, 83px);
+    }
+  }
+}
+
+// ==========================================
+// MOBILE: Accordion inline expand
+// ==========================================
+.m-user-card {
+  width: 100%;
+}
+
+.m-user-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.m-user-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.m-user-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1F1F1F;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-user-email {
+  font-size: 13px;
+  color: #8C8C8C;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.m-expand-icon {
+  color: #8C8C8C;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.m-user-body {
+  margin-top: 8px;
+  border-top: 1px solid #EBEBEB;
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.m-user-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  color: #1F1F1F;
+  -webkit-tap-highlight-color: transparent;
+
+  mat-icon {
+    color: #8C8C8C;
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  &:active {
+    background-color: #F5F5F5;
+  }
+
+  &--logout {
+    color: #E53935;
+
+    mat-icon {
+      color: #E53935;
+    }
+  }
+}
+
+// ==========================================
+// DESKTOP: Avatar + toggle button
+// ==========================================
+.c-layout-user-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60px;
+  height: 80px;
+
+  .c-layout-user-avatar {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .c-layout-icon-toggle {
+    background-color: transparent;
+    border-top: 1px solid #f0f0f0;
+    box-shadow: none;
+    margin-top: 10px;
+    width: 32px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+  }
+}
+
+// ==========================================
+// CSS Mat-menu (dùng chung)
+// ==========================================
+.c-user-menu-wrapper {
+  .c-user-info-wrapper {
+    width: 250px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+
+    .c-user-avatar {
+      width: 40px;
+      height: 40px;
+    }
+
+    .c-user-name {
+      font-size: 16px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .c-user-email {
+      font-size: 14px;
+      color: #7a7a7a;
+      text-align: center;
+    }
+  }
+
+  .c-sign-button-wrapper {
+    text-align: center;
+    padding: 16px 16px 8px 16px;
+    width: 100%;
+    border-top: 1px solid #dee2e6;
+
+    .c-account-options {
+      all: unset;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      mat-icon {
+        font-size: 21px;
+        width: 21px;
+        height: 21px;
+        color: #8c8c8c;
+      }
+    }
+
+    .c-sign-button {
+      width: 100%;
+      color: #000;
+      padding: 16px;
+      font-weight: 700;
+      background-color: #eef0f2;
+    }
+  }
+}
+
+.c-avatar {
+  max-width: 100%;
+  object-fit: cover;
+}

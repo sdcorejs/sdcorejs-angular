@@ -1,0 +1,50 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  // Allow flex children to shrink within host height; prevents overflow instead of scrolling.
+  min-height: 0;
+  height: 100vh;
+}
+
+:host ::ng-deep {
+  .sd-loading {
+    max-width: 100%;
+    max-height: 100%;
+  }
+}
+
+.tab-router__list {
+  flex: 1;
+  // Important for nested flex layout: lets the tab area respect available height.
+  min-height: 0;
+}
+
+.tab-router__disabled-outlet {
+  flex: 1;
+  width: 100%;
+  // Same reason as .tab-router__list, so disabled mode keeps fixed-height behavior.
+  min-height: 0;
+  overflow: auto;
+}
+
+.tab-router__pane {
+  display: none;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  &.active {
+    display: block;
+  }
+}
+
+.tab-router__content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+  height: 100%;
+  width: 100%;
+}

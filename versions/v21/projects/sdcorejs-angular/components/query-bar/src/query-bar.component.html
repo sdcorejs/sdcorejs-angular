@@ -1,0 +1,175 @@
+<!--
+  sd-query-bar — unified filter chip row (Jira/Linear/Notion style).
+  Visual spec: refs/design_handoff_sd_query_bar/README.md
+  TODO(next-iter): replace inline placeholders for field-picker + chip-popover
+  with extracted sub-components driven by CDK overlay.
+-->
+@let _filters = filters();
+@let _fields = fields();
+@let _density = density();
+@let _showOr = showOrConnector();
+@let _used = usedFieldKeys();
+
+<div
+  class="c-query-bar"
+  [class.c-density-compact]="_density === 'compact'"
+  [class.c-density-comfortable]="_density === 'comfortable'">
+
+  <!-- Main region — search + filters + add-filter. Wraps internally; the right
+       action toolbar stays anchored and does NOT flow with this. -->
+  <div class="c-query-bar__main">
+
+  <!-- Free-text search (left, optional) -->
+  @if (showSearch()) {
+    <div class="c-search">
+      <mat-icon class="c-search-icon" fontSet="material-icons-outlined">search</mat-icon>
+      <input
+        class="c-search-input"
+        type="text"
+        [ngModel]="search()"
+        (ngModelChange)="setSearch($event)"
+        (keydown.enter)="triggerApply()"
+        placeholder="Tìm kiếm..." />
+    </div>
+    <span class="c-divider" aria-hidden="true"></span>
+  }
+
+  <!-- Field switcher (used by chipPopover header) — declared first so chipPopover's
+       nested ng-template can resolve the template ref. -->
+  <!-- Field switcher used by chipPopover header — current field key comes from editingIndex. -->
+  <sd-query-field-picker
+    #switchPicker
+    [fields]="_fields"
+    [currentKey]="editingIndex() !== null ? $any(filters()[editingIndex()!])?.field : undefined"
+    (pick)="editingIndex() !== null && changeFilterField(editingIndex()!, $event)" />
+
+  <!-- Chip popover — extracted into <sd-query-chip-popover>. Declared BEFORE chips
+       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`. -->
+  <sd-query-chip-popover
+    #chipPopover
+    [field]="editingField() ?? undefined"
+    [filter]="editingIndex() !== null ? $any(filters()[editingIndex()!]) : undefined"
+    [chipIndex]="editingIndex()"
+    [autoIdBase]="autoIdInput() ?? 'qb'"
+    [switchPickerMenu]="switchPicker.menu()!"
+    (commit)="onChipPopoverCommit($event)"
+    (swapField)="editingIndex() !== null && changeFilterField(editingIndex()!, $event)" />
+
+  @if (mode() === 'inline') {
+    <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->
+
+    <!-- Completed chips -->
+    @for (filter of _filters; track $index; let i = $index) {
+      @if (_showOr && i > 0) {
+        <span class="c-or-connector" aria-hidden="true">OR</span>
+      }
+      @let _field = fieldByKey()[$any(filter).field];
+      @if (_field) {
+        @let _op = $any(filter.operator);
+        @let _data = $any(filter).data;
+        @if (_field.type === 'string' || _field.type === 'number') {
+          <!-- Seamless chip — the pill is the input (string / number). -->
+          <sd-query-inline-value-chip
+            [field]="_field"
+            [operator]="_op"
+            [value]="_data"
+            [density]="_density"
+            [showOperator]="showOperatorOnChip()"
+            [autoId]="inlineAutoId(i, 'value')"
+            (valueChange)="updateFilter(i, { data: $event })"
+            (remove)="removeFilter(i)" />
+        } @else {
+          <sd-query-inline-chip
+            [field]="_field"
+            [filter]="filter"
+            [density]="_density"
+            [multiple]="multiple(_op)"
+            [showOperator]="showOperatorOnChip()"
+            [autoId]="inlineAutoId(i, 'value')"
+            [valueText]="chipValueText(filter)"
+            [isNoData]="isNoDataOperator(_op)"
+            (commit)="updateFilter(i, { data: $event })"
+            (commitRange)="setFilterRange(i, $event)"
+            (liveChange)="updateFilter(i, { data: $event })"
+            (remove)="removeFilter(i)" />
+        }
+      }
+    }
+
+    <!-- Building chip (in-progress) — extracted into <sd-query-build-chip>. -->
+    @if (building(); as _b) {
+      <sd-query-build-chip
+        [building]="_b"
+        [density]="_density"
+        [allowedOperators]="allowedOperatorsFor(_b.field)"
+        [multiple]="multiple($any(_b.operator))"
+        [showOperator]="showOperatorOnChip()"
+        (pickOperator)="pickBuildOperator($any($event))"
+        (commitValue)="commitBuildValue($event)"
+        (cancel)="cancelBuild()"
+        (seamlessCommit)="onBuildSeamlessCommit($event)" />
+    }
+
+    <!-- Add filter -->
+    <button
+      type="button"
+      class="c-add-filter"
+      [matMenuTriggerFor]="addPicker.menu()"
+      [disabled]="_fields.length === 0 || _used.size >= _fields.length"
+      [matTooltip]="_fields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      <mat-icon fontSet="material-icons-outlined">add</mat-icon>
+    </button>
+  } @else {
+    <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
+    @for (filter of _filters; track $index; let i = $index) {
+      @if (_showOr && i > 0) {
+        <span class="c-or-connector" aria-hidden="true">OR</span>
+      }
+      @let _field = fieldByKey()[$any(filter).field];
+      @let _active = isFilterActive(filter);
+      <!-- why: menu close commit is handled by chipPopover's (commit) →
+           onChipPopoverCommit; popover-chip only signals open + remove here. -->
+      <sd-query-popover-chip
+        [field]="_field"
+        [filter]="filter"
+        [active]="_active"
+        [showOperator]="showOperatorOnChip()"
+        [valueText]="chipValueText(filter)"
+        [menu]="chipPopover.menu()!"
+        (open)="openChipPopover(i)"
+        (remove)="removeFilter(i)" />
+    }
+
+    <!-- Add filter trigger -->
+    <button
+      type="button"
+      class="c-add-filter"
+      [matMenuTriggerFor]="addPicker.menu()"
+      [disabled]="_fields.length === 0 || _used.size >= _fields.length"
+      [matTooltip]="_fields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      <mat-icon fontSet="material-icons-outlined">add</mat-icon>
+    </button>
+  }
+
+  </div><!-- /.c-query-bar__main -->
+
+  <!-- Field picker — list available fields, fade ones already in use. -->
+  <sd-query-field-picker
+    #addPicker
+    [fields]="_fields"
+    [usedKeys]="_used"
+    (pick)="mode() === 'inline' ? beginBuild($event) : addFilter($event)" />
+
+  <sd-query-actions-bar
+    [showLogicToggle]="showLogicToggle()"
+    [(logic)]="logic"
+    [filtersCount]="_filters.length"
+    [showSavedFilters]="showSavedFilters()"
+    [savedFiltersKey]="savedFiltersKey()"
+    [query]="currentQuery()"
+    (applyFilter)="onApplyFilter($event)"
+    [showClearAll]="showClearAll()"
+    [canSearch]="canSearch()"
+    (clear)="clearAll()"
+    (search)="triggerApply()" />
+</div>

@@ -1,0 +1,35 @@
+<div class="sd-history">
+  <div class="history-container">
+    <div class="history-line"></div>
+    <div *ngFor="let item of items; let i = index" class="history-item">
+      <div class="dot"></div>
+      <div class="card">
+        <div class="header">
+          <div class="title-wrapper">
+            <span class="title">{{ item.title }}</span>
+            <span class="status">
+                @if (item?.status) {
+                  <sd-badge
+                  [icon]="item.status?.icon"
+                  [title]="item.status?.title"
+                  [color]="item.status?.color"></sd-badge>
+                }
+            </span>
+          </div>
+            <span class="date">{{ item?.date | viewDateTime }}</span>
+        </div>
+        <div class="meta">
+          @if (item?.actor) {
+            <span>{{ 'core.component.history.by' | translate }} <strong>&#64;{{ item.actor }}</strong></span>
+          }
+          @if (item?.source) {
+            <span> &#183; {{ item.source }}</span>
+          }
+        </div>
+        <div class="description">
+          {{ item?.description }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

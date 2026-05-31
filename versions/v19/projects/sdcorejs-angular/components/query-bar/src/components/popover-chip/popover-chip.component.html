@@ -1,0 +1,43 @@
+<!-- why: div[role=button] (not <button>) so the nested <sd-operator> isn't button-in-button (invalid HTML). -->
+<div
+  #chipTrigger="matMenuTrigger"
+  role="button"
+  tabindex="0"
+  class="c-chip"
+  [class.c-chip-active]="active()"
+  [class.c-chip-inactive]="!active()"
+  [attr.data-field]="filterField()"
+  [matTooltip]="field()?.label || filterField()"
+  [matMenuTriggerFor]="menu()"
+  (menuOpened)="open.emit()"
+  (keydown.enter)="chipTrigger.openMenu()"
+  (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
+  <mat-icon class="c-chip-icon" fontSet="material-icons-outlined">
+    {{ field() ? iconFor(field()!) : 'tune' }}
+  </mat-icon>
+  <span class="c-chip-label">{{ field()?.label || filterField() }}</span>
+
+  @if (showOperator() && active()) {
+    <sd-operator class="c-chip-operator" [operators]="[filterOperator()]" [model]="filterOperator()" [disabled]="true" />
+  } @else if (active()) {
+    <span class="c-chip-sep">:</span>
+  }
+
+  @if (active()) {
+    <span class="c-chip-value">{{ valueText() }}</span>
+  }
+
+  <mat-icon class="c-chip-chevron" fontSet="material-icons-outlined">arrow_drop_down</mat-icon>
+
+  @if (active()) {
+    <span
+      role="button"
+      tabindex="0"
+      class="c-chip-remove"
+      aria-label="Remove filter"
+      (click)="$event.stopPropagation(); remove.emit()"
+      (keydown.enter)="$event.stopPropagation(); remove.emit()">
+      <mat-icon fontSet="material-icons-outlined">close</mat-icon>
+    </span>
+  }
+</div>

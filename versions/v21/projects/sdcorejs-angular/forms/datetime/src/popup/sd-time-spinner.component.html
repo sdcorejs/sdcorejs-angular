@@ -1,0 +1,87 @@
+<div class="sd-time-spinner" [class.disabled]="disabled()">
+  <!-- HOURS -->
+  <div class="unit">
+    <button type="button" class="step" (click)="step('h', 1)" tabindex="-1" [attr.aria-label]="'core.form.time-spinner.increase-hour' | translate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+    <input
+      class="value"
+      type="text"
+      inputmode="numeric"
+      maxlength="2"
+      [value]="pad(hours())"
+      [disabled]="disabled()"
+      (input)="onInput('h', $event)"
+      (wheel)="onWheel('h', $event)"
+      (keydown)="onKeyDown('h', $event)"
+      (focus)="onFocus('h', $event)"
+      (blur)="onBlur('h', $event)"
+      [attr.aria-label]="'core.form.time-spinner.hour' | translate" />
+    <button type="button" class="step" (click)="step('h', -1)" tabindex="-1" [attr.aria-label]="'core.form.time-spinner.decrease-hour' | translate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  <span class="sep">:</span>
+
+  <!-- MINUTES -->
+  <div class="unit">
+    <button type="button" class="step" (click)="step('m', 1)" tabindex="-1" [attr.aria-label]="'core.form.time-spinner.increase-minute' | translate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+    </button>
+    <input
+      class="value"
+      type="text"
+      inputmode="numeric"
+      maxlength="2"
+      [value]="pad(minutes())"
+      [disabled]="disabled()"
+      (input)="onInput('m', $event)"
+      (wheel)="onWheel('m', $event)"
+      (keydown)="onKeyDown('m', $event)"
+      (focus)="onFocus('m', $event)"
+      (blur)="onBlur('m', $event)"
+      [attr.aria-label]="'core.form.time-spinner.minute' | translate" />
+    <button type="button" class="step" (click)="step('m', -1)" tabindex="-1" [attr.aria-label]="'core.form.time-spinner.decrease-minute' | translate">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </button>
+  </div>
+
+  @if (showSeconds()) {
+    <span class="sep">:</span>
+    <!-- SECONDS -->
+    <div class="unit">
+      <button type="button" class="step" (click)="step('s', 1)" tabindex="-1" [attr.aria-label]="'core.form.time-spinner.increase-second' | translate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+      <input
+        class="value"
+        type="text"
+        inputmode="numeric"
+        maxlength="2"
+        [value]="pad(seconds())"
+        [disabled]="disabled()"
+        (input)="onInput('s', $event)"
+        (wheel)="onWheel('s', $event)"
+        (keydown)="onKeyDown('s', $event)"
+        (focus)="onFocus('s', $event)"
+        (blur)="onBlur('s', $event)"
+        [attr.aria-label]="'core.form.time-spinner.second' | translate" />
+      <button type="button" class="step" (click)="step('s', -1)" tabindex="-1" [attr.aria-label]="'core.form.time-spinner.decrease-second' | translate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+    </div>
+  }
+</div>

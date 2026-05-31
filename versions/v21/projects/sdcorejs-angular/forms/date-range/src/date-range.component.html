@@ -1,0 +1,100 @@
+@let lblDef = sdLabelDef();
+@let lbl = label();
+@let app = appearance();
+@let req = required();
+@let hideErr = hideInlineError();
+@let errMsg = errorMessage();
+@let hText = helperText();
+@let minD = resolvedMin();
+@let maxD = resolvedMax();
+@let sz = size();
+
+@if (viewed()) {
+  <sd-view
+    [label]="lbl"
+    [labelTemplate]="lblDef?.templateRef ?? null"
+    [value]="valueModel()"
+    [display]="formatted()"
+    [valueTemplate]="sdValueTemplate()">
+  </sd-view>
+} @else {
+@if (!app && lblDef?.templateRef) {
+  <ng-container *ngTemplateOutlet="lblDef!.templateRef"> </ng-container>
+}
+@if (!app && lbl && !lblDef?.templateRef) {
+  <sd-label [label]="lbl" [required]="req"></sd-label>
+}
+
+<mat-form-field
+  [class.sd-md]="sz === 'md'"
+  [class.sd-sm]="sz === 'sm'"
+  [class.hide-inline-error]="hideErr"
+  [appearance]="app!"
+  [floatLabel]="floatLabel()">
+  @if (app && lbl) {
+    <mat-label style="display: inline-block">
+      <div style="display: flex; align-items: center; gap: 4px">
+        <span>{{ lbl }}</span>
+        @if (hText) {
+          <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+        }
+      </div>
+    </mat-label>
+  }
+
+  <mat-date-range-input [max]="maxD" [min]="minD" [rangePicker]="picker" [disabled]="formControl.disabled" [required]="req"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-invalid]="dataInvalid()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()"
+    [attr.data-required]="dataRequired()"
+    [attr.data-error-message]="dataErrorMessage()">
+    <input
+      aria-hidden="true"
+      [id]="id1"
+      autocomplete="off"
+      autocorrect="off"
+      matStartDate
+      [formControl]="control1"
+      [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | translate)"
+      (dateInput)="onStartChange($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      (keyup.enter)="onEnter()"
+      [attr.data-qclabel]="lbl"
+      [attr.data-autoId]="autoId() + '-from'" />
+
+    <input
+      aria-hidden="true"
+      [id]="id2"
+      [autocomplete]="id2"
+      autocorrect="off"
+      matEndDate
+      [formControl]="control2"
+      [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | translate)"
+      (dateInput)="onEndChange($event)"
+      (focus)="onFocus()"
+      (blur)="onBlur()"
+      (keyup.enter)="onEnter()"
+      [attr.data-qclabel]="lbl"
+      [attr.data-autoId]="autoId() + '-to'" />
+  </mat-date-range-input>
+
+  @if (hideErr && errMsg && (formControl.touched || control1.touched || control2.touched)) {
+    <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+  }
+
+  @if (!hideErr && errMsg && (formControl.touched || control1.touched || control2.touched)) {
+    <mat-error>{{ errMsg }}</mat-error>
+  }
+
+  @if (control1.value || control2.value) {
+    <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix>cancel</mat-icon>
+  }
+
+  <mat-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix>today</mat-icon>
+
+  <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
+</mat-form-field>
+}

@@ -1,0 +1,17 @@
+:host {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  &.sd-splitter--horizontal { flex-direction: row; }
+  &.sd-splitter--vertical { flex-direction: column; }
+
+  &.sd-splitter--disabled .sd-splitter__handle { pointer-events: none; }
+
+  &.sd-splitter--dragging {
+    user-select: none;
+    .sd-splitter__panel { transition: none !important; }
+  }
+}

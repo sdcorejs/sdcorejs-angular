@@ -1,0 +1,181 @@
+// Inline-chip — completed token in inline mode (non string/number/seamless).
+//
+// why: parent's `.c-token*` rules are emulated-scoped to `<sd-query-bar>`'s view,
+// so they don't cross into this child's DOM. Styles are mirrored here (kept in sync
+// with query-bar.component.scss + build-chip.component.scss).
+//
+// Density-aware rules read `:host-context(.c-density-*)` from the bar host.
+
+// Local tokens — kept in sync with query-bar.component.scss.
+$qb-primary:        var(--sd-primary);
+$qb-primary-light:  var(--sd-primary-light);
+$qb-primary-faint:  var(--sd-primary-light);
+$qb-border:         #d6d8db;
+$qb-text-secondary: #5f6368;
+$qb-text-muted:     #7a7a7a;
+$qb-radius-chip:    999px;
+
+:host { display: contents; }
+
+.c-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 0 0 12px;
+  border: 1px solid $qb-primary-light;
+  border-radius: $qb-radius-chip;
+  background: $qb-primary-faint;
+  font-size: 13px;
+  color: $qb-text-secondary;
+  white-space: nowrap;
+  overflow: hidden;
+
+  :host-context(.c-density-compact) & { height: 28px; }
+  :host-context(.c-density-comfortable) & { height: 32px; }
+}
+
+.c-token-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  color: inherit;
+}
+.c-token-field { font-weight: 500; line-height: 1; }
+
+.c-token-op {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+
+  ::ng-deep .c-op-trigger { padding: 0; color: inherit; }
+  ::ng-deep .c-op-icon svg { width: 14px; height: 14px; display: block; }
+}
+
+.c-token-sep { color: $qb-text-muted; }
+
+.c-token-value {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 500;
+  color: $qb-primary;
+  cursor: pointer;
+
+  &:hover { text-decoration: underline; }
+}
+
+.c-token-value-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 240px;
+
+  // why: sd-date-range wider than other pickers — cap so it doesn't overlap × cancel.
+  sd-date-range {
+    display: inline-flex;
+    max-width: 220px;
+    min-width: 0;
+    flex: 0 1 auto;
+  }
+
+  sd-select, sd-date, sd-datetime { display: inline-flex; align-items: center; line-height: 1; }
+}
+
+// Bare-control overrides scoped to this chip.
+.c-token ::ng-deep {
+  .mat-mdc-form-field { line-height: 1; }
+  .mat-mdc-text-field-wrapper,
+  .mat-mdc-form-field-flex { padding: 0; min-height: 0; background: transparent; }
+  .mat-mdc-form-field-infix { padding: 0; min-height: 0; width: auto; border: 0; display: inline-flex; align-items: center; }
+  .mat-mdc-select-value,
+  .mat-mdc-input-element,
+  input { line-height: 1; font-size: 13px; padding: 0; height: auto; color: inherit; }
+
+  .mat-mdc-select-value {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: $qb-primary;
+    font-weight: 500;
+  }
+
+  // why: chip có nút × riêng — ẩn icon clear nội bộ của sd-select/sd-date.
+  .sd-suffix-icon { display: none; }
+}
+
+.c-token-multi-head {
+  display: inline-block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+
+// Boolean true/false toggle — pill native buttons (NOT sd-button).
+// why: mat-button MDC layer hardcodes 36px baseline + internal paddings — không thể
+// thu nhỏ gọn để vừa chip (28/32px) mà vẫn giữ font đẹp. Tự vẽ pill native button
+// có scope hẹp, height 18/20px ăn khớp chip, không qua MDC.
+.c-bool-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.c-bool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  min-width: 0;
+  padding: 0 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: background 120ms ease, color 120ms ease;
+
+  :host-context(.c-density-comfortable) & { height: 20px; padding: 0 10px; font-size: 12px; }
+}
+
+// Outline state (mặc định): colour = semantic, background = transparent.
+.c-bool-true  { color: var(--sd-success); }
+.c-bool-false { color: var(--sd-warning); }
+
+// Active state (đang được chọn): fill semantic colour, text trắng.
+.c-bool-active.c-bool-true  { background: var(--sd-success); color: #fff; border-color: var(--sd-success); }
+.c-bool-active.c-bool-false { background: var(--sd-warning); color: #fff; border-color: var(--sd-warning); }
+
+.c-bool-btn:hover:not(.c-bool-active).c-bool-true  { background: var(--sd-success-light); }
+.c-bool-btn:hover:not(.c-bool-active).c-bool-false { background: var(--sd-warning-light); }
+
+// × cancel — square segment with faint left divider.
+.c-token-remove {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-left: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+
+  :host-context(.c-density-compact) & { width: 26px; }
+  :host-context(.c-density-comfortable) & { width: 28px; }
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  &:hover { background: rgba(0, 0, 0, 0.05); }
+}

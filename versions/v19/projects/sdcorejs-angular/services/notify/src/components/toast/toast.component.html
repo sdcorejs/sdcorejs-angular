@@ -1,0 +1,57 @@
+<div class="sd-toast__bar" [class]="'bg-' + data.type"></div>
+
+<div class="sd-toast__icon" [class]="'text-' + data.type">
+  @switch (data.type) {
+    @case ('success') {
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    }
+    @case ('info') {
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+    }
+    @case ('warning') {
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+    }
+    @case ('error') {
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    }
+  }
+</div>
+
+<div class="sd-toast__content">
+  <div class="sd-toast__header">
+    <strong class="sd-toast__title">{{ data.title || ('core.notify.type.' + data.type | translate) }}</strong>
+    <button class="sd-toast__close" (click)="close()">✕</button>
+  </div>
+
+  <div class="sd-toast__body">
+    @if (!isMultiMessage) {
+      <div [innerHTML]="data.message"></div>
+    } 
+    @else {
+      <ul class="msg-list">
+        @for (msg of displayMessages; track msg) {
+          <li [innerHTML]="'- ' + msg"></li>
+        }
+      </ul>
+
+      @if (hasMore) {
+        <button type="button" 
+                class="toggle-more btn-link" 
+                [class]="'text-' + data.type" 
+                (click)="toggleExpand()">
+          {{ isExpanded() ? ('core.notify.show-less' | translate) : ('core.notify.show-more' | translate: { count: restCount }) }}
+        </button>
+      }
+    }
+  </div>
+
+  @if (data.actionLabel) {
+    <div class="sd-toast__actions">
+      <button class="btn-action" 
+              [class]="'bg-' + data.type + '-light text-' + data.type"
+              (click)="onActionClick()">
+        {{ data.actionLabel }}
+      </button>
+    </div>
+  }
+</div>

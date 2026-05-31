@@ -1,0 +1,71 @@
+:host {
+  display: block;
+
+  --sd-input-color-swatch-size: 22px;
+  --sd-input-color-swatch-border: rgba(0, 0, 0, 0.12);
+  --sd-input-color-swatch-checker:
+    linear-gradient(45deg, #ddd 25%, transparent 25%),
+    linear-gradient(-45deg, #ddd 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ddd 75%),
+    linear-gradient(-45deg, transparent 75%, #ddd 75%);
+}
+
+.sd-input-color__suffix {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+// why: nút clear giờ do <sd-input> render (class .sd-clear-btn dùng chung trong
+// form.scss). Ở đây chỉ còn swatch + native picker.
+
+.sd-input-color__swatch {
+  width: var(--sd-input-color-swatch-size);
+  height: var(--sd-input-color-swatch-size);
+  border-radius: 4px;
+  border: 1px solid var(--sd-input-color-swatch-border);
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+  position: relative;
+  overflow: hidden;
+
+  &:hover:not(:disabled) {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px rgba(21, 101, 192, 0.18);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  // Checkerboard background only when color is transparent / unset, so an empty
+  // swatch is visually distinguishable from a valid white/transparent color.
+  &.sd-input-color__swatch--empty {
+    background-color: #ffffff;
+    background-image: var(--sd-input-color-swatch-checker);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+  }
+
+}
+
+.sd-input-color__hidden-picker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  // anchor near swatch so the native picker dialog opens close to the button
+  right: 0;
+  top: 50%;
+}

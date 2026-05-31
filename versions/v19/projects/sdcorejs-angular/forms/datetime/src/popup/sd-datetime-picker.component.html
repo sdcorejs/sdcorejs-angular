@@ -1,0 +1,46 @@
+<div class="sd-datetime-picker">
+  <!-- Calendar -->
+  <div class="picker-calendar">
+    <mat-calendar
+      [selected]="selectedDate()"
+      [minDate]="_minDate"
+      [maxDate]="_maxDate"
+      (selectedChange)="onDateSelected($event)">
+    </mat-calendar>
+  </div>
+
+  <!-- Divider mảnh -->
+  <div class="picker-divider"></div>
+
+  <!-- Time Spinner -->
+  <div class="picker-time">
+    <sd-time-spinner
+      [(hours)]="hours"
+      [(minutes)]="minutes"
+      [(seconds)]="seconds"
+      [showSeconds]="showSeconds()"
+      [disabled]="disabled()">
+    </sd-time-spinner>
+  </div>
+
+  <!-- Footer: Bây giờ | Hủy | Xác nhận -->
+  <div class="picker-footer">
+    <button type="button" class="btn btn-ghost" (click)="onNow()" [disabled]="disabled()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <polyline points="12 7 12 12 15 14"></polyline>
+      </svg>
+      <span>{{ 'core.form.datetime.now' | translate }}</span>
+    </button>
+
+    <div class="footer-actions">
+      <button type="button" class="btn btn-text" (click)="onCancel()">{{ 'core.common.cancel' | translate }}</button>
+      <button type="button" class="btn btn-primary" (click)="onConfirm()" [disabled]="disabled()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>{{ 'core.form.datetime.confirm' | translate }}</span>
+      </button>
+    </div>
+  </div>
+</div>

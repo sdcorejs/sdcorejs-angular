@@ -1,0 +1,99 @@
+// --------------------------------------------------------------------------
+// SCSS variables — dùng nội bộ trong scss, không output CSS
+//   Đặt tên theo thang đọc được: fw = font-weight, fs = font-size
+// --------------------------------------------------------------------------
+$fw-lighter: 400;
+$fw-normal:  500;
+$fw-bold:    600;
+
+$fs-xs:     11.2px;
+$fs-small:  14px;
+$fs-normal: 16px;
+$fs-regular: 18px;
+$fs-medium: 21px;
+$fs-large:  24px;
+$fs-xl:     28px;
+$fs-xxl:    38px;
+$fs-xxxl:   42px;
+
+// --------------------------------------------------------------------------
+// Design token classes — hệ thống typography của SD Angular
+//   Quy ước: T{size}{weight}  |  M = Medium (500), R = Regular (400)
+//   Mỗi class bao gồm font-size + font-weight + line-height chuẩn hóa
+// --------------------------------------------------------------------------
+.T48M { font-size: 48px; font-weight: 500; line-height: 56px; }
+.T48R { font-size: 48px; font-weight: 400; line-height: 56px; }
+
+.T32M { font-size: 32px; font-weight: 500; line-height: 48px; }
+.T32R { font-size: 32px; font-weight: 400; line-height: 48px; }
+
+.T24M { font-size: 24px; font-weight: 500; line-height: 28px; }
+.T24R { font-size: 20px; font-weight: 400; line-height: 28px; }
+
+.T20M { font-size: 20px; font-weight: 500; line-height: 28px; }
+.T20R { font-size: 20px; font-weight: 400; line-height: 28px; }
+
+.T18M { font-size: 18px; font-weight: 500; line-height: 28px; }
+.T18R { font-size: 18px; font-weight: 400; line-height: 28px; }
+
+.T16M { font-size: 16px; font-weight: 500; line-height: 24px; }
+.T16R { font-size: 16px; font-weight: 400; line-height: 24px; }
+
+.T14M { font-size: 14px; font-weight: 500; line-height: 20px; }
+.T14R { font-size: 14px; font-weight: 400; line-height: 20px; }
+
+.T12M { font-size: 12px; font-weight: 500; line-height: 16px; }
+// !important vì T12R thường bị override bởi material components
+.T12R { font-size: 12px !important; font-weight: 400; line-height: 16px; }
+
+.T10M { font-size: 10px; font-weight: 500; line-height: 12px; }
+.T10R { font-size: 10px; font-weight: 400; line-height: 12px; }
+
+// --------------------------------------------------------------------------
+// Font-size utilities  (px-based, 0–200)
+//   fs-0 … fs-200 — dùng khi cần ghi đè nhanh, không dùng thay token
+// --------------------------------------------------------------------------
+@for $i from 0 through 200 {
+  .fs-#{$i} { font-size: #{$i}px !important; }
+}
+
+// --------------------------------------------------------------------------
+// Font-weight utilities
+// --------------------------------------------------------------------------
+.font-weight-light   { font-weight: 300 !important; }
+.font-weight-normal  { font-weight: 400 !important; }
+.font-weight-medium  { font-weight: 500 !important; }
+.font-weight-bold    { font-weight: 600 !important; }
+.font-weight-bolder  { font-weight: 700 !important; }
+
+// --------------------------------------------------------------------------
+// Text alignment
+// --------------------------------------------------------------------------
+.text-left    { text-align: left !important; }
+.text-center  { text-align: center !important; }
+.text-right   { text-align: right !important; }
+.text-justify { text-align: justify !important; }
+
+// --------------------------------------------------------------------------
+// Text wrapping & overflow
+// --------------------------------------------------------------------------
+.text-wrap   { white-space: normal !important; }
+.text-nowrap { white-space: nowrap !important; }
+.text-ellipsis {
+  // Hiển thị "..." khi text tràn — cần container có width cố định
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.text-break {
+  // Xuống dòng từng ký tự khi tràn — dùng cho URL, hash, code dài
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+// --------------------------------------------------------------------------
+// Text transform
+// --------------------------------------------------------------------------
+.text-uppercase  { text-transform: uppercase !important; }
+.text-lowercase  { text-transform: lowercase !important; }
+.text-capitalize { text-transform: capitalize !important; }

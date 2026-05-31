@@ -1,0 +1,80 @@
+:host {
+  display: block;
+
+  --sd-stepper-active-color: var(--sd-primary, #1565c0);
+  --sd-stepper-active-bg: var(--sd-primary, #1565c0);
+  --sd-stepper-completed-color: var(--sd-primary, #1565c0);
+  --sd-stepper-line-active-color: var(--sd-primary, #1565c0);
+  --sd-stepper-error-color: var(--sd-error, #f44336);
+  --sd-stepper-pending-bg: #e0e0e0;
+  --sd-stepper-pending-color: rgba(0, 0, 0, 0.54);
+  --sd-stepper-text-color: var(--sd-text-primary, #1a1a1a);
+}
+
+.sd-step__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-step__icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+.sd-step__text {
+  white-space: nowrap;
+}
+
+// why: Material's MatStepper uses M3 tokens that default to azure/violet.
+// Override the bound CSS vars so the indicator + connector follow our color input.
+// ::ng-deep needed because mat-step-header / mat-stepper-horizontal-line live
+// inside mat-stepper's encapsulated view.
+:host ::ng-deep {
+  // Step circle (number / icon)
+  .mat-step-icon {
+    background-color: var(--sd-stepper-pending-bg);
+    color: var(--sd-stepper-pending-color);
+  }
+
+  .mat-step-icon-selected {
+    background-color: var(--sd-stepper-active-bg) !important;
+    color: #ffffff !important;
+  }
+
+  .mat-step-icon-state-done,
+  .mat-step-icon-state-edit {
+    background-color: var(--sd-stepper-completed-color) !important;
+    color: #ffffff !important;
+  }
+
+  .mat-step-icon-state-error {
+    background-color: var(--sd-stepper-error-color) !important;
+    color: #ffffff !important;
+  }
+
+  // Active label text color
+  .mat-step-label.mat-step-label-active .mat-step-text-label {
+    color: var(--sd-stepper-text-color);
+    font-weight: 500;
+  }
+  .mat-step-label-selected .mat-step-text-label {
+    color: var(--sd-stepper-active-color);
+    font-weight: 600;
+  }
+
+  // Connector line (horizontal + vertical)
+  .mat-stepper-horizontal-line,
+  .mat-stepper-vertical-line::before {
+    border-color: rgba(0, 0, 0, 0.12);
+  }
+
+  // Suppress hover state-layer on active step header so dark fill stays clean
+  // (same pattern used in <sd-tab-group>).
+  .mat-step-header.cdk-program-focused,
+  .mat-step-header:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}

@@ -1,0 +1,106 @@
+@let _label = label();
+@let _appearance = appearance();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _viewDef = sdViewDef();
+@let _labelDef = sdLabelDef();
+@let _helperText = helperText();
+@let _required = required();
+@let _maxLength = maxlength();
+
+@if (viewed()) {
+  @if (_labelDef?.templateRef) {
+    <ng-container *ngTemplateOutlet="_labelDef!.templateRef"> </ng-container>
+  } @else if (_label) {
+    <div class="T14R text-black400">{{ _label }}</div>
+  }
+  <div class="T14M">{{ formControl.value | sdEmpty }}</div>
+} @else {
+  @if (!_appearance && _labelDef?.templateRef) {
+    <ng-container *ngTemplateOutlet="_labelDef!.templateRef"> </ng-container>
+  }
+  @if (!_appearance && _label && !_labelDef?.templateRef) {
+    <sd-label [label]="_label" [required]="_required"></sd-label>
+  }
+
+  <div
+    class="d-flex align-items-center sd-textarea-container"
+    [class.sd-view]="_viewDef?.templateRef"
+    [class.c-focused]="isFocused"
+    [class.c-disabled]="formControl.disabled"
+    (click)="onClick()"
+    aria-hidden="true">
+    @if (_viewDef?.templateRef && !isFocused) {
+      <ng-container *ngTemplateOutlet="_viewDef!.templateRef; context: { value: formControl.value }"> </ng-container>
+    } @else {
+      <div class="sd-textarea-field-wrap">
+        <mat-form-field
+          [class.sd-md]="size() === 'md'"
+          [class.sd-sm]="size() === 'sm'"
+          [class.hide-inline-error]="_hideInlineError"
+          [appearance]="_appearance!"
+          [floatLabel]="floatLabel()">
+          @if (_appearance && _label) {
+            <mat-label style="display: inline-block">
+              <div style="display: flex; align-items: center; gap: 4px">
+                <span>{{ _label }}</span>
+                @if (_helperText) {
+                  <mat-icon [matTooltip]="_helperText" matTooltipPosition="above">info_outline</mat-icon>
+                }
+              </div>
+            </mat-label>
+          }
+
+          <textarea
+            matInput
+            [placeholder]="placeholder() || _label || ''"
+            [formControl]="formControl"
+            [required]="_required"
+            autocomplete="off"
+            (focus)="onFocus()"
+            (blur)="onBlur()"
+            [rows]="rows()"
+            [attr.data-autoId]="autoId()"
+            [attr.data-disabled]="dataDisabled()"
+            [attr.data-invalid]="dataInvalid()"
+            [attr.data-empty]="dataEmpty()"
+            [attr.data-value]="dataValue()"
+            [attr.data-required]="dataRequired()"
+            [attr.data-maxlength]="dataMaxLength()"
+            [attr.data-pattern]="dataPattern()"
+            [attr.data-error-message]="dataErrorMessage()"
+            spellcheck="false"
+            #textarea>
+          </textarea>
+
+          @if (_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+          }
+
+          @if (!_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-error>{{ _errorMessage }}</mat-error>
+          }
+
+          @if (sdSuffixDef()?.templateRef; as suffixRef) {
+            <ng-container matSuffix>
+              <ng-container *ngTemplateOutlet="suffixRef"></ng-container>
+            </ng-container>
+          }
+          <!-- <ng-container matSuffix>
+            <ng-content select="[sdSuffix]"></ng-content>
+          </ng-container> -->
+        </mat-form-field>
+
+        @if (_maxLength !== null && !_hideInlineError && !formControl.disabled) {
+          <div
+            class="sd-maxlength-counter"
+            [class.sd-maxlength-counter--visible]="isFocused"
+            [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
+            [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | translate) : null">
+            {{ getCurrentLength() }}/{{ _maxLength }}
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

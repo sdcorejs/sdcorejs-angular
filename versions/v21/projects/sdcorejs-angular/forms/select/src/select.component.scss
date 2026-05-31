@@ -1,0 +1,256 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+:host {
+  display: block;
+  // [NEW]: Ngăn host phình to ngoài mức kiểm soát
+  max-width: 100%;
+}
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → không cần đệm trên cho form-field.
+:host(.sd-viewed) { padding-top: 0; }
+
+// Start: Xử lý loading
+::ng-deep {
+  .sd-loading-option {
+    // 1. Ẩn checkbox mặc định của material
+    .mat-pseudo-checkbox {
+      display: none !important;
+    }
+
+    // 2. Căn giữa spinner bên trong khung text
+    .mdc-list-item__primary-text {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    // 3. Set chiều cao
+    min-height: 50px !important;
+  }
+}
+// End: Xử lý loading
+
+// Start: Xử lý text không bị phình ra khi chọn nhiều
+.sd-trigger-text {
+  display: block;
+  width: 100%;
+  white-space: nowrap; // Bắt buộc nằm trên 1 dòng
+  overflow: hidden; // Giấu phần chữ bị tràn
+  text-overflow: ellipsis; // Biến phần bị giấu thành dấu ...
+}
+
+// Bổ sung thêm đoạn này để đảm bảo bản thân mat-select không bị phình ra
+:host ::ng-deep {
+  .mat-mdc-select-value {
+    max-width: 100%;
+    overflow: hidden;
+    // [NEW]: Ép chết chiều rộng để không bị chữ độn to lên
+    width: 0;
+    min-width: 100%;
+  }
+}
+// End: Xử lý text không bị phình ra khi chọn nhiều
+
+// Ẩn arrow khi có giá trị được chọn
+:host ::ng-deep .sd-selected .mat-mdc-select-arrow {
+  display: none;
+}
+
+// Custom arrow nên ẩn đi arrow mặc định
+:host ::ng-deep .mat-mdc-select-arrow {
+  display: none !important; // Ẩn icon mặc định
+}
+
+:host ::ng-deep .custom-arrow {
+  pointer-events: none; // Không ảnh hưởng khi bấm
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+}
+
+:host ::ng-deep {
+  // Form field color
+  .mat-mdc-form-field {
+    // Disabled background & border
+    &.mat-form-field-appearance-outline {
+      &.mat-form-field-disabled {
+        .mat-mdc-text-field-wrapper {
+          background: color.$disabled-bg;
+        }
+      }
+    }
+    // Disabled text input color
+    mat-select {
+      &.mat-mdc-select-disabled {
+        .mat-mdc-select-value {
+          color: color.$disabled-text !important;
+        }
+      }
+    }
+    .mat-mdc-placeholder-required {
+      color: map.get(color.$color_map, 'error');
+    }
+  }
+}
+
+/* CSS sdViewDef */
+.sd-view {
+  &:not(.c-focused):not(.c-disabled) {
+    &:hover {
+      background-color: #ebecf0;
+    }
+  }
+}
+
+/* Ẩn check box */
+::ng-deep .sd-select-panel {
+  .mat-mdc-option.sd-empty .mat-pseudo-checkbox {
+    display: none;
+  }
+}
+
+::ng-deep .sd-select-panel {
+  // Giảm chiều cao của mỗi dòng option
+  .mat-mdc-option {
+    min-height: 36px !important;
+    padding: 8px 12px !important;
+  }
+
+  .c-filter-input-container {
+    position: sticky;
+    top: 0;
+    background-color: #fff;
+    box-shadow: 0px 1px 0px 0px #f2f2f2;
+    padding: 8px;
+    margin-bottom: 8px;
+    z-index: 1000;
+    .filter-input-wrapper {
+      display: flex;
+      align-items: center;
+      padding: 4px 8px;
+      border: 1px solid map.get(color.$color_map, 'black200');
+      border-radius: 4px;
+      background-color: #fff;
+      .mat-icon {
+        color: #dadada;
+      }
+      .c-search-input {
+        background-color: #fff;
+        border: none;
+        outline: none;
+        flex: 1;
+        padding: 4px;
+      }
+    }
+  }
+}
+
+::ng-deep .sd-multiline-tooltip {
+  white-space: pre-line;
+}
+
+::ng-deep .mat-mdc-select-panel.sd-select-panel {
+  padding: 0;
+  .mat-mdc-option.mdc-list-item--disabled.sd-empty {
+    .mdc-list-item__primary-text {
+      opacity: 0.8;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+  }
+}
+
+::ng-deep .sd-select-panel.sd-multiple {
+  // Thu nhỏ Checkbox
+  .mat-pseudo-checkbox {
+    transform: scale(0.75);
+    margin-right: 8px !important;
+  }
+
+  .mdc-list-item__primary-text {
+    font-size: 14px;
+    white-space: normal;
+  }
+}
+
+/* [NEW]: Ghi đè min-width inline style của Angular Material 
+  để panel có thể tự mở rộng ra theo nội dung chữ hoặc panelWidth được cấu hình
+*/
+::ng-deep .mat-mdc-select-panel.sd-select-panel {
+  // Cho phép panel mở rộng tự do, tối đa lên tới 90vw (chống tràn màn hình mobile)
+  max-width: 90vw !important;
+
+  // Tùy chọn: Chống vỡ layout chữ khi khung panel quá nhỏ
+  .mat-mdc-option .mdc-list-item__primary-text {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+}
+
+// =============================================================================
+// Bare mode — "không khung": bóc hết shell mat-form-field để control nằm phẳng
+// trong context inline (vd. chip query-bar khi user click vào để chỉnh giá trị).
+// -----------------------------------------------------------------------------
+// Khi dùng <sd-select bare>:
+//   - Trong chip / token / inline editor — nơi đã có viền riêng & layout chặt.
+// Khi KHÔNG dùng:
+//   - Form thông thường (cần outline + label + subscript hint/error).
+//   - State chỉ-đọc: dùng [viewed]=true để render <sd-view> (text only).
+//
+// bare và viewed bù nhau, không chồng:
+//   - viewed=true               → hiển thị text qua <sd-view>, không có form-field.
+//   - bare=true + viewed=false  → form-field bị bóc khung, vẫn tương tác được.
+// =============================================================================
+
+// Host: inline-flex để control ngồi cùng dòng với chữ/icon xung quanh chip.
+:host(.sd-bare) {
+  display: inline-flex;
+  align-items: center;
+}
+
+// Bóc từng lớp visual quanh trigger của mat-select.
+:host(.sd-bare) ::ng-deep {
+  // Mặc định form-field rộng 100% — co về auto để vừa nội dung.
+  .mat-mdc-form-field { width: auto; }
+
+  // Wrapper outline/nền: bỏ đệm + nền để text ngồi sát viền chip.
+  .mat-mdc-text-field-wrapper { padding: 0; background: transparent; }
+
+  // Flex row chứa prefix/infix/suffix: bỏ đệm, canh giữa dọc.
+  .mat-mdc-form-field-flex { padding: 0; align-items: center; }
+
+  // Viền outline ("notched"): ẩn — chip đã có viền riêng.
+  .mdc-notched-outline { display: none; }
+
+  // Vùng hint/error dưới control: ẩn — chip không có chỗ cho subscript.
+  .mat-mdc-form-field-subscript-wrapper { display: none; }
+
+  // Infix là vùng input thật: bỏ đệm + min-height, canh giữa, bỏ border.
+  .mat-mdc-form-field-infix {
+    padding: 0;
+    min-height: 0;
+    width: auto;
+    border: 0;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  // Mũi tên dropdown của mat-select: ẩn — chip có affordance × riêng để xóa,
+  // và panel mở qua click toàn vùng trigger.
+  .mat-mdc-select-arrow-wrapper { display: none; }
+}

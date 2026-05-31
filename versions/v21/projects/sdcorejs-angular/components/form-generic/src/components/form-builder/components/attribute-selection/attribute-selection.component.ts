@@ -1,0 +1,98 @@
+﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdSection } from '@sdcorejs/angular/components/section';
+import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import {
+  SdFormGenericComponent,
+  SdFormGenericDefinitionSelection,
+  SdFormGenericGroup,
+  SdFormGenericSelectionStaticItem,
+  SdFormGenericTableColumn,
+  SdFormGenericValues,
+  SdFormGenericVariable,
+} from '../../../../models';
+import { FormGenericService } from '../../../../services';
+import { BuildQueries } from "./components/build-queries/build-queries.component";
+import { BuildVariables } from "./components/build-variables/build-variables.component";
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
+
+// Template lÃ  cÃ¡c máº«u do Portal Ä‘á»‹nh nghÄ©a sáºµn (key, label ....) Ä‘á»ƒ ngÆ°á»i dÃ¹ng chá»n nhanh
+// Khi thá»±c hiá»‡n sao chÃ©p 1 template chÃºng ta sáº½ CLONE Ä‘á»ƒ trÃ¡nh áº£nh hÆ°á»Ÿng template gá»‘c
+@Component({
+  selector: 'attribute-selection',
+  templateUrl: './attribute-selection.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, TranslatePipe],
+})
+export class AttributeSelection {
+  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
+   @Input({ required: true }) variables!: SdFormGenericVariable[];
+  @Input({ required: true }) component!: SdFormGenericValues | SdFormGenericTableColumn;
+  // ValuesKey
+  valuesKey?: string;
+  @Input({ alias: 'valuesKey', required: true }) set _valuesKey(valuesKey: string | undefined | null) {
+    if (this.valuesKey !== valuesKey) {
+      this.valuesKey = valuesKey?.toString();
+    }
+  }
+  @Output() valuesKeyChange = new EventEmitter<string>();
+  selections: SdFormGenericDefinitionSelection[] = [];
+
+  // Values
+  values: SdFormGenericSelectionStaticItem[] = [];
+  @Input({ alias: 'values', required: true }) set _values(values: SdFormGenericSelectionStaticItem[] | undefined | null) {
+    if (this.values !== values) {
+      this.values = values || [];
+    }
+  }
+  @Output() valuesChange = new EventEmitter<SdFormGenericSelectionStaticItem[]>();
+  @Output() sdChange = new EventEmitter<SdFormGenericComponent>();
+  constructor(
+    private ref: ChangeDetectorRef,
+    private formGenericService: FormGenericService
+  ) {}
+
+  ngOnInit(): void {
+    this.formGenericService.selection.definitions().then(selections => {
+      // Náº¿u khÃ´ng pháº£i lÃ  type select thÃ¬ khÃ´ng hiá»ƒn thá»‹ cÃ¡c lá»±a chá»n lazyValues
+      // VÃ¬ radio, checklist khÃ´ng thá»ƒ load lazy
+      if (this.component.type !== 'select') {
+        this.selections = selections.filter(selection => !('lazyValues' in selection) && !('lazyValuesKey' in selection));
+      } else {
+        this.selections = selections;
+      }
+      this.ref.markForCheck();
+    });
+  }
+
+  onChangeValuesKey = (value: any) => {
+    this.valuesKeyChange.emit(value);
+    // GÃ¡n values rá»—ng náº¿u Ä‘Ã£ sá»­ dá»¥ng valuesKey
+    this.values = [];
+    this.valuesChange.emit(this.values);
+    this.ref.markForCheck();
+  };
+
+  onChangeValues = () => {
+    this.valuesChange.emit(this.values);
+  };
+
+  addItem = () => {
+    this.values.push({
+      value: `value_${new Date().getTime().toString(36)}`,
+      label: `Label ${new Date().getTime().toString(36)}`,
+    });
+    this.valuesChange.emit(this.values);
+    this.ref.markForCheck();
+  };
+
+  removeItem = (idx: number) => {
+    this.values.splice(idx, 1);
+    this.valuesChange.emit(this.values);
+    this.ref.markForCheck();
+  };
+}
+

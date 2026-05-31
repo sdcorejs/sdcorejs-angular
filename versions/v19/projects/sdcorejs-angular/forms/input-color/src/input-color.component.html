@@ -1,0 +1,44 @@
+<sd-input
+  [label]="label()"
+  [helperText]="helperText()"
+  [placeholder]="placeholder()"
+  [size]="size()"
+  [appearance]="appearance() ?? undefined"
+  [form]="form()"
+  [name]="name() ?? ''"
+  [autoId]="autoId()"
+  [required]="required()"
+  [disabled]="disabled()"
+  [readonly]="readonly()"
+  [viewed]="viewed()"
+  [pattern]="hexPattern"
+  patternErrorMessage="Mã màu HEX không hợp lệ (vd #1565C0)"
+  [model]="valueModel()"
+  (sdChange)="onInputChange($event)">
+
+  <ng-template sdSuffixDef>
+    <div class="sd-input-color__suffix">
+      <!-- why: nút clear do <sd-input> tự render (built-in, hover-gated). Ở đây
+           chỉ chiếu swatch + native picker. onInputChange coerce '' → null nên
+           clear của sd-input vẫn cho ra model rỗng đúng nghĩa. -->
+      <button
+        type="button"
+        class="sd-input-color__swatch"
+        [style.background]="swatchColor()"
+        [class.sd-input-color__swatch--empty]="swatchColor() === 'transparent'"
+        [disabled]="disabled() || readonly() || viewed()"
+        (click)="openPicker()"
+        title="Mở bảng chọn màu"
+        aria-label="Mở bảng chọn màu">
+      </button>
+      <input
+        #picker
+        type="color"
+        class="sd-input-color__hidden-picker"
+        tabindex="-1"
+        aria-hidden="true"
+        [value]="pickerSafeValue()"
+        (input)="onPickerChange($event)" />
+    </div>
+  </ng-template>
+</sd-input>

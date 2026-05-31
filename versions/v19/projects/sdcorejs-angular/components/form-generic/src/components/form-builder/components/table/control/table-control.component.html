@@ -1,0 +1,41 @@
+<div class="fb-table-control" [class.is-viewed]="component.properties?.viewed">
+  <div class="fb-table-control__label">
+    {{ component.label }}
+    @if (component.validate?.required) {
+      <span>*</span>
+    }
+  </div>
+
+  @if (component.columns?.length) {
+    <div class="fb-table-control__frame">
+      <div class="fb-table-control__header">
+        @for (column of component.columns; track column.key) {
+          <div class="fb-table-control__cell" [style.width]="column.width">
+            <span class="fb-table-control__icon msi">{{ columnIcon(column.type) }}</span>
+            <span>{{ column.label }}</span>
+            @if (column.validate?.required) {
+              <span class="fb-table-control__required">*</span>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="fb-table-control__body">
+        @for (row of sampleRows(); track row) {
+          <div class="fb-table-control__row">
+            @for (column of component.columns; track column.key) {
+              <div class="fb-table-control__cell" [style.width]="column.width">
+                {{ cellPreview(column, row) }}
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <button type="button" class="fb-table-control__add">
+      <span>+</span>
+      Add row
+    </button>
+  }
+</div>

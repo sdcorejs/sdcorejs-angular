@@ -1,0 +1,572 @@
+@let _configuration = configuration();
+@let _tableOption = tableOption()!;
+@let _loading = loading();
+@let _items = items();
+@let _total = total();
+@let _isFiltered = isFiltered();
+@let _requireFiltered = requireFiltered();
+@let _export = _tableOption?.export;
+@let _exporting = exporting();
+@let _titleDef = titleDef();
+
+@if (_configuration) {
+  @if (!_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
+    <external-filter
+      class="mb-16"
+      [autoId]="autoId()"
+      [filterRegister]="filterRegister"
+      [filter]="_tableOption.filter!"
+      [externalFilters]="_tableOption.filter?.externalFilters!">
+    </external-filter>
+  }
+  @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState;
+  <ng-content select="[sdTableTop]"></ng-content>
+  <div class="c-container">
+    @if (_loading) {
+      <div class="c-loading">
+        <mat-spinner></mat-spinner>
+      </div>
+    }
+    <div
+      class="c-table"
+      sdScroll
+      stickyShadow
+      [style.max-height]="_tableOption.style?.maxHeight"
+      [style.min-height]="_tableOption.style?.minHeight">
+      <table
+        mat-table
+        [dataSource]="groupedItems"
+        [trackBy]="trackBy"
+        matSort
+        [matSortDisabled]="!_tableOption.sort?.enable"
+        multiTemplateDataRows
+        cdkDropList
+        [cdkDropListData]="groupedItems"
+        [cdkDropListDisabled]="!_tableOption.rowReorder?.enabled"
+        [cdkDropListSortPredicate]="reorderSortPredicate"
+        (cdkDropListDropped)="onReorderDrop($event)">
+        @if (_tableOption.rowReorder?.enabled) {
+          <ng-container matColumnDef="sdReorder">
+            <th mat-header-cell *matHeaderCellDef class="sd-reorder-header" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+            <td mat-cell *matCellDef="let row" class="sd-reorder-cell">
+              @if (!row.meta?.group?.items?.length) {
+                <mat-icon cdkDragHandle [class.sd-reorder-disabled]="isReorderDisabled(row)">
+                  {{ _tableOption.rowReorder?.icon || 'drag_indicator' }}
+                </mat-icon>
+              }
+            </td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+        }
+
+        @if (_tableOption.tree) {
+          <ng-container matColumnDef="sdTreeToggle">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              class="sd-tree-toggle-cell p-0"
+              [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+            <td mat-cell *matCellDef="let row" class="sd-tree-toggle-cell p-0">
+              @if (row.meta?.tree) {
+                <div
+                  class="sd-tree-toggle-inner"
+                  [style.padding-left.px]="(row.meta.tree.level ?? 0) * (_tableOption.tree?.indentSize ?? 20)">
+                  @if (row.meta.tree.hasChildren) {
+                    @if (row.meta.tree.isExpanding) {
+                      <div class="lds-ring sd-tree-spinner">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                      </div>
+                    } @else {
+                      <sd-button
+                        type="link"
+                        [prefixIcon]="row.meta.tree.isExpanded ? 'expand_less' : 'expand_more'"
+                        (click)="onTreeToggle(row); $event.stopPropagation()"
+                        width="35px">
+                      </sd-button>
+                    }
+                  }
+                </div>
+              }
+            </td>
+            <td mat-footer-cell *matFooterCellDef></td>
+          </ng-container>
+        }
+
+        <ng-container matColumnDef="sdSubInformation" sticky>
+          <td class="p-0" mat-cell *matCellDef="let item" [attr.colspan]="_configuration.displayedColumns.length">
+            @if (sdSubInformation()?.templateRef) {
+              @if (_tableOption.expand?.always) {
+                <ng-container *ngTemplateOutlet="sdSubInformation()?.templateRef!; context: { item: item }"> </ng-container>
+              } @else {
+                <div [@detailExpand]="item.isExpanded ? 'expanded' : 'collapsed'">
+                  @if (item.isExpanded) {
+                    <ng-container *ngTemplateOutlet="sdSubInformation()?.templateRef!; context: { item: item }"> </ng-container>
+                  }
+                </div>
+              }
+            }
+          </td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+
+        <ng-container matColumnDef="sdSubInformationAction" stickyEnd>
+          <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 1px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+          <td mat-cell *matCellDef="let element">
+            @if (!element.isExpanding && !_tableOption.expand?.always) {
+              <sd-button
+                type="link"
+                [prefixIcon]="element.isExpanded ? 'expand_less' : 'expand_more'"
+                (click)="onExpand(element)"
+                width="35px">
+              </sd-button>
+            }
+            @if (element.isExpanding) {
+              <div class="lds-ring">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+              </div>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="sdSelection" sticky>
+          <th class="sd-selection-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+            @let visibleSelectAll = _items | selectionVisibleSelectAll: _tableOption.selector | async;
+            @if (visibleSelectAll) {
+              <mat-checkbox
+                class="c-selection px-8"
+                color="primary"
+                [ngModel]="isSelectAll()"
+                (ngModelChange)="isSelectAll.set($event)"
+                (change)="onSelectAll()">
+              </mat-checkbox>
+            }
+          </th>
+
+          <td class="sd-selection-cell p-0" mat-cell *matCellDef="let item">
+            @let visible = item | selectionVisible: _tableOption.selector;
+            @if (visible) {
+              @if (_tableOption.selector?.single) {
+                <mat-radio-button
+                  class="c-selection px-8"
+                  color="primary"
+                  [checked]="item.meta.selector.isSelected"
+                  (change)="item.meta.selector.isSelected = true; onSelect(item)"
+                  [disabled]="selectedTableItems() | selectionDisabled: item : _tableOption.selector!">
+                </mat-radio-button>
+              } @else {
+                <mat-checkbox
+                  class="c-selection px-8"
+                  color="primary"
+                  [(ngModel)]="item.meta.selector.isSelected"
+                  (change)="onSelect(item)"
+                  [disabled]="selectedTableItems() | selectionDisabled: item : _tableOption.selector!">
+                </mat-checkbox>
+              }
+            }
+          </td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+        @if (_tableOption.index?.enabled) {
+          @let _pageOffset = pageOffset();
+          @let _indexWidth = _tableOption.index?.width || '50px';
+          <ng-container matColumnDef="sdIndex" sticky>
+            <th
+              class="text-center p-0"
+              mat-header-cell
+              *matHeaderCellDef
+              [style.width]="_indexWidth"
+              [style.min-width]="_indexWidth"
+              [style.max-width]="_indexWidth"
+              [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+              {{ _tableOption.index?.title || '#' }}
+            </th>
+            <td class="text-center px-4" mat-cell *matCellDef="let item; let i = dataIndex" [style.min-width]="_indexWidth" [style.max-width]="_indexWidth">
+              @if (!item?.meta?.group?.isGroupHeader) {
+                @if (_tableOption.tree && item?.meta?.tree?.indexPath?.length) {
+                  <!-- why: tree → STT phân cấp 1, 1.2, 1.2.1 (indexPath join '.'). Tô đậm root (level 0). -->
+                  <span [class.sd-stt-root]="(item.meta.tree.level ?? 0) === 0">
+                    {{ item.meta.tree.indexPath.join('.') }}
+                  </span>
+                } @else {
+                  {{ _pageOffset + i + 1 }}
+                }
+              }
+            </td>
+            <td mat-footer-cell *matFooterCellDef [style.min-width]="_indexWidth" [style.max-width]="_indexWidth"></td>
+          </ng-container>
+        }
+        <ng-container
+          matColumnDef="sdCommand"
+          [sticky]="_tableOption.command?.align !== 'right'"
+          [stickyEnd]="_tableOption.command?.align === 'right'">
+          <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+          <td class="px-8" mat-cell *matCellDef="let item">
+            <desktop-command
+              [autoId]="autoId()"
+              [commands]="_tableOption.command?.commands || _tableOption.commands || []"
+              [item]="item"
+              [itemIndex]="groupedItems.indexOf(item)"></desktop-command>
+          </td>
+          <td mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+        <!-- why: group header row dùng matRowDef RIÊNG với column list ['sdGroupHeader']
+             qua predicate when:isGroupHeaderRow. Cell colspan = displayedColumns.length để
+             span TOÀN BỘ width data row. Tránh colspan trick overflow row khi các TD khác render. -->
+        <ng-container matColumnDef="sdGroupHeader">
+          <td
+            class="p-0 sd-group-header-cell"
+            mat-cell
+            *matCellDef="let item"
+            [attr.colspan]="sdGroupColspan()">
+            <div class="sd-group-row d-flex align-items-center py-8">
+              <!-- why: slot 42px khớp width với sd-selection-cell data row → checkbox group căn TRỤC dọc đúng với checkbox data. -->
+              @if (_tableOption.selector?.visible && !_tableOption.selector?.single) {
+                <div class="sd-group-selection-slot d-flex align-items-center justify-content-center">
+                  <mat-checkbox
+                    class="c-selection"
+                    color="primary"
+                    [checked]="isGroupAllSelected(item)"
+                    [indeterminate]="isGroupIndeterminate(item)"
+                    (change)="onSelectGroup(item, $event.checked)">
+                  </mat-checkbox>
+                </div>
+              } @else {
+                <div class="sd-group-selection-slot"></div>
+              }
+              @if (_tableOption.group?.collapsible) {
+                <sd-button
+                  type="link"
+                  [prefixIcon]="item.meta.group.isExpanded ? 'expand_more' : 'chevron_right'"
+                  width="32px"
+                  (click)="toggleGroupExpand(item)">
+                </sd-button>
+              }
+              @if (sdGroupDef()?.templateRef; as tpl) {
+                <ng-container *ngTemplateOutlet="tpl; context: groupContext(item)"></ng-container>
+              } @else {
+                <span class="T14R">{{ item.meta.group.values | json }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+        <!-- why: filler column ở cuối hấp thụ leftover space khi tổng width các cột data < container — giữ cho selection/STT/command không bị dãn. -->
+        <ng-container matColumnDef="sdFiller">
+          <th class="sd-filler-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+          <td class="sd-filler-cell p-0" mat-cell *matCellDef="let item"></td>
+          <td class="sd-filler-cell p-0" mat-footer-cell *matFooterCellDef></td>
+        </ng-container>
+        @for (column of _configuration.firstColumns; track column.field) {
+          <ng-container [matColumnDef]="column.field" [sticky]="_configuration.fixedColumn[column.field]">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              class="px-8 py-8 c-th"
+              [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
+              [minWidth]="column.minWidth"
+              [maxWidth]="column.maxWidth"
+              (resizeEnd)="onColumnResize(column.field, $event)"
+              [style.width]="column.width"
+              [style.min-width]="column.minWidth || column.width"
+              [style.max-width]="column.maxWidth"
+              [attr.rowspan]="_configuration.multipleHeader && column.type !== 'children' ? 2 : 1"
+              [attr.colspan]="column.type === 'children' ? column.children.length : 1">
+              <div>
+                @if (column.type === 'children') {
+                  <div
+                    aria-hidden="true"
+                    class="c-header-title"
+                    [class.justify-content-end]="column.align === 'right'"
+                    [class.text-right]="column.align === 'right'">
+                    <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                  </div>
+                } @else {
+                  <div
+                    aria-hidden="true"
+                    mat-sort-header
+                    class="c-header-title"
+                    [class.justify-content-end]="column.align === 'right'"
+                    [class.text-right]="column.align === 'right'"
+                    [disabled]="!column.sortable">
+                    <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                  </div>
+                  @let hideInlineFilter =
+                    _tableOption.filter?.disabled ||
+                    _tableOption.filter?.hideInlineFilter === true ||
+                    (_tableOption.filter?.hideInlineFilter === 'auto' && !_isFiltered && _total! <= 10);
+                  @if (!hideInlineFilter) {
+                    <ng-container *sdDesktop>
+                      <column-filter
+                        [autoId]="autoId()"
+                        [value]="columnFilter?.[column.field!]!"
+                        [operator]="columnOperator[column.field]"
+                        (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
+                        [columnFilter]="columnFilter!"
+                        [cacheValues]="cacheValues"
+                        [column]="column"
+                        (filterChange)="onFilterChange()"
+                        (filterCommit)="onFilterCommit()">
+                      </column-filter>
+                    </ng-container>
+                  }
+                }
+              </div>
+            </th>
+            <td
+              class="c-td px-0"
+              [class.d-none]="column.type === 'children'"
+              mat-cell
+              *matCellDef="let item"
+              [sdHoverCopy]="(item.data && item.data[column.field]) || ''"
+              [sdHoverCopyDisabled]="!column.cell?.copiable">
+              @if (column.type !== 'children' && !item?.meta?.group?.isGroupHeader) {
+                <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="cellDef()"> </desktop-cell>
+              }
+            </td>
+            <td mat-footer-cell *matFooterCellDef>
+              <ng-container *ngIf="footerDef()[column.field]">
+                <ng-container *ngTemplateOutlet="footerDef()[column.field].templateRef; context: { items: _items, column: column }">
+                </ng-container>
+              </ng-container>
+            </td>
+          </ng-container>
+        }
+        @for (column of _configuration.secondColumns; track column.field) {
+          <ng-container [matColumnDef]="column.field">
+            <th
+              mat-header-cell
+              *matHeaderCellDef
+              class="c-th px-8"
+              [style.width]="column.width"
+              [style.min-width]="column.minWidth || column.width"
+              [style.max-width]="column.maxWidth">
+              <div>
+                <div
+                  aria-hidden="true"
+                  mat-sort-header
+                  class="c-header-title"
+                  [class.justify-content-end]="column.align === 'right'"
+                  [class.text-right]="column.align === 'right'"
+                  [disabled]="!column.sortable">
+                  <column-title [column]="column" [titleDef]="_titleDef[column.field]"></column-title>
+                </div>
+                @if (!_tableOption.filter?.disabled && !_tableOption.filter?.hideInlineFilter && columnOperator) {
+                  <ng-container *sdDesktop>
+                    <column-filter
+                      [autoId]="autoId()"
+                      [value]="columnFilter?.[column.field!]!"
+                      [operator]="columnOperator[column.field]"
+                      [columnFilter]="columnFilter!"
+                      [cacheValues]="cacheValues"
+                      [column]="column"
+                      (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
+                      (filterChange)="onFilterChange()"
+                      (filterCommit)="onFilterCommit()">
+                    </column-filter>
+                  </ng-container>
+                }
+              </div>
+            </th>
+            <td
+              class="c-td px-0"
+              mat-cell
+              *matCellDef="let item"
+              [sdHoverCopy]="item[column.field]"
+              [sdHoverCopyDisabled]="!column.cell?.copiable">
+              @if (column.type !== 'children') {
+                <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="cellDef()"> </desktop-cell>
+              }
+            </td>
+            <td mat-footer-cell *matFooterCellDef>
+              <ng-container *ngIf="footerDef()[column.field]">
+                <ng-container *ngTemplateOutlet="footerDef()[column.field].templateRef; context: { items: _items, column: column }">
+                </ng-container>
+              </ng-container>
+            </td>
+          </ng-container>
+        }
+        <tr class="c-first-header" mat-header-row *matHeaderRowDef="_configuration.firstHeaders; sticky: true"></tr>
+        @if (!!_configuration.secondHeaders.length) {
+          <tr class="c-second-header" mat-header-row *matHeaderRowDef="_configuration.secondHeaders; sticky: true"></tr>
+        }
+        <!-- Group header row — chỉ 1 cell sdGroupHeader colspan toàn width. -->
+        <tr
+          mat-row
+          *matRowDef="let row; columns: ['sdGroupHeader']; when: isGroupHeaderRow"
+          class="c-group-row-tr"></tr>
+
+        <!-- Data row — dùng displayedColumns đầy đủ; when isDataRow để loại trừ group header. -->
+        <tr
+          mat-row
+          cdkDrag
+          [cdkDragData]="row"
+          [cdkDragDisabled]="
+            !_tableOption.rowReorder?.enabled ||
+            !!row.meta?.group?.items?.length ||
+            (row.meta?.tree?.level ?? 0) > 0 ||
+            isReorderDisabled(row)
+          "
+          *matRowDef="let row; columns: _configuration.displayedColumns; when: isDataRow"
+          matRipple
+          class="c-row"
+          [class.sd-tree-row]="!!_tableOption.tree"
+          [ngClass]="_tableOption.tree ? 'sd-tree-level-' + (row.meta?.tree?.level ?? 0) : null"
+          [ngStyle]="rowStyle(row)"
+          [class.selected]="row.meta.selector.isSelected"></tr>
+
+        <!-- Sub-information row — also gated bởi isDataRow để KHÔNG render empty expand row dưới group header. -->
+        <tr mat-row *matRowDef="let row; columns: ['sdSubInformation']; when: isDataRow" class="c-detail-row"></tr>
+        @if (hasFooter() && !!_configuration.displayedFooters.length) {
+          <tr mat-footer-row *matFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
+        }
+      </table>
+      @if (!_loading && !_total) {
+        <div class="c-no-data-row">
+          @if (_isFiltered) {
+            @if (tableConfiguration?.images?.filterEmpty) {
+              <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />
+            } @else {
+              <img class="c-image sd-image-filter-empty" alt="filter-empty" />
+            }
+            <div class="T16M">{{ 'core.component.table.no-results' | translate }}</div>
+            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | translate }}</div>
+          } @else {
+            @if (_requireFiltered) {
+              @if (tableConfiguration?.images?.filterRequired) {
+                <img class="c-image" [src]="tableConfiguration!.images!.filterRequired" alt="filter-required" />
+              } @else {
+                <img class="c-image sd-image-filter-required" alt="filter-required" />
+              }
+              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | translate }}</div>
+            } @else {
+              @if (tableConfiguration?.images?.dataEmpty) {
+                <img class="c-image" [src]="tableConfiguration!.images!.dataEmpty" alt="data-empty" />
+              } @else {
+                <img class="c-image sd-image-data-empty" alt="data-empty" />
+              }
+              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | translate }}</div>
+            }
+          }
+        </div>
+      }
+    </div>
+    <div class="c-paginator">
+      <div class="c-action">
+        <ng-container *sdDesktop>
+          @if (_tableOption.reload?.visible) {
+            <sd-button
+              class="mr-8"
+              [title]="'core.component.table.reload' | translate"
+              prefixIcon="refresh"
+              (click)="reload()"
+              [disabled]="!_items.length"
+              type="link">
+            </sd-button>
+          }
+        </ng-container>
+        @if (_export && _items.length) {
+          @if (_export.type === 'custom') {
+            <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportCustom()" type="link"> </sd-button>
+          } @else {
+            @if (_export.visible) {
+              @if (_exporting) {
+                <sd-button class="mr-8" [loading]="_exporting" [title]="exportTitle()" prefixIcon="get_app" type="link"> </sd-button>
+              } @else {
+                @if (_export.visible === 'ALL' || !_export.visible) {
+                  <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" [matMenuTriggerFor]="menu" type="link"> </sd-button>
+                  <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="exportExcel()" type="button">
+                      <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
+                      <span> {{ 'core.component.table.export-excel' | translate }}</span>
+                    </button>
+                    <button mat-menu-item (click)="exportCSV()" type="button">
+                      <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
+                      <span> {{ 'core.component.table.export-csv' | translate }}</span>
+                    </button>
+                  </mat-menu>
+                } @else if (_export.visible === 'EXCEL') {
+                  <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportExcel()" type="link"> </sd-button>
+                } @else if (_export.visible === 'CSV') {
+                  <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportCSV()" type="link"> </sd-button>
+                }
+              }
+            }
+          }
+        }
+
+        <ng-container *sdDesktop>
+          @if (configComponent()) {
+            <sd-button
+              class="mr-8"
+              [title]="'core.component.table.setup-short' | translate"
+              prefixIcon="settings"
+              (click)="configComponent()!.open()"
+              type="link">
+            </sd-button>
+          }
+        </ng-container>
+        <!-- Mobile: nút Filter mở mobile-filter drawer (inline filter ẩn trên mobile) -->
+        <ng-container *sdMobile>
+          @if (!_tableOption.filter?.disabled && mobileFilter()) {
+            <sd-button
+              [autoId]="autoId() + 'mobile-filter-open'"
+              class="mr-8"
+              prefixIcon="filter_alt"
+              (click)="mobileFilter()!.open()"
+              type="link">
+            </sd-button>
+          }
+        </ng-container>
+      </div>
+      @let hidePaginator = !_tableOption.paginate?.pageSize || _total === undefined || _total <= _tableOption.paginate?.pageSize!;
+      <!-- Desktop paginator: full config (pageSize dropdown, first/last buttons) -->
+      <ng-container *sdDesktop>
+        <mat-paginator
+          [class.d-none]="_tableOption.paginate?.hidden || hidePaginator"
+          [length]="_total"
+          [pageSize]="_tableOption.paginate?.pageSize"
+          [pageSizeOptions]="_tableOption.paginate?.pages!"
+          [showFirstLastButtons]="_tableOption.paginate?.showFirstLastButtons"
+          [hidePageSize]="_tableOption.paginate?.hidePageSize"></mat-paginator>
+      </ng-container>
+      <!-- Mobile paginator: ẩn pageSize dropdown + first/last buttons để tiết kiệm không gian -->
+      <ng-container *sdMobile>
+        <mat-paginator
+          [class.d-none]="_tableOption.paginate?.hidden || hidePaginator"
+          [length]="_total"
+          [pageSize]="_tableOption.paginate?.pageSize"
+          [showFirstLastButtons]="false"
+          hidePageSize></mat-paginator>
+      </ng-container>
+      <!-- "Đang hiển thị..." chỉ desktop -->
+      <ng-container *sdDesktop>
+        @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
+          <div class="T14R pr-16">
+            {{ 'core.component.table.showing' | translate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+          </div>
+        }
+      </ng-container>
+    </div>
+  </div>
+  <selector-action [tableOption]="_tableOption" [selectedTableItems]="selectedTableItems()" (clear)="onClearSelection(groupedItems)" />
+  @if (_tableOption.config?.visible) {
+    <config [tableOption]="_tableOption" />
+  }
+  <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
+  @if (!_tableOption.filter?.disabled && filterRegister) {
+    <mobile-filter
+      [autoId]="autoId()"
+      [filter]="_tableOption.filter!"
+      [externalFilters]="_tableOption.filter?.externalFilters!"
+      [columns]="_configuration.firstColumns"
+      [filterDefs]="sdFilterDefs()"
+      [filterRegister]="filterRegister"
+      [cacheValues]="cacheValues">
+    </mobile-filter>
+  }
+}

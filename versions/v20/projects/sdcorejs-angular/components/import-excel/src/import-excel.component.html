@@ -1,0 +1,184 @@
+@if (option) {
+  <sd-modal [title]="option.title || ('core.component.import-excel.title' | translate)" (sdClosed)="onClosed()" #modal>
+    <div class="d-flex align-items-center mb-12" style="min-height: 32px">
+      @if (excelItems.length) {
+        <div class="d-flex">
+          <sd-button class="mr-2" (click)="view('ALL')" icon="cached" [title]="'core.component.import-excel.see-all' | translate" size="sm" type="outline"></sd-button>
+
+          <sd-button
+            class="mr-2"
+            (click)="view('SUCCESS')"
+            icon="done"
+            title="{{ numberOfSuccess }}"
+            [tooltip]="'core.component.import-excel.valid-rows' | translate"
+            size="sm"
+            color="success">
+          </sd-button>
+
+          <sd-button
+            class="mr-2"
+            (click)="view('WARNING')"
+            icon="warning"
+            title="{{ numberOfWarning }}"
+            [tooltip]="'core.component.import-excel.error-rows' | translate"
+            size="sm"
+            color="warning">
+          </sd-button>
+
+          <sd-button
+            (click)="view('ERROR')"
+            icon="error"
+            title="{{ numberOfError }}"
+            color="error"
+            [tooltip]="'core.component.import-excel.warning-rows' | translate"
+            size="sm">
+          </sd-button>
+        </div>
+      }
+    </div>
+
+    <div class="sd-box border rounded">
+      <div class="sd-box-body p-0">
+        <div class="table-responsive">
+          <table class="sd-table">
+            <thead>
+              <tr>
+                <th class="text-center c-sticky-left" style="width: 50px">#</th>
+                @if (filteredItems.length) {
+                  <th class="text-center" style="min-width: 250px; width: 250px">{{ 'core.component.import-excel.status' | translate }}</th>
+                }
+                @for (column of option.columns; track column.field) {
+                  @if (column | columnHidden) {
+                    <th [ngStyle]="{ 'min-width': column.width || '300px', width: column.width || '300px' }" [matTooltip]="column.title">
+                      <span class="c-ellipsis">
+                        {{ column.title }}
+                      </span>
+                    </th>
+                  }
+                }
+              </tr>
+            </thead>
+
+            <tbody>
+              @if (viewItems.length) {
+                @for (item of viewItems; track item.meta.excelIndex) {
+                  <tr>
+                    <td class="text-center c-sticky-left px-4">
+                      <sd-badge
+                        type="tag"
+                        [title]="item.meta.excelIndex"
+                        [success]="!item.meta.warningMessages.length && !item.meta.errorMessages.length"
+                        [warning]="!!item.meta.warningMessages.length && !item.meta.errorMessages.length"
+                        [error]="!!item.meta.errorMessages.length" />
+                    </td>
+
+                    <td style="min-width: 250px; width: 250px">
+                      <div
+                        class="text-wrap"
+                        [innerHTML]="
+                          item.meta.errorMessages[0] || item.meta.warningMessages[0] || ('<span class=\'text-success\'>' + ('core.component.import-excel.valid-data' | translate) + '</span>')
+                        "></div>
+                    </td>
+
+                    @for (column of option.columns; track column.field) {
+                      @if (column | columnHidden) {
+                        <td
+                          class="align-middle"
+                          [ngClass]="{
+                            'bg-warning-light': item.meta.warning[column.field] && !item.meta.error[column.field],
+                            'bg-error-light': item.meta.error[column.field]
+                          }"
+                          [matTooltip]="item.meta.error[column.field] || item.meta.warning[column.field]"
+                          [ngStyle]="{ 'min-width': column.width || '300px' }"
+                          matTooltipPosition="above">
+                          <div class="c-ellipsis">
+                            @if (column.type !== 'array') {
+                              <span [innerHTML]="item | columnTransform: column | async"></span>
+                            }
+
+                            @if (column.type === 'array') {
+                              @let arrayItems = item.data[column.field]?.split(column.divideString);
+
+                              <div class="d-flex align-items-center justify-content-between">
+                                <span>{{ arrayItems?.length || 0 }} {{ column.unitString }}</span>
+
+                                @if (arrayItems?.length) {
+                                  <button
+                                    mat-icon-button
+                                    [matMenuTriggerFor]="menu"
+                                    class="c-mat-menu"
+                                    style="width: 24px; height: 24px; line-height: 24px">
+                                    <mat-icon style="font-size: 18px">open_in_new</mat-icon>
+                                  </button>
+
+                                  <mat-menu #menu="matMenu">
+                                    <div
+                                      class="px-3 py-2"
+                                      style="max-width: 300px; max-height: 250px; overflow: auto"
+                                      (click)="$event.stopPropagation()"
+                                      aria-hidden="true">
+                                      @for (val of arrayItems; track $index) {
+                                        <div class="border-bottom py-2 text-wrap" [innerHTML]="val"></div>
+                                      }
+                                    </div>
+                                  </mat-menu>
+                                }
+                              </div>
+                            }
+                          </div>
+                        </td>
+                      }
+                    }
+                  </tr>
+                }
+              } @else {
+                <tr>
+                  <td [attr.colspan]="option.columns.length + 2" class="p-0 border-0 bg-white">
+                    <div
+                      class="empty-state-wrapper"
+                      (click)="downloadTemplate()"
+                      [matTooltip]="'core.component.import-excel.download-template-tooltip' | translate"
+                      aria-hidden="true">
+                      <mat-icon class="empty-icon">cloud_download</mat-icon>
+
+                      <h4>{{ 'core.component.import-excel.no-data-upload' | translate }}</h4>
+                      <span class="text-small text-link"> {{ 'core.component.import-excel.click-here-template' | translate }} </span>
+
+                      @if (isDownloadTemplate) {
+                        <div class="mt-3">
+                          <mat-spinner diameter="24" mode="indeterminate"></mat-spinner>
+                        </div>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="sd-box-footer border-top">
+        <div class="d-flex align-items-center justify-content-end">
+          <mat-paginator [length]="filteredItems.length || 0" hidePageSize showFirstLastButtons></mat-paginator>
+        </div>
+      </div>
+    </div>
+    <sd-button sdFooterLeft (click)="upload()" prefixIcon="file_upload" [title]="'core.component.import-excel.upload' | translate" size="sm" color="info" [loading]="uploading">
+    </sd-button>
+    <div class="d-flex align-items-center" sdFooter>
+      @if (filteredItems.length) {
+        <sd-button class="mr-4" (click)="export()" prefixIcon="get_app" [title]="'core.component.import-excel.download' | translate" size="sm" color="success" type="outline">
+        </sd-button>
+      }
+      <sd-button
+        (click)="accept()"
+        [title]="'core.component.import-excel.confirm-save' | translate"
+        [disabled]="(numberOfSuccess === 0 && numberOfWarning === 0) || numberOfError > 0 || isUploaded"
+        color="primary"
+        type="fill"
+        size="sm">
+      </sd-button>
+    </div>
+  </sd-modal>
+}

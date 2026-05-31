@@ -1,0 +1,128 @@
+<!--
+  In-progress chip (inline-mode token build flow).
+  Seamless string/number branch keeps its own pill; everything else renders inside
+  the dashed .c-token.c-token-building shell.
+-->
+@let _b = building();
+
+@if (isSeamless()) {
+  <sd-query-inline-value-chip
+    [field]="_b.field"
+    [operator]="$any(_b.operator)"
+    [value]="_b.value ?? null"
+    [density]="density()"
+    [showOperator]="showOperator()"
+    [autoId]="autoId()"
+    [autofocus]="true"
+    (valueChange)="seamlessCommit.emit($event)"
+    (remove)="cancel.emit()" />
+} @else {
+  <div class="c-token c-token-building">
+    <span class="c-token-field">{{ _b.field.label }}</span>
+
+    @if (_b.step === 'operator') {
+      <sd-operator
+        #buildOperator
+        class="c-token-op"
+        [operators]="allowedOperators()"
+        [model]="_b.operator"
+        (modelChange)="pickOperator.emit($any($event))" />
+    } @else {
+      <!-- why: badge readonly cho operator đã chọn — vẫn render <sd-operator>
+           để giữ thị giác giống chip hoàn thành (icon + tooltip). -->
+      <sd-operator
+        class="c-token-op"
+        [operators]="[$any(_b.operator)]"
+        [model]="$any(_b.operator)"
+        [disabled]="true" />
+
+      @if (_b.field.type === 'values' || _b.field.type === 'lazy-values') {
+        @let _bopt = $any(_b.field).option;
+        <span class="c-token-value c-token-value-edit">
+          <sd-select #bPicker bare size="sm" minWidthPanel="300px"
+            [autoId]="autoId()"
+            [items]="_b.field.type === 'lazy-values' ? $any(_bopt).search : $any(_bopt.items)"
+            [valueField]="_bopt.valueField"
+            [displayField]="_bopt.displayField"
+            [multiple]="multiple()"
+            [model]="$any(_b.value)"
+            (sdChange)="commitValue.emit($event)">
+            <!-- why: build chip multi-select cũng cần "head +N" để gọn (giống completed chip). -->
+            <ng-template #sdValue let-selectedItems="selectedItems">
+              @if ((selectedItems?.length ?? 0) > 1) {
+                <span class="c-token-multi-head">{{ $any(selectedItems)[0][_bopt.displayField] }}</span> +{{ selectedItems.length - 1 }}
+              } @else if ((selectedItems?.length ?? 0) === 1) {
+                <span class="c-token-multi-head">{{ $any(selectedItems)[0][_bopt.displayField] }}</span>
+              }
+            </ng-template>
+          </sd-select>
+        </span>
+      } @else if (_b.field.type === 'date') {
+        <span class="c-token-value c-token-value-edit">
+          @if (_b.operator === 'BETWEEN') {
+            <!-- why: 1 sd-date-range thay 2 sd-date — gọn hơn, hành vi thống nhất với completed chip. -->
+            <sd-date-range #bPicker bare size="sm"
+              [autoId]="autoId()"
+              [model]="$any(_b.value)"
+              (sdChange)="commitValue.emit($event)"></sd-date-range>
+          } @else {
+            <sd-date #bPicker bare size="sm"
+              [autoId]="autoId()"
+              [model]="$any(_b.value)"
+              (sdChange)="commitValue.emit($event)"></sd-date>
+          }
+        </span>
+      } @else if (_b.field.type === 'datetime') {
+        <span class="c-token-value c-token-value-edit">
+          @if (_b.operator === 'BETWEEN') {
+            <!-- why: datetime BETWEEN downgrade về date-range (mất time precision; đã thống nhất). -->
+            <sd-date-range #bPicker bare size="sm"
+              [autoId]="autoId()"
+              [model]="$any(_b.value)"
+              (sdChange)="commitValue.emit($event)"></sd-date-range>
+          } @else {
+            <sd-datetime #bPicker bare size="sm"
+              [autoId]="autoId()"
+              [model]="$any(_b.value)"
+              (sdChange)="commitValue.emit($event)"></sd-datetime>
+          }
+        </span>
+      } @else if (_b.field.type === 'boolean') {
+        <!-- why: native button thay sd-button (tránh mat-button baseline 36px gây tràn).
+             Pill nhỏ vẽ bằng CSS scoped trong chip — giữ semantic colour qua class
+             .c-bool-true / .c-bool-false. -->
+        <span class="c-token-value c-token-value-edit c-bool-toggle">
+          <button
+            type="button"
+            class="c-bool-btn c-bool-true"
+            [class.c-bool-active]="_b.value === true"
+            [attr.data-autoId]="autoId() + '-true'"
+            (click)="commitValue.emit(true)">
+            {{ $any(_b.field).trueLabel || 'Có' }}
+          </button>
+          <button
+            type="button"
+            class="c-bool-btn c-bool-false"
+            [class.c-bool-active]="_b.value === false"
+            [attr.data-autoId]="autoId() + '-false'"
+            (click)="commitValue.emit(false)">
+            {{ $any(_b.field).falseLabel || 'Không' }}
+          </button>
+        </span>
+      } @else {
+        <!-- Fallback (e.g. unforeseen type) — generic sd-input wired via draft outputs. -->
+        <span class="c-token-value c-token-value-edit">
+          <sd-input size="sm"
+            [autoId]="autoId()"
+            [model]="$any(_b.value)"
+            (sdChange)="draftChange.emit($event)"
+            (keyupEnter)="draftCommit.emit()"></sd-input>
+        </span>
+      }
+    }
+
+    <button type="button" class="c-token-remove" aria-label="Cancel" (click)="cancel.emit()">
+      <mat-icon fontSet="material-icons-outlined">close</mat-icon>
+    </button>
+  </div>
+}

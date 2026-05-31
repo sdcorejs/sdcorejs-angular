@@ -1,0 +1,72 @@
+.sd-mini-editor {
+  display: block;
+}
+
+::ng-deep {
+  .ck-powered-by-balloon {
+    display: none !important;
+  }
+  .ck-mentions {
+    .ck-button.ck-on {
+      background: var(--sd-primary) !important;
+      color: #fff !important;
+
+      * {
+        color: #fff !important;
+      }
+    }
+  }
+}
+
+:host ::ng-deep {
+  .ck-editor {
+    --ck-content-font-size: 14px;
+    --ck-content-line-height: 1.5;
+  }
+
+  .ck-editor__editable_inline {
+    border: var(--ck-focus-ring);
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    max-height: var(--sd-mini-editor-max-height);
+    overflow: auto;
+  }
+
+  .ck-toolbar {
+    border-radius: 0;
+    border: 0 !important;
+  }
+
+  .ck-content {
+    img {
+      max-width: 100% !important;
+      height: auto !important;
+      object-fit: contain;
+    }
+
+    p {
+      margin-bottom: var(--ck-spacing-large);
+      text-indent: 0;
+    }
+
+    ul,
+    ol {
+      padding-left: 20px !important;
+      margin-left: 0 !important;
+    }
+  }
+
+  .ck-custom-mention {
+    font-weight: 600;
+    padding: 0 2px;
+    display: inline-block;
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+    color: #2962ff;
+
+    &::before {
+      content: attr(data-marker);
+    }
+  }
+}

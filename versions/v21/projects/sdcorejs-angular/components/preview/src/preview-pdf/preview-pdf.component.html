@@ -1,0 +1,456 @@
+<!--
+  sd-preview-pdf shell. Self-contained — sizes to its parent. Consumer wraps
+  in <sd-modal>/<sd-side-drawer>/page section. Header + sidebar + stage +
+  floating toolbar mirror Artboards A / C / E from the design handoff.
+-->
+<div class="sd-preview-pdf-shell" role="region">
+
+  <!-- ============================================
+       HEADER BAR — hidden in empty + loading per design
+       ============================================ -->
+  @if (stage() === 'ready') {
+    <div class="sd-preview-pdf-header">
+      <div class="sd-preview-pdf-header__left">
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [class.sd-preview-pdf-iconbtn--active]="isSidebarOpen()"
+          [attr.aria-label]="'core.component.preview-pdf.toggle-sidebar' | translate"
+          [attr.title]="'core.component.preview-pdf.toggle-sidebar' | translate"
+          [attr.data-autoId]="autoIdSidebarToggle()"
+          (click)="toggleSidebar()">
+          <mat-icon fontIcon="menu"></mat-icon>
+        </button>
+        <span class="sd-preview-pdf-header__divider"></span>
+        <div class="sd-preview-pdf-fileicon" aria-hidden="true">PDF</div>
+        <div class="sd-preview-pdf-header__meta">
+          <div class="sd-preview-pdf-header__name" [title]="title() || filename()">
+            {{ title() || filename() }}
+          </div>
+          <div class="sd-preview-pdf-header__sub">
+            {{ 'core.component.preview-pdf.pages-count' | translate: { count: numPages() } }}
+          </div>
+        </div>
+      </div>
+
+      <div class="sd-preview-pdf-header__right">
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [class.sd-preview-pdf-iconbtn--active]="searchBarOpen()"
+          [attr.aria-label]="'core.component.preview-pdf.search' | translate"
+          [attr.title]="'core.component.preview-pdf.search' | translate"
+          [attr.data-autoId]="autoIdSearchToggle()"
+          (click)="searchBarOpen() ? closeSearch() : openSearch()">
+          <mat-icon fontIcon="search"></mat-icon>
+        </button>
+        @if (downloadable()) {
+          <button
+            type="button"
+            class="sd-preview-pdf-iconbtn"
+            [attr.aria-label]="'core.component.preview-pdf.download' | translate"
+            [attr.title]="'core.component.preview-pdf.download' | translate"
+            [attr.data-autoId]="autoIdDownload()"
+            (click)="downloadFile()">
+            <mat-icon fontIcon="download"></mat-icon>
+          </button>
+        }
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [attr.aria-label]="'core.component.preview-pdf.fullscreen' | translate"
+          [attr.title]="'core.component.preview-pdf.fullscreen' | translate"
+          [attr.data-autoId]="autoIdFullscreen()"
+          (click)="toggleFullscreen()">
+          <mat-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ============================================
+         SEARCH BAR — between header + body, only when bar is open
+         ============================================ -->
+    @if (searchBarOpen()) {
+      <div class="sd-preview-pdf-searchbar" role="search">
+        <mat-icon class="sd-preview-pdf-searchbar__icon" fontIcon="search"></mat-icon>
+        <input
+          #searchInput
+          type="text"
+          class="sd-preview-pdf-searchbar__input"
+          [attr.placeholder]="'core.component.preview-pdf.search-placeholder' | translate"
+          [value]="searchTerm()"
+          [attr.data-autoId]="autoIdSearchInput()"
+          (input)="onSearchInput($any($event.target).value)" />
+        <span class="sd-preview-pdf-searchbar__counter" aria-live="polite">
+          {{ searchCurrent() }} / {{ searchTotal() }}
+        </span>
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [disabled]="searchTotal() === 0"
+          [attr.aria-label]="'core.component.preview-pdf.search-prev' | translate"
+          [attr.title]="'core.component.preview-pdf.search-prev' | translate"
+          [attr.data-autoId]="autoIdSearchPrev()"
+          (click)="searchPrev()">
+          <mat-icon fontIcon="keyboard_arrow_up"></mat-icon>
+        </button>
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [disabled]="searchTotal() === 0"
+          [attr.aria-label]="'core.component.preview-pdf.search-next' | translate"
+          [attr.title]="'core.component.preview-pdf.search-next' | translate"
+          [attr.data-autoId]="autoIdSearchNext()"
+          (click)="searchNext()">
+          <mat-icon fontIcon="keyboard_arrow_down"></mat-icon>
+        </button>
+        <span class="sd-preview-pdf-searchbar__divider"></span>
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [class.sd-preview-pdf-iconbtn--active]="searchCaseSensitive()"
+          [attr.aria-label]="'core.component.preview-pdf.search-case' | translate"
+          [attr.title]="'core.component.preview-pdf.search-case' | translate"
+          [attr.data-autoId]="autoIdSearchCase()"
+          (click)="toggleSearchCaseSensitive()">
+          <mat-icon fontIcon="match_case"></mat-icon>
+        </button>
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [class.sd-preview-pdf-iconbtn--active]="searchWholeWord()"
+          [attr.aria-label]="'core.component.preview-pdf.search-whole' | translate"
+          [attr.title]="'core.component.preview-pdf.search-whole' | translate"
+          [attr.data-autoId]="autoIdSearchWhole()"
+          (click)="toggleSearchWholeWord()">
+          <mat-icon fontIcon="text_fields"></mat-icon>
+        </button>
+        <span class="sd-preview-pdf-searchbar__spacer"></span>
+        <button
+          type="button"
+          class="sd-preview-pdf-iconbtn"
+          [attr.aria-label]="'core.component.preview-pdf.search-close' | translate"
+          [attr.title]="'core.component.preview-pdf.search-close' | translate"
+          [attr.data-autoId]="autoIdSearchClose()"
+          (click)="closeSearch()">
+          <mat-icon fontIcon="close"></mat-icon>
+        </button>
+      </div>
+    }
+  }
+
+  <!-- ============================================
+       BODY — sidebar + stage
+       ============================================ -->
+  <div class="sd-preview-pdf-body">
+
+    <!-- SIDEBAR ............................................................. -->
+    @if (stage() === 'ready' && isSidebarOpen()) {
+      <aside class="sd-preview-pdf-sidebar" role="complementary">
+        <div class="sd-preview-pdf-sidebar__tabs" role="tablist">
+          <button
+            type="button"
+            class="sd-preview-pdf-sidebar__tab"
+            role="tab"
+            [class.sd-preview-pdf-sidebar__tab--active]="sidebarMode() === 'thumbnails'"
+            [attr.data-autoId]="autoIdTabThumbnails()"
+            (click)="setSidebarMode('thumbnails')">
+            <mat-icon fontIcon="view_carousel"></mat-icon>
+            <span>{{ 'core.component.preview-pdf.tab.thumbnails' | translate }}</span>
+          </button>
+          <button
+            type="button"
+            class="sd-preview-pdf-sidebar__tab"
+            role="tab"
+            [class.sd-preview-pdf-sidebar__tab--active]="sidebarMode() === 'outline'"
+            [attr.data-autoId]="autoIdTabOutline()"
+            (click)="setSidebarMode('outline')">
+            <mat-icon fontIcon="list"></mat-icon>
+            <span>{{ 'core.component.preview-pdf.tab.outline' | translate }}</span>
+          </button>
+          <button
+            type="button"
+            class="sd-preview-pdf-sidebar__tab"
+            role="tab"
+            [class.sd-preview-pdf-sidebar__tab--active]="sidebarMode() === 'search'"
+            [attr.data-autoId]="autoIdTabSearch()"
+            (click)="setSidebarMode('search')">
+            <mat-icon fontIcon="search"></mat-icon>
+            <span>{{ 'core.component.preview-pdf.tab.search' | translate }}</span>
+          </button>
+        </div>
+
+        <div class="sd-preview-pdf-sidebar__content">
+          @switch (sidebarMode()) {
+            @case ('thumbnails') {
+              <ul class="sd-preview-pdf-thumb-list">
+                @for (p of pageNumbers(); track trackByPage($index, p); let pi = $index) {
+                  <li>
+                    <button
+                      type="button"
+                      class="sd-preview-pdf-thumb"
+                      [class.sd-preview-pdf-thumb--active]="p === activePage()"
+                      [attr.aria-current]="p === activePage() ? 'page' : null"
+                      [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: p, total: numPages() })"
+                      [attr.data-autoId]="autoIdThumb(pi)"
+                      (click)="goToPage(p)">
+                      <div class="sd-preview-pdf-thumb__page">
+                        <canvas
+                          #thumbCanvas
+                          class="sd-preview-pdf-thumb__canvas"
+                          [attr.data-page]="p"
+                          aria-hidden="true"></canvas>
+                      </div>
+                      <span class="sd-preview-pdf-thumb__label">{{ p }}</span>
+                    </button>
+                  </li>
+                }
+              </ul>
+            }
+            @case ('outline') {
+              <!-- TODO(preview-pdf): outline tree (pdfDoc.getOutline()) deferred to follow-up commit. -->
+              <div class="sd-preview-pdf-sidebar__deferred">
+                <mat-icon fontIcon="list"></mat-icon>
+                <p>{{ 'core.component.preview-pdf.deferred.outline' | translate }}</p>
+              </div>
+            }
+            @case ('search') {
+              @if (!searchTerm()) {
+                <div class="sd-preview-pdf-sidebar__deferred">
+                  <mat-icon fontIcon="search"></mat-icon>
+                  <p>{{ 'core.component.preview-pdf.search-placeholder' | translate }}</p>
+                </div>
+              } @else if (searchTotal() === 0) {
+                <div class="sd-preview-pdf-sidebar__deferred">
+                  <mat-icon fontIcon="search_off"></mat-icon>
+                  <p>{{ 'core.component.preview-pdf.search-no-results' | translate }}</p>
+                </div>
+              } @else {
+                <ul class="sd-preview-pdf-search-list">
+                  @for (r of searchResults(); track $index; let i = $index) {
+                    <li>
+                      <button
+                        type="button"
+                        class="sd-preview-pdf-search-result"
+                        [class.sd-preview-pdf-search-result--active]="i === searchActiveIndex()"
+                        [attr.data-autoId]="autoIdResult(i)"
+                        (click)="goToPage(r.page)">
+                        <span class="sd-preview-pdf-search-result__snippet">
+                          {{ r.before }}<mark>{{ r.term }}</mark>{{ r.after }}
+                        </span>
+                        <span class="sd-preview-pdf-search-result__page">{{ r.page }}</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            }
+            @default {
+              <div class="sd-preview-pdf-sidebar__deferred"></div>
+            }
+          }
+        </div>
+      </aside>
+    }
+
+    <!-- STAGE ............................................................... -->
+    <div class="sd-preview-pdf-stage" #stageRef (wheel)="onWheel($event)">
+      @switch (stage()) {
+        @case ('empty') {
+          <div class="sd-preview-pdf-status">
+            <div class="sd-preview-pdf-status__tile sd-preview-pdf-status__tile--muted">
+              <mat-icon fontIcon="picture_as_pdf"></mat-icon>
+            </div>
+            <div class="sd-preview-pdf-status__title">
+              {{ 'core.component.preview-pdf.empty.title' | translate }}
+            </div>
+            <div class="sd-preview-pdf-status__hint">
+              {{ 'core.component.preview-pdf.empty.subtitle' | translate }}
+            </div>
+          </div>
+        }
+        @case ('loading') {
+          <div class="sd-preview-pdf-status">
+            <div class="sd-preview-pdf-spinner" role="progressbar"></div>
+            <div class="sd-preview-pdf-status__title">
+              {{ 'core.component.preview-pdf.loading' | translate }}
+              @if (loadPercent() > 0) {
+                <span class="sd-preview-pdf-progress-pct">&nbsp;{{ loadPercent() }}%</span>
+              }
+            </div>
+            <div class="sd-preview-pdf-progress">
+              <div class="sd-preview-pdf-progress__fill" [style.width.%]="loadPercent()"></div>
+            </div>
+          </div>
+        }
+        @case ('error') {
+          @if (loadError$(); as err) {
+            <div class="sd-preview-pdf-status">
+              <div class="sd-preview-pdf-status__tile sd-preview-pdf-status__tile--danger">
+                <mat-icon fontIcon="error_outline"></mat-icon>
+              </div>
+              <div class="sd-preview-pdf-status__title">
+                {{ ('core.component.preview-pdf.error.' + err.reason + '.title') | translate }}
+              </div>
+              <div class="sd-preview-pdf-status__hint">
+                {{ ('core.component.preview-pdf.error.' + err.reason + '.body') | translate }}
+              </div>
+              <div class="sd-preview-pdf-status__actions">
+                <button type="button" class="sd-preview-pdf-btn-primary" (click)="retryLoad()" [attr.data-autoId]="autoIdRetry()">
+                  <mat-icon fontIcon="refresh"></mat-icon>
+                  <span>{{ 'core.component.preview-pdf.error.retry' | translate }}</span>
+                </button>
+                @if (downloadable()) {
+                  <button type="button" class="sd-preview-pdf-btn-secondary" (click)="downloadFile()">
+                    <mat-icon fontIcon="download"></mat-icon>
+                    <span>{{ 'core.component.preview-pdf.error.download-raw' | translate }}</span>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+        @default {
+          <div class="sd-preview-pdf-page-wrap">
+            <canvas
+              #pageCanvas
+              class="sd-preview-pdf-page"
+              role="img"
+              [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: activePage(), total: numPages() })">
+            </canvas>
+          </div>
+        }
+      }
+
+      <!-- FLOATING TOOLBAR ........................................ -->
+      @if (showToolbar() && stage() === 'ready') {
+        <div class="sd-preview-pdf-toolbar" role="toolbar">
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [disabled]="!canPrev()"
+            [attr.aria-label]="'core.component.preview-pdf.first-page' | translate"
+            [attr.title]="'core.component.preview-pdf.first-page' | translate"
+            [attr.data-autoId]="autoIdFirst()"
+            (click)="firstPage()">
+            <mat-icon fontIcon="first_page"></mat-icon>
+          </button>
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [disabled]="!canPrev()"
+            [attr.aria-label]="'core.component.preview-pdf.prev-page' | translate"
+            [attr.title]="'core.component.preview-pdf.prev-page' | translate"
+            [attr.data-autoId]="autoIdPrev()"
+            (click)="prevPage()">
+            <mat-icon fontIcon="chevron_left"></mat-icon>
+          </button>
+          <span class="sd-preview-pdf-toolbar__page">
+            <input
+              type="text"
+              inputmode="numeric"
+              class="sd-preview-pdf-toolbar__page-input"
+              [value]="activePage()"
+              #pageInput
+              (keydown.enter)="onPageInputEnter($event)"
+              (blur)="onPageInputBlur($event)"
+              [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: activePage(), total: numPages() }"
+              [attr.data-autoId]="autoIdPageInput()" />
+            <span class="sd-preview-pdf-toolbar__page-total">/ {{ numPages() }}</span>
+          </span>
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [disabled]="!canNext()"
+            [attr.aria-label]="'core.component.preview-pdf.next-page' | translate"
+            [attr.title]="'core.component.preview-pdf.next-page' | translate"
+            [attr.data-autoId]="autoIdNext()"
+            (click)="nextPage()">
+            <mat-icon fontIcon="chevron_right"></mat-icon>
+          </button>
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [disabled]="!canNext()"
+            [attr.aria-label]="'core.component.preview-pdf.last-page' | translate"
+            [attr.title]="'core.component.preview-pdf.last-page' | translate"
+            [attr.data-autoId]="autoIdLast()"
+            (click)="lastPage()">
+            <mat-icon fontIcon="last_page"></mat-icon>
+          </button>
+
+          <span class="sd-preview-pdf-toolbar__divider"></span>
+
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [attr.aria-label]="'core.component.preview-pdf.zoom-out' | translate"
+            [attr.title]="'core.component.preview-pdf.zoom-out' | translate"
+            [attr.data-autoId]="autoIdZoomOut()"
+            (click)="zoomOut()">
+            <mat-icon fontIcon="remove"></mat-icon>
+          </button>
+          <span class="sd-preview-pdf-toolbar__zoom" aria-live="polite" [attr.data-autoId]="autoIdZoomReadout()">{{ zoomPercent() }}%</span>
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [attr.aria-label]="'core.component.preview-pdf.zoom-in' | translate"
+            [attr.title]="'core.component.preview-pdf.zoom-in' | translate"
+            [attr.data-autoId]="autoIdZoomIn()"
+            (click)="zoomIn()">
+            <mat-icon fontIcon="add"></mat-icon>
+          </button>
+
+          <span class="sd-preview-pdf-toolbar__divider"></span>
+
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
+            [class.sd-preview-pdf-toolbar__btn--active]="zoomMode() === 'page-fit'"
+            [attr.data-autoId]="autoIdFitPage()"
+            (click)="setZoom('page-fit')">
+            <mat-icon fontIcon="fit_screen"></mat-icon>
+            <span>{{ 'core.component.preview-pdf.fit-page' | translate }}</span>
+          </button>
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
+            [class.sd-preview-pdf-toolbar__btn--active]="zoomMode() === 'page-width'"
+            [attr.data-autoId]="autoIdFitWidth()"
+            (click)="setZoom('page-width')">
+            <mat-icon fontIcon="swap_horiz"></mat-icon>
+            <span>{{ 'core.component.preview-pdf.fit-width' | translate }}</span>
+          </button>
+
+          <span class="sd-preview-pdf-toolbar__divider"></span>
+
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn"
+            [attr.aria-label]="'core.component.preview-pdf.rotate' | translate"
+            [attr.title]="'core.component.preview-pdf.rotate' | translate"
+            [attr.data-autoId]="autoIdRotate()"
+            (click)="rotate('right')">
+            <mat-icon fontIcon="rotate_right"></mat-icon>
+          </button>
+
+          <!-- TODO(preview-pdf): scroll mode toggle is signature-only;
+               clicking switches the state but rendering stays single-page
+               until the continuous scroll feature lands. -->
+          <button
+            type="button"
+            class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
+            [attr.data-autoId]="autoIdScrollMode()"
+            (click)="setScrollMode(scrollModeCurrent() === 'page' ? 'continuous' : 'page')">
+            <mat-icon [fontIcon]="scrollModeCurrent() === 'page' ? 'description' : 'view_day'"></mat-icon>
+            <span>
+              {{ (scrollModeCurrent() === 'page'
+                  ? 'core.component.preview-pdf.scroll-page'
+                  : 'core.component.preview-pdf.scroll-continuous') | translate }}
+            </span>
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

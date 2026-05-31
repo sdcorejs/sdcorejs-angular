@@ -1,0 +1,151 @@
+@use '../../../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+$image-viewer-height: 60vh;
+$thumbnail-size: 100px;
+$gap-size: 0.5rem;
+
+.image-gallery {
+  display: flex;
+  width: 100%;
+  max-height: 60vh;
+  min-height: 60vh;
+
+  .main-image-container {
+    flex: 1;
+    position: relative;
+    background-color: map.get(color.$color_map, 'black100');
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    .next-icon {
+      position: absolute;
+      top: 45%;
+      right: 8px;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.54);
+      z-index: 9999;
+    }
+
+    .back-icon {
+      position: absolute;
+      top: 45%;
+      left: 8px;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.54);
+      z-index: 9999;
+    }
+
+    .c-image-error {
+      text-align: center;
+      color: map.get(color.$color_map, 'error');
+      mat-icon {
+        height: 36px;
+        width: 36px;
+        font-size: 36px;
+      }
+    }
+  }
+
+  .thumbnail-container {
+    width: calc($thumbnail-size + 20px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-sizing: border-box;
+  }
+
+  .thumbnail-wrapper {
+    position: relative;
+    width: $thumbnail-size;
+    aspect-ratio: 1;
+    flex: 0 0 auto;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    background: transparent;
+    .thumbnail-img {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    &.c-image-error {
+      background-color: map.get(color.$color_map, 'black200');
+    }
+  }
+
+  .main-image {
+    object-fit: contain;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .main-document {
+    object-fit: contain;
+    height: 64px;
+    width: 64px;
+    display: block;
+  }
+}
+
+.file {
+  padding: 4px;
+  content: url('../../assets/file-types/file.png');
+
+  &.png {
+    content: url('../../assets/file-types/png.png');
+  }
+
+  &.jpg {
+    content: url('../../assets/file-types/jpg.png');
+  }
+
+  &.pdf {
+    content: url('../../assets/file-types/pdf.png');
+  }
+
+  &.doc {
+    content: url('../../assets/file-types/doc.png');
+  }
+
+  &.docx {
+    content: url('../../assets/file-types/docx.png');
+  }
+
+  &.xls {
+    content: url('../../assets/file-types/xls.png');
+  }
+
+  &.xlsx {
+    content: url('../../assets/file-types/xlsx.png');
+  }
+
+  &.ppt {
+    content: url('../../assets/file-types/xls.png');
+  }
+
+  &.pptx {
+    content: url('../../assets/file-types/xlsx.png');
+  }
+
+  &.csv {
+    content: url('../../assets/file-types/csv.png');
+  }
+
+  &.psd {
+    content: url('../../assets/file-types/psd.png');
+  }
+
+  &.xml {
+    content: url('../../assets/file-types/xml.png');
+  }
+
+  &.zip {
+    content: url('../../assets/file-types/zip.png');
+  }
+}

@@ -1,0 +1,197 @@
+:host {
+  display: block;
+
+  --sd-tab-label-color: var(--sd-text-primary, #1a1a1a);
+  --sd-tab-label-active-color: var(--sd-color-primary, #1565c0);
+  --sd-tab-indicator-color: var(--sd-color-primary, #1565c0);
+  --sd-tab-disabled-opacity: 0.5;
+  --sd-tab-badge-bg: var(--sd-color-primary-light, #e8f0ff);
+  --sd-tab-badge-color: var(--sd-color-primary, #1565c0);
+  --sd-tab-badge-radius: 10px;
+  --sd-tab-badge-padding: 0 6px;
+  --sd-tab-badge-min-width: 18px;
+  --sd-tab-close-color: var(--sd-text-secondary, #6b6b6b);
+  --sd-tab-close-hover-color: var(--sd-color-error, #d32f2f);
+}
+
+.sd-tab__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sd-tab__icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+}
+
+.sd-tab__text {
+  white-space: nowrap;
+}
+
+.sd-tab__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--sd-tab-badge-min-width);
+  height: 18px;
+  padding: var(--sd-tab-badge-padding);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--sd-tab-badge-color);
+  background: var(--sd-tab-badge-bg);
+  border-radius: var(--sd-tab-badge-radius);
+  margin-left: 2px;
+}
+
+.sd-tab__close {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  line-height: 16px;
+  color: var(--sd-tab-close-color);
+  cursor: pointer;
+  opacity: 0.6;
+  margin-left: 4px;
+  transition: opacity 120ms ease, color 120ms ease;
+
+  &:hover {
+    opacity: 1;
+    color: var(--sd-tab-close-hover-color);
+  }
+}
+
+// why: override Material's default indicator color so it follows the project's
+// primary token instead of mat's blue palette. ::ng-deep is needed because the
+// indicator markup lives inside mat-tab's encapsulated view.
+:host ::ng-deep .mat-mdc-tab .mdc-tab-indicator__content--underline {
+  border-color: var(--sd-tab-indicator-color);
+}
+
+// why: Material's MDC state-layer (.mdc-tab__ripple::before) is a translucent
+// overlay applied on hover/focus. On a dark active tab (pills filled with
+// primary), the default semi-transparent white wash looks muddy. Kill the
+// state-layer on active tabs so the active fill stays clean and crisp.
+:host ::ng-deep .mat-mdc-tab.mdc-tab--active .mdc-tab__ripple::before,
+:host ::ng-deep .mat-mdc-tab.mdc-tab--active::before {
+  background-color: transparent !important;
+  opacity: 0 !important;
+}
+
+// =============================================================================
+// Variant: pills — rounded pill tabs, active filled with primary.
+// Good for nested tab groups, filter bars, light contexts.
+// =============================================================================
+:host(.sd-tab-group--pills) ::ng-deep {
+  // Hide the underline indicator entirely.
+  .mat-mdc-tab .mdc-tab-indicator { display: none; }
+
+  // Remove the divider line at the bottom of the tab header.
+  .mat-mdc-tab-label-container,
+  .mat-mdc-tab-header {
+    border-bottom: none !important;
+  }
+
+  // Tighter header — pills don't need the 48px Material default height.
+  .mat-mdc-tab-header { min-height: 36px; }
+
+  .mat-mdc-tab-labels { gap: 4px; padding: 2px 0; }
+
+  // Each tab as a pill.
+  .mat-mdc-tab {
+    min-width: 0;
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 999px;
+    flex-grow: 0 !important;
+    flex-basis: auto !important;
+    background: transparent;
+    transition: background-color 120ms ease, color 120ms ease;
+
+    &:hover:not(.mat-mdc-tab-disabled) {
+      background: var(--sd-tab-badge-bg);
+    }
+
+    .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: 500; }
+    .mdc-tab__content { height: 100%; }
+
+    &.mdc-tab--active {
+      background: var(--sd-tab-label-active-color);
+      .mdc-tab__text-label { color: #ffffff; }
+    }
+
+    // why: active pill darken on hover instead of the default whitish state-layer.
+    // box-shadow inset > filter because filter would dim text + icons too.
+    &.mdc-tab--active:hover:not(.mat-mdc-tab-disabled) {
+      box-shadow: inset 0 0 0 9999px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  // Inside the pill we still allow the sd-tab__label inline-flex with icon/badge/close.
+  .sd-tab__label .sd-tab__icon { color: inherit; }
+  .sd-tab__label .sd-tab__badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: inherit;
+  }
+
+  // Restore badge appearance for non-active tab.
+  .mat-mdc-tab:not(.mdc-tab--active) .sd-tab__label .sd-tab__badge {
+    background: var(--sd-tab-badge-bg);
+    color: var(--sd-tab-badge-color);
+  }
+}
+
+// =============================================================================
+// Variant: segmented — single bordered container, tabs sit flush.
+// iOS-style segmented control.
+// =============================================================================
+:host(.sd-tab-group--segmented) ::ng-deep {
+  .mat-mdc-tab .mdc-tab-indicator { display: none; }
+
+  .mat-mdc-tab-label-container,
+  .mat-mdc-tab-header {
+    border-bottom: none !important;
+  }
+
+  .mat-mdc-tab-header {
+    display: inline-flex;
+    min-height: 34px;
+    background: #f0f3f7;
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .mat-mdc-tab-labels { gap: 0; }
+
+  .mat-mdc-tab {
+    min-width: 0;
+    height: 28px;
+    padding: 0 14px;
+    border-radius: 6px;
+    flex-grow: 0 !important;
+    flex-basis: auto !important;
+    background: transparent;
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+
+    &:hover:not(.mat-mdc-tab-disabled):not(.mdc-tab--active) {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .mdc-tab__text-label { color: var(--sd-tab-label-color); font-weight: 500; font-size: 13px; }
+
+    &.mdc-tab--active {
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      .mdc-tab__text-label { color: var(--sd-tab-label-active-color); font-weight: 600; }
+    }
+
+    // why: keep the active "pill" inside the segmented container clean on hover.
+    &.mdc-tab--active:hover:not(.mat-mdc-tab-disabled) {
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+  }
+}

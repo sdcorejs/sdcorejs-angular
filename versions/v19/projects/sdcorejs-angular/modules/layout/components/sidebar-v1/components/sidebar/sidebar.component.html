@@ -1,0 +1,160 @@
+@let _userInfo = userInfo();
+@let _sidebar = sidebar();
+
+@if (_userInfo && _sidebar) {
+  <div class="wrapper" [style.height]="isMobileOrTablet ? screenHeight + 'px' : '100%'">
+    <div class="c-header">
+      @if (_sidebar.logoUrl) {
+        <div class="c-logo">
+          <a href="javascript:;" (click)="openHomePage()">
+            <img alt="logo" [src]="_sidebar.logoUrl" />
+          </a>
+        </div>
+      }
+      <div class="c-title-menu-group">
+        <span>{{ titleMenuGroup() || _sidebar.defaultTitle || 'Back Office' }}</span>
+      </div>
+    </div>
+    <div class="c-body">
+      <div class="c-menu">
+        <div class="c-menu-group">
+          @if (_sidebar?.pin?.enabled && pinnedMenuGroup().children?.length) {
+            <button
+              (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
+              (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
+              (click)="expandPinnedGroup()"
+              [matTooltip]="'Đã ghim'"
+              [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
+              [matTooltipPosition]="'right'"
+              style="padding: 0; margin: 0; border: none; background-color: transparent">
+              <mat-icon
+                class="c-menu-group-icon"
+                [ngStyle]="{
+                  color: isPinnedMenuGroupActive() ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
+                  backgroundColor: isPinnedMenuGroupActive() ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                }">
+                push_pin
+              </mat-icon>
+            </button>
+          }
+          @for (nodeMenuGroup of menus(); track nodeMenuGroup.id) {
+            <button
+              (mouseenter)="onMouseOverMenuGroupNode($event, nodeMenuGroup)"
+              (mouseleave)="onMouseLeaveMenuGroupNode($event, nodeMenuGroup)"
+              (click)="expandMenuGroup(nodeMenuGroup)"
+              [matTooltip]="nodeMenuGroup.tooltipTitle || nodeMenuGroup.title"
+              [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
+              [matTooltipPosition]="'right'"
+              style="padding: 0; margin: 0; border: none; background-color: transparent">
+              @if (nodeMenuGroup.iconUrl) {
+                <span
+                  class="c-menu-group-icon"
+                  [ngStyle]="{
+                    backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                  }">
+                  <img width="24px" height="24px" [src]="nodeMenuGroup.iconUrl" [alt]="nodeMenuGroup.title" />
+                </span>
+              } @else {
+                <mat-icon
+                  class="c-menu-group-icon"
+                  [ngStyle]="{
+                    color: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
+                    backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                  }">
+                  {{ nodeMenuGroup.icon || 'widgets' }}
+                </mat-icon>
+              }
+            </button>
+          }
+        </div>
+        <div class="c-menu-tree">
+          @if (totalMenuInMenusByGroup() >= 10) {
+            <div style="padding: 0px 4px" class="c-menu-tree-search">
+              <sd-input size="sm" [placeholder]="'core.module.layout.sidebar.search' | translate" [model]="searchText()" (sdChange)="onFilterSearchText($event)">
+                <ng-template sdSuffixDef>
+                  @if (searchText()) {
+                    <mat-icon class="c-search-prefix-icon cancel" (click)="onClearSearchText()">cancel</mat-icon>
+                  } @else {
+                    <mat-icon class="c-search-prefix-icon search">search</mat-icon>
+                  }
+                </ng-template>
+              </sd-input>
+            </div>
+          }
+          <div class="c-menu-tree-container">
+            <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" [style.backgroundColor]="'transparent'">
+              <mat-nested-tree-node *matTreeNodeDef="let node; when: !hasChild">
+                <li
+                  class="c-menu-node"
+                  (mouseenter)="onMouseOverMenuNode($event, node)"
+                  (mouseleave)="onMouseLeaveMenuNode($event, node)"
+                  [ngStyle]="{
+                    backgroundColor: (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                  }">
+                  <div aria-hidden="true" class="c-menu-node-description" (click)="navigate(node)" [class.d-none]="!isShowSidebar()">
+                    <div
+                      class="c-menu-node-description-content"
+                      [ngStyle]="{
+                        color: (currentPath() | menuFocus: node) ? _sidebar.brandColor || '#2962FF' : '#1F1F1F',
+                      }"
+                      [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
+
+                    @if (_sidebar?.pin?.enabled) {
+                      <mat-icon
+                        class="c-menu-node-description-icon-pin"
+                        [fontSet]="isPinnedNode(node) ? 'material-icons' : 'material-icons-outlined'"
+                        [style.opacity]="isPinnedNode(node) || isHoveredNode(node) ? '1' : null"
+                        [style.color]="isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || '#2962FF' : null"
+                        (click)="onTogglePin($event, node)"
+                        >push_pin
+                      </mat-icon>
+                    }
+                  </div>
+                </li>
+              </mat-nested-tree-node>
+
+              <mat-nested-tree-node
+                *matTreeNodeDef="let node; when: hasChild"
+                aria-hidden="true"
+                [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node }">
+                <li>
+                  <div
+                    class="c-menu-node"
+                    (mouseenter)="onMouseOverMenuNode($event, node)"
+                    (mouseleave)="onMouseLeaveMenuNode($event, node)">
+                    <div class="d-flex align-items-center" style="gap: 10px; width: 100%">
+                      <div [class.d-none]="!isShowSidebar()" class="c-menu-node-description" (click)="onToggleMenuNode(node)">
+                        <div
+                          class="c-menu-node-description-content"
+                          [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
+                        <mat-icon class="c-menu-node-description-icon-expand">
+                          {{ treeControl.isExpanded(node) ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
+                        </mat-icon>
+                      </div>
+                    </div>
+                  </div>
+                  <ul class="p-0" [class.d-none]="!treeControl.isExpanded(node)">
+                    <ng-container matTreeNodeOutlet></ng-container>
+                  </ul>
+                </li>
+              </mat-nested-tree-node>
+            </mat-tree>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="c-footer">
+      <lib-layout-user
+        [userInfo]="_userInfo"
+        [isMobileOrTablet]="isMobileOrTablet"
+        (menuOpened)="onUserMenuOpened()"
+        (menuClosed)="onUserMenuClosed()"
+        [isShowSidebar]="isShowSidebar()"
+        (toggleMenuLock)="toggleMenuLock($event)">
+      </lib-layout-user>
+    </div>
+
+    <div class="c-vertical"></div>
+  </div>
+}

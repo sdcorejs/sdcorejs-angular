@@ -1,0 +1,17 @@
+/* ==========================================================================
+   SD-ANGULAR UTILITY CLASSES — thuần SCSS, không phụ thuộc 3rd-party.
+   Mỗi partial độc lập, có thể import riêng lẻ nếu cần.
+   ========================================================================== */
+
+@use 'spacing';
+@use 'sizing';
+@use 'border';
+@use 'typography';
+@use 'gap';
+@use 'display';
+@use 'flexbox';
+@use 'overflow';
+@use 'position';
+@use 'misc';
+@use 'grid';
+@use 'elevation';

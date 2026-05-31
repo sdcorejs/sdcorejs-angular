@@ -1,0 +1,128 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+:host {
+  display: block;
+}
+
+// why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+// why: viewed mode hiển thị sd-view (text only) → bỏ đệm trên.
+:host(.sd-viewed) { padding-top: 0; }
+
+:host ::ng-deep {
+  // Form field color
+  .mat-mdc-form-field {
+    // Disabled background & border
+    &.mat-form-field-appearance-outline {
+      &.mat-form-field-disabled {
+        .mat-mdc-text-field-wrapper {
+          background: map.get(color.$color_map, 'black100');
+        }
+      }
+    }
+    input {
+      // Màu của place holder
+      &.c-selected::placeholder {
+        /* Chrome, Firefox, Opera, Safari 10.1+ */
+        color: #000;
+        opacity: 1;
+        /* Firefox */
+      }
+
+      &.c-selected:-ms-input-placeholder {
+        /* Internet Explorer 10-11 */
+        color: #000;
+      }
+
+      &.c-selected::-ms-input-placeholder {
+        /* Microsoft Edge */
+        color: #000;
+      }
+
+      // Disabled text input color
+      &.mat-mdc-input-element:disabled {
+        color: color.$disabled-text !important;
+        &.c-selected::placeholder {
+          /* Chrome, Firefox, Opera, Safari 10.1+ */
+          color: color.$disabled-text !important;
+          /* Firefox */
+        }
+
+        &.c-selected:-ms-input-placeholder {
+          /* Internet Explorer 10-11 */
+          color: color.$disabled-text !important;
+        }
+
+        &.c-selected::-ms-input-placeholder {
+          /* Microsoft Edge */
+          color: color.$disabled-text !important;
+        }
+      }
+    }
+    .mat-mdc-placeholder-required {
+      color: map.get(color.$color_map, 'error');
+    }
+    &:hover {
+      .icon-copy {
+        opacity: 1;
+      }
+    }
+    .icon-copy {
+      cursor: pointer;
+      width: 0.9em;
+      height: 0.9em;
+      fill: rgba(0, 0, 0, 0.5);
+      transition: opacity 0.2s linear;
+      opacity: 0;
+    }
+  }
+}
+
+// Dùng ::ng-deep để xuyên qua lớp encapsulation của Angular
+::ng-deep .sd-autocomplete-panel {
+  // Thu nhỏ chiều cao của từng dòng option (Mặc định thường là 48px)
+  .mat-mdc-option {
+    min-height: 36px !important;
+    padding: 8px 12px !important; // Giảm padding để phù hợp với chiều cao mới
+  }
+
+  // (Tùy chọn) Chỉnh lại cỡ chữ cho phù hợp với độ cao mới
+  .mdc-list-item__primary-text {
+    font-size: 14px !important;
+    line-height: normal;
+  }
+
+  // Nếu option của bạn có chứa checkbox tự build (trong trường hợp custom multiple autocomplete)
+  // thì áp dụng luôn scale như mat-select
+  .mat-pseudo-checkbox {
+    transform: scale(0.75);
+    margin-right: 8px !important;
+  }
+}
+
+/* CSS sdViewDef */
+.sd-view {
+  &:not(.c-focused):not(.c-disabled) {
+    &:hover {
+      background-color: #ebecf0;
+    }
+  }
+}
+
+.sd__option--add {
+  position: sticky;
+  bottom: 0;
+  background-color: #fff;
+  z-index: 10;
+  color: rgba(0, 0, 0, 0.87);
+  cursor: pointer !important;
+}
+.c-loading-icon {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+}

@@ -1,0 +1,559 @@
+<!-- cdkDropListGroup: auto-connect tất cả cdkDropList trong palette, canvas rows, group bodies.
+     [class.fb-shell--dragging]: JS-driven flag để ẩn hover/actions/resize toàn diện
+     trong lúc drag (CSS :has() không bắt 100% trường hợp với CDK preview clone). -->
+<div class="fb-shell" cdkDropListGroup [class.fb-shell--dragging]="isAnyDragging()">
+  <!-- ════════════════════════ LEFT PALETTE ════════════════════════ -->
+  <aside class="fb-palette">
+    <div class="fb-panel-header">
+      <div class="fb-panel-header__title">{{ 'core.component.form-builder.components' | translate }}</div>
+    </div>
+
+    <!-- Search pill -->
+    <div class="fb-palette__search">
+      <span class="msi" aria-hidden="true">search</span>
+      <input
+        type="text"
+        [placeholder]="'core.component.form-builder.search-components' | translate"
+        [value]="paletteSearch()"
+        (input)="paletteSearch.set($any($event.target).value)" />
+      <span class="kbd">⌘K</span>
+    </div>
+
+    <div class="fb-palette__scroll">
+      @for (group of paletteGroups(); track group.key) {
+        <div class="fb-palette__group-label">{{ group.label }}</div>
+        <div
+          class="fb-palette__list"
+          cdkDropList
+          [cdkDropListData]="group.items"
+          [cdkDropListEnterPredicate]="noReturnPredicate">
+          @for (formBuilderComponent of group.items; track formBuilderComponent.type) {
+            <div
+              cdkDrag
+              class="fb-palette-item"
+              [matTooltip]="formBuilderComponent.name"
+              matTooltipPosition="right"
+              (click)="addComponent(formBuilderComponent)"
+              (cdkDragStarted)="onAnyDragStarted()"
+              (cdkDragMoved)="onAnyDragMoved($event)"
+              (cdkDragEnded)="onAnyDragEnded()"
+              aria-hidden="true">
+              <span class="fb-palette-item__icon"><span class="msi">{{ formBuilderComponent.symbol }}</span></span>
+              <span class="fb-palette-item__name">{{ formBuilderComponent.name }}</span>
+              <span class="fb-palette-item__drag"><span class="msi">drag_indicator</span></span>
+              <!-- Generic drag preview: chỉ icon (puck), label ẩn -->
+              <div *cdkDragPreview class="fb-drag-preview"></div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </aside>
+
+  <!-- ════════════════════════ CENTER CANVAS ═══════════════════════ -->
+  <section class="fb-canvas">
+    <header class="fb-canvas__header">
+      <div class="fb-canvas__title">
+        <span>{{ 'core.component.form-builder.layout' | translate }}</span>
+      </div>
+      <div class="fb-canvas__actions">
+        <!-- Toolbar cluster: view JSON / variables / validation -->
+        <button
+          type="button"
+          class="fb-icon-btn"
+          [matTooltip]="'core.component.form-builder.view-json' | translate"
+          (click)="viewJSON()">
+          <span class="msi">data_object</span>
+        </button>
+        <button
+          type="button"
+          class="fb-icon-btn"
+          [matTooltip]="'core.component.form-builder.config-variable' | translate"
+          (click)="configureVariables()">
+          <span class="msi">data_array</span>
+        </button>
+        <button
+          type="button"
+          class="fb-icon-btn"
+          [matTooltip]="'core.component.form-builder.config-validation-warning-error' | translate"
+          (click)="openConfigureValidation()">
+          <span class="msi">rule</span>
+        </button>
+
+        <span class="fb-divider"></span>
+
+        <!-- M3 segmented Design/Preview toggle -->
+        <div class="fb-mode-toggle" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            [class.is-active]="!isPreview()"
+            (click)="setMode(false)">
+            <span class="msi">edit</span>
+            <span>{{ 'core.component.form-builder.design' | translate }}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            [class.is-active]="isPreview()"
+            (click)="setMode(true)">
+            <span class="msi">visibility</span>
+            <span>{{ 'core.component.form-builder.preview' | translate }}</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div
+      class="fb-canvas__body"
+      [class.is-preview]="isPreview()"
+      id="frmComponent">
+      @if (isPreview()) {
+        <!-- ── Preview mode ───────────────────────────────────────────── -->
+        <div class="fb-preview-card">
+          <div class="fb-preview-card__chip">
+            <span class="msi">visibility</span>
+            {{ 'core.component.form-builder.preview-runtime' | translate }}
+          </div>
+          <sd-form-render [configuration]="{ components: this.components, validations: this.validations }"></sd-form-render>
+          <div class="fb-preview-card__footer">
+            <sd-button type="outline" [title]="'core.component.form-builder.cancel' | translate" (click)="setMode(false)"></sd-button>
+            <sd-button type="fill" color="primary" [title]="'core.component.form-builder.submit' | translate" (click)="onValidate()"></sd-button>
+          </div>
+        </div>
+      } @else {
+        <!-- ── Design mode ────────────────────────────────────────────── -->
+        @if (!dragDropRows.length) {
+          <div class="fb-empty">
+            <div class="fb-empty__art"><span class="msi">dashboard_customize</span></div>
+            <div class="fb-empty__title">{{ 'core.component.form-builder.empty-title' | translate }}</div>
+            <div class="fb-empty__hint">
+              {{ 'core.component.form-builder.empty-hint' | translate }}
+              <span class="fb-empty__kbd"><span class="msi">keyboard</span>⌘ K</span>
+            </div>
+          </div>
+        }
+
+        <div
+          cdkDropList
+          cdkDropListOrientation="vertical"
+          [cdkDropListData]="dragDropRows"
+          (cdkDropListDropped)="drop($event)"
+          (click)="clickFormContentEmpty()"
+          aria-hidden="true">
+          @for (row of dragDropRows; track row.rowIndex) {
+            <div
+              cdkDrag
+              class="fb-row"
+              (mouseover)="onMouseover($event, row)"
+              (focus)="onFocus($event)"
+              (cdkDragStarted)="onAnyDragStarted()"
+              (cdkDragMoved)="onAnyDragMoved($event)"
+              (cdkDragEnded)="onAnyDragEnded()"
+              [class.is-drag-target]="targetItem === row"
+              [id]="'row_' + row.rowIndex"
+              aria-hidden="true">
+              <div class="fb-row__drag" [matTooltip]="'core.component.form-builder.drag-vertically' | translate" cdkDragHandle>
+                <span class="msi">drag_indicator</span>
+              </div>
+              <!-- Generic puck preview -->
+              <div *cdkDragPreview class="fb-drag-preview"></div>
+              <!-- Quick-add break button — show on row hover, insert break after this row -->
+              <button
+                type="button"
+                class="fb-row-break-btn"
+                [matTooltip]="'core.component.form-builder.break' | translate"
+                matTooltipPosition="right"
+                (click)="insertBreakAfter(row); $event.stopPropagation()">
+                <span class="msi">horizontal_rule</span>
+              </button>
+
+              <div
+                class="fb-row__items"
+                style="display: flex; flex: 1; gap: var(--gap-2);"
+                cdkDropList
+                cdkDropListOrientation="horizontal"
+                [cdkDropListData]="row.items"
+                (cdkDropListDropped)="drop($event)">
+
+                @for (item of row.items; track item.id; let i = $index) {
+                  <!-- Group component renders as outlined card with colored header bar -->
+                  @if (item.type === 'group') {
+                    @let g = $any(item);
+                    @let cv = groupColorVars(g.properties?.color);
+                    <div
+                      cdkDrag
+                      [id]="item.id"
+                      class="fb-group column-{{ item.layout?.columns || 12 }}"
+                      [class.fb-item]="false"
+                      [class.is-selected]="item.id === selectedComponent()?.id"
+                      [class.is-hidden]="item.properties?.hidden"
+                      [style.flex]="'0 0 calc(' + (+(item.layout?.columns || 12)) + '/12 * 100% - var(--gap-2))'"
+                      [style.maxWidth]="'calc(' + (+(item.layout?.columns || 12)) + '/12 * 100% - var(--gap-2))'"
+                      (click)="selectComponent(item); $event.stopPropagation()"
+                      (cdkDragStarted)="dragStartComponentItem($event); onAnyDragStarted()"
+                      (cdkDragMoved)="onAnyDragMoved($event)"
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
+                      aria-hidden="true">
+                      <!-- Generic puck preview -->
+                      <div *cdkDragPreview class="fb-drag-preview"></div>
+                      <!-- cdkDragHandle: chỉ cho phép kéo group qua header — body free cho click vào child. -->
+                      <div class="fb-group__header" cdkDragHandle [style.background]="cv.bg" [style.color]="cv.fg">
+                        <span class="fb-group__icon"><span class="msi">{{ g.properties?.icon || 'category' }}</span></span>
+                        <span class="fb-group__label">{{ item.label }}</span>
+                        @if (hasConditional(item)) {
+                          <span class="fb-group__conditional-chip">
+                            <span class="msi" style="font-size: 12px;">bolt</span>
+                            {{ 'core.component.form-builder.conditional' | translate }}
+                          </span>
+                        }
+                        <span class="fb-group__count">{{ g.components?.length || 0 }} fields</span>
+                      </div>
+                      <!-- Floating action toolbar -->
+                      <div class="fb-actions">
+                        <button type="button" class="fb-icon-btn"
+                                [matTooltip]="'core.component.form-builder.duplicate' | translate"
+                                (click)="onDuplicate(item); $event.stopPropagation()">
+                          <span class="msi">content_copy</span>
+                        </button>
+                        <button type="button" class="fb-icon-btn"
+                                [class.warning]="item.properties?.hidden"
+                                [class.on]="item.properties?.hidden"
+                                [matTooltip]="item.properties?.hidden ? ('core.component.form-builder.show' | translate) : ('core.component.form-builder.hide' | translate)"
+                                (click)="onChangeHidden(item); $event.stopPropagation()">
+                          <span class="msi">{{ item.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
+                        </button>
+                        <button type="button" class="fb-icon-btn danger"
+                                [matTooltip]="'core.component.form-builder.delete' | translate"
+                                (click)="removeComponent(item.id); $event.stopPropagation()">
+                          <span class="msi">delete</span>
+                        </button>
+                      </div>
+
+                      <div
+                        class="fb-group__body"
+                        cdkDropList
+                        cdkDropListOrientation="horizontal"
+                        [cdkDropListData]="g.components"
+                        (cdkDropListDropped)="dropInGroup($event, g)">
+                        @if (!g.components?.length) {
+                          <div class="fb-group__empty">
+                            <span class="msi" style="font-size: 16px; margin-right: 6px;">south</span>
+                            {{ 'core.component.form-builder.group-drop-here' | translate }}
+                          </div>
+                        }
+                        @for (child of g.components; track child.id; let ci = $index) {
+                          <div
+                            cdkDrag
+                            [id]="child.id"
+                            class="fb-item is-child column-{{ child.layout?.columns || 12 }}"
+                            [class.is-selected]="child.id === selectedComponent()?.id"
+                            [class.is-hidden]="child.properties?.hidden"
+                            [class.is-readonly]="child.properties?.viewed"
+                            (click)="selectComponent(child); $event.stopPropagation()"
+                            (cdkDragStarted)="onAnyDragStarted()"
+                            (cdkDragMoved)="onAnyDragMoved($event)"
+                            (cdkDragEnded)="onAnyDragEnded()">
+                            <!-- Generic puck preview -->
+                            <div *cdkDragPreview class="fb-drag-preview"></div>
+                            <ng-container
+                              *ngTemplateOutlet="controlTemplate; context: { $implicit: child }">
+                            </ng-container>
+                            <!-- Resize handle cho group child — chia 12-col ngay trong group body.
+                                 Wrapping cdkDropList có enterPredicate=false để KHÔNG nhận drop
+                                 (chỉ dùng làm context cho cdkDrag), tránh xung đột với group__body drop list. -->
+                            <div cdkDropList cdkDropListOrientation="horizontal" [cdkDropListEnterPredicate]="noReturnPredicate">
+                              <div
+                                cdkDrag
+                                cdkDragLockAxis="x"
+                                class="fb-resize"
+                                (cdkDragStarted)="onAnyDragStarted()"
+                                (cdkDragMoved)="changeSizeChildInGroup($event, child, g)"
+                                (cdkDragEnded)="dragEndChangeSizeControl($event); onAnyDragEnded()"
+                                [matTooltip]="'core.component.form-builder.flex' | translate"
+                                aria-label="resize"></div>
+                            </div>
+                            <!-- Inline status chips for nested children -->
+                            @if (child.properties?.hidden) {
+                              <span class="fb-status-chip hidden">
+                                <span class="msi">visibility_off</span>
+                                {{ 'core.component.form-builder.hidden' | translate }}
+                              </span>
+                            } @else if (child.properties?.viewed) {
+                              <span class="fb-status-chip readonly">
+                                <span class="msi">edit_off</span>
+                                {{ 'core.component.form-builder.read-only' | translate }}
+                              </span>
+                            } @else if (hasConditional(child)) {
+                              <span class="fb-status-chip conditional">
+                                <span class="msi">bolt</span>
+                                {{ 'core.component.form-builder.conditional' | translate }}
+                              </span>
+                            }
+                            <div class="fb-actions">
+                              <button type="button" class="fb-icon-btn"
+                                      [class.warning]="child.properties?.viewed"
+                                      [class.on]="child.properties?.viewed"
+                                      [matTooltip]="child.properties?.viewed ? ('core.component.form-builder.unset-readonly' | translate) : ('core.component.form-builder.set-readonly' | translate)"
+                                      (click)="onChangeViewed(child); $event.stopPropagation()">
+                                <span class="msi">edit_off</span>
+                              </button>
+                              <button type="button" class="fb-icon-btn"
+                                      [matTooltip]="'core.component.form-builder.duplicate' | translate"
+                                      (click)="onDuplicate(child); $event.stopPropagation()">
+                                <span class="msi">content_copy</span>
+                              </button>
+                              <button type="button" class="fb-icon-btn"
+                                      [class.warning]="child.properties?.hidden"
+                                      [class.on]="child.properties?.hidden"
+                                      [matTooltip]="child.properties?.hidden ? ('core.component.form-builder.show' | translate) : ('core.component.form-builder.hide' | translate)"
+                                      (click)="onChangeHidden(child); $event.stopPropagation()">
+                                <span class="msi">{{ child.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
+                              </button>
+                              <button type="button" class="fb-icon-btn danger"
+                                      [matTooltip]="'core.component.form-builder.delete' | translate"
+                                      (click)="removeFromGroup(g, child.id); $event.stopPropagation()">
+                                <span class="msi">delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @else if (item.type === 'break') {
+                    <!-- Break: row separator cố định. Render 12-col line, không có resize/edit attribute. -->
+                    <div
+                      cdkDrag
+                      [id]="item.id"
+                      class="fb-item is-break column-12"
+                      [class.is-selected]="item.id === selectedComponent()?.id"
+                      [class.is-hidden]="item.properties?.hidden"
+                     (click)="selectComponent(item); $event.stopPropagation()"
+                     (cdkDragStarted)="dragStartComponentItem($event); onAnyDragStarted()"
+                      (cdkDragMoved)="onAnyDragMoved($event)"
+                     (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
+                     aria-hidden="true">
+                      <!-- Generic puck preview -->
+                      <div *cdkDragPreview class="fb-drag-preview"></div>
+                      <div class="fb-break-line">
+                        <span class="msi">horizontal_rule</span>
+                        <span class="fb-break-label">{{ 'core.component.form-builder.break' | translate }}</span>
+                      </div>
+                      <div class="fb-actions">
+                        <button type="button" class="fb-icon-btn"
+                                [class.warning]="item.properties?.hidden"
+                                [class.on]="item.properties?.hidden"
+                                [matTooltip]="item.properties?.hidden ? ('core.component.form-builder.show' | translate) : ('core.component.form-builder.hide' | translate)"
+                                (click)="onChangeHidden(item); $event.stopPropagation()">
+                          <span class="msi">{{ item.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
+                        </button>
+                        <button type="button" class="fb-icon-btn danger"
+                                [matTooltip]="'core.component.form-builder.delete' | translate"
+                                (click)="removeComponent(item.id); $event.stopPropagation()">
+                          <span class="msi">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  } @else {
+                    <!-- Regular form component -->
+                    <div
+                      cdkDrag
+                      [id]="item.id"
+                      class="fb-item column-{{ item.layout?.columns || 12 }}"
+                      [class.is-selected]="item.id === selectedComponent()?.id"
+                      [class.is-hidden]="item.properties?.hidden"
+                      [class.is-readonly]="item.properties?.viewed"
+                      (click)="selectComponent(item); $event.stopPropagation()"
+                      (cdkDragStarted)="dragStartComponentItem($event); onAnyDragStarted()"
+                      (cdkDragMoved)="onAnyDragMoved($event)"
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
+                      aria-hidden="true">
+                      <!-- Generic puck preview -->
+                      <div *cdkDragPreview class="fb-drag-preview"></div>
+
+                      <!-- Status chip (mutually exclusive priority: hidden > readonly > conditional) -->
+                      @if (item.properties?.hidden) {
+                        <span class="fb-status-chip hidden">
+                          <span class="msi">visibility_off</span>
+                          {{ 'core.component.form-builder.hidden' | translate }}
+                        </span>
+                      } @else if (item.properties?.viewed) {
+                        <span class="fb-status-chip readonly">
+                          <span class="msi">edit_off</span>
+                          {{ 'core.component.form-builder.read-only' | translate }}
+                        </span>
+                      } @else if (hasConditional(item)) {
+                        <span class="fb-status-chip conditional">
+                          <span class="msi">bolt</span>
+                          {{ 'core.component.form-builder.conditional' | translate }}
+                        </span>
+                      }
+
+                      <!-- Floating action toolbar pill -->
+                      <div class="fb-actions">
+                        <button type="button" class="fb-icon-btn"
+                                [class.warning]="item.properties?.viewed"
+                                [class.on]="item.properties?.viewed"
+                                [matTooltip]="item.properties?.viewed ? ('core.component.form-builder.unset-readonly' | translate) : ('core.component.form-builder.set-readonly' | translate)"
+                                (click)="onChangeViewed(item); $event.stopPropagation()">
+                          <span class="msi">edit_off</span>
+                        </button>
+                        <button type="button" class="fb-icon-btn"
+                                [matTooltip]="'core.component.form-builder.duplicate' | translate"
+                                (click)="onDuplicate(item); $event.stopPropagation()">
+                          <span class="msi">content_copy</span>
+                        </button>
+                        <button type="button" class="fb-icon-btn"
+                                [class.warning]="item.properties?.hidden"
+                                [class.on]="item.properties?.hidden"
+                                [matTooltip]="item.properties?.hidden ? ('core.component.form-builder.show' | translate) : ('core.component.form-builder.hide' | translate)"
+                                (click)="onChangeHidden(item); $event.stopPropagation()">
+                          <span class="msi">{{ item.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
+                        </button>
+                        <button type="button" class="fb-icon-btn danger"
+                                [matTooltip]="'core.component.form-builder.delete' | translate"
+                                (click)="removeComponent(item.id); $event.stopPropagation()">
+                          <span class="msi">delete</span>
+                        </button>
+                      </div>
+
+                      <ng-container
+                        *ngTemplateOutlet="controlTemplate; context: { $implicit: item }">
+                      </ng-container>
+
+                      <!-- Resize handle (pill) — cdkDragLockAxis="x" để chỉ kéo ngang.
+                           Wrapping cdkDropList có enterPredicate=false, không nhận drop. -->
+                      <div cdkDropList cdkDropListOrientation="horizontal" [cdkDropListEnterPredicate]="noReturnPredicate">
+                        <div
+                          cdkDrag
+                          cdkDragLockAxis="x"
+                          class="fb-resize"
+                          (cdkDragStarted)="onAnyDragStarted()"
+                          (cdkDragMoved)="changeSizeControl($event, item, row.items, i)"
+                          (cdkDragEnded)="dragEndChangeSizeControl($event); onAnyDragEnded()"
+                          [matTooltip]="'core.component.form-builder.flex' | translate"
+                          aria-label="resize"></div>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ════════════════════════ RIGHT ATTRIBUTES ════════════════════════ -->
+  <aside class="fb-attrs">
+    <div class="fb-panel-header">
+      <div class="fb-panel-header__title">{{ 'core.component.form-builder.attribute' | translate }}</div>
+    </div>
+
+    @let sel = selectedComponent();
+    @if (sel) {
+      <!-- Selection header: type icon + name + key/type -->
+      <div class="fb-attrs__selection">
+        <span class="fb-attrs__sel-icon"><span class="msi">{{ symbolFor(sel) }}</span></span>
+        <div class="fb-attrs__sel-meta">
+          <div class="fb-attrs__sel-name">{{ $any(sel).label || ('core.component.form-builder.untitled' | translate) }}</div>
+          <div class="fb-attrs__sel-key">
+            @if ($any(sel).key) {
+              {{ $any(sel).key }} · {{ typeLabelFor(sel) }}
+            } @else {
+              {{ typeLabelFor(sel) }}
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="fb-attrs__body" aria-hidden="true">
+        @if (sel.type === 'textfield') {
+          <textfield-attribute [components]="components" [variables]="variables" [component]="sel"></textfield-attribute>
+        } @else if (sel.type === 'textarea') {
+          <textarea-attribute [components]="components" [variables]="variables" [component]="sel"></textarea-attribute>
+        } @else if (sel.type === 'chip-string') {
+          <chip-string-attribute [components]="components" [variables]="variables" [component]="sel"></chip-string-attribute>
+        } @else if (sel.type === 'chip-calendar') {
+          <chip-calendar-attribute [components]="components" [variables]="variables" [component]="sel"></chip-calendar-attribute>
+        } @else if (sel.type === 'number') {
+          <number-attribute [components]="components" [variables]="variables" [component]="sel"></number-attribute>
+        } @else if (sel.type === 'datetime') {
+          <datetime-attribute [components]="components" [variables]="variables" [component]="sel"></datetime-attribute>
+        } @else if (sel.type === 'select') {
+          <select-attribute [components]="components" [variables]="variables" [component]="sel"></select-attribute>
+        } @else if (sel.type === 'radio') {
+          <radio-attribute [components]="components" [variables]="variables" [component]="sel"></radio-attribute>
+        } @else if (sel.type === 'checkbox') {
+          <checkbox-attribute [components]="components" [variables]="variables" [component]="sel"></checkbox-attribute>
+        } @else if (sel.type === 'html') {
+          <html-attribute [components]="components" [variables]="variables" [component]="sel"></html-attribute>
+        } @else if (sel.type === 'upload') {
+          <upload-attribute [components]="components" [variables]="variables" [component]="sel"></upload-attribute>
+        } @else if (sel.type === 'table') {
+          <table-attribute [components]="components" [variables]="variables" [component]="sel"></table-attribute>
+        } @else if (sel.type === 'group') {
+          <group-attribute [group]="$any(sel)"></group-attribute>
+        }
+      </div>
+    } @else {
+      <div class="fb-attrs__placeholder">
+        <span class="msi">ads_click</span>
+        <div class="title">{{ 'core.component.form-builder.no-selection-title' | translate }}</div>
+        <div class="hint">{{ 'core.component.form-builder.no-selection-hint' | translate }}</div>
+      </div>
+    }
+  </aside>
+</div>
+
+<!-- ══════════════════ Reusable control template ═════════════════ -->
+<ng-template #controlTemplate let-item>
+  @if (item.type === 'textfield') {
+    <textfield-control [component]="item"></textfield-control>
+  } @else if (item.type === 'textarea') {
+    <textarea-control [component]="item"></textarea-control>
+  } @else if (item.type === 'chip-string') {
+    <chip-string-control [component]="item"></chip-string-control>
+  } @else if (item.type === 'chip-calendar') {
+    <chip-calendar-control [component]="item"></chip-calendar-control>
+  } @else if (item.type === 'number') {
+    <number-control [component]="item"></number-control>
+  } @else if (item.type === 'datetime') {
+    <datetime-control [component]="item"></datetime-control>
+  } @else if (item.type === 'select') {
+    <select-control [component]="item"></select-control>
+  } @else if (item.type === 'radio') {
+    <radio-control [component]="item"></radio-control>
+  } @else if (item.type === 'checkbox') {
+    <checkbox-control [component]="item"></checkbox-control>
+  } @else if (item.type === 'html') {
+    <html-control [component]="item"></html-control>
+  } @else if (item.type === 'upload') {
+    <upload-control [component]="item"></upload-control>
+  } @else if (item.type === 'table') {
+    <table-control [component]="item"></table-control>
+  }
+</ng-template>
+
+<!-- ══════════════════════ JSON / variables modals ═══════════════════════ -->
+<sd-modal title="JSON" view="dialog" width="80%" #popupViewJSON>
+  <sd-textarea [(model)]="jsonString"></sd-textarea>
+  <ng-container sdFooter>
+    <sd-button type="fill" [title]="'core.component.form-builder.save' | translate" (click)="updateJSON()" prefixIcon="save" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>
+<sd-modal [title]="'core.component.form-builder.config-variable' | translate" view="dialog" width="800px" #popupConfigureVariables>
+  @for (variable of clonedVariables; track variable.id) {
+    <div class="d-flex align-items-center" style="gap: 8px">
+      <sd-input [form]="form" [label]="'core.component.form-builder.field-key' | translate" [(model)]="variable.key" required></sd-input>
+      <sd-input [form]="form" [label]="'core.component.form-builder.display-label' | translate" [(model)]="variable.label" required></sd-input>
+      <sd-button prefixIcon="delete" (click)="removeVariables(variable.id)" color="error"></sd-button>
+    </div>
+  }
+  <a href="javascript:;" (click)="addVariables()">{{ 'core.component.form-builder.add-variable' | translate }}</a>
+  <ng-container sdFooter>
+    <sd-button type="fill" [title]="'core.component.form-builder.save' | translate" (click)="updateVariables()" prefixIcon="save" color="primary"></sd-button>
+  </ng-container>
+</sd-modal>
+<configure-validation (accept)="onUpdateValidations($event)"></configure-validation>
