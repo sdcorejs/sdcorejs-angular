@@ -1,12 +1,20 @@
 name: Publish @sdcorejs/angular to npm
 
+# Convention: tag = `v<patch>` (vd `v0.5`, `v0.5-beta.1`) — KHÔNG có major.
+# Workflow tự nhân lên 3 phiên bản: 19.<patch> / 20.<patch> / 21.<patch>.
+# Vd: push tag `v0.5` → publish @sdcorejs/angular@19.0.5, @20.0.5, @21.0.5 (npm tag=latest).
+#     push tag `v0.5-beta.1` → publish 19.0.5-beta.1 / 20.0.5-beta.1 / 21.0.5-beta.1 (npm tag=beta).
+
 on:
   push:
     tags:
-      - 'v*'           # stable: v19.1.0
-      - 'v*-beta.*'    # beta:   v19.0.0-beta.87
+      - 'v*'
   workflow_dispatch:
     inputs:
+      patch:
+        description: 'Patch suffix (vd "0.5" hoặc "0.5-beta.1"). Sẽ publish 19.<patch> / 20.<patch> / 21.<patch>.'
+        required: true
+        type: string
       tag:
         description: 'npm dist-tag (beta / latest)'
         required: true
@@ -24,8 +32,15 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        version: [v19, v20, v21]
+        include:
+          - version: v19
+            major: 19
+          - version: v20
+            major: 20
+          - version: v21
+            major: 21
 
     steps:
       - name: Checkout
@@ -39,6 +54,28 @@ jobs:
           cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Resolve patch + npm dist-tag
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PATCH="${{ github.event.inputs.patch }}"
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            # Strip leading 'v' from tag ref: v0.5 → 0.5
+            PATCH="${GITHUB_REF_NAME#v}"
+            if echo "$PATCH" | grep -qE '(beta|alpha|rc)'; then TAG="beta"; else TAG="latest"; fi
+          fi
+          echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG"     >> "$GITHUB_OUTPUT"
+          echo "version=${{ matrix.major }}.$PATCH" >> "$GITHUB_OUTPUT"
+
+      - name: Write version into library package.json
+        run: |
+          PKG="projects/sdcorejs-angular/package.json"
+          node -e "const fs=require('fs');const p='${PKG}';const j=JSON.parse(fs.readFileSync(p,'utf8'));j.version='${{ steps.resolve.outputs.version }}';fs.writeFileSync(p,JSON.stringify(j,null,2)+'\n');"
+          grep '"version"' "$PKG"
+        working-directory: versions/${{ matrix.version }}
+
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
         working-directory: versions/${{ matrix.version }}
@@ -47,19 +84,8 @@ jobs:
         run: node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular
         working-directory: versions/${{ matrix.version }}
 
-      - name: Resolve dist-tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
-          elif echo "${{ github.ref_name }}" | grep -qE '(beta|alpha|rc)'; then
-            echo "tag=beta" >> "$GITHUB_OUTPUT"
-          else
-            echo "tag=latest" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Publish @sdcorejs/angular
-        run: npm publish --access public --tag ${{ steps.tag.outputs.tag }}
+      - name: Publish @sdcorejs/angular@${{ steps.resolve.outputs.version }} (tag=${{ steps.resolve.outputs.tag }})
+        run: npm publish --access public --tag ${{ steps.resolve.outputs.tag }}
         working-directory: versions/${{ matrix.version }}/dist/sdcorejs-angular
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

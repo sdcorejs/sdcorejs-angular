@@ -62,39 +62,71 @@ git commit -m "Sync with vn-angular@<commit-hash>"
 git push
 ```
 
-### Quy trình deploy (publish npm)
+### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-```powershell
-# Chạy interactive — nhập patch suffix (vd "0.5" → publish 19.0.5 / 20.0.5 / 21.0.5)
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1
+Workflow: `.github/workflows/publish-npm.yml`. Auth qua secret `NPM_TOKEN` (repo Settings > Secrets and variables > Actions). KHÔNG cần `npm login` local.
 
-# Hoặc một dòng
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "0.5"
+**Trigger**:
+- Push tag `v<patch>` → publish 19.<patch> / 20.<patch> / 21.<patch>.
+  - `v0.5` → 19.0.5 / 20.0.5 / 21.0.5 (npm tag=latest).
+  - `v0.5-beta.1` → 19.0.5-beta.1 / 20.0.5-beta.1 / 21.0.5-beta.1 (npm tag=beta).
+- Manual dispatch trên Actions tab → nhập patch + tag (beta/latest).
 
-# Dry-run preview (no publish)
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "0.5" -DryRun
+Workflow matrix [v19/v20/v21] chạy song song, mỗi job:
+1. Resolve patch + dist-tag từ tag/dispatch input.
+2. Ghi `${major}.${patch}` vào `versions/v<N>/projects/sdcorejs-angular/package.json`.
+3. `npm ci --legacy-peer-deps` trong workspace.
+4. `ng build sdcorejs-angular`.
+5. `npm publish --tag <beta|latest>` từ `dist/sdcorejs-angular`.
+
+**Tag stable 19.0.0/20.0.0/21.0.0**:
+```bash
+git tag v0.0
+git push origin v0.0
 ```
 
-Mỗi target trong deploy.ps1 chạy:
-1. Ghi version `<major>.<PatchVersion>` vào `versions/v<N>/projects/sdcorejs-angular/package.json`.
-2. `npm install --legacy-peer-deps` (skip nếu `-SkipInstall` + node_modules đã có).
-3. `ng build sdcorejs-angular` (`--max_old_space_size=8000`).
-4. `cd dist/sdcorejs-angular && npm publish --access public`.
+### Quy trình deploy npm — local fallback (deploy.ps1)
 
-Yêu cầu pre-publish: `npm login --scope=@sdcorejs` (auth lên registry).
+Khi không thể đẩy qua Actions (vd debug):
+```powershell
+powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "0.5"
+
+# -DryRun: chạy full flow (write version + install + build) nhưng SKIP `npm publish`.
+# Để verify build pass + version đúng trước khi push thật. Log có dòng "[DRY RUN] No changes will be made."
+powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "0.5" -DryRun
+```
+Yêu cầu auth local: `npm login --scope=@sdcorejs`.
+
+### Showcase deploy lên GitHub Pages
+
+Workflow: `.github/workflows/deploy-pages.yml`. Build showcase v19 → upload Pages artifact → deploy.
+
+**Trigger**:
+- Push lên branch `001` (mặc định hiện tại) khi đổi file trong `versions/v19/projects/{showcase,sdcorejs-angular}/**`, `angular.json`, `package*.json`, hoặc workflow.
+- Manual dispatch.
+
+**Yêu cầu setup repo** (1 lần): Settings > Pages > Source = **"GitHub Actions"** (KHÔNG dùng branch source).
+
+URL Pages sau deploy: `https://sdcorejs.github.io/sdcorejs-angular/` (theo repo name → `base-href=/sdcorejs-angular/`).
+
+Workflow:
+1. Build `sdcorejs-angular` lib (showcase phụ thuộc qua tsconfig path).
+2. Build showcase `--configuration production --base-href=/sdcorejs-angular/`.
+3. Copy `index.html → 404.html` (SPA fallback cho deep links).
+4. Upload `dist/showcase/browser` → deploy-pages action.
 
 ## Trạng thái publish (snapshot 2026-05-31)
 
 - npm registry: `@sdcorejs/angular` **chưa publish lần nào** (`npm view` trả về 404).
 - Package.json hiện tại: `"version": "19.0.0-beta.104"` (placeholder local).
 - **Sẵn sàng publish 19.0.0 / 20.0.0 / 21.0.0?** ✅ Về mặt pipeline:
-  - deploy.ps1 ghi đè version chuẩn xác theo input — chỉ cần truyền `-PatchVersion "0.0"`.
-  - Pipeline build qua từng workspace OK (đã chạy tay build sd-angular trong vn-angular trước đó, kiến trúc tương đương).
-  - 3 major chạy độc lập trong loop → fail major nào dừng major đó (`throw` trong loop).
+  - GitHub Actions `publish-npm.yml` auto-ghi version theo matrix major × tag patch.
+  - Tag `v0.0` push lên repo → publish 19.0.0 / 20.0.0 / 21.0.0 song song qua matrix.
+  - Auth qua secret `NPM_TOKEN` (đã có sẵn).
 - ⚠️ Trước khi publish stable cần verify:
   - `npm run test:ci` ở vn-angular xanh (2717+ tests passed lần gần nhất).
-  - Mỗi `versions/v<N>` chạy được `ng build sdcorejs-angular` không error — recommend chạy `deploy.ps1 -DryRun` để chỉ thử install + build (không publish).
-  - Verify npm auth (`npm whoami` trả về account có quyền vào scope `@sdcorejs`).
+  - Mỗi `versions/v<N>` chạy được `ng build sdcorejs-angular` không error — chạy workflow_dispatch trên `publish-npm.yml` với patch giả `0.0-dryrun.1` để test trước (publish sẽ về beta tag, an toàn).
+  - Hoặc dùng `deploy.ps1 -DryRun` local nếu muốn kiểm thử nhanh không publish.
   - Verify peerDeps Angular major khớp với từng workspace (v19 → Angular 19, etc.) — sync-multi-version-workspaces đã handle.
 
 ## Known issues
