@@ -1,4 +1,4 @@
-﻿import { HttpClient, HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { inject, Injectable, Injector } from '@angular/core';
 import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -9,22 +9,22 @@ import { catchError, switchMap } from 'rxjs/operators';
 export class SdNoInternetInterceptor implements HttpInterceptor {
   readonly #i18n = inject(I18nService);
 
-  // Tráº¡ng thÃ¡i offline Ä‘á»ƒ trÃ¡nh spam request check hoáº·c hiá»ƒn thá»‹ nhiá»u snackbar
+  // Trạng thái offline để tránh spam request check hoặc hiển thị nhiều snackbar
   #isOffline = false;
 
-  // Giá»¯ tham chiáº¿u Ä‘á»ƒ cÃ³ thá»ƒ Ä‘Ã³ng/thao tÃ¡c snackbar
+  // Giữ tham chiếu để có thể đóng/thao tác snackbar
   #snackBarRef: MatSnackBarRef<any> | null = null;
 
-  // Giá»¯ tham chiáº¿u interval Ä‘á»ƒ clear khi cÃ³ máº¡ng láº¡i
+  // Giữ tham chiếu interval để clear khi có mạng lại
   #pollInterval: ReturnType<typeof setInterval> | null = null;
 
   // Lazy load HttpClient
   #http: HttpClient | null = null;
 
-  // Endpoint kiá»ƒm tra máº¡ng (NÃªn dÃ¹ng 1 file tÄ©nh nháº¹ hoáº·c API ping public uy tÃ­n)
+  // Endpoint kiểm tra mạng (Nên dùng 1 file tĩnh nhẹ hoặc API ping public uy tín)
   readonly #healthCheckUrl = 'https://jsonplaceholder.typicode.com/todos/1';
 
-  // Thá»i gian láº·p láº¡i viá»‡c kiá»ƒm tra máº¡ng (ms)
+  // Thời gian lặp lại việc kiểm tra mạng (ms)
   readonly #checkIntervalDuration = 3000;
 
   constructor(
@@ -35,31 +35,31 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
       catchError((error: HttpErrorResponse) => {
-        // --- TRÆ¯á»œNG Há»¢P 1: Lá»—i máº¥t káº¿t ná»‘i (Status 0) ---
+        // --- TRƯỜNG HỢP 1: Lỗi mất kết nối (Status 0) ---
         if (error.status === 0 && !this.#isOffline) {
           this.#isOffline = true;
 
-          // Lazy load HttpClient Ä‘á»ƒ trÃ¡nh lá»—i Circular Dependency
+          // Lazy load HttpClient để tránh lỗi Circular Dependency
           if (!this.#http) {
             this.#http = this.injector.get(HttpClient);
           }
 
-          // Gá»i thá»­ má»™t API public Ä‘á»ƒ xÃ¡c minh xem lÃ  Máº¥t máº¡ng tháº­t hay do CORS/Server cháº·n
+          // Gọi thử một API public để xác minh xem là Mất mạng thật hay do CORS/Server chặn
           return this.#http.get(this.#healthCheckUrl).pipe(
-            // 1. Æ¯u tiÃªn báº¯t lá»—i káº¿t ná»‘i trÆ°á»›c (ÄÃ¢y lÃ  logic Máº¤T Máº NG THáº¬T)
+            // 1. Ưu tiên bắt lỗi kết nối trước (Đây là logic MẤT MẠNG THẬT)
             catchError(_checkError => {
-              // Hiá»ƒn thá»‹ thÃ´ng bÃ¡o vÃ  báº¯t Ä‘áº§u polling chá» máº¡ng
+              // Hiển thị thông báo và bắt đầu polling chờ mạng
               this.#showReloadSnackbar(this.#i18n.t('core.interceptor.no-internet.offline'), { isSticky: true });
               this.#startPolling();
 
-              // NÃ©m láº¡i lá»—i gá»‘c Ä‘á»ƒ Component biáº¿t request tháº¥t báº¡i
+              // Ném lại lỗi gốc để Component biết request thất bại
               return throwError(() => error);
             }),
 
-            // 2. Náº¿u khÃ´ng vÃ o catchError á»Ÿ trÃªn -> Check thÃ nh cÃ´ng -> CÃ“ Máº NG
-            // Lá»—i status 0 ban Ä‘áº§u lÃ  do CORS, SSL, hoáº·c Server cháº·n connection
+            // 2. Nếu không vào catchError ở trên -> Check thành công -> CÓ MẠNG
+            // Lỗi status 0 ban đầu là do CORS, SSL, hoặc Server chặn connection
             switchMap(() => {
-              this.#isOffline = false; // Reset cá»
+              this.#isOffline = false; // Reset cờ
 
               this.snackBar.open(this.#i18n.t('core.interceptor.no-internet.cors-error'), this.#i18n.t('core.common.close'), {
                 duration: 5000,
@@ -67,13 +67,13 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
                 verticalPosition: 'top',
               });
 
-              // NÃ©m láº¡i lá»—i gá»‘c
+              // Ném lại lỗi gốc
               return throwError(() => error);
             })
           );
         }
 
-        // --- TRÆ¯á»œNG Há»¢P 2: Server báº£o trÃ¬ (503) ---
+        // --- TRƯỜNG HỢP 2: Server bảo trì (503) ---
         else if (error.status === 503) {
           this.snackBar.open(this.#i18n.t('core.interceptor.no-internet.maintenance'), this.#i18n.t('core.common.close'), {
             horizontalPosition: 'center',
@@ -82,18 +82,18 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
           });
         }
 
-        // --- TRÆ¯á»œNG Há»¢P KHÃC: 401, 404, 500... ---
-        // NÃ©m lá»—i ra Ä‘á»ƒ component xá»­ lÃ½ bÃ¬nh thÆ°á»ng
+        // --- TRƯỜNG HỢP KHÁC: 401, 404, 500... ---
+        // Ném lỗi ra để component xử lý bình thường
         return throwError(() => error);
       })
     );
   }
 
   /**
-   * Hiá»ƒn thá»‹ Snackbar thÃ´ng bÃ¡o tráº¡ng thÃ¡i máº¡ng
+   * Hiển thị Snackbar thông báo trạng thái mạng
    */
   #showReloadSnackbar = (message: string, options?: { duration?: number; isSticky?: boolean }): void => {
-    // ÄÃ³ng snackbar cÅ© náº¿u Ä‘ang hiá»‡n
+    // Đóng snackbar cũ nếu đang hiện
     if (this.#snackBarRef) {
       this.#snackBarRef.dismiss();
     }
@@ -101,53 +101,53 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
     this.#snackBarRef = this.snackBar.open(message, this.#i18n.t('core.common.reload'), {
       horizontalPosition: 'center',
       verticalPosition: 'top',
-      // Náº¿u isSticky = true (máº¥t máº¡ng) -> KhÃ´ng tá»± táº¯t. Náº¿u cÃ³ duration -> tá»± táº¯t.
+      // Nếu isSticky = true (mất mạng) -> Không tự tắt. Nếu có duration -> tự tắt.
       duration: options?.duration,
-      panelClass: options?.isSticky ? ['offline-snackbar'] : undefined, // Class CSS tÃ¹y chá»n
+      panelClass: options?.isSticky ? ['offline-snackbar'] : undefined, // Class CSS tùy chọn
     });
 
-    // Xá»­ lÃ½ sá»± kiá»‡n báº¥m nÃºt "Táº£i láº¡i trang"
+    // Xử lý sự kiện bấm nút "Tải lại trang"
     this.#snackBarRef.onAction().subscribe(() => {
       window.location.reload();
     });
   };
 
   /**
-   * Báº¯t Ä‘áº§u vÃ²ng láº·p kiá»ƒm tra káº¿t ná»‘i máº¡ng
+   * Bắt đầu vòng lặp kiểm tra kết nối mạng
    */
   #startPolling = (): void => {
-    this.#stopPolling(); // Clear cÅ© náº¿u cÃ³
+    this.#stopPolling(); // Clear cũ nếu có
 
-    // @i18n-ignore â€” dev console log
-    console.log('--- Báº¯t Ä‘áº§u cháº¿ Ä‘á»™ theo dÃµi máº¡ng ---');
+    // @i18n-ignore — dev console log
+    console.log('--- Bắt đầu chế độ theo dõi mạng ---');
 
     this.#pollInterval = setInterval(() => {
       if (!this.#http) {
         this.#http = this.injector.get(HttpClient);
       }
 
-      // Check nháº¹
+      // Check nhẹ
       this.#http.get(this.#healthCheckUrl).subscribe({
         next: () => {
-          // --> ÄÃƒ CÃ“ Máº NG Láº I
-          // @i18n-ignore â€” dev console log
-          console.log('--> Káº¿t ná»‘i Ä‘Ã£ Ä‘Æ°á»£c khÃ´i phá»¥c!');
+          // --> ĐÃ CÓ MẠNG LẠI
+          // @i18n-ignore — dev console log
+          console.log('--> Kết nối đã được khôi phục!');
 
           this.#stopPolling();
           this.#isOffline = false;
 
-          // ThÃ´ng bÃ¡o thÃ nh cÃ´ng (tá»± táº¯t sau 5s)
+          // Thông báo thành công (tự tắt sau 5s)
           this.#showReloadSnackbar(this.#i18n.t('core.interceptor.no-internet.restored'), { duration: 5000, isSticky: false });
         },
         error: () => {
-          // --> VáºªN Máº¤T Máº NG: KhÃ´ng lÃ m gÃ¬ cáº£, chá» láº§n check tiáº¿p theo
+          // --> VẪN MẤT MẠNG: Không làm gì cả, chờ lần check tiếp theo
         },
       });
     }, this.#checkIntervalDuration);
   };
 
   /**
-   * Dá»«ng vÃ²ng láº·p kiá»ƒm tra
+   * Dừng vòng lặp kiểm tra
    */
   #stopPolling = (): void => {
     if (this.#pollInterval) {
@@ -156,4 +156,3 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
     }
   };
 }
-

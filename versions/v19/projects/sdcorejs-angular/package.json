@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@sdcorejs/angular",
   "version": "19.0.0-beta.104",
   "peerDependencies": {
@@ -23,4 +23,3 @@
   },
   "sideEffects": false
 }
-

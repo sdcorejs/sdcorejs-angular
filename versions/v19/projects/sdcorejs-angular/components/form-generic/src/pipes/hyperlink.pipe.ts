@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pipe, PipeTransform } from '@angular/core';
 import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
 
@@ -6,7 +6,7 @@ import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
   name: 'hyperlink',
   standalone: true,
 })
-// Pipe xá»­ lÃ½ hiá»ƒn thá»‹ detail cho component
+// Pipe xử lý hiển thị detail cho component
 export class HyperlinkPipe implements PipeTransform {
   constructor() {}
   transform = (hyperlink: string | undefined | null, entity: Record<string, any>): string => {
@@ -16,4 +16,3 @@ export class HyperlinkPipe implements PipeTransform {
     return StringUtilities.templateToDisplay(hyperlink, entity);
   };
 }
-

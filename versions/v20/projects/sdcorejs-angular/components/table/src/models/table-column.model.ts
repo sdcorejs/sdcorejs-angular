@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Signal, TemplateRef } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdSearch } from '@sdcorejs/angular/forms';
@@ -29,14 +29,14 @@ interface Badge {
   title?: SdUnwrapSignal<SdBadge['title']>;
 }
 
-// 1. DÃ nh cho cÃ¡c cá»™t bÃ¬nh thÆ°á»ng (KhÃ´ng cÃ³ items)
+// 1. Dành cho các cột bình thường (Không có items)
 type UseBadgeFunc<T = any> = (value: any, rowData: T) => Badge;
-// 2. DÃ nh cho cá»™t cÃ³ items (values / lazy-values)
-// ThÃªm Generic K Ä‘áº¡i diá»‡n cho kiá»ƒu cá»§a 1 item trong danh sÃ¡ch
+// 2. Dành cho cột có items (values / lazy-values)
+// Thêm Generic K đại diện cho kiểu của 1 item trong danh sách
 type UseBadgeValuesFunc<T = any, K = any> = (
   value: any,
   rowData: T,
-  items: K[] // <-- Tráº£ vá» máº£ng dá»¯ liá»‡u Ä‘Ã£ load Ä‘á»ƒ tiá»‡n tra cá»©u
+  items: K[] // <-- Trả về mảng dữ liệu đã load để tiện tra cứu
 ) => Badge;
 
 interface ColumnTitleOption {
@@ -59,9 +59,9 @@ interface SdTableColumnBase<T = any> {
   width?: string;
   minWidth?: string;
   maxWidth?: string;
-  hidden?: boolean; // áº¨n hoÃ n toÃ n
-  invisible?: boolean; // Máº·c Ä‘á»‹nh áº©n
-  fixed?: boolean; // Cá»‘ Ä‘á»‹nh cá»™t
+  hidden?: boolean; // Ẩn hoàn toàn
+  invisible?: boolean; // Mặc định ẩn
+  fixed?: boolean; // Cố định cột
   align?: 'right';
   htmlTemplate?: (value: any, rowData: T) => string;
   transform?: SdTableColumnTransformFunc<T>;
@@ -71,7 +71,7 @@ interface SdTableColumnBase<T = any> {
   filter?: {
     disabled?: boolean;
     default?: any;
-    // Chá»‰ dÃ nh cho filter inline column
+    // Chỉ dành cho filter inline column
     operator?: {
       default?: Operator;
       enable?: boolean;
@@ -115,15 +115,15 @@ interface SdTableColumnDate<T = any> extends SdTableColumnBase<T> {
   filter?: SdTableColumnBase['filter'] & { type?: 'daterange' | 'date' | 'split-date' };
 }
 
-// ThÃªm Generic K (máº·c Ä‘á»‹nh lÃ  any hoáº·c Record<string, any> Ä‘á»ƒ khÃ´ng lá»—i code cÅ©)
+// Thêm Generic K (mặc định là any hoặc Record<string, any> để không lỗi code cũ)
 export interface SdTableColumnValues<T = any, K = Record<string, any>> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'values';
   useBadge?: UseBadgeValuesFunc<T, K>;
   option: {
-    // items bÃ¢y giá» sáº½ nháº­n máº£ng kiá»ƒu K
+    // items bây giờ sẽ nhận mảng kiểu K
     items: K[] | Signal<K[]> | (() => Promise<K[]>);
-    // Ã‰p kiá»ƒu: Chá»‰ Ä‘Æ°á»£c phÃ©p nháº­p cÃ¡c key cá»§a K (lÃ  chuá»—i)
+    // Ép kiểu: Chỉ được phép nhập các key của K (là chuỗi)
     valueField: NestedKeyOf<K>;
     displayField: NestedKeyOf<K>;
     selection?: 'MULTIPLE';
@@ -135,13 +135,13 @@ export interface SdTableColumnLazyValues<T = any, K = Record<string, any>> exten
   type: 'lazy-values';
   useBadge?: UseBadgeFunc<T>;
   option: {
-    // items (Filter) sáº½ tráº£ vá» dá»¯ liá»‡u kiá»ƒu K
+    // items (Filter) sẽ trả về dữ liệu kiểu K
     items: SdSearch<K>;
-    // Ã‰p kiá»ƒu: Chá»‰ Ä‘Æ°á»£c nháº­p cÃ¡c key cÃ³ trong K
+    // Ép kiểu: Chỉ được nhập các key có trong K
     valueField: NestedKeyOf<K>;
     displayField: NestedKeyOf<K>;
-    // views (Hiá»ƒn thá»‹) cÅ©ng pháº£i tráº£ vá» máº£ng cÃ¡c object kiá»ƒu K
-    // Náº¿u khÃ´ng cÃ³ tranform hay htmlTemplate cáº§n khai bÃ¡o views
+    // views (Hiển thị) cũng phải trả về mảng các object kiểu K
+    // Nếu không có tranform hay htmlTemplate cần khai báo views
     views?: (values: string[]) => Promise<K[]>;
     selection?: 'MULTIPLE';
   };
@@ -154,4 +154,3 @@ export interface SdTableColumnChildren<T = any> extends SdTableColumnBase<T> {
   type: 'children';
   children: SdTableColumnNormal<T>[];
 }
-

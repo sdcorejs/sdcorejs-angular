@@ -1,4 +1,4 @@
-﻿# sd-operator â€” Reusable operator picker
+# sd-operator — Reusable operator picker
 
 **Date:** 2026-05-27
 **Status:** Approved (design)
@@ -8,9 +8,9 @@
 
 Filter operator selection is currently implemented two different ways:
 
-- **sd-table** `column-filter` â€” a hand-rolled `<sd-button>` trigger + `<mat-menu>` that
+- **sd-table** `column-filter` — a hand-rolled `<sd-button>` trigger + `<mat-menu>` that
   renders each operator's SVG icon (logic: `inlineIcon` / `operatorIcon` / `#svg` + scss).
-- **query-bar** â€” an `<sd-select>` with an `sdItemDef` template that re-implements the same
+- **query-bar** — an `<sd-select>` with an `sdItemDef` template that re-implements the same
   icon rendering, plus an `icon` field injected into the operator items.
 
 This duplicates the icon-wrapping logic, the i18n label lookup, and the SVG sanitization in
@@ -21,7 +21,7 @@ not collapse to a single icon.
 
 A single reusable component `sd-operator` that:
 
-- Collapses to **just the operator icon** (with a tooltip) when not open â€” more compact than a
+- Collapses to **just the operator icon** (with a tooltip) when not open — more compact than a
   select.
 - Opens a `matMenu` listing the allowed operators (icon + Vietnamese label + raw operator code),
   matching the approved mockup.
@@ -33,19 +33,19 @@ A single reusable component `sd-operator` that:
 ## Component
 
 **Location / entry point:** `projects/sdcorejs-angular/components/operator/`
-â†’ `@sdcorejs/angular/components/operator`
+→ `@sdcorejs/angular/components/operator`
 
 Resolves automatically via the wildcard tsconfig path
-(`@sdcorejs/angular/*` â†’ `projects/sdcorejs-angular/*`) + a per-folder `ng-package.json`; no tsconfig
+(`@sdcorejs/angular/*` → `projects/sdcorejs-angular/*`) + a per-folder `ng-package.json`; no tsconfig
 or path-array edits required (same pattern as `components/button`).
 
 Files:
 
-- `index.ts` â€” `export * from './src/operator.component';`
-- `ng-package.json` â€” `{ "lib": { "entryFile": "index.ts" } }`
+- `index.ts` — `export * from './src/operator.component';`
+- `ng-package.json` — `{ "lib": { "entryFile": "index.ts" } }`
 - `src/operator.component.ts` / `.html` / `.scss`
 - `src/operator.component.spec.ts`
-- `sd-operator.md` â€” usage doc
+- `sd-operator.md` — usage doc
 
 ### Public API
 
@@ -79,10 +79,10 @@ export class SdOperator {
 
 ### Internals
 
-- `#items = computed(() => operators().map(value => { OPERATORS entry â†’ { value, icon: SafeHtml, display: i18n.t(entry.display) } }))`.
+- `#items = computed(() => operators().map(value => { OPERATORS entry → { value, icon: SafeHtml, display: i18n.t(entry.display) } }))`.
   Operators not present in `OPERATORS` are skipped (defensive).
 - `DomSanitizer.bypassSecurityTrustHtml` wraps each operator's inner SVG markup in a
-  `<svg viewBox="0 0 24 24" â€¦>` shell (source is the internal `OPERATORS` constant, not user
+  `<svg viewBox="0 0 24 24" …>` shell (source is the internal `OPERATORS` constant, not user
   input). Rendered via `[innerHTML]`.
 - `I18nService.t(entry.display)` resolves labels.
 - Funnel fallback icon is a component static constant.
@@ -111,22 +111,22 @@ export class SdOperator {
   - `operatorIcon` + `#svg` + the `DomSanitizer`/`SafeHtml` imports,
   - the `sdItemDef` icon templates in the HTML,
   - `SdItemDefDefDirective` import.
-  - Keep `SdSelect` â€” still used by the value editors for `values` / `lazy-values` fields.
+  - Keep `SdSelect` — still used by the value editors for `values` / `lazy-values` fields.
   - `editingOperatorItems` / `#operatorItemsByKey` / `operatorItemsFor` can be dropped if nothing
     else consumes them after the switch; verify with a usage check before removing.
-- Keep `SD_QUERY_OPERATOR_LABEL` fix (NOT_START_WITH / NOT_END_WITH) â€” unrelated to this refactor
+- Keep `SD_QUERY_OPERATOR_LABEL` fix (NOT_START_WITH / NOT_END_WITH) — unrelated to this refactor
   but required for the wider `Operator` type.
 
-## Testing (TDD, Red â†’ Green â†’ Refactor)
+## Testing (TDD, Red → Green → Refactor)
 
 ### `operator.component.spec.ts` (new)
 
 - Renders the icon of the current `model`; tooltip = i18n label.
-- `model` undefined â†’ funnel fallback icon rendered.
+- `model` undefined → funnel fallback icon rendered.
 - Menu lists exactly `operators()` in order, each with icon + label + operator code.
 - The row matching `model` is marked active.
 - Selecting a menu row emits `modelChange` and updates `model`.
-- `disabled` â†’ trigger disabled, menu does not open.
+- `disabled` → trigger disabled, menu does not open.
 
 ### `column-filter.component.spec.ts` (update)
 
@@ -150,4 +150,3 @@ export class SdOperator {
 
 - `npm run build` (lib typecheck) passes.
 - Targeted karma run of `operator`, `column-filter`, `query-bar` specs is green.
-

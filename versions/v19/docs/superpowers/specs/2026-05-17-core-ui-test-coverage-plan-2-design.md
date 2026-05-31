@@ -1,9 +1,9 @@
-﻿# Core UI Test Coverage â€” Plan 2 Design
+# Core UI Test Coverage — Plan 2 Design
 
 **Date**: 2026-05-17
 **Scope**: vn-angular (`projects/sdcorejs-angular`)
 **Owner**: nghiatt15@onemount.com
-**Batch**: Plan 2 â€” 10 remaining forms + 3 follow-ups from Plan 1 review
+**Batch**: Plan 2 — 10 remaining forms + 3 follow-ups from Plan 1 review
 
 ## 1. Problem statement
 
@@ -25,7 +25,7 @@ Follow-ups:
 - Plan 3 components (modal, side-drawer, section, tab-router, quick-action, view, anchor, history, preview, upload-file, mini-editor)
 - **Skipped per user direction**: workflow, query-builder, document-builder, history, modules/generic (none of these are forms anyway)
 - Services, modules, handlers, interceptors (Plan 5+)
-- Heavy components (Plan 6): chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow â€” **skipped per user direction until those features are finalized**
+- Heavy components (Plan 6): chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow — **skipped per user direction until those features are finalized**
 
 ## 3. Approach
 
@@ -41,14 +41,13 @@ Same as Plan 1 + coverage threshold enforcement added in Task 13.
 2. 10 MD files audited per 14-item checklist.
 3. SdAnchor coverage lifted from 68% lines / 38% branches.
 4. Import convention normalized across all `*.spec.ts`.
-5. Coverage thresholds enforced in karma.conf (global only â€” each deferred to later plans when more files are tested).
+5. Coverage thresholds enforced in karma.conf (global only — each deferred to later plans when more files are tested).
 6. Gap report aggregated.
 7. Source `.ts` changes limited to import-path normalization (no behavioral changes).
-8. Single branch (`feature/plan-2-forms-tests`) â€” merge after final review.
+8. Single branch (`feature/plan-2-forms-tests`) — merge after final review.
 
 ## 6. Reference
 
 - Plan 1 design: `2026-05-15-core-ui-test-coverage-design.md`
 - Plan 1 plan: `plans/2026-05-15-core-ui-test-coverage-plan-1.md`
 - Plan 2 plan: `plans/2026-05-17-core-ui-test-coverage-plan-2.md`
-

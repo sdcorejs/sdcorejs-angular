@@ -1,4 +1,4 @@
-﻿import { Injectable, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
 import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION } from '../../configurations';
 import { SdLayoutChildrenMenu } from '../menu/menu.model';
@@ -7,7 +7,7 @@ import { SdLayoutChildrenMenu } from '../menu/menu.model';
   providedIn: 'root',
 })
 export class SdLayoutStorageService {
-  // ThÃ´ng tin state cá»§a sidebar
+  // Thông tin state của sidebar
   isShowSidebar: SdStorage<boolean>;
   menuLockStatus: SdStorage<boolean>;
   lastActiveMenuGroupId: SdStorage<string>;
@@ -23,4 +23,3 @@ export class SdLayoutStorageService {
     // End
   }
 }
-

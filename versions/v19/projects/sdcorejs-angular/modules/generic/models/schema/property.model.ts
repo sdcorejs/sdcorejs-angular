@@ -1,12 +1,12 @@
-﻿import { SdTableColumn } from '@sdcorejs/angular/components';
+import { SdTableColumn } from '@sdcorejs/angular/components';
 import { Color } from '@sdcorejs/utils/models';
 
 /**
  * @description
- * `SdSchemaProperty` lÃ  má»™t kiá»ƒu dá»¯ liá»‡u há»£p nháº¥t (discriminated union type)
- * Ä‘Æ°á»£c sá»­ dá»¥ng Ä‘á»ƒ Ä‘á»‹nh nghÄ©a cáº¥u trÃºc cá»§a tá»«ng thuá»™c tÃ­nh (trÆ°á»ng) trong má»™t mÃ´ hÃ¬nh dá»¯ liá»‡u.
- * NÃ³ cung cáº¥p cÃ¡c cáº¥u hÃ¬nh chi tiáº¿t vá» kiá»ƒu dá»¯ liá»‡u, cÃ¡ch hiá»ƒn thá»‹, hÃ nh vi trong danh sÃ¡ch
- * vÃ  cÃ¡c quy táº¯c cho viá»‡c thÃªm/cáº­p nháº­t dá»¯ liá»‡u.
+ * `SdSchemaProperty` là một kiểu dữ liệu hợp nhất (discriminated union type)
+ * được sử dụng để định nghĩa cấu trúc của từng thuộc tính (trường) trong một mô hình dữ liệu.
+ * Nó cung cấp các cấu hình chi tiết về kiểu dữ liệu, cách hiển thị, hành vi trong danh sách
+ * và các quy tắc cho việc thêm/cập nhật dữ liệu.
  */
 export type SdSchemaProperty<T = any> =
   | PropertyString<T>
@@ -19,39 +19,39 @@ export type SdSchemaProperty<T = any> =
 
 /**
  * @description
- * Kiá»ƒu dá»¯ liá»‡u cho thuá»™c tÃ­nh `type` cá»§a `SdSchemaProperty`.
- * DÃ¹ng Ä‘á»ƒ phÃ¢n biá»‡t cÃ¡c loáº¡i thuá»™c tÃ­nh khÃ¡c nhau.
+ * Kiểu dữ liệu cho thuộc tính `type` của `SdSchemaProperty`.
+ * Dùng để phân biệt các loại thuộc tính khác nhau.
  */
 export type SdSchemaPropertyType = SdSchemaProperty['type'];
 
 /**
  * @description
- * Giao diá»‡n cÆ¡ báº£n cho táº¥t cáº£ cÃ¡c loáº¡i thuá»™c tÃ­nh trong schema.
- * Má»i thuá»™c tÃ­nh cá»¥ thá»ƒ Ä‘á»u pháº£i káº¿ thá»«a cÃ¡c thuá»™c tÃ­nh tá»« giao diá»‡n nÃ y.
+ * Giao diện cơ bản cho tất cả các loại thuộc tính trong schema.
+ * Mọi thuộc tính cụ thể đều phải kế thừa các thuộc tính từ giao diện này.
  */
 interface PropertyBase<T = any> {
   /**
    * @description
-   * TÃªn trÆ°á»ng (field name) cá»§a thuá»™c tÃ­nh trong model.
-   * ÄÃ¢y lÃ  khÃ³a Ä‘á»ƒ Ã¡nh xáº¡ thuá»™c tÃ­nh nÃ y vá»›i dá»¯ liá»‡u thá»±c táº¿ cá»§a model.
+   * Tên trường (field name) của thuộc tính trong model.
+   * Đây là khóa để ánh xạ thuộc tính này với dữ liệu thực tế của model.
    * @example 'name', 'statusCode', 'createdAt'
    */
   code: Extract<keyof T, string>;
   /**
    * @description
-   * NhÃ£n tiáº¿ng Viá»‡t cá»§a trÆ°á»ng thÃ´ng tin, hiá»ƒn thá»‹ trÃªn giao diá»‡n ngÆ°á»i dÃ¹ng.
-   * @example 'TÃªn sáº£n pháº©m', 'MÃ£ Ä‘Æ¡n hÃ ng', 'NgÃ y táº¡o'
+   * Nhãn tiếng Việt của trường thông tin, hiển thị trên giao diện người dùng.
+   * @example 'Tên sản phẩm', 'Mã đơn hàng', 'Ngày tạo'
    */
   label: string;
   /**
    * @description
-   * (TÃ¹y chá»n) Cáº¥u hÃ¬nh liÃªn quan Ä‘áº¿n cÃ¡ch thuá»™c tÃ­nh nÃ y Ä‘Æ°á»£c hiá»ƒn thá»‹ trong danh sÃ¡ch (báº£ng).
+   * (Tùy chọn) Cấu hình liên quan đến cách thuộc tính này được hiển thị trong danh sách (bảng).
    * @see List
    */
   list?: List<T>;
   /**
    * @description
-   * (TÃ¹y chá»n) Cáº¥u hÃ¬nh liÃªn quan Ä‘áº¿n cÃ¡ch thuá»™c tÃ­nh nÃ y Ä‘Æ°á»£c hiá»ƒn thá»‹ trong mÃ n hÃ¬nh chi tiáº¿t (form).
+   * (Tùy chọn) Cấu hình liên quan đến cách thuộc tính này được hiển thị trong màn hình chi tiết (form).
    * @see Detail
    */
   detail?: Detail<T>;
@@ -59,93 +59,93 @@ interface PropertyBase<T = any> {
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh cÃ³ kiá»ƒu dá»¯ liá»‡u lÃ  chuá»—i vÄƒn báº£n.
+ * Định nghĩa thuộc tính có kiểu dữ liệu là chuỗi văn bản.
  */
 interface PropertyString<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'string'.
+   * @description Kiểu của thuộc tính. Luôn là 'string'.
    */
   type: 'string';
 }
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh cÃ³ kiá»ƒu dá»¯ liá»‡u lÃ  sá»‘.
+ * Định nghĩa thuộc tính có kiểu dữ liệu là số.
  */
 interface PropertyNumber<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'number'.
+   * @description Kiểu của thuộc tính. Luôn là 'number'.
    */
   type: 'number';
 }
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh cÃ³ kiá»ƒu dá»¯ liá»‡u lÃ  ngÃ y thÃ¡ng (chá»‰ ngÃ y, khÃ´ng cÃ³ thá»i gian).
+ * Định nghĩa thuộc tính có kiểu dữ liệu là ngày tháng (chỉ ngày, không có thời gian).
  */
 interface PropertyDate<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'date'.
+   * @description Kiểu của thuộc tính. Luôn là 'date'.
    */
   type: 'date';
 }
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh cÃ³ kiá»ƒu dá»¯ liá»‡u lÃ  ngÃ y vÃ  giá».
+ * Định nghĩa thuộc tính có kiểu dữ liệu là ngày và giờ.
  */
 interface PropertyDatetime<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'datetime'.
+   * @description Kiểu của thuộc tính. Luôn là 'datetime'.
    */
   type: 'datetime';
 }
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh cÃ³ kiá»ƒu dá»¯ liá»‡u lÃ  boolean (Ä‘Ãºng/sai).
+ * Định nghĩa thuộc tính có kiểu dữ liệu là boolean (đúng/sai).
  */
 interface PropertyBoolean<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'boolean'.
+   * @description Kiểu của thuộc tính. Luôn là 'boolean'.
    */
   type: 'boolean';
   /**
    * @description
-   * (TÃ¹y chá»n) Kiá»ƒu hiá»ƒn thá»‹ cá»¥ thá»ƒ cho thuá»™c tÃ­nh boolean trÃªn giao diá»‡n.
+   * (Tùy chọn) Kiểu hiển thị cụ thể cho thuộc tính boolean trên giao diện.
    * @default 'dropdown'
    */
   subType?: 'dropdown' | 'checkbox' | 'switch' | 'radio';
   /**
    * @description
-   * (TÃ¹y chá»n) VÄƒn báº£n hiá»ƒn thá»‹ trÃªn giao diá»‡n khi giÃ¡ trá»‹ lÃ  `true`.
-   * @example 'Hoáº¡t Ä‘á»™ng', 'ÄÃ£ duyá»‡t'
+   * (Tùy chọn) Văn bản hiển thị trên giao diện khi giá trị là `true`.
+   * @example 'Hoạt động', 'Đã duyệt'
    */
   displayOnTrue?: string;
   /**
    * @description
-   * (TÃ¹y chá»n) VÄƒn báº£n hiá»ƒn thá»‹ trÃªn giao diá»‡n khi giÃ¡ trá»‹ lÃ  `false`.
-   * @example 'KhÃ´ng hoáº¡t Ä‘á»™ng', 'ChÆ°a duyá»‡t'
+   * (Tùy chọn) Văn bản hiển thị trên giao diện khi giá trị là `false`.
+   * @example 'Không hoạt động', 'Chưa duyệt'
    */
   displayOnFalse?: string;
 }
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh kiá»ƒu enum (liá»‡t kÃª), cho phÃ©p chá»n má»™t trong cÃ¡c giÃ¡ trá»‹ Ä‘á»‹nh sáºµn.
+ * Định nghĩa thuộc tính kiểu enum (liệt kê), cho phép chọn một trong các giá trị định sẵn.
  */
 interface PropertyEnum<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'enum'.
+   * @description Kiểu của thuộc tính. Luôn là 'enum'.
    */
   type: 'enum';
   /**
    * @description
-   * Máº£ng cÃ¡c Ä‘á»‘i tÆ°á»£ng tÃ¹y chá»n cho thuá»™c tÃ­nh enum. Má»—i Ä‘á»‘i tÆ°á»£ng bao gá»“m:
-   * - `value`: GiÃ¡ trá»‹ thá»±c táº¿ cá»§a tÃ¹y chá»n.
-   * - `display`: VÄƒn báº£n hiá»ƒn thá»‹ cho ngÆ°á»i dÃ¹ng.
-   * - `badgeColor`: (TÃ¹y chá»n) MÃ u sáº¯c cho badge hiá»ƒn thá»‹ tÃ¹y chá»n (vÃ­ dá»¥: 'success', 'warning').
-   * - `badgeIcon`: (TÃ¹y chá»n) Icon cho badge hiá»ƒn thá»‹ tÃ¹y chá»n.
+   * Mảng các đối tượng tùy chọn cho thuộc tính enum. Mỗi đối tượng bao gồm:
+   * - `value`: Giá trị thực tế của tùy chọn.
+   * - `display`: Văn bản hiển thị cho người dùng.
+   * - `badgeColor`: (Tùy chọn) Màu sắc cho badge hiển thị tùy chọn (ví dụ: 'success', 'warning').
+   * - `badgeIcon`: (Tùy chọn) Icon cho badge hiển thị tùy chọn.
    */
   options: {
     value: string;
@@ -157,77 +157,77 @@ interface PropertyEnum<T> extends PropertyBase<T> {
 
 /**
  * @description
- * Äá»‹nh nghÄ©a thuá»™c tÃ­nh quan há»‡ (relation), liÃªn káº¿t Ä‘áº¿n má»™t mÃ´ hÃ¬nh dá»¯ liá»‡u khÃ¡c.
+ * Định nghĩa thuộc tính quan hệ (relation), liên kết đến một mô hình dữ liệu khác.
  */
 interface PropertyRelation<T> extends PropertyBase<T> {
   /**
-   * @description Kiá»ƒu cá»§a thuá»™c tÃ­nh. LuÃ´n lÃ  'relation'.
+   * @description Kiểu của thuộc tính. Luôn là 'relation'.
    */
   type: 'relation';
   /**
    * @description
-   * Kiá»ƒu quan há»‡ giá»¯a mÃ´ hÃ¬nh hiá»‡n táº¡i vÃ  mÃ´ hÃ¬nh Ä‘Æ°á»£c liÃªn káº¿t.
+   * Kiểu quan hệ giữa mô hình hiện tại và mô hình được liên kết.
    * @example 'OneToOne', 'OneToMany', 'ManyToMany', 'ManyToOne'
    */
   relation: 'OneToOne' | 'OneToMany' | 'ManyToMany' | 'ManyToOne';
   /**
    * @description
-   * TÃªn cá»§a module backend mÃ  má»‘i quan há»‡ nÃ y trá» tá»›i.
+   * Tên của module backend mà mối quan hệ này trỏ tới.
    * @example 'user-management', 'product-catalog'
    */
   module: string;
   /**
    * @description
-   * `typeCode` cá»§a mÃ´ hÃ¬nh Ä‘Æ°á»£c liÃªn káº¿t (nhÆ° Ä‘Æ°á»£c Ä‘á»‹nh nghÄ©a trong `SdSchema` cá»§a nÃ³).
+   * `typeCode` của mô hình được liên kết (như được định nghĩa trong `SdSchema` của nó).
    * @example 'CUSTOMER_DETAIL', 'PRODUCT_ITEM'
    */
   typeCode: string;
   /**
    * @description
-   * (TÃ¹y chá»n) TrÆ°á»ng nÃ o cá»§a model hiá»‡n táº¡i sáº½ Ä‘Æ°á»£c Ã¡nh xáº¡ Ä‘áº¿n trÆ°á»ng nÃ o cá»§a model Ä‘Æ°á»£c liÃªn káº¿t (mappedTo).
-   * VÃ­ dá»¥: Property `orderId` cá»§a `OrderDetail` cÃ³ quan há»‡ Ä‘áº¿n `Order`
-   * cÃ³ thá»ƒ `mappedTo` Ä‘áº¿n trÆ°á»ng 'orderDetailIds' cá»§a `Order` model.
-   * @example 'orderDetailIds' (trÆ°á»ng nÃ y thuá»™c vá» model Ä‘Æ°á»£c liÃªn káº¿t)
+   * (Tùy chọn) Trường nào của model hiện tại sẽ được ánh xạ đến trường nào của model được liên kết (mappedTo).
+   * Ví dụ: Property `orderId` của `OrderDetail` có quan hệ đến `Order`
+   * có thể `mappedTo` đến trường 'orderDetailIds' của `Order` model.
+   * @example 'orderDetailIds' (trường này thuộc về model được liên kết)
    */
   mappedTo?: string;
   /**
    * @description
-   * (TÃ¹y chá»n) Má»™t Ä‘á»‘i tÆ°á»£ng chá»©a cÃ¡c tham sá»‘ truy váº¥n bá»• sung
-   * Ä‘á»ƒ Ã¡p dá»¥ng khi láº¥y dá»¯ liá»‡u cho má»‘i quan há»‡ nÃ y.
+   * (Tùy chọn) Một đối tượng chứa các tham số truy vấn bổ sung
+   * để áp dụng khi lấy dữ liệu cho mối quan hệ này.
    * @example `{ isActive: true, status: 'approved' }`
    */
   query?: Record<string, never>;
 
   /**
    * @description
-   * (TÃ¹y chá»n) TrÆ°á»ng tá»« mÃ´ hÃ¬nh liÃªn káº¿t sáº½ Ä‘Æ°á»£c sá»­ dá»¥ng lÃ m giÃ¡ trá»‹ duy nháº¥t.
-   * Máº·c Ä‘á»‹nh lÃ  khÃ³a chÃ­nh (`primaryKey`) cá»§a `SdSchema` cá»§a mÃ´ hÃ¬nh Ä‘Æ°á»£c liÃªn káº¿t.
+   * (Tùy chọn) Trường từ mô hình liên kết sẽ được sử dụng làm giá trị duy nhất.
+   * Mặc định là khóa chính (`primaryKey`) của `SdSchema` của mô hình được liên kết.
    * @example 'id', 'code'
    */
   valueField?: string;
   /**
    * @description
-   * (TÃ¹y chá»n) TrÆ°á»ng tá»« mÃ´ hÃ¬nh liÃªn káº¿t sáº½ Ä‘Æ°á»£c hiá»ƒn thá»‹ cho ngÆ°á»i dÃ¹ng trÃªn giao diá»‡n.
+   * (Tùy chọn) Trường từ mô hình liên kết sẽ được hiển thị cho người dùng trên giao diện.
    * @example 'name', 'fullName'
    */
   displayField?: string;
   /**
    * @description
-   * (TÃ¹y chá»n) Danh sÃ¡ch cÃ¡c trÆ°á»ng trong mÃ´ hÃ¬nh liÃªn káº¿t sáº½ Ä‘Æ°á»£c dÃ¹ng Ä‘á»ƒ tÃ¬m kiáº¿m
-   * khi ngÆ°á»i dÃ¹ng nháº­p vÃ o Ã´ tÃ¬m kiáº¿m cá»§a trÆ°á»ng quan há»‡.
+   * (Tùy chọn) Danh sách các trường trong mô hình liên kết sẽ được dùng để tìm kiếm
+   * khi người dùng nhập vào ô tìm kiếm của trường quan hệ.
    * @example ['name', 'email', 'phone']
    */
   searchFields?: string[];
   /**
    * @description
-   * (TÃ¹y chá»n) Má»™t chuá»—i Ä‘á»‹nh dáº¡ng vÄƒn báº£n Ä‘á»ƒ tÃ¹y chá»‰nh cÃ¡ch hiá»ƒn thá»‹ cá»§a thá»±c thá»ƒ liÃªn káº¿t.
-   * @example `${code} - ${name}` sáº½ hiá»ƒn thá»‹ "PROD001 - BÃ n phÃ­m cÆ¡"
+   * (Tùy chọn) Một chuỗi định dạng văn bản để tùy chỉnh cách hiển thị của thực thể liên kết.
+   * @example `${code} - ${name}` sẽ hiển thị "PROD001 - Bàn phím cơ"
    */
   transform?: string;
   /**
    * @description
-   * (TÃ¹y chá»n) Má»™t chuá»—i Ä‘á»‹nh dáº¡ng HTML Ä‘á»ƒ tÃ¹y chá»‰nh cÃ¡ch hiá»ƒn thá»‹ cá»§a thá»±c thá»ƒ liÃªn káº¿t.
-   * Há»¯u Ã­ch cho cÃ¡c trÆ°á»ng há»£p hiá»ƒn thá»‹ phá»©c táº¡p hÆ¡n so vá»›i `transform`.
+   * (Tùy chọn) Một chuỗi định dạng HTML để tùy chỉnh cách hiển thị của thực thể liên kết.
+   * Hữu ích cho các trường hợp hiển thị phức tạp hơn so với `transform`.
    * @example `<div><span>${code}</span> - <strong>${name}</strong></div>`
    */
   template?: string;
@@ -235,54 +235,54 @@ interface PropertyRelation<T> extends PropertyBase<T> {
 
 /**
  * @description
- * Giao diá»‡n Ä‘á»‹nh nghÄ©a cÃ¡c cáº¥u hÃ¬nh cho thuá»™c tÃ­nh khi hiá»ƒn thá»‹ trong danh sÃ¡ch (báº£ng).
+ * Giao diện định nghĩa các cấu hình cho thuộc tính khi hiển thị trong danh sách (bảng).
  */
 interface List<T = any> {
   /**
    * @description
-   * (TÃ¹y chá»n) Chiá»u rá»™ng cá»§a cá»™t trong báº£ng.
-   * CÃ³ thá»ƒ lÃ  sá»‘ (pixels) hoáº·c chuá»—i (vÃ­ dá»¥: '100px', '20%').
+   * (Tùy chọn) Chiều rộng của cột trong bảng.
+   * Có thể là số (pixels) hoặc chuỗi (ví dụ: '100px', '20%').
    * @see SdTableColumn['width']
    */
   width?: SdTableColumn<T>['width'];
   /**
    * @description
-   * (TÃ¹y chá»n) Náº¿u lÃ  `true`, cá»™t nÃ y sáº½ bá»‹ áº©n hoÃ n toÃ n vÃ  ngÆ°á»i dÃ¹ng khÃ´ng thá»ƒ hiá»ƒn thá»‹ láº¡i
-   * thÃ´ng qua cÃ i Ä‘áº·t hiá»ƒn thá»‹ cá»™t.
+   * (Tùy chọn) Nếu là `true`, cột này sẽ bị ẩn hoàn toàn và người dùng không thể hiển thị lại
+   * thông qua cài đặt hiển thị cột.
    * @see SdTableColumn['hidden']
    * @default false
    */
   hidden?: SdTableColumn<T>['hidden'];
   /**
    * @description
-   * (TÃ¹y chá»n) Náº¿u lÃ  `true`, cá»™t nÃ y sáº½ bá»‹ áº©n máº·c Ä‘á»‹nh nhÆ°ng ngÆ°á»i dÃ¹ng cÃ³ thá»ƒ hiá»ƒn thá»‹ láº¡i
-   * thÃ´ng qua cÃ i Ä‘áº·t hiá»ƒn thá»‹ cá»™t.
+   * (Tùy chọn) Nếu là `true`, cột này sẽ bị ẩn mặc định nhưng người dùng có thể hiển thị lại
+   * thông qua cài đặt hiển thị cột.
    * @see SdTableColumn['invisible']
    * @default false
    */
   invisible?: SdTableColumn<T>['invisible'];
   /**
    * @description
-   * (TÃ¹y chá»n) Náº¿u lÃ  `true`, cá»™t nÃ y cÃ³ thá»ƒ Ä‘Æ°á»£c sáº¯p xáº¿p (sort) trong báº£ng.
+   * (Tùy chọn) Nếu là `true`, cột này có thể được sắp xếp (sort) trong bảng.
    * @see SdTableColumn['sortable']
    * @default false
    */
   sortable?: SdTableColumn<T>['sortable'];
   /**
    * @description
-   * (TÃ¹y chá»n) Cáº¥u hÃ¬nh bá»™ lá»c cho cá»™t nÃ y trong báº£ng.
+   * (Tùy chọn) Cấu hình bộ lọc cho cột này trong bảng.
    * @see SdTableColumn['filter']
    */
   filter?: SdTableColumn<T>['filter'];
   /**
    * @description
-   * (TÃ¹y chá»n) HÃ m hoáº·c chuá»—i Ä‘á»‹nh dáº¡ng vÄƒn báº£n Ä‘á»ƒ chuyá»ƒn Ä‘á»•i giÃ¡ trá»‹ hiá»ƒn thá»‹ cá»§a cá»™t.
+   * (Tùy chọn) Hàm hoặc chuỗi định dạng văn bản để chuyển đổi giá trị hiển thị của cột.
    * @see SdTableColumn['transform']
    */
   transform?: SdTableColumn<T>['transform'];
   /**
    * @description
-   * (TÃ¹y chá»n) Chuá»—i template HTML Ä‘á»ƒ tÃ¹y chá»‰nh cÃ¡ch hiá»ƒn thá»‹ ná»™i dung cá»§a Ã´ trong báº£ng.
+   * (Tùy chọn) Chuỗi template HTML để tùy chỉnh cách hiển thị nội dung của ô trong bảng.
    * @see SdTableColumn['htmlTemplate']
    */
   htmlTemplate?: SdTableColumn<T>['htmlTemplate'];
@@ -290,31 +290,31 @@ interface List<T = any> {
 
 /**
  * @description
- * Giao diá»‡n Ä‘á»‹nh nghÄ©a cÃ¡c cáº¥u hÃ¬nh cho thuá»™c tÃ­nh khi hiá»ƒn thá»‹ trong mÃ n hÃ¬nh chi tiáº¿t (form táº¡o/cáº­p nháº­t).
+ * Giao diện định nghĩa các cấu hình cho thuộc tính khi hiển thị trong màn hình chi tiết (form tạo/cập nhật).
  */
 interface Detail<T = any> {
   /**
    * @description
-   * (TÃ¹y chá»n) Náº¿u lÃ  `true`, trÆ°á»ng nÃ y cÃ³ thá»ƒ Ä‘Æ°á»£c chÃ¨n (insert) khi táº¡o má»›i Ä‘á»‘i tÆ°á»£ng.
+   * (Tùy chọn) Nếu là `true`, trường này có thể được chèn (insert) khi tạo mới đối tượng.
    * @default true
    */
   insertable?: boolean;
   /**
    * @description
-   * (TÃ¹y chá»n) Náº¿u lÃ  `true`, trÆ°á»ng nÃ y cÃ³ thá»ƒ Ä‘Æ°á»£c cáº­p nháº­t (update) khi chá»‰nh sá»­a Ä‘á»‘i tÆ°á»£ng.
+   * (Tùy chọn) Nếu là `true`, trường này có thể được cập nhật (update) khi chỉnh sửa đối tượng.
    * @default true
    */
   updatable?: boolean;
   /**
    * @description
-   * (TÃ¹y chá»n) Náº¿u lÃ  `true`, trÆ°á»ng nÃ y lÃ  báº¯t buá»™c (required) khi nháº­p liá»‡u.
+   * (Tùy chọn) Nếu là `true`, trường này là bắt buộc (required) khi nhập liệu.
    * @default false
    */
   required?: boolean;
   /**
    * @description
-   * (TÃ¹y chá»n) GiÃ¡ trá»‹ máº·c Ä‘á»‹nh cá»§a trÆ°á»ng khi táº¡o má»›i.
+   * (Tùy chọn) Giá trị mặc định của trường khi tạo mới.
    * @default undefined
    */
-  defaultValue?: never; // Sá»­ dá»¥ng 'never' Ä‘á»ƒ Ä‘áº£m báº£o ráº±ng Ä‘Ã¢y lÃ  má»™t thuá»™c tÃ­nh marker vÃ  khÃ´ng nÃªn Ä‘Æ°á»£c gÃ¡n giÃ¡ trá»‹ cá»¥ thá»ƒ á»Ÿ Ä‘Ã¢y. GiÃ¡ trá»‹ sáº½ Ä‘Æ°á»£c gÃ¡n trong cÃ¡c thÃ nh pháº§n UI dá»±a trÃªn kiá»ƒu dá»¯ liá»‡u cá»§a Property.
+  defaultValue?: never; // Sử dụng 'never' để đảm bảo rằng đây là một thuộc tính marker và không nên được gán giá trị cụ thể ở đây. Giá trị sẽ được gán trong các thành phần UI dựa trên kiểu dữ liệu của Property.
 }

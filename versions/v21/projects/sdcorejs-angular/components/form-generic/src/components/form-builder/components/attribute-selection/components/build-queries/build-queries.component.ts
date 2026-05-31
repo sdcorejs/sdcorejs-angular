@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -44,12 +44,12 @@ export class BuildQueries {
   model?: Record<string, any>;
   @Input({ alias: 'model', required: true }) set _model(model: Record<string, any> | undefined) {
     this.model = JSON.parse(JSON.stringify({ ...model }));
-    // Parse JSON -> STRING Ä‘á»ƒ hiá»ƒn thá»‹ trÃªn UI
+    // Parse JSON -> STRING để hiển thị trên UI
     this.queryString = JSON.stringify(this.model);
   }
   @Output() modelChange = new EventEmitter<Record<string, string>>();
 
-  // Má»—i láº§n inputChanges thÃ¬ tÃ­nh láº¡i selection
+  // Mỗi lần inputChanges thì tính lại selection
   #inputChanges = new Subject<void>();
   #subscription = new Subscription();
   constructor(private ref: ChangeDetectorRef) {}
@@ -98,4 +98,3 @@ export interface Property {
   value: string;
   display: string;
 }
-

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
@@ -17,7 +17,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
   imports: [
     CommonModule,
     SdInput,
-    // Pipe cho pháº§n viewed
+    // Pipe cho phần viewed
     ComponentViewedPipe,
   ],
 })
@@ -33,7 +33,7 @@ export class TextfieldComponent {
   set _entity(val: Record<string, any>) {
     if (this.entity !== val) {
       this.entity = val;
-      this.#applyDefaultValue(); // Ãp dá»¥ng defaultValue khi entity thay Ä‘á»•i
+      this.#applyDefaultValue(); // Áp dụng defaultValue khi entity thay đổi
     }
   }
 
@@ -44,7 +44,7 @@ export class TextfieldComponent {
   })
   set _component(val: SdFormGenericTextfield) {
     this.component = val;
-    this.#applyDefaultValue(); // Ãp dá»¥ng defaultValue khi component thay Ä‘á»•i
+    this.#applyDefaultValue(); // Áp dụng defaultValue khi component thay đổi
   }
 
   disabled = false;
@@ -75,7 +75,7 @@ export class TextfieldComponent {
   constructor(private ref: ChangeDetectorRef) {}
 
   ngOnInit() {
-    this.#applyDefaultValue(); // Ãp dá»¥ng defaultValue khi component khá»Ÿi táº¡o
+    this.#applyDefaultValue(); // Áp dụng defaultValue khi component khởi tạo
     this.#subscription.add(
       this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
         this.entity[variable.key] = variable.value;
@@ -89,29 +89,28 @@ export class TextfieldComponent {
   }
 
   /**
-   * Ãp dá»¥ng defaultValue náº¿u:
-   * - KhÃ´ng á»Ÿ tráº¡ng thÃ¡i viewed
-   * - KhÃ´ng bá»‹ disabled
-   * - entity[key] chÆ°a cÃ³ giÃ¡ trá»‹ (null, undefined, hoáº·c empty string)
-   * - component cÃ³ defaultValue
+   * Áp dụng defaultValue nếu:
+   * - Không ở trạng thái viewed
+   * - Không bị disabled
+   * - entity[key] chưa có giá trị (null, undefined, hoặc empty string)
+   * - component có defaultValue
    */
   #applyDefaultValue = () => {
     if (!this.component?.key || !this.entity) {
       return;
     }
     const isViewed = this.viewed || this.component.properties?.viewed;
-    // Chá»‰ gÃ¡n default value náº¿u undefined
+    // Chỉ gán default value nếu undefined
     const isUndefined = this.entity[this.component.key] === undefined;
     const hasDefaultValue = this.component.defaultValue !== undefined && this.component.defaultValue !== null;
-    // Chá»‰ gÃ¡n defaultValue khi:
-    // 1. KhÃ´ng á»Ÿ tráº¡ng thÃ¡i viewed
-    // 2. KhÃ´ng bá»‹ disabled
-    // 3. GiÃ¡ trá»‹ hiá»‡n táº¡i chÆ°a Ä‘Æ°á»£c  set (null, undefined hoáº·c empty string)
-    // 4. Component cÃ³ defaultValue
+    // Chỉ gán defaultValue khi:
+    // 1. Không ở trạng thái viewed
+    // 2. Không bị disabled
+    // 3. Giá trị hiện tại chưa được  set (null, undefined hoặc empty string)
+    // 4. Component có defaultValue
     if (!isViewed && hasDefaultValue && isUndefined) {
       this.entity[this.component.key] = this.component.defaultValue;
       this.ref.markForCheck();
     }
   };
 }
-

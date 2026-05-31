@@ -1,6 +1,6 @@
-﻿/**
+/**
  * Runtime state attributes the component renders on the same anchor as `data-autoid`.
- * Every field is OPTIONAL â€” only present when the component actually renders that attribute.
+ * Every field is OPTIONAL — only present when the component actually renders that attribute.
  * All values are the raw DOM string (already "true"/"false" or stringified number/value).
  */
 export interface SdAutoidElementState {
@@ -12,7 +12,7 @@ export interface SdAutoidElementState {
   count?: string;
   /** Serialized DOM `data-value` (NOT `input.value`). Distinct from `SdAutoidElement.text` field. */
   dataValue?: string;
-  // Validation meta â€” new in v0.0.1
+  // Validation meta — new in v0.0.1
   required?: string;
   maxlength?: string;
   minlength?: string;
@@ -33,7 +33,7 @@ export interface SdAutoidElement {
   text: string;
   xpath: string;
   duplicate: boolean;
-  /** Runtime state attributes read from the DOM. Always an object â€” may be empty `{}`. */
+  /** Runtime state attributes read from the DOM. Always an object — may be empty `{}`. */
   state: SdAutoidElementState;
   /**
    * `data-autoid` of the closest ancestor `<sd-table>` that contains this element,
@@ -57,4 +57,3 @@ export interface SdAutoidAuditResult {
   missing: SdAutoidMissing[];
   missingCount: number;
 }
-

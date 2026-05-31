@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TemplateRef } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
@@ -15,21 +15,21 @@ export interface SdTableQuickFilter {
 export interface TableFilterConfiguration {
   // selectedQuickFilter: string;
   // quickFilters: SdGridMaterialQuickFilter[];
-  // columnFilter?: Record<string, any>; // GiÃ¡ trá»‹ filter column
-  inlineExternal: Record<string, boolean>; // áº¨n hiá»‡n filter external
-  // externalFilter?: Record<string, any>; // GiÃ¡ trá»‹ filter external
+  // columnFilter?: Record<string, any>; // Giá trị filter column
+  inlineExternal: Record<string, boolean>; // Ẩn hiện filter external
+  // externalFilter?: Record<string, any>; // Giá trị filter external
 }
 
 export interface TableFilterValue {
   columnOperator?: Record<string, Operator>;
 
-  columnFilter?: Record<string, any>; // GiÃ¡ trá»‹ filter column
+  columnFilter?: Record<string, any>; // Giá trị filter column
 
-  externalFilter?: Record<string, any>; // GiÃ¡ trá»‹ filter external
+  externalFilter?: Record<string, any>; // Giá trị filter external
 
-  notReload?: boolean; // Äá»ƒ nháº­n biáº¿t lÃ  chá»‰ set giÃ¡ trá»‹, khÃ´ng trigger change
+  notReload?: boolean; // Để nhận biết là chỉ set giá trị, không trigger change
 
-  filtered?: boolean; // Äá»ƒ nháº­n biáº¿t lÃ  cÃ³ Ä‘ang lá»c hay khÃ´ng
+  filtered?: boolean; // Để nhận biết là có đang lọc hay không
 }
 
 export interface SdTableFilterRequest<T = any> {
@@ -45,37 +45,37 @@ export interface SdTableFilterRequest<T = any> {
 }
 
 export interface SdTableOptionFilter<T = any> {
-  /** Key Ä‘á»‹nh danh náº¿u muá»‘n lÆ°u cache */
+  /** Key định danh nếu muốn lưu cache */
   key?: string;
 
-  /** CÃ³ báº­t cache giÃ¡ trá»‹ filter hay khÃ´ng */
+  /** Có bật cache giá trị filter hay không */
   cacheable?: boolean;
 
-  /** VÃ´ hiá»‡u toÃ n bá»™ filter */
+  /** Vô hiệu toàn bộ filter */
   disabled?: boolean;
 
-  /** áº¨n táº¥t cáº£ inline filter (chá»‰ cÃ²n external), náº¿u chá»n auto thÃ¬ sáº½ áº©n khi total row <= 10, phÃ¹ há»£p cho cÃ¡c mÃ n detail cÃ³ Ã­t dá»¯ liá»‡u */
+  /** Ẩn tất cả inline filter (chỉ còn external), nếu chọn auto thì sẽ ẩn khi total row <= 10, phù hợp cho các màn detail có ít dữ liệu */
   hideInlineFilter?: boolean | 'auto';
 
-  /** HÃ m xá»­ lÃ½ khi Ä‘á»•i Operator cá»§a filter column */
+  /** Hàm xử lý khi đổi Operator của filter column */
   operatorChange?: (column?: SdTableColumn, operator?: Operator) => void;
 
-  /** Danh sÃ¡ch external filter */
+  /** Danh sách external filter */
   externalFilters?: SdTableExternalFilter[];
 
-  /** Sá»‘ lÆ°á»£ng cá»™t external filter trÃªn má»—i hÃ ng (máº·c Ä‘á»‹nh: 6) */
+  /** Số lượng cột external filter trên mỗi hàng (mặc định: 6) */
   externalFilterPerRow?: 4 | 6;
 
-  /** Cháº¿ Ä‘á»™ thá»§ cÃ´ng: pháº£i nháº¥n nÃºt Ã¡p dá»¥ng má»›i gá»­i filter */
+  /** Chế độ thủ công: phải nhấn nút áp dụng mới gửi filter */
   manualFilter?: boolean;
 
-  /** CÃ³ thá»ƒ thu gá»n bá»™ lá»c hay khÃ´ng */
+  /** Có thể thu gọn bộ lọc hay không */
   collapsable?: boolean;
 
-  /** áº¨n toolbar (xÃ³a bá»™ lá»c, thiáº¿t láº­p) cá»§a external filter, khi cÃ³ Ã­t external filter user khÃ´ng cáº§n chá»©c nÄƒng nÃ y */
+  /** Ẩn toolbar (xóa bộ lọc, thiết lập) của external filter, khi có ít external filter user không cần chức năng này */
   hideExternalFilterToolbar?: boolean;
 
-  /** HÃ m xá»­ lÃ½ khi trigger clear filter tá»« external filter */
+  /** Hàm xử lý khi trigger clear filter từ external filter */
   onClearFilter?: () => void;
 }
 
@@ -97,11 +97,11 @@ export const SdConvertToPagingReq = (
   };
   const { filters } = req;
   const { rawExternalFilter, rawColumnFilter, columnOperator, orderBy, orderDirection } = filterRequest;
-  // Xá»­ lÃ½ external filter
+  // Xử lý external filter
   for (const externalFilter of externalFilters || []) {
     const value = rawExternalFilter?.[externalFilter.field];
     const field = fieldMapping?.[externalFilter.field] || externalFilter.field;
-    // Náº¿u cÃ³ giÃ¡ trá»‹ thÃ¬ má»›i xá»­ lÃ½ filter
+    // Nếu có giá trị thì mới xử lý filter
     if (value !== undefined && value !== null && value !== '') {
       if (externalFilter.type === 'string') {
         filters!.push({
@@ -168,12 +168,12 @@ export const SdConvertToPagingReq = (
       }
     }
   }
-  // Xá»­ lÃ½ column filter
+  // Xử lý column filter
   for (const column of columns || []) {
     const value = rawColumnFilter?.[column.field];
     const field = fieldMapping?.[column.field] || column.field;
     const operator = columnOperator?.[column.field] || column.filter?.operator?.default;
-    // Náº¿u cÃ³ giÃ¡ trá»‹ thÃ¬ má»›i xá»­ lÃ½ filter
+    // Nếu có giá trị thì mới xử lý filter
     if (value !== undefined && value !== null && value !== '') {
       if (column.type === 'string') {
         filters!.push({
@@ -242,7 +242,7 @@ export const SdConvertToPagingReq = (
       }
     }
   }
-  // Xá»­ lÃ½ orders
+  // Xử lý orders
   if (orderBy && orderDirection) {
     req.orders!.push({
       field: orderBy,
@@ -267,10 +267,10 @@ interface BaseFilter<TData = any> {
   field: string;
   title: string;
   defaultShowing?: boolean;
-  required?: boolean; // Báº­t lÃªn náº¿u báº¯t buá»™c pháº£i cÃ³ giÃ¡ trá»‹- má»›i thá»±c hiá»‡n gá»i API filter
-  hidden?: boolean; // áº¨n filter
-  defaultOperator?: Operator; // ÄÃ´i lÃºc cá»™t string nhÆ°ng láº¡i muá»‘n tÃ¬m kiáº¿m chÃ­nh xÃ¡c
-  data?: TData; // CÃ¡c tham sá»‘ muá»‘n truyá»n thÃªm Ä‘á»ƒ Ä‘Ã¡nh dáº¥u/nháº­n biáº¿t ..., vÃ­ dá»¥ mappingField
+  required?: boolean; // Bật lên nếu bắt buộc phải có giá trị- mới thực hiện gọi API filter
+  hidden?: boolean; // Ẩn filter
+  defaultOperator?: Operator; // Đôi lúc cột string nhưng lại muốn tìm kiếm chính xác
+  data?: TData; // Các tham số muốn truyền thêm để đánh dấu/nhận biết ..., ví dụ mappingField
   onChange?: (value: any) => void;
 }
 
@@ -361,4 +361,3 @@ export interface TableFilterRegister {
     observer: Observable<TableFilterValue>;
   };
 }
-

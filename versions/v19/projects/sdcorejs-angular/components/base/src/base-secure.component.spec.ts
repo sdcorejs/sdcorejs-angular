@@ -1,10 +1,10 @@
-﻿import { Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
 
 import { SdBaseSecureComponent } from './base-secure.component';
 
-// Concrete subclass dÃ¹ng Ä‘á»ƒ kÃ­ch hoáº¡t constructor cá»§a abstract base.
+// Concrete subclass dùng để kích hoạt constructor của abstract base.
 @Component({
   selector: 'sd-secure-test-host',
   standalone: true,
@@ -56,4 +56,3 @@ describe('SdBaseSecureComponent', () => {
     expect(() => TestBed.createComponent(SecureTestHost)).toThrowError('[Security] denied');
   });
 });
-

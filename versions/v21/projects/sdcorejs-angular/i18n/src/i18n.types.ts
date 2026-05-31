@@ -1,4 +1,4 @@
-﻿import type { EN_MESSAGES } from './en';
+import type { EN_MESSAGES } from './en';
 import { SUPPORTED_LANGUAGES, type Language } from '@sdcorejs/angular/models';
 
 export { SUPPORTED_LANGUAGES };
@@ -7,7 +7,7 @@ export type I18nKey = keyof typeof EN_MESSAGES;
 export type I18nParams = Record<string, string | number>;
 
 /**
- * I18nCatalog â€” full catalog of messages keyed by I18nKey.
+ * I18nCatalog — full catalog of messages keyed by I18nKey.
  *
  * Tip: hover over EN_MESSAGES['key'] to see the EN reference value when typing a custom catalog.
  *
@@ -32,4 +32,3 @@ export type I18nCatalog = Record<I18nKey, string>;
  *   const config: ISdCoreConfiguration = { language: () => ({ ...myCatalog }) };
  */
 export type CustomLanguageProvider = () => I18nCatalog;
-

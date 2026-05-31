@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable, Optional } from '@angular/core';
+import { Inject, Injectable, Optional } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 
 @Injectable({
@@ -23,7 +23,7 @@ export class SdLicenseService {
   };
 
   #verify = () => {
-    const hostname = window.location.hostname; // VÃ­ dá»¥: store.uat.nexa.mobi
+    const hostname = window.location.hostname; // Ví dụ: store.uat.nexa.mobi
 
     // 1. Bypass Localhost
     if (this.#isLocalhost(hostname)) {
@@ -39,37 +39,37 @@ export class SdLicenseService {
       return;
     }
 
-    // 2. CHECK EXACT MATCH (Æ¯u tiÃªn khá»›p chÃ­nh xÃ¡c 100%)
-    // Hash chuá»—i: "store.uat.nexa.mobi" + SALT
+    // 2. CHECK EXACT MATCH (Ưu tiên khớp chính xác 100%)
+    // Hash chuỗi: "store.uat.nexa.mobi" + SALT
     if (this.#checkMatch(hostname, configKeys)) {
       this.#isValid = true;
       return;
     }
 
-    // 3. CHECK WILDCARD MATCH (Thá»­ cÃ¡c trÆ°á»ng há»£p cÃ³ dáº¥u *)
+    // 3. CHECK WILDCARD MATCH (Thử các trường hợp có dấu *)
     const parts = hostname.split('.'); // ["store", "uat", "nexa", "mobi"]
 
-    // Láº·p Ä‘á»ƒ cáº¯t dáº§n subdomain bÃªn trÃ¡i vÃ  thÃªm "*." vÃ o
-    // Äiá»u kiá»‡n > 2 Ä‘á»ƒ Ä‘áº£m báº£o khÃ´ng check cÃ¡c case vÃ´ nghÄ©a nhÆ° *.mobi hay *.com
+    // Lặp để cắt dần subdomain bên trái và thêm "*." vào
+    // Điều kiện > 2 để đảm bảo không check các case vô nghĩa như *.mobi hay *.com
     while (parts.length > 2) {
-      parts.shift(); // Bá» pháº§n Ä‘áº§u: ["uat", "nexa", "mobi"]
+      parts.shift(); // Bỏ phần đầu: ["uat", "nexa", "mobi"]
       
-      // Táº¡o domain wildcard: "*.uat.nexa.mobi"
+      // Tạo domain wildcard: "*.uat.nexa.mobi"
       const wildcardDomain = '*.' + parts.join('.'); 
       
-      // Hash chuá»—i: "*.uat.nexa.mobi" + SALT
+      // Hash chuỗi: "*.uat.nexa.mobi" + SALT
       if (this.#checkMatch(wildcardDomain, configKeys)) {
         this.#isValid = true;
         return;
       }
     }
 
-    // Náº¿u cháº¡y háº¿t vÃ²ng láº·p mÃ  khÃ´ng khá»›p cÃ¡i nÃ o
+    // Nếu chạy hết vòng lặp mà không khớp cái nào
     this.#isValid = false;
     this.#throwSecurityError();
   };
 
-  // Helper Ä‘á»ƒ check xem hash cá»§a input cÃ³ náº±m trong list key khÃ´ng
+  // Helper để check xem hash của input có nằm trong list key không
   #checkMatch = (inputString: string, validKeys: string[]): boolean => {
     const hash = this.#generateHash(inputString + this.#SALT);
     return validKeys.includes(hash);

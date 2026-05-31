@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/mini-editor';
@@ -62,4 +62,3 @@ export class MiniEditorDemoComponent {
   commentContent = '<p>Đồng ý với <strong>đề xuất</strong> trên!</p>';
   markdownContent = '**Lưu ý:** Đây là ghi chú Markdown.';
 }
-

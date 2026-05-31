@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AfterViewInit,
   booleanAttribute,
@@ -31,9 +31,9 @@ import * as uuid from 'uuid';
   styleUrl: './switch.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    // why: dÃ¹ng host class .sd-c-<x> (thay vÃ¬ data-attr) Ä‘á»ƒ reactivity host-binding vá»›i
-    // signal cháº¯c cháº¯n Ã¡p dá»¥ng + cÃ³ default fallback `sd-c-primary` khi color() lÃ  'primary'.
-    // Test cÅ© assert data-sd-color Ä‘Ã£ Ä‘Æ°á»£c thay báº±ng class assert tÆ°Æ¡ng á»©ng.
+    // why: dùng host class .sd-c-<x> (thay vì data-attr) để reactivity host-binding với
+    // signal chắc chắn áp dụng + có default fallback `sd-c-primary` khi color() là 'primary'.
+    // Test cũ assert data-sd-color đã được thay bằng class assert tương ứng.
     '[class.sd-c-primary]': "color() === 'primary'",
     '[class.sd-c-secondary]': "color() === 'secondary'",
     '[class.sd-c-info]': "color() === 'info'",
@@ -52,7 +52,7 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
   formControl = new SdFormControl();
   #subscription = new Subscription();
 
-  // Inputs â€” accept null|undefined at boundary, transform to canonical
+  // Inputs — accept null|undefined at boundary, transform to canonical
   readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
     alias: 'autoId',
     transform: (v): string | undefined => v ?? undefined,
@@ -72,7 +72,7 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
   readonly label = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
-  // why: legacy callers pass `null` to mean "fallback to primary" â€” keep that contract
+  // why: legacy callers pass `null` to mean "fallback to primary" — keep that contract
   readonly color = input<Color, Color | null | undefined>('primary', {
     transform: (v): Color => v || 'primary',
   });
@@ -158,4 +158,3 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
     this.formControl.updateValueAndValidity();
   };
 }
-

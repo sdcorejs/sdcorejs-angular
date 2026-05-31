@@ -1,4 +1,4 @@
-﻿# Layout Module
+# Layout Module
 
 - **Type:** `@NgModule` (`SdLayoutModule`) + standalone components / pipes / services
 - **Import path:** `@sdcorejs/angular/modules/layout`
@@ -20,10 +20,10 @@ App shell for back-office portals: provides `<sd-layout>` (sidebar + content hos
 
 | Component | Selector | Purpose |
 |---|---|---|
-| `SdLayoutComponent` | `sd-layout` | Top-level shell â€” picks desktop or mobile sidebar based on viewport |
+| `SdLayoutComponent` | `sd-layout` | Top-level shell — picks desktop or mobile sidebar based on viewport |
 | `SdPageComponent` | `sd-page` | Page frame with `title`, `description`, `noHeader` inputs |
-| `SidebarV1Component` | `sidebar-v1` | Desktop sidebar (lockable, hover-to-expand) â€” used internally by `<sd-layout>` |
-| `SidebarMobileV1Component` | `sidebar-mobile-v1` | Mobile sidebar (drawer overlay) â€” used internally |
+| `SidebarV1Component` | `sidebar-v1` | Desktop sidebar (lockable, hover-to-expand) — used internally by `<sd-layout>` |
+| `SidebarMobileV1Component` | `sidebar-mobile-v1` | Mobile sidebar (drawer overlay) — used internally |
 
 **Services:**
 
@@ -35,9 +35,9 @@ App shell for back-office portals: provides `<sd-layout>` (sidebar + content hos
 **Pipes:** `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` (transform / focus / highlight menu items by search input).
 
 **Sub-modules (lazy):**
-- `HomeModule` â€” `/home` landing page with redirect guard.
-- `NotFoundModule` â€” `/not-found` 404 illustration.
-- `ForbiddenModule` â€” `/forbidden` access-denied illustration.
+- `HomeModule` — `/home` landing page with redirect guard.
+- `NotFoundModule` — `/not-found` 404 illustration.
+- `ForbiddenModule` — `/forbidden` access-denied illustration.
 
 **Routing:** `SdLayoutModule` declares `RouterModule.forChild(Routes)` mapping `home` / `not-found` / `forbidden`; root path redirects to `not-found`.
 
@@ -50,10 +50,10 @@ interface ISdLayoutConfiguration {
   /** Optional URL the home page redirect-guard should send authenticated users to */
   homeUrl?: string;
 
-  /** Sidebar branding â€” sync object or factory */
+  /** Sidebar branding — sync object or factory */
   sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration>);
 
-  /** Current user â€” sync object or factory (typically reads SdAuthService) */
+  /** Current user — sync object or factory (typically reads SdAuthService) */
   userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
 
   signout: () => void | Promise<void>;
@@ -149,24 +149,24 @@ export const routes: Routes = [
 
 ## Public API
 
-- **`<sd-layout [menus]>`** â€” host the app shell. `menus` is `SdLayoutMenu[]`. Internally selects `sidebar-v1` (desktop) or `sidebar-mobile-v1` (mobile/tablet) via `BrowserUtilities.isMobile()`.
-- **`<sd-page title description noHeader>`** â€” wrap each routed view; renders header bar with title/description.
-- **`SdLayoutService`** â€” read `userInfo` / `sidebar` signals (auto-resolved from `SD_LAYOUT_CONFIGURATION`).
-- **`SdLayoutStorageService`** â€” read/write sidebar state across reloads:
+- **`<sd-layout [menus]>`** — host the app shell. `menus` is `SdLayoutMenu[]`. Internally selects `sidebar-v1` (desktop) or `sidebar-mobile-v1` (mobile/tablet) via `BrowserUtilities.isMobile()`.
+- **`<sd-page title description noHeader>`** — wrap each routed view; renders header bar with title/description.
+- **`SdLayoutService`** — read `userInfo` / `sidebar` signals (auto-resolved from `SD_LAYOUT_CONFIGURATION`).
+- **`SdLayoutStorageService`** — read/write sidebar state across reloads:
   - `isShowSidebar: SdStorage<boolean>`
   - `menuLockStatus: SdStorage<boolean>`
   - `lastActiveMenuGroupId: SdStorage<string>`
-- **Pipes** â€” `menus | menu`, `menus | menuFocus:searchText`, `text | highLightSearch:term`. Used internally by sidebars; available for custom shells.
+- **Pipes** — `menus | menu`, `menus | menuFocus:searchText`, `text | highLightSearch:term`. Used internally by sidebars; available for custom shells.
 
 ## Behavior notes
 
-- **Mobile detection:** `BrowserUtilities.isMobile()` decides desktop vs mobile sidebar at component init. The signal does NOT live-update on viewport change â€” a navigation/refresh re-evaluates.
-- **Sidebar lock state:** `menuLockStatus` is read at construction (`?? true`) â€” locked-open by default. On mobile, `isShowSidebar` is forced false at init regardless.
+- **Mobile detection:** `BrowserUtilities.isMobile()` decides desktop vs mobile sidebar at component init. The signal does NOT live-update on viewport change — a navigation/refresh re-evaluates.
+- **Sidebar lock state:** `menuLockStatus` is read at construction (`?? true`) — locked-open by default. On mobile, `isShowSidebar` is forced false at init regardless.
 - **Hover-to-expand:** when unlocked, `sidebar-v1` opens on `mouseenter` (`onhover=true`) and closes after a 400ms transition delay on `mouseleave` (`#handleMouseLeaveTransition`).
 - **`onPopupOfSideBarOpened/Closed`:** mat-menu / popup interactions inside the sidebar pin it open while the popup is showing.
-- **Routing:** `SdLayoutModule` registers `home` / `not-found` / `forbidden` as child routes â€” the typical wiring is `{ path: 'layout', loadChildren: () => SdLayoutModule }`.
+- **Routing:** `SdLayoutModule` registers `home` / `not-found` / `forbidden` as child routes — the typical wiring is `{ path: 'layout', loadChildren: () => SdLayoutModule }`.
 - **`<sd-page>` title attribute cleanup:** the component's `effect` removes the host's native `title` attribute when the input `title` is set, preventing the browser tooltip from doubling up.
-- **Permission-aware menus:** `SdLayoutMenu.permission` accepts a code string, an array (OR), a boolean, or a getter. The `MenuPipe` filters menus accordingly â€” pair with the `permission` module for code resolution.
+- **Permission-aware menus:** `SdLayoutMenu.permission` accepts a code string, an array (OR), a boolean, or a getter. The `MenuPipe` filters menus accordingly — pair with the `permission` module for code resolution.
 
 ## Examples
 
@@ -211,16 +211,15 @@ constructor(auth: SdAuthService, storage: SdLayoutStorageService) {
 
 ## Anti-patterns
 
-- Do NOT mount `<sd-layout>` inside a route that's lazy-loaded under `/layout` â€” the sub-module owns `home/not-found/forbidden`, and you'd nest layouts.
-- Do NOT pass an Observable to `userInfo` â€” it expects a sync value or a function returning `MaybeAsync<SdLayoutUserInfo>` (sync / Promise).
-- Do NOT bypass `SdLayoutStorageService` to read sidebar state â€” its keys are UUID-based; reading raw localStorage breaks if the keys change.
-- Do NOT use `<sd-page>` outside an `<sd-layout>` â€” it expects the shell's CSS context.
-- Do NOT depend on `SdLayoutComponent` for SSR â€” sidebar layout uses browser-only `BrowserUtilities.isMobile()` (window check).
+- Do NOT mount `<sd-layout>` inside a route that's lazy-loaded under `/layout` — the sub-module owns `home/not-found/forbidden`, and you'd nest layouts.
+- Do NOT pass an Observable to `userInfo` — it expects a sync value or a function returning `MaybeAsync<SdLayoutUserInfo>` (sync / Promise).
+- Do NOT bypass `SdLayoutStorageService` to read sidebar state — its keys are UUID-based; reading raw localStorage breaks if the keys change.
+- Do NOT use `<sd-page>` outside an `<sd-layout>` — it expects the shell's CSS context.
+- Do NOT depend on `SdLayoutComponent` for SSR — sidebar layout uses browser-only `BrowserUtilities.isMobile()` (window check).
 
 ## Related
 
-- [auth module](./sd-auth.md) â€” typical source for `userInfo` / `signout` config.
-- [permission module](./sd-permission.md) â€” backs `SdLayoutMenu.permission` filtering.
-- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) â€” provide the auth flow that feeds the layout.
+- [auth module](./sd-auth.md) — typical source for `userInfo` / `signout` config.
+- [permission module](./sd-permission.md) — backs `SdLayoutMenu.permission` filtering.
+- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) — provide the auth flow that feeds the layout.
 - `<sd-page>` is unique to layout (no other doc); other components like `[sd-table]` (`../components/sd-table.md`) are commonly placed inside `<sd-page>`.
-

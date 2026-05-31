@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdEditor } from '@sdcorejs/angular/components/editor';
 
@@ -48,4 +48,3 @@ export class EditorDemoComponent {
   readonly content = signal<string>('<p>Sản phẩm <strong>SP-001</strong> được thiết kế dành cho doanh nghiệp vừa và nhỏ.</p><ul><li>Bảo hành 12 tháng</li><li>Hỗ trợ kỹ thuật 24/7</li></ul>');
   readonly readOnlyContent = signal<string>('<p><em>Bằng việc sử dụng dịch vụ, bạn đồng ý với các điều khoản sau:</em></p><ol><li>Không chia sẻ tài khoản cho bên thứ ba.</li><li>Tuân thủ chính sách bảo mật của hệ thống.</li></ol>');
 }
-

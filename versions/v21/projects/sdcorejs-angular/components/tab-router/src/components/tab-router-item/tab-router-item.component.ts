@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 
@@ -98,4 +98,3 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
     }
   };
 }
-

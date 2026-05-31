@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Inject, Optional, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatIconModule } from "@angular/material/icon";
@@ -39,7 +39,7 @@ export class ConfigureValidationComponent {
   ngAfterViewInit(): void {
     // this.#subscription.add(
     //   this.#validationsChanges.pipe(debounceTime(200), startWith(this.validations)).subscribe(() => {
-    //     // Khi component thay Ä‘á»•i thÃ¬ sync láº¡i
+    //     // Khi component thay đổi thì sync lại
     //     this.ref.markForCheck();
     //   })
     // );
@@ -49,7 +49,7 @@ export class ConfigureValidationComponent {
   }
 
   open = (formGeneric: SdFormGeneric) => {
-    // Xá»­ lÃ½ gÃ¡n validations
+    // Xử lý gán validations
     if (Array.isArray(formGeneric?.validations)) {
       this.validations = JSON.parse(JSON.stringify(formGeneric?.validations));
     } else {
@@ -95,4 +95,3 @@ export class ConfigureValidationComponent {
     this.modal?.close();
   };
 }
-

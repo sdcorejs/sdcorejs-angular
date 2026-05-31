@@ -1,16 +1,16 @@
-﻿import { ErrorHandler } from '@angular/core';
+import { ErrorHandler } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdGlobalErrorHandler } from './global-error.handler';
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Builds a minimal I18nService stub whose `t()` returns the key unchanged. */
 function makeI18nStub(): jasmine.SpyObj<Pick<I18nService, 't'>> {
   return { t: jasmine.createSpy('t').and.callFake((key: string) => key) };
 }
 
-// â”€â”€â”€ Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('SdGlobalErrorHandler', () => {
   let handler: SdGlobalErrorHandler;
@@ -22,7 +22,7 @@ describe('SdGlobalErrorHandler', () => {
   beforeEach(() => {
     i18nStub = makeI18nStub();
 
-    // Prevent real dialog â€” confirm returns false (cancel) by default
+    // Prevent real dialog — confirm returns false (cancel) by default
     confirmSpy = spyOn(window, 'confirm').and.returnValue(false);
 
     consoleErrorSpy = spyOn(console, 'error').and.stub();
@@ -39,14 +39,14 @@ describe('SdGlobalErrorHandler', () => {
     handler = TestBed.inject(SdGlobalErrorHandler);
   });
 
-  // â”€â”€â”€ 1. Instantiation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 1. Instantiation ───────────────────────────────────────────────────────
 
   it('should be created via TestBed.inject', () => {
     expect(handler).toBeTruthy();
     expect(handler).toBeInstanceOf(SdGlobalErrorHandler);
   });
 
-  // â”€â”€â”€ 2. Normal (non-chunk) Error â€” falls through to console.error â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. Normal (non-chunk) Error — falls through to console.error ──────────
 
   it('should call console.error for a normal Error object', () => {
     const err = new Error('Something broke');
@@ -69,7 +69,7 @@ describe('SdGlobalErrorHandler', () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith('Application error:', null);
   });
 
-  // â”€â”€â”€ 3. Chunk-load errors â€” confirm + reload branch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 3. Chunk-load errors — confirm + reload branch ────────────────────────
 
   it('should detect "Loading chunk" (Webpack) and show confirm', () => {
     handler.handleError(new Error('Loading chunk 42 failed'));
@@ -106,7 +106,7 @@ describe('SdGlobalErrorHandler', () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
-  // â”€â”€â”€ 4. Confirm dialog controls reload â€” confirmed vs cancelled â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 4. Confirm dialog controls reload — confirmed vs cancelled ─────────────
   // NOTE: window.location.reload is non-configurable in Chrome Headless; calling
   // it with confirm=true would navigate the Karma test runner away (DISCONNECT).
   // We only assert the decision-gate behaviour (confirm call count / return path).
@@ -117,12 +117,12 @@ describe('SdGlobalErrorHandler', () => {
   });
 
   it('should NOT call console.error for a chunk-load error (regardless of confirm)', () => {
-    // confirm defaults to false (cancel) â€” no reload, no console.error
+    // confirm defaults to false (cancel) — no reload, no console.error
     handler.handleError(new Error('Loading chunk 1 failed'));
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
-  // â”€â”€â”€ 5. i18n keys passed to confirm dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 5. i18n keys passed to confirm dialog ──────────────────────────────────
 
   it('should call i18n.t for update-title and update-body keys', () => {
     handler.handleError(new Error('Loading chunk 3 failed'));
@@ -130,7 +130,7 @@ describe('SdGlobalErrorHandler', () => {
     expect(i18nStub.t).toHaveBeenCalledWith('core.handler.global-error.update-body');
   });
 
-  // â”€â”€â”€ 6. Rejection wrapper (Angular unhandled promise) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 6. Rejection wrapper (Angular unhandled promise) ───────────────────────
 
   it('should detect chunk error inside a rejection string wrapper', () => {
     handler.handleError({ rejection: 'Loading chunk 5 failed (missing: /chunk-5.js)' });
@@ -148,18 +148,17 @@ describe('SdGlobalErrorHandler', () => {
     expect(consoleErrorSpy).toHaveBeenCalledWith('Application error:', inner);
   });
 
-  // â”€â”€â”€ 7. Case-insensitive matching â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 7. Case-insensitive matching ───────────────────────────────────────────
 
   it('should match chunk signature case-insensitively (uppercase message)', () => {
     handler.handleError(new Error('LOADING CHUNK 10 FAILED'));
     expect(confirmSpy).toHaveBeenCalled();
   });
 
-  // â”€â”€â”€ 8. console.warn is NOT called for non-chunk errors â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 8. console.warn is NOT called for non-chunk errors ─────────────────────
 
   it('should NOT call console.warn for non-chunk errors', () => {
     handler.handleError(new Error('ordinary runtime error'));
     expect(consoleWarnSpy).not.toHaveBeenCalled();
   });
 });
-

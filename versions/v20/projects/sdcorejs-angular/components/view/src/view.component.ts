@@ -1,4 +1,4 @@
-﻿import { NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import { 
   ChangeDetectionStrategy, 
   Component, 
@@ -24,30 +24,30 @@ export class SdView {
   label = input<string | null | undefined>();
   value = input<any>(); 
   
-  // input.required() sáº½ Ã©p dev báº¯t buá»™c pháº£i truyá»n [display] vÃ o, y há»‡t @Input({ required: true })
+  // input.required() sẽ ép dev bắt buộc phải truyền [display] vào, y hệt @Input({ required: true })
   display = input.required<string | null | undefined>(); 
   hyperlink = input<string | null | undefined>();
 
-  // Input Ä‘á»ƒ há»©ng template tá»« component cha (nhÆ° sd-input, sd-select) truyá»n xuá»‘ng
+  // Input để hứng template từ component cha (như sd-input, sd-select) truyền xuống
   labelTemplate = input<TemplateRef<any> | undefined>();
   valueTemplate = input<TemplateRef<any> | undefined>();
 
-  // why: cha (sd-select) chuyá»ƒn danh sÃ¡ch item Ä‘Ã£ chá»n xuá»‘ng Ä‘á»ƒ template "head +N"
-  // (chip multi sd-select) cÃ³ thá»ƒ Ä‘á»c displayField â€” sd-view chá»‰ lÃ  proxy, khÃ´ng tá»± build list.
+  // why: cha (sd-select) chuyển danh sách item đã chọn xuống để template "head +N"
+  // (chip multi sd-select) có thể đọc displayField — sd-view chỉ là proxy, không tự build list.
   selectedItems = input<any[] | undefined>();
 
   // ==========================================
-  // 2. SIGNAL QUERIES (Thay tháº¿ @ContentChild)
+  // 2. SIGNAL QUERIES (Thay thế @ContentChild)
   // ==========================================
-  // Tráº£ vá» Signal chá»©a TemplateRef náº¿u Dev dÃ¹ng tháº» <sd-view> vÃ  truyá»n #sdLabel, #sdValue
+  // Trả về Signal chứa TemplateRef nếu Dev dùng thẻ <sd-view> và truyền #sdLabel, #sdValue
   contentLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   contentValueTemplate = contentChild<TemplateRef<any>>('sdValue');
 
   // ==========================================
-  // 3. COMPUTED SIGNALS (Thay tháº¿ Getters)
+  // 3. COMPUTED SIGNALS (Thay thế Getters)
   // ==========================================
-  // Æ¯u tiÃªn Input tá»« cha truyá»n xuá»‘ng, khÃ´ng cÃ³ thÃ¬ láº¥y ContentChild
-  // Lá»£i Ã­ch: Cache giÃ¡ trá»‹, khÃ´ng bá»‹ cháº¡y láº¡i vÃ´ tá»™i váº¡ nhÆ° Getter cÅ©!
+  // Ưu tiên Input từ cha truyền xuống, không có thì lấy ContentChild
+  // Lợi ích: Cache giá trị, không bị chạy lại vô tội vạ như Getter cũ!
   activeLabelTemplate = computed(() => this.labelTemplate() ?? this.contentLabelTemplate());
   
   activeValueTemplate = computed(() => this.valueTemplate() ?? this.contentValueTemplate());

@@ -1,4 +1,4 @@
-﻿import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -110,15 +110,15 @@ describe('SdInputNumber', () => {
     });
 
     it('renders label as placeholder when placeholder is not set', () => {
-      host.label = 'Sá»‘ tiá»n';
+      host.label = 'Số tiền';
       fixture.detectChanges();
-      expect(getInput(fixture).getAttribute('placeholder')).toBe('Sá»‘ tiá»n');
+      expect(getInput(fixture).getAttribute('placeholder')).toBe('Số tiền');
     });
 
     it('renders explicit placeholder when provided', () => {
-      host.placeholder = 'Nháº­p sá»‘';
+      host.placeholder = 'Nhập số';
       fixture.detectChanges();
-      expect(getInput(fixture).getAttribute('placeholder')).toBe('Nháº­p sá»‘');
+      expect(getInput(fixture).getAttribute('placeholder')).toBe('Nhập số');
     });
   });
 
@@ -163,7 +163,7 @@ describe('SdInputNumber', () => {
   // -------------------------------------------------------------------------
 
   describe('min/max validation', () => {
-    it('applies min validator â€” rejects value below min', () => {
+    it('applies min validator — rejects value below min', () => {
       host.min = 10;
       fixture.detectChanges();
       comp.formControl.setValue(5, { emitEvent: false });
@@ -179,7 +179,7 @@ describe('SdInputNumber', () => {
       expect(comp.formControl.hasError('min')).toBe(false);
     });
 
-    it('applies max validator â€” rejects value above max', () => {
+    it('applies max validator — rejects value above max', () => {
       host.max = 100;
       fixture.detectChanges();
       comp.formControl.setValue(200, { emitEvent: false });
@@ -264,7 +264,7 @@ describe('SdInputNumber', () => {
   });
 
   // -------------------------------------------------------------------------
-  // parse user input â†’ number
+  // parse user input → number
   // -------------------------------------------------------------------------
 
   describe('parse user input to number', () => {
@@ -398,14 +398,14 @@ describe('SdInputNumber', () => {
   // -------------------------------------------------------------------------
 
   describe('errorMessage', () => {
-    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', () => {
+    it('returns "Vui lòng nhập thông tin" for required error', () => {
       host.model = 1;  // seed to avoid NG0100
       host.required = true;
       fixture.detectChanges();
       comp.formControl.setValue(null);
       comp.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(comp.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns min error message with the configured min value', () => {
@@ -414,7 +414,7 @@ describe('SdInputNumber', () => {
       comp.formControl.setValue(10);
       comp.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(comp.errorMessage()).toBe('GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c nhá» hÆ¡n 50');
+      expect(comp.errorMessage()).toBe('Giá trị không được nhỏ hơn 50');
     });
 
     it('returns max error message with the configured max value', () => {
@@ -423,14 +423,14 @@ describe('SdInputNumber', () => {
       comp.formControl.setValue(200);
       comp.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(comp.errorMessage()).toBe('GiÃ¡ trá»‹ khÃ´ng Ä‘Æ°á»£c lá»›n hÆ¡n 100');
+      expect(comp.errorMessage()).toBe('Giá trị không được lớn hơn 100');
     });
 
     it('returns inlineError text when inlineError validator fires', () => {
-      host.inlineError = 'GiÃ¡ trá»‹ khÃ´ng há»£p lá»‡';
+      host.inlineError = 'Giá trị không hợp lệ';
       fixture.detectChanges();
       comp.formControl.updateValueAndValidity();
-      expect(comp.errorMessage()).toBe('GiÃ¡ trá»‹ khÃ´ng há»£p lá»‡');
+      expect(comp.errorMessage()).toBe('Giá trị không hợp lệ');
     });
 
     it('returns undefined when control has no errors', () => {
@@ -444,14 +444,14 @@ describe('SdInputNumber', () => {
 
   describe('inlineError validator', () => {
     it('adds inlineError error when inlineError is set', () => {
-      host.inlineError = 'Lá»—i nháº­p liá»‡u';
+      host.inlineError = 'Lỗi nhập liệu';
       fixture.detectChanges();
       comp.formControl.updateValueAndValidity();
       expect(comp.formControl.hasError('inlineError')).toBe(true);
     });
 
     it('removes inlineError when inlineError is cleared', () => {
-      host.inlineError = 'Lá»—i nháº­p liá»‡u';
+      host.inlineError = 'Lỗi nhập liệu';
       fixture.detectChanges();
       host.inlineError = undefined;
       fixture.detectChanges();
@@ -574,7 +574,7 @@ describe('SdInputNumber', () => {
       expect(host.changes).toContain(null);
     });
 
-    it('clear() emits cleared output (dedicated intent â€” column-filter dÃ¹ng Ä‘á»ƒ fire reload mÃ  KHÃ”NG over-trigger nhÆ° sdChange per-keystroke)', () => {
+    it('clear() emits cleared output (dedicated intent — column-filter dùng để fire reload mà KHÔNG over-trigger như sdChange per-keystroke)', () => {
       host.model = 123;
       fixture.detectChanges();
       const spy = jasmine.createSpy('cleared');
@@ -694,10 +694,10 @@ describe('SdInputNumber (host classes)', () => {
     fixture = TestBed.createComponent(SdInputNumber);
   });
 
-  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
-    fixture.componentRef.setInput('label', 'Sá»‘ tiá»n');
+    fixture.componentRef.setInput('label', 'Số tiền');
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
   });
@@ -710,4 +710,3 @@ describe('SdInputNumber (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
-

@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, input, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, input, untracked } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { COMPONENT_ICONS, SdFormGenericComponent, SdFormGenericGroup } from '../../../../../models';
@@ -17,24 +17,24 @@ const COLOR_PRESETS = ['primary', 'secondary', 'success', 'warning', 'error'] as
   imports: [AttributeInput, AttributeExpression, TranslatePipe],
 })
 export class GroupAttribute {
-  // â”€â”€ constants â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── constants ────────────────────────────────────────────────────────
   readonly iconPresets = ICON_PRESETS;
   readonly colorPresets = COLOR_PRESETS;
   readonly componentIcons = COMPONENT_ICONS;
 
   form = new FormGroup({});
 
-  // â”€â”€ signal input â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── signal input ─────────────────────────────────────────────────────
   /** Required group reference. Mutated in place khi user pick icon/color/expression. */
   readonly group = input.required<SdFormGenericGroup>();
 
-  // â”€â”€ injected services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── injected services ────────────────────────────────────────────────
   readonly #builderService = inject(BuilderService);
   readonly #ref = inject(ChangeDetectorRef);
 
   constructor() {
-    // Báº£o Ä‘áº£m group cÃ³ properties + defaults khi input ref thay Ä‘á»•i.
-    // untracked() vÃ¬ ta mutate group (khÃ´ng pháº£i read signal) â€” trÃ¡nh táº¡o cycle.
+    // Bảo đảm group có properties + defaults khi input ref thay đổi.
+    // untracked() vì ta mutate group (không phải read signal) — tránh tạo cycle.
     effect(() => {
       const g = this.group();
       untracked(() => {
@@ -64,4 +64,3 @@ export class GroupAttribute {
     return this.componentIcons[c.type]?.symbol ?? 'help';
   };
 }
-

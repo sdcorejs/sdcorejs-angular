@@ -1,4 +1,4 @@
-﻿import {
+import {
   booleanAttribute,
   ChangeDetectionStrategy,
   Component,
@@ -40,7 +40,7 @@ export class SdInputColor {
   readonly placeholder = input<string>('#RRGGBB');
   readonly size = input<Size>('md');
   readonly appearance = input<MatFormFieldAppearance | undefined>(undefined);
-  // why: type as `any` â€” the inner <sd-input> applies the FormGroup|NgForm transform.
+  // why: type as `any` — the inner <sd-input> applies the FormGroup|NgForm transform.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   readonly form = input<any>(undefined);
   readonly name = input<string | undefined>();
@@ -51,7 +51,7 @@ export class SdInputColor {
   readonly readonly = input(false, { transform: booleanAttribute });
   readonly viewed = input(false, { transform: booleanAttribute });
 
-  // Two-way model â€” same alias as <sd-input>
+  // Two-way model — same alias as <sd-input>
   readonly valueModel = model<string | null | undefined>(undefined, { alias: 'model' });
 
   // ==========================================
@@ -95,9 +95,9 @@ export class SdInputColor {
   // ==========================================
   // Handlers
   // ==========================================
-  // why: <sd-input> built-in clear báº¯n null khi clear (thao tÃ¡c chá»§ Ä‘á»™ng) â†’ coi
-  // nhÆ° "khÃ´ng cÃ³ mÃ u". Chuá»—i rá»—ng cÅ©ng quy vá» null. Set model = null (khÃ´ng pháº£i
-  // undefined): undefined chá»‰ dÃ nh cho tráº¡ng thÃ¡i pristine chÆ°a tá»«ng thao tÃ¡c.
+  // why: <sd-input> built-in clear bắn null khi clear (thao tác chủ động) → coi
+  // như "không có màu". Chuỗi rỗng cũng quy về null. Set model = null (không phải
+  // undefined): undefined chỉ dành cho trạng thái pristine chưa từng thao tác.
   onInputChange = (v: unknown): void => {
     const str = v == null || v === '' ? null : String(v);
     this.valueModel.set(str);
@@ -115,8 +115,8 @@ export class SdInputColor {
     this.sdChange.emit(v);
   };
 
-  // why: nÃºt clear hiá»ƒn thá»‹ giá» do <sd-input> render. Giá»¯ method public nÃ y cho
-  // consumer gá»i tay (programmatic). No-op khi khÃ´ng sá»­a Ä‘Æ°á»£c hoáº·c Ä‘Ã£ rá»—ng.
+  // why: nút clear hiển thị giờ do <sd-input> render. Giữ method public này cho
+  // consumer gọi tay (programmatic). No-op khi không sửa được hoặc đã rỗng.
   clear = (ev?: Event): void => {
     ev?.stopPropagation();
     if (this.required() || this.disabled() || this.readonly() || this.viewed()) return;
@@ -126,4 +126,3 @@ export class SdInputColor {
     this.sdChange.emit(null);
   };
 }
-

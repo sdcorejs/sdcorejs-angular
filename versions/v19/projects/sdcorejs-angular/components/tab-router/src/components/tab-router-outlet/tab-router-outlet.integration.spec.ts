@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -88,7 +88,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       .componentInstance as SdTabRouterOutletComponent;
   });
 
-  describe('navigation â†’ tab creation', () => {
+  describe('navigation → tab creation', () => {
     it('creates a new tab when navigating to a route', async () => {
       await navigateAndStabilize(router, fixture, '/a');
       const tabs = outletCmp.tabs();
@@ -135,7 +135,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       expect(tabA.injector).toBe(firstInjector);
     });
 
-    it('different queryParams â‡’ different tab key â‡’ creates a new tab', async () => {
+    it('different queryParams ⇒ different tab key ⇒ creates a new tab', async () => {
       await navigateAndStabilize(router, fixture, '/a?x=1');
       await navigateAndStabilize(router, fixture, '/a?x=2');
 
@@ -236,7 +236,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       (outletCmp as any).tabs.set(fakeTabs);
       fixture.detectChanges();
 
-      // Now real-navigate to /a â†’ that becomes the 31st tab
+      // Now real-navigate to /a → that becomes the 31st tab
       await navigateAndStabilize(router, fixture, '/a');
 
       expect(notify.warning).toHaveBeenCalledWith('core.component.tab-router.too-many-tabs');
@@ -264,4 +264,3 @@ describe('SdTabRouterOutletComponent (integration)', () => {
     }));
   });
 });
-

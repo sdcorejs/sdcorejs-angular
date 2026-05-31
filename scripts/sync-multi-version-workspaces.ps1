@@ -5,6 +5,15 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# why: same encoding hygiene như sync-from-vn-angular.ps1.
+# Get-Content -Raw mặc định ANSI cp1252 trên PS 5.1 → mojibake với Vietnamese.
+# Set-Content -Encoding UTF8 ghi BOM → inconsistent với vn-angular source (no BOM).
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+function Write-Utf8NoBom {
+  param([string]$Path, [string]$Content)
+  [System.IO.File]::WriteAllText($Path, $Content, $script:Utf8NoBom)
+}
+
 if ([string]::IsNullOrWhiteSpace($RootPath)) {
   $RootPath = Resolve-Path (Join-Path $PSScriptRoot "..")
 }
@@ -55,7 +64,7 @@ function Update-MajorInPackageJson {
     return
   }
 
-  $content = Get-Content -LiteralPath $PackagePath -Raw
+  $content = Get-Content -LiteralPath $PackagePath -Raw -Encoding UTF8
   $updated = $content
 
   $angularVersion = "^$Major.0.0"
@@ -100,7 +109,7 @@ function Update-MajorInPackageJson {
   }
 
   if ($updated -ne $content) {
-    Set-Content -LiteralPath $PackagePath -Value $updated -Encoding UTF8
+    Write-Utf8NoBom -Path $PackagePath -Content $updated
   }
 }
 
@@ -114,7 +123,7 @@ function Update-SideDrawerPortalCall {
     return
   }
 
-  $content = Get-Content -LiteralPath $FilePath -Raw
+  $content = Get-Content -LiteralPath $FilePath -Raw -Encoding UTF8
   $updated = $content
 
   $legacyCall = "new DomPortalOutlet(document.body, this.#viewContainerRef, this.#ar, this.#injector)"
@@ -128,7 +137,7 @@ function Update-SideDrawerPortalCall {
   }
 
   if ($updated -ne $content) {
-    Set-Content -LiteralPath $FilePath -Value $updated -Encoding UTF8
+    Write-Utf8NoBom -Path $FilePath -Content $updated
   }
 }
 
@@ -141,7 +150,7 @@ function Update-VersionTsConfig {
     return
   }
 
-  $content = Get-Content -LiteralPath $TsConfigPath -Raw
+  $content = Get-Content -LiteralPath $TsConfigPath -Raw -Encoding UTF8
   $updated = $content
 
   $updated = $updated -replace '"@sdcorejs/angular":\s*\["dist/sdcorejs-angular"\]', '"@sdcorejs/angular": ["./dist/sdcorejs-angular"]'
@@ -154,7 +163,7 @@ function Update-VersionTsConfig {
   }
 
   if ($updated -ne $content) {
-    Set-Content -LiteralPath $TsConfigPath -Value $updated -Encoding UTF8
+    Write-Utf8NoBom -Path $TsConfigPath -Content $updated
   }
 }
 
@@ -205,7 +214,7 @@ foreach ($v in $versions) {
     "- Sync rule: v19 is synced first (primary). v20 and v21 are rollout targets.",
     "- DomPortalOutlet: $domNote"
   )
-  Set-Content -LiteralPath (Join-Path $dest "SYNC-STATUS.md") -Value ($statusLines -join "`n") -Encoding UTF8
+  Write-Utf8NoBom -Path (Join-Path $dest "SYNC-STATUS.md") -Content (($statusLines -join "`n") + "`n")
 }
 
 Write-Host "Done. Version workspaces synchronized: v19, v20, v21" -ForegroundColor Green

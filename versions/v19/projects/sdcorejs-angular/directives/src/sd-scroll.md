@@ -1,4 +1,4 @@
-﻿# `[sdScroll]` Directive
+# `[sdScroll]` Directive
 
 **Type**: Attribute Directive
 **Selector**: `[sdScroll]`
@@ -7,7 +7,7 @@
 **Import path**: `@sdcorejs/angular/directives` (or direct: `@sdcorejs/angular/directives/sd-scroll`)
 
 ## One-line purpose
-Hover-aware horizontal scroll container â€” `overflow-x` is `hidden` by default and flips to `auto` only while the cursor is over the host (vertical overflow is permanently `auto`).
+Hover-aware horizontal scroll container — `overflow-x` is `hidden` by default and flips to `auto` only while the cursor is over the host (vertical overflow is permanently `auto`).
 
 ## When to use
 - Wide tables / lists where you don't want a horizontal scrollbar visible at rest
@@ -17,7 +17,7 @@ Hover-aware horizontal scroll container â€” `overflow-x` is `hidden` by def
 ## When NOT to use
 - When you need always-visible horizontal scrollbars (use plain CSS `overflow-x: auto`).
 - When the host has constrained width without overflow (the directive does nothing useful).
-- For touch-only mobile UIs â€” hover semantics are limited; rely on native scrolling instead.
+- For touch-only mobile UIs — hover semantics are limited; rely on native scrolling instead.
 
 ## Inputs
 None.
@@ -72,14 +72,13 @@ onRefresh() {
 ## Change history
 | Version | Change |
 | --- | --- |
-| `19.0.0-beta.86` | Initial release â€” hover-controlled `overflow-x`, GPU-layer hint, `scrollTop()` helper. |
+| `19.0.0-beta.86` | Initial release — hover-controlled `overflow-x`, GPU-layer hint, `scrollTop()` helper. |
 
 ## Anti-patterns
-- Expecting vertical-overflow toggling â€” directive hard-codes `overflow-y: auto`; only X axis is hover-controlled.
-- Relying on touch devices to trigger `mouseover` â€” behavior on iOS/Android is inconsistent.
-- Combining with components that set their own `overflow` styles â€” the directive's runtime style writes will fight inline styles.
+- Expecting vertical-overflow toggling — directive hard-codes `overflow-y: auto`; only X axis is hover-controlled.
+- Relying on touch devices to trigger `mouseover` — behavior on iOS/Android is inconsistent.
+- Combining with components that set their own `overflow` styles — the directive's runtime style writes will fight inline styles.
 
 ## Related
-- Plain CSS `overflow-x: auto` â€” when you don't need hover-hide behavior.
-- Angular CDK `ScrollingModule` â€” for virtual scrolling in tall lists.
-
+- Plain CSS `overflow-x: auto` — when you don't need hover-hide behavior.
+- Angular CDK `ScrollingModule` — for virtual scrolling in tall lists.

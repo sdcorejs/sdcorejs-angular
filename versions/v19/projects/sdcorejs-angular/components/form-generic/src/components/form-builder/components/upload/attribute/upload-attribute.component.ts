@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject } from '@angular/core';
 import { SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericUpload, SdFormGenericVariable } from '../../../../../models';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
@@ -33,7 +33,7 @@ export class UploadAttribute {
 
   #subscription = new Subscription();
   readonly #i18n = inject(I18nService);
-  // Dropdown nguá»“n upload (mobile); display dá»‹ch qua i18n Ä‘á»ƒ há»— trá»£ EN
+  // Dropdown nguồn upload (mobile); display dịch qua i18n để hỗ trợ EN
   sources: {
     value: 'ALL' | 'PHOTO_LIBRARY' | 'CAPTURE';
     display: string;
@@ -53,14 +53,14 @@ export class UploadAttribute {
   ) {}
 
   ngAfterViewInit(): void {
-    // Khi thay Ä‘á»•i, debound 0.5s rá»“i má»›i emit output
+    // Khi thay đổi, debound 0.5s rồi mới emit output
     this.#subscription.add(
       this.form.valueChanges.pipe(debounceTime(500)).subscribe(() => {
         this.builderService.componentEmitters.next(this.component);
       })
     );
     this.#subscription.add(
-      // Chá»‰ láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i tÆ°Æ¡ng á»©ng vá»›i component dá»±a vÃ o id
+      // Chỉ lắng nghe sự kiện thay đổi tương ứng với component dựa vào id
       this.builderService.componentListeners.pipe(filter(component => component.id === this.component.id)).subscribe(component => {
         if (component) {
           this.ref.markForCheck();
@@ -75,10 +75,10 @@ export class UploadAttribute {
 
   onChangeTemplate = (template: SdFormGenericComponent) => {
     if (template && template.type === 'upload') {
-      // DÃ¹ng Object Assign Ä‘á»ƒ khÃ´ng bá»‹ táº¡o ra reference má»›i
+      // Dùng Object Assign để không bị tạo ra reference mới
       Object.assign(this.component, {
         ...template,
-        id: this.component.id, // Giá»¯ láº¡i id Ä‘á»ƒ componentEmitters Ä‘á»‹nh danh Ä‘Æ°á»£c component nÃ o bá»‹ thay Ä‘á»•i
+        id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
       SdFormatComponent(this.component);
       this.component.properties!.type = this.component.properties!.type || 'file';
@@ -96,4 +96,3 @@ export class UploadAttribute {
         ?.filter(val => !!val) || [];
   };
 }
-

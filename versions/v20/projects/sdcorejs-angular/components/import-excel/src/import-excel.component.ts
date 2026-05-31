@@ -1,4 +1,4 @@
-﻿import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
 import * as uuid from 'uuid';
 
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
@@ -65,7 +65,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
   @ViewChild(MatPaginator) set paginator(paginator: MatPaginator) {
     if (paginator && this.#paginator !== paginator) {
       this.#paginator = paginator;
-      this.#paginatorSub?.unsubscribe(); // Clear cÅ©
+      this.#paginatorSub?.unsubscribe(); // Clear cũ
       this.#paginatorSub = paginator.page.subscribe(this.#reload);
       this.#subscription.add(this.#paginatorSub);
     }
@@ -179,7 +179,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
       const validatePromises = this.excelItems.map((item, idx) => this.#validate(item, idx));
       await Promise.all(validatePromises);
 
-      // Náº¿u khÃ´ng cÃ³ error thÃ¬ tiáº¿p tá»¥c validate tá»« option validate truyá»n vÃ o
+      // Nếu không có error thì tiếp tục validate từ option validate truyền vào
 
       if (!this.excelItems.some(this.#filterError) && validateItems) {
         const results = await validateItems(this.excelItems.map(e => e.data));
@@ -330,7 +330,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
           }
         }
 
-        // Náº¿u pass validation tá»«ng column, kiá»ƒm tra validation theo hÃ m validateItem
+        // Nếu pass validation từng column, kiểm tra validation theo hàm validateItem
         if (!errorMessages.length && validateItem) {
           const validation = await validateItem(
             item,
@@ -498,4 +498,3 @@ export class SdImportExcel implements OnInit, OnDestroy {
     this.sdClosed.emit();
   };
 }
-

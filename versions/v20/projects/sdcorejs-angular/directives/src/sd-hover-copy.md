@@ -1,28 +1,28 @@
-�# `[sdHoverCopy]` Directive
+# `[sdHoverCopy]` Directive
 
 **Type**: Attribute Directive
 **Selector**: `[sdHoverCopy]`
 **Class**: `SdHoverCopyDirective`
-**Standalone**: no (declared module-style � no `standalone: true` flag)
+**Standalone**: no (declared module-style — no `standalone: true` flag)
 **Import path**: `@sdcorejs/angular/directives` (or direct: `@sdcorejs/angular/directives/sd-hover-copy`)
 
 ## One-line purpose
 On hover, overlays a small copy-to-clipboard button on the host element; clicking copies the supplied text and shows a "Copied" tooltip.
 
 ## When to use
-- Table cells displaying IDs, codes, hashes, phone numbers, emails � anything users routinely copy
+- Table cells displaying IDs, codes, hashes, phone numbers, emails — anything users routinely copy
 - Read-only inline values in detail panels
 - Anywhere a user wants quick clipboard access without selecting text manually
 
 ## When NOT to use
-- For rich copy UX with multiple actions � build a custom action menu instead.
-- On host elements that already use `position: relative` for overlapping children � the directive forces `position: relative` and absolutely positions its button at `right: 4px`, which may collide.
+- For rich copy UX with multiple actions — build a custom action menu instead.
+- On host elements that already use `position: relative` for overlapping children — the directive forces `position: relative` and absolutely positions its button at `right: 4px`, which may collide.
 
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `sdHoverCopy` (alias `copyText`) | `string` | **required** | The text to copy when the button is clicked. |
-| `sdHoverCopyDisabled` | `boolean` | `false` | When `true`, removes the copy button from the DOM (per SM-2287 � the previous opacity-only hide didn't fully prevent clicks). |
+| `sdHoverCopyDisabled` | `boolean` | `false` | When `true`, removes the copy button from the DOM (per SM-2287 — the previous opacity-only hide didn't fully prevent clicks). |
 
 ## Outputs
 None.
@@ -57,18 +57,17 @@ None.
 ### 3. Detail-panel value
 ```html
 <div class="kv-row">
-  <span class="key">Mã �ơn:</span>
+  <span class="key">Mã đơn:</span>
   <span class="val" [sdHoverCopy]="order.code">{{ order.code }}</span>
 </div>
 ```
 
 ## Anti-patterns
-- Setting `sdHoverCopy` to a non-string (object/array) � directive coerces with `String(...)`, but the result will likely be `[object Object]`.
-- Toggling visibility purely via `sdHoverCopyDisabled = true` and expecting space to remain � the button is removed from DOM entirely.
-- Stacking on a host whose layout depends on `position` other than `relative` � the directive overrides it.
-- Using on inline-only elements (`<span>` without block context) � absolute positioning may not align as expected.
+- Setting `sdHoverCopy` to a non-string (object/array) — directive coerces with `String(...)`, but the result will likely be `[object Object]`.
+- Toggling visibility purely via `sdHoverCopyDisabled = true` and expecting space to remain — the button is removed from DOM entirely.
+- Stacking on a host whose layout depends on `position` other than `relative` — the directive overrides it.
+- Using on inline-only elements (`<span>` without block context) — absolute positioning may not align as expected.
 
 ## Related
-- `BrowserUtilities.copyToClipboard` � underlying clipboard helper.
-- `[sdTooltip]` � for richer hover UX without copy.
-
+- `BrowserUtilities.copyToClipboard` — underlying clipboard helper.
+- `[sdTooltip]` — for richer hover UX without copy.

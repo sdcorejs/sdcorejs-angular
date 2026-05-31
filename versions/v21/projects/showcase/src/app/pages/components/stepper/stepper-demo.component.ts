@@ -1,4 +1,4 @@
-﻿import { JsonPipe } from '@angular/common';
+import { JsonPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -78,7 +78,7 @@ export class StepperDemoComponent {
   readonly labelPos = signal<'end' | 'bottom'>('bottom');
 
   // -------- 7. Color palette --------
-  // (nothing â€” colors hard-coded in template)
+  // (nothing — colors hard-coded in template)
 
   // -------- 8. External Next/Previous controls --------
   readonly externalStepper = viewChild<SdStepper>('external');
@@ -100,4 +100,3 @@ export class StepperDemoComponent {
   // -------- 9. Non-editable (no return) --------
   readonly nonEditableIndex = signal(0);
 }
-

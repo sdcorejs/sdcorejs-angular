@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
@@ -47,4 +47,3 @@ export class TextareaDemoComponent {
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
 }
-

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-output-rename */
+/* eslint-disable @angular-eslint/no-output-rename */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -20,7 +20,7 @@ import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdInformActionDirective } from './inform-action.directive';
 
-// why: má»—i color cÃ³ icon tráº¡ng thÃ¡i máº·c Ä‘á»‹nh khi consumer khÃ´ng truyá»n [icon].
+// why: mỗi color có icon trạng thái mặc định khi consumer không truyền [icon].
 const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
   primary: 'info',
   secondary: 'info',
@@ -117,20 +117,20 @@ export class SdInform {
 
   hasActionSlot = computed(() => !!this.actionSlot());
 
-  // clamp dÃ²ng: null = khÃ´ng clamp (Ä‘áº§y Ä‘á»§); sá»‘ = sá»‘ dÃ²ng tá»‘i Ä‘a.
+  // clamp dòng: null = không clamp (đầy đủ); số = số dòng tối đa.
   clampLines = computed<number | null>(() => {
     const n = this.lineClamp();
     if (!n || n <= 0) return null;
     return this.expanded() ? null : n;
   });
 
-  // toggle hiá»‡n khi Ä‘ang clamp vÃ  Ä‘Ã£ tá»«ng trÃ n, hoáº·c Ä‘ang má»Ÿ rá»™ng (Ä‘á»ƒ cÃ²n thu gá»n láº¡i).
+  // toggle hiện khi đang clamp và đã từng tràn, hoặc đang mở rộng (để còn thu gọn lại).
   showToggle = computed(() => {
     if (!this.lineClamp()) return false;
     return this.overflowing() || this.expanded();
   });
 
-  // why: error/warning lÃ  cáº£nh bÃ¡o â†’ assertive 'alert'; cÃ¡c mÃ u cÃ²n láº¡i lÃ  thÃ´ng tin â†’ polite 'status'.
+  // why: error/warning là cảnh báo → assertive 'alert'; các màu còn lại là thông tin → polite 'status'.
   liveRole = computed<'alert' | 'status'>(() => {
     const c = this.effectiveColor();
     return c === 'error' || c === 'warning' ? 'alert' : 'status';
@@ -140,16 +140,16 @@ export class SdInform {
   #measureScheduled = false;
 
   constructor() {
-    // Ä‘o láº§n Ä‘áº§u sau render
+    // đo lần đầu sau render
     afterNextRender(() => this.measureOverflow());
-    // why: re-Ä‘o khi ná»™i dung/clamp/expanded Ä‘á»•i; Ä‘á»“ng thá»i gáº¯n ResizeObserver Ä‘á»ƒ báº¯t thay Ä‘á»•i kÃ­ch thÆ°á»›c container (responsive).
+    // why: re-đo khi nội dung/clamp/expanded đổi; đồng thời gắn ResizeObserver để bắt thay đổi kích thước container (responsive).
     effect(onCleanup => {
       this.description();
       this.lineClamp();
       this.expanded();
       const el = this.bodyRef()?.nativeElement;
       this.#scheduleMeasure();
-      // why: guard instanceof Element Ä‘á»ƒ test stub (plain object) khÃ´ng lÃ m ResizeObserver.observe nÃ©m lá»—i.
+      // why: guard instanceof Element để test stub (plain object) không làm ResizeObserver.observe ném lỗi.
       if (el instanceof Element && typeof ResizeObserver !== 'undefined') {
         const ro = new ResizeObserver(() => this.measureOverflow());
         ro.observe(el);
@@ -161,18 +161,18 @@ export class SdInform {
   #scheduleMeasure(): void {
     if (this.#measureScheduled) return;
     this.#measureScheduled = true;
-    // gom nhiá»u thay Ä‘á»•i vÃ o 1 láº§n Ä‘o sau khi DOM cáº­p nháº­t xong
+    // gom nhiều thay đổi vào 1 lần đo sau khi DOM cập nhật xong
     queueMicrotask(() => {
       this.#measureScheduled = false;
       this.measureOverflow();
     });
   }
 
-  /** Äo trÃ n dÃ²ng cá»§a body; chá»‰ cÃ³ Ã½ nghÄ©a khi Ä‘ang clamp. */
+  /** Đo tràn dòng của body; chỉ có ý nghĩa khi đang clamp. */
   measureOverflow(): void {
     const el = this.bodyRef()?.nativeElement;
     if (!el || this.expanded() || !this.lineClamp()) return;
-    // +1 chá»‘ng sai sá»‘ lÃ m trÃ²n sub-pixel
+    // +1 chống sai số làm tròn sub-pixel
     this.overflowing.set(el.scrollHeight > el.clientHeight + 1);
   }
 
@@ -192,4 +192,3 @@ export class SdInform {
     this.sdAction.emit(event);
   }
 }
-

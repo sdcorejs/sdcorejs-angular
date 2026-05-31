@@ -1,4 +1,4 @@
-﻿import { SdSearchReq } from '@sdcorejs/angular/forms/models';
+import { SdSearchReq } from '@sdcorejs/angular/forms/models';
 import { Filter, PagingReq, PagingRes, QueryReq } from '@sdcorejs/utils/models';
 import { SdSchema } from './schema/schema.model';
 
@@ -16,4 +16,3 @@ export interface SdRegister<T = any> {
 export interface SdRegisterArgs<TData = any> {
   data?: TData;
 }
-

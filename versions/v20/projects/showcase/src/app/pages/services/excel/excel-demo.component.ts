@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdExcelService } from '@sdcorejs/angular/services/excel';
@@ -69,4 +69,3 @@ export class ExcelDemoComponent {
     });
   }
 }
-

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   afterNextRender,
@@ -46,7 +46,7 @@ import {
 type Density = 'compact' | 'comfortable';
 type Range = { from?: string | number | null; to?: string | number | null };
 
-/** Shared empty array â€” stable reference so template bindings don't churn change detection. */
+/** Shared empty array — stable reference so template bindings don't churn change detection. */
 const EMPTY_ARRAY: any[] = [];
 
 @Component({
@@ -74,13 +74,13 @@ export class SdQueryBar {
   readonly #i18n = inject(I18nService);
   readonly #injector = inject(Injector);
 
-  /** All popover-mode chips in order â€” used to auto-open after addFilter / close before removeFilter. */
+  /** All popover-mode chips in order — used to auto-open after addFilter / close before removeFilter. */
   readonly popoverChips = viewChildren(SdQueryPopoverChip);
 
-  /** The extracted in-progress chip â€” owns operator menu + value picker view refs. */
+  /** The extracted in-progress chip — owns operator menu + value picker view refs. */
   private readonly buildChip = viewChild(SdQueryBuildChip);
 
-  /** The extracted chip popover â€” owns operator+value staging + commit-on-close. */
+  /** The extracted chip popover — owns operator+value staging + commit-on-close. */
   readonly chipPopover = viewChild(SdQueryChipPopover);
 
   /**
@@ -93,12 +93,12 @@ export class SdQueryBar {
     if (k === 'values' || k === 'lazy-values' || k === 'date' || k === 'datetime') {
       afterNextRender(() => this.buildChip()?.openPicker(), { injector: this.#injector });
     }
-    // why: string/number branch â€” <sd-query-inline-value-chip [autofocus]> tá»± focus,
-    // khÃ´ng cáº§n parent gá»i thÃªm.
+    // why: string/number branch — <sd-query-inline-value-chip [autofocus]> tự focus,
+    // không cần parent gọi thêm.
   }
 
   // ---------------------------------------------------------------------------
-  // Inputs â€” all accept null|undefined at boundary, transform to canonical shape
+  // Inputs — all accept null|undefined at boundary, transform to canonical shape
   // ---------------------------------------------------------------------------
 
   /** Prefix for auto-generated `data-autoid` on inner controls (chips, operator/value editors, buttons). */
@@ -120,7 +120,7 @@ export class SdQueryBar {
 
   /**
    * Global connector between filters. Two-way bindable via `[(logic)]`.
-   * Only meaningful when `showLogicToggle=true` and there are â‰¥2 filters.
+   * Only meaningful when `showLogicToggle=true` and there are ≥2 filters.
    */
   readonly logic = model<SdQueryLogic>('AND');
 
@@ -129,9 +129,9 @@ export class SdQueryBar {
 
   /**
    * Editing mode:
-   * - `'popover'` (default) â†’ compact chips; click a chip to edit operator + value in a
-   *   mat-menu popover, commit with "Ãp dá»¥ng".
-   * - `'inline'` â†’ GitLab-style. Each filter's operator + value controls render directly
+   * - `'popover'` (default) → compact chips; click a chip to edit operator + value in a
+   *   mat-menu popover, commit with "Áp dụng".
+   * - `'inline'` → GitLab-style. Each filter's operator + value controls render directly
    *   on the bar (no popup, no per-filter apply). Edits update `filters` live; the user
    *   presses the search button (or Enter) once to fire `(apply)`.
    */
@@ -139,7 +139,7 @@ export class SdQueryBar {
     transform: (v): 'popover' | 'inline' => v || 'popover',
   });
 
-  /** Density preset â€” chip / control height. */
+  /** Density preset — chip / control height. */
   readonly density = input<Density, Density | null | undefined>('compact', {
     transform: (v): Density => v || 'compact',
   });
@@ -157,12 +157,12 @@ export class SdQueryBar {
   readonly savedFiltersKey = input<string | undefined>(undefined);
 
   /**
-   * Snapshot of the current query â€” fed into `<sd-query-saved-filters-menu [query]>` so
+   * Snapshot of the current query — fed into `<sd-query-saved-filters-menu [query]>` so
    * saving a filter captures live filters/logic/search.
    */
   readonly currentQuery = computed<SdQuery>(() => this.#buildQuery());
 
-  /** Receive an applied filter from the saved-filters menu â€” re-install bar state + trigger apply. */
+  /** Receive an applied filter from the saved-filters menu — re-install bar state + trigger apply. */
   onApplyFilter(saved: SdSavedFilter): void {
     this.filters.set(saved.query.filters ?? []);
     this.logic.set(saved.query.logic ?? 'AND');
@@ -170,37 +170,37 @@ export class SdQueryBar {
     this.triggerApply();
   }
 
-  /** Show AND/OR segmented toggle (renders only when there are â‰¥2 filters). */
+  /** Show AND/OR segmented toggle (renders only when there are ≥2 filters). */
   readonly showLogicToggle = input(false, { transform: booleanAttribute });
 
   /** Show "Clear all" button when at least one filter is active. */
   readonly showClearAll = input(true, { transform: booleanAttribute });
 
-  /** Render the operator label on the chip face (default: hidden â€” operator only visible in popover). */
+  /** Render the operator label on the chip face (default: hidden — operator only visible in popover). */
   readonly showOperatorOnChip = input(false, { transform: booleanAttribute });
 
   // ---------------------------------------------------------------------------
   // Outputs
   // ---------------------------------------------------------------------------
 
-  /** Composite payload â€” emitted whenever filters / logic / search change. */
+  /** Composite payload — emitted whenever filters / logic / search change. */
   readonly queryChange = output<SdQuery>();
 
-  /** Fires when the user presses "Ãp dá»¥ng" inside a chip popover â€” host should reload data. */
+  /** Fires when the user presses "Áp dụng" inside a chip popover — host should reload data. */
   readonly apply = output<SdQuery>();
 
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
 
-  /** Map of `field.key` â†’ `SdQueryField` for fast lookup from filters[]. */
+  /** Map of `field.key` → `SdQueryField` for fast lookup from filters[]. */
   readonly fieldByKey = computed<Record<string, SdQueryField>>(() => {
     const map: Record<string, SdQueryField> = {};
     for (const f of this.fields()) map[f.key as string] = f;
     return map;
   });
 
-  /** Field keys already chained on a chip â€” the picker greys these out. */
+  /** Field keys already chained on a chip — the picker greys these out. */
   readonly usedFieldKeys = computed<Set<string>>(() => {
     const set = new Set<string>();
     for (const f of this.filters()) {
@@ -218,7 +218,7 @@ export class SdQueryBar {
   readonly canSearch = computed(() => this.filters().length > 0 || this.search().trim().length > 0);
 
   // ---------------------------------------------------------------------------
-  // Chip popover state â€” only `editingIndex` lives on the parent; the
+  // Chip popover state — only `editingIndex` lives on the parent; the
   // `<sd-query-chip-popover>` child owns ALL staging (operator + value + options).
   // ---------------------------------------------------------------------------
 
@@ -235,7 +235,7 @@ export class SdQueryBar {
   });
 
   /**
-   * Multi-select is derived from the operator (IN / NOT_IN) â€” not a field flag.
+   * Multi-select is derived from the operator (IN / NOT_IN) — not a field flag.
    * Only called by inline-mode + build-mode templates with a known operator;
    * popover-mode chips read `multiple()` from the child popover directly.
    */
@@ -264,7 +264,7 @@ export class SdQueryBar {
     const data = (filter as any).data;
     if (data === null || data === undefined) return '';
     if (filter.operator === 'BETWEEN' && data && typeof data === 'object') {
-      return `${data.from ?? ''} â€” ${data.to ?? ''}`;
+      return `${data.from ?? ''} — ${data.to ?? ''}`;
     }
     if (Array.isArray(data)) {
       if (data.length === 0) return '';
@@ -280,7 +280,7 @@ export class SdQueryBar {
 
 
   // ---------------------------------------------------------------------------
-  // Inline mode â€” per-field helpers + live mutators (no popover / no Apply gate)
+  // Inline mode — per-field helpers + live mutators (no popover / no Apply gate)
   // ---------------------------------------------------------------------------
 
   /** The single in-progress inline chip (not yet in `filters`). */
@@ -297,7 +297,7 @@ export class SdQueryBar {
   }
 
   // ---------------------------------------------------------------------------
-  // Inline mode â€” progressive token build flow (field â†’ operator â†’ value)
+  // Inline mode — progressive token build flow (field → operator → value)
   // ---------------------------------------------------------------------------
 
   /** Append a completed chip to `filters` WITHOUT emitting (inline mode commits on Search). */
@@ -313,18 +313,18 @@ export class SdQueryBar {
     this.filters.set([...this.filters(), next]);
   }
 
-  /** Entry point from the field picker â€” start building a chip for `field`. */
+  /** Entry point from the field picker — start building a chip for `field`. */
   beginBuild(field: SdQueryField): void {
     const allowed = sdQueryAllowedOperators(field);
     const def = sdQueryDefaultOperator(field);
-    // why: date/datetime máº·c Ä‘á»‹nh lÃ  BETWEEN â€” skip operator step Ä‘á»ƒ user vÃ o value
-    // step ngay (95% case dÃ¹ng BETWEEN cho date/datetime; cáº¯t 1 click cho luá»“ng phá»•
-    // biáº¿n nháº¥t). Field type khÃ¡c giá»¯ flow chá»n operator Ä‘á»ƒ user tháº¥y Ä‘áº§y Ä‘á»§ lá»±a chá»n.
+    // why: date/datetime mặc định là BETWEEN — skip operator step để user vào value
+    // step ngay (95% case dùng BETWEEN cho date/datetime; cắt 1 click cho luồng phổ
+    // biến nhất). Field type khác giữ flow chọn operator để user thấy đầy đủ lựa chọn.
     const skipOperatorStep = (field.type === 'date' || field.type === 'datetime') && allowed.includes(def);
     if (allowed.length > 1 && !skipOperatorStep) {
       this.#building.set({ field, step: 'operator' });
       // why: auto-open the operator menu so the user can pick the condition without a
-      // second click â€” the viewChild only resolves after the building chip renders.
+      // second click — the viewChild only resolves after the building chip renders.
       afterNextRender(() => this.buildChip()?.openOperator(), { injector: this.#injector });
       return;
     }
@@ -338,7 +338,7 @@ export class SdQueryBar {
     this.#enterValueStep(field);
   }
 
-  /** Operator chosen during build â€” finish (no-data) or advance to the value step. */
+  /** Operator chosen during build — finish (no-data) or advance to the value step. */
   pickBuildOperator(op: Operator): void {
     const b = this.#building();
     if (!b) return;
@@ -351,7 +351,7 @@ export class SdQueryBar {
     this.#enterValueStep(b.field);
   }
 
-  /** Value committed during build â€” push the completed chip, clear building. No emit. */
+  /** Value committed during build — push the completed chip, clear building. No emit. */
   commitBuildValue(value: unknown): void {
     const b = this.#building();
     if (!b || !b.operator) return;
@@ -384,10 +384,10 @@ export class SdQueryBar {
 
 
   /**
-   * Commit both ends of a BETWEEN range at once â€” called from `<sd-query-inline-chip>`'s
+   * Commit both ends of a BETWEEN range at once — called from `<sd-query-inline-chip>`'s
    * `(commitRange)` output when the user picks a date range.
-   * why: sd-date-range emits {from,to} via (sdChange) â€” single call thay cho cáº·p
-   * setFilterRangeFrom / setFilterRangeTo cÅ© (Ä‘Ã£ bá»).
+   * why: sd-date-range emits {from,to} via (sdChange) — single call thay cho cặp
+   * setFilterRangeFrom / setFilterRangeTo cũ (đã bỏ).
    */
   setFilterRange(i: number, ev: { from: unknown; to: unknown } | null): void {
     this.updateFilter(i, { data: ev ?? { from: null, to: null } } as Partial<Filter>);
@@ -403,7 +403,7 @@ export class SdQueryBar {
     const next: Filter = { field: field.key as any, operator, data } as Filter;
     const newIndex = this.filters().length;
     this.filters.set([...this.filters(), next]);
-    // why: user added a field â€” open its edit popover immediately so they can pick
+    // why: user added a field — open its edit popover immediately so they can pick
     // operator + value in one continuous flow (no second click required).
     afterNextRender(
       () => this.popoverChips()[newIndex]?.openMenu(),
@@ -411,7 +411,7 @@ export class SdQueryBar {
     );
   }
 
-  /** Swap the field of an existing chip â€” reset operator + value to the new field's defaults. */
+  /** Swap the field of an existing chip — reset operator + value to the new field's defaults. */
   changeFilterField(index: number, field: SdQueryField): void {
     const list = [...this.filters()];
     if (index < 0 || index >= list.length) return;
@@ -464,7 +464,7 @@ export class SdQueryBar {
   }
 
   triggerApply(): void {
-    // why: single deferred trigger â€” fire both the change notification and the reload
+    // why: single deferred trigger — fire both the change notification and the reload
     // signal once, from here only (mutations no longer emit).
     const q = this.#buildQuery();
     this.queryChange.emit(q);
@@ -472,11 +472,11 @@ export class SdQueryBar {
   }
 
   // ---------------------------------------------------------------------------
-  // Chip popover â€” delegate staging to `<sd-query-chip-popover>` child.
+  // Chip popover — delegate staging to `<sd-query-chip-popover>` child.
   // ---------------------------------------------------------------------------
 
   /**
-   * Called when a popover-mode chip is clicked â€” set editingIndex and seed the
+   * Called when a popover-mode chip is clicked — set editingIndex and seed the
    * child popover's staging signals from the chip's Filter.
    */
   openChipPopover(index: number): void {
@@ -487,7 +487,7 @@ export class SdQueryBar {
     this.chipPopover()?.seed(filter, field);
   }
 
-  /** Receive `(commit)` from the child popover â€” splice into filters, null the index. */
+  /** Receive `(commit)` from the child popover — splice into filters, null the index. */
   onChipPopoverCommit(next: Filter): void {
     const idx = this.editingIndex();
     if (idx === null) return;
@@ -514,8 +514,8 @@ export class SdQueryBar {
     const field = this.fieldByKey()[fieldKey];
     if (!field) return String(raw);
     if (field.type === 'boolean') {
-      const trueLabel = (field as any).trueLabel ?? 'CÃ³';
-      const falseLabel = (field as any).falseLabel ?? 'KhÃ´ng';
+      const trueLabel = (field as any).trueLabel ?? 'Có';
+      const falseLabel = (field as any).falseLabel ?? 'Không';
       return raw ? trueLabel : falseLabel;
     }
     if (field.type === 'values' || field.type === 'lazy-values') {
@@ -536,4 +536,3 @@ export class SdQueryBar {
     return null;
   }
 }
-

@@ -1,4 +1,4 @@
-�# Spec � Module `authom` cho `sd-angular`
+# Spec — Module `authom` cho `sd-angular`
 
 **Ngày:** 2026-05-05
 **Trạng thái:** Approved (chờ implementation plan)
@@ -6,14 +6,14 @@
 
 ## 1. Mục tiêu
 
-Xây dựng module `authom` trong thư vi�!n `sd-angular`, mirror cấu trúc module `keycloak` hi�!n có, �Ồ consumer có thỒ tích hợp xác thực v�:i AuthOM (server OAuth 2.0 dựa trên Auth0 cũ) ch�0 bằng vài dòng provider trong `app.config.ts`.
+Xây dựng module `authom` trong thư viện `sd-angular`, mirror cấu trúc module `keycloak` hiện có, để consumer có thể tích hợp xác thực với AuthOM (server OAuth 2.0 dựa trên Auth0 cũ) chỉ bằng vài dòng provider trong `app.config.ts`.
 
-Yêu cầu c�t lõi:
+Yêu cầu cốt lõi:
 - Authorization Code Flow + PKCE (gọi thẳng AuthOM, không cần BE proxy).
 - Silent refresh qua iframe ẩn + session cookie (`prompt=none`).
-- Auto-refresh token trư�:c khi hết hạn (dựa vào JWT `exp`).
-- Token ch�0 lưu RAM (không persist localStorage / sessionStorage).
-- H� trợ cả standalone (`provideSdAuthOm`) và NgModule (`SdAuthOmModule.forRoot`) � nhất quán v�:i module keycloak.
+- Auto-refresh token trước khi hết hạn (dựa vào JWT `exp`).
+- Token chỉ lưu RAM (không persist localStorage / sessionStorage).
+- Hỗ trợ cả standalone (`provideSdAuthOm`) và NgModule (`SdAuthOmModule.forRoot`) — nhất quán với module keycloak.
 
 ## 2. Phạm vi
 
@@ -21,32 +21,32 @@ Yêu cầu c�t lõi:
 - Login redirect flow + handle callback.
 - Silent refresh dùng iframe + file HTML tĩnh `silent-authom.html`.
 - Auto-refresh timer dựa trên JWT `exp`.
-- HTTP interceptor �ính `Authorization: Bearer` cho URL match `secureRoutes` (glob pattern v�:i `*`).
-- Logout redirect t�:i AuthOM `/v2/logout`.
-- H� trợ tham s� AuthOM-specific: `audience`, `organization`, `scope`.
+- HTTP interceptor đính `Authorization: Bearer` cho URL match `secureRoutes` (glob pattern với `*`).
+- Logout redirect tới AuthOM `/v2/logout`.
+- Hỗ trợ tham số AuthOM-specific: `audience`, `organization`, `scope`.
 
-**Out of scope (YAGNI, có thỒ thêm sau):**
-- Refresh tokens (`useRefreshTokens` của Auth0 SDK) � module ch�0 dùng silent iframe.
-- `cacheLocation: 'localstorage'` � module luôn lưu RAM.
-- BE proxy `tokenEndpoint` � bỏ, dùng PKCE �Ồ gọi thẳng `/oauth/token`.
+**Out of scope (YAGNI, có thể thêm sau):**
+- Refresh tokens (`useRefreshTokens` của Auth0 SDK) — module chỉ dùng silent iframe.
+- `cacheLocation: 'localstorage'` — module luôn lưu RAM.
+- BE proxy `tokenEndpoint` — bỏ, dùng PKCE để gọi thẳng `/oauth/token`.
 - Cross-tab sync token.
 
 ## 3. Cấu trúc file
 
 ```
 projects/sdcorejs-angular/modules/authom/
-�S���� index.ts                       # re-export public API
-�S���� ng-package.json                # entry point cho ng-packagr
-�S���� authom.configuration.ts        # InjectionToken + interface
-�S���� authom.service.ts              # core service
-�S���� authom.interceptor.ts          # HttpInterceptorFn
-�S���� authom.module.ts               # provideSdAuthOm + SdAuthOmModule.forRoot
-����� silent-authom.html             # template HTML tĩnh cho iframe
+├── index.ts                       # re-export public API
+├── ng-package.json                # entry point cho ng-packagr
+├── authom.configuration.ts        # InjectionToken + interface
+├── authom.service.ts              # core service
+├── authom.interceptor.ts          # HttpInterceptorFn
+├── authom.module.ts               # provideSdAuthOm + SdAuthOmModule.forRoot
+└── silent-authom.html             # template HTML tĩnh cho iframe
 ```
 
-`silent-authom.html` �ược ship như m�"t file tĩnh trong source � consumer copy thủ công vào `public/` (Angular 19) hoặc `src/` + thêm vào `angular.json` `assets`. Document trong README/comment.
+`silent-authom.html` được ship như một file tĩnh trong source — consumer copy thủ công vào `public/` (Angular 19) hoặc `src/` + thêm vào `angular.json` `assets`. Document trong README/comment.
 
-B�" sung 1 helper vào file �ã có: thêm `sha256` vào `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts` (export qua `StringUtilities`). Quyết ��9nh cu�i cùng: vẫn dùng `crypto.subtle.digest` và `crypto.getRandomValues` (Web Crypto API) � không viết SHA-256 pure JS nữa.
+Bổ sung 1 helper vào file đã có: thêm `sha256` vào `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts` (export qua `StringUtilities`). Quyết định cuối cùng: vẫn dùng `crypto.subtle.digest` và `crypto.getRandomValues` (Web Crypto API) — không viết SHA-256 pure JS nữa.
 
 ## 4. Configuration
 
@@ -54,22 +54,22 @@ B�" sung 1 helper vào file �ã có: thêm `sha256` vào `projects/sdcorejs
 
 ```ts
 export interface SdAuthOmTenantConfig {
-  // Bắt bu�"c
+  // Bắt buộc
   domain: string;                    // vd: 'login-qc.oneshop.dev'
   clientId: string;
 
-  // Tuỳ chọn � params cho /authorize
+  // Tuỳ chọn — params cho /authorize
   redirectUri?: string;              // default: window.location.origin
   audience?: string;                 // API audience (cho JWT có aud)
   organization?: string;             // org ID
   scope?: string;                    // default: 'openid profile email'
 
-  // Tuỳ chọn � interceptor
+  // Tuỳ chọn — interceptor
   secureRoutes?: string[];           // glob patterns, vd ['https://api.example.com/*']
 
-  // Tuỳ chọn � silent refresh
+  // Tuỳ chọn — silent refresh
   silentRefreshRedirectUri?: string; // default: `${origin}/silent-authom.html`
-  refreshThresholdSeconds?: number;  // default: 30 (refresh trư�:c khi hết hạn)
+  refreshThresholdSeconds?: number;  // default: 30 (refresh trước khi hết hạn)
   authorizeTimeoutInSeconds?: number;// default: 5 (timeout iframe)
 }
 ```
@@ -85,9 +85,9 @@ export const SD_AUTHOM_CONFIGURATION =
   new InjectionToken<ISdAuthOmConfiguration>('sd-authom.configuration');
 ```
 
-H� trợ async load (multi-tenant fetch theo subdomain), gi�ng pattern keycloak.
+Hỗ trợ async load (multi-tenant fetch theo subdomain), giống pattern keycloak.
 
-## 5. Service contract � `SdAuthOmService`
+## 5. Service contract — `SdAuthOmService`
 
 ```ts
 @Injectable({ providedIn: 'root' })
@@ -113,13 +113,13 @@ export class SdAuthOmService {
 }
 ```
 
-### 5.1 `init(config)` � chạy b�xi `APP_INITIALIZER`
+### 5.1 `init(config)` — chạy bởi `APP_INITIALIZER`
 
-1. Guard `isPlatformBrowser(PLATFORM_ID)` � nếu không phải browser, return `false`.
+1. Guard `isPlatformBrowser(PLATFORM_ID)` — nếu không phải browser, return `false`.
 2. Lưu config vào `this.config`.
-3. Nếu `window.location.search` chứa `?code=` �  gọi `handleCallback()`.
-4. Nếu chưa có token sau callback �  gọi `silentRefresh()` (case m�x app khi �ã có session �x AuthOM).
-5. Trả về `true` nếu cu�i cùng có `accessToken`, `false` nếu không.
+3. Nếu `window.location.search` chứa `?code=` → gọi `handleCallback()`.
+4. Nếu chưa có token sau callback → gọi `silentRefresh()` (case mở app khi đã có session ở AuthOM).
+5. Trả về `true` nếu cuối cùng có `accessToken`, `false` nếu không.
 
 ### 5.2 `login(options?)`
 
@@ -127,7 +127,7 @@ export class SdAuthOmService {
 2. Generate `code_verifier` = base64url của `crypto.getRandomValues(new Uint8Array(32))`.
 3. Generate `code_challenge` = base64url của `await crypto.subtle.digest('SHA-256', encoder.encode(verifier))`.
 4. Lưu `sessionStorage`: `authom_state`, `authom_code_verifier`, `authom_return_to` (default = `pathname + search`).
-5. Build URL `https://{domain}/authorize` v�:i query:
+5. Build URL `https://{domain}/authorize` với query:
    - `response_type=code`
    - `client_id={clientId}`
    - `redirect_uri={redirectUri || origin}`
@@ -145,9 +145,9 @@ export class SdAuthOmService {
 2. Build `https://{domain}/v2/logout?client_id={clientId}&returnTo={returnTo || origin}`.
 3. `window.location.href = url`.
 
-### 5.4 `silentRefresh()` � Promise<boolean>
+### 5.4 `silentRefresh()` — Promise<boolean>
 
-State + code_verifier cho silent refresh �ược giữ trong **closure local variables** (không dùng sessionStorage) � tránh race v�:i `login()` (Standard flow). File `silent-authom.html` echo `state` về parent qua postMessage �Ồ parent verify.
+State + code_verifier cho silent refresh được giữ trong **closure local variables** (không dùng sessionStorage) — tránh race với `login()` (Standard flow). File `silent-authom.html` echo `state` về parent qua postMessage để parent verify.
 
 1. Generate local `state`, `code_verifier`, `code_challenge` (lưu trong biến closure).
 2. Tạo iframe ẩn (`display: none`).
@@ -158,19 +158,19 @@ State + code_verifier cho silent refresh �ược giữ trong **closure local 
 4. `iframe.src = authorizeUrl`, append vào body.
 5. Listen `message` event:
    - Verify `event.origin === window.location.origin`.
-   - Nếu `event.data.type === 'AUTHOM_SILENT_SUCCESS'` và `event.data.state === local state` �  exchange `event.data.code` v�:i local `code_verifier` �  set token + schedule refresh �  resolve `true`.
-   - Nếu `event.data.type === 'AUTHOM_SILENT_ERROR'` hoặc state mismatch �  resolve `false`.
-6. Timeout sau `authorizeTimeoutInSeconds * 1000` ms �  resolve `false`.
+   - Nếu `event.data.type === 'AUTHOM_SILENT_SUCCESS'` và `event.data.state === local state` → exchange `event.data.code` với local `code_verifier` → set token + schedule refresh → resolve `true`.
+   - Nếu `event.data.type === 'AUTHOM_SILENT_ERROR'` hoặc state mismatch → resolve `false`.
+6. Timeout sau `authorizeTimeoutInSeconds * 1000` ms → resolve `false`.
 7. Cleanup: remove iframe, removeEventListener.
 
-### 5.5 `handleCallback()` � Promise<boolean>
+### 5.5 `handleCallback()` — Promise<boolean>
 
-`handleCallback` ch�0 chạy cho Standard Login Flow (không phải silent refresh � silent refresh có flow riêng trong section 5.4 qua postMessage).
+`handleCallback` chỉ chạy cho Standard Login Flow (không phải silent refresh — silent refresh có flow riêng trong section 5.4 qua postMessage).
 
 1. Đọc `code` + `state` từ `URLSearchParams(window.location.search)`.
-2. Verify state kh�:p `sessionStorage.authom_state` �  mismatch �  cleanup sessionStorage, xóa query string, return `false`.
-3. Lấy `code_verifier` từ sessionStorage. Nếu không có �  return `false`.
-4. POST t�:i `https://{domain}/oauth/token`:
+2. Verify state khớp `sessionStorage.authom_state` → mismatch → cleanup sessionStorage, xóa query string, return `false`.
+3. Lấy `code_verifier` từ sessionStorage. Nếu không có → return `false`.
+4. POST tới `https://{domain}/oauth/token`:
    ```
    grant_type=authorization_code
    code={code}
@@ -178,23 +178,23 @@ State + code_verifier cho silent refresh �ược giữ trong **closure local 
    redirect_uri={redirectUri}
    client_id={clientId}
    ```
-5. Cleanup sessionStorage: xóa `authom_state`, `authom_code_verifier` (giữ `authom_return_to` �ến bư�:c 7).
-6. Nếu exchange fail �  return `false`. Nếu thành công: set `accessToken`, decode `id_token` �  set `idTokenClaims`, schedule auto-refresh.
-7. Lấy `returnTo` từ `sessionStorage.authom_return_to` (nếu có) �  `history.replaceState({}, '', returnTo)`, xóa khỏi sessionStorage. Nếu không có �  `history.replaceState({}, '', pathname)` (ch�0 xóa query string).
+5. Cleanup sessionStorage: xóa `authom_state`, `authom_code_verifier` (giữ `authom_return_to` đến bước 7).
+6. Nếu exchange fail → return `false`. Nếu thành công: set `accessToken`, decode `id_token` → set `idTokenClaims`, schedule auto-refresh.
+7. Lấy `returnTo` từ `sessionStorage.authom_return_to` (nếu có) → `history.replaceState({}, '', returnTo)`, xóa khỏi sessionStorage. Nếu không có → `history.replaceState({}, '', pathname)` (chỉ xóa query string).
 8. Return `true`.
 
-**Lưu ý timing**: `handleCallback` chạy bên trong `init()`, tức là **trư�:c** khi Angular Router thực hi�!n initial navigation. Nên vi�!c gọi `history.replaceState` �x bư�:c 7 trư�:c khi `init()` resolve giúp Router parse URL �ã sạch query.
+**Lưu ý timing**: `handleCallback` chạy bên trong `init()`, tức là **trước** khi Angular Router thực hiện initial navigation. Nên việc gọi `history.replaceState` ở bước 7 trước khi `init()` resolve giúp Router parse URL đã sạch query.
 
 ### 5.6 Auto-refresh timer (private)
 
-- Gọi sau m�i lần exchange/refresh thành công.
-- Decode JWT bằng `atob(token.split('.')[1])` �  lấy `exp` (seconds since epoch).
+- Gọi sau mỗi lần exchange/refresh thành công.
+- Decode JWT bằng `atob(token.split('.')[1])` → lấy `exp` (seconds since epoch).
 - `delay = max(0, (exp - now/1000 - refreshThresholdSeconds) * 1000)`.
 - `setTimeout(() => silentRefresh(), delay)`.
 - Lưu timer ID, clear khi logout / new refresh / silent fail.
-- Nếu JWT không có `exp` �  log warning, skip auto-refresh.
+- Nếu JWT không có `exp` → log warning, skip auto-refresh.
 
-## 6. Interceptor � `SdAuthOmInterceptor`
+## 6. Interceptor — `SdAuthOmInterceptor`
 
 ```ts
 export const SdAuthOmInterceptor: HttpInterceptorFn = (req, next) => {
@@ -214,13 +214,13 @@ export const SdAuthOmInterceptor: HttpInterceptorFn = (req, next) => {
 };
 ```
 
-**`matchGlob(pattern, url)`** � helper n�"i b�", h� trợ ký tự `*`:
+**`matchGlob(pattern, url)`** — helper nội bộ, hỗ trợ ký tự `*`:
 - Convert pattern thành RegExp: escape các ký tự regex, replace `\*` thành `.*`.
-- Test url kh�:p regex.
+- Test url khớp regex.
 
-Khác bi�!t so v�:i keycloak interceptor:
-- Glob match thay vì `includes()` (vì config Auth0 hi�!n tại dùng wildcard `*`).
-- Không có logic `updateToken(30)` async � auto-refresh �ã chạy timer riêng, token luôn fresh.
+Khác biệt so với keycloak interceptor:
+- Glob match thay vì `includes()` (vì config Auth0 hiện tại dùng wildcard `*`).
+- Không có logic `updateToken(30)` async — auto-refresh đã chạy timer riêng, token luôn fresh.
 
 ## 7. `silent-authom.html`
 
@@ -251,13 +251,13 @@ Khác bi�!t so v�:i keycloak interceptor:
 ```
 
 Nguyên tắc:
-- File tĩnh < 1KB, không bootstrap Angular trong iframe �  tránh load nguyên bundle (>1MB).
-- `targetOrigin = window.location.origin` (không dùng `'*'`) �  tránh leak code ra origin khác.
-- Check `window.parent === window` �  tránh chạy nhầm khi user m�x file trực tiếp.
+- File tĩnh < 1KB, không bootstrap Angular trong iframe → tránh load nguyên bundle (>1MB).
+- `targetOrigin = window.location.origin` (không dùng `'*'`) → tránh leak code ra origin khác.
+- Check `window.parent === window` → tránh chạy nhầm khi user mở file trực tiếp.
 
 ## 8. Module providers
 
-### 8.1 `provideSdAuthOm()` � standalone
+### 8.1 `provideSdAuthOm()` — standalone
 
 ```ts
 export function provideSdAuthOm(options: {
@@ -285,20 +285,20 @@ export function provideSdAuthOm(options: {
 }
 ```
 
-### 8.2 `SdAuthOmModule.forRoot()` � NgModule legacy
+### 8.2 `SdAuthOmModule.forRoot()` — NgModule legacy
 
 Tương tự keycloak.module.ts, dùng `APP_INITIALIZER` thay vì `provideAppInitializer`.
 
 ### 8.3 Wire interceptor (consumer self-service)
 
-Module **không** auto-provide interceptor � consumer tự thêm vào `provideHttpClient`:
+Module **không** auto-provide interceptor — consumer tự thêm vào `provideHttpClient`:
 
 ```ts
 provideHttpClient(withInterceptors([SdAuthOmInterceptor])),
 provideSdAuthOm({ useFactory: () => ({ loadTenantConfig: ... }) }),
 ```
 
-## 9. StringUtilities � b�" sung
+## 9. StringUtilities — bổ sung
 
 Thêm 1 hàm vào `projects/sdcorejs-angular/utilities/extensions/src/string.extension.ts`:
 
@@ -320,15 +320,15 @@ Export qua `StringUtilities`. Service `authom.service.ts` import và dùng.
 | # | Scenario | Behavior |
 |---|----------|----------|
 | 1 | SSR / non-browser | `init()` return `false` ngay; mọi method skip. |
-| 2 | `crypto.subtle` unavailable (HTTP, không phải HTTPS / localhost) | `login()` throw error rõ ràng � document trong README. |
+| 2 | `crypto.subtle` unavailable (HTTP, không phải HTTPS / localhost) | `login()` throw error rõ ràng — document trong README. |
 | 3 | State mismatch | `handleCallback` return `false`, không exchange code. |
-| 4 | Multi-tab race (tab B copy URL có `?code=`) | Tab B exchange fail (code �ã dùng) �  return `false` �  app tự xử lý. |
-| 5 | Silent refresh timeout | Resolve `false`, không clear token cũ (vẫn dùng �ến khi expire). |
+| 4 | Multi-tab race (tab B copy URL có `?code=`) | Tab B exchange fail (code đã dùng) → return `false` → app tự xử lý. |
+| 5 | Silent refresh timeout | Resolve `false`, không clear token cũ (vẫn dùng đến khi expire). |
 | 6 | Silent refresh nhận error message | Resolve `false`, clear token, clear timer. |
-| 7 | JWT không có `exp` (opaque token) | Log warning, skip auto-refresh, token vẫn dùng �ược. |
-| 8 | Logout | Clear token + claims + timer **trư�:c** khi redirect t�:i `/v2/logout`. |
+| 7 | JWT không có `exp` (opaque token) | Log warning, skip auto-refresh, token vẫn dùng được. |
+| 8 | Logout | Clear token + claims + timer **trước** khi redirect tới `/v2/logout`. |
 | 9 | Network fail khi exchange | Return `false`, không retry. App tự xử lý. |
-| 10 | URL có `?code=` còn sót khi Router parse | `replaceState` xóa query string **trư�:c** khi `init()` resolve. |
+| 10 | URL có `?code=` còn sót khi Router parse | `replaceState` xóa query string **trước** khi `init()` resolve. |
 
 ## 11. Public API export (`index.ts`)
 
@@ -370,9 +370,8 @@ export const appConfig: ApplicationConfig = {
 
 ## 13. Security notes
 
-- `code_verifier` 32 bytes ngẫu nhiên qua `crypto.getRandomValues` �  �ủ entropy cho PKCE.
-- `state` qua `crypto.randomUUID` �  �ủ unique ch�ng CSRF.
+- `code_verifier` 32 bytes ngẫu nhiên qua `crypto.getRandomValues` → đủ entropy cho PKCE.
+- `state` qua `crypto.randomUUID` → đủ unique chống CSRF.
 - `targetOrigin` của `postMessage` luôn = `window.location.origin`, không bao giờ `*`.
-- Token ch�0 lưu RAM, mất khi reload � silent refresh sẽ lấy lại nếu session AuthOM còn hợp l�!.
-- `crypto.subtle` ch�0 hoạt ��"ng trong secure context (HTTPS / localhost).
-
+- Token chỉ lưu RAM, mất khi reload — silent refresh sẽ lấy lại nếu session AuthOM còn hợp lệ.
+- `crypto.subtle` chỉ hoạt động trong secure context (HTTPS / localhost).

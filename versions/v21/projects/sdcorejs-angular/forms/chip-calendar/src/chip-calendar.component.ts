@@ -1,4 +1,4 @@
-﻿import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -378,5 +378,4 @@ export class SdChipCalendar implements AfterViewInit {
   onCloseCalendar = () => this.#closeCalendar();
   dateClass = (cellDate: Date) => this.#dateClass(cellDate);
 }
-
 

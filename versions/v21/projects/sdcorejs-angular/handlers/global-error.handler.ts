@@ -1,8 +1,8 @@
-﻿import { ErrorHandler, inject, Injectable } from '@angular/core';
+import { ErrorHandler, inject, Injectable } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
-// Sá»­ dá»¥ng Global Handler Ä‘á»ƒ Ä‘áº£m báº£o khi cÃ³ báº£n build má»›i sáº½ bÃ¡o cho ngÆ°á»i dÃ¹ng biáº¿t Ä‘á»ƒ táº£i láº¡i
-// CÃ¡ch sá»­ dá»¥ng: providers: [{ provide: ErrorHandler, useClass: GlobalErrorHandler }],
+// Sử dụng Global Handler để đảm bảo khi có bản build mới sẽ báo cho người dùng biết để tải lại
+// Cách sử dụng: providers: [{ provide: ErrorHandler, useClass: GlobalErrorHandler }],
 @Injectable()
 export class SdGlobalErrorHandler implements ErrorHandler {
   readonly #i18n = inject(I18nService);
@@ -10,20 +10,20 @@ export class SdGlobalErrorHandler implements ErrorHandler {
   constructor() {}
 
   handleError(error: any): void {
-    // Láº¥y message lá»—i an toÃ n
+    // Lấy message lỗi an toàn
     const errorMessage = this.#extractErrorMessage(error);
 
-    // Danh sÃ¡ch cÃ¡c tá»« khÃ³a nháº­n diá»‡n lá»—i máº¥t file JS/Chunk
-    // Cáº§n bao gá»“m nhiá»u biáº¿n thá»ƒ do trÃ¬nh duyá»‡t/bundler khÃ¡c nhau
+    // Danh sách các từ khóa nhận diện lỗi mất file JS/Chunk
+    // Cần bao gồm nhiều biến thể do trình duyệt/bundler khác nhau
     const chunkErrorSignatures = [
-      'Loading chunk',                              // Webpack cÅ©
-      'Importing a module script failed',           // Má»™t sá»‘ trÃ¬nh duyá»‡t
-      'Failed to fetch dynamically imported module', // <-- Lá»—i báº¡n Ä‘ang gáº·p (Angular má»›i/Vite/Esbuild)
-      'error loading dynamically imported module',  // Firefox/Safari biáº¿n thá»ƒ
-      'missing source map'                          // ÄÃ´i khi Ä‘i kÃ¨m
+      'Loading chunk',                              // Webpack cũ
+      'Importing a module script failed',           // Một số trình duyệt
+      'Failed to fetch dynamically imported module', // <-- Lỗi bạn đang gặp (Angular mới/Vite/Esbuild)
+      'error loading dynamically imported module',  // Firefox/Safari biến thể
+      'missing source map'                          // Đôi khi đi kèm
     ];
 
-    // Kiá»ƒm tra xem lá»—i cÃ³ chá»©a tá»« khÃ³a nÃ o khÃ´ng
+    // Kiểm tra xem lỗi có chứa từ khóa nào không
     const isChunkError = chunkErrorSignatures.some(signature =>
       errorMessage.includes(signature.toLowerCase())
     );
@@ -40,22 +40,22 @@ export class SdGlobalErrorHandler implements ErrorHandler {
         window.location.reload();
       }
     } else {
-      // Log lá»—i thÆ°á»ng
+      // Log lỗi thường
       console.error('Application error:', error);
     }
   }
 
-  // HÃ m phá»¥ trá»£ Ä‘á»ƒ láº¥y text lá»—i tá»« object error báº¥t ká»³
+  // Hàm phụ trợ để lấy text lỗi từ object error bất kỳ
   #extractErrorMessage = (error: any): string => {
     if (!error) return '';
 
-    // Náº¿u lÃ  chuá»—i
+    // Nếu là chuỗi
     if (typeof error === 'string') return error.toLowerCase();
 
-    // Náº¿u lÃ  Error Object chuáº©n
+    // Nếu là Error Object chuẩn
     if (error.message) return error.message.toLowerCase();
 
-    // Náº¿u lá»—i náº±m trong rejection (Promise)
+    // Nếu lỗi nằm trong rejection (Promise)
     if (error.rejection) {
       return (typeof error.rejection === 'string')
         ? error.rejection.toLowerCase()
@@ -64,4 +64,3 @@ export class SdGlobalErrorHandler implements ErrorHandler {
     return '';
   }
 }
-

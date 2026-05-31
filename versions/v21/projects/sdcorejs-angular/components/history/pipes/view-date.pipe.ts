@@ -1,4 +1,4 @@
-﻿import { Injectable, Pipe, PipeTransform } from '@angular/core';
+import { Injectable, Pipe, PipeTransform } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 
@@ -17,4 +17,3 @@ export class ViewDateTimePipe implements PipeTransform {
     return DateUtilities.toFormat(value, 'HH:mm dd/MM/yyyy');
   }
 }
-

@@ -1,14 +1,14 @@
-�# Bare Picker API Implementation Plan
+# Bare Picker API Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add a `[bare]` render mode + public `open()` to `sd-select` / `sd-date` / `sd-datetime`, then refactor `sd-query-bar` inline mode to render those bare controls and delete the bespoke `valuePopover` / `.c-valpop` panel + inline option machinery.
 
-**Architecture:** Additive (default-off) API on the three core form controls � `bare` flattens the `mat-form-field` chrome via a `:host(.sd-bare)` CSS scope; `open()` opens the control's existing native picker. `sd-query-bar` composes the bare controls in its inline chips and routes `lazy-values` through `sd-select`'s `SdSearch` items, so the bar no longer owns any option/overlay logic for the inline path.
+**Architecture:** Additive (default-off) API on the three core form controls — `bare` flattens the `mat-form-field` chrome via a `:host(.sd-bare)` CSS scope; `open()` opens the control's existing native picker. `sd-query-bar` composes the bare controls in its inline chips and routes `lazy-values` through `sd-select`'s `SdSearch` items, so the bar no longer owns any option/overlay logic for the inline path.
 
 **Tech Stack:** Angular 19 standalone + signals, Angular Material (mat-select / mat-datepicker / CDK overlay), Karma+Jasmine, ng-packagr secondary entry points.
 
-**Working directory for all commands:** `cd /c/Users/Admin/Documents/lib-core-angular/vn-angular` (the harness resets cwd between Bash calls � prefix every `npx ng` command with this `cd`).
+**Working directory for all commands:** `cd /c/Users/Admin/Documents/lib-core-angular/vn-angular` (the harness resets cwd between Bash calls — prefix every `npx ng` command with this `cd`).
 
 **Test command template (one entry at a time keeps Karma fast):**
 ```bash
@@ -23,23 +23,23 @@ cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng test sdcorejs-
 ## File Structure
 
 **Core controls (each: add `bare` input + host class + `open()` + `:host(.sd-bare)` CSS):**
-- `projects/sdcorejs-angular/forms/select/src/select.component.ts` � `bare` input, `open()`.
-- `projects/sdcorejs-angular/forms/select/src/select.component.scss` � `:host(.sd-bare)` flatten.
-- `projects/sdcorejs-angular/forms/select/src/select.component.spec.ts` � bare + open tests.
-- `projects/sdcorejs-angular/forms/date/src/date.component.{ts,scss,spec.ts}` � same.
-- `projects/sdcorejs-angular/forms/datetime/src/datetime.component.{ts,scss,spec.ts}` � `bare` + open test (`open()` already exists).
+- `projects/sdcorejs-angular/forms/select/src/select.component.ts` — `bare` input, `open()`.
+- `projects/sdcorejs-angular/forms/select/src/select.component.scss` — `:host(.sd-bare)` flatten.
+- `projects/sdcorejs-angular/forms/select/src/select.component.spec.ts` — bare + open tests.
+- `projects/sdcorejs-angular/forms/date/src/date.component.{ts,scss,spec.ts}` — same.
+- `projects/sdcorejs-angular/forms/datetime/src/datetime.component.{ts,scss,spec.ts}` — `bare` + open test (`open()` already exists).
 
 **sd-query-bar:**
-- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` � add `lazyItemsFor()` adapter; delete value-popover state + ~14 methods + inline option cache; repurpose `usesValuePopover`.
-- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` � route `values`/`lazy-values`/`date`/`datetime` inline chips to bare controls via `valueEditor`; delete `valuePopover` mat-menu + value-trigger buttons.
-- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` � delete `.c-value-popover*` / `.c-valpop*`.
-- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` � drop value-popover specs; add bare-control specs.
+- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` — add `lazyItemsFor()` adapter; delete value-popover state + ~14 methods + inline option cache; repurpose `usesValuePopover`.
+- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` — route `values`/`lazy-values`/`date`/`datetime` inline chips to bare controls via `valueEditor`; delete `valuePopover` mat-menu + value-trigger buttons.
+- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` — delete `.c-value-popover*` / `.c-valpop*`.
+- `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` — drop value-popover specs; add bare-control specs.
 
 **Untouched:** `inline-value-chip.*` (string/number seamless), popover-mode chipPopover path.
 
 ---
 
-## Task 1: sd-datetime � `bare` input + open() test
+## Task 1: sd-datetime — `bare` input + open() test
 
 `open()` already exists (`datetime.component.ts:301`, anchors a CDK overlay to the host). Only add `bare` + verify `open()`.
 
@@ -78,7 +78,7 @@ Run:
 ```bash
 cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="projects/sdcorejs-angular/forms/datetime/**/*.spec.ts" 2>&1 | tr '\r' '\n' | grep -iE "TOTAL|FAILED|error TS" | head
 ```
-Expected: FAIL � `component.bare is not a function` (input missing).
+Expected: FAIL — `component.bare is not a function` (input missing).
 
 - [ ] **Step 3: Add the `bare` input + host class binding**
 
@@ -100,7 +100,7 @@ Add the input (near the other boolean inputs such as `required`/`disabled`; ensu
 Append to `datetime.component.scss`:
 
 ```scss
-// Bare mode � flatten the field so the control fits inline in a chip (sd-query-bar).
+// Bare mode — flatten the field so the control fits inline in a chip (sd-query-bar).
 :host(.sd-bare) {
   display: inline-flex;
 
@@ -130,7 +130,7 @@ EOF
 
 ---
 
-## Task 2: sd-date � `open()` + `bare`
+## Task 2: sd-date — `open()` + `bare`
 
 `date.component.ts` has `datePicker = viewChild<MatDatepicker<Date>>(MatDatepicker)` (line 85) and a `focus()` that calls `datePicker()?.open()`. Add a clean public `open()` + `bare`.
 
@@ -165,7 +165,7 @@ Run:
 ```bash
 cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="projects/sdcorejs-angular/forms/date/**/*.spec.ts" 2>&1 | tr '\r' '\n' | grep -iE "TOTAL|FAILED|error TS" | head
 ```
-Expected: FAIL � `component.open is not a function` and/or `component.bare is not a function`.
+Expected: FAIL — `component.open is not a function` and/or `component.bare is not a function`.
 
 - [ ] **Step 3: Add `bare` input, host class, `open()`**
 
@@ -223,7 +223,7 @@ EOF
 
 ---
 
-## Task 3: sd-select � `open()` + `bare`
+## Task 3: sd-select — `open()` + `bare`
 
 `select.component.ts` has `selectRef = viewChild<MatSelect>('select')` (line 96) and a `focus()` that calls `selectRef()?.open()`.
 
@@ -260,7 +260,7 @@ Run:
 ```bash
 cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include="projects/sdcorejs-angular/forms/select/**/*.spec.ts" 2>&1 | tr '\r' '\n' | grep -iE "TOTAL|FAILED|error TS" | head
 ```
-Expected: FAIL � `component.open is not a function` / `component.bare is not a function`.
+Expected: FAIL — `component.open is not a function` / `component.bare is not a function`.
 
 - [ ] **Step 3: Add `bare` input, host class, `open()`**
 
@@ -298,7 +298,7 @@ Append to `select.component.scss`:
   .mdc-notched-outline { display: none; }
   .mat-mdc-form-field-subscript-wrapper { display: none; }
   .mat-mdc-form-field-infix { padding: 0; min-height: 0; width: auto; border: 0; }
-  // hide the trailing dropdown arrow � the chip provides its own affordance
+  // hide the trailing dropdown arrow — the chip provides its own affordance
   .mat-mdc-select-arrow-wrapper { display: none; }
 }
 ```
@@ -320,7 +320,7 @@ EOF
 
 ---
 
-## Task 4: sd-query-bar � lazy `SdSearch` adapter + reroute inline value editor to bare controls
+## Task 4: sd-query-bar — lazy `SdSearch` adapter + reroute inline value editor to bare controls
 
 This task changes behavior; do template + TS together so the entry still compiles, then run specs.
 
@@ -336,7 +336,7 @@ import { firstValueFrom, isObservable } from 'rxjs';
 ```
 (`isObservable` is already imported; add `firstValueFrom`.)
 
-Add a method (near `optionsFor`, before its deletion in Step 3 � or anywhere in the class):
+Add a method (near `optionsFor`, before its deletion in Step 3 — or anywhere in the class):
 ```ts
   /**
    * Build an `SdSearch` function for a lazy-values field so `sd-select` owns the
@@ -442,7 +442,7 @@ In the **build chip** value step, replace the popover-trigger branch. Current:
               [matMenuTriggerFor]="valuePopover"
               [matMenuTriggerData]="{ mode: 'build', index: -1, field: _b.field }"
               (menuOpened)="openBuildValuePopover(_b.field, buildValueTrigger)">
-              {{ _b.value == null ? 'Chọn⬦' : chipValueText($any({ field: _b.field.key, operator: _b.operator, data: _b.value })) }}
+              {{ _b.value == null ? 'Chọn…' : chipValueText($any({ field: _b.field.key, operator: _b.operator, data: _b.value })) }}
             </button>
           } @else {
             <span class="c-token-value c-token-value-edit">
@@ -493,7 +493,7 @@ Run:
 ```bash
 cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng build sdcorejs-angular --configuration=development 2>&1 | tr '\r' '\n' > /tmp/qb-bare-build.log; grep -niE "Built @sdcorejs/angular/components/query-bar|query-bar.*error TS|forms/(select|date|datetime).*error TS" /tmp/qb-bare-build.log | head
 ```
-Expected: `�S Built @sdcorejs/angular/components/query-bar`, no query-bar/forms errors. (`form-generic` failing later is pre-existing and unrelated.)
+Expected: `✔ Built @sdcorejs/angular/components/query-bar`, no query-bar/forms errors. (`form-generic` failing later is pre-existing and unrelated.)
 
 - [ ] **Step 8: Commit**
 
@@ -508,7 +508,7 @@ EOF
 
 ---
 
-## Task 5: sd-query-bar � delete `.c-valpop` styles + fix specs
+## Task 5: sd-query-bar — delete `.c-valpop` styles + fix specs
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss`
@@ -516,7 +516,7 @@ EOF
 
 - [ ] **Step 1: Delete the value-popover styles**
 
-In `query-bar.component.scss`, delete the entire block under the comment `// Value popover � minimal panel ...` � the `::ng-deep .mat-mdc-menu-panel.c-value-popover .c-value-popover-body { ... }` rule and its nested `.c-valpop-*` selectors.
+In `query-bar.component.scss`, delete the entire block under the comment `// Value popover — minimal panel ...` — the `::ng-deep .mat-mdc-menu-panel.c-value-popover .c-value-popover-body { ... }` rule and its nested `.c-valpop-*` selectors.
 
 - [ ] **Step 2: Find spec references to the removed surface**
 
@@ -573,8 +573,8 @@ describe('lazyItemsFor adapter', () => {
     key: 'city', label: 'City', kind: 'lazy-values', operators: ['IN'],
     option: {
       search: (req: { search?: string }) => Promise.resolve(
-        [{ id: 'hn', name: 'Hà N�"i' }].filter(c => !req.search || c.name.includes(req.search))),
-      views: (values: unknown[]) => Promise.resolve([{ id: 'hn', name: 'Hà N�"i' }].filter(c => values.includes(c.id))),
+        [{ id: 'hn', name: 'Hà Nội' }].filter(c => !req.search || c.name.includes(req.search))),
+      views: (values: unknown[]) => Promise.resolve([{ id: 'hn', name: 'Hà Nội' }].filter(c => values.includes(c.id))),
       valueField: 'id', displayField: 'name',
     },
   } as unknown as SdQueryField;
@@ -618,7 +618,7 @@ EOF
 
 **Files:** none (verification only).
 
-- [ ] **Step 1: Full sd-angular suite (regression � bare/open are additive)**
+- [ ] **Step 1: Full sd-angular suite (regression — bare/open are additive)**
 
 Run:
 ```bash
@@ -632,14 +632,14 @@ Run:
 ```bash
 cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng build sdcorejs-angular --configuration=development 2>&1 | tr '\r' '\n' | grep -niE "Built @sdcorejs/angular/(components/query-bar|forms/select|forms/date|forms/datetime)|error TS" | head
 ```
-Expected: all four entries `�S Built ...`, no `error TS` for them. (`form-generic` failing afterward is pre-existing.)
+Expected: all four entries `✔ Built ...`, no `error TS` for them. (`form-generic` failing afterward is pre-existing.)
 
-- [ ] **Step 3: Manual demo check (UI correctness � cannot be asserted by tests)**
+- [ ] **Step 3: Manual demo check (UI correctness — cannot be asserted by tests)**
 
 Run `cd /c/Users/Admin/Documents/lib-core-angular/vn-angular && npx ng serve demo`, open `/sd-query-bar`, switch to **inline** mode, and verify:
 - Adding/editing a `Phòng ban` (values) chip opens the **native sd-select panel** (search + checkboxes), not the old `.c-valpop` list.
-- `Thành ph� (lazy)` chip searches via the lazy backend through sd-select.
-- `Ngày vào` (date) opens the mat-calendar; `ĐĒng nhập cu�i` (datetime) opens the datetime overlay.
+- `Thành phố (lazy)` chip searches via the lazy backend through sd-select.
+- `Ngày vào` (date) opens the mat-calendar; `Đăng nhập cuối` (datetime) opens the datetime overlay.
 - Chips still read `label : value` with grey label / primary bold value; toolbar stays anchored.
 
 If serve cannot run in this environment, state that explicitly rather than claiming success.
@@ -651,4 +651,3 @@ If serve cannot run in this environment, state that explicitly rather than claim
 - **Spec coverage:** bare (Tasks 1-3 + query-bar specs), open() (Tasks 1-3), lazy adapter (Task 5 Step 5), removal of valuePopover/.c-valpop (Task 4 Step 5, Task 5 Step 1), inline reroute (Task 4 Steps 2-3), risk/regression (Task 6). All design sections covered.
 - **Type consistency:** `open()` added as an arrow property on date/select (matches the `focus = () => {}` style already in those files); `bare = input(false, {transform: booleanAttribute})` identical across all three. `lazyItemsFor` returns `SdSearch` and is consumed by `sd-select [items]` which accepts `SdSearch`. `editValueFn(i)` mirrors the existing `setEditDraftFn`/`commitEditDraftFn` factory style.
 - **Placeholder scan:** every code step contains concrete code; deletions reference exact members/blocks + a grep gate (Task 4 Step 6) to catch leftovers.
-

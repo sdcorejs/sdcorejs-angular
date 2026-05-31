@@ -1,4 +1,4 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogConfirmComponent } from './components/dialog-confirm/dialog-confirm.component';
 import { Color } from '@sdcorejs/utils/models';
@@ -188,4 +188,3 @@ export class SdConfirmService {
     });
   };
 }
-

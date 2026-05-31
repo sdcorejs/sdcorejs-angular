@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -185,7 +185,7 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 8: BETWEEN date renders sd-date-range; sdChange emits commitRange
-  it('BETWEEN date â†’ renders <sd-date-range>; sdChange emits (commitRange)', () => {
+  it('BETWEEN date → renders <sd-date-range>; sdChange emits (commitRange)', () => {
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: '2024-01-01', to: '2024-01-31' } };
@@ -203,7 +203,7 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 9: BETWEEN datetime also renders sd-date-range (downgrade)
-  it('BETWEEN datetime â†’ renders <sd-date-range> (downgrade)', () => {
+  it('BETWEEN datetime → renders <sd-date-range> (downgrade)', () => {
     const dtField = { key: 'dt', label: 'DT', type: 'datetime' } as SdQueryField;
     host.field = dtField;
     host.filter = { field: 'dt', operator: 'BETWEEN', data: { from: null, to: null } };
@@ -213,10 +213,10 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 9a: BETWEEN range commit with full {from,to} exits edit immediately
-  // why: bug "click ra láº§n Ä‘áº§u chÆ°a update, click vÃ o rá»“i ra má»›i Ä‘Ãºng" â€” viewed
-  // text render trÆ°á»›c khi model vá» tá»›i sd-date-range. Fix: commitRange vá»›i cáº£ 2
-  // Ä‘áº§u range â†’ exit edit sync, viewed re-render ngay táº¡i tick cÃ³ model má»›i.
-  it('BETWEEN range commit with both from + to â†’ exits edit mode synchronously', () => {
+  // why: bug "click ra lần đầu chưa update, click vào rồi ra mới đúng" — viewed
+  // text render trước khi model về tới sd-date-range. Fix: commitRange với cả 2
+  // đầu range → exit edit sync, viewed re-render ngay tại tick có model mới.
+  it('BETWEEN range commit with both from + to → exits edit mode synchronously', () => {
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: null, to: null } };
@@ -236,8 +236,8 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 9b: BETWEEN partial commit (only one end) stays in edit
-  // why: user má»›i chá»n `from` chÆ°a chá»n `to` â†’ giá»¯ edit Ä‘á»ƒ user tiáº¿p tá»¥c chá»n `to`.
-  it('BETWEEN range commit with only one end â†’ stays in edit', () => {
+  // why: user mới chọn `from` chưa chọn `to` → giữ edit để user tiếp tục chọn `to`.
+  it('BETWEEN range commit with only one end → stays in edit', () => {
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: null, to: null } };
@@ -254,8 +254,8 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
   });
 
-  // ---- 9c: BETWEEN range commit null payload â†’ emits null + stays in edit
-  it('BETWEEN range commit with null payload â†’ emits null and stays in edit', () => {
+  // ---- 9c: BETWEEN range commit null payload → emits null + stays in edit
+  it('BETWEEN range commit with null payload → emits null and stays in edit', () => {
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: '2024-02-01', to: '2024-02-28' } };
@@ -272,17 +272,17 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
   });
 
-  // ---- 10: boolean viewed â†’ button; click â†’ enter edit; toggle emits commit + exit
-  it('boolean: viewed mode shows .c-token-value button; click â†’ enter edit; toggle commits', () => {
+  // ---- 10: boolean viewed → button; click → enter edit; toggle emits commit + exit
+  it('boolean: viewed mode shows .c-token-value button; click → enter edit; toggle commits', () => {
     const boolField = { key: 'on', label: 'On', type: 'boolean' } as SdQueryField;
     host.field = boolField;
     host.filter = { field: 'on', operator: 'EQUAL', data: true };
-    host.valueText = 'CÃ³';
+    host.valueText = 'Có';
     fixture.detectChanges();
 
     const btn = fixture.nativeElement.querySelector('.c-token > button.c-token-value, .c-token .c-token-value') as HTMLElement;
     expect(btn).not.toBeNull();
-    expect(btn.textContent).toContain('CÃ³');
+    expect(btn.textContent).toContain('Có');
 
     btn.click();
     fixture.detectChanges();
@@ -301,14 +301,14 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 10a: boolean edit toggles render inside .c-bool-toggle pill wrapper as native buttons
-  // why: badge padding lá»›n tá»«ng gÃ¢y trÃ n ra ngoÃ i chip â†’ Ä‘Ã£ Ä‘á»•i tá»« sd-button (mat MDC 36px
+  // why: badge padding lớn từng gây tràn ra ngoài chip → đã đổi từ sd-button (mat MDC 36px
   // baseline) sang native .c-bool-btn (height 18/20px). Verify wrapper class + native button
   // selector + active class follow data value.
   it('boolean: edit mode renders 2 .c-bool-btn native toggles inside .c-bool-toggle wrapper', () => {
     const boolField = { key: 'on', label: 'On', type: 'boolean' } as SdQueryField;
     host.field = boolField;
     host.filter = { field: 'on', operator: 'EQUAL', data: true };
-    host.valueText = 'CÃ³';
+    host.valueText = 'Có';
     fixture.detectChanges();
 
     (fixture.nativeElement.querySelector('.c-token > .c-token-value, .c-token .c-token-value') as HTMLElement).click();
@@ -318,13 +318,13 @@ describe('SdQueryInlineChip', () => {
     expect(wrap).not.toBeNull();
     const btns = wrap.querySelectorAll('button.c-bool-btn') as NodeListOf<HTMLButtonElement>;
     expect(btns.length).toBe(2);
-    // why: data=true â†’ true btn carries .c-bool-active; false btn does not.
+    // why: data=true → true btn carries .c-bool-active; false btn does not.
     expect(btns[0].classList.contains('c-bool-active')).toBe(true);
     expect(btns[1].classList.contains('c-bool-active')).toBe(false);
   });
 
-  // ---- 11: Ã— emits (remove)
-  it('Ã— button emits (remove)', () => {
+  // ---- 11: × emits (remove)
+  it('× button emits (remove)', () => {
     const x = fixture.nativeElement.querySelector('.c-token-remove') as HTMLElement;
     expect(x).not.toBeNull();
     x.click();
@@ -343,7 +343,7 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelector('.c-token-value-edit')).toBeNull();
     expect(fixture.nativeElement.querySelector('.c-token-sep')).toBeNull();
     expect(fixture.nativeElement.querySelector('sd-operator.c-token-op')).toBeNull();
-    // Ã— still present
+    // × still present
     expect(fixture.nativeElement.querySelector('.c-token-remove')).not.toBeNull();
     // icon + label still present
     expect(fixture.nativeElement.querySelector('.c-token-icon')).not.toBeNull();
@@ -361,4 +361,3 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelector('.c-token-remove')).not.toBeNull();
   });
 });
-

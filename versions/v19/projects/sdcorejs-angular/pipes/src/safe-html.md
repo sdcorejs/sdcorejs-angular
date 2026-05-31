@@ -1,4 +1,4 @@
-﻿# `sdSafeHtml` pipe (`| sdSafeHtml`)
+# `sdSafeHtml` pipe (`| sdSafeHtml`)
 
 **Type**: Pipe
 **Pure**: yes (default)
@@ -14,8 +14,8 @@ Bypasses Angular's HTML sanitization via `DomSanitizer.bypassSecurityTrustHtml`,
 - Display preformatted snippets containing safe markup (icons, basic styling, links)
 
 ## When NOT to use
-- For ANY user-supplied HTML â€” bypassing sanitization on untrusted input is an XSS vulnerability. Sanitize on the server or sanitize manually first.
-- For plain text â€” Angular interpolation `{{ value }}` is safer and faster.
+- For ANY user-supplied HTML — bypassing sanitization on untrusted input is an XSS vulnerability. Sanitize on the server or sanitize manually first.
+- For plain text — Angular interpolation `{{ value }}` is safer and faster.
 
 ## Signature
 ```ts
@@ -44,16 +44,15 @@ transform(html: string | number | undefined | null): SafeHtml | number | undefin
 ```
 
 ## Edge cases / null behavior
-- `null` / `undefined` / `''` â†’ returns `undefined` (Angular renders nothing).
-- Number input â†’ returned untouched (no sanitization, no bypass).
-- Non-string truthy â†’ coerced through `bypassSecurityTrustHtml` directly (TypeScript signature constrains the input, but be aware).
+- `null` / `undefined` / `''` → returns `undefined` (Angular renders nothing).
+- Number input → returned untouched (no sanitization, no bypass).
+- Non-string truthy → coerced through `bypassSecurityTrustHtml` directly (TypeScript signature constrains the input, but be aware).
 
 ## Anti-patterns
-- âŒ Piping user input from forms / URL params â€” opens XSS. Sanitize upstream or use `DomSanitizer.sanitize(SecurityContext.HTML, ...)` instead.
-- âŒ Using on every cell of a table "just in case" â€” defeats Angular's built-in protection broadly.
-- âŒ Nesting with other pipes that mutate strings â€” once converted to `SafeHtml`, downstream string operations break.
+- ❌ Piping user input from forms / URL params — opens XSS. Sanitize upstream or use `DomSanitizer.sanitize(SecurityContext.HTML, ...)` instead.
+- ❌ Using on every cell of a table "just in case" — defeats Angular's built-in protection broadly.
+- ❌ Nesting with other pipes that mutate strings — once converted to `SafeHtml`, downstream string operations break.
 
 ## Related
-- Angular `DomSanitizer` â€” the underlying API.
-- Angular `[innerHTML]` binding â€” the consumer of the resulting `SafeHtml` value.
-
+- Angular `DomSanitizer` — the underlying API.
+- Angular `[innerHTML]` binding — the consumer of the resulting `SafeHtml` value.

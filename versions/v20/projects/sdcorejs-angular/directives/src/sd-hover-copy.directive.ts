@@ -1,4 +1,4 @@
-﻿import { Directive, ElementRef, inject, Input, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, inject, Input, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
@@ -23,8 +23,8 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   ) {}
 
   // https://onemount.atlassian.net/browse/SM-2287
-  // Hiá»‡n táº¡i khi sdHoverCopyDisabled = true, directive chá»‰ dÃ¹ng opacity: 0 vÃ  pointerEvents: 'none' Ä‘á»ƒ áº©n nÃºt, nhÆ°ng Ä‘iá»u nÃ y khÃ´ng hoÃ n toÃ n ngÄƒn cháº·n Ä‘Æ°á»£c viá»‡c click trong má»™t sá»‘ trÆ°á»ng há»£p.
-  // Giáº£i phÃ¡p: Remove khá»i DOM náº¿u column khÃ´ng Ä‘Æ°á»£c enable
+  // Hiện tại khi sdHoverCopyDisabled = true, directive chỉ dùng opacity: 0 và pointerEvents: 'none' để ẩn nút, nhưng điều này không hoàn toàn ngăn chặn được việc click trong một số trường hợp.
+  // Giải pháp: Remove khỏi DOM nếu column không được enable
   ngOnInit(): void {
     if (!this.sdHoverCopyDisabled) {
       this.#createAndAppendCopyButton();
@@ -150,4 +150,3 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     }
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdChip } from '@sdcorejs/angular/forms/chip';
@@ -57,4 +57,3 @@ export class ChipDemoComponent {
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
 }
-

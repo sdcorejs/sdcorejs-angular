@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdQueryBar, SdQueryField, SdQueryLogic } from '@sdcorejs/angular/components/query-bar';
 import { Filter } from '@sdcorejs/angular/utilities/models';
@@ -111,4 +111,3 @@ export class QueryBarDemoComponent {
     // Trong app thực, sẽ trigger reload table dựa trên filters() + logic() + search().
   }
 }
-

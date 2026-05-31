@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
@@ -71,4 +71,3 @@ export class CheckboxDemoComponent {
     return items.join(', ');
   };
 }
-

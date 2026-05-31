@@ -1,4 +1,4 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 // import hash from 'object-hash';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableAction, SdTableActionNormal } from '../../models/table-option-selector.model';
@@ -93,4 +93,3 @@ interface ActionChildren<T = any> {
   type?: SdUnwrapSignal<SdButton['type']>;
   children: ActionNormal<T>[];
 }
-

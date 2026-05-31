@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdInput } from '@sdcorejs/angular/forms/input';
@@ -58,4 +58,3 @@ export class InputDemoComponent {
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
 }
-

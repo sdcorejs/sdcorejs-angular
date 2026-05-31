@@ -1,10 +1,10 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { I18N_STORAGE_KEY } from './i18n.token';
 import { I18nService } from './i18n.service';
 import { Language } from './i18n.types';
 
-describe('I18nService â€” initial resolution', () => {
+describe('I18nService — initial resolution', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('uses localStorage when valid', () => {
@@ -36,7 +36,7 @@ describe('I18nService â€” initial resolution', () => {
   });
 });
 
-describe('I18nService â€” setLanguage', () => {
+describe('I18nService — setLanguage', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('updates signal', () => {
@@ -55,7 +55,7 @@ describe('I18nService â€” setLanguage', () => {
   it('messages signal swaps when language changes', () => {
     TestBed.configureTestingModule({ providers: [] });
     const svc = TestBed.inject(I18nService);
-    expect(svc.messages()['core.common.cancel']).toBe('Há»§y');
+    expect(svc.messages()['core.common.cancel']).toBe('Hủy');
     svc.setLanguage('en', { reload: false });
     expect(svc.messages()['core.common.cancel']).toBe('Cancel');
   });
@@ -68,22 +68,22 @@ describe('I18nService â€” setLanguage', () => {
   });
 });
 
-describe('I18nService â€” t()', () => {
+describe('I18nService — t()', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('returns value for existing key', () => {
     TestBed.configureTestingModule({ providers: [] });
-    expect(TestBed.inject(I18nService).t('core.common.cancel')).toBe('Há»§y');
+    expect(TestBed.inject(I18nService).t('core.common.cancel')).toBe('Hủy');
   });
 
   it('interpolates {name} params', () => {
     TestBed.configureTestingModule({ providers: [] });
-    expect(TestBed.inject(I18nService).t('core.test.greet', { name: 'Bob' })).toBe('Xin chÃ o Bob');
+    expect(TestBed.inject(I18nService).t('core.test.greet', { name: 'Bob' })).toBe('Xin chào Bob');
   });
 
   it('keeps placeholder when param missing', () => {
     TestBed.configureTestingModule({ providers: [] });
-    expect(TestBed.inject(I18nService).t('core.test.greet')).toBe('Xin chÃ o {name}');
+    expect(TestBed.inject(I18nService).t('core.test.greet')).toBe('Xin chào {name}');
   });
 
   it('returns key as-is when missing in both vi and en', () => {
@@ -101,7 +101,7 @@ describe('I18nService â€” t()', () => {
   });
 });
 
-describe('I18nService â€” custom language provider', () => {
+describe('I18nService — custom language provider', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('resolves sync custom catalog', () => {
@@ -122,4 +122,3 @@ describe('I18nService â€” custom language provider', () => {
     expect(svc.t('core.common.cancel')).toBe('Cancel');
   });
 });
-

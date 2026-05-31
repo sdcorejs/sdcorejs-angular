@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
@@ -22,7 +22,7 @@ import { Router } from '@angular/router';
     CommonModule,
     SdSelect,
     SdAutocomplete,
-    // Pipe cho pháº§n viewed
+    // Pipe cho phần viewed
     ComponentViewedPipe,
     HyperlinkPipe,
   ],
@@ -89,7 +89,7 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
   hashedValues?: string;
   #generateQuery = (query: string | Record<string, any> | undefined, data: Record<string, any>): Record<string, any> => {
     let result: Record<string, any> = {};
-    // Náº¿u query Ä‘Æ°á»£c cáº¥u hÃ¬nh tá»« Form Builder cá»§a Camunda thÃ¬ JSON nÃ³ sáº½ lÃ  string, cáº§n thá»±c hiá»‡n parse
+    // Nếu query được cấu hình từ Form Builder của Camunda thì JSON nó sẽ là string, cần thực hiện parse
     if (typeof query === 'string') {
       try {
         result = JSON.parse(query);
@@ -102,10 +102,10 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
     } else {
       result = { ...query };
     }
-    // Xá»­ lÃ½ query,
-    // VÃ­ dá»¥: {"a": "1", "b": "true", "c": "${key}"} => {"a": "1", "b": true, "c": "Dá»¯ liá»‡u tÆ°Æ¡ng á»©ng vá»›i key trong data"}
+    // Xử lý query,
+    // Ví dụ: {"a": "1", "b": "true", "c": "${key}"} => {"a": "1", "b": true, "c": "Dữ liệu tương ứng với key trong data"}
     for (const key of Object.keys({ ...result })) {
-      // Xá»­ ly
+      // Xử ly
       result[key] = StringUtilities.templateToDisplay(result[key], data);
       if (result[key] === 'true') {
         result[key] = true;
@@ -141,12 +141,12 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
     );
     this.#subscription.add(
       this.#inputChanges.pipe(startWith('')).subscribe(async () => {
-        // Tráº¡ng thÃ¡i viewed thÃ¬ khÃ´ng cáº§n check
+        // Trạng thái viewed thì không cần check
         if (!this.viewed && this.component && !this.component?.properties?.viewed) {
           const values = { ...this.entity, ...this.form.value };
           const query = this.#generateQuery(this.component?.properties?.query, values);
           const hashedQuery = Utilities.hash(query);
-          // Náº¿u query cÃ³ thay Ä‘á»•i thÃ¬ thá»±c hiá»‡n gÃ¡n láº¡i items
+          // Nếu query có thay đổi thì thực hiện gán lại items
           if (hashedQuery !== this.#hashedQuery) {
             this.#hashedQuery = hashedQuery;
             this.items = await this.formRenderService.selection.items(this.component?.valuesKey, {
@@ -167,9 +167,9 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
 
   onChanges = async () => {
     const setVariables = this.component.properties?.setVariables;
-    // Náº¿u cÃ³ cáº¥u hÃ¬nh gÃ¡n giÃ¡ trá»‹ khi trÆ°á»ng dá»¯ liá»‡u thay Ä‘á»•i thÃ¬ thá»±c hiá»‡n gÃ¡n giÃ¡ trá»‹
+    // Nếu có cấu hình gán giá trị khi trường dữ liệu thay đổi thì thực hiện gán giá trị
     if (this.component.valuesKey && setVariables) {
-      // Láº¥y thÃ´ng tin detail
+      // Lấy thông tin detail
       const values = { ...this.entity, ...this.form.value };
       const query = this.#generateQuery(this.component?.properties?.query, values);
       const detail = await this.formRenderService.selection.variables.detail(this.component.valuesKey, this.entity[this.component.key], {
@@ -177,15 +177,15 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
         component: this.component,
         query,
       });
-      // Náº¿u cÃ³ detail thÃ¬ thá»±c hiá»‡n setVariables
+      // Nếu có detail thì thực hiện setVariables
       if (detail) {
-        // Äi qua tá»«ng key cá»§a component sáº½ gÃ¡n giÃ¡ trá»‹
+        // Đi qua từng key của component sẽ gán giá trị
         for (const key of Object.keys(setVariables)) {
           try {
             const value = StringUtilities.parseExpression(setVariables[key], detail);
-            // Thá»±c hiá»‡n gÃ¡n giÃ¡ trá»‹
+            // Thực hiện gán giá trị
             this.entity[key] = value;
-            // ThÃ´ng bÃ¡o setVariables Ä‘á»ƒ component (náº¿u Ä‘ang hiá»ƒn thá»‹) biáº¿t vÃ  thá»±c hiá»‡n re-render hay markForCheck()
+            // Thông báo setVariables để component (nếu đang hiển thị) biết và thực hiện re-render hay markForCheck()
             this.setVariables.next({ key, value });
           } catch (err) {
             console.error(err);
@@ -205,4 +205,3 @@ export class SelectComponent implements AfterViewInit, OnDestroy {
     }
   };
 }
-

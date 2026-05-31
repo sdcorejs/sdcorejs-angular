@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { SdFormatComponent, SdFormGenericNumber } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
@@ -30,10 +30,10 @@ export class NumberControl {
 
   ngAfterViewInit(): void {
     this.#subscription.add(
-      // Chá»‰ láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i tÆ°Æ¡ng á»©ng vá»›i component dá»±a vÃ o id
+      // Chỉ lắng nghe sự kiện thay đổi tương ứng với component dựa vào id
       this.builderService.componentListeners.pipe(filter(component => component.id === this.component.id)).subscribe(component => {
         if (component) {
-           // VÃ¬ Ä‘Ã£ Ä‘Ãºng theo id nÃªn cÃ³ thá»ƒ Ã©p kiá»ƒu any
+           // Vì đã đúng theo id nên có thể ép kiểu any
           this.ref.markForCheck();
         }
       })
@@ -44,4 +44,3 @@ export class NumberControl {
     this.#subscription.unsubscribe();
   }
 }
-

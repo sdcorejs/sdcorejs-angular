@@ -1,4 +1,4 @@
-�# `<sd-editor>`
+# `<sd-editor>`
 
 **Type**: Component
 **Selector**: `sd-editor`
@@ -11,16 +11,16 @@
 Form-bound rich-text editor (CKEditor 5 ClassicEditor) with bold/italic/underline, font size & color, alignment, lists, and optional inline image upload + label/required/maxlength validation.
 
 ## When to use
-- Long-form rich-text fields on forms � descriptions, notes, articles, email body
+- Long-form rich-text fields on forms — descriptions, notes, articles, email body
 - Anywhere users need formatted text with images and word-style alignment
 - Content fields that must integrate with `FormGroup` / `[(model)]` and validation (required, maxlength, custom)
 - When you need batched / deferred image uploads tied to form save
 
 ## When NOT to use
-- For short comments / chat messages �  use `<sd-mini-editor>` (lighter toolbar)
-- For document templates with variables, page orientation, page breaks, headings TOC �  use `<sd-document-builder>`
-- For plain text �  use `<sd-input type="textarea">`
-- For code �  use `<sd-code-editor>`
+- For short comments / chat messages → use `<sd-mini-editor>` (lighter toolbar)
+- For document templates with variables, page orientation, page breaks, headings TOC → use `<sd-document-builder>`
+- For plain text → use `<sd-input type="textarea">`
+- For code → use `<sd-code-editor>`
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -53,12 +53,12 @@ Form-bound rich-text editor (CKEditor 5 ClassicEditor) with bold/italic/underlin
 | `sdFocus` | `FocusEvent` | Editor gained focus. |
 
 ## Public methods
-- `onReady(editor)` � internal CKEditor lifecycle hook (don't call manually).
-- `focusEditor()` � programmatic focus.
-- `upload(): Promise<string>` � runs deferred image uploads (see `imageConfig.uploadMode === 'deferred'`) and returns final HTML. Use this in your save handler when uploads are batched.
+- `onReady(editor)` — internal CKEditor lifecycle hook (don't call manually).
+- `focusEditor()` — programmatic focus.
+- `upload(): Promise<string>` — runs deferred image uploads (see `imageConfig.uploadMode === 'deferred'`) and returns final HTML. Use this in your save handler when uploads are batched.
 
 ## Content projection
-None � label/error chrome is rendered by the component itself based on inputs.
+None — label/error chrome is rendered by the component itself based on inputs.
 
 ## Visual cues
 - Optional `<sd-label>` row above (label + required asterisk + helper text)
@@ -86,7 +86,7 @@ None � label/error chrome is rendered by the component itself based on inputs
 ```html
 <form #f="ngForm" [formGroup]="formGroup">
   <sd-editor
-    label="N�"i dung email"
+    label="Nội dung email"
     name="body"
     [form]="f"
     [required]="true"
@@ -139,8 +139,8 @@ Rendered on the editor host element (the outer `div.sd-editor`):
 | `data-empty` | `"true"` / `"false"` | `sdIsEmpty(model())` |
 
 > **Not exposed:**
-> - `data-value` � editor content may be MB-sized; use `data-empty` to check whether the editor has any content.
-> - `data-loading` � the component does not currently expose a loading signal; may be added if Monaco init becomes observable.
+> - `data-value` — editor content may be MB-sized; use `data-empty` to check whether the editor has any content.
+> - `data-loading` — the component does not currently expose a loading signal; may be added if Monaco init becomes observable.
 
 Selector example:
 
@@ -150,17 +150,16 @@ await expect(ed).toHaveAttribute('data-empty', 'false');
 ```
 
 ## Anti-patterns
-- DON'T use `<sd-editor>` for short comments � toolbar is too heavy; use `<sd-mini-editor>`
-- DON'T set `maxlength` against HTML length � it counts plain text
-- DON'T inline-upload massive images without resize options � keep `image.resizeOptions` enabled
-- DON'T forget `editor.upload()` before save when using `imageConfig.uploadMode: 'deferred'` � otherwise blob URLs leak into stored content
-- DON'T register two `ISdEditorConfiguration` with the same `key` � the constructor throws
-- DON'T mix `disabled` and `readonly` semantically � `disabled` disables the entire form control; `readonly` is a view-only display
+- DON'T use `<sd-editor>` for short comments — toolbar is too heavy; use `<sd-mini-editor>`
+- DON'T set `maxlength` against HTML length — it counts plain text
+- DON'T inline-upload massive images without resize options — keep `image.resizeOptions` enabled
+- DON'T forget `editor.upload()` before save when using `imageConfig.uploadMode: 'deferred'` — otherwise blob URLs leak into stored content
+- DON'T register two `ISdEditorConfiguration` with the same `key` — the constructor throws
+- DON'T mix `disabled` and `readonly` semantically — `disabled` disables the entire form control; `readonly` is a view-only display
 
 ## Related
-- `<sd-mini-editor>` � compact comment-style editor
-- `<sd-document-builder>` � full document authoring with variables, page settings
-- `<sd-label>` � used internally for the label row
-- `SdCustomValidator` � custom async validator type
-- `SD_EDITOR_CONFIGURATION` � DI token for upload config
-
+- `<sd-mini-editor>` — compact comment-style editor
+- `<sd-document-builder>` — full document authoring with variables, page settings
+- `<sd-label>` — used internally for the label row
+- `SdCustomValidator` — custom async validator type
+- `SD_EDITOR_CONFIGURATION` — DI token for upload config

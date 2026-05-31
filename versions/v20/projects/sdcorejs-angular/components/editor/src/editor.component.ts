@@ -1,4 +1,4 @@
-﻿import {
+import {
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -73,8 +73,8 @@ export class SdEditor {
 
   // Input
   readonly option = input<SdEditorOption>({});
-  readonly height = input<string>('250px'); // Chiá»u dÃ i height hiá»ƒn thá»‹ máº·c Ä‘á»‹nh
-  readonly maxHeight = input<string>('250px'); // Chiá»u dÃ i tá»‘i Ä‘a má»Ÿ rá»™ng náº¿u ná»™i dung vÆ°á»£t quÃ¡ height máº·c Ä‘á»‹nh
+  readonly height = input<string>('250px'); // Chiều dài height hiển thị mặc định
+  readonly maxHeight = input<string>('250px'); // Chiều dài tối đa mở rộng nếu nội dung vượt quá height mặc định
   readonly maxlength = input<number | undefined>(undefined);
   readonly label = input<string | undefined>();
   readonly helperText = input<string | undefined>();
@@ -161,7 +161,7 @@ export class SdEditor {
         ...opt,
         uploadFn,
         onWarning: (msg: string) => this.#notifyService.warning(msg),
-        // Truyá»n i18n service xuá»‘ng CKEditor plugin (ngoÃ i DI tree) Ä‘á»ƒ dá»‹ch warning messages
+        // Truyền i18n service xuống CKEditor plugin (ngoài DI tree) để dịch warning messages
         _i18n: this.#i18n,
       }),
       plugins,
@@ -235,12 +235,12 @@ export class SdEditor {
   focusEditor = () => this.#editor?.editing?.view?.focus?.();
 
   /**
-   * Xá»­ lÃ½ táº£i lÃªn cÃ¡c file vÃ  tráº£ vá» ná»™i dung dá»¯ liá»‡u cuá»‘i cÃ¹ng.
+   * Xử lý tải lên các file và trả về nội dung dữ liệu cuối cùng.
    * * @description
-   * - Äá»‘i vá»›i cÃ¡c file upload cháº¿ Ä‘á»™ 'deferred' (chá»‰ xá»­ lÃ½ khi submit), cáº§n @ViewChild component vÃ  gá»i hÃ m upload() nÃ y.
-   * - Há»— trá»£ two-way binding.
-   * - HÃ m há»— trá»£ tráº£ ra data cuá»‘i cÃ¹ng.
-   * * @returns {Promise<string>} Ná»™i dung cuá»‘i cÃ¹ng Ä‘Æ°á»£c trÃ­ch xuáº¥t tá»« sd-editor.
+   * - Đối với các file upload chế độ 'deferred' (chỉ xử lý khi submit), cần @ViewChild component và gọi hàm upload() này.
+   * - Hỗ trợ two-way binding.
+   * - Hàm hỗ trợ trả ra data cuối cùng.
+   * * @returns {Promise<string>} Nội dung cuối cùng được trích xuất từ sd-editor.
    */
   upload = async (): Promise<string> => {
     await this.#uploadImages();
@@ -256,7 +256,7 @@ export class SdEditor {
     return this.#editor ? this.#normalizeEditorToHtml(this.#editor.getData()) : '';
   }
 
-  // Normalize HTML tá»« bÃªn ngoÃ i -> format CKEditor.
+  // Normalize HTML từ bên ngoài -> format CKEditor.
   #normalizeHtmlForEditor = (html: string): string => {
     if (!html) {
       return '';
@@ -267,7 +267,7 @@ export class SdEditor {
     return result;
   };
 
-  // Normalize HTML tá»« CKEditor â†’ format HTML.
+  // Normalize HTML từ CKEditor → format HTML.
   #normalizeEditorToHtml = (html: string): string => {
     if (!html) {
       return '';
@@ -278,7 +278,7 @@ export class SdEditor {
     return result;
   };
 
-  // Xá»­ lÃ½ binding 2 chiá»u
+  // Xử lý binding 2 chiều
   #onModelSignalChange(html: string): void {
     const v = html ?? '';
     if (this.formControl.value === v) {
@@ -291,7 +291,7 @@ export class SdEditor {
     }
   }
 
-  // Xá»­ lÃ½ khi user soáº¡n tháº£o
+  // Xử lý khi user soạn thảo
   #onEditorUserInput(rawHtml: string): void {
     const out = imageClassesToInlineStyles(rawHtml);
     this._textLength.set(countTextLength(out));
@@ -304,7 +304,7 @@ export class SdEditor {
     this.sdChange.emit(out);
   }
 
-  // Xá»­ lÃ½ náº¿u dev sá»­ dá»¥ng form vÃ  set trá»±c tiáº¿p data
+  // Xử lý nếu dev sử dụng form và set trực tiếp data
   #onFormGroupExternalChange(html: string): void {
     const v = html ?? '';
     this.valueModel.set(v);
@@ -357,12 +357,12 @@ export class SdEditor {
 
   // Setup
   #setupEffects(): void {
-    // Láº¯ng nghe disabled
+    // Lắng nghe disabled
     effect(() => {
       this.disabled() ? this.formControl.disable({ emitEvent: false }) : this.formControl.enable({ emitEvent: false });
     });
 
-    // Láº¯ng nghe readonly
+    // Lắng nghe readonly
     effect(() => {
       if (!this.#editor) {
         return;
@@ -374,13 +374,13 @@ export class SdEditor {
       }
     });
 
-    // Láº¯ng nghe binÄ‘ing 2 chiá»u model
+    // Lắng nghe binđing 2 chiều model
     effect(() => this.#onModelSignalChange(this.valueModel()));
 
-    // Láº¯ng nghe name form
+    // Lắng nghe name form
     effect(() => this.form()?.addControl(this.name(), this.formControl));
 
-    // Láº¯ng nghe validators
+    // Lắng nghe validators
     effect(() => {
       this.required();
       this.maxlength();
@@ -391,14 +391,14 @@ export class SdEditor {
   }
 
   #setupSubscriptions(): void {
-    // ÄÄƒng kÃ½ náº¿u dev sá»­ dá»¥ng form Ä‘á»ƒ set data trá»±c tiáº¿p tá»« bÃªn ngoÃ i vÃ o
+    // Đăng ký nếu dev sử dụng form để set data trực tiếp từ bên ngoài vào
     this.formControl.valueChanges
       .pipe(takeUntilDestroyed(this.#destroyRef))
       .subscribe((val: string) => this.#onFormGroupExternalChange(val));
 
     this.formControl.sdChanges.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(() => this.#cdRef.markForCheck());
 
-    // ÄÄƒng kÃ½ user gÃµ trong editor
+    // Đăng ký user gõ trong editor
     this.#contentChangeSubject
       .pipe(debounceTime(100), takeUntilDestroyed(this.#destroyRef))
       .subscribe(rawHtml => this.#onEditorUserInput(rawHtml));
@@ -414,8 +414,8 @@ export class SdEditor {
   // Helpers
   #uploadImages = async (): Promise<void> => {
     const uploadMode = this.option()?.imageConfig?.uploadMode ?? 'deferred';
-    // Early return náº¿u khÃ´ng pháº£i 'deferred' mode.
-    // Náº¿u trÆ°á»›c Ä‘Ã³ lÃ  mode "deferred" mÃ  mong muá»‘n chuyá»ƒn sang mode "immediate", dev chÆ°a cáº§n refactor code phÃ­a caller mÃ  khÃ´ng áº£nh hÆ°á»Ÿng Ä‘áº¿n logic.
+    // Early return nếu không phải 'deferred' mode.
+    // Nếu trước đó là mode "deferred" mà mong muốn chuyển sang mode "immediate", dev chưa cần refactor code phía caller mà không ảnh hưởng đến logic.
     if (uploadMode !== 'deferred') return;
 
     const uploadFn = this.#buildUploadFn();
@@ -430,7 +430,7 @@ export class SdEditor {
     const activeBlobUrls = this.#editor ? getActiveBlobUrls(this.#editor) : new Set<string>();
     const toUpload = filterActivePendingFiles(plugin.pendingFiles, activeBlobUrls);
 
-    // Capture trÆ°á»›c await Ä‘á»ƒ trÃ¡nh race condition: áº£nh Ä‘Æ°á»£c chÃ¨n trong lÃºc chá» API
+    // Capture trước await để tránh race condition: ảnh được chèn trong lúc chờ API
     const processedBlobUrls = new Set(toUpload.map(([blobUrl]) => blobUrl));
     const { replacements, failedBatches } = await runBatchUploads(toUpload, uploadFn, batchSize, maxConcurrent);
 
@@ -442,7 +442,7 @@ export class SdEditor {
       applyReplacementsToEditor(this.#editor, replacements);
     }
 
-    // Chá»‰ xÃ³a Ä‘Ãºng cÃ¡c entries Ä‘Ã£ Ä‘Æ°á»£c xá»­ lÃ½
+    // Chỉ xóa đúng các entries đã được xử lý
     for (const blobUrl of processedBlobUrls) {
       plugin.pendingFiles.delete(blobUrl);
     }
@@ -494,4 +494,3 @@ export class SdEditor {
     return this.option()?.imageConfig?.uploadFn ?? this.#getSelectedConfig()?.upload;
   };
 }
-

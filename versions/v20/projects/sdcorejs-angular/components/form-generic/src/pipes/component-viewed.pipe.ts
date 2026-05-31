@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
 import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
@@ -13,7 +13,7 @@ import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 @Injectable({
   providedIn: 'root',
 })
-// Pipe xá»­ lÃ½ hiá»ƒn thá»‹ detail cho component
+// Pipe xử lý hiển thị detail cho component
 export class ComponentViewedPipe implements PipeTransform {
   constructor(
     private readonly formatNumberPipe: SdFormatNumberPipe,
@@ -50,7 +50,7 @@ export class ComponentViewedPipe implements PipeTransform {
         return EMPTY_STR;
       }
       const selection = await this.formGenericService.selection.getDefinition(component?.valuesKey);
-      // Náº¿u cÃ³ cáº¥u hÃ¬nh view tÆ°Æ¡ng á»©ng vá»›i selection thÃ¬ sá»­ dá»¥ng viewed
+      // Nếu có cấu hình view tương ứng với selection thì sử dụng viewed
       if (selection?.viewed) {
         return (
           (await selection.viewed(values, {
@@ -59,7 +59,7 @@ export class ComponentViewedPipe implements PipeTransform {
           })) || EMPTY_STR
         );
       }
-      // NgoÃ i ra xá»­ lÃ½ láº¥y thÃ´ng tin items
+      // Ngoài ra xử lý lấy thông tin items
       const items = await this.formGenericService.selection.items(component?.valuesKey, {
         entity,
         component,
@@ -67,7 +67,7 @@ export class ComponentViewedPipe implements PipeTransform {
       if (!items) {
         return EMPTY_STR;
       }
-      // Náº¿u items lÃ  Array thÃ¬ kiá»ƒm tra value vÃ  hiá»ƒn thá»‹ display
+      // Nếu items là Array thì kiểm tra value và hiển thị display
       if (Array.isArray(items)) {
         return (
           items
@@ -76,7 +76,7 @@ export class ComponentViewedPipe implements PipeTransform {
             .join(', ') || EMPTY_STR
         );
       }
-      // items lÃ  Function (lazyValues) thÃ¬ thá»±c hiá»‡n gá»i API
+      // items là Function (lazyValues) thì thực hiện gọi API
       return await items({
         type: 'VALUE',
         value: values,
@@ -92,4 +92,3 @@ export class ComponentViewedPipe implements PipeTransform {
     return '';
   };
 }
-

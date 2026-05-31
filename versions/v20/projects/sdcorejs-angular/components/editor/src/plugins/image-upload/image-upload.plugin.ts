@@ -1,4 +1,4 @@
-﻿import { SdEditorImageConfig, SdEditorImageUploadValidation } from '../../models';
+import { SdEditorImageConfig, SdEditorImageUploadValidation } from '../../models';
 import { SdEditorUploadFileDetail, SdEditorUploadFileFuncUpload } from '../../configurations';
 import { FileRepository, Image, ImageResize, ImageStyle, ImageToolbar, ImageUpload, Plugin, FileLoader } from 'ckeditor5';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -254,7 +254,7 @@ export class EditorImageUploadPlugin extends Plugin {
           if (maxPerSelection !== undefined) {
             const files: File[] = Array.isArray(options?.file) ? options.file : options?.file ? [options.file] : [];
             if (files.length > maxPerSelection) {
-              // Angular wrapper luÃ´n truyá»n _i18n; náº¿u thiáº¿u thÃ¬ warning sáº½ lÃ  chuá»—i rá»—ng (i18n service tá»± log missing key)
+              // Angular wrapper luôn truyền _i18n; nếu thiếu thì warning sẽ là chuỗi rỗng (i18n service tự log missing key)
               const msg = option?._i18n?.t('core.component.editor.image.max-per-selection', { max: maxPerSelection }) ?? '';
               option?.onWarning?.(msg);
               evt.stop();
@@ -324,7 +324,7 @@ export class EditorImageUploadPlugin extends Plugin {
       }
     }
 
-    // Downcast: model â†’ HTML view
+    // Downcast: model → HTML view
     editor.conversion.for('downcast').add((dispatcher: any) => {
       for (const [modelAttr, htmlAttr] of [
         ['loading', 'loading'],
@@ -350,7 +350,7 @@ export class EditorImageUploadPlugin extends Plugin {
       }
     });
 
-    // Upcast: HTML â†’ model
+    // Upcast: HTML → model
     editor.conversion.for('upcast').add((dispatcher: any) => {
       dispatcher.on(
         'element:figure',
@@ -446,4 +446,3 @@ export class EditorImageUploadPlugin extends Plugin {
     return result || 'Image';
   }
 }
-

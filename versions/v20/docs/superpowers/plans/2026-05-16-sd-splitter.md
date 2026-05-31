@@ -1,4 +1,4 @@
-�# sd-splitter Implementation Plan
+# sd-splitter Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -20,13 +20,13 @@ Files created (all under `projects/sdcorejs-angular/components/splitter/`):
 |---|---|
 | `index.ts` | Public API re-exports |
 | `src/splitter.models.ts` | Types: `SplitterOrientation`, `SplitterPanelUnit`, `SplitterPanelState`, `SplitterLayoutState`, internal `ResolvedPanelMeta` |
-| `src/splitter-state.service.ts` | Internal state service (signals + reconcile + applyDelta + collapse logic). Pure TS, d�& TDD. |
+| `src/splitter-state.service.ts` | Internal state service (signals + reconcile + applyDelta + collapse logic). Pure TS, dễ TDD. |
 | `src/splitter-state.service.spec.ts` | Unit tests for state service |
-| `src/splitter-panel/splitter-panel.component.ts` | `<sd-splitter-panel>` � wrapper v�:i inputs, host binding `flex-basis` |
+| `src/splitter-panel/splitter-panel.component.ts` | `<sd-splitter-panel>` — wrapper với inputs, host binding `flex-basis` |
 | `src/splitter-panel/splitter-panel.component.html` | `<ng-content>` |
 | `src/splitter-panel/splitter-panel.component.scss` | Panel styles |
 | `src/splitter-panel/splitter-panel.component.spec.ts` | Panel component tests |
-| `src/splitter-handle/splitter-handle.component.ts` | Internal � divider draggable + a11y |
+| `src/splitter-handle/splitter-handle.component.ts` | Internal — divider draggable + a11y |
 | `src/splitter-handle/splitter-handle.component.html` | Handle markup (.bar bên trong) |
 | `src/splitter-handle/splitter-handle.component.scss` | Handle styles + CSS variables |
 | `src/splitter-handle/splitter-handle.component.spec.ts` | Handle interaction tests |
@@ -36,17 +36,17 @@ Files created (all under `projects/sdcorejs-angular/components/splitter/`):
 | `src/splitter.component.spec.ts` | Container component tests |
 | `src/splitter.integration.spec.ts` | Integration tests (DOM end-to-end) |
 
-Files modified: none (ch�0 thêm component m�:i).
+Files modified: none (chỉ thêm component mới).
 
 ---
 
-## Test Conventions (�ọc trư�:c khi làm)
+## Test Conventions (đọc trước khi làm)
 
 Pattern theo `projects/sdcorejs-angular/components/table/src/directives/sd-column-resize.directive.spec.ts`:
 
-- Standalone host component wrap unit under test v�:i template inline
+- Standalone host component wrap unit under test với template inline
 - `TestBed.configureTestingModule({ imports: [HostComponent] })`
-- Signal-based host state �Ồ toggle inputs trong test
+- Signal-based host state để toggle inputs trong test
 - Helper dispatch native events:
   ```ts
   function dispatchPointer(target: EventTarget, type: string, init: PointerEventInit) {
@@ -58,11 +58,11 @@ Pattern theo `projects/sdcorejs-angular/components/table/src/directives/sd-colum
     target.dispatchEvent(ev);
   }
   ```
-- Mock `getBoundingClientRect` qua `spyOn(el, 'getBoundingClientRect').and.returnValue({...} as DOMRect)` �Ồ có pixel deterministic
-- Mock `requestAnimationFrame` qua `spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return 0; });` �Ồ rAF chạy ngay
+- Mock `getBoundingClientRect` qua `spyOn(el, 'getBoundingClientRect').and.returnValue({...} as DOMRect)` để có pixel deterministic
+- Mock `requestAnimationFrame` qua `spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return 0; });` để rAF chạy ngay
 - `SdStorageService` provide thật trong TestBed (tự lưu vào `localStorage`), `localStorage.clear()` trong `beforeEach`. Pattern theo `config.service.spec.ts`.
 
-L�!nh test: `npm test` (chạy toàn b�") hoặc filter qua `ng test --include='**/splitter/**'`.
+Lệnh test: `npm test` (chạy toàn bộ) hoặc filter qua `ng test --include='**/splitter/**'`.
 
 ---
 
@@ -71,7 +71,7 @@ L�!nh test: `npm test` (chạy toàn b�") hoặc filter qua `ng test --inclu
 **Files:**
 - Create: `projects/sdcorejs-angular/components/splitter/index.ts`
 - Create: `projects/sdcorejs-angular/components/splitter/src/splitter.models.ts`
-- Create stubs (sẽ �iền sau): `splitter.component.ts`, `splitter-panel/splitter-panel.component.ts`, `splitter-handle/splitter-handle.component.ts`, `splitter-state.service.ts`
+- Create stubs (sẽ điền sau): `splitter.component.ts`, `splitter-panel/splitter-panel.component.ts`, `splitter-handle/splitter-handle.component.ts`, `splitter-state.service.ts`
 
 - [ ] **Step 1: Create `src/splitter.models.ts`**
 
@@ -92,7 +92,7 @@ export interface SplitterLayoutState {
   panels: SplitterPanelState[];
 }
 
-// Internal � không export ra index.ts
+// Internal — không export ra index.ts
 export interface ResolvedPanelMeta {
   id: string | number;          // panelId nếu có, else index
   index: number;
@@ -102,7 +102,7 @@ export interface ResolvedPanelMeta {
   collapsible: boolean;
   resizable: boolean;
   declaredSize: number;         // size khai báo trong template, dùng cho resetLayout
-  lastSize: number;             // size trư�:c khi collapse (cho expand restore)
+  lastSize: number;             // size trước khi collapse (cho expand restore)
 }
 ```
 
@@ -172,7 +172,7 @@ export * from './src/splitter.models';
 - [ ] **Step 7: Verify build**
 
 Run: `npm run build`
-Expected: PASS (không có l�i compile vì stub tr�ng compile �ược)
+Expected: PASS (không có lỗi compile vì stub trống compile được)
 
 - [ ] **Step 8: Commit**
 
@@ -183,13 +183,13 @@ git commit -m "feat(splitter): scaffold component skeleton + models"
 
 ---
 
-## Task 2: SplitterStateService � basic signal mutations
+## Task 2: SplitterStateService — basic signal mutations
 
 **Files:**
 - Modify: `src/splitter-state.service.ts`
 - Create: `src/splitter-state.service.spec.ts`
 
-Service exposes mutation methods cho live drag và committed state. Chưa có reconcile/applyDelta � ch�0 primitive setters.
+Service exposes mutation methods cho live drag và committed state. Chưa có reconcile/applyDelta — chỉ primitive setters.
 
 - [ ] **Step 1: Write failing test `splitter-state.service.spec.ts`**
 
@@ -197,7 +197,7 @@ Service exposes mutation methods cho live drag và committed state. Chưa có re
 import { TestBed } from '@angular/core/testing';
 import { SplitterStateService } from './splitter-state.service';
 
-describe('SplitterStateService � basic mutations', () => {
+describe('SplitterStateService — basic mutations', () => {
   let service: SplitterStateService;
 
   beforeEach(() => {
@@ -247,7 +247,7 @@ describe('SplitterStateService � basic mutations', () => {
 - [ ] **Step 2: Run test, verify FAIL**
 
 Run: `ng test --include='**/splitter-state.service.spec.ts' --watch=false`
-Expected: FAIL � `service.setLiveSize is not a function`
+Expected: FAIL — `service.setLiveSize is not a function`
 
 - [ ] **Step 3: Implement service**
 
@@ -313,17 +313,17 @@ git commit -m "feat(splitter): state service with signal-based size + collapse m
 
 ---
 
-## Task 3: SplitterStateService � reconcile (template �  storage)
+## Task 3: SplitterStateService — reconcile (template ↔ storage)
 
 **Files:**
 - Modify: `src/splitter-state.service.ts`
 - Modify: `src/splitter-state.service.spec.ts`
 
 Add `reconcile(metas, stored)` method theo 4 rule trong spec section 8:
-1. Match panelId (cả 2 �ều có id) �  restore size + collapsed
-2. Match index (cả 2 không có id) �  restore
-3. Không match �  dùng declaredSize
-4. Unit l�!ch �  bỏ qua storage entry
+1. Match panelId (cả 2 đều có id) → restore size + collapsed
+2. Match index (cả 2 không có id) → restore
+3. Không match → dùng declaredSize
+4. Unit lệch → bỏ qua storage entry
 
 - [ ] **Step 1: Append failing tests**
 
@@ -385,7 +385,7 @@ describe('SplitterStateService.reconcile', () => {
     expect(service.liveSizes().has('gone')).toBe(false);
   });
 
-  it('uses declaredSize khi panel m�:i chưa có trong storage', () => {
+  it('uses declaredSize khi panel mới chưa có trong storage', () => {
     const stored = { v: 1 as const, panels: [
       { id: 'a', size: 80, unit: 'flex' as const, collapsed: false },
     ]};
@@ -394,7 +394,7 @@ describe('SplitterStateService.reconcile', () => {
     expect(service.liveSizes().get('newPanel')).toBe(7);
   });
 
-  it('bỏ qua storage entry khi unit l�!ch', () => {
+  it('bỏ qua storage entry khi unit lệch', () => {
     const stored = { v: 1 as const, panels: [
       { id: 'a', size: 250, unit: 'px' as const, collapsed: false },
     ]};
@@ -407,11 +407,11 @@ describe('SplitterStateService.reconcile', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-state.service.spec.ts' --watch=false`
-Expected: FAIL � `service.reconcile is not a function`
+Expected: FAIL — `service.reconcile is not a function`
 
 - [ ] **Step 3: Implement `reconcile`**
 
-Append vào `SplitterStateService` (trư�:c `commit()`):
+Append vào `SplitterStateService` (trước `commit()`):
 
 ```ts
 reconcile(metas: ResolvedPanelMeta[], stored: SplitterLayoutState | null | undefined): void {
@@ -424,11 +424,11 @@ reconcile(metas: ResolvedPanelMeta[], stored: SplitterLayoutState | null | undef
     let restoredCollapsed = false;
 
     if (stored?.panels?.length) {
-      // Try match by id, ưu tiên trùng id tuy�!t ��i
+      // Try match by id, ưu tiên trùng id tuyệt đối
       const byId = stored.panels.find(p => p.id === meta.id);
       const match = byId ?? stored.panels[meta.index];
 
-      // Ch�0 accept nếu unit trùng
+      // Chỉ accept nếu unit trùng
       if (match && match.unit === meta.unit) {
         restoredSize = match.size;
         restoredCollapsed = match.collapsed;
@@ -453,18 +453,18 @@ Expected: PASS (10 specs total)
 
 ```bash
 git add projects/sdcorejs-angular/components/splitter/
-git commit -m "feat(splitter): reconcile state service v�:i template + storage merge"
+git commit -m "feat(splitter): reconcile state service với template + storage merge"
 ```
 
 ---
 
-## Task 4: SplitterStateService � applyDelta (resize logic)
+## Task 4: SplitterStateService — applyDelta (resize logic)
 
 **Files:**
 - Modify: `src/splitter-state.service.ts`
 - Modify: `src/splitter-state.service.spec.ts`
 
-Add `applyDelta(handleIndex, deltaPx, containerPx)` �Ồ xử lý kéo divider giữa 2 panel kề. 3 combo: flex-flex, px-px, mix flex+px. Clamp theo min/max.
+Add `applyDelta(handleIndex, deltaPx, containerPx)` để xử lý kéo divider giữa 2 panel kề. 3 combo: flex-flex, px-px, mix flex+px. Clamp theo min/max.
 
 - [ ] **Step 1: Append failing tests**
 
@@ -489,18 +489,18 @@ describe('SplitterStateService.applyDelta', () => {
     return service;
   }
 
-  it('flex-flex: delta dương d�9ch chuyỒn weight giữa 2 panel', () => {
+  it('flex-flex: delta dương dịch chuyển weight giữa 2 panel', () => {
     setup([
       { id: 'a', unit: 'flex', size: 1 },
       { id: 'b', unit: 'flex', size: 1 },
     ]);
-    // container 200px, m�i panel 100px, delta +20px �  a: 120, b: 80 �  weight 1.2, 0.8
+    // container 200px, mỗi panel 100px, delta +20px → a: 120, b: 80 → weight 1.2, 0.8
     service.applyDelta(0, 20, 200);
     expect(service.liveSizes().get('a')).toBeCloseTo(1.2, 5);
     expect(service.liveSizes().get('b')).toBeCloseTo(0.8, 5);
   });
 
-  it('px-px: delta c�"ng/trừ trực tiếp', () => {
+  it('px-px: delta cộng/trừ trực tiếp', () => {
     setup([
       { id: 'a', unit: 'px', size: 100 },
       { id: 'b', unit: 'px', size: 100 },
@@ -510,12 +510,12 @@ describe('SplitterStateService.applyDelta', () => {
     expect(service.liveSizes().get('b')).toBe(70);
   });
 
-  it('mix px+flex: delta d�n hết vào panel flex, panel px c� ��9nh', () => {
+  it('mix px+flex: delta dồn hết vào panel flex, panel px cố định', () => {
     setup([
       { id: 'fixed', unit: 'px', size: 100 },
       { id: 'fluid', unit: 'flex', size: 1 },
     ]);
-    // container 200, fixed=100, fluid=100 (1 weight = remaining 100px). Delta +20 �  fixed: 120, fluid: 80 (weight 0.8)
+    // container 200, fixed=100, fluid=100 (1 weight = remaining 100px). Delta +20 → fixed: 120, fluid: 80 (weight 0.8)
     service.applyDelta(0, 20, 200);
     expect(service.liveSizes().get('fixed')).toBe(120);
     expect(service.liveSizes().get('fluid')).toBeCloseTo(0.8, 5);
@@ -526,7 +526,7 @@ describe('SplitterStateService.applyDelta', () => {
       { id: 'a', unit: 'flex', size: 1, min: 0.4 },     // min weight 0.4
       { id: 'b', unit: 'flex', size: 1 },
     ]);
-    // container 200, m�i panel 100. Delta -80 �  a sẽ về 20 (weight 0.2), nhưng min 0.4 �  clamp
+    // container 200, mỗi panel 100. Delta -80 → a sẽ về 20 (weight 0.2), nhưng min 0.4 → clamp
     service.applyDelta(0, -80, 200);
     expect(service.liveSizes().get('a')).toBeCloseTo(0.4, 5);
     // delta thực sự áp dụng = -60px, b: 1 + 0.6 = 1.6
@@ -538,7 +538,7 @@ describe('SplitterStateService.applyDelta', () => {
       { id: 'a', unit: 'px', size: 100 },
       { id: 'b', unit: 'px', size: 100, min: 50 },
     ]);
-    // Delta +80 �  b mu�n 20, nhưng min 50 �  clamp, a ch�0 +50
+    // Delta +80 → b muốn 20, nhưng min 50 → clamp, a chỉ +50
     service.applyDelta(0, 80, 200);
     expect(service.liveSizes().get('a')).toBe(150);
     expect(service.liveSizes().get('b')).toBe(50);
@@ -559,7 +559,7 @@ describe('SplitterStateService.applyDelta', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-state.service.spec.ts' --watch=false`
-Expected: FAIL � `service.applyDelta is not a function`
+Expected: FAIL — `service.applyDelta is not a function`
 
 - [ ] **Step 3: Implement `applyDelta`**
 
@@ -568,7 +568,7 @@ Append vào `SplitterStateService`:
 ```ts
 /**
  * Áp delta px lên 2 panel kề handleIndex (prev = handleIndex, next = handleIndex + 1).
- * Trả về delta thực sự �ã áp (sau khi clamp).
+ * Trả về delta thực sự đã áp (sau khi clamp).
  */
 applyDelta(handleIndex: number, deltaPx: number, containerPx: number): number {
   const metas = this.#metas;
@@ -576,14 +576,14 @@ applyDelta(handleIndex: number, deltaPx: number, containerPx: number): number {
   const next = metas[handleIndex + 1];
   if (!prev || !next) return 0;
 
-  // bỏ qua nếu 1 trong 2 �ang collapsed (collapse logic xử lý riêng �x Task 5)
+  // bỏ qua nếu 1 trong 2 đang collapsed (collapse logic xử lý riêng ở Task 5)
   if (this.collapsedMap().get(prev.id) || this.collapsedMap().get(next.id)) return 0;
 
   const sizes = this.liveSizes();
   const prevSize = sizes.get(prev.id) ?? prev.declaredSize;
   const nextSize = sizes.get(next.id) ?? next.declaredSize;
 
-  // 1. Tính px hi�!n tại của 2 panel (�Ồ clamp ��ng nhất)
+  // 1. Tính px hiện tại của 2 panel (để clamp đồng nhất)
   const flexBudgetPx = this.#flexBudgetPx(containerPx);
   const totalFlexWeight = this.#totalFlexWeight();
   const prevPx = prev.unit === 'px' ? prevSize : (flexBudgetPx * prevSize) / Math.max(totalFlexWeight, 1e-9);
@@ -597,8 +597,8 @@ applyDelta(handleIndex: number, deltaPx: number, containerPx: number): number {
 
   let delta = deltaPx;
   delta = Math.max(delta, prevMinPx - prevPx);  // prev không nhỏ hơn prevMin
-  delta = Math.min(delta, prevMaxPx - prevPx);  // prev không l�:n hơn prevMax
-  delta = Math.max(delta, nextPx - nextMaxPx);  // next không l�:n hơn nextMax
+  delta = Math.min(delta, prevMaxPx - prevPx);  // prev không lớn hơn prevMax
+  delta = Math.max(delta, nextPx - nextMaxPx);  // next không lớn hơn nextMax
   delta = Math.min(delta, nextPx - nextMinPx);  // next không nhỏ hơn nextMin
 
   if (delta === 0) return 0;
@@ -651,12 +651,12 @@ Expected: PASS (16 specs)
 
 ```bash
 git add projects/sdcorejs-angular/components/splitter/
-git commit -m "feat(splitter): applyDelta v�:i clamp min/max cho flex/px/mix"
+git commit -m "feat(splitter): applyDelta với clamp min/max cho flex/px/mix"
 ```
 
 ---
 
-## Task 5: SplitterStateService � collapse / expand v�:i lastSize
+## Task 5: SplitterStateService — collapse / expand với lastSize
 
 **Files:**
 - Modify: `src/splitter-state.service.ts`
@@ -704,7 +704,7 @@ describe('SplitterStateService.collapse/expand', () => {
     expect(service.liveSizes().get('a')).toBe(7);
   });
 
-  it('expandPanel khi không có lastSize hợp l�! �  fallback minSize', () => {
+  it('expandPanel khi không có lastSize hợp lệ → fallback minSize', () => {
     service.reconcile([
       { id: 'a', index: 0, unit: 'flex', minSize: 0.5, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 1, lastSize: 0 },
     ], null);
@@ -734,7 +734,7 @@ describe('SplitterStateService.collapse/expand', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-state.service.spec.ts' --watch=false`
-Expected: FAIL � `service.collapsePanel is not a function`
+Expected: FAIL — `service.collapsePanel is not a function`
 
 - [ ] **Step 3: Implement collapse methods**
 
@@ -744,7 +744,7 @@ Append vào `SplitterStateService`:
 collapsePanel(id: string | number): void {
   const meta = this.#metas.find(m => m.id === id);
   if (!meta || !meta.collapsible) return;
-  // Lưu size hi�!n tại �Ồ expand sau
+  // Lưu size hiện tại để expand sau
   const current = this.liveSizes().get(id);
   if (current !== undefined && current > 0) {
     meta.lastSize = current;
@@ -781,23 +781,23 @@ Expected: PASS (22 specs)
 
 ```bash
 git add projects/sdcorejs-angular/components/splitter/
-git commit -m "feat(splitter): collapse/expand/toggle v�:i lastSize restore"
+git commit -m "feat(splitter): collapse/expand/toggle với lastSize restore"
 ```
 
 ---
 
-## Task 6: SplitterStateService � snap-to-collapse trong applyDelta
+## Task 6: SplitterStateService — snap-to-collapse trong applyDelta
 
 **Files:**
 - Modify: `src/splitter-state.service.ts`
 - Modify: `src/splitter-state.service.spec.ts`
 
-Khi delta kéo panel xu�ng dư�:i `minSize � snapThreshold` (default 0.5) **và** panel `collapsible=true` �  auto trigger collapse trong applyDelta. Khi kéo ngược ra �  auto expand.
+Khi delta kéo panel xuống dưới `minSize × snapThreshold` (default 0.5) **và** panel `collapsible=true` → auto trigger collapse trong applyDelta. Khi kéo ngược ra → auto expand.
 
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-describe('SplitterStateService � snap-to-collapse', () => {
+describe('SplitterStateService — snap-to-collapse', () => {
   let service: SplitterStateService;
 
   beforeEach(() => {
@@ -805,17 +805,17 @@ describe('SplitterStateService � snap-to-collapse', () => {
     service = TestBed.inject(SplitterStateService);
   });
 
-  it('kéo collapsible panel xu�ng dư�:i minSize � snapThreshold �  snap collapse', () => {
+  it('kéo collapsible panel xuống dưới minSize × snapThreshold → snap collapse', () => {
     service.reconcile([
       { id: 'a', index: 0, unit: 'px', minSize: 80, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 100, lastSize: 100 },
       { id: 'b', index: 1, unit: 'px', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
     ], null);
-    // Kéo a từ 100 xu�ng <= 40 (= 80 * 0.5) �  snap
-    service.applyDelta(0, -70, 200, 0.5);   // a mu�n về 30, dư�:i ngưỡng 40
+    // Kéo a từ 100 xuống <= 40 (= 80 * 0.5) → snap
+    service.applyDelta(0, -70, 200, 0.5);   // a muốn về 30, dưới ngưỡng 40
     expect(service.collapsedMap().get('a')).toBe(true);
   });
 
-  it('không snap nếu panel không collapsible � clamp tại minSize', () => {
+  it('không snap nếu panel không collapsible — clamp tại minSize', () => {
     service.reconcile([
       { id: 'a', index: 0, unit: 'px', minSize: 80, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
       { id: 'b', index: 1, unit: 'px', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
@@ -825,14 +825,14 @@ describe('SplitterStateService � snap-to-collapse', () => {
     expect(service.liveSizes().get('a')).toBe(80);   // clamp tại min
   });
 
-  it('kéo ngược lại (delta dương vượt minSize) �  expand từ collapsed', () => {
+  it('kéo ngược lại (delta dương vượt minSize) → expand từ collapsed', () => {
     service.reconcile([
       { id: 'a', index: 0, unit: 'px', minSize: 80, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 100, lastSize: 120 },
       { id: 'b', index: 1, unit: 'px', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
     ], null);
     service.setCollapsed('a', true);
     service.setLiveSize('a', 0);
-    // delta dương �0� minSize �  expand
+    // delta dương ≥ minSize → expand
     service.applyDelta(0, 90, 200, 0.5);
     expect(service.collapsedMap().get('a')).toBe(false);
     expect(service.liveSizes().get('a')).toBe(120);   // restore lastSize
@@ -843,7 +843,7 @@ describe('SplitterStateService � snap-to-collapse', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-state.service.spec.ts' --watch=false`
-Expected: FAIL � `service.applyDelta` ignores `snapThreshold` param (or fails các assertion m�:i)
+Expected: FAIL — `service.applyDelta` ignores `snapThreshold` param (or fails các assertion mới)
 
 - [ ] **Step 3: Modify `applyDelta` signature + add snap logic**
 
@@ -853,15 +853,15 @@ Replace `applyDelta` trong `SplitterStateService`:
 /**
  * Áp delta px lên 2 panel kề handleIndex (prev = handleIndex, next = handleIndex + 1).
  * Khi snap collapsible panel: tự set collapsed + reset size = 0.
- * Khi expand collapsible panel �ang collapsed: nếu delta �ủ l�:n �  expand.
- * Trả về delta thực sự �ã áp.
+ * Khi expand collapsible panel đang collapsed: nếu delta đủ lớn → expand.
+ * Trả về delta thực sự đã áp.
  */
 applyDelta(handleIndex: number, deltaPx: number, containerPx: number, snapThreshold = 0.5): number {
   const prev = this.#metas[handleIndex];
   const next = this.#metas[handleIndex + 1];
   if (!prev || !next) return 0;
 
-  // Trường hợp 1: 1 trong 2 panel �ang collapsed �  c� gắng expand khi delta �ủ l�:n
+  // Trường hợp 1: 1 trong 2 panel đang collapsed → cố gắng expand khi delta đủ lớn
   const prevCollapsed = this.collapsedMap().get(prev.id) === true;
   const nextCollapsed = this.collapsedMap().get(next.id) === true;
 
@@ -873,7 +873,7 @@ applyDelta(handleIndex: number, deltaPx: number, containerPx: number, snapThresh
     this.expandPanel(next.id);
     return -next.minSize;
   }
-  if (prevCollapsed || nextCollapsed) return 0;   // chưa �ủ ngưỡng expand �  no-op
+  if (prevCollapsed || nextCollapsed) return 0;   // chưa đủ ngưỡng expand → no-op
 
   const sizes = this.liveSizes();
   const prevSize = sizes.get(prev.id) ?? prev.declaredSize;
@@ -891,7 +891,7 @@ applyDelta(handleIndex: number, deltaPx: number, containerPx: number, snapThresh
   const prevMinPx = this.#sizeToPx(prev, prev.minSize, flexBudgetPx, totalFlexWeight);
   const nextMinPx = this.#sizeToPx(next, next.minSize, flexBudgetPx, totalFlexWeight);
 
-  // Snap check: panel kéo dư�:i minSize � snapThreshold + collapsible �  snap collapse
+  // Snap check: panel kéo dưới minSize × snapThreshold + collapsible → snap collapse
   if (prev.collapsible && prevMinPx > 0 && rawNewPrevPx < prevMinPx * snapThreshold) {
     this.collapsePanel(prev.id);
     this.setLiveSize(prev.id, 0);
@@ -903,7 +903,7 @@ applyDelta(handleIndex: number, deltaPx: number, containerPx: number, snapThresh
     return nextPx;
   }
 
-  // Không snap �  clamp logic cũ
+  // Không snap → clamp logic cũ
   const prevMaxPx = prev.maxSize != null ? this.#sizeToPx(prev, prev.maxSize, flexBudgetPx, totalFlexWeight) : Infinity;
   const nextMaxPx = next.maxSize != null ? this.#sizeToPx(next, next.maxSize, flexBudgetPx, totalFlexWeight) : Infinity;
 
@@ -940,7 +940,7 @@ git commit -m "feat(splitter): snap-to-collapse và expand-by-drag trong applyDe
 
 ---
 
-## Task 7: SdSplitterPanelComponent � inputs + host binding
+## Task 7: SdSplitterPanelComponent — inputs + host binding
 
 **Files:**
 - Modify: `src/splitter-panel/splitter-panel.component.ts`
@@ -948,7 +948,7 @@ git commit -m "feat(splitter): snap-to-collapse và expand-by-drag trong applyDe
 - Create: `src/splitter-panel/splitter-panel.component.scss`
 - Create: `src/splitter-panel/splitter-panel.component.spec.ts`
 
-Panel có inputs theo spec. Host element bind `style.flex` từ live state (sẽ kết n�i lên service �x Task 11).
+Panel có inputs theo spec. Host element bind `style.flex` từ live state (sẽ kết nối lên service ở Task 11).
 
 - [ ] **Step 1: Write failing test `splitter-panel.component.spec.ts`**
 
@@ -1016,7 +1016,7 @@ describe('SdSplitterPanelComponent', () => {
     expect(panelEl.classList.contains('sd-splitter__panel')).toBe(true);
   });
 
-  it('two-way binding [(collapsed)] ��ng b�" v�:i host signal', () => {
+  it('two-way binding [(collapsed)] đồng bộ với host signal', () => {
     const cmp = fixture.debugElement.query(By.directive(SdSplitterPanelComponent)).componentInstance as SdSplitterPanelComponent;
     cmp.collapsed.set(true);
     fixture.detectChanges();
@@ -1028,7 +1028,7 @@ describe('SdSplitterPanelComponent', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-panel.component.spec.ts' --watch=false`
-Expected: FAIL � inputs chưa �ược expose
+Expected: FAIL — inputs chưa được expose
 
 - [ ] **Step 3: Implement `SdSplitterPanelComponent`**
 
@@ -1102,7 +1102,7 @@ git commit -m "feat(splitter-panel): inputs + host bindings cho panel"
 
 ---
 
-## Task 8: SdSplitterHandleComponent � pointer drag
+## Task 8: SdSplitterHandleComponent — pointer drag
 
 **Files:**
 - Modify: `src/splitter-handle/splitter-handle.component.ts`
@@ -1146,7 +1146,7 @@ function dispatchPointer(target: EventTarget, type: string, init: PointerEventIn
   target.dispatchEvent(ev);
 }
 
-describe('SdSplitterHandleComponent � pointer drag', () => {
+describe('SdSplitterHandleComponent — pointer drag', () => {
   let fixture: ComponentFixture<Host>;
   let host: Host;
   let handleEl: HTMLElement;
@@ -1157,26 +1157,26 @@ describe('SdSplitterHandleComponent � pointer drag', () => {
     host = fixture.componentInstance;
     fixture.detectChanges();
     handleEl = fixture.debugElement.query(By.css('sd-splitter-handle')).nativeElement;
-    // setPointerCapture / releasePointerCapture không có trong JSDOM nhưng Karma chạy Chrome �  có. Spy �Ồ tránh fail.
+    // setPointerCapture / releasePointerCapture không có trong JSDOM nhưng Karma chạy Chrome → có. Spy để tránh fail.
     spyOn(handleEl, 'setPointerCapture').and.stub();
     spyOn(handleEl, 'releasePointerCapture').and.stub();
     // rAF: chạy ngay
     spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return 0; });
   });
 
-  it('pointerdown �  emit dragStart và setPointerCapture', () => {
+  it('pointerdown → emit dragStart và setPointerCapture', () => {
     dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 100, clientY: 0, button: 0 });
     expect(host.events).toEqual(['start']);
     expect(handleEl.setPointerCapture).toHaveBeenCalledWith(1);
   });
 
-  it('pointermove sau pointerdown (horizontal) �  emit dragMove v�:i deltaX', () => {
+  it('pointermove sau pointerdown (horizontal) → emit dragMove với deltaX', () => {
     dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 100, clientY: 0 });
     dispatchPointer(handleEl, 'pointermove', { pointerId: 1, clientX: 150, clientY: 0 });
     expect(host.deltas).toEqual([50]);
   });
 
-  it('orientation=vertical �  deltaY thay vì deltaX', () => {
+  it('orientation=vertical → deltaY thay vì deltaX', () => {
     host.orientation.set('vertical');
     fixture.detectChanges();
     dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 0, clientY: 100 });
@@ -1184,19 +1184,19 @@ describe('SdSplitterHandleComponent � pointer drag', () => {
     expect(host.deltas).toEqual([30]);
   });
 
-  it('pointerup �  emit dragEnd + releasePointerCapture', () => {
+  it('pointerup → emit dragEnd + releasePointerCapture', () => {
     dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 100, clientY: 0 });
     dispatchPointer(handleEl, 'pointerup', { pointerId: 1, clientX: 110, clientY: 0 });
     expect(host.events).toEqual(['start', 'end']);
     expect(handleEl.releasePointerCapture).toHaveBeenCalledWith(1);
   });
 
-  it('pointermove khi chưa pointerdown �  no-op', () => {
+  it('pointermove khi chưa pointerdown → no-op', () => {
     dispatchPointer(handleEl, 'pointermove', { pointerId: 1, clientX: 200, clientY: 0 });
     expect(host.deltas).toEqual([]);
   });
 
-  it('disabled=true �  pointerdown không emit', () => {
+  it('disabled=true → pointerdown không emit', () => {
     host.disabled.set(true);
     fixture.detectChanges();
     dispatchPointer(handleEl, 'pointerdown', { pointerId: 1, clientX: 100, clientY: 0 });
@@ -1208,7 +1208,7 @@ describe('SdSplitterHandleComponent � pointer drag', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-handle.component.spec.ts' --watch=false`
-Expected: FAIL � outputs chưa �ược expose
+Expected: FAIL — outputs chưa được expose
 
 - [ ] **Step 3: Implement pointer drag in `splitter-handle.component.ts`**
 
@@ -1241,7 +1241,7 @@ export class SdSplitterHandleComponent {
   disabled = input(false, { transform: booleanAttribute });
 
   readonly dragStart = output<void>();
-  readonly dragMove = output<number>();   // deltaPx kỒ từ pointerdown
+  readonly dragMove = output<number>();   // deltaPx kể từ pointerdown
   readonly dragEnd = output<void>();
 
   #pointerId: number | null = null;
@@ -1358,18 +1358,18 @@ Expected: PASS (6 specs)
 
 ```bash
 git add projects/sdcorejs-angular/components/splitter/
-git commit -m "feat(splitter-handle): pointer drag v�:i setPointerCapture + rAF batching"
+git commit -m "feat(splitter-handle): pointer drag với setPointerCapture + rAF batching"
 ```
 
 ---
 
-## Task 9: SdSplitterHandleComponent � keyboard a11y
+## Task 9: SdSplitterHandleComponent — keyboard a11y
 
 **Files:**
 - Modify: `src/splitter-handle/splitter-handle.component.ts`
 - Modify: `src/splitter-handle/splitter-handle.component.spec.ts`
 
-Arrow keys �  emit `dragMove(±keyboardStep)` + `dragEnd`. Home/End �  emit `collapseRequest`/`expandRequest`. Enter/Space �  emit `toggleRequest`.
+Arrow keys → emit `dragMove(±keyboardStep)` + `dragEnd`. Home/End → emit `collapseRequest`/`expandRequest`. Enter/Space → emit `toggleRequest`.
 
 - [ ] **Step 1: Append failing tests**
 
@@ -1379,7 +1379,7 @@ function dispatchKey(target: EventTarget, key: string) {
   target.dispatchEvent(ev);
 }
 
-describe('SdSplitterHandleComponent � keyboard', () => {
+describe('SdSplitterHandleComponent — keyboard', () => {
   let fixture: ComponentFixture<Host>;
   let host: Host;
   let handleEl: HTMLElement;
@@ -1392,14 +1392,14 @@ describe('SdSplitterHandleComponent � keyboard', () => {
     handleEl = fixture.debugElement.query(By.css('sd-splitter-handle')).nativeElement;
   });
 
-  it('ArrowRight (horizontal) �  emit dragMove(+keyboardStep) + dragEnd', () => {
+  it('ArrowRight (horizontal) → emit dragMove(+keyboardStep) + dragEnd', () => {
     // assume default keyboardStep = 10 in handle component
     dispatchKey(handleEl, 'ArrowRight');
     expect(host.deltas).toEqual([10]);
-    expect(host.events).toEqual(['end']);   // m�i key press là 1 commit point
+    expect(host.events).toEqual(['end']);   // mỗi key press là 1 commit point
   });
 
-  it('ArrowLeft �  emit dragMove(-keyboardStep)', () => {
+  it('ArrowLeft → emit dragMove(-keyboardStep)', () => {
     dispatchKey(handleEl, 'ArrowLeft');
     expect(host.deltas).toEqual([-10]);
   });
@@ -1413,7 +1413,7 @@ describe('SdSplitterHandleComponent � keyboard', () => {
     expect(host.deltas).toEqual([10, -10]);
   });
 
-  it('Enter �  emit toggleRequest', () => {
+  it('Enter → emit toggleRequest', () => {
     let toggleCount = 0;
     const cmp = fixture.debugElement.query(By.directive(SdSplitterHandleComponent)).componentInstance as SdSplitterHandleComponent;
     cmp.toggleRequest.subscribe(() => toggleCount++);
@@ -1421,7 +1421,7 @@ describe('SdSplitterHandleComponent � keyboard', () => {
     expect(toggleCount).toBe(1);
   });
 
-  it('disabled=true �  key không emit', () => {
+  it('disabled=true → key không emit', () => {
     host.disabled.set(true);
     fixture.detectChanges();
     dispatchKey(handleEl, 'ArrowRight');
@@ -1433,7 +1433,7 @@ describe('SdSplitterHandleComponent � keyboard', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter-handle.component.spec.ts' --watch=false`
-Expected: FAIL � keyboard listeners chưa có
+Expected: FAIL — keyboard listeners chưa có
 
 - [ ] **Step 3: Add `keyboardStep` input + key handler + `toggleRequest` output**
 
@@ -1480,23 +1480,23 @@ Expected: PASS (11 specs)
 
 ```bash
 git add projects/sdcorejs-angular/components/splitter/
-git commit -m "feat(splitter-handle): keyboard a11y v�:i arrow + Enter/Space"
+git commit -m "feat(splitter-handle): keyboard a11y với arrow + Enter/Space"
 ```
 
 ---
 
-## Task 10: SdSplitterHandleComponent � double-click toggle + aria-value attrs
+## Task 10: SdSplitterHandleComponent — double-click toggle + aria-value attrs
 
 **Files:**
 - Modify: `src/splitter-handle/splitter-handle.component.ts`
 - Modify: `src/splitter-handle/splitter-handle.component.spec.ts`
 
-Double-click �  emit `toggleRequest`. Aria values từ inputs `ariaValueMin / Max / Now`.
+Double-click → emit `toggleRequest`. Aria values từ inputs `ariaValueMin / Max / Now`.
 
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-it('dblclick �  emit toggleRequest', () => {
+it('dblclick → emit toggleRequest', () => {
   let count = 0;
   const cmp = fixture.debugElement.query(By.directive(SdSplitterHandleComponent)).componentInstance as SdSplitterHandleComponent;
   cmp.toggleRequest.subscribe(() => count++);
@@ -1506,19 +1506,19 @@ it('dblclick �  emit toggleRequest', () => {
 
 it('aria-value attrs từ inputs', () => {
   const cmp = fixture.debugElement.query(By.directive(SdSplitterHandleComponent)).componentInstance as SdSplitterHandleComponent;
-  fixture.componentRef.setInput('ariaValueMin' as any, 0);  // sẽ thêm input �x step 3
-  // Test sẽ tạm bỏ qua aria � verify dư�:i dạng input nhận �úng.
-  // (Test này sẽ �ược fill lại sau khi step 3 add inputs.)
+  fixture.componentRef.setInput('ariaValueMin' as any, 0);  // sẽ thêm input ở step 3
+  // Test sẽ tạm bỏ qua aria — verify dưới dạng input nhận đúng.
+  // (Test này sẽ được fill lại sau khi step 3 add inputs.)
   expect(cmp).toBeTruthy();
 });
 ```
 
-(Test thứ 2 ch�0 là placeholder � sẽ refactor sau khi thêm inputs.)
+(Test thứ 2 chỉ là placeholder — sẽ refactor sau khi thêm inputs.)
 
 - [ ] **Step 2: Run, verify FAIL cho dblclick**
 
 Run: `ng test --include='**/splitter-handle.component.spec.ts' --watch=false`
-Expected: FAIL � `toggleRequest` không emit từ dblclick
+Expected: FAIL — `toggleRequest` không emit từ dblclick
 
 - [ ] **Step 3: Add dblclick handler + aria-value inputs**
 
@@ -1552,9 +1552,9 @@ Cập nhật test thứ 2:
 ```ts
 it('binds aria-valuemin/max/now attrs từ inputs', () => {
   const cmpEl = fixture.debugElement.query(By.directive(SdSplitterHandleComponent));
-  cmpEl.componentInstance['ariaValueMin'] = () => 0;  // không hoạt ��"ng vì signal là readonly
-  // Bypass � set qua host signal-based input không trivial trong test này.
-  // H� trợ approach: thêm inputs lên host template.
+  cmpEl.componentInstance['ariaValueMin'] = () => 0;  // không hoạt động vì signal là readonly
+  // Bypass — set qua host signal-based input không trivial trong test này.
+  // Hỗ trợ approach: thêm inputs lên host template.
 });
 ```
 
@@ -1598,7 +1598,7 @@ git commit -m "feat(splitter-handle): dblclick toggle + aria-value attrs"
 
 ---
 
-## Task 11: SdSplitterComponent � template render v�:i contentChildren
+## Task 11: SdSplitterComponent — template render với contentChildren
 
 **Files:**
 - Modify: `src/splitter.component.ts`
@@ -1606,7 +1606,7 @@ git commit -m "feat(splitter-handle): dblclick toggle + aria-value attrs"
 - Create: `src/splitter.component.scss`
 - Create: `src/splitter.component.spec.ts`
 
-Container �ọc `contentChildren()` của panel, render panels + handles xen kẽ. Chưa wire drag/state � ch�0 render �úng s� phần tử và class.
+Container đọc `contentChildren()` của panel, render panels + handles xen kẽ. Chưa wire drag/state — chỉ render đúng số phần tử và class.
 
 - [ ] **Step 1: Write failing test `splitter.component.spec.ts`**
 
@@ -1632,7 +1632,7 @@ class Host {
   orientation: 'horizontal' | 'vertical' = 'horizontal';
 }
 
-describe('SdSplitterComponent � render', () => {
+describe('SdSplitterComponent — render', () => {
   let fixture: ComponentFixture<Host>;
   let splitterEl: HTMLElement;
 
@@ -1655,12 +1655,12 @@ describe('SdSplitterComponent � render', () => {
     expect(handles.length).toBe(2);
   });
 
-  it('handle có orientation ��ng b�" v�:i splitter', () => {
+  it('handle có orientation đồng bộ với splitter', () => {
     const handle = splitterEl.querySelector('sd-splitter-handle')!;
     expect(handle.classList.contains('sd-splitter__handle--horizontal')).toBe(true);
   });
 
-  it('vertical orientation ��"i class', () => {
+  it('vertical orientation đổi class', () => {
     fixture.componentInstance.orientation = 'vertical';
     fixture.detectChanges();
     expect(splitterEl.classList.contains('sd-splitter--vertical')).toBe(true);
@@ -1673,7 +1673,7 @@ describe('SdSplitterComponent � render', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter.component.spec.ts' --watch=false`
-Expected: FAIL � chưa render handles
+Expected: FAIL — chưa render handles
 
 - [ ] **Step 3: Create template `src/splitter.component.html`**
 
@@ -1681,11 +1681,11 @@ Expected: FAIL � chưa render handles
 <ng-content select="sd-splitter-panel"></ng-content>
 ```
 
-`<ng-content>` projects user-declared `<sd-splitter-panel>` vào host. Handles �ược tạo runtime qua `createComponent()` �Ồ giữ Angular lifecycle (pointer/keyboard logic từ Task 8�10) và re-arrange DOM xen kẽ panels.
+`<ng-content>` projects user-declared `<sd-splitter-panel>` vào host. Handles được tạo runtime qua `createComponent()` để giữ Angular lifecycle (pointer/keyboard logic từ Task 8–10) và re-arrange DOM xen kẽ panels.
 
 - [ ] **Step 4: Implement component `src/splitter.component.ts`**
 
-Replace n�"i dung file:
+Replace nội dung file:
 
 ```ts
 import { afterNextRender, booleanAttribute, Component, ComponentRef, contentChildren, createComponent, effect, ElementRef, EnvironmentInjector, inject, input, numberAttribute } from '@angular/core';
@@ -1722,7 +1722,7 @@ export class SdSplitterComponent {
   #handleRefs: ComponentRef<SdSplitterHandleComponent>[] = [];
 
   constructor() {
-    // Sync handles sau khi DOM render xong (panels �ã projected vào host)
+    // Sync handles sau khi DOM render xong (panels đã projected vào host)
     effect(() => {
       const panelCount = this.panels().length;
       const orientation = this.orientation();
@@ -1812,7 +1812,7 @@ git commit -m "feat(splitter): container render panels + dynamic handles xen k�
 
 ---
 
-## Task 12: SdSplitterComponent � reconcile effect + panel meta extraction
+## Task 12: SdSplitterComponent — reconcile effect + panel meta extraction
 
 **Files:**
 - Modify: `src/splitter.component.ts`
@@ -1823,7 +1823,7 @@ Wire `contentChildren` signal vào `SplitterStateService.reconcile()` qua `effec
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-describe('SdSplitterComponent � reconcile', () => {
+describe('SdSplitterComponent — reconcile', () => {
   let fixture: ComponentFixture<Host>;
   let splitterEl: HTMLElement;
 
@@ -1843,8 +1843,8 @@ describe('SdSplitterComponent � reconcile', () => {
   });
 
   it('panel unit="px" áp flex 0 0 <px>', async () => {
-    // Test cần host template riêng v�:i panel px
-    // Tạm skip � sẽ cover �x integration test Task 18.
+    // Test cần host template riêng với panel px
+    // Tạm skip — sẽ cover ở integration test Task 18.
   });
 });
 ```
@@ -1852,7 +1852,7 @@ describe('SdSplitterComponent � reconcile', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter.component.spec.ts' --watch=false`
-Expected: FAIL � `panelEls[0].style.flex` empty
+Expected: FAIL — `panelEls[0].style.flex` empty
 
 - [ ] **Step 3: Wire reconcile + panel style application**
 
@@ -1862,14 +1862,14 @@ Append vào `SdSplitterComponent`:
 #state = inject(SplitterStateService);
 
 constructor() {
-  // 1. Reconcile khi panels signal ��"i
+  // 1. Reconcile khi panels signal đổi
   effect(() => {
     const panels = this.panels();
     const metas = panels.map((p, i) => this.#toMeta(p, i));
-    this.#state.reconcile(metas, null);   // storage wiring �x Task 13
+    this.#state.reconcile(metas, null);   // storage wiring ở Task 13
   });
 
-  // 2. Áp flex style lên panel host element m�i khi liveSizes/collapsed ��"i
+  // 2. Áp flex style lên panel host element mỗi khi liveSizes/collapsed đổi
   effect(() => {
     const sizes = this.#state.liveSizes();
     const collapsed = this.#state.collapsedMap();
@@ -1886,7 +1886,7 @@ constructor() {
     }
   });
 
-  // 3. Sync handle layout (�ã có �x Task 11)
+  // 3. Sync handle layout (đã có ở Task 11)
   // (giữ nguyên)
 }
 
@@ -1921,20 +1921,20 @@ git commit -m "feat(splitter): reconcile effect + flex-basis apply lên panel ho
 
 ---
 
-## Task 13: SdSplitterComponent � storage wiring (storageKey)
+## Task 13: SdSplitterComponent — storage wiring (storageKey)
 
 **Files:**
 - Modify: `src/splitter.component.ts`
 - Modify: `src/splitter.component.spec.ts`
 
-Khi `storageKey` có �  tạo `SdStorageService.create()` handle, reconcile dùng stored state, auto save qua `setSilent` m�i khi `committedLayout` ��"i.
+Khi `storageKey` có → tạo `SdStorageService.create()` handle, reconcile dùng stored state, auto save qua `setSilent` mỗi khi `committedLayout` đổi.
 
 - [ ] **Step 1: Append failing tests**
 
 ```ts
 import { SdStorageService } from '@sdcorejs/angular/services';
 
-describe('SdSplitterComponent � storage', () => {
+describe('SdSplitterComponent — storage', () => {
   let fixture: ComponentFixture<HostWithStorage>;
   let splitterEl: HTMLElement;
   let storage: SdStorageService;
@@ -1960,13 +1960,13 @@ describe('SdSplitterComponent � storage', () => {
     storage = TestBed.inject(SdStorageService);
   });
 
-  it('không có storageKey �  không gọi storage', () => {
+  it('không có storageKey → không gọi storage', () => {
     const setSpy = spyOn(storage, 'create').and.callThrough();
     TestBed.createComponent(Host).detectChanges();   // Host không có storageKey
     expect(setSpy).not.toHaveBeenCalled();
   });
 
-  it('storageKey có �  khi commit, layout state �ược lưu vào localStorage', async () => {
+  it('storageKey có → khi commit, layout state được lưu vào localStorage', async () => {
     fixture = TestBed.createComponent(HostWithStorage);
     fixture.detectChanges();
     const cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
@@ -1984,7 +1984,7 @@ describe('SdSplitterComponent � storage', () => {
     expect(stored?.panels.find(p => p.id === 'b')?.size).toBeCloseTo(1.3, 5);
   });
 
-  it('storageKey có và localStorage �ã có state �  restore khi init', () => {
+  it('storageKey có và localStorage đã có state → restore khi init', () => {
     const handle = storage.create<SplitterLayoutState>('test-splitter');
     handle.set({ v: 1, panels: [
       { id: 'a', size: 0.3, unit: 'flex', collapsed: false },
@@ -2003,7 +2003,7 @@ describe('SdSplitterComponent � storage', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter.component.spec.ts' --watch=false`
-Expected: FAIL � `expect(stored?.panels...).toBeCloseTo(0.7)` fails vì chưa save
+Expected: FAIL — `expect(stored?.panels...).toBeCloseTo(0.7)` fails vì chưa save
 
 - [ ] **Step 3: Wire storage trong `SdSplitterComponent`**
 
@@ -2018,7 +2018,7 @@ Replace constructor effects:
 });
 
 constructor() {
-  // 1. Reconcile khi panels ��"i HOẶC storage handle ��"i
+  // 1. Reconcile khi panels đổi HOẶC storage handle đổi
   effect(() => {
     const panels = this.panels();
     const stored = this.#storageHandle()?.get() ?? null;
@@ -2029,7 +2029,7 @@ constructor() {
   // 2. Áp flex style (giữ nguyên)
   effect(() => { /* ... như Task 12 ... */ });
 
-  // 3. Auto-save khi committedLayout ��"i
+  // 3. Auto-save khi committedLayout đổi
   effect(() => {
     const layout = this.#state.committedLayout();
     const handle = this.#storageHandle();
@@ -2059,7 +2059,7 @@ git commit -m "feat(splitter): storage wiring qua storageKey + setSilent auto-sa
 
 ---
 
-## Task 14: SdSplitterComponent � imperative API
+## Task 14: SdSplitterComponent — imperative API
 
 **Files:**
 - Modify: `src/splitter.component.ts`
@@ -2070,7 +2070,7 @@ Public methods: `getLayout`, `setLayout`, `resetLayout`, `collapse`, `expand`, `
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-describe('SdSplitterComponent � imperative API', () => {
+describe('SdSplitterComponent — imperative API', () => {
   let fixture: ComponentFixture<Host>;
   let cmp: SdSplitterComponent;
 
@@ -2081,13 +2081,13 @@ describe('SdSplitterComponent � imperative API', () => {
     cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance;
   });
 
-  it('getLayout trả về state hi�!n tại', () => {
+  it('getLayout trả về state hiện tại', () => {
     const layout = cmp.getLayout();
     expect(layout.v).toBe(1);
     expect(layout.panels.length).toBe(3);
   });
 
-  it('setLayout apply state m�:i', () => {
+  it('setLayout apply state mới', () => {
     cmp.setLayout({
       v: 1,
       panels: [
@@ -2115,9 +2115,9 @@ describe('SdSplitterComponent � imperative API', () => {
     expect(cmp.getLayout().panels.map(p => p.size)).toEqual([1, 2, 1]);
   });
 
-  it('collapse(index) � set collapsed nếu collapsible', () => {
-    // Default panels không collapsible � phải dùng host khác
-    // (cover �x integration test). Test v�:i panel collapsible:
+  it('collapse(index) — set collapsed nếu collapsible', () => {
+    // Default panels không collapsible — phải dùng host khác
+    // (cover ở integration test). Test với panel collapsible:
     const stateSvc = fixture.debugElement.query(By.directive(SdSplitterComponent)).injector.get(SplitterStateService);
     const metas = [...stateSvc.getPanelMetas()];
     metas[0] = { ...metas[0], collapsible: true };
@@ -2127,15 +2127,15 @@ describe('SdSplitterComponent � imperative API', () => {
   });
 
   it('collapse(string id) match qua panelId', () => {
-    // Cần host khác v�:i panelId � cover �x integration test
+    // Cần host khác với panelId — cover ở integration test
   });
 
-  it('resizePanel target index � set size, clamp theo min/max', () => {
+  it('resizePanel target index — set size, clamp theo min/max', () => {
     cmp.resizePanel(0, 3);
     expect(cmp.getLayout().panels[0].size).toBe(3);
   });
 
-  it('resizePanel string id không t�n tại �  throw', () => {
+  it('resizePanel string id không tồn tại → throw', () => {
     expect(() => cmp.collapse('nonexistent')).toThrowError(/panel.*nonexistent/i);
   });
 });
@@ -2144,7 +2144,7 @@ describe('SdSplitterComponent � imperative API', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter.component.spec.ts' --watch=false`
-Expected: FAIL � `cmp.getLayout is not a function`
+Expected: FAIL — `cmp.getLayout is not a function`
 
 - [ ] **Step 3: Implement API**
 
@@ -2152,7 +2152,7 @@ Append vào `SdSplitterComponent`:
 
 ```ts
 getLayout(): SplitterLayoutState {
-  // Snapshot live state thành layout � không cần phải commit trư�:c
+  // Snapshot live state thành layout — không cần phải commit trước
   const metas = this.#state.getPanelMetas();
   const sizes = this.#state.liveSizes();
   const collapsed = this.#state.collapsedMap();
@@ -2242,19 +2242,19 @@ git commit -m "feat(splitter): imperative API (get/set/reset/collapse/expand/tog
 
 ---
 
-## Task 15: SdSplitterComponent � wire handle events to state
+## Task 15: SdSplitterComponent — wire handle events to state
 
 **Files:**
 - Modify: `src/splitter.component.ts`
 - Modify: `src/splitter.component.spec.ts`
 
-Wire `dragStart` / `dragMove` / `dragEnd` / `toggleRequest` của handle vào state service. Set class `sd-splitter--dragging` trên host khi �ang kéo. Handle `i` thao tác trên panel `i` và `i+1`. Tính container px qua `getBoundingClientRect`.
+Wire `dragStart` / `dragMove` / `dragEnd` / `toggleRequest` của handle vào state service. Set class `sd-splitter--dragging` trên host khi đang kéo. Handle `i` thao tác trên panel `i` và `i+1`. Tính container px qua `getBoundingClientRect`.
 
-Cũng add: `disabled=true` thì handle có `[disabled]="true"`; `resizable=false` panel �  handle kề b�9 disabled.
+Cũng add: `disabled=true` thì handle có `[disabled]="true"`; `resizable=false` panel → handle kề bị disabled.
 
-- [ ] **Step 1: Append failing tests** (sẽ test qua integration �x Task 18 � task này ch�0 wire, không cần test riêng nếu integration �ã cover)
+- [ ] **Step 1: Append failing tests** (sẽ test qua integration ở Task 18 — task này chỉ wire, không cần test riêng nếu integration đã cover)
 
-Skip step test riêng � viết integration test �x Task 18.
+Skip step test riêng — viết integration test ở Task 18.
 
 - [ ] **Step 2: Wire handle events trong `#syncHandles`**
 
@@ -2321,7 +2321,7 @@ Replace `#syncHandles` trong `SdSplitterComponent`:
 }
 
 #onHandleToggle(handleIndex: number): void {
-  // Double-click / Enter / Space � ưu tiên collapse panel collapsible �x phía prev, fallback next
+  // Double-click / Enter / Space — ưu tiên collapse panel collapsible ở phía prev, fallback next
   const panels = this.panels();
   const prev = panels[handleIndex];
   const next = panels[handleIndex + 1];
@@ -2347,18 +2347,18 @@ git commit -m "feat(splitter): wire handle drag/keyboard/toggle events vào stat
 
 ---
 
-## Task 16: SdSplitterComponent � emit outputs (resizeEnd, collapsedChange, layoutChange)
+## Task 16: SdSplitterComponent — emit outputs (resizeEnd, collapsedChange, layoutChange)
 
 **Files:**
 - Modify: `src/splitter.component.ts`
 - Modify: `src/splitter.component.spec.ts`
 
-Emit events: `resizeEnd` �x `#onDragEnd`, `collapsedChange` m�i khi `collapsedMap` ��"i, `layoutChange` �x mọi commit.
+Emit events: `resizeEnd` ở `#onDragEnd`, `collapsedChange` mỗi khi `collapsedMap` đổi, `layoutChange` ở mọi commit.
 
 - [ ] **Step 1: Append failing tests**
 
 ```ts
-describe('SdSplitterComponent � outputs', () => {
+describe('SdSplitterComponent — outputs', () => {
   let fixture: ComponentFixture<HostWithEvents>;
   let captured: { resizeEnd: any[]; collapsedChange: any[]; layoutChange: any[] };
 
@@ -2386,7 +2386,7 @@ describe('SdSplitterComponent � outputs', () => {
     captured = fixture.componentInstance.captured;
   });
 
-  it('imperative collapse �  emit collapsedChange + layoutChange', () => {
+  it('imperative collapse → emit collapsedChange + layoutChange', () => {
     const cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
     cmp.collapse('a');
     fixture.detectChanges();
@@ -2394,7 +2394,7 @@ describe('SdSplitterComponent � outputs', () => {
     expect(captured.layoutChange.length).toBe(1);
   });
 
-  it('imperative resizePanel �  emit layoutChange', () => {
+  it('imperative resizePanel → emit layoutChange', () => {
     const cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
     cmp.resizePanel('a', 3);
     fixture.detectChanges();
@@ -2407,7 +2407,7 @@ describe('SdSplitterComponent � outputs', () => {
 - [ ] **Step 2: Run, verify FAIL**
 
 Run: `ng test --include='**/splitter.component.spec.ts' --watch=false`
-Expected: FAIL � outputs chưa �ược declare
+Expected: FAIL — outputs chưa được declare
 
 - [ ] **Step 3: Add outputs + emit logic**
 
@@ -2421,7 +2421,7 @@ readonly layoutChange = output<SplitterLayoutState>();
 #prevCollapsedMap = new Map<string | number, boolean>();
 ```
 
-Trong constructor, thêm effect emit `layoutChange` + `collapsedChange` khi committedLayout ��"i:
+Trong constructor, thêm effect emit `layoutChange` + `collapsedChange` khi committedLayout đổi:
 
 ```ts
 effect(() => {
@@ -2429,7 +2429,7 @@ effect(() => {
   if (layout.panels.length === 0) return;
   this.layoutChange.emit(layout);
 
-  // Detect collapsed change qua diff v�:i prev map
+  // Detect collapsed change qua diff với prev map
   const currMap = this.#state.collapsedMap();
   for (const [id, isCollapsed] of currMap) {
     const prev = this.#prevCollapsedMap.get(id) ?? false;
@@ -2466,13 +2466,13 @@ git commit -m "feat(splitter): outputs resizeEnd/collapsedChange/layoutChange"
 
 ---
 
-## Task 17: Styling polish � transitions + drag class
+## Task 17: Styling polish — transitions + drag class
 
 **Files:**
 - Modify: `src/splitter-panel/splitter-panel.component.scss`
 - Modify: `src/splitter.component.scss`
 
-Add CSS transitions cho `flex-basis` (ch�0 áp khi không �ang drag).
+Add CSS transitions cho `flex-basis` (chỉ áp khi không đang drag).
 
 - [ ] **Step 1: Update `splitter-panel.component.scss`**
 
@@ -2490,7 +2490,7 @@ Add CSS transitions cho `flex-basis` (ch�0 áp khi không �ang drag).
   }
 }
 
-// Disable transition khi parent �ang drag
+// Disable transition khi parent đang drag
 :host-context(.sd-splitter--dragging) {
   transition: none !important;
 }
@@ -2510,7 +2510,7 @@ git commit -m "style(splitter): smooth flex transition + disable trong drag"
 
 ---
 
-## Task 18: Integration tests � end-to-end DOM scenarios
+## Task 18: Integration tests — end-to-end DOM scenarios
 
 **Files:**
 - Create: `src/splitter.integration.spec.ts`
@@ -2575,7 +2575,7 @@ describe('sd-splitter integration', () => {
     expect(panels[1].style.flex).toContain('1 1 0');
   });
 
-  it('pointer drag handle �  A panel size update', async () => {
+  it('pointer drag handle → A panel size update', async () => {
     const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
     spyOn(handle, 'setPointerCapture').and.stub();
     spyOn(handle, 'releasePointerCapture').and.stub();
@@ -2589,14 +2589,14 @@ describe('sd-splitter integration', () => {
     expect(cmp.getLayout().panels.find(p => p.id === 'a')!.size).toBe(250);
   });
 
-  it('drag panel A xu�ng dư�:i minSize � 0.5 �  snap collapse', () => {
+  it('drag panel A xuống dưới minSize × 0.5 → snap collapse', () => {
     const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
     spyOn(handle, 'setPointerCapture').and.stub();
     spyOn(handle, 'releasePointerCapture').and.stub();
 
-    // A �ầu = 200. min=50. snap threshold = 50*0.5 = 25.
+    // A đầu = 200. min=50. snap threshold = 50*0.5 = 25.
     dispatchPointer(handle, 'pointerdown', { clientX: 200, clientY: 0, button: 0 });
-    dispatchPointer(handle, 'pointermove', { clientX: 20, clientY: 0 });   // a �  20 < 25, snap
+    dispatchPointer(handle, 'pointermove', { clientX: 20, clientY: 0 });   // a → 20 < 25, snap
     dispatchPointer(handle, 'pointerup', { clientX: 20, clientY: 0 });
     fixture.detectChanges();
 
@@ -2604,7 +2604,7 @@ describe('sd-splitter integration', () => {
     expect(cmp.getLayout().panels.find(p => p.id === 'a')!.collapsed).toBe(true);
   });
 
-  it('disabled splitter �  pointer drag không thay ��"i state', () => {
+  it('disabled splitter → pointer drag không thay đổi state', () => {
     fixture.componentInstance.disabled.set(true);
     fixture.detectChanges();
 
@@ -2619,7 +2619,7 @@ describe('sd-splitter integration', () => {
     expect(cmp.getLayout().panels.find(p => p.id === 'a')!.size).toBe(200);
   });
 
-  it('storage roundtrip: drag �  re-create component cùng storageKey �  restore', () => {
+  it('storage roundtrip: drag → re-create component cùng storageKey → restore', () => {
     fixture.componentInstance.storageKey.set('integration-test');
     fixture.detectChanges();
 
@@ -2660,7 +2660,7 @@ describe('sd-splitter nested', () => {
   })
   class NestedHost {}
 
-  it('renders nested splitter v�:i handle riêng', () => {
+  it('renders nested splitter với handle riêng', () => {
     TestBed.configureTestingModule({ imports: [NestedHost], providers: [SdStorageService] });
     const fix = TestBed.createComponent(NestedHost);
     fix.detectChanges();
@@ -2679,9 +2679,9 @@ Run: `ng test --include='**/splitter.integration.spec.ts' --watch=false`
 Expected: PASS
 
 Nếu có specs fail, debug và sửa. Likely areas:
-- `dispatchPointer` không trigger `pointermove` listener � kiỒm tra phải dispatch trên `handleEl` chính
-- `getBoundingClientRect` mock � verify rect �úng width
-- `requestAnimationFrame` callback � verify chạy ngay qua spy
+- `dispatchPointer` không trigger `pointermove` listener — kiểm tra phải dispatch trên `handleEl` chính
+- `getBoundingClientRect` mock — verify rect đúng width
+- `requestAnimationFrame` callback — verify chạy ngay qua spy
 
 - [ ] **Step 3: Commit**
 
@@ -2692,16 +2692,16 @@ git commit -m "test(splitter): integration tests cho drag/snap/disabled/storage/
 
 ---
 
-## Task 19: Final verification � build, lint, manual smoke
+## Task 19: Final verification — build, lint, manual smoke
 
-**Files:** none new � verify toàn b�".
+**Files:** none new — verify toàn bộ.
 
 - [ ] **Step 1: Run full test suite**
 
 Run: `ng test --watch=false --include='**/splitter/**'`
-Expected: PASS � tất cả specs (state service ~25, panel ~4, handle ~13, container ~10+, integration ~6)
+Expected: PASS — tất cả specs (state service ~25, panel ~4, handle ~13, container ~10+, integration ~6)
 
-Verify count: t�"ng �0� 58 specs.
+Verify count: tổng ≥ 58 specs.
 
 - [ ] **Step 2: Run lint**
 
@@ -2711,7 +2711,7 @@ Expected: PASS, không warning trong `components/splitter/`
 - [ ] **Step 3: Run build**
 
 Run: `npm run build`
-Expected: PASS, không l�i compile, output bundle có chứa `SdSplitterComponent`
+Expected: PASS, không lỗi compile, output bundle có chứa `SdSplitterComponent`
 
 - [ ] **Step 4: Verify public exports**
 
@@ -2720,9 +2720,9 @@ Read `projects/sdcorejs-angular/components/splitter/index.ts` và confirm export
 - `SdSplitterPanelComponent`
 - Types: `SplitterOrientation`, `SplitterPanelUnit`, `SplitterPanelState`, `SplitterLayoutState`
 
-Confirm KH�NG export: `SdSplitterHandleComponent`, `SplitterStateService`, `ResolvedPanelMeta`.
+Confirm KHÔNG export: `SdSplitterHandleComponent`, `SplitterStateService`, `ResolvedPanelMeta`.
 
-Nếu l�!ch � sửa `index.ts`:
+Nếu lệch — sửa `index.ts`:
 
 ```ts
 export * from './src/splitter.component';
@@ -2737,7 +2737,7 @@ Add temporary demo trong `projects/demo/` (nếu có) hoặc tạo component tes
 ```html
 <sd-splitter storageKey="smoke" style="width:600px;height:400px;border:1px solid #ccc;">
   <sd-splitter-panel panelId="left" size="200" unit="px" minSize="100" collapsible style="background:#eee;padding:8px;">
-    Sidebar � kéo divider hoặc double-click handle �Ồ collapse
+    Sidebar — kéo divider hoặc double-click handle để collapse
   </sd-splitter-panel>
   <sd-splitter-panel panelId="main" size="1" style="padding:8px;">
     Main content
@@ -2745,11 +2745,11 @@ Add temporary demo trong `projects/demo/` (nếu có) hoặc tạo component tes
 </sd-splitter>
 ```
 
-M�x browser, verify:
-- Kéo divider �  size update mượt
-- Double-click handle �  sidebar collapse + expand
-- Tab vào handle + ArrowRight �  resize +10px
-- Reload trang �  size persist từ localStorage
+Mở browser, verify:
+- Kéo divider → size update mượt
+- Double-click handle → sidebar collapse + expand
+- Tab vào handle + ArrowRight → resize +10px
+- Reload trang → size persist từ localStorage
 
 - [ ] **Step 6: Final commit + PR**
 
@@ -2759,22 +2759,21 @@ git commit -m "chore(splitter): final cleanup + public exports verified"
 git log --oneline | head -20
 ```
 
-Verify l�9ch sử commit có ~19 commit grouped theo task.
+Verify lịch sử commit có ~19 commit grouped theo task.
 
 ---
 
 ## Hoàn thành
 
-Sau task 19, component `sd-splitter` �ã có �ầy �ủ:
+Sau task 19, component `sd-splitter` đã có đầy đủ:
 - Public API theo spec
-- Test coverage �ầy �ủ (unit + integration) cho Core UI
-- Persistence qua `SdStorageService` v�:i `storageKey`
+- Test coverage đầy đủ (unit + integration) cho Core UI
+- Persistence qua `SdStorageService` với `storageKey`
 - Keyboard a11y + ARIA attrs
 - Signal-based composition không dùng lifecycle hooks legacy
-- CSS variables �Ồ theme
+- CSS variables để theme
 
 **Next steps (nếu cần):**
-- Touch device verification � `--sd-splitter-handle-hit-area-touch` (open question từ spec section 12)
+- Touch device verification — `--sd-splitter-handle-hit-area-touch` (open question từ spec section 12)
 - Demo page trong `projects/demo/` (nếu repo có)
 - Documentation `sd-splitter.md` markdown trong folder component (theo pattern các component khác có file `.md`)
-

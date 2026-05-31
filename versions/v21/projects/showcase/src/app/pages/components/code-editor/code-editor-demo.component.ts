@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
 
@@ -66,4 +66,3 @@ function isActive(emp: Employee): boolean {
 </section>`,
   );
 }
-

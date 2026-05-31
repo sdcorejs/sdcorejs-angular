@@ -1,4 +1,4 @@
-﻿import { NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
   ChangeDetectionStrategy,
@@ -31,7 +31,7 @@ export class SdStepper extends SdBaseSecureComponent {
   steps = contentChildren(SdStep);
 
   selectedIndex = model<number>(0);
-  // why: enforce sequential gating â€” only valid steps unlock the next.
+  // why: enforce sequential gating — only valid steps unlock the next.
   linear = input(false, { transform: booleanAttribute });
   orientation = input<'horizontal' | 'vertical'>('horizontal');
   labelPosition = input<'end' | 'bottom'>('end');
@@ -51,7 +51,7 @@ export class SdStepper extends SdBaseSecureComponent {
     return this.autoId() ?? null;
   }
 
-  // Core color CSS vars â€” same mechanism as <sd-tab-group>.
+  // Core color CSS vars — same mechanism as <sd-tab-group>.
   @HostBinding('style.--sd-stepper-active-color') get cssActive(): string {
     return `var(--sd-${this.color()})`;
   }
@@ -105,4 +105,3 @@ export class SdStepper extends SdBaseSecureComponent {
     step?.selectChange.emit();
   }
 }
-

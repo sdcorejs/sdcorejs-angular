@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -25,7 +25,7 @@ export class SdCacheService {
 
     const hashKey = Utilities.hash({ key });
 
-    // 1. Init Subject: Load data cÃ³ sáºµn náº¿u cÃ³
+    // 1. Init Subject: Load data có sẵn nếu có
     if (!this.#subjects.has(hashKey)) {
       const existingData = this.#internalGet<T>(hashKey, option);
       this.#subjects.set(hashKey, new BehaviorSubject<T | undefined>(existingData ?? option?.default));
@@ -36,7 +36,7 @@ export class SdCacheService {
     // 2. Define helpers
     const get = () => {
       const val = this.#internalGet<T>(hashKey, option);
-      // Fix strict type: Ã‰p kiá»ƒu vá» T (cháº¥p nháº­n rá»§i ro undefined náº¿u user khÃ´ng check)
+      // Fix strict type: Ép kiểu về T (chấp nhận rủi ro undefined nếu user không check)
       return (val ?? option?.default) as T;
     };
 
@@ -62,15 +62,15 @@ export class SdCacheService {
 
     // 3. IMPLEMENT LOAD (Get-Or-Set Pattern)
     const load = async (callback: () => Promise<T>): Promise<T> => {
-      // Check cache trÆ°á»›c
+      // Check cache trước
       if (has()) {
         return get();
       }
 
-      // Cache miss -> Gá»i API
+      // Cache miss -> Gọi API
       try {
         const result = await callback();
-        // Chá»‰ lÆ°u náº¿u káº¿t quáº£ há»£p lá»‡ (khÃ¡c undefined/null)
+        // Chỉ lưu nếu kết quả hợp lệ (khác undefined/null)
         if (result !== undefined && result !== null) {
           set(result);
         }
@@ -135,7 +135,7 @@ export class SdCacheService {
   }
 
   #internalSet<T>(key: string, data: T, option?: SdCacheOption): void {
-    // FIX Lá»–I Táº I ÄÃ‚Y: Bá» "?? null" Ä‘á»ƒ giá»¯ nguyÃªn kiá»ƒu T
+    // FIX LỖI TẠI ĐÂY: Bỏ "?? null" để giữ nguyên kiểu T
     const clonedData = this.#deepClone(data);
 
     const entry: CacheEntry<T> = {
@@ -168,4 +168,3 @@ export class SdCacheService {
     return JSON.parse(JSON.stringify(val));
   }
 }
-

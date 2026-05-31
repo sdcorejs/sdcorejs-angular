@@ -1,4 +1,4 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -169,4 +169,3 @@ export class SdDocxService {
     return this.#VALID_EXTENSIONS.some(ext => lowerCaseName.endsWith(ext));
   }
 }
-

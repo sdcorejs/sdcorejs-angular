@@ -1,4 +1,4 @@
-﻿import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -226,9 +226,9 @@ describe('SdAutocomplete', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Selection â€” primitive string items (no valueField/displayField)
+  // Selection — primitive string items (no valueField/displayField)
   // -------------------------------------------------------------------------
-  describe('selection â€” primitive items', () => {
+  describe('selection — primitive items', () => {
     beforeEach(fakeAsync(() => {
       host.items = ['Alpha', 'Beta', 'Gamma'];
       fixture.detectChanges();
@@ -355,7 +355,7 @@ describe('SdAutocomplete', () => {
   // errorMessage
   // -------------------------------------------------------------------------
   describe('errorMessage getter', () => {
-    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', fakeAsync(() => {
+    it('returns "Vui lòng nhập thông tin" for required error', fakeAsync(() => {
       host.model = 'seed';
       host.required = true;
       fixture.detectChanges();
@@ -363,7 +363,7 @@ describe('SdAutocomplete', () => {
       comp.formControl.setValue(null, { emitEvent: false });
       comp.formControl.markAsTouched();
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
     }));
 
     it('returns inlineError message when inlineError validator fires', () => {
@@ -540,7 +540,7 @@ describe('SdAutocomplete (SD_FORM_CONFIGURATION)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// E2E data-* attributes (Tasks 11â€“12)
+// E2E data-* attributes (Tasks 11–12)
 // ---------------------------------------------------------------------------
 
 describe('SdAutocomplete (E2E attributes)', () => {
@@ -622,10 +622,10 @@ describe('SdAutocomplete (host classes)', () => {
     fixture = TestBed.createComponent(SdAutocomplete);
   });
 
-  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
-    fixture.componentRef.setInput('label', 'Tá»‰nh/ThÃ nh');
+    fixture.componentRef.setInput('label', 'Tỉnh/Thành');
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
   });
@@ -638,4 +638,3 @@ describe('SdAutocomplete (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
-

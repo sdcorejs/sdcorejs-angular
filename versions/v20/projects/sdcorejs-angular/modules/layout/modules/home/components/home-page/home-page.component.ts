@@ -1,10 +1,10 @@
-﻿import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SdTabComponent } from '@sdcorejs/angular/components';
 import { I18N_STORAGE_KEY, I18N_MESSAGES, I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Language } from '@sdcorejs/angular/models';
 
-// NOTE: Import ná»™i bá»™ trong module layout thÃ¬ dÃ¹ng path tÆ°Æ¡ng Ä‘á»‘i
+// NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
 import { SdLayoutService, SdLayoutStorageService } from '../../../../services';
 import { ActivatedRoute } from '@angular/router';
@@ -19,8 +19,8 @@ import { ActivatedRoute } from '@angular/router';
 })
 @SdTabComponent({
   component: HomePageComponent,
-  // WHY: decorator cháº¡y trÆ°á»›c Angular DI, nÃªn khÃ´ng inject Ä‘Æ°á»£c I18nService.
-  // Äá»c ngÃ´n ngá»¯ hiá»‡n táº¡i trá»±c tiáº¿p tá»« localStorage + I18N_MESSAGES Ä‘á»ƒ cÃ³ giÃ¡ trá»‹ Ä‘Ã£ dá»‹ch.
+  // WHY: decorator chạy trước Angular DI, nên không inject được I18nService.
+  // Đọc ngôn ngữ hiện tại trực tiếp từ localStorage + I18N_MESSAGES để có giá trị đã dịch.
   name: () => {
     const lang = ((): Language => {
       try {
@@ -41,8 +41,8 @@ export class HomePageComponent {
   readonly #layoutService = inject(SdLayoutService);
   readonly #i18n = inject(I18nService);
 
-  // Map Language code â†’ BCP 47 locale tag dÃ¹ng cho Intl date formatting
-  // WHY: must be declared before todayInfo â€” field init runs top-to-bottom; #getTodayInfo reads #localeMap.
+  // Map Language code → BCP 47 locale tag dùng cho Intl date formatting
+  // WHY: must be declared before todayInfo — field init runs top-to-bottom; #getTodayInfo reads #localeMap.
   readonly #localeMap: Record<Language, string> = {
     vi: 'vi-VN',
     en: 'en-US',
@@ -54,12 +54,12 @@ export class HomePageComponent {
   // ==========================================
   // SIGNALS (STATE)
   // ==========================================
-  // Láº¥y snapshot má»™t láº§n lÃºc khá»Ÿi táº¡o vÃ  Ä‘Æ°a vÃ o signal
+  // Lấy snapshot một lần lúc khởi tạo và đưa vào signal
   readonly todayInfo = signal<string>(this.#getTodayInfo(new Date()));
   userInfo = this.#layoutService.userInfo;
 
-  // WHY: static data, khÃ´ng cáº§n signal. `storage` + `schema` thay cho `database` + `account_tree`
-  // Ä‘á»ƒ Ä‘áº£m báº£o render trÃªn má»i version cá»§a Material Icons máº·c Ä‘á»‹nh.
+  // WHY: static data, không cần signal. `storage` + `schema` thay cho `database` + `account_tree`
+  // để đảm bảo render trên mọi version của Material Icons mặc định.
   readonly features = [
     { icon: 'storage', key: 'core.module.layout.home.feature.data', area: 'data' },
     { icon: 'insights', key: 'core.module.layout.home.feature.reports', area: 'report' },
@@ -82,9 +82,9 @@ export class HomePageComponent {
   }
 
   #getTodayInfo(date: Date) {
-    // WHY: weekday names i18n hÃ³a qua key core.module.layout.weekday.<0..6>
+    // WHY: weekday names i18n hóa qua key core.module.layout.weekday.<0..6>
     const weekday = this.#i18n.t(`core.module.layout.weekday.${date.getDay()}`);
-    // WHY: dÃ¹ng locale theo ngÃ´n ngá»¯ hiá»‡n táº¡i Ä‘á»ƒ Ä‘á»‹nh dáº¡ng sá»‘ (dd/mm/yyyy vs mm/dd/yyyy ...)
+    // WHY: dùng locale theo ngôn ngữ hiện tại để định dạng số (dd/mm/yyyy vs mm/dd/yyyy ...)
     const locale = this.#localeMap[this.#i18n.language()] ?? 'vi-VN';
     const dateStr = date.toLocaleDateString(locale, {
       day: '2-digit',
@@ -95,4 +95,3 @@ export class HomePageComponent {
     return `${formatted} (${this.#getTimezone()})`;
   }
 }
-

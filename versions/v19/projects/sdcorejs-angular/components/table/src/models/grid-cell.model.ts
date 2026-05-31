@@ -1,4 +1,4 @@
-﻿import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 
 export interface SdCellView {
@@ -16,4 +16,3 @@ export interface SdCellView {
   };
   click?: () => void;
 }
-

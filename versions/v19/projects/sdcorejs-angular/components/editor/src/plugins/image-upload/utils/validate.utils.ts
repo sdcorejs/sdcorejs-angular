@@ -1,9 +1,9 @@
-﻿import { FileLoader } from 'ckeditor5';
+import { FileLoader } from 'ckeditor5';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdEditorImageUploadValidation } from '../../../models';
 
-// Dá»±a vÃ o file Ä‘á»ƒ detect Ä‘á»‹nh dáº¡ng thay vÃ¬ chá»‰ check tÃªn
-// TrÃ¡nh user gá»­i file khÃ´ng Ä‘Ãºng, vÃ­ dá»¥ file docx nhÆ°ng Ä‘á»•i tÃªn thÃ nh áº£nh docx.jpg
+// Dựa vào file để detect định dạng thay vì chỉ check tên
+// Tránh user gửi file không đúng, ví dụ file docx nhưng đổi tên thành ảnh docx.jpg
 const detectFormatFromBytes = async (file: File): Promise<string> => {
   const buffer = await file.slice(0, 12).arrayBuffer();
   const b = new Uint8Array(buffer);
@@ -39,7 +39,7 @@ const getImageInfo = async (file: File): Promise<{ width: number; height: number
   return { width, height, sizeMB, format };
 };
 
-// Helper: gá»i i18n.t khi cÃ³ service; náº¿u thiáº¿u thÃ¬ tráº£ empty (Angular wrapper luÃ´n truyá»n i18n)
+// Helper: gọi i18n.t khi có service; nếu thiếu thì trả empty (Angular wrapper luôn truyền i18n)
 const tr = (i18n: I18nService | undefined, key: string, params: Record<string, unknown>): string =>
   i18n?.t(key, params as any) ?? '';
 
@@ -104,4 +104,3 @@ export const validateAndGetFile = async (
   }
   return file;
 };
-

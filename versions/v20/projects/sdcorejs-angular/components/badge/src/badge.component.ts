@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttribute, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -6,7 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Color, Size } from '@sdcorejs/utils/models';
 import { MaterialIconFontSet, DefaultMaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 
-// Export cÃ¡c Type Ä‘á»ƒ dÃ¹ng chung
+// Export các Type để dùng chung
 export type SdBadgeType = 'tag' | 'round' | 'icon';
 
 @Component({
@@ -113,8 +113,8 @@ export class SdBadge {
     };
   });
 
-  // why: size modifier cho container .c-badge (round + tag). TÃ¡ch prefix c-badge--<size>
-  // Ä‘á»ƒ khÃ´ng Ä‘á»¥ng class .c-sm/.c-md/.c-lg Ä‘ang dÃ¹ng trÃªn icon span.
+  // why: size modifier cho container .c-badge (round + tag). Tách prefix c-badge--<size>
+  // để không đụng class .c-sm/.c-md/.c-lg đang dùng trên icon span.
   containerSizeClasses = computed(() => {
     const s = this.size();
     return {
@@ -124,22 +124,21 @@ export class SdBadge {
     };
   });
 
-  // Gá»˜P CLASS CHO BADGE TYPE = 'TAG' (cÅ©ng dÃ¹ng láº¡i cho 'ROUND' khi cÃ³ icon)
+  // GỘP CLASS CHO BADGE TYPE = 'TAG' (cũng dùng lại cho 'ROUND' khi có icon)
   tagIconCombinedClasses = computed(() => ({
     ...this.iconSizeAndFontClasses(),
     ...this.baseColorClasses(),
   }));
 
-  // Gá»˜P CLASS CHO CONTAINER round/tag (color tint + size modifier)
+  // GỘP CLASS CHO CONTAINER round/tag (color tint + size modifier)
   containerCombinedClasses = computed(() => ({
     ...this.baseColorClasses(),
     ...this.containerSizeClasses(),
   }));
 
-  // Gá»˜P CLASS CHO BADGE TYPE = 'ICON'
+  // GỘP CLASS CHO BADGE TYPE = 'ICON'
   iconCombinedClasses = computed(() => ({
     ...this.iconSizeAndFontClasses(),
     ...this.iconColorClasses(),
   }));
 }
-

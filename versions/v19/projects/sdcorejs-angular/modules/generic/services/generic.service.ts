@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { SdApiService } from '@sdcorejs/angular/services/api';
 import { ArrayUtilities, StringUtilities } from '@sdcorejs/angular/utilities';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -35,12 +35,12 @@ export class SdGenericService {
       return await register.paging(req);
     };
     const all: SdRegister<T>['all'] = async req => {
-      // Náº¿u register cÃ³ phÆ°Æ¡ng thá»©c all thÃ¬ sá»­ dá»¥ng phÆ°Æ¡ng thá»©c Ä‘Ã³
+      // Nếu register có phương thức all thì sử dụng phương thức đó
       if (register.all) {
         return await register.all(req);
       }
       const { properties } = await schema();
-      // Náº¿u khÃ´ng cÃ³ phÆ°Æ¡ng thá»©c all thÃ¬ sá»­ dá»¥ng phÆ°Æ¡ng thá»©c paging Ä‘á»ƒ láº¥y táº¥t cáº£ dá»¯ liá»‡u
+      // Nếu không có phương thức all thì sử dụng phương thức paging để lấy tất cả dữ liệu
       return await Utilities.fetchAllByPaging(async (pageSize, pageNumber) => {
         const res = await paging({
           ...req,
@@ -55,7 +55,7 @@ export class SdGenericService {
       });
     };
     const search: SdRegister<T>['search'] = async (req, filters) => {
-      // Náº¿u register cÃ³ phÆ°Æ¡ng thá»©c search thÃ¬ sá»­ dá»¥ng phÆ°Æ¡ng thá»©c Ä‘Ã³
+      // Nếu register có phương thức search thì sử dụng phương thức đó
       if (register.search) {
         return await register.search(req);
       }
@@ -89,7 +89,7 @@ export class SdGenericService {
               });
               return res?.items || [];
             }
-            // LuÃ´n filter contain Ä‘á»‘i vá»›i search
+            // Luôn filter contain đối với search
             const res = await paging({
               filters: [
                 ...(filters || []),
@@ -119,7 +119,7 @@ export class SdGenericService {
       }
       const { properties } = await schema();
       const req: Record<string, any> = { ...entity };
-      // XÃ³a cÃ¡c properties khÃ´ng cho phÃ©p insert trÆ°á»›c khi gá»­i lÃªn
+      // Xóa các properties không cho phép insert trước khi gửi lên
       for (const property of properties.filter(e => !e.detail?.insertable)) {
         delete req[property.code];
       }
@@ -134,7 +134,7 @@ export class SdGenericService {
       if (!identityValue) {
         return undefined;
       }
-      // Náº¿u register cÃ³ phÆ°Æ¡ng thá»©c detail thÃ¬ sá»­ dá»¥ng phÆ°Æ¡ng thá»©c Ä‘Ã³
+      // Nếu register có phương thức detail thì sử dụng phương thức đó
       if (register.detail) {
         return await register.detail(identityValue);
       }
@@ -150,7 +150,7 @@ export class SdGenericService {
       }
       const { properties } = await schema();
       const req: Record<string, any> = { ...entity };
-      // XÃ³a cÃ¡c properties khÃ´ng cho phÃ©p update trÆ°á»›c khi gá»­i lÃªn
+      // Xóa các properties không cho phép update trước khi gửi lên
       for (const property of properties.filter(e => !e.detail?.updatable)) {
         delete req[property.code];
       }
@@ -184,4 +184,3 @@ export class SdGenericService {
     };
   };
 }
-

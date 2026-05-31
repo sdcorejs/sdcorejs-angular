@@ -1,14 +1,14 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, booleanAttribute, input, model } from '@angular/core';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 /**
- * Time spinner â€” UI chá»n giá»/phÃºt/(giÃ¢y) compact, modern.
+ * Time spinner — UI chọn giờ/phút/(giây) compact, modern.
  *
  *  - Format 24h
- *  - Máº·c Ä‘á»‹nh hiá»ƒn thá»‹ HH:MM, báº­t `showSeconds` Ä‘á»ƒ hiá»‡n thÃªm cá»™t giÃ¢y
- *  - Há»— trá»£: click â–²â–¼, gÃµ trá»±c tiáº¿p, lÄƒn chuá»™t, mÅ©i tÃªn bÃ n phÃ­m
- *  - Wrap vÃ²ng (23 â†’ â–² â†’ 00)
+ *  - Mặc định hiển thị HH:MM, bật `showSeconds` để hiện thêm cột giây
+ *  - Hỗ trợ: click ▲▼, gõ trực tiếp, lăn chuột, mũi tên bàn phím
+ *  - Wrap vòng (23 → ▲ → 00)
  */
 @Component({
   selector: 'sd-time-spinner',
@@ -19,7 +19,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdTimeSpinner {
-  // Hai-chiá»u: cha cÃ³ thá»ƒ Ä‘á»c/ghi tá»«ng Ä‘Æ¡n vá»‹ qua signal model.
+  // Hai-chiều: cha có thể đọc/ghi từng đơn vị qua signal model.
   hours = model<number>(0);
   minutes = model<number>(0);
   seconds = model<number>(0);
@@ -27,12 +27,12 @@ export class SdTimeSpinner {
   showSeconds = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
 
-  // Cache hiá»ƒn thá»‹ 2 chá»¯ sá»‘ â€” pad-left "0".
+  // Cache hiển thị 2 chữ số — pad-left "0".
   pad(n: number): string {
     return n < 10 ? `0${n}` : `${n}`;
   }
 
-  // BÆ°á»›c nháº£y Â±1, wrap vÃ²ng quanh max.
+  // Bước nhảy ±1, wrap vòng quanh max.
   step(unit: 'h' | 'm' | 's', delta: number) {
     if (this.disabled()) return;
     if (unit === 'h') {
@@ -48,8 +48,8 @@ export class SdTimeSpinner {
   }
 
   /**
-   * Buffer tÃ­ch lÅ©y chá»¯ sá»‘ Ä‘ang gÃµ cho tá»«ng Ä‘Æ¡n vá»‹.
-   * ÄÆ°á»£c reset khi: focus, commit (2 chá»¯ sá»‘ / auto-commit), blur.
+   * Buffer tích lũy chữ số đang gõ cho từng đơn vị.
+   * Được reset khi: focus, commit (2 chữ số / auto-commit), blur.
    */
   private _buf: Record<'h' | 'm' | 's', string> = { h: '', m: '', s: '' };
 
@@ -60,8 +60,8 @@ export class SdTimeSpinner {
   }
 
   /**
-   * onInput chá»‰ xá»­ lÃ½ cÃ¡c trÆ°á»ng há»£p khÃ´ng qua keydown:
-   * paste, drag-drop, mobile soft-keyboard (khÃ´ng fire keydown).
+   * onInput chỉ xử lý các trường hợp không qua keydown:
+   * paste, drag-drop, mobile soft-keyboard (không fire keydown).
    */
   onInput(unit: 'h' | 'm' | 's', event: Event) {
     if (this.disabled()) return;
@@ -76,7 +76,7 @@ export class SdTimeSpinner {
     this._buf[unit] = '';
   }
 
-  // LÄƒn chuá»™t trÃªn input â€” cuá»™n lÃªn = tÄƒng.
+  // Lăn chuột trên input — cuộn lên = tăng.
   onWheel(unit: 'h' | 'm' | 's', event: WheelEvent) {
     if (this.disabled()) return;
     event.preventDefault();
@@ -85,10 +85,10 @@ export class SdTimeSpinner {
   }
 
   /**
-   * Xá»­ lÃ½ gÃµ phÃ­m:
-   * - Chá»¯ sá»‘: buffer 2 kÃ½ tá»±, auto-commit khi Ä‘á»§ hoáº·c chá»¯ sá»‘ Ä‘áº§u vÆ°á»£t ngÆ°á»¡ng
-   * - Arrow: Â±1, reset buffer
-   * - Tab/Enter: commit buffer dá»Ÿ (náº¿u cÃ³)
+   * Xử lý gõ phím:
+   * - Chữ số: buffer 2 ký tự, auto-commit khi đủ hoặc chữ số đầu vượt ngưỡng
+   * - Arrow: ±1, reset buffer
+   * - Tab/Enter: commit buffer dở (nếu có)
    */
   onKeyDown(unit: 'h' | 'm' | 's', event: KeyboardEvent) {
     if (this.disabled()) return;
@@ -107,11 +107,11 @@ export class SdTimeSpinner {
     }
 
     if (/^\d$/.test(event.key)) {
-      event.preventDefault(); // Ta tá»± kiá»ƒm soÃ¡t hiá»ƒn thá»‹
+      event.preventDefault(); // Ta tự kiểm soát hiển thị
       const max = unit === 'h' ? 23 : 59;
-      // Chá»¯ sá»‘ Ä‘áº§u tá»‘i Ä‘a Ä‘á»ƒ cÃ²n cÃ³ thá»ƒ nháº­p chá»¯ sá»‘ 2 há»£p lá»‡:
-      // giá»  â†’ max first digit = 2  (vd '3x' khÃ´ng há»£p lá»‡ vÃ¬ max 23)
-      // phÃºt/giÃ¢y â†’ max first digit = 5
+      // Chữ số đầu tối đa để còn có thể nhập chữ số 2 hợp lệ:
+      // giờ  → max first digit = 2  (vd '3x' không hợp lệ vì max 23)
+      // phút/giây → max first digit = 5
       const maxFirstDigit = unit === 'h' ? 2 : 5;
       const buf = this._buf[unit] + event.key;
       const el = event.target as HTMLInputElement;
@@ -119,18 +119,18 @@ export class SdTimeSpinner {
       if (buf.length === 1) {
         const d = parseInt(event.key, 10);
         if (d > maxFirstDigit) {
-          // Chá»¯ sá»‘ Ä‘áº§u khÃ´ng thá»ƒ lÃ  hÃ ng chá»¥c há»£p lá»‡ â†’ commit ngay dáº¡ng 0X
+          // Chữ số đầu không thể là hàng chục hợp lệ → commit ngay dạng 0X
           const num = Math.min(d, max);
           this._commitUnit(unit, num);
           el.value = this.pad(num);
           this._buf[unit] = '';
         } else {
-          // Chá» chá»¯ sá»‘ thá»© 2 â€” hiá»ƒn thá»‹ kÃ½ tá»± Ä‘Æ¡n táº¡m thá»i
+          // Chờ chữ số thứ 2 — hiển thị ký tự đơn tạm thời
           this._buf[unit] = event.key;
           el.value = event.key;
         }
       } else {
-        // ÄÃ£ cÃ³ 2 chá»¯ sá»‘ â†’ commit
+        // Đã có 2 chữ số → commit
         const num = Math.min(parseInt(buf, 10), max);
         this._commitUnit(unit, num);
         el.value = this.pad(num);
@@ -141,11 +141,11 @@ export class SdTimeSpinner {
 
     if (event.key === 'Backspace' || event.key === 'Delete') {
       this._buf[unit] = '';
-      return; // browser tá»± xá»­ lÃ½ xÃ³a kÃ½ tá»±
+      return; // browser tự xử lý xóa ký tự
     }
 
     if (event.key === 'Tab' || event.key === 'Enter') {
-      // Commit náº¿u cÃ²n buffer chá»¯ sá»‘ Ä‘Æ¡n
+      // Commit nếu còn buffer chữ số đơn
       if (this._buf[unit]) {
         const max = unit === 'h' ? 23 : 59;
         const num = Math.min(parseInt(this._buf[unit], 10), max);
@@ -155,7 +155,7 @@ export class SdTimeSpinner {
     }
   }
 
-  // Khi blur: commit buffer dá»Ÿ (náº¿u cÃ³) + chuáº©n hÃ³a hiá»ƒn thá»‹.
+  // Khi blur: commit buffer dở (nếu có) + chuẩn hóa hiển thị.
   onBlur(unit: 'h' | 'm' | 's', event: FocusEvent) {
     if (this._buf[unit]) {
       const max = unit === 'h' ? 23 : 59;
@@ -169,10 +169,9 @@ export class SdTimeSpinner {
     else el.value = this.pad(this.seconds());
   }
 
-  // Chá»n toÃ n bá»™ text khi focus + reset buffer.
+  // Chọn toàn bộ text khi focus + reset buffer.
   onFocus(unit: 'h' | 'm' | 's', event: FocusEvent) {
     this._buf[unit] = '';
     (event.target as HTMLInputElement).select();
   }
 }
-

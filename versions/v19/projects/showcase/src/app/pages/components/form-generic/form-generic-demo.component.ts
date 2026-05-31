@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -221,4 +221,3 @@ export class FormGenericDemoComponent {
     this.output.set(JSON.stringify(b.getForm(), null, 2));
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
 
@@ -64,4 +64,3 @@ export class ButtonDemoComponent {
     setTimeout(() => this.submitting.set(false), 1500);
   }
 }
-

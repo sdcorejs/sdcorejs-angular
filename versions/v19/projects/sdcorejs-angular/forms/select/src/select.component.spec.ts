@@ -1,4 +1,4 @@
-﻿import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -42,7 +42,7 @@ class HostComponent {
   onSdSelection(v: any) { this.selections.push(v); }
 }
 
-/** Multi-select host â€” multiple is static so MatSelect doesn't throw */
+/** Multi-select host — multiple is static so MatSelect doesn't throw */
 @Component({
   standalone: true,
   imports: [SdSelect, FormsModule, ReactiveFormsModule],
@@ -103,7 +103,7 @@ function getComp(fixture: ComponentFixture<any>): SdSelect {
 }
 
 // ---------------------------------------------------------------------------
-// Main suite â€” single-select
+// Main suite — single-select
 // ---------------------------------------------------------------------------
 
 describe('SdSelect', () => {
@@ -351,14 +351,14 @@ describe('SdSelect', () => {
   // errorMessage getter
   // -------------------------------------------------------------------------
   describe('errorMessage getter', () => {
-    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', fakeAsync(() => {
+    it('returns "Vui lòng nhập thông tin" for required error', fakeAsync(() => {
       host.required = true;
       fixture.detectChanges();
       tick();
       comp.formControl.setValue(null, { emitEvent: false });
       comp.formControl.markAsTouched();
       comp.formControl.updateValueAndValidity({ emitEvent: false });
-      expect(comp.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
     }));
 
     it('returns the inlineError message when inlineError validator fires', () => {
@@ -374,7 +374,7 @@ describe('SdSelect', () => {
   });
 
   // -------------------------------------------------------------------------
-  // output events â€” single mode
+  // output events — single mode
   // -------------------------------------------------------------------------
   describe('output events', () => {
     it('emits sdChange when panel closes with a changed value', fakeAsync(() => {
@@ -383,7 +383,7 @@ describe('SdSelect', () => {
       tick(200);
       // change the form value to make hash differ
       comp.formControl.setValue(2, { emitEvent: false });
-      // close: new hash != old hash â†’ sdChange emitted
+      // close: new hash != old hash → sdChange emitted
       comp.onOpenedChange(false);
       tick();
       fixture.detectChanges();
@@ -452,7 +452,7 @@ describe('SdSelect', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Multi-select suite â€” uses dedicated MultiHostComponent
+// Multi-select suite — uses dedicated MultiHostComponent
 // ---------------------------------------------------------------------------
 
 describe('SdSelect (multi-select mode)', () => {
@@ -572,7 +572,7 @@ describe('SdSelect (NgForm extraction)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// bare + open() â€” Task 3
+// bare + open() — Task 3
 // ---------------------------------------------------------------------------
 
 describe('SdSelect (bare + open)', () => {
@@ -599,12 +599,12 @@ describe('SdSelect (bare + open)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
   });
 
-  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.componentRef.setInput('valueField', 'id');
     fixture.componentRef.setInput('displayField', 'name');
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
-    fixture.componentRef.setInput('label', 'Tráº¡ng thÃ¡i');
+    fixture.componentRef.setInput('label', 'Trạng thái');
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
   });
@@ -660,7 +660,7 @@ describe('SdSelect (SD_FORM_CONFIGURATION)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// E2E data-* attributes (Tasks 11â€“12)
+// E2E data-* attributes (Tasks 11–12)
 // ---------------------------------------------------------------------------
 
 describe('SdSelect (E2E attributes)', () => {
@@ -725,4 +725,3 @@ describe('SdSelect (E2E attributes)', () => {
     expect(el.getAttribute('data-loading')).toBe('true');
   });
 });
-

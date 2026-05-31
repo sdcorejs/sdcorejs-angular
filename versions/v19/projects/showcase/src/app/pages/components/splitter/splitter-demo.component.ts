@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdSplitterComponent, SdSplitterPanelComponent } from '@sdcorejs/angular/components/splitter';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -95,4 +95,3 @@ export class SplitterDemoComponent {
     this.apiSplitter()?.resetLayout();
   }
 }
-

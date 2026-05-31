@@ -1,4 +1,4 @@
-�# `<sd-table>`
+# `<sd-table>`
 
 **Type**: Component (generic over `T`)
 **Selector**: `sd-table`
@@ -8,23 +8,23 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-The standard list/table component of SDCoreJS � renders tabular data with paging, sorting, inline column filters, external (toolbar) filters, multi-select with bulk actions, row commands, expansion, grouping, sticky columns, drag-and-drop row reorder, **drag-to-resize columns with persistence**, Excel/CSV export, and column-config persistence. Used on virtually every list page.
+The standard list/table component of SDCoreJS — renders tabular data with paging, sorting, inline column filters, external (toolbar) filters, multi-select with bulk actions, row commands, expansion, grouping, sticky columns, drag-and-drop row reorder, **drag-to-resize columns with persistence**, Excel/CSV export, and column-config persistence. Used on virtually every list page.
 
 ## When to use
 - Any list page (master data, transactions, search results)
 - Both **local** mode (`type: 'local'`, full client-side data) and **server** mode (`type: 'server'`, paged + filtered + sorted server-side)
-- Multi-select operations on rows (approve, delete, export, ⬦)
+- Multi-select operations on rows (approve, delete, export, …)
 - Per-row commands (edit, view detail, custom actions)
 - Hierarchical / grouped views (with `option.group`) and parent-detail expansion (with `option.expand`)
 - Pages that need user-customizable column visibility/order/width (config saved in storage when `option.key` is set)
 - Pages that need drag-to-resize columns at runtime (set `option.config.resizable: true`; width persists into the same storage entry as the column-config dialog)
 
 ## When NOT to use
-- For �0� 5 simple cards / a small read-only list �  use a regular Angular `@for` with custom layout
-- For "key-value detail" display �  use `<sd-view>`, not a 1-row table
-- For tree-structured data with inline child rows �  use `option.tree` (configurable depth via `maxDepth`)
-- For master-detail panel below a row �  use `option.expand` + `[sdTableExpandDef]`
-- For editable spreadsheets � cell editing is not first-class; use a different grid library if heavy in-place editing is required
+- For ≤ 5 simple cards / a small read-only list → use a regular Angular `@for` with custom layout
+- For "key-value detail" display → use `<sd-view>`, not a 1-row table
+- For tree-structured data with inline child rows → use `option.tree` (configurable depth via `maxDepth`)
+- For master-detail panel below a row → use `option.expand` + `[sdTableExpandDef]`
+- For editable spreadsheets — cell editing is not first-class; use a different grid library if heavy in-place editing is required
 
 ## The contract: `[option]` is the only required input
 
@@ -40,10 +40,10 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `onFilter` (server) | `(filterReq, { externalFilterValid }) => void` | no | Called BEFORE each server fetch; useful to cancel / log / sync URL. |
 | `columns` | `SdTableColumn<T>[]` | yes | Column definitions (see schema below). |
 | `key` | `string` | no | Storage key for persisted user column-config (visibility/order/width). |
-| `config` | `TableOptionConfig` | no | `{ visible?, resizable?, onResize? }` � gear button, drag-to-resize, resize callback. See **Column resize** section. |
+| `config` | `TableOptionConfig` | no | `{ visible?, resizable?, onResize? }` — gear button, drag-to-resize, resize callback. See **Column resize** section. |
 | `selector` | `SdTableOptionSelector<T>` | no | Multi-select + bulk actions. |
 | `expand` | `SdTableOptionExpand<T>` | no | Per-row expansion (master-detail). |
-| `tree` | `SdTableOptionTree<T>` | no | Tree rows � inline child rows with expand/collapse. |
+| `tree` | `SdTableOptionTree<T>` | no | Tree rows — inline child rows with expand/collapse. |
 | `sort` | `{ enable?: boolean }` | no | Master switch for sortable headers. |
 | `paginate` | `SdTableOptionPaginate` | no | `{ pageSize?, pages?, showFirstLastButtons?, hidePageSize?, hidden? }`. |
 | `reload` | `{ visible?, onReload? }` | no | Show reload button + callback when data refreshes. |
@@ -54,7 +54,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `command` | `{ align?: 'left' \| 'right'; commands?: SdTableCommand<T>[] }` | no | Newer per-row commands API with alignment. |
 | `style` | `{ shadow?, maxHeight?, minHeight?, rowCss? }` | no | Shadow toggle, scroll bounds, per-row CSS. |
 | `rowReorder` | `{ enabled?, onChange?, icon?, disabled?(row,i) }` | no | Drag-and-drop row reordering. Respects groups. |
-| `index` | `{ enabled?, title?, width? }` | no | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages � `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
+| `index` | `{ enabled?, title?, width? }` | no | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages — `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
 
 ### Column schema (`SdTableColumn<T>`)
 
@@ -74,7 +74,7 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 | `htmlTemplate` | `(value, row) => string` | HTML string renderer (sanitized via `sdSafeHtml`). |
 | `transform` | `(value, row, { isExport? }) => string \| Promise<string>` | Format the value (display + export). |
 | `tooltip` | `(value, row) => string` | Hover tooltip on the cell. |
-| `click` | `(value, row) => void` | Cell click handler � turns cell into a link. |
+| `click` | `(value, row) => void` | Cell click handler — turns cell into a link. |
 | `sortable` | `boolean` | Enable sort on this column (also requires `option.sort.enable`). |
 | `filter` | `{ disabled?, default?, operator?, filterDef? }` | Inline column filter. `operator: { default?, enable?, list? }` controls the operator dropdown. `filterDef` is a custom `TemplateRef`. |
 | `export` | `{ disabled?, description? }` | Export-specific overrides. |
@@ -89,11 +89,11 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 | `'date' \| 'datetime' \| 'time'` | `useBadge?`, `filter?: { type?: 'daterange' \| 'date' \| 'split-date' }` |
 | `'values'` | `option: { items: K[] \| Signal<K[]> \| () => Promise<K[]>; valueField; displayField; selection?: 'MULTIPLE' }`, `useBadge?: (value, row, items) => Badge` |
 | `'lazy-values'` | `option: { items: SdSearch<K>; valueField; displayField; views?(values) => Promise<K[]>; selection?: 'MULTIPLE' }` |
-| `'children'` | `children: SdTableColumnNormal<T>[]` � produces a multi-row header with this group on top of its children. |
+| `'children'` | `children: SdTableColumnNormal<T>[]` — produces a multi-row header with this group on top of its children. |
 
-`Badge` shape: `{ type?, color?, icon?, title? }` � maps to a `<sd-badge>` rendered in the cell.
+`Badge` shape: `{ type?, color?, icon?, title? }` — maps to a `<sd-badge>` rendered in the cell.
 
-### Config option (`TableOptionConfig`) � gear button + column resize
+### Config option (`TableOptionConfig`) — gear button + column resize
 
 ```ts
 export interface TableOptionConfig {
@@ -105,19 +105,19 @@ export interface TableOptionConfig {
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `visible` | `boolean` | Shows the column-config (�a") button in the toolbar. The dialog lets users toggle visibility, drag-reorder columns, and rename headers. |
+| `visible` | `boolean` | Shows the column-config (⚙) button in the toolbar. The dialog lets users toggle visibility, drag-reorder columns, and rename headers. |
 | `resizable` | `boolean` | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdTreeToggle`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
 | `onResize` | `(field, width, columnWidth) => void` | Fires once per `mouseup`. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics. |
 
 **Persistence:** When `option.key` is provided, resize writes to the same storage entry used by the column-config dialog (under the prefix `TABLE_CONFIG`). Without a key it falls back to session storage keyed by `Utilities.hash(option)`.
 
-**Reload semantics:** Resizing does **NOT** trigger a data reload, value cache refresh, or filter re-register � it only updates the configuration signal locally and writes storage silently (via the new `SdStorage.setSilent`). Safe to use on heavy server-mode tables.
+**Reload semantics:** Resizing does **NOT** trigger a data reload, value cache refresh, or filter re-register — it only updates the configuration signal locally and writes storage silently (via the new `SdStorage.setSilent`). Safe to use on heavy server-mode tables.
 
-**Width clamp:** During drag, width is clamped to `[column.minWidth, column.maxWidth]`. If either is unset or not a `'NNpx'` string, defaults apply: `minWidth = 40px`, `maxWidth = ��~`. Other units (`%`, `rem`, ⬦) are ignored by the clamp parser.
+**Width clamp:** During drag, width is clamped to `[column.minWidth, column.maxWidth]`. If either is unset or not a `'NNpx'` string, defaults apply: `minWidth = 40px`, `maxWidth = ∞`. Other units (`%`, `rem`, …) are ignored by the clamp parser.
 
 ### Reserved column names (internal `matColumnDef`)
 
-The table adds these special columns conditionally � **do not** define a data column with the same `field`:
+The table adds these special columns conditionally — **do not** define a data column with the same `field`:
 
 | Name | When rendered | Position |
 | --- | --- | --- |
@@ -136,7 +136,7 @@ The table adds these special columns conditionally � **do not** define a data
 | --- | --- | --- |
 | `visible` | `boolean` | Show the checkbox column. |
 | `single` | `boolean` | Radio-style single-select (default is multi-select). |
-| `actions` | `SdTableAction<T>[]` | Bulk-action buttons shown when �0� 1 row selected. Each action: `{ icon?, fontSet?, tooltip?, title?, color?, type?, hidden?, isGrouped?, click(selectedItems) }` (or grouped via `children`). |
+| `actions` | `SdTableAction<T>[]` | Bulk-action buttons shown when ≥ 1 row selected. Each action: `{ icon?, fontSet?, tooltip?, title?, color?, type?, hidden?, isGrouped?, click(selectedItems) }` (or grouped via `children`). |
 | `message` | `string \| (selected) => string` | Selection summary text in the action bar. |
 | `onSelect` | `(rowData, selectedItems) => void` | Row toggle callback. |
 | `onSelectAll` | `(selectedItems) => void` | Header checkbox callback. |
@@ -144,7 +144,7 @@ The table adds these special columns conditionally � **do not** define a data
 | `defaultSelected` | `(rowData) => boolean` | Pre-select after each load. |
 
 ### Expand option (`SdTableOptionExpand<T>`)
-`{ disabled?(row), onExpand?(row) => any \| Promise<any>, multiple?, always? }` � `always: true` keeps every row expanded; `multiple` allows multiple expanded simultaneously.
+`{ disabled?(row), onExpand?(row) => any \| Promise<any>, multiple?, always? }` — `always: true` keeps every row expanded; `multiple` allows multiple expanded simultaneously.
 
 ### Tree option (`SdTableOptionTree<T>`)
 Inline child rows rendered beneath parent rows (tree table).
@@ -176,11 +176,11 @@ items: () => [
 ### Filter option (`SdTableOptionFilter`)
 `externalFilters?: { field, type: 'string' \| 'boolean' \| 'date' \| 'datetime' \| 'daterange' \| 'select' \| ...; defaultOperator?: Operator; required? }[]` controls the toolbar filter form.
 
-#### Inline column filter � commit semantics
-- **Enter** trên `sd-input` / `sd-input-number` �  commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
-- **Blur** (focus rời input) �  commit value vào `filterRegister` v�:i `notReload: true` � **không** gọi API. Đảm bảo giá tr�9 typed-but-not-entered không b�9 mất nếu user chuyỒn sang filter khác hoặc bấm Reload.
-- **Click nút Reload** (`reload()`) �  table tự commit `this.columnFilter` snapshot vào `filterRegister` (notReload:true) trư�:c khi build filter request � �ảm bảo giá tr�9 input vẫn còn focus cũng �ược gửi lên.
-- **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` �  commit + reload tức thì.
+#### Inline column filter — commit semantics
+- **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
+- **Blur** (focus rời input) → commit value vào `filterRegister` với `notReload: true` — **không** gọi API. Đảm bảo giá trị typed-but-not-entered không bị mất nếu user chuyển sang filter khác hoặc bấm Reload.
+- **Click nút Reload** (`reload()`) → table tự commit `this.columnFilter` snapshot vào `filterRegister` (notReload:true) trước khi build filter request — đảm bảo giá trị input vẫn còn focus cũng được gửi lên.
+- **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` → commit + reload tức thì.
 
 ### Commands (`SdTableCommandNormal<T>`)
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.
@@ -190,32 +190,32 @@ items: () => [
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="components-table-<value>"` for E2E selectors. |
-| `option` | `SdTableOption<T>` (REQUIRED) | � | The whole table configuration (see schema above). |
+| `option` | `SdTableOption<T>` (REQUIRED) | — | The whole table configuration (see schema above). |
 
 ## Outputs
-None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `commands[].click`, `expand.onExpand`, `rowReorder.onChange`, `selector.actions[].click`, ⬦). Use a `@ViewChild(SdTable)` ref for imperative API.
+None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `commands[].click`, `expand.onExpand`, `rowReorder.onChange`, `selector.actions[].click`, …). Use a `@ViewChild(SdTable)` ref for imperative API.
 
 ## Public API (via template ref)
 ```ts
 @ViewChild(SdTable) tableRef!: SdTable<MyEntity>;
 ```
-- `tableRef.reload(force = true, scrollTop = true)` � re-fetch (server) or re-filter (local)
-- `tableRef.dataItems: T[]` � current rendered rows (data only)
-- `tableRef.selectedItems: T[]` � current selection
-- `tableRef.clearFilter()` � clears column + external filters
-- `tableRef.setFilter({ columnFilter?, externalFilter? })` � programmatically set filter values
-- `tableRef.exportExcel(columns?)` / `exportCSV(columns?)` / `exportCustom()` � trigger export
-- `tableRef.onClearSelection(items?)` � clear selected rows (defaults to all)
-- `tableRef.detectChanges()` � force CD
+- `tableRef.reload(force = true, scrollTop = true)` — re-fetch (server) or re-filter (local)
+- `tableRef.dataItems: T[]` — current rendered rows (data only)
+- `tableRef.selectedItems: T[]` — current selection
+- `tableRef.clearFilter()` — clears column + external filters
+- `tableRef.setFilter({ columnFilter?, externalFilter? })` — programmatically set filter values
+- `tableRef.exportExcel(columns?)` / `exportCSV(columns?)` / `exportCustom()` — trigger export
+- `tableRef.onClearSelection(items?)` — clear selected rows (defaults to all)
+- `tableRef.detectChanges()` — force CD
 
 ## Content projection (slots / directive children)
-- `[sdTableCellDef]="'<field>'"` � custom cell template per column. Inside `<ng-template sdTableCellDef="fieldName" let-row>...</ng-template>`.
-- `[sdTableTitleDef]="'<field>'"` � custom header template per column.
-- `[sdTableFooterDef]="'<field>'"` � custom footer cell (totals row). Presence of any footer def turns on the footer row.
-- `[sdTableFilterDef]="'<field>'"` � custom inline-filter template per column.
-- `[sdTableExpandDef]` � custom row-expansion (sub-information) template.
+- `[sdTableCellDef]="'<field>'"` — custom cell template per column. Inside `<ng-template sdTableCellDef="fieldName" let-row>...</ng-template>`.
+- `[sdTableTitleDef]="'<field>'"` — custom header template per column.
+- `[sdTableFooterDef]="'<field>'"` — custom footer cell (totals row). Presence of any footer def turns on the footer row.
+- `[sdTableFilterDef]="'<field>'"` — custom inline-filter template per column.
+- `[sdTableExpandDef]` — custom row-expansion (sub-information) template.
 
-## Visual cues (helps agent map screenshots �  component)
+## Visual cues (helps agent map screenshots → component)
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
 - **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle in `sdTreeToggle` column when `tree` configured. Expand caret for master-detail when `expand` configured.
@@ -223,7 +223,7 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: shows blank body; loading state shows centered Material spinner.
-- **Pagination bar** (bottom): "Đang hiỒn th�9 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `MatPaginatorIntlCro`.
+- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `MatPaginatorIntlCro`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
 - **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdTreeToggle`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.
@@ -243,13 +243,13 @@ The component extends `SdBaseSecureComponent`. Bulk actions (`selector.actions`)
 
 ## Examples
 
-### 1. Server-paginated list with filters, selection, commands, export � typical CRUD list page
+### 1. Server-paginated list with filters, selection, commands, export — typical CRUD list page
 ```html
 <sd-page title="Quản lý nhân viên">
   <ng-container headerRight>
     <sd-button
       *sdPermission="'HR_C_EMPLOYEE_CREATE'; sdPermissionKey: 'hr'"
-      title="Tạo m�:i" type="fill" color="primary" prefixIcon="add"
+      title="Tạo mới" type="fill" color="primary" prefixIcon="add"
       (click)="onCreate()">
     </sd-button>
   </ng-container>
@@ -287,7 +287,7 @@ tableOption: SdTableOption<Employee> = {
     { field: 'status', title: 'Trạng thái', type: 'values',
       option: { items: STATUS_LIST, valueField: 'value', displayField: 'label' },
       useBadge: (val) => ({ color: val === 'ACTIVE' ? 'success' : 'warn',
-                            title: val === 'ACTIVE' ? 'Hoạt ��"ng' : 'Ngưng' }) },
+                            title: val === 'ACTIVE' ? 'Hoạt động' : 'Ngưng' }) },
 
     { field: 'salary', title: 'Lương', type: 'number', align: 'right', sortable: true,
       transform: (v) => (v ?? 0).toLocaleString('vi-VN') },
@@ -347,14 +347,14 @@ tableOption: SdTableOption<Order> = {
   type: 'local',
   items: () => this.cachedOrders, // sync array
   columns: [
-    { field: 'orderNo', title: 'S� �ơn', type: 'string', fixed: true },
+    { field: 'orderNo', title: 'Số đơn', type: 'string', fixed: true },
     { field: 'customerName', title: 'Khách hàng', type: 'string' },
-    { field: 'total', title: 'T�"ng tiền', type: 'number', align: 'right' },
+    { field: 'total', title: 'Tổng tiền', type: 'number', align: 'right' },
   ],
   group: {
     fields: ['status'],
     htmlTemplate: (rows) =>
-      `<strong>${rows[0].status}</strong> &nbsp; (${rows.length} �ơn)`,
+      `<strong>${rows[0].status}</strong> &nbsp; (${rows.length} đơn)`,
   },
   expand: {
     multiple: false,
@@ -419,7 +419,7 @@ tableOption: SdTableOption<Employee> = {
     onResize: (field, width, columnWidth) => {
       // Optional: sync to a remote user profile so widths follow the user
       // across browsers/devices. Fires once per mouseup.
-      console.log(`User resized '${field}' �  ${width}`);
+      console.log(`User resized '${field}' → ${width}`);
       console.log('Current column widths:', columnWidth);
       // e.g. { code: '120px', name: '320px', salary: '140px' }
       this.userPrefs.saveTableLayout('hr.employee.list', columnWidth);
@@ -427,23 +427,23 @@ tableOption: SdTableOption<Employee> = {
   },
 };
 ```
-The drag handle hides automatically for columns excluded from resize. Widths reload from localStorage on next page visit; calling `tableRef.detectChanges()` is not necessary � the component's storage subscriber updates the live configuration signal in place without re-fetching data.
+The drag handle hides automatically for columns excluded from resize. Widths reload from localStorage on next page visit; calling `tableRef.detectChanges()` is not necessary — the component's storage subscriber updates the live configuration signal in place without re-fetching data.
 
 ## Anti-patterns
-- �R Recreating `tableOption` on every change-detection cycle (e.g. computing it inside the template) � every new reference triggers a full re-init via the `effect`. Keep it as a class property.
-- �R Using `type: 'local'` for �0� 1k rows that come from the server � paging happens client-side, so all rows are fetched and held in memory. Switch to `type: 'server'`.
-- �R Skipping `option.key` on a customer-facing list � without it, user column-config is not persisted across page reloads.
-- �R Wiring per-row navigation via the cell `click` callback when the user expects right-click "open in new tab" � use a column with `htmlTemplate` rendering an `<a [sdHref]>` instead.
-- �R Defining `commands` AND `command.commands` simultaneously � `command` is the newer API; pick one to avoid confusion.
-- �R Putting a heavy server-side `items()` in front of a daterange filter without honoring the `BETWEEN` / `GREATER_OR_EQUAL` operators emitted in `pagingReq.filters` � the table builds the request correctly; your backend must accept that operator vocabulary.
-- �R Using `'lazy-values'` with `selection: 'MULTIPLE'` and forgetting to provide `views` � bulk-display of saved values needs `views(values) => K[]` to render labels for already-stored ids.
-- �R Mutating row data in-place after a server fetch and expecting the table to redraw � call `tableRef.reload()` or replace the dataset reference.
-- �R Setting `expand.always: true` AND `expand.onExpand` � `always` keeps every row expanded; `onExpand` is bypassed for toggling but still called once for each row's data on first render. Decide which mode you want.
-- �R Relying on `output` events � there are none. Use `option`-level callbacks or `@ViewChild` API.
-- �R Setting `config.resizable: true` without `option.key` and expecting widths to survive reload � without `key` the storage falls back to session storage hashed from the option object; safe for prototypes, not for persistent UX.
-- �R Using `column.minWidth: '30%'` (or any non-`px` unit) and expecting the resize clamp to honor it � the directive's parser only accepts `'NNpx'`. Other units render fine for static width but are treated as "no clamp" by the resize logic (falls back to default `min = 40px`).
-- �R Writing to `column.width` programmatically while `config.resizable: true` on a table that already has `option.key` � the persisted user width takes precedence over `column.width` in `option`. Reset via the gear dialog �  "Đưa về mặc ��9nh" if you want option-defined widths back.
-- �R Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering � the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
+- ❌ Recreating `tableOption` on every change-detection cycle (e.g. computing it inside the template) — every new reference triggers a full re-init via the `effect`. Keep it as a class property.
+- ❌ Using `type: 'local'` for ≥ 1k rows that come from the server — paging happens client-side, so all rows are fetched and held in memory. Switch to `type: 'server'`.
+- ❌ Skipping `option.key` on a customer-facing list — without it, user column-config is not persisted across page reloads.
+- ❌ Wiring per-row navigation via the cell `click` callback when the user expects right-click "open in new tab" — use a column with `htmlTemplate` rendering an `<a [sdHref]>` instead.
+- ❌ Defining `commands` AND `command.commands` simultaneously — `command` is the newer API; pick one to avoid confusion.
+- ❌ Putting a heavy server-side `items()` in front of a daterange filter without honoring the `BETWEEN` / `GREATER_OR_EQUAL` operators emitted in `pagingReq.filters` — the table builds the request correctly; your backend must accept that operator vocabulary.
+- ❌ Using `'lazy-values'` with `selection: 'MULTIPLE'` and forgetting to provide `views` — bulk-display of saved values needs `views(values) => K[]` to render labels for already-stored ids.
+- ❌ Mutating row data in-place after a server fetch and expecting the table to redraw — call `tableRef.reload()` or replace the dataset reference.
+- ❌ Setting `expand.always: true` AND `expand.onExpand` — `always` keeps every row expanded; `onExpand` is bypassed for toggling but still called once for each row's data on first render. Decide which mode you want.
+- ❌ Relying on `output` events — there are none. Use `option`-level callbacks or `@ViewChild` API.
+- ❌ Setting `config.resizable: true` without `option.key` and expecting widths to survive reload — without `key` the storage falls back to session storage hashed from the option object; safe for prototypes, not for persistent UX.
+- ❌ Using `column.minWidth: '30%'` (or any non-`px` unit) and expecting the resize clamp to honor it — the directive's parser only accepts `'NNpx'`. Other units render fine for static width but are treated as "no clamp" by the resize logic (falls back to default `min = 40px`).
+- ❌ Writing to `column.width` programmatically while `config.resizable: true` on a table that already has `option.key` — the persisted user width takes precedence over `column.width` in `option`. Reset via the gear dialog → "Đưa về mặc định" if you want option-defined widths back.
+- ❌ Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering — the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
 
 ## E2E test attributes
 
@@ -461,12 +461,11 @@ await expect(page.locator('sd-table[data-autoid="components-table-employees"]'))
 ```
 
 ## Related
-- `<sd-button>`, `<sd-quick-action>` � used in toolbar / per-row commands
-- `<sd-badge>` � used inside cells via `useBadge` or custom cell templates
-- `<sd-page>`, `<sd-section>` � typical wrappers for a list page
-- `*sdPermission` � for permission-gated rows / commands
-- `SD_TABLE_CONFIGURATION` � global default config provider
-- `SdSearch<T>` (forms autocomplete pattern) � used by `'lazy-values'` columns
-- `PagingReq`, `Operator` � request payload contract for server-mode tables
-- Skill ref `30-list-page.md` (if present) � the recommended page-level scaffold using `<sd-table>`
-
+- `<sd-button>`, `<sd-quick-action>` — used in toolbar / per-row commands
+- `<sd-badge>` — used inside cells via `useBadge` or custom cell templates
+- `<sd-page>`, `<sd-section>` — typical wrappers for a list page
+- `*sdPermission` — for permission-gated rows / commands
+- `SD_TABLE_CONFIGURATION` — global default config provider
+- `SdSearch<T>` (forms autocomplete pattern) — used by `'lazy-values'` columns
+- `PagingReq`, `Operator` — request payload contract for server-mode tables
+- Skill ref `30-list-page.md` (if present) — the recommended page-level scaffold using `<sd-table>`

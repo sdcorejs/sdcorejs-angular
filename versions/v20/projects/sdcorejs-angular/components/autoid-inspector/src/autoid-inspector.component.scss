@@ -1,5 +1,5 @@
-﻿// Sá»­ dá»¥ng CSS custom properties tá»« @sdcorejs/angular theme (--sd-*).
-// Fallback hex chá»‰ Ã¡p dá»¥ng khi consumer chÆ°a import sd-core.scss.
+// Sử dụng CSS custom properties từ @sdcorejs/angular theme (--sd-*).
+// Fallback hex chỉ áp dụng khi consumer chưa import sd-core.scss.
 $primary: var(--sd-primary, #2A66F4);
 $primary-light: var(--sd-primary-light, #EAF1FF);
 $primary-dark: var(--sd-primary-dark, #1C4AD9);
@@ -460,7 +460,7 @@ $black100: var(--sd-black100, #F2F2F2);
   }
 
   // ==========================================
-  // TABLE â€” sticky header fix
+  // TABLE — sticky header fix
   // ==========================================
   &__table-wrap {
     border: 1px solid $black200;
@@ -484,9 +484,9 @@ $black100: var(--sd-black100, #F2F2F2);
       border-bottom: 1px solid $black200;
     }
 
-    // Sticky header: pháº£i cÃ³ background SOLID + box-shadow + z-index Ä‘á»ƒ
-    // row scroll dÆ°á»›i khÃ´ng lá»™ ra phÃ­a sau. border-bottom cá»§a <th> khÃ´ng
-    // sticky theo, nÃªn dÃ¹ng box-shadow inset bottom thay tháº¿.
+    // Sticky header: phải có background SOLID + box-shadow + z-index để
+    // row scroll dưới không lộ ra phía sau. border-bottom của <th> không
+    // sticky theo, nên dùng box-shadow inset bottom thay thế.
     thead th {
       position: sticky;
       top: 0;
@@ -715,4 +715,3 @@ $black100: var(--sd-black100, #F2F2F2);
     }
   }
 }
-

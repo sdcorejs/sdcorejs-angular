@@ -1,16 +1,16 @@
-�# sd-tab � Tab Group Component
+# sd-tab — Tab Group Component
 
 **Date:** 2026-05-29
-**Status:** Spec � pending implementation
+**Status:** Spec — pending implementation
 **Owner:** anh.hoang10@onemount.com
 
 ## 1. Mục tiêu
 
-Cung cấp cặp component `<sd-tab-group>` + `<sd-tab>` cho `@sdcorejs/angular` � wrapper khai báo (declarative content projection) trên `MatTabsModule` của Angular Material. Mục tiêu là cho ứng dụng tạo tab UI thuần (không gắn route) v�:i API gần `mat-tab-group` nhưng ��ng nhất convention `sd-*`: signals-first, OnPush, slot projection, `autoId`, i18n-bằng-string-thuần.
+Cung cấp cặp component `<sd-tab-group>` + `<sd-tab>` cho `@sdcorejs/angular` — wrapper khai báo (declarative content projection) trên `MatTabsModule` của Angular Material. Mục tiêu là cho ứng dụng tạo tab UI thuần (không gắn route) với API gần `mat-tab-group` nhưng đồng nhất convention `sd-*`: signals-first, OnPush, slot projection, `autoId`, i18n-bằng-string-thuần.
 
-Đây là component thu�"c **Core UI** (`projects/sdcorejs-angular/components/tab/`) � yêu cầu test coverage �ầy �ủ (TDD: red �  green �  refactor).
+Đây là component thuộc **Core UI** (`projects/sdcorejs-angular/components/tab/`) — yêu cầu test coverage đầy đủ (TDD: red → green → refactor).
 
-`<sd-tab-router>` �ã t�n tại nhưng phục vụ tab gắn v�:i Angular Router (m�i tab = m�"t route). `<sd-tab-group>` phục vụ trường hợp tab n�"i b�" m�"t trang: chuyỒn n�"i dung trong cùng route, không thao tác URL.
+`<sd-tab-router>` đã tồn tại nhưng phục vụ tab gắn với Angular Router (mỗi tab = một route). `<sd-tab-group>` phục vụ trường hợp tab nội bộ một trang: chuyển nội dung trong cùng route, không thao tác URL.
 
 ## 2. Phạm vi
 
@@ -19,20 +19,20 @@ Cung cấp cặp component `<sd-tab-group>` + `<sd-tab>` cho `@sdcorejs/angular`
 - Tab label string thuần + icon prefix (Material icon name) + badge / count
 - Disabled state per tab
 - Two-way `[(selectedIndex)]` (index-based selection model)
-- Lazy load: n�"i dung tab ch�0 render khi tab active lần �ầu (matTabContent pattern)
-- Closable tab: hiỒn th�9 X icon, emit `(closed)` event per tab
+- Lazy load: nội dung tab chỉ render khi tab active lần đầu (matTabContent pattern)
+- Closable tab: hiển thị X icon, emit `(closed)` event per tab
 - Forward các knob layout của `mat-tab-group` (giữ default Material): `alignTabs`, `animationDuration`, `headerPosition`, `disableRipple`, `dynamicHeight`
 - `autoId` input emit `data-autoId` cho e2e
-- CSS variables �Ồ theme
+- CSS variables để theme
 
 **Out of scope (vòng 1)**
-- Drag-and-drop reorder tabs (gi�ng editor tab)
-- Add tab "+" button bên cạnh tab cu�i (dynamic add)
-- Scrollable tabs override (giữ logic mặc ��9nh của mat-tab-group khi tabs tràn)
-- i18n key input � caller tự d�9ch trư�:c khi truyền vào `[label]`
-- Routing tích hợp � �ã thu�"c `<sd-tab-router>`
-- Two-way bằng `selectedKey` / `selectedTab` reference (vòng 1 ch�0 `selectedIndex`)
-- Vertical tabs (mat-tab-nav-bar / mat-tab-nav-panel pattern); ch�0 horizontal + `headerPosition`
+- Drag-and-drop reorder tabs (giống editor tab)
+- Add tab "+" button bên cạnh tab cuối (dynamic add)
+- Scrollable tabs override (giữ logic mặc định của mat-tab-group khi tabs tràn)
+- i18n key input — caller tự dịch trước khi truyền vào `[label]`
+- Routing tích hợp — đã thuộc `<sd-tab-router>`
+- Two-way bằng `selectedKey` / `selectedTab` reference (vòng 1 chỉ `selectedIndex`)
+- Vertical tabs (mat-tab-nav-bar / mat-tab-nav-panel pattern); chỉ horizontal + `headerPosition`
 
 ## 3. Public API
 
@@ -48,10 +48,10 @@ Cung cấp cặp component `<sd-tab-group>` + `<sd-tab>` cho `@sdcorejs/angular`
 
 | Input | Type | Default | Mô tả |
 |---|---|---|---|
-| `selectedIndex` | `number` (model � two-way) | `0` | Index tab �ang active. Two-way `[(selectedIndex)]`. Khi giá tr�9 vượt phạm vi �  clamp về `0` |
+| `selectedIndex` | `number` (model — two-way) | `0` | Index tab đang active. Two-way `[(selectedIndex)]`. Khi giá trị vượt phạm vi → clamp về `0` |
 | `headerPosition` | `'above' \| 'below'` | `'above'` | Forward `mat-tab-group.headerPosition` |
 | `alignTabs` | `'start' \| 'center' \| 'end'` | `'start'` | Forward `mat-tab-group.alignTabs` |
-| `animationDuration` | `string` | `'500ms'` | Forward `mat-tab-group.animationDuration` (��9nh dạng CSS time) |
+| `animationDuration` | `string` | `'500ms'` | Forward `mat-tab-group.animationDuration` (định dạng CSS time) |
 | `disableRipple` | `boolean` | `false` | Forward `mat-tab-group.disableRipple` |
 | `dynamicHeight` | `boolean` | `false` | Forward `mat-tab-group.dynamicHeight` |
 | `autoId` | `string \| undefined` | `undefined` | Emit `data-autoId` / `data-autoid` cho e2e |
@@ -81,46 +81,46 @@ realignInkBar(): void;                 // forward mat-tab-group.realignInkBar() 
 
 | Input | Type | Default | Mô tả |
 |---|---|---|---|
-| `label` | `string` (REQUIRED) | � | Nhãn tab. Caller tự d�9ch i18n trư�:c khi truyền |
-| `icon` | `string \| null \| undefined` | `undefined` | Material icon name hiỒn th�9 bên trái label |
-| `badge` | `string \| number \| null \| undefined` | `undefined` | Badge hiỒn th�9 bên phải label. Number `0` hi�!n ra, `null`/`undefined` ẩn |
-| `disabled` | `boolean` | `false` | `booleanAttribute` transform. Disable tab � không click �ược, opacity giảm |
-| `closable` | `boolean` | `false` | `booleanAttribute` transform. HiỒn th�9 nút X bên phải label; click X emit `(close)` |
+| `label` | `string` (REQUIRED) | — | Nhãn tab. Caller tự dịch i18n trước khi truyền |
+| `icon` | `string \| null \| undefined` | `undefined` | Material icon name hiển thị bên trái label |
+| `badge` | `string \| number \| null \| undefined` | `undefined` | Badge hiển thị bên phải label. Number `0` hiện ra, `null`/`undefined` ẩn |
+| `disabled` | `boolean` | `false` | `booleanAttribute` transform. Disable tab — không click được, opacity giảm |
+| `closable` | `boolean` | `false` | `booleanAttribute` transform. Hiển thị nút X bên phải label; click X emit `(close)` |
 
 **Outputs**
 
 | Output | Payload | Mô tả |
 |---|---|---|
-| `close` | `void` | Emit khi user click nút X trên tab này (ch�0 khi `closable=true`). Parent tự xử lý remove tab khỏi data source nếu mu�n |
+| `close` | `void` | Emit khi user click nút X trên tab này (chỉ khi `closable=true`). Parent tự xử lý remove tab khỏi data source nếu muốn |
 
 **Content projection**
 
-| Slot | Mục �ích |
+| Slot | Mục đích |
 |---|---|
-| (default) | N�"i dung của tab. Wrap trong `<ng-template matTabContent>` �Ồ lazy render � ch�0 tạo DOM khi tab �ược active lần �ầu |
+| (default) | Nội dung của tab. Wrap trong `<ng-template matTabContent>` để lazy render — chỉ tạo DOM khi tab được active lần đầu |
 
 ## 4. Cấu trúc file
 
 ```
 projects/sdcorejs-angular/components/tab/
-�S���� index.ts                              # re-export public API
-�S���� ng-package.json                       # secondary entry point
-�S���� sd-tab.md                             # doc (mục 16)
-����� src/
-    �S���� tab-group.component.ts            # <sd-tab-group>
-    �S���� tab-group.component.html
-    �S���� tab-group.component.scss
-    �S���� tab-group.component.spec.ts
-    �S���� tab.component.ts                  # <sd-tab>
-    �S���� tab.component.html                # template label (icon + label + badge + close)
-    �S���� tab.component.scss
-    ����� tab.component.spec.ts
+├── index.ts                              # re-export public API
+├── ng-package.json                       # secondary entry point
+├── sd-tab.md                             # doc (mục 16)
+└── src/
+    ├── tab-group.component.ts            # <sd-tab-group>
+    ├── tab-group.component.html
+    ├── tab-group.component.scss
+    ├── tab-group.component.spec.ts
+    ├── tab.component.ts                  # <sd-tab>
+    ├── tab.component.html                # template label (icon + label + badge + close)
+    ├── tab.component.scss
+    └── tab.component.spec.ts
 ```
 
-**Trách nhi�!m:**
+**Trách nhiệm:**
 
-- **`SdTabGroup`** � render `<mat-tab-group>` shell, �ọc `contentChildren(SdTab)` �Ồ biết list tab. V�:i m�i `SdTab`, render 1 `<mat-tab>` truyền `[disabled]` + label template + lazy content template. Forward `selectedIndex` two-way + các knob layout xu�ng `mat-tab-group`. Render close button trong label template khi `tab.closable()` = true. Emit `tabClosed` khi user click X.
-- **`SdTab`** � không tự render gì hiỒn th�9. Là 1 "config holder" chứa các signal input (`label`, `icon`, `badge`, `disabled`, `closable`) + `output close` + `ng-content` lưu vào `viewChild`/`contentChild` template ref �Ồ `SdTabGroup` �ọc qua `contentChildren`. Pattern này tương tự cách `<mat-tab>` hoạt ��"ng (không render trực tiếp � `mat-tab-group` �ọc list).
+- **`SdTabGroup`** — render `<mat-tab-group>` shell, đọc `contentChildren(SdTab)` để biết list tab. Với mỗi `SdTab`, render 1 `<mat-tab>` truyền `[disabled]` + label template + lazy content template. Forward `selectedIndex` two-way + các knob layout xuống `mat-tab-group`. Render close button trong label template khi `tab.closable()` = true. Emit `tabClosed` khi user click X.
+- **`SdTab`** — không tự render gì hiển thị. Là 1 "config holder" chứa các signal input (`label`, `icon`, `badge`, `disabled`, `closable`) + `output close` + `ng-content` lưu vào `viewChild`/`contentChild` template ref để `SdTabGroup` đọc qua `contentChildren`. Pattern này tương tự cách `<mat-tab>` hoạt động (không render trực tiếp — `mat-tab-group` đọc list).
 
 **`index.ts` export:**
 ```ts
@@ -128,11 +128,11 @@ export * from './src/tab-group.component';
 export * from './src/tab.component';
 ```
 
-**`ng-package.json`** gi�ng các component khác � entry file `index.ts`.
+**`ng-package.json`** giống các component khác — entry file `index.ts`.
 
 ## 5. Data shape
 
-Không có model interface phức tạp � toàn b�" public surface là signal inputs/outputs. Type chia sẻ:
+Không có model interface phức tạp — toàn bộ public surface là signal inputs/outputs. Type chia sẻ:
 
 ```ts
 // trong tab-group.component.ts (export gián tiếp)
@@ -142,9 +142,9 @@ export interface SdTabClosedEvent {
 }
 ```
 
-## 6. Architecture � pattern tab-list discovery
+## 6. Architecture — pattern tab-list discovery
 
-Mat-tab-group native dùng `@ContentChildren(MatTab)` �Ồ tự build list. Ta �i cùng pattern nhưng v�:i signal API:
+Mat-tab-group native dùng `@ContentChildren(MatTab)` để tự build list. Ta đi cùng pattern nhưng với signal API:
 
 ```ts
 @Component({
@@ -155,7 +155,7 @@ Mat-tab-group native dùng `@ContentChildren(MatTab)` �Ồ tự build list. T
   // ...
 })
 export class SdTabGroup extends SdBaseSecureComponent {
-  tabs = contentChildren(SdTab);             // signal � auto re-run khi @for thêm/b�:t tab
+  tabs = contentChildren(SdTab);             // signal — auto re-run khi @for thêm/bớt tab
 
   selectedIndex = model<number>(0);
   headerPosition = input<'above' | 'below'>('above');
@@ -233,13 +233,13 @@ export class SdTab {
 }
 ```
 
-**Lý do dùng `viewChild` + template ref:** mat-tab cần truy cập template, nhưng nếu projecting raw `<ng-content>` vào `mat-tab` content slot, mat-tab sẽ render ngay (không lazy). Pattern template ref + `matTabContent` + `ngTemplateOutlet` �ảm bảo lazy � Angular ch�0 instantiate template khi mat-tab active lần �ầu.
+**Lý do dùng `viewChild` + template ref:** mat-tab cần truy cập template, nhưng nếu projecting raw `<ng-content>` vào `mat-tab` content slot, mat-tab sẽ render ngay (không lazy). Pattern template ref + `matTabContent` + `ngTemplateOutlet` đảm bảo lazy — Angular chỉ instantiate template khi mat-tab active lần đầu.
 
-## 7. Lifecycle v�:i signal + effect
+## 7. Lifecycle với signal + effect
 
-- `contentChildren(SdTab)` là signal � `@for` template sẽ tự re-run khi user `@if` thêm/b�:t `<sd-tab>` runtime
-- `selectedIndex` là `model<number>` � two-way binding xuôi xu�ng `mat-tab-group [(selectedIndex)]`; Angular tự sync
-- Effect clamp: nếu `selectedIndex()` vượt `tabs().length - 1` �  set về `0`. Áp dụng khi user remove tab cu�i �ang active
+- `contentChildren(SdTab)` là signal — `@for` template sẽ tự re-run khi user `@if` thêm/bớt `<sd-tab>` runtime
+- `selectedIndex` là `model<number>` — two-way binding xuôi xuống `mat-tab-group [(selectedIndex)]`; Angular tự sync
+- Effect clamp: nếu `selectedIndex()` vượt `tabs().length - 1` → set về `0`. Áp dụng khi user remove tab cuối đang active
 
 ```ts
 constructor() {
@@ -259,39 +259,39 @@ Không dùng `ngOnInit` / `ngAfterContentInit`.
 ## 8. Behavior details
 
 ### 8a. Selection
-- Click tab �  `mat-tab-group` emit `selectedIndexChange` �  forward ra `selectedIndex` model
-- API `selectTab(i)` �  set `selectedIndex` (clamp 0..len-1)
-- Click tab `disabled` �  mat-tab-group block, không emit change
-- Click X close button �  `$event.stopPropagation()` �Ồ không trigger tab select r�i emit `tabClosed`
+- Click tab → `mat-tab-group` emit `selectedIndexChange` → forward ra `selectedIndex` model
+- API `selectTab(i)` → set `selectedIndex` (clamp 0..len-1)
+- Click tab `disabled` → mat-tab-group block, không emit change
+- Click X close button → `$event.stopPropagation()` để không trigger tab select rồi emit `tabClosed`
 
 ### 8b. Lazy content
-- `<ng-template matTabContent>` + `ngTemplateOutlet`: tab content ch�0 tạo DOM khi tab �ược active **lần �ầu**. Sau �ó giữ trong DOM (default mat-tab behavior, tránh re-mount m�i lần switch)
-- Side-effect: ngOnInit của child component trong tab ch�0 chạy lần �ầu user m�x tab �ó
+- `<ng-template matTabContent>` + `ngTemplateOutlet`: tab content chỉ tạo DOM khi tab được active **lần đầu**. Sau đó giữ trong DOM (default mat-tab behavior, tránh re-mount mỗi lần switch)
+- Side-effect: ngOnInit của child component trong tab chỉ chạy lần đầu user mở tab đó
 
 ### 8c. Disabled
-- `<sd-tab disabled>` �  mat-tab disabled, ripple/click b�9 chặn, opacity giảm (mat default styling)
+- `<sd-tab disabled>` → mat-tab disabled, ripple/click bị chặn, opacity giảm (mat default styling)
 
 ### 8d. Closable
-- `closable=true` �  render `<mat-icon>close</mat-icon>` bên phải label, cursor pointer
+- `closable=true` → render `<mat-icon>close</mat-icon>` bên phải label, cursor pointer
 - Click X: stop propagation (không select tab), emit `(close)` trên `SdTab` + emit `tabClosed` trên `SdTabGroup`
-- Component **không tự remove tab khỏi DOM** � parent tự xử lý `*ngIf` / state �Ồ remove. Lý do: parent quản state thật của tab list, �ặc bi�!t khi tabs render từ array dynamic
+- Component **không tự remove tab khỏi DOM** — parent tự xử lý `*ngIf` / state để remove. Lý do: parent quản state thật của tab list, đặc biệt khi tabs render từ array dynamic
 
 ### 8e. Badge
-- `badge=5` �  render span `sd-tab__badge` chứa text "5"
-- `badge=null` / `undefined` �  không render
-- `badge=0` �  vẫn render (s� 0 có ý nghĩa hợp l�!). Nếu caller mu�n ẩn 0 �  tự convert sang `null`
+- `badge=5` → render span `sd-tab__badge` chứa text "5"
+- `badge=null` / `undefined` → không render
+- `badge=0` → vẫn render (số 0 có ý nghĩa hợp lệ). Nếu caller muốn ẩn 0 → tự convert sang `null`
 
 ### 8f. Icon
-- `icon="info"` �  render `<mat-icon>info</mat-icon>` bên trái label
+- `icon="info"` → render `<mat-icon>info</mat-icon>` bên trái label
 - Dùng Material icons font (Material Icons hoặc Material Symbols, theo cấu hình project)
 
 ### 8g. Bounds clamp
-- Effect �x mục 7 clamp `selectedIndex` khi `tabs().length` giảm
-- Không emit `selectedIndexChange` thủ công � `model.set()` tự lo
+- Effect ở mục 7 clamp `selectedIndex` khi `tabs().length` giảm
+- Không emit `selectedIndexChange` thủ công — `model.set()` tự lo
 
 ## 9. Styling
 
-### CSS variables (�ặt trên `.sd-tab-group`)
+### CSS variables (đặt trên `.sd-tab-group`)
 ```scss
 .sd-tab-group {
   --sd-tab-label-color: var(--sd-text-primary, #1a1a1a);
@@ -319,70 +319,70 @@ Không dùng `ngOnInit` / `ngAfterContentInit`.
         <span class="sd-tab__badge">3</span>
         <mat-icon class="sd-tab__close ml-4">close</mat-icon>
       </ng-template>
-      ⬦
+      …
     </mat-tab>
   </mat-tab-group>
 </sd-tab-group>
 ```
 
 ### Style rules
-- Label container `display: inline-flex; align-items: center; gap: 4px` � icon + label + badge + close align hàng ngang
+- Label container `display: inline-flex; align-items: center; gap: 4px` — icon + label + badge + close align hàng ngang
 - `.sd-tab__badge`: min-width `--sd-tab-badge-min-width`, height 18px, line-height 18px, font-size 11px, font-weight 500, bo tròn `--sd-tab-badge-radius`, background/color theo CSS vars
-- `.sd-tab__close`: font-size 16px, opacity 0.6, hover �  opacity 1 + `--sd-tab-close-hover-color`, cursor pointer
-- Disabled tab: opacity `--sd-tab-disabled-opacity`, pointer-events: none (mat-tab-group �ã set sẵn)
-- Active tab indicator: forward mat-tab native bar; override color qua `::ng-deep .mat-mdc-tab .mdc-tab-indicator__content--underline { border-color: var(--sd-tab-indicator-color); }` nếu mat default l�!ch theme
+- `.sd-tab__close`: font-size 16px, opacity 0.6, hover → opacity 1 + `--sd-tab-close-hover-color`, cursor pointer
+- Disabled tab: opacity `--sd-tab-disabled-opacity`, pointer-events: none (mat-tab-group đã set sẵn)
+- Active tab indicator: forward mat-tab native bar; override color qua `::ng-deep .mat-mdc-tab .mdc-tab-indicator__content--underline { border-color: var(--sd-tab-indicator-color); }` nếu mat default lệch theme
 
 ## 10. Testing strategy (TDD)
 
-Yêu cầu test �x 3 cấp:
+Yêu cầu test ở 3 cấp:
 
 ### 10a. `SdTab` unit tests (`tab.component.spec.ts`)
-- `label` required �  omit throw NG0950
-- `icon`, `badge`, `disabled`, `closable` default �úng
-- `badge=0` không b�9 coi là falsy (test render path)
+- `label` required → omit throw NG0950
+- `icon`, `badge`, `disabled`, `closable` default đúng
+- `badge=0` không bị coi là falsy (test render path)
 - `disabled` boolean attribute coerce: `disabled`, `disabled="true"`, `[disabled]="false"`
 - `close` output emit khi gọi tay (qua test host)
 - `bodyTpl` viewChild lookup ra `TemplateRef`
 
-### 10b. `SdTabGroup` unit tests (`tab-group.component.spec.ts` � phần logic)
+### 10b. `SdTabGroup` unit tests (`tab-group.component.spec.ts` — phần logic)
 - `tabs` signal cập nhật khi `@for` add/remove
 - Default `selectedIndex = 0`
-- Click tab N �  `selectedIndex` set thành N, emit `selectedIndexChange`
-- API `selectTab(2)` set �úng + clamp khi out of range
-- `selectTab(-1)` �  clamp về 0
-- `selectTab(99)` �  clamp về `tabs().length - 1`
-- Effect clamp khi tab cu�i active b�9 remove
-- `onClose(tab, i)` emit `tabClosed` v�:i payload `{ index: i, tab }`
-- Forward inputs: `headerPosition`, `alignTabs`, `animationDuration`, `disableRipple`, `dynamicHeight` set �úng trên `mat-tab-group` instance
+- Click tab N → `selectedIndex` set thành N, emit `selectedIndexChange`
+- API `selectTab(2)` set đúng + clamp khi out of range
+- `selectTab(-1)` → clamp về 0
+- `selectTab(99)` → clamp về `tabs().length - 1`
+- Effect clamp khi tab cuối active bị remove
+- `onClose(tab, i)` emit `tabClosed` với payload `{ index: i, tab }`
+- Forward inputs: `headerPosition`, `alignTabs`, `animationDuration`, `disableRipple`, `dynamicHeight` set đúng trên `mat-tab-group` instance
 
-### 10c. `SdTabGroup` integration tests (`tab-group.component.spec.ts` � phần DOM)
-- Render 3 tab v�:i label "A" / "B" / "C" �  3 mat-tab-label �úng text
-- Tab có `icon="info"` �  render `<mat-icon>info</mat-icon>` trong label
-- Tab có `badge=5` �  render span `.sd-tab__badge` chứa "5"
-- Tab `badge=0` �  vẫn render "0"
-- Tab `badge=null` �  không có `.sd-tab__badge`
-- Tab `disabled` �  mat-tab có `mat-mdc-tab-disabled` class, click không ��"i `selectedIndex`
-- Tab `closable` �  render `.sd-tab__close`; click �  `tabClosed` emit + `selectedIndexChange` KH�NG emit (stopPropagation)
-- Lazy content: tab 2 chưa �ược active �  DOM body tab 2 chưa t�n tại; click tab 2 �  DOM xuất hi�!n
-- `selectedIndex` two-way: set từ parent �  mat-tab-group active �úng tab; click tab �  parent variable cập nhật
-- Bounds clamp: 3 tabs, `selectedIndex=2`, parent remove tab cu�i �  `selectedIndex` clamp về 1
-- `autoId="userTabs"` �  host element có `data-autoId="userTabs"`
+### 10c. `SdTabGroup` integration tests (`tab-group.component.spec.ts` — phần DOM)
+- Render 3 tab với label "A" / "B" / "C" → 3 mat-tab-label đúng text
+- Tab có `icon="info"` → render `<mat-icon>info</mat-icon>` trong label
+- Tab có `badge=5` → render span `.sd-tab__badge` chứa "5"
+- Tab `badge=0` → vẫn render "0"
+- Tab `badge=null` → không có `.sd-tab__badge`
+- Tab `disabled` → mat-tab có `mat-mdc-tab-disabled` class, click không đổi `selectedIndex`
+- Tab `closable` → render `.sd-tab__close`; click → `tabClosed` emit + `selectedIndexChange` KHÔNG emit (stopPropagation)
+- Lazy content: tab 2 chưa được active → DOM body tab 2 chưa tồn tại; click tab 2 → DOM xuất hiện
+- `selectedIndex` two-way: set từ parent → mat-tab-group active đúng tab; click tab → parent variable cập nhật
+- Bounds clamp: 3 tabs, `selectedIndex=2`, parent remove tab cuối → `selectedIndex` clamp về 1
+- `autoId="userTabs"` → host element có `data-autoId="userTabs"`
 
 ### Test infra
-- Pattern theo các spec hi�!n có trong `projects/sdcorejs-angular/components/section/section.component.spec.ts` (Jasmine + Angular TestBed, ChromeHeadless)
-- Test host component khai báo `<sd-tab-group>` + `<sd-tab>` v�:i input bindings + @ViewChild ref �Ồ gọi imperative API
+- Pattern theo các spec hiện có trong `projects/sdcorejs-angular/components/section/section.component.spec.ts` (Jasmine + Angular TestBed, ChromeHeadless)
+- Test host component khai báo `<sd-tab-group>` + `<sd-tab>` với input bindings + @ViewChild ref để gọi imperative API
 - Chạy: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='**/tab/**/*.spec.ts'`
 
 ## 11. Demo page
 
 Thêm `projects/demo/src/app/pages/sd-tab/sd-tab-demo.component.ts` + route, theo mẫu `sd-section.component.ts`. Demo bao phủ:
 
-1. Tab �ơn giản � 3 tab text-only
+1. Tab đơn giản — 3 tab text-only
 2. Tab có icon + badge + disabled
-3. Tab closable � parent xử lý remove (array `signal<string[]>` + splice trong handler)
-4. Lazy content � tab 2/3 chứa component "heavy" log `console.log('mounted')` �Ồ chứng minh mount tr�&
-5. Two-way `[(selectedIndex)]` v�:i 2 control button "Prev" / "Next" + display index
-6. Layout knobs � `headerPosition='below'`, `alignTabs='center'`, `animationDuration='0ms'`
+3. Tab closable — parent xử lý remove (array `signal<string[]>` + splice trong handler)
+4. Lazy content — tab 2/3 chứa component "heavy" log `console.log('mounted')` để chứng minh mount trễ
+5. Two-way `[(selectedIndex)]` với 2 control button "Prev" / "Next" + display index
+6. Layout knobs — `headerPosition='below'`, `alignTabs='center'`, `animationDuration='0ms'`
 
 ## 12. Doc (`sd-tab.md`)
 
@@ -399,48 +399,47 @@ Theo template `sd-section.md`. Sections:
 
 ## 13. Risks & mitigations
 
-- **Risk:** lazy content + `ngTemplateOutlet` không tự destroy khi tab b�9 remove �  memory leak.
-  **Mitigation:** mat-tab-group native �ã handle (destroy view trong `mat-tab` destroy hook); ta ch�0 forward template, không lấn quyền lifecycle.
+- **Risk:** lazy content + `ngTemplateOutlet` không tự destroy khi tab bị remove → memory leak.
+  **Mitigation:** mat-tab-group native đã handle (destroy view trong `mat-tab` destroy hook); ta chỉ forward template, không lấn quyền lifecycle.
 
-- **Risk:** override màu indicator qua `::ng-deep` có thỒ vỡ khi Angular Material 19 ��"i class name.
-  **Mitigation:** pin class hi�!n tại trong `tab-group.component.scss`, kèm `// why:` comment ch�0 rõ phiên bản mat �ang dựa vào; nếu break �x major bump, sửa trong 1 ch�.
+- **Risk:** override màu indicator qua `::ng-deep` có thể vỡ khi Angular Material 19 đổi class name.
+  **Mitigation:** pin class hiện tại trong `tab-group.component.scss`, kèm `// why:` comment chỉ rõ phiên bản mat đang dựa vào; nếu break ở major bump, sửa trong 1 chỗ.
 
-- **Risk:** caller render `@for` over array dynamic; identity tab thay ��"i giữa các tick (no track key) �  `contentChildren` mất �"n ��9nh.
-  **Mitigation:** doc bắt bu�"c dùng `track tab.id` hoặc `track $index` �x phía caller; demo gương mẫu.
+- **Risk:** caller render `@for` over array dynamic; identity tab thay đổi giữa các tick (no track key) → `contentChildren` mất ổn định.
+  **Mitigation:** doc bắt buộc dùng `track tab.id` hoặc `track $index` ở phía caller; demo gương mẫu.
 
-- **Risk:** `closable=true` + parent quên xử lý �  click X không có hi�!u ứng visible.
+- **Risk:** `closable=true` + parent quên xử lý → click X không có hiệu ứng visible.
   **Mitigation:** doc nêu rõ "component không tự remove"; demo show pattern remove qua signal array.
 
-- **Risk:** click vùng X trên tab disabled vẫn emit `(close)` mặc dù tab không tương tác �ược.
+- **Risk:** click vùng X trên tab disabled vẫn emit `(close)` mặc dù tab không tương tác được.
   **Mitigation:** trong template, gate `(click)` bằng `!tab.disabled()`; test cover case này.
 
 ## 14. Out of scope (deferred)
 
-- **Vertical tabs / tab-nav-bar** � defer �ến khi có yêu cầu cụ thỒ từ m�"t consumer
-- **Add "+" button** � defer �ến khi có editor-like use case
-- **Drag reorder** � defer �ến khi tab list dài + cần reorder thường xuyên
-- **i18n key input** � defer; nếu nhiều caller phàn nàn boilerplate `i18n.t()`, sẽ thêm `[i18nKey]` optional �x v2
-- **`selectedKey` / `selectedTab` ref two-way** � defer �ến khi có use case index không �"n ��9nh
-- **Scrollable header tùy biến** (chevron tay) � defer; mat default �ã có pagination khi overflow
+- **Vertical tabs / tab-nav-bar** — defer đến khi có yêu cầu cụ thể từ một consumer
+- **Add "+" button** — defer đến khi có editor-like use case
+- **Drag reorder** — defer đến khi tab list dài + cần reorder thường xuyên
+- **i18n key input** — defer; nếu nhiều caller phàn nàn boilerplate `i18n.t()`, sẽ thêm `[i18nKey]` optional ở v2
+- **`selectedKey` / `selectedTab` ref two-way** — defer đến khi có use case index không ổn định
+- **Scrollable header tùy biến** (chevron tay) — defer; mat default đã có pagination khi overflow
 
 ## 15. Acceptance criteria
 
-Spec coi như �ạt khi:
+Spec coi như đạt khi:
 
-1. �S& Build `npm run build` xanh (typecheck + ng-packagr) � entry m�:i �x `@sdcorejs/angular/components/tab` xuất bản OK
-2. �S& Tất cả test trong `projects/sdcorejs-angular/components/tab/src/*.spec.ts` xanh �x `ChromeHeadless`
-3. �S& Demo page `/sd-tab` m�x �ược, 6 scenario �x mục 11 hiỒn th�9 �úng visual
-4. �S& Two-way `[(selectedIndex)]` hoạt ��"ng cả chiều xuôi và ngược
-5. �S& Lazy content xác nhận qua `console.log('mounted')` ch�0 in khi tab tương ứng �ược active lần �ầu
-6. �S& Closable tab: click X �  `tabClosed` emit + `selectedIndexChange` không emit; parent splice array �  tab biến mất, `selectedIndex` clamp tự ��"ng
-7. �S& Disabled tab: click không ��"i `selectedIndex`; nếu disabled tab cũng `closable`, click X không emit `(close)`
-8. �S& Bounds clamp: remove tab cu�i �ang active �  `selectedIndex` lùi về index hợp l�!, không l�i runtime
-9. �S& `autoId="x"` �  host có `data-autoId="x"` (e2e selector)
-10. �S& `sd-tab.md` kh�:p hoàn toàn v�:i public API hi�!n tại (mọi input/output/method có trong code �ều có trong doc, và ngược lại)
+1. ✅ Build `npm run build` xanh (typecheck + ng-packagr) — entry mới ở `@sdcorejs/angular/components/tab` xuất bản OK
+2. ✅ Tất cả test trong `projects/sdcorejs-angular/components/tab/src/*.spec.ts` xanh ở `ChromeHeadless`
+3. ✅ Demo page `/sd-tab` mở được, 6 scenario ở mục 11 hiển thị đúng visual
+4. ✅ Two-way `[(selectedIndex)]` hoạt động cả chiều xuôi và ngược
+5. ✅ Lazy content xác nhận qua `console.log('mounted')` chỉ in khi tab tương ứng được active lần đầu
+6. ✅ Closable tab: click X → `tabClosed` emit + `selectedIndexChange` không emit; parent splice array → tab biến mất, `selectedIndex` clamp tự động
+7. ✅ Disabled tab: click không đổi `selectedIndex`; nếu disabled tab cũng `closable`, click X không emit `(close)`
+8. ✅ Bounds clamp: remove tab cuối đang active → `selectedIndex` lùi về index hợp lệ, không lỗi runtime
+9. ✅ `autoId="x"` → host có `data-autoId="x"` (e2e selector)
+10. ✅ `sd-tab.md` khớp hoàn toàn với public API hiện tại (mọi input/output/method có trong code đều có trong doc, và ngược lại)
 
-## 16. Open questions (giải quyết trư�:c plan)
+## 16. Open questions (giải quyết trước plan)
 
-- Có cần expose `(animationDone)` từ mat-tab-group ra ngoài không? � hi�!n không, defer
-- Tab có cần `[selected]` input riêng (true/false) thay vì ch�0 index? � hi�!n không, defer (sẽ kéo theo bài toán "2 tab cùng selected"); ch�t API ch�0 qua `selectedIndex`
-- Có project `<sd-badge>` component thay vì span thô cho badge không? � ch�t span thô vì nhẹ và badge �x �ây ch�0 là count/text 1 dòng, không cần variant color của `<sd-badge>`. Có thỒ ��"i sau.
-
+- Có cần expose `(animationDone)` từ mat-tab-group ra ngoài không? — hiện không, defer
+- Tab có cần `[selected]` input riêng (true/false) thay vì chỉ index? — hiện không, defer (sẽ kéo theo bài toán "2 tab cùng selected"); chốt API chỉ qua `selectedIndex`
+- Có project `<sd-badge>` component thay vì span thô cho badge không? — chốt span thô vì nhẹ và badge ở đây chỉ là count/text 1 dòng, không cần variant color của `<sd-badge>`. Có thể đổi sau.

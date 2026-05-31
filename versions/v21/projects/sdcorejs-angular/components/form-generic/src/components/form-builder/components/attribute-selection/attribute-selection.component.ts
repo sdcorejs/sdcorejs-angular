@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -19,8 +19,8 @@ import { BuildQueries } from "./components/build-queries/build-queries.component
 import { BuildVariables } from "./components/build-variables/build-variables.component";
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
-// Template lÃ  cÃ¡c máº«u do Portal Ä‘á»‹nh nghÄ©a sáºµn (key, label ....) Ä‘á»ƒ ngÆ°á»i dÃ¹ng chá»n nhanh
-// Khi thá»±c hiá»‡n sao chÃ©p 1 template chÃºng ta sáº½ CLONE Ä‘á»ƒ trÃ¡nh áº£nh hÆ°á»Ÿng template gá»‘c
+// Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
+// Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
 @Component({
   selector: 'attribute-selection',
   templateUrl: './attribute-selection.component.html',
@@ -57,8 +57,8 @@ export class AttributeSelection {
 
   ngOnInit(): void {
     this.formGenericService.selection.definitions().then(selections => {
-      // Náº¿u khÃ´ng pháº£i lÃ  type select thÃ¬ khÃ´ng hiá»ƒn thá»‹ cÃ¡c lá»±a chá»n lazyValues
-      // VÃ¬ radio, checklist khÃ´ng thá»ƒ load lazy
+      // Nếu không phải là type select thì không hiển thị các lựa chọn lazyValues
+      // Vì radio, checklist không thể load lazy
       if (this.component.type !== 'select') {
         this.selections = selections.filter(selection => !('lazyValues' in selection) && !('lazyValuesKey' in selection));
       } else {
@@ -70,7 +70,7 @@ export class AttributeSelection {
 
   onChangeValuesKey = (value: any) => {
     this.valuesKeyChange.emit(value);
-    // GÃ¡n values rá»—ng náº¿u Ä‘Ã£ sá»­ dá»¥ng valuesKey
+    // Gán values rỗng nếu đã sử dụng valuesKey
     this.values = [];
     this.valuesChange.emit(this.values);
     this.ref.markForCheck();
@@ -95,4 +95,3 @@ export class AttributeSelection {
     this.ref.markForCheck();
   };
 }
-

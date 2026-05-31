@@ -1,4 +1,4 @@
-﻿import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -6,7 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 // Import sd-core
 import { SdAvatar } from '@sdcorejs/angular/components';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-// NOTE: Import ná»™i bá»™ trong module layout thÃ¬ dÃ¹ng path tÆ°Æ¡ng Ä‘á»‘i
+// NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../../configurations';
 
 @Component({
@@ -30,7 +30,7 @@ export class LayoutUserComponent {
   isShowSidebar = input<boolean>(false);
   userInfo = input.required<SdLayoutUserInfo>();
 
-  // Chuyá»ƒn thÃ nh void vÃ¬ cÃ¡c hÃ m emit hiá»‡n táº¡i khÃ´ng truyá»n data
+  // Chuyển thành void vì các hàm emit hiện tại không truyền data
   menuClosed = output<void>();
   menuOpened = output<void>();
   toggleMenuLock = output<Event>();
@@ -60,7 +60,7 @@ export class LayoutUserComponent {
   };
 
   changePassword = (): void => {
-    // DÃ¹ng Optional Chaining gá»i hÃ m cá»±c gá»n
+    // Dùng Optional Chaining gọi hàm cực gọn
     this.changePasswordLayoutConfig?.(); 
   };
 
@@ -68,5 +68,4 @@ export class LayoutUserComponent {
     this.toggleMenuLock.emit(event);
   };
 }
-
 

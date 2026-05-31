@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
 
@@ -89,4 +89,3 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AnchorDemoComponent {}
-

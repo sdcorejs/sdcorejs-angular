@@ -1,4 +1,4 @@
-﻿# Spec â€” vn-angular E2E `data-*` runtime-state attributes
+# Spec — vn-angular E2E `data-*` runtime-state attributes
 
 - **Date:** 2026-05-24
 - **Status:** Draft (awaiting user review)
@@ -7,7 +7,7 @@
 
 ## 1. Problem & Goals
 
-The repo already ships an `autoId` convention: each Core UI component accepts an `autoId` input, namespaces it (`forms-input-<x>`, `components-modal-<x>`, â€¦), and renders it as `[attr.data-autoId]` on a stable anchor element. QA automation uses `[data-autoid="..."]` selectors to locate elements.
+The repo already ships an `autoId` convention: each Core UI component accepts an `autoId` input, namespaces it (`forms-input-<x>`, `components-modal-<x>`, …), and renders it as `[attr.data-autoId]` on a stable anchor element. QA automation uses `[data-autoid="..."]` selectors to locate elements.
 
 That covers **identity** but not **runtime state**. QA still has to read Angular internals (or guess via CSS classes) to answer:
 
@@ -29,7 +29,7 @@ This spec extends the existing `autoId` pattern with a small, consistent set of 
 **Non-goals**
 
 - No new public API surface beyond template attributes (no new `@Input`s, no new directive).
-- No retrofit of pre-`autoId` components that don't yet have the `autoId` input â€” those are out-of-scope.
+- No retrofit of pre-`autoId` components that don't yet have the `autoId` input — those are out-of-scope.
 - No e2e runner / Playwright scaffolding inside this repo. We only expose the hooks.
 
 ## 2. Attribute catalog
@@ -49,10 +49,10 @@ All attributes are **always present** on relevant components and use lowercase n
 
 **Serialization rules** (implemented in `sdSerializeDataValue`):
 
-- `null` / `undefined` / `""` â†’ `data-value=""`, paired with `data-empty="true"`.
-- `Date` â†’ `value.toISOString()`.
-- `Array` / `object` â†’ `JSON.stringify(value)`.
-- `boolean` / `number` â†’ `String(value)`.
+- `null` / `undefined` / `""` → `data-value=""`, paired with `data-empty="true"`.
+- `Date` → `value.toISOString()`.
+- `Array` / `object` → `JSON.stringify(value)`.
+- `boolean` / `number` → `String(value)`.
 - For `sd-input` with `type === 'password'`, `data-value` is **omitted entirely** (bound to `null`, which Angular's `[attr.*]` removes from the DOM). `data-empty` is still rendered.
 
 ## 3. Per-component matrix
@@ -61,39 +61,39 @@ All attributes are **always present** on relevant components and use lowercase n
 
 | Component | data-disabled | data-value | data-empty | data-invalid | data-loading | data-count | Anchor element |
 |---|---|---|---|---|---|---|---|
-| `sd-input` | âœ“ | âœ“ (skip if `type=password`) | âœ“ | âœ“ | â€” | â€” | inner `<input matInput>` |
-| `sd-textarea` | âœ“ | âœ“ | âœ“ | âœ“ | â€” | â€” | `<textarea matInput>` |
-| `sd-input-number` | âœ“ | âœ“ | âœ“ | âœ“ | â€” | â€” | `<input>` |
-| `sd-switch` | âœ“ | âœ“ (`"true"`/`"false"`) | âœ“ | â€” | â€” | â€” | `<mat-slide-toggle>` |
-| `sd-checkbox` | âœ“ | âœ“ | âœ“ | â€” | â€” | â€” | `<mat-checkbox>` |
-| `sd-radio` | âœ“ | âœ“ (selected key) | âœ“ | â€” | â€” | â€” | `<mat-radio-group>` |
-| `sd-date` | âœ“ | âœ“ (ISO) | âœ“ | âœ“ | â€” | â€” | `<input>` |
-| `sd-datetime` | âœ“ | âœ“ (ISO) | âœ“ | âœ“ | â€” | â€” | `<input>` |
+| `sd-input` | ✓ | ✓ (skip if `type=password`) | ✓ | ✓ | — | — | inner `<input matInput>` |
+| `sd-textarea` | ✓ | ✓ | ✓ | ✓ | — | — | `<textarea matInput>` |
+| `sd-input-number` | ✓ | ✓ | ✓ | ✓ | — | — | `<input>` |
+| `sd-switch` | ✓ | ✓ (`"true"`/`"false"`) | ✓ | — | — | — | `<mat-slide-toggle>` |
+| `sd-checkbox` | ✓ | ✓ | ✓ | — | — | — | `<mat-checkbox>` |
+| `sd-radio` | ✓ | ✓ (selected key) | ✓ | — | — | — | `<mat-radio-group>` |
+| `sd-date` | ✓ | ✓ (ISO) | ✓ | ✓ | — | — | `<input>` |
+| `sd-datetime` | ✓ | ✓ (ISO) | ✓ | ✓ | — | — | `<input>` |
 
 ### 3.2 Forms (collection / async)
 
 | Component | data-disabled | data-value | data-empty | data-invalid | data-loading | data-count | Anchor |
 |---|---|---|---|---|---|---|---|
-| `sd-select` | âœ“ | âœ“ (selected key) | âœ“ | âœ“ | âœ“ (async options) | â€” | `<mat-select>` host |
-| `sd-autocomplete` | âœ“ | âœ“ (selected key) | âœ“ | âœ“ | âœ“ | â€” | `<input>` |
-| `sd-chip` | âœ“ | âœ“ `JSON.stringify(arr)` | âœ“ | â€” | â€” | âœ“ | `<input.sd-chip-input>` |
-| `sd-chip-calendar` | âœ“ | âœ“ ISO[] JSON | âœ“ | â€” | â€” | âœ“ | `<input.sd-chip-input>` |
-| `sd-date-range` | âœ“ | âœ“ `{from,to}` ISO JSON | âœ“ (either side missing) | âœ“ | â€” | â€” | `<input>` |
+| `sd-select` | ✓ | ✓ (selected key) | ✓ | ✓ | ✓ (async options) | — | `<mat-select>` host |
+| `sd-autocomplete` | ✓ | ✓ (selected key) | ✓ | ✓ | ✓ | — | `<input>` |
+| `sd-chip` | ✓ | ✓ `JSON.stringify(arr)` | ✓ | — | — | ✓ | `<input.sd-chip-input>` |
+| `sd-chip-calendar` | ✓ | ✓ ISO[] JSON | ✓ | — | — | ✓ | `<input.sd-chip-input>` |
+| `sd-date-range` | ✓ | ✓ `{from,to}` ISO JSON | ✓ (either side missing) | ✓ | — | — | `<input>` |
 
 ### 3.3 Components
 
 | Component | data-autoId placement | data-opened | data-loading | data-disabled | data-empty | data-count | Notes |
 |---|---|---|---|---|---|---|---|
-| `sd-button` | existing `<button mat-*>` (4 branches for 4 button types) | â€” | âœ“ (`loading()` input) | âœ“ (`disabled()` input) | â€” | â€” | No value semantics. |
-| `sd-modal` | **NEW** wrapping `<div class="sd-modal-root">` inside `<ng-template>` | âœ“ (`isOpened()`) | â€” | â€” | â€” | â€” | Dialog renders into MatDialog overlay (document.body). Wrapper is the QA anchor. |
-| `sd-side-drawer` | existing `.sd-side-drawer` root in template | âœ“ | âœ“ | â€” | â€” | â€” | Convert `isOpened` and `isLoading` from plain booleans to signals (see Â§6). |
-| `sd-table` | host element (already carries `data-autoId` today) | â€” | âœ“ (`loading` signal â€” already exists) | â€” | â€” | â€” | |
-| `sd-upload-file` | existing input anchor | â€” | âœ“ (uploading) | âœ“ | âœ“ | âœ“ (file count) | **No data-value** â€” File objects don't serialize safely. |
-| `sd-editor` | existing host anchor | â€” | âœ“ (Monaco init) | âœ“ | âœ“ | â€” | **No data-value** â€” editor content may be MBs. |
+| `sd-button` | existing `<button mat-*>` (4 branches for 4 button types) | — | ✓ (`loading()` input) | ✓ (`disabled()` input) | — | — | No value semantics. |
+| `sd-modal` | **NEW** wrapping `<div class="sd-modal-root">` inside `<ng-template>` | ✓ (`isOpened()`) | — | — | — | — | Dialog renders into MatDialog overlay (document.body). Wrapper is the QA anchor. |
+| `sd-side-drawer` | existing `.sd-side-drawer` root in template | ✓ | ✓ | — | — | — | Convert `isOpened` and `isLoading` from plain booleans to signals (see §6). |
+| `sd-table` | host element (already carries `data-autoId` today) | — | ✓ (`loading` signal — already exists) | — | — | — | |
+| `sd-upload-file` | existing input anchor | — | ✓ (uploading) | ✓ | ✓ | ✓ (file count) | **No data-value** — File objects don't serialize safely. |
+| `sd-editor` | existing host anchor | — | ✓ (Monaco init) | ✓ | ✓ | — | **No data-value** — editor content may be MBs. |
 
 ## 4. Implementation
 
-The pattern mirrors `autoId`: per-component manual binding â€” no shared directive. This keeps the code style consistent with what's already in the repo and avoids hiding behavior behind decorators.
+The pattern mirrors `autoId`: per-component manual binding — no shared directive. This keeps the code style consistent with what's already in the repo and avoids hiding behavior behind decorators.
 
 ### 4.1 Shared utilities (new)
 
@@ -103,9 +103,9 @@ The pattern mirrors `autoId`: per-component manual binding â€” no shared di
 /**
  * Serialize a value for the `data-value` attribute.
  *
- * Null/undefined/empty-string â†’ ''.
- * Date â†’ ISO string. Arrays/objects â†’ JSON.stringify().
- * Primitives â†’ String().
+ * Null/undefined/empty-string → ''.
+ * Date → ISO string. Arrays/objects → JSON.stringify().
+ * Primitives → String().
  */
 export function sdSerializeDataValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '';
@@ -169,14 +169,14 @@ export function sdFormControlState<T = unknown>(
 }
 ```
 
-> **Open question to resolve during implementation:** `SdFormControl` may already wire reactive snapshots. If so, replace this helper with a simpler `computed` reading the existing signals. The spec does not block on which exact mechanism â€” only on the shape of the resulting `computed` consumed by templates.
+> **Open question to resolve during implementation:** `SdFormControl` may already wire reactive snapshots. If so, replace this helper with a simpler `computed` reading the existing signals. The spec does not block on which exact mechanism — only on the shape of the resulting `computed` consumed by templates.
 
 ### 4.3 Per-component template pattern (scalar form)
 
 Example for `sd-input`:
 
 ```ts
-// input.component.ts â€” add below the existing autoId computed
+// input.component.ts — add below the existing autoId computed
 readonly #state = sdFormControlState(this.formControl);
 readonly dataDisabled = computed(() => String(this.#state().disabled));
 readonly dataInvalid = computed(() => String(this.#state().invalid));
@@ -196,7 +196,7 @@ readonly dataValue = computed(() => {
   [attr.data-value]="dataValue()" />
 ```
 
-### 4.4 Per-component template pattern (collection â€” chip)
+### 4.4 Per-component template pattern (collection — chip)
 
 ```ts
 readonly dataCount = computed(() =>
@@ -221,7 +221,7 @@ readonly dataCount = computed(() =>
 
 The same binding goes on all 4 `@if` branches (`fill`, `light`, `outline`, `link`).
 
-### 4.6 Modal â€” wrapping anchor
+### 4.6 Modal — wrapping anchor
 
 `sd-modal` renders its content into a MatDialog overlay (or MatBottomSheet) via `<ng-template>`. The component host element is not part of the rendered DOM, so we add a **new wrapping `<div class="sd-modal-root">`** inside the template that carries the QA hooks:
 
@@ -246,7 +246,7 @@ const modal = document.querySelector('[data-autoid="components-modal-X"][data-op
 
 **Risk:** any existing SCSS rule that targets the first child of the dialog content directly (e.g. `.mat-mdc-dialog-content > div`) needs to be updated to traverse through `.sd-modal-root`. Verify during implementation.
 
-### 4.7 Side-drawer â€” signal conversion
+### 4.7 Side-drawer — signal conversion
 
 Today, `side-drawer.component.ts` exposes `isOpened` and `isLoading` as plain mutable booleans:
 
@@ -270,7 +270,7 @@ readonly isLoading = this.#isLoadingSignal.asReadonly();
 // `open()` / `close()` / `startLoading()` / `stopLoading()` use `.set()` internally.
 ```
 
-All in-template reads (`this.isOpened()`) and external `drawer.isOpened()` calls work uniformly. Any external code that accessed `drawer.isOpened` as a plain property must update to `drawer.isOpened()`. This is the **only** breaking change in this spec â€” flag it explicitly in the changelog.
+All in-template reads (`this.isOpened()`) and external `drawer.isOpened()` calls work uniformly. Any external code that accessed `drawer.isOpened` as a plain property must update to `drawer.isOpened()`. This is the **only** breaking change in this spec — flag it explicitly in the changelog.
 
 Template root `.sd-side-drawer` element receives:
 
@@ -283,7 +283,7 @@ Template root `.sd-side-drawer` element receives:
 </div>
 ```
 
-> **Side note:** `sd-side-drawer` does not currently have an `autoId` input â€” adding it is part of this work.
+> **Side note:** `sd-side-drawer` does not currently have an `autoId` input — adding it is part of this work.
 
 ### 4.8 Table / upload-file / editor
 
@@ -307,10 +307,10 @@ Component renders the following attributes on `<anchor element>` to support QA a
 | Attribute | Value | Source |
 |---|---|---|
 | `data-autoid` | `<namespace>-<name>-<autoId>` | input `autoId` |
-| `data-disabled` | `"true"` / `"false"` | â€¦ |
-| `data-value` | â€¦ | â€¦ |
-| `data-empty` | `"true"` / `"false"` | â€¦ |
-| `data-invalid` | `"true"` / `"false"` | â€¦ |
+| `data-disabled` | `"true"` / `"false"` | … |
+| `data-value` | … | … |
+| `data-empty` | `"true"` / `"false"` | … |
+| `data-invalid` | `"true"` / `"false"` | … |
 
 Selector example:
 
@@ -328,11 +328,11 @@ Apply to all 19 components in scope.
 
 Sections:
 
-1. **Convention** â€” lowercase names, always-present rule, stringify rule, password-skip rule.
-2. **Attribute catalog** â€” full catalog table (Section 2 of this spec).
-3. **Component matrix** â€” the per-component table (Section 3).
-4. **Selector cookbook** â€” short Playwright + Cypress snippets for common waits (`await page.locator(...).toHaveAttribute('data-loading', 'false')`).
-5. **YAML schema for AI agents** â€” machine-readable form so downstream agents (e.g. the SDCoreJS `angular-portal` e2e skills) can read what each component exposes without parsing markdown tables:
+1. **Convention** — lowercase names, always-present rule, stringify rule, password-skip rule.
+2. **Attribute catalog** — full catalog table (Section 2 of this spec).
+3. **Component matrix** — the per-component table (Section 3).
+4. **Selector cookbook** — short Playwright + Cypress snippets for common waits (`await page.locator(...).toHaveAttribute('data-loading', 'false')`).
+5. **YAML schema for AI agents** — machine-readable form so downstream agents (e.g. the SDCoreJS `angular-portal` e2e skills) can read what each component exposes without parsing markdown tables:
 
 ```yaml
 sd-input:
@@ -363,7 +363,7 @@ Add a one-liner under the "Testing" section of `projects/sdcorejs-angular/README
 
 ## 6. Tests
 
-For each component in scope, rename the existing `describe('â€¦ â€” autoId', () => {...})` block to `describe('â€¦ â€” E2E attributes', () => {...})` and add cases for every new attribute that component renders. Each new attribute gets at least one test that flips the underlying signal/input and asserts the DOM attribute.
+For each component in scope, rename the existing `describe('… — autoId', () => {...})` block to `describe('… — E2E attributes', () => {...})` and add cases for every new attribute that component renders. Each new attribute gets at least one test that flips the underlying signal/input and asserts the DOM attribute.
 
 Typical scalar-form test set:
 
@@ -400,7 +400,7 @@ it('data-invalid flips on touched + invalid', () => {
 });
 ```
 
-Modal / side-drawer specs additionally cover open â†’ close â†’ `data-opened` transitions. Button spec covers `disabled` / `loading` input flips. Table covers the `loading` signal flip.
+Modal / side-drawer specs additionally cover open → close → `data-opened` transitions. Button spec covers `disabled` / `loading` input flips. Table covers the `loading` signal flip.
 
 A dedicated unit-test file at `projects/sdcorejs-angular/utilities/src/data-state/data-state.spec.ts` covers `sdSerializeDataValue` and `sdIsEmpty` directly (all stringify branches, edge cases).
 
@@ -412,7 +412,7 @@ A dedicated unit-test file at `projects/sdcorejs-angular/utilities/src/data-stat
 | Modal SCSS selectors that target a direct child of the dialog content may break when `<div.sd-modal-root>` wraps the body. | Grep SCSS for `.mat-mdc-dialog-content > *`, `.cdk-overlay-pane > *`, `> sd-modal` style rules. Adjust during implementation. |
 | `data-value` on text-like inputs leaks user input to the DOM. Password is explicit-skipped, but other "sensitive" controls (e.g. credit-card-like custom inputs) inherit the default. | The repo currently has no such control. If one is added later, it must opt out by overriding `dataValue` to return `null`. Document the override pattern in `E2E-ATTRIBUTES.md`. |
 | Large array values (e.g. chip with hundreds of items) bloat DOM via `data-value=JSON.stringify(arr)`. | `data-count` is the primary QA signal for collections. Consumers should prefer `data-count` over parsing `data-value` for long arrays. Documented in cookbook. |
-| Editor content potentially MBs â€” explicitly excluded from `data-value`. | Documented in catalog. `data-empty` covers the "has content?" case. |
+| Editor content potentially MBs — explicitly excluded from `data-value`. | Documented in catalog. `data-empty` covers the "has content?" case. |
 
 ## 8. Out of scope
 
@@ -424,7 +424,7 @@ A dedicated unit-test file at `projects/sdcorejs-angular/utilities/src/data-stat
 
 - [ ] `sdSerializeDataValue` and `sdIsEmpty` exist in `@sdcorejs/angular/utilities`, with unit tests.
 - [ ] `sdFormControlState` exists (or equivalent computed inside each form component) and emits on value/status changes.
-- [ ] Every component in Â§3 renders its listed attributes on the listed anchor element.
+- [ ] Every component in §3 renders its listed attributes on the listed anchor element.
 - [ ] Every component spec has a renamed `E2E attributes` describe block with at least one test per new attribute.
 - [ ] Every `sd-<name>.md` has an `## E2E test attributes` section listing the attributes.
 - [ ] `projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md` exists with the convention, catalog, matrix, cookbook, and YAML schema sections.
@@ -445,4 +445,3 @@ A dedicated unit-test file at `projects/sdcorejs-angular/utilities/src/data-stat
 8. Final pass: run full test suite, fix any regressions.
 
 The implementation plan (written by `superpowers:writing-plans` next) will break this down into reviewable PR-sized chunks.
-

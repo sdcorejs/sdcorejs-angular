@@ -1,4 +1,4 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { TableFormatService } from './table-format.service';
 import { SdTableColumn } from '../../models/table-column.model';
@@ -21,7 +21,7 @@ function buildService(): TableFormatService {
 }
 
 // ---------------------------------------------------------------------------
-// format() â€” core display generation
+// format() — core display generation
 // ---------------------------------------------------------------------------
 describe('TableFormatService.format', () => {
   let service: TableFormatService;
@@ -143,7 +143,7 @@ describe('TableFormatService.format', () => {
     const cols: SdTableColumn[] = [{ field: 'active', title: 'Active', type: 'boolean' }];
 
     const result = await service.format(raw, cols, {}, {});
-    // null boolean â†’ '' â†’ then SD_EMPTY_STR override
+    // null boolean → '' → then SD_EMPTY_STR override
     expect(result[0].meta.display['active'].data).toBe(EMPTY_STR);
   });
 
@@ -274,7 +274,7 @@ describe('TableFormatService.format', () => {
   });
 
   // -----------------------------------------------------------------------
-  // align: right â†’ cellStyle
+  // align: right → cellStyle
   // -----------------------------------------------------------------------
   it('applies right-align cellStyle when column align is "right"', async () => {
     const raw = [{ amount: 100 }];
@@ -331,7 +331,7 @@ describe('TableFormatService.format', () => {
     ];
 
     const result = await service.format(raw, cols, {}, {});
-    // No cache â†’ falls back to raw value 'X'
+    // No cache → falls back to raw value 'X'
     expect(result[0].meta.display['status'].data).toBe('X');
   });
 
@@ -380,7 +380,7 @@ describe('TableFormatService.format', () => {
     const cols: SdTableColumn[] = [{ field: 'active', title: 'Active', type: 'boolean' }];
 
     const result = await service.format(raw, cols, {}, {});
-    // null â†’ '' â†’ SD_EMPTY_STR path sets badge to undefined
+    // null → '' → SD_EMPTY_STR path sets badge to undefined
     expect(result[0].meta.display['active'].badge).toBeUndefined();
   });
 
@@ -754,9 +754,8 @@ describe('TableFormatService.loadValues', () => {
 
     await service.loadValues(cols, cacheValues, cacheObjValues);
 
-    // null â†’ [] after Array.isArray check
+    // null → [] after Array.isArray check
     expect(cacheValues['type']).toBeDefined();
     expect(cacheValues['type'].length).toBe(0);
   });
 });
-

@@ -1,4 +1,4 @@
-�# `<sd-upload-file>`
+# `<sd-upload-file>`
 
 **Type**: Component (generic over `TArgs`)
 **Selector**: `sd-upload-file`
@@ -8,21 +8,21 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-File picker + drag-drop + preview component � manages a list of "to-be-uploaded" and "already-uploaded" files (images, documents, generic), with built-in validation, preview thumbnails, reorder, image-resize, and a public `upload()` method to be called before form submit.
+File picker + drag-drop + preview component — manages a list of "to-be-uploaded" and "already-uploaded" files (images, documents, generic), with built-in validation, preview thumbnails, reorder, image-resize, and a public `upload()` method to be called before form submit.
 
 ## When to use
-- Image attachment fields (avatar, gallery, evidence photos) � `[type]="'image'"`
-- Document attachments (PDF, Word, Excel, contracts) � `[type]="'document'"` or `'file'`
+- Image attachment fields (avatar, gallery, evidence photos) — `[type]="'image'"`
+- Document attachments (PDF, Word, Excel, contracts) — `[type]="'document'"` or `'file'`
 - Multi-file evidence with reorderable order
 - Inside a form (template-driven via `[form]="ngForm"` or reactive via `[form]="formGroup"`) where you need `required` validation tied to the form
 - When the parent needs to defer the actual server upload until form-submit time (call `await uploadFileRef.upload()` before the API call)
 
 ## When NOT to use
-- For huge file uploads with chunking / resumable streams �  wrap your own component using a different uploader (this component reads each file fully and previews via FileReader)
-- For "select existing files from a CMS" � this is a fresh-upload component, not a media-library picker
-- For instant single-file upload that immediately writes to a CDN with no preview � overkill; use a simple `<input type="file">`
+- For huge file uploads with chunking / resumable streams → wrap your own component using a different uploader (this component reads each file fully and previews via FileReader)
+- For "select existing files from a CMS" — this is a fresh-upload component, not a media-library picker
+- For instant single-file upload that immediately writes to a CDN with no preview — overkill; use a simple `<input type="file">`
 
-## Configuration provider � REQUIRED unless `[upload]` is bound
+## Configuration provider — REQUIRED unless `[upload]` is bound
 
 The component uploads via either:
 1. The `[upload]` input function bound directly, OR
@@ -32,7 +32,7 @@ The component uploads via either:
 // app.config.ts
 provide: SD_UPLOAD_FILE_CONFIGURATION,
 useValue: {
-  // key?: 'avatar', // optional � match with [key] input
+  // key?: 'avatar', // optional — match with [key] input
   upload:   (files, args) => myService.upload(files, args).then(r => r.idOrKeys),
   details:  (idOrKeys, args) => myService.details(idOrKeys, args), // returns SdUploadFileDetail[]
   download: (idOrKey, args) => myService.download(idOrKey, args),
@@ -45,7 +45,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | E2E test hook. Computed prefix `components-upload-file-{autoId}` on the drop zone trigger (rendered via `data-autoid` attribute). Each per-file remove button gets `components-upload-file-{autoId}-remove-{index}` (index-based for stability across duplicate filenames). |
-| `args` | `TArgs` (generic) | `undefined` | Opaque payload forwarded to `upload`/`details`/`download` handlers as second arg. Use it to pass domain context (entity id, type, ⬦). |
+| `args` | `TArgs` (generic) | `undefined` | Opaque payload forwarded to `upload`/`details`/`download` handlers as second arg. Use it to pass domain context (entity id, type, …). |
 | `label` | `string` | `undefined` | Field label rendered above the picker via `<sd-label>`. |
 | `key` | `string \| undefined` | `undefined` | Selects which config from `SD_UPLOAD_FILE_CONFIGURATION` array to use. |
 | `description` | `string` | `undefined` | Description shown under label (replaces auto-generated description). |
@@ -53,9 +53,9 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 | `previewWidth` | `string` | `'50px'` | Width of each thumbnail / drop zone. |
 | `previewHeight` | `string` | `'50px'` | Height of each thumbnail / drop zone. |
 | `align` | `'left' \| 'center'` | `'left'` | Horizontal alignment of the thumbnail row. |
-| `upload` | `SdUploadFileFuncUpload<TArgs>` | `undefined` | `(files, args) => Promise<string[]>` � returns idOrKeys after server upload. Overrides config. |
-| `details` | `SdUploadFileFuncDetails<TArgs>` | `undefined` | `(idOrKeys, args) => Promise<SdUploadFileDetail[]>` � fetches metadata to render existing files. Overrides config. |
-| `download` | `SdUploadFileFuncDownload<TArgs>` | `undefined` | `(idOrKey, args) => ⬦` � used when user clicks a file in viewed mode. Overrides config. |
+| `upload` | `SdUploadFileFuncUpload<TArgs>` | `undefined` | `(files, args) => Promise<string[]>` — returns idOrKeys after server upload. Overrides config. |
+| `details` | `SdUploadFileFuncDetails<TArgs>` | `undefined` | `(idOrKeys, args) => Promise<SdUploadFileDetail[]>` — fetches metadata to render existing files. Overrides config. |
+| `download` | `SdUploadFileFuncDownload<TArgs>` | `undefined` | `(idOrKey, args) => …` — used when user clicks a file in viewed mode. Overrides config. |
 | `type` | `'image' \| 'document' \| 'file'` | `'file'` | Layout switch: `image`=square thumbnails, `document`=row with file-type icon, `file`=mixed. |
 | `max` | `number` | `10` | Max number of files allowed in `model`. |
 | `maxOfImage` | `number` | `3` | When disabled (viewed mode), only first N image thumbs render with a `+N` overlay on the last to open the popup gallery. |
@@ -64,7 +64,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 | `maxWidth` | `number` | `undefined` | Max image width in pixels (image type only). |
 | `maxHeight` | `number` | `undefined` | Max image height in pixels (image type only). |
 | `imageValidator` | `(image: HTMLImageElement) => string` | `undefined` | Custom image-validator returning an error message or empty string. |
-| `scaleToPixel` | `number` | `undefined` | If set, images are auto-resized client-side until `width*height �0� scaleToPixel`. |
+| `scaleToPixel` | `number` | `undefined` | If set, images are auto-resized client-side until `width*height ≤ scaleToPixel`. |
 | `name` | `string` | random uuid | Form-control name when registered in the parent `FormGroup`. |
 | `form` | `FormGroup \| NgForm` | `undefined` | Parent form. Accepts both reactive `FormGroup` and template-driven `NgForm` (auto-extracts `.form`). The component registers its internal control under `name`. |
 | `required` | `boolean` (`''` truthy) | `false` | Required validator. Bare attribute = `true`. |
@@ -73,7 +73,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 ## Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `loaded` | `OutputRef<PreviewFile[]>` | Declared output � reserved for future use; currently not emitted. Do not rely on it until the API is stabilised. |
+| `loaded` | `OutputRef<PreviewFile[]>` | Declared output — reserved for future use; currently not emitted. Do not rely on it until the API is stabilised. |
 | `filesChanged` | `OutputRef<(string \| File)[]>` | Emits whenever the file set changes (add, remove, reorder). Items are mixed: server keys (string), CDN URLs (string), or freshly-picked `File` objects. Emitted after every `#details` resolution. |
 | `model` | `ModelSignal<(string \| number)[]>` | **Two-way bindable via `[(model)]`**. Holds idOrKeys / cdn URLs / hashed-keys-of-pending-uploads. Set this from your form to pre-populate. Updating the array triggers `#details()` to resolve metadata and refresh `previewFiles`. |
 
@@ -81,13 +81,13 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 ```ts
 @ViewChild(SdUploadFile) uploadRef!: SdUploadFile;
 ```
-- `uploadRef.upload()` �  `Promise<void>` � **Must be called before submitting the form to the server.** Sends pending `File` objects to the configured `upload` handler, replaces hashed-keys in `model` with returned idOrKeys.
-- `uploadRef.getFiles()` �  `Promise<File[]>` � Returns raw `File` objects still pending (not yet uploaded).
-- `uploadRef.preview()` �  opens the popup gallery with all preview files.
-- `uploadRef.onDownload(previewFile)` � triggers download via the configured handler.
-- `uploadRef.onRemove(previewFile)` � shows a confirmation dialog and removes the file from `model` + `previewFiles` on confirm.
-- `uploadRef.formControl` � internal `SdFormControl` registered in the parent `FormGroup`. Use for programmatic `touched`/`dirty` checks if needed.
-- `uploadRef.previewFiles()` � read the current `PreviewFile[]` signal (useful for testing or parent inspection).
+- `uploadRef.upload()` → `Promise<void>` — **Must be called before submitting the form to the server.** Sends pending `File` objects to the configured `upload` handler, replaces hashed-keys in `model` with returned idOrKeys.
+- `uploadRef.getFiles()` → `Promise<File[]>` — Returns raw `File` objects still pending (not yet uploaded).
+- `uploadRef.preview()` → opens the popup gallery with all preview files.
+- `uploadRef.onDownload(previewFile)` — triggers download via the configured handler.
+- `uploadRef.onRemove(previewFile)` — shows a confirmation dialog and removes the file from `model` + `previewFiles` on confirm.
+- `uploadRef.formControl` — internal `SdFormControl` registered in the parent `FormGroup`. Use for programmatic `touched`/`dirty` checks if needed.
+- `uploadRef.previewFiles()` — read the current `PreviewFile[]` signal (useful for testing or parent inspection).
 
 ## Internal data model: `PreviewFile`
 ```ts
@@ -105,15 +105,15 @@ interface PreviewFile {
 ```
 
 ## Content projection (slots)
-- `<ng-template sdLabelDef>⬦</ng-template>` � custom label template (overrides default `<sd-label>` rendering). Resolved via `contentChild(SdLabelDefDirective)`.
+- `<ng-template sdLabelDef>…</ng-template>` — custom label template (overrides default `<sd-label>` rendering). Resolved via `contentChild(SdLabelDefDirective)`.
 
-## Visual cues (helps agent map screenshots �  component)
-- **Drop zone**: square box with **2px dashed grey border**, centered Material icon `file_upload` (cloud / arrow-up), `previewWidth` � `previewHeight` (default 50�50). On dragover, border becomes **2px solid grey** and opacity 0.9. Click opens native file picker.
+## Visual cues (helps agent map screenshots → component)
+- **Drop zone**: square box with **2px dashed grey border**, centered Material icon `file_upload` (cloud / arrow-up), `previewWidth` × `previewHeight` (default 50×50). On dragover, border becomes **2px solid grey** and opacity 0.9. Click opens native file picker.
 - **Image type**: row of square thumbnails (drop zone first, then images). Hover reveals zoom-in icon + close (X) button. Drag handle to reorder.
-- **Document type**: stacked rows below images. Each row = file-type icon (extension-colored: pdf/doc/xls/png/⬦) + filename as a link + size in KB + close icon.
+- **Document type**: stacked rows below images. Each row = file-type icon (extension-colored: pdf/doc/xls/png/…) + filename as a link + size in KB + close icon.
 - **Disabled / viewed mode**: drop zone hidden; for image type, only first `maxOfImage` thumbnails shown; if more, an overlay `+N` count appears on the last to open the gallery popup.
-- **Required error**: red text `Vui lòng tải lên t�!p/ảnh` below the row when touched and empty.
-- **Auto description** (when `[description]` not set): renders `Đ�9nh dạng: png, jpg và t�i �a: 5MB` style based on `extensions` + `maxSize`.
+- **Required error**: red text `Vui lòng tải lên tệp/ảnh` below the row when touched and empty.
+- **Auto description** (when `[description]` not set): renders `Định dạng: png, jpg và tối đa: 5MB` style based on `extensions` + `maxSize`.
 
 ## E2E test attributes
 
@@ -127,8 +127,8 @@ Rendered on the existing input anchor (drop zone) that already carries `data-aut
 | `data-count` | numeric string | `previewFiles().length` |
 
 > **Not exposed:**
-> - `data-value` � File objects don't serialize safely. Inspect `data-count` and `data-empty` for collection state.
-> - `data-loading` � the component does not currently expose a loading signal. May be added later if needed.
+> - `data-value` — File objects don't serialize safely. Inspect `data-count` and `data-empty` for collection state.
+> - `data-loading` — the component does not currently expose a loading signal. May be added later if needed.
 
 Selector example:
 
@@ -146,7 +146,7 @@ Not built-in. Wrap host with `*sdPermission` if upload itself is permission-gate
 ```html
 <form [formGroup]="form">
   <sd-upload-file
-    label="Ảnh �ại di�!n"
+    label="Ảnh đại diện"
     [form]="form"
     name="avatar"
     type="image"
@@ -163,7 +163,7 @@ Not built-in. Wrap host with `*sdPermission` if upload itself is permission-gate
 ### 2. Multiple document upload with custom upload handler
 ```html
 <sd-upload-file #uploadRef
-  label="T�!p �ính kèm"
+  label="Tệp đính kèm"
   type="document"
   [max]="10"
   [extensions]="['pdf','doc','docx','xls','xlsx']"
@@ -186,7 +186,7 @@ onSubmit = async () => {
 ### 3. Read-only display of already-uploaded files (e.g. on detail page)
 ```html
 <sd-upload-file
-  label="Hình ảnh hi�!n trường"
+  label="Hình ảnh hiện trường"
   type="image"
   [disabled]="true"
   [maxOfImage]="3"
@@ -197,7 +197,7 @@ onSubmit = async () => {
 ### 4. Centered image gallery, larger thumbnails
 ```html
 <sd-upload-file
-  label="B�" sưu tập"
+  label="Bộ sưu tập"
   type="image"
   align="center"
   previewWidth="120px"
@@ -208,17 +208,17 @@ onSubmit = async () => {
 ```
 
 ## Anti-patterns
-- �R Calling backend save without `await uploadRef.upload()` first � pending `File` objects never get uploaded; the saved record will reference temporary hashed keys that don't exist on the server.
-- �R Forgetting to provide `SD_UPLOAD_FILE_CONFIGURATION` AND not binding `[upload]` � the component will display an `SdNotifyService.error` at upload time but compile fine. Always set up at least one path.
-- �R Using `[max]="1"` for an avatar but forgetting to use `type="image"` � drop zone will look generic and previews will be tiny.
-- �R Using duplicate `key` values across multiple injected configs � throws an `Error` on component init.
-- �R Passing a Reactive `FormGroup` AND a template-driven `NgForm` � pick one. The transform handles either, but mixing causes confusion.
-- �R Setting `[required]="true"` without binding `[form]` � validation errors won't surface in your parent form.
-- �R Mutating `model` array in place � set a new array (`this.attachments = [...newKeys]`) so the `effect` picks up the change.
+- ❌ Calling backend save without `await uploadRef.upload()` first — pending `File` objects never get uploaded; the saved record will reference temporary hashed keys that don't exist on the server.
+- ❌ Forgetting to provide `SD_UPLOAD_FILE_CONFIGURATION` AND not binding `[upload]` — the component will display an `SdNotifyService.error` at upload time but compile fine. Always set up at least one path.
+- ❌ Using `[max]="1"` for an avatar but forgetting to use `type="image"` — drop zone will look generic and previews will be tiny.
+- ❌ Using duplicate `key` values across multiple injected configs — throws an `Error` on component init.
+- ❌ Passing a Reactive `FormGroup` AND a template-driven `NgForm` — pick one. The transform handles either, but mixing causes confusion.
+- ❌ Setting `[required]="true"` without binding `[form]` — validation errors won't surface in your parent form.
+- ❌ Mutating `model` array in place — set a new array (`this.attachments = [...newKeys]`) so the `effect` picks up the change.
 
 ## Sub-component: `PreviewComponent` (internal)
 
-Used internally via `<preview>` selector � rendered inside `sd-upload-file`'s template.
+Used internally via `<preview>` selector — rendered inside `sd-upload-file`'s template.
 Typically not used standalone, but accessible via `viewChild(PreviewComponent)` if needed.
 
 | Member | Type | Notes |
@@ -248,10 +248,9 @@ interface SdUploadFileDetail {
 ```
 
 ## Related
-- `<sd-input>`, `<sd-select>`, etc. � peer form-field components that share the `<sd-label>` styling
-- `SD_UPLOAD_FILE_CONFIGURATION` injection token � central upload/details/download wiring
-- `SdUploadFileDetail` � shape returned by `details()` (fields: `idOrKey`, `cdn`, `name`, `size`, `extension`)
-- `UploadFileService` � internal `providedIn: 'root'` service that acts as a temporary in-memory cache for `File` objects between selection and upload; managed automatically by the component
-- `<sd-modal>` � used internally by the preview popup
-- `*sdPermission` � wrap to gate by permission
-
+- `<sd-input>`, `<sd-select>`, etc. — peer form-field components that share the `<sd-label>` styling
+- `SD_UPLOAD_FILE_CONFIGURATION` injection token — central upload/details/download wiring
+- `SdUploadFileDetail` — shape returned by `details()` (fields: `idOrKey`, `cdn`, `name`, `size`, `extension`)
+- `UploadFileService` — internal `providedIn: 'root'` service that acts as a temporary in-memory cache for `File` objects between selection and upload; managed automatically by the component
+- `<sd-modal>` — used internally by the preview popup
+- `*sdPermission` — wrap to gate by permission

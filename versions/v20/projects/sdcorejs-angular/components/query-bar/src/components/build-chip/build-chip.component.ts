@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -27,16 +27,16 @@ type Density = 'compact' | 'comfortable';
 /**
  * Visual block for the in-progress build chip (inline mode token builder).
  *
- * why: tÃ¡ch khá»i `<sd-query-bar>` Ä‘á»ƒ parent chá»‰ giá»¯ state (`building()` signal +
- * step transitions) â€” táº¥t cáº£ render logic cá»§a 2 step (operator picker / value
- * picker) cá»™ng vá»›i 7 nhÃ¡nh field type sá»‘ng táº¡i Ä‘Ã¢y.
+ * why: tách khỏi `<sd-query-bar>` để parent chỉ giữ state (`building()` signal +
+ * step transitions) — tất cả render logic của 2 step (operator picker / value
+ * picker) cộng với 7 nhánh field type sống tại đây.
  *
  * The chip has two visually distinct branches:
- *  - **Seamless** (`string` / `number`) â€” the entire pill IS an `<sd-query-inline-value-chip>`
+ *  - **Seamless** (`string` / `number`) — the entire pill IS an `<sd-query-inline-value-chip>`
  *    (its own border, autofocused input). The host's `.c-token-building` shell is skipped.
- *  - **Token** (`values` / `lazy-values` / `date` / `datetime` / `boolean` / other) â€”
+ *  - **Token** (`values` / `lazy-values` / `date` / `datetime` / `boolean` / other) —
  *    `.c-token.c-token-building` dashed pill with field label + operator (menu in
- *    operator step, disabled badge in value step) + the per-type picker + Ã— cancel.
+ *    operator step, disabled badge in value step) + the per-type picker + × cancel.
  */
 @Component({
   selector: 'sd-query-build-chip',
@@ -58,16 +58,16 @@ type Density = 'compact' | 'comfortable';
   ],
 })
 export class SdQueryBuildChip {
-  /** Current build state â€” drives every visual branch. */
+  /** Current build state — drives every visual branch. */
   readonly building = input.required<BuildingChip>();
 
-  /** Density preset â€” forwarded to the seamless chip + sizes the .c-token row. */
+  /** Density preset — forwarded to the seamless chip + sizes the .c-token row. */
   readonly density = input<Density>('compact');
 
   /** Operator set offered in the operator-step menu (parent's `allowedOperatorsFor(field)`). */
   readonly allowedOperators = input<Operator[]>([]);
 
-  /** Whether the active operator is a multi-select (`IN`/`NOT_IN`) â€” drives sd-select [multiple]. */
+  /** Whether the active operator is a multi-select (`IN`/`NOT_IN`) — drives sd-select [multiple]. */
   readonly multiple = input(false);
 
   /** Show the operator label on the seamless chip's pill (forwarded to inline-value-chip). */
@@ -84,7 +84,7 @@ export class SdQueryBuildChip {
   // Outputs
   // ---------------------------------------------------------------------------
 
-  /** Operator chosen from the operator-step menu â€” parent advances to value step. */
+  /** Operator chosen from the operator-step menu — parent advances to value step. */
   readonly pickOperator = output<Operator>();
 
   /**
@@ -93,37 +93,37 @@ export class SdQueryBuildChip {
    */
   readonly commitValue = output<unknown>();
 
-  /** Ã— button â€” abandon the build (parent clears `building` signal). */
+  /** × button — abandon the build (parent clears `building` signal). */
   readonly cancel = output<void>();
 
   /**
-   * Commit from the seamless (string / number) branch. Parent decides empty â†’ cancel
+   * Commit from the seamless (string / number) branch. Parent decides empty → cancel
    * vs push complete (see `onBuildSeamlessCommit`); this just forwards the raw value.
    */
   readonly seamlessCommit = output<unknown>();
 
-  /** Fallback editor (boolean ng-template / other) â€” staged draft on every change. */
+  /** Fallback editor (boolean ng-template / other) — staged draft on every change. */
   readonly draftChange = output<unknown>();
 
-  /** Fallback editor â€” Enter / click commits the staged draft. */
+  /** Fallback editor — Enter / click commits the staged draft. */
   readonly draftCommit = output<void>();
 
   // ---------------------------------------------------------------------------
-  // Internal refs â€” used by parent via public open*() methods
+  // Internal refs — used by parent via public open*() methods
   // ---------------------------------------------------------------------------
 
-  /** Operator-step menu â€” auto-opened by parent right after `building` enters operator step. */
+  /** Operator-step menu — auto-opened by parent right after `building` enters operator step. */
   private readonly opMenu = viewChild<SdOperator>('buildOperator');
 
-  /** Value-step picker (the active bare control) â€” auto-opened by parent at value step. */
+  /** Value-step picker (the active bare control) — auto-opened by parent at value step. */
   private readonly picker = viewChild<SdSelect | SdDate | SdDatetime | SdDateRange>('bPicker');
 
-  /** Open the operator menu â€” parent calls after rendering the operator step. */
+  /** Open the operator menu — parent calls after rendering the operator step. */
   openOperator(): void {
     this.opMenu()?.open();
   }
 
-  /** Open the value-step picker's native panel â€” parent calls after rendering the value step. */
+  /** Open the value-step picker's native panel — parent calls after rendering the value step. */
   openPicker(): void {
     (this.picker() as any)?.open?.();
   }
@@ -140,4 +140,3 @@ export class SdQueryBuildChip {
     return t === 'string' || t === 'number';
   });
 }
-

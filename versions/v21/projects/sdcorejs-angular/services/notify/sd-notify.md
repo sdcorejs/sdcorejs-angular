@@ -1,4 +1,4 @@
-﻿# SdNotifyService
+# SdNotifyService
 
 **Type**: Service (Angular `@Injectable`)
 **Class**: `SdNotifyService`
@@ -10,13 +10,13 @@ Toast notification service that auto-mounts a `SdToastContainerComponent` on `bo
 
 ## When to use
 - Standard user feedback after an action: success ("Saved"), info ("Email sent"), warning, error.
-- High-frequency error/warning sources (validation, network failures) â€” `error()` and `warning()` debounce by 500 ms and group repeats into a single toast with a count, preventing toast spam.
-- When you want a single visual surface for messages across the entire app â€” the container is created once at service construction.
+- High-frequency error/warning sources (validation, network failures) — `error()` and `warning()` debounce by 500 ms and group repeats into a single toast with a count, preventing toast spam.
+- When you want a single visual surface for messages across the entire app — the container is created once at service construction.
 
 ## When NOT to use
-- For modal/blocking confirmations â€” use `SdConfirmService` instead.
-- For inline form validation messages â€” bind directly to the form state.
-- For long-running progress â€” toasts auto-dismiss; render a dedicated progress UI.
+- For modal/blocking confirmations — use `SdConfirmService` instead.
+- For inline form validation messages — bind directly to the form state.
+- For long-running progress — toasts auto-dismiss; render a dedicated progress UI.
 
 ## Public API
 
@@ -96,7 +96,7 @@ export interface ToastData {
 ```
 
 ## Behavior notes
-- **Auto-mount**: the constructor creates `SdToastContainerComponent` once and appends it to `document.body`. Importing the service into any consumer triggers this â€” the container is global.
+- **Auto-mount**: the constructor creates `SdToastContainerComponent` once and appends it to `document.body`. Importing the service into any consumer triggers this — the container is global.
 - **Max visible**: 5 toasts (`#MAX_TOASTS`). Newer toasts push older ones out (slice(0, 5) after unshift).
 - **Order**: newest first (prepended to the array).
 - **Debounce window**: 500 ms (`#DEBOUNCE_TIME`) for `warning` / `error`. Each new call resets the timer.
@@ -105,7 +105,7 @@ export interface ToastData {
 - **Title behavior**:
   - Immediate (`success`/`info`): uses `option.title` verbatim if provided.
   - Buffered (`warning`/`error`): default title is `'Warning'` / `'Error'`; if N > 1, suffix `" (N)"` is appended.
-- **Position / styling**: rendered by `SdToastContainerComponent` â€” not configurable through the service API. Override the component's CSS to change position/animation.
+- **Position / styling**: rendered by `SdToastContainerComponent` — not configurable through the service API. Override the component's CSS to change position/animation.
 - **`actionLabel` + `onAction`**: passed through to the toast; the container is responsible for calling `onAction()` on click.
 
 ## Examples
@@ -184,7 +184,7 @@ describe('SdNotifyService', () => {
 ```
 
 Key points:
-- **Do NOT provide a fake `DOCUMENT`** â€” Angular's renderer reads `DOCUMENT` for `createElement`. Replacing it entirely breaks the DI hierarchy.
+- **Do NOT provide a fake `DOCUMENT`** — Angular's renderer reads `DOCUMENT` for `createElement`. Replacing it entirely breaks the DI hierarchy.
 - **`fakeAsync` + `tick(500)`** is required to test buffered (`warning` / `error`) behavior.
 - `service.clearAll()` in `afterEach` cancels any pending `setTimeout` so debounce timers do not bleed into subsequent tests.
 
@@ -205,14 +205,13 @@ Covers (25 specs total):
 - Signal reactivity
 
 ## Anti-patterns
-- Do NOT call `error()` in tight render loops â€” even with debouncing, the buffer grows until flush. Filter at the source.
-- Do NOT pass an array to `success()` / `info()` â€” only `warning` and `error` accept `string | string[]`.
-- Do NOT mount `SdToastContainerComponent` yourself â€” the service already does. A second container will produce duplicate toasts.
-- Do NOT depend on toast id format (`Utilities.generateUuid()`) â€” treat it as opaque and only use `remove(id)`.
-- Do NOT use this for blocking confirmations (`Are you sure?`) â€” toasts dismiss themselves; use `SdConfirmService`.
+- Do NOT call `error()` in tight render loops — even with debouncing, the buffer grows until flush. Filter at the source.
+- Do NOT pass an array to `success()` / `info()` — only `warning` and `error` accept `string | string[]`.
+- Do NOT mount `SdToastContainerComponent` yourself — the service already does. A second container will produce duplicate toasts.
+- Do NOT depend on toast id format (`Utilities.generateUuid()`) — treat it as opaque and only use `remove(id)`.
+- Do NOT use this for blocking confirmations (`Are you sure?`) — toasts dismiss themselves; use `SdConfirmService`.
 
 ## Related
-- `SdConfirmService` (`@sdcorejs/angular/services/confirm`) â€” modal alternative for blocking interactions.
-- `SdToastContainerComponent` (`@sdcorejs/angular/services/notify/components`) â€” the rendered host. Customize via global CSS.
-- `Utilities.generateUuid` (`@sdcorejs/utils/fns`) â€” used internally for toast ids.
-
+- `SdConfirmService` (`@sdcorejs/angular/services/confirm`) — modal alternative for blocking interactions.
+- `SdToastContainerComponent` (`@sdcorejs/angular/services/notify/components`) — the rendered host. Customize via global CSS.
+- `Utilities.generateUuid` (`@sdcorejs/utils/fns`) — used internally for toast ids.

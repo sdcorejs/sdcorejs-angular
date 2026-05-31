@@ -1,4 +1,4 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { SdLicenseService } from './license.service';
 import {
   ISdCoreConfiguration,
@@ -59,7 +59,7 @@ function withHostname(fakeHostname: string, fn: () => void) {
 // ---------------------------------------------------------------------------
 describe('SdLicenseService', () => {
   // -------------------------------------------------------------------------
-  // GROUP 1: localhost environment (always runs â€” Karma is on localhost)
+  // GROUP 1: localhost environment (always runs — Karma is on localhost)
   // -------------------------------------------------------------------------
   describe('localhost bypass (Karma env)', () => {
     it('instantiates without throwing on localhost', () => {
@@ -80,7 +80,7 @@ describe('SdLicenseService', () => {
       expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
     });
 
-    it('enforceLicense() is a no-op when valid (localhost â†’ isValid=true)', () => {
+    it('enforceLicense() is a no-op when valid (localhost → isValid=true)', () => {
       TestBed.configureTestingModule({});
       const service = TestBed.inject(SdLicenseService);
       // Calling multiple times must not throw
@@ -92,12 +92,12 @@ describe('SdLicenseService', () => {
   });
 
   // -------------------------------------------------------------------------
-  // GROUP 2: non-localhost paths â€” uses Object.defineProperty to fake hostname
+  // GROUP 2: non-localhost paths — uses Object.defineProperty to fake hostname
   // -------------------------------------------------------------------------
   describe('non-localhost paths', () => {
 
     // -----------------------------------------------------------------------
-    // 2a. No configuration â†’ throw on non-localhost
+    // 2a. No configuration → throw on non-localhost
     // -----------------------------------------------------------------------
     describe('no SD_CORE_CONFIGURATION on non-localhost host', () => {
       withHostname('app.example.com', () => {
@@ -115,7 +115,7 @@ describe('SdLicenseService', () => {
     });
 
     // -----------------------------------------------------------------------
-    // 2b. Exact hostname match â†’ valid
+    // 2b. Exact hostname match → valid
     // -----------------------------------------------------------------------
     describe('exact hostname match', () => {
       withHostname('app.example.com', () => {
@@ -138,9 +138,9 @@ describe('SdLicenseService', () => {
     });
 
     // -----------------------------------------------------------------------
-    // 2c. Array of keys â€” one matches exactly
+    // 2c. Array of keys — one matches exactly
     // -----------------------------------------------------------------------
-    describe('array of license keys â€” one matches exactly', () => {
+    describe('array of license keys — one matches exactly', () => {
       withHostname('store.uat.nexa.mobi', () => {
         it('passes when licenseKey is an array and one entry matches exactly', () => {
           if (window.location.hostname !== 'store.uat.nexa.mobi') {
@@ -209,7 +209,7 @@ describe('SdLicenseService', () => {
     });
 
     // -----------------------------------------------------------------------
-    // 2f. Non-matching hostname â†’ throws
+    // 2f. Non-matching hostname → throws
     // -----------------------------------------------------------------------
     describe('non-matching hostname', () => {
       withHostname('evil.attacker.com', () => {
@@ -264,7 +264,7 @@ describe('SdLicenseService', () => {
     });
 
     // -----------------------------------------------------------------------
-    // 2h. licenseKey is an empty array (length 0) â†’ throw
+    // 2h. licenseKey is an empty array (length 0) → throw
     // -----------------------------------------------------------------------
     describe('licenseKey is an empty array', () => {
       withHostname('some.domain.com', () => {
@@ -286,7 +286,7 @@ describe('SdLicenseService', () => {
     });
 
     // -----------------------------------------------------------------------
-    // 2i. hostname with only 2 parts (e.g. example.com) â€” while loop never runs
+    // 2i. hostname with only 2 parts (e.g. example.com) — while loop never runs
     // -----------------------------------------------------------------------
     describe('hostname with only 2 parts (wildcard loop skipped)', () => {
       withHostname('example.com', () => {
@@ -308,4 +308,3 @@ describe('SdLicenseService', () => {
     });
   });
 });
-

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { CdkDragDrop, CdkDragMove, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -108,13 +108,13 @@ interface DragDropRowItem {
     ConfigureValidationComponent, TranslatePipe],
 })
 export class SdFormBuilder extends SdBaseSecureComponent {
-  // â”€â”€ viewChild signals (Angular 17+) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── viewChild signals (Angular 17+) ────────────────────────────────────
   readonly popupViewJSON = viewChild<SdModal>('popupViewJSON');
   readonly popupConfigureVariables = viewChild<SdModal>('popupConfigureVariables');
   readonly configureValidation = viewChild(ConfigureValidationComponent);
   readonly formRender = viewChild(SdFormRender);
 
-  // â”€â”€ injected services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── injected services ──────────────────────────────────────────────────
   readonly #ref = inject(ChangeDetectorRef);
   readonly #notifyService = inject(SdNotifyService);
   readonly #confirmService = inject(SdConfirmService);
@@ -123,15 +123,15 @@ export class SdFormBuilder extends SdBaseSecureComponent {
 
   form = new FormGroup({});
 
-  // â”€â”€ signal inputs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  /** Input chÃ­nh: schema form. Má»—i láº§n ref thay Ä‘á»•i â†’ effect sáº½ clone vá» local arrays. */
+  // ── signal inputs ──────────────────────────────────────────────────────
+  /** Input chính: schema form. Mỗi lần ref thay đổi → effect sẽ clone về local arrays. */
   readonly formGeneric = input<SdFormGeneric | undefined>(undefined);
 
-  // â”€â”€ component registry (immutable) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── component registry (immutable) ─────────────────────────────────────
   readonly formBuilderComponents = FormBuilderComponents;
   readonly componentIcons = COMPONENT_ICONS;
 
-  // â”€â”€ palette state (signal + computed group buckets) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── palette state (signal + computed group buckets) ────────────────────
   readonly paletteSearch = signal('');
   readonly paletteGroups = computed<{ key: FormBuilderComponentGroup; label: string; items: FormBuilderComponent[] }[]>(() => {
     const term = this.paletteSearch().trim().toLowerCase();
@@ -149,22 +149,22 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     ].filter(g => g.items.length > 0);
   });
 
-  // â”€â”€ local mutable state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Components/variables/validations giá»¯ lÃ  plain arrays vÃ¬ code hiá»‡n táº¡i
-  // mutate in-place ráº¥t nhiá»u chá»— (push, splice, forEach â€¦). Äá»•i sang signal
-  // tá»‘n rá»§i ro vá»›i ráº¥t Ã­t lá»£i Ã­ch â€” chá»‰ markForCheck() khi cáº§n.
+  // ── local mutable state ────────────────────────────────────────────────
+  // Components/variables/validations giữ là plain arrays vì code hiện tại
+  // mutate in-place rất nhiều chỗ (push, splice, forEach …). Đổi sang signal
+  // tốn rủi ro với rất ít lợi ích — chỉ markForCheck() khi cần.
   components: Required<SdFormGeneric>['components'] = [];
   variables: Required<SdFormGeneric>['variables'] = [];
   validations: Required<SdFormGeneric>['validations'] = [];
 
-  /** Cloned variables â€” dÃ¹ng cho modal "Configure variables" (huá»· thÃ¬ discard, ok thÃ¬ gÃ¡n ngÆ°á»£c). */
+  /** Cloned variables — dùng cho modal "Configure variables" (huỷ thì discard, ok thì gán ngược). */
   clonedVariables: SdFormGenericVariable[] = [];
 
   readonly selectedComponent = signal<SdFormGenericComponent | SdFormGenericGroup | undefined>(undefined);
   readonly isPreview = signal(false);
 
-  /** Signal toÃ n cá»¥c: TRUE khi Báº¤T Ká»² cdkDrag nÃ o Ä‘ang active (palette, canvas, group, resize).
-   *  Trigger class `.fb-shell--dragging` Ä‘á»ƒ áº©n hover/actions/resize toÃ n diá»‡n, khÃ´ng phá»¥ thuá»™c :has(). */
+  /** Signal toàn cục: TRUE khi BẤT KỲ cdkDrag nào đang active (palette, canvas, group, resize).
+   *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
   readonly isAnyDragging = signal(false);
 
   expand = true;
@@ -173,7 +173,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   targetItem?: DragDropRowItem = undefined;
   private lastDragPointer?: { x: number; y: number };
 
-  /** Handler chung cho má»i cdkDragStarted â€” set signal global true. */
+  /** Handler chung cho mọi cdkDragStarted — set signal global true. */
   onAnyDragStarted = () => {
     this.isAnyDragging.set(true);
   };
@@ -191,8 +191,8 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
   };
 
-  /** Handler chung cho má»i cdkDragEnded â€” set signal global false (dÃ¹ng setTimeout 0
-   *  Ä‘á»ƒ chá» CDK xá»­ lÃ½ xong drop event trÆ°á»›c khi UI re-enable). */
+  /** Handler chung cho mọi cdkDragEnded — set signal global false (dùng setTimeout 0
+   *  để chờ CDK xử lý xong drop event trước khi UI re-enable). */
   onAnyDragEnded = () => {
     setTimeout(() => {
       this.isAnyDragging.set(false);
@@ -209,9 +209,9 @@ export class SdFormBuilder extends SdBaseSecureComponent {
 
   constructor() {
     super();
-    // Khi input `formGeneric` ref thay Ä‘á»•i: clone components/variables/validations
-    // sang local arrays vÃ  báº¯n subject tÆ°Æ¡ng á»©ng cho stream debounced (syncRows).
-    // untracked() bao bá»c cÃ¡c mutation Ä‘á»ƒ khÃ´ng táº¡o cycle (effect chá»‰ tracks formGeneric()).
+    // Khi input `formGeneric` ref thay đổi: clone components/variables/validations
+    // sang local arrays và bắn subject tương ứng cho stream debounced (syncRows).
+    // untracked() bao bọc các mutation để không tạo cycle (effect chỉ tracks formGeneric()).
     effect(() => {
       const fg = this.formGeneric();
       untracked(() => {
@@ -252,7 +252,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     const id = GenerateId();
     let newComponent: SdFormGenericComponent | SdFormGenericGroup;
     if (item.type === 'group') {
-      // Group lÃ  layout container, khÃ´ng cÃ³ key/validate; cÃ³ nested components[] + properties{icon,color}.
+      // Group là layout container, không có key/validate; có nested components[] + properties{icon,color}.
       newComponent = {
         id,
         type: 'group',
@@ -265,8 +265,8 @@ export class SdFormBuilder extends SdBaseSecureComponent {
         },
       } as SdFormGenericGroup;
     } else if (item.type === 'break') {
-      // Break: 12-col luÃ´n, Ä‘Ã³ng vai trÃ² row separator cá»‘ Ä‘á»‹nh. Extend base nÃªn cÃ³ key
-      // (auto-gen cho stability) nhÆ°ng khÃ´ng hiá»ƒn thá»‹ trong attribute panel.
+      // Break: 12-col luôn, đóng vai trò row separator cố định. Extend base nên có key
+      // (auto-gen cho stability) nhưng không hiển thị trong attribute panel.
       newComponent = {
         id,
         key: GenerateKey(),
@@ -302,8 +302,8 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.#ref.markForCheck();
   };
 
-  // â”€â”€ Helpers cho UI má»›i â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  /** Symbol Material Ä‘á»ƒ render trÃªn canvas item / attribute header. */
+  // ── Helpers cho UI mới ────────────────────────────────────────
+  /** Symbol Material để render trên canvas item / attribute header. */
   symbolFor = (item: SdFormGenericComponent | SdFormGenericGroup): string => {
     if (item.type === 'group') return (item as SdFormGenericGroup).properties?.icon || 'category';
     return this.componentIcons[item.type]?.symbol ?? 'help';
@@ -314,13 +314,13 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     return this.componentIcons[item.type]?.label ?? item.type;
   };
 
-  /** True náº¿u component cÃ³ expression Ä‘iá»u kiá»‡n â€” drives the "conditional" status chip. */
+  /** True nếu component có expression điều kiện — drives the "conditional" status chip. */
   hasConditional = (item: SdFormGenericComponent | SdFormGenericGroup): boolean => {
     const p: any = item.properties || {};
     return !!(p.visibleWhenExpression || p.hiddenWhenExpression || p.disabledWhenExpression || p.requiredWhenExpression);
   };
 
-  /** Map SdColor preset â†’ 2 CSS var names cho header-bg vÃ  header-fg cá»§a group card. */
+  /** Map SdColor preset → 2 CSS var names cho header-bg và header-fg của group card. */
   groupColorVars = (color: string | undefined | null): { bg: string; fg: string } => {
     switch (color) {
       case 'secondary':
@@ -342,7 +342,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.isPreview.set(preview);
   };
 
-  /** Nested drop handler â€” when dragging a palette item or canvas item INTO a group body. */
+  /** Nested drop handler — when dragging a palette item or canvas item INTO a group body. */
   dropInGroup = (event: CdkDragDrop<any[]>, group: SdFormGenericGroup) => {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
@@ -350,10 +350,10 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
     const dropped = event.previousContainer.data[event.previousIndex];
     if (dropped && 'symbol' in dropped) {
-      // Palette â†’ group: táº¡o component má»›i rá»“i push vÃ o group.components.
+      // Palette → group: tạo component mới rồi push vào group.components.
       const item = dropped as FormBuilderComponent;
       if (item.type === 'group') {
-        this.#notifyService.warning('Group lá»“ng group chÆ°a Ä‘Æ°á»£c há»— trá»£.');
+        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
         return;
       }
       const newComponent = this.#createComponentFromPalette(item) as SdFormGenericComponent;
@@ -361,10 +361,10 @@ export class SdFormBuilder extends SdBaseSecureComponent {
       this.selectedComponent.set(newComponent);
       this.#ref.markForCheck();
     } else {
-      // Canvas â†’ group: chuyá»ƒn instance hiá»‡n cÃ³.
+      // Canvas → group: chuyển instance hiện có.
       const component = dropped as SdFormGenericComponent | SdFormGenericGroup;
       if (component.type === 'group') {
-        this.#notifyService.warning('Group lá»“ng group chÆ°a Ä‘Æ°á»£c há»— trá»£.');
+        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
         return;
       }
       transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
@@ -372,9 +372,9 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
   };
 
-  /** Quick-add break sau row chá»‰ Ä‘á»‹nh.
-   *  TÃ­nh component index cuá»‘i cÃ¹ng cá»§a row Ä‘Ã³ trong this.components, splice break vÃ o sau.
-   *  KhÃ´ng qua palette â€” chá»‰ lÃ  utility action bÃ¡m theo row trÃªn canvas.
+  /** Quick-add break sau row chỉ định.
+   *  Tính component index cuối cùng của row đó trong this.components, splice break vào sau.
+   *  Không qua palette — chỉ là utility action bám theo row trên canvas.
    */
   insertBreakAfter = (row: DragDropRowItem) => {
     const lastItemId = row.items[row.items.length - 1]?.id;
@@ -433,7 +433,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       this.#syncRowsToComponents();
-      // xá»­ lÃ½ kÃ©o chÃ©o
+      // xử lý kéo chéo
       if (!event.isPointerOverContainer) {
         const dragItemId = event.item.element.nativeElement.id;
         if (dragItemId) {
@@ -476,7 +476,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
   };
 
-  // Mouseover thÃ¬ pháº£i cÃ³ Focus khÃ´ng thÃ¬ tháº» sáº½ bÃ¡o lá»—i
+  // Mouseover thì phải có Focus không thì thẻ sẽ báo lỗi
   onFocus = (event: FocusEvent) => {
     //console.log(event);
   };
@@ -484,16 +484,16 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   xuLyKeoCheo = (dragItem?: SdFormGenericComponent | SdFormGenericGroup) => {
     if (dragItem) {
       if (this.targetItem) {
-        // kiá»ƒm tra target Ä‘Ã£ full column chÆ°a?
+        // kiểm tra target đã full column chưa?
         const totalColumnInRow = this.targetItem.items.map(t => +t.layout!.columns || 12).reduce((acc, curr) => acc + curr, 0);
         if (totalColumnInRow + +dragItem.layout!.columns <= 12) {
-          // xÃ³a vá»‹ trÃ­ cÅ©
+          // xóa vị trí cũ
           this.dragDropRows.forEach(t => {
             if (t.items.some((k: { id: any }) => k.id === dragItem.id)) {
               t.items = t.items.filter((k: { id: any }) => k.id !== dragItem.id) || [];
             }
           });
-          // thÃªm vÃ o vá»‹ trÃ­ má»›i
+          // thêm vào vị trí mới
           this.targetItem.items.push(dragItem);
           this.#syncRowsToComponents();
         } else {
@@ -509,7 +509,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   };
 
   #recountTabIndex = () => {
-    // TrÃ¡nh dÃ¹ng map vÃ¬ nÃ³ sáº½ sinh ra reference má»›i
+    // Tránh dùng map vì nó sẽ sinh ra reference mới
     this.components.forEach((item, index) => {
       if (item.layout) {
         item.layout!.row = `${index + 1}`;
@@ -528,19 +528,19 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.#syncComponentsToRows();
   };
 
-  // HÃ m xá»­ lÃ½ chuyá»ƒn Ä‘á»•i components -> dragDropRows
-  // Dá»±a vÃ o columns cá»§a component Ä‘á»ƒ quyáº¿t Ä‘á»‹nh dragDropRows cÃ³ bao nhiÃªu items trÃªn row, Ä‘áº£m báº£o columns tá»•ng sá»‘ items <= 12
+  // Hàm xử lý chuyển đổi components -> dragDropRows
+  // Dựa vào columns của component để quyết định dragDropRows có bao nhiêu items trên row, đảm bảo columns tổng số items <= 12
   #syncComponentsToRows = () => {
     this.dragDropRows = [];
     for (const component of this.components) {
-      // láº¥y dÃ²ng cuá»‘i cÃ¹ng cá»§a dragDropList
+      // lấy dòng cuối cùng của dragDropList
       let lastRow: DragDropRowItem = { rowIndex: this.dragDropRows.length, items: [] };
       if (this.dragDropRows.length) {
         lastRow = this.dragDropRows[this.dragDropRows.length - 1];
       } else {
         this.dragDropRows.push(lastRow);
       }
-      // tÃ­nh tá»•ng cá»™t trÃªn 1 dÃ²ng
+      // tính tổng cột trên 1 dòng
       const columns = +component.layout!.columns || 12;
       const totalColumnInRow = lastRow.items.map(t => +t.layout!.columns || 12).reduce((acc: number, curr) => acc + curr, 0);
       if (+totalColumnInRow + columns <= 12) {
@@ -552,10 +552,10 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
   };
 
-  // HÃ m xá»­ lÃ½ chuyá»ƒn Ä‘á»•i dragDropRows -> components
-  // VÃ¬ khi kÃ©o tháº£ sáº½ thay Ä‘á»•i vá»‹ trÃ­, do Ä‘Ã³ cáº§n sáº¯p xáº¿p láº¡i components
+  // Hàm xử lý chuyển đổi dragDropRows -> components
+  // Vì khi kéo thả sẽ thay đổi vị trí, do đó cần sắp xếp lại components
   #syncRowsToComponents = () => {
-    // ráº£i data ma tráº­n droplist => schema.components
+    // rải data ma trận droplist => schema.components
     this.components = this.dragDropRows?.map(e => e.items)?.reduce((current, next) => [...current, ...next], []) || [];
   };
 
@@ -613,7 +613,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     if ('symbol' in dropped) {
       const paletteItem = dropped as FormBuilderComponent;
       if (paletteItem.type === 'group') {
-        this.#notifyService.warning('Group lá»“ng group chÆ°a Ä‘Æ°á»£c há»— trá»£.');
+        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
         return true;
       }
       const created = this.#createComponentFromPalette(paletteItem) as SdFormGenericComponent;
@@ -623,7 +623,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
       if (!('type' in dropped)) return false;
       const component = dropped as SdFormGenericComponent | SdFormGenericGroup;
       if (component.type === 'group') {
-        this.#notifyService.warning('Group lá»“ng group chÆ°a Ä‘Æ°á»£c há»— trá»£.');
+        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
         return true;
       }
       transferArrayItem(event.previousContainer.data, group.components, event.previousIndex, group.components.length);
@@ -670,7 +670,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     const right = rect.right - left;
     const mouse = event.pointerPosition.x - left!;
     const t = Math.round(12 / (100 / ((100 * mouse) / right))) - totalColumnBeforeItem;
-    // Clamp + skip-if-unchanged Ä‘á»ƒ trÃ¡nh re-render má»—i pixel mouse di chuyá»ƒn.
+    // Clamp + skip-if-unchanged để tránh re-render mỗi pixel mouse di chuyển.
     const newCols = t > 12 ? '12' : t < 2 ? '2' : `${t}`;
     if (item.layout!.columns !== newCols) {
       item.layout!.columns = newCols as any;
@@ -692,9 +692,9 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   };
 
   /** Resize a child item INSIDE a group.
-   *  Math: láº¥y bounding cá»§a chÃ­nh item, tÃ­nh (mouse.x - item.left) / colWidth = newCols.
-   *  CÃ¡ch nÃ y Ä‘Ãºng cho cáº£ flex-wrap (item á»Ÿ wrap row 2+) vÃ¬ dÃ¹ng item-relative,
-   *  khÃ´ng pháº£i sum-of-all-preceding-cols (sai khi item wrap xuá»‘ng row má»›i).
+   *  Math: lấy bounding của chính item, tính (mouse.x - item.left) / colWidth = newCols.
+   *  Cách này đúng cho cả flex-wrap (item ở wrap row 2+) vì dùng item-relative,
+   *  không phải sum-of-all-preceding-cols (sai khi item wrap xuống row mới).
    */
   changeSizeChildInGroup = (
     event: CdkDragMove<SdFormGenericComponent>,
@@ -708,14 +708,14 @@ export class SdFormBuilder extends SdBaseSecureComponent {
 
     const bodyRect = bodyEl.getBoundingClientRect();
     const childRect = childEl.getBoundingClientRect();
-    // Width cá»§a 1 col trong group body (loáº¡i trá»« padding náº¿u cÃ³).
+    // Width của 1 col trong group body (loại trừ padding nếu có).
     const bodyStyle = getComputedStyle(bodyEl);
     const padL = parseFloat(bodyStyle.paddingLeft) || 0;
     const padR = parseFloat(bodyStyle.paddingRight) || 0;
     const colWidth = (bodyRect.width - padL - padR) / 12;
     if (colWidth <= 0) return;
 
-    // Má»›i: new right edge = mouse.x; new width = mouse.x - child.left
+    // Mới: new right edge = mouse.x; new width = mouse.x - child.left
     const newWidth = event.pointerPosition.x - childRect.left;
     let newCols = Math.round(newWidth / colWidth);
     if (newCols < 2) newCols = 2;
@@ -725,17 +725,17 @@ export class SdFormBuilder extends SdBaseSecureComponent {
 
   onChangeViewed = (component: SdFormGenericComponent) => {
     component.properties!.viewed = !component.properties!.viewed;
-    // Emit khi cÃ³ sá»± thay Ä‘á»•i Ä‘á»ƒ control vÃ  attribute láº¯ng nghe vÃ  render láº¡i
+    // Emit khi có sự thay đổi để control và attribute lắng nghe và render lại
     this.#builderService.componentEmitters.next(component);
   };
 
   onChangeHidden = (component: SdFormGenericComponent | SdFormGenericGroup) => {
     component.properties!.hidden = !component.properties!.hidden;
-    // Emit khi cÃ³ sá»± thay Ä‘á»•i Ä‘á»ƒ control vÃ  attribute láº¯ng nghe vÃ  render láº¡i
+    // Emit khi có sự thay đổi để control và attribute lắng nghe và render lại
     this.#builderService.componentEmitters.next(component);
   };
 
-  // Duplicate component nhÆ°ng sáº½ clear id vÃ  key Ä‘á»ƒ trÃ¡nh trÃ¹ng láº·p
+  // Duplicate component nhưng sẽ clear id và key để tránh trùng lặp
   onDuplicate = (component: SdFormGenericComponent | SdFormGenericGroup) => {
     const clonedComponent = JSON.parse(JSON.stringify(component));
     clonedComponent.id = GenerateId();
@@ -748,7 +748,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.#ref.markForCheck();
   };
 
-  // Copy form hiá»‡n táº¡i
+  // Copy form hiện tại
   jsonString?: string;
   viewJSON = () => {
     this.jsonString = JSON.stringify({ components: this.components });
@@ -805,13 +805,13 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.#ref.markForCheck();
   };
 
-  // ChÃ¬a ra cho bÃªn ngoÃ i láº¥y components hiá»‡n táº¡i
+  // Chìa ra cho bên ngoài lấy components hiện tại
   getComponents = (): (SdFormGenericComponent | SdFormGenericGroup)[] => {
     this.#syncRowsToComponents();
     return JSON.parse(JSON.stringify(this.components || []));
   };
 
-  // ChÃ¬a ra cho bÃªn ngoÃ i láº¥y variables hiá»‡n táº¡i
+  // Chìa ra cho bên ngoài lấy variables hiện tại
   getVariables = (): SdFormGenericVariable[] => {
     return JSON.parse(JSON.stringify(this.variables || []));
   };
@@ -852,4 +852,3 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
   };
 }
-

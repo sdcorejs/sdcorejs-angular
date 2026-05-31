@@ -1,4 +1,4 @@
-﻿import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, inject } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -25,7 +25,7 @@ export class PreviewComponent {
   previewFiles: PreviewFile[] = [];
   constructor(private cd: ChangeDetectorRef) {}
 
-  // NÃªn sá»­ dá»¥ng urlOrFiles á»Ÿ tham sá»‘ khi open thay vÃ¬ dÃ¹ng @Input Ä‘á»ƒ component sá»­ dá»¥ng sáº½ chá»‰ cáº§n map á»Ÿ hÃ m khi gá»i open thay vÃ¬ pháº£i máº¥t cÃ´ng map má»i lÃºc Ä‘á»ƒ binding vÃ o @Input
+  // Nên sử dụng urlOrFiles ở tham số khi open thay vì dùng @Input để component sử dụng sẽ chỉ cần map ở hàm khi gọi open thay vì phải mất công map mọi lúc để binding vào @Input
   open = async (previewFiles: PreviewFile[] | undefined | null, index?: number) => {
     if (!Array.isArray(previewFiles) || previewFiles.length === 0) {
       return;
@@ -66,4 +66,3 @@ export class PreviewComponent {
     this.cd.markForCheck();
   };
 }
-

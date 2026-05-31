@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 
@@ -110,4 +110,3 @@ this.tab.beforeClose = async () => {
   return await this.confirm.ask('Bạn có thay đổi chưa lưu. Đóng tab?');
 };`;
 }
-

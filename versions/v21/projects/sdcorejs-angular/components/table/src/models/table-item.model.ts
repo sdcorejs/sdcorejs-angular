@@ -1,4 +1,4 @@
-﻿import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 // import hash from 'object-hash';
@@ -20,12 +20,12 @@ export interface SdTableMetaTree<T = any> {
   isExpanded: boolean;
   isExpanding?: boolean;
   parentId?: string;
-  /** Cached formatted child SdTableItem[] â€” populated on first expand/format */
+  /** Cached formatted child SdTableItem[] — populated on first expand/format */
   childItems?: SdTableItem<T>[];
   /**
-   * Hierarchical index path tá»« root tá»›i row hiá»‡n táº¡i â€” sibling-index (1-based) per level.
-   * Vd root thá»© nháº¥t = [1], child thá»© 2 cá»§a root Ä‘Ã³ = [1, 2], grandchild thá»© 1 = [1, 2, 1].
-   * Template STT join('.') â†’ "1", "1.2", "1.2.1". Populate trong `flattenTree`.
+   * Hierarchical index path từ root tới row hiện tại — sibling-index (1-based) per level.
+   * Vd root thứ nhất = [1], child thứ 2 của root đó = [1, 2], grandchild thứ 1 = [1, 2, 1].
+   * Template STT join('.') → "1", "1.2", "1.2.1". Populate trong `flattenTree`.
    */
   indexPath?: number[];
 }
@@ -45,15 +45,15 @@ export interface SdTableDisplay {
 }
 
 export interface SdTableMetaGroup<T = any> {
-  /** Children items thuá»™c group nÃ y (chá»‰ set trÃªn group header row). */
+  /** Children items thuộc group này (chỉ set trên group header row). */
   items?: SdTableItem<T>[];
-  /** true = row nÃ y lÃ  synthetic group header (sinh bá»Ÿi SdGroupPipe). */
+  /** true = row này là synthetic group header (sinh bởi SdGroupPipe). */
   isGroupHeader?: boolean;
-  /** Hash key cá»§a group (= Utilities.hash(values)). */
+  /** Hash key của group (= Utilities.hash(values)). */
   key?: string;
   /** Resolved group-field values (vd `{ customerId: 1, customerName: 'A' }`). */
   values?: Record<string, any>;
-  /** Tráº¡ng thÃ¡i expand. Chá»‰ Ã½ nghÄ©a khi `option.group.collapsible = true`. */
+  /** Trạng thái expand. Chỉ ý nghĩa khi `option.group.collapsible = true`. */
   isExpanded?: boolean;
 }
 
@@ -85,4 +85,3 @@ export const MapToSdTableItem = <T = any>(item: T): SdTableItem<T> => ({
     tree: { level: 0, hasChildren: false, isExpanded: false, isExpanding: false },
   },
 });
-

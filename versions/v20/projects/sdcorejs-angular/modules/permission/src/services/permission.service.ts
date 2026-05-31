@@ -1,4 +1,4 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SdCache, SdCacheService } from '@sdcorejs/angular/services/cache';
 import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
@@ -164,4 +164,3 @@ export class SdPermissionService {
     }
   };
 }
-

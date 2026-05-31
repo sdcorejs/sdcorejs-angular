@@ -1,4 +1,4 @@
-﻿import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { ColumnFilterComponent } from './column-filter.component';
@@ -53,7 +53,7 @@ describe('ColumnFilterComponent', () => {
       expect(spy).toHaveBeenCalledTimes(1);
     });
 
-    it('does NOT emit filterChange (blur khÃ´ng trigger reload)', () => {
+    it('does NOT emit filterChange (blur không trigger reload)', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const spy = jasmine.createSpy('filterChange');
       component.filterChange.subscribe(spy);
@@ -65,7 +65,7 @@ describe('ColumnFilterComponent', () => {
   });
 
   describe('template binding', () => {
-    it('binds (keyupEnter) sd-input â†’ onFilterChange', () => {
+    it('binds (keyupEnter) sd-input → onFilterChange', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const filterChangeSpy = jasmine.createSpy('filterChange');
       const filterCommitSpy = jasmine.createSpy('filterCommit');
@@ -81,7 +81,7 @@ describe('ColumnFilterComponent', () => {
       expect(filterCommitSpy).not.toHaveBeenCalled();
     });
 
-    it('binds (sdBlur) sd-input â†’ onFilterCommit (khÃ´ng trigger filterChange)', () => {
+    it('binds (sdBlur) sd-input → onFilterCommit (không trigger filterChange)', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const filterChangeSpy = jasmine.createSpy('filterChange');
       const filterCommitSpy = jasmine.createSpy('filterCommit');
@@ -95,7 +95,7 @@ describe('ColumnFilterComponent', () => {
       expect(filterChangeSpy).not.toHaveBeenCalled();
     });
 
-    it('binds (keyupEnter) sd-input-number â†’ onFilterChange, (sdBlur) â†’ onFilterCommit', () => {
+    it('binds (keyupEnter) sd-input-number → onFilterChange, (sdBlur) → onFilterCommit', () => {
       bootstrap({ field: 'age', type: 'number' } as SdTableColumn, { age: null });
       const filterChangeSpy = jasmine.createSpy('filterChange');
       const filterCommitSpy = jasmine.createSpy('filterCommit');
@@ -127,20 +127,20 @@ describe('ColumnFilterComponent', () => {
       expect(component.autoId()).toBe('tbl-inline-price');
     });
 
-    it('autoId rá»—ng khi base autoId khÃ´ng truyá»n', () => {
+    it('autoId rỗng khi base autoId không truyền', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn);
       expect(component.autoId()).toBe('');
     });
   });
 
   describe('computed templateRef', () => {
-    it('undefined khi column khÃ´ng cÃ³ filter.filterDef', () => {
+    it('undefined khi column không có filter.filterDef', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn);
       expect(component.templateRef()).toBeUndefined();
     });
 
-    it('tráº£ filterDef khi column khai bÃ¡o (khÃ´ng render template Ä‘á»ƒ trÃ¡nh outlet crash)', () => {
-      // Táº¡o fixture khÃ´ng detectChanges Ä‘á»ƒ computed Ä‘á»c input khÃ´ng kÃ©o theo ngTemplateOutlet
+    it('trả filterDef khi column khai báo (không render template để tránh outlet crash)', () => {
+      // Tạo fixture không detectChanges để computed đọc input không kéo theo ngTemplateOutlet
       fixture = TestBed.createComponent(ColumnFilterComponent);
       component = fixture.componentInstance;
       const fakeTpl = {} as any;
@@ -154,12 +154,12 @@ describe('ColumnFilterComponent', () => {
   });
 
   describe('computed operators', () => {
-    it('rá»—ng khi filter.operator.enable = false', () => {
+    it('rỗng khi filter.operator.enable = false', () => {
       bootstrap({ field: 'name', type: 'string', filter: { operator: { enable: false } } } as SdTableColumn);
       expect(component.operators().length).toBe(0);
     });
 
-    it('lá»c theo column.filter.operator.list', () => {
+    it('lọc theo column.filter.operator.list', () => {
       bootstrap({
         field: 'price',
         type: 'number',
@@ -217,30 +217,29 @@ describe('ColumnFilterComponent', () => {
     });
   });
 
-  describe('effect khá»Ÿi táº¡o default cho split filter', () => {
-    it('date + daterange (default) â†’ khá»Ÿi táº¡o { from: null, to: null }', () => {
+  describe('effect khởi tạo default cho split filter', () => {
+    it('date + daterange (default) → khởi tạo { from: null, to: null }', () => {
       const filter: Record<string, any> = {};
       bootstrap({ field: 'createdAt', type: 'date' } as SdTableColumn, filter);
       expect(filter['createdAt']).toEqual({ from: null, to: null });
     });
 
-    it('date + filter.type = "date" â†’ KHÃ”NG khá»Ÿi táº¡o { from, to }', () => {
+    it('date + filter.type = "date" → KHÔNG khởi tạo { from, to }', () => {
       const filter: Record<string, any> = {};
       bootstrap({ field: 'createdAt', type: 'date', filter: { type: 'date' } } as SdTableColumn, filter);
       expect(filter['createdAt']).toBeUndefined();
     });
 
-    it('number + split-number â†’ khá»Ÿi táº¡o { from: null, to: null }', () => {
+    it('number + split-number → khởi tạo { from: null, to: null }', () => {
       const filter: Record<string, any> = {};
       bootstrap({ field: 'price', type: 'number', filter: { type: 'split-number' } } as SdTableColumn, filter);
       expect(filter['price']).toEqual({ from: null, to: null });
     });
 
-    it('number plain â†’ KHÃ”NG khá»Ÿi táº¡o { from, to }', () => {
+    it('number plain → KHÔNG khởi tạo { from, to }', () => {
       const filter: Record<string, any> = {};
       bootstrap({ field: 'price', type: 'number' } as SdTableColumn, filter);
       expect(filter['price']).toBeUndefined();
     });
   });
 });
-

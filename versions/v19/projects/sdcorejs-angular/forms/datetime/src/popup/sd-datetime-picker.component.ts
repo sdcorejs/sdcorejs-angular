@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,10 +15,10 @@ import { isValid as isValidDate } from 'date-fns';
 import { SdTimeSpinner } from './sd-time-spinner.component';
 
 /**
- * Datetime picker popup â€” Calendar (Angular Material) + Time Spinner + Footer.
+ * Datetime picker popup — Calendar (Angular Material) + Time Spinner + Footer.
  *
- * Component nÃ y Ä‘Æ°á»£c render trong CDK Overlay tá»« `sd-datetime`.
- * PhÃ¡t event `confirmed`/`cancelled` khi user thao tÃ¡c trÃªn footer.
+ * Component này được render trong CDK Overlay từ `sd-datetime`.
+ * Phát event `confirmed`/`cancelled` khi user thao tác trên footer.
  */
 @Component({
   selector: 'sd-datetime-picker',
@@ -32,40 +32,40 @@ export class SdDatetimePicker {
   // ==========================================
   // INPUTS
   // ==========================================
-  /** GiÃ¡ trá»‹ khá»Ÿi táº¡o cá»§a picker (native Date, cÃ³ thá»ƒ null). */
+  /** Giá trị khởi tạo của picker (native Date, có thể null). */
   initialValue = input<Date | null>(null);
-  /** Min/max boundary (Date hoáº·c báº¥t ká»³ giÃ¡ trá»‹ nÃ o há»£p lá»‡ cho `new Date(...)`). */
+  /** Min/max boundary (Date hoặc bất kỳ giá trị nào hợp lệ cho `new Date(...)`). */
   minDate = input<Date | string | number | null>(null);
   maxDate = input<Date | string | number | null>(null);
-  /** Hiá»ƒn thá»‹ thÃªm cá»™t giÃ¢y (máº·c Ä‘á»‹nh áº©n â€” chá»‰ HH:MM). */
+  /** Hiển thị thêm cột giây (mặc định ẩn — chỉ HH:MM). */
   showSeconds = input(false, { transform: booleanAttribute });
   /** Disabled state. */
   disabled = input(false, { transform: booleanAttribute });
 
   // ==========================================
-  // OUTPUTS (legacy EventEmitter Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch Overlay subscription)
+  // OUTPUTS (legacy EventEmitter để tương thích Overlay subscription)
   // ==========================================
   @Output() confirmed = new EventEmitter<Date>();
   @Output() cancelled = new EventEmitter<void>();
 
   // ==========================================
-  // STATE â€” signals ná»™i bá»™
+  // STATE — signals nội bộ
   // ==========================================
-  // date-fns lÃ  immutable â€” luÃ´n cáº¥p Date má»›i, khÃ´ng mutate.
+  // date-fns là immutable — luôn cấp Date mới, không mutate.
   selectedDate = signal<Date>(new Date());
   hours = signal<number>(0);
   minutes = signal<number>(0);
   seconds = signal<number>(0);
 
   constructor() {
-    // Khá»Ÿi táº¡o tá»« initialValue khi component Ä‘Æ°á»£c táº¡o.
-    // Effect khÃ´ng cáº§n thiáº¿t vÃ¬ input chá»‰ set má»™t láº§n lÃºc má»Ÿ popup.
+    // Khởi tạo từ initialValue khi component được tạo.
+    // Effect không cần thiết vì input chỉ set một lần lúc mở popup.
     queueMicrotask(() => this.#hydrateFromInput());
   }
 
   #hydrateFromInput() {
     const init = this.initialValue();
-    // Clone báº±ng new Date(getTime()) Ä‘á»ƒ khÃ´ng chia sáº» reference vá»›i caller.
+    // Clone bằng new Date(getTime()) để không chia sẻ reference với caller.
     const d = init instanceof Date && isValidDate(init) ? new Date(init.getTime()) : new Date();
     this.selectedDate.set(d);
     this.hours.set(d.getHours());
@@ -77,10 +77,10 @@ export class SdDatetimePicker {
   // EVENT HANDLERS
   // ==========================================
 
-  /** Khi user chá»n ngÃ y trÃªn MatCalendar. */
+  /** Khi user chọn ngày trên MatCalendar. */
   onDateSelected(date: Date | null) {
     if (!date) return;
-    // Giá»¯ nguyÃªn giá»/phÃºt/giÃ¢y hiá»‡n táº¡i, chá»‰ thay Ä‘á»•i ngÃ y.
+    // Giữ nguyên giờ/phút/giây hiện tại, chỉ thay đổi ngày.
     const next = new Date(date.getTime());
     next.setHours(this.hours(), this.minutes(), this.seconds(), 0);
     this.selectedDate.set(next);
@@ -88,7 +88,7 @@ export class SdDatetimePicker {
 
   onConfirm() {
     if (this.disabled()) return;
-    // Táº¡o Date má»›i tá»« selectedDate + hours/minutes/seconds hiá»‡n táº¡i.
+    // Tạo Date mới từ selectedDate + hours/minutes/seconds hiện tại.
     const base = this.selectedDate();
     const result = new Date(base.getTime());
     result.setHours(
@@ -104,7 +104,7 @@ export class SdDatetimePicker {
     this.cancelled.emit();
   }
 
-  /** Äáº·t nhanh thá»i gian "BÃ¢y giá»". */
+  /** Đặt nhanh thời gian "Bây giờ". */
   onNow() {
     if (this.disabled()) return;
     const now = new Date();
@@ -114,7 +114,7 @@ export class SdDatetimePicker {
     this.seconds.set(now.getSeconds());
   }
 
-  // Min/Max â€” chuyá»ƒn vá» Date cho MatCalendar (date-fns adapter dÃ¹ng native Date).
+  // Min/Max — chuyển về Date cho MatCalendar (date-fns adapter dùng native Date).
   get _minDate(): Date | null {
     const v = this.minDate();
     if (v === null || v === undefined) return null;
@@ -130,4 +130,3 @@ export class SdDatetimePicker {
     return isValidDate(d) ? d : null;
   }
 }
-

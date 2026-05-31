@@ -1,4 +1,4 @@
-﻿# Design Spec â€” `@sdcorejs/angular-material-datetime`
+# Design Spec — `@sdcorejs/angular-material-datetime`
 
 - **Date**: 2026-05-22
 - **Author**: anh.hoang10@onemount.com (Hoang Anh)
@@ -10,11 +10,11 @@
 ## 1. Problem & Goals
 
 ### Problem
-The current `<sd-datetime>` component lives inside `projects/sdcorejs-angular/forms/datetime/` and is tightly coupled to SDCoreJS internals (`SdLabel`, `SdView`, `SdFormControl`, `I18nService`, `DateUtilities`, `SD_FORM_CONFIGURATION`). It cannot be reused outside the `@sdcorejs/angular` ecosystem. Angular Material itself does **not** ship a datetime picker, time-only picker, or date-range picker with time-of-day â€” leaving a real gap for the broader Angular OSS community.
+The current `<sd-datetime>` component lives inside `projects/sdcorejs-angular/forms/datetime/` and is tightly coupled to SDCoreJS internals (`SdLabel`, `SdView`, `SdFormControl`, `I18nService`, `DateUtilities`, `SD_FORM_CONFIGURATION`). It cannot be reused outside the `@sdcorejs/angular` ecosystem. Angular Material itself does **not** ship a datetime picker, time-only picker, or date-range picker with time-of-day — leaving a real gap for the broader Angular OSS community.
 
 ### Goals
-1. Ship an independent Angular library â€” **directive-first, no opinionated wrapper component** â€” that adds datetime, time-only, and date-range-with-time pickers to the Angular Material ecosystem.
-2. Adapter-pluggable: developer picks the underlying date library (`native`, `date-fns`, `moment`) via a provider function â€” same DI pattern as Angular Material's stock adapters.
+1. Ship an independent Angular library — **directive-first, no opinionated wrapper component** — that adds datetime, time-only, and date-range-with-time pickers to the Angular Material ecosystem.
+2. Adapter-pluggable: developer picks the underlying date library (`native`, `date-fns`, `moment`) via a provider function — same DI pattern as Angular Material's stock adapters.
 3. Idiomatic OSS API: standard `ControlValueAccessor`, generic value type `D` matching the adapter, no proprietary form patterns.
 4. Compatibility with Angular **v19, v20, v21+** (signal APIs stable baseline).
 5. Publishable on npm under `@sdcorejs/*` scope with provenance attestation.
@@ -32,20 +32,20 @@ The current `<sd-datetime>` component lives inside `projects/sdcorejs-angular/fo
 
 ## 2. Implementation strategy: clean-room rewrite
 
-This library is a **clean-room rewrite** â€” NOT a fork of any existing OSS datetime picker library. The implementer must not read source code from third-party datetime picker libraries during implementation, to keep the codebase free of any derivative-work obligations.
+This library is a **clean-room rewrite** — NOT a fork of any existing OSS datetime picker library. The implementer must not read source code from third-party datetime picker libraries during implementation, to keep the codebase free of any derivative-work obligations.
 
 ### Permitted references (read freely)
-- Angular Material source code (MIT, intended extension surface) â€” patterns for `MatDatepickerInput`, `MatCalendar`, `MatDateRangeInput`, value-accessor wiring
+- Angular Material source code (MIT, intended extension surface) — patterns for `MatDatepickerInput`, `MatCalendar`, `MatDateRangeInput`, value-accessor wiring
 - The existing `<sd-datetime>` source in `projects/sdcorejs-angular/forms/datetime/` (owned codebase)
 - Material 3 datepicker public design specs
-- Public API documentation (READMEs, JSDoc on npm) of third-party datetime libs â€” interfaces are not copyrightable
+- Public API documentation (READMEs, JSDoc on npm) of third-party datetime libs — interfaces are not copyrightable
 
 ### Forbidden references
 - Source code (`.ts` / `.scss` / `.html`) of any third-party datetime picker library (do not clone their repo, do not read individual files)
 - Test files of such libraries
 
 ### Leverage approach (reduces effort)
-- Use Angular Material's `<mat-calendar>` directly for calendar UI â€” wrap, do not reimplement
+- Use Angular Material's `<mat-calendar>` directly for calendar UI — wrap, do not reimplement
 - Use Material's `<mat-date-range-input>` and range-selection mode for the range picker shell
 - Build `<sd-time-spinner>` from scratch (Material has no equivalent)
 - Build input directives following the `MatDatepickerInput` pattern (study Material source, write fresh implementation for time-aware parsing)
@@ -57,33 +57,33 @@ This library is a **clean-room rewrite** â€” NOT a fork of any existing OSS
 
 ```
 angular-material-datetime/
-â”œâ”€â”€ angular.json
-â”œâ”€â”€ package.json                       (workspace root, devDeps only)
-â”œâ”€â”€ tsconfig.json
-â”œâ”€â”€ README.md
-â”œâ”€â”€ LICENSE                            (MIT, "Copyright (c) 2026 SDCoreJS contributors")
-â”œâ”€â”€ projects/
-â”‚   â”œâ”€â”€ datetime/                      â†’ npm: @sdcorejs/angular-material-datetime
-â”‚   â”‚   â”œâ”€â”€ ng-package.json
-â”‚   â”‚   â”œâ”€â”€ package.json
-â”‚   â”‚   â””â”€â”€ src/
-â”‚   â”‚       â”œâ”€â”€ lib/
-â”‚   â”‚       â”‚   â”œâ”€â”€ datetime-picker/
-â”‚   â”‚       â”‚   â”œâ”€â”€ timepicker/
-â”‚   â”‚       â”‚   â”œâ”€â”€ date-range-picker/
-â”‚   â”‚       â”‚   â”œâ”€â”€ core/              (SdDateAdapter<D>, SD_DATE_FORMATS, tokens)
-â”‚   â”‚       â”‚   â””â”€â”€ native/            (SdNativeDateAdapter + provideSdNativeDateAdapter)
-â”‚   â”‚       â””â”€â”€ public-api.ts
-â”‚   â”œâ”€â”€ moment-adapter/                â†’ npm: @sdcorejs/angular-material-datetime-moment
-â”‚   â”œâ”€â”€ date-fns-adapter/              â†’ npm: @sdcorejs/angular-material-datetime-date-fns
-â”‚   â””â”€â”€ demo/                          (Angular app for GH Pages â€” not published)
-â”œâ”€â”€ docs/                              (markdown reference; copied into demo build)
-â”œâ”€â”€ compat-tests/
-â”‚   â””â”€â”€ consumer-app/                  (small consumer app for cross-Angular-version matrix)
-â””â”€â”€ .github/workflows/
-    â”œâ”€â”€ ci.yml
-    â”œâ”€â”€ compat-matrix.yml
-    â””â”€â”€ release.yml + deploy-pages.yml
+├── angular.json
+├── package.json                       (workspace root, devDeps only)
+├── tsconfig.json
+├── README.md
+├── LICENSE                            (MIT, "Copyright (c) 2026 SDCoreJS contributors")
+├── projects/
+│   ├── datetime/                      → npm: @sdcorejs/angular-material-datetime
+│   │   ├── ng-package.json
+│   │   ├── package.json
+│   │   └── src/
+│   │       ├── lib/
+│   │       │   ├── datetime-picker/
+│   │       │   ├── timepicker/
+│   │       │   ├── date-range-picker/
+│   │       │   ├── core/              (SdDateAdapter<D>, SD_DATE_FORMATS, tokens)
+│   │       │   └── native/            (SdNativeDateAdapter + provideSdNativeDateAdapter)
+│   │       └── public-api.ts
+│   ├── moment-adapter/                → npm: @sdcorejs/angular-material-datetime-moment
+│   ├── date-fns-adapter/              → npm: @sdcorejs/angular-material-datetime-date-fns
+│   └── demo/                          (Angular app for GH Pages — not published)
+├── docs/                              (markdown reference; copied into demo build)
+├── compat-tests/
+│   └── consumer-app/                  (small consumer app for cross-Angular-version matrix)
+└── .github/workflows/
+    ├── ci.yml
+    ├── compat-matrix.yml
+    └── release.yml + deploy-pages.yml
 ```
 
 ### Convention
@@ -96,7 +96,7 @@ angular-material-datetime/
 - Prefix `Sd*` for classes (`SdDatetimePicker`, `SdTimepicker`, `SdDateRangePicker`)
 - Selector `sd-*` for components (`<sd-datetime-picker>`)
 - Attribute selector `sd*` for directives (`[sdDatetimePicker]`)
-- The `-picker` suffix differentiates from the existing `<sd-datetime>` in `vn-angular` â†’ both libraries can coexist in the same Angular app without selector clash
+- The `-picker` suffix differentiates from the existing `<sd-datetime>` in `vn-angular` → both libraries can coexist in the same Angular app without selector clash
 
 ---
 
@@ -177,7 +177,7 @@ Each adapter package ships exactly: one `SdDateAdapter<D>` implementation + one 
 | Symbol | Kind | Purpose |
 |---|---|---|
 | `<sd-datetime-picker>` | Component | Overlay container (calendar + time spinner) |
-| `[sdDatetimePicker]` | Directive on `<input>` | Bind input â†” picker, parse/format, validate |
+| `[sdDatetimePicker]` | Directive on `<input>` | Bind input ↔ picker, parse/format, validate |
 | `[sdDatetimePickerToggle]` | Directive (button) | Toggle button that opens the picker |
 | `<sd-datetime-picker-actions>` | Component | Slot for action buttons |
 | `[sdDatetimePickerApply]` | Directive (button) | Confirm value, close popup |
@@ -188,7 +188,7 @@ Each adapter package ships exactly: one `SdDateAdapter<D>` implementation + one 
 | Symbol | Kind | Purpose |
 |---|---|---|
 | `<sd-timepicker>` | Component | Standalone HH:mm[:ss] spinner, implements CVA |
-| `[sdTimepickerInput]` | Directive on `<input>` | Bind input â†” timepicker (text-entry) |
+| `[sdTimepickerInput]` | Directive on `<input>` | Bind input ↔ timepicker (text-entry) |
 
 **Date-range with time**
 | Symbol | Kind | Purpose |
@@ -207,17 +207,17 @@ Each adapter package ships exactly: one `SdDateAdapter<D>` implementation + one 
 - `SD_DATETIME_DEFAULT_OPTIONS` token for global defaults (`showSeconds`, `stepMinute`, `color`, `touchUi`)
 
 ### Adapter packages
-- `@sdcorejs/angular-material-datetime-moment` â†’ `SdMomentDateAdapter`, `provideSdMomentDateAdapter(formats?)`
-- `@sdcorejs/angular-material-datetime-date-fns` â†’ `SdDateFnsAdapter`, `provideSdDateFnsAdapter(formats?)`
+- `@sdcorejs/angular-material-datetime-moment` → `SdMomentDateAdapter`, `provideSdMomentDateAdapter(formats?)`
+- `@sdcorejs/angular-material-datetime-date-fns` → `SdDateFnsAdapter`, `provideSdDateFnsAdapter(formats?)`
 
 ### Form integration
 - All input directives implement `ControlValueAccessor`
 - Compatible with `[formControl]`, `formControlName`, `[(ngModel)]`
-- Value type is the adapter's generic `D` â€” `Date` for native, `Moment` for moment-adapter, `Date` for date-fns-adapter
+- Value type is the adapter's generic `D` — `Date` for native, `Moment` for moment-adapter, `Date` for date-fns-adapter
 
 ### Standalone-only
 - All components and directives declared `standalone: true`
-- **No NgModule exports** â€” clean v19+ approach
+- **No NgModule exports** — clean v19+ approach
 
 ### Usage example
 
@@ -259,7 +259,7 @@ export class DemoComponent {
 ## 6. Build & CI matrix
 
 ### Build per package
-- `ng build <project>` â†’ `ng-packagr` â†’ FESM2022 + `.d.ts` + sourcemaps
+- `ng build <project>` → `ng-packagr` → FESM2022 + `.d.ts` + sourcemaps
 - `sideEffects: false` in each `package.json`
 - Peer dependencies (datetime core):
   ```json
@@ -281,7 +281,7 @@ export class DemoComponent {
 
 ### CI workflows
 
-**`ci.yml`** â€” runs on every PR + push to main:
+**`ci.yml`** — runs on every PR + push to main:
 ```yaml
 jobs:
   lint-test-build:
@@ -296,7 +296,7 @@ jobs:
       - upload coverage to Codecov
 ```
 
-**`compat-matrix.yml`** â€” runs nightly + before any release:
+**`compat-matrix.yml`** — runs nightly + before any release:
 ```yaml
 jobs:
   angular-compat:
@@ -317,7 +317,7 @@ jobs:
 
 `compat-tests/consumer-app/` is a small Angular app that uses all three pickers and all three adapters, with ~10 smoke tests. This catches API breakage when Angular bumps major.
 
-**`release.yml`** â€” runs when a git tag `v*` is pushed:
+**`release.yml`** — runs when a git tag `v*` is pushed:
 ```yaml
 permissions:
   id-token: write           # required for npm provenance
@@ -337,11 +337,11 @@ jobs:
       - create GitHub release with auto-generated notes
 ```
 
-Authentication uses the existing `NPM_TOKEN` secret. The `--provenance` flag adds cryptographic build attestation via the workflow's OIDC token â€” independent from auth.
+Authentication uses the existing `NPM_TOKEN` secret. The `--provenance` flag adds cryptographic build attestation via the workflow's OIDC token — independent from auth.
 
 ### Versioning policy
 - **Pre-1.0** (`0.x.y`): MINOR bump for breaking changes, PATCH for fixes
-- **Post-1.0**: strict SemVer; major bump when peer Angular range changes (e.g., drop v19 â†’ major bump)
+- **Post-1.0**: strict SemVer; major bump when peer Angular range changes (e.g., drop v19 → major bump)
 
 ---
 
@@ -352,13 +352,13 @@ One Angular app at `projects/demo` builds a static SPA hosted on GitHub Pages at
 ### Pages
 ```
 projects/demo/src/app/pages/
-â”œâ”€â”€ home/                      (feature overview, install snippet)
-â”œâ”€â”€ getting-started/           (install, pick adapter, basic example)
-â”œâ”€â”€ datetime-picker/           (live demo + props/events tables)
-â”œâ”€â”€ timepicker/                (live demo)
-â”œâ”€â”€ date-range-picker/         (live demo)
-â”œâ”€â”€ adapters/                  (compare native vs moment vs date-fns)
-â””â”€â”€ api-reference/             (auto-generated from TypeDoc)
+├── home/                      (feature overview, install snippet)
+├── getting-started/           (install, pick adapter, basic example)
+├── datetime-picker/           (live demo + props/events tables)
+├── timepicker/                (live demo)
+├── date-range-picker/         (live demo)
+├── adapters/                  (compare native vs moment vs date-fns)
+└── api-reference/             (auto-generated from TypeDoc)
 ```
 
 **Note**: no "migration from third-party lib" page. The library is presented as a standalone project with no external references.
@@ -367,18 +367,18 @@ projects/demo/src/app/pages/
 Plain markdown files:
 ```
 docs/
-â”œâ”€â”€ getting-started.md
-â”œâ”€â”€ datetime-picker.md
-â”œâ”€â”€ timepicker.md
-â”œâ”€â”€ date-range-picker.md
-â”œâ”€â”€ adapters/
-â”‚   â”œâ”€â”€ native.md
-â”‚   â”œâ”€â”€ moment.md
-â”‚   â””â”€â”€ date-fns.md
-â””â”€â”€ api-reference.md           (generated by TypeDoc, not committed)
+├── getting-started.md
+├── datetime-picker.md
+├── timepicker.md
+├── date-range-picker.md
+├── adapters/
+│   ├── native.md
+│   ├── moment.md
+│   └── date-fns.md
+└── api-reference.md           (generated by TypeDoc, not committed)
 ```
 
-Build step copies `docs/*` â†’ `projects/demo/src/assets/docs/` before `ng build demo`. Demo app loads markdown at runtime via HTTP GET and renders with `marked`.
+Build step copies `docs/*` → `projects/demo/src/assets/docs/` before `ng build demo`. Demo app loads markdown at runtime via HTTP GET and renders with `marked`.
 
 ### API reference
 - Generated by `typedoc` from JSDoc comments in source
@@ -417,17 +417,17 @@ Explicitly skipped for v0.1 (no Netlify / Vercel integration).
 
 | Phase | Deliverable | Effort |
 |---|---|---|
-| **M0 â€” Bootstrap** | Repo created, workspace scaffolded, CI skeleton, LICENSE (MIT) in place, GitHub repo settings (branch protection, required CI checks) | 1-2 days |
-| **M1 â€” Core + native + datetime picker** | `SdDateAdapter<D>`, `SdNativeDateAdapter`, `<sd-time-spinner>`, `<sd-datetime-picker>` overlay wrapping `<mat-calendar>`, `[sdDatetimePicker]` input directive with CVA, all action directives (toggle/apply/cancel/clear), unit tests â‰¥80% coverage | 7-10 days |
-| **M2 â€” Timepicker** | `<sd-timepicker>` standalone component (reuses `<sd-time-spinner>` from M1) + `[sdTimepickerInput]` + tests | 2-3 days |
-| **M3 â€” Adapter packages** | `-moment` + `-date-fns` clean adapter implementations + per-adapter unit tests at 95% coverage | 3-4 days |
-| **M4 â€” Date-range picker** | `<sd-date-range-picker>` wrapping `<mat-date-range-input>` + dual time spinners + range validators (`startBeforeEnd`) + tests | 7-10 days |
-| **M5 â€” Demo + docs site** | Demo app pages for all three pickers + markdown docs + TypeDoc API ref + GH Pages deploy workflow | 3-5 days |
-| **M6 â€” Compat matrix + release** | `compat-tests/consumer-app/` + nightly compat matrix CI + `release.yml` wired to `NPM_TOKEN` + tag `v0.1.0` â†’ npm publish all three packages | 2-3 days |
+| **M0 — Bootstrap** | Repo created, workspace scaffolded, CI skeleton, LICENSE (MIT) in place, GitHub repo settings (branch protection, required CI checks) | 1-2 days |
+| **M1 — Core + native + datetime picker** | `SdDateAdapter<D>`, `SdNativeDateAdapter`, `<sd-time-spinner>`, `<sd-datetime-picker>` overlay wrapping `<mat-calendar>`, `[sdDatetimePicker]` input directive with CVA, all action directives (toggle/apply/cancel/clear), unit tests ≥80% coverage | 7-10 days |
+| **M2 — Timepicker** | `<sd-timepicker>` standalone component (reuses `<sd-time-spinner>` from M1) + `[sdTimepickerInput]` + tests | 2-3 days |
+| **M3 — Adapter packages** | `-moment` + `-date-fns` clean adapter implementations + per-adapter unit tests at 95% coverage | 3-4 days |
+| **M4 — Date-range picker** | `<sd-date-range-picker>` wrapping `<mat-date-range-input>` + dual time spinners + range validators (`startBeforeEnd`) + tests | 7-10 days |
+| **M5 — Demo + docs site** | Demo app pages for all three pickers + markdown docs + TypeDoc API ref + GH Pages deploy workflow | 3-5 days |
+| **M6 — Compat matrix + release** | `compat-tests/consumer-app/` + nightly compat matrix CI + `release.yml` wired to `NPM_TOKEN` + tag `v0.1.0` → npm publish all three packages | 2-3 days |
 | **Total** | First public release `v0.1.0` | **~25-35 days** of focused effort |
 
 ### `v0.1.0` README outline
-- Title: "Angular Material Datetime / Timepicker / Date-range â€” adapter-pluggable"
+- Title: "Angular Material Datetime / Timepicker / Date-range — adapter-pluggable"
 - Quick-start: 4-line install + minimal example
 - Adapter matrix table (native / moment / date-fns)
 - Angular compatibility table (v19, v20, v21)
@@ -453,11 +453,11 @@ Explicitly skipped for v0.1 (no Netlify / Vercel integration).
 | `<sd-time-spinner>` UX requires iteration to feel natural | Allocate buffer in M1; ship simple HH:MM spinner first, refine post-feedback |
 | Bundle size of moment adapter is large (~70 KB unminified) due to moment.js itself | Document the cost; moment-adapter is opt-in via separate package install |
 | `ControlValueAccessor` value type generic `D` may be awkward for consumers using `FormBuilder` | Provide TypeScript helper types (`SdFormDate<D>`) and example snippets in docs |
-| Clean-room discipline â€” implementer accidentally reads third-party datetime picker source during research | Document the rule in `CONTRIBUTING.md`; rely on author self-discipline |
+| Clean-room discipline — implementer accidentally reads third-party datetime picker source during research | Document the rule in `CONTRIBUTING.md`; rely on author self-discipline |
 
 ### Open questions (to resolve in writing-plans phase, not blocking this spec)
 - Exact Jest configuration (preset, jsdom environment, snapshot serializers)
-- Whether to use Angular's built-in control-flow (`@if` / `@for`) in component templates (yes by default â€” v19+ baseline)
+- Whether to use Angular's built-in control-flow (`@if` / `@for`) in component templates (yes by default — v19+ baseline)
 - Naming for the time-spinner internal component (`<sd-time-spinner>` vs `<sd-time-input>`)
 - Whether to expose a low-level `[sdDatetimeOverlay]` for power users wanting a custom calendar UI
 
@@ -469,9 +469,8 @@ The library is considered ready for `v0.1.0` release when:
 - [ ] All three pickers (`<sd-datetime-picker>`, `<sd-timepicker>`, `<sd-date-range-picker>`) work with `[formControl]`, `formControlName`, and `[(ngModel)]`
 - [ ] All three adapters (native bundled, moment, date-fns) compile and pass their unit tests
 - [ ] `compat-matrix.yml` passes green for Angular `^19`, `^20`, `^21`
-- [ ] Unit test coverage â‰¥ 80% overall, â‰¥ 95% for adapter classes
+- [ ] Unit test coverage ≥ 80% overall, ≥ 95% for adapter classes
 - [ ] Demo site is deployed and reachable at the public GitHub Pages URL with all picker examples working
 - [ ] All three npm packages publish successfully with `--provenance` attestation visible on npmjs.com
-- [ ] README contains install, quick-start, adapter matrix, compatibility table, and license â€” no mention of any third-party datetime picker library
+- [ ] README contains install, quick-start, adapter matrix, compatibility table, and license — no mention of any third-party datetime picker library
 - [ ] Repository contains no references to third-party datetime picker libraries in source, tests, docs, or commit messages
-

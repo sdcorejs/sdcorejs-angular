@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -61,4 +61,3 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ModalDemoComponent {}
-

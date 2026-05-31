@@ -1,4 +1,4 @@
-﻿{
+{
     "name":  "sdcorejs-angular",
     "version":  "0.0.0",
     "scripts":  {
@@ -71,6 +71,3 @@
                             "typescript-eslint":  "8.26.0"
                         }
 }
-
-
-

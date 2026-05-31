@@ -1,11 +1,11 @@
-﻿import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { SdAuthService } from '@sdcorejs/angular/modules';
 import { SdUnauthorizedInterceptor } from './unauthorized.interceptor';
 
-// â”€â”€â”€ Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('SdUnauthorizedInterceptor', () => {
   let httpClient: HttpClient;
@@ -35,7 +35,7 @@ describe('SdUnauthorizedInterceptor', () => {
 
   afterEach(() => httpMock.verify());
 
-  // â”€â”€â”€ 1. Instantiation / registration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 1. Instantiation / registration ────────────────────────────────────────
 
   it('should be created and registered as an HTTP interceptor', () => {
     const interceptor = TestBed.inject(SdUnauthorizedInterceptor);
@@ -43,7 +43,7 @@ describe('SdUnauthorizedInterceptor', () => {
     expect(interceptor).toBeInstanceOf(SdUnauthorizedInterceptor);
   });
 
-  // â”€â”€â”€ 2. Pass-through on success â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. Pass-through on success ─────────────────────────────────────────────
 
   it('should pass through a successful (200) response without calling signout', () => {
     let result: unknown;
@@ -56,7 +56,7 @@ describe('SdUnauthorizedInterceptor', () => {
     expect(result).toEqual({ data: 'ok' });
   });
 
-  // â”€â”€â”€ 3. 401 â†’ calls signout once â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 3. 401 → calls signout once ────────────────────────────────────────────
 
   it('should call authService.signout() once when a 401 error is returned', () => {
     let caughtError: HttpErrorResponse | undefined;
@@ -85,21 +85,21 @@ describe('SdUnauthorizedInterceptor', () => {
     expect(caughtError!.status).toBe(401);
   });
 
-  // â”€â”€â”€ 4. #unauthorizedHandled guard â€” no duplicate signout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 4. #unauthorizedHandled guard — no duplicate signout ───────────────────
 
   it('should NOT call signout a second time when a second 401 arrives on the same instance', () => {
     // First 401
     httpClient.get('/api/a').subscribe({ error: () => undefined });
     httpMock.expectOne('/api/a').flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
-    // Second 401 â€” same interceptor instance (singleton)
+    // Second 401 — same interceptor instance (singleton)
     httpClient.get('/api/b').subscribe({ error: () => undefined });
     httpMock.expectOne('/api/b').flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
     expect(authServiceSpy.signout).toHaveBeenCalledTimes(1);
   });
 
-  // â”€â”€â”€ 5. Other error statuses pass through without calling signout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 5. Other error statuses pass through without calling signout ────────────
 
   it('should NOT call signout when a 400 error is returned', () => {
     httpClient.get('/api/bad').subscribe({ error: () => undefined });
@@ -135,4 +135,3 @@ describe('SdUnauthorizedInterceptor', () => {
     expect(authServiceSpy.signout).not.toHaveBeenCalled();
   });
 });
-

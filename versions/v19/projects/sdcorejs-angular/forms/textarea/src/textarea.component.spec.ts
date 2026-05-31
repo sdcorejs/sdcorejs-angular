@@ -1,4 +1,4 @@
-﻿import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -97,17 +97,17 @@ describe('SdTextarea', () => {
     });
 
     it('renders placeholder on textarea element', () => {
-      host.placeholder = 'Nháº­p mÃ´ táº£...';
+      host.placeholder = 'Nhập mô tả...';
       fixture.detectChanges();
       const el = queryByCss<HTMLTextAreaElement>(fixture, 'textarea');
-      expect(el.getAttribute('placeholder')).toBe('Nháº­p mÃ´ táº£...');
+      expect(el.getAttribute('placeholder')).toBe('Nhập mô tả...');
     });
 
     it('uses label as fallback placeholder when placeholder is empty', () => {
-      host.label = 'Ghi chÃº';
+      host.label = 'Ghi chú';
       fixture.detectChanges();
       const el = queryByCss<HTMLTextAreaElement>(fixture, 'textarea');
-      expect(el.getAttribute('placeholder')).toBe('Ghi chÃº');
+      expect(el.getAttribute('placeholder')).toBe('Ghi chú');
     });
   });
 
@@ -212,14 +212,14 @@ describe('SdTextarea', () => {
 
   describe('inlineError validator', () => {
     it('sets inlineError on formControl when inlineError is provided', () => {
-      host.inlineError = 'Lá»—i tÃ¹y chá»‰nh';
+      host.inlineError = 'Lỗi tùy chỉnh';
       fixture.detectChanges();
       textarea.formControl.updateValueAndValidity();
       expect(textarea.formControl.hasError('inlineError')).toBe(true);
     });
 
     it('clears inlineError validator when inlineError is removed', () => {
-      host.inlineError = 'Lá»—i tÃ¹y chá»‰nh';
+      host.inlineError = 'Lỗi tùy chỉnh';
       fixture.detectChanges();
       host.inlineError = undefined;
       fixture.detectChanges();
@@ -302,14 +302,14 @@ describe('SdTextarea', () => {
   // -------------------------------------------------------------------------
 
   describe('errorMessage getter', () => {
-    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', () => {
+    it('returns "Vui lòng nhập thông tin" for required error', () => {
       host.model = 'seed';
       host.required = true;
       fixture.detectChanges();
       textarea.formControl.setValue('');
       textarea.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(textarea.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(textarea.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns maxlength message with the configured limit', () => {
@@ -318,7 +318,7 @@ describe('SdTextarea', () => {
       textarea.formControl.setValue('abcdef');
       textarea.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(textarea.errorMessage()).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 5');
+      expect(textarea.errorMessage()).toBe('Số ký tự tối đa: 5');
     });
 
     it('returns undefined when no errors present', () => {
@@ -507,10 +507,10 @@ describe('SdTextarea (host classes)', () => {
     fixture = TestBed.createComponent(SdTextarea);
   });
 
-  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
-    fixture.componentRef.setInput('label', 'MÃ´ táº£');
+    fixture.componentRef.setInput('label', 'Mô tả');
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
   });
@@ -523,4 +523,3 @@ describe('SdTextarea (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
-

@@ -1,4 +1,4 @@
-﻿import { afterNextRender, booleanAttribute, Component, ComponentRef, computed, contentChildren, createComponent, DestroyRef, effect, ElementRef, EnvironmentInjector, inject, Injector, input, numberAttribute, output } from '@angular/core';
+import { afterNextRender, booleanAttribute, Component, ComponentRef, computed, contentChildren, createComponent, DestroyRef, effect, ElementRef, EnvironmentInjector, inject, Injector, input, numberAttribute, output } from '@angular/core';
 import { SdSplitterHandleComponent } from './splitter-handle/splitter-handle.component';
 import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
 import { ResolvedPanelMeta, SplitterLayoutState, SplitterOrientation } from './splitter.models';
@@ -20,9 +20,9 @@ import { SdStorageService } from '@sdcorejs/angular/services/storage';
 })
 export class SdSplitterComponent {
   #host = inject<ElementRef<HTMLElement>>(ElementRef);
-  // EnvironmentInjector: dÃ¹ng cho createComponent (cáº§n injector tree). Lifetime application-scope.
+  // EnvironmentInjector: dùng cho createComponent (cần injector tree). Lifetime application-scope.
   #envInjector = inject(EnvironmentInjector);
-  // Component-scoped Injector: gáº¯n DestroyRef cá»§a component â†’ afterNextRender callback tá»± cancel khi destroy
+  // Component-scoped Injector: gắn DestroyRef của component → afterNextRender callback tự cancel khi destroy
   #injector = inject(Injector);
   #destroyRef = inject(DestroyRef);
   #state = inject(SplitterStateService);
@@ -52,7 +52,7 @@ export class SdSplitterComponent {
   #prevCollapsedMap = new Map<string | number, boolean>();
 
   constructor() {
-    // 1. Reconcile state khi panels signal Ä‘á»•i (panel add/remove qua @if/@for)
+    // 1. Reconcile state khi panels signal đổi (panel add/remove qua @if/@for)
     effect(() => {
       const panels = this.panels();
       const stored = this.#storageHandle()?.get() ?? null;
@@ -60,22 +60,22 @@ export class SdSplitterComponent {
       this.#state.reconcile(metas, stored);
     });
 
-    // Auto-save vÃ o storage khi committedLayout Ä‘á»•i (only commit triggers, khÃ´ng pháº£i live drag)
+    // Auto-save vào storage khi committedLayout đổi (only commit triggers, không phải live drag)
     effect(() => {
       const layout = this.#state.committedLayout();
       const handle = this.#storageHandle();
       if (handle && layout.panels.length > 0) {
-        handle.setSilent(layout);   // setSilent: khÃ´ng emit qua storage subject
+        handle.setSilent(layout);   // setSilent: không emit qua storage subject
       }
     });
 
-    // Emit layoutChange + collapsedChange (diff) khi committedLayout Ä‘á»•i
+    // Emit layoutChange + collapsedChange (diff) khi committedLayout đổi
     effect(() => {
       const layout = this.#state.committedLayout();
       if (layout.panels.length === 0) return;
       this.layoutChange.emit(layout);
 
-      // Detect collapsed change qua diff vá»›i prev map
+      // Detect collapsed change qua diff với prev map
       const currMap = this.#state.collapsedMap();
       for (const [id, isCollapsed] of currMap) {
         const prev = this.#prevCollapsedMap.get(id) ?? false;
@@ -86,15 +86,15 @@ export class SdSplitterComponent {
       this.#prevCollapsedMap = new Map(currMap);
     });
 
-    // 2. Apply flex style lÃªn panel host element dá»±a trÃªn liveSizes + collapsedMap.
-    // Normalize flex-grow cá»§a cÃ¡c panel flex Ä‘á»ƒ sum = 1 â†’ CSS phÃ¢n phá»‘i háº¿t free space.
-    // Náº¿u Ä‘á»ƒ raw weight (vd 0.7), sum < 1 â†’ flexbox Ä‘á»ƒ láº¡i khoáº£ng trá»‘ng bÃªn rÃ¬a.
+    // 2. Apply flex style lên panel host element dựa trên liveSizes + collapsedMap.
+    // Normalize flex-grow của các panel flex để sum = 1 → CSS phân phối hết free space.
+    // Nếu để raw weight (vd 0.7), sum < 1 → flexbox để lại khoảng trống bên rìa.
     effect(() => {
       const sizes = this.#state.liveSizes();
       const collapsed = this.#state.collapsedMap();
       const panels = this.panels();
 
-      // TÃ­nh tá»•ng weight cá»§a panel flex Ä‘ang khÃ´ng collapsed (Ä‘á»ƒ normalize)
+      // Tính tổng weight của panel flex đang không collapsed (để normalize)
       let totalFlexWeight = 0;
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i];
@@ -115,7 +115,7 @@ export class SdSplitterComponent {
         } else if (panel.unit() === 'px') {
           flex = `0 0 ${size}px`;
         } else {
-          // Normalize: grow = weight / totalWeight â†’ sum(grow) = 1
+          // Normalize: grow = weight / totalWeight → sum(grow) = 1
           const grow = totalFlexWeight > 0 ? size / totalFlexWeight : 1;
           flex = `${grow} 1 0`;
         }
@@ -123,7 +123,7 @@ export class SdSplitterComponent {
       }
     });
 
-    // Sync handles sau khi DOM render xong (panels Ä‘Ã£ projected vÃ o host)
+    // Sync handles sau khi DOM render xong (panels đã projected vào host)
     effect(() => {
       const panelCount = this.panels().length;
       const orientation = this.orientation();
@@ -131,11 +131,11 @@ export class SdSplitterComponent {
       const keyboardStep = this.keyboardStep();
       afterNextRender(
         () => this.#syncHandles(panelCount, orientation, disabled, keyboardStep),
-        { injector: this.#injector }   // component-scoped â†’ auto-cancel khi component destroy
+        { injector: this.#injector }   // component-scoped → auto-cancel khi component destroy
       );
     });
 
-    // Destroy handle ComponentRef khi container bá»‹ destroy (trÃ¡nh leak)
+    // Destroy handle ComponentRef khi container bị destroy (tránh leak)
     this.#destroyRef.onDestroy(() => {
       for (const ref of this.#handleRefs) ref.destroy();
       this.#handleRefs = [];
@@ -173,7 +173,7 @@ export class SdSplitterComponent {
       ref.instance.toggleRequest.subscribe(() => this.#onHandleToggle(handleIndex));
       this.#handleRefs.push(ref);
     }
-    // Apply inputs vá»›i disabled tÃ­nh theo per-panel resizable
+    // Apply inputs với disabled tính theo per-panel resizable
     for (let i = 0; i < this.#handleRefs.length; i++) {
       const ref = this.#handleRefs[i];
       const prev = panels[i];
@@ -215,7 +215,7 @@ export class SdSplitterComponent {
   }
 
   #onHandleToggle(handleIndex: number): void {
-    // Double-click / Enter / Space â€” Æ°u tiÃªn collapse panel collapsible á»Ÿ phÃ­a prev, fallback next
+    // Double-click / Enter / Space — ưu tiên collapse panel collapsible ở phía prev, fallback next
     const panels = this.panels();
     const prev = panels[handleIndex];
     const next = panels[handleIndex + 1];
@@ -303,4 +303,3 @@ export class SdSplitterComponent {
     return meta.id;
   }
 }
-

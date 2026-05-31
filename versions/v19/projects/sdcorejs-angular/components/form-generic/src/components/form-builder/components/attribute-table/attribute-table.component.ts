@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Inject, Input, Optional, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -25,8 +25,8 @@ import { AttributeSwitch } from '../attribute-switch/attribute-switch.component'
 import { AttributeParameter } from '../attribute-parameter/attribute-parameter.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
-// Template lÃ  cÃ¡c máº«u do Portal Ä‘á»‹nh nghÄ©a sáºµn (key, label ....) Ä‘á»ƒ ngÆ°á»i dÃ¹ng chá»n nhanh
-// Khi thá»±c hiá»‡n sao chÃ©p 1 template chÃºng ta sáº½ CLONE Ä‘á»ƒ trÃ¡nh áº£nh hÆ°á»Ÿng template gá»‘c
+// Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
+// Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
 @Component({
   selector: 'attribute-table',
   templateUrl: './attribute-table.component.html',
@@ -95,7 +95,7 @@ export class AttributeTable {
     this.modal?.open();
   };
 
-  // Map column type â†’ Material Symbol icon (per design handoff form-builder redesign).
+  // Map column type → Material Symbol icon (per design handoff form-builder redesign).
   readonly columnTypeIcons: Record<string, string> = {
     string: 'text_fields',
     number: '123',
@@ -141,4 +141,3 @@ export class AttributeTable {
     this.modal?.close();
   };
 }
-

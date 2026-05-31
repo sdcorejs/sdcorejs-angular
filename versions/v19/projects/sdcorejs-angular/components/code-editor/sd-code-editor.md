@@ -1,4 +1,4 @@
-﻿# `<sd-code-editor>`
+# `<sd-code-editor>`
 
 **Type**: Component
 **Selector**: `sd-code-editor`
@@ -9,7 +9,7 @@
 **View encapsulation**: `None` (so PrismJS color tokens reach the DOM)
 
 ## One-line purpose
-Lightweight code viewer/editor with PrismJS syntax highlighting, copy-to-clipboard, and a friendly "macOS dots" header â€” supports `html`, `typescript`, `json`, `css`, `scss`. Two-way bindable via the `model` alias.
+Lightweight code viewer/editor with PrismJS syntax highlighting, copy-to-clipboard, and a friendly "macOS dots" header — supports `html`, `typescript`, `json`, `css`, `scss`. Two-way bindable via the `model` alias.
 
 ## When to use
 - Display a code snippet in docs, audit logs, or developer settings
@@ -19,10 +19,10 @@ Lightweight code viewer/editor with PrismJS syntax highlighting, copy-to-clipboa
 - Embed in onboarding flows that show example payloads
 
 ## When NOT to use
-- For full IDE features (LSP, multi-cursor, diffs, large files) â€” use Monaco editor instead
-- For plain-text editing without highlighting â€” use `<sd-input type="textarea">`
-- For Markdown/WYSIWYG content â€” use a dedicated rich-text editor
-- For user-facing form fields where invalid input matters â€” JSON parse errors silently fall back to a string
+- For full IDE features (LSP, multi-cursor, diffs, large files) — use Monaco editor instead
+- For plain-text editing without highlighting — use `<sd-input type="textarea">`
+- For Markdown/WYSIWYG content — use a dedicated rich-text editor
+- For user-facing form fields where invalid input matters — JSON parse errors silently fall back to a string
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -30,30 +30,30 @@ Lightweight code viewer/editor with PrismJS syntax highlighting, copy-to-clipboa
 | `model` | `any` (signal `model<any>` aliased as `model`) | `undefined` | Two-way bound value. Strings pass through verbatim. Non-string objects are auto-formatted: when `language='json'`, `JSON.stringify(value, null, 2)`; otherwise `String(value)`. Circular refs render an inline error comment. |
 | `language` | `'html' \| 'typescript' \| 'json' \| 'css' \| 'scss'` | `'typescript'` | Syntax highlighting language. `html` is mapped to PrismJS `markup` internally. |
 | `maxHeight` | `string` | `'500px'` | Max height of the code area (CSS value); content scrolls vertically beyond this. |
-| `viewed` | `boolean` | `false` | `transform: booleanAttribute` â€” bare attribute = true. When true, hides the textarea and shows read-only highlighted code; header label switches to `(READ ONLY)`. When false, an editable textarea is overlaid on the highlighted code. |
+| `viewed` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. When true, hides the textarea and shows read-only highlighted code; header label switches to `(READ ONLY)`. When false, an editable textarea is overlaid on the highlighted code. |
 
-> **Exported type**: `CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss'` â€” import from `@sdcorejs/angular/components/code-editor` when you need a typed variable.
+> **Exported type**: `CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss'` — import from `@sdcorejs/angular/components/code-editor` when you need a typed variable.
 
 ## Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `modelChange` | (signal model two-way) | Standard `[(model)]="â€¦"` binding. JSON inputs are parsed back to objects on change; if parsing fails, the raw string is emitted instead. The component avoids re-emit loops via an internal `_lastEmittedValue` guard. |
+| `modelChange` | (signal model two-way) | Standard `[(model)]="…"` binding. JSON inputs are parsed back to objects on change; if parsing fails, the raw string is emitted instead. The component avoids re-emit loops via an internal `_lastEmittedValue` guard. |
 
 ## Content projection (slots)
-None â€” content is bound exclusively via `model`.
+None — content is bound exclusively via `model`.
 
 ## Behavior notes
 - **Two-way data flow**:
-  - **Parent â†’ editor**: when the `model` signal changes externally, the textarea text is updated. Non-strings are stringified (JSON.stringify for `language='json'`, `String(...)` otherwise).
-  - **Editor â†’ parent**: on every keystroke, raw text is emitted via `model.set(...)`. For `language='json'`, the component tries `JSON.parse(text)` first and emits the parsed object (so consumers receive a real object); on parse failure, it emits the raw string.
+  - **Parent → editor**: when the `model` signal changes externally, the textarea text is updated. Non-strings are stringified (JSON.stringify for `language='json'`, `String(...)` otherwise).
+  - **Editor → parent**: on every keystroke, raw text is emitted via `model.set(...)`. For `language='json'`, the component tries `JSON.parse(text)` first and emits the parsed object (so consumers receive a real object); on parse failure, it emits the raw string.
 - **Loop guard**: the last emitted value is recorded; if the parent re-sets the same value, the inbound effect skips re-stringifying.
 - **Copy**: header copy button uses Angular CDK `Clipboard`. Success state ("Copied") auto-resets after 2000 ms.
 - **Highlighting**: PrismJS imports `typescript`, `json`, `css`, `scss`, and `markup` (HTML).
 - **Trailing newline**: highlighted output appends `\n` to prevent a textarea cursor from clipping the last line.
 
-## Visual cues (helps agent map screenshots â†’ component)
+## Visual cues (helps agent map screenshots → component)
 - A dark-themed code "card" with a header bar at the top.
-- **Header (left)**: macOS-style traffic-light dots (red/yellow/green) â€” purely decorative.
+- **Header (left)**: macOS-style traffic-light dots (red/yellow/green) — purely decorative.
 - **Header (center)**: language uppercase ("TYPESCRIPT") followed by a faint `(EDITING)` or `(READ ONLY)` label.
 - **Header (right)**: a "Copy" button with a copy icon; flips to a green check + "Copied" for 2 s after a successful copy.
 - **Body**: PrismJS-highlighted `<pre><code>` block; when editable, an invisible-but-aligned `<textarea>` overlays the highlighted view (textarea text is transparent; you read color from the `<pre>` underneath).
@@ -81,7 +81,7 @@ configJson = signal({ apiUrl: 'https://api.example.com', timeout: 5000, retries:
 </sd-code-editor>
 ```
 
-### 3. JSON config editor â€” parent receives a parsed object on each change
+### 3. JSON config editor — parent receives a parsed object on each change
 ```ts
 form = signal<any>({ name: 'demo', enabled: true });
 ```
@@ -106,19 +106,18 @@ form = signal<any>({ name: 'demo', enabled: true });
 ```
 
 ## Anti-patterns
-- Treating it as a full IDE â€” no IntelliSense, no linting, no LSP; switch to Monaco for serious editing
-- Binding very large strings (>~50 KB) â€” PrismJS re-highlights on every change and is synchronous
-- Using `language='json'` and assuming the model is always an object â€” while typing invalid JSON, the model becomes the raw string; check the type before consuming
-- Setting `[language]` dynamically without expecting a re-format â€” switching to/from `json` re-stringifies the model
-- Putting a `disabled`-styled wrapper around it instead of `viewed` â€” `viewed` is the official read-only toggle and updates the header label
+- Treating it as a full IDE — no IntelliSense, no linting, no LSP; switch to Monaco for serious editing
+- Binding very large strings (>~50 KB) — PrismJS re-highlights on every change and is synchronous
+- Using `language='json'` and assuming the model is always an object — while typing invalid JSON, the model becomes the raw string; check the type before consuming
+- Setting `[language]` dynamically without expecting a re-format — switching to/from `json` re-stringifies the model
+- Putting a `disabled`-styled wrapper around it instead of `viewed` — `viewed` is the official read-only toggle and updates the header label
 
 ## Accessibility
-- The `<pre><code>` block has `aria-hidden="true"` â€” it is decorative (PrismJS colors, not raw text); the overlaid `<textarea>` is the accessible input surface when in edit mode.
+- The `<pre><code>` block has `aria-hidden="true"` — it is decorative (PrismJS colors, not raw text); the overlaid `<textarea>` is the accessible input surface when in edit mode.
 - When `viewed=true` only the `<pre>` is rendered; consider adding a visually-hidden `<span>` with the raw text if the snippet must be announced by screen readers.
 - `spellcheck="false"`, `autocomplete="off"`, `autocorrect="off"`, `autocapitalize="off"` are set on the textarea to prevent browser interference with code text.
 
 ## Related
-- `<sd-input type="textarea">` â€” for plain-text multi-line input without highlighting
-- `<sd-button>` â€” for actions next to a read-only snippet (e.g. "Run", "Reset")
-- `<sd-tab>` â€” to switch between multiple code samples (e.g. HTML / TS / SCSS variants)
-
+- `<sd-input type="textarea">` — for plain-text multi-line input without highlighting
+- `<sd-button>` — for actions next to a read-only snippet (e.g. "Run", "Reset")
+- `<sd-tab>` — to switch between multiple code samples (e.g. HTML / TS / SCSS variants)

@@ -1,4 +1,4 @@
-﻿# SdStorageService
+# SdStorageService
 
 **Type**: Service (Angular `@Injectable`)
 **Class**: `SdStorageService`
@@ -10,15 +10,15 @@ Reactive `localStorage` / `sessionStorage` wrapper that gives you a typed `SdSto
 
 ## When to use
 - Persist a typed value (user preference, last route, draft form) and react to its changes via `subject` / `observer`.
-- Share state across components without a full state library â€” multiple consumers calling `create(sameKey)` get the same `BehaviorSubject`.
-- Need session-scoped persistence â€” pass `{ type: 'session' }` to use `sessionStorage`.
-- Need namespacing â€” provide `SD_STORAGE_CONFIG` with a `key` rewriter (e.g. prefix with app version) to invalidate state on releases.
+- Share state across components without a full state library — multiple consumers calling `create(sameKey)` get the same `BehaviorSubject`.
+- Need session-scoped persistence — pass `{ type: 'session' }` to use `sessionStorage`.
+- Need namespacing — provide `SD_STORAGE_CONFIG` with a `key` rewriter (e.g. prefix with app version) to invalidate state on releases.
 
 ## When NOT to use
-- For sensitive data (tokens, PII) â€” `localStorage` is plain text and accessible to any script on the origin.
-- For very large blobs â€” Web Storage caps at ~5 MB and quota errors are logged but swallowed.
-- When you need TTL/expiry â€” there is no built-in expiry. Combine with `SdCacheService` if you need it.
-- For non-JSON-serializable values (functions, `Map`, `Set`, cyclic refs) â€” values are deep-cloned via `JSON.parse(JSON.stringify(...))`.
+- For sensitive data (tokens, PII) — `localStorage` is plain text and accessible to any script on the origin.
+- For very large blobs — Web Storage caps at ~5 MB and quota errors are logged but swallowed.
+- When you need TTL/expiry — there is no built-in expiry. Combine with `SdCacheService` if you need it.
+- For non-JSON-serializable values (functions, `Map`, `Set`, cyclic refs) — values are deep-cloned via `JSON.parse(JSON.stringify(...))`.
 
 ## Public API
 
@@ -32,8 +32,8 @@ create<T = any>(key: string | object, option?: SdStorageOption<T>): SdStorage<T>
 **Parameters**:
 - `key` (`string | object`): if string, used directly; if object, hashed via `Utilities.hash(key)`. Then optionally rewritten by `SD_STORAGE_CONFIG.key`.
 - `option` (`SdStorageOption<T>`, optional):
-  - `type?: 'session'` â€” use `sessionStorage` (default `localStorage`).
-  - `default?: T` â€” value returned by `get()` and seeded on the subject when nothing is stored.
+  - `type?: 'session'` — use `sessionStorage` (default `localStorage`).
+  - `default?: T` — value returned by `get()` and seeded on the subject when nothing is stored.
 
 **Throws**: `'Key is required'` if `key` is falsy. `'Invalid key type'` for non-string/non-object.
 
@@ -52,7 +52,7 @@ create<T = any>(key: string | object, option?: SdStorageOption<T>): SdStorage<T>
 
 ## Configuration / DI tokens
 
-### `SD_STORAGE_CONFIG` â€” `InjectionToken<ISdStorageConfiguration>`
+### `SD_STORAGE_CONFIG` — `InjectionToken<ISdStorageConfiguration>`
 Optional. Provide a global key rewriter for namespacing/versioning.
 
 ```typescript
@@ -75,13 +75,13 @@ export interface SdStorageOption<T = any> {
 ## Behavior notes
 - **Read path**: memory `Map` first, then `Storage.getItem`. On `JSON.parse` failure the key is removed and `undefined` is returned.
 - **Write path**: memory + `Storage.setItem`. Quota errors are caught and `console.error`-logged (no throw, but the in-memory copy is still updated).
-- **Stored shape**: each value is wrapped as `{ data, createdOn: Date }` and JSON-stringified. `createdOn` is rehydrated to a `Date` on read, but is not exposed on `get()` â€” only `data` is returned.
+- **Stored shape**: each value is wrapped as `{ data, createdOn: Date }` and JSON-stringified. `createdOn` is rehydrated to a `Date` on read, but is not exposed on `get()` — only `data` is returned.
 - **Deep clone**: both `get()` and `set()` deep-clone via `JSON.parse(JSON.stringify(...))`. Mutating a returned object does NOT affect the stored value.
-- **Subject identity**: handles share `BehaviorSubject` per effective key â€” calling `create('user')` from two components yields handles whose `subject` is the same instance, so `.set()` in one updates the `observer` in the other.
+- **Subject identity**: handles share `BehaviorSubject` per effective key — calling `create('user')` from two components yields handles whose `subject` is the same instance, so `.set()` in one updates the `observer` in the other.
 - **Default value**: returned by `get()` when nothing is in storage. The subject is seeded with `existingData ?? option.default` on first `create()`.
 - **`observer`**: emits via `subject.next(...)` but maps through `get()`, so subscribers always see a fresh deep-cloned read.
-- **`destroy()`**: present at runtime (with `@ts-ignore`) but not in the `SdStorage<T>` type â€” call it as `(handle as any).destroy()` if you need to free a handle on component teardown.
-- **`createdOn` field**: written but not exposed â€” useful for future TTL features but not currently surfaced.
+- **`destroy()`**: present at runtime (with `@ts-ignore`) but not in the `SdStorage<T>` type — call it as `(handle as any).destroy()` if you need to free a handle on component teardown.
+- **`createdOn` field**: written but not exposed — useful for future TTL features but not currently surfaced.
 
 ## Examples
 
@@ -126,14 +126,13 @@ providers: [
 ```
 
 ## Anti-patterns
-- Do NOT store secrets â€” use a server session or in-memory state instead.
-- Do NOT mutate the object returned by `get()` and expect the next `get()` to reflect it â€” values are deep-cloned. Always go through `set()`.
-- Do NOT call `create()` repeatedly inside a hot loop â€” pull the handle once and reuse it. Each call hashes the key and may sync from storage.
-- Do NOT combine `SD_STORAGE_CONFIG.key` with hard-coded namespacing in your own keys â€” pick one. Mixing yields keys like `app:app:foo`.
-- Do NOT store non-JSON-serializable values (`Map`, `Set`, `Date` other than the wrapper, `Function`, cyclic objects) â€” they will silently lose data.
-- Do NOT forget to call `(handle as any).destroy()` on long-lived dynamic keys if you create many â€” the subject map will grow.
+- Do NOT store secrets — use a server session or in-memory state instead.
+- Do NOT mutate the object returned by `get()` and expect the next `get()` to reflect it — values are deep-cloned. Always go through `set()`.
+- Do NOT call `create()` repeatedly inside a hot loop — pull the handle once and reuse it. Each call hashes the key and may sync from storage.
+- Do NOT combine `SD_STORAGE_CONFIG.key` with hard-coded namespacing in your own keys — pick one. Mixing yields keys like `app:app:foo`.
+- Do NOT store non-JSON-serializable values (`Map`, `Set`, `Date` other than the wrapper, `Function`, cyclic objects) — they will silently lose data.
+- Do NOT forget to call `(handle as any).destroy()` on long-lived dynamic keys if you create many — the subject map will grow.
 
 ## Related
-- `SdCacheService` (`@sdcorejs/angular/services/cache`) â€” adds TTL semantics on top of similar storage primitives.
-- `Utilities.hash` (`@sdcorejs/utils/fns`) â€” hashes object keys.
-
+- `SdCacheService` (`@sdcorejs/angular/services/cache`) — adds TTL semantics on top of similar storage primitives.
+- `Utilities.hash` (`@sdcorejs/utils/fns`) — hashes object keys.

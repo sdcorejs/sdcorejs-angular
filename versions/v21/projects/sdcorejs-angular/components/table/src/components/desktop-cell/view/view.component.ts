@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -71,7 +71,7 @@ export class ViewComponent {
   }
 
   #checkOverflow = (element: HTMLElement) => {
-    // NÃ©m vÃ o queue Ä‘á»ƒ Ä‘á»£i DOM render
+    // Ném vào queue để đợi DOM render
     setTimeout(() => {
       const hasOverflow = element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
       if (this.isOverflowing() !== hasOverflow) {
@@ -85,4 +85,3 @@ export class ViewComponent {
     this.isCollapsed.update(current => !current);
   };
 }
-

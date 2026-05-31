@@ -1,4 +1,4 @@
-﻿import { inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import type { CellValue, Style } from 'exceljs';
 // import hash from 'object-hash';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
@@ -119,9 +119,9 @@ export class SdExcelService {
 
   constructor() {}
 
-  // exceljs lÃ  CJS module â€” khi dynamic import tá»« ESM, named export `Workbook`
-  // cÃ³ thá»ƒ náº±m trÃªn `mod.Workbook` hoáº·c bá»‹ bá»c trong `mod.default.Workbook` tuá»³ bundler.
-  // Helper nÃ y chuáº©n hoÃ¡ cáº£ hai trÆ°á»ng há»£p.
+  // exceljs là CJS module — khi dynamic import từ ESM, named export `Workbook`
+  // có thể nằm trên `mod.Workbook` hoặc bị bọc trong `mod.default.Workbook` tuỳ bundler.
+  // Helper này chuẩn hoá cả hai trường hợp.
   async #loadWorkbook(): Promise<new () => import('exceljs').Workbook> {
     const mod: any = await import('exceljs');
     return mod.Workbook ?? mod.default?.Workbook;
@@ -143,7 +143,7 @@ export class SdExcelService {
     const hasDescription = columns.some(column => column.description);
     const Workbook = await this.#loadWorkbook();
     const workbook = new Workbook();
-    const firstSheet = workbook.addWorksheet('template'); // Láº¥y ra sheet Ä‘áº§u tiÃªn
+    const firstSheet = workbook.addWorksheet('template'); // Lấy ra sheet đầu tiên
     columns.forEach((column, index) => {
       const { required, fill, fontColor } = column;
       const cellField = firstSheet.getCell(1, index + 1);
@@ -217,8 +217,8 @@ export class SdExcelService {
     const { columns, items, fileName } = option;
     const filename = `${fileName || 'CSV'}_${DateUtilities.toFormat(new Date(), 'yyyy-MM-dd-HH-mm-ss')}.csv`;
 
-    // Escape CSV cell: bá»c trong dáº¥u " náº¿u chá»©a dáº¥u pháº©y / xuá»‘ng dÃ²ng / dáº¥u ngoáº·c kÃ©p.
-    // Dáº¥u " bÃªn trong Ä‘Æ°á»£c nhÃ¢n Ä‘Ã´i theo chuáº©n RFC 4180.
+    // Escape CSV cell: bọc trong dấu " nếu chứa dấu phẩy / xuống dòng / dấu ngoặc kép.
+    // Dấu " bên trong được nhân đôi theo chuẩn RFC 4180.
     const escape = (v: unknown): string => {
       if (v == null) return '';
       const s = String(v);
@@ -230,9 +230,9 @@ export class SdExcelService {
       columns.map(c => escape((item as Record<string, unknown>)[c.field])).join(','),
     );
 
-    // Prepend UTF-8 BOM (ï»¿) Ä‘á»ƒ Excel má»Ÿ Ä‘Ãºng encoding cho tiáº¿ng Viá»‡t cÃ³ dáº¥u.
-    // DÃ¹ng CRLF vÃ¬ Excel trÃªn Windows Æ°u tiÃªn, macOS Excel cÅ©ng cháº¥p nháº­n.
-    const csv = 'ï»¿' + [headerLine, ...dataLines].join('\r\n');
+    // Prepend UTF-8 BOM (﻿) để Excel mở đúng encoding cho tiếng Việt có dấu.
+    // Dùng CRLF vì Excel trên Windows ưu tiên, macOS Excel cũng chấp nhận.
+    const csv = '﻿' + [headerLine, ...dataLines].join('\r\n');
 
     BrowserUtilities.downloadBlob(
       new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
@@ -255,8 +255,8 @@ export class SdExcelService {
       }
     }
     const Workbook = await this.#loadWorkbook();
-    const workbook = new Workbook(); //await XlsxPopulate.fromBlankAsync(); // Äá»c file sau khi Ä‘Ã£ download
-    const firstSheet = workbook.addWorksheet('data'); // Láº¥y ra sheet Ä‘áº§u tiÃªn
+    const workbook = new Workbook(); //await XlsxPopulate.fromBlankAsync(); // Đọc file sau khi đã download
+    const firstSheet = workbook.addWorksheet('data'); // Lấy ra sheet đầu tiên
     columns.forEach((column, index) => {
       let width = 120;
       if (column.width && column.width.endsWith('px')) {
@@ -301,7 +301,7 @@ export class SdExcelService {
     items.forEach((e, idx1) => {
       columns.forEach((column, idx2) => {
         if (typeof e[column.field] === 'number') {
-          // Format máº·c Ä‘á»‹nh vá»›i kiá»ƒu sá»‘
+          // Format mặc định với kiểu số
           firstSheet.getCell(fromRow + idx1, 1 + idx2).value = +e[column.field];
           firstSheet.getCell(fromRow + idx1, 1 + idx2).numFmt = '#';
         } else {
@@ -321,18 +321,18 @@ export class SdExcelService {
     );
   };
 
-  // Helper Ä‘á»ƒ láº¥y giÃ¡ trá»‹ text chuáº©n tá»« Ã´ Excel (xá»­ lÃ½ RichText, Formula, Hyperlink)
+  // Helper để lấy giá trị text chuẩn từ ô Excel (xử lý RichText, Formula, Hyperlink)
   #getCellValue = (value: CellValue): string | number | null | undefined | boolean | Date => {
     if (value && typeof value === 'object') {
-      // Xá»­ lÃ½ Rich Text (vd: Ã´ bÃ´i Ä‘áº­m)
+      // Xử lý Rich Text (vd: ô bôi đậm)
       if ('richText' in value) {
         return value.richText.map(t => t.text).join('');
       }
-      // Xá»­ lÃ½ Hyperlink
+      // Xử lý Hyperlink
       if ('text' in value) {
-        return value.text as string; // hoáº·c value.result náº¿u lÃ  cÃ´ng thá»©c
+        return value.text as string; // hoặc value.result nếu là công thức
       }
-      // Xá»­ lÃ½ Formula
+      // Xử lý Formula
       if ('result' in value) {
         return value.result as any;
       }
@@ -346,7 +346,7 @@ export class SdExcelService {
         maxSizeInMb: 10,
       });
 
-      // Chuáº©n hÃ³a file Ä‘áº§u vÃ o (náº¿u upload tráº£ vá» máº£ng thÃ¬ láº¥y pháº§n tá»­ Ä‘áº§u)
+      // Chuẩn hóa file đầu vào (nếu upload trả về mảng thì lấy phần tử đầu)
       const file = Array.isArray(fileResult) ? fileResult[0] : fileResult;
 
       if (!file) {
@@ -356,7 +356,7 @@ export class SdExcelService {
       return await this.parse(file);
     } catch (error) {
       console.error('Upload error:', error);
-      throw error; // Hoáº·c return { items: [], file: null } tÃ¹y logic nghiá»‡p vá»¥
+      throw error; // Hoặc return { items: [], file: null } tùy logic nghiệp vụ
     }
   };
   parse = async (file: File): Promise<{ items: Record<string, any>[]; file: File | null }> => {
@@ -380,43 +380,43 @@ export class SdExcelService {
 
           const items: Record<string, any>[] = [];
 
-          // Láº¥y row Header (Row 1)
+          // Lấy row Header (Row 1)
           const headerRow = sheet.getRow(1);
-          // Map: Column Index (báº¯t Ä‘áº§u tá»« 1) -> TÃªn trÆ°á»ng (Key)
+          // Map: Column Index (bắt đầu từ 1) -> Tên trường (Key)
           const headerMap: Record<number, string> = {};
 
-          // Duyá»‡t qua cÃ¡c Ã´ cÃ³ dá»¯ liá»‡u thá»±c táº¿ cá»§a dÃ²ng Header
+          // Duyệt qua các ô có dữ liệu thực tế của dòng Header
           headerRow.eachCell((cell, colNumber) => {
             const cellValue = this.#getCellValue(cell.value);
             if (cellValue) {
-              // Ã‰p kiá»ƒu vá» string vÃ  trim Ä‘á»ƒ lÃ m key
+              // Ép kiểu về string và trim để làm key
               headerMap[colNumber] = String(cellValue).trim();
             }
           });
 
-          // Duyá»‡t dá»¯ liá»‡u tá»« dÃ²ng 2 trá»Ÿ Ä‘i
+          // Duyệt dữ liệu từ dòng 2 trở đi
           sheet.eachRow((row, rowIndex) => {
             if (rowIndex <= 1 || !row.hasValues) return;
 
             const item: Record<string, any> = {};
 
-            // Chá»‰ duyá»‡t qua cÃ¡c cá»™t Ä‘Ã£ Ä‘á»‹nh nghÄ©a trong headerMap
-            // CÃ¡ch nÃ y an toÃ n hÆ¡n lÃ  duyá»‡t máº£ng values
+            // Chỉ duyệt qua các cột đã định nghĩa trong headerMap
+            // Cách này an toàn hơn là duyệt mảng values
             Object.keys(headerMap).forEach(colKey => {
               const colNumber = Number(colKey);
               const fieldKey = headerMap[colNumber];
 
-              // Láº¥y giÃ¡ trá»‹ Ã´ táº¡i cá»™t tÆ°Æ¡ng á»©ng
+              // Lấy giá trị ô tại cột tương ứng
               const rawValue = this.#getCellValue(row.getCell(colNumber).value);
 
               let finalValue = rawValue;
 
-              // Xá»­ lÃ½ string: trim
+              // Xử lý string: trim
               if (typeof finalValue === 'string') {
                 finalValue = finalValue.trim();
               }
 
-              // Xá»­ lÃ½ cÃ¡c keyword Ä‘áº·c biá»‡t
+              // Xử lý các keyword đặc biệt
               if (finalValue === '' || finalValue === undefined) {
                 finalValue = null;
               } else if (finalValue === 'SET_NULL') {
@@ -428,7 +428,7 @@ export class SdExcelService {
               item[fieldKey] = finalValue;
             });
 
-            // Chá»‰ push náº¿u item cÃ³ dá»¯ liá»‡u (tÃ¹y chá»n)
+            // Chỉ push nếu item có dữ liệu (tùy chọn)
             if (Object.keys(item).length > 0) {
               items.push(item);
             }
@@ -445,4 +445,3 @@ export class SdExcelService {
     });
   };
 }
-

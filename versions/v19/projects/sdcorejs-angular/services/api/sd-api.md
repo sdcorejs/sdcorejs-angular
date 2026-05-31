@@ -1,4 +1,4 @@
-﻿# SdApiService
+# SdApiService
 
 **Type**: Service (Angular `@Injectable`)
 **Class**: `SdApiService`
@@ -11,14 +11,14 @@ HTTP client wrapper around Angular `HttpClient` adding per-host handlers, config
 ## When to use
 - Any time you call a backend HTTP API from Angular and want consistent timeout/retry/error handling.
 - When multiple components fire the same GET concurrently and you want one network round-trip (deduplication within 1s).
-- When you need persistent caching of responses (memory/session/local) â€” pass `cacheOption`.
+- When you need persistent caching of responses (memory/session/local) — pass `cacheOption`.
 - When you need per-host request/response interception (auth headers, response normalization) without writing a full `HttpInterceptor`.
 
 ## When NOT to use
-- For non-HTTP side effects â€” use plain services.
-- When you need streaming/SSE â€” use `HttpClient` directly with `responseType: 'text'` and a parser.
-- When you need raw `HttpResponse` (headers/status) â€” `SdApiService` returns the response body only via `mapResponse`. Use `service.http` (the underlying `HttpClient`) for raw access.
-- When you need `PATCH` â€” the service has no `patch()` method; use `service.http.patch(...)` directly.
+- For non-HTTP side effects — use plain services.
+- When you need streaming/SSE — use `HttpClient` directly with `responseType: 'text'` and a parser.
+- When you need raw `HttpResponse` (headers/status) — `SdApiService` returns the response body only via `mapResponse`. Use `service.http` (the underlying `HttpClient`) for raw access.
+- When you need `PATCH` — the service has no `patch()` method; use `service.http.patch(...)` directly.
 
 ## Public API
 
@@ -87,7 +87,7 @@ export class AppModule {}
 
 ## Configuration / DI tokens
 
-### `SD_API_CONFIG` â€” `InjectionToken<ISdApiConfiguration>`
+### `SD_API_CONFIG` — `InjectionToken<ISdApiConfiguration>`
 Provide an array of `ISdApiConfiguration` (multi: true) to register per-host handlers.
 
 ```typescript
@@ -160,14 +160,13 @@ const result = await this.api.upload('/api/files', {
 ```
 
 ## Anti-patterns
-- Do NOT add a leading `/` and expect handler matching against `https://...` hosts â€” `hosts` are matched via `url.startsWith`. Use full URLs (or normalize at the handler level).
-- Do NOT rely on `intercept` / `beforeRemote` / `afterRemote` from `SdApiHandler` â€” only `mapResponse` and `timeout` are honored by the service core. Use real Angular interceptors for those concerns.
-- Do NOT cache `POST`/`PUT`/`DELETE` with `cacheOption` unless you understand the side effects â€” write methods should usually pass `autoCache: false` instead.
-- Do NOT subscribe to the returned promise twice expecting two requests â€” `shareReplay(1)` plus the dedup map mean within 1s you reuse the result.
+- Do NOT add a leading `/` and expect handler matching against `https://...` hosts — `hosts` are matched via `url.startsWith`. Use full URLs (or normalize at the handler level).
+- Do NOT rely on `intercept` / `beforeRemote` / `afterRemote` from `SdApiHandler` — only `mapResponse` and `timeout` are honored by the service core. Use real Angular interceptors for those concerns.
+- Do NOT cache `POST`/`PUT`/`DELETE` with `cacheOption` unless you understand the side effects — write methods should usually pass `autoCache: false` instead.
+- Do NOT subscribe to the returned promise twice expecting two requests — `shareReplay(1)` plus the dedup map mean within 1s you reuse the result.
 
 ## Related
-- `SdCacheService` (`@sdcorejs/angular/services/cache`) â€” backs the persistent cache layer.
-- `SdApiModule` â€” NgModule that registers `HttpClient` (with interceptors from DI) and `SdHttpInterceptor`.
-- `SdHttpInterceptor` (`interceptors/api.interceptor`) â€” executes `intercept`, `beforeRemote`, and `afterRemote` hooks from `SdApiHandler`.
-- `BrowserUtilities.upload` / `Utilities.hash` (`@sdcorejs/utils/fns`) â€” power `upload()` and key generation.
-
+- `SdCacheService` (`@sdcorejs/angular/services/cache`) — backs the persistent cache layer.
+- `SdApiModule` — NgModule that registers `HttpClient` (with interceptors from DI) and `SdHttpInterceptor`.
+- `SdHttpInterceptor` (`interceptors/api.interceptor`) — executes `intercept`, `beforeRemote`, and `afterRemote` hooks from `SdApiHandler`.
+- `BrowserUtilities.upload` / `Utilities.hash` (`@sdcorejs/utils/fns`) — power `upload()` and key generation.

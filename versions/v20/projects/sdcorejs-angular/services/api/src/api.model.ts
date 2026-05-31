@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient, HttpErrorResponse, HttpRequest, HttpResponse } from '@angular/common/http';
 import { InjectionToken } from '@angular/core';
 import { SdCacheOption } from '@sdcorejs/angular/services/cache';
@@ -22,19 +22,19 @@ type HttpDeleteOption = Parameters<HttpClient['delete']>[1];
 export type SdDeleteOption = HttpDeleteOption & SdApiOption;
 
 export interface SdApiHandler {
-  /** Danh sÃ¡ch host URL mÃ  handler nÃ y sáº½ xá»­ lÃ½ */
+  /** Danh sách host URL mà handler này sẽ xử lý */
   hosts: string[];
-  /** Can thiá»‡p request: gáº¯n header, token, transform body... */
+  /** Can thiệp request: gắn header, token, transform body... */
   intercept?: (request: HttpRequest<any>) => HttpRequest<any>;
-  /** Hook cháº¡y TRÆ¯á»šC khi gá»­i request (dÃ¹ng Ä‘á»ƒ log, tracking...) */
+  /** Hook chạy TRƯỚC khi gửi request (dùng để log, tracking...) */
   beforeRemote?: (request: HttpRequest<any>) => void | Promise<void>;
-  /** Hook cháº¡y SAU khi nháº­n response (xá»­ lÃ½ lá»—i, notify...) */
+  /** Hook chạy SAU khi nhận response (xử lý lỗi, notify...) */
   afterRemote?: (
     response: HttpResponse<any> | HttpErrorResponse | Error
   ) => void | Promise<void>;
-  /** Transform response body thÃ nh kiá»ƒu dá»¯ liá»‡u mong muá»‘n */
+  /** Transform response body thành kiểu dữ liệu mong muốn */
   mapResponse?: <Tres = any, Tdata = any>(response: Tres) => Tdata;
-  /** Timeout tÃ­nh báº±ng milliseconds. Máº·c Ä‘á»‹nh: 30000 (30 giÃ¢y) */
+  /** Timeout tính bằng milliseconds. Mặc định: 30000 (30 giây) */
   timeout?: number;
 }
 

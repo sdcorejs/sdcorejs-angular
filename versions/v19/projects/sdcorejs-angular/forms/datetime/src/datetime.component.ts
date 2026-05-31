@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
@@ -47,10 +47,10 @@ import * as uuid from 'uuid';
 import { SdDatetimePicker } from './popup/sd-datetime-picker.component';
 
 /**
- * Format parse/display dÃ¹ng cho MatDateAdapter (date-fns).
- * Note: format input lÃ  `dd/MM/yyyy HH:mm` (khÃ´ng cÃ³ giÃ¢y máº·c Ä‘á»‹nh) â€”
- *       giÃ¢y chá»‰ Ä‘Æ°á»£c render khi `showSeconds` = true.
- * Token date-fns dÃ¹ng chá»¯ thÆ°á»ng: `yyyy` (nÄƒm), `dd` (ngÃ y), `HH` (giá» 24h).
+ * Format parse/display dùng cho MatDateAdapter (date-fns).
+ * Note: format input là `dd/MM/yyyy HH:mm` (không có giây mặc định) —
+ *       giây chỉ được render khi `showSeconds` = true.
+ * Token date-fns dùng chữ thường: `yyyy` (năm), `dd` (ngày), `HH` (giờ 24h).
  */
 const SD_DATETIME_FORMATS = {
   parse: { dateInput: 'dd/MM/yyyy HH:mm' },
@@ -63,8 +63,8 @@ const SD_DATETIME_FORMATS = {
 };
 
 /**
- * Thá»­ parse `value` theo láº§n lÆ°á»£t nhiá»u format; tráº£ vá» Date Ä‘áº§u tiÃªn há»£p lá»‡.
- * date-fns khÃ´ng há»— trá»£ multi-format parse nhÆ° moment(value, [fmt1, fmt2], true).
+ * Thử parse `value` theo lần lượt nhiều format; trả về Date đầu tiên hợp lệ.
+ * date-fns không hỗ trợ multi-format parse như moment(value, [fmt1, fmt2], true).
  */
 function parseFirstValid(value: string, formats: string[]): Date | null {
   for (const fmt of formats) {
@@ -81,7 +81,7 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
   providers: [
-    // DateFnsAdapter inject MAT_DATE_LOCALE; cáº¥p default en-US Ä‘á»ƒ parse/format hoáº¡t Ä‘á»™ng.
+    // DateFnsAdapter inject MAT_DATE_LOCALE; cấp default en-US để parse/format hoạt động.
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
     provideDateFnsAdapter(SD_DATETIME_FORMATS),
   ],
@@ -142,15 +142,15 @@ export class SdDatetime implements OnDestroy, OnInit {
   name = input<string>(uuid.v4());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -163,7 +163,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
   viewed = input(false, { transform: booleanAttribute });
-  /** Hiá»ƒn thá»‹ thÃªm cá»™t giÃ¢y trong picker. Máº·c Ä‘á»‹nh: chá»‰ HH:MM. */
+  /** Hiển thị thêm cột giây trong picker. Mặc định: chỉ HH:MM. */
   showSeconds = input(false, { transform: booleanAttribute });
 
   /** Flatten the field chrome to a chip-friendly trigger (value + caret only). */
@@ -172,7 +172,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   inlineError = input<string | undefined>();
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -195,7 +195,7 @@ export class SdDatetime implements OnDestroy, OnInit {
 
   floatLabel = input<FloatLabelType>('auto');
 
-  // Min/max â€” cháº¥p nháº­n 'TODAY', Date, hoáº·c string ISO
+  // Min/max — chấp nhận 'TODAY', Date, hoặc string ISO
   minInput = input<any>(undefined, { alias: 'min' });
   minDateInput = input<any>(undefined, { alias: 'minDate' });
   resolvedMin = computed(() => this.#parseDateBoundary(this.minInput() ?? this.minDateInput()));
@@ -206,8 +206,8 @@ export class SdDatetime implements OnDestroy, OnInit {
 
   valueModel = model<string | number | Date | undefined | null>(undefined, { alias: 'model' });
 
-  // viewed-mode: formControl.value lÃ  chuá»—i display (dd/MM/yyyy HH:mm) nÃªn DatePipe khÃ´ng parse Ä‘Æ°á»£c.
-  // Láº¥y tháº³ng tá»« valueModel (nguá»“n dá»¯ liá»‡u tháº­t) rá»“i convert sang Date cho DatePipe.
+  // viewed-mode: formControl.value là chuỗi display (dd/MM/yyyy HH:mm) nên DatePipe không parse được.
+  // Lấy thẳng từ valueModel (nguồn dữ liệu thật) rồi convert sang Date cho DatePipe.
   viewedDate = computed<Date | null>(() => {
     const v = this.valueModel();
     if (v == null || !DateUtilities.isDate(v)) return null;
@@ -231,7 +231,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   isFocused = false;
   isValid?: boolean;
 
-  /** State popup â€” true khi Ä‘ang má»Ÿ. */
+  /** State popup — true khi đang mở. */
   pickerOpened = signal(false);
 
   #date: string | undefined | null;
@@ -239,7 +239,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   #overlayRef: OverlayRef | null = null;
 
   constructor() {
-    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i â†’ cáº­p nháº­t hiá»ƒn thá»‹
+    // EFFECT 1: Sync model thay đổi từ bên ngoài → cập nhật hiển thị
     effect(() => {
       let val = this.valueModel();
       untracked(() => {
@@ -249,7 +249,7 @@ export class SdDatetime implements OnDestroy, OnInit {
         val = DateUtilities.toFormat(val, 'yyyy/MM/dd HH:mm');
         if (this.#date !== val) {
           this.#date = val;
-          // Cáº­p nháº­t formControl vá»›i chuá»—i hiá»ƒn thá»‹ dd/MM/yyyy HH:mm
+          // Cập nhật formControl với chuỗi hiển thị dd/MM/yyyy HH:mm
           const fmt = this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm';
           const displayStr = DateUtilities.isDate(this.#date)
             ? DateUtilities.toFormat(this.#date, fmt)
@@ -299,10 +299,10 @@ export class SdDatetime implements OnDestroy, OnInit {
   }
 
   // ==========================================
-  // 6. POPUP MANAGEMENT â€” CDK Overlay
+  // 6. POPUP MANAGEMENT — CDK Overlay
   // ==========================================
 
-  /** Má»Ÿ popup chá»n datetime, neo vÃ o input. */
+  /** Mở popup chọn datetime, neo vào input. */
   open() {
     if (this.formControl.disabled || this.pickerOpened()) return;
 
@@ -331,24 +331,24 @@ export class SdDatetime implements OnDestroy, OnInit {
     const portal = new ComponentPortal(SdDatetimePicker, null, this.injector);
     const ref = this.#overlayRef.attach(portal);
 
-    // Äáº©y state hiá»‡n táº¡i vÃ o popup
+    // Đẩy state hiện tại vào popup
     ref.setInput('initialValue', this.#currentValueAsDate());
     ref.setInput('minDate', this.resolvedMin());
     ref.setInput('maxDate', this.resolvedMax());
     ref.setInput('showSeconds', this.showSeconds());
 
-    // Subscribe events tá»« popup
+    // Subscribe events từ popup
     ref.instance.confirmed.subscribe((value: Date) => this.#onPickerConfirm(value));
     ref.instance.cancelled.subscribe(() => this.#onPickerCancel());
 
-    // ÄÃ³ng khi click backdrop
+    // Đóng khi click backdrop
     this.#overlayRef.backdropClick().subscribe(() => this.#onPickerCancel());
 
     this.pickerOpened.set(true);
     this.ref.markForCheck();
   }
 
-  /** ÄÃ³ng popup (public â€” gá»i tá»« template náº¿u cáº§n). */
+  /** Đóng popup (public — gọi từ template nếu cần). */
   close() {
     this.#closeOverlay();
   }
@@ -366,7 +366,7 @@ export class SdDatetime implements OnDestroy, OnInit {
 
   #onPickerConfirm(value: Date) {
     const fmt = this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00';
-    // value giá» lÃ  native Date (date-fns), khÃ´ng cáº§n .toDate() nhÆ° Moment.
+    // value giờ là native Date (date-fns), không cần .toDate() như Moment.
     const stored = DateUtilities.toFormat(value, fmt);
     if (this.#date !== stored) {
       this.valueModel.set(stored);
@@ -379,7 +379,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     this.#closeOverlay();
   }
 
-  /** Láº¥y giÃ¡ trá»‹ hiá»‡n táº¡i dÆ°á»›i dáº¡ng native Date Ä‘á»ƒ truyá»n vÃ o popup. */
+  /** Lấy giá trị hiện tại dưới dạng native Date để truyền vào popup. */
   #currentValueAsDate(): Date | null {
     const v = this.valueModel();
     if (!v || !DateUtilities.isDate(v)) return null;
@@ -457,8 +457,8 @@ export class SdDatetime implements OnDestroy, OnInit {
   };
 
   /**
-   * Khi user gÃµ trá»±c tiáº¿p vÃ o input vÃ  rá»i focus â†’ validate format dd/MM/yyyy HH:mm
-   * Há»— trá»£ cáº£ format cÃ³ giÃ¢y.
+   * Khi user gõ trực tiếp vào input và rời focus → validate format dd/MM/yyyy HH:mm
+   * Hỗ trợ cả format có giây.
    */
   onConfirmInput = (event: any) => {
     const currentVal: string = event.target.value;
@@ -480,8 +480,8 @@ export class SdDatetime implements OnDestroy, OnInit {
       this.formControl.updateValueAndValidity();
     }, 0);
 
-    // Äá»“ng bá»™ ngÆ°á»£c vá» model náº¿u há»£p lá»‡.
-    // date-fns khÃ´ng cÃ³ multi-format strict parse nhÆ° moment, dÃ¹ng helper parseFirstValid.
+    // Đồng bộ ngược về model nếu hợp lệ.
+    // date-fns không có multi-format strict parse như moment, dùng helper parseFirstValid.
     if (currentVal) {
       const parsed = parseFirstValid(currentVal, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
       if (parsed) {
@@ -507,4 +507,3 @@ export class SdDatetime implements OnDestroy, OnInit {
     }
   };
 }
-

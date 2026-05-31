@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdTab, SdTabClosedEvent, SdTabGroup } from '@sdcorejs/angular/components/tab';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -199,4 +199,3 @@ export class TabDemoComponent {
   prev() { this.twowayIndex.update((v) => Math.max(0, v - 1)); }
   next() { this.twowayIndex.update((v) => Math.min(2, v + 1)); }
 }
-

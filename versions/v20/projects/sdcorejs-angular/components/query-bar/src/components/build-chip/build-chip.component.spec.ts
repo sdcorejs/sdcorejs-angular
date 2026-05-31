@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -81,7 +81,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 3: step='value', type='string' renders seamless inline-value-chip + forwards valueChange to seamlessCommit
-  it("step='value' string â†’ renders <sd-query-inline-value-chip>; valueChange forwards to (seamlessCommit)", () => {
+  it("step='value' string → renders <sd-query-inline-value-chip>; valueChange forwards to (seamlessCommit)", () => {
     host.building = {
       field: { key: 'name', label: 'Name', type: 'string' } as SdQueryField,
       operator: 'CONTAIN',
@@ -98,7 +98,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 4: step='value', type='number' same as string
-  it("step='value' number â†’ renders <sd-query-inline-value-chip>", () => {
+  it("step='value' number → renders <sd-query-inline-value-chip>", () => {
     host.building = {
       field: { key: 'age', label: 'Age', type: 'number' } as SdQueryField,
       operator: 'EQUAL',
@@ -111,7 +111,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 5: step='value', type='values' renders bare sd-select; sdChange emits (commitValue)
-  it("step='value' values â†’ renders bare sd-select; sdChange emits (commitValue)", () => {
+  it("step='value' values → renders bare sd-select; sdChange emits (commitValue)", () => {
     const field = {
       key: 'status',
       label: 'Status',
@@ -136,7 +136,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 6: step='value', type='date', op='EQUAL' renders bare sd-date
-  it("step='value' date + EQUAL â†’ renders bare <sd-date>", () => {
+  it("step='value' date + EQUAL → renders bare <sd-date>", () => {
     const field = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.building = { field, operator: 'EQUAL', step: 'value' };
     fixture.detectChanges();
@@ -146,7 +146,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 7: step='value', type='date', op='BETWEEN' renders sd-date-range
-  it("step='value' date + BETWEEN â†’ renders <sd-date-range>", () => {
+  it("step='value' date + BETWEEN → renders <sd-date-range>", () => {
     const field = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.building = { field, operator: 'BETWEEN', step: 'value' };
     fixture.detectChanges();
@@ -156,7 +156,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 8: step='value', type='datetime', op='BETWEEN' renders sd-date-range (downgrade)
-  it("step='value' datetime + BETWEEN â†’ renders <sd-date-range> (downgrade)", () => {
+  it("step='value' datetime + BETWEEN → renders <sd-date-range> (downgrade)", () => {
     const field = { key: 'dt', label: 'DT', type: 'datetime' } as SdQueryField;
     host.building = { field, operator: 'BETWEEN', step: 'value' };
     fixture.detectChanges();
@@ -165,7 +165,7 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 9: step='value' boolean renders two .c-bool-btn native toggles; click emits commitValue
-  it("step='value' boolean â†’ two .c-bool-btn toggles; click â†’ (commitValue)(true|false)", () => {
+  it("step='value' boolean → two .c-bool-btn toggles; click → (commitValue)(true|false)", () => {
     const field = { key: 'on', label: 'On', type: 'boolean' } as SdQueryField;
     host.building = { field, operator: 'EQUAL', step: 'value' };
     fixture.detectChanges();
@@ -187,8 +187,8 @@ describe('SdQueryBuildChip', () => {
     expect(host.commitCount).toBe(2);
   });
 
-  // ---- 10: Ã— button emits (cancel)
-  it("Ã— button (.c-token-remove) emits (cancel)", () => {
+  // ---- 10: × button emits (cancel)
+  it("× button (.c-token-remove) emits (cancel)", () => {
     host.building = {
       field: { key: 'status', label: 'Status', type: 'values', option: { items: [], valueField: 'id', displayField: 'name' } } as unknown as SdQueryField,
       operator: 'IN',
@@ -247,7 +247,7 @@ describe('SdQueryBuildChip', () => {
     host.building = { field, operator: 'IN', step: 'value' };
     fixture.detectChanges();
 
-    // Find disabled badge â€” there's only one sd-operator in the value step (the operator badge).
+    // Find disabled badge — there's only one sd-operator in the value step (the operator badge).
     const opDe = fixture.debugElement.query(By.directive(SdOperator));
     expect(opDe).not.toBeNull();
     const op = opDe.componentInstance as SdOperator;
@@ -255,7 +255,7 @@ describe('SdQueryBuildChip', () => {
     expect(op.model()).toBe('IN');
   });
 
-  // ---- 14: seamless branch remove â†’ (cancel)
+  // ---- 14: seamless branch remove → (cancel)
   it('seamless string/number branch: (remove) from inline-value-chip propagates to (cancel)', () => {
     host.building = {
       field: { key: 'name', label: 'Name', type: 'string' } as SdQueryField,
@@ -270,4 +270,3 @@ describe('SdQueryBuildChip', () => {
     expect(host.cancelled).toBe(1);
   });
 });
-

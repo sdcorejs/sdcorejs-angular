@@ -1,4 +1,4 @@
-﻿import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { SdAuthService } from '@sdcorejs/angular/modules';
 import { Observable, throwError } from 'rxjs';
@@ -23,4 +23,3 @@ export class SdUnauthorizedInterceptor implements HttpInterceptor {
     );
   }
 }
-

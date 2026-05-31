@@ -1,10 +1,10 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Signal } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms/models';
 import { Filter, NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 
 // ---------------------------------------------------------------------------
-// Field definitions â€” discriminated union by `type`, mirroring sd-table column
+// Field definitions — discriminated union by `type`, mirroring sd-table column
 // vocabulary. Each consumer declares its searchable fields via `SdQueryField`.
 // ---------------------------------------------------------------------------
 
@@ -26,17 +26,17 @@ interface SdQueryFieldBase<T = any> {
   icon?: string;
   /**
    * Controls the operator selector in the chip popover:
-   * - omitted / `false` â†’ **simple mode**: no operator dropdown; the chip always uses
+   * - omitted / `false` → **simple mode**: no operator dropdown; the chip always uses
    *   `defaultOperator` (or the per-type default). Use this for screens that don't need
    *   operator choice.
-   * - `true` â†’ show the full operator set for the field's `type`
+   * - `true` → show the full operator set for the field's `type`
    *   (`SD_QUERY_OPERATORS_BY_TYPE[type]`).
-   * - `Operator[]` â†’ show exactly these operators.
+   * - `Operator[]` → show exactly these operators.
    */
   operators?: boolean | Operator[];
   /**
    * Operator the chip starts with. Falls back to `SD_QUERY_DEFAULT_OPERATOR_BY_TYPE[type]`:
-   * stringâ†’CONTAIN, numberâ†’EQUAL, values/lazy-valuesâ†’IN, booleanâ†’EQUAL, date/datetimeâ†’BETWEEN.
+   * string→CONTAIN, number→EQUAL, values/lazy-values→IN, boolean→EQUAL, date/datetime→BETWEEN.
    */
   defaultOperator?: Operator;
   /** Field is offered in picker but not interactive (read-only badge in chip). */
@@ -58,7 +58,7 @@ export interface SdQueryFieldNumber<T = any> extends SdQueryFieldBase<T> {
 
 export interface SdQueryFieldBoolean<T = any> extends SdQueryFieldBase<T> {
   type: 'boolean';
-  /** Labels rendered for the true/false buttons. Default: "CÃ³" / "KhÃ´ng". */
+  /** Labels rendered for the true/false buttons. Default: "Có" / "Không". */
   trueLabel?: string;
   falseLabel?: string;
 }
@@ -84,7 +84,7 @@ export interface SdQueryFieldValues<T = any, K = Record<string, any>> extends Sd
 }
 
 /**
- * Server-backed options â€” searchable, paginated. Mirrors `SdTableColumnLazyValues.option`.
+ * Server-backed options — searchable, paginated. Mirrors `SdTableColumnLazyValues.option`.
  * `search` is the unified `SdSearch<K>` callback used by `sd-select`: it handles
  * `{ type: 'SEARCH', searchText }` for live queries and `{ type: 'VALUE', value }` for
  * resolving chip-display labels of already-selected IDs.
@@ -107,7 +107,7 @@ export type SdQueryField<T = any> =
   | SdQueryFieldLazyValues<T>;
 
 // ---------------------------------------------------------------------------
-// Output model â€” `SdQuery` is the canonical payload emitted via `[(query)]`.
+// Output model — `SdQuery` is the canonical payload emitted via `[(query)]`.
 // It composes the reusable `Filter[]` from utils plus query-bar-only metadata
 // (global logic, free-text search). Callers can also bind `[(filters)]` alone
 // when they don't need logic/search.
@@ -123,7 +123,7 @@ export interface SdQuery<T = any> {
   search?: string;
 }
 
-/** Persisted bookmark of a query (filters + logic + search) â€” managed by `[savedFiltersKey]`. */
+/** Persisted bookmark of a query (filters + logic + search) — managed by `[savedFiltersKey]`. */
 export interface SdSavedFilter<T = any> {
   id: string;
   name: string;
@@ -131,11 +131,11 @@ export interface SdSavedFilter<T = any> {
 }
 
 /**
- * Transient state of the in-progress chip during inline-mode token build (field â†’
- * operator â†’ value). Lives at the parent (`SdQueryBar.building()`) and is rendered
+ * Transient state of the in-progress chip during inline-mode token build (field →
+ * operator → value). Lives at the parent (`SdQueryBar.building()`) and is rendered
  * by `<sd-query-build-chip>`. Step transitions:
- *   - 'operator' â€” operator menu open, waiting for the user to pick a condition
- *   - 'value'    â€” operator locked, value picker / seamless input is the focus
+ *   - 'operator' — operator menu open, waiting for the user to pick a condition
+ *   - 'value'    — operator locked, value picker / seamless input is the focus
  */
 export interface BuildingChip<T = any> {
   field: SdQueryField<T>;
@@ -148,7 +148,7 @@ export interface BuildingChip<T = any> {
 // Constants
 // ---------------------------------------------------------------------------
 
-/** Full operator set per field type â€” used when `operators: true`. */
+/** Full operator set per field type — used when `operators: true`. */
 export const SD_QUERY_OPERATORS_BY_TYPE: Record<SdQueryFieldType, Operator[]> = {
   string:        ['CONTAIN', 'EQUAL', 'NOT_EQUAL', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'],
   number:        ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'GREATER_OR_EQUAL', 'LESS_THAN', 'LESS_OR_EQUAL', 'BETWEEN'],
@@ -183,16 +183,16 @@ export const SD_QUERY_TYPE_ICON: Record<SdQueryFieldType, string> = {
 
 /**
  * Resolves the icon shown on chips and in the field picker.
- * Priority: `field.icon` â†’ `SD_QUERY_TYPE_ICON[field.type]` â†’ `'tune'`.
+ * Priority: `field.icon` → `SD_QUERY_TYPE_ICON[field.type]` → `'tune'`.
  */
 export function sdQueryFieldIcon(field: SdQueryField): string {
   return field.icon ?? SD_QUERY_TYPE_ICON[field.type] ?? 'tune';
 }
 
-/** Operators that carry no data â€” value section is hidden in chip popover. */
+/** Operators that carry no data — value section is hidden in chip popover. */
 export const SD_QUERY_NO_DATA_OPERATORS: Operator[] = ['NULL', 'NOT_NULL'];
 
-/** Operators that carry an array payload â€” UI offers multi-select. */
+/** Operators that carry an array payload — UI offers multi-select. */
 export const SD_QUERY_MULTI_OPERATORS: Operator[] = ['IN', 'NOT_IN'];
 
 /** Picks the initial operator when a new chip is created for `field`. */
@@ -203,9 +203,9 @@ export function sdQueryDefaultOperator(field: SdQueryField): Operator {
 
 /**
  * Operators offered in the chip popover for `field`:
- * - `operators === true` â†’ full set for the type
- * - `operators` is an array â†’ that array (deduped against the type set is the caller's job)
- * - otherwise (simple mode) â†’ just the single default operator (no real choice)
+ * - `operators === true` → full set for the type
+ * - `operators` is an array → that array (deduped against the type set is the caller's job)
+ * - otherwise (simple mode) → just the single default operator (no real choice)
  */
 export function sdQueryAllowedOperators(field: SdQueryField): Operator[] {
   if (field.operators === true) return SD_QUERY_OPERATORS_BY_TYPE[field.type];
@@ -215,9 +215,8 @@ export function sdQueryAllowedOperators(field: SdQueryField): Operator[] {
 
 /**
  * Whether the operator selector should be visible. Simple mode (operators omitted/false,
- * or an array with a single entry) hides the dropdown â€” the chip uses one fixed operator.
+ * or an array with a single entry) hides the dropdown — the chip uses one fixed operator.
  */
 export function sdQueryShowOperatorSelector(field: SdQueryField): boolean {
   return sdQueryAllowedOperators(field).length > 1;
 }
-

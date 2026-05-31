@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pipe, PipeTransform } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { interval, Observable, of } from 'rxjs';
@@ -46,4 +46,3 @@ export class SdTimeDifferentPipe implements PipeTransform {
     );
   }
 }
-

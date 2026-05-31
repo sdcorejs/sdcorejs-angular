@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
@@ -35,4 +35,3 @@ export class AttributeTextarea {
     this.sdChange.emit(value);
   };
 }
-

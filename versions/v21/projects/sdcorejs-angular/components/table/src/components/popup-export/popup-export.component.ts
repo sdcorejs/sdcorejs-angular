@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, inject } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
@@ -323,4 +323,3 @@ export class SdPopupExport {
     return '';
   };
 }
-

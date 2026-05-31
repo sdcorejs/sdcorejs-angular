@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/component-class-suffix */
+/* eslint-disable @angular-eslint/component-class-suffix */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
@@ -140,15 +140,15 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   name = input<string>(uuid.v4());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -176,7 +176,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   inlineError = input<string | undefined>();
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -229,7 +229,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   normalizedValue = computed(() => this.valueModel());
 
   // ==========================================
-  // [NEW]: HÃ m Ä‘á»c thuá»™c tÃ­nh lá»“ng nhau (a.b.c)
+  // [NEW]: Hàm đọc thuộc tính lồng nhau (a.b.c)
   // ==========================================
   getNestedValue = (obj: any, path: string | undefined): any => {
     if (!path || obj == null) return obj;
@@ -315,7 +315,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
         const sText = searchText || '';
         
         if (typeof items !== 'function') {
-          // [UPDATED]: Há»— trá»£ search lá»“ng nhau (nested) local
+          // [UPDATED]: Hỗ trợ search lồng nhau (nested) local
           const filtered = items.filter((e: any) => {
             const v = String(this.getNestedValue(e, this.valueField()) || '').toLowerCase();
             const d = String(this.getNestedValue(e, this.displayField()) || '').toLowerCase();
@@ -344,7 +344,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
         return obs.pipe(
           map(data => {
             this.#cache[key] = data || [];
-            // [UPDATED]: LÆ°u cache #item theo nested value
+            // [UPDATED]: Lưu cache #item theo nested value
             (this.#cache[key] || []).forEach((e: any) => {
               const valKey = this.getNestedValue(e, this.valueField());
               if (valKey != null) {
@@ -379,7 +379,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
 
             return obs.pipe(
               map(data => {
-                // [UPDATED]: LÆ°u cache #item theo nested value
+                // [UPDATED]: Lưu cache #item theo nested value
                 (data || []).forEach((e: any) => {
                   const valKey = this.getNestedValue(e, vField);
                   if (valKey != null) {
@@ -391,7 +391,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
               catchError(() => of({ [vField]: val, [dField!]: val }))
             );
           }
-          // [UPDATED]: TÃ¬m local theo nested field
+          // [UPDATED]: Tìm local theo nested field
           return of((items as any[]).find((e: any) => this.getNestedValue(e, vField) === val));
         }
         return of('');
@@ -401,7 +401,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
 
     const controlPlaceHolder$ = selected$.pipe(
       map((item: T) => {
-        // [UPDATED]: Äá»c PlaceHolder báº±ng getNestedValue
+        // [UPDATED]: Đọc PlaceHolder bằng getNestedValue
         const dispVal = this.getNestedValue(item, this.displayField());
         return dispVal ?? item ?? this.placeholder() ?? (this.appearance() ? this.label() : '');
       })
@@ -409,7 +409,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
 
     const display$ = selected$.pipe(
       map((item: T) => {
-        // [UPDATED]: Äá»c Display báº±ng getNestedValue
+        // [UPDATED]: Đọc Display bằng getNestedValue
         const dField = this.displayField(); 
         
         if (dField && typeof item === 'object' && !!item) {
@@ -468,7 +468,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
         this.sdSelection.emit({ values: [item], selectedItems: [item], value: item, selectedItem: item });
       }
     } else if (vField && dField) {
-      // [UPDATED]: Láº¥y giÃ¡ trá»‹ val = getNestedValue(item, vField)
+      // [UPDATED]: Lấy giá trị val = getNestedValue(item, vField)
       const val = this.getNestedValue(item, vField) ?? null;
       if (this.formControl.value !== val) {
         this.formControl.setValue(val, { emitEvent: false });

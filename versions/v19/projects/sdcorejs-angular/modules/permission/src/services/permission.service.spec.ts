@@ -1,4 +1,4 @@
-﻿import { TestBed } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { SdPermissionService } from './permission.service';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
@@ -7,7 +7,7 @@ import { SdCacheService } from '@sdcorejs/angular/services/cache';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Minimal SdCacheService stub â€” uses in-memory Map instead of sessionStorage */
+/** Minimal SdCacheService stub — uses in-memory Map instead of sessionStorage */
 function makeCacheServiceStub(): SdCacheService {
   const store = new Map<string, unknown>();
 
@@ -74,7 +74,7 @@ describe('SdPermissionService', () => {
       expect(() =>
         makeService([
           { loadPermissions: () => [] }, // key = undefined
-          { loadPermissions: () => [] }, // key = undefined â€” duplicate
+          { loadPermissions: () => [] }, // key = undefined — duplicate
         ])
       ).toThrowError(/Duplicate permission configuration key/);
     });
@@ -114,14 +114,14 @@ describe('SdPermissionService', () => {
       expect(result.filter(p => p === 'PERM_A').length).toBe(1);
     });
 
-    it('is idempotent â€” loadPermissions loader called only once on repeated calls', async () => {
+    it('is idempotent — loadPermissions loader called only once on repeated calls', async () => {
       const loadSpy = jasmine.createSpy('loadPermissions').and.returnValue(
         Promise.resolve(['PERM_A'])
       );
       const service = makeService({ loadPermissions: loadSpy });
 
       await service.loadPermissions();
-      await service.loadPermissions(); // second call â€” cache hit
+      await service.loadPermissions(); // second call — cache hit
 
       expect(loadSpy).toHaveBeenCalledTimes(1);
     });
@@ -142,7 +142,7 @@ describe('SdPermissionService', () => {
       expect(result).toEqual([]);
     });
 
-    it('loads by key â€” keyed config is isolated from default config', async () => {
+    it('loads by key — keyed config is isolated from default config', async () => {
       const service = makeService([
         { key: 'pcm', loadPermissions: () => Promise.resolve(['PCM_PERM']) },
         { loadPermissions: () => Promise.resolve(['PORTAL_PERM']) },
@@ -161,7 +161,7 @@ describe('SdPermissionService', () => {
         loadPermissions: () => Promise.resolve(['PORTAL_PERM']),
       });
 
-      // 'oms' has no config â†’ resolves with effective key = undefined â†’ uses portal config
+      // 'oms' has no config → resolves with effective key = undefined → uses portal config
       const result = await service.loadPermissions('oms');
       // The fallback sends it to the undefined-key config
       expect(result).toEqual(['PORTAL_PERM']);
@@ -241,7 +241,7 @@ describe('SdPermissionService', () => {
       expect(service.hasPermission('ANY_PERM')).toBeTrue();
     });
 
-    it('respects permissionKey â€” checks against the correct keyed map', async () => {
+    it('respects permissionKey — checks against the correct keyed map', async () => {
       const service = makeService([
         { key: 'pcm', loadPermissions: () => Promise.resolve(['PCM_ONLY']) },
         { loadPermissions: () => Promise.resolve(['PORTAL_ONLY']) },
@@ -357,4 +357,3 @@ describe('SdPermissionService', () => {
     });
   });
 });
-

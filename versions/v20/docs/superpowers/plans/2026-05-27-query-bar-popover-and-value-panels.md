@@ -1,4 +1,4 @@
-�# query-bar popover compact + Search placement + inline value panels � Implementation Plan
+# query-bar popover compact + Search placement + inline value panels — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -19,10 +19,10 @@ Branch `query-bar`. Commit per task. English commit messages; keep Vietnamese `/
 
 ## File Structure
 
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` � popover close commit, value-panel state/helpers, `MatDatepickerModule` import.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` � popover header/body/footer, Search button position, value popover content.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` � header/operator, neutral search button, option-list + calendar styling.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` � tests.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` — popover close commit, value-panel state/helpers, `MatDatepickerModule` import.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` — popover header/body/footer, Search button position, value popover content.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` — header/operator, neutral search button, option-list + calendar styling.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` — tests.
 
 ---
 
@@ -62,16 +62,16 @@ Branch `query-bar`. Commit per task. English commit messages; keep Vietnamese `/
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � `component.commitChipEditOnClose is not a function`.
+Run the query-bar spec. Expected: FAIL — `component.commitChipEditOnClose is not a function`.
 
 - [ ] **Step 3: Implement**
 
-In `query-bar.component.ts`, add `commitChipEditOnClose` (do NOT delete `applyChipEdit` yet � the footer button still calls it until Task 2 removes the footer):
+In `query-bar.component.ts`, add `commitChipEditOnClose` (do NOT delete `applyChipEdit` yet — the footer button still calls it until Task 2 removes the footer):
 
 ```ts
   /**
    * Commit the staged operator + value into the chip when the popover closes.
-   * why: the Áp dụng button is gone � closing the popover (out-focus) auto-applies the
+   * why: the Áp dụng button is gone — closing the popover (out-focus) auto-applies the
    * staged edit. No emit: the global Search button remains the only query trigger.
    */
   commitChipEditOnClose(): void {
@@ -110,7 +110,7 @@ git commit -m "feat(query-bar): popover auto-applies staged edit on close (no Á
 
 ---
 
-## Task 2: Popover layout � operator in header, no labels, no footer, placeholders
+## Task 2: Popover layout — operator in header, no labels, no footer, placeholders
 
 **Files:** `query-bar.component.html`, `query-bar.component.scss`, `query-bar.component.spec.ts`
 
@@ -143,7 +143,7 @@ git commit -m "feat(query-bar): popover auto-applies staged edit on close (no Á
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � operator not in `.c-pop-header`, section labels / footer still present.
+Run the query-bar spec. Expected: FAIL — operator not in `.c-pop-header`, section labels / footer still present.
 
 - [ ] **Step 3: Rewrite the popover header + body + footer**
 
@@ -157,7 +157,7 @@ In `query-bar.component.html`, replace the header block (lines ~75-87) with one 
             class="c-pop-header-field"
             [matMenuTriggerFor]="fieldSwitchPicker"
             [matMenuTriggerData]="{ currentIndex: index }"
-            matTooltip="Đ�"i field">
+            matTooltip="Đổi field">
             <span>{{ _editField.label }}</span>
             <mat-icon fontSet="material-icons-outlined">unfold_more</mat-icon>
           </button>
@@ -172,24 +172,24 @@ In `query-bar.component.html`, replace the header block (lines ~75-87) with one 
         </div>
 ```
 
-In the body, delete the operator block + both `c-pop-section-label` rows. Replace the body open (lines ~89-106, from `<div class="c-pop-body" ...>` through the removed `Giá tr�9` label) so the body starts directly with the value `@if`:
+In the body, delete the operator block + both `c-pop-section-label` rows. Replace the body open (lines ~89-106, from `<div class="c-pop-body" ...>` through the removed `Giá trị` label) so the body starts directly with the value `@if`:
 
 ```html
         <div class="c-pop-body" (click)="$event.stopPropagation()">
-          <!-- Value � per-kind sd-* control, skipped for NULL / NOT_NULL. Placeholder
+          <!-- Value — per-kind sd-* control, skipped for NULL / NOT_NULL. Placeholder
                makes the field self-explanatory now that section labels are gone. -->
           @if (!isNoDataOperator(_editOp)) {
             @if (_editOp === 'BETWEEN') {
 ```
 
-(The `@if (_editOp === 'BETWEEN')` and the rest of the value ladder stay; just remove the wrapping `<div>` + `<div class="c-pop-section-label">Giá tr�9</div>` that previously sat between `c-pop-body` and the value `@if`. Ensure the closing `}` / `</div>` count stays balanced � the value ladder's outer `@if (!isNoDataOperator(_editOp))` now wraps the kind branches directly.)
+(The `@if (_editOp === 'BETWEEN')` and the rest of the value ladder stay; just remove the wrapping `<div>` + `<div class="c-pop-section-label">Giá trị</div>` that previously sat between `c-pop-body` and the value `@if`. Ensure the closing `}` / `</div>` count stays balanced — the value ladder's outer `@if (!isNoDataOperator(_editOp))` now wraps the kind branches directly.)
 
 Add placeholders to the single-value controls in that ladder:
-- `sd-select` (values/lazy-values, line ~174): add `placeholder="Chọn giá tr�9"`.
-- `sd-date` (line ~187): add `placeholder="Chọn giá tr�9"`.
-- `sd-datetime` (line ~193): add `placeholder="Chọn giá tr�9"`.
-- `sd-input-number` (line ~199): add `placeholder="Nhập giá tr�9"`.
-- `sd-input` (line ~205): add `placeholder="Nhập giá tr�9"`.
+- `sd-select` (values/lazy-values, line ~174): add `placeholder="Chọn giá trị"`.
+- `sd-date` (line ~187): add `placeholder="Chọn giá trị"`.
+- `sd-datetime` (line ~193): add `placeholder="Chọn giá trị"`.
+- `sd-input-number` (line ~199): add `placeholder="Nhập giá trị"`.
+- `sd-input` (line ~205): add `placeholder="Nhập giá trị"`.
 (BETWEEN keeps its `Từ`/`Đến`; boolean unchanged.)
 
 Delete the footer block entirely (lines ~215-224):
@@ -226,12 +226,12 @@ Run the query-bar spec. Expected: PASS.
 
 ```bash
 git add projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts
-git commit -m "feat(query-bar): compact popover � operator in header, no labels/footer, value placeholders"
+git commit -m "feat(query-bar): compact popover — operator in header, no labels/footer, value placeholders"
 ```
 
 ---
 
-## Task 3: Search button � far right + neutral style
+## Task 3: Search button — far right + neutral style
 
 **Files:** `query-bar.component.html`, `query-bar.component.scss`, `query-bar.component.spec.ts`
 
@@ -256,13 +256,13 @@ git commit -m "feat(query-bar): compact popover � operator in header, no labe
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � search-trigger is the first child, not last.
+Run the query-bar spec. Expected: FAIL — search-trigger is the first child, not last.
 
 - [ ] **Step 3: Move the button + restyle**
 
 In `query-bar.component.html`, move the Search `<button class="c-search-trigger">` block from the top of `.c-query-bar__actions` to be the **last** element inside that div (after the Clear-all `@if` block, before the closing `</div>` at line ~493).
 
-In `query-bar.component.scss`, restyle `.c-search-trigger` to match the neutral Clear-all look (bordered, dark, density-sized) � replace the primary-tinted rule:
+In `query-bar.component.scss`, restyle `.c-search-trigger` to match the neutral Clear-all look (bordered, dark, density-sized) — replace the primary-tinted rule:
 
 ```scss
 .c-search-trigger {
@@ -288,7 +288,7 @@ In `query-bar.component.scss`, restyle `.c-search-trigger` to match the neutral 
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run the query-bar spec. Expected: PASS (the earlier `search trigger button` tests still pass � disabled state + click still wired).
+Run the query-bar spec. Expected: PASS (the earlier `search trigger button` tests still pass — disabled state + click still wired).
 
 - [ ] **Step 5: Commit**
 
@@ -359,7 +359,7 @@ git commit -m "feat(query-bar): move Search button to far right, neutral style"
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � `valuePopoverOptions`/`toggleValueOption`/etc. not functions; `openBuildValuePopover` arity differs.
+Run the query-bar spec. Expected: FAIL — `valuePopoverOptions`/`toggleValueOption`/etc. not functions; `openBuildValuePopover` arity differs.
 
 - [ ] **Step 3: Implement the state + helpers**
 
@@ -373,7 +373,7 @@ Add `MatMenuTrigger` is already imported. Add the search signal + accessor near 
   readonly valuePopoverSearch = this.#valuePopoverSearch.asReadonly();
   setValuePopoverSearch(v: string): void { this.#valuePopoverSearch.set(v); }
 
-  /** The trigger that opened the value popover � lets single-select/date close it. */
+  /** The trigger that opened the value popover — lets single-select/date close it. */
   #activeValueTrigger: MatMenuTrigger | null = null;
 ```
 
@@ -453,7 +453,7 @@ Add the draft + option helpers:
     this.#activeValueTrigger?.closeMenu();
   }
 
-  /** On popover close: multi rows only updated the draft � commit it now. Single/date
+  /** On popover close: multi rows only updated the draft — commit it now. Single/date
    *  already committed (ctx cleared), so this is a no-op for them. Always reset search. */
   onValuePopoverClosed(): void {
     const ctx = this.#valueCtx();
@@ -477,7 +477,7 @@ git commit -m "feat(query-bar): inline value-panel helpers (option list, multi t
 
 ---
 
-## Task 5: Inline value popover template � option list + calendar, styling, build sweep
+## Task 5: Inline value popover template — option list + calendar, styling, build sweep
 
 **Files:** `query-bar.component.ts`, `query-bar.component.html`, `query-bar.component.scss`, `query-bar.component.spec.ts`
 
@@ -524,7 +524,7 @@ git commit -m "feat(query-bar): inline value-panel helpers (option list, multi t
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � popover still renders `sd-select` / `sd-date`.
+Run the query-bar spec. Expected: FAIL — popover still renders `sd-select` / `sd-date`.
 
 - [ ] **Step 3: Import MatDatepickerModule**
 
@@ -574,7 +574,7 @@ In `query-bar.component.html`, replace the `#valuePopover` mat-menu (lines ~422-
         } @else if (field.kind === 'date') {
           <mat-calendar [selected]="$any(currentDraftValue())" (selectedChange)="commitValuePopoverDate($any($event))"></mat-calendar>
         } @else if (field.kind === 'datetime') {
-          <sd-datetime size="sm" [autoId]="'qb-valpop'" placeholder="Chọn giá tr�9" (sdChange)="commitValuePopover($event)"></sd-datetime>
+          <sd-datetime size="sm" [autoId]="'qb-valpop'" placeholder="Chọn giá trị" (sdChange)="commitValuePopover($event)"></sd-datetime>
         }
       </div>
     </ng-template>
@@ -583,7 +583,7 @@ In `query-bar.component.html`, replace the `#valuePopover` mat-menu (lines ~422-
 
 Update the two value-trigger buttons to declare a local `matMenuTrigger` ref and pass it to the open handler:
 
-- Edit trigger (line ~270-274) � add `#editValueTrigger="matMenuTrigger"` and change `(menuOpened)`:
+- Edit trigger (line ~270-274) — add `#editValueTrigger="matMenuTrigger"` and change `(menuOpened)`:
   ```html
               <button
                 type="button"
@@ -595,7 +595,7 @@ Update the two value-trigger buttons to declare a local `matMenuTrigger` ref and
                 {{ chipValueText(filter) }}
               </button>
   ```
-- Build trigger (line ~301-308) � it already has `#buildValueTrigger="matMenuTrigger"`; change `(menuOpened)`:
+- Build trigger (line ~301-308) — it already has `#buildValueTrigger="matMenuTrigger"`; change `(menuOpened)`:
   ```html
               (menuOpened)="openBuildValuePopover(_b.field, buildValueTrigger)">
   ```
@@ -654,7 +654,7 @@ Run the query-bar spec. Expected: PASS.
 
 - [ ] **Step 7: Full build + combined sweep**
 
-Run: `npm run build` � Expected: `Built Angular Package`, no errors.
+Run: `npm run build` — Expected: `Built Angular Package`, no errors.
 
 Run:
 ```bash
@@ -669,17 +669,16 @@ Expected: TOTAL all SUCCESS.
 
 ```bash
 git add projects/sdcorejs-angular/components/query-bar
-git commit -m "feat(query-bar): inline value direct panels � option list + mat-calendar"
+git commit -m "feat(query-bar): inline value direct panels — option list + mat-calendar"
 ```
 
 ---
 
 ## Self-Review notes
 
-- **Spec coverage (compact popover):** operator in header + no "Điều ki�!n" label (Task 2); drop "Giá tr�9" label + placeholders (Task 2); remove Áp dụng + auto-apply on close, no emit (Task 1); no-data �  empty body (existing `@if (!isNoDataOperator)` retained, Task 2). **Search button (B):** far right (Task 3) + neutral style (Task 3).
+- **Spec coverage (compact popover):** operator in header + no "Điều kiện" label (Task 2); drop "Giá trị" label + placeholders (Task 2); remove Áp dụng + auto-apply on close, no emit (Task 1); no-data → empty body (existing `@if (!isNoDataOperator)` retained, Task 2). **Search button (B):** far right (Task 3) + neutral style (Task 3).
 - **Spec coverage (inline value panels):** option list single/multi + search (Task 4 helpers + Task 5 DOM); `isOptionSelected` (Task 4); mat-calendar for date (Task 5); commit-on-close for multi (Task 4 `onValuePopoverClosed`); datetime keeps `sd-datetime` (Task 5 template); input/number/boolean unchanged.
-- **Type consistency:** `commitChipEditOnClose()`, `openEditValuePopover(i, field, trigger)` / `openBuildValuePopover(field, trigger)` (both gain a `MatMenuTrigger | null` param � callers updated in Task 5 template), `valuePopoverOptions()`, `isOptionSelected(opt)`, `pickValueOption(opt)`, `toggleValueOption(opt)`, `commitValuePopoverDate(d)`, `onValuePopoverClosed()`, `currentDraftValue()`, `valuePopoverSearch()` / `setValuePopoverSearch(v)` � names consistent across TS + template.
+- **Type consistency:** `commitChipEditOnClose()`, `openEditValuePopover(i, field, trigger)` / `openBuildValuePopover(field, trigger)` (both gain a `MatMenuTrigger | null` param — callers updated in Task 5 template), `valuePopoverOptions()`, `isOptionSelected(opt)`, `pickValueOption(opt)`, `toggleValueOption(opt)`, `commitValuePopoverDate(d)`, `onValuePopoverClosed()`, `currentDraftValue()`, `valuePopoverSearch()` / `setValuePopoverSearch(v)` — names consistent across TS + template.
 - **Note:** Task 4's tests call `openBuildValuePopover(field, null)` (trigger optional/null in tests); the template passes the real `MatMenuTrigger`. `#activeValueTrigger?.closeMenu()` is null-safe.
-- **Risk:** `mat-calendar [selected]` expects a `Date`; if the stored draft is a string the calendar may not highlight � acceptable (selection still commits a `Date`). The existing `commitValuePopover` reshaping handles data types.
+- **Risk:** `mat-calendar [selected]` expects a `Date`; if the stored draft is a string the calendar may not highlight — acceptable (selection still commits a `Date`). The existing `commitValuePopover` reshaping handles data types.
 ```
-

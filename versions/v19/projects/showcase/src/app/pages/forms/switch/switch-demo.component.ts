@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdSwitch } from '@sdcorejs/angular/forms/switch';
@@ -65,4 +65,3 @@ export class SwitchDemoComponent {
   lockedA = signal<boolean>(true);
   lockedB = signal<boolean>(false);
 }
-

@@ -1,4 +1,4 @@
-﻿import { SdSearch } from '@sdcorejs/angular/forms/models';
+import { SdSearch } from '@sdcorejs/angular/forms/models';
 import {
   SdFormGenericArgs,
   SdFormGenericDefinitionHtml,
@@ -10,12 +10,12 @@ import {
 import { SdFormGenericValidationConfiguration } from '../models/form-generic-validation.model';
 
 export interface IWorkflowConfigurationForm<TSelectionArgs = any> {
-  // Máº«u chung chá»n nhanh
+  // Mẫu chung chọn nhanh
   templates: SdFormGenericTemplate[];
   // Definition cho select/radio/checklist
   selections:  SdFormGenericDefinitionSelection<any, TSelectionArgs>[] | (() => SdFormGenericDefinitionSelection<any, TSelectionArgs>[]) | (() => Promise<SdFormGenericDefinitionSelection[]>);
-  getValues?: (key: string, selectionArgs?: TSelectionArgs) => Promise<SdFormGenericSelectionItem[]>; // Náº¿u sá»­ dá»¥ng valuesKey
-  getLazyValues?: (key: string, selectionArgs?: TSelectionArgs) => ((searchArgs: Parameters<SdSearch>[0], args: SdFormGenericArgs) => Promise<SdFormGenericSelectionItem[]>); // Náº¿u sá»­ dá»¥ng lazyValuesKey
+  getValues?: (key: string, selectionArgs?: TSelectionArgs) => Promise<SdFormGenericSelectionItem[]>; // Nếu sử dụng valuesKey
+  getLazyValues?: (key: string, selectionArgs?: TSelectionArgs) => ((searchArgs: Parameters<SdSearch>[0], args: SdFormGenericArgs) => Promise<SdFormGenericSelectionItem[]>); // Nếu sử dụng lazyValuesKey
   // Definition cho table
   tables: SdFormGenericDefinitionTable[];
   // Definition cho table
@@ -23,4 +23,3 @@ export interface IWorkflowConfigurationForm<TSelectionArgs = any> {
   // Validation
   validation?: SdFormGenericValidationConfiguration;
 }
-

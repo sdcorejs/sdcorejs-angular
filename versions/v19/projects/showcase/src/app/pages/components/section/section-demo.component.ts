@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdSectionItem } from '@sdcorejs/angular/components/section';
@@ -82,4 +82,3 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
 export class SectionDemoComponent {
   readonly filterCollapsed = signal(false);
 }
-

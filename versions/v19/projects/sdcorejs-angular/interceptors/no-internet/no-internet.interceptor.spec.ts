@@ -1,4 +1,4 @@
-﻿import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
@@ -6,7 +6,7 @@ import { MatSnackBar, MatSnackBarRef } from '@angular/material/snack-bar';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNoInternetInterceptor } from './no-internet.interceptor';
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const HEALTH_URL = 'https://jsonplaceholder.typicode.com/todos/1';
 
@@ -15,7 +15,7 @@ function flushNetworkError(httpMock: HttpTestingController, url: string): void {
   httpMock.expectOne(url).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
 }
 
-// â”€â”€â”€ Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('SdNoInternetInterceptor', () => {
   let httpClient: HttpClient;
@@ -25,7 +25,7 @@ describe('SdNoInternetInterceptor', () => {
   let snackBarRefSpy: jasmine.SpyObj<MatSnackBarRef<any>>;
 
   beforeEach(() => {
-    // MatSnackBarRef mock â€” needs `onAction()` and `dismiss()`.
+    // MatSnackBarRef mock — needs `onAction()` and `dismiss()`.
     snackBarRefSpy = jasmine.createSpyObj<MatSnackBarRef<any>>('MatSnackBarRef', ['dismiss', 'onAction']);
     snackBarRefSpy.onAction.and.returnValue({ subscribe: jasmine.createSpy('subscribe') } as any);
 
@@ -61,7 +61,7 @@ describe('SdNoInternetInterceptor', () => {
     Object.defineProperty(window.navigator, 'onLine', { value: true, configurable: true });
   });
 
-  // â”€â”€â”€ 1. Instantiation / registration â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 1. Instantiation / registration ────────────────────────────────────────
 
   it('should be created and registered as an HTTP interceptor', () => {
     const interceptor = TestBed.inject(SdNoInternetInterceptor);
@@ -69,7 +69,7 @@ describe('SdNoInternetInterceptor', () => {
     expect(interceptor).toBeInstanceOf(SdNoInternetInterceptor);
   });
 
-  // â”€â”€â”€ 2. Pass-through on success (online) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. Pass-through on success (online) ────────────────────────────────────
 
   it('should pass through a successful (200) response without opening a snackbar', () => {
     let result: unknown;
@@ -81,7 +81,7 @@ describe('SdNoInternetInterceptor', () => {
     expect(result).toEqual({ ok: true });
   });
 
-  // â”€â”€â”€ 3. Status 0 â€” genuine offline path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 3. Status 0 — genuine offline path ─────────────────────────────────────
 
   it('should set #isOffline and ping health endpoint when status 0 is returned', () => {
     httpClient.get('/api/resource').subscribe({ error: () => undefined });
@@ -89,7 +89,7 @@ describe('SdNoInternetInterceptor', () => {
     // Trigger the original status-0 error.
     flushNetworkError(httpMock, '/api/resource');
 
-    // expectOne throws if the request was NOT made â€” that IS the assertion.
+    // expectOne throws if the request was NOT made — that IS the assertion.
     const healthReq = httpMock.expectOne(HEALTH_URL);
     expect(healthReq.request.url).toBe(HEALTH_URL);
     healthReq.error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
@@ -100,7 +100,7 @@ describe('SdNoInternetInterceptor', () => {
 
     flushNetworkError(httpMock, '/api/resource');
 
-    // Health ping fails too â†’ genuine offline.
+    // Health ping fails too → genuine offline.
     httpMock.expectOne(HEALTH_URL).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
 
     expect(snackBarSpy.open).toHaveBeenCalledWith(
@@ -122,14 +122,14 @@ describe('SdNoInternetInterceptor', () => {
     expect(caughtError!.status).toBe(0);
   });
 
-  // â”€â”€â”€ 4. Status 0 â€” CORS / SSL / server-block (health ping succeeds) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 4. Status 0 — CORS / SSL / server-block (health ping succeeds) ──────────
 
   it('should show a CORS-error snackbar when health ping succeeds (not a real offline)', () => {
     httpClient.get('/api/cors-fail').subscribe({ error: () => undefined });
 
     flushNetworkError(httpMock, '/api/cors-fail');
 
-    // Health ping succeeds â†’ was CORS/SSL error, not real offline.
+    // Health ping succeeds → was CORS/SSL error, not real offline.
     httpMock.expectOne(HEALTH_URL).flush({});
 
     expect(snackBarSpy.open).toHaveBeenCalledWith(
@@ -151,19 +151,19 @@ describe('SdNoInternetInterceptor', () => {
     expect(caughtError!.status).toBe(0);
   });
 
-  // â”€â”€â”€ 5. #isOffline guard â€” no duplicate health pings â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 5. #isOffline guard — no duplicate health pings ─────────────────────────
 
   it('should NOT ping the health endpoint a second time when already offline (#isOffline guard)', () => {
-    // First request â†’ triggers health ping â†’ genuine offline.
+    // First request → triggers health ping → genuine offline.
     httpClient.get('/api/a').subscribe({ error: () => undefined });
     flushNetworkError(httpMock, '/api/a');
     httpMock.expectOne(HEALTH_URL).error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
 
-    // Second status-0 while still offline â†’ guard must suppress second health ping.
+    // Second status-0 while still offline → guard must suppress second health ping.
     httpClient.get('/api/b').subscribe({ error: () => undefined });
     flushNetworkError(httpMock, '/api/b');
 
-    // expectNone throws if a request IS pending â€” that IS the assertion.
+    // expectNone throws if a request IS pending — that IS the assertion.
     const pending = httpMock.match(HEALTH_URL);
     expect(pending.length).toBe(0);
   });
@@ -181,7 +181,7 @@ describe('SdNoInternetInterceptor', () => {
     expect(snackBarSpy.open.calls.count()).toBe(firstCallCount);
   });
 
-  // â”€â”€â”€ 6. Status 503 â€” maintenance â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 6. Status 503 — maintenance ────────────────────────────────────────────
 
   it('should show a maintenance snackbar when a 503 response is returned', () => {
     httpClient.get('/api/service').subscribe({ error: () => undefined });
@@ -212,7 +212,7 @@ describe('SdNoInternetInterceptor', () => {
     expect(caughtError!.status).toBe(503);
   });
 
-  // â”€â”€â”€ 7. Other error statuses pass through untouched â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 7. Other error statuses pass through untouched ─────────────────────────
 
   it('should NOT open a snackbar for a 400 error and should rethrow it', () => {
     let caughtError: HttpErrorResponse | undefined;
@@ -244,7 +244,7 @@ describe('SdNoInternetInterceptor', () => {
     expect(caughtError?.status).toBe(500);
   });
 
-  // â”€â”€â”€ 8. Polling â€” recovery path â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 8. Polling — recovery path ─────────────────────────────────────────────
 
   it('should show a "restored" snackbar when polling succeeds after an offline period', fakeAsync(() => {
     // Trigger genuine offline.
@@ -255,7 +255,7 @@ describe('SdNoInternetInterceptor', () => {
     // Advance timer by one poll interval (3 000 ms).
     tick(3000);
 
-    // Polling fires â€” flush the health-check request as a success.
+    // Polling fires — flush the health-check request as a success.
     httpMock.expectOne(HEALTH_URL).flush({});
 
     expect(snackBarSpy.open).toHaveBeenCalledWith(
@@ -286,9 +286,8 @@ describe('SdNoInternetInterceptor', () => {
     tick(3000);
     httpMock.expectOne(HEALTH_URL).flush({});
 
-    // Advance another interval â€” no more health requests should be pending.
+    // Advance another interval — no more health requests should be pending.
     tick(3000);
     httpMock.expectNone(HEALTH_URL);
   }));
 });
-

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -68,29 +68,29 @@ export class ExternalFilterComponent {
   inlineExternal = signal<Record<string, boolean>>({});
   filtered = signal<boolean>(false);
   isMobileOrTablet = BrowserUtilities.isMobile();
-  // FormGroup lÃ  instance, parent Ä‘á»c qua viewChild â€” giá»¯ readonly field.
+  // FormGroup là instance, parent đọc qua viewChild — giữ readonly field.
   readonly form = new FormGroup({});
 
   // ==========================================
   // 4. COMPUTED
   // ==========================================
-  // autoId base = `<input>-external-` â€” template ghÃ©p tiáº¿p `<field>` cho má»—i control.
+  // autoId base = `<input>-external-` — template ghép tiếp `<field>` cho mỗi control.
   autoId = computed(() => {
     const base = this.autoIdInput();
     return base ? `${base}-external-` : '';
   });
 
-  // Layout column: 4 filter/row â†’ 3 cá»™t; máº·c Ä‘á»‹nh 6 filter/row â†’ 2 cá»™t.
+  // Layout column: 4 filter/row → 3 cột; mặc định 6 filter/row → 2 cột.
   col = computed<2 | 3>(() => (this.filter()?.externalFilterPerRow === 4 ? 3 : 2));
 
-  // Normalize externalFilters vá» máº£ng (input cÃ³ thá»ƒ null/undefined).
+  // Normalize externalFilters về mảng (input có thể null/undefined).
   filterItems = computed(() => this.externalFilters() || []);
 
   constructor() {
-    // Subscribe filterRegister observers â€” re-subscribe khi input Ä‘á»•i, cleanup khi Ä‘á»•i/destroy.
-    // QUAN TRá»ŒNG: pháº£i wrap untracked(). Observer cÃ³ startWith() â†’ emit Äá»’NG Bá»˜ ngay khi
-    // subscribe, callback Ä‘á»c this.externalFilter() (qua #filtered) sáº½ bá»‹ effect track â†’
-    // externalFilter.set({}) táº¡o ref má»›i â†’ effect rerun â†’ resubscribe â†’ loop vÃ´ háº¡n â†’ OOM.
+    // Subscribe filterRegister observers — re-subscribe khi input đổi, cleanup khi đổi/destroy.
+    // QUAN TRỌNG: phải wrap untracked(). Observer có startWith() → emit ĐỒNG BỘ ngay khi
+    // subscribe, callback đọc this.externalFilter() (qua #filtered) sẽ bị effect track →
+    // externalFilter.set({}) tạo ref mới → effect rerun → resubscribe → loop vô hạn → OOM.
     effect(onCleanup => {
       const register = this.filterRegister();
       if (!register) return;
@@ -112,7 +112,7 @@ export class ExternalFilterComponent {
       });
     });
 
-    // Khi form values Ä‘á»•i â†’ cáº­p nháº­t filtered. takeUntilDestroyed() tá»± láº¥y DestroyRef tá»« injection context.
+    // Khi form values đổi → cập nhật filtered. takeUntilDestroyed() tự lấy DestroyRef từ injection context.
     this.form.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.filtered.set(this.#filtered());
       this.#ref.markForCheck();
@@ -128,7 +128,7 @@ export class ExternalFilterComponent {
 
   onFilter = (externalFilter: SdTableExternalFilter) => {
     externalFilter?.onChange?.(this.externalFilter()?.[externalFilter.field]);
-    // Náº¿u khÃ´ng pháº£i manual filter thÃ¬ submit luÃ´n; manual â†’ Ä‘á»£i user báº¥m nÃºt Search.
+    // Nếu không phải manual filter thì submit luôn; manual → đợi user bấm nút Search.
     if (!this.filter()?.manualFilter) {
       this.onSubmit();
     }
@@ -144,7 +144,7 @@ export class ExternalFilterComponent {
     });
   };
 
-  // Public API â€” table.component gá»i Ä‘á»ƒ commit pending value vÃ o filterRegister mÃ  khÃ´ng trigger reload.
+  // Public API — table.component gọi để commit pending value vào filterRegister mà không trigger reload.
   updateFilter = () => {
     this.filterRegister()?.value.set({
       externalFilter: this.externalFilter(),
@@ -173,9 +173,9 @@ export class ExternalFilterComponent {
   // ==========================================
   #filtered = (): boolean => {
     return Object.values({ ...this.externalFilter() }).some(val => {
-      // Máº£ng cÃ³ pháº§n tá»­ â†’ coi nhÆ° cÃ³ filter
+      // Mảng có phần tử → coi như có filter
       if (Array.isArray(val)) return !!val.length;
-      // Object (date) cÃ³ from/to â†’ cÃ³ filter
+      // Object (date) có from/to → có filter
       if (val && typeof val === 'object') {
         if ('from' in val && !!val.from) return true;
         if ('to' in val && !!val.to) return true;
@@ -185,4 +185,3 @@ export class ExternalFilterComponent {
     });
   };
 }
-

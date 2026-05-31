@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
@@ -17,7 +17,7 @@ import {
   model,
   OnInit,
   output,
-  signal, // THÃŠM IMPORT NÃ€Y
+  signal, // THÊM IMPORT NÀY
   Signal,
   TemplateRef,
   untracked,
@@ -128,15 +128,15 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -169,7 +169,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   inlineError = input<string | undefined>();
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -187,7 +187,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   floatLabel = input<FloatLabelType>('auto');
 
-  // Má»Ÿ rá»™ng kiá»ƒu dá»¯ liá»‡u cho phÃ©p nháº­n Signal tá»« bÃªn ngoÃ i truyá»n vÃ o
+  // Mở rộng kiểu dữ liệu cho phép nhận Signal từ bên ngoài truyền vào
   items = input<undefined | null | T[] | SdSearch | Signal<T[]>>();
 
   valueModel = model<boolean | number | string | (number | string)[] | undefined | null>(undefined, { alias: 'model' });
@@ -213,17 +213,17 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #searchRequestId = 0;
   #hashedValue?: string;
 
-  // [NÃ‚NG Cáº¤P]: Xá»­ lÃ½ Unwrap (Má»Ÿ há»™p) Signal lá»“ng nhau náº¿u cÃ³
+  // [NÂNG CẤP]: Xử lý Unwrap (Mở hộp) Signal lồng nhau nếu có
   actualItems = computed(() => {
     const rawItems = this.items();
-    // Náº¿u cha truyá»n vÃ o má»™t biáº¿n Signal, ta cáº§n gá»i rawItems() Ä‘á»ƒ láº¥y máº£ng tháº­t
+    // Nếu cha truyền vào một biến Signal, ta cần gọi rawItems() để lấy mảng thật
     if (isSignal(rawItems)) {
       return rawItems();
     }
     return rawItems;
   });
 
-  // Thay vÃ¬ toObservable(this.items), ta observe cÃ¡i actualItems Ä‘Ã£ Ä‘Æ°á»£c unwrap
+  // Thay vì toObservable(this.items), ta observe cái actualItems đã được unwrap
   #items$ = toObservable(this.actualItems);
   #valueModel$ = toObservable(this.valueModel);
 
@@ -293,7 +293,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     const items = this.selectedItems();
     if (!items || !items.length) return '';
     const vF = this.valueField();
-    return items.map(item => (vF ? `â€¢ ${this.itemValue(item)} - ${this.itemDisplay(item)}` : `â€¢ ${item}`)).join('\n');
+    return items.map(item => (vF ? `• ${this.itemValue(item)} - ${this.itemDisplay(item)}` : `• ${item}`)).join('\n');
   });
 
   updatePanelWidth = () => {
@@ -347,20 +347,20 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     });
 
     // ==========================================
-    // EFFECT: QUáº¢N LÃ FORM GROUP & CONTROL
+    // EFFECT: QUẢN LÝ FORM GROUP & CONTROL
     // ==========================================
     effect(onCleanup => {
-      // 1. Láº¥y giÃ¡ trá»‹ má»›i nháº¥t cá»§a form vÃ  name
+      // 1. Lấy giá trị mới nhất của form và name
       const formGroup = this.form();
       const controlName = this.name();
       if (formGroup && controlName) {
-        // 2. ThÃªm control vÃ o form
+        // 2. Thêm control vào form
         formGroup.addControl(controlName, this.formControl);
-        // 3. ÄÄƒng kÃ½ hÃ m dá»n dáº¹p (Cleanup)
+        // 3. Đăng ký hàm dọn dẹp (Cleanup)
         onCleanup(() => {
-          // HÃ m nÃ y sáº½ tá»± Ä‘á»™ng cháº¡y trong 2 trÆ°á»ng há»£p:
-          // - Khi Component bá»‹ Destroy (thay tháº¿ ngOnDestroy)
-          // - Khi form() hoáº·c name() thay Ä‘á»•i giÃ¡ trá»‹ (nÃ³ sáº½ gá»¡ control cÅ© ra trÆ°á»›c khi add cÃ¡i má»›i vÃ o)
+          // Hàm này sẽ tự động chạy trong 2 trường hợp:
+          // - Khi Component bị Destroy (thay thế ngOnDestroy)
+          // - Khi form() hoặc name() thay đổi giá trị (nó sẽ gỡ control cũ ra trước khi add cái mới vào)
           formGroup.removeControl(controlName);
         });
       }
@@ -427,8 +427,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
           return formValue === value;
         });
 
-        // Khi filtered mode báº­t vÃ  multiple=true, luÃ´n Ä‘áº©y item Ä‘Ã£ chá»n lÃªn trÃªn
-        // Ä‘á»ƒ user dá»… nhÃ¬n tháº¥y selection hiá»‡n táº¡i, ká»ƒ cáº£ dataset chÆ°a vÆ°á»£t limit.
+        // Khi filtered mode bật và multiple=true, luôn đẩy item đã chọn lên trên
+        // để user dễ nhìn thấy selection hiện tại, kể cả dataset chưa vượt limit.
         const shouldPinSelectedFirst = this.filtered() && this.multiple() && isArray;
         if (!shouldPinSelectedFirst && items.length <= this.limit()) return filteredList;
 
@@ -597,8 +597,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     this.formControl.updateValueAndValidity({ emitEvent: true });
   };
 
-  // Chá»‰ cáº­p nháº­t model binding, KHÃ”NG emit event.
-  // sdChange + sdSelection sáº½ chá»‰ Ä‘Æ°á»£c emit khi panel Ä‘Ã³ng (onOpenedChange).
+  // Chỉ cập nhật model binding, KHÔNG emit event.
+  // sdChange + sdSelection sẽ chỉ được emit khi panel đóng (onOpenedChange).
   #onChange = async (value: boolean | number | string | (number | string)[]) => {
     this.valueModel.set(value);
   };
@@ -637,9 +637,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   /** Open the select panel programmatically (anchors to the mat-select trigger). */
   open = () => {
     if (this.formControl.disabled) return;
-    // why: signal write tá»« updatePanelWidth() chÆ°a qua CD trong cÃ¹ng tick â†’ mat-select
-    // sáº½ Ä‘á»c [panelWidth] cÅ© vÃ  panel co láº¡i theo bare trigger. GÃ¡n trá»±c tiáº¿p panelWidth
-    // lÃªn mat-select instance Ä‘á»ƒ open() tháº¥y giÃ¡ trá»‹ má»›i ngay, khÃ´ng pháº£i chá» CD.
+    // why: signal write từ updatePanelWidth() chưa qua CD trong cùng tick → mat-select
+    // sẽ đọc [panelWidth] cũ và panel co lại theo bare trigger. Gán trực tiếp panelWidth
+    // lên mat-select instance để open() thấy giá trị mới ngay, không phải chờ CD.
     this.updatePanelWidth();
     const ref = this.selectRef();
     if (!ref) return;
@@ -685,4 +685,3 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     }
   };
 }
-

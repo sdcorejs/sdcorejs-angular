@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   booleanAttribute,
@@ -29,7 +29,7 @@ import * as uuid from 'uuid';
   standalone: true,
   host: {
     // why: host class .sd-c-<x> + default sd-c-primary cho fallback. Thay data-sd-color
-    // Ä‘á»ƒ trÃ¡nh edge case host-attr-binding khÃ´ng reactive trong vÃ i cáº£nh build pipeline.
+    // để tránh edge case host-attr-binding không reactive trong vài cảnh build pipeline.
     '[class.sd-c-primary]': "color() === 'primary'",
     '[class.sd-c-secondary]': "color() === 'secondary'",
     '[class.sd-c-info]': "color() === 'info'",
@@ -48,7 +48,7 @@ export class SdCheckbox implements OnDestroy, AfterViewInit {
   #subscription = new Subscription();
   #model: unknown;
 
-  // Inputs â€” all accept null|undefined at the boundary, transform to canonical shape
+  // Inputs — all accept null|undefined at the boundary, transform to canonical shape
   readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
     alias: 'autoId',
     transform: (v): string | undefined => v ?? undefined,
@@ -70,7 +70,7 @@ export class SdCheckbox implements OnDestroy, AfterViewInit {
   readonly label = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
-  // why: full Color enum, Ã¡p dá»¥ng qua [data-sd-color] + SCSS override MDC vars.
+  // why: full Color enum, áp dụng qua [data-sd-color] + SCSS override MDC vars.
   readonly color = input<Color, Color | null | undefined>('primary', {
     transform: (v): Color => v || 'primary',
   });
@@ -148,4 +148,3 @@ export class SdCheckbox implements OnDestroy, AfterViewInit {
     this.formControl.updateValueAndValidity();
   };
 }
-

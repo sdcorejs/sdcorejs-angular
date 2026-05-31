@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 
@@ -80,4 +80,3 @@ export class BadgeDemoComponent {
   readonly unreadCount = signal(7);
   readonly errorsCount = signal(3);
 }
-

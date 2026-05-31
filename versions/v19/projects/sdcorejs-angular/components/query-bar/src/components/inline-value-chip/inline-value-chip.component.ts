@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -29,7 +29,7 @@ type ChipState = 'pending' | 'active' | 'focus' | 'error';
 /**
  * Seamless inline value chip for `string` / `number` fields (inline mode only).
  *
- * why: the pill itself IS the input â€” one border, no nested rectangle control. The
+ * why: the pill itself IS the input — one border, no nested rectangle control. The
  * label + value + remove live in three flush segments inside a single pill envelope.
  * Mirrors refs/design_handoff_sd_query_bar "Seamless string/number chip" handoff.
  *
@@ -46,7 +46,7 @@ type ChipState = 'pending' | 'active' | 'focus' | 'error';
   styleUrl: './inline-value-chip.component.scss',
 })
 export class SdQueryInlineValueChip {
-  /** Field this chip filters by â€” must be kind `string` or `number`. */
+  /** Field this chip filters by — must be kind `string` or `number`. */
   readonly field = input.required<SdQueryField>();
   /** Active operator (drives BETWEEN dual-input + no-data hiding). */
   readonly operator = input<Operator>('CONTAIN');
@@ -57,12 +57,12 @@ export class SdQueryInlineValueChip {
   readonly showOperator = input(false);
   /** Prefix for the inner input's `data-autoid`. */
   readonly autoId = input<string | undefined>(undefined);
-  /** Focus the first input on creation â€” used for the in-progress build chip. */
+  /** Focus the first input on creation — used for the in-progress build chip. */
   readonly autofocus = input(false);
 
   /** Emitted on commit (Enter / blur) with the parsed next value. */
   readonly valueChange = output<unknown>();
-  /** Emitted when the user clicks the Ã— segment. */
+  /** Emitted when the user clicks the × segment. */
   readonly remove = output<void>();
 
   private readonly firstInput = viewChild<ElementRef<HTMLInputElement>>('firstInput');
@@ -70,7 +70,7 @@ export class SdQueryInlineValueChip {
   readonly focused = signal(false);
   readonly hasError = signal(false);
 
-  /** Editable drafts â€” single value, plus from/to for BETWEEN. Seeded from `value`. */
+  /** Editable drafts — single value, plus from/to for BETWEEN. Seeded from `value`. */
   readonly draft = signal('');
   readonly draftFrom = signal('');
   readonly draftTo = signal('');
@@ -81,9 +81,9 @@ export class SdQueryInlineValueChip {
 
   readonly icon = computed(() => sdQueryFieldIcon(this.field()));
 
-  readonly ph = computed(() => (this.isNumber() ? 'giÃ¡ trá»‹' : 'nháº­pâ€¦'));
-  readonly phFrom = computed(() => (this.isNumber() ? 'Tá»«' : 'tá»«â€¦'));
-  readonly phTo = computed(() => (this.isNumber() ? 'Äáº¿n' : 'Ä‘áº¿nâ€¦'));
+  readonly ph = computed(() => (this.isNumber() ? 'giá trị' : 'nhập…'));
+  readonly phFrom = computed(() => (this.isNumber() ? 'Từ' : 'từ…'));
+  readonly phTo = computed(() => (this.isNumber() ? 'Đến' : 'đến…'));
 
   readonly hasValue = computed(() => {
     if (this.isNoData()) return true;
@@ -122,16 +122,16 @@ export class SdQueryInlineValueChip {
   }
 
   /**
-   * Width in chars â€” hugs the current value; falls back to the placeholder width only when
+   * Width in chars — hugs the current value; falls back to the placeholder width only when
    * empty. why: using placeholder.length unconditionally left a long trailing gap before the
-   * Ã— for short values (e.g. a 1-digit number under the 'giÃ¡ trá»‹' placeholder).
+   * × for short values (e.g. a 1-digit number under the 'giá trị' placeholder).
    */
   sizeFor(text: string, placeholder: string): number {
     const base = text && text.length > 0 ? text.length : placeholder.length;
     return Math.max(base, 2);
   }
 
-  /** Click anywhere in the pill (except Ã— or an input) focuses the first input. */
+  /** Click anywhere in the pill (except × or an input) focuses the first input. */
   focusFromShell(ev: Event): void {
     const target = ev.target as HTMLElement;
     if (target.closest('.c-seamless__x') || target.closest('input')) return;
@@ -154,7 +154,7 @@ export class SdQueryInlineValueChip {
     this.valueChange.emit(parsed.value);
   }
 
-  /** Commit a BETWEEN range â€” both ends parsed, emitted as `{ from, to }`. */
+  /** Commit a BETWEEN range — both ends parsed, emitted as `{ from, to }`. */
   commitRange(): void {
     this.focused.set(false);
     const from = this.#parse(this.draftFrom());
@@ -167,7 +167,7 @@ export class SdQueryInlineValueChip {
     this.valueChange.emit({ from: from.value, to: to.value });
   }
 
-  /** Esc â€” revert drafts to the committed value and blur without emitting. */
+  /** Esc — revert drafts to the committed value and blur without emitting. */
   revertAndBlur(input: HTMLInputElement): void {
     const v = this.value();
     if (this.isBetween()) {
@@ -187,7 +187,7 @@ export class SdQueryInlineValueChip {
     this.remove.emit();
   }
 
-  /** Format a stored value for display â€” number â†’ vi-VN grouped digits. */
+  /** Format a stored value for display — number → vi-VN grouped digits. */
   #format(v: any): string {
     if (v == null || v === '') return '';
     if (this.isNumber()) {
@@ -203,7 +203,7 @@ export class SdQueryInlineValueChip {
     if (t === '') return { ok: true, value: this.isNumber() ? null : '' };
     if (this.isNumber()) {
       // vi-VN groups thousands with '.', so strip dots + spaces, then require a plain
-      // (optionally negative) integer â€” anything else (letters, stray symbols) is an error.
+      // (optionally negative) integer — anything else (letters, stray symbols) is an error.
       const cleaned = t.replace(/[.\s]/g, '');
       if (!/^-?\d+$/.test(cleaned)) return { ok: false, value: t };
       const n = Number(cleaned);
@@ -212,4 +212,3 @@ export class SdQueryInlineValueChip {
     return { ok: true, value: t };
   }
 }
-

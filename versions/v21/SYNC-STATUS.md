@@ -1,11 +1,11 @@
-﻿# Sync Status - v21
+# Sync Status - v21
 
 | Key | Value |
 |-----|-------|
 | Angular Major | 21 |
-| Source Commit | 873d4aea |
-| Synced At | 2026-05-31 02:24:20 |
-| Source | vn-angular → versions/v19 → v21 |
+| Source Commit | 51eea1bd |
+| Synced At | 2026-06-01 00:10:48 |
+| Source | vn-angular â†’ versions/v19 â†’ v21 |
 
 ## Notes
 - Sync rule: v19 is synced first (primary). v20 and v21 are rollout targets.

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
@@ -42,4 +42,3 @@ export class SdSection extends SdBaseSecureComponent {
     }
   };
 }
-

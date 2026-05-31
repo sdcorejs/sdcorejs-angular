@@ -1,9 +1,9 @@
-﻿# `SdUnauthorizedInterceptor`
+# `SdUnauthorizedInterceptor`
 
 **Type**: HttpInterceptor (Angular `HttpInterceptor` class-based, multi-provider)
 **Class**: `SdUnauthorizedInterceptor implements HttpInterceptor`
 **Import path**: `@sdcorejs/angular/interceptors/unauthorized` (or barrel `@sdcorejs/angular/interceptors`)
-**Provided in**: NOT provided by default â€” register via `HTTP_INTERCEPTORS` multi-provider
+**Provided in**: NOT provided by default — register via `HTTP_INTERCEPTORS` multi-provider
 **Dependencies**: `SdAuthService`
 
 ## One-line purpose
@@ -11,7 +11,7 @@ Centralizes unauthorized handling for all HTTP calls: when a request fails with 
 
 ## When to use
 - Wire it in every Angular SPA built with `@sdcorejs/angular` that uses token-based authentication, so expired/revoked sessions are automatically signed out without per-screen 401 handling
-- Useful when multiple parallel API calls may return `401` simultaneously â€” the built-in `#unauthorizedHandled` guard ensures `signout()` fires exactly once regardless of concurrency
+- Useful when multiple parallel API calls may return `401` simultaneously — the built-in `#unauthorizedHandled` guard ensures `signout()` fires exactly once regardless of concurrency
 
 ## Behavior
 Pipes every outgoing request through `next.handle(...)` and inspects errors:
@@ -60,10 +60,9 @@ action: {
 - Do NOT register this interceptor multiple times (root + feature) because duplicate instances can trigger duplicate signout actions.
 - Do NOT put this interceptor after interceptors that fully consume/replace `401` errors; otherwise unauthorized handling may never execute.
 - Do NOT assume this interceptor itself performs navigation. Navigation should remain in `SdAuthService` + auth configuration (`action.signout`).
-- Do NOT use the modern `withInterceptors([...])` functional form to register this â€” it is a class-based interceptor that depends on constructor DI; use `withInterceptorsFromDi()` + `HTTP_INTERCEPTORS` multi-provider as shown in the Setup section above.
+- Do NOT use the modern `withInterceptors([...])` functional form to register this — it is a class-based interceptor that depends on constructor DI; use `withInterceptorsFromDi()` + `HTTP_INTERCEPTORS` multi-provider as shown in the Setup section above.
 
 ## Related
-- `SdAuthService.signout()` â€” invoked on first `401`
-- `ISdAuthConfiguration.action.signout` â€” app-specific logout + redirect logic
-- `SdNoInternetInterceptor` â€” complementary resilience interceptor for offline/`503` cases
-
+- `SdAuthService.signout()` — invoked on first `401`
+- `ISdAuthConfiguration.action.signout` — app-specific logout + redirect logic
+- `SdNoInternetInterceptor` — complementary resilience interceptor for offline/`503` cases

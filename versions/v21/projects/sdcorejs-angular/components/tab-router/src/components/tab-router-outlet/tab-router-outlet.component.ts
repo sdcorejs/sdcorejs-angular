@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   afterNextRender,
   booleanAttribute,
@@ -57,34 +57,34 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   #tabRouterService = inject(SdTabRouterService);
   #sdNotifyService = inject(SdNotifyService);
   readonly #i18n = inject(I18nService);
-  // Inject Ä‘á»ƒ Ä‘áº£m báº£o SdTabDecoratorService Ä‘Æ°á»£c khá»Ÿi táº¡o (nÃ³ register BehaviorSubject
-  // tÄ©nh Ä‘á»ƒ @SdTab decorator cÃ³ thá»ƒ truy cáº­p SdTabRouterService). KhÃ´ng dÃ¹ng trá»±c tiáº¿p á»Ÿ Ä‘Ã¢y.
+  // Inject để đảm bảo SdTabDecoratorService được khởi tạo (nó register BehaviorSubject
+  // tĩnh để @SdTab decorator có thể truy cập SdTabRouterService). Không dùng trực tiếp ở đây.
   #tabDecoratorService = inject(SdTabDecoratorService);
 
   #rootRoute?: ActivatedRoute;
   #subscription = new Subscription();
 
-  // State cá»§a navigation hiá»‡n táº¡i (replaceTab, switchTab, ...) Ä‘Æ°á»£c capture á»Ÿ RoutesRecognized
-  // vÃ  dÃ¹ng láº¡i á»Ÿ NavigationEnd. LÃ½ do: táº¡i NavigationEnd, getCurrentNavigation() Ä‘Ã£ tráº£ vá» null,
-  // cÃ²n lastSuccessfulNavigation vÃ  window.history.state khÃ´ng Ä‘Ã¡ng tin cáº­y vá»›i má»i case.
+  // State của navigation hiện tại (replaceTab, switchTab, ...) được capture ở RoutesRecognized
+  // và dùng lại ở NavigationEnd. Lý do: tại NavigationEnd, getCurrentNavigation() đã trả về null,
+  // còn lastSuccessfulNavigation và window.history.state không đáng tin cậy với mọi case.
   #pendingNavigationState: Record<string, any> = {};
-  // Serialize má»i #activeRoute (router events + initial sync) Ä‘á»ƒ trÃ¡nh race táº¡o duplicate tab.
+  // Serialize mọi #activeRoute (router events + initial sync) để tránh race tạo duplicate tab.
   #activationQueue: Promise<void> = Promise.resolve();
 
   constructor() {
     this.#subscription.add(
       this.#router.events
         .pipe(
-          // KHÃ”NG unwrap event.routerEvent (vd Scroll wrap NavigationEnd):
-          // Angular emit NavigationEnd RAW trÆ°á»›c, RouterScroller emit Scroll(NavigationEnd) sau.
-          // Náº¿u unwrap thÃªm Scroll â†’ handler fire 2 láº§n cho 1 nav â†’ race condition táº¡o duplicate tabs.
-          // Hybrid: cáº§n Cáº¢ HAI event vÃ¬ má»—i event chá»©a data khÃ¡c nhau á»Ÿ thá»i Ä‘iá»ƒm khÃ¡c nhau.
-          // - RoutesRecognized: navigation Ä‘ang in-flight â†’ getCurrentNavigation().extras.state Ä‘á»c Ä‘Æ°á»£c
-          // - NavigationEnd: navigation hoÃ n táº¥t â†’ routerState.root Ä‘Ã£ update vá»›i route má»›i (cáº§n cho lazy routes)
+          // KHÔNG unwrap event.routerEvent (vd Scroll wrap NavigationEnd):
+          // Angular emit NavigationEnd RAW trước, RouterScroller emit Scroll(NavigationEnd) sau.
+          // Nếu unwrap thêm Scroll → handler fire 2 lần cho 1 nav → race condition tạo duplicate tabs.
+          // Hybrid: cần CẢ HAI event vì mỗi event chứa data khác nhau ở thời điểm khác nhau.
+          // - RoutesRecognized: navigation đang in-flight → getCurrentNavigation().extras.state đọc được
+          // - NavigationEnd: navigation hoàn tất → routerState.root đã update với route mới (cần cho lazy routes)
           filter((event): event is RoutesRecognized | NavigationEnd =>
             event instanceof RoutesRecognized || event instanceof NavigationEnd),
-          // Serialize: #handleEvent async (await getBestInjector). 2 nav liÃªn tiáº¿p
-          // khÃ´ng await xen káº½ â†’ trÃ¡nh race Ä‘á»c this.tabs() = [] khi tab Ä‘áº§u chÆ°a ká»‹p set.
+          // Serialize: #handleEvent async (await getBestInjector). 2 nav liên tiếp
+          // không await xen kẽ → tránh race đọc this.tabs() = [] khi tab đầu chưa kịp set.
           concatMap(event => from(this.#handleEvent(event)))
         )
         .subscribe()
@@ -100,8 +100,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       })
     );
 
-    // Initial navigation cÃ³ thá»ƒ hoÃ n táº¥t trÆ°á»›c khi outlet subscribe router.events
-    // (blocking init hoáº·c outlet mount muá»™n). Catch-up sau first render.
+    // Initial navigation có thể hoàn tất trước khi outlet subscribe router.events
+    // (blocking init hoặc outlet mount muộn). Catch-up sau first render.
     afterNextRender(() => {
       void this.#syncCurrentRoute();
     });
@@ -123,13 +123,13 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       return;
     }
     if (event instanceof RoutesRecognized) {
-      // Capture state ngay lÃºc nav cÃ²n in-flight. ÄÃ¢y lÃ  Ä‘iá»ƒm duy nháº¥t cháº¯c cháº¯n
-      // getCurrentNavigation() tráº£ vá» Navigation object vá»›i extras.state nguyÃªn váº¹n.
+      // Capture state ngay lúc nav còn in-flight. Đây là điểm duy nhất chắc chắn
+      // getCurrentNavigation() trả về Navigation object với extras.state nguyên vẹn.
       this.#pendingNavigationState = this.#router.getCurrentNavigation()?.extras?.state ?? {};
       return;
     }
-    // NavigationEnd: dÃ¹ng routerState.snapshot.root (canonical state táº¡i NavigationEnd),
-    // KHÃ”NG dÃ¹ng injected ActivatedRoute.snapshot â€” cÃ³ thá»ƒ chÆ°a sync trÃªn initial load.
+    // NavigationEnd: dùng routerState.snapshot.root (canonical state tại NavigationEnd),
+    // KHÔNG dùng injected ActivatedRoute.snapshot — có thể chưa sync trên initial load.
     const navigationState = this.#pendingNavigationState;
     this.#pendingNavigationState = {};
     await this.#scheduleActivation(async () => {
@@ -139,7 +139,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     });
   };
 
-  // BÃ¹ initial navigation náº¿u NavigationEnd Ä‘Ã£ fire trÆ°á»›c khi outlet subscribe.
+  // Bù initial navigation nếu NavigationEnd đã fire trước khi outlet subscribe.
   #syncCurrentRoute = (): Promise<void> => {
     if (this.disabled() || !this.#router.navigated) {
       return Promise.resolve();
@@ -210,7 +210,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     const params = { ...(route.params || {}) };
     const data = { ...(route.data || {}) };
     const [url] = fullUrl.split('?');
-    // Tab identity = hash(url + queryParams). CÃ¹ng key = cÃ¹ng tab, khÃ´ng táº¡o láº¡i.
+    // Tab identity = hash(url + queryParams). Cùng key = cùng tab, không tạo lại.
     const key = Utilities.hash({ url, queryParams });
 
     let existedIndex = -1;
@@ -218,17 +218,17 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
     const currentTabs = this.tabs();
 
-    // QUAN TRá»ŒNG: scan READ-ONLY, KHÃ”NG mutate tab.isActive trong loop nÃ y.
+    // QUAN TRỌNG: scan READ-ONLY, KHÔNG mutate tab.isActive trong loop này.
     //
-    // LÃ½ do: NavigationEnd cÃ³ thá»ƒ fire nhiá»u láº§n cho 1 user-action (do nested outlets,
-    // redirect, hoáº·c Angular internal). VÃ¬ #activeRoute lÃ  async (await getBestInjector),
-    // 2 invocations cÃ³ thá»ƒ cháº¡y concurrent vÃ  interleave vá»›i nhau.
+    // Lý do: NavigationEnd có thể fire nhiều lần cho 1 user-action (do nested outlets,
+    // redirect, hoặc Angular internal). Vì #activeRoute là async (await getBestInjector),
+    // 2 invocations có thể chạy concurrent và interleave với nhau.
     //
-    // Náº¿u mutate tab.isActive = false á»Ÿ Ä‘Ã¢y, call thá»© 2 sáº½ tháº¥y isActive Ä‘Ã£ bá»‹ call 1
-    // set false rá»“i â†’ khÃ´ng tÃ¬m tháº¥y active tab â†’ activatedIndex stay -1 â†’ splice bá» qua
-    // â†’ tab cÅ© khÃ´ng bá»‹ remove â†’ xuáº¥t hiá»‡n duplicate tabs.
+    // Nếu mutate tab.isActive = false ở đây, call thứ 2 sẽ thấy isActive đã bị call 1
+    // set false rồi → không tìm thấy active tab → activatedIndex stay -1 → splice bỏ qua
+    // → tab cũ không bị remove → xuất hiện duplicate tabs.
     //
-    // CÃ¡ch fix: chá»‰ Äá»ŒC isActive, sau Ä‘Ã³ dÃ¹ng .map() á»Ÿ dÆ°á»›i Ä‘á»ƒ táº¡o tab objects má»›i qua spread.
+    // Cách fix: chỉ ĐỌC isActive, sau đó dùng .map() ở dưới để tạo tab objects mới qua spread.
     for (let i = 0; i < currentTabs.length; i++) {
       const tab = currentTabs[i];
       if (tab.key === key) {
@@ -241,16 +241,16 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
     const replaceTab = state['replaceTab'];
 
-    // Resolve injector phÃ¹ há»£p vá»›i route. Cáº§n xá»­ lÃ½ 3 trÆ°á»ng há»£p:
-    // - Standalone route (Angular Ä‘Ã£ set _injector trÃªn routeConfig sau khi activate)
-    // - NgModule lazy load (cáº§n createNgModule tá»« class)
+    // Resolve injector phù hợp với route. Cần xử lý 3 trường hợp:
+    // - Standalone route (Angular đã set _injector trên routeConfig sau khi activate)
+    // - NgModule lazy load (cần createNgModule từ class)
     // - Fallback: root injector
     const getBestInjector = async (snapshot: ActivatedRouteSnapshot): Promise<Injector> => {
-      // Standalone route: Angular tá»± lÆ°u environment injector trÃªn routeConfig._injector
+      // Standalone route: Angular tự lưu environment injector trên routeConfig._injector
       const routeInjector = (snapshot as any)._resolvedGui || (snapshot as any).routeConfig?._injector;
       if (routeInjector) return routeInjector;
 
-      // NgModule lazy: pháº£i gá»i láº¡i loadChildren() Ä‘á»ƒ láº¥y module class rá»“i createNgModule
+      // NgModule lazy: phải gọi lại loadChildren() để lấy module class rồi createNgModule
       const loadChildren = snapshot.parent?.routeConfig?.loadChildren;
       if (typeof loadChildren === 'function') {
         let loaded: any = await loadChildren();
@@ -259,17 +259,17 @@ export class SdTabRouterOutletComponent implements OnDestroy {
           loaded = await lastValueFrom(loaded);
         }
 
-        // ES module cÃ³ thá»ƒ export default
+        // ES module có thể export default
         if (loaded && typeof loaded === 'object' && 'default' in loaded) {
           loaded = loaded.default;
         }
 
-        // Angular cÅ©: NgModuleFactory
+        // Angular cũ: NgModuleFactory
         if (loaded instanceof NgModuleFactory) {
           return loaded.create(this.#injector).injector;
         }
 
-        // Angular má»›i: NgModule class. Bá»c try/catch vÃ¬ createNgModule throw náº¿u khÃ´ng pháº£i NgModule.
+        // Angular mới: NgModule class. Bọc try/catch vì createNgModule throw nếu không phải NgModule.
         if (typeof loaded === 'function' && !Array.isArray(loaded)) {
           try {
             return createNgModule(loaded, this.#injector).injector;
@@ -282,7 +282,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     };
 
     const finalInjector = await getBestInjector(route);
-    // Refresh root sau await: lazy route tree cÃ³ thá»ƒ hoÃ n táº¥t trong lÃºc resolve injector.
+    // Refresh root sau await: lazy route tree có thể hoàn tất trong lúc resolve injector.
     this.#rootRoute = this.#router.routerState.root;
     const activatedRoute = this.#findActivatedRouteForSnapshot(this.#rootRoute, route);
 
@@ -298,28 +298,28 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       tabInfoChanges: new Subject(),
     };
 
-    // Táº¡o updatedTabs qua spread thay vÃ¬ mutate (xem lÃ½ do á»Ÿ for loop phÃ­a trÃªn).
-    // Vá»›i tab cÃ³ isActive khÃ´ng Ä‘á»•i: giá»¯ nguyÃªn reference (trÃ¡nh trigger ngComponentOutlet
-    // re-evaluate khÃ´ng cáº§n thiáº¿t). Vá»›i tab cáº§n Ä‘á»•i isActive: táº¡o object má»›i qua spread,
-    // cÃ¡c nested fields (component, injector) váº«n giá»¯ same reference nÃªn component khÃ´ng bá»‹ recreate.
+    // Tạo updatedTabs qua spread thay vì mutate (xem lý do ở for loop phía trên).
+    // Với tab có isActive không đổi: giữ nguyên reference (tránh trigger ngComponentOutlet
+    // re-evaluate không cần thiết). Với tab cần đổi isActive: tạo object mới qua spread,
+    // các nested fields (component, injector) vẫn giữ same reference nên component không bị recreate.
     let updatedTabs = currentTabs.map(tab => {
       if (tab.key === key) return tab.isActive ? tab : { ...tab, isActive: true };
       return tab.isActive ? { ...tab, isActive: false } : tab;
     });
 
-    // replaceTab: thay vÃ¬ má»Ÿ tab má»›i song song, xoÃ¡ tab Ä‘ang active rá»“i má»Ÿ tab má»›i á»Ÿ cuá»‘i.
-    // Use case: tá»« tab "chi tiáº¿t" báº¥m "chá»‰nh sá»­a" vá»›i replaceTab â†’ tab chi tiáº¿t bá»‹ xoÃ¡,
-    // tab chá»‰nh sá»­a thay tháº¿ (giá»¯ sá»‘ tab khÃ´ng tÄƒng).
+    // replaceTab: thay vì mở tab mới song song, xoá tab đang active rồi mở tab mới ở cuối.
+    // Use case: từ tab "chi tiết" bấm "chỉnh sửa" với replaceTab → tab chi tiết bị xoá,
+    // tab chỉnh sửa thay thế (giữ số tab không tăng).
     if (replaceTab && activatedIndex >= 0) {
       updatedTabs = updatedTabs.filter((_, i) => i !== activatedIndex);
     }
 
     if (existedIndex >= 0) {
-      // Tab Ä‘Ã£ tá»“n táº¡i (cÃ¹ng url + queryParams) â†’ CHá»ˆ activate, KHÃ”NG thay tab object.
-      // LÃ½ do: thay tab object = Ä‘á»•i reference cá»§a tab.injector â†’ ngComponentOutlet recreate
-      // component â†’ tab bá»‹ "reload" má»—i khi click láº¡i hoáº·c navigate cÃ¹ng URL.
+      // Tab đã tồn tại (cùng url + queryParams) → CHỈ activate, KHÔNG thay tab object.
+      // Lý do: thay tab object = đổi reference của tab.injector → ngComponentOutlet recreate
+      // component → tab bị "reload" mỗi khi click lại hoặc navigate cùng URL.
       //
-      // splice phÃ­a trÃªn cÃ³ thá»ƒ Ä‘Ã£ shift index náº¿u activatedIndex < existedIndex.
+      // splice phía trên có thể đã shift index nếu activatedIndex < existedIndex.
       const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex
         ? existedIndex - 1
         : existedIndex;
@@ -327,7 +327,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       this.#tabRouterService.pushEvent(updatedTabs[idx], SdTabActivated);
       this.tabs.set(updatedTabs);
     } else {
-      // Tab chÆ°a tá»“n táº¡i â†’ thÃªm má»›i á»Ÿ cuá»‘i.
+      // Tab chưa tồn tại → thêm mới ở cuối.
       this.#tabRouterService.setCurrentTab(newTab);
       this.tabs.set([...updatedTabs, newTab]);
 
@@ -339,14 +339,14 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     this.tabRouterNav()?.checkUI();
   };
 
-  // Láº§n xuá»‘ng deepest firstChild Ä‘á»ƒ láº¥y snapshot cá»§a route lÃ¡ (route thá»±c sá»± render component).
+  // Lần xuống deepest firstChild để lấy snapshot của route lá (route thực sự render component).
   #getActivatedRouteSnapshot = (snapshot: ActivatedRouteSnapshot): ActivatedRouteSnapshot | null => {
     let node = snapshot;
     while (node.firstChild) node = node.firstChild;
     return node;
   };
 
-  // DFS match leaf snapshot â†’ ActivatedRoute instance (á»•n Ä‘á»‹nh hÆ¡n so vá»›i so sÃ¡nh component class).
+  // DFS match leaf snapshot → ActivatedRoute instance (ổn định hơn so với so sánh component class).
   #findActivatedRouteForSnapshot = (
     activatedRoute: ActivatedRoute,
     targetSnapshot: ActivatedRouteSnapshot,
@@ -364,9 +364,9 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   };
 }
 
-// Custom Injector cho tá»«ng tab: override ActivatedRoute thÃ nh route cá»§a TAB ÄÃ“
-// (khÃ´ng pháº£i route hiá»‡n táº¡i cá»§a router). Náº¿u khÃ´ng override, má»i tab sáº½ inject ActivatedRoute
-// cá»§a route Ä‘ang active â†’ component cÅ© trong tab inactive nháº­n data sai khi user navigate.
+// Custom Injector cho từng tab: override ActivatedRoute thành route của TAB ĐÓ
+// (không phải route hiện tại của router). Nếu không override, mọi tab sẽ inject ActivatedRoute
+// của route đang active → component cũ trong tab inactive nhận data sai khi user navigate.
 class SdOutletInjector implements Injector {
   constructor(
     private route: ActivatedRoute | null,
@@ -380,4 +380,3 @@ class SdOutletInjector implements Injector {
     return this.parentInjector.get(token, notFoundValue);
   }
 }
-

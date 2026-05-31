@@ -1,4 +1,4 @@
-﻿export * from '@sdcorejs/angular/components/avatar';
+export * from '@sdcorejs/angular/components/avatar';
 export * from '@sdcorejs/angular/components/button';
 export * from '@sdcorejs/angular/components/badge';
 export * from '@sdcorejs/angular/components/tab-router';
@@ -22,4 +22,3 @@ export * from '@sdcorejs/angular/components/editor';
 export * from '@sdcorejs/angular/components/splitter';
 export * from '@sdcorejs/angular/components/preview';
 export * from '@sdcorejs/angular/components/autoid-inspector';
-

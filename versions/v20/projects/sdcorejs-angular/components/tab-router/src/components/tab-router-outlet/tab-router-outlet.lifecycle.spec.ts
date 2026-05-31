@@ -1,9 +1,9 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Lifecycle invariants for sd-tab-router-outlet.
  *
  * Bug regression: components rendered inside a tab pane MUST follow
- *   constructor â†’ ngOnInit â†’ ngOnDestroy
+ *   constructor → ngOnInit → ngOnDestroy
  * exactly once per tab instance. If a tab is reactivated (same key) we MUST
  * NOT re-instantiate. If the tab is closed we MUST run ngOnDestroy so
  * subscriptions/intervals inside the tab body do not leak.
@@ -27,7 +27,7 @@ import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 
-// Shared counters across instances per class â€” we don't share state across tests though
+// Shared counters across instances per class — we don't share state across tests though
 // (re-initialised in beforeEach via reset()).
 const counters = {
   pageA: { ctor: 0, init: 0, destroy: 0 },
@@ -67,7 +67,7 @@ const settle = async (fixture: ComponentFixture<HostComponent>) => {
   fixture.detectChanges();
 };
 
-describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
+describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
   let fixture: ComponentFixture<HostComponent>;
   let router: Router;
   let outletCmp: SdTabRouterOutletComponent;
@@ -79,7 +79,7 @@ describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
     await TestBed.configureTestingModule({
       imports: [HostComponent, NoopAnimationsModule],
       providers: [
-        // withInMemoryScrolling enables the RouterScroller â†’ emits Scroll events
+        // withInMemoryScrolling enables the RouterScroller → emits Scroll events
         // that wrap NavigationEnd. This is the bundle most production apps use.
         provideRouter(
           [
@@ -210,7 +210,7 @@ describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
     // Reproduces the race condition pattern: when RouterScroller fires
     // Scroll(NavigationEnd) right after raw NavigationEnd, the outlet handler
     // was invoked twice and the await getBestInjector(...) yielded between calls,
-    // letting both invocations read this.tabs() = [] â†’ 2 new tabs with same key.
+    // letting both invocations read this.tabs() = [] → 2 new tabs with same key.
     // concatMap on the events pipe must serialize and idempotently reuse the tab.
     const p1 = router.navigateByUrl('/a');
     const p2 = router.navigateByUrl('/a');
@@ -223,7 +223,7 @@ describe('SdTabRouterOutletComponent â€” lifecycle invariants', () => {
   });
 });
 
-describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct URL)', () => {
+describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', () => {
   beforeEach(async () => {
     counters.reset();
 
@@ -253,7 +253,7 @@ describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct UR
     const initialFixture = TestBed.createComponent(HostComponent);
     const router = TestBed.inject(Router);
 
-    // TestBed khÃ´ng luÃ´n cháº¡y initial navigation tá»± Ä‘á»™ng â€” mÃ´ phá»ng F5 táº¡i "/".
+    // TestBed không luôn chạy initial navigation tự động — mô phỏng F5 tại "/".
     if (!router.navigated) {
       await router.navigateByUrl('/');
     }
@@ -269,10 +269,10 @@ describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct UR
     expect(counters.pageA.init).toBe(1);
   });
 
-  it('F5 trÃªn URL trá»±c tiáº¿p /a (khÃ´ng qua redirect) â€” tab catch-up Ä‘Ãºng url + render PageA', async () => {
+  it('F5 trên URL trực tiếp /a (không qua redirect) — tab catch-up đúng url + render PageA', async () => {
     const router = TestBed.inject(Router);
-    // Nav TRÆ¯á»šC khi táº¡o fixture: mÃ´ phá»ng app load vá»›i router Ä‘Ã£ navigate xong
-    // vÃ  outlet mount sau (do blocking init hoáº·c lazy app shell).
+    // Nav TRƯỚC khi tạo fixture: mô phỏng app load với router đã navigate xong
+    // và outlet mount sau (do blocking init hoặc lazy app shell).
     await router.navigateByUrl('/a');
     const lateFixture = TestBed.createComponent(HostComponent);
     await settle(lateFixture);
@@ -286,14 +286,14 @@ describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct UR
     expect(counters.pageA.init).toBe(1);
   });
 
-  it('syncCurrentRoute idempotent â€” initial nav + afterNextRender catch-up khÃ´ng táº¡o 2 tab', async () => {
+  it('syncCurrentRoute idempotent — initial nav + afterNextRender catch-up không tạo 2 tab', async () => {
     const router = TestBed.inject(Router);
-    // Sync nav trÆ°á»›c, sau Ä‘Ã³ mount outlet â†’ cáº£ `router.events` subscribe path vÃ 
-    // `afterNextRender(#syncCurrentRoute)` Ä‘á»u cÃ³ cÆ¡ há»™i cháº¡y. Pháº£i dedupe.
+    // Sync nav trước, sau đó mount outlet → cả `router.events` subscribe path và
+    // `afterNextRender(#syncCurrentRoute)` đều có cơ hội chạy. Phải dedupe.
     await router.navigateByUrl('/a');
     const fixture = TestBed.createComponent(HostComponent);
     await settle(fixture);
-    // Trigger thÃªm láº§n navigate cÃ¹ng URL Ä‘á»ƒ cháº¯c cháº¯n khÃ´ng táº¡o duplicate.
+    // Trigger thêm lần navigate cùng URL để chắc chắn không tạo duplicate.
     await router.navigateByUrl('/a');
     await settle(fixture);
 
@@ -303,7 +303,7 @@ describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct UR
     expect(counters.pageA.ctor).toBe(1);
   });
 
-  it('F5 trÃªn URL cÃ³ queryParams â€” tab key hash gá»“m queryParams, khÃ´ng táº¡o tab thá»© hai khi nav láº¡i cÃ¹ng url+queryParams', async () => {
+  it('F5 trên URL có queryParams — tab key hash gồm queryParams, không tạo tab thứ hai khi nav lại cùng url+queryParams', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/a?x=1');
     const fixture = TestBed.createComponent(HostComponent);
@@ -321,7 +321,7 @@ describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct UR
     expect(counters.pageA.ctor).toBe(1);
   });
 
-  it('F5 rá»“i nav qua URL khÃ¡c cÃ¹ng query khÃ¡c â€” táº¡o 2 tab Ä‘á»™c láº­p (tab key khÃ¡c)', async () => {
+  it('F5 rồi nav qua URL khác cùng query khác — tạo 2 tab độc lập (tab key khác)', async () => {
     const router = TestBed.inject(Router);
     await router.navigateByUrl('/a?x=1');
     const fixture = TestBed.createComponent(HostComponent);
@@ -337,4 +337,3 @@ describe('SdTabRouterOutletComponent â€” initial navigation (F5 / direct UR
     expect(counters.pageA.ctor).toBe(2);
   });
 });
-

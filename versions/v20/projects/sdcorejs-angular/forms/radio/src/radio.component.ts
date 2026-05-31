@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -42,7 +42,7 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
   standalone: true,
   host: {
     // why: host class .sd-c-<x> + default sd-c-primary cho fallback. Thay data-sd-color
-    // Ä‘á»ƒ trÃ¡nh edge case host-attr-binding khÃ´ng reactive trong vÃ i cáº£nh build pipeline.
+    // để tránh edge case host-attr-binding không reactive trong vài cảnh build pipeline.
     '[class.sd-c-primary]': "color() === 'primary'",
     '[class.sd-c-secondary]': "color() === 'secondary'",
     '[class.sd-c-info]': "color() === 'info'",
@@ -61,7 +61,7 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   formControl = new SdFormControl();
   #subscription = new Subscription();
 
-  // Inputs â€” accept null|undefined at boundary, transform to canonical
+  // Inputs — accept null|undefined at boundary, transform to canonical
   readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
     alias: 'autoId',
     transform: (v): string | undefined => v ?? undefined,
@@ -100,8 +100,8 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly viewed = input(false, { transform: booleanAttribute });
-  // why: legacy callers pass `null` â†’ fallback to 'primary'. Color enum má»Ÿ rá»™ng hÆ¡n ThemePalette,
-  // Ã¡p dá»¥ng qua host attr [data-sd-color] + SCSS override MDC token vars (mat [color] khÃ´ng nháº­n 'success'/'info'/...).
+  // why: legacy callers pass `null` → fallback to 'primary'. Color enum mở rộng hơn ThemePalette,
+  // áp dụng qua host attr [data-sd-color] + SCSS override MDC token vars (mat [color] không nhận 'success'/'info'/...).
   readonly color = input<Color, Color | null | undefined>('primary', {
     transform: (v): Color => v || 'primary',
   });
@@ -123,7 +123,7 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
 
   // Computed (template bindings)
   readonly autoId = computed(() => (this.autoIdInput() ? `forms-radio-${this.autoIdInput()}` : undefined));
-  // Kept for back-compat with templates that read `normalizedItems()` â€” alias of items()
+  // Kept for back-compat with templates that read `normalizedItems()` — alias of items()
   readonly normalizedItems = computed(() => this.items());
   readonly #state = sdFormControlState(computed(() => this.formControl));
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
@@ -135,7 +135,7 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
     const items = this.items();
     const vField = this.valueField();
     const dField = this.displayField();
-    // why: tÃ¬m item match value rá»“i tráº£ vá» string á»Ÿ `displayField`, khÃ´ng tráº£ nguyÃªn object (sáº½ in [object Object]).
+    // why: tìm item match value rồi trả về string ở `displayField`, không trả nguyên object (sẽ in [object Object]).
     const match = items.find(e => this.formControl?.value?.toString() === e?.[vField]?.toString());
     return match?.[dField] ?? '';
   });
@@ -210,4 +210,3 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
     this.formControl.updateValueAndValidity({ emitEvent: true });
   };
 }
-

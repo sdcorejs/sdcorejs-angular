@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdQueryBuilder } from '@sdcorejs/angular/components/query-builder';
 
@@ -47,4 +47,3 @@ export class QueryBuilderDemoComponent {
     ],
   };
 }
-

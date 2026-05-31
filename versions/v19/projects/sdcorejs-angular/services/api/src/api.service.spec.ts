@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -6,7 +6,7 @@ import { SdApiService } from './api.service';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
 import { ISdApiConfiguration, SD_API_CONFIG } from './api.model';
 
-// â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── helpers ──────────────────────────────────────────────────────────────────
 
 /** Flush a pending request and return the captured req object. */
 function flushOne(httpMock: HttpTestingController, url: string, method: string, body: any) {
@@ -16,7 +16,7 @@ function flushOne(httpMock: HttpTestingController, url: string, method: string, 
   return req;
 }
 
-// â”€â”€â”€ suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── suite ────────────────────────────────────────────────────────────────────
 
 describe('SdApiService', () => {
   let service: SdApiService;
@@ -36,7 +36,7 @@ describe('SdApiService', () => {
 
   afterEach(() => httpMock.verify());
 
-  // â”€â”€â”€ instantiation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── instantiation ──────────────────────────────────────────────────────────
 
   it('should be created', () => {
     expect(service).toBeTruthy();
@@ -46,7 +46,7 @@ describe('SdApiService', () => {
     expect(service.http).toBeTruthy();
   });
 
-  // â”€â”€â”€ GET â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── GET ────────────────────────────────────────────────────────────────────
 
   it('get() issues GET to the given URL and resolves with body', async () => {
     const promise = service.get('/api/users');
@@ -74,7 +74,7 @@ describe('SdApiService', () => {
     await promise;
   });
 
-  // â”€â”€â”€ POST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── POST ───────────────────────────────────────────────────────────────────
 
   it('post() issues POST with body and resolves with body', async () => {
     const payload = { name: 'Bob' };
@@ -99,7 +99,7 @@ describe('SdApiService', () => {
   it('post() with FormData body gets a unique key each time (no deduplication)', async () => {
     const fd1 = new FormData();
     const fd2 = new FormData();
-    // Both calls are independent â€” two requests must be made
+    // Both calls are independent — two requests must be made
     const p1 = service.post('/api/upload', fd1, { autoCache: false });
     const p2 = service.post('/api/upload', fd2, { autoCache: false });
     const reqs = httpMock.match('/api/upload');
@@ -109,7 +109,7 @@ describe('SdApiService', () => {
     await Promise.all([p1, p2]);
   });
 
-  // â”€â”€â”€ PUT â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── PUT ────────────────────────────────────────────────────────────────────
 
   it('put() issues PUT with body', async () => {
     const payload = { name: 'Charlie' };
@@ -122,7 +122,7 @@ describe('SdApiService', () => {
     expect(result).toEqual({ id: 3, name: 'Charlie' });
   });
 
-  // â”€â”€â”€ DELETE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── DELETE ─────────────────────────────────────────────────────────────────
 
   it('delete() issues DELETE and resolves', async () => {
     const promise = service.delete('/api/users/4');
@@ -141,7 +141,7 @@ describe('SdApiService', () => {
     await promise;
   });
 
-  // â”€â”€â”€ error paths â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── error paths ────────────────────────────────────────────────────────────
 
   it('get() rejects when server returns 404', async () => {
     const promise = service.get('/api/not-found');
@@ -164,7 +164,7 @@ describe('SdApiService', () => {
     await expectAsync(promise).toBeRejected();
   });
 
-  // â”€â”€â”€ { ok: false } response shape â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── { ok: false } response shape ───────────────────────────────────────────
 
   it('get() throws the body when response has { ok: false }', async () => {
     const errorBody = { ok: false, message: 'Unauthorized', code: 401 };
@@ -183,7 +183,7 @@ describe('SdApiService', () => {
     expect(result).toEqual(body);
   });
 
-  // â”€â”€â”€ deduplication â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── deduplication ──────────────────────────────────────────────────────────
 
   it('identical GET calls within 1s share one network request (deduplication)', async () => {
     // Fire two concurrent identical requests
@@ -200,7 +200,7 @@ describe('SdApiService', () => {
     expect(r2).toEqual({ data: 'shared' });
   });
 
-  it('autoCache:false bypasses deduplication â€” two distinct requests are made', async () => {
+  it('autoCache:false bypasses deduplication — two distinct requests are made', async () => {
     const p1 = service.post('/api/side-effect', { x: 1 }, { autoCache: false });
     const p2 = service.post('/api/side-effect', { x: 1 }, { autoCache: false });
 
@@ -211,7 +211,7 @@ describe('SdApiService', () => {
     await Promise.all([p1, p2]);
   });
 
-  // â”€â”€â”€ handler: mapResponse â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── handler: mapResponse ────────────────────────────────────────────────────
 
   it('uses handler mapResponse when URL matches a registered host', async () => {
     TestBed.resetTestingModule();
@@ -239,7 +239,7 @@ describe('SdApiService', () => {
     expect(result).toEqual([{ id: 1 }]);
   });
 
-  // â”€â”€â”€ handler: no match when URL prefix differs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── handler: no match when URL prefix differs ────────────────────────────────
 
   it('no handler matched when URL does not start with registered host', async () => {
     TestBed.resetTestingModule();
@@ -260,7 +260,7 @@ describe('SdApiService', () => {
     service = TestBed.inject(SdApiService);
     httpMock = TestBed.inject(HttpTestingController);
 
-    // URL does NOT start with 'https://api.example.com' â†’ mapResponse not applied
+    // URL does NOT start with 'https://api.example.com' → mapResponse not applied
     const promise = service.get('/api/local/users');
     const req = httpMock.expectOne('/api/local/users');
     req.flush({ id: 5 });
@@ -268,7 +268,7 @@ describe('SdApiService', () => {
     expect(result).toEqual({ id: 5 }); // raw body, not 'MAPPED'
   });
 
-  // â”€â”€â”€ responseType â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── responseType ────────────────────────────────────────────────────────────
 
   it('forwards responseType to HttpClient (e.g. blob)', async () => {
     const promise = service.get<Blob>('/api/file', { responseType: 'blob' } as any);
@@ -279,7 +279,7 @@ describe('SdApiService', () => {
     expect(result).toBeInstanceOf(Blob);
   });
 
-  // â”€â”€â”€ uploadFile â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── uploadFile ──────────────────────────────────────────────────────────────
 
   it('uploadFile() throws "Invalid file extension" when filename has no dot', async () => {
     const fileWithNoDot = new File(['content'], 'filewithoutdot', { type: 'text/plain' });
@@ -304,4 +304,3 @@ describe('SdApiService', () => {
     expect(result).toEqual({ url: 'https://cdn.example.com/photo.png' });
   });
 });
-

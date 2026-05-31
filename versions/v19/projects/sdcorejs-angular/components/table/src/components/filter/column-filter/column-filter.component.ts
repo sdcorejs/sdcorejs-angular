@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -36,12 +36,12 @@ export class ColumnFilterComponent {
   column = input.required<SdTableColumn>();
   columnFilter = input<Record<string, any>>({});
   cacheValues = input<Record<string, any[]> | undefined>(undefined);
-  // Parent váº«n truyá»n `value` vÃ o â€” giá»¯ input Ä‘á»ƒ khÃ´ng phÃ¡ há»£p Ä‘á»“ng (template khÃ´ng dÃ¹ng trá»±c tiáº¿p).
+  // Parent vẫn truyền `value` vào — giữ input để không phá hợp đồng (template không dùng trực tiếp).
   value = input<any>();
-  // 2-way bind tá»« parent: parent Ä‘á»c/ghi operator hiá»‡n táº¡i cá»§a column.
+  // 2-way bind từ parent: parent đọc/ghi operator hiện tại của column.
   operator = model<Operator | undefined>(undefined);
-  // Khi true (mobile context): gÃ¡n column.title vÃ o [label] cá»§a cÃ¡c control con
-  // Ä‘á»ƒ parent khÃ´ng pháº£i render <label> riÃªng. Default false (desktop inline).
+  // Khi true (mobile context): gán column.title vào [label] của các control con
+  // để parent không phải render <label> riêng. Default false (desktop inline).
   isMobile = input(false, { transform: booleanAttribute });
 
   // ==========================================
@@ -60,11 +60,11 @@ export class ColumnFilterComponent {
     return base ? `${base}-inline-${field}` : '';
   });
 
-  // Cho phÃ©p parent custom filter qua templateRef (column.filter.filterDef).
+  // Cho phép parent custom filter qua templateRef (column.filter.filterDef).
   templateRef = computed(() => this.column()?.filter?.filterDef);
 
-  // Label cho control con khi isMobile=true. column.title cÃ³ thá»ƒ lÃ  string hoáº·c { title, templateRef }.
-  // Tráº£ undefined khi khÃ´ng pháº£i mobile â†’ control khÃ´ng hiá»ƒn thá»‹ label (giá»¯ behavior desktop cÅ©).
+  // Label cho control con khi isMobile=true. column.title có thể là string hoặc { title, templateRef }.
+  // Trả undefined khi không phải mobile → control không hiển thị label (giữ behavior desktop cũ).
   label = computed<string | undefined>(() => {
     if (!this.isMobile()) return undefined;
     const col = this.column();
@@ -73,7 +73,7 @@ export class ColumnFilterComponent {
     return typeof title === 'string' ? title : title.title || col?.field;
   });
 
-  // Danh sÃ¡ch operator hiá»ƒn thá»‹ dá»±a trÃªn column config
+  // Danh sách operator hiển thị dựa trên column config
   operators = computed(() => {
     const col = this.column();
     if (!col?.filter?.disabled && col?.filter?.operator?.enable) {
@@ -82,10 +82,10 @@ export class ColumnFilterComponent {
     return [];
   });
 
-  // Chá»‰ cÃ¡c Operator value cho phÃ©p â€” truyá»n vÃ o <sd-operator [operators]>.
+  // Chỉ các Operator value cho phép — truyền vào <sd-operator [operators]>.
   operatorValues = computed(() => this.operators().map(o => o.value));
 
-  // Margin wrapper operator: sá»‘ + Ä‘ang chá»n operator â†’ thÃªm mb-4 (canh baseline vá»›i sd-input-number).
+  // Margin wrapper operator: số + đang chọn operator → thêm mb-4 (canh baseline với sd-input-number).
   operatorWrapperClass = computed(() => (this.column()?.type === 'number' && this.operator() ? 'mb-4 mr-2' : 'mr-2'));
 
   // Items cho sd-select khi column type = values / lazy-values
@@ -105,8 +105,8 @@ export class ColumnFilterComponent {
   });
 
   constructor() {
-    // Khá»Ÿi táº¡o default { from: null, to: null } cho split-date / split-number / daterange.
-    // Cháº¡y trÆ°á»›c láº§n render Ä‘áº§u nÃªn template tháº¥y giÃ¡ trá»‹ Ä‘Ã£ init â€” khÃ´ng cáº§n markForCheck.
+    // Khởi tạo default { from: null, to: null } cho split-date / split-number / daterange.
+    // Chạy trước lần render đầu nên template thấy giá trị đã init — không cần markForCheck.
     effect(() => {
       const col = this.column();
       const filter = this.columnFilter();
@@ -127,7 +127,6 @@ export class ColumnFilterComponent {
   // ==========================================
   onFilterChange = () => this.filterChange.emit();
 
-  // Blur input: commit giÃ¡ trá»‹ KHÃ”NG trigger reload.
+  // Blur input: commit giá trị KHÔNG trigger reload.
   onFilterCommit = () => this.filterCommit.emit();
 }
-

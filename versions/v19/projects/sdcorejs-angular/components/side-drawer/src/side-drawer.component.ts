@@ -1,4 +1,4 @@
-﻿import { CdkPortal, DomPortalOutlet, PortalModule } from '@angular/cdk/portal';
+import { CdkPortal, DomPortalOutlet, PortalModule } from '@angular/cdk/portal';
 import { CommonModule } from '@angular/common';
 import {
   ApplicationRef,
@@ -75,17 +75,17 @@ export class SdSideDrawer extends SdBaseSecureComponent {
   constructor() {
     super();
 
-    // Thay tháº¿ ngAfterViewInit, tá»± Ä‘á»™ng cháº¡y ná»™i dung nÃ y khi DOM sáºµn sÃ ng Ä‘á»ƒ render
+    // Thay thế ngAfterViewInit, tự động chạy nội dung này khi DOM sẵn sàng để render
     afterNextRender(() => {
-      // 1. Gáº¯n portal vÃ o body vÃ  lÆ°u láº¡i EmbeddedViewRef
+      // 1. Gắn portal vào body và lưu lại EmbeddedViewRef
       const outlet = new DomPortalOutlet(document.body, this.#viewContainerRef, this.#ar, this.#injector);
       this.#embeddedViewRef = outlet.attachTemplatePortal(this.portal());
       
-      // 2. Setup sá»± kiá»‡n hover ngay sau khi DOM tháº­t Ä‘Ã£ Ä‘Æ°á»£c in ra
+      // 2. Setup sự kiện hover ngay sau khi DOM thật đã được in ra
       this.#setupHoverSubscription();
     });
 
-    // Thay tháº¿ ngOnDestroy báº±ng logic destroy trá»±c tiáº¿p 
+    // Thay thế ngOnDestroy bằng logic destroy trực tiếp 
     this.#destroyRef.onDestroy(() => {
       this.#destroy$.next();
       this.#destroy$.complete();
@@ -108,7 +108,7 @@ export class SdSideDrawer extends SdBaseSecureComponent {
     this.#ref.markForCheck();
     this.#isOpenedSignal.set(true);
 
-    // Cháº·n scroll á»Ÿ document body
+    // Chặn scroll ở document body
     this.#previousBodyOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
   };
@@ -119,7 +119,7 @@ export class SdSideDrawer extends SdBaseSecureComponent {
     this.sdClosed.emit();
     this.stopLoading();
     
-    // KhÃ´i phá»¥c láº¡i scroll á»Ÿ document body
+    // Khôi phục lại scroll ở document body
     if (this.#previousBodyOverflow !== null) {
       document.body.style.overflow = this.#previousBodyOverflow;
       this.#previousBodyOverflow = null;
@@ -146,7 +146,7 @@ export class SdSideDrawer extends SdBaseSecureComponent {
   #setupHoverSubscription(): void {
     if (!this.#embeddedViewRef) return;
 
-    // 3. Láº¥y DOM element trá»±c tiáº¿p tá»« rootNodes cá»§a EmbeddedViewRef
+    // 3. Lấy DOM element trực tiếp từ rootNodes của EmbeddedViewRef
     const rootNodes = this.#embeddedViewRef.rootNodes;
     const element = rootNodes.find(
       (node) => node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).classList?.contains('sd-side-drawer')
@@ -157,7 +157,7 @@ export class SdSideDrawer extends SdBaseSecureComponent {
       return;
     }
 
-    // 4. Gáº¯n event listeners trá»±c tiáº¿p lÃªn element tháº­t
+    // 4. Gắn event listeners trực tiếp lên element thật
     const mouseEnter$ = fromEvent(element, 'mouseenter').pipe(map(() => true));
     const mouseLeave$ = fromEvent(element, 'mouseleave').pipe(map(() => false));
 

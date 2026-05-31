@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -89,4 +89,3 @@ export class ViewDemoComponent {
     amount: 1_280_000_000,
   };
 }
-

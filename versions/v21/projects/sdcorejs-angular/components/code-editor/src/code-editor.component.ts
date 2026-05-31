@@ -1,4 +1,4 @@
-﻿import { Clipboard } from '@angular/cdk/clipboard';
+import { Clipboard } from '@angular/cdk/clipboard';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -34,7 +34,7 @@ export type CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss';
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './code-editor.component.html',
   styleUrls: ['./code-editor.component.scss'],
-  encapsulation: ViewEncapsulation.None, // Báº¯t buá»™c Ä‘á»ƒ nháº­n mÃ u Prism
+  encapsulation: ViewEncapsulation.None, // Bắt buộc để nhận màu Prism
 })
 export class SdCodeEditor {
   #clipboard = inject(Clipboard);
@@ -43,13 +43,13 @@ export class SdCodeEditor {
   // ==========================================
   // 1. SIGNAL INPUTS & MODEL
   // ==========================================
-  // Nháº­n báº¥t ká»³ kiá»ƒu dá»¯ liá»‡u nÃ o (string, array, object)
+  // Nhận bất kỳ kiểu dữ liệu nào (string, array, object)
   valueModel = model<any>(undefined, { alias: 'model' });
   
   language = input<CodeLanguage>('typescript');
   maxHeight = input<string>('500px');
   
-  // Tráº¡ng thÃ¡i Viewed (true = Read Only, false = Editable)
+  // Trạng thái Viewed (true = Read Only, false = Editable)
   viewed = input(false, { transform: booleanAttribute });
 
   // ==========================================
@@ -57,35 +57,35 @@ export class SdCodeEditor {
   // ==========================================
   copied = signal<boolean>(false);
   
-  // Chuá»—i text ná»™i bá»™ dÃ¹ng Ä‘á»ƒ map vá»›i tháº» <textarea>
+  // Chuỗi text nội bộ dùng để map với thẻ <textarea>
   textValue = signal<string>('');
   
   prismLang = computed(() => this.language() === 'html' ? 'markup' : this.language());
 
-  // Cá» lÆ°u váº¿t Ä‘á»ƒ chá»‘ng Loop (VÃ²ng láº·p vÃ´ táº­n khi báº¯n 2 chiá»u)
+  // Cờ lưu vết để chống Loop (Vòng lặp vô tận khi bắn 2 chiều)
   private _lastEmittedValue: any = undefined;
 
   constructor() {
     // ==========================================
-    // EFFECT 1: Dá»¯ liá»‡u tá»« CHA truyá»n vÃ o (Model -> TextValue)
+    // EFFECT 1: Dữ liệu từ CHA truyền vào (Model -> TextValue)
     // ==========================================
     effect(() => {
       const extVal = this.valueModel();
       const lang = this.language();
       
       untracked(() => {
-        // Náº¿u giÃ¡ trá»‹ nÃ y do chÃ­nh component báº¯n ra, bá» qua Ä‘á»ƒ trÃ¡nh loop
+        // Nếu giá trị này do chính component bắn ra, bỏ qua để tránh loop
         if (extVal === this._lastEmittedValue) return;
 
         if (typeof extVal === 'string') {
           this.textValue.set(extVal);
         } else if (extVal !== undefined && extVal !== null) {
-          // Tá»± Ä‘á»™ng format Object -> String náº¿u lÃ  JSON
+          // Tự động format Object -> String nếu là JSON
           if (lang === 'json') {
             try {
               this.textValue.set(JSON.stringify(extVal, null, 2));
             } catch {
-              this.textValue.set('// Lá»—i: Object cÃ³ tham chiáº¿u vÃ²ng (Circular Reference)');
+              this.textValue.set('// Lỗi: Object có tham chiếu vòng (Circular Reference)');
             }
           } else {
             this.textValue.set(String(extVal));
@@ -98,15 +98,15 @@ export class SdCodeEditor {
   }
 
   // ==========================================
-  // EFFECT 2: PrismJS render (TextValue -> HTML MÃ€U)
+  // EFFECT 2: PrismJS render (TextValue -> HTML MÀU)
   // ==========================================
   highlightedCode = computed<SafeHtml>(() => {
-    // DÃ¹ng khoáº£ng tráº¯ng Ä‘á»ƒ giá»¯ Ä‘á»™ cao cho tháº» pre náº¿u rá»—ng
+    // Dùng khoảng trắng để giữ độ cao cho thẻ pre nếu rỗng
     const rawCode = this.textValue() || ' '; 
     const langKey = this.prismLang();
     const grammar = Prism.languages[langKey] || Prism.languages['markup'];
     
-    // Cá»™ng thÃªm \n á»Ÿ cuá»‘i Ä‘á»ƒ chá»‘ng lá»—i con trá» textarea Äƒn láº¹m dÃ²ng cuá»‘i
+    // Cộng thêm \n ở cuối để chống lỗi con trỏ textarea ăn lẹm dòng cuối
     const highlightedString = Prism.highlight(rawCode, grammar, langKey) + '\n';
     return this.#sanitizer.bypassSecurityTrustHtml(highlightedString);
   });
@@ -115,23 +115,23 @@ export class SdCodeEditor {
   // EVENTS
   // ==========================================
   
-  // Khi ngÆ°á»i dÃ¹ng gÃµ vÃ o Textarea (TextValue -> Model)
+  // Khi người dùng gõ vào Textarea (TextValue -> Model)
   onTextChange(newText: string) {
     this.textValue.set(newText);
     
     let valToEmit: any = newText;
     
-    // Náº¿u ngÃ´n ngá»¯ lÃ  JSON, cá»‘ gáº¯ng tráº£ vá» Object tháº­t
+    // Nếu ngôn ngữ là JSON, cố gắng trả về Object thật
     if (this.language() === 'json') {
       try {
         valToEmit = JSON.parse(newText);
       } catch {
-        // Náº¿u gÃµ dá»Ÿ ngoáº·c/sai cÃº phÃ¡p -> Tráº£ vá» chuá»—i String táº¡m
+        // Nếu gõ dở ngoặc/sai cú pháp -> Trả về chuỗi String tạm
         valToEmit = newText; 
       }
     }
     
-    // Ghi sá»• vÃ  báº¯n ra ngoÃ i
+    // Ghi sổ và bắn ra ngoài
     this._lastEmittedValue = valToEmit;
     this.valueModel.set(valToEmit);
   }

@@ -1,13 +1,13 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 import { StringUtilities } from '@sdcorejs/angular/utilities';
 import { SdTableCommand, SdTableCommandChildren, SdTableCommandNormal } from '../../../models/table-command.model';
 import { SdTableItem } from '../../../models/table-item.model';
 
 /**
- * Lá»c danh sÃ¡ch commands theo `hidden` (sync / async) + pre-resolve `icon`, `title`, `key`
- * cho tá»«ng row. Output dÃ¹ng trá»±c tiáº¿p trong template khÃ´ng cáº§n thÃªm pipe phá»¥.
+ * Lọc danh sách commands theo `hidden` (sync / async) + pre-resolve `icon`, `title`, `key`
+ * cho từng row. Output dùng trực tiếp trong template không cần thêm pipe phụ.
  *
- * ÄÃ£ rename tá»« `commandFilter` â†’ `filter` sau khi gom toÃ n bá»™ pipe command vÃ o
+ * Đã rename từ `commandFilter` → `filter` sau khi gom toàn bộ pipe command vào
  * `components/command/pipes/`.
  *
  * @example
@@ -78,7 +78,7 @@ export class CommandFilterPipe implements PipeTransform {
     return typeof command.title === 'string' ? command.title : command.title(item.data);
   };
 
-  // Key dÃ¹ng Ä‘á»ƒ gÃ¡n cho autoId â€” cáº§n stable theo (icon, title).
+  // Key dùng để gán cho autoId — cần stable theo (icon, title).
   #key = (item: SdTableItem, command: SdTableCommand): string => {
     const icon = this.#icon(item, command);
     const title = this.#title(item, command);
@@ -102,4 +102,3 @@ interface CommandChildren<T = any> extends SdTableCommandChildren<T> {
   icon: string;
   children: CommandNormal<T>[];
 }
-

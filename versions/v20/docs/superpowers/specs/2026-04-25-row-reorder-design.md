@@ -1,4 +1,4 @@
-﻿# Row Reorder Feature â€” Design Spec
+# Row Reorder Feature — Design Spec
 
 **Date:** 2026-04-25  
 **Component:** `projects/sdcorejs-angular/components/table`  
@@ -23,26 +23,26 @@ rowReorder?: {
 };
 ```
 
-- `enabled` â€” activates the feature
-- `onChange` â€” called after a successful drop; indices are relative to the current page
-- `icon` â€” custom Material icon name for the drag handle
-- `disabled` â€” per-row predicate; disables drag for that row (icon shown greyed out)
+- `enabled` — activates the feature
+- `onChange` — called after a successful drop; indices are relative to the current page
+- `icon` — custom Material icon name for the drag handle
+- `disabled` — per-row predicate; disables drag for that row (icon shown greyed out)
 
 ---
 
 ## Architecture
 
 ```
-items() signal  â”€â”€â–º  cdkDropList (table)
-                          â”‚
+items() signal  ──►  cdkDropList (table)
+                          │
                     cdkDrag (mat-row)
-                          â”‚
+                          │
                     cdkDragHandle (reorder column cell)
-                          â”‚
+                          │
                   onReorderDrop()
-                    â”œâ”€â”€ moveItemInArray on items()
-                    â”œâ”€â”€ table.renderRows()
-                    â””â”€â”€ onChange(newRows[], movedItem, fromIndex, toIndex)
+                    ├── moveItemInArray on items()
+                    ├── table.renderRows()
+                    └── onChange(newRows[], movedItem, fromIndex, toIndex)
 ```
 
 ---
@@ -139,7 +139,7 @@ isReorderDisabled(item: SdTableItem<T>): boolean {
 
 ### 3. `table.component.html`
 
-**`<table mat-table>`** â€” add CDK drop list attributes:
+**`<table mat-table>`** — add CDK drop list attributes:
 ```html
 <table mat-table
   cdkDropList
@@ -150,7 +150,7 @@ isReorderDisabled(item: SdTableItem<T>): boolean {
   ...existing attrs...>
 ```
 
-**New `'reorder'` column definition** â€” insert before all other `ng-container[matColumnDef]`:
+**New `'reorder'` column definition** — insert before all other `ng-container[matColumnDef]`:
 ```html
 @if (_tableOption.rowReorder?.enabled) {
   <ng-container matColumnDef="reorder">
@@ -167,7 +167,7 @@ isReorderDisabled(item: SdTableItem<T>): boolean {
 }
 ```
 
-**Data `mat-row`** â€” add `cdkDrag`:
+**Data `mat-row`** — add `cdkDrag`:
 ```html
 <tr mat-row
   cdkDrag
@@ -177,7 +177,7 @@ isReorderDisabled(item: SdTableItem<T>): boolean {
   ...>
 ```
 
-**Group header `mat-row`** â€” always disabled:
+**Group header `mat-row`** — always disabled:
 ```html
 <tr mat-row
   cdkDrag
@@ -227,4 +227,3 @@ isReorderDisabled(item: SdTableItem<T>): boolean {
 - Reorder across pages
 - Touch device optimisation (CDK handles basic touch support natively)
 - Persisting order to server (handled by consumer via `onChange`)
-

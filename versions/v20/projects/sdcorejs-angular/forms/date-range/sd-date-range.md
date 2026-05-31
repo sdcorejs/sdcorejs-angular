@@ -1,4 +1,4 @@
-�# `<sd-date-range>`
+# `<sd-date-range>`
 
 **Type**: Component (form input)
 **Selector**: `sd-date-range`
@@ -8,20 +8,20 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Two-date range picker � user picks a start date AND an end date through a single 2-month calendar popup. Wraps Material `mat-date-range-picker` with SDCoreJS label/validators/min-max boundary support.
+Two-date range picker — user picks a start date AND an end date through a single 2-month calendar popup. Wraps Material `mat-date-range-picker` with SDCoreJS label/validators/min-max boundary support.
 
 ## When to use
-- Filtering a list page by a date interval ("from" �  "to" � e.g. transaction date, hire date, posting period)
+- Filtering a list page by a date interval ("from" → "to" — e.g. transaction date, hire date, posting period)
 - Report parameter form needing a date interval
 - Picking validity periods (effective-from / expiry-to) where both ends matter and must stay in sync
 - DETAIL state where the saved range needs to be displayed (component still shows two read-only inputs unless you swap to plain text)
 
 ## When NOT to use
-- Single-date selection �  use `<sd-date>`
-- Date + time of a single moment �  use `<sd-datetime>`
-- Quick preset chips ("Today", "This week", ⬦) on top of a list �  use `<sd-chip-calendar>`
-- Multi-period or non-contiguous dates �  not supported � pick a different pattern
-- Range bound to time-of-day (start-time / end-time) � this picker is date-only
+- Single-date selection → use `<sd-date>`
+- Date + time of a single moment → use `<sd-datetime>`
+- Quick preset chips ("Today", "This week", …) on top of a list → use `<sd-chip-calendar>`
+- Multi-period or non-contiguous dates → not supported — pick a different pattern
+- Range bound to time-of-day (start-time / end-time) — this picker is date-only
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -41,7 +41,7 @@ Two-date range picker � user picks a start date AND an end date through a sin
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorMessage` instead. |
 | `model` | `{ from?: string \| null; to?: string \| null } \| null \| undefined` | `undefined` | Two-way bound range value (use `[(model)]`). Both ends are ISO-style date strings (`yyyy/MM/dd`). |
 
-> **Coerce**: `required`, `disabled`, `hideInlineError` use `booleanAttribute` � bare attribute = `true`.
+> **Coerce**: `required`, `disabled`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -53,19 +53,19 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 
 | Class | Condition | Effect |
 | --- | --- | --- |
-| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent �  no top padding. |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 | `sd-bare` | `[bare]="true"` | Strips the mat-form-field shell for inline contexts (chip, token). |
 
 ## Content projection (slots)
-- `<ng-template sdLabelDef>` � custom label rendering (replaces the plain `label` text). The component uses `SdLabelDefDirective` content child.
+- `<ng-template sdLabelDef>` — custom label rendering (replaces the plain `label` text). The component uses `SdLabelDefDirective` content child.
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` PLUS two internal start/end controls under random uuids for fine-grained validity. All three are removed in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
-- **No `[viewed]` flag** � unlike `<sd-date>`, `<sd-datetime>`, `<sd-input>` etc., this component has no DETAIL read-only mode. For read-only display, either set `[disabled]="true"` or render the formatted range as plain text outside the component.
+- **No `[viewed]` flag** — unlike `<sd-date>`, `<sd-datetime>`, `<sd-input>` etc., this component has no DETAIL read-only mode. For read-only display, either set `[disabled]="true"` or render the formatted range as plain text outside the component.
 - **Date adapter**: providers include `provideDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage in `control1`/`control2` uses native `Date` objects; the emitted `model` value is `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }` strings.
-- **Validators**: `[required]` adds `Validators.required` to both internal controls and the aggregate. Material picker auto-emits `matDatepickerMin` / `matDatepickerMax` errors when `min`/`max` are violated. Error tooltip messages: required �  "Vui lòng nhập thông tin"; min �  "Ngày bắt �ầu không hợp l�! (nhỏ hơn gi�:i hạn)"; max �  "Ngày kết thúc không hợp l�! (l�:n hơn gi�:i hạn)".
+- **Validators**: `[required]` adds `Validators.required` to both internal controls and the aggregate. Material picker auto-emits `matDatepickerMin` / `matDatepickerMax` errors when `min`/`max` are violated. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày bắt đầu không hợp lệ (nhỏ hơn giới hạn)"; max → "Ngày kết thúc không hợp lệ (lớn hơn giới hạn)".
 
 ## Public methods & getters
 
@@ -83,13 +83,13 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 | `formControl` | `FormControl` | Aggregate reactive control registered into the parent `FormGroup` under `name`. Holds `{ from: Date, to: Date }` as value. |
 | `control1` | `FormControl` | Internal reactive control for the start date (native `Date` value). Registered under a random uuid in the parent form. |
 | `control2` | `FormControl` | Internal reactive control for the end date (native `Date` value). Registered under a random uuid in the parent form. |
-| `resolvedMin()` | computed `Date \| null` | Resolved `min` boundary � parses the `min` input string / Date / `'TODAY'` into a `Date`. |
-| `resolvedMax()` | computed `Date \| null` | Resolved `max` boundary � parses the `max` input string / Date / `'TODAY'` into a `Date`. |
+| `resolvedMin()` | computed `Date \| null` | Resolved `min` boundary — parses the `min` input string / Date / `'TODAY'` into a `Date`. |
+| `resolvedMax()` | computed `Date \| null` | Resolved `max` boundary — parses the `max` input string / Date / `'TODAY'` into a `Date`. |
 
-## Visual cues (helps agent map screenshots �  component)
-- A single Material outlined field with TWO date inputs side-by-side separated by an "� " / dash, each in `dd/MM/yyyy` format (e.g. `01/01/2025  �   31/12/2025`)
-- Trailing icons: a calendar icon to open the picker; an �S" clear button when a value is set
-- Clicking the calendar icon opens a 2-month side-by-side calendar popup; user clicks start date, then end date � the range fills in
+## Visual cues (helps agent map screenshots → component)
+- A single Material outlined field with TWO date inputs side-by-side separated by an "→" / dash, each in `dd/MM/yyyy` format (e.g. `01/01/2025  →  31/12/2025`)
+- Trailing icons: a calendar icon to open the picker; an ✕ clear button when a value is set
+- Clicking the calendar icon opens a 2-month side-by-side calendar popup; user clicks start date, then end date — the range fills in
 - When focused, both inputs share a single underline/outline (visually one field, not two)
 - Helper-text shows as an info icon next to the label
 
@@ -99,7 +99,7 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 ```html
 <sd-date-range
   [form]="filterForm" name="transactionDate"
-  label="Khoảng ngày giao d�9ch"
+  label="Khoảng ngày giao dịch"
   [(model)]="filter.transactionDate"
   (sdChange)="onFilterChange()">
 </sd-date-range>
@@ -109,7 +109,7 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 ```html
 <sd-date-range
   [form]="form" name="effectivePeriod"
-  label="Hi�!u lực" required
+  label="Hiệu lực" required
   min="TODAY" [max]="contractEndDate"
   [(model)]="model.effectivePeriod">
 </sd-date-range>
@@ -125,15 +125,15 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 ```
 
 ## Anti-patterns
-- �R Using `formControlName` / `[(ngModel)]` � not wired; use `[form]+[name]` and `[(model)]`.
-- �R Trying `[viewed]="true"` � no such input on this component. Use `[disabled]` or render plain text.
-- �R Treating the model as two separate strings � it is `{ from, to }`. Splitting it across two `<sd-date>` defeats the purpose (no shared calendar, no aggregate validation).
-- �R Mutating `model.from` / `model.to` directly � assign a new object literal so the `effect` re-runs.
-- �R Using this for date-and-time intervals � neither end carries time. Use two `<sd-datetime>` if you need that.
+- ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
+- ❌ Trying `[viewed]="true"` — no such input on this component. Use `[disabled]` or render plain text.
+- ❌ Treating the model as two separate strings — it is `{ from, to }`. Splitting it across two `<sd-date>` defeats the purpose (no shared calendar, no aggregate validation).
+- ❌ Mutating `model.from` / `model.to` directly — assign a new object literal so the `effect` re-runs.
+- ❌ Using this for date-and-time intervals — neither end carries time. Use two `<sd-datetime>` if you need that.
 
 ## E2E test attributes
 
-All five attributes live on the **`<mat-date-range-input>`** element � the single QA anchor for the whole control. The two inner date inputs retain their own per-side `data-autoid` (`-from` / `-to`) and are unchanged.
+All five attributes live on the **`<mat-date-range-input>`** element — the single QA anchor for the whole control. The two inner date inputs retain their own per-side `data-autoid` (`-from` / `-to`) and are unchanged.
 
 | Attribute | Element | Values | Notes |
 | --- | --- | --- | --- |
@@ -152,18 +152,17 @@ All five attributes live on the **`<mat-date-range-input>`** element � the si
 | API | Type | Notes |
 |---|---|---|
 | `[bare]` | `boolean` | Strips the form-field shell so the control fits inline in a chip / token. Use inside `<sd-query-bar>` BETWEEN or other inline editors. Default `false`. |
-| `[viewed]` | `boolean` | Read-only mode � renders `<sd-view>` showing `dd/MM/yyyy �  dd/MM/yyyy`. Project an `<ng-template #sdValue>` inside `<sd-date-range>` to override the display. Default `false`. |
+| `[viewed]` | `boolean` | Read-only mode — renders `<sd-view>` showing `dd/MM/yyyy → dd/MM/yyyy`. Project an `<ng-template #sdValue>` inside `<sd-date-range>` to override the display. Default `false`. |
 | `open()` | method | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode. |
 
 `bare` and `viewed` are independent and complementary:
-- `viewed=true` �  text-only `<sd-view>`, no form-field.
-- `bare=true, viewed=false` �  editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
+- `viewed=true` → text-only `<sd-view>`, no form-field.
+- `bare=true, viewed=false` → editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
 
 ## Related
-- `<sd-date>` � single-date picker
-- `<sd-datetime>` � single date+time picker
-- `<sd-chip-calendar>` � date with quick preset chips (Today, This week, ⬦)
-- `<sd-label>` � label primitive used internally
-- `SdLabelDefDirective` � custom label projection
-- `SD_FORM_CONFIGURATION` token � global default `appearance`
-
+- `<sd-date>` — single-date picker
+- `<sd-datetime>` — single date+time picker
+- `<sd-chip-calendar>` — date with quick preset chips (Today, This week, …)
+- `<sd-label>` — label primitive used internally
+- `SdLabelDefDirective` — custom label projection
+- `SD_FORM_CONFIGURATION` token — global default `appearance`

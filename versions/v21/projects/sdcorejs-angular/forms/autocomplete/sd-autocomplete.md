@@ -1,4 +1,4 @@
-�# `<sd-autocomplete>`
+# `<sd-autocomplete>`
 
 **Type**: Component (form input)
 **Selector**: `sd-autocomplete`
@@ -8,19 +8,19 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Typeahead single-select dropdown � user types to filter a static array OR an async backend source, then picks one item. Wraps Material `mat-autocomplete` with SDCoreJS label/validators/`viewed` read-only support.
+Typeahead single-select dropdown — user types to filter a static array OR an async backend source, then picks one item. Wraps Material `mat-autocomplete` with SDCoreJS label/validators/`viewed` read-only support.
 
 ## When to use
-- Picking ONE entity from a long list (customer, product, employee, ⬦) where a plain `<sd-select>` would be too crowded
-- Backend-driven dynamic dropdown � set `items` to a function returning `Observable<T[]>` / `Promise<T[]>`
+- Picking ONE entity from a long list (customer, product, employee, …) where a plain `<sd-select>` would be too crowded
+- Backend-driven dynamic dropdown — set `items` to a function returning `Observable<T[]>` / `Promise<T[]>`
 - Static list with search-as-you-type (`items` is an array)
 - DETAIL state that needs read-only display via `[viewed]="true"`
 
 ## When NOT to use
-- Multi-select tags �  use `<sd-chip>` (multi values) or `<sd-select [multiple]>`
-- Picking a date �  `<sd-date>` / `<sd-date-range>` / `<sd-chip-calendar>`
-- Free-text input (no list) �  `<sd-input>`
-- Hierarchical/tree picker �  see tree-select components, not this one
+- Multi-select tags → use `<sd-chip>` (multi values) or `<sd-select [multiple]>`
+- Picking a date → `<sd-date>` / `<sd-date-range>` / `<sd-chip-calendar>`
+- Free-text input (no list) → `<sd-input>`
+- Hierarchical/tree picker → see tree-select components, not this one
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -40,22 +40,22 @@ Typeahead single-select dropdown � user types to filter a static array OR an 
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Render value as a link in `[viewed]` mode. |
 | `items` | `T[] \| SdSearch<T> \| null \| undefined` | `undefined` | Static array OR a function `({type:'SEARCH',searchText} \| {type:'VALUE',value}) => Observable<T[]> \| Promise<T[]>`. |
 | `appearance` | `MatFormFieldAppearance` | from `SD_FORM_CONFIGURATION` ?? `'outline'` | Material form-field style. |
-| `addable` | `boolean` | `false` | Show "+" add button �  emits `sdAdd`. |
+| `addable` | `boolean` | `false` | Show "+" add button → emits `sdAdd`. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables both display + filter controls. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode � renders display value (or `<sd-view-def>` template) instead of the input. |
+| `viewed` | `boolean` | `false` | Read-only DETAIL mode — renders display value (or `<sd-view-def>` template) instead of the input. |
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error as a tooltip instead. |
 | `validator` | `SdCustomValidator \| undefined` | `undefined` | Async custom validator (wrapped via `HandleSdCustomValidator`). |
 | `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message (sets a synthetic `inlineError` validator). |
 | `model` | `string \| number \| null \| undefined` | `undefined` | Two-way bound selected VALUE (use `[(model)]`). |
 
-> **Coerce**: `addable`, `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` � bare attribute = `true`.
+> **Coerce**: `addable`, `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
 
 ## Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
 | `sdChange` | `string \| number \| null` | Emitted when selection changes (the resolved VALUE). |
-| `sdSelection` | `SdSelectionData` | `{ values, selectedItems, value, selectedItem }` � full payload incl. raw item. |
+| `sdSelection` | `SdSelectionData` | `{ values, selectedItems, value, selectedItem }` — full payload incl. raw item. |
 | `sdAdd` | `void` | Fired by the "+" button when `[addable]="true"`. |
 
 ## Host classes
@@ -63,25 +63,25 @@ Applied automatically on `<sd-autocomplete>` for styling hooks:
 
 | Class | Condition | Effect |
 | --- | --- | --- |
-| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent �  no top padding. |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
-- `#sdLabel` template � custom label rendering
-- `#sdValue` template � custom in-list option rendering
-- `<ng-template sdItemDef>` � alternate option-row template
-- `<ng-template sdViewDef>` � read-only display template used in `[viewed]` mode
+- `#sdLabel` template — custom label rendering
+- `#sdValue` template — custom in-list option rendering
+- `<ng-template sdItemDef>` — alternate option-row template
+- `<ng-template sdViewDef>` — read-only display template used in `[viewed]` mode
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. The component then calls `formGroup.addControl(name, formControl)` on `ngAfterViewInit` and `formGroup.removeControl(name)` on `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: input is hidden, the display label (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
-- **Validators**: `[required]` adds `Validators.required`. `[validator]` accepts an async custom validator. `[inlineError]="msg"` injects a synthetic error and shows `msg`. Built-in error tooltip messages: required �  "Vui lòng nhập thông tin"; custom validator and inline-error messages bubble up via `errorMessage`.
-- **Reactive validator updates** � `required`, `validator`, and `inlineError` are signal inputs; an internal `effect()` calls `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip validators on/off at runtime with no manual call needed.
-- **`[disabled]` reactive** � toggling `disabled` calls `inputControl.disable() / enable()` and `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
-- **`[(model)]` two-way** � host writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` to avoid triggering `valueChanges`. The reverse direction (selection �  `formControl.setValue` �  `valueModel.set()` �  `(modelChange)`) flows through the normal signal-model mechanism.
-- **`[form]` transform** � the `form` input accepts `NgForm` (unwrapped to its inner `FormGroup`), `FormGroup` (used directly), or an object with shape `{ form: FormGroup }` as a safety fallback.
-- **Default `appearance`** � when `[appearance]` is omitted, reads `SD_FORM_CONFIGURATION` injection token. Falls back to `'outline'` if the token is absent.
+- **Validators**: `[required]` adds `Validators.required`. `[validator]` accepts an async custom validator. `[inlineError]="msg"` injects a synthetic error and shows `msg`. Built-in error tooltip messages: required → "Vui lòng nhập thông tin"; custom validator and inline-error messages bubble up via `errorMessage`.
+- **Reactive validator updates** — `required`, `validator`, and `inlineError` are signal inputs; an internal `effect()` calls `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip validators on/off at runtime with no manual call needed.
+- **`[disabled]` reactive** — toggling `disabled` calls `inputControl.disable() / enable()` and `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
+- **`[(model)]` two-way** — host writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` to avoid triggering `valueChanges`. The reverse direction (selection → `formControl.setValue` → `valueModel.set()` → `(modelChange)`) flows through the normal signal-model mechanism.
+- **`[form]` transform** — the `form` input accepts `NgForm` (unwrapped to its inner `FormGroup`), `FormGroup` (used directly), or an object with shape `{ form: FormGroup }` as a safety fallback.
+- **Default `appearance`** — when `[appearance]` is omitted, reads `SD_FORM_CONFIGURATION` injection token. Falls back to `'outline'` if the token is absent.
 
 ### Three ways to integrate
 
@@ -112,14 +112,14 @@ Applied automatically on `<sd-autocomplete>` for styling hooks:
 </form>
 ```
 
-> **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` � unwraps `.form`) and `FormGroup` (used directly). In all three patterns the component manages `addControl` / `removeControl` lifecycle internally � never call them yourself.
+> **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` — unwraps `.form`) and `FormGroup` (used directly). In all three patterns the component manages `addControl` / `removeControl` lifecycle internally — never call them yourself.
 
-## Visual cues (helps agent map screenshots �  component)
+## Visual cues (helps agent map screenshots → component)
 - Outlined input field with a label that floats on focus
-- Trailing icons: �x� search icon when empty; a **slim clear button** (`.sd-clear-btn`, thin `close` icon) when a value is selected; loading spinner when an async source is in flight; optional "+" add button when `[addable]`. The clear button **replaces** the search icon (like `sd-select`), so it is **always shown** when there's a value � NOT hover-gated.
+- Trailing icons: 🔍 search icon when empty; a **slim clear button** (`.sd-clear-btn`, thin `close` icon) when a value is selected; loading spinner when an async source is in flight; optional "+" add button when `[addable]`. The clear button **replaces** the search icon (like `sd-select`), so it is **always shown** when there's a value — NOT hover-gated.
 - Below the field, a Material panel slides down listing matching options; each row uses `displayField` (or custom `sdItemDef` template)
 - Highlighted/selected option painted in primary color
-- In `[viewed]="true"` mode: no input box � just plain text (or hyperlink) of the resolved display value
+- In `[viewed]="true"` mode: no input box — just plain text (or hyperlink) of the resolved display value
 
 ## Examples
 
@@ -189,17 +189,16 @@ await expect(el).toHaveAttribute('data-required', 'false');
 ```
 
 ## Anti-patterns
-- �R Using `formControlName` / `[(ngModel)]` � not wired; use `[form]+[name]` and `[(model)]`.
-- �R Loading the entire dataset into `items` for huge collections � pass a function (`SdSearch`) so search is delegated to the backend.
-- �R Forgetting `valueField`/`displayField` when items are objects � display will be empty.
-- �R Mutating the array passed to `[items]` in place � pass a new reference so the signal effect re-runs and the cache resets.
-- �R Using `[disabled]` to express read-only DETAIL state � use `[viewed]="true"` instead so labels/links render correctly.
+- ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
+- ❌ Loading the entire dataset into `items` for huge collections — pass a function (`SdSearch`) so search is delegated to the backend.
+- ❌ Forgetting `valueField`/`displayField` when items are objects — display will be empty.
+- ❌ Mutating the array passed to `[items]` in place — pass a new reference so the signal effect re-runs and the cache resets.
+- ❌ Using `[disabled]` to express read-only DETAIL state — use `[viewed]="true"` instead so labels/links render correctly.
 
 ## Related
-- `<sd-select>` � non-search dropdown (incl. multi-select)
-- `<sd-chip>` � multi-value tag input
-- `<sd-input>` � free-text
-- `<sd-label>` � label primitive used internally
-- `SdSearch<T>` model � backend source contract
-- `SD_FORM_CONFIGURATION` token � global default `appearance`
-
+- `<sd-select>` — non-search dropdown (incl. multi-select)
+- `<sd-chip>` — multi-value tag input
+- `<sd-input>` — free-text
+- `<sd-label>` — label primitive used internally
+- `SdSearch<T>` model — backend source contract
+- `SD_FORM_CONFIGURATION` token — global default `appearance`

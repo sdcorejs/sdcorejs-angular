@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import {
   AfterViewInit,
@@ -42,12 +42,12 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
   configuration!: SdFormRenderConfiguration;
   @Input({ alias: 'configuration', required: true }) set _configuration(val: SdFormRenderConfiguration) {
     this.configuration = val;
-    // LuÃ´n format láº¡i component trÆ°á»›c khi render
+    // Luôn format lại component trước khi render
     this.configuration?.components?.forEach(SdFormatComponent);
     this.#configurationChanges.next(this.configuration);
   }
 
-  // Dá»±a vÃ o giÃ¡ trá»‹ default sáº½ gÃ¡n cho entity
+  // Dựa vào giá trị default sẽ gán cho entity
   #defaultEntity: Record<string, any> = {};
   @Input('defaultEntity') set _default(defaultEntity: Record<string, any>) {
     this.#defaultEntity = defaultEntity;
@@ -77,7 +77,7 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
   hashedValues?: string;
   formValue: Record<string, any> = {};
 
-  // CÃ¡c component item cá»§a form-render sáº½ láº¯ng nghe thay Ä‘á»•i
+  // Các component item của form-render sẽ lắng nghe thay đổi
   setVariables = new Subject<{ key: string; value: any }>();
   constructor(
     private ref: ChangeDetectorRef,
@@ -93,7 +93,7 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
         .subscribe(async () => {
           if (this.entity && this.configuration?.components?.length) {
             this.loadCompleted = true;
-            this.ref.markForCheck(); // VÃ¬ loadCompleted ko pháº£i lÃ  @Input nÃªn component sáº½ ko load láº¡i
+            this.ref.markForCheck(); // Vì loadCompleted ko phải là @Input nên component sẽ ko load lại
             if (this.configuration?.onLoaded) {
               try {
                 this.configuration.onLoaded();
@@ -126,7 +126,7 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
         const hashedValues = Utilities.hash(values);
         if (this.hashedValues !== hashedValues) {
           this.hashedValues = hashedValues;
-          // á»ž tráº¡ng thÃ¡i view thÃ¬ khÃ´ng cÃ³ FormControl nÃªn pháº£i binding entity má»›i cÃ³ dá»¯ liá»‡u cho formValue
+          // Ở trạng thái view thì không có FormControl nên phải binding entity mới có dữ liệu cho formValue
           this.formValue = { ...this.entity, ...values };
           this.ref.markForCheck();
         }
@@ -138,17 +138,17 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
     this.#subscription.unsubscribe();
   }
 
-  // HÃ m nÃ y sáº½ Ä‘i qua cÃ¡c components vÃ  cÃ¡c columns trong table Ä‘á»ƒ xá»­ lÃ½ upload file
-  // TrÆ°á»›c khi thá»±c hiá»‡n lÆ°u thÃ¬ cáº§n gá»i hÃ m nÃ y trÆ°á»›c Ä‘á»ƒ mapping giÃ¡ trá»‹ Ä‘Ãºng
+  // Hàm này sẽ đi qua các components và các columns trong table để xử lý upload file
+  // Trước khi thực hiện lưu thì cần gọi hàm này trước để mapping giá trị đúng
   upload = async () => {
     for (const formRenderItem of this.formRenderItems || []) {
       await formRenderItem.upload();
     }
   };
 
-  // NÃªn gá»i hÃ m nÃ y trÆ°á»›c khi save/submit
-  // HÃ m nÃ y tráº£ vá» máº£ng string error
-  // Náº¿u khÃ´ng cÃ³ error nÃ o thÃ¬ tráº£ vá» máº£ng rá»—ng
+  // Nên gọi hàm này trước khi save/submit
+  // Hàm này trả về mảng string error
+  // Nếu không có error nào thì trả về mảng rỗng
   getValidationMessages = async (alert: SdFormGenericValidation['alert']) => {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -176,4 +176,3 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
     return messages;
   };
 }
-

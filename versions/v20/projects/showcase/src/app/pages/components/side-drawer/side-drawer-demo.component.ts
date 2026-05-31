@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
@@ -75,4 +75,3 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SideDrawerDemoComponent {}
-

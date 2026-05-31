@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -37,18 +37,18 @@ import {
 type Range = { from?: string | number | null; to?: string | number | null };
 
 /**
- * Popover-mode chip editor â€” the entire `<mat-menu>` that opens when a popover-mode
+ * Popover-mode chip editor — the entire `<mat-menu>` that opens when a popover-mode
  * chip is clicked. Owns ALL operator+value staging signals and async option loading.
  *
- * why: tÃ¡ch khá»i `<sd-query-bar>` Ä‘á»ƒ parent chá»‰ giá»¯ `editingIndex` (chip nÃ o Ä‘ang
- * má»Ÿ) + nháº­n `(commit)` khi popover Ä‘Ã³ng. Má»—i láº§n parent gá»i `seed(filter, field)`
- * trÆ°á»›c khi má»Ÿ chip popover, child reset staging signals + kÃ­ch option loading.
+ * why: tách khỏi `<sd-query-bar>` để parent chỉ giữ `editingIndex` (chip nào đang
+ * mở) + nhận `(commit)` khi popover đóng. Mỗi lần parent gọi `seed(filter, field)`
+ * trước khi mở chip popover, child reset staging signals + kích option loading.
  *
  * Public surface (template ref `#cp`):
- *   - `cp.menu()` â€” the `<mat-menu>` to feed `[menu]` of `<sd-query-popover-chip>`
- *   - `cp.seed(filter, field)` â€” parent reseeds staging before opening
- *   - `(commit)` output â€” emitted on mat-menu close with staged Filter
- *   - `(swapField)` output â€” emitted when the nested field switcher picks a new field
+ *   - `cp.menu()` — the `<mat-menu>` to feed `[menu]` of `<sd-query-popover-chip>`
+ *   - `cp.seed(filter, field)` — parent reseeds staging before opening
+ *   - `(commit)` output — emitted on mat-menu close with staged Filter
+ *   - `(swapField)` output — emitted when the nested field switcher picks a new field
  */
 @Component({
   selector: 'sd-query-chip-popover',
@@ -76,33 +76,33 @@ export class SdQueryChipPopover {
   // Inputs
   // ---------------------------------------------------------------------------
 
-  /** Resolved field of the currently editing chip â€” parent passes from `fieldByKey()`. */
+  /** Resolved field of the currently editing chip — parent passes from `fieldByKey()`. */
   readonly field = input<SdQueryField | undefined>(undefined);
 
-  /** The chip's current Filter â€” used by `seed()` for initial staging values. */
+  /** The chip's current Filter — used by `seed()` for initial staging values. */
   readonly filter = input<Filter | undefined>(undefined);
 
-  /** Optional chip index â€” embedded in the composed autoIds. */
+  /** Optional chip index — embedded in the composed autoIds. */
   readonly chipIndex = input<number | null>(null);
 
   /** Prefix for `data-autoId` on inner controls. */
   readonly autoIdBase = input<string>('qb');
 
-  /** MatMenu for the field switcher â€” parent passes its `<sd-query-field-picker>` menu. */
+  /** MatMenu for the field switcher — parent passes its `<sd-query-field-picker>` menu. */
   readonly switchPickerMenu = input<MatMenu | undefined>(undefined);
 
   // ---------------------------------------------------------------------------
   // Outputs
   // ---------------------------------------------------------------------------
 
-  /** Emitted when mat-menu closes â€” parent splices `next` into filters[idx]. */
+  /** Emitted when mat-menu closes — parent splices `next` into filters[idx]. */
   readonly commit = output<Filter>();
 
-  /** Emitted when nested field-switcher picks a new field â€” parent calls changeFilterField. */
+  /** Emitted when nested field-switcher picks a new field — parent calls changeFilterField. */
   readonly swapField = output<SdQueryField>();
 
   // ---------------------------------------------------------------------------
-  // Staging signals â€” uncommitted edits, committed on menu close.
+  // Staging signals — uncommitted edits, committed on menu close.
   // ---------------------------------------------------------------------------
 
   /** Staged operator. */
@@ -148,17 +148,17 @@ export class SdQueryChipPopover {
   readonly iconFor = sdQueryFieldIcon;
 
   // ---------------------------------------------------------------------------
-  // mat-menu instance â€” parent reads via `cp.menu()`
+  // mat-menu instance — parent reads via `cp.menu()`
   // ---------------------------------------------------------------------------
 
   readonly menu = viewChild<MatMenu>('menu');
 
   // ---------------------------------------------------------------------------
-  // Seed â€” parent calls before opening the popover so staging signals are
+  // Seed — parent calls before opening the popover so staging signals are
   // primed from the current filter + the option list is loaded.
   // ---------------------------------------------------------------------------
 
-  /** Reseed staging from a new filter/field pair â€” call before opening the menu. */
+  /** Reseed staging from a new filter/field pair — call before opening the menu. */
   seed(filter: Filter | undefined, field: SdQueryField | undefined): void {
     if (!filter || !field) {
       this.editingOperator.set('EQUAL');
@@ -184,7 +184,7 @@ export class SdQueryChipPopover {
   // Operator + value mutators
   // ---------------------------------------------------------------------------
 
-  /** Called on operator change in the popover header â€” reshapes value when family changes. */
+  /** Called on operator change in the popover header — reshapes value when family changes. */
   onEditingOperatorChange(next: Operator): void {
     const prev = this.editingOperator();
     this.editingOperator.set(next);
@@ -215,13 +215,13 @@ export class SdQueryChipPopover {
     this.editingValue.set(value);
   }
 
-  /** BETWEEN range â€” mutate only `.from`. */
+  /** BETWEEN range — mutate only `.from`. */
   onEditingRangeFrom(value: string | number | null): void {
     const v = (this.editingValue() as Range) ?? {};
     this.editingValue.set({ ...v, from: value });
   }
 
-  /** BETWEEN range â€” mutate only `.to`. */
+  /** BETWEEN range — mutate only `.to`. */
   onEditingRangeTo(value: string | number | null): void {
     const v = (this.editingValue() as Range) ?? {};
     this.editingValue.set({ ...v, to: value });
@@ -242,11 +242,11 @@ export class SdQueryChipPopover {
   }
 
   // ---------------------------------------------------------------------------
-  // Menu lifecycle â€” close = commit
+  // Menu lifecycle — close = commit
   // ---------------------------------------------------------------------------
 
   /**
-   * mat-menu's (closed) handler â€” compose the next Filter from staging signals and
+   * mat-menu's (closed) handler — compose the next Filter from staging signals and
    * emit (commit). Parent splices into its filters[] and nulls editingIndex.
    */
   onMenuClosed(): void {
@@ -261,7 +261,7 @@ export class SdQueryChipPopover {
   }
 
   // ---------------------------------------------------------------------------
-  // Async option loaders â€” same logic as the parent's private methods.
+  // Async option loaders — same logic as the parent's private methods.
   // ---------------------------------------------------------------------------
 
   #loadValuesOptions(field: SdQueryField): void {
@@ -303,4 +303,3 @@ export class SdQueryChipPopover {
     }
   }
 }
-

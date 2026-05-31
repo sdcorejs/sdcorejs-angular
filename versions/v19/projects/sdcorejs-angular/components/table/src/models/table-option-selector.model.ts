@@ -1,41 +1,41 @@
-﻿import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 
 export interface SdTableOptionSelector<T = any> {
-  /** Báº­t/táº¯t cá»™t checkbox selector. Máº·c Ä‘á»‹nh: true. */
+  /** Bật/tắt cột checkbox selector. Mặc định: true. */
   visible?: boolean;
-  /** Chá»‰ cho chá»n 1 dÃ²ng táº¡i má»™t thá»i Ä‘iá»ƒm. */
+  /** Chỉ cho chọn 1 dòng tại một thời điểm. */
   single?: boolean;
-  /** Danh sÃ¡ch action hiá»ƒn thá»‹ khi cÃ³ item Ä‘Æ°á»£c chá»n. */
+  /** Danh sách action hiển thị khi có item được chọn. */
   actions?: SdTableAction<T>[];
-  /** Ná»™i dung hiá»ƒn thá»‹ bÃªn cáº¡nh selector/action bar. */
+  /** Nội dung hiển thị bên cạnh selector/action bar. */
   message?: string | ((selectedItems?: T[]) => string);
-  /** Callback khi user chá»n/bá» chá»n má»™t dÃ²ng. */
+  /** Callback khi user chọn/bỏ chọn một dòng. */
   onSelect?: (rowData?: T, selectedItems?: T[]) => void;
-  /** Callback khi user chá»n táº¥t cáº£ hoáº·c bá» chá»n táº¥t cáº£. */
+  /** Callback khi user chọn tất cả hoặc bỏ chọn tất cả. */
   onSelectAll?: (selectedItems: T[]) => void;
-  /** Disable checkbox cá»§a tá»«ng dÃ²ng theo Ä‘iá»u kiá»‡n. */
+  /** Disable checkbox của từng dòng theo điều kiện. */
   disabled?: (rowData?: T, selectedItems?: T[]) => boolean;
   /**
-   * Predicate Ä‘á»ƒ tá»± Ä‘á»™ng pre-select item sau má»—i láº§n load.
-   * Table sáº½ gá»i hÃ m nÃ y cho tá»«ng item vÃ  set isSelected = true náº¿u tráº£ vá» true.
-   * DÃ¹ng khi cáº§n programmatically set selected items tá»« bÃªn ngoÃ i.
+   * Predicate để tự động pre-select item sau mỗi lần load.
+   * Table sẽ gọi hàm này cho từng item và set isSelected = true nếu trả về true.
+   * Dùng khi cần programmatically set selected items từ bên ngoài.
    */
   defaultSelected?: (rowData: T) => boolean;
   /**
-   * Giá»¯ láº¡i selection khi user chuyá»ƒn trang / filter / sort / reload.
-   * Selection chá»‰ bá»‹ clear khi user báº¥m nÃºt X (onClearSelection) hoáº·c bá» chá»n tá»«ng item.
+   * Giữ lại selection khi user chuyển trang / filter / sort / reload.
+   * Selection chỉ bị clear khi user bấm nút X (onClearSelection) hoặc bỏ chọn từng item.
    *
-   * - Default (false): selection bá»‹ máº¥t khi data items Ä‘Æ°á»£c re-fetch (server-side) hoáº·c
-   *   item references thay Ä‘á»•i. Action bar chá»‰ hiá»ƒn thá»‹ sá»‘ item selected á»Ÿ page hiá»‡n táº¡i.
-   * - Enabled (true): table giá»¯ map ná»™i bá»™ selectedItems theo `meta.id` (hash cá»§a data).
-   *   Sau má»—i #render, restore `isSelected` cho item nÃ o id Ä‘Ã£ cÃ³ trong map.
-   *   `selectedTableItems()` tráº£ vá» TOÃ€N Bá»˜ item Ä‘Ã£ chá»n xuyÃªn trang (ká»ƒ cáº£ off-page),
-   *   nÃªn action bar + callback `click(items)` nháº­n Ä‘áº§y Ä‘á»§ data Ä‘ang Ä‘Æ°á»£c chá»n.
+   * - Default (false): selection bị mất khi data items được re-fetch (server-side) hoặc
+   *   item references thay đổi. Action bar chỉ hiển thị số item selected ở page hiện tại.
+   * - Enabled (true): table giữ map nội bộ selectedItems theo `meta.id` (hash của data).
+   *   Sau mỗi #render, restore `isSelected` cho item nào id đã có trong map.
+   *   `selectedTableItems()` trả về TOÀN BỘ item đã chọn xuyên trang (kể cả off-page),
+   *   nên action bar + callback `click(items)` nhận đầy đủ data đang được chọn.
    *
-   * LÆ°u Ã½: matching dá»±a trÃªn `Utilities.hash(data)` â€” hai item cÃ³ cÃ¹ng data shape sáº½
-   * trÃ¹ng id (mong muá»‘n). Náº¿u data cÃ³ timestamp/random field thay Ä‘á»•i giá»¯a cÃ¡c láº§n fetch,
-   * id sáº½ khÃ¡c vÃ  selection khÃ´ng restore Ä‘Æ°á»£c.
+   * Lưu ý: matching dựa trên `Utilities.hash(data)` — hai item có cùng data shape sẽ
+   * trùng id (mong muốn). Nếu data có timestamp/random field thay đổi giữa các lần fetch,
+   * id sẽ khác và selection không restore được.
    */
   preserveSelection?: boolean;
 }
@@ -44,66 +44,65 @@ export type SdTableAction<T = any> = SdTableActionNormal<T> | SdTableActionChild
 
 export interface SdTableActionNormal<T = any> {
   /**
-   * TÃªn icon hiá»ƒn thá»‹ trÃªn action button.
-   * GiÃ¡ trá»‹ nÃ y Ä‘Æ°á»£c render qua `mat-icon`, vÃ¬ váº­y nÃªn dÃ¹ng Ä‘Ãºng tÃªn glyph cá»§a Material Icons.
-   * Tra cá»©u icon táº¡i: https://fonts.google.com/icons
+   * Tên icon hiển thị trên action button.
+   * Giá trị này được render qua `mat-icon`, vì vậy nên dùng đúng tên glyph của Material Icons.
+   * Tra cứu icon tại: https://fonts.google.com/icons
    */
   icon?: string;
   /**
-   * Font set cá»§a Material icon.
-   * Kiá»ƒu thá»±c táº¿ láº¥y tá»« `SdButton['fontSet']` vÃ  chá»‰ há»— trá»£ cÃ¡c giÃ¡ trá»‹ thuá»™c `MaterialIconFontSet`,
-   * vÃ­ dá»¥: `material-icons`, `material-icons-outlined`, `material-icons-round`,
+   * Font set của Material icon.
+   * Kiểu thực tế lấy từ `SdButton['fontSet']` và chỉ hỗ trợ các giá trị thuộc `MaterialIconFontSet`,
+   * ví dụ: `material-icons`, `material-icons-outlined`, `material-icons-round`,
    * `material-icons-sharp`.
-   * Náº¿u khÃ´ng truyá»n, `SdButton` sáº½ dÃ¹ng font set máº·c Ä‘á»‹nh cá»§a nÃ³.
+   * Nếu không truyền, `SdButton` sẽ dùng font set mặc định của nó.
    */
   fontSet?: SdUnwrapSignal<SdButton['fontSet']>;
-  /** Tooltip hiá»ƒn thá»‹ khi hover action button. */
+  /** Tooltip hiển thị khi hover action button. */
   tooltip?: SdUnwrapSignal<SdButton['tooltip']>;
-  /** Text label hiá»ƒn thá»‹ trÃªn button action. */
+  /** Text label hiển thị trên button action. */
   title?: SdUnwrapSignal<SdButton['title']>;
   /**
-   * MÃ u cá»§a `SdButton`.
-   * Kiá»ƒu thá»±c táº¿ map theo `SdButton['color']`, hiá»‡n dÃ¹ng cÃ¡c token nhÆ°
+   * Màu của `SdButton`.
+   * Kiểu thực tế map theo `SdButton['color']`, hiện dùng các token như
    * `primary`, `secondary`, `info`, `success`, `warning`, `error`.
    */
   color?: SdUnwrapSignal<SdButton['color']>;
   /**
-   * Variant hiá»ƒn thá»‹ cá»§a `SdButton`.
-   * Kiá»ƒu thá»±c táº¿ lÃ  `fill | light | outline | link`.
+   * Variant hiển thị của `SdButton`.
+   * Kiểu thực tế là `fill | light | outline | link`.
    */
   type?: SdUnwrapSignal<SdButton['type']>;
-  /** áº¨n action theo cá» tÄ©nh hoáº·c theo Ä‘iá»u kiá»‡n cá»§a dá»¯ liá»‡u dÃ²ng. */
+  /** Ẩn action theo cờ tĩnh hoặc theo điều kiện của dữ liệu dòng. */
   hidden?: boolean | ((rowData?: T) => boolean);
-  /** Gom action vÃ o nhÃ³m hiá»ƒn thá»‹ compact náº¿u table há»— trá»£ grouped actions. */
+  /** Gom action vào nhóm hiển thị compact nếu table hỗ trợ grouped actions. */
   isGrouped?: boolean;
-  /** HÃ m xá»­ lÃ½ khi click action, nháº­n toÃ n bá»™ item Ä‘ang Ä‘Æ°á»£c chá»n. */
+  /** Hàm xử lý khi click action, nhận toàn bộ item đang được chọn. */
   click: (selectedItems?: T[]) => void;
 }
 
 interface SdTableActionChildren<T = any> {
   /**
-   * TÃªn icon cá»§a action cha (group action).
-   * GiÃ¡ trá»‹ nÃªn lÃ  tÃªn glyph Material Icons: https://fonts.google.com/icons
+   * Tên icon của action cha (group action).
+   * Giá trị nên là tên glyph Material Icons: https://fonts.google.com/icons
    */
   icon?: string;
   /**
-   * Font set cá»§a Material icon cho action cha.
-   * DÃ¹ng cÃ¹ng kiá»ƒu dá»¯ liá»‡u vá»›i `SdButton['fontSet']`.
+   * Font set của Material icon cho action cha.
+   * Dùng cùng kiểu dữ liệu với `SdButton['fontSet']`.
    */
   fontSet?: SdUnwrapSignal<SdButton['fontSet']>;
-  /** Tooltip cá»§a action cha. */
+  /** Tooltip của action cha. */
   tooltip?: SdUnwrapSignal<SdButton['tooltip']>;
-  /** Label cá»§a action cha. */
+  /** Label của action cha. */
   title?: SdUnwrapSignal<SdButton['title']>;
-  /** MÃ u cá»§a action cha theo kiá»ƒu `SdButton['color']`. */
+  /** Màu của action cha theo kiểu `SdButton['color']`. */
   color?: SdUnwrapSignal<SdButton['color']>;
-  /** Variant hiá»ƒn thá»‹ cá»§a action cha theo kiá»ƒu `SdButton['type']`. */
+  /** Variant hiển thị của action cha theo kiểu `SdButton['type']`. */
   type?: SdUnwrapSignal<SdButton['type']>;
-  /** áº¨n action cha theo cá» tÄ©nh hoáº·c theo Ä‘iá»u kiá»‡n cá»§a dá»¯ liá»‡u dÃ²ng. */
+  /** Ẩn action cha theo cờ tĩnh hoặc theo điều kiện của dữ liệu dòng. */
   hidden?: boolean | ((rowData?: T) => boolean);
-  /** Gom action cha vÃ o nhÃ³m hiá»ƒn thá»‹ compact náº¿u table há»— trá»£ grouped actions. */
+  /** Gom action cha vào nhóm hiển thị compact nếu table hỗ trợ grouped actions. */
   isGrouped?: boolean;
-  /** Danh sÃ¡ch action con hiá»ƒn thá»‹ bÃªn trong group action nÃ y. */
+  /** Danh sách action con hiển thị bên trong group action này. */
   children: SdTableActionNormal<T>[];
 }
-

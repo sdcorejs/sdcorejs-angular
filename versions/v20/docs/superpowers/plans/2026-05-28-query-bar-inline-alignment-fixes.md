@@ -1,10 +1,10 @@
-�# query-bar inline alignment + BETWEEN dual + selected-display fixes � Implementation Plan
+# query-bar inline alignment + BETWEEN dual + selected-display fixes — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix the inline query-bar chip so every variant (seamless string/number + token select/date/datetime/boolean) sits on a single vertically-centered row, surface the selected value inside `sd-select [bare]`, and render two `sd-date`/`sd-datetime` pickers for `BETWEEN` on date/datetime fields.
 
-**Architecture:** Pure query-bar changes � `::ng-deep` overrides scoped under `.c-token` for alignment + bare-select value display, a small dual-render branch in the inline build value step and inline edit value editor, and two TS helpers (`setBuildRangeFrom` / `setBuildRangeTo`). No edits to `sd-select` / `sd-date` / `sd-datetime` core.
+**Architecture:** Pure query-bar changes — `::ng-deep` overrides scoped under `.c-token` for alignment + bare-select value display, a small dual-render branch in the inline build value step and inline edit value editor, and two TS helpers (`setBuildRangeFrom` / `setBuildRangeTo`). No edits to `sd-select` / `sd-date` / `sd-datetime` core.
 
 **Tech Stack:** Angular 19 standalone + signals, Angular Material MDC form-field internals (targeted via `::ng-deep`), existing `sd-*` bare picker mode + `sd-query-inline-value-chip`, Karma/Jasmine.
 
@@ -15,18 +15,18 @@
 **Test command:** `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts'`
 **Lib typecheck:** `npm run build`
 
-Branch `query-bar`. Each commit must start with the ticket prefix `SM-00:` (pre-receive hook requires it � branch convention). Keep Vietnamese `// why:` comments.
+Branch `query-bar`. Each commit must start with the ticket prefix `SM-00:` (pre-receive hook requires it — branch convention). Keep Vietnamese `// why:` comments.
 
 ## File Structure
 
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` � `::ng-deep` overrides under `.c-token`.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` � `setBuildRangeFrom` / `setBuildRangeTo` + a small inline-edit range setter wrapper.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` � BETWEEN dual branches in the build value step + the inline edit value editor.
-- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` � DOM + behavioral tests.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.scss` — `::ng-deep` overrides under `.c-token`.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.ts` — `setBuildRangeFrom` / `setBuildRangeTo` + a small inline-edit range setter wrapper.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.html` — BETWEEN dual branches in the build value step + the inline edit value editor.
+- Modify: `projects/sdcorejs-angular/components/query-bar/src/query-bar.component.spec.ts` — DOM + behavioral tests.
 
 ---
 
-## Task 1: Chip-level CSS overrides � alignment + bare-select value visibility
+## Task 1: Chip-level CSS overrides — alignment + bare-select value visibility
 
 **Files:** `query-bar.component.scss`, `query-bar.component.spec.ts`
 
@@ -55,11 +55,11 @@ Branch `query-bar`. Each commit must start with the ticket prefix `SM-00:` (pre-
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � `sd-select.sd-bare` either renders without `.mat-mdc-select-value` exposed in the test fixture OR the structural query doesn't find it under the chip class. (Either way, the test pins the contract that the chip must render the bare select with a value element.)
+Run the query-bar spec. Expected: FAIL — `sd-select.sd-bare` either renders without `.mat-mdc-select-value` exposed in the test fixture OR the structural query doesn't find it under the chip class. (Either way, the test pins the contract that the chip must render the bare select with a value element.)
 
 - [ ] **Step 3: Add the `::ng-deep` overrides under `.c-token`**
 
-In `query-bar.component.scss`, place the new block immediately after the existing `.c-token` rules (search for `// Inline mode (GitLab-style token builder) � flat completed chips` and add at the end of that section, before the next `---` divider):
+In `query-bar.component.scss`, place the new block immediately after the existing `.c-token` rules (search for `// Inline mode (GitLab-style token builder) — flat completed chips` and add at the end of that section, before the next `---` divider):
 
 ```scss
 // Chip-level overrides for the bare pickers inside .c-token.
@@ -76,7 +76,7 @@ In `query-bar.component.scss`, place the new block immediately after the existin
   .mat-mdc-input-element,
   input { line-height: 1; font-size: 13px; padding: 0; height: auto; color: inherit; }
 
-  // sd-select bare's selected text � make it visible (primary, weight, ellipsized) and avoid
+  // sd-select bare's selected text — make it visible (primary, weight, ellipsized) and avoid
   // collapsing inside the inline-flex chip. Without min-width:0 + max-width it can render at
   // 0 width inside the flex container.
   .mat-mdc-select-value {
@@ -147,7 +147,7 @@ git commit -m "SM-00: fix(query-bar): align bare pickers inside .c-token + surfa
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � `component.setBuildRangeFrom is not a function`.
+Run the query-bar spec. Expected: FAIL — `component.setBuildRangeFrom is not a function`.
 
 - [ ] **Step 3: Implement the helpers**
 
@@ -189,7 +189,7 @@ git commit -m "SM-00: feat(query-bar): setBuildRangeFrom / setBuildRangeTo for B
 
 ---
 
-## Task 3: Template � render dual pickers for BETWEEN date/datetime
+## Task 3: Template — render dual pickers for BETWEEN date/datetime
 
 **Files:** `query-bar.component.html`, `query-bar.component.spec.ts`
 
@@ -206,7 +206,7 @@ git commit -m "SM-00: feat(query-bar): setBuildRangeFrom / setBuildRangeTo for B
 
     it('date BETWEEN build value step renders two sd-date (Từ / Đến)', () => {
       fixture.componentRef.setInput('fields', [dateField]);
-      component.beginBuild(dateField); // single op BETWEEN �  straight to value step
+      component.beginBuild(dateField); // single op BETWEEN → straight to value step
       fixture.detectChanges();
 
       const dates = fixture.nativeElement.querySelectorAll('.c-token-building sd-date');
@@ -239,7 +239,7 @@ git commit -m "SM-00: feat(query-bar): setBuildRangeFrom / setBuildRangeTo for B
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run the query-bar spec. Expected: FAIL � only one `<sd-date>` rendered (current branch always renders a single picker for date/datetime).
+Run the query-bar spec. Expected: FAIL — only one `<sd-date>` rendered (current branch always renders a single picker for date/datetime).
 
 - [ ] **Step 3: Update the inline build value step**
 
@@ -251,7 +251,7 @@ In `query-bar.component.html`, replace the build `date` branch (around line 328)
               @if (_b.operator === 'BETWEEN') {
                 <sd-date #bPicker bare size="sm" autoId="qb-build-value-from" placeholder="Từ"
                   [model]="$any(_b.value)?.from" (sdChange)="setBuildRangeFrom($event)"></sd-date>
-                <span class="c-token-dash" aria-hidden="true">�</span>
+                <span class="c-token-dash" aria-hidden="true">—</span>
                 <sd-date bare size="sm" autoId="qb-build-value-to" placeholder="Đến"
                   [model]="$any(_b.value)?.to" (sdChange)="setBuildRangeTo($event)"></sd-date>
               } @else {
@@ -263,7 +263,7 @@ In `query-bar.component.html`, replace the build `date` branch (around line 328)
               @if (_b.operator === 'BETWEEN') {
                 <sd-datetime #bPicker bare size="sm" autoId="qb-build-value-from" placeholder="Từ"
                   [model]="$any(_b.value)?.from" (sdChange)="setBuildRangeFrom($event)"></sd-datetime>
-                <span class="c-token-dash" aria-hidden="true">�</span>
+                <span class="c-token-dash" aria-hidden="true">—</span>
                 <sd-datetime bare size="sm" autoId="qb-build-value-to" placeholder="Đến"
                   [model]="$any(_b.value)?.to" (sdChange)="setBuildRangeTo($event)"></sd-datetime>
               } @else {
@@ -287,7 +287,7 @@ In the completed-chip branch (around line 281-285, where `_field.kind !== 'boole
                       [autoId]="inlineAutoId(i, 'value-from')"
                       [model]="$any(_data)?.from"
                       (sdChange)="setFilterRangeFrom(i, $any($event))"></sd-date>
-                    <span class="c-token-dash" aria-hidden="true">�</span>
+                    <span class="c-token-dash" aria-hidden="true">—</span>
                     <sd-date bare size="sm" placeholder="Đến"
                       [autoId]="inlineAutoId(i, 'value-to')"
                       [model]="$any(_data)?.to"
@@ -297,7 +297,7 @@ In the completed-chip branch (around line 281-285, where `_field.kind !== 'boole
                       [autoId]="inlineAutoId(i, 'value-from')"
                       [model]="$any(_data)?.from"
                       (sdChange)="setFilterRangeFrom(i, $any($event))"></sd-datetime>
-                    <span class="c-token-dash" aria-hidden="true">�</span>
+                    <span class="c-token-dash" aria-hidden="true">—</span>
                     <sd-datetime bare size="sm" placeholder="Đến"
                       [autoId]="inlineAutoId(i, 'value-to')"
                       [model]="$any(_data)?.to"
@@ -374,11 +374,10 @@ git commit -m "SM-00: test(query-bar): green build + sweep for alignment + BETWE
 ## Self-Review notes
 
 - **Spec coverage:**
-  - A. Chip alignment �  Task 1 (`::ng-deep` overrides under `.c-token`).
-  - B. sd-select bare selected display �  Task 1 (`.mat-mdc-select-value` styled with primary color + min-width + ellipsis).
-  - C. BETWEEN dual for date/datetime �  Tasks 2 (TS helpers) + 3 (template build value step + inline edit value editor + dash SCSS).
-  - D. Tests �  each task ships its own DOM + behavioral assertions; Task 4 confirms full build + cross-component sweep.
-- **Type consistency:** `setBuildRangeFrom(v: unknown)` / `setBuildRangeTo(v: unknown)` consistent across TS + template. `setFilterRangeFrom(i, v)` / `setFilterRangeTo(i, v)` reused from existing popover wiring � verified by the prior plan that introduced them.
-- **Risk:** the `::ng-deep` overrides apply to ALL mat-form-fields inside `.c-token` � that's exactly the bare pickers (and nothing else lives inside a token), so scope is correct. The `auto-commit on both-set` behavior in `setBuildRangeTo` is the same approach the inline-value-chip already uses for seamless BETWEEN (`commitRange()` on blur with both ends populated) � consistent UX.
-- **Out of scope reminder:** no changes to `sd-select` / `sd-date` / `sd-datetime` source. If the bare-select value still does not appear after Task 1, the Minor follow-up is `lazyItemsFor`'s memoization � verify it resolves a real array (not a fn) before the select renders; do NOT modify `sd-select` itself.
-
+  - A. Chip alignment → Task 1 (`::ng-deep` overrides under `.c-token`).
+  - B. sd-select bare selected display → Task 1 (`.mat-mdc-select-value` styled with primary color + min-width + ellipsis).
+  - C. BETWEEN dual for date/datetime → Tasks 2 (TS helpers) + 3 (template build value step + inline edit value editor + dash SCSS).
+  - D. Tests → each task ships its own DOM + behavioral assertions; Task 4 confirms full build + cross-component sweep.
+- **Type consistency:** `setBuildRangeFrom(v: unknown)` / `setBuildRangeTo(v: unknown)` consistent across TS + template. `setFilterRangeFrom(i, v)` / `setFilterRangeTo(i, v)` reused from existing popover wiring — verified by the prior plan that introduced them.
+- **Risk:** the `::ng-deep` overrides apply to ALL mat-form-fields inside `.c-token` — that's exactly the bare pickers (and nothing else lives inside a token), so scope is correct. The `auto-commit on both-set` behavior in `setBuildRangeTo` is the same approach the inline-value-chip already uses for seamless BETWEEN (`commitRange()` on blur with both ends populated) — consistent UX.
+- **Out of scope reminder:** no changes to `sd-select` / `sd-date` / `sd-datetime` source. If the bare-select value still does not appear after Task 1, the Minor follow-up is `lazyItemsFor`'s memoization — verify it resolves a real array (not a fn) before the select renders; do NOT modify `sd-select` itself.

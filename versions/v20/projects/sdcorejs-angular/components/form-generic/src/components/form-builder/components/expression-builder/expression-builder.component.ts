@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -24,7 +24,7 @@ import { ExpressionQueryPipe } from '../../../../pipes';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
-// Component xÃ¢y dá»±ng Expression dá»±a vÃ o SdFormGenericExpression
+// Component xây dựng Expression dựa vào SdFormGenericExpression
 @Component({
   selector: 'expression-builder',
   templateUrl: './expression-builder.component.html',
@@ -105,9 +105,9 @@ export class ExpressionBuilderComponent {
   ngOnInit(): void {}
 
   onEdit = async () => {
-    // Khi cáº­p nháº­t expression thÃ¬ clone ra
+    // Khi cập nhật expression thì clone ra
     this.expression = JSON.parse(JSON.stringify(this.model));
-    // ThÃ´ng bÃ¡o cho component cha cÃ³ sá»± kiá»‡n edit trong trÆ°á»ng há»£p attributes cÃ³ thay Ä‘á»•i
+    // Thông báo cho component cha có sự kiện edit trong trường hợp attributes có thay đổi
     this.edit.next();
     this.modal?.open?.();
     this.ref.markForCheck();
@@ -160,7 +160,7 @@ export class ExpressionBuilderComponent {
   };
 
   onChangeDateInfo = (condition: SdFormGenericExpressionCondition) => {
-    // Xá»­ lÃ½ giÃ¡ trá»‹
+    // Xử lý giá trị
     if (condition.dayInfo?.type === 'NOW') {
       condition.value = 'now';
     } else if (condition.dayInfo?.type === 'RELATED' && condition.dayInfo.relatedValue) {
@@ -170,4 +170,3 @@ export class ExpressionBuilderComponent {
     }
   };
 }
-

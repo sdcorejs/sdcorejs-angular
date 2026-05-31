@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -12,10 +12,10 @@ import { Filter } from '@sdcorejs/angular/utilities/models';
 import { SdQueryField } from '../../query-bar.model';
 
 /**
- * Host wrapper â€” declares a switchPicker mat-menu + a button trigger that opens the
+ * Host wrapper — declares a switchPicker mat-menu + a button trigger that opens the
  * chip popover so its `<ng-template matMenuContent>` is actually instantiated.
  *
- * why: ChipPopover's body lives inside an mat-menu `<ng-template matMenuContent>` â€”
+ * why: ChipPopover's body lives inside an mat-menu `<ng-template matMenuContent>` —
  * only renders after the menu opens. Tests need to open the menu via a real trigger.
  */
 @Component({
@@ -74,8 +74,8 @@ describe('SdQueryChipPopover', () => {
     await build();
   });
 
-  // ---- 1: seed + open â†’ string fallback renders sd-input with the staged value
-  it("seed(string, CONTAIN, 'abc') â†’ opens with <sd-input> showing 'abc'", () => {
+  // ---- 1: seed + open → string fallback renders sd-input with the staged value
+  it("seed(string, CONTAIN, 'abc') → opens with <sd-input> showing 'abc'", () => {
     host.child()!.seed(host.filter, host.field!);
     fixture.detectChanges();
     openPopover();
@@ -86,8 +86,8 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.editingOperator()).toBe('CONTAIN');
   });
 
-  // ---- 2: BETWEEN number â†’ two sd-input-number controls
-  it('BETWEEN number â†’ renders two <sd-input-number>', () => {
+  // ---- 2: BETWEEN number → two sd-input-number controls
+  it('BETWEEN number → renders two <sd-input-number>', () => {
     host.field = { key: 'age', label: 'Age', type: 'number' } as SdQueryField;
     host.filter = { field: 'age', operator: 'BETWEEN', data: { from: 1, to: 5 } } as any;
     fixture.detectChanges();
@@ -99,8 +99,8 @@ describe('SdQueryChipPopover', () => {
     expect(nums.length).toBe(2);
   });
 
-  // ---- 3: BETWEEN date â†’ two sd-date controls
-  it('BETWEEN date â†’ renders two <sd-date>', () => {
+  // ---- 3: BETWEEN date → two sd-date controls
+  it('BETWEEN date → renders two <sd-date>', () => {
     host.field = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: '2026-01-01', to: '2026-01-31' } } as any;
     fixture.detectChanges();
@@ -112,8 +112,8 @@ describe('SdQueryChipPopover', () => {
     expect(dates.length).toBe(2);
   });
 
-  // ---- 4: BETWEEN datetime â†’ two sd-datetime
-  it('BETWEEN datetime â†’ renders two <sd-datetime>', () => {
+  // ---- 4: BETWEEN datetime → two sd-datetime
+  it('BETWEEN datetime → renders two <sd-datetime>', () => {
     host.field = { key: 'dt', label: 'DT', type: 'datetime' } as SdQueryField;
     host.filter = { field: 'dt', operator: 'BETWEEN', data: { from: null, to: null } } as any;
     fixture.detectChanges();
@@ -125,8 +125,8 @@ describe('SdQueryChipPopover', () => {
     expect(dts.length).toBe(2);
   });
 
-  // ---- 5: boolean â†’ two sd-button toggles
-  it('boolean â†’ renders .c-pop-boolean.c-bool-toggle with two sd-button', () => {
+  // ---- 5: boolean → two sd-button toggles
+  it('boolean → renders .c-pop-boolean.c-bool-toggle with two sd-button', () => {
     host.field = { key: 'on', label: 'On', type: 'boolean' } as SdQueryField;
     host.filter = { field: 'on', operator: 'EQUAL', data: true } as any;
     fixture.detectChanges();
@@ -140,8 +140,8 @@ describe('SdQueryChipPopover', () => {
     expect(btns.length).toBe(2);
   });
 
-  // ---- 6: values â†’ sd-select populated from option.items
-  it('values â†’ sd-select rendered with items populated synchronously', () => {
+  // ---- 6: values → sd-select populated from option.items
+  it('values → sd-select rendered with items populated synchronously', () => {
     host.field = {
       key: 's',
       label: 'S',
@@ -160,7 +160,7 @@ describe('SdQueryChipPopover', () => {
   });
 
   // ---- 7: lazy-values kicks #loadLazyOptions, editingOptions populated after promise
-  it('lazy-values â†’ editingOptions populated after async search resolves', async () => {
+  it('lazy-values → editingOptions populated after async search resolves', async () => {
     const search = ({ searchText }: any) => Promise.resolve([{ id: 'x', name: 'X' }]);
     host.field = {
       key: 'lz',
@@ -180,29 +180,29 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.editingOptionsLoading()).toBe(false);
   });
 
-  // ---- 8: operator change single â†’ multi reshapes value into array
-  it('onEditingOperatorChange CONTAIN â†’ IN reshapes editingValue from "abc" to ["abc"]', () => {
+  // ---- 8: operator change single → multi reshapes value into array
+  it('onEditingOperatorChange CONTAIN → IN reshapes editingValue from "abc" to ["abc"]', () => {
     host.child()!.seed(host.filter, host.field!);
     host.child()!.onEditingOperatorChange('IN');
     expect(host.child()!.editingValue()).toEqual(['abc']);
   });
 
-  // ---- 9: operator change BETWEEN â†’ EQUAL stays at range obj or normalized?
+  // ---- 9: operator change BETWEEN → EQUAL stays at range obj or normalized?
   // Current parent behavior: from BETWEEN to EQUAL keeps the {from,to} object as-is
-  // (no special reset path). Spec the existing semantics â€” value stays an object.
-  it('onEditingOperatorChange BETWEEN â†’ EQUAL keeps the staged value object', () => {
+  // (no special reset path). Spec the existing semantics — value stays an object.
+  it('onEditingOperatorChange BETWEEN → EQUAL keeps the staged value object', () => {
     host.field = { key: 'age', label: 'Age', type: 'number' } as SdQueryField;
     host.filter = { field: 'age', operator: 'BETWEEN', data: { from: 1, to: 5 } } as any;
     fixture.detectChanges();
     host.child()!.seed(host.filter, host.field);
     host.child()!.onEditingOperatorChange('EQUAL');
-    // why: the BETWEENâ†’EQUAL branch isn't singleâ†’multi nor multiâ†’single nor reshape,
+    // why: the BETWEEN→EQUAL branch isn't single→multi nor multi→single nor reshape,
     // so value object is preserved (the body hides the BETWEEN UI; user picks new scalar).
     expect(host.child()!.editingValue()).toEqual({ from: 1, to: 5 });
   });
 
   // ---- 10: operator change to NULL hides body + sets value to null
-  it('onEditingOperatorChange CONTAIN â†’ NULL hides value body + sets value=null', () => {
+  it('onEditingOperatorChange CONTAIN → NULL hides value body + sets value=null', () => {
     host.child()!.seed(host.filter, host.field!);
     host.child()!.onEditingOperatorChange('NULL');
     expect(host.child()!.editingValue()).toBeNull();
@@ -247,7 +247,7 @@ describe('SdQueryChipPopover', () => {
     host.child()!.seed(host.filter, host.field!);
     fixture.detectChanges();
     openPopover();
-    // Field switch button is rendered with `[matMenuTriggerFor]` â€” query for the
+    // Field switch button is rendered with `[matMenuTriggerFor]` — query for the
     // directive instance instead of the raw attribute (Angular doesn't reflect it).
     const switchBtn = document.querySelector('.c-pop-header-field') as HTMLElement | null;
     expect(switchBtn).not.toBeNull();
@@ -262,7 +262,7 @@ describe('SdQueryChipPopover', () => {
     host.child()!.editingOperator.set('EQUAL');
     fixture.detectChanges();
 
-    // Trigger menu close â€” use the public trigger
+    // Trigger menu close — use the public trigger
     host.trigger()!.closeMenu();
     fixture.detectChanges();
 
@@ -284,4 +284,3 @@ describe('SdQueryChipPopover', () => {
     expect(host.child()!.editingValue()).toEqual({ from: 9, to: 10 });
   });
 });
-

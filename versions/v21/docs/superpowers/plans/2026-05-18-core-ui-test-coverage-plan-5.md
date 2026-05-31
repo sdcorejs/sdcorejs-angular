@@ -1,4 +1,4 @@
-�# Core UI Test Coverage Plan 5 � Implementation Plan
+# Core UI Test Coverage Plan 5 — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -10,7 +10,7 @@
 
 **References:** 
 - Plan 1-4 plans + designs
-- Plan 4 API service spec (SdApiService) � interceptor + HTTP test pattern reference
+- Plan 4 API service spec (SdApiService) — interceptor + HTTP test pattern reference
 
 **Branch:** `feature/plan-5-modules-handlers-interceptors-tests` (already created).
 
@@ -117,7 +117,7 @@ describe('unauthorizedInterceptor', () => {
 | 11 | `modules/authom/authom.service.spec.ts` | 274 | Complex |
 | 12 | `modules/keycloak/keycloak.interceptor.spec.ts` | 29 | Trivial |
 | 13 | `modules/keycloak/keycloak.service.spec.ts` | 41 | Simple |
-| 14 | Plan 5 design doc + gap report aggregate | � | � |
+| 14 | Plan 5 design doc + gap report aggregate | — | — |
 
 ---
 
@@ -167,7 +167,7 @@ Same finalize pattern as Plan 1-4.
 
 - [ ] 13 new spec files.
 - [ ] `npm run test:ci` pass with coverage threshold met.
-- [ ] MD files audited (if exist; some interceptor/guard files may have no MD � note in gap report).
+- [ ] MD files audited (if exist; some interceptor/guard files may have no MD — note in gap report).
 - [ ] No source `.ts` changes (preserve ng-packagr alias).
 - [ ] Build pass.
 - [ ] Gap report aggregated.
@@ -176,9 +176,9 @@ Same finalize pattern as Plan 1-4.
 
 ## Out of scope
 
-- `modules/layout/` � heavy UI components (page, sidebar-mobile, sidebar-v1, layout-main); deferred to Plan 6.
-- `modules/generic/` � skipped permanently per user direction (unfinished form-generic).
-- `modules/auth/configurations/`, `modules/permission/src/configurations/` � pure config interface files (no logic to test).
+- `modules/layout/` — heavy UI components (page, sidebar-mobile, sidebar-v1, layout-main); deferred to Plan 6.
+- `modules/generic/` — skipped permanently per user direction (unfinished form-generic).
+- `modules/auth/configurations/`, `modules/permission/src/configurations/` — pure config interface files (no logic to test).
 
 ---
 
@@ -193,4 +193,3 @@ Same finalize pattern as Plan 1-4.
 **Authom/Keycloak service** may depend on external SDKs (keycloak-js): mock or stub the SDK before TestBed.inject.
 
 **i18n strings**: add `localStorage.setItem('sd-core.language', 'vi')` in beforeEach if test asserts translated strings.
-

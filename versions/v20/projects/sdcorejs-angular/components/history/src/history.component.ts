@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdHistoryItemType } from '../models/history.model';
@@ -14,4 +14,3 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 export class SdHistoryItem {
   @Input() items: SdHistoryItemType[] = [];
 }
-

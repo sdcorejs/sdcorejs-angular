@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import {
@@ -62,58 +62,58 @@ interface Order {
 }
 
 const EMPLOYEES: Employee[] = [
-  { id: 1, name: 'Nguyá»…n VÄƒn An', department: 'TECH', position: 'TrÆ°á»Ÿng phÃ²ng', salary: 35_000_000, status: 'ACTIVE', joinDate: new Date(2020, 0, 15), active: true, email: 'an.nv@company.vn' },
-  { id: 2, name: 'Tráº§n Thá»‹ BÃ¬nh', department: 'SALES', position: 'NhÃ¢n viÃªn', salary: 18_000_000, status: 'ACTIVE', joinDate: new Date(2021, 4, 1), active: true, email: 'binh.tt@company.vn' },
-  { id: 3, name: 'LÃª HoÃ ng CÆ°á»ng', department: 'TECH', position: 'Senior Dev', salary: 28_000_000, status: 'PROBATION', joinDate: new Date(2024, 11, 1), active: true, email: 'cuong.lh@company.vn' },
-  { id: 4, name: 'Pháº¡m Thá»‹ Dung', department: 'HR', position: 'ChuyÃªn viÃªn', salary: 16_000_000, status: 'ACTIVE', joinDate: new Date(2022, 2, 10), active: true, email: 'dung.pt@company.vn' },
-  { id: 5, name: 'HoÃ ng Minh Em', department: 'FINANCE', position: 'Káº¿ toÃ¡n', salary: 17_500_000, status: 'RESIGNED', joinDate: new Date(2019, 7, 20), active: false, email: 'em.hm@company.vn' },
-  { id: 6, name: 'VÅ© VÄƒn PhÃºc', department: 'MARKETING', position: 'TrÆ°á»Ÿng nhÃ³m', salary: 22_000_000, status: 'ACTIVE', joinDate: new Date(2021, 9, 5), active: true, email: 'phuc.vv@company.vn' },
-  { id: 7, name: 'Äá»— Thu Giang', department: 'SALES', position: 'TrÆ°á»Ÿng phÃ²ng', salary: 32_000_000, status: 'ACTIVE', joinDate: new Date(2018, 1, 12), active: true, email: 'giang.dt@company.vn' },
-  { id: 8, name: 'BÃ¹i Quang Huy', department: 'TECH', position: 'Junior Dev', salary: 14_000_000, status: 'PROBATION', joinDate: new Date(2025, 0, 4), active: true, email: 'huy.bq@company.vn' },
+  { id: 1, name: 'Nguyễn Văn An', department: 'TECH', position: 'Trưởng phòng', salary: 35_000_000, status: 'ACTIVE', joinDate: new Date(2020, 0, 15), active: true, email: 'an.nv@company.vn' },
+  { id: 2, name: 'Trần Thị Bình', department: 'SALES', position: 'Nhân viên', salary: 18_000_000, status: 'ACTIVE', joinDate: new Date(2021, 4, 1), active: true, email: 'binh.tt@company.vn' },
+  { id: 3, name: 'Lê Hoàng Cường', department: 'TECH', position: 'Senior Dev', salary: 28_000_000, status: 'PROBATION', joinDate: new Date(2024, 11, 1), active: true, email: 'cuong.lh@company.vn' },
+  { id: 4, name: 'Phạm Thị Dung', department: 'HR', position: 'Chuyên viên', salary: 16_000_000, status: 'ACTIVE', joinDate: new Date(2022, 2, 10), active: true, email: 'dung.pt@company.vn' },
+  { id: 5, name: 'Hoàng Minh Em', department: 'FINANCE', position: 'Kế toán', salary: 17_500_000, status: 'RESIGNED', joinDate: new Date(2019, 7, 20), active: false, email: 'em.hm@company.vn' },
+  { id: 6, name: 'Vũ Văn Phúc', department: 'MARKETING', position: 'Trưởng nhóm', salary: 22_000_000, status: 'ACTIVE', joinDate: new Date(2021, 9, 5), active: true, email: 'phuc.vv@company.vn' },
+  { id: 7, name: 'Đỗ Thu Giang', department: 'SALES', position: 'Trưởng phòng', salary: 32_000_000, status: 'ACTIVE', joinDate: new Date(2018, 1, 12), active: true, email: 'giang.dt@company.vn' },
+  { id: 8, name: 'Bùi Quang Huy', department: 'TECH', position: 'Junior Dev', salary: 14_000_000, status: 'PROBATION', joinDate: new Date(2025, 0, 4), active: true, email: 'huy.bq@company.vn' },
 ];
 
 const PRODUCTS: Product[] = [
   { id: 1, code: 'SP-001', name: 'Laptop Dell Latitude 5430', amount: 22_500_000, stock: 12, active: true },
-  { id: 2, code: 'SP-002', name: 'MÃ n hÃ¬nh LG UltraWide 34"', amount: 9_800_000, stock: 8, active: true },
-  { id: 3, code: 'SP-003', name: 'BÃ n phÃ­m cÆ¡ Keychron K6', amount: 2_300_000, stock: 0, active: false },
-  { id: 4, code: 'SP-004', name: 'Chuá»™t Logitech MX Master 3S', amount: 2_750_000, stock: 25, active: true },
+  { id: 2, code: 'SP-002', name: 'Màn hình LG UltraWide 34"', amount: 9_800_000, stock: 8, active: true },
+  { id: 3, code: 'SP-003', name: 'Bàn phím cơ Keychron K6', amount: 2_300_000, stock: 0, active: false },
+  { id: 4, code: 'SP-004', name: 'Chuột Logitech MX Master 3S', amount: 2_750_000, stock: 25, active: true },
   { id: 5, code: 'SP-005', name: 'Tai nghe Sony WH-1000XM5', amount: 7_500_000, stock: 4, active: true },
 ];
 
 const ORG: OrgNode[] = [
   {
-    id: 1, name: 'Khá»‘i CÃ´ng nghá»‡', role: 'Division', headcount: 42, children: [
-      { id: 11, name: 'PhÃ²ng Backend', role: 'Department', headcount: 18, children: [
-        { id: 111, name: 'NhÃ³m API', role: 'Team', headcount: 8 },
-        { id: 112, name: 'NhÃ³m Data', role: 'Team', headcount: 10 },
+    id: 1, name: 'Khối Công nghệ', role: 'Division', headcount: 42, children: [
+      { id: 11, name: 'Phòng Backend', role: 'Department', headcount: 18, children: [
+        { id: 111, name: 'Nhóm API', role: 'Team', headcount: 8 },
+        { id: 112, name: 'Nhóm Data', role: 'Team', headcount: 10 },
       ] },
-      { id: 12, name: 'PhÃ²ng Frontend', role: 'Department', headcount: 14 },
-      { id: 13, name: 'PhÃ²ng QA', role: 'Department', headcount: 10 },
+      { id: 12, name: 'Phòng Frontend', role: 'Department', headcount: 14 },
+      { id: 13, name: 'Phòng QA', role: 'Department', headcount: 10 },
     ],
   },
   {
-    id: 2, name: 'Khá»‘i Kinh doanh', role: 'Division', headcount: 28, children: [
-      { id: 21, name: 'PhÃ²ng Sales Báº¯c', role: 'Department', headcount: 16 },
-      { id: 22, name: 'PhÃ²ng Sales Nam', role: 'Department', headcount: 12 },
+    id: 2, name: 'Khối Kinh doanh', role: 'Division', headcount: 28, children: [
+      { id: 21, name: 'Phòng Sales Bắc', role: 'Department', headcount: 16 },
+      { id: 22, name: 'Phòng Sales Nam', role: 'Department', headcount: 12 },
     ],
   },
 ];
 
 const ORDERS: Order[] = [
-  { id: 1, code: 'ORD-001', customerId: 1, customerName: 'Nguyá»…n VÄƒn An', customerPhone: '0912345678', product: 'Laptop Dell', qty: 1, amount: 22_500_000, date: new Date(2026, 4, 1) },
-  { id: 2, code: 'ORD-002', customerId: 1, customerName: 'Nguyá»…n VÄƒn An', customerPhone: '0912345678', product: 'Chuá»™t Logitech', qty: 2, amount: 5_500_000, date: new Date(2026, 4, 3) },
-  { id: 3, code: 'ORD-003', customerId: 1, customerName: 'Nguyá»…n VÄƒn An', customerPhone: '0912345678', product: 'Tai nghe Sony', qty: 1, amount: 7_500_000, date: new Date(2026, 4, 10) },
-  { id: 4, code: 'ORD-004', customerId: 2, customerName: 'Tráº§n Thá»‹ BÃ¬nh', customerPhone: '0987654321', product: 'MÃ n hÃ¬nh LG', qty: 1, amount: 9_800_000, date: new Date(2026, 4, 2) },
-  { id: 5, code: 'ORD-005', customerId: 2, customerName: 'Tráº§n Thá»‹ BÃ¬nh', customerPhone: '0987654321', product: 'BÃ n phÃ­m Keychron', qty: 1, amount: 2_300_000, date: new Date(2026, 4, 8) },
-  { id: 6, code: 'ORD-006', customerId: 3, customerName: 'LÃª HoÃ ng CÆ°á»ng', customerPhone: '0901234567', product: 'Laptop Macbook', qty: 1, amount: 45_000_000, date: new Date(2026, 4, 5) },
-  { id: 7, code: 'ORD-007', customerId: 3, customerName: 'LÃª HoÃ ng CÆ°á»ng', customerPhone: '0901234567', product: 'Magic Mouse', qty: 1, amount: 2_500_000, date: new Date(2026, 4, 6) },
-  { id: 8, code: 'ORD-008', customerId: 4, customerName: 'Pháº¡m Thá»‹ Dung', customerPhone: '0934567890', product: 'iPad Pro', qty: 1, amount: 28_000_000, date: new Date(2026, 4, 12) },
+  { id: 1, code: 'ORD-001', customerId: 1, customerName: 'Nguyễn Văn An', customerPhone: '0912345678', product: 'Laptop Dell', qty: 1, amount: 22_500_000, date: new Date(2026, 4, 1) },
+  { id: 2, code: 'ORD-002', customerId: 1, customerName: 'Nguyễn Văn An', customerPhone: '0912345678', product: 'Chuột Logitech', qty: 2, amount: 5_500_000, date: new Date(2026, 4, 3) },
+  { id: 3, code: 'ORD-003', customerId: 1, customerName: 'Nguyễn Văn An', customerPhone: '0912345678', product: 'Tai nghe Sony', qty: 1, amount: 7_500_000, date: new Date(2026, 4, 10) },
+  { id: 4, code: 'ORD-004', customerId: 2, customerName: 'Trần Thị Bình', customerPhone: '0987654321', product: 'Màn hình LG', qty: 1, amount: 9_800_000, date: new Date(2026, 4, 2) },
+  { id: 5, code: 'ORD-005', customerId: 2, customerName: 'Trần Thị Bình', customerPhone: '0987654321', product: 'Bàn phím Keychron', qty: 1, amount: 2_300_000, date: new Date(2026, 4, 8) },
+  { id: 6, code: 'ORD-006', customerId: 3, customerName: 'Lê Hoàng Cường', customerPhone: '0901234567', product: 'Laptop Macbook', qty: 1, amount: 45_000_000, date: new Date(2026, 4, 5) },
+  { id: 7, code: 'ORD-007', customerId: 3, customerName: 'Lê Hoàng Cường', customerPhone: '0901234567', product: 'Magic Mouse', qty: 1, amount: 2_500_000, date: new Date(2026, 4, 6) },
+  { id: 8, code: 'ORD-008', customerId: 4, customerName: 'Phạm Thị Dung', customerPhone: '0934567890', product: 'iPad Pro', qty: 1, amount: 28_000_000, date: new Date(2026, 4, 12) },
 ];
 
 const TASKS: Task[] = [
-  { id: 1, title: 'TÃ­ch há»£p cá»•ng thanh toÃ¡n VNPay', assignee: 'An', priority: 'high', progress: 65, description: 'Triá»ƒn khai SDK VNPay phase 1 â€” sandbox + production switch, log audit, retry policy 3 láº§n.' },
-  { id: 2, title: 'Sá»­a lá»—i NaN cá»™t STT', assignee: 'BÃ¬nh', priority: 'medium', progress: 100, description: 'Cá»™t STT hiá»ƒn thá»‹ NaN khi multiTemplateDataRows=true. ÄÃ£ Ä‘á»•i sang renderIndex.' },
-  { id: 3, title: 'Migrate import sdcorejs/utils', assignee: 'CÆ°á»ng', priority: 'low', progress: 80, description: 'Chuyá»ƒn 80 file production code dÃ¹ng @sdcorejs/angular/utilities sang @sdcorejs/utils. 4 batch parallel.' },
+  { id: 1, title: 'Tích hợp cổng thanh toán VNPay', assignee: 'An', priority: 'high', progress: 65, description: 'Triển khai SDK VNPay phase 1 — sandbox + production switch, log audit, retry policy 3 lần.' },
+  { id: 2, title: 'Sửa lỗi NaN cột STT', assignee: 'Bình', priority: 'medium', progress: 100, description: 'Cột STT hiển thị NaN khi multiTemplateDataRows=true. Đã đổi sang renderIndex.' },
+  { id: 3, title: 'Migrate import sdcorejs/utils', assignee: 'Cường', priority: 'low', progress: 80, description: 'Chuyển 80 file production code dùng @sdcorejs/angular/utilities sang @sdcorejs/utils. 4 batch parallel.' },
 ];
 
 @Component({
@@ -132,55 +132,55 @@ const TASKS: Task[] = [
   template: `
     <demo-page
       title="Table"
-      description="Báº£ng dá»¯ liá»‡u máº·c Ä‘á»‹nh cá»§a SDCoreJS â€” phÃ¢n trang, sáº¯p xáº¿p, lá»c, chá»n nhiá»u, lá»‡nh dÃ²ng, export Excel/CSV. Há»— trá»£ cháº¿ Ä‘á»™ local vÃ  server.">
+      description="Bảng dữ liệu mặc định của SDCoreJS — phân trang, sắp xếp, lọc, chọn nhiều, lệnh dòng, export Excel/CSV. Hỗ trợ chế độ local và server.">
 
-      <demo-section heading="Full demo (local) â€” selection + command + export + STT + filler + paginate">
+      <demo-section heading="Full demo (local) — selection + command + export + STT + filler + paginate">
         <div class="table-box">
           <sd-table [option]="employeeOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Tá»‘i giáº£n â€” paginate + boolean/badge cell">
+      <demo-section heading="Tối giản — paginate + boolean/badge cell">
         <div class="table-box">
           <sd-table [option]="productOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Single selection (selector.single = true) â€” chá»‰ chá»n 1 dÃ²ng (radio)">
+      <demo-section heading="Single selection (selector.single = true) — chỉ chọn 1 dòng (radio)">
         <div class="table-box">
           <sd-table [option]="singleSelectOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Tree rows (option.tree) â€” children inline, indent theo depth">
+      <demo-section heading="Tree rows (option.tree) — children inline, indent theo depth">
         <div class="table-box">
           <sd-table [option]="treeOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Row grouping (option.group) â€” group theo field department, collapsible + select-all-in-group">
+      <demo-section heading="Row grouping (option.group) — group theo field department, collapsible + select-all-in-group">
         <div class="table-box">
           <sd-table [option]="groupOption">
             <ng-template sdTableGroupDef let-values="values" let-data="data" let-isExpanded="isExpanded">
               <div class="group-header-cell">
-                <span class="group-label">PhÃ²ng <b>{{ values['department'] }}</b></span>
-                <span class="group-meta">â€” {{ data.length }} nhÃ¢n viÃªn Â· tráº¡ng thÃ¡i: {{ isExpanded ? 'expand' : 'collapse' }}</span>
+                <span class="group-label">Phòng <b>{{ values['department'] }}</b></span>
+                <span class="group-meta">— {{ data.length }} nhân viên · trạng thái: {{ isExpanded ? 'expand' : 'collapse' }}</span>
               </div>
             </ng-template>
           </sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Group Ä‘Æ¡n hÃ ng theo khÃ¡ch hÃ ng (sdTableGroupDef + collapsible + select-all-in-group)">
+      <demo-section heading="Group đơn hàng theo khách hàng (sdTableGroupDef + collapsible + select-all-in-group)">
         <div class="table-box">
           <sd-table [option]="customerOrderOption">
             <ng-template sdTableGroupDef let-values="values" let-data="data">
               <div class="group-header-cell">
                 <span class="group-label">
-                  KhÃ¡ch: <b>{{ values['customerId'] === 1 ? 'Nguyá»…n VÄƒn An' : values['customerId'] === 2 ? 'Tráº§n Thá»‹ BÃ¬nh' : values['customerId'] === 3 ? 'LÃª HoÃ ng CÆ°á»ng' : 'Pháº¡m Thá»‹ Dung' }}</b>
+                  Khách: <b>{{ values['customerId'] === 1 ? 'Nguyễn Văn An' : values['customerId'] === 2 ? 'Trần Thị Bình' : values['customerId'] === 3 ? 'Lê Hoàng Cường' : 'Phạm Thị Dung' }}</b>
                 </span>
                 <span class="group-meta">
-                  â€” {{ data.length }} Ä‘Æ¡n Â· Tá»•ng: {{ totalOrderAmount(data) | number: '1.0-0' }} â‚«
+                  — {{ data.length }} đơn · Tổng: {{ totalOrderAmount(data) | number: '1.0-0' }} ₫
                 </span>
               </div>
             </ng-template>
@@ -188,15 +188,15 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Expandable row (option.expand + sdTableExpandDef) â€” render sub-information">
+      <demo-section heading="Expandable row (option.expand + sdTableExpandDef) — render sub-information">
         <div class="table-box">
           <sd-table [option]="expandOption">
             <ng-template sdTableExpandDef let-item="item">
               <div class="expand-box">
-                <div class="expand-title">MÃ´ táº£ task #{{ item.data.id }}</div>
+                <div class="expand-title">Mô tả task #{{ item.data.id }}</div>
                 <p>{{ item.data.description }}</p>
                 <div class="expand-meta">
-                  NgÆ°á»i phá»¥ trÃ¡ch: <b>{{ item.data.assignee }}</b> Â· Tiáº¿n Ä‘á»™: <b>{{ item.data.progress }}%</b>
+                  Người phụ trách: <b>{{ item.data.assignee }}</b> · Tiến độ: <b>{{ item.data.progress }}%</b>
                 </div>
               </div>
             </ng-template>
@@ -210,13 +210,13 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Row reorder (option.rowReorder.enabled = true) â€” kÃ©o-tháº£ Ä‘á»•i thá»© tá»±">
+      <demo-section heading="Row reorder (option.rowReorder.enabled = true) — kéo-thả đổi thứ tự">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Custom cell template (sdTableCellDef) â€” render giÃ¡ trá»‹ báº±ng template tá»± custom">
+      <demo-section heading="Custom cell template (sdTableCellDef) — render giá trị bằng template tự custom">
         <div class="table-box">
           <sd-table [option]="customCellOption">
             <ng-template [sdTableCellDef]="'name'" let-item="item">
@@ -235,32 +235,32 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Footer aggregation (sdMaterialFooterDef) â€” tá»•ng lÆ°Æ¡ng, count">
+      <demo-section heading="Footer aggregation (sdMaterialFooterDef) — tổng lương, count">
         <div class="table-box">
           <sd-table [option]="footerOption">
             <ng-template [sdTableFooterDef]="'salary'" let-items="items">
-              <b>Tá»•ng: {{ totalSalary(items) | number: '1.0-0' }} â‚«</b>
+              <b>Tổng: {{ totalSalary(items) | number: '1.0-0' }} ₫</b>
             </ng-template>
             <ng-template [sdTableFooterDef]="'name'" let-items="items">
-              <span>{{ items.length }} nhÃ¢n viÃªn</span>
+              <span>{{ items.length }} nhân viên</span>
             </ng-template>
           </sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="KhÃ´ng cÃ³ filler (máº·c Ä‘á»‹nh) â€” so sÃ¡nh: cá»™t utility bá»‹ stretch trÃªn mÃ n rá»™ng">
+      <demo-section heading="Không có filler (mặc định) — so sánh: cột utility bị stretch trên màn rộng">
         <div class="table-box">
           <sd-table [option]="noFillerOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Server-side (type='server') â€” mock async fetch + sort/paginate server">
+      <demo-section heading="Server-side (type='server') — mock async fetch + sort/paginate server">
         <div class="table-box">
           <sd-table [option]="serverOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Preserve selection (selector.preserveSelection = true) â€” chá»n item á»Ÿ page 1, chuyá»ƒn page 2 / sort / reload váº«n giá»¯; chá»‰ clear khi báº¥m X">
+      <demo-section heading="Preserve selection (selector.preserveSelection = true) — chọn item ở page 1, chuyển page 2 / sort / reload vẫn giữ; chỉ clear khi bấm X">
         <div class="table-box">
           <sd-table [option]="preserveSelectionOption"></sd-table>
         </div>
@@ -336,56 +336,56 @@ export class TableDemoComponent {
     selector: {
       visible: true,
       actions: [
-        { icon: 'mail', title: 'Gá»­i email', click: items => alert(`Gá»­i email tá»›i ${items?.length} nhÃ¢n viÃªn`) },
-        { icon: 'delete', title: 'XÃ³a', color: 'error', click: items => alert(`XÃ³a ${items?.length} nhÃ¢n viÃªn`) },
+        { icon: 'mail', title: 'Gửi email', click: items => alert(`Gửi email tới ${items?.length} nhân viên`) },
+        { icon: 'delete', title: 'Xóa', color: 'error', click: items => alert(`Xóa ${items?.length} nhân viên`) },
       ],
-      message: items => `ÄÃ£ chá»n ${items?.length ?? 0} nhÃ¢n viÃªn`,
+      message: items => `Đã chọn ${items?.length ?? 0} nhân viên`,
     },
     command: {
       align: 'right',
       commands: [
-        { icon: 'edit', title: 'Sá»­a', click: (e: Employee) => alert(`Sá»­a: ${e.name}`) },
-        { icon: 'delete', title: 'XÃ³a', color: 'error', click: (e: Employee) => alert(`XÃ³a: ${e.name}`) },
+        { icon: 'edit', title: 'Sửa', click: (e: Employee) => alert(`Sửa: ${e.name}`) },
+        { icon: 'delete', title: 'Xóa', color: 'error', click: (e: Employee) => alert(`Xóa: ${e.name}`) },
       ],
     },
     export: { visible: 'EXCEL' },
     columns: [
-      { field: 'name', type: 'string', title: 'Há» vÃ  tÃªn', width: '180px', sortable: true },
+      { field: 'name', type: 'string', title: 'Họ và tên', width: '180px', sortable: true },
       { field: 'email', type: 'string', title: 'Email', width: '220px' },
       {
-        field: 'department', type: 'values', title: 'PhÃ²ng ban', width: '140px',
+        field: 'department', type: 'values', title: 'Phòng ban', width: '140px',
         option: {
           items: [
-            { value: 'TECH', display: 'CÃ´ng nghá»‡' },
+            { value: 'TECH', display: 'Công nghệ' },
             { value: 'SALES', display: 'Kinh doanh' },
-            { value: 'HR', display: 'NhÃ¢n sá»±' },
-            { value: 'FINANCE', display: 'TÃ i chÃ­nh' },
+            { value: 'HR', display: 'Nhân sự' },
+            { value: 'FINANCE', display: 'Tài chính' },
             { value: 'MARKETING', display: 'Marketing' },
           ],
           valueField: 'value',
           displayField: 'display',
         },
       },
-      { field: 'position', type: 'string', title: 'Chá»©c vá»¥', width: '160px' },
-      { field: 'salary', type: 'number', title: 'LÆ°Æ¡ng', width: '140px', align: 'right', sortable: true },
+      { field: 'position', type: 'string', title: 'Chức vụ', width: '160px' },
+      { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right', sortable: true },
       {
-        field: 'status', type: 'values', title: 'Tráº¡ng thÃ¡i', width: '130px',
+        field: 'status', type: 'values', title: 'Trạng thái', width: '130px',
         option: {
           items: [
-            { value: 'ACTIVE', display: 'Äang lÃ m viá»‡c' },
-            { value: 'PROBATION', display: 'Thá»­ viá»‡c' },
-            { value: 'RESIGNED', display: 'ÄÃ£ nghá»‰' },
+            { value: 'ACTIVE', display: 'Đang làm việc' },
+            { value: 'PROBATION', display: 'Thử việc' },
+            { value: 'RESIGNED', display: 'Đã nghỉ' },
           ],
           valueField: 'value',
           displayField: 'display',
         },
         useBadge: (v: string) => v === 'ACTIVE'
-          ? { title: 'Äang lÃ m viá»‡c', color: 'success' }
+          ? { title: 'Đang làm việc', color: 'success' }
           : v === 'PROBATION'
-            ? { title: 'Thá»­ viá»‡c', color: 'warning' }
-            : { title: 'ÄÃ£ nghá»‰', color: 'error' },
+            ? { title: 'Thử việc', color: 'warning' }
+            : { title: 'Đã nghỉ', color: 'error' },
       },
-      { field: 'joinDate', type: 'date', title: 'NgÃ y vÃ o', width: '130px' },
+      { field: 'joinDate', type: 'date', title: 'Ngày vào', width: '130px' },
     ],
     style: { shadow: true, maxHeight: '460px' },
   };
@@ -397,18 +397,18 @@ export class TableDemoComponent {
     paginate: { pageSize: 5, hidePageSize: true },
     filler: { enabled: true },
     columns: [
-      { field: 'code', type: 'string', title: 'MÃ£ SP', width: '120px' },
-      { field: 'name', type: 'string', title: 'TÃªn sáº£n pháº©m', width: '320px' },
-      { field: 'amount', type: 'number', title: 'GiÃ¡ bÃ¡n (VND)', width: '160px', align: 'right' },
+      { field: 'code', type: 'string', title: 'Mã SP', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên sản phẩm', width: '320px' },
+      { field: 'amount', type: 'number', title: 'Giá bán (VND)', width: '160px', align: 'right' },
       {
-        field: 'stock', type: 'number', title: 'Tá»“n kho', width: '120px', align: 'right',
+        field: 'stock', type: 'number', title: 'Tồn kho', width: '120px', align: 'right',
         useBadge: (v: number) => v === 0
-          ? { title: 'Háº¿t hÃ ng', color: 'error' }
+          ? { title: 'Hết hàng', color: 'error' }
           : v < 5
-            ? { title: `${v} (sáº¯p háº¿t)`, color: 'warning' }
+            ? { title: `${v} (sắp hết)`, color: 'warning' }
             : { title: `${v}`, color: 'success' },
       },
-      { field: 'active', type: 'boolean', title: 'KÃ­ch hoáº¡t', width: '120px', option: { displayOnTrue: 'CÃ³', displayOnFalse: 'KhÃ´ng' } },
+      { field: 'active', type: 'boolean', title: 'Kích hoạt', width: '120px', option: { displayOnTrue: 'Có', displayOnFalse: 'Không' } },
     ],
     style: { shadow: true },
   };
@@ -416,13 +416,13 @@ export class TableDemoComponent {
   readonly singleSelectOption: SdTableOption<Employee> = {
     type: 'local',
     items: () => EMPLOYEES.slice(0, 5),
-    selector: { visible: true, single: true, message: items => `ÄÃ£ chá»n: ${items?.[0]?.name ?? '(chÆ°a chá»n)'}` },
+    selector: { visible: true, single: true, message: items => `Đã chọn: ${items?.[0]?.name ?? '(chưa chọn)'}` },
     index: { enabled: true },
     filler: { enabled: true },
     columns: [
-      { field: 'name', type: 'string', title: 'Há» tÃªn', width: '200px' },
-      { field: 'department', type: 'string', title: 'PhÃ²ng ban', width: '140px' },
-      { field: 'position', type: 'string', title: 'Chá»©c vá»¥', width: '180px' },
+      { field: 'name', type: 'string', title: 'Họ tên', width: '200px' },
+      { field: 'department', type: 'string', title: 'Phòng ban', width: '140px' },
+      { field: 'position', type: 'string', title: 'Chức vụ', width: '180px' },
     ],
     style: { shadow: true },
   };
@@ -434,9 +434,9 @@ export class TableDemoComponent {
     index: { enabled: true },
     filler: { enabled: true },
     columns: [
-      { field: 'name', type: 'string', title: 'ÄÆ¡n vá»‹', width: '280px' },
-      { field: 'role', type: 'string', title: 'Cáº¥p', width: '140px' },
-      { field: 'headcount', type: 'number', title: 'Sá»‘ nhÃ¢n sá»±', width: '140px', align: 'right' },
+      { field: 'name', type: 'string', title: 'Đơn vị', width: '280px' },
+      { field: 'role', type: 'string', title: 'Cấp', width: '140px' },
+      { field: 'headcount', type: 'number', title: 'Số nhân sự', width: '140px', align: 'right' },
     ],
     style: { shadow: true },
   };
@@ -445,36 +445,36 @@ export class TableDemoComponent {
     type: 'local',
     items: () => EMPLOYEES,
     group: { fields: ['department'], collapsible: true },
-    selector: { visible: true, message: items => `ÄÃ£ chá»n ${items?.length ?? 0} nhÃ¢n viÃªn` },
+    selector: { visible: true, message: items => `Đã chọn ${items?.length ?? 0} nhân viên` },
     filler: { enabled: true },
     columns: [
-      { field: 'name', type: 'string', title: 'Há» tÃªn', width: '200px' },
-      { field: 'position', type: 'string', title: 'Chá»©c vá»¥', width: '180px' },
-      { field: 'salary', type: 'number', title: 'LÆ°Æ¡ng', width: '140px', align: 'right' },
+      { field: 'name', type: 'string', title: 'Họ tên', width: '200px' },
+      { field: 'position', type: 'string', title: 'Chức vụ', width: '180px' },
+      { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right' },
     ],
     style: { shadow: true },
   };
 
-  // Demo "Ä‘Æ¡n hÃ ng Ã— khÃ¡ch hÃ ng" â€” group orders theo customerName.
+  // Demo "đơn hàng × khách hàng" — group orders theo customerName.
   readonly customerOrderOption: SdTableOption<Order> = {
     type: 'local',
     items: () => ORDERS,
     group: { fields: ['customerId'], collapsible: true },
     selector: {
       visible: true,
-      message: items => `ÄÃ£ chá»n ${items?.length ?? 0} Ä‘Æ¡n`,
+      message: items => `Đã chọn ${items?.length ?? 0} đơn`,
       actions: [
-        { icon: 'print', title: 'In', click: items => alert(`In ${items?.length} Ä‘Æ¡n`) },
-        { icon: 'send', title: 'Gá»­i mail', click: items => alert(`Gá»­i mail cho ${items?.length} Ä‘Æ¡n`) },
+        { icon: 'print', title: 'In', click: items => alert(`In ${items?.length} đơn`) },
+        { icon: 'send', title: 'Gửi mail', click: items => alert(`Gửi mail cho ${items?.length} đơn`) },
       ],
     },
     filler: { enabled: true },
     columns: [
-      { field: 'code', type: 'string', title: 'MÃ£ Ä‘Æ¡n', width: '120px' },
-      { field: 'product', type: 'string', title: 'Sáº£n pháº©m', width: '260px' },
+      { field: 'code', type: 'string', title: 'Mã đơn', width: '120px' },
+      { field: 'product', type: 'string', title: 'Sản phẩm', width: '260px' },
       { field: 'qty', type: 'number', title: 'SL', width: '80px', align: 'right' },
-      { field: 'amount', type: 'number', title: 'ThÃ nh tiá»n', width: '160px', align: 'right' },
-      { field: 'date', type: 'date', title: 'NgÃ y', width: '120px' },
+      { field: 'amount', type: 'number', title: 'Thành tiền', width: '160px', align: 'right' },
+      { field: 'date', type: 'date', title: 'Ngày', width: '120px' },
     ],
     style: { shadow: true, maxHeight: '500px' },
   };
@@ -487,9 +487,9 @@ export class TableDemoComponent {
     filler: { enabled: true },
     columns: [
       { field: 'title', type: 'string', title: 'Task', width: '320px' },
-      { field: 'assignee', type: 'string', title: 'Phá»¥ trÃ¡ch', width: '140px' },
-      { field: 'priority', type: 'string', title: 'Æ¯u tiÃªn', width: '120px' },
-      { field: 'progress', type: 'number', title: 'Tiáº¿n Ä‘á»™ %', width: '120px', align: 'right' },
+      { field: 'assignee', type: 'string', title: 'Phụ trách', width: '140px' },
+      { field: 'priority', type: 'string', title: 'Ưu tiên', width: '120px' },
+      { field: 'progress', type: 'number', title: 'Tiến độ %', width: '120px', align: 'right' },
     ],
     style: { shadow: true },
   };
@@ -502,14 +502,14 @@ export class TableDemoComponent {
       align: 'right',
       commands: [
         { icon: 'visibility', title: 'Xem', click: (p: Product) => alert(`Xem ${p.code}`) },
-        { icon: 'edit', title: 'Sá»­a', click: (p: Product) => alert(`Sá»­a ${p.code}`) },
-        { icon: 'delete', title: 'XÃ³a', color: 'error', click: (p: Product) => alert(`XÃ³a ${p.code}`) },
+        { icon: 'edit', title: 'Sửa', click: (p: Product) => alert(`Sửa ${p.code}`) },
+        { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => alert(`Xóa ${p.code}`) },
       ],
     },
     columns: [
-      { field: 'code', type: 'string', title: 'MÃ£', width: '120px' },
-      { field: 'name', type: 'string', title: 'TÃªn', width: '320px' },
-      { field: 'amount', type: 'number', title: 'GiÃ¡', width: '160px', align: 'right' },
+      { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên', width: '320px' },
+      { field: 'amount', type: 'number', title: 'Giá', width: '160px', align: 'right' },
     ],
     style: { shadow: true },
   };
@@ -523,9 +523,9 @@ export class TableDemoComponent {
     },
     filler: { enabled: true },
     columns: [
-      { field: 'code', type: 'string', title: 'MÃ£', width: '120px' },
-      { field: 'name', type: 'string', title: 'TÃªn', width: '320px' },
-      { field: 'stock', type: 'number', title: 'Tá»“n', width: '100px', align: 'right' },
+      { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên', width: '320px' },
+      { field: 'stock', type: 'number', title: 'Tồn', width: '100px', align: 'right' },
     ],
     style: { shadow: true },
   };
@@ -535,9 +535,9 @@ export class TableDemoComponent {
     items: () => EMPLOYEES.slice(0, 6),
     filler: { enabled: true },
     columns: [
-      { field: 'name', type: 'string', title: 'NhÃ¢n sá»±', width: '260px' },
-      { field: 'department', type: 'string', title: 'PhÃ²ng', width: '140px' },
-      { field: 'status', type: 'string', title: 'Tráº¡ng thÃ¡i', width: '160px' },
+      { field: 'name', type: 'string', title: 'Nhân sự', width: '260px' },
+      { field: 'department', type: 'string', title: 'Phòng', width: '140px' },
+      { field: 'status', type: 'string', title: 'Trạng thái', width: '160px' },
     ],
     style: { shadow: true },
   };
@@ -547,9 +547,9 @@ export class TableDemoComponent {
     items: () => EMPLOYEES,
     filler: { enabled: true },
     columns: [
-      { field: 'name', type: 'string', title: 'Há» tÃªn', width: '200px' },
-      { field: 'department', type: 'string', title: 'PhÃ²ng', width: '140px' },
-      { field: 'salary', type: 'number', title: 'LÆ°Æ¡ng', width: '180px', align: 'right' },
+      { field: 'name', type: 'string', title: 'Họ tên', width: '200px' },
+      { field: 'department', type: 'string', title: 'Phòng', width: '140px' },
+      { field: 'salary', type: 'number', title: 'Lương', width: '180px', align: 'right' },
     ],
     style: { shadow: true },
   };
@@ -559,10 +559,10 @@ export class TableDemoComponent {
     items: () => PRODUCTS,
     selector: { visible: true },
     index: { enabled: true },
-    // filler: KHÃ”NG báº­t â†’ so sÃ¡nh visual vá»›i cÃ¡c demo trÃªn (cá»™t utility sáº½ bá»‹ browser ná»›i rá»™ng).
+    // filler: KHÔNG bật → so sánh visual với các demo trên (cột utility sẽ bị browser nới rộng).
     columns: [
-      { field: 'code', type: 'string', title: 'MÃ£', width: '120px' },
-      { field: 'name', type: 'string', title: 'TÃªn', width: '320px' },
+      { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên', width: '320px' },
     ],
     style: { shadow: true },
   };
@@ -577,14 +577,14 @@ export class TableDemoComponent {
       visible: true,
       preserveSelection: true,
       actions: [
-        { icon: 'mail', title: 'Gá»­i email', click: items => alert(`Gá»­i email tá»›i ${items?.length} nhÃ¢n viÃªn: ${items?.map(e => e.name).join(', ')}`) },
+        { icon: 'mail', title: 'Gửi email', click: items => alert(`Gửi email tới ${items?.length} nhân viên: ${items?.map(e => e.name).join(', ')}`) },
       ],
-      message: items => `ÄÃ£ chá»n ${items?.length ?? 0} nhÃ¢n viÃªn xuyÃªn trang`,
+      message: items => `Đã chọn ${items?.length ?? 0} nhân viên xuyên trang`,
     },
     columns: [
-      { field: 'name', type: 'string', title: 'Há» tÃªn', width: '200px', sortable: true },
-      { field: 'department', type: 'string', title: 'PhÃ²ng', width: '140px' },
-      { field: 'position', type: 'string', title: 'Chá»©c vá»¥', width: '180px' },
+      { field: 'name', type: 'string', title: 'Họ tên', width: '200px', sortable: true },
+      { field: 'department', type: 'string', title: 'Phòng', width: '140px' },
+      { field: 'position', type: 'string', title: 'Chức vụ', width: '180px' },
     ],
     style: { shadow: true },
   };
@@ -592,7 +592,7 @@ export class TableDemoComponent {
   readonly serverOption: SdTableOption<Employee> = {
     type: 'server',
     items: async (_filterReq, pagingReq) => {
-      // Mock fetch: chia EMPLOYEES theo pagingReq Ä‘á»ƒ minh hoáº¡ kiá»ƒu server-side.
+      // Mock fetch: chia EMPLOYEES theo pagingReq để minh hoạ kiểu server-side.
       await new Promise(r => setTimeout(r, 300));
       const page = pagingReq?.pageNumber ?? 0;
       const size = pagingReq?.pageSize ?? 3;
@@ -602,9 +602,9 @@ export class TableDemoComponent {
     sort: { enable: true },
     filler: { enabled: true },
     columns: [
-      { field: 'name', type: 'string', title: 'Há» tÃªn', width: '200px', sortable: true },
-      { field: 'department', type: 'string', title: 'PhÃ²ng', width: '160px' },
-      { field: 'salary', type: 'number', title: 'LÆ°Æ¡ng', width: '160px', align: 'right', sortable: true },
+      { field: 'name', type: 'string', title: 'Họ tên', width: '200px', sortable: true },
+      { field: 'department', type: 'string', title: 'Phòng', width: '160px' },
+      { field: 'salary', type: 'number', title: 'Lương', width: '160px', align: 'right', sortable: true },
     ],
     style: { shadow: true },
   };
@@ -617,4 +617,3 @@ export class TableDemoComponent {
     return (orders || []).reduce((sum, o) => sum + (o?.amount ?? 0), 0);
   }
 }
-

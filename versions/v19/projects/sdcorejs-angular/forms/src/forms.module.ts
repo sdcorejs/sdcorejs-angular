@@ -1,4 +1,4 @@
-﻿import { NgModule } from '@angular/core';
+import { NgModule } from '@angular/core';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -15,4 +15,3 @@ import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
   exports: [SdInput, SdInputNumber, SdDate, SdDateRange, SdSelect, SdAutocomplete, SdRadio, SdTextarea],
 })
 export class SdFormsModule {}
-

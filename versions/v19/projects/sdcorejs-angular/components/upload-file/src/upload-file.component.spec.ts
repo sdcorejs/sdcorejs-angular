@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -62,7 +62,7 @@ describe('SdUploadFile', () => {
     spyOn(notifyService, 'error');
   });
 
-  // â”€â”€â”€ Creation & Rendering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Creation & Rendering ─────────────────────────────────────────────────
 
   describe('creation & rendering', () => {
     it('creates the component', () => {
@@ -72,24 +72,24 @@ describe('SdUploadFile', () => {
 
     it('renders the upload drop-zone area by default (max not reached, not disabled)', () => {
       fixture.detectChanges();
-      // previewFiles is empty (0 < max 10) and not disabled â†’ drop zone visible
+      // previewFiles is empty (0 < max 10) and not disabled → drop zone visible
       const dropZone = fixture.nativeElement.querySelector('.c-area-upload');
       expect(dropZone).not.toBeNull();
     });
   });
 
-  // â”€â”€â”€ Centralized state-image classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Centralized state-image classes ─────────────────────────────────────
   // why: state images (data-empty, image-error, etc.) live in @sdcorejs/angular
   // assets/scss/core/image.scss as `.sd-image-<name>`. Each consumer applies the
   // central class on the rendered <img>; local `content: url(...)` rules were
-  // removed. These tests guard the contract â€” a stylesheet refactor that drops
+  // removed. These tests guard the contract — a stylesheet refactor that drops
   // a class name from image.scss must keep the template attachment in sync.
 
   describe('centralized image classes', () => {
     it('renders the sd-image-image-error class on the error <img> when isImgError=true', async () => {
       setInput(fixture, 'type', 'image');
       fixture.detectChanges();
-      // wait for the modelâ†’previewFiles effect's async #details() to settle so
+      // wait for the model→previewFiles effect's async #details() to settle so
       // it does not later overwrite the manual previewFiles.set() below
       await fixture.whenStable();
 
@@ -100,7 +100,7 @@ describe('SdUploadFile', () => {
 
       const errImg = fixture.nativeElement.querySelector('img.sd-image-image-error');
       expect(errImg).not.toBeNull();
-      // legacy class name must be gone â€” guard against accidental revert
+      // legacy class name must be gone — guard against accidental revert
       expect(fixture.nativeElement.querySelector('img.c-img-error')).toBeNull();
     });
 
@@ -134,7 +134,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ Input: disabled â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Input: disabled ──────────────────────────────────────────────────────
 
   describe('input: disabled', () => {
     it('defaults to false', () => {
@@ -166,12 +166,12 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ Input: required â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // why: bug "required khÃ´ng báº¯t lá»—i" â€” #updateValidator bá»‹ comment, validator
-  // khÃ´ng bao giá» Ä‘Æ°á»£c Ä‘Äƒng kÃ½ lÃªn formControl. Fix báº±ng effect Ä‘Äƒng kÃ½
-  // Validators.required (nháº­n empty array lÃ  invalid). Specs Ä‘áº£m báº£o behavior.
+  // ─── Input: required ──────────────────────────────────────────────────────
+  // why: bug "required không bắt lỗi" — #updateValidator bị comment, validator
+  // không bao giờ được đăng ký lên formControl. Fix bằng effect đăng ký
+  // Validators.required (nhận empty array là invalid). Specs đảm bảo behavior.
   describe('input: required', () => {
-    it('attaches Validators.required when required=true (empty value â†’ required error)', () => {
+    it('attaches Validators.required when required=true (empty value → required error)', () => {
       setInput(fixture, 'required', true);
       fixture.detectChanges();
       expect(component.formControl.hasError('required')).toBeTrue();
@@ -210,15 +210,15 @@ describe('SdUploadFile', () => {
       fixture.detectChanges();
       component.formControl.markAsTouched();
       fixture.detectChanges();
-      // why: chá»‰ assert state cáº§n thiáº¿t Ä‘á»ƒ template render error â€” visual matcher
-      // bá»‹ áº£nh hÆ°á»Ÿng bá»Ÿi async effect (#details) nÃªn fragile, dÃ¹ng state assert.
+      // why: chỉ assert state cần thiết để template render error — visual matcher
+      // bị ảnh hưởng bởi async effect (#details) nên fragile, dùng state assert.
       expect(component.formControl.disabled).toBeFalse();
       expect(component.formControl.touched).toBeTrue();
       expect(component.formControl.errors?.['required']).toBeTrue();
     });
   });
 
-  // â”€â”€â”€ Input: max â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Input: max ───────────────────────────────────────────────────────────
 
   describe('input: max', () => {
     it('defaults to 10', () => {
@@ -237,7 +237,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ Input: type â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Input: type ──────────────────────────────────────────────────────────
 
   describe('input: type', () => {
     it('defaults to "file"', () => {
@@ -261,7 +261,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ Input: extensions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Input: extensions ───────────────────────────────────────────────────
 
   describe('input: extensions', () => {
     it('defaults to empty array', () => {
@@ -280,7 +280,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ Computed: generatedDescription â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Computed: generatedDescription ──────────────────────────────────────
 
   describe('computed: generatedDescription', () => {
     it('returns undefined when no extensions or maxSize', () => {
@@ -290,18 +290,18 @@ describe('SdUploadFile', () => {
 
     it('returns only extension string when no maxSize', () => {
       setInput(fixture, 'extensions', ['png', 'jpg']);
-      expect(component.generatedDescription()).toBe('Äá»‹nh dáº¡ng: png, jpg');
+      expect(component.generatedDescription()).toBe('Định dạng: png, jpg');
     });
 
     it('returns only maxSize string when no extensions', () => {
       setInput(fixture, 'maxSize', 5);
-      expect(component.generatedDescription()).toBe('Tá»‘i Ä‘a: 5MB');
+      expect(component.generatedDescription()).toBe('Tối đa: 5MB');
     });
 
     it('returns combined string when both extensions and maxSize set', () => {
       setInput(fixture, 'extensions', ['pdf']);
       setInput(fixture, 'maxSize', 10);
-      expect(component.generatedDescription()).toBe('Äá»‹nh dáº¡ng: pdf vÃ  tá»‘i Ä‘a: 10MB');
+      expect(component.generatedDescription()).toBe('Định dạng: pdf và tối đa: 10MB');
     });
 
     it('returns custom description when description input is set', () => {
@@ -311,7 +311,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ Model (two-way) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Model (two-way) ─────────────────────────────────────────────────────
 
   describe('model two-way binding', () => {
     it('starts with empty model', () => {
@@ -337,8 +337,8 @@ describe('SdUploadFile', () => {
     }));
   });
 
-  // â”€â”€â”€ File validation (tested via #uploadFile path) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Note: #validate is a private field â€” tested indirectly via the internal
+  // ─── File validation (tested via #uploadFile path) ───────────────────────
+  // Note: #validate is a private field — tested indirectly via the internal
   // #uploadFile flow which is the single path that calls it.
 
   describe('file validation: maxSize', () => {
@@ -385,7 +385,7 @@ describe('SdUploadFile', () => {
       }
     }));
 
-    it('model starts empty â€” no files added before interaction', () => {
+    it('model starts empty — no files added before interaction', () => {
       fixture.detectChanges();
       expect(component.model()).toEqual([]);
     });
@@ -427,7 +427,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ onRemove â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── onRemove ─────────────────────────────────────────────────────────────
 
   describe('onRemove', () => {
     it('calls confirmService.confirm and removes file after confirmation', fakeAsync(() => {
@@ -462,7 +462,7 @@ describe('SdUploadFile', () => {
     }));
   });
 
-  // â”€â”€â”€ onDrop (reorder) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── onDrop (reorder) ────────────────────────────────────────────────────
 
   describe('onDrop (CDK drag-drop)', () => {
     it('reorders model when items are dropped', fakeAsync(() => {
@@ -477,7 +477,7 @@ describe('SdUploadFile', () => {
     }));
   });
 
-  // â”€â”€â”€ Public API: getFiles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Public API: getFiles ────────────────────────────────────────────────
 
   describe('public API: getFiles()', () => {
     it('returns raw File objects from previewFiles', async () => {
@@ -497,7 +497,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ isLastVisibleOverlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── isLastVisibleOverlay ────────────────────────────────────────────────
 
   describe('isLastVisibleOverlay()', () => {
     it('returns false when formControl is enabled', () => {
@@ -512,7 +512,7 @@ describe('SdUploadFile', () => {
       setInput(fixture, 'disabled', true);
       setInput(fixture, 'maxOfImage', 3);
       fixture.detectChanges();
-      // 4 files, maxOfImage=3, disabled=true â†’ index 2 is last overlay
+      // 4 files, maxOfImage=3, disabled=true → index 2 is last overlay
       component.previewFiles.set([
         makeImagePreviewFile(), makeImagePreviewFile(), makeImagePreviewFile(), makeImagePreviewFile(),
       ]);
@@ -528,7 +528,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ duplicate configuration key guard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── duplicate configuration key guard ───────────────────────────────────
 
   describe('duplicate configuration key guard', () => {
     it('throws on init when duplicate keys are provided', async () => {
@@ -550,7 +550,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ autoId (merged in from local branch) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── autoId (merged in from local branch) ────────────────────────────────
 
   describe('autoId', () => {
     @Component({
@@ -596,7 +596,7 @@ describe('SdUploadFile', () => {
     });
   });
 
-  // â”€â”€â”€ E2E attributes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── E2E attributes ───────────────────────────────────────────────────────
 
   describe('E2E attributes', () => {
     @Component({
@@ -628,7 +628,7 @@ describe('SdUploadFile', () => {
       hostFixture.detectChanges();
       let dropZone = hostFixture.nativeElement.querySelector('.c-area-upload');
 
-      // Initial: disabled=false â†’ data-disabled="false"
+      // Initial: disabled=false → data-disabled="false"
       expect(dropZone?.getAttribute('data-disabled')).toBe('false');
       expect(comp.dataDisabled()).toBe('false');
 
@@ -704,7 +704,7 @@ describe('SdUploadFilePreview', () => {
     fixture.detectChanges();
   });
 
-  // â”€â”€â”€ Creation & Rendering â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Creation & Rendering ─────────────────────────────────────────────────
 
   describe('creation & rendering', () => {
     it('creates the component', () => {
@@ -719,12 +719,12 @@ describe('SdUploadFilePreview', () => {
       expect(component.previewFiles).toEqual([]);
     });
 
-    it('starts with title = "Xem áº£nh"', () => {
-      expect(component.title).toBe('Xem áº£nh');
+    it('starts with title = "Xem ảnh"', () => {
+      expect(component.title).toBe('Xem ảnh');
     });
   });
 
-  // â”€â”€â”€ open() method â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── open() method ────────────────────────────────────────────────────────
 
   describe('open()', () => {
     it('sets previewFiles when called with valid array', () => {
@@ -753,7 +753,7 @@ describe('SdUploadFilePreview', () => {
     });
   });
 
-  // â”€â”€â”€ Navigation: updateCurrentImage â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Navigation: updateCurrentImage ──────────────────────────────────────
 
   describe('updateCurrentImage()', () => {
     beforeEach(() => {
@@ -785,7 +785,7 @@ describe('SdUploadFilePreview', () => {
     });
   });
 
-  // â”€â”€â”€ Thumbnail click â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Thumbnail click ──────────────────────────────────────────────────────
 
   describe('onClickThumbnailImage()', () => {
     it('sets activeIndex to clicked thumbnail index', () => {
@@ -795,7 +795,7 @@ describe('SdUploadFilePreview', () => {
     });
   });
 
-  // â”€â”€â”€ Download output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Download output ──────────────────────────────────────────────────────
 
   describe('output: download', () => {
     it('emits download event when onDownload is called', () => {
@@ -810,7 +810,7 @@ describe('SdUploadFilePreview', () => {
     });
   });
 
-  // â”€â”€â”€ Close output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Close output ─────────────────────────────────────────────────────────
 
   describe('output: close', () => {
     it('emits close event when onClose is called', () => {
@@ -823,7 +823,7 @@ describe('SdUploadFilePreview', () => {
     });
   });
 
-  // â”€â”€â”€ Centralized state-image classes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Centralized state-image classes ─────────────────────────────────────
   // why: PreviewComponent toggles `c-image-error` on the parent button + renders
   // the central `sd-image-image-error` class on the failed thumbnail; main view
   // shows a `<div class="c-image-error">` with a mat-icon warning. Tests guard
@@ -873,4 +873,3 @@ describe('SdUploadFilePreview', () => {
     });
   });
 });
-

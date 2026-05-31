@@ -1,14 +1,14 @@
-�# Table Row Children (Tree Rows) Implementation Plan
+# Table Row Children (Tree Rows) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 >
-> **Commit policy:** **KH�NG tự ý commit.** Ch�0 commit khi user yêu cầu rõ ràng.
+> **Commit policy:** **KHÔNG tự ý commit.** Chỉ commit khi user yêu cầu rõ ràng.
 
-**Goal:** Thêm `option.tree` cho `SdTable` � render child rows inline dư�:i parent v�:i expand/collapse, `maxDepth`, embedded + lazy load, paginate root only.
+**Goal:** Thêm `option.tree` cho `SdTable` — render child rows inline dưới parent với expand/collapse, `maxDepth`, embedded + lazy load, paginate root only.
 
-**Architecture:** Root rows lưu trong `items` signal. `SdTreePipe` flatten visible rows theo `meta.tree.isExpanded`. C�"t �ặc bi�!t `sdTreeToggle` xử lý expand UI. Tree utilities (`tree.util.ts`) quản lý meta, flatten, lazy eligibility. `#treeRevision` signal invalidate pure pipe sau toggle.
+**Architecture:** Root rows lưu trong `items` signal. `SdTreePipe` flatten visible rows theo `meta.tree.isExpanded`. Cột đặc biệt `sdTreeToggle` xử lý expand UI. Tree utilities (`tree.util.ts`) quản lý meta, flatten, lazy eligibility. `#treeRevision` signal invalidate pure pipe sau toggle.
 
-**Tech Stack:** Angular 17+ signals, `MatTable` multiTemplateDataRows, existing `SdTableFilterService` / `TableFormatService`, Vitest/Jasmine (theo setup hi�!n có).
+**Tech Stack:** Angular 17+ signals, `MatTable` multiTemplateDataRows, existing `SdTableFilterService` / `TableFormatService`, Vitest/Jasmine (theo setup hiện có).
 
 **Spec:** `docs/superpowers/specs/2026-05-22-table-row-children-design.md`
 
@@ -70,7 +70,7 @@ export interface SdTableMetaTree {
   isExpanded: boolean;
   isExpanding?: boolean;
   parentId?: string;
-  /** Cached formatted child SdTableItem[] � populated on first expand/format */
+  /** Cached formatted child SdTableItem[] — populated on first expand/format */
   childItems?: SdTableItem[];
 }
 
@@ -222,7 +222,7 @@ describe('tree.util', () => {
 });
 ```
 
-- [ ] **Step 2: Run tests � expect FAIL**
+- [ ] **Step 2: Run tests — expect FAIL**
 
 ```bash
 cd vn-angular && npx ng test sdcorejs-angular --include='**/tree.util.spec.ts' --browsers=ChromeHeadless --watch=false 2>&1 | tail -30
@@ -291,7 +291,7 @@ export const flattenTree = <T>(
   return result;
 };
 
-/** Flatten ALL nodes regardless of expand state � used for export */
+/** Flatten ALL nodes regardless of expand state — used for export */
 export const flattenTreeAll = <T>(
   roots: SdTableItem<T>[],
   option?: SdTableOptionTree,
@@ -318,7 +318,7 @@ export const flattenTreeAll = <T>(
 };
 ```
 
-- [ ] **Step 4: Run tests � expect PASS**
+- [ ] **Step 4: Run tests — expect PASS**
 
 Same command as Step 2.
 
@@ -380,11 +380,11 @@ export class SdTreePipe implements PipeTransform {
 export * from './sd-tree.pipe';
 ```
 
-- [ ] **Step 4: Run pipe tests � expect PASS**
+- [ ] **Step 4: Run pipe tests — expect PASS**
 
 ---
 
-## Task 4: Config service � register `sdTreeToggle` column
+## Task 4: Config service — register `sdTreeToggle` column
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/table/src/services/config.service.ts`
@@ -431,7 +431,7 @@ cd vn-angular && npx ng build sdcorejs-angular 2>&1 | tail -10
 
 ---
 
-## Task 5: sdGroup pipe � skip when tree enabled
+## Task 5: sdGroup pipe — skip when tree enabled
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/table/src/pipes/sd-group.pipe.ts`
@@ -451,7 +451,7 @@ if (gridOption.tree) {
 
 ---
 
-## Task 6: Table component � tree state & toggle logic
+## Task 6: Table component — tree state & toggle logic
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/table/src/table.component.ts`
@@ -539,7 +539,7 @@ if (treeOpt) {
 }
 ```
 
-Implement `#expandDefaultBranches` � DFS: if row should be expanded per defaultExpanded, await `#ensureChildItemsFormatted`, recurse into childItems.
+Implement `#expandDefaultBranches` — DFS: if row should be expanded per defaultExpanded, await `#ensureChildItemsFormatted`, recurse into childItems.
 
 - [ ] **Step 6: Persist expand state before reload**
 
@@ -606,15 +606,15 @@ isReorderDisabled(item: SdTableItem<T>): boolean {
 }
 ```
 
-Update `reorderSortPredicate` � reject if drag or target has `level > 0`.
+Update `reorderSortPredicate` — reject if drag or target has `level > 0`.
 
-Update `onReorderDrop` � only reorder within root items in `this.items()` signal (not flattened DOM indices for children). Existing `#toItemsIndex` logic counts non-group rows; add skip for `level > 0`:
+Update `onReorderDrop` — only reorder within root items in `this.items()` signal (not flattened DOM indices for children). Existing `#toItemsIndex` logic counts non-group rows; add skip for `level > 0`:
 
 ```typescript
 if (groupedItems[i]?.meta?.tree?.level > 0) continue; // in toItemsIndex loop
 ```
 
-- [ ] **Step 9: Export � flatten all tree nodes**
+- [ ] **Step 9: Export — flatten all tree nodes**
 
 In `#createExportContext` or `#exportedItems`, when tree enabled, after loading root items, call `#initTreeMeta` + recursively `#ensureChildItemsFormatted` for all nodes, then use `flattenTreeAll` for export data source.
 
@@ -726,7 +726,7 @@ cd vn-angular && npx ng build sdcorejs-angular && npx ng build demo 2>&1 | tail 
 **Files:**
 - Modify: `projects/demo/src/app/pages/sd-table/sd-table-demo.component.ts`
 - Modify: `projects/demo/src/app/pages/sd-table/sd-table-demo.component.html`
-- Optional: `projects/demo/src/app/pages/sd-table-server/sd-table-server-demo.component.ts` � server tab
+- Optional: `projects/demo/src/app/pages/sd-table-server/sd-table-server-demo.component.ts` — server tab
 
 - [ ] **Step 1: Add tree demo data (embedded, 3 levels)**
 
@@ -788,7 +788,7 @@ treeLazyOption: SdTableOption<TreeDemoItem> = {
 
 Run `npx ng serve demo`, open sd-table demo page:
 - Embedded: expand/collapse, indent visible, 3 levels respect maxDepth
-- Lazy: spinner �  child appears
+- Lazy: spinner → child appears
 
 ---
 
@@ -799,11 +799,11 @@ Run `npx ng serve demo`, open sd-table demo page:
 
 - [ ] **Step 1: Add `tree` to option schema table**
 
-Document all `SdTableOptionTree` fields, examples (embedded, lazy, server), interaction matrix (coexist expand, exclude group), update line "not recursive trees" �  now supported via `option.tree`.
+Document all `SdTableOptionTree` fields, examples (embedded, lazy, server), interaction matrix (coexist expand, exclude group), update line "not recursive trees" → now supported via `option.tree`.
 
 ---
 
-## Task 10: Regression verification � �ảm bảo tính nĒng cũ vẫn hoạt ��"ng
+## Task 10: Regression verification — đảm bảo tính năng cũ vẫn hoạt động
 
 **Files:** none (verification only)
 
@@ -823,7 +823,7 @@ Expected: zero compile errors.
 
 - [ ] **Step 3: Regression checklist (table WITHOUT tree option)**
 
-Verify on existing demo pages (`sd-table-demo`, `sd-table-server-demo`) � behavior unchanged:
+Verify on existing demo pages (`sd-table-demo`, `sd-table-server-demo`) — behavior unchanged:
 
 | Feature | Verify |
 |---|---|
@@ -870,12 +870,12 @@ Verify on existing demo pages (`sd-table-demo`, `sd-table-server-demo`) � beh
 | Lazy load + cache | Task 6 Step 7 |
 | `maxDepth` | Task 2 util |
 | `defaultExpanded` | Task 2 util, Task 6 Step 5 |
-| Paginate root only | No change to `#filterLocal` slice logic (roots only) � Task 10 verify |
+| Paginate root only | No change to `#filterLocal` slice logic (roots only) — Task 10 verify |
 | Coexist expand | Task 10 checklist |
 | Group mutually exclusive | Task 5 |
 | Row reorder root only | Task 6 Step 8 |
 | Export flatten all | Task 6 Step 9 |
-| Filter root only | Existing `#filterLocal` on roots � Task 10 verify |
+| Filter root only | Existing `#filterLocal` on roots — Task 10 verify |
 | Circular ref guard | Task 2 |
 | Demo | Task 8 |
 | Docs | Task 9 |
@@ -888,10 +888,9 @@ Verify on existing demo pages (`sd-table-demo`, `sd-table-server-demo`) � beh
 
 Plan saved to `docs/superpowers/plans/2026-05-22-table-row-children.md`.
 
-**Hai lựa chọn triỒn khai:**
+**Hai lựa chọn triển khai:**
 
-1. **Subagent-Driven (recommended)** � dispatch subagent per task, review giữa các task
-2. **Inline Execution** � implement trực tiếp trong session này theo từng task
+1. **Subagent-Driven (recommended)** — dispatch subagent per task, review giữa các task
+2. **Inline Execution** — implement trực tiếp trong session này theo từng task
 
-Bạn mu�n triỒn khai theo cách nào?
-
+Bạn muốn triển khai theo cách nào?

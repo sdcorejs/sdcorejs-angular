@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdPreviewImage, SdPreviewPdf } from '@sdcorejs/angular/components/preview';
 
@@ -54,4 +54,3 @@ export class PreviewDemoComponent {
 
   readonly pdfUrl = signal<string>('https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf');
 }
-

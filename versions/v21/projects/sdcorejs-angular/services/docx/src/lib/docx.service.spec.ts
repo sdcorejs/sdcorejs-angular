@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SdDocxService spec
  *
  * Scope reductions:
@@ -18,7 +18,7 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { SdDocxService } from './docx.service';
 import { SdDocxConvertOptions, SdDocxConvertResult } from './docx.model';
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeFile(name: string, sizeBytes = 32): File {
   return new File([new Uint8Array(sizeBytes)], name, {
@@ -42,9 +42,9 @@ function installConversionSpy(
 ): jasmine.Spy {
   const VALID_EXTENSIONS = ['.doc', '.docx'];
   const ERROR_FORMAT =
-    'Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡. Vui lÃ²ng chá»n Máº«u cÃ³ Ä‘á»‹nh dáº¡ng DOC hoáº·c DOCX';
+    'Định dạng không hợp lệ. Vui lòng chọn Mẫu có định dạng DOC hoặc DOCX';
   const ERROR_SIZE =
-    'KÃ­ch thÆ°á»›c tá»‡p máº«u vÆ°á»£t quÃ¡ tiÃªu chuáº©n há»— trá»£ cá»§a há»‡ thá»‘ng. Vui lÃ²ng thá»­ láº¡i';
+    'Kích thước tệp mẫu vượt quá tiêu chuẩn hỗ trợ của hệ thống. Vui lòng thử lại';
 
   return spyOn(service, 'convertToHtml').and.callFake(
     async (
@@ -66,9 +66,9 @@ function installConversionSpy(
         fileSize = input.size;
       } else if (input instanceof Blob) {
         fileSize = input.size;
-        // no fileName â†’ format check skipped
+        // no fileName → format check skipped
       }
-      // ArrayBuffer: neither fileName nor fileSize â†’ both checks skipped
+      // ArrayBuffer: neither fileName nor fileSize → both checks skipped
 
       if (opts.validateFormat && fileName) {
         if (!VALID_EXTENSIONS.some(ext => fileName!.toLowerCase().endsWith(ext))) {
@@ -90,7 +90,7 @@ function installConversionSpy(
   );
 }
 
-// â”€â”€â”€ Suite â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Suite ────────────────────────────────────────────────────────────────────
 
 describe('SdDocxService', () => {
   let service: SdDocxService;
@@ -127,13 +127,13 @@ describe('SdDocxService', () => {
       .forEach(el => el.remove());
   });
 
-  // â”€â”€â”€ 1. Instantiation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 1. Instantiation ───────────────────────────────────────────────────────
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  // â”€â”€â”€ 2. Public API surface â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. Public API surface ──────────────────────────────────────────────────
 
   it('exposes an "open" method', () => {
     expect(typeof service.open).toBe('function');
@@ -147,7 +147,7 @@ describe('SdDocxService', () => {
     expect(typeof service.convertToHtmlString).toBe('function');
   });
 
-  // â”€â”€â”€ 3. convertToHtml â€” valid extensions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 3. convertToHtml — valid extensions ─────────────────────────────────
 
   it('returns a result for a .docx file', async () => {
     installConversionSpy(service, notifyService);
@@ -163,14 +163,14 @@ describe('SdDocxService', () => {
     expect(notifyService.error).not.toHaveBeenCalled();
   });
 
-  // â”€â”€â”€ 4. convertToHtml â€” format validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 4. convertToHtml — format validation ────────────────────────────────
 
   it('returns null and shows error toast for a .pdf File', async () => {
     installConversionSpy(service, notifyService);
     const result = await service.convertToHtml(makeFile('report.pdf'));
     expect(result).toBeNull();
     expect(notifyService.error).toHaveBeenCalledWith(
-      jasmine.stringContaining('Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡'),
+      jasmine.stringContaining('Định dạng không hợp lệ'),
     );
   });
 
@@ -181,11 +181,11 @@ describe('SdDocxService', () => {
     });
     expect(result).not.toBeNull();
     expect(notifyService.error).not.toHaveBeenCalledWith(
-      jasmine.stringContaining('Äá»‹nh dáº¡ng khÃ´ng há»£p lá»‡'),
+      jasmine.stringContaining('Định dạng không hợp lệ'),
     );
   });
 
-  // â”€â”€â”€ 5. convertToHtml â€” size validation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 5. convertToHtml — size validation ──────────────────────────────────
 
   it('returns null and shows error toast when file exceeds 50 MB default', async () => {
     installConversionSpy(service, notifyService);
@@ -195,7 +195,7 @@ describe('SdDocxService', () => {
     const result = await service.convertToHtml(file);
     expect(result).toBeNull();
     expect(notifyService.error).toHaveBeenCalledWith(
-      jasmine.stringContaining('KÃ­ch thÆ°á»›c tá»‡p máº«u'),
+      jasmine.stringContaining('Kích thước tệp mẫu'),
     );
   });
 
@@ -207,7 +207,7 @@ describe('SdDocxService', () => {
     const result = await service.convertToHtml(file, { maxSizeInMb: 2 });
     expect(result).toBeNull();
     expect(notifyService.error).toHaveBeenCalledWith(
-      jasmine.stringContaining('KÃ­ch thÆ°á»›c tá»‡p máº«u'),
+      jasmine.stringContaining('Kích thước tệp mẫu'),
     );
   });
 
@@ -220,7 +220,7 @@ describe('SdDocxService', () => {
     expect(result).not.toBeNull();
   });
 
-  // â”€â”€â”€ 6. convertToHtml â€” Blob / ArrayBuffer skip format validation â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 6. convertToHtml — Blob / ArrayBuffer skip format validation ─────────
 
   it('accepts a Blob input and skips format validation', async () => {
     installConversionSpy(service, notifyService);
@@ -235,7 +235,7 @@ describe('SdDocxService', () => {
     expect(result).not.toBeNull();
   });
 
-  // â”€â”€â”€ 7. Result shape â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 7. Result shape ─────────────────────────────────────────────────────
 
   it('result has a "html" string and a "messages" array', async () => {
     installConversionSpy(service, notifyService, '<html><body>hello</body></html>');
@@ -247,7 +247,7 @@ describe('SdDocxService', () => {
     expect(Array.isArray(result!.messages)).toBeTrue();
   });
 
-  // â”€â”€â”€ 8. convertToHtmlString â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 8. convertToHtmlString ───────────────────────────────────────────────
 
   it('convertToHtmlString() returns the html string on success', async () => {
     installConversionSpy(service, notifyService, '<html>ok</html>');
@@ -261,4 +261,3 @@ describe('SdDocxService', () => {
     expect(html).toBeNull();
   });
 });
-

@@ -1,5 +1,5 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
-// Äá»‹nh nghÄ©a cÃ¡c Components cá»§a Form Render
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// Định nghĩa các Components của Form Render
 import { SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { Color, ValidationPatternType } from '@sdcorejs/utils/models';
@@ -60,7 +60,7 @@ export const SdFormatComponent = (component: SdFormGenericComponent | SdFormGene
     if (!component.id) {
       component.id = GenerateId();
     }
-    // Html vÃ  Group khÃ´ng cÃ³ key vÃ  validate
+    // Html và Group không có key và validate
     if (component.type !== 'group') {
       if (!component.key) {
         component.key = GenerateKey();
@@ -80,31 +80,31 @@ export const SdFormatComponent = (component: SdFormGenericComponent | SdFormGene
     }
 
     if (component.type === 'datetime') {
-      // Náº¿u lÃ  datetime thÃ¬ gÃ¡n máº·c Ä‘á»‹nh subtype lÃ  date
+      // Nếu là datetime thì gán mặc định subtype là date
       component.subtype = component.subtype || 'date';
     } else if (component.type === 'table') {
-      // Náº¿u lÃ  table thÃ¬ láº¥y columns máº«u
+      // Nếu là table thì lấy columns mẫu
       if (!component.columns?.length) {
         component.columns = [
           {
             key: 'key_1',
-            label: 'Cá»™t 1',
+            label: 'Cột 1',
             type: 'string',
           },
           {
             key: 'key_2',
-            label: 'Cá»™t 2',
+            label: 'Cột 2',
             type: 'string',
           },
           {
             key: 'key_3',
-            label: 'Cá»™t 3',
+            label: 'Cột 3',
             type: 'string',
           },
         ];
       }
     } else if (component.type === 'radio') {
-      // Náº¿u lÃ  radio thÃ¬ láº¥y values máº«u
+      // Nếu là radio thì lấy values mẫu
       if (!component.values?.length) {
         component.values = [
           {
@@ -117,7 +117,7 @@ export const SdFormatComponent = (component: SdFormGenericComponent | SdFormGene
           },
         ];
       }
-      // Máº·c Ä‘á»‹nh tráº£i ngang cÃ¡c lá»±a chá»n
+      // Mặc định trải ngang các lựa chọn
       component.properties.direction = component.properties.direction || 'row';
     } else if (component.type === 'upload') {
       component.properties!.type = component.properties!.type || 'file';
@@ -159,16 +159,16 @@ export interface SdFormGenericComponentBase {
   };
   disabled?: boolean;
   properties?: {
-    viewed?: boolean; // true náº¿u muá»‘n hiá»ƒn thá»‹ dáº¡ng view (view khÃ¡c vá»›i disable)
-    hyperlink?: string; // Hyperlink khi á»Ÿ tráº¡ng thÃ¡i viewed
+    viewed?: boolean; // true nếu muốn hiển thị dạng view (view khác với disable)
+    hyperlink?: string; // Hyperlink khi ở trạng thái viewed
     hidden?: boolean;
     hiddenWhenExpression?: SdFormGenericExpression;
     visibleWhenExpression?: SdFormGenericExpression;
     disabledWhenExpression?: SdFormGenericExpression;
     requiredWhenExpression?: SdFormGenericExpression;
     onChange?: {
-      // Thá»±c táº¿ khi sá»­ dá»¥ng sáº½ cÃ³ mong muá»‘n trigger sá»± kiá»‡n change sáº½ lÃ m gÃ¬ Ä‘Ã³
-      // Náº¿u muá»‘n setValues thÃ¬ cÃº phÃ¡p sáº½ lÃ  "key": "${otherKey}" hoáº·c "key": true, "key": "value"
+      // Thực tế khi sử dụng sẽ có mong muốn trigger sự kiện change sẽ làm gì đó
+      // Nếu muốn setValues thì cú pháp sẽ là "key": "${otherKey}" hoặc "key": true, "key": "value"
       setValues?: Record<string, any>;
     };
   } & Record<string, any>;
@@ -180,7 +180,7 @@ export interface SdFormGenericTextfield extends SdFormGenericComponentBase {
     maxlength?: number;
     minlength?: number;
     pattern?: ValidationPatternType | string; // Regex
-    patternErrorMessage?: string; // Message lá»—i khi invalid pattern
+    patternErrorMessage?: string; // Message lỗi khi invalid pattern
   } & SdFormGenericComponentBase['validate'];
 }
 
@@ -191,8 +191,8 @@ export interface SdFormGenericChipString extends SdFormGenericComponentBase {
     maxlength?: number;
     minlength?: number;
     pattern?: ValidationPatternType | string; // Regex
-    patternErrorMessage?: string; // Message lá»—i khi invalid pattern
-    maxOfItems?: number; // Sá»‘ lÆ°á»£ng item tá»‘i Ä‘a
+    patternErrorMessage?: string; // Message lỗi khi invalid pattern
+    maxOfItems?: number; // Số lượng item tối đa
   } & SdFormGenericComponentBase['validate'];
 }
 export interface SdFormGenericChipCalendar extends SdFormGenericComponentBase {
@@ -202,8 +202,8 @@ export interface SdFormGenericChipCalendar extends SdFormGenericComponentBase {
     maxlength?: number;
     minlength?: number;
     pattern?: ValidationPatternType | string; // Regex
-    patternErrorMessage?: string; // Message lá»—i khi invalid pattern
-    maxOfItems?: number; // Sá»‘ lÆ°á»£ng item tá»‘i Ä‘a
+    patternErrorMessage?: string; // Message lỗi khi invalid pattern
+    maxOfItems?: number; // Số lượng item tối đa
   } & SdFormGenericComponentBase['validate'];
 }
 export interface SdFormGenericTextarea extends SdFormGenericComponentBase {
@@ -241,7 +241,7 @@ export interface SdFormGenericDatetime extends SdFormGenericComponentBase {
 export interface SdFormGenericRadio extends SdFormGenericComponentBase {
   type: 'radio';
   values?: SdFormGenericSelectionStaticItem[];
-  valuesKey?: string; // Mapping tá»« form-render-values
+  valuesKey?: string; // Mapping từ form-render-values
   defaultValue?: string;
   properties?: {
     direction?: 'row' | 'column';
@@ -250,18 +250,18 @@ export interface SdFormGenericRadio extends SdFormGenericComponentBase {
 export interface SdFormGenericSelect extends SdFormGenericComponentBase {
   type: 'select';
   values?: SdFormGenericSelectionStaticItem[];
-  valuesKey?: string; // Mapping tá»« form-render-values
+  valuesKey?: string; // Mapping từ form-render-values
   defaultValue?: string | string[];
   properties?: {
     query?: Record<string, any>;
     multiple?: boolean;
-    setVariables?: Record<string, string>; // Chá»‰ Ä‘á»‘i vá»›i dá»¯ liá»‡u tá»« API
+    setVariables?: Record<string, string>; // Chỉ đối với dữ liệu từ API
   } & SdFormGenericComponentBase['properties'];
 }
 export interface SdFormGenericChecklist extends SdFormGenericComponentBase {
   type: 'checklist';
   values?: SdFormGenericSelectionStaticItem[];
-  valuesKey?: string; // Mapping tá»« form-render-values
+  valuesKey?: string; // Mapping từ form-render-values
   defaultValue?: string[];
   properties?: {
     query?: Record<string, any>;
@@ -287,12 +287,12 @@ export interface SdFormGenericUpload extends SdFormGenericComponentBase {
   type: 'upload';
   properties?: {
     type?: SdUnwrapSignal<SdUploadFile['type']>;
-    maxSize?: SdUnwrapSignal<SdUploadFile['maxSize']>; // Dung lÆ°á»£ng tá»‘i Ä‘a
-    max?: SdUnwrapSignal<SdUploadFile['max']>; // Sá»‘ lÆ°á»£ng file tá»‘i Ä‘a
+    maxSize?: SdUnwrapSignal<SdUploadFile['maxSize']>; // Dung lượng tối đa
+    max?: SdUnwrapSignal<SdUploadFile['max']>; // Số lượng file tối đa
     extensions?: SdUnwrapSignal<SdUploadFile['extensions']>;
-    args?: Record<string, any>; //.tham sá»‘
-    // DÃ nh cho mobile
-    source?: 'ALL' | 'PHOTO_LIBRARY' | 'CAPTURE'; // Máº·c Ä‘á»‹nh lÃ  ALL
+    args?: Record<string, any>; //.tham số
+    // Dành cho mobile
+    source?: 'ALL' | 'PHOTO_LIBRARY' | 'CAPTURE'; // Mặc định là ALL
   } & SdFormGenericComponentBase['properties'];
 }
 
@@ -315,23 +315,23 @@ export type SdFormGenericTableColumn<T = any> =
 export const TableColumnTypes = [
   {
     value: 'string',
-    display: 'Chuá»—i',
+    display: 'Chuỗi',
   },
   {
     value: 'number',
-    display: 'Sá»‘',
+    display: 'Số',
   },
   {
     value: 'date',
-    display: 'NgÃ y',
+    display: 'Ngày',
   },
   {
     value: 'datetime',
-    display: 'NgÃ y giá»',
+    display: 'Ngày giờ',
   },
   {
     value: 'values',
-    display: 'Chá»n giÃ¡ trá»‹',
+    display: 'Chọn giá trị',
   },
   {
     value: 'boolean',
@@ -339,11 +339,11 @@ export const TableColumnTypes = [
   },
   {
     value: 'file',
-    display: 'Tá»‡p',
+    display: 'Tệp',
   },
   {
     value: 'image',
-    display: 'áº¢nh',
+    display: 'Ảnh',
   },
 ];
 
@@ -411,17 +411,17 @@ export interface SdFormGenericTable extends SdFormGenericComponentBase {
   columns?: SdFormGenericTableColumn[];
   properties?: {
     type?: SdTableOption['type'];
-    titleButtonCreate?: string; // TiÃªu Ä‘á» nÃºt táº¡o má»›i
+    titleButtonCreate?: string; // Tiêu đề nút tạo mới
   } & SdFormGenericComponentBase['properties'];
 }
 
 /**
- * Break component â€” invisible runtime element Ã©p xuá»‘ng dÃ²ng má»›i. DÃ¹ng khi layout cÃ³
- * vÃ¹ng cá»‘ Ä‘á»‹nh vÃ  viá»‡c áº©n/hiá»‡n trÆ°á»ng khÃ¡c khÃ´ng nÃªn xÃ¡o trá»™n vá»‹ trÃ­ cÃ¡c trÆ°á»ng cÃ²n láº¡i.
- * á»ž canvas (design) render thanh ngang máº£nh; á»Ÿ runtime render empty 12-col cell.
+ * Break component — invisible runtime element ép xuống dòng mới. Dùng khi layout có
+ * vùng cố định và việc ẩn/hiện trường khác không nên xáo trộn vị trí các trường còn lại.
+ * Ở canvas (design) render thanh ngang mảnh; ở runtime render empty 12-col cell.
  *
- * Extend SdFormGenericComponentBase Ä‘á»ƒ tÆ°Æ¡ng thÃ­ch vá»›i union narrowing trong cÃ¡c pipe/render
- * (key, validate, disabled, properties full) â€” runtime sáº½ ignore má»i field ngoÃ i id/type/layout.
+ * Extend SdFormGenericComponentBase để tương thích với union narrowing trong các pipe/render
+ * (key, validate, disabled, properties full) — runtime sẽ ignore mọi field ngoài id/type/layout.
  */
 export interface SdFormGenericBreak extends SdFormGenericComponentBase {
   type: 'break';
@@ -439,7 +439,7 @@ export interface SdFormGenericHtml {
   layout?: SdFormGenericLayout;
   properties?: {
     viewed?: boolean;
-    hyperlink?: string; // Hyperlink khi á»Ÿ tráº¡ng thÃ¡i viewed
+    hyperlink?: string; // Hyperlink khi ở trạng thái viewed
     hidden?: boolean;
     hiddenWhenExpression?: SdFormGenericExpression;
     visibleWhenExpression?: SdFormGenericExpression;
@@ -461,27 +461,27 @@ export interface FormBuilderComponent {
 }
 
 export const FormBuilderComponents: FormBuilderComponent[] = [
-  // â”€â”€ Basic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Basic ───────────────────────────────────────────────────
   { type: 'textfield', symbol: 'text_fields', group: 'basic', name: 'Text field' },
   { type: 'textarea', symbol: 'notes', group: 'basic', name: 'Text area' },
   { type: 'number', symbol: '123', group: 'basic', name: 'Number' },
   { type: 'datetime', symbol: 'calendar_month', group: 'basic', name: 'Date' },
-  // â”€â”€ Choice â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Choice ──────────────────────────────────────────────────
   { type: 'select', symbol: 'arrow_drop_down_circle', group: 'choice', name: 'Select' },
   { type: 'radio', symbol: 'radio_button_checked', group: 'choice', name: 'Radio' },
   { type: 'checkbox', symbol: 'check_box', group: 'choice', name: 'Check box' },
-  // â”€â”€ Advanced â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Advanced ────────────────────────────────────────────────
   { type: 'chip-string', symbol: 'label', group: 'advanced', name: 'Chip string' },
   { type: 'chip-calendar', symbol: 'event_note', group: 'advanced', name: 'Chip calendar' },
   { type: 'upload', symbol: 'upload_file', group: 'advanced', name: 'Upload' },
   { type: 'table', symbol: 'table_rows', group: 'advanced', name: 'Table' },
-  // â”€â”€ Layout â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Break KHÃ”NG cÃ³ trong palette â€” thÃªm qua per-row "+ Break" quick-add button.
+  // ── Layout ──────────────────────────────────────────────────
+  // Break KHÔNG có trong palette — thêm qua per-row "+ Break" quick-add button.
   { type: 'group', symbol: 'category', group: 'layout', name: 'Group' },
   { type: 'html', symbol: 'code_blocks', group: 'layout', name: 'HTML' },
 ];
 
-/** Lookup: component type â†’ Material Symbol + label, used by attribute panel header. */
+/** Lookup: component type → Material Symbol + label, used by attribute panel header. */
 export const COMPONENT_ICONS: Record<string, { symbol: string; label: string }> = FormBuilderComponents.reduce(
   (acc, c) => ({ ...acc, [c.type]: { symbol: c.symbol, label: c.name } }),
   {} as Record<string, { symbol: string; label: string }>,
@@ -516,4 +516,3 @@ export const GetVariableAttributes = (variables: SdFormGenericVariable[]) => {
   }
   return attributes;
 };
-

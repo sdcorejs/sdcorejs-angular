@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
@@ -66,4 +66,3 @@ export class UploadFileDemoComponent {
   readonly productImages = signal<(string | number)[]>([]);
   readonly form = new FormGroup({});
 }
-

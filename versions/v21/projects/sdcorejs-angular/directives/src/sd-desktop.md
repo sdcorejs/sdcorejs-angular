@@ -1,9 +1,9 @@
-﻿# `*sdDesktop` Directive
+# `*sdDesktop` Directive
 
 **Type**: Structural Directive
 **Selector**: `[sdDesktop]`
 **Class**: `SdDesktopDirective`
-**Standalone**: no (declared module-style â€” no `standalone: true` flag)
+**Standalone**: no (declared module-style — no `standalone: true` flag)
 **Import path**: `@sdcorejs/angular/directives` (or direct: `@sdcorejs/angular/directives/sd-desktop`)
 
 ## One-line purpose
@@ -15,11 +15,11 @@ Structural directive that renders its template ONLY on desktop (non-mobile) view
 - Hide elements that don't make sense on small screens (data tables, multi-column grids)
 
 ## When NOT to use
-- For dynamic, reactive viewport tracking â€” this directive is evaluated ONCE at construction time (no resize listener), so it does not toggle if the user resizes the window across the breakpoint. For reactive behavior, prefer Angular CDK `BreakpointObserver` or media-query-based CSS.
-- For minor styling differences â€” use CSS media queries instead.
+- For dynamic, reactive viewport tracking — this directive is evaluated ONCE at construction time (no resize listener), so it does not toggle if the user resizes the window across the breakpoint. For reactive behavior, prefer Angular CDK `BreakpointObserver` or media-query-based CSS.
+- For minor styling differences — use CSS media queries instead.
 
 ## Inputs
-None â€” the directive takes no inputs. Visibility is determined entirely by `BrowserUtilities.isMobile()` at the moment the host is constructed.
+None — the directive takes no inputs. Visibility is determined entirely by `BrowserUtilities.isMobile()` at the moment the host is constructed.
 
 ## Outputs
 None.
@@ -27,7 +27,7 @@ None.
 ## Behavior
 - On construction, calls `BrowserUtilities.isMobile()`.
 - If FALSE (i.e. desktop), creates an embedded view of the template via `ViewContainerRef.createEmbeddedView`.
-- If TRUE (mobile), the template is never instantiated â€” DOM is empty.
+- If TRUE (mobile), the template is never instantiated — DOM is empty.
 - No teardown / re-evaluation logic: the decision is sticky for the lifetime of the parent view.
 
 ## Examples
@@ -51,11 +51,10 @@ None.
 ```
 
 ## Anti-patterns
-- Using `*sdDesktop` on a parent that may toggle viewport class at runtime â€” the directive does not react to resize.
-- Combining with `*ngIf` on the same element â€” Angular only allows one structural directive per element; wrap with `<ng-container>`.
-- Using for fine-grained styling â€” prefer SCSS media queries.
+- Using `*sdDesktop` on a parent that may toggle viewport class at runtime — the directive does not react to resize.
+- Combining with `*ngIf` on the same element — Angular only allows one structural directive per element; wrap with `<ng-container>`.
+- Using for fine-grained styling — prefer SCSS media queries.
 
 ## Related
-- `*sdMobile` â€” the inverse: renders only on mobile.
-- `BrowserUtilities.isMobile()` â€” underlying detection helper (exported from `@sdcorejs/angular/utilities/extensions`).
-
+- `*sdMobile` — the inverse: renders only on mobile.
+- `BrowserUtilities.isMobile()` — underlying detection helper (exported from `@sdcorejs/angular/utilities/extensions`).

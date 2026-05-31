@@ -1,9 +1,9 @@
-﻿# `SdGlobalErrorHandler`
+# `SdGlobalErrorHandler`
 
 **Type**: ErrorHandler (Angular `ErrorHandler` implementation)
 **Class**: `SdGlobalErrorHandler implements ErrorHandler`
 **Import path**: `@sdcorejs/angular/handlers`
-**Provided in**: NOT provided by default â€” consumer app must wire it via `providers` in `app.config.ts`
+**Provided in**: NOT provided by default — consumer app must wire it via `providers` in `app.config.ts`
 
 ## One-line purpose
 Catches uncaught application errors at the Angular root and, when the error is a chunk-load / dynamic-import failure (typical after a new build is deployed while the user has the old SPA cached), prompts the user to reload the page so they pick up the new bundle. All other errors fall through to `console.error`.
@@ -22,12 +22,12 @@ The handler implements `handleError(error: any)` and runs:
 2. Matches the message against a list of chunk-load signatures:
    - `Loading chunk` (Webpack)
    - `Importing a module script failed` (some browsers)
-   - `Failed to fetch dynamically imported module` (Angular esbuild/Vite â€” most common today)
+   - `Failed to fetch dynamically imported module` (Angular esbuild/Vite — most common today)
    - `error loading dynamically imported module` (Firefox/Safari variants)
    - `missing source map`
 3. If matched: logs a `console.warn`, then shows a native `window.confirm` dialog whose text is
    composed via `I18nService.t()` using keys `core.handler.global-error.update-title` and
-   `core.handler.global-error.update-body`. On OK â†’ `window.location.reload()`.
+   `core.handler.global-error.update-body`. On OK → `window.location.reload()`.
 4. If NOT matched: `console.error('Application error:', error)` and the error continues to propagate normally for devtools.
 
 The handler has a single DI dependency (`I18nService`) for localising the confirm dialog text.
@@ -49,12 +49,11 @@ export const appConfig: ApplicationConfig = {
 ```
 
 ## Anti-patterns
-- Do NOT subclass it just to add a Sentry/Datadog hook â€” wrap it instead, or call your reporter from a sibling provider so the chunk-reload UX is preserved.
-- Do NOT swallow errors â€” the non-chunk branch deliberately re-logs to `console.error` so devtools still surface stack traces.
-- Do NOT replace the `confirm()` with a silent `location.reload()` â€” silent reloads create infinite loops if the error is actually a server-side 404 on the chunk file.
-- Do NOT register inside a feature module's providers â€” `ErrorHandler` is a root-singleton DI token; only the root `ApplicationConfig` / `AppModule` should provide it.
+- Do NOT subclass it just to add a Sentry/Datadog hook — wrap it instead, or call your reporter from a sibling provider so the chunk-reload UX is preserved.
+- Do NOT swallow errors — the non-chunk branch deliberately re-logs to `console.error` so devtools still surface stack traces.
+- Do NOT replace the `confirm()` with a silent `location.reload()` — silent reloads create infinite loops if the error is actually a server-side 404 on the chunk file.
+- Do NOT register inside a feature module's providers — `ErrorHandler` is a root-singleton DI token; only the root `ApplicationConfig` / `AppModule` should provide it.
 
 ## Related
-- `SdNoInternetInterceptor` â€” sibling resilience layer for HTTP failures (status 0 / 503)
-- `SD_CORE_CONFIGURATION` â€” root config token; usually provided alongside this handler in `app.config.ts`
-
+- `SdNoInternetInterceptor` — sibling resilience layer for HTTP failures (status 0 / 503)
+- `SD_CORE_CONFIGURATION` — root config token; usually provided alongside this handler in `app.config.ts`

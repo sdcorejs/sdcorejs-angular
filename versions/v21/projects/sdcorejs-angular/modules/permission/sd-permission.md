@@ -1,6 +1,6 @@
-﻿# Permission Module
+# Permission Module
 
-- **Type:** Tree-shakable directive + service + guard (no `forRoot` â€” provide the config token directly)
+- **Type:** Tree-shakable directive + service + guard (no `forRoot` — provide the config token directly)
 - **Import path:** `@sdcorejs/angular/modules/permission`
 - **Library version:** `@sdcorejs/angular@19.0.0-beta.86`
 
@@ -12,36 +12,36 @@ RBAC permission layer: `*sdPermission` directive conditionally renders templates
 
 - Hide buttons / sections based on user permission codes (e.g. `'PCM_C_PRODUCT_CREATE'`).
 - Block route activation when the user lacks the route's `data.permission`.
-- Portal aggregates several products with different permission APIs â€” multiple `SD_PERMISSION_CONFIGURATION` providers (using `multi: true`) let you scope by `key`, with `key === undefined` acting as the portal-wide fallback.
+- Portal aggregates several products with different permission APIs — multiple `SD_PERMISSION_CONFIGURATION` providers (using `multi: true`) let you scope by `key`, with `key === undefined` acting as the portal-wide fallback.
 - Need cached, session-persisted permission lists (backed by `SdCacheService` with `type: 'session'`).
 
 ## What it provides
 
 | Symbol | Kind | Purpose |
 |---|---|---|
-| `SdPermissionDirective` | Directive (selector `[sdPermission]`) | Structural directive â€” renders template only if user has at least one of the given codes |
+| `SdPermissionDirective` | Directive (selector `[sdPermission]`) | Structural directive — renders template only if user has at least one of the given codes |
 | `SdPermissionService` | Service (`providedIn: 'root'`) | Loads / caches permissions per key, exposes `hasPermission`, `getToken`, `decodeToken` |
 | `SdPermissionGuard` | Route guard (`CanActivate` + `CanActivateChild`) | `canActivate` preloads ALL permissions (use at portal layer); `canActivateChild` checks `route.data.permission` against `route.data.permissionKey` |
-| `SD_PERMISSION_CONFIGURATION` | InjectionToken | `multi`-capable token â€” single config or array |
+| `SD_PERMISSION_CONFIGURATION` | InjectionToken | `multi`-capable token — single config or array |
 | `ISdPermissionConfiguration` | Interface | Per-key configuration shape |
 
 ## Configuration
 
 ```ts
 interface ISdPermissionConfiguration {
-  /** Identifier â€” undefined = default portal-level fallback */
+  /** Identifier — undefined = default portal-level fallback */
   key?: string;
 
   /** Set true to bypass all permission checks (POC / UAT toggle) */
   disabled?: boolean;
 
-  /** Resolver returning the user's permission codes â€” sync, Promise, or Observable */
+  /** Resolver returning the user's permission codes — sync, Promise, or Observable */
   loadPermissions: () => MaybeAsync<string[]>;
 
-  /** Called when canActivateChild denies â€” e.g. router.navigateByUrl('/layout/forbidden') */
+  /** Called when canActivateChild denies — e.g. router.navigateByUrl('/layout/forbidden') */
   onForbiden?: () => void;
 
-  /** Returns current access token â€” used by decodeToken() */
+  /** Returns current access token — used by decodeToken() */
   getToken?: () => MaybeAsync<string | undefined | null>;
 }
 
@@ -88,7 +88,7 @@ providers: [
 ]
 ```
 
-**Routes â€” preload at portal, gate per-feature:**
+**Routes — preload at portal, gate per-feature:**
 ```ts
 export const routes: Routes = [
   {
@@ -108,28 +108,28 @@ export const routes: Routes = [
 ## Public API
 
 - **`SdPermissionDirective`** (`*sdPermission`):
-  - `[sdPermission]` (`string | string[] | null | undefined`) â€” codes; OR-joined when array. Falsy/empty â†’ render unconditionally.
-  - `[sdPermissionKey]` (`string | undefined`) â€” which configuration key to consult.
+  - `[sdPermission]` (`string | string[] | null | undefined`) — codes; OR-joined when array. Falsy/empty → render unconditionally.
+  - `[sdPermissionKey]` (`string | undefined`) — which configuration key to consult.
 - **`SdPermissionService`**:
-  - `loadPermissions(key?)` â€” fetches + caches; idempotent per key (skips on cache hit).
-  - `loadAllPermissions()` â€” runs `loadPermissions` for every configured key (used by `canActivate`).
-  - `hasPermission(permission, key?)` â€” sync OR check; truthy if `disabled` config or empty input.
-  - `getToken(key?)` â€” resolves the configured `getToken()`.
-  - `decodeToken<T>(key?)` â€” base64url-decodes JWT payload; returns `null` on failure.
+  - `loadPermissions(key?)` — fetches + caches; idempotent per key (skips on cache hit).
+  - `loadAllPermissions()` — runs `loadPermissions` for every configured key (used by `canActivate`).
+  - `hasPermission(permission, key?)` — sync OR check; truthy if `disabled` config or empty input.
+  - `getToken(key?)` — resolves the configured `getToken()`.
+  - `decodeToken<T>(key?)` — base64url-decodes JWT payload; returns `null` on failure.
 - **`SdPermissionGuard`**:
-  - `canActivate` â†’ preloads (does not deny).
-  - `canActivateChild` â†’ checks `route.data.permission` against `route.data.permissionKey`; on deny, calls matching config's `onForbiden`.
+  - `canActivate` → preloads (does not deny).
+  - `canActivateChild` → checks `route.data.permission` against `route.data.permissionKey`; on deny, calls matching config's `onForbiden`.
 
 ## Behavior notes
 
 - **Cache:** permissions per key are stored in `SdCacheService` (`type: 'session'`, sessionStorage-backed) keyed by an internal UUID. Survives reloads within the same browser session. `permissionMapByKey` is also held in memory for synchronous `hasPermission` lookups.
-- **Resolution algorithm â€” `#getEffectivePermissionKey`:**
+- **Resolution algorithm — `#getEffectivePermissionKey`:**
   1. If a configuration with that exact `key` exists, use it.
   2. Else if the requested `key` is non-undefined AND a portal-level config (`key === undefined`) exists, fall back to the portal config.
   3. Else use the requested `key` as-is (will resolve to empty permissions list).
-- **OR semantics:** array codes pass if user has ANY one. There is no AND helper â€” split into multiple `*sdPermission` guards or use a custom check via `hasPermission(...)` in TS.
-- **Empty / missing permission input** â†’ directive renders the template (treated as "no restriction"). Same for `route.data.permission` being undefined â†’ guard returns true.
-- **`disabled: true`** short-circuits `hasPermission` to always-true (NOT guard preload â€” it still runs, but checks pass).
+- **OR semantics:** array codes pass if user has ANY one. There is no AND helper — split into multiple `*sdPermission` guards or use a custom check via `hasPermission(...)` in TS.
+- **Empty / missing permission input** → directive renders the template (treated as "no restriction"). Same for `route.data.permission` being undefined → guard returns true.
+- **`disabled: true`** short-circuits `hasPermission` to always-true (NOT guard preload — it still runs, but checks pass).
 - **Duplicate keys:** providing two configs with the same `key` (incl. both `undefined`) throws on first service injection.
 - **`onForbiden` lookup:** for a denied child route, the guard finds the first config matching `permissionKey` (or, when `permissionKey` is set but no exact match, the portal-level `undefined` config) that has an `onForbiden` and calls it.
 
@@ -169,16 +169,15 @@ export class Toolbar {
 
 ## Anti-patterns
 
-- Do NOT use `SdPermissionGuard.canActivate` on every leaf route â€” it's designed for a portal-level preload (calls `loadAllPermissions`). Per-route enforcement belongs in `canActivateChild`.
-- Do NOT mutate the array returned by `loadPermissions()` â€” it's distinct'd and cached, but mutation will not refresh the in-memory map.
-- Do NOT rely on `*sdPermission` for security â€” it only hides UI. Always also enforce on the API.
-- Do NOT pass duplicate `key` values across multi providers â€” service constructor throws.
-- Do NOT call `loadPermissions(key)` from inside `loadPermissions` (recursive) â€” the service guards against re-entry but produces an empty list.
+- Do NOT use `SdPermissionGuard.canActivate` on every leaf route — it's designed for a portal-level preload (calls `loadAllPermissions`). Per-route enforcement belongs in `canActivateChild`.
+- Do NOT mutate the array returned by `loadPermissions()` — it's distinct'd and cached, but mutation will not refresh the in-memory map.
+- Do NOT rely on `*sdPermission` for security — it only hides UI. Always also enforce on the API.
+- Do NOT pass duplicate `key` values across multi providers — service constructor throws.
+- Do NOT call `loadPermissions(key)` from inside `loadPermissions` (recursive) — the service guards against re-entry but produces an empty list.
 
 ## Related
 
-- [auth module](./sd-auth.md) â€” usually paired so `getToken` resolves to the auth provider's current access token.
-- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) â€” typical sources for `loadPermissions` (decode JWT roles or call a backend).
-- [layout module](./sd-layout.md) â€” sidebar `SdLayoutMenu` items carry `permission` / `permissionKey` and are filtered using the same service.
-- [sd-cache](../services/sd-cache.md) â€” backing store for permission lists (`type: 'session'`).
-
+- [auth module](./sd-auth.md) — usually paired so `getToken` resolves to the auth provider's current access token.
+- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) — typical sources for `loadPermissions` (decode JWT roles or call a backend).
+- [layout module](./sd-layout.md) — sidebar `SdLayoutMenu` items carry `permission` / `permissionKey` and are filtered using the same service.
+- [sd-cache](../services/sd-cache.md) — backing store for permission lists (`type: 'session'`).

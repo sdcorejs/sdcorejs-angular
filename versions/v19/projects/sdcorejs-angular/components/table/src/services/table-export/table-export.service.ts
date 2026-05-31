@@ -1,4 +1,4 @@
-﻿import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -15,7 +15,7 @@ export interface SdTableExportContext<T = any> {
   total: number;
   cacheObjValues: Record<string, Record<string, string>>;
 
-  // HÃ m callback Ä‘á»ƒ Service gá»i ngÆ°á»£c láº¡i Component xin dá»¯ liá»‡u tá»«ng trang
+  // Hàm callback để Service gọi ngược lại Component xin dữ liệu từng trang
   fetchChunk: (
     pageNumber: number,
     pageSize: number
@@ -27,7 +27,7 @@ export interface SdTableExportContext<T = any> {
       }
   >;
 
-  // DÃ nh cho custom export
+  // Dành cho custom export
   getFilterInfo: () => SdTableFilterRequest;
 }
 
@@ -36,7 +36,7 @@ export class TableExportService {
   #excelService = inject(SdExcelService);
 
   // ==========================================
-  // SIGNAL STATE (Component sáº½ bind trá»±c tiáº¿p vÃ o Ä‘Ã¢y)
+  // SIGNAL STATE (Component sẽ bind trực tiếp vào đây)
   // ==========================================
   exporting = signal(false);
   exportTitle = signal('Export');
@@ -76,8 +76,8 @@ export class TableExportService {
   async #processExport(context: SdTableExportContext, args: { columns?: SdExcelColumn[]; isCSV?: boolean }) {
     const { option, total, fetchChunk, cacheObjValues } = context;
 
-    // `type` lÃ  optional trÃªn SdTableOptionExportDefault â€” undefined cÅ©ng coi nhÆ° 'default'.
-    // Chá»‰ cháº·n nhÃ¡nh 'custom' (Ä‘Ã£ cÃ³ exportCustom xá»­ lÃ½ riÃªng).
+    // `type` là optional trên SdTableOptionExportDefault — undefined cũng coi như 'default'.
+    // Chỉ chặn nhánh 'custom' (đã có exportCustom xử lý riêng).
     if (option.export?.type === 'custom') return;
 
     const { isCSV } = args;
@@ -88,7 +88,7 @@ export class TableExportService {
 
       let pageNumber = 0;
       let exportItems: any[] = [];
-      let currentTotal = total; // Biáº¿n cá»¥c bá»™ Ä‘á»ƒ track total tráº£ vá» tá»« fetchChunk
+      let currentTotal = total; // Biến cục bộ để track total trả về từ fetchChunk
 
       this.exporting.set(true);
       const items: any[] = [];
@@ -115,7 +115,7 @@ export class TableExportService {
 
         const totalPage = Math.max(1, currentTotal / pageSize);
         const percent = Math.round(((pageNumber - 1) * 100.0) / totalPage);
-        // Äáº£m báº£o percent khÃ´ng vÆ°á»£t quÃ¡ 100
+        // Đảm bảo percent không vượt quá 100
         this.exportTitle.set(`Exporting...${Math.min(percent, 100)}%`);
 
         const allColumns = this.#allColumns(option);
@@ -186,7 +186,7 @@ export class TableExportService {
         }
       };
 
-      // VÃ²ng láº·p láº¥y dá»¯ liá»‡u
+      // Vòng lặp lấy dữ liệu
       while (pageNumber * pageSize < currentTotal) {
         promises.push(fetchChunk(pageNumber, pageSize));
         pageNumber++;
@@ -198,7 +198,7 @@ export class TableExportService {
         await handleData();
       }
 
-      // Xuáº¥t file
+      // Xuất file
       if (isCSV) {
         await this.#excelService.exportCSV({
           columns,
@@ -305,4 +305,3 @@ export class TableExportService {
     return option.export?.columns?.filter(e => !e.export?.disabled) || [];
   }
 }
-

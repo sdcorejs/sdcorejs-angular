@@ -1,4 +1,4 @@
-﻿# `[sdHref]` Directive
+# `[sdHref]` Directive
 
 **Type**: Attribute Directive
 **Selector**: `a[sdHref]` (only matches an `<a>` element)
@@ -15,13 +15,13 @@ Smart `<a>` href that uses Angular Router for internal links and `window.open(_,
 - Preserve right-click "open in new tab" semantics (the host stays a real `<a>` with `href`)
 
 ## When NOT to use
-- Standard internal-only links â€” use `[routerLink]` directly.
-- Buttons that perform actions â€” use `<sd-button>` (or `<sd-anchor>`).
+- Standard internal-only links — use `[routerLink]` directly.
+- Buttons that perform actions — use `<sd-button>` (or `<sd-anchor>`).
 
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `sdHref` (property: `url`) | `string` | required | URL string. Template binding key is `sdHref`; class property is `url`. If empty/falsy, `href` falls back to `javascript:;` and clicks are no-ops. If starts with `http`, treated as external. Otherwise treated as internal route â€” split on `?` to derive route path and `queryParams`. |
+| `sdHref` (property: `url`) | `string` | required | URL string. Template binding key is `sdHref`; class property is `url`. If empty/falsy, `href` falls back to `javascript:;` and clicks are no-ops. If starts with `http`, treated as external. Otherwise treated as internal route — split on `?` to derive route path and `queryParams`. |
 
 ## Outputs
 None.
@@ -29,15 +29,15 @@ None.
 ## Behavior
 - Host-binds `attr.href` to the input (or `javascript:;` when missing) so the link is keyboardable / right-clickable.
 - On click:
-  - If `url` is empty â†’ no-op (returns early).
-  - If `url` starts with `http` â†’ calls `window.open(url, '_blank')` and `event.preventDefault()`.
-  - Otherwise â†’ `event.preventDefault()`, splits `url` into `path?queryString`, parses `queryString` via `URLSearchParams` into a `queryParams` record, and calls `Router.navigate([path], { queryParams })`.
+  - If `url` is empty → no-op (returns early).
+  - If `url` starts with `http` → calls `window.open(url, '_blank')` and `event.preventDefault()`.
+  - Otherwise → `event.preventDefault()`, splits `url` into `path?queryString`, parses `queryString` via `URLSearchParams` into a `queryParams` record, and calls `Router.navigate([path], { queryParams })`.
 
 ## Examples
 
 ### 1. Internal route with query params
 ```html
-<a [sdHref]="'/orders/detail?id=42&tab=history'">ÄÆ¡n hÃ ng 42</a>
+<a [sdHref]="'/orders/detail?id=42&tab=history'">Đơn hàng 42</a>
 ```
 
 ### 2. External link (opens new tab)
@@ -54,7 +54,7 @@ None.
 
 - The directive preserves `attr.href` on the host `<a>` so keyboard users can Tab to the link and activate it with Enter; screen readers announce it as a standard link.
 - External links open via `window.open(_, '_blank')`. Consider adding visually hidden text (e.g. `(opens in new tab)`) or an `aria-label` that communicates this to assistive technology users.
-- The fallback `href="javascript:;"` (when `url` is empty) is sanitized by Angular to `unsafe:javascript:;` in the DOM, which may confuse screen readers â€” avoid rendering empty-href anchors in production; prefer conditionally hiding them instead.
+- The fallback `href="javascript:;"` (when `url` is empty) is sanitized by Angular to `unsafe:javascript:;` in the DOM, which may confuse screen readers — avoid rendering empty-href anchors in production; prefer conditionally hiding them instead.
 
 ## Theming / CSS surface
 
@@ -64,7 +64,7 @@ The directive does not emit any CSS classes. All styling is on the host `<a>` el
 
 - Use `provideRouter([])` and spy on `router.navigate` **before** `createComponent` to prevent the Angular router from triggering actual navigation in the test runner.
 - Spy on `window.open` globally in `beforeEach` (`spyOn(window, 'open').and.returnValue(null)`) to prevent Karma from attempting to open real browser windows.
-- For the empty-href no-op test, invoke the directive's `onClick` method directly rather than dispatching a DOM click â€” this avoids the browser following `unsafe:javascript:;` which causes a Karma page reload:
+- For the empty-href no-op test, invoke the directive's `onClick` method directly rather than dispatching a DOM click — this avoids the browser following `unsafe:javascript:;` which causes a Karma page reload:
   ```typescript
   const directive = fixture.debugElement
     .query(By.directive(SdHrefDirective))
@@ -74,12 +74,11 @@ The directive does not emit any CSS classes. All styling is on the host `<a>` el
 - Angular's `DomSanitizer` prefixes `javascript:` URLs with `unsafe:` in the DOM. Assertions on `attr.href` for the empty case should expect `'unsafe:javascript:;'`.
 
 ## Anti-patterns
-- Placing `[sdHref]` on a non-anchor element â€” selector restricts to `a`, so it won't match.
-- Combining with `[routerLink]` on the same anchor â€” both will compete for the click; pick one.
-- Passing a relative path expected to merge with current route â€” directive uses absolute `Router.navigate([path])`, not relative navigation.
-- Using for links that need `target="_blank"` configurability â€” directive hard-codes `_blank` only when scheme is `http`.
+- Placing `[sdHref]` on a non-anchor element — selector restricts to `a`, so it won't match.
+- Combining with `[routerLink]` on the same anchor — both will compete for the click; pick one.
+- Passing a relative path expected to merge with current route — directive uses absolute `Router.navigate([path])`, not relative navigation.
+- Using for links that need `target="_blank"` configurability — directive hard-codes `_blank` only when scheme is `http`.
 
 ## Related
-- `<sd-anchor>` â€” full-featured stylized anchor component.
-- Angular `routerLink` â€” for plain internal navigation.
-
+- `<sd-anchor>` — full-featured stylized anchor component.
+- Angular `routerLink` — for plain internal navigation.

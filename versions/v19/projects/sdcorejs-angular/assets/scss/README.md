@@ -1,31 +1,31 @@
-�# `@sdcorejs/angular` � Assets & SCSS Reference
+# `@sdcorejs/angular` — Assets & SCSS Reference
 
-> **Mục �ích tài li�!u này (cho người + AI agent):** li�!t kê chính xác mọi utility class, design token, font, image, theme mixin mà `@sdcorejs/angular` ship trong `assets/`. AI agent ch�0 �ược sinh template dùng class **nằm trong danh sách dư�:i �ây** � nếu cần class m�:i, phải tạo trong `core/utilities/*.scss` trư�:c.
+> **Mục đích tài liệu này (cho người + AI agent):** liệt kê chính xác mọi utility class, design token, font, image, theme mixin mà `@sdcorejs/angular` ship trong `assets/`. AI agent chỉ được sinh template dùng class **nằm trong danh sách dưới đây** — nếu cần class mới, phải tạo trong `core/utilities/*.scss` trước.
 
 ---
 
 ## Mục lục
 
-1. [Cài �ặt vào Angular](#1-cài-�ặt-vào-angular)
+1. [Cài đặt vào Angular](#1-cài-đặt-vào-angular)
 2. [Cấu trúc thư mục `assets/`](#2-cấu-trúc-thư-mục-assets)
-3. [H�! th�ng màu sắc](#3-h�!-th�ng-màu-sắc) � `--sd-*` tokens + `.text-*` / `.bg-*` / `.border-*`
-4. [Typography tokens](#4-typography-tokens) � `T{size}{weight}` + `fs-*` + `font-weight-*`
-5. [Layout & Grid](#5-layout--grid) � `row` / `col-*` / `grid-container` / `grid-cols-*`
-6. [Flexbox utilities](#6-flexbox-utilities) � `d-flex` + `flex-*` + `align-*` + `justify-*`
-7. [Spacing](#7-spacing) � `m-*` / `p-*` / `gap-*`
-8. [Sizing](#8-sizing) � `w-*` / `h-*` / `min-*` / `max-*`
-9. [Border & radius](#9-border--radius) � `border` / `border-{side}` / `rounded-*`
+3. [Hệ thống màu sắc](#3-hệ-thống-màu-sắc) — `--sd-*` tokens + `.text-*` / `.bg-*` / `.border-*`
+4. [Typography tokens](#4-typography-tokens) — `T{size}{weight}` + `fs-*` + `font-weight-*`
+5. [Layout & Grid](#5-layout--grid) — `row` / `col-*` / `grid-container` / `grid-cols-*`
+6. [Flexbox utilities](#6-flexbox-utilities) — `d-flex` + `flex-*` + `align-*` + `justify-*`
+7. [Spacing](#7-spacing) — `m-*` / `p-*` / `gap-*`
+8. [Sizing](#8-sizing) — `w-*` / `h-*` / `min-*` / `max-*`
+9. [Border & radius](#9-border--radius) — `border` / `border-{side}` / `rounded-*`
 10. [Display, position, overflow, visibility](#10-display-position-overflow-visibility)
 11. [Cursor, vertical-align, misc](#11-cursor-vertical-align-misc)
-12. [Elevation (mat-elevation-z0�z8)](#12-elevation-mat-elevation-z0z8)
+12. [Elevation (mat-elevation-z0–z8)](#12-elevation-mat-elevation-z0z8)
 13. [Reset / Reboot baseline](#13-reset--reboot-baseline)
 14. [Custom theme](#14-custom-theme)
 15. [Fonts & Images shipped](#15-fonts--images-shipped)
-16. [What is NOT shipped](#16-what-is-not-shipped) � anti-confusion cho AI
+16. [What is NOT shipped](#16-what-is-not-shipped) — anti-confusion cho AI
 
 ---
 
-## 1. Cài �ặt vào Angular
+## 1. Cài đặt vào Angular
 
 `angular.json`:
 
@@ -36,9 +36,9 @@
 ]
 ```
 
-`sd-core.scss` là entry point duy nhất � auto-load reset, utilities, color theme, form overrides, scrollbar, Angular Material theme. Không cần import partial nào riêng lẻ.
+`sd-core.scss` là entry point duy nhất — auto-load reset, utilities, color theme, form overrides, scrollbar, Angular Material theme. Không cần import partial nào riêng lẻ.
 
-> Convention chung: **mọi utility class �ều có `!important`** �Ồ �ảm bảo override �ược Angular Material (thường có specificity cao).
+> Convention chung: **mọi utility class đều có `!important`** để đảm bảo override được Angular Material (thường có specificity cao).
 
 ---
 
@@ -46,66 +46,66 @@
 
 ```
 projects/sdcorejs-angular/assets/
-�S���� fonts/
-�   �S���� fonts.scss                     # @font-face khai báo cho Roboto + Material Icons + Material Symbols
-�   �S���� material-icons/                # 2 file .woff2 (icons-v145 + outlined-v110)
-�   �S���� material-symbols/              # 1 file .woff2 (symbols-v29)
-�   ����� roboto/                        # 4 file .woff2 (regular, italic, 500, 600 � latin + vietnamese)
-�S���� images/                            # SVG illustrations (18 file � empty-state, error, success...)
-�   �S���� coming-soon.svg                # Trang chưa sẵn sàng
-�   �S���� data-empty.svg                 # Empty state cho table/list
-�   �S���� expired.svg                    # Session expired
-�   �S���� file-error.svg                 # Upload file l�i
-�   �S���� filter-empty.svg               # Không match filter
-�   �S���� filter-required.svg            # Yêu cầu b�" lọc trư�:c khi load
-�   �S���� forbidden.svg                  # 403
-�   �S���� image-error.svg                # Image load fail
-�   �S���� maintenance.svg                # Trang �ang bảo trì
-�   �S���� not-found.svg                  # 404
-�   �S���� offline.svg                    # Mất mạng
-�   �S���� submitted.svg                  # Gửi form thành công
-�   �S���� success.svg                    # Generic success
-�   �S���� unauthorized.svg               # 401
-�   ����� unknown-error.svg              # 500 / fallback
-����� scss/
-    �S���� sd-core.scss                   # ENTRY (ch�0 file này �ược import từ host app)
-    �S���� ckeditor5.scss                 # Override style cho CKEditor 5 (opt-in)
-    �S���� core/
-    �   �S���� color.scss                 # Color map + CSS var declarations
-    �   �S���� form.scss                  # Override Angular Material form (input/select/checkbox/radio)
-    �   �S���� image.scss                 # Ti�!n ích background-image cho 18 illustration SVG �x trên
-    �   �S���� scrollbar.scss             # Custom scrollbar (webkit + firefox)
-    �   ����� utilities/
-    �       �S���� _index.scss            # Forward toàn b�" partial bên dư�:i
-    �       �S���� _base.scss             # Reset/reboot baseline (box-sizing, body, headings, forms⬦)
-    �       �S���� _border.scss           # rounded-* + border + border-{side}
-    �       �S���� _display.scss          # d-none/block/inline/inline-block/flex/inline-flex/grid
-    �       �S���� _elevation.scss        # mat-elevation-z0�z8
-    �       �S���� _flexbox.scss          # flex-1/none/auto, direction, wrap, grow/shrink, align/justify
-    �       �S���� _gap.scss              # gap-* / gap-x-* / gap-y-*
-    �       �S���� _grid.scss             # row/col 12-column + .grid-container + col-span-*
-    �       �S���� _misc.scss             # align-{middle⬦}, cursor-*, visible/invisible
-    �       �S���� _overflow.scss         # overflow-*
-    �       �S���� _position.scss         # position-relative/absolute/fixed/sticky/static
-    �       �S���� _sizing.scss           # w-* / h-* + min/max + w-full/screen/auto/fit
-    �       �S���� _spacing.scss          # m-*, p-* (mt/mr/mb/ml/mx/my, pt/pr/pb/pl/px/py) + m-auto
-    �       ����� _typography.scss       # T{n}{M|R} tokens + fs-* + font-weight-* + text-*
-    ����� themes/
-        �S���� default.scss               # sd.theme() mixin � override `--sd-*` color tokens
-        ����� material-theme.scss        # Angular Material M2 theme baseline
+├── fonts/
+│   ├── fonts.scss                     # @font-face khai báo cho Roboto + Material Icons + Material Symbols
+│   ├── material-icons/                # 2 file .woff2 (icons-v145 + outlined-v110)
+│   ├── material-symbols/              # 1 file .woff2 (symbols-v29)
+│   └── roboto/                        # 4 file .woff2 (regular, italic, 500, 600 — latin + vietnamese)
+├── images/                            # SVG illustrations (18 file — empty-state, error, success...)
+│   ├── coming-soon.svg                # Trang chưa sẵn sàng
+│   ├── data-empty.svg                 # Empty state cho table/list
+│   ├── expired.svg                    # Session expired
+│   ├── file-error.svg                 # Upload file lỗi
+│   ├── filter-empty.svg               # Không match filter
+│   ├── filter-required.svg            # Yêu cầu bộ lọc trước khi load
+│   ├── forbidden.svg                  # 403
+│   ├── image-error.svg                # Image load fail
+│   ├── maintenance.svg                # Trang đang bảo trì
+│   ├── not-found.svg                  # 404
+│   ├── offline.svg                    # Mất mạng
+│   ├── submitted.svg                  # Gửi form thành công
+│   ├── success.svg                    # Generic success
+│   ├── unauthorized.svg               # 401
+│   └── unknown-error.svg              # 500 / fallback
+└── scss/
+    ├── sd-core.scss                   # ENTRY (chỉ file này được import từ host app)
+    ├── ckeditor5.scss                 # Override style cho CKEditor 5 (opt-in)
+    ├── core/
+    │   ├── color.scss                 # Color map + CSS var declarations
+    │   ├── form.scss                  # Override Angular Material form (input/select/checkbox/radio)
+    │   ├── image.scss                 # Tiện ích background-image cho 18 illustration SVG ở trên
+    │   ├── scrollbar.scss             # Custom scrollbar (webkit + firefox)
+    │   └── utilities/
+    │       ├── _index.scss            # Forward toàn bộ partial bên dưới
+    │       ├── _base.scss             # Reset/reboot baseline (box-sizing, body, headings, forms…)
+    │       ├── _border.scss           # rounded-* + border + border-{side}
+    │       ├── _display.scss          # d-none/block/inline/inline-block/flex/inline-flex/grid
+    │       ├── _elevation.scss        # mat-elevation-z0–z8
+    │       ├── _flexbox.scss          # flex-1/none/auto, direction, wrap, grow/shrink, align/justify
+    │       ├── _gap.scss              # gap-* / gap-x-* / gap-y-*
+    │       ├── _grid.scss             # row/col 12-column + .grid-container + col-span-*
+    │       ├── _misc.scss             # align-{middle…}, cursor-*, visible/invisible
+    │       ├── _overflow.scss         # overflow-*
+    │       ├── _position.scss         # position-relative/absolute/fixed/sticky/static
+    │       ├── _sizing.scss           # w-* / h-* + min/max + w-full/screen/auto/fit
+    │       ├── _spacing.scss          # m-*, p-* (mt/mr/mb/ml/mx/my, pt/pr/pb/pl/px/py) + m-auto
+    │       └── _typography.scss       # T{n}{M|R} tokens + fs-* + font-weight-* + text-*
+    └── themes/
+        ├── default.scss               # sd.theme() mixin — override `--sd-*` color tokens
+        └── material-theme.scss        # Angular Material M2 theme baseline
 ```
 
 ---
 
-## 3. H�! th�ng màu sắc
+## 3. Hệ thống màu sắc
 
-Màu �ược ��9nh nghĩa dư�:i dạng **CSS custom properties** v�:i prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS).
+Màu được định nghĩa dưới dạng **CSS custom properties** với prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS).
 
 ### 3.1 Color tokens
 
 | Token              | CSS variable           | Default     | Dùng cho |
 |---|---|---|---|
-| `primary`          | `--sd-primary`         | `#2A66F4`   | Màu chủ �ạo � button, checkbox, accent |
+| `primary`          | `--sd-primary`         | `#2A66F4`   | Màu chủ đạo — button, checkbox, accent |
 | `primary-light`    | `--sd-primary-light`   | `#EAF1FF`   | Background nhẹ của primary |
 | `primary-dark`     | `--sd-primary-dark`    | `#1C4AD9`   | Hover/active state của primary |
 | `info`             | `--sd-info`            | `#2962FF`   | Link, thông tin, badge info |
@@ -117,23 +117,23 @@ Màu �ược ��9nh nghĩa dư�:i dạng **CSS custom properties** v�
 | `warning`          | `--sd-warning`         | `#FF9600`   | Cảnh báo, trạng thái cần chú ý |
 | `warning-light`    | `--sd-warning-light`   | `#FFEACC`   | Background nhẹ của warning |
 | `warning-dark`     | `--sd-warning-dark`    | `#BF7000`   | Hover state của warning |
-| `error`            | `--sd-error`           | `#F82C13`   | L�i, validation fail, trạng thái nguy hiỒm |
+| `error`            | `--sd-error`           | `#F82C13`   | Lỗi, validation fail, trạng thái nguy hiểm |
 | `error-light`      | `--sd-error-light`     | `#FED5D0`   | Background nhẹ của error |
 | `error-dark`       | `--sd-error-dark`      | `#BA200E`   | Hover state của error |
 | `secondary`        | `--sd-secondary`       | `#212121`   | Text phụ, icon secondary |
 | `secondary-light`  | `--sd-secondary-light` | `#E9E9E9`   | Background nhẹ |
-| `secondary-dark`   | `--sd-secondary-dark`  | `#000000`   | � |
+| `secondary-dark`   | `--sd-secondary-dark`  | `#000000`   | — |
 | `light`            | `--sd-light`           | `#F8F9FA`   | Background trang, surface nhẹ |
-| `dark`             | `--sd-dark`            | `#343A40`   | Text �ậm, dark surface |
+| `dark`             | `--sd-dark`            | `#343A40`   | Text đậm, dark surface |
 | `black500`         | `--sd-black500`        | `#212121`   | Text chính |
 | `black400`         | `--sd-black400`        | `#757575`   | Text phụ, placeholder |
 | `black300`         | `--sd-black300`        | `#BFBFBF`   | Divider, border nhẹ |
-| `black200`         | `--sd-black200`        | `#E6E6E6`   | Border mặc ��9nh, separator |
+| `black200`         | `--sd-black200`        | `#E6E6E6`   | Border mặc định, separator |
 | `black100`         | `--sd-black100`        | `#F2F2F2`   | Background disabled, row hover |
 
 ### 3.2 Color utility classes
 
-Mọi token �x §3.1 �ều sinh 3 class:
+Mọi token ở §3.1 đều sinh 3 class:
 
 | Pattern         | Ví dụ                     |
 |---|---|
@@ -156,7 +156,7 @@ Mọi token �x §3.1 �ều sinh 3 class:
 }
 ```
 
-Hoặc �ọc trực tiếp CSS var (recommended cho runtime override):
+Hoặc đọc trực tiếp CSS var (recommended cho runtime override):
 
 ```scss
 .my-element {
@@ -169,9 +169,9 @@ Hoặc �ọc trực tiếp CSS var (recommended cho runtime override):
 
 ## 4. Typography tokens
 
-### 4.1 Design token classes � `T{size}{weight}`
+### 4.1 Design token classes — `T{size}{weight}`
 
-Quy ư�:c: `M` = Medium (500), `R` = Regular (400). M�i class g�m `font-size` + `font-weight` + `line-height` chuẩn hóa.
+Quy ước: `M` = Medium (500), `R` = Regular (400). Mỗi class gồm `font-size` + `font-weight` + `line-height` chuẩn hóa.
 
 | Class           | Font size     | Weight    | Line height |
 |---|---|---|---|
@@ -182,16 +182,16 @@ Quy ư�:c: `M` = Medium (500), `R` = Regular (400). M�i class g�m `font-
 | `T18M` / `T18R` | 18px          | 500 / 400 | 28px |
 | `T16M` / `T16R` | 16px          | 500 / 400 | 24px |
 | `T14M` / `T14R` | 14px          | 500 / 400 | 20px |
-| `T12M` / `T12R`⬠ | 12px          | 500 / 400 | 16px |
+| `T12M` / `T12R`† | 12px          | 500 / 400 | 16px |
 | `T10M` / `T10R` | 10px          | 500 / 400 | 12px |
 
-\* `T24R` font-size 20px (quirk l�9ch sử � `T24M` là 24px). Khi cần 24px/400, dùng `T20R` 20px hoặc cặp `fs-24 + font-weight-normal`.
-⬠ `T12R` dùng `!important` vì hay b�9 Angular Material override.
+\* `T24R` font-size 20px (quirk lịch sử — `T24M` là 24px). Khi cần 24px/400, dùng `T20R` 20px hoặc cặp `fs-24 + font-weight-normal`.
+† `T12R` dùng `!important` vì hay bị Angular Material override.
 
 ### 4.2 Font-size utilities (px-based)
 
 ```
-fs-0   fs-1 ⬦ fs-200
+fs-0   fs-1 … fs-200
 ```
 
 Dùng khi cần override nhanh, **không thay** design token. Output: `font-size: {n}px !important`.
@@ -216,8 +216,8 @@ text-uppercase   text-lowercase   text-capitalize
 
 | Class            | Output |
 |---|---|
-| `text-ellipsis`  | `white-space: nowrap; overflow: hidden; text-overflow: ellipsis` (yêu cầu container có width c� ��9nh) |
-| `text-break`     | `overflow-wrap: break-word; word-break: break-word` (xu�ng dòng giữa ký tự � URL, hash, mã dài) |
+| `text-ellipsis`  | `white-space: nowrap; overflow: hidden; text-overflow: ellipsis` (yêu cầu container có width cố định) |
+| `text-break`     | `overflow-wrap: break-word; word-break: break-word` (xuống dòng giữa ký tự — URL, hash, mã dài) |
 
 ---
 
@@ -238,21 +238,21 @@ text-uppercase   text-lowercase   text-capitalize
 
 | Class    | Gutter |
 |---|---|
-| `row`    | 16px (mặc ��9nh) |
+| `row`    | 16px (mặc định) |
 | `row-md` | 8px |
 | `row-sm` | 4px |
 | `row-xs` | 2px |
 
 **Auto-width column:** `.col` (chiếm phần còn lại, `flex: 1 1 0%`).
 
-**Responsive columns** (mobile-first � class ch�0 kích hoạt khi viewport �0� breakpoint):
+**Responsive columns** (mobile-first — class chỉ kích hoạt khi viewport ≥ breakpoint):
 
 | Pattern         | Min-width |
 |---|---|
-| `col-sm-{1-12}` / `col-sm` | �0� 576px |
-| `col-md-{1-12}` / `col-md` | �0� 768px |
-| `col-lg-{1-12}` / `col-lg` | �0� 992px |
-| `col-xl-{1-12}` / `col-xl` | �0� 1200px |
+| `col-sm-{1-12}` / `col-sm` | ≥ 576px |
+| `col-md-{1-12}` / `col-md` | ≥ 768px |
+| `col-lg-{1-12}` / `col-lg` | ≥ 992px |
+| `col-xl-{1-12}` / `col-xl` | ≥ 1200px |
 
 ```html
 <div class="row">
@@ -265,8 +265,8 @@ text-uppercase   text-lowercase   text-capitalize
 
 ```html
 <div class="grid-container grid-cols-3">
-  <div class="col-span-2">Chiếm 2 c�"t</div>
-  <div class="col-span-1">Chiếm 1 c�"t</div>
+  <div class="col-span-2">Chiếm 2 cột</div>
+  <div class="col-span-1">Chiếm 1 cột</div>
   <div class="col-span-full">Full width</div>
 </div>
 ```
@@ -274,13 +274,13 @@ text-uppercase   text-lowercase   text-capitalize
 | Class                | Mô tả |
 |---|---|
 | `grid-container`     | `display: grid`, `column-gap: 8px`, `row-gap: 0` |
-| `grid-cols-{1-12}`   | S� c�"t |
-| `col-span-{1-12}`    | Item chiếm n c�"t |
-| `col-span-full`      | Item chiếm toàn b�" chiều ngang |
+| `grid-cols-{1-12}`   | Số cột |
+| `col-span-{1-12}`    | Item chiếm n cột |
+| `col-span-full`      | Item chiếm toàn bộ chiều ngang |
 | `row-span-{1-12}`    | Item chiếm n hàng |
-| `row-span-full`      | Item chiếm toàn b�" chiều dọc |
+| `row-span-full`      | Item chiếm toàn bộ chiều dọc |
 
-> Các class `col-span-*` / `row-span-*` ch�0 có hi�!u lực **bên trong** `.grid-container` (selector nested).
+> Các class `col-span-*` / `row-span-*` chỉ có hiệu lực **bên trong** `.grid-container` (selector nested).
 
 ---
 
@@ -312,7 +312,7 @@ text-uppercase   text-lowercase   text-capitalize
 
 ## 7. Spacing
 
-### 7.1 Margin / Padding (px-based, 0�200)
+### 7.1 Margin / Padding (px-based, 0–200)
 
 ```
 m-{n}   mt-{n}   mr-{n}   mb-{n}   ml-{n}   mx-{n}   my-{n}
@@ -323,7 +323,7 @@ Ví dụ: `m-0`, `mt-8`, `px-16`, `py-24`, `mb-4`.
 
 **Auto margin:** `m-auto`, `mt-auto`, `mr-auto`, `mb-auto`, `ml-auto`, `mx-auto`, `my-auto`.
 
-### 7.2 Gap (px-based, 0�200)
+### 7.2 Gap (px-based, 0–200)
 
 ```
 gap-{n}   gap-x-{n}   gap-y-{n}
@@ -335,7 +335,7 @@ Ví dụ: `gap-8`, `gap-x-16`, `gap-y-4`.
 
 ## 8. Sizing
 
-### 8.1 Width / Height theo px (0�200)
+### 8.1 Width / Height theo px (0–200)
 
 ```
 w-{n}   h-{n}
@@ -363,7 +363,7 @@ w-{n}   h-{n}
 
 ## 9. Border & radius
 
-### 9.1 Border-radius (px-based, 0�200)
+### 9.1 Border-radius (px-based, 0–200)
 
 ```
 rounded-{n}        // border-radius: {n}px
@@ -383,7 +383,7 @@ Border color default = `var(--sd-black200)`.
 | `border-left`    | `border-left: 1px solid var(--sd-black200)` |
 | `border-right`   | `border-right: 1px solid var(--sd-black200)` |
 
-Đ�"i màu border: kết hợp `.border` v�:i `.border-{token}` (xem §3.2).
+Đổi màu border: kết hợp `.border` với `.border-{token}` (xem §3.2).
 
 ---
 
@@ -444,9 +444,9 @@ cursor-pointer   cursor-default   cursor-not-allowed
 
 ---
 
-## 12. Elevation (`mat-elevation-z0`�`z8`)
+## 12. Elevation (`mat-elevation-z0`–`z8`)
 
-CSS shadow tĩnh, tương �ương Angular Material `mat.elevation()` mixin nhưng **không cần** import Material SCSS.
+CSS shadow tĩnh, tương đương Angular Material `mat.elevation()` mixin nhưng **không cần** import Material SCSS.
 
 | Class                | Dùng cho |
 |---|---|
@@ -455,30 +455,30 @@ CSS shadow tĩnh, tương �ương Angular Material `mat.elevation()` mixin nh
 | `mat-elevation-z2`   | Button raised |
 | `mat-elevation-z3`   | Card hover |
 | `mat-elevation-z4`   | App bar |
-| `mat-elevation-z5`   | � |
+| `mat-elevation-z5`   | — |
 | `mat-elevation-z6`   | Floating action button |
-| `mat-elevation-z7`   | � |
+| `mat-elevation-z7`   | — |
 | `mat-elevation-z8`   | Dialog, drawer |
 
 ---
 
 ## 13. Reset / Reboot baseline
 
-`_base.scss` chạy trư�:c mọi utility, thiết lập rendering chuẩn:
+`_base.scss` chạy trước mọi utility, thiết lập rendering chuẩn:
 
-| Rule | Mục �ích |
+| Rule | Mục đích |
 |---|---|
-| `*, *::before, *::after { box-sizing: border-box }` | Bắt bu�"c � thiếu là layout l�!ch |
+| `*, *::before, *::after { box-sizing: border-box }` | Bắt buộc — thiếu là layout lệch |
 | `html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; line-height: 1.15 }` | iOS rotation + ẩn tap highlight |
 | `body { font-family: Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #212529 }` | Baseline typography |
-| `h1⬦h6` | `margin-top: 0; margin-bottom: 0.5rem` |
+| `h1…h6` | `margin-top: 0; margin-bottom: 0.5rem` |
 | `p, ol, ul, dl` | `margin-top: 0; margin-bottom: 1rem` |
-| `a { color: #007bff; text-decoration: none }`, `a:hover { text-decoration: underline }` | Link mặc ��9nh |
-| `label { display: inline-block; margin-bottom: 0.5rem }` | Form layout (mat-checkbox override �x `core/form.scss`) |
+| `a { color: #007bff; text-decoration: none }`, `a:hover { text-decoration: underline }` | Link mặc định |
+| `label { display: inline-block; margin-bottom: 0.5rem }` | Form layout (mat-checkbox override ở `core/form.scss`) |
 | `button { border-radius: 0 }`, `button:focus:not(:focus-visible) { outline: 0 }` | Reset native button |
 | `table { border-collapse: collapse }` | Tránh double border |
 | `th { font-weight: 600; text-align: inherit }` | Bỏ bold native browser |
-| `textarea { overflow: auto; resize: vertical }` | Bỏ scrollbar dọc mặc ��9nh IE, ch�0 resize chiều dọc |
+| `textarea { overflow: auto; resize: vertical }` | Bỏ scrollbar dọc mặc định IE, chỉ resize chiều dọc |
 | `[role="button"] { cursor: pointer }` | A11y |
 | `[hidden] { display: none !important }` | IE10 fallback |
 
@@ -486,7 +486,7 @@ CSS shadow tĩnh, tương �ương Angular Material `mat.elevation()` mixin nh
 
 ## 14. Custom theme
 
-Trong `styles.scss` của host app, gọi `sd.theme()` �Ồ override màu, sau �ó cấu hình Angular Material M2 palette tương ứng:
+Trong `styles.scss` của host app, gọi `sd.theme()` để override màu, sau đó cấu hình Angular Material M2 palette tương ứng:
 
 ```scss
 @use '@sdcorejs/angular/assets/scss/themes/default' as sd;
@@ -531,7 +531,7 @@ $custom-theme: mat.m2-define-light-theme((
 @include mat.all-component-themes($custom-theme);
 ```
 
-> `sd.theme()` ch�0 cần khai báo những token mu�n override � token không khai báo giữ default.
+> `sd.theme()` chỉ cần khai báo những token muốn override — token không khai báo giữ default.
 > Cả `sd.theme()` và `mat.all-component-themes()` **phải** gọi trong `styles.scss`, không phải component SCSS.
 
 ---
@@ -540,7 +540,7 @@ $custom-theme: mat.m2-define-light-theme((
 
 ### 15.1 Fonts
 
-`fonts.scss` declare `@font-face` cho 3 family � host app **không cần** thêm Google Fonts link.
+`fonts.scss` declare `@font-face` cho 3 family — host app **không cần** thêm Google Fonts link.
 
 | Family | Variants | File path |
 |---|---|---|
@@ -557,9 +557,9 @@ Tham chiếu qua `core/image.scss` utility hoặc trực tiếp `assets/images/<
 | `coming-soon.svg`          | Trang chưa sẵn sàng |
 | `data-empty.svg`           | Empty state cho table / list |
 | `expired.svg`              | Session expired |
-| `file-error.svg`           | Upload file l�i |
-| `filter-empty.svg`         | Không kết quả kh�:p filter |
-| `filter-required.svg`      | Yêu cầu chọn filter trư�:c khi load data |
+| `file-error.svg`           | Upload file lỗi |
+| `filter-empty.svg`         | Không kết quả khớp filter |
+| `filter-required.svg`      | Yêu cầu chọn filter trước khi load data |
 | `forbidden.svg`            | 403 Forbidden |
 | `image-error.svg`          | Image load fail |
 | `maintenance.svg`          | Đang bảo trì |
@@ -574,32 +574,31 @@ Tham chiếu qua `core/image.scss` utility hoặc trực tiếp `assets/images/<
 
 ## 16. What is NOT shipped
 
-ĐỒ AI agent không sinh class lạ:
+Để AI agent không sinh class lạ:
 
-- �R **Không có Bootstrap, Tailwind, Bulma, Foundation.** Tất cả utility �x §3�§13 là code thuần SCSS của `@sdcorejs/angular`. Class như `.btn`, `.btn-primary`, `.card`, `.alert`, `.navbar`, `.form-control`, `.input-group`, `.modal`, `.dropdown`, `.list-group`, `.breadcrumb`, `.carousel`, `.popover`, `.tooltip`, `.progress`, `.spinner-border`, `.badge` (Bootstrap) **KH�NG t�n tại**.
-- �R **Không có Tailwind escape syntax** (`md:flex`, `hover:bg-red-500`, `text-[14px]`⬦). Responsive class duy nhất là `col-sm-*` / `col-md-*` / `col-lg-*` / `col-xl-*` �x §5.1.
-- �R **Không có dark mode token** sẵn � phải tự khai báo nếu cần.
-- �R **Không có animation utility class** (kiỒu `.fade`, `.slide-in`). Animation handle qua Angular `[@trigger]` hoặc CSS riêng của component.
-- �R **Không sinh class theo px arbitrary** � `m-{n}`, `p-{n}`, `w-{n}`, `h-{n}`, `fs-{n}`, `gap-{n}`, `rounded-{n}` ch�0 chạy từ **0 �  200** integer. Cần `w-250` thì phải tự viết SCSS hoặc dùng inline style.
-- �R **Không có shorthand position** (kiỒu `top-0`, `left-50`). Set `position-absolute` r�i viết CSS riêng cho offset.
-- �R **Component selector không phải utility class.** `sd-button`, `sd-input`, `sd-anchor`⬦ là Angular component (xem `components/*/sd-*.md`), không phải CSS class.
+- ❌ **Không có Bootstrap, Tailwind, Bulma, Foundation.** Tất cả utility ở §3–§13 là code thuần SCSS của `@sdcorejs/angular`. Class như `.btn`, `.btn-primary`, `.card`, `.alert`, `.navbar`, `.form-control`, `.input-group`, `.modal`, `.dropdown`, `.list-group`, `.breadcrumb`, `.carousel`, `.popover`, `.tooltip`, `.progress`, `.spinner-border`, `.badge` (Bootstrap) **KHÔNG tồn tại**.
+- ❌ **Không có Tailwind escape syntax** (`md:flex`, `hover:bg-red-500`, `text-[14px]`…). Responsive class duy nhất là `col-sm-*` / `col-md-*` / `col-lg-*` / `col-xl-*` ở §5.1.
+- ❌ **Không có dark mode token** sẵn — phải tự khai báo nếu cần.
+- ❌ **Không có animation utility class** (kiểu `.fade`, `.slide-in`). Animation handle qua Angular `[@trigger]` hoặc CSS riêng của component.
+- ❌ **Không sinh class theo px arbitrary** — `m-{n}`, `p-{n}`, `w-{n}`, `h-{n}`, `fs-{n}`, `gap-{n}`, `rounded-{n}` chỉ chạy từ **0 → 200** integer. Cần `w-250` thì phải tự viết SCSS hoặc dùng inline style.
+- ❌ **Không có shorthand position** (kiểu `top-0`, `left-50`). Set `position-absolute` rồi viết CSS riêng cho offset.
+- ❌ **Component selector không phải utility class.** `sd-button`, `sd-input`, `sd-anchor`… là Angular component (xem `components/*/sd-*.md`), không phải CSS class.
 
-### Migration check khi �ọc code cũ
+### Migration check khi đọc code cũ
 
 | Class cũ (Bootstrap) | Thay thế bằng |
 |---|---|
-| `d-flex`             | `d-flex` (giữ nguyên � �ã port) |
+| `d-flex`             | `d-flex` (giữ nguyên — đã port) |
 | `text-center`        | `text-center` (giữ nguyên) |
 | `text-truncate`      | `text-ellipsis` |
 | `font-weight-normal` | `font-weight-normal` (giữ nguyên) |
-| `mt-2` / `mt-3` ⬦    | `mt-8` / `mt-16` ⬦ (px-based 0�200, không phải multiplier 4) |
-| `pl-2`               | `pl-8` (��"i �ơn v�9) |
+| `mt-2` / `mt-3` …    | `mt-8` / `mt-16` … (px-based 0–200, không phải multiplier 4) |
+| `pl-2`               | `pl-8` (đổi đơn vị) |
 | `w-100`              | `w-100` hoặc `w-full` |
-| `border-secondary`   | `border-secondary` (vẫn có � secondary là token màu, không phải utility riêng) |
+| `border-secondary`   | `border-secondary` (vẫn có — secondary là token màu, không phải utility riêng) |
 | `btn`, `btn-primary` | dùng `<sd-button [color]="primary">` |
-| `form-control`       | dùng `<sd-input>` / `<sd-select>` ⬦ |
+| `form-control`       | dùng `<sd-input>` / `<sd-select>` … |
 | `alert`              | dùng `<sd-notify>` service |
 | `modal`              | dùng `<sd-modal>` |
 
-> Lưu ý l�:n nhất: **spacing scale �ã ��"i từ Bootstrap multiplier (1=4px, 2=8px⬦) sang px tuy�!t ��i**. `mb-3` trong Bootstrap = 16px; trong `@sdcorejs/angular` `mb-3` = **3px**. Reading code cũ cần convert (� 4) cẩn thận hoặc thay bằng `mb-16`.
-
+> Lưu ý lớn nhất: **spacing scale đã đổi từ Bootstrap multiplier (1=4px, 2=8px…) sang px tuyệt đối**. `mb-3` trong Bootstrap = 16px; trong `@sdcorejs/angular` `mb-3` = **3px**. Reading code cũ cần convert (× 4) cẩn thận hoặc thay bằng `mb-16`.

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Public API Surface of sd-angular
  */
 import '@sdcorejs/angular/configurations';

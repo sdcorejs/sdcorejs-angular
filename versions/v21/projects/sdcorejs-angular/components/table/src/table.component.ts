@@ -1,4 +1,4 @@
-﻿import { animate, state, style, transition, trigger } from '@angular/animations';
+import { animate, state, style, transition, trigger } from '@angular/animations';
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -50,7 +50,7 @@ import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdDesktopDirective, SdHoverCopyDirective, SdMobileDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 
-// ÄÃƒ THÃŠM: Import Utilities Ä‘á»ƒ dÃ¹ng hÃ m getNestedValue
+// ĐÃ THÊM: Import Utilities để dùng hàm getNestedValue
 import { Operator, PagingReq } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
@@ -172,7 +172,7 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
   ],
 })
 export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnInit, AfterViewInit, OnDestroy {
-  // ... (Giá»¯ nguyÃªn toÃ n bá»™ pháº§n khai bÃ¡o biáº¿n, constructor, lifecycle hooks vÃ  cÃ¡c hÃ m filter, load, export, v.v...)
+  // ... (Giữ nguyên toàn bộ phần khai báo biến, constructor, lifecycle hooks và các hàm filter, load, export, v.v...)
   // ==========================================
   // 1. SIGNAL INPUTS
   // ==========================================
@@ -275,7 +275,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   #tableFormatService = inject(TableFormatService);
   #tableExportService = inject(TableExportService);
 
-  // Expose state signals tá»« TableExportService cho template binding.
+  // Expose state signals từ TableExportService cho template binding.
   exporting = this.#tableExportService.exporting;
   exportTitle = this.#tableExportService.exportTitle;
 
@@ -347,7 +347,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
 
     this.#subscription.add(
       this.#configService.widthChange$.subscribe(({ field, width }) => {
-        // Update configuration signal local â€” KHÃ”NG gá»i loadValues/reload
+        // Update configuration signal local — KHÔNG gọi loadValues/reload
         const conf = this.configuration();
         if (!conf) return;
         const firstColumns = conf.firstColumns.map(c =>
@@ -388,7 +388,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     this.#subscription.unsubscribe();
   }
 
-  // --- GIá»® NGUYÃŠN Táº¤T Cáº¢ CÃC HÃ€M FILTER VÃ€ EXPORT CÅ¨ Cá»¦A Báº N ---
+  // --- GIỮ NGUYÊN TẤT CẢ CÁC HÀM FILTER VÀ EXPORT CŨ CỦA BẠN ---
   #filterExportInfo = (pageNumber: number, pageSize: number): SdTableFilterRequest => {
     const { columnOperator, columnFilter, externalFilter } = this.filterRegister.value.get();
     return {
@@ -450,11 +450,11 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
             map(filterValue => {
               const { columnOperator, columnFilter, notReload } = filterValue;
               this.columnOperator = columnOperator || {};
-              // Sync IN PLACE â€” khÃ´ng gÃ¡n object clone má»›i. column-filter chia sáº»
-              // reference this.columnFilter qua [columnFilter] input; náº¿u gÃ¡n clone
-              // má»›i, cf giá»¯ ref cÅ© (do OnPush + reload async lag) â†’ ghi clear vÃ o
-              // object orphan â†’ giÃ¡ trá»‹ cÅ© persist. Giá»¯ ref á»•n Ä‘á»‹nh Ä‘á»ƒ cf + table
-              // luÃ´n trá» cÃ¹ng 1 object.
+              // Sync IN PLACE — không gán object clone mới. column-filter chia sẻ
+              // reference this.columnFilter qua [columnFilter] input; nếu gán clone
+              // mới, cf giữ ref cũ (do OnPush + reload async lag) → ghi clear vào
+              // object orphan → giá trị cũ persist. Giữ ref ổn định để cf + table
+              // luôn trỏ cùng 1 object.
               this.#syncColumnFilterInPlace(columnFilter || {});
               if (!notReload) {
                 if (this.paginator()) {
@@ -469,9 +469,9 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     }
   };
 
-  // Äá»“ng bá»™ this.columnFilter vá»›i `next` mÃ  GIá»® NGUYÃŠN reference object.
-  // column-filter chia sáº» ref nÃ y qua [columnFilter] â€” reassign clone má»›i sáº½
-  // orphan ref cÅ© (cf váº«n ghi vÃ o Ä‘Ã³ do CD lag) khiáº¿n clear/giÃ¡ trá»‹ stale.
+  // Đồng bộ this.columnFilter với `next` mà GIỮ NGUYÊN reference object.
+  // column-filter chia sẻ ref này qua [columnFilter] — reassign clone mới sẽ
+  // orphan ref cũ (cf vẫn ghi vào đó do CD lag) khiến clear/giá trị stale.
   #syncColumnFilterInPlace = (next: Record<string, any>) => {
     const cur = this.columnFilter ?? (this.columnFilter = {});
     if (cur === next) return;
@@ -491,7 +491,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
         const { field, type } = column;
         const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
 
-        // Sá»¬A: DÃ¹ng getNestedValue Ä‘á»ƒ há»— trá»£ nested field trong filterLocal
+        // SỬA: Dùng getNestedValue để hỗ trợ nested field trong filterLocal
         const rawColVal = Utilities.getNestedValue(item, field);
         const columnValue: string = (rawColVal || '').toString().trim().toLowerCase();
 
@@ -579,7 +579,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
         items.sort((tableItemCurrent, tableItemNext) => {
           const data = tableItemCurrent.data;
           const next = tableItemNext.data;
-          // Sá»¬A: DÃ¹ng getNestedValue cho sorting
+          // SỬA: Dùng getNestedValue cho sorting
           const dataVal = Utilities.getNestedValue(data, field);
           const nextVal = Utilities.getNestedValue(next, field);
 
@@ -771,11 +771,11 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
       this.treeRevision.update(n => n + 1);
     }
 
-    // Restore selection tá»« preservedSelectedMap (chá»‰ khi preserveSelection báº­t).
-    // Pháº£i cháº¡y TRÆ¯á»šC applyDefaultSelected Ä‘á»ƒ user-selection Æ°u tiÃªn hÆ¡n default.
+    // Restore selection từ preservedSelectedMap (chỉ khi preserveSelection bật).
+    // Phải chạy TRƯỚC applyDefaultSelected để user-selection ưu tiên hơn default.
     this.#restorePreservedSelection();
 
-    // Ãp dá»¥ng defaultSelected: pre-select cÃ¡c item thá»a predicate
+    // Áp dụng defaultSelected: pre-select các item thỏa predicate
     this.#applyDefaultSelected();
 
     await this.tableOption()?.reload?.onReload?.(this.items(), additionArgs);
@@ -789,8 +789,8 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
 
   reload = async (force = true, scrollTop = true) => {
     this.externalFilter()?.updateFilter?.();
-    // Commit pending column filter value (input/input-number gÃµ dá»Ÿ chÆ°a enter/blur)
-    // vÃ o filterRegister trÆ°á»›c khi Ä‘á»c filter request â€” trÃ¡nh storage stale.
+    // Commit pending column filter value (input/input-number gõ dở chưa enter/blur)
+    // vào filterRegister trước khi đọc filter request — tránh storage stale.
     this.filterRegister?.value.set({
       columnOperator: this.columnOperator || {},
       columnFilter: this.columnFilter,
@@ -840,7 +840,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     }
   };
 
-  // Helper táº¡o Context truyá»n cho Service
+  // Helper tạo Context truyền cho Service
   #createExportContext = (): SdTableExportContext => {
     return {
       option: this.tableOption()!,
@@ -978,8 +978,8 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     });
   };
 
-  // Blur input filter: chá»‰ commit giÃ¡ trá»‹ vÃ o filterRegister, KHÃ”NG trigger reload.
-  // Reload chá»‰ cháº¡y khi user enter hoáº·c báº¥m nÃºt táº£i láº¡i.
+  // Blur input filter: chỉ commit giá trị vào filterRegister, KHÔNG trigger reload.
+  // Reload chỉ chạy khi user enter hoặc bấm nút tải lại.
   onFilterCommit = () => {
     this.filterRegister?.value.set({
       columnOperator: this.columnOperator || {},
@@ -1028,9 +1028,9 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
         this.#getSelectionRows()
           .filter(e => e !== rowData)
           .forEach(e => (e.meta.selector!.isSelected = false));
-        // single + preserve: chá»‰ giá»¯ Má»˜T item trong map (item vá»«a chá»n náº¿u isSelected,
-        // hoáº·c empty náº¿u vá»«a bá» chá»n). Off-page items cÃ³ thá»ƒ Ä‘Ã£ á»Ÿ trong map â†’ xoÃ¡ háº¿t
-        // trÆ°á»›c khi #updateSelectedItems sync entry má»›i.
+        // single + preserve: chỉ giữ MỘT item trong map (item vừa chọn nếu isSelected,
+        // hoặc empty nếu vừa bỏ chọn). Off-page items có thể đã ở trong map → xoá hết
+        // trước khi #updateSelectedItems sync entry mới.
         if (this.#preserveEnabled()) {
           this.#preservedSelectedMap.clear();
         }
@@ -1061,7 +1061,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     items = items || this.items();
     this.isSelectAll.set(false);
     items?.forEach(e => (e.meta.selector!.isSelected = false));
-    // User explicit X â€” clear toÃ n bá»™ preserved map (bao gá»“m cáº£ off-page items).
+    // User explicit X — clear toàn bộ preserved map (bao gồm cả off-page items).
     if (this.#preserveEnabled()) {
       this.#preservedSelectedMap.clear();
     }
@@ -1096,22 +1096,22 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   };
 
   // ==========================================
-  // GROUP HELPERS â€” sync selection + expand state cho group header rows
+  // GROUP HELPERS — sync selection + expand state cho group header rows
   // ==========================================
 
-  /** Children selectable cá»§a 1 group header (lá»c bá» children khÃ´ng selectable). */
+  /** Children selectable của 1 group header (lọc bỏ children không selectable). */
   #groupSelectableChildren = (header: SdTableItem<T>): SdTableItem<T>[] => {
     const children = header.meta.group?.items || [];
     return children.filter(c => c.meta.selector?.selectable !== false);
   };
 
-  /** true náº¿u Má»ŒI selectable child trong group Ä‘á»u selected. Group rá»—ng (khÃ´ng child) â†’ false. */
+  /** true nếu MỌI selectable child trong group đều selected. Group rỗng (không child) → false. */
   isGroupAllSelected = (header: SdTableItem<T>): boolean => {
     const sel = this.#groupSelectableChildren(header);
     return sel.length > 0 && sel.every(c => c.meta.selector!.isSelected);
   };
 
-  /** true náº¿u CÃ“ Má»˜T VÃ€I selectable child selected nhÆ°ng KHÃ”NG pháº£i táº¥t cáº£. */
+  /** true nếu CÓ MỘT VÀI selectable child selected nhưng KHÔNG phải tất cả. */
   isGroupIndeterminate = (header: SdTableItem<T>): boolean => {
     const sel = this.#groupSelectableChildren(header);
     if (sel.length === 0) return false;
@@ -1120,7 +1120,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     return some && !all;
   };
 
-  /** Toggle select-all cho 1 group: set isSelected cho má»i selectable child, sync state. */
+  /** Toggle select-all cho 1 group: set isSelected cho mọi selectable child, sync state. */
   onSelectGroup = (header: SdTableItem<T>, checked: boolean) => {
     const sel = this.#groupSelectableChildren(header);
     sel.forEach(c => (c.meta.selector!.isSelected = checked));
@@ -1130,12 +1130,12 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     this.#updateSelectedItems();
   };
 
-  // Map<groupKey, isExpanded> â€” table own state, pass vÃ o SdGroupPipe arg 3.
-  // why: pipe stateless, persist toggle qua cÃ¡c láº§n re-eval báº±ng Map external. Mutate Map
-  // KHÃ”NG tá»± re-trigger pipe (default pure: true) â€” gá»i items.update Ä‘á»ƒ invalidate input.
+  // Map<groupKey, isExpanded> — table own state, pass vào SdGroupPipe arg 3.
+  // why: pipe stateless, persist toggle qua các lần re-eval bằng Map external. Mutate Map
+  // KHÔNG tự re-trigger pipe (default pure: true) — gọi items.update để invalidate input.
   groupExpandState = new Map<string, boolean>();
 
-  /** Toggle expand/collapse cho 1 group (chá»‰ Ã½ nghÄ©a khi option.group.collapsible). */
+  /** Toggle expand/collapse cho 1 group (chỉ ý nghĩa khi option.group.collapsible). */
   toggleGroupExpand = (header: SdTableItem<T>) => {
     if (!header.meta.group?.key) return;
     const key = header.meta.group.key;
@@ -1145,14 +1145,14 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
       : defaultExpanded;
     this.groupExpandState.set(key, !current);
     header.meta.group.isExpanded = !current;
-    // why: trigger pipe re-eval â€” Map mutation khÃ´ng thay Ä‘á»•i reference items() nÃªn cáº§n update.
+    // why: trigger pipe re-eval — Map mutation không thay đổi reference items() nên cần update.
     this.items.update(arr => [...arr]);
   };
 
   /**
-   * Predicate cho matRowDef.when â€” phÃ¢n biá»‡t group header row vs data row.
-   * Group header row dÃ¹ng matRowDef riÃªng vá»›i column list ['sdGroupHeader'] (1 cell duy nháº¥t).
-   * Data row dÃ¹ng displayedColumns nguyÃªn váº¹n.
+   * Predicate cho matRowDef.when — phân biệt group header row vs data row.
+   * Group header row dùng matRowDef riêng với column list ['sdGroupHeader'] (1 cell duy nhất).
+   * Data row dùng displayedColumns nguyên vẹn.
    */
   isGroupHeaderRow = (_idx: number, row: SdTableItem<T>): boolean =>
     row?.meta?.group?.isGroupHeader === true;
@@ -1160,12 +1160,12 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     row?.meta?.group?.isGroupHeader !== true;
 
   /**
-   * Colspan cho cell sdGroupHeader trÃªn group row = displayedColumns.length.
-   * Span TOÃ€N Bá»˜ width data row vÃ¬ group row chá»‰ cÃ³ 1 cell.
+   * Colspan cho cell sdGroupHeader trên group row = displayedColumns.length.
+   * Span TOÀN BỘ width data row vì group row chỉ có 1 cell.
    */
   sdGroupColspan = computed(() => (this.configuration()?.displayedColumns?.length || 1));
 
-  /** Build context object truyá»n vÃ o SdTableGroupDefDirective template. */
+  /** Build context object truyền vào SdTableGroupDefDirective template. */
   groupContext = (header: SdTableItem<T>): SdTableGroupDefContext<T> => {
     const g = header.meta.group;
     const items = g?.items || [];
@@ -1193,16 +1193,16 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     return fn(row.data, index, ctx);
   };
 
-  // why: khi preserveSelection báº­t, giá»¯ map ná»™i bá»™ id â†’ SdTableItem Ä‘á»ƒ selection
-  // khÃ´ng máº¥t qua filter / paginate / sort / reload (ká»ƒ cáº£ server re-fetch táº¡o refs má»›i).
-  // Map chá»‰ bá»‹ clear khi user gá»i onClearSelection (nÃºt X) hoáº·c bá» chá»n tá»«ng item.
+  // why: khi preserveSelection bật, giữ map nội bộ id → SdTableItem để selection
+  // không mất qua filter / paginate / sort / reload (kể cả server re-fetch tạo refs mới).
+  // Map chỉ bị clear khi user gọi onClearSelection (nút X) hoặc bỏ chọn từng item.
   #preservedSelectedMap = new Map<string, SdTableItem<T>>();
 
   #preserveEnabled = () => this.tableOption()?.selector?.preserveSelection === true;
 
-  // Restore isSelected cho item visible nÃ o id Ä‘Ã£ cÃ³ trong preserved map.
-  // Äá»“ng thá»i update reference trong map sang SdTableItem má»›i (cáº§n thiáº¿t khi server
-  // re-fetch táº¡o refs má»›i, ta muá»‘n map giá»¯ ref hiá»‡n hÃ nh Ä‘á»ƒ cÃ¡c tham chiáº¿u downstream OK).
+  // Restore isSelected cho item visible nào id đã có trong preserved map.
+  // Đồng thời update reference trong map sang SdTableItem mới (cần thiết khi server
+  // re-fetch tạo refs mới, ta muốn map giữ ref hiện hành để các tham chiếu downstream OK).
   #restorePreservedSelection = () => {
     if (!this.#preserveEnabled()) return;
     const rows = this.#getSelectionRows();
@@ -1217,8 +1217,8 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   #updateSelectedItems = () => {
     const rows = this.#getSelectionRows();
     if (this.#preserveEnabled()) {
-      // Sync map theo state visible: add náº¿u selected, remove náº¿u deselected.
-      // Off-page items giá»¯ nguyÃªn trong map (khÃ´ng bá»‹ visit á»Ÿ Ä‘Ã¢y).
+      // Sync map theo state visible: add nếu selected, remove nếu deselected.
+      // Off-page items giữ nguyên trong map (không bị visit ở đây).
       rows.forEach(item => {
         const id = item.meta.id;
         if (item.meta.selector!.isSelected) {
@@ -1241,7 +1241,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   setFilter = (args: { columnFilter?: Record<string, any>; externalFilter?: Record<string, any> }) => {
     const { columnFilter, externalFilter } = args || {};
     if (columnFilter) {
-      // Giá»¯ reference á»•n Ä‘á»‹nh cho column-filter (xem #syncColumnFilterInPlace).
+      // Giữ reference ổn định cho column-filter (xem #syncColumnFilterInPlace).
       this.#syncColumnFilterInPlace(columnFilter);
     }
     this.filterRegister.value.set({
@@ -1261,8 +1261,8 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   detectChanges = () => this.#ref.detectChanges();
 
   onColumnResize = (field: string, width: string) => {
-    // persistColumnWidth ghi storage (silent) vÃ  emit widthChange$,
-    // subscriber trong constructor Ä‘Ã£ update configuration() signal Ä‘á»“ng bá»™.
+    // persistColumnWidth ghi storage (silent) và emit widthChange$,
+    // subscriber trong constructor đã update configuration() signal đồng bộ.
     this.#configService.persistColumnWidth(field, width);
 
     const onResize = this.tableOption()?.config?.onResize;
@@ -1279,8 +1279,8 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     return item.meta.id;
   };
 
-  // Offset STT theo paging â€” computed memoize, khÃ´ng tÃ­nh láº¡i trá»« khi paginator Ä‘á»•i.
-  // Template chá»‰ cáº§n Ä‘á»c pageOffset() rá»“i cá»™ng `i + 1` (ráº» hÆ¡n gá»i function).
+  // Offset STT theo paging — computed memoize, không tính lại trừ khi paginator đổi.
+  // Template chỉ cần đọc pageOffset() rồi cộng `i + 1` (rẻ hơn gọi function).
   pageOffset = computed(() => {
     const p = this.paginator();
     return (p?.pageIndex ?? 0) * (p?.pageSize ?? 0);
@@ -1559,4 +1559,3 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     return req;
   };
 }
-

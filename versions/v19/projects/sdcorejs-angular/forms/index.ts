@@ -1,4 +1,4 @@
-﻿export * from '@sdcorejs/angular/forms/directives';
+export * from '@sdcorejs/angular/forms/directives';
 export * from '@sdcorejs/angular/forms/models';
 export * from '@sdcorejs/angular/forms/label';
 export * from '@sdcorejs/angular/forms/input';
@@ -15,4 +15,3 @@ export * from '@sdcorejs/angular/forms/chip';
 export * from '@sdcorejs/angular/forms/chip-calendar';
 export * from '@sdcorejs/angular/forms/checkbox';
 export * from './src/forms.module';
-

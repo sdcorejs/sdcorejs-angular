@@ -1,4 +1,4 @@
-﻿import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
+import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { Color } from '@sdcorejs/utils/models';
 
 export interface SdTableCommandOption<T = any> {
@@ -27,4 +27,3 @@ export interface SdTableCommandChildren<T = any> {
   hidden?: boolean | ((rowData: T) => boolean | Promise<boolean>);
   children: SdTableCommandNormal<T>[];
 }
-

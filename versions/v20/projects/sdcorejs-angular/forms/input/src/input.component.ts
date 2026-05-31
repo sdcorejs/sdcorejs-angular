@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
   booleanAttribute,
@@ -45,8 +45,8 @@ import { Size } from '@sdcorejs/utils/models';
 import type { ValidationPatternType } from '@sdcorejs/utils/models';
 import { VALIDATION_PATTERNS } from '@sdcorejs/utils/constants';
 
-// Back-compat: SdPatternType cÅ© â†’ ValidationPatternType má»›i.
-// 3 key Ä‘Ã£ Ä‘á»•i tÃªn trong @sdcorejs/utils v1.x.
+// Back-compat: SdPatternType cũ → ValidationPatternType mới.
+// 3 key đã đổi tên trong @sdcorejs/utils v1.x.
 const LEGACY_PATTERN_ALIAS: Record<string, ValidationPatternType> = {
   PHONE_VN: 'VN_PHONE',
   IDVN: 'VN_ID',
@@ -80,7 +80,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   id = `I${uuid.v4()}`;
 
   // ==========================================
-  // 1. SIGNAL QUERIES (Thay tháº¿ @ViewChild / @ContentChild)
+  // 1. SIGNAL QUERIES (Thay thế @ViewChild / @ContentChild)
   // ==========================================
   control = viewChild<ElementRef<HTMLInputElement>>('control');
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
@@ -125,7 +125,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   name = input<string>(uuid.v4());
 
   // ==========================================
-  // 3. INJECT (Thay tháº¿ Constructor DI)
+  // 3. INJECT (Thay thế Constructor DI)
   // ==========================================
   #ref = inject(ChangeDetectorRef);
   #formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
@@ -137,15 +137,15 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   floatLabel = input<FloatLabelType>('auto');
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -168,7 +168,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   pattern = input<ValidationPatternType | string | undefined | null>();
   patternErrorMessage = input<string | undefined | null>();
 
-  // Bá» qua náº¿u val khÃ´ng pháº£i string (number/boolean/object truyá»n nháº§m â†’ trÃ¡nh validator há»ng)
+  // Bỏ qua nếu val không phải string (number/boolean/object truyền nhầm → tránh validator hỏng)
   #lookupPattern = (val: unknown) => {
     if (typeof val !== 'string') return undefined;
     const key = (LEGACY_PATTERN_ALIAS[val] ?? val) as ValidationPatternType;
@@ -183,7 +183,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   });
 
   resolvedPatternErrorMsg = computed(() => {
-    // patternObj.errorMessage lÃ  i18n key (vd 'core.validator.email.error') â†’ wrap qua i18n.t() Ä‘á»ƒ hiá»ƒn thá»‹ string Ä‘Ã£ dá»‹ch
+    // patternObj.errorMessage là i18n key (vd 'core.validator.email.error') → wrap qua i18n.t() để hiển thị string đã dịch
     const customMsg = this.patternErrorMessage();
     if (customMsg) return customMsg;
     const patternObj = this.#lookupPattern(this.pattern());
@@ -192,7 +192,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   /**
    * First active error message for tooltip display when `hideInlineError = true`.
-   * Re-runs only when `#state` ticks (value / status / touched change) â€” no longer
+   * Re-runs only when `#state` ticks (value / status / touched change) — no longer
    * invoked on every change-detection cycle as a getter would be.
    */
   readonly errorMessage = computed<string | undefined>(() => {
@@ -216,18 +216,18 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   valueModel = model<any>(undefined, { alias: 'model' });
 
   // ==========================================
-  // 4. SIGNAL OUTPUTS (Thay tháº¿ @Output)
+  // 4. SIGNAL OUTPUTS (Thay thế @Output)
   // ==========================================
   sdChange = output<any>();
-  sdFocus = output<void>(); // Äá»•i sang void vÃ¬ khÃ´ng truyá»n data
+  sdFocus = output<void>(); // Đổi sang void vì không truyền data
   sdBlur = output<any>();
   keyupEnter = output<any>();
-  // why: sdChange fire per-keystroke nÃªn consumer KHÃ”NG dÃ¹ng nÃ³ Ä‘á»ƒ trigger
-  // "commit filter" (sáº½ over-reload). `cleared` lÃ  intent rÃµ rÃ ng cho action
-  // X (clear button) â€” consumer nhÆ° column-filter dÃ¹ng Ä‘á»ƒ fire reload ngay.
+  // why: sdChange fire per-keystroke nên consumer KHÔNG dùng nó để trigger
+  // "commit filter" (sẽ over-reload). `cleared` là intent rõ ràng cho action
+  // X (clear button) — consumer như column-filter dùng để fire reload ngay.
   cleared = output<void>();
 
-  // ðŸš¨ GIá»® Láº I EVENT_EMITTER DUY NHáº¤T VÃŒ Cáº¦N CHECK OBSERVERED
+  // 🚨 GIỮ LẠI EVENT_EMITTER DUY NHẤT VÌ CẦN CHECK OBSERVERED
   @Output() sdFocusForceBlur = new EventEmitter<void>();
 
   formControl = new SdFormControl();
@@ -332,10 +332,10 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     this.sdChange.emit(value);
   };
 
-  // why: dá»±a trÃªn valueModel() (signal model-input) thay vÃ¬ formControl.value â€”
-  // khi bá»‹ wrap (vd <sd-input-color>) effect set formControl cháº¡y SAU lÃºc template
-  // eval nÃªn formControl.value chÆ°a ká»‹p cÃ³; valueModel() thÃ¬ cÃ³ ngay. Method (khÃ´ng
-  // computed) Ä‘á»ƒ re-eval má»—i CD. Required khÃ´ng Ä‘Æ°á»£c clear; disabled/readonly áº©n nÃºt.
+  // why: dựa trên valueModel() (signal model-input) thay vì formControl.value —
+  // khi bị wrap (vd <sd-input-color>) effect set formControl chạy SAU lúc template
+  // eval nên formControl.value chưa kịp có; valueModel() thì có ngay. Method (không
+  // computed) để re-eval mỗi CD. Required không được clear; disabled/readonly ẩn nút.
   showClear = (): boolean => {
     if (this.required() || this.disabled() || this.readonly()) return false;
     return !sdIsEmpty(this.valueModel());
@@ -344,8 +344,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   clear = ($event?: Event) => {
     $event?.stopPropagation();
     if (sdIsEmpty(this.valueModel()) && sdIsEmpty(this.formControl.value)) return;
-    // why: clear lÃ  thao tÃ¡c chá»§ Ä‘á»™ng â†’ model vá» null (khÃ´ng pháº£i '' hay undefined).
-    // undefined chá»‰ dÃ nh cho tráº¡ng thÃ¡i pristine chÆ°a tá»«ng nháº­p.
+    // why: clear là thao tác chủ động → model về null (không phải '' hay undefined).
+    // undefined chỉ dành cho trạng thái pristine chưa từng nhập.
     this.formControl.setValue(null, { emitEvent: false });
     this.valueModel.set(null);
     this.sdChange.emit(null);
@@ -365,7 +365,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   onFocus = () => {
     this.isFocused = true;
-    this.sdFocus.emit(); // Gá»i .emit() y há»‡t nhÆ° cÅ©
+    this.sdFocus.emit(); // Gọi .emit() y hệt như cũ
 
     if (this.sdFocusForceBlur.observed) {
       this.blur();
@@ -383,7 +383,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   };
 
   onClick = () => {
-    // ðŸš¨ Gá»ŒI SIGNAL: Pháº£i thÃªm () vÃ o sdViewDef
+    // 🚨 GỌI SIGNAL: Phải thêm () vào sdViewDef
     if (this.sdViewDef()?.templateRef) {
       if (!this.formControl.disabled && !this.isFocused) {
         this.focus();
@@ -393,17 +393,16 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   blur = () => {
     this.isFocused = false;
-    // ðŸš¨ Gá»ŒI SIGNAL: Pháº£i thÃªm () vÃ o control
+    // 🚨 GỌI SIGNAL: Phải thêm () vào control
     this.control()?.nativeElement?.blur();
   };
 
   focus = () => {
     this.isFocused = true;
     setTimeout(() => {
-      // ðŸš¨ Gá»ŒI SIGNAL: Pháº£i thÃªm () vÃ o control
+      // 🚨 GỌI SIGNAL: Phải thêm () vào control
       this.control()?.nativeElement?.focus();
     }, 100);
   };
 }
-
 

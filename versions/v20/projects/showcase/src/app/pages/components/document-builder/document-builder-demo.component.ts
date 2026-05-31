@@ -1,4 +1,4 @@
-﻿import { AfterViewInit, ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/components/document-builder';
 
@@ -61,4 +61,3 @@ export class DocumentBuilderDemoComponent implements AfterViewInit {
     this.htmlOutput.set(html);
   }
 }
-

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
@@ -51,7 +51,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     SdRadio,
     SdDate,
     SdDatetime,
-    // Pipe cho pháº§n viewed
+    // Pipe cho phần viewed
     TranslatePipe,
   ],
 })
@@ -100,7 +100,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
   row: any = {};
   columnValues: Record<string, SdFormGenericSelectionItem[] | SdSearch> = {};
   formRenderColumn: Record<string, SdFormGenericTableColumn> = {};
-  // Láº¥y nhá»¯ng fileColumns Ä‘á»ƒ Ä‘á»‹nh nghÄ©a cellDef tÆ°Æ¡ng á»©ng
+  // Lấy những fileColumns để định nghĩa cellDef tương ứng
   fileKeys: string[] = [];
   imageKeys: string[] = [];
 
@@ -127,7 +127,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
         this.ref.markForCheck();
       })
     );
-    // Khi giÃ¡ trá»‹ thay Ä‘á»•i thÃ¬ reload láº¡i
+    // Khi giá trị thay đổi thì reload lại
     this.#subscription.add(
       this.#modelChanges.pipe(startWith(this.model)).subscribe(async () => {
         await this.#reload();
@@ -137,11 +137,11 @@ export class TableComponent implements AfterViewInit, OnDestroy {
   }
 
   #initTable = async () => {
-    // Xá»­ lÃ½ columns
+    // Xử lý columns
     const columns: SdTableColumn[] = [];
     //console.log( this.component?.columns)
     for (const column of this.component?.columns || []) {
-      // Ghi nháº­n láº¡i vÃ o object formRenderColumn Ä‘á»ƒ cÃ³ thá»ƒ xá»­ lÃ½ customType hoáº·c má»™t vÃ i thuá»™c tÃ­nh khÃ¡c khi render UI
+      // Ghi nhận lại vào object formRenderColumn để có thể xử lý customType hoặc một vài thuộc tính khác khi render UI
       this.formRenderColumn[column.key] = column;
       const { type, key, label, width } = column;
       if (type === 'string') {
@@ -151,7 +151,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
           title: label,
           width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       } else if (type === 'number') {
@@ -161,7 +161,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
           title: label,
           width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       } else if (type === 'boolean') {
@@ -175,7 +175,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
             displayOnFalse: column.displayOnFalse,
           },
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       } else if (type === 'date') {
@@ -185,7 +185,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
           title: label,
           width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       } else if (type === 'datetime') {
@@ -195,7 +195,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
           title: label,
           width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       } else if (type === 'radio') {
@@ -206,7 +206,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
           title: label,
           width: width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
           option: {
             items: values || [],
@@ -230,7 +230,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
               title: label,
               width: width,
               filter: {
-                disabled: true, // KhÃ´ng cáº§n filter
+                disabled: true, // Không cần filter
               },
               option: {
                 items: this.columnValues[key],
@@ -248,7 +248,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
               title: label,
               width: width,
               filter: {
-                disabled: true, // KhÃ´ng cáº§n filter
+                disabled: true, // Không cần filter
               },
               option: {
                 items: this.columnValues[key],
@@ -259,27 +259,27 @@ export class TableComponent implements AfterViewInit, OnDestroy {
           }
         }
       } else if (type === 'image') {
-        // áº¢nh hay file thÃ¬ Ä‘á»u lÃ  string, nhÆ°ng sáº½ dÃ¹ng cellDef Ä‘á»ƒ can thiá»‡p hiá»ƒn thá»‹
-        this.imageKeys.push(key); // Ghi nháº­n láº¡i cá»™t nÃ o lÃ  image Ä‘á»ƒ can thiá»‡p cellDef
+        // Ảnh hay file thì đều là string, nhưng sẽ dùng cellDef để can thiệp hiển thị
+        this.imageKeys.push(key); // Ghi nhận lại cột nào là image để can thiệp cellDef
         columns.push({
           type: 'string',
           field: key,
           title: label,
           width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       } else if (type === 'file') {
-        // áº¢nh hay file thÃ¬ Ä‘á»u lÃ  string, nhÆ°ng sáº½ dÃ¹ng cellDef Ä‘á»ƒ can thiá»‡p hiá»ƒn thá»‹
-        this.fileKeys.push(key); // Ghi nháº­n láº¡i cá»™t nÃ o lÃ  file Ä‘á»ƒ can thiá»‡p cellDef
+        // Ảnh hay file thì đều là string, nhưng sẽ dùng cellDef để can thiệp hiển thị
+        this.fileKeys.push(key); // Ghi nhận lại cột nào là file để can thiệp cellDef
         columns.push({
           type: 'string',
           field: key,
           title: label,
           width,
           filter: {
-            disabled: true, // KhÃ´ng cáº§n filter
+            disabled: true, // Không cần filter
           },
         });
       }
@@ -370,7 +370,7 @@ export class TableComponent implements AfterViewInit, OnDestroy {
       this.form.markAllAsTouched();
       return;
     }
-    // Náº¿u lÃ  cáº­p nháº­t thÃ¬ cáº­p nháº­t vÃ o trÆ°á»ng tÆ°Æ¡ng á»©ng
+    // Nếu là cập nhật thì cập nhật vào trường tương ứng
     if (this.#selectedIndex >= 0) {
       this.model[this.#selectedIndex] = this.row;
     } else {
@@ -381,10 +381,10 @@ export class TableComponent implements AfterViewInit, OnDestroy {
     this.table?.reload();
     this.ref.markForCheck();
     if (!addable) {
-      // Náº¿u khÃ´ng thÃªm dÃ²ng ná»¯a thÃ¬ Ä‘Ã³ng luÃ´n
+      // Nếu không thêm dòng nữa thì đóng luôn
       this.sideDrawer?.close();
     } else {
-      // ThÃªm dÃ²ng ná»¯a nhanh
+      // Thêm dòng nữa nhanh
       this.onDetail();
     }
   };
@@ -405,9 +405,8 @@ export class TableComponent implements AfterViewInit, OnDestroy {
 
   upload = async () => {
     if (this.uploadFiles?.length) {
-      // Thá»±c hiá»‡n upload táº¥t cáº£ cÃ¡c file Ä‘Ã£ chá»n
+      // Thực hiện upload tất cả các file đã chọn
       await Promise.all(this.uploadFiles.map(uploadFile => uploadFile.upload()));
     }
   };
 }
-

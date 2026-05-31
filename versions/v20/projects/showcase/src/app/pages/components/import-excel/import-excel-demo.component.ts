@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, viewChild } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import {
@@ -102,4 +102,3 @@ export class ImportExcelDemoComponent {
     },
   };
 }
-

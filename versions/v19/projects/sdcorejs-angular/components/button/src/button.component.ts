@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -22,7 +22,7 @@ import { DefaultMaterialIconFontSet, MaterialIconFontSet } from '@sdcorejs/angul
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 
-// Export cÃ¡c Type ra ngoÃ i Ä‘á»ƒ tÃ¡i sá»­ dá»¥ng á»Ÿ file config/interface
+// Export các Type ra ngoài để tái sử dụng ở file config/interface
 export type SdButtonType = 'fill' | 'light' | 'outline' | 'link';
 export type SdButtonSize = 'sm' | 'md' | 'lg';
 export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
@@ -48,7 +48,7 @@ export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy
   private el = inject(ElementRef);
 
   // ==========================================
-  // 2. SIGNAL INPUTS (Báº£o máº­t 100% vá»›i Null/Undefined)
+  // 2. SIGNAL INPUTS (Bảo mật 100% với Null/Undefined)
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   
@@ -107,13 +107,13 @@ export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy
   constructor() {
     super();
 
-    // Ká»¹ thuáº­t ÄÃ¡nh cháº·n sá»± kiá»‡n (Capture Phase)
-    // TÃ³m sá»‘ng má»i sá»± kiá»‡n click ngay khi nÃ³ vá»«a cháº¡m vÃ o component
+    // Kỹ thuật Đánh chặn sự kiện (Capture Phase)
+    // Tóm sống mọi sự kiện click ngay khi nó vừa chạm vào component
     this.el.nativeElement.addEventListener(
       'click',
       (event: Event) => {
         if (this.disabled() || this.loading()) {
-          // Nghiá»n nÃ¡t sá»± kiá»‡n, khÃ´ng cho Angular phÃ¡t (click) ra component cha
+          // Nghiền nát sự kiện, không cho Angular phát (click) ra component cha
           event.preventDefault();
           event.stopPropagation();
           event.stopImmediatePropagation();
@@ -136,7 +136,7 @@ export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy
     );
   }
 
-  // Nháº­n click tá»« tháº» button con bÃªn trong
+  // Nhận click từ thẻ button con bên trong
   onInternalClick(event: Event) {
     event.stopPropagation();
     

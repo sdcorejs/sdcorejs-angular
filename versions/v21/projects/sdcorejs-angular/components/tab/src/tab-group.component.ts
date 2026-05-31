@@ -1,4 +1,4 @@
-﻿import { NgTemplateOutlet } from '@angular/common';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   booleanAttribute,
   ChangeDetectionStrategy,
@@ -40,7 +40,7 @@ export class SdTabGroup extends SdBaseSecureComponent {
   // 'segmented' = single bordered container, iOS-style.
   variant = input<'line' | 'pills' | 'segmented'>('line');
   // why: drives the active/indicator color via Core CSS vars (--sd-<color>, --sd-<color>-light).
-  // Same palette consumers use on <sd-badge>, <sd-button>, etc â€” keeps theming consistent.
+  // Same palette consumers use on <sd-badge>, <sd-button>, etc — keeps theming consistent.
   color = input<Color>('primary');
   headerPosition = input<'above' | 'below'>('above');
   alignTabs = input<'start' | 'center' | 'end'>('start');
@@ -117,4 +117,3 @@ export class SdTabGroup extends SdBaseSecureComponent {
     this.tabClosed.emit({ index, tab });
   }
 }
-

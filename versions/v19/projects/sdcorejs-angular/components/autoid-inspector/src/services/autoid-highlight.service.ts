@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 const ATTR = 'data-sd-autoid-highlight';
 const SAVED_OUTLINE = 'data-sd-autoid-prev-outline';
@@ -6,9 +6,9 @@ const SAVED_OUTLINE_OFFSET = 'data-sd-autoid-prev-outline-offset';
 const SAVED_BG = 'data-sd-autoid-prev-bg';
 const SAVED_BORDER_RADIUS = 'data-sd-autoid-prev-radius';
 
-// Token mÃ u láº¥y tá»« @sdcorejs/angular theme (--sd-*). Fallback hex Ã¡p dá»¥ng khi
-// consumer chÆ°a import sd-core.scss. DÃ¹ng cÃ¹ng bá»™ var vá»›i scss component Ä‘á»ƒ
-// nháº¥t quÃ¡n visual giá»¯a highlight ok / duplicate / missing.
+// Token màu lấy từ @sdcorejs/angular theme (--sd-*). Fallback hex áp dụng khi
+// consumer chưa import sd-core.scss. Dùng cùng bộ var với scss component để
+// nhất quán visual giữa highlight ok / duplicate / missing.
 const COLOR_OK = 'var(--sd-success, #4CAF50)';
 const COLOR_OK_BG = 'var(--sd-success-light, rgba(76, 175, 80, 0.12))';
 const COLOR_DUP = 'var(--sd-error, #F82C13)';
@@ -18,7 +18,7 @@ const COLOR_MISSING_BG = 'var(--sd-warning-light, rgba(255, 150, 0, 0.12))';
 
 @Injectable({ providedIn: 'root' })
 export class SdAutoidHighlightService {
-  /** Apply outline cho má»i [data-autoid]: xanh náº¿u unique, Ä‘á» náº¿u duplicate. Idempotent. */
+  /** Apply outline cho mọi [data-autoid]: xanh nếu unique, đỏ nếu duplicate. Idempotent. */
   apply(root: HTMLElement = document.body): void {
     this.clear(root);
     const nodes = root.querySelectorAll<HTMLElement>('[data-autoid]');
@@ -29,17 +29,17 @@ export class SdAutoidHighlightService {
       count[id] = (count[id] ?? 0) + 1;
     });
 
-    // Äá»ƒ trÃ¡nh apply 2 láº§n lÃªn cÃ¹ng 1 target khi nhiá»u [data-autoid] cÃ¹ng
-    // chia sáº» 1 sd-* host (vd 2 input lá»“ng trong 1 sd-date-range).
+    // Để tránh apply 2 lần lên cùng 1 target khi nhiều [data-autoid] cùng
+    // chia sẻ 1 sd-* host (vd 2 input lồng trong 1 sd-date-range).
     const visited = new Set<HTMLElement>();
 
     nodes.forEach(node => {
       const id = node.getAttribute('data-autoid');
       if (!id) return;
 
-      // Highlight HOST sd-* (giá»‘ng applyMissing) â€” outline Ã´m trá»n card,
-      // khÃ´ng hiá»ƒn thá»‹ lá»‡ch trÃªn input con / label fragment. Fallback vá»
-      // chÃ­nh node khi khÃ´ng tÃ¬m tháº¥y sd-* ancestor (vd native button).
+      // Highlight HOST sd-* (giống applyMissing) — outline ôm trọn card,
+      // không hiển thị lệch trên input con / label fragment. Fallback về
+      // chính node khi không tìm thấy sd-* ancestor (vd native button).
       const target = this.#resolveTarget(node);
       if (visited.has(target)) return;
       visited.add(target);
@@ -55,7 +55,7 @@ export class SdAutoidHighlightService {
     });
   }
 
-  /** Highlight táº­p element khÃ´ng cÃ³ autoid (missing) báº±ng outline cam dashed. */
+  /** Highlight tập element không có autoid (missing) bằng outline cam dashed. */
   applyMissing(nodes: HTMLElement[]): void {
     nodes.forEach(node => {
       if (node.hasAttribute(ATTR)) return;
@@ -63,7 +63,7 @@ export class SdAutoidHighlightService {
     });
   }
 
-  /** Restore inline style nhÆ° trÆ°á»›c khi apply. */
+  /** Restore inline style như trước khi apply. */
   clear(root: HTMLElement = document.body): void {
     const nodes = root.querySelectorAll<HTMLElement>(`[${ATTR}]`);
     nodes.forEach(node => {
@@ -98,22 +98,21 @@ export class SdAutoidHighlightService {
     style: 'solid' | 'dashed',
     marker: 'ok' | 'duplicate' | 'missing'
   ): void {
-    // Backup full style cáº§n restore Ä‘á»ƒ clear() Ä‘Æ°a vá» nguyÃªn tráº¡ng.
+    // Backup full style cần restore để clear() đưa về nguyên trạng.
     node.setAttribute(SAVED_OUTLINE, node.style.outline ?? '');
     node.setAttribute(SAVED_OUTLINE_OFFSET, node.style.outlineOffset ?? '');
     node.setAttribute(SAVED_BG, node.style.backgroundColor ?? '');
     node.setAttribute(SAVED_BORDER_RADIUS, node.style.borderRadius ?? '');
 
     node.style.outline = `2px ${style} ${color}`;
-    // outline-offset 2px trÃ¡nh Ä‘Ã¨ lÃªn border cá»§a host (mat-form-field, button)
-    // â†’ highlight náº±m gá»n ngoÃ i card thay vÃ¬ cáº¯t vÃ o ná»™i dung.
+    // outline-offset 2px tránh đè lên border của host (mat-form-field, button)
+    // → highlight nằm gọn ngoài card thay vì cắt vào nội dung.
     node.style.outlineOffset = '2px';
     node.style.backgroundColor = bg;
-    // Bo nháº¹ Ä‘á»ƒ outline trÃ´ng sáº¡ch trÃªn host bo gÃ³c sáºµn.
+    // Bo nhẹ để outline trông sạch trên host bo góc sẵn.
     if (!node.style.borderRadius) {
       node.style.borderRadius = '6px';
     }
     node.setAttribute(ATTR, marker);
   }
 }
-

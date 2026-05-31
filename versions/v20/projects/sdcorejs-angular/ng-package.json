@@ -1,4 +1,4 @@
-﻿{
+{
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/sdcorejs-angular",
   "lib": {
@@ -19,4 +19,3 @@
   ],
   "assets": ["assets"]
 }
-

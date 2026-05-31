@@ -1,4 +1,4 @@
-�# Row Reorder Implementation Plan
+# Row Reorder Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -35,10 +35,10 @@ Expected: build succeeds with no errors.
 
 - [ ] **Step 2: Add reorder column injection in `loadConfigurationResult`**
 
-Find this block (around line 150�153):
+Find this block (around line 150–153):
 ```typescript
     result.multipleHeader = result.secondHeaders.length > 0;
-    // Sub infomation không thỒ có footer
+    // Sub infomation không thể có footer
     result.displayedFooters = result.displayedColumns.filter(val => val !== this.#COLUMNS.SUBINFORMATION);
     return result;
 ```
@@ -46,7 +46,7 @@ Find this block (around line 150�153):
 Replace with:
 ```typescript
     result.multipleHeader = result.secondHeaders.length > 0;
-    // Sub infomation không thỒ có footer
+    // Sub infomation không thể có footer
     result.displayedFooters = result.displayedColumns.filter(val => val !== this.#COLUMNS.SUBINFORMATION);
     if (option.rowReorder?.enabled) {
       result.displayedColumns.unshift('reorder');
@@ -267,7 +267,7 @@ Insert before it:
 
 - [ ] **Step 3: Add `cdkDrag` to the main data row**
 
-Find lines 251�256 (the main data row definition):
+Find lines 251–256 (the main data row definition):
 ```html
         <tr
           mat-row
@@ -451,4 +451,3 @@ Confirm a table that does NOT have `rowReorder.enabled` shows no drag handle col
 git add -p
 git commit -m "fix(table): row reorder smoke test fixes"
 ```
-

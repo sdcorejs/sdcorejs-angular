@@ -1,4 +1,4 @@
-﻿import { COMMA, ENTER } from '@angular/cdk/keycodes';
+import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -379,4 +379,3 @@ export class SdChip implements AfterViewInit {
   focus = () => this.#focus();
   onClear = ($event?: any) => this.#clear($event);
 }
-

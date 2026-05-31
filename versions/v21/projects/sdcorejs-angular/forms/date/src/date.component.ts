@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
@@ -50,8 +50,8 @@ import * as uuid from 'uuid';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
   providers: [
-    // DateFnsAdapter inject MAT_DATE_LOCALE; náº¿u undefined sáº½ throw khi format/parse.
-    // Provide locale en-US táº¡i scope component Ä‘á»ƒ hÃ nh vi giá»‘ng Moment cÅ© (English default).
+    // DateFnsAdapter inject MAT_DATE_LOCALE; nếu undefined sẽ throw khi format/parse.
+    // Provide locale en-US tại scope component để hành vi giống Moment cũ (English default).
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
     provideDateFnsAdapter({
       parse: { dateInput: 'dd/MM/yyyy' },
@@ -120,15 +120,15 @@ export class SdDate implements OnDestroy, OnInit {
   name = input<string>(uuid.v4());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -147,7 +147,7 @@ export class SdDate implements OnDestroy, OnInit {
   inlineError = input<string | undefined>();
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -171,7 +171,7 @@ export class SdDate implements OnDestroy, OnInit {
 
   floatLabel = input<FloatLabelType>('auto');
 
-  // Xá»­ lÃ½ thÃ´ng minh Gom min/minDate vÃ  max/maxDate
+  // Xử lý thông minh Gom min/minDate và max/maxDate
   minInput = input<any>(undefined, { alias: 'min' });
   minDateInput = input<any>(undefined, { alias: 'minDate' });
   resolvedMin = computed(() => this.#parseDateBoundary(this.minInput() ?? this.minDateInput()));
@@ -200,8 +200,8 @@ export class SdDate implements OnDestroy, OnInit {
   #subscription = new Subscription();
 
   constructor() {
-    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i (String/Date -> Date)
-    // Material date-fns adapter dÃ¹ng native Date lÃ m internal type cho FormControl.
+    // EFFECT 1: Sync model thay đổi từ bên ngoài (String/Date -> Date)
+    // Material date-fns adapter dùng native Date làm internal type cho FormControl.
     effect(() => {
       let val = this.valueModel();
       untracked(() => {
@@ -257,7 +257,7 @@ export class SdDate implements OnDestroy, OnInit {
     this.#subscription.unsubscribe();
   }
 
-  // HÃ m private tÃ¡i sá»­ dá»¥ng cho parse Min/Max Date
+  // Hàm private tái sử dụng cho parse Min/Max Date
   #parseDateBoundary(val: any): Date | null {
     if (val === 'TODAY') return new Date();
     if (val && DateUtilities.isDate(val)) return new Date(val);
@@ -347,7 +347,7 @@ export class SdDate implements OnDestroy, OnInit {
   };
 
   onChange = (event: MatDatepickerInputEvent<Date>) => {
-    // event.value giá» lÃ  native Date (date-fns adapter), khÃ´ng cáº§n .toDate() nhÆ° Moment.
+    // event.value giờ là native Date (date-fns adapter), không cần .toDate() như Moment.
     const value = DateUtilities.toFormat(event.value, 'yyyy/MM/dd');
     this.inputRef()?.nativeElement?.focus();
     

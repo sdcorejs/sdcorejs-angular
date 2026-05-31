@@ -1,7 +1,7 @@
-﻿/**
- * Module `authom` â€” OAuth 2.0 + PKCE authentication client cho AuthOM (Auth0-based).
+/**
+ * Module `authom` — OAuth 2.0 + PKCE authentication client cho AuthOM (Auth0-based).
  *
- * CÃ¡ch dÃ¹ng (standalone):
+ * Cách dùng (standalone):
  * ```ts
  * import { provideHttpClient, withInterceptors } from '@angular/common/http';
  * import { provideSdAuthOm, SdAuthOmInterceptor } from '@sdcorejs/angular/modules/authom';
@@ -25,12 +25,11 @@
  * };
  * ```
  *
- * YÃªu cáº§u setup thÃªm:
- * 1. Copy file `silent-authom.html` tá»« source module nÃ y vÃ o thÆ° má»¥c `public/` cá»§a app.
- * 2. App pháº£i cháº¡y trÃªn HTTPS (hoáº·c localhost) â€” Web Crypto API yÃªu cáº§u secure context.
+ * Yêu cầu setup thêm:
+ * 1. Copy file `silent-authom.html` từ source module này vào thư mục `public/` của app.
+ * 2. App phải chạy trên HTTPS (hoặc localhost) — Web Crypto API yêu cầu secure context.
  */
 export * from './authom.configuration';
 export * from './authom.service';
 export * from './authom.interceptor';
 export * from './authom.module';
-

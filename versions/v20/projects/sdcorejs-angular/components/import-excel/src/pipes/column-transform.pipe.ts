@@ -1,4 +1,4 @@
-﻿import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
 import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
@@ -10,24 +10,24 @@ import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
 export class ColumnTransformPipe implements PipeTransform {
   constructor(private sanitizer: DomSanitizer) {}
 
-  // Chuyá»ƒn thÃ nh async Ä‘á»ƒ há»— trá»£ Promise tá»« bÃªn ngoÃ i
+  // Chuyển thành async để hỗ trợ Promise từ bên ngoài
   async transform(item: SdImportExcelItem, column: SdUploadExcelColumn): Promise<string | SafeHtml> {
     const { type, transform, field } = column;
     const value = item.data[field];
 
-    // 1. Æ¯u tiÃªn hiá»ƒn thá»‹ dá»¯ liá»‡u gá»‘c náº¿u cÃ³ lá»—i
+    // 1. Ưu tiên hiển thị dữ liệu gốc nếu có lỗi
     if (item.meta.error[field]) {
       return item.meta.origin[field] ?? value ?? '';
     }
 
-    // 2. Custom Transform (Há»— trá»£ cáº£ Sync vÃ  Async)
+    // 2. Custom Transform (Hỗ trợ cả Sync và Async)
     if (transform) {
-      // await sáº½ hoáº¡t Ä‘á»™ng Ä‘Ãºng dÃ¹ transform tráº£ vá» value thÆ°á»ng hay Promise
+      // await sẽ hoạt động đúng dù transform trả về value thường hay Promise
       const result = await transform(item.data, value);
       return result ?? '';
     }
 
-    // 3. Xá»­ lÃ½ logic hiá»ƒn thá»‹
+    // 3. Xử lý logic hiển thị
     switch (type) {
       case 'number':
         return NumberUtilities.toVN(value) ?? '';
@@ -35,7 +35,7 @@ export class ColumnTransformPipe implements PipeTransform {
       case 'bool':
         if (typeof value === 'boolean') {
           const html = `<div class="text-center"><input type="checkbox" ${value ? 'checked' : ''} disabled></div>`;
-          // Báº¯t buá»™c bypass security Ä‘á»ƒ hiá»ƒn thá»‹ Ä‘Æ°á»£c input checkbox
+          // Bắt buộc bypass security để hiển thị được input checkbox
           return this.sanitizer.bypassSecurityTrustHtml(html);
         }
         return '';

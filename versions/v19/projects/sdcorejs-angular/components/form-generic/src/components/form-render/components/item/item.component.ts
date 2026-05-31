@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -89,8 +89,8 @@ export class LibItemComponent {
     }
   }
 
-  // Thá»±c hiá»‡n upload náº¿u cÃ³ component upload
-  // TODO: Bá»• sung logic upload cho table
+  // Thực hiện upload nếu có component upload
+  // TODO: Bổ sung logic upload cho table
   upload = async () => {
     await this.itemUpload?.upload?.();
     await this.itemTable?.upload?.();
@@ -108,4 +108,3 @@ export class LibItemComponent {
   //   }
   // };
 }
-

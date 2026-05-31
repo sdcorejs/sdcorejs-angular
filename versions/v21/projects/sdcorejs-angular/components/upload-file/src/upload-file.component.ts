@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
@@ -63,7 +63,7 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
     MatProgressSpinner, TranslatePipe],
 })
 export class SdUploadFile<TArgs = any> {
-  // â”€â”€â”€ Injected Services â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Injected Services ────────────────────────────────────────────────
   readonly #notifyService = inject(SdNotifyService);
   readonly #confirmService = inject(SdConfirmService);
   readonly #configuration = inject<ISdUploadFileConfiguration | ISdUploadFileConfiguration[]>(
@@ -74,7 +74,7 @@ export class SdUploadFile<TArgs = any> {
   readonly #destroyRef = inject(DestroyRef);
   readonly #i18n = inject(I18nService);
 
-  // â”€â”€â”€ Internal State â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Internal State ───────────────────────────────────────────────────
   readonly id = `I${uuid.v4()}`;
   readonly #isMobileOrTablet = BrowserUtilities.isMobile();
   readonly #canvas1 = `C${uuid.v4()}`;
@@ -84,23 +84,23 @@ export class SdUploadFile<TArgs = any> {
 
   readonly formControl = new SdFormControl();
 
-  // â”€â”€â”€ Signals (state) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Signals (state) ──────────────────────────────────────────────────
   readonly previewFiles = signal<PreviewFile[]>([]);
   readonly selectedFile = signal<PreviewFile | null | undefined>(undefined);
 
-  // â”€â”€â”€ Query Signals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Query Signals ────────────────────────────────────────────────────
   readonly previewFileComponent = viewChild(PreviewComponent);
   readonly dropElements = viewChildren<ElementRef>('dropElement');
   readonly sdLabelDef = contentChild(SdLabelDefDirective);
 
-  // â”€â”€â”€ Input Signals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // autoId prefix `upload-file-`. Má»—i nÃºt remove dÃ¹ng index-based suffix Ä‘á»ƒ á»•n Ä‘á»‹nh khi filename trÃ¹ng nhau.
+  // ─── Input Signals ────────────────────────────────────────────────────
+  // autoId prefix `upload-file-`. Mỗi nút remove dùng index-based suffix để ổn định khi filename trùng nhau.
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `components-upload-file-${this.autoIdInput()}` : undefined));
   readonly removeAutoId = (index: number): string | undefined =>
     (this.autoId() ? `${this.autoId()}-remove-${index}` : undefined);
 
-  // â”€â”€â”€ E2E data attributes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── E2E data attributes ──────────────────────────────────────────────
   readonly dataDisabled = computed(() => (this.disabled() ? 'true' : 'false'));
   readonly dataEmpty = computed(() => (sdIsEmpty(this.previewFiles()) ? 'true' : 'false'));
   readonly dataCount = computed(() => String(this.previewFiles()?.length ?? 0));
@@ -121,15 +121,15 @@ export class SdUploadFile<TArgs = any> {
   readonly maxHeight = input<number>();
   readonly scaleToPixel = input<number>();
 
-  // â”€â”€â”€ Inputs with transform (null/undefined â†’ default value) â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Inputs with transform (null/undefined → default value) ─────────
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -172,7 +172,7 @@ export class SdUploadFile<TArgs = any> {
     transform: (val): boolean => val === '' || !!val,
   });
 
-  // â”€â”€â”€ Computed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Computed ─────────────────────────────────────────────────────────
   readonly generatedDescription = computed(() => {
     const desc = this.description();
     if (desc) return desc;
@@ -188,11 +188,11 @@ export class SdUploadFile<TArgs = any> {
     return undefined;
   });
 
-  // â”€â”€â”€ Output Signals â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Output Signals ───────────────────────────────────────────────────
   readonly loaded = output<PreviewFile[]>();
   readonly filesChanged = output<(string | File)[]>();
 
-  // â”€â”€â”€ Model Signal (two-way binding support: [(model)]) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Model Signal (two-way binding support: [(model)]) ────────────────
   readonly model = model<(string | number)[]>([]);
 
   constructor() {
@@ -239,10 +239,10 @@ export class SdUploadFile<TArgs = any> {
       }
     });
 
-    // why: required() lÃ  signal input â€” pháº£i Ä‘Äƒng kÃ½ validator qua effect Ä‘á»ƒ báº¯t thay
-    // Ä‘á»•i runtime. Validators.required nháº­n biáº¿t array rá»—ng (length === 0) lÃ  empty
-    // nÃªn file array hoáº¡t Ä‘á»™ng Ä‘Ãºng. updateValueAndValidity Ä‘á»ƒ chip lá»—i xuáº¥t hiá»‡n
-    // ngay khi required toggle true mÃ  chÆ°a upload file nÃ o.
+    // why: required() là signal input — phải đăng ký validator qua effect để bắt thay
+    // đổi runtime. Validators.required nhận biết array rỗng (length === 0) là empty
+    // nên file array hoạt động đúng. updateValueAndValidity để chip lỗi xuất hiện
+    // ngay khi required toggle true mà chưa upload file nào.
     effect(() => {
       if (this.required()) {
         this.formControl.setValidators(Validators.required);
@@ -260,7 +260,7 @@ export class SdUploadFile<TArgs = any> {
   }
 
 
-  // â”€â”€â”€ Drop container setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Drop container setup ─────────────────────────────────────────────
   #setupDropContainer() {
     const dropEls = this.dropElements();
     if (dropEls?.length > 0) {
@@ -294,7 +294,7 @@ export class SdUploadFile<TArgs = any> {
     });
   }
 
-  // â”€â”€â”€ Private Methods â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Private Methods ──────────────────────────────────────────────────
   #touch = () => {
     this.formControl.markAsTouched();
     this.formControl.setValue(this.model() || []);
@@ -412,7 +412,7 @@ export class SdUploadFile<TArgs = any> {
     }
   };
 
-  // â”€â”€â”€ Public Event Handlers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Public Event Handlers ────────────────────────────────────────────
   onUpload = () => {
     BrowserUtilities.upload({
       maxSizeInMb: this.maxSize(),
@@ -507,7 +507,7 @@ export class SdUploadFile<TArgs = any> {
     this.selectedFile.set(this.selectedFile() !== file ? file : null);
   };
 
-  // â”€â”€â”€ Resize â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Resize ───────────────────────────────────────────────────────────
   #resize = async (file: File): Promise<File> => {
     if (!this.scaleToPixel()) {
       return file;
@@ -575,9 +575,9 @@ export class SdUploadFile<TArgs = any> {
     return blob as File;
   };
 
-  // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Public API ───────────────────────────────────────────────────────
   /**
-   * Láº¥y danh sÃ¡ch cÃ¡c File tá»« previewFiles (chÆ°a upload).
+   * Lấy danh sách các File từ previewFiles (chưa upload).
    */
   getFiles = async () => {
     const items = this.previewFiles()?.filter(val => !!val) || [];
@@ -585,8 +585,8 @@ export class SdUploadFile<TArgs = any> {
   };
 
   /**
-   * Thá»±c hiá»‡n upload cÃ¡c file vÃ  gÃ¡n giÃ¡ trá»‹, output tráº£ ra máº£ng idOrKeys.
-   * HÃ€M NÃ€Y Báº®T BUá»˜C PHáº¢I Gá»ŒI TRÆ¯á»šC KHI Gá»ŒI Vá»€ SERVER.
+   * Thực hiện upload các file và gán giá trị, output trả ra mảng idOrKeys.
+   * HÀM NÀY BẮT BUỘC PHẢI GỌI TRƯỚC KHI GỌI VỀ SERVER.
    */
   upload = async () => {
     const items = this.previewFiles()?.filter(val => !!val) || [];
@@ -632,20 +632,20 @@ export class SdUploadFile<TArgs = any> {
   };
 
   /**
-   * Má»Ÿ popup preview áº£nh.
+   * Mở popup preview ảnh.
    */
   preview = async () => {
     this.previewFileComponent()?.open(this.previewFiles());
   };
 
   /**
-   * Táº£i xuá»‘ng má»™t tá»‡p tin dá»±a trÃªn Ä‘á»‘i tÆ°á»£ng PreviewFile.
-   * * Æ¯u tiÃªn:
-   * 1. Táº£i xuá»‘ng tá»« thuá»™c tÃ­nh `file`.
-   * 2. Táº£i xuá»‘ng tá»« thuá»™c tÃ­nh `src`.
-   * 3. Gá»i hÃ m download dá»±a vÃ o `idOrKey`.
+   * Tải xuống một tệp tin dựa trên đối tượng PreviewFile.
+   * * Ưu tiên:
+   * 1. Tải xuống từ thuộc tính `file`.
+   * 2. Tải xuống từ thuộc tính `src`.
+   * 3. Gọi hàm download dựa vào `idOrKey`.
    *
-   * @param previewFile Äá»‘i tÆ°á»£ng PreviewFile chá»©a thÃ´ng tin tá»‡p tin.
+   * @param previewFile Đối tượng PreviewFile chứa thông tin tệp tin.
    */
   onDownload = (previewFile: PreviewFile) => {
     if (previewFile.file || previewFile.src) {
@@ -663,10 +663,10 @@ export class SdUploadFile<TArgs = any> {
     return this.formControl.disabled && fileIndex === this.maxOfImage() - 1 && this.previewFiles().length > this.maxOfImage();
   }
 
-  // â”€â”€â”€ Details â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Details ──────────────────────────────────────────────────────────
   /**
-   * Khi binding model, Ä‘áº§u vÃ o thÆ°á»ng lÃ  id/key/cdn,
-   * cáº§n render ra áº£nh/tá»‡p tÆ°Æ¡ng á»©ng.
+   * Khi binding model, đầu vào thường là id/key/cdn,
+   * cần render ra ảnh/tệp tương ứng.
    */
   #details = async (keys: (string | number)[]) => {
     if (!Array.isArray(keys) || !keys.length) {
@@ -733,7 +733,7 @@ export class SdUploadFile<TArgs = any> {
     return results;
   };
 
-  // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Helpers ──────────────────────────────────────────────────────────
   #isCdn = (idOrKey: string | number) => {
     if (typeof idOrKey !== 'string') return false;
     return idOrKey.startsWith('http');
@@ -755,8 +755,8 @@ export class SdUploadFile<TArgs = any> {
   };
 
   /**
-   * Giáº£i phÃ³ng cÃ¡c URL blob Ä‘Ã£ táº¡o Ä‘á»ƒ trÃ¡nh rÃ² rá»‰ bá»™ nhá»›.
-   * Chá»‰ nÃªn gá»i khi khÃ´ng cÃ²n sá»­ dá»¥ng previewFiles ná»¯a.
+   * Giải phóng các URL blob đã tạo để tránh rò rỉ bộ nhớ.
+   * Chỉ nên gọi khi không còn sử dụng previewFiles nữa.
    */
   #revokePreviewBlobURLs = (): void => {
     const files = this.previewFiles();
@@ -771,4 +771,3 @@ export class SdUploadFile<TArgs = any> {
     });
   };
 }
-

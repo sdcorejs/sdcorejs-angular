@@ -1,14 +1,14 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tree-row regression tests cho SdTable.
  *
- * Má»¥c tiÃªu: lock hÃ nh vi cá»§a cÃ¡c API public liÃªn quan tá»›i tree (onTreeToggle,
+ * Mục tiêu: lock hành vi của các API public liên quan tới tree (onTreeToggle,
  * rowStyle, isReorderDisabled, reorderSortPredicate, dataItems/selectedItems,
- * onClearSelection, treeRevision) trÆ°á»›c khi re-structor Ä‘á»ƒ trÃ¡nh regress.
+ * onClearSelection, treeRevision) trước khi re-structor để tránh regress.
  *
- * Strategy: trÃ¡nh cháº¡y full reload pipeline (effect + paginator + sort +
- * format service), set tháº³ng signal `tableOption` + `items` rá»“i gá»i method
- * public. Pre-format childItems Ä‘á»ƒ bá» qua TableFormatService.
+ * Strategy: tránh chạy full reload pipeline (effect + paginator + sort +
+ * format service), set thẳng signal `tableOption` + `items` rồi gọi method
+ * public. Pre-format childItems để bỏ qua TableFormatService.
  */
 import { TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -60,13 +60,13 @@ const createTable = (): SdTable<Node> => {
       { provide: SD_TABLE_CONFIGURATION, useValue: null },
     ],
   });
-  // KHÃ”NG detectChanges: trÃ¡nh trigger required-input error (option input bá» qua),
-  // signal `tableOption` set tháº³ng Ä‘á»ƒ test cÃ´ láº­p tree logic.
+  // KHÔNG detectChanges: tránh trigger required-input error (option input bỏ qua),
+  // signal `tableOption` set thẳng để test cô lập tree logic.
   const fixture = TestBed.createComponent(SdTable<Node>);
   return fixture.componentInstance;
 };
 
-describe('SdTable â€” tree row API', () => {
+describe('SdTable — tree row API', () => {
   describe('onTreeToggle', () => {
     let cmp: SdTable<Node>;
     let root: SdTableItem<Node>;
@@ -84,14 +84,14 @@ describe('SdTable â€” tree row API', () => {
       cmp.items.set([root]);
     });
 
-    it('expand row â†’ set isExpanded = true vÃ  tÄƒng treeRevision', async () => {
+    it('expand row → set isExpanded = true và tăng treeRevision', async () => {
       const beforeRev = cmp.treeRevision();
       await cmp.onTreeToggle(root);
       expect(root.meta.tree!.isExpanded).toBe(true);
       expect(cmp.treeRevision()).toBeGreaterThan(beforeRev);
     });
 
-    it('collapse row Ä‘Ã£ expand â†’ set isExpanded = false', async () => {
+    it('collapse row đã expand → set isExpanded = false', async () => {
       root.meta.tree!.isExpanded = true;
       await cmp.onTreeToggle(root);
       expect(root.meta.tree!.isExpanded).toBe(false);
@@ -105,31 +105,31 @@ describe('SdTable â€” tree row API', () => {
       expect(cmp.treeRevision()).toBe(beforeRev);
     });
 
-    it('no-op khi Ä‘ang isExpanding', async () => {
+    it('no-op khi đang isExpanding', async () => {
       root.meta.tree!.isExpanding = true;
       await cmp.onTreeToggle(root);
       expect(root.meta.tree!.isExpanded).toBe(false);
     });
 
-    it('lazy load â€” gá»i onExpandChildren, ghi raw data vÃ o childrenKey rá»“i expand', async () => {
+    it('lazy load — gọi onExpandChildren, ghi raw data vào childrenKey rồi expand', async () => {
       const lazyRoot = makeItem({ id: 10, name: 'lazy' }, { level: 0, hasChildren: true, isExpanded: false });
       const loader = jasmine
         .createSpy('onExpandChildren')
         .and.returnValue(Promise.resolve([{ id: 11, name: 'lazy-child' }]));
       cmp.tableOption.set(baseOption({ tree: { childrenKey: 'children', onExpandChildren: loader } } as any));
       cmp.items.set([lazyRoot]);
-      // Format service khÃ´ng cÃ³ format tháº­t â†’ stub trá»±c tiáº¿p childItems sau khi loader cháº¡y.
-      // Chá»‰ test contract: loader Ä‘Æ°á»£c gá»i, isExpanded = true, data.children Ä‘Æ°á»£c ghi.
+      // Format service không có format thật → stub trực tiếp childItems sau khi loader chạy.
+      // Chỉ test contract: loader được gọi, isExpanded = true, data.children được ghi.
       await cmp.onTreeToggle(lazyRoot);
 
       expect(loader).toHaveBeenCalledOnceWith(jasmine.objectContaining({ id: 10 }));
       expect((lazyRoot.data as any).children).toEqual([{ id: 11, name: 'lazy-child' }]);
-      // childItems do TableFormatService format â€” khÃ´ng assert chi tiáº¿t format,
-      // chá»‰ check isExpanded chuyá»ƒn true khi loader tráº£ non-empty.
+      // childItems do TableFormatService format — không assert chi tiết format,
+      // chỉ check isExpanded chuyển true khi loader trả non-empty.
       expect(lazyRoot.meta.tree!.isExpanded).toBe(true);
     });
 
-    it('lazy load tráº£ máº£ng rá»—ng â†’ hasChildren tá»± set false vÃ  khÃ´ng expand', async () => {
+    it('lazy load trả mảng rỗng → hasChildren tự set false và không expand', async () => {
       const lazyRoot = makeItem({ id: 20, name: 'empty' }, { level: 0, hasChildren: true });
       const loader = jasmine.createSpy().and.returnValue(Promise.resolve([]));
       cmp.tableOption.set(baseOption({ tree: { childrenKey: 'children', onExpandChildren: loader } } as any));
@@ -141,14 +141,14 @@ describe('SdTable â€” tree row API', () => {
   });
 
   describe('rowStyle', () => {
-    it('tráº£ null khi style.rowCss khÃ´ng cáº¥u hÃ¬nh', () => {
+    it('trả null khi style.rowCss không cấu hình', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption());
       const row = makeItem({ id: 1, name: 'r' });
       expect(cmp.rowStyle(row, 0)).toBeNull();
     });
 
-    it('truyá»n ctx { level, hasChildren, isExpanded } khi cÃ³ tree option', () => {
+    it('truyền ctx { level, hasChildren, isExpanded } khi có tree option', () => {
       const cmp = createTable();
       const rowCss = jasmine.createSpy('rowCss').and.returnValue({ color: 'red' });
       cmp.tableOption.set(baseOption({ style: { rowCss } as any }));
@@ -158,7 +158,7 @@ describe('SdTable â€” tree row API', () => {
       expect(rowCss).toHaveBeenCalledWith(row.data, 5, { level: 2, hasChildren: true, isExpanded: true });
     });
 
-    it('khÃ´ng truyá»n ctx khi tree option undefined', () => {
+    it('không truyền ctx khi tree option undefined', () => {
       const cmp = createTable();
       const rowCss = jasmine.createSpy().and.returnValue(null);
       cmp.tableOption.set(baseOption({ tree: undefined, style: { rowCss } as any }));
@@ -169,14 +169,14 @@ describe('SdTable â€” tree row API', () => {
   });
 
   describe('isReorderDisabled', () => {
-    it('luÃ´n true khi level > 0 (child row khÃ´ng Ä‘Æ°á»£c drag)', () => {
+    it('luôn true khi level > 0 (child row không được drag)', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption({ rowReorder: { enabled: true } as any }));
       const child = makeItem({ id: 2, name: 'c' }, { level: 1, hasChildren: false });
       expect(cmp.isReorderDisabled(child)).toBe(true);
     });
 
-    it('false cho root row khi rowReorder khÃ´ng cÃ³ disabled callback', () => {
+    it('false cho root row khi rowReorder không có disabled callback', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption({ rowReorder: { enabled: true } as any }));
       const root = makeItem({ id: 1, name: 'r' });
@@ -186,7 +186,7 @@ describe('SdTable â€” tree row API', () => {
   });
 
   describe('reorderSortPredicate', () => {
-    it('reject khi rowReorder khÃ´ng enabled', () => {
+    it('reject khi rowReorder không enabled', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption());
       const drop = { data: [makeItem({ id: 1, name: 'r' })] } as unknown as CdkDropList<SdTableItem<Node>[]>;
@@ -194,7 +194,7 @@ describe('SdTable â€” tree row API', () => {
       expect(cmp.reorderSortPredicate(0, drag, drop)).toBe(false);
     });
 
-    it('reject khi drag tá»« child row (level > 0)', () => {
+    it('reject khi drag từ child row (level > 0)', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption({ rowReorder: { enabled: true } as any }));
       const target = makeItem({ id: 1, name: 'r' });
@@ -204,7 +204,7 @@ describe('SdTable â€” tree row API', () => {
       expect(cmp.reorderSortPredicate(0, drag, drop)).toBe(false);
     });
 
-    it('reject khi target lÃ  child row (level > 0)', () => {
+    it('reject khi target là child row (level > 0)', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption({ rowReorder: { enabled: true } as any }));
       const target = makeItem({ id: 2, name: 'c' }, { level: 1, hasChildren: false });
@@ -213,7 +213,7 @@ describe('SdTable â€” tree row API', () => {
       expect(cmp.reorderSortPredicate(0, { data: drag } as any, drop)).toBe(false);
     });
 
-    it('accept root â†’ root khi khÃ´ng cÃ³ group', () => {
+    it('accept root → root khi không có group', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption({ rowReorder: { enabled: true } as any }));
       const r1 = makeItem({ id: 1, name: 'a' });
@@ -224,7 +224,7 @@ describe('SdTable â€” tree row API', () => {
   });
 
   describe('dataItems / selectedItems', () => {
-    it('dataItems map vá» raw data', () => {
+    it('dataItems map về raw data', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption());
       const a = makeItem({ id: 1, name: 'a' });
@@ -233,7 +233,7 @@ describe('SdTable â€” tree row API', () => {
       expect(cmp.dataItems).toEqual([{ id: 1, name: 'a' }, { id: 2, name: 'b' }] as any);
     });
 
-    it('selectedItems chá»‰ tráº£ nhá»¯ng item Ä‘Ã£ isSelected', () => {
+    it('selectedItems chỉ trả những item đã isSelected', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption());
       const a = makeItem({ id: 1, name: 'a' });
@@ -247,7 +247,7 @@ describe('SdTable â€” tree row API', () => {
   });
 
   describe('onClearSelection', () => {
-    it('reset isSelected = false trÃªn má»i item truyá»n vÃ o vÃ  táº¯t isSelectAll', () => {
+    it('reset isSelected = false trên mọi item truyền vào và tắt isSelectAll', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption());
       const a = makeItem({ id: 1, name: 'a' });
@@ -264,7 +264,7 @@ describe('SdTable â€” tree row API', () => {
       expect(cmp.isSelectAll()).toBe(false);
     });
 
-    it('default vá» this.items() khi khÃ´ng truyá»n argument', () => {
+    it('default về this.items() khi không truyền argument', () => {
       const cmp = createTable();
       cmp.tableOption.set(baseOption());
       const a = makeItem({ id: 1, name: 'a' });
@@ -276,11 +276,10 @@ describe('SdTable â€” tree row API', () => {
   });
 
   describe('trackBy', () => {
-    it('tráº£ meta.id á»•n Ä‘á»‹nh cho row', () => {
+    it('trả meta.id ổn định cho row', () => {
       const cmp = createTable();
       const item = makeItem({ id: 1, name: 'a' });
       expect(cmp.trackBy(0, item)).toBe(item.meta.id);
     });
   });
 });
-

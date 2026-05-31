@@ -1,10 +1,10 @@
-�# Core UI Test Coverage Plan 2 � Implementation Plan
+# Core UI Test Coverage Plan 2 — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** M�x r�"ng test coverage cho 10 forms primitives còn lại của `@sdcorejs/angular` (autocomplete, chip, chip-calendar, date, date-range, datetime, input-number, radio, select, textarea) + 3 follow-ups từ Plan 1 review (coverage threshold enforcement, scroll-spy test cho SdAnchor, normalize import sweep).
+**Goal:** Mở rộng test coverage cho 10 forms primitives còn lại của `@sdcorejs/angular` (autocomplete, chip, chip-calendar, date, date-range, datetime, input-number, radio, select, textarea) + 3 follow-ups từ Plan 1 review (coverage threshold enforcement, scroll-spy test cho SdAnchor, normalize import sweep).
 
-**Architecture:** Tái sử dụng pattern Plan 1 (TestBed-driven integration + HostComponent wrapper + separate top-level `describe` cho FormGroup/NgForm lifecycle). M�i form spec follow checklist: render �  inputs/coerce �  formControl integration �  validators �  output events �  form integration (3 ways). Relative imports cho `testing/test-utils.ts` và `@sdcorejs/angular/*` services.
+**Architecture:** Tái sử dụng pattern Plan 1 (TestBed-driven integration + HostComponent wrapper + separate top-level `describe` cho FormGroup/NgForm lifecycle). Mỗi form spec follow checklist: render → inputs/coerce → formControl integration → validators → output events → form integration (3 ways). Relative imports cho `testing/test-utils.ts` và `@sdcorejs/angular/*` services.
 
 **Tech Stack:** Angular 19.2.x, Angular Signals, Karma 6.4.x, Jasmine 5.5.x, `@angular/material` (form fields, datepicker, slide-toggle, select, autocomplete, chips), `@angular/material-moment-adapter`.
 
@@ -86,7 +86,7 @@ describe('Sd<Name>', () => {
   // ... per-form specific
 });
 
-// FormGroup lifecycle � separate top-level describe (per Plan 1 review feedback)
+// FormGroup lifecycle — separate top-level describe (per Plan 1 review feedback)
 describe('Sd<Name> (FormGroup lifecycle)', () => {
   let fg: FormGroup;
   let fixture: ComponentFixture<FgHost>;
@@ -111,7 +111,7 @@ describe('Sd<Name> (FormGroup lifecycle)', () => {
   });
 });
 
-// NgForm extraction � separate top-level describe
+// NgForm extraction — separate top-level describe
 describe('Sd<Name> (NgForm extraction)', () => {
   let fixture: ComponentFixture<NgFormHost>;
 
@@ -153,10 +153,10 @@ describe('Sd<Name> (NgForm extraction)', () => {
 | 8 | `forms/datetime/src/datetime.component.spec.ts` | 458 | Complex |
 | 9 | `forms/autocomplete/src/autocomplete.component.spec.ts` | 533 | Complex |
 | 10 | `forms/select/src/select.component.spec.ts` | 656 | Complex |
-| 11 | Normalize import convention sweep across all `*.spec.ts` | � | � |
-| 12 | Add scroll-spy test for SdAnchor (lift coverage from 68% to ~85%) | � | � |
-| 13 | Enforce coverage thresholds in `karma.conf.js` | � | � |
-| 14 | Update gap report in design doc + create Plan 2 spec | � | � |
+| 11 | Normalize import convention sweep across all `*.spec.ts` | — | — |
+| 12 | Add scroll-spy test for SdAnchor (lift coverage from 68% to ~85%) | — | — |
+| 13 | Enforce coverage thresholds in `karma.conf.js` | — | — |
+| 14 | Update gap report in design doc + create Plan 2 spec | — | — |
 
 Plus per-task MD audit + update of corresponding `sd-<name>.md` file.
 
@@ -193,9 +193,9 @@ Expected: 388 tests pass (from Plan 1 baseline).
 **Source notes** (read `radio.component.ts` to verify):
 - Setter-based @Input pattern (similar to switch/checkbox from Plan 1).
 - Inputs: `label`, `name`, `form`, `disabled`, `required`, `model`, `options` (array of `{value, label}`), `direction` (horizontal/vertical), `color`.
-- `formControl = new FormControl()` � plain Angular FormControl.
+- `formControl = new FormControl()` — plain Angular FormControl.
 - `model` setter syncs formControl with `{emitEvent: false}`.
-- User selection �  emit `modelChange` + `sdChange`.
+- User selection → emit `modelChange` + `sdChange`.
 - Wraps `mat-radio-group`.
 
 **Test scope** (~15-18 specs):
@@ -204,13 +204,13 @@ Expected: 388 tests pass (from Plan 1 baseline).
 - `inputs` (3-4): label render, options render correctly, direction class (horizontal vs vertical)
 - `disabled` (3): coerce true/empty-string/false
 - `model setter` (2): syncs formControl without emit, dedup guard
-- `required validator` (2): apply when true, remove when false (use `setValue(null)` to trigger; `Validators.required` rejects null/undefined/empty, NOT false � same lesson as switch)
+- `required validator` (2): apply when true, remove when false (use `setValue(null)` to trigger; `Validators.required` rejects null/undefined/empty, NOT false — same lesson as switch)
 - `output events` (1): emit modelChange + sdChange when user selects
 - `color` (1-2): default primary, accepts warn
 - Top-level `describe('SdRadio (FormGroup lifecycle)')` (2)
 - Top-level `describe('SdRadio (NgForm extraction)')` (1)
 
-**MD audit checklist (14 items)** � particular focus:
+**MD audit checklist (14 items)** — particular focus:
 - Item 5 Inputs table: include `options` with `{value, label}[]` type
 - Item 13 Form-specific: 3-way snippet (template-driven `[(model)]`, reactive `FormGroup`, NgForm)
 - Item 14 Code mẫu: example with options array + selected default
@@ -260,7 +260,7 @@ Expected: 15-18 specs pass.
 
 - [ ] **Step 4: Audit `sd-radio.md` per 14-item checklist**
 
-Verify all 14 items. B�" sung mục thiếu (Outputs table, Form-specific 3-way snippet, anti-patterns if missing, etc.).
+Verify all 14 items. Bổ sung mục thiếu (Outputs table, Form-specific 3-way snippet, anti-patterns if missing, etc.).
 
 - [ ] **Step 5: Commit**
 
@@ -281,7 +281,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 **Source notes**:
 - Pattern similar to SdInput but with `<textarea>` instead of `<input>`.
-- Likely uses signal inputs OR setter-based � verify by reading source.
+- Likely uses signal inputs OR setter-based — verify by reading source.
 - Has `rows`, `maxlength`, `minlength` inputs.
 - Validators (required, maxlength, minlength).
 - Wraps `mat-form-field` + `<textarea matInput>`.
@@ -293,7 +293,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - disabled (2): effect-based disable/enable
 - required validator (2): apply/remove
 - maxlength/minlength (2): apply
-- model two-way (2): downward (model �  formControl), upward (formControl �  model)
+- model two-way (2): downward (model → formControl), upward (formControl → model)
 - output events (1-2): sdChange emit, sdBlur trim + emit
 - error tooltip message (2): required, maxlength
 - focus tracking (1)
@@ -345,7 +345,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Modify: `projects/sdcorejs-angular/forms/chip/sd-chip.md`
 
 **Source notes**:
-- Chip-input style (multi-select). User types text + Enter �  adds chip; can remove chips.
+- Chip-input style (multi-select). User types text + Enter → adds chip; can remove chips.
 - Likely uses `MatChipGrid`/`MatChipRow`.
 - `model` is array of strings or values.
 - Inputs: `placeholder`, `disabled`, `required`, `maxLength` per chip, `model`.
@@ -361,7 +361,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Top-level FormGroup lifecycle (2)
 - Top-level NgForm extraction (1)
 
-**Adjust scope based on actual source � focus on observable behaviors, not internal state.**
+**Adjust scope based on actual source — focus on observable behaviors, not internal state.**
 
 - [ ] **Step 1: Read source + html + pipes folder + md**
 
@@ -470,7 +470,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 **Test setup notes**:
 - May need `provideMomentDateAdapter()` or `provideNativeDateAdapter()` in TestBed providers.
-- MatDatepicker panel opening hard to test � focus on programmatic value setting.
+- MatDatepicker panel opening hard to test — focus on programmatic value setting.
 
 - [ ] **Step 1: Read source + html + md + check moment/native adapter usage**
 
@@ -549,20 +549,20 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/forms/input-number/src/input-number.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/input-number/sd-input-number.md`
 
-**Source notes** (478 lines � complex):
+**Source notes** (478 lines — complex):
 - Similar pattern to SdInput but constrained to number values.
 - Likely has min/max, step, thousands separator (vi-VN format), decimal places.
-- May parse user input (e.g. "1,000.5" �  1000.5) and re-format on blur.
+- May parse user input (e.g. "1,000.5" → 1000.5) and re-format on blur.
 - Inputs: `label`, `placeholder`, `min`, `max`, `step`, `precision`, `format`, `required`, `disabled`, `model`.
 
-**Test scope** (~25-30 specs � input-number is the third most complex of Plan 2):
+**Test scope** (~25-30 specs — input-number is the third most complex of Plan 2):
 - creation & rendering (2)
 - model two-way (3): number model, string input, formatted display
 - min/max validation (3)
 - step input (1-2)
 - precision / decimal places (2-3)
 - thousands separator formatting (2-3)
-- parse user input �  number (2)
+- parse user input → number (2)
 - blur re-format (1-2)
 - required (2)
 - disabled (2)
@@ -580,7 +580,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 Expected: ~25-30 specs pass.
 
-- [ ] **Step 4: Audit `sd-input-number.md`** � especially format/locale notes.
+- [ ] **Step 4: Audit `sd-input-number.md`** — especially format/locale notes.
 
 - [ ] **Step 5: Commit**
 
@@ -611,7 +611,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - required (2)
 - disabled (2)
 - format input (1-2)
-- popup interactions (3-5) � programmatic, not click-driven
+- popup interactions (3-5) — programmatic, not click-driven
 - output events (2-3)
 - Top-level FormGroup (2), NgForm (1)
 
@@ -670,7 +670,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 - [ ] **Step 2: Create spec file**
 
-- [ ] **Step 3: Run test**. Autocomplete dropdown opens via overlay � focus on programmatic option selection rather than UI clicking.
+- [ ] **Step 3: Run test**. Autocomplete dropdown opens via overlay — focus on programmatic option selection rather than UI clicking.
 
 Expected: ~25-30 specs pass.
 
@@ -693,7 +693,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `projects/sdcorejs-angular/forms/select/src/select.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/select/sd-select.md`
 
-**Source notes** (656 lines � largest in Plan 2):
+**Source notes** (656 lines — largest in Plan 2):
 - Wraps `MatSelect`.
 - Single AND multi-select modes.
 - Inputs: `label`, `placeholder`, `options`, `model`, `multiple`, `required`, `disabled`, `searchable` (?).
@@ -711,9 +711,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - output events (2-3)
 - Top-level FormGroup (2), NgForm (1)
 
-**MatSelect panel opens via overlay � use `MatSelectHarness` if available, or programmatic `select.open()` + `select.options` query.**
+**MatSelect panel opens via overlay — use `MatSelectHarness` if available, or programmatic `select.open()` + `select.options` query.**
 
-- [ ] **Step 1: Read source CAREFULLY + html + md** � 656 lines is the largest spec target.
+- [ ] **Step 1: Read source CAREFULLY + html + md** — 656 lines is the largest spec target.
 
 - [ ] **Step 2: Create spec file**
 
@@ -721,7 +721,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 
 Expected: ~30-35 specs pass.
 
-- [ ] **Step 4: Audit `sd-select.md`** � likely already detailed (was reference for SdInput). Verify multi-select scenarios documented.
+- [ ] **Step 4: Audit `sd-select.md`** — likely already detailed (was reference for SdInput). Verify multi-select scenarios documented.
 
 - [ ] **Step 5: Commit**
 
@@ -761,7 +761,7 @@ Example:
 
 Note: `@sdcorejs/angular/utilities/extensions` resolves to `projects/sdcorejs-angular/utilities/extensions/index.ts` per tsconfig path. Relative `../../utilities/extensions` resolves the same.
 
-For SD_FORM_CONFIGURATION in input.component.spec.ts: `'@sdcorejs/angular/forms/models'` �  `'../../models'` (2 levels up from `forms/input/src/` to `forms/`, then into `models`).
+For SD_FORM_CONFIGURATION in input.component.spec.ts: `'@sdcorejs/angular/forms/models'` → `'../../models'` (2 levels up from `forms/input/src/` to `forms/`, then into `models`).
 
 - [ ] **Step 3: Run full test suite to ensure no regression**
 
@@ -795,9 +795,9 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 **Rationale**: Plan 1 final review (Important 2) noted anchor coverage is 68% lines / 38% branches because scroll-spy subscription wasn't tested. Mock `getBoundingClientRect` + dispatch `scroll` event to exercise the scroll-spy logic.
 
 **Test additions** (~3-5 new specs):
-- Scroll event on wrapper �  `activeSectionId` updates to section currently in viewport
-- Multiple section transitions: scroll past sec1 �  activeSectionId = sec2
-- Scroll past last section �  activeSectionId stays at last
+- Scroll event on wrapper → `activeSectionId` updates to section currently in viewport
+- Multiple section transitions: scroll past sec1 → activeSectionId = sec2
+- Scroll past last section → activeSectionId stays at last
 - `auditTime(50)` rate-limiting: 2 rapid scrolls produce 1 update (verify via fakeAsync + tick)
 
 - [ ] **Step 1: Add a new top-level describe block**
@@ -859,7 +859,7 @@ describe('SdAnchor (scroll-spy)', () => {
     fixture.detectChanges();
 
     // Both 3 events should result in 1 update (after auditTime)
-    // Hard to assert "count of updates" with signals � instead just verify no error and final state is correct
+    // Hard to assert "count of updates" with signals — instead just verify no error and final state is correct
     expect(anchor.activeSectionId()).toBeTruthy();
   }));
 });
@@ -903,7 +903,7 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 **Files:**
 - Modify: `projects/sdcorejs-angular/karma.conf.js`
 
-**Rationale**: Plan 1 final review (Important 1) noted coverage is generated but not enforced � Plan 2 regression could silently drop coverage. Add `coverageReporter.check.each` threshold.
+**Rationale**: Plan 1 final review (Important 1) noted coverage is generated but not enforced — Plan 2 regression could silently drop coverage. Add `coverageReporter.check.each` threshold.
 
 - [ ] **Step 1: Add `check` block to coverageReporter**
 
@@ -936,8 +936,8 @@ coverageReporter: {
 ```
 
 Threshold rationale:
-- Per-file `each`: 70 line / 50 branch is conservative � matches realistic floor for complex forms (input 86%, button 90%, anchor still ~68% before Task 12).
-- Global: 75 line / 60 branch � leaves headroom while gating regressions.
+- Per-file `each`: 70 line / 50 branch is conservative — matches realistic floor for complex forms (input 86%, button 90%, anchor still ~68% before Task 12).
+- Global: 75 line / 60 branch — leaves headroom while gating regressions.
 - After Task 12 (scroll-spy), anchor should clear 70%.
 
 - [ ] **Step 2: Update test:ci script to include --code-coverage**
@@ -948,7 +948,7 @@ Modify `package.json`:
 "test:ci": "ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --code-coverage"
 ```
 
-- [ ] **Step 3: Run full suite � verify all pass + thresholds met**
+- [ ] **Step 3: Run full suite — verify all pass + thresholds met**
 
 ```bash
 npm run test:ci 2>&1 | tail -30
@@ -981,16 +981,16 @@ Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 - Create: `docs/superpowers/specs/2026-05-17-core-ui-test-coverage-plan-2-design.md` (brief spec doc)
 - Append: gap report section to `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` (extends Plan 1's §6.1 with Plan 2 results)
 
-- [ ] **Step 1: Create Plan 2 spec doc** (brief � references Plan 1 spec for shared decisions)
+- [ ] **Step 1: Create Plan 2 spec doc** (brief — references Plan 1 spec for shared decisions)
 
 Content:
 ```markdown
-# Core UI Test Coverage � Plan 2 Design
+# Core UI Test Coverage — Plan 2 Design
 
 **Date**: 2026-05-17
 **Scope**: vn-angular (`projects/sdcorejs-angular`)
 **Owner**: nghiatt15@onemount.com
-**Batch**: Plan 2 � 10 remaining forms + 3 follow-ups from Plan 1 review
+**Batch**: Plan 2 — 10 remaining forms + 3 follow-ups from Plan 1 review
 
 ## 1. Problem statement
 
@@ -1021,12 +1021,12 @@ Same as Plan 1 + coverage threshold enforcement added in Task 13.
 
 1. 10 new spec files created + tests pass.
 2. 10 MD files audited per 14-item checklist.
-3. SdAnchor coverage lifted to �0�75% lines / �0�50% branches.
+3. SdAnchor coverage lifted to ≥75% lines / ≥50% branches.
 4. Import convention normalized across all `*.spec.ts`.
 5. Coverage thresholds enforced in karma.conf.
 6. Gap report aggregated.
 7. No source `.ts` changes (except trivial typo fixes).
-8. Single branch (`feature/plan-2-forms-tests`) � merge after final review.
+8. Single branch (`feature/plan-2-forms-tests`) — merge after final review.
 
 ## 6. Reference
 
@@ -1040,11 +1040,11 @@ Same as Plan 1 + coverage threshold enforcement added in Task 13.
 Append to `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` after §6.1:
 
 ```markdown
-## 6.2 Gap report � Plan 2 implementation results
+## 6.2 Gap report — Plan 2 implementation results
 
 **Implementation completed**: 2026-MM-DD (fill at commit time)
 **Branch**: `feature/plan-2-forms-tests`
-**Test counts**: Plan 1 final (~388) �  After Plan 2: ~XXX (added ~YYY tests across 10 spec files + scroll-spy additions)
+**Test counts**: Plan 1 final (~388) → After Plan 2: ~XXX (added ~YYY tests across 10 spec files + scroll-spy additions)
 
 ### Per-file summary
 
@@ -1065,9 +1065,9 @@ Append to `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` af
 
 | Item | Status | Commit |
 |---|---|---|
-| Normalize import sweep | �S& Done | (fill) |
-| Scroll-spy test for SdAnchor | �S& Done � coverage lifted from 68%/38% to X%/Y% | (fill) |
-| Coverage threshold enforced | �S& Done � each �0�70/50, global �0�75/60 | (fill) |
+| Normalize import sweep | ✅ Done | (fill) |
+| Scroll-spy test for SdAnchor | ✅ Done — coverage lifted from 68%/38% to X%/Y% | (fill) |
+| Coverage threshold enforced | ✅ Done — each ≥70/50, global ≥75/60 | (fill) |
 
 ### Coverage actual (Plan 2 files)
 
@@ -1082,10 +1082,10 @@ Append to `docs/superpowers/specs/2026-05-15-core-ui-test-coverage-design.md` af
 
 ### Plan 3+ deferred items
 
-- Plan 3 components (modal, side-drawer, etc. � excluding skipped: workflow, etc.)
+- Plan 3 components (modal, side-drawer, etc. — excluding skipped: workflow, etc.)
 - Plan 4 directives (sd-desktop, sd-href, sd-hover-copy, sd-scroll)
 - Plan 5 services
-- Plan 6 heavy components (chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow) � **skipped per user direction until those features are finalized**
+- Plan 6 heavy components (chart, code-editor, document-builder, editor, import-excel, query-builder, table sub-components, workflow) — **skipped per user direction until those features are finalized**
 ```
 
 Fill in placeholders (X, fill, MM-DD) with actual values.
@@ -1105,7 +1105,7 @@ All must pass.
 
 ```bash
 git add docs/superpowers/
-git commit -m "SM-00: Plan 2 finalize � design doc + gap report aggregate
+git commit -m "SM-00: Plan 2 finalize — design doc + gap report aggregate
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>"
 ```
@@ -1121,7 +1121,7 @@ git push -u origin feature/plan-2-forms-tests
 ## Done criteria checklist
 
 - [ ] 10 form spec files created.
-- [ ] All `npm run test:ci` pass (Plan 1 + Plan 2 �0� 500+ tests).
+- [ ] All `npm run test:ci` pass (Plan 1 + Plan 2 ≈ 500+ tests).
 - [ ] Coverage thresholds enforced; no file below 70/50.
 - [ ] 10 MD files audited + gap report appended.
 - [ ] Scroll-spy test added to SdAnchor.
@@ -1135,15 +1135,14 @@ git push -u origin feature/plan-2-forms-tests
 
 **Date adapter not provided**: tests with `MatDatepicker` need `provideMomentDateAdapter()` from `@angular/material-moment-adapter` or `provideNativeDateAdapter()` from `@angular/material/core` in TestBed providers.
 
-**Multi-select model**: `[(model)]` with array � pre-seed `host.model = []` before triggering validators to avoid NG0100.
+**Multi-select model**: `[(model)]` with array — pre-seed `host.model = []` before triggering validators to avoid NG0100.
 
 **MatSelect / MatAutocomplete panel**: hard to open via DOM events in headless. Prefer programmatic API (`select.open()`, `select.options`) for option enumeration.
 
 **Mat chip events**: simulating Enter on chip input requires dispatching `KeyboardEvent` with `key: 'Enter'`. May need `MatChipInputEvent` for `chipAdded` testing.
 
-**License service / OnPush**: same handling as Plan 1 � Karma localhost auto-passes; no mock needed.
+**License service / OnPush**: same handling as Plan 1 — Karma localhost auto-passes; no mock needed.
 
-**Effect timing on signal inputs**: same as SdInput � `fixture.detectChanges()` flushes effects synchronously; pre-seed `host.model` to avoid NG0100.
+**Effect timing on signal inputs**: same as SdInput — `fixture.detectChanges()` flushes effects synchronously; pre-seed `host.model` to avoid NG0100.
 
 **FormGroup integration timing**: `ngAfterViewInit` registers control; verify after first `fixture.detectChanges()`. Run `fixture.destroy()` to test removeControl.
-

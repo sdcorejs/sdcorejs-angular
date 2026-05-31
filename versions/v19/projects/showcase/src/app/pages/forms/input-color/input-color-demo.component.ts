@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
@@ -10,37 +10,37 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
   template: `
     <demo-page
       title="Input Color"
-      description="Ã” nháº­p mÃ£ mÃ u HEX vá»›i swatch hiá»ƒn thá»‹ mÃ u hiá»‡n táº¡i. Báº¥m swatch Ä‘á»ƒ má»Ÿ báº£ng chá»n mÃ u hoáº·c gÃµ tay mÃ£ HEX (#RGB / #RRGGBB / #RRGGBBAA).">
+      description="Ô nhập mã màu HEX với swatch hiển thị màu hiện tại. Bấm swatch để mở bảng chọn màu hoặc gõ tay mã HEX (#RGB / #RRGGBB / #RRGGBBAA).">
 
-      <demo-section heading="CÆ¡ báº£n" note="GiÃ¡ trá»‹ bind hai chiá»u â€” pick hoáº·c gÃµ tay Ä‘á»u cáº­p nháº­t signal.">
+      <demo-section heading="Cơ bản" note="Giá trị bind hai chiều — pick hoặc gõ tay đều cập nhật signal.">
         <div class="row">
-          <sd-input-color label="MÃ u thÆ°Æ¡ng hiá»‡u" [(model)]="brand" />
-          <span class="value">Äang chá»n: <code>{{ brand() || '(trá»‘ng)' }}</code></span>
+          <sd-input-color label="Màu thương hiệu" [(model)]="brand" />
+          <span class="value">Đang chọn: <code>{{ brand() || '(trống)' }}</code></span>
         </div>
       </demo-section>
 
-      <demo-section heading="Validator (required + hex)" note="Äá»ƒ trá»‘ng hoáº·c gÃµ chuá»—i sai Ä‘á»‹nh dáº¡ng (vd 'red') sáº½ hiá»‡n lá»—i.">
+      <demo-section heading="Validator (required + hex)" note="Để trống hoặc gõ chuỗi sai định dạng (vd 'red') sẽ hiện lỗi.">
         <sd-input-color
           label="required"
-          helperText="Äá»‹nh dáº¡ng #RGB, #RRGGBB hoáº·c #RRGGBBAA"
+          helperText="Định dạng #RGB, #RRGGBB hoặc #RRGGBBAA"
           [required]="true"
           [(model)]="tagColor" />
       </demo-section>
 
-      <demo-section heading="Tráº¡ng thÃ¡i (state)">
+      <demo-section heading="Trạng thái (state)">
         <sd-input-color label="disabled" [model]="'#1565C0'" [disabled]="true" />
         <sd-input-color label="readonly" [model]="'#4CAF50'" [readonly]="true" />
         <sd-input-color label="viewed" [model]="'#F82C13'" [viewed]="true" />
       </demo-section>
 
-      <demo-section heading="Hex dáº¡ng ngáº¯n / kÃ¨m alpha" note="Picker tá»± normalize #RGB â†’ #RRGGBB vÃ  bá» alpha; swatch giá»¯ giÃ¡ trá»‹ tháº­t.">
+      <demo-section heading="Hex dạng ngắn / kèm alpha" note="Picker tự normalize #RGB → #RRGGBB và bỏ alpha; swatch giữ giá trị thật.">
         <div class="row">
-          <sd-input-color label="Hex 3 kÃ½ tá»±" [(model)]="shortHex" />
-          <span class="value">Swatch hiá»ƒn thá»‹: <code>{{ shortHex() }}</code></span>
+          <sd-input-color label="Hex 3 ký tự" [(model)]="shortHex" />
+          <span class="value">Swatch hiển thị: <code>{{ shortHex() }}</code></span>
         </div>
         <div class="row">
-          <sd-input-color label="Hex 8 kÃ½ tá»± (cÃ³ alpha)" [(model)]="alphaHex" />
-          <span class="value">Swatch hiá»ƒn thá»‹: <code>{{ alphaHex() }}</code></span>
+          <sd-input-color label="Hex 8 ký tự (có alpha)" [(model)]="alphaHex" />
+          <span class="value">Swatch hiển thị: <code>{{ alphaHex() }}</code></span>
         </div>
       </demo-section>
     </demo-page>
@@ -76,4 +76,3 @@ export class InputColorDemoComponent {
   readonly shortHex = signal<string | undefined>('#0AF');
   readonly alphaHex = signal<string | undefined>('#1565C088');
 }
-

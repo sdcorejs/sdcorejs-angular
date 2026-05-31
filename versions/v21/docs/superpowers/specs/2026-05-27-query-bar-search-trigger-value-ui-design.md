@@ -1,4 +1,4 @@
-�# query-bar � unified Search trigger + compact value editing
+# query-bar — unified Search trigger + compact value editing
 
 **Date:** 2026-05-27
 **Status:** Approved (design)
@@ -7,12 +7,12 @@
 
 ## Problem
 
-1. Inline value editing renders the full-size `sd-input` / `sd-select` directly inside the flat token, which looks cramped/ugly � especially for `values` / `date` controls that are taller than the 28px token.
+1. Inline value editing renders the full-size `sd-input` / `sd-select` directly inside the flat token, which looks cramped/ugly — especially for `values` / `date` controls that are taller than the 28px token.
 2. The two modes apply differently: inline already defers to a Search button, but popover applies live per chip (`applyChipEdit` + live `queryChange`). There is no single, consistent "press Search to run the query" affordance, and the inline Search button sits awkwardly in the main filter region instead of with the action buttons.
 
 ## Goal
 
-- **A.** One deferred trigger model for both modes: editing chips never runs the query; a single Search icon button (next to Clear-all) � or pressing Enter in the free-text search input � is the only thing that emits `apply` / `queryChange`.
+- **A.** One deferred trigger model for both modes: editing chips never runs the query; a single Search icon button (next to Clear-all) — or pressing Enter in the free-text search input — is the only thing that emits `apply` / `queryChange`.
 - **B.** Compact inline value editing: text/number stay inline (sized to the token); `values` / `lazy-values` / `date` / `datetime` open a small popover holding the full control.
 
 ## A. Unified deferred Search trigger
@@ -42,15 +42,15 @@
 
 The reusable `#valueEditor` ng-template stays the dispatch point, but splits by kind:
 
-- **text / number** � inline compact control sized to the token: `sd-input` / `sd-input-number` `size="sm"`, constrained width (e.g. `max-width: 140px`), no heavy frame. Used in both the building value step and editing-value. Commit: stash on `sdChange`, finalize on `keyupEnter` (existing draft pattern).
-- **values / lazy-values / date / datetime** � clicking the value segment opens a small **mat-menu popover** anchored at the segment, containing the full-size `sd-select` (with `multiple` for IN/NOT_IN) / `sd-date` / `sd-datetime`. Selecting a value commits (draft �  finalize) and closes the popover. The token itself shows only the value text. During the **building** value step for these kinds, render the segment and auto-open the popover (reuse the `afterNextRender` open pattern, via a `MatMenuTrigger` viewChild or programmatic open).
-- **boolean** � two compact inline toggle buttons (current behavior, just sized to the token).
-- **BETWEEN** � out of scope (still deferred; a BETWEEN field in inline mode is not part of this change).
+- **text / number** — inline compact control sized to the token: `sd-input` / `sd-input-number` `size="sm"`, constrained width (e.g. `max-width: 140px`), no heavy frame. Used in both the building value step and editing-value. Commit: stash on `sdChange`, finalize on `keyupEnter` (existing draft pattern).
+- **values / lazy-values / date / datetime** — clicking the value segment opens a small **mat-menu popover** anchored at the segment, containing the full-size `sd-select` (with `multiple` for IN/NOT_IN) / `sd-date` / `sd-datetime`. Selecting a value commits (draft → finalize) and closes the popover. The token itself shows only the value text. During the **building** value step for these kinds, render the segment and auto-open the popover (reuse the `afterNextRender` open pattern, via a `MatMenuTrigger` viewChild or programmatic open).
+- **boolean** — two compact inline toggle buttons (current behavior, just sized to the token).
+- **BETWEEN** — out of scope (still deferred; a BETWEEN field in inline mode is not part of this change).
 
 ### Styling
 
 - Add a `.c-token-value-edit` inline-control skin: shrink `sd-*` control height to ~26px, remove the default control border inside the token, auto width. Keep borders only inside the value popover panel, where the full control is shown.
-- The value popover panel reuses the existing popover panel styling conventions (`c-chip-popover`-like) but minimal � just padding + the single control.
+- The value popover panel reuses the existing popover panel styling conventions (`c-chip-popover`-like) but minimal — just padding + the single control.
 
 ## Out of scope
 
@@ -75,4 +75,3 @@ The reusable `#valueEditor` ng-template stays the dispatch point, but splits by 
 
 - `npm run build` passes.
 - Targeted karma run of the query-bar spec is green.
-

@@ -1,7 +1,7 @@
-�# @sdcorejs/angular
+# @sdcorejs/angular
 
-> **VI** � Thư vi�!n UI n�"i b�" xây dựng trên Angular Material, h� trợ Angular 19+  
-> **EN** � Internal UI component library built on Angular Material, supporting Angular 19+
+> **VI** — Thư viện UI nội bộ xây dựng trên Angular Material, hỗ trợ Angular 19+  
+> **EN** — Internal UI component library built on Angular Material, supporting Angular 19+
 
 [![Version](https://img.shields.io/badge/version-19.0.0--beta.47-blue)](./package.json)
 [![Angular](https://img.shields.io/badge/Angular-19%2B-red)](https://angular.dev)
@@ -11,7 +11,7 @@
 
 ## Table of Contents / Mục lục
 
-- [Getting Started / Cài �ặt](#getting-started--cài-�ặt)
+- [Getting Started / Cài đặt](#getting-started--cài-đặt)
 - [Theming / SCSS Customization](#theming--scss-customization)
 - [Components](#components)
   - [SdButton](#sdbutton)
@@ -23,11 +23,11 @@
   - [Other Components](#other-components--các-component-khác)
 - [Form Components](#form-components)
 - [CRUD Patterns / Code mẫu CRUD](#crud-patterns--code-mẫu-crud)
-- [Contributing Guide / Hư�:ng dẫn �óng góp](#contributing-guide--hư�:ng-dẫn-�óng-góp)
+- [Contributing Guide / Hướng dẫn đóng góp](#contributing-guide--hướng-dẫn-đóng-góp)
 
 ---
 
-## Getting Started / Cài �ặt
+## Getting Started / Cài đặt
 
 ### Prerequisites / Yêu cầu
 
@@ -38,7 +38,7 @@
 | `@angular/material-date-fns-adapter` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
 | `date-fns` | `^3 \|\| ^4` |
 
-### Installation / Cài �ặt
+### Installation / Cài đặt
 
 ```bash
 npm install @sdcorejs/angular
@@ -94,7 +94,7 @@ export const appConfig: ApplicationConfig = {
 
 ### CSS Variables
 
-`@sdcorejs/angular` sử dụng CSS custom properties (variables) �Ồ quản lý màu sắc. M�i màu �ược expose dư�:i dạng `--sd-<color>`.
+`@sdcorejs/angular` sử dụng CSS custom properties (variables) để quản lý màu sắc. Mỗi màu được expose dưới dạng `--sd-<color>`.
 
 **Available color tokens / Các biến màu sắc:**
 
@@ -102,26 +102,26 @@ export const appConfig: ApplicationConfig = {
 |---|---|---|
 | `--sd-primary` | `#2A66F4` | Màu chính |
 | `--sd-primary-light` | `#EAF1FF` | Màu chính nhạt |
-| `--sd-primary-dark` | `#1C4AD9` | Màu chính �ậm |
+| `--sd-primary-dark` | `#1C4AD9` | Màu chính đậm |
 | `--sd-secondary` | `#212121` | Màu phụ |
 | `--sd-secondary-light` | `#E9E9E9` | Màu phụ nhạt |
 | `--sd-success` | `#4CAF50` | Thành công |
 | `--sd-success-light` | `#DBEFDC` | Thành công nhạt |
 | `--sd-warning` | `#FF9600` | Cảnh báo |
 | `--sd-warning-light` | `#FFEACC` | Cảnh báo nhạt |
-| `--sd-error` | `#F82C13` | L�i |
-| `--sd-error-light` | `#FED5D0` | L�i nhạt |
+| `--sd-error` | `#F82C13` | Lỗi |
+| `--sd-error-light` | `#FED5D0` | Lỗi nhạt |
 | `--sd-info` | `#2962FF` | Thông tin |
 | `--sd-info-light` | `#E7E9FF` | Thông tin nhạt |
-| `--sd-black500` | `#212121` | Xám �ậm nhất |
-| `--sd-black400` | `#757575` | Xám �ậm |
+| `--sd-black500` | `#212121` | Xám đậm nhất |
+| `--sd-black400` | `#757575` | Xám đậm |
 | `--sd-black300` | `#BFBFBF` | Xám trung |
 | `--sd-black200` | `#E6E6E6` | Xám nhạt |
 | `--sd-black100` | `#F2F2F2` | Xám nhạt nhất |
 
-### Custom Theme / Tuỳ ch�0nh theme
+### Custom Theme / Tuỳ chỉnh theme
 
-Ghi �è theme mặc ��9nh bằng cách truyền map SCSS vào mixin `theme()`:
+Ghi đè theme mặc định bằng cách truyền map SCSS vào mixin `theme()`:
 
 ```scss
 // styles.scss
@@ -138,11 +138,11 @@ html {
 }
 ```
 
-Ch�0 cần override các màu mu�n thay ��"i � các màu còn lại giữ nguyên giá tr�9 mặc ��9nh.
+Chỉ cần override các màu muốn thay đổi — các màu còn lại giữ nguyên giá trị mặc định.
 
-### Utility Classes / Các class ti�!n ích
+### Utility Classes / Các class tiện ích
 
-Thư vi�!n cung cấp sẵn các utility class:
+Thư viện cung cấp sẵn các utility class:
 
 ```html
 <!-- Text color -->
@@ -152,7 +152,7 @@ Thư vi�!n cung cấp sẵn các utility class:
 <!-- Background -->
 <div class="bg-primary-light">Background nhạt</div>
 
-<!-- Spacing (�ơn v�9 px, từ 0�200) -->
+<!-- Spacing (đơn vị px, từ 0–200) -->
 <div class="mt-16 mb-8 px-24">margin-top: 16px, padding: 0 24px</div>
 
 <!-- Gap -->
@@ -160,8 +160,8 @@ Thư vi�!n cung cấp sẵn các utility class:
 
 <!-- Grid -->
 <div class="sd-grid-container grid-cols-3">
-  <div class="col-span-2">Chiếm 2 c�"t</div>
-  <div class="col-span-1">Chiếm 1 c�"t</div>
+  <div class="col-span-2">Chiếm 2 cột</div>
+  <div class="col-span-1">Chiếm 1 cột</div>
 </div>
 
 <!-- Bootstrap grid -->
@@ -175,7 +175,7 @@ Thư vi�!n cung cấp sẵn các utility class:
 
 ## Components
 
-> Tất cả component �ều là **standalone** và sử dụng **Angular Signals** API.  
+> Tất cả component đều là **standalone** và sử dụng **Angular Signals** API.  
 > All components are **standalone** and use **Angular Signals** API.
 
 ### SdButton
@@ -188,18 +188,18 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 
 | Input | Type | Default | Description |
 |---|---|---|---|
-| `type` | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'` | KiỒu nút |
+| `type` | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'` | Kiểu nút |
 | `color` | `Color` | `'secondary'` | Màu sắc |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Kích thư�:c |
-| `title` | `string` | � | Nhãn nút |
-| `prefixIcon` | `string` | � | Icon Material trư�:c text |
-| `suffixIcon` | `string` | � | Icon Material sau text |
-| `disabled` | `boolean` | `false` | Vô hi�!u hoá |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Kích thước |
+| `title` | `string` | — | Nhãn nút |
+| `prefixIcon` | `string` | — | Icon Material trước text |
+| `suffixIcon` | `string` | — | Icon Material sau text |
+| `disabled` | `boolean` | `false` | Vô hiệu hoá |
 | `loading` | `boolean` | `false` | Trạng thái loading (tự chặn click) |
-| `tooltip` | `string` | � | Tooltip khi hover |
-| `width` | `string` | � | CSS width tuỳ ch�0nh |
+| `tooltip` | `string` | — | Tooltip khi hover |
+| `width` | `string` | — | CSS width tuỳ chỉnh |
 
-**Output:** `(click): EventEmitter<Event>` � có throttle 300ms, tự chặn khi `disabled` hoặc `loading`.
+**Output:** `(click): EventEmitter<Event>` — có throttle 300ms, tự chặn khi `disabled` hoặc `loading`.
 
 ```html
 <sd-button type="fill" color="primary" title="Lưu" prefixIcon="save" (click)="onSave()" />
@@ -220,19 +220,19 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
 
 | Input | Type | Default | Description |
 |---|---|---|---|
-| `type` | `'tag' \| 'round' \| 'icon'` | `'icon'` | KiỒu badge |
+| `type` | `'tag' \| 'round' \| 'icon'` | `'icon'` | Kiểu badge |
 | `color` | `Color` | `'secondary'` | Màu sắc |
-| `title` | `string \| number` | � | N�"i dung hiỒn th�9 |
-| `icon` | `string` | � | Icon Material |
-| `size` | `Size` | `'sm'` | Kích thư�:c |
-| `tooltip` | `string` | � | Tooltip |
+| `title` | `string \| number` | — | Nội dung hiển thị |
+| `icon` | `string` | — | Icon Material |
+| `size` | `Size` | `'sm'` | Kích thước |
+| `tooltip` | `string` | — | Tooltip |
 
 Shorthand color inputs (boolean): `primary`, `secondary`, `success`, `info`, `warning`, `error`.
 
 ```html
-<sd-badge type="tag" color="success" title="Hoạt ��"ng" />
-<sd-badge type="round" [warning]="true" title="Chờ duy�!t" />
-<sd-badge type="icon" color="error" icon="close" title="Từ ch�i" />
+<sd-badge type="tag" color="success" title="Hoạt động" />
+<sd-badge type="round" [warning]="true" title="Chờ duyệt" />
+<sd-badge type="icon" color="error" icon="close" title="Từ chối" />
 ```
 
 ---
@@ -247,21 +247,21 @@ import { SdSection } from '@sdcorejs/angular/components/section';
 
 | Input | Type | Default | Description |
 |---|---|---|---|
-| `title` | `string` | *required* | Tiêu �ề section |
-| `subTitle` | `string` | � | Tiêu �ề phụ |
-| `icon` | `string` | � | Icon Material |
+| `title` | `string` | *required* | Tiêu đề section |
+| `subTitle` | `string` | — | Tiêu đề phụ |
+| `icon` | `string` | — | Icon Material |
 | `iconColor` | `Color` | `'primary'` | Màu icon |
 | `collapsable` | `boolean` | `false` | Cho phép thu gọn |
-| `collapsed` | `boolean` | `false` | Trạng thái ban �ầu thu gọn |
+| `collapsed` | `boolean` | `false` | Trạng thái ban đầu thu gọn |
 | `hideHeader` | `boolean` | `false` | Ẩn phần header |
 
 ```html
 <sd-section title="Thông tin cơ bản" icon="person" iconColor="primary">
-  <!-- n�"i dung -->
+  <!-- nội dung -->
 </sd-section>
 
-<sd-section title="Cài �ặt nâng cao" icon="settings" collapsable [collapsed]="true">
-  <!-- n�"i dung ẩn mặc ��9nh -->
+<sd-section title="Cài đặt nâng cao" icon="settings" collapsable [collapsed]="true">
+  <!-- nội dung ẩn mặc định -->
 </sd-section>
 ```
 
@@ -277,26 +277,26 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 
 | Input | Type | Default | Description |
 |---|---|---|---|
-| `title` | `string` | � | Tiêu �ề modal |
+| `title` | `string` | — | Tiêu đề modal |
 | `color` | `Color` | `'primary'` | Màu header |
-| `width` | `'sx' \| 'sm' \| 'md' \| 'lg' \| string` | `'md'` | Đ�" r�"ng (md = 60vw) |
+| `width` | `'sx' \| 'sm' \| 'md' \| 'lg' \| string` | `'md'` | Độ rộng (md = 60vw) |
 | `height` | `string` | `'auto'` | Chiều cao |
-| `view` | `'dialog' \| 'bottom-sheet'` | auto | Tự ��"ng bottom-sheet trên mobile |
-| `lazyLoadContent` | `boolean` | `true` | Lazy render n�"i dung |
+| `view` | `'dialog' \| 'bottom-sheet'` | auto | Tự động bottom-sheet trên mobile |
+| `lazyLoadContent` | `boolean` | `true` | Lazy render nội dung |
 
-**Output:** `(sdClosed): EventEmitter` � phát ra khi modal �óng.
+**Output:** `(sdClosed): EventEmitter` — phát ra khi modal đóng.
 
 **Methods** (dùng qua `@ViewChild`):
-- `modal.open()` � m�x modal
-- `modal.close()` � �óng modal
+- `modal.open()` — mở modal
+- `modal.close()` — đóng modal
 
-> �a�️ N�"i dung modal phải �ặt trong `<ng-template>`.
+> ⚠️ Nội dung modal phải đặt trong `<ng-template>`.
 
 ```html
-<sd-modal #myModal title="Thêm m�:i" width="md" (sdClosed)="onClosed()">
+<sd-modal #myModal title="Thêm mới" width="md" (sdClosed)="onClosed()">
   <ng-template>
     <div class="modal-body p-16">
-      <!-- n�"i dung form -->
+      <!-- nội dung form -->
     </div>
     <div class="modal-footer d-flex justify-content-end gap-8 p-16">
       <sd-button title="Huỷ" (click)="myModal.close()" />
@@ -305,7 +305,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
   </ng-template>
 </sd-modal>
 
-<sd-button title="M�x modal" prefixIcon="add" (click)="myModal.open()" />
+<sd-button title="Mở modal" prefixIcon="add" (click)="myModal.open()" />
 ```
 
 ---
@@ -317,21 +317,21 @@ import { SdTable } from '@sdcorejs/angular/components/table';
 import type { SdTableOption, SdTableColumn } from '@sdcorejs/angular/components/table';
 ```
 
-SdTable nhận m�"t object `option` duy nhất kiỒu `SdTableOption<T>`.
+SdTable nhận một object `option` duy nhất kiểu `SdTableOption<T>`.
 
-**Column types / KiỒu c�"t:**
+**Column types / Kiểu cột:**
 
 | `type` | Mô tả |
 |---|---|
-| `'string'` | VĒn bản |
-| `'number'` | S� (tự format) |
+| `'string'` | Văn bản |
+| `'number'` | Số (tự format) |
 | `'boolean'` | True/False |
 | `'date'` | Ngày |
 | `'datetime'` | Ngày giờ |
 | `'time'` | Giờ |
-| `'values'` | Enum từ danh sách c� ��9nh |
+| `'values'` | Enum từ danh sách cố định |
 | `'lazy-values'` | Enum load async |
-| `'children'` | C�"t nhóm (multi-header) |
+| `'children'` | Cột nhóm (multi-header) |
 
 **Local table:**
 
@@ -389,7 +389,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 ```
 
 ```html
-<sd-avatar src="/api/avatar/123" name="Nguy�&n VĒn A" size="md" />
+<sd-avatar src="/api/avatar/123" name="Nguyễn Văn A" size="md" />
 <sd-avatar name="NVA" color="primary" size="lg" />
 ```
 
@@ -399,17 +399,17 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 
 | Component | Import | Mô tả |
 |---|---|---|
-| `SdTabRouter` | `@sdcorejs/angular/components/tab-router` | Tab navigation v�:i Angular Router |
+| `SdTabRouter` | `@sdcorejs/angular/components/tab-router` | Tab navigation với Angular Router |
 | `SdSideDrawer` | `@sdcorejs/angular/components/side-drawer` | Drawer layout trái/phải |
 | `SdUploadFile` | `@sdcorejs/angular/components/upload-file` | Upload file |
 | `SdQuickAction` | `@sdcorejs/angular/components/quick-action` | Nút action dạng icon |
-| `SdHistory` | `@sdcorejs/angular/components/history` | L�9ch sử thay ��"i |
+| `SdHistory` | `@sdcorejs/angular/components/history` | Lịch sử thay đổi |
 | `SdImportExcel` | `@sdcorejs/angular/components/import-excel` | Wizard import Excel |
 | `SdQueryBuilder` | `@sdcorejs/angular/components/query-builder` | Visual query builder |
 | `SdCodeEditor` | `@sdcorejs/angular/components/code-editor` | Code editor (PrismJS) |
 | `SdMiniEditor` | `@sdcorejs/angular/components/mini-editor` | Rich text editor nhỏ |
 | `SdDocumentBuilder` | `@sdcorejs/angular/components/document-builder` | Document builder |
-| `SdAnchorMain` | `@sdcorejs/angular/components/anchor` | Anchor / mục lục cu�"n trang |
+| `SdAnchorMain` | `@sdcorejs/angular/components/anchor` | Anchor / mục lục cuộn trang |
 | `SdView` | `@sdcorejs/angular/components/view` | View wrapper read-only |
 
 ---
@@ -423,7 +423,7 @@ import {
   SdSelect,       // Dropdown
   SdAutocomplete, // Autocomplete
   SdDate,         // Date picker
-  SdSearch,       // Search v�:i debounce
+  SdSearch,       // Search với debounce
 } from '@sdcorejs/angular/forms';
 ```
 
@@ -476,7 +476,7 @@ export class ProductListComponent implements OnInit {
   isSaving = signal(false);
 
   readonly STATUS_LIST = [
-    { value: 'ACTIVE',   label: 'Hoạt ��"ng' },
+    { value: 'ACTIVE',   label: 'Hoạt động' },
     { value: 'INACTIVE', label: 'Dừng' },
   ];
 
@@ -548,13 +548,13 @@ export class ProductListComponent implements OnInit {
 <!-- product-list.component.html -->
 <div class="d-flex justify-content-between align-items-center mb-16">
   <h2>Danh sách sản phẩm</h2>
-  <sd-button type="fill" color="primary" title="Thêm m�:i"
+  <sd-button type="fill" color="primary" title="Thêm mới"
     prefixIcon="add" (click)="openForm()" />
 </div>
 
 <sd-table #sdTable [option]="option" />
 
-<sd-modal #formModal [title]="selectedItem ? 'Ch�0nh sửa' : 'Thêm m�:i'" width="md">
+<sd-modal #formModal [title]="selectedItem ? 'Chỉnh sửa' : 'Thêm mới'" width="md">
   <ng-template>
     <div class="modal-body p-16">
       <sd-section title="Thông tin sản phẩm" icon="inventory">
@@ -586,48 +586,48 @@ export class ProductListComponent implements OnInit {
 
 ---
 
-## Contributing Guide / Hư�:ng dẫn �óng góp
+## Contributing Guide / Hướng dẫn đóng góp
 
-### Cấu trúc thư vi�!n / Project structure
+### Cấu trúc thư viện / Project structure
 
 ```
 sd-angular/
-�S���� src/
-�   ����� public-api.ts           # Entry point chính
-�S���� assets/
-�   ����� scss/
-�       �S���� sd-core.scss        # SCSS entry (import vào app)
-�       �S���� core/               # Base utilities (color, grid, form, ...)
-�       ����� themes/             # Theme mặc ��9nh + Material theme
-�S���� components/                 # UI Components
-�   �S���� button/
-�   �S���� table/
-�   �S���� modal/
-�   ����� ...
-�S���� forms/                      # Form components
-�   �S���� input/
-�   �S���� select/
-�   ����� ...
-�S���� directives/                 # Angular directives
-�S���� pipes/                      # Angular pipes
-�S���� services/                   # Shared services
-�S���� utilities/                  # Types, models, helpers
-����� modules/                    # Feature modules (layout, permission, ...)
+├── src/
+│   └── public-api.ts           # Entry point chính
+├── assets/
+│   └── scss/
+│       ├── sd-core.scss        # SCSS entry (import vào app)
+│       ├── core/               # Base utilities (color, grid, form, ...)
+│       └── themes/             # Theme mặc định + Material theme
+├── components/                 # UI Components
+│   ├── button/
+│   ├── table/
+│   ├── modal/
+│   └── ...
+├── forms/                      # Form components
+│   ├── input/
+│   ├── select/
+│   └── ...
+├── directives/                 # Angular directives
+├── pipes/                      # Angular pipes
+├── services/                   # Shared services
+├── utilities/                  # Types, models, helpers
+└── modules/                    # Feature modules (layout, permission, ...)
 ```
 
-### Thêm component m�:i / Adding a new component
+### Thêm component mới / Adding a new component
 
 **1. Tạo thư mục component:**
 
 ```
 components/
-����� my-component/
-    �S���� index.ts                         # Export public API
-    �S���� ng-package.json                  # ng-packagr entry
-    ����� src/
-        �S���� my-component.component.ts
-        �S���� my-component.component.html
-        ����� my-component.component.scss
+└── my-component/
+    ├── index.ts                         # Export public API
+    ├── ng-package.json                  # ng-packagr entry
+    └── src/
+        ├── my-component.component.ts
+        ├── my-component.component.html
+        └── my-component.component.scss
 ```
 
 **2. `ng-package.json`:**
@@ -679,9 +679,9 @@ export class SdMyComponent extends SdBaseSecureComponent {
 export * from '@sdcorejs/angular/components/my-component';
 ```
 
-### Quy ư�:c / Conventions
+### Quy ước / Conventions
 
-| Mục | Quy ư�:c |
+| Mục | Quy ước |
 |---|---|
 | Selector | `sd-<tên-component>` |
 | Class name | `Sd<TênComponent>` (Pascal) |
@@ -695,7 +695,7 @@ export * from '@sdcorejs/angular/components/my-component';
 ### Build
 
 ```bash
-# Build toàn b�" thư vi�!n
+# Build toàn bộ thư viện
 ng-packagr -p ng-package.json
 
 # Watch mode
@@ -704,11 +704,11 @@ ng-packagr -p ng-package.json --watch
 
 ### Versioning
 
-Thư vi�!n tuân theo [Semantic Versioning](https://semver.org):
+Thư viện tuân theo [Semantic Versioning](https://semver.org):
 
-- `MAJOR` � Breaking changes (thay ��"i API không tương thích)
-- `MINOR` � Tính nĒng m�:i (tương thích ngược)
-- `PATCH` � Bug fixes
+- `MAJOR` — Breaking changes (thay đổi API không tương thích)
+- `MINOR` — Tính năng mới (tương thích ngược)
+- `PATCH` — Bug fixes
 
 ---
 
@@ -720,4 +720,4 @@ Core UI components expose runtime state via lowercase `data-*` attributes. See [
 
 ## License
 
-Internal use only � © SD Team
+Internal use only — © SD Team

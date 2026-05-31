@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -31,9 +31,9 @@ import {
   templateUrl: './preview-image.component.html',
   styleUrl: './preview-image.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // WHY tabindex='0': host pháº£i focusable Ä‘á»ƒ @HostListener('keydown') nháº­n event
-  // mÃ  khÃ´ng cáº§n bind document. Consumer (modal/drawer/page) chá»‰ cáº§n tháº£ component
-  // vÃ o DOM â€” keyboard shortcut tá»± hoáº¡t Ä‘á»™ng khi component hoáº·c descendant Ä‘ang focus.
+  // WHY tabindex='0': host phải focusable để @HostListener('keydown') nhận event
+  // mà không cần bind document. Consumer (modal/drawer/page) chỉ cần thả component
+  // vào DOM — keyboard shortcut tự hoạt động khi component hoặc descendant đang focus.
   host: {
     tabindex: '0',
     class: 'sd-preview-image-host',
@@ -44,8 +44,8 @@ export class SdPreviewImage implements OnDestroy {
   // ==========================================
   // CONSTANTS
   // ==========================================
-  // Zoom giá»›i háº¡n theo handoff: stage hiá»ƒn thá»‹ tá»« 25% â†’ 400% lÃ  dáº£i há»¯u dá»¥ng.
-  // NgoÃ i dáº£i nÃ y áº£nh hoáº·c quÃ¡ nhá» Ä‘á»ƒ thao tÃ¡c hoáº·c Ä‘Ã£ pixelated náº·ng.
+  // Zoom giới hạn theo handoff: stage hiển thị từ 25% → 400% là dải hữu dụng.
+  // Ngoài dải này ảnh hoặc quá nhỏ để thao tác hoặc đã pixelated nặng.
   static readonly MIN_ZOOM = 0.25;
   static readonly MAX_ZOOM = 4;
   static readonly ZOOM_STEP = 0.1;
@@ -60,8 +60,8 @@ export class SdPreviewImage implements OnDestroy {
   // ==========================================
   // INPUTS (signal-based, Angular 19 style)
   // ==========================================
-  // Declarative items input â€” consumer drives state. Má»—i láº§n items() Ä‘á»•i,
-  // effect() bÃªn dÆ°á»›i sáº½ normalize + load láº¡i danh sÃ¡ch.
+  // Declarative items input — consumer drives state. Mỗi lần items() đổi,
+  // effect() bên dưới sẽ normalize + load lại danh sách.
   readonly items = input<PreviewItem[]>([]);
   readonly title = input<string | undefined>(undefined);
   readonly thumbnailPosition = input<ThumbnailPosition>('bottom');
@@ -74,8 +74,8 @@ export class SdPreviewImage implements OnDestroy {
   // ==========================================
   // OUTPUTS
   // ==========================================
-  // `close`: user requested dismissal (X button hoáº·c Esc). Consumer tá»± quyáº¿t
-  // Ä‘á»‹nh Ä‘Ã³ng modal / Ä‘iá»u hÆ°á»›ng / hide section.
+  // `close`: user requested dismissal (X button hoặc Esc). Consumer tự quyết
+  // định đóng modal / điều hướng / hide section.
   readonly close = output<void>();
   readonly activeIndexChange = output<number>();
   readonly download = output<{ index: number; item: NormalizedImage }>();
@@ -94,14 +94,14 @@ export class SdPreviewImage implements OnDestroy {
   readonly #isDragging = signal(false);
 
   // Track every blob URL we created so we can revoke on destroy / re-normalize.
-  // CDN strings hoÃ¡ ra Fileâ†’blob URL ná»™i bá»™ â€” báº¯t buá»™c pháº£i revoke Ä‘á»ƒ khÃ´ng leak.
+  // CDN strings hoá ra File→blob URL nội bộ — bắt buộc phải revoke để không leak.
   readonly #ownedBlobUrls = new Set<string>();
 
-  // Token chá»‘ng race: náº¿u items() Ä‘á»•i liÃªn tiáº¿p (user click ráº¥t nhanh) thÃ¬
-  // promise normalize cá»§a láº§n trÆ°á»›c pháº£i bá»‹ bá» qua khi resolve.
+  // Token chống race: nếu items() đổi liên tiếp (user click rất nhanh) thì
+  // promise normalize của lần trước phải bị bỏ qua khi resolve.
   #loadToken = 0;
 
-  // Pointer state for drag/pinch â€” khÃ´ng cáº§n signal vÃ¬ khÃ´ng drive template.
+  // Pointer state for drag/pinch — không cần signal vì không drive template.
   #dragStart: { x: number; y: number; panX: number; panY: number } | null = null;
   #swipeStart: { x: number; y: number; t: number } | null = null;
   readonly #activePointers = new Map<number, { x: number; y: number }>();
@@ -132,8 +132,8 @@ export class SdPreviewImage implements OnDestroy {
   });
   readonly zoomPercent = computed(() => Math.round(this.#zoom() * 100));
 
-  // Transform style cho áº£nh stage. WHY: gom translate/scale/rotate vÃ o 1 string
-  // duy nháº¥t Ä‘á»ƒ OnPush phÃ¡t hiá»‡n thay Ä‘á»•i qua signal kÃ©o theo computed.
+  // Transform style cho ảnh stage. WHY: gom translate/scale/rotate vào 1 string
+  // duy nhất để OnPush phát hiện thay đổi qua signal kéo theo computed.
   readonly imageTransform = computed(() => {
     const p = this.#pan();
     const z = this.#zoom();
@@ -151,35 +151,35 @@ export class SdPreviewImage implements OnDestroy {
   });
 
   // ==========================================
-  // CONSTRUCTOR â€” declarative wiring
+  // CONSTRUCTOR — declarative wiring
   // ==========================================
   constructor() {
-    // Reactive normalize: má»—i láº§n items() Ä‘á»•i â†’ revoke blob cÅ© â†’ load má»›i.
-    // WHY effect khÃ´ng async: effect() callback khÃ´ng há»— trá»£ async cleanup,
-    // dÃ¹ng token-based race guard trong #normalizeAndLoad Ä‘á»ƒ bá» qua káº¿t quáº£ cÅ©.
+    // Reactive normalize: mỗi lần items() đổi → revoke blob cũ → load mới.
+    // WHY effect không async: effect() callback không hỗ trợ async cleanup,
+    // dùng token-based race guard trong #normalizeAndLoad để bỏ qua kết quả cũ.
     effect(() => {
       const list = this.items();
       const start = this.startIndex();
       this.#normalizeAndLoad(list, start);
     });
 
-    // Auto-focus host sau láº§n render Ä‘áº§u Ä‘á»ƒ keyboard hoáº¡t Ä‘á»™ng ngay.
-    // WHY: náº¿u consumer KHÃ”NG bá»c trong modal, khÃ´ng cÃ³ ai focus giÃºp.
-    // Consumer bá»c modal sáº½ tá»± focus trap riÃªng â€” focus() nÃ y vÃ´ háº¡i (no-op
-    // náº¿u element khÃ´ng visible).
+    // Auto-focus host sau lần render đầu để keyboard hoạt động ngay.
+    // WHY: nếu consumer KHÔNG bọc trong modal, không có ai focus giúp.
+    // Consumer bọc modal sẽ tự focus trap riêng — focus() này vô hại (no-op
+    // nếu element không visible).
     afterNextRender(() => {
       try {
         this.#hostEl.nativeElement.focus({ preventScroll: true });
       } catch {
-        // ignore â€” focus() can throw on detached/hidden elements.
+        // ignore — focus() can throw on detached/hidden elements.
       }
     });
 
-    // Cleanup khi component bá»‹ destroy.
+    // Cleanup khi component bị destroy.
     this.#destroyRef.onDestroy(() => {
       this.#revokeAllBlobs();
       if (document.fullscreenElement === this.#hostEl.nativeElement) {
-        // TrÃ¡nh Ä‘á»ƒ fullscreen "treo" khi component bá»‹ huá»· giá»¯a chá»«ng.
+        // Tránh để fullscreen "treo" khi component bị huỷ giữa chừng.
         document.exitFullscreen?.().catch(() => undefined);
       }
     });
@@ -189,9 +189,9 @@ export class SdPreviewImage implements OnDestroy {
   // LIFECYCLE
   // ==========================================
   ngOnDestroy(): void {
-    // Giá»¯ ngOnDestroy Ä‘á»ƒ váº«n tÆ°Æ¡ng thÃ­ch vá»›i khai bÃ¡o `implements OnDestroy`.
-    // Logic dá»n dáº¹p Ä‘Ã£ Ä‘Æ°á»£c dá»i sang DestroyRef.onDestroy á»Ÿ constructor Ä‘á»ƒ cÃ³
-    // thá»ƒ chia sáº» vá»›i effect() teardown náº¿u cáº§n sau nÃ y.
+    // Giữ ngOnDestroy để vẫn tương thích với khai báo `implements OnDestroy`.
+    // Logic dọn dẹp đã được dời sang DestroyRef.onDestroy ở constructor để có
+    // thể chia sẻ với effect() teardown nếu cần sau này.
   }
 
   // ==========================================
@@ -234,7 +234,7 @@ export class SdPreviewImage implements OnDestroy {
 
   rotate(direction: 'left' | 'right'): void {
     const delta = direction === 'right' ? 90 : -90;
-    // Wrap vá» [0, 360) cho gá»n â€” khÃ´ng strictly cáº§n thiáº¿t vá» máº·t visual.
+    // Wrap về [0, 360) cho gọn — không strictly cần thiết về mặt visual.
     this.#rotation.update(r => ((r + delta) % 360 + 360) % 360);
   }
 
@@ -242,8 +242,8 @@ export class SdPreviewImage implements OnDestroy {
     if (!this.allowDownload()) return;
     const img = this.activeImage();
     if (!img || img.error) return;
-    // Æ¯u tiÃªn CDN URL náº¿u cÃ³ Ä‘á»ƒ táº­n dá»¥ng Content-Disposition cá»§a server,
-    // fallback vá» blob URL khi user upload File trá»±c tiáº¿p.
+    // Ưu tiên CDN URL nếu có để tận dụng Content-Disposition của server,
+    // fallback về blob URL khi user upload File trực tiếp.
     const href = img.url || img.blobUrl;
     const a = document.createElement('a');
     a.href = href;
@@ -256,8 +256,8 @@ export class SdPreviewImage implements OnDestroy {
 
   toggleFullscreen(): void {
     if (!document.fullscreenElement) {
-      // Fullscreen the host element directly. WHY: component giá» tá»± chá»©a
-      // toÃ n bá»™ chrome â€” khÃ´ng cÃ²n modal overlay nÃ o cáº§n "thoÃ¡t ra" nhÆ° v2.
+      // Fullscreen the host element directly. WHY: component giờ tự chứa
+      // toàn bộ chrome — không còn modal overlay nào cần "thoát ra" như v2.
       const target = this.#hostEl.nativeElement;
       target.requestFullscreen?.()
         .then(() => this.#isFullscreen.set(true))
@@ -277,10 +277,10 @@ export class SdPreviewImage implements OnDestroy {
     this.#stage.set('loading');
     const refreshed = await this.#normalize(img.url, { name: img.name, caption: img.caption, alt: img.alt });
     if (refreshed) {
-      // Trao Ä‘á»•i nguyÃªn record Ä‘á»ƒ giá»¯ id thumbnail (avoid track-by reset).
+      // Trao đổi nguyên record để giữ id thumbnail (avoid track-by reset).
       this.#images.update(arr => {
         const next = [...arr];
-        // Revoke blob cÅ© TRÆ¯á»šC khi thay Ä‘á»ƒ khÃ´ng leak record vá»«a fail táº£i.
+        // Revoke blob cũ TRƯỚC khi thay để không leak record vừa fail tải.
         if (this.#ownedBlobUrls.has(arr[idx].blobUrl)) {
           URL.revokeObjectURL(arr[idx].blobUrl);
           this.#ownedBlobUrls.delete(arr[idx].blobUrl);
@@ -294,21 +294,21 @@ export class SdPreviewImage implements OnDestroy {
     }
   }
 
-  /** User clicked the X button â€” emit close intent for the consumer to react. */
+  /** User clicked the X button — emit close intent for the consumer to react. */
   requestClose(): void {
     this.close.emit();
   }
 
   // ==========================================
-  // KEYBOARD â€” bound to HOST (not document)
+  // KEYBOARD — bound to HOST (not document)
   // ==========================================
-  // WHY @HostListener('keydown') on host: component cÃ³ tabindex=0 nÃªn nháº­n Ä‘Æ°á»£c
-  // keyboard event khi nÃ³ hoáº·c descendant Ä‘ang focused. KhÃ´ng bind document Ä‘á»ƒ
-  // trÃ¡nh "cÆ°á»›p" phÃ­m táº¯t cá»§a cÃ¡c pháº§n khÃ¡c trong app khi component khÃ´ng hoáº¡t Ä‘á»™ng.
+  // WHY @HostListener('keydown') on host: component có tabindex=0 nên nhận được
+  // keyboard event khi nó hoặc descendant đang focused. Không bind document để
+  // tránh "cướp" phím tắt của các phần khác trong app khi component không hoạt động.
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
-    // Bá» qua khi user Ä‘ang gÃµ trong input â€” toolbar / overlay cÃ³ thá»ƒ chá»©a
-    // input áº©n (search), khÃ´ng muá»‘n â† â†’ cÆ°á»›p event cá»§a há».
+    // Bỏ qua khi user đang gõ trong input — toolbar / overlay có thể chứa
+    // input ẩn (search), không muốn ← → cướp event của họ.
     const target = event.target as HTMLElement | null;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
       return;
@@ -324,8 +324,8 @@ export class SdPreviewImage implements OnDestroy {
         this.updateCurrentImage(1);
         break;
       case 'Escape':
-        // Esc = consumer-controlled dismiss intent. Component KHÃ”NG tá»± Ä‘Ã³ng modal â€”
-        // nÃ³ khÃ´ng biáº¿t mÃ¬nh cÃ³ náº±m trong modal hay khÃ´ng.
+        // Esc = consumer-controlled dismiss intent. Component KHÔNG tự đóng modal —
+        // nó không biết mình có nằm trong modal hay không.
         event.preventDefault();
         this.requestClose();
         break;
@@ -373,7 +373,7 @@ export class SdPreviewImage implements OnDestroy {
   onWheel(event: WheelEvent): void {
     if (!this.allowZoom()) return;
     event.preventDefault();
-    // deltaY < 0 nghÄ©a lÃ  cuá»™n lÃªn = zoom in (giá»‘ng Google Photos / macOS Preview).
+    // deltaY < 0 nghĩa là cuộn lên = zoom in (giống Google Photos / macOS Preview).
     const factor = event.deltaY < 0 ? 1 + SdPreviewImage.ZOOM_STEP : 1 - SdPreviewImage.ZOOM_STEP;
     this.#setZoom(this.#zoom() * factor);
   }
@@ -384,7 +384,7 @@ export class SdPreviewImage implements OnDestroy {
     this.#activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
 
     if (this.#activePointers.size === 2) {
-      // Báº¯t Ä‘áº§u pinch â€” khoÃ¡ zoom hiá»‡n táº¡i lÃ m anchor.
+      // Bắt đầu pinch — khoá zoom hiện tại làm anchor.
       const pts = [...this.#activePointers.values()];
       this.#pinchStartDistance = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       this.#pinchStartZoom = this.#zoom();
@@ -394,7 +394,7 @@ export class SdPreviewImage implements OnDestroy {
     }
 
     if (this.#zoom() > 1) {
-      // ÄÃ£ zoom â†’ pointer drag = pan, khÃ´ng pháº£i swipe.
+      // Đã zoom → pointer drag = pan, không phải swipe.
       this.#isDragging.set(true);
       this.#dragStart = {
         x: event.clientX,
@@ -403,7 +403,7 @@ export class SdPreviewImage implements OnDestroy {
         panY: this.#pan().y,
       };
     } else {
-      // á»ž má»©c 100% â†’ pointer drag Ä‘Æ°á»£c coi lÃ  swipe sang áº£nh káº¿.
+      // Ở mức 100% → pointer drag được coi là swipe sang ảnh kế.
       this.#swipeStart = { x: event.clientX, y: event.clientY, t: performance.now() };
     }
   }
@@ -440,7 +440,7 @@ export class SdPreviewImage implements OnDestroy {
       this.#isDragging.set(false);
     }
 
-    // Detect swipe â€” chá»‰ khi Ä‘ang á»Ÿ fit/100% vÃ  di chuyá»ƒn ngang Ä‘á»§ xa.
+    // Detect swipe — chỉ khi đang ở fit/100% và di chuyển ngang đủ xa.
     if (start && this.#zoom() <= 1) {
       const dx = event.clientX - start.x;
       const dy = event.clientY - start.y;
@@ -501,7 +501,7 @@ export class SdPreviewImage implements OnDestroy {
   async #normalizeAndLoad(items: PreviewItem[] | null | undefined, startIndex: number): Promise<void> {
     const token = ++this.#loadToken;
 
-    // Revoke trÆ°á»›c khi map má»›i â€” items() Ä‘á»•i liÃªn tiáº¿p sáº½ leak náº¿u khÃ´ng.
+    // Revoke trước khi map mới — items() đổi liên tiếp sẽ leak nếu không.
     this.#revokeAllBlobs();
     this.#resetTransform();
 
@@ -517,9 +517,9 @@ export class SdPreviewImage implements OnDestroy {
 
     const normalized = await Promise.all(items.map(item => this.#normalize(item)));
 
-    // Race guard: náº¿u items() Ä‘Ã£ Ä‘á»•i trong lÃºc await thÃ¬ káº¿t quáº£ nÃ y lÃ  stale.
-    // LÆ°u Ã½: blob URL cá»§a batch nÃ y Ä‘Ã£ add vÃ o #ownedBlobUrls â€” batch má»›i sáº½
-    // revoke chÃºng khi nÃ³ cÅ©ng vÃ o #normalizeAndLoad.
+    // Race guard: nếu items() đã đổi trong lúc await thì kết quả này là stale.
+    // Lưu ý: blob URL của batch này đã add vào #ownedBlobUrls — batch mới sẽ
+    // revoke chúng khi nó cũng vào #normalizeAndLoad.
     if (token !== this.#loadToken) {
       return;
     }
@@ -542,9 +542,9 @@ export class SdPreviewImage implements OnDestroy {
     const img = this.#images()[index];
     this.#stage.set(img?.error ? 'error' : 'ready');
     this.activeIndexChange.emit(index);
-    // Auto-scroll thumbnail strip â€” Ä‘á»£i 1 microtask Ä‘á»ƒ DOM rendered xong.
-    // WHY scoped query: thumbnail id lÃ  global ('sd-preview-thumb-N'); náº¿u cÃ³
-    // > 1 instance trÃªn page sáº½ collide. Query trong nativeElement Ä‘á»ƒ isolate.
+    // Auto-scroll thumbnail strip — đợi 1 microtask để DOM rendered xong.
+    // WHY scoped query: thumbnail id là global ('sd-preview-thumb-N'); nếu có
+    // > 1 instance trên page sẽ collide. Query trong nativeElement để isolate.
     queueMicrotask(() => {
       const el = this.#hostEl.nativeElement.querySelector(`#sd-preview-thumb-${index}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -555,8 +555,8 @@ export class SdPreviewImage implements OnDestroy {
     const clamped = Math.min(SdPreviewImage.MAX_ZOOM, Math.max(SdPreviewImage.MIN_ZOOM, value));
     this.#zoom.set(clamped);
     if (clamped <= 1) {
-      // Khi vá» fit/100% â€” pan khÃ´ng cÃ²n Ã½ nghÄ©a, reset Ä‘á»ƒ khÃ´ng bá»‹ "lá»‡ch" khi
-      // zoom láº¡i láº§n sau.
+      // Khi về fit/100% — pan không còn ý nghĩa, reset để không bị "lệch" khi
+      // zoom lại lần sau.
       this.#pan.set({ x: 0, y: 0 });
     }
   }
@@ -586,7 +586,7 @@ export class SdPreviewImage implements OnDestroy {
         return this.#fromFile(item, override);
       }
       if (item && typeof item === 'object') {
-        // Object form: cháº¥p nháº­n file hoáº·c url, Æ°u tiÃªn file vÃ¬ khÃ´ng cáº§n network.
+        // Object form: chấp nhận file hoặc url, ưu tiên file vì không cần network.
         if (item.file) {
           return this.#fromFile(item.file, { name: item.name, caption: item.caption, alt: item.alt });
         }
@@ -610,7 +610,7 @@ export class SdPreviewImage implements OnDestroy {
     override?: { name?: string; caption?: string; alt?: string },
   ): Promise<NormalizedImage> {
     const id = uuid.v4();
-    // Láº¥y filename tá»« pháº§n path cuá»‘i â€” bá» query string.
+    // Lấy filename từ phần path cuối — bỏ query string.
     const baseSrc = url.split('?')[0];
     const inferredName = override?.name || baseSrc.substring(baseSrc.lastIndexOf('/') + 1) || 'image';
     try {
@@ -632,8 +632,8 @@ export class SdPreviewImage implements OnDestroy {
         error: false,
       };
     } catch {
-      // Váº«n tráº£ vá» record Ä‘á»ƒ Artboard G cÃ³ thá»ƒ hiá»ƒn thá»‹ Retry â€” error=true sáº½
-      // Ä‘Æ°á»£c stage signal chuyá»ƒn sang tráº¡ng thÃ¡i lá»—i khi Ä‘Ã¢y lÃ  active image.
+      // Vẫn trả về record để Artboard G có thể hiển thị Retry — error=true sẽ
+      // được stage signal chuyển sang trạng thái lỗi khi đây là active image.
       return {
         id,
         url,
@@ -653,8 +653,8 @@ export class SdPreviewImage implements OnDestroy {
     override?: { name?: string; caption?: string; alt?: string },
   ): NormalizedImage | null {
     if (!file.type.startsWith('image/')) {
-      // Silently filter â€” handoff yÃªu cáº§u non-image File bá»‹ drop yÃªn láº·ng Ä‘á»ƒ
-      // tÆ°Æ¡ng thÃ­ch vá»›i upload form nÆ¡i user trá»™n láº«n áº£nh vÃ  tÃ i liá»‡u.
+      // Silently filter — handoff yêu cầu non-image File bị drop yên lặng để
+      // tương thích với upload form nơi user trộn lẫn ảnh và tài liệu.
       return null;
     }
     const blobUrl = URL.createObjectURL(file);
@@ -671,4 +671,3 @@ export class SdPreviewImage implements OnDestroy {
     };
   }
 }
-

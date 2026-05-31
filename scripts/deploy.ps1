@@ -73,9 +73,12 @@ foreach ($t in $targets) {
   # --- 1. Update library package.json version ---
   Write-Host "  Updating library version..." -ForegroundColor Gray
   if (!$DryRun) {
-    $pkg = Get-Content -LiteralPath $libPackagePath -Raw | ConvertFrom-Json
+    # why: encoding hygiene — UTF8 explicit cho read (tránh ANSI cp1252 mặc định PS 5.1)
+    # + no-BOM cho write (consistent với vn-angular source).
+    $pkg = Get-Content -LiteralPath $libPackagePath -Raw -Encoding UTF8 | ConvertFrom-Json
     $pkg.version = $fullVersion
-    $pkg | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $libPackagePath -Encoding UTF8
+    $jsonOut = $pkg | ConvertTo-Json -Depth 100
+    [System.IO.File]::WriteAllText($libPackagePath, $jsonOut, (New-Object System.Text.UTF8Encoding($false)))
   }
   Write-Host "  version = $fullVersion" -ForegroundColor Green
 

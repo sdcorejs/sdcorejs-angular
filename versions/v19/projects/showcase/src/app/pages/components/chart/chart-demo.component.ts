@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ChartData, ChartOptions } from 'chart.js';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import {
@@ -133,4 +133,3 @@ export class ChartDemoComponent {
     ],
   };
 }
-

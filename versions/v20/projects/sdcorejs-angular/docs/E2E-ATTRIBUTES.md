@@ -1,10 +1,10 @@
-﻿# Core UI â€” E2E test attributes reference
+# Core UI — E2E test attributes reference
 
 Source of truth for the `data-*` attributes rendered by `@sdcorejs/angular` components for QA automation. Both human QA engineers and downstream AI agents (e.g. SDCoreJS skill packs that generate e2e tests) should be able to read this file alone and know what each component exposes.
 
 ## Convention
 
-- Attribute names are **lowercase**. The browser normalizes data-attribute names regardless of casing in the source â€” so `[attr.data-autoId]` becomes `data-autoid` in the DOM. All selectors in this doc use lowercase.
+- Attribute names are **lowercase**. The browser normalizes data-attribute names regardless of casing in the source — so `[attr.data-autoId]` becomes `data-autoid` in the DOM. All selectors in this doc use lowercase.
 - Boolean attributes are **always present** with the string literals `"true"` or `"false"` (not boolean-attribute style). This lets QA write simple selectors like `[data-loading="false"]`.
 - `data-value` is **omitted** (bound to `null`, which Angular removes from the DOM) for sensitive or non-serializable inputs:
   - `sd-input` with `type="password"`
@@ -138,7 +138,7 @@ sd-checkbox:
   prefix: forms-checkbox
   loading: false
   notes:
-    - "no required input on sd-checkbox â€” data-required not applicable"
+    - "no required input on sd-checkbox — data-required not applicable"
 
 sd-radio:
   attrs: [data-autoid, data-disabled, data-empty, data-value, data-required]
@@ -239,7 +239,7 @@ sd-upload-file:
   prefix: components-upload-file
   loading: false  # no loading signal currently exposed
   notes:
-    - "data-value omitted â€” File objects don't serialize safely"
+    - "data-value omitted — File objects don't serialize safely"
 
 sd-editor:
   attrs: [data-autoid, data-disabled, data-empty]
@@ -247,7 +247,7 @@ sd-editor:
   prefix: components-editor
   loading: false  # no loading signal currently exposed
   notes:
-    - "data-value omitted â€” content may be MB-sized"
+    - "data-value omitted — content may be MB-sized"
 
 sd-autoid-inspector:
   attrs:
@@ -264,8 +264,7 @@ sd-autoid-inspector:
   prefix: sd-autoid-inspector (static, no autoId input)
   loading: false
   notes:
-    - "Devtool â€” does not expose data-value/empty/invalid (no FormControl)."
+    - "Devtool — does not expose data-value/empty/invalid (no FormControl)."
     - "FAB absent when enabled=false or dismissed=true."
     - "Panel only rendered when open()=true."
 ```
-

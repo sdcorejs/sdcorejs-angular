@@ -1,4 +1,4 @@
-﻿import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -94,18 +94,18 @@ describe('SdInput', () => {
     });
 
     it('renders placeholder on input', () => {
-      host.placeholder = 'Nháº­p...';
+      host.placeholder = 'Nhập...';
       fixture.detectChanges();
       const el = queryByCss<HTMLInputElement>(fixture, 'input');
       // placeholder fallback: placeholder() || label() || ''
-      expect(el.getAttribute('placeholder')).toBe('Nháº­p...');
+      expect(el.getAttribute('placeholder')).toBe('Nhập...');
     });
 
     it('uses label as fallback placeholder when placeholder is empty', () => {
-      host.label = 'Há» tÃªn';
+      host.label = 'Họ tên';
       fixture.detectChanges();
       const el = queryByCss<HTMLInputElement>(fixture, 'input');
-      expect(el.getAttribute('placeholder')).toBe('Há» tÃªn');
+      expect(el.getAttribute('placeholder')).toBe('Họ tên');
     });
   });
 
@@ -155,7 +155,7 @@ describe('SdInput', () => {
 
   describe('required validator', () => {
     it('applies required validator', () => {
-      // pre-seed: avoids NG0100 â€” ngAfterViewInit calls detectChanges();
+      // pre-seed: avoids NG0100 — ngAfterViewInit calls detectChanges();
       // a non-empty starting value keeps the control valid during that pass
       host.model = 'seed';
       host.required = true;
@@ -216,14 +216,14 @@ describe('SdInput', () => {
 
   describe('inlineError validator', () => {
     it('sets inlineError on formControl when inlineError is provided', () => {
-      host.inlineError = 'Lá»—i';
+      host.inlineError = 'Lỗi';
       fixture.detectChanges();
       input.formControl.updateValueAndValidity();
       expect(input.formControl.hasError('inlineError')).toBe(true);
     });
 
     it('clears validator when inlineError is empty', () => {
-      host.inlineError = 'Lá»—i';
+      host.inlineError = 'Lỗi';
       fixture.detectChanges();
       host.inlineError = '';
       fixture.detectChanges();
@@ -269,8 +269,8 @@ describe('SdInput', () => {
   });
 
   describe('errorMessage getter', () => {
-    it('returns "Vui lÃ²ng nháº­p thÃ´ng tin" for required error', () => {
-      // pre-seed: avoids NG0100 â€” ngAfterViewInit calls detectChanges();
+    it('returns "Vui lòng nhập thông tin" for required error', () => {
+      // pre-seed: avoids NG0100 — ngAfterViewInit calls detectChanges();
       // a non-empty starting value keeps the control valid during that pass
       host.model = 'seed';
       host.required = true;
@@ -278,7 +278,7 @@ describe('SdInput', () => {
       input.formControl.setValue('');
       input.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(input.errorMessage()).toBe('Vui lÃ²ng nháº­p thÃ´ng tin');
+      expect(input.errorMessage()).toBe('Vui lòng nhập thông tin');
     });
 
     it('returns maxlength message with limit', () => {
@@ -288,14 +288,14 @@ describe('SdInput', () => {
       input.formControl.setValue('abcd');
       input.formControl.updateValueAndValidity();
       fixture.detectChanges();
-      expect(input.errorMessage()).toBe('Sá»‘ kÃ½ tá»± tá»‘i Ä‘a: 3');
+      expect(input.errorMessage()).toBe('Số ký tự tối đa: 3');
     });
 
     it('returns inlineError message when inlineError validator fires', () => {
-      host.inlineError = 'ÄÃ£ cÃ³ lá»—i';
+      host.inlineError = 'Đã có lỗi';
       fixture.detectChanges();
       input.formControl.updateValueAndValidity();
-      expect(input.errorMessage()).toBe('ÄÃ£ cÃ³ lá»—i');
+      expect(input.errorMessage()).toBe('Đã có lỗi');
     });
 
     it('returns undefined when no errors', () => {
@@ -443,7 +443,7 @@ describe('SdInput', () => {
       expect(input.resolvedPattern()).toBeUndefined();
     });
 
-    it('remaps legacy type names (PHONE_VN â†’ VN_PHONE)', () => {
+    it('remaps legacy type names (PHONE_VN → VN_PHONE)', () => {
       setPattern('PHONE_VN');
       const legacy = input.resolvedPattern();
       setPattern('VN_PHONE');
@@ -459,9 +459,9 @@ describe('SdInput', () => {
 
     it('returns custom patternErrorMessage when set, regardless of type match', () => {
       host.pattern = 'EMAIL';
-      host.patternErrorMessage = 'Email khÃ´ng há»£p lá»‡';
+      host.patternErrorMessage = 'Email không hợp lệ';
       fixture.detectChanges();
-      expect(input.resolvedPatternErrorMsg()).toBe('Email khÃ´ng há»£p lá»‡');
+      expect(input.resolvedPatternErrorMsg()).toBe('Email không hợp lệ');
     });
 
     it('returns undefined error message for raw regex without custom message', () => {
@@ -642,7 +642,7 @@ describe('SdInput', () => {
       expect(host.changes.length).toBe(before);
     });
 
-    it('clear() emits cleared output (dedicated intent â€” consumer dÃ¹ng Ä‘á»ƒ fire reload mÃ  KHÃ”NG over-trigger nhÆ° sdChange per-keystroke)', () => {
+    it('clear() emits cleared output (dedicated intent — consumer dùng để fire reload mà KHÔNG over-trigger như sdChange per-keystroke)', () => {
       host.model = 'hello';
       fixture.detectChanges();
       const spy = jasmine.createSpy('cleared');
@@ -751,10 +751,10 @@ describe('SdInput (host classes)', () => {
     fixture = TestBed.createComponent(SdInput);
   });
 
-  it('no label â†’ no .sd-has-label; label set â†’ .sd-has-label added', () => {
+  it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
-    fixture.componentRef.setInput('label', 'Há» vÃ  tÃªn');
+    fixture.componentRef.setInput('label', 'Họ và tên');
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(true);
   });
@@ -767,4 +767,3 @@ describe('SdInput (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
-

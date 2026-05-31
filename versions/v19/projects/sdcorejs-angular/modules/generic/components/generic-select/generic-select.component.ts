@@ -1,4 +1,4 @@
-﻿import {
+import {
   AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -89,14 +89,14 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     this.multiple = val === '' || !!val;
   }
 
-  // Khi sá»­ dá»¥ng multiple trong form detail, sáº½ cáº§n truyá»n Ä‘á»ƒ biáº¿t nÃ³ Ä‘ang multiple theo key nÃ o
+  // Khi sử dụng multiple trong form detail, sẽ cần truyền để biết nó đang multiple theo key nào
   relationMappedTo: string;
   @Input('relationMappedTo') set _relationMappedTo(val: string) {
     this.relationMappedTo = val;
     this.#queryChanges.next(uuid.v4());
   }
 
-  // Khi sá»­ dá»¥ng multiple trong form detail, sáº½ cáº§n truyá»n náº¿u lÃ  update, náº¿u táº¡o má»›i thÃ¬ Ä‘á»ƒ trá»‘ng
+  // Khi sử dụng multiple trong form detail, sẽ cần truyền nếu là update, nếu tạo mới thì để trống
   relationType: PropertyRelationType;
 
   @Input('relationType') set _relationType(val: PropertyRelationType) {
@@ -175,7 +175,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
         if (this.module && this.typeCode) {
           this.register = this.genericService.getRegister(this.module, this.typeCode);
           this.schema = await this.register.schema();
-          // Máº·c Ä‘á»‹nh láº¥y valueField lÃ  primaryKey cá»§a model
+          // Mặc định lấy valueField là primaryKey của model
           this.valueField = this.valueField ?? this.schema.valueField ?? this.schema.primaryKey;
           this.displayField = this.displayField ?? this.schema.displayField ?? this.schema.primaryKey;
         }
@@ -265,7 +265,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     }
   };
 
-  // ThÃªm element má»›i
+  // Thêm element mới
   onAdd = async (entity: BaseEntity) => {
     if (this.multiple) {
       this.onModelChange([...(this.model || []), entity[this.valueField]]);
@@ -280,7 +280,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     this.ref.markForCheck();
     // if (entity?.sdNew && !this.newEntities.some(e => e[this.valueField] === entity[this.valueField])) {
     //   this.newEntities.push(entity);
-    //   // Set giÃ¡ trá»‹ cho model sau khi add entity má»›i
+    //   // Set giá trị cho model sau khi add entity mới
     //   if (this.multiple) {
     //     this.onModelChange([...(this.model || []), entity[this.valueField]]);
     //     // TODO: Submit selected
@@ -309,14 +309,14 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
   items = async (searchText?: any | any[], isFormValue?: boolean): Promise<any[]> => {
     let query = {
       ...this.query,
-      // Náº¿u lÃ  multiple thÃ¬ chá»‰ load giÃ¡ trá»‹
+      // Nếu là multiple thì chỉ load giá trị
       ...(this.relationMappedTo &&
         this.#multipleRelationValue &&
         this.relationType === 'OneToMany' && {
           [this.relationMappedTo]: [this.#multipleRelationValue],
         }),
     };
-    // Náº¿u lÃ  multiple vÃ  lÃ  táº¡o má»›i thÃ¬ khÃ´ng load dá»¯ liá»‡u
+    // Nếu là multiple và là tạo mới thì không load dữ liệu
     // if (this.multiple && this.#isCreate) {
     //   return [...this.newEntities].map(e => ({
     //     ...e,
@@ -324,7 +324,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     //   }));
     // }
     if (isFormValue) {
-      // Xá»­ lÃ½ khÃ´ng gá»­i lÃªn giÃ¡ trá»‹ cÃ¡c newEntities
+      // Xử lý không gửi lên giá trị các newEntities
       searchText = Array.isArray(searchText) ? searchText : [searchText];
       // searchText = searchText.filter((text: string) => text && this.newEntities.every(entity => entity[this.valueField] !== text));
       this.currentItems = [
@@ -339,7 +339,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
         ...e,
         displayTransform: this.displayTransform ? String.templateToDisplay(this.displayTransform, e) : undefined,
       }));
-      // TODO: andn1 Ä‘áº·t táº¡m dÃ²ng nÃ y Ä‘á»ƒ láº¥y Ä‘c full thÃ´ng tin nhá»¯ng item Ä‘c chá»n khi vÃ o trang detail/edit
+      // TODO: andn1 đặt tạm dòng này để lấy đc full thông tin những item đc chọn khi vào trang detail/edit
       this.sdSelection.emit(this.currentItems?.filter(t => searchText.includes(t.code)) || []);
       return this.currentItems;
     }
@@ -403,4 +403,3 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     this.router.navigate(['core-commerce', 'main', menuId, 'detail', this.model]);
   };
 }
-

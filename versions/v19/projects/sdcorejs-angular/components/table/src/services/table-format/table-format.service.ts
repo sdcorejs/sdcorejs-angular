@@ -1,4 +1,4 @@
-﻿import { Injectable, inject, isSignal } from '@angular/core';
+import { Injectable, inject, isSignal } from '@angular/core';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -10,7 +10,7 @@ import { ConfiguredTableResult } from '../../models/table-option-config.model';
 
 @Injectable()
 export class TableFormatService {
-  // Inject cÃ¡c pipe/service dÃ¹ng Ä‘á»ƒ format dá»¯ liá»‡u
+  // Inject các pipe/service dùng để format dữ liệu
   #formatNumberPipe = inject(SdFormatNumberPipe);
 
   // ==========================================
@@ -18,7 +18,7 @@ export class TableFormatService {
   // ==========================================
 
   /**
-   * Táº£i vÃ  cache cÃ¡c giÃ¡ trá»‹ tá»« Ä‘iá»ƒn cho cá»™t 'values'
+   * Tải và cache các giá trị từ điển cho cột 'values'
    */
   async loadValues(
     columns: SdTableColumn[],
@@ -34,9 +34,9 @@ export class TableFormatService {
 
     for (const column of columns) {
       if (column.type === 'values' && !cacheValues[column.field]) {
-        // TRÆ¯á»œNG Há»¢P 1: Náº¿u items lÃ  má»™t Signal
+        // TRƯỜNG HỢP 1: Nếu items là một Signal
         if (isSignal(column.option.items)) {
-          // Äá»c giÃ¡ trá»‹ hiá»‡n táº¡i cá»§a Signal
+          // Đọc giá trị hiện tại của Signal
           const data = column.option.items();
 
           cacheValues[column.field] = (Array.isArray(data) ? data : []).map(e => ({
@@ -47,7 +47,7 @@ export class TableFormatService {
 
           cacheObjValues[column.field] = ArrayUtilities.toObject(column.option.valueField, cacheValues[column.field]);
         }
-        // TRÆ¯á»œNG Há»¢P 2: Náº¿u items lÃ  hÃ m tráº£ vá» Promise (API Call)
+        // TRƯỜNG HỢP 2: Nếu items là hàm trả về Promise (API Call)
         else if (typeof column.option.items === 'function') {
           promises.push(
             column.option.items().then(data => ({
@@ -56,11 +56,11 @@ export class TableFormatService {
               displayField: column.option.displayField,
               data: Array.isArray(data) ? data : [],
             }))
-            // ... catch error giá»¯ nguyÃªn
+            // ... catch error giữ nguyên
           );
         }
 
-        // TRÆ¯á»œNG Há»¢P 3: Máº£ng tÄ©nh (K[]) bÃ¬nh thÆ°á»ng
+        // TRƯỜNG HỢP 3: Mảng tĩnh (K[]) bình thường
         else {
           cacheValues[column.field] = column.option.items.map(e => ({
             ...e,
@@ -87,7 +87,7 @@ export class TableFormatService {
   }
 
   /**
-   * Chuyá»ƒn Ä‘á»•i dá»¯ liá»‡u thÃ´ thÃ nh SdTableItem kÃ¨m cÃ¡c thiáº¿t láº­p hiá»ƒn thá»‹ (Display Meta)
+   * Chuyển đổi dữ liệu thô thành SdTableItem kèm các thiết lập hiển thị (Display Meta)
    */
   async format<T = any>(
     rawItems: T[],
@@ -100,7 +100,7 @@ export class TableFormatService {
       const { field, click, tooltip, htmlTemplate, transform } = column;
       const fieldStr = field;
 
-      // Xá»­ lÃ½ náº¡p tá»« Ä‘iá»ƒn Ä‘á»™ng (lazy-values)
+      // Xử lý nạp từ điển động (lazy-values)
       if (!transform && !htmlTemplate && column.type === 'lazy-values' && typeof column.option.views === 'function') {
         const {
           option: { views, valueField, displayField },
@@ -132,7 +132,7 @@ export class TableFormatService {
         }
       }
 
-      // Format dá»¯ liá»‡u cho tá»«ng hÃ ng
+      // Format dữ liệu cho từng hàng
       for (const item of items) {
         const rowData = item.data;
         const value = Utilities.getNestedValue(rowData, fieldStr);
@@ -154,7 +154,7 @@ export class TableFormatService {
           const newValue = transform(value, rowData);
           display.data = newValue instanceof Promise ? await newValue : newValue;
         } else {
-          // Xá»­ lÃ½ cÃ¡c type cÆ¡ báº£n
+          // Xử lý các type cơ bản
           if (column.type === 'date' || column.type === 'datetime' || column.type === 'time') {
             display.data = this.#formatDateDisplay(value, column.type);
             display.isHtml = column.type === 'datetime';
@@ -174,7 +174,7 @@ export class TableFormatService {
             }
           }
 
-          // Xá»­ lÃ½ Badge
+          // Xử lý Badge
           const badgeResult = this.#createBadge(column, value, rowData, cacheValues);
           if (badgeResult) {
             display.badge = badgeResult.badge;
@@ -191,7 +191,7 @@ export class TableFormatService {
       }
     };
 
-    // Duyá»‡t qua táº¥t cáº£ cÃ¡c cá»™t
+    // Duyệt qua tất cả các cột
     for (const column of columns.filter(e => !e.hidden)) {
       if (column.type === 'children') {
         for (const childColumn of column.children?.filter(e => !e.hidden) || []) {
@@ -260,4 +260,3 @@ export class TableFormatService {
     return undefined;
   }
 }
-

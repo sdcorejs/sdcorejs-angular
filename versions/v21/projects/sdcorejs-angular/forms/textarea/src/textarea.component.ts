@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
@@ -111,15 +111,15 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   name = input<string>(uuid.v4());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -154,7 +154,7 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   });
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -189,13 +189,13 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   isFocused = false;
 
   constructor() {
-    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i
+    // EFFECT 1: Sync model thay đổi từ bên ngoài
     effect(() => {
       const val = this.valueModel();
       untracked(() => {
         if (this.formControl.value !== val) {
           this.formControl.setValue(val, { emitEvent: false });
-          // [IMPROVE] Cáº­p nháº­t chiá»u cao khi value Ä‘á»•i tá»« bÃªn ngoÃ i
+          // [IMPROVE] Cập nhật chiều cao khi value đổi từ bên ngoài
           if (this.autoHeight()) this.#adjustHeight();
         }
       });
@@ -239,7 +239,7 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
     this.#subscription.unsubscribe();
   }
 
-  // HÃ m private tÃ­nh toÃ¡n chiá»u cao mÆ°á»£t mÃ 
+  // Hàm private tính toán chiều cao mượt mà
   #adjustHeight() {
     const el = this.textareaRef()?.nativeElement;
     if (el) {

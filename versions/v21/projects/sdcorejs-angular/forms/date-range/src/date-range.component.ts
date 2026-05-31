@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
@@ -51,7 +51,7 @@ interface Daterange {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
   providers: [
-    // DateFnsAdapter inject MAT_DATE_LOCALE; cáº¥p default en-US Ä‘á»ƒ parse/format hoáº¡t Ä‘á»™ng.
+    // DateFnsAdapter inject MAT_DATE_LOCALE; cấp default en-US để parse/format hoạt động.
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
     provideDateFnsAdapter({
       parse: { dateInput: 'dd/MM/yyyy' },
@@ -123,15 +123,15 @@ export class SdDateRange implements OnDestroy, OnInit {
   name = input<string>(uuid.v4());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -143,7 +143,7 @@ export class SdDateRange implements OnDestroy, OnInit {
   hideInlineError = input(false, { transform: booleanAttribute });
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -166,19 +166,19 @@ export class SdDateRange implements OnDestroy, OnInit {
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
 
-  /** Bare mode â€” strip the form-field shell to fit inline in a chip / token. */
+  /** Bare mode — strip the form-field shell to fit inline in a chip / token. */
   bare = input(false, { transform: booleanAttribute });
 
-  /** Viewed mode â€” render a read-only <sd-view> instead of the editable form-field. */
+  /** Viewed mode — render a read-only <sd-view> instead of the editable form-field. */
   viewed = input(false, { transform: booleanAttribute });
 
   /** Optional <ng-template #sdValue> projected by consumer to override the viewed text. */
   sdValueTemplate = contentChild<TemplateRef<unknown>>('sdValue');
 
   /**
-   * Formatted "dd/MM/yyyy â†’ dd/MM/yyyy" string for the viewed-mode display.
-   * why: viewed mode chá»‰ hiá»ƒn thá»‹ text â€” cáº§n format gá»n cho cáº£ 2 Ä‘áº§u range,
-   * Returns empty when both ends are blank, "from â†’" when only from is set, and so on.
+   * Formatted "dd/MM/yyyy → dd/MM/yyyy" string for the viewed-mode display.
+   * why: viewed mode chỉ hiển thị text — cần format gọn cho cả 2 đầu range,
+   * Returns empty when both ends are blank, "from →" when only from is set, and so on.
    */
   formatted = computed<string>(() => {
     const m = this.valueModel();
@@ -193,7 +193,7 @@ export class SdDateRange implements OnDestroy, OnInit {
     const a = fmt(m?.from);
     const b = fmt(m?.to);
     if (!a && !b) return '';
-    return `${a} â†’ ${b}`;
+    return `${a} → ${b}`;
   });
 
   /** Open the range picker panel programmatically (for query-bar chip auto-open). */
@@ -236,15 +236,15 @@ export class SdDateRange implements OnDestroy, OnInit {
   constructor() {
     this.cdRef.markForCheck();
 
-    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i vÃ o control1 vÃ  control2
+    // EFFECT 1: Sync model thay đổi từ bên ngoài vào control1 và control2
     effect(() => {
       const val = this.valueModel();
       untracked(() => {
         const fromStr = DateUtilities.isDate(val?.from) ? DateUtilities.toFormat(val?.from, 'yyyy/MM/dd') : null;
         const toStr = DateUtilities.isDate(val?.to) ? DateUtilities.toFormat(val?.to, 'yyyy/MM/dd') : null;
 
-        // Chá»‰ set value náº¿u cÃ³ sá»± khÃ¡c biá»‡t (trÃ¡nh loop)
-        // control1/control2 giá» giá»¯ native Date (date-fns adapter), khÃ´ng cáº§n .toDate() nhÆ° Moment.
+        // Chỉ set value nếu có sự khác biệt (tránh loop)
+        // control1/control2 giờ giữ native Date (date-fns adapter), không cần .toDate() như Moment.
         const currentFrom = this.control1.value ? DateUtilities.toFormat(this.control1.value, 'yyyy/MM/dd') : null;
         const currentTo = this.control2.value ? DateUtilities.toFormat(this.control2.value, 'yyyy/MM/dd') : null;
 
@@ -255,7 +255,7 @@ export class SdDateRange implements OnDestroy, OnInit {
           this.control2.setValue(toStr ? parseDate(toStr, 'yyyy/MM/dd', new Date()) : null, { emitEvent: false });
         }
 
-        // Äá»“ng bá»™ control tá»•ng Ä‘á»ƒ required cá»§a form cha khÃ´ng bá»‹ invalid khi model default Ä‘Ã£ cÃ³ giÃ¡ trá»‹.
+        // Đồng bộ control tổng để required của form cha không bị invalid khi model default đã có giá trị.
         this.formControl.setValue({ from: this.control1.value, to: this.control2.value }, { emitEvent: false });
         this.formControl.updateValueAndValidity({ emitEvent: false });
       });
@@ -323,7 +323,7 @@ export class SdDateRange implements OnDestroy, OnInit {
   };
 
   #emit = () => {
-    // control1/control2 giá» giá»¯ native Date, khÃ´ng cáº§n .toDate().
+    // control1/control2 giờ giữ native Date, không cần .toDate().
     const from = this.control1.value || null;
     const to = this.control2.value || null;
 

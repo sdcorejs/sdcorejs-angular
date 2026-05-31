@@ -1,4 +1,4 @@
-﻿# Design â€” Bare picker API for sd-select / sd-date / sd-datetime
+# Design — Bare picker API for sd-select / sd-date / sd-datetime
 
 **Date:** 2026-05-28
 **Status:** Approved (design)
@@ -21,25 +21,25 @@ are out of scope here.
 Expose each picker as a reusable, polished overlay that any host (starting with
 `sd-query-bar`) can render compactly and open, replacing the bespoke panel.
 
-## Chosen approach â€” `[bare]` render mode + public `open()`
+## Chosen approach — `[bare]` render mode + public `open()`
 
 Additive, default-off API on each control. No impact on existing consumers.
 
 ### Core component API (sd-select, sd-date, sd-datetime)
 
-**`bare` input** â€” `input(false, { transform: booleanAttribute })`.
-- `true` â†’ strip the `mat-form-field` chrome (outline / label / helper / error /
+**`bare` input** — `input(false, { transform: booleanAttribute })`.
+- `true` → strip the `mat-form-field` chrome (outline / label / helper / error /
   suffix clutter); render just the value text + caret, sized to fit inside a chip.
 - Implemented as a `.sd-bare` host class that flattens the field via CSS
   (transparent background, no border/padding, hide the dropdown arrow where it
   duplicates the chip's own affordance). Picker/overlay markup unchanged.
-- Default `false` â†’ existing render is byte-for-byte unchanged.
+- Default `false` → existing render is byte-for-byte unchanged.
 
-**`open()` method** â€” public, opens the control's picker anchored to its own host
+**`open()` method** — public, opens the control's picker anchored to its own host
 (which, inside a chip, anchors the panel to the chip):
-- `sd-datetime` â€” already has `open()` (CDK overlay `flexibleConnectedTo(host)`); keep.
-- `sd-date` â€” add `open()` â†’ `datePicker()?.open()` (mat-datepicker, anchors to its input).
-- `sd-select` â€” add `open()` â†’ `selectRef()?.open()` (mat-select panel; already used by `focus()`).
+- `sd-datetime` — already has `open()` (CDK overlay `flexibleConnectedTo(host)`); keep.
+- `sd-date` — add `open()` → `datePicker()?.open()` (mat-datepicker, anchors to its input).
+- `sd-select` — add `open()` → `selectRef()?.open()` (mat-select panel; already used by `focus()`).
 - Native click on the bare control still opens the panel; `open()` exists so the
   host can auto-open when a chip is added or enters edit.
 
@@ -60,16 +60,16 @@ lets `sd-query-bar` delete its own inline option machinery.
   `#ensureOptions`, `#setOptions`, the constructor preload effect.
   (Popover-mode `editingOptions` / `#loadValuesOptions` / `#loadLazyOptions` stay.)
 
-**Add / change** â€” inline value renderer for `values` / `lazy-values` / `date` / `datetime`:
-- Chip layout becomes `label + <bare sd-*> + Ã—`. The `c-token-value-trigger`
+**Add / change** — inline value renderer for `values` / `lazy-values` / `date` / `datetime`:
+- Chip layout becomes `label + <bare sd-*> + ×`. The `c-token-value-trigger`
   button is replaced by the bare control.
-  - `values` / `lazy-values` â†’ `<sd-select bare [items] [valueField] [displayField]
+  - `values` / `lazy-values` → `<sd-select bare [items] [valueField] [displayField]
     [multiple]="isMulti(op)" [model]="data" (sdChange)="updateFilter(i,{data})">`.
-  - `date` â†’ `<sd-date bare [model] (sdChange)>`, `datetime` â†’ `<sd-datetime bare [model] (sdChange)>`.
+  - `date` → `<sd-date bare [model] (sdChange)>`, `datetime` → `<sd-datetime bare [model] (sdChange)>`.
 - **Lazy adapter**: build an `SdSearch` function from `field.option.search` / `views`
   and pass it as `sd-select [items]`, so `sd-select` owns search / lazy / cache.
 - Build chip value step uses the same bare controls; auto-opens via
-  `afterNextRender(() => ctrl.open())`; commits on `sdChange` (empty â†’ `cancelBuild`).
+  `afterNextRender(() => ctrl.open())`; commits on `sdChange` (empty → `cancelBuild`).
 - `usesValuePopover` is repurposed to "render bare control" (vs seamless
   string/number, vs boolean buttons).
 
@@ -89,7 +89,7 @@ toggle) inline paths are untouched.
 **Core (per component)**
 - `bare=true` renders the flat trigger (`.sd-bare` present, no mat-form-field
   outline); `bare=false` (default) renders unchanged.
-- `open()` opens the panel â€” `sd-select` `selectRef().panelOpen` true; `sd-date`
+- `open()` opens the panel — `sd-select` `selectRef().panelOpen` true; `sd-date`
   `datePicker().opened` true; `sd-datetime` `pickerOpened()` true.
 
 **sd-query-bar**
@@ -102,9 +102,9 @@ toggle) inline paths are untouched.
 
 ## Risk
 
-- `bare` + `open()` are additive (default off) â†’ zero impact on existing
+- `bare` + `open()` are additive (default off) → zero impact on existing
   sd-select / sd-date / sd-datetime consumers. Bare CSS scoped to `.sd-bare`.
-- Lazy adapter must map `SdSearch` (`{ type, searchText, value }`) â†”
+- Lazy adapter must map `SdSearch` (`{ type, searchText, value }`) ↔
   `field.option.search` (`{ search, size }`) / `views(values)`; covered by a unit test.
 - AOT strict-template must pass for the new bare bindings.
 
@@ -112,13 +112,12 @@ toggle) inline paths are untouched.
 
 1. Core: `bare` + `open()` + tests on sd-select, sd-date, sd-datetime.
 2. sd-query-bar inline refactor (remove bespoke panel, render bare controls, lazy adapter).
-3. Gates: build `query-bar` entry âœ“, full sd-angular suite green âœ“, demo verify.
+3. Gates: build `query-bar` entry ✓, full sd-angular suite green ✓, demo verify.
 
 ## Out of scope
 
 - Truly detached standalone `Sd*Picker` overlay components (would require
-  rebuilding the mat-select panel) â€” revisit only if an external host needs a
+  rebuilding the mat-select panel) — revisit only if an external host needs a
   picker without rendering the control.
-- Popover-mode chip editor (chipPopover) â€” unchanged.
-- `string` / `number` seamless chip and `boolean` toggle â€” unchanged.
-
+- Popover-mode chip editor (chipPopover) — unchanged.
+- `string` / `number` seamless chip and `boolean` toggle — unchanged.

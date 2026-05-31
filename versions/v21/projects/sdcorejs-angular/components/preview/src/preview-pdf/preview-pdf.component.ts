@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -120,14 +120,14 @@ interface PdfDocumentProxy {
   templateUrl: './preview-pdf.component.html',
   styleUrl: './preview-pdf.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // WHY tabindex='0': host pháº£i focusable Ä‘á»ƒ @HostListener('keydown') nháº­n event
-  // mÃ  khÃ´ng cáº§n bind document. Mirror the preview-image pattern â€” consumer
-  // (modal/drawer/page) chá»‰ cáº§n tháº£ component vÃ o DOM.
+  // WHY tabindex='0': host phải focusable để @HostListener('keydown') nhận event
+  // mà không cần bind document. Mirror the preview-image pattern — consumer
+  // (modal/drawer/page) chỉ cần thả component vào DOM.
   host: {
     tabindex: '0',
     class: 'sd-preview-pdf-host',
     // WHY data-theme attribute: SCSS uses :host([data-theme="light"]) to swap
-    // CSS custom properties â€” declarative, devtools-visible, no class-name
+    // CSS custom properties — declarative, devtools-visible, no class-name
     // collision with consumer styling.
     '[attr.data-theme]': 'theme()',
     '[class.sd-preview-pdf-host--fullscreen]': 'isFullscreen()',
@@ -137,9 +137,9 @@ export class SdPreviewPdf implements OnDestroy {
   // ==========================================
   // CONSTANTS
   // ==========================================
-  // Dáº£i zoom há»¯u dá»¥ng cho viewer PDF. DÆ°á»›i 25% chá»¯ thÃ nh cháº¥m, trÃªn 400% lÃ 
-  // raster bá»‹ pixelated náº·ng (canvas + DPR váº«n cÃ³ giá»›i háº¡n). TrÃ¹ng dáº£i cá»§a
-  // preview-image Ä‘á»ƒ consumer lÃ m quen vá»›i 1 spec duy nháº¥t.
+  // Dải zoom hữu dụng cho viewer PDF. Dưới 25% chữ thành chấm, trên 400% là
+  // raster bị pixelated nặng (canvas + DPR vẫn có giới hạn). Trùng dải của
+  // preview-image để consumer làm quen với 1 spec duy nhất.
   static readonly MIN_ZOOM = 0.25;
   static readonly MAX_ZOOM = 4;
   static readonly ZOOM_STEP = 0.1;
@@ -162,7 +162,7 @@ export class SdPreviewPdf implements OnDestroy {
   protected readonly stageEl = viewChild<ElementRef<HTMLElement>>('stageRef');
   protected readonly pageInputRef = viewChild<ElementRef<HTMLInputElement>>('pageInput');
   protected readonly searchInputRef = viewChild<ElementRef<HTMLInputElement>>('searchInput');
-  // Every thumbnail <canvas> in the sidebar â€” populated when sidebar is open +
+  // Every thumbnail <canvas> in the sidebar — populated when sidebar is open +
   // mode==='thumbnails'. We feed these to the IntersectionObserver below so a
   // thumb only renders when it scrolls into the viewport (lazy fill).
   protected readonly thumbCanvases =
@@ -228,7 +228,7 @@ export class SdPreviewPdf implements OnDestroy {
   readonly downloadable = input(true);
   readonly password = input<string | undefined>(undefined);
   readonly httpHeaders = input<Record<string, string> | undefined>(undefined);
-  // Theme variant â€” drives [data-theme] host attribute. Default 'dark'
+  // Theme variant — drives [data-theme] host attribute. Default 'dark'
   // preserves the original visual contract; 'light' flips token set via SCSS.
   readonly theme = input<PreviewTheme>('dark');
 
@@ -241,7 +241,7 @@ export class SdPreviewPdf implements OnDestroy {
   readonly zoomChange = output<number>();
   readonly download = output<{ filename: string }>();
   readonly loadError = output<PdfErrorEvent>();
-  // Fired whenever the search term, results, or active index changes â€” gives
+  // Fired whenever the search term, results, or active index changes — gives
   // the consumer a stable hook for analytics / sticky highlight bars without
   // poking at the internal state signal.
   readonly searchChange = output<{ term: string; total: number; current: number }>();
@@ -265,7 +265,7 @@ export class SdPreviewPdf implements OnDestroy {
   readonly #filename = signal('document.pdf');
   readonly #fileSize = signal(0);
 
-  // Thumbnail cache: page number â†’ data URL of mini-render. Lazy-populated as
+  // Thumbnail cache: page number → data URL of mini-render. Lazy-populated as
   // the user opens the sidebar / scrolls thumbnails into view.
   readonly #thumbCache = signal<Record<number, string>>({});
 
@@ -274,11 +274,11 @@ export class SdPreviewPdf implements OnDestroy {
   // ==========================================
   // Whether the search bar (between header + body) is visible. Toggled via
   // Ctrl+F, the sidebar tab, or `openSearch()` / `closeSearch()`. Independent
-  // from the sidebar's `'search'` tab â€” the bar can stay open with the
+  // from the sidebar's `'search'` tab — the bar can stay open with the
   // sidebar closed (Ctrl+F flow), and the tab can be open without the bar.
   readonly #searchBarOpen = signal(false);
   // Persisted across `clearSearch()` so user toggles don't reset on each new
-  // term â€” mirrors Acrobat / Chrome's "Find in page" behaviour.
+  // term — mirrors Acrobat / Chrome's "Find in page" behaviour.
   readonly #searchCaseSensitive = signal(false);
   readonly #searchWholeWord = signal(false);
   readonly #searchTerm = signal('');
@@ -287,22 +287,22 @@ export class SdPreviewPdf implements OnDestroy {
   // or before the first searchNext). Highlight rendering uses this to skip
   // the `--active` class altogether.
   readonly #searchActiveIndex = signal(-1);
-  // Page-text cache: pageNum â†’ fully-joined plain text. We pay the
+  // Page-text cache: pageNum → fully-joined plain text. We pay the
   // `getTextContent()` cost once per page per document, then reuse across
   // re-runs (e.g. toggling case-sensitive). Cleared on every source change.
   readonly #pageTextCache = new Map<number, string>();
   // Token to abort an in-flight `search()` call when a newer one supersedes it
-  // â€” same pattern as #loadToken / #renderToken upstream.
+  // — same pattern as #loadToken / #renderToken upstream.
   #searchToken = 0;
   // The IntersectionObserver instance that drives lazy thumb rendering. Lives
   // for the component's lifetime; we just rebind to the latest canvas refs
   // when the sidebar tab switches.
   #thumbObserver: IntersectionObserver | null = null;
-  // Pages currently being rendered as thumbs â€” guards against double work
+  // Pages currently being rendered as thumbs — guards against double work
   // when a thumb scrolls in/out/in rapidly.
   readonly #thumbsRendering = new Set<number>();
 
-  // Cached resolved source object that getDocument actually consumed â€” used
+  // Cached resolved source object that getDocument actually consumed — used
   // for download fallback when caller passed a non-URL source.
   #lastBlobUrl: string | null = null;
   // Track ALL blob URLs we created so we can revoke on source change + destroy.
@@ -349,7 +349,7 @@ export class SdPreviewPdf implements OnDestroy {
     const n = this.numPages();
     return n > 0 ? Array.from({ length: n }, (_, i) => i + 1) : [];
   });
-  // Alias used by the template's thumbnail @for â€” keeps the JSX-y `pageNumbers`
+  // Alias used by the template's thumbnail @for — keeps the JSX-y `pageNumbers`
   // name from the design handoff while reusing the same computed.
   readonly pageNumbers = this.pageList;
 
@@ -368,14 +368,14 @@ export class SdPreviewPdf implements OnDestroy {
     const idx = this.#searchActiveIndex();
     return idx < 0 ? 0 : idx + 1;
   });
-  // Currently-active hit (or null when nothing is focused) â€” drives the
+  // Currently-active hit (or null when nothing is focused) — drives the
   // in-page `<mark class="--active">` highlight + auto-scroll effect below.
   readonly searchActiveResult = computed<PdfSearchResult | null>(() => {
     const idx = this.#searchActiveIndex();
     const results = this.#searchResults();
     return idx >= 0 && idx < results.length ? results[idx] : null;
   });
-  // Snapshot of the full search state â€” handed to consumer via
+  // Snapshot of the full search state — handed to consumer via
   // `getSearchState()` for parity with `searchChange` event shape.
   readonly searchState = computed<PdfSearchState>(() => ({
     term: this.#searchTerm(),
@@ -386,7 +386,7 @@ export class SdPreviewPdf implements OnDestroy {
   }));
 
   // ==========================================
-  // CONSTRUCTOR â€” declarative wiring
+  // CONSTRUCTOR — declarative wiring
   // ==========================================
   constructor() {
     // Initialize internal mirrors from inputs once. WHY mirrors: user actions
@@ -397,7 +397,7 @@ export class SdPreviewPdf implements OnDestroy {
     });
     effect(() => {
       const m = this.sidebar();
-      // 'outline' + 'search' are deferred â€” selecting them through the input
+      // 'outline' + 'search' are deferred — selecting them through the input
       // is allowed (we still toggle the tab UI) but the body shows the deferred
       // placeholder. Don't force-fallback to 'thumbnails' so the input value
       // is honored visibly.
@@ -405,7 +405,7 @@ export class SdPreviewPdf implements OnDestroy {
     });
     effect(() => {
       const m = this.scrollMode();
-      // Continuous scroll is deferred â€” warn once if requested but keep the
+      // Continuous scroll is deferred — warn once if requested but keep the
       // input value so consumer code is forward-compatible.
       if (m === 'continuous') {
         console.warn(
@@ -416,7 +416,7 @@ export class SdPreviewPdf implements OnDestroy {
       this.#scrollModeInternal.set(m);
     });
     effect(() => {
-      // Reset zoom mode when initialZoom input changes â€” only fires when the
+      // Reset zoom mode when initialZoom input changes — only fires when the
       // input itself updates (not when user clicks zoom +/-).
       this.#zoomMode.set(this.initialZoom());
     });
@@ -430,12 +430,12 @@ export class SdPreviewPdf implements OnDestroy {
       document.removeEventListener('fullscreenchange', onFullscreenChange);
     });
 
-    // React to source changes â€” destroy previous doc, load new one.
+    // React to source changes — destroy previous doc, load new one.
     // WHY untracked-via-queueMicrotask: `effect()` tracks every signal READ
     // sync-ly inside the callback. `#loadDocument` reads internal signals
     // (#pdfDoc via #destroyDoc, plus #zoom on the cleanup path). Letting the
     // effect track those would re-fire whenever we updated them inside the
-    // load flow â†’ infinite loop. Reading only `source()` here and deferring
+    // load flow → infinite loop. Reading only `source()` here and deferring
     // the actual load to a microtask scopes the tracking to ONLY `source()`.
     effect(() => {
       const src = this.source();
@@ -447,11 +447,11 @@ export class SdPreviewPdf implements OnDestroy {
       try {
         this.#hostEl.nativeElement.focus({ preventScroll: true });
       } catch {
-        // ignore â€” focus() can throw on detached elements.
+        // ignore — focus() can throw on detached elements.
       }
     });
 
-    // Drive lazy thumbnail rendering â€” every time the list of thumbnail
+    // Drive lazy thumbnail rendering — every time the list of thumbnail
     // <canvas> refs changes (sidebar opens, mode flips, doc reloads) we
     // disconnect any prior observer and start watching the new set.
     // WHY effect (not afterNextRender): viewChildren() emits a signal that
@@ -471,7 +471,7 @@ export class SdPreviewPdf implements OnDestroy {
       this.#searchTerm();
       this.#searchActiveIndex();
       this.activePage();
-      // Defer to a microtask so the canvas render finished writing â€” keeps
+      // Defer to a microtask so the canvas render finished writing — keeps
       // us out of the page render's await chain.
       queueMicrotask(() => this.#applyHighlightsForActivePage());
     });
@@ -492,8 +492,8 @@ export class SdPreviewPdf implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // Cleanup logic dá»i vÃ o DestroyRef.onDestroy á»Ÿ constructor â€” giá»¯ hook Ä‘á»ƒ
-    // tÆ°Æ¡ng thÃ­ch vá»›i `implements OnDestroy` (giÃºp test code `spyOn(comp, 'ngOnDestroy')`).
+    // Cleanup logic dời vào DestroyRef.onDestroy ở constructor — giữ hook để
+    // tương thích với `implements OnDestroy` (giúp test code `spyOn(comp, 'ngOnDestroy')`).
   }
 
   // ==========================================
@@ -530,7 +530,7 @@ export class SdPreviewPdf implements OnDestroy {
     if (typeof mode === 'number') {
       this.#setZoom(mode);
     } else {
-      // Fit modes recompute against stage size + page natural size â€” done in
+      // Fit modes recompute against stage size + page natural size — done in
       // #renderActivePage which reads zoomMode().
       this.#renderActivePage();
     }
@@ -552,7 +552,7 @@ export class SdPreviewPdf implements OnDestroy {
       this.#sidebarOpenInternal.set(true);
     }
     // Selecting the 'search' tab implicitly opens the search bar so the user
-    // can start typing right away â€” matches Acrobat's flyout behaviour.
+    // can start typing right away — matches Acrobat's flyout behaviour.
     if (mode === 'search') {
       this.openSearch();
     }
@@ -612,7 +612,7 @@ export class SdPreviewPdf implements OnDestroy {
     }
   }
 
-  /** Programmatic equivalent of clicking the X â€” emits the close output. */
+  /** Programmatic equivalent of clicking the X — emits the close output. */
   requestClose(): void {
     this.close.emit();
   }
@@ -642,7 +642,7 @@ export class SdPreviewPdf implements OnDestroy {
    * Implementation: iterate every page once (cached), build a flat plain-text
    * string per page (joining textItem.str), and slice ~30 chars of context
    * around each match. We deliberately use plain JS regex rather than
-   * pdf.js's `pdfFindController` â€” it's <40 lines, fully testable, and
+   * pdf.js's `pdfFindController` — it's <40 lines, fully testable, and
    * sidesteps the find-controller's dependency on a real text layer (which
    * we don't render).
    */
@@ -692,7 +692,7 @@ export class SdPreviewPdf implements OnDestroy {
       if (token !== this.#searchToken) return 0; // newer search superseded us
       const text = await this.#getPageText(doc, p);
       if (token !== this.#searchToken) return 0;
-      // re is /g â€” must be re-created or `lastIndex` reset between pages.
+      // re is /g — must be re-created or `lastIndex` reset between pages.
       re.lastIndex = 0;
       let m: RegExpExecArray | null;
       while ((m = re.exec(text)) !== null) {
@@ -784,7 +784,7 @@ export class SdPreviewPdf implements OnDestroy {
   }
 
   // ==========================================
-  // KEYBOARD â€” bound to HOST (not document)
+  // KEYBOARD — bound to HOST (not document)
   // ==========================================
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
@@ -835,11 +835,11 @@ export class SdPreviewPdf implements OnDestroy {
         }
         return;
       }
-      return; // typing â†’ let it pass through
+      return; // typing → let it pass through
     }
 
     // Other editable targets (page-number input etc.) shouldn't trigger
-    // viewer shortcuts â€” but Esc should still close an open search bar.
+    // viewer shortcuts — but Esc should still close an open search bar.
     if (isOtherEditable) {
       if (event.key === 'Escape' && this.#searchBarOpen()) {
         event.preventDefault();
@@ -850,7 +850,7 @@ export class SdPreviewPdf implements OnDestroy {
 
     // F3 outside the search input still cycles results (matches browser
     // Find-in-page convention). Only meaningful when the bar is open OR
-    // there are stale results â€” we keep it ungated for parity.
+    // there are stale results — we keep it ungated for parity.
     if (event.key === 'F3') {
       event.preventDefault();
       if (event.shiftKey) {
@@ -907,7 +907,7 @@ export class SdPreviewPdf implements OnDestroy {
         break;
       case 'Escape':
         // Esc closes the search bar (when open). NEVER emits `close` on the
-        // component â€” that remains the consumer's responsibility per the
+        // component — that remains the consumer's responsibility per the
         // standalone-embed pattern.
         if (this.#searchBarOpen()) {
           event.preventDefault();
@@ -965,7 +965,7 @@ export class SdPreviewPdf implements OnDestroy {
     this.#thumbCache.set({});
     this.#pageTextCache.clear();
     this.#thumbsRendering.clear();
-    // Reset search state â€” results are per-document, but keep the term so a
+    // Reset search state — results are per-document, but keep the term so a
     // newly-loaded source with the same term gets re-indexed automatically
     // on the next user keystroke. Active index resets unconditionally.
     this.#searchResults.set([]);
@@ -1087,7 +1087,7 @@ export class SdPreviewPdf implements OnDestroy {
     try {
       await renderTask.promise;
     } catch {
-      // Cancelled mid-flight when user navigated to a new page â€” fine.
+      // Cancelled mid-flight when user navigated to a new page — fine.
       return;
     } finally {
       if (this.#currentRenderTask === renderTask) {
@@ -1111,7 +1111,7 @@ export class SdPreviewPdf implements OnDestroy {
     const stage = this.stageEl()?.nativeElement;
     if (!stage) return 1;
     const stageRect = stage.getBoundingClientRect();
-    // 32px horizontal + 96px bottom padding lives in the SCSS â€” subtract it so
+    // 32px horizontal + 96px bottom padding lives in the SCSS — subtract it so
     // the page fits without overlapping the floating toolbar.
     const availW = Math.max(80, stageRect.width - 48);
     const availH = Math.max(80, stageRect.height - 120);
@@ -1205,7 +1205,7 @@ export class SdPreviewPdf implements OnDestroy {
   /** Map any thrown value into a {reason} we can render. */
   #classifyError(err: unknown): PdfErrorReason {
     if (!err) return 'unknown';
-    // pdfjs throws named exception classes â€” we sniff by name to avoid
+    // pdfjs throws named exception classes — we sniff by name to avoid
     // importing the constructors (keeps the bundle smaller).
     const name = (err as { name?: string }).name;
     if (name === 'PasswordException') return 'password';
@@ -1247,7 +1247,7 @@ export class SdPreviewPdf implements OnDestroy {
    * Build the search regex. We escape every metachar so the term is matched
    * literally (so `foo.bar` doesn't treat `.` as "any char"). Unicode flag
    * `u` makes `\b` understand Vietnamese diacritic-bearing letters as word
-   * characters â€” without it `\b` would split `Ä‘` at the d, breaking
+   * characters — without it `\b` would split `đ` at the d, breaking
    * whole-word matches on Vietnamese terms.
    */
   #buildSearchRegex(term: string, caseSensitive: boolean, wholeWord: boolean): RegExp | null {
@@ -1265,7 +1265,7 @@ export class SdPreviewPdf implements OnDestroy {
   /**
    * Fetch (and cache) the plain text of a single page. We normalize to NFC
    * so the same Vietnamese letter encoded as composed vs decomposed sequences
-   * (NFD) matches the same search term â€” pdfjs has been seen to return NFD
+   * (NFD) matches the same search term — pdfjs has been seen to return NFD
    * in some PDFs.
    */
   async #getPageText(doc: PdfDocumentProxy, pageNum: number): Promise<string> {
@@ -1306,7 +1306,7 @@ export class SdPreviewPdf implements OnDestroy {
   /**
    * Paint highlight marks over the current page's canvas wrapper. WHY DOM
    * append (not text layer): rendering the proper pdf.js text layer is a
-   * larger change â€” out-of-scope here. Instead we drop floating `<mark>`
+   * larger change — out-of-scope here. Instead we drop floating `<mark>`
    * pills near the top of the page; they're a visual cue that the page
    * contains a hit + which one is active, even when we can't place them
    * pixel-accurately. The result-list cards still drive precise navigation.
@@ -1348,7 +1348,7 @@ export class SdPreviewPdf implements OnDestroy {
       try {
         activeMark?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       } catch {
-        // older Safari throws on smooth â€” fall back silently
+        // older Safari throws on smooth — fall back silently
       }
     }
   }
@@ -1362,7 +1362,7 @@ export class SdPreviewPdf implements OnDestroy {
    * currently mounted. Called from an effect that tracks `thumbCanvases()`.
    */
   #syncThumbObserver(canvases: HTMLCanvasElement[]): void {
-    // Disconnect prior observer â€” refs are stale once the @for re-renders.
+    // Disconnect prior observer — refs are stale once the @for re-renders.
     this.#thumbObserver?.disconnect();
     if (canvases.length === 0) {
       this.#thumbObserver = null;
@@ -1386,7 +1386,7 @@ export class SdPreviewPdf implements OnDestroy {
           const c = entry.target as HTMLCanvasElement;
           const n = Number(c.getAttribute('data-page'));
           if (!Number.isFinite(n)) continue;
-          this.#thumbObserver?.unobserve(c); // one-shot â€” cached after first paint
+          this.#thumbObserver?.unobserve(c); // one-shot — cached after first paint
           void this.#renderThumbnail(n, c);
         }
       },
@@ -1399,7 +1399,7 @@ export class SdPreviewPdf implements OnDestroy {
    * Render a single page into a sidebar thumbnail canvas at ~140px width.
    * Cached via `#thumbsRendering` so rapid scroll bounces don't double-render.
    *
-   * Visible for testing â€” tests can stub `getPage()` on the fake doc to
+   * Visible for testing — tests can stub `getPage()` on the fake doc to
    * assert this method calls `render(...)` with the right page argument.
    */
   async renderThumbnailForPage(pageNum: number): Promise<void> {
@@ -1415,7 +1415,7 @@ export class SdPreviewPdf implements OnDestroy {
     if (!doc) return;
     if (this.#thumbsRendering.has(pageNum)) return;
     if (this.#thumbCache()[pageNum]) {
-      // Already cached â†’ just blit the dataURL onto the canvas.
+      // Already cached → just blit the dataURL onto the canvas.
       this.#paintCachedThumb(canvas, this.#thumbCache()[pageNum]);
       return;
     }
@@ -1424,7 +1424,7 @@ export class SdPreviewPdf implements OnDestroy {
       const page = await doc.getPage(pageNum);
       // Target ~140px wide for sidebar thumbs (handoff says 152px, leave a
       // small margin so the canvas itself can fit inside the page wrapper's
-      // outline). PDF page viewport at scale=1 â‰ˆ 612 wide; pick scale so the
+      // outline). PDF page viewport at scale=1 ≈ 612 wide; pick scale so the
       // result lands near 140px.
       const baseViewport = page.getViewport({ scale: 1 });
       const scale = 140 / Math.max(1, baseViewport.width);
@@ -1439,17 +1439,17 @@ export class SdPreviewPdf implements OnDestroy {
       try {
         await renderTask.promise;
       } catch {
-        return; // cancelled / failed silently â€” keep the blank thumb
+        return; // cancelled / failed silently — keep the blank thumb
       }
       try {
         const dataUrl = canvas.toDataURL('image/png');
         this.#thumbCache.update(prev => ({ ...prev, [pageNum]: dataUrl }));
       } catch {
-        // Tainted canvas (e.g. dev mock) â€” just skip caching, keep visual.
+        // Tainted canvas (e.g. dev mock) — just skip caching, keep visual.
       }
       page.cleanup();
     } catch {
-      // Page load failed â€” leave the thumb blank rather than throwing.
+      // Page load failed — leave the thumb blank rather than throwing.
     } finally {
       this.#thumbsRendering.delete(pageNum);
     }
@@ -1472,4 +1472,3 @@ export class SdPreviewPdf implements OnDestroy {
     img.src = dataUrl;
   }
 }
-

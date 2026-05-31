@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable, Optional } from '@angular/core';
+import { Inject, Injectable, Optional } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../configurations';
 import { SdFormGenericArgs, SdFormGenericDefinitionHtml, SdFormGenericDefinitionSelection, SdFormGenericSelectionItem } from '../models';
@@ -33,7 +33,7 @@ export class FormGenericService {
 
   selection = {
     definitions: async (): Promise<SdFormGenericDefinitionSelection[]> => {
-      // Náº¿u chÆ°a xá»­ lÃ½ láº¥y trÆ°á»›c Ä‘Ã³ thÃ¬ thá»±c hiá»‡n xá»­ lÃ½ láº¥y data cho selections
+      // Nếu chưa xử lý lấy trước đó thì thực hiện xử lý lấy data cho selections
       if (!this.#selections) {
         const selections = this.configuration?.form?.selections;
         if (!selections) {
@@ -58,15 +58,15 @@ export class FormGenericService {
       const selections = await this.selection.definitions();
       return selections.find(e => e.value === valuesKey);
     },
-    // Láº¥y dá»¯ liá»‡u items cho dropdown, radio, checklist
-    // Dá»¯ liá»‡u cÃ³ thá»ƒ lÃ  1 máº£ng hoáº·c hÃ m
+    // Lấy dữ liệu items cho dropdown, radio, checklist
+    // Dữ liệu có thể là 1 mảng hoặc hàm
     items: async (
       valuesKey: string | undefined | null,
       args: SdFormGenericArgs
     ): Promise<SdFormGenericSelectionItem[] | SdSearch<SdFormGenericSelectionItem>> => {
       try {
         const { component, column } = args;
-        // Náº¿u cÃ³ values thÃ¬ xá»­ lÃ½ tráº£ vá» máº£ng tÄ©nh
+        // Nếu có values thì xử lý trả về mảng tĩnh
         if (component && 'values' in component && Array.isArray(component.values) && component.values.length) {
           return component.values.map(e => ({
             value: e.value,
@@ -74,7 +74,7 @@ export class FormGenericService {
             data: e,
           }));
         }
-        // Náº¿u component lÃ  table vÃ  cÃ³ thÃ´ng tin column
+        // Nếu component là table và có thông tin column
         if (component?.type === 'table' && column && 'values' in column && Array.isArray(column.values) && column.values.length) {
           return column.values.map(e => ({
             value: e.value,
@@ -82,11 +82,11 @@ export class FormGenericService {
             data: e,
           }));
         }
-        // NgoÃ i ra náº¿u khÃ´ng cÃ³ valuesKey thÃ¬ tráº£ vá» máº£ng rá»—ng
+        // Ngoài ra nếu không có valuesKey thì trả về mảng rỗng
         if (!valuesKey) {
           return [];
         }
-        // TÃ¬m cáº¥u hÃ¬nh dá»±a vÃ o valuesKey
+        // Tìm cấu hình dựa vào valuesKey
         const selection = await this.selection.getDefinition(valuesKey);
         if (!selection) {
           return [];
@@ -121,7 +121,7 @@ export class FormGenericService {
 
   html = {
     definitions: async (): Promise<SdFormGenericDefinitionHtml[]> => {
-      // Náº¿u chÆ°a xá»­ lÃ½ láº¥y trÆ°á»›c Ä‘Ã³ thÃ¬ thá»±c hiá»‡n xá»­ lÃ½ láº¥y data cho htmls
+      // Nếu chưa xử lý lấy trước đó thì thực hiện xử lý lấy data cho htmls
       if (!this.#definitionHtmls) {
         const htmls = this.configuration?.form?.htmls;
         if (!htmls) {
@@ -158,4 +158,3 @@ export class FormGenericService {
     },
   };
 }
-

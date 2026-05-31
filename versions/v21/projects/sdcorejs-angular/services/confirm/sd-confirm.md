@@ -1,4 +1,4 @@
-�# SdConfirmService
+# SdConfirmService
 
 **Type**: Service (Angular `@Injectable`)
 **Class**: `SdConfirmService`
@@ -15,9 +15,9 @@ Opens a Material dialog (`DialogConfirmComponent`) for confirm/input/radio/date 
 - Asking for a date alongside a confirmation (use `withDate`).
 
 ## When NOT to use
-- For richer forms � use a dedicated dialog component with `MatDialog.open(...)`.
-- For non-blocking notifications � use `SdNotifyService` (toast/snackbar).
-- For multi-step flows � use a wizard/stepper, not a confirm dialog.
+- For richer forms — use a dedicated dialog component with `MatDialog.open(...)`.
+- For non-blocking notifications — use `SdNotifyService` (toast/snackbar).
+- For multi-step flows — use a wizard/stepper, not a confirm dialog.
 
 ## Public API
 
@@ -29,7 +29,7 @@ confirm(
   message: string,
   option?: {
     title?: string;                  // default: 'Xác nhận'
-    yesTitle?: string;               // default: 'Đ�ng ý'
+    yesTitle?: string;               // default: 'Đồng ý'
     noTitle?: string;                // default: 'Hủy bỏ'
     yesButtonColor?: Color;        // default: 'primary'
     noButtonColor?: Color;         // default: 'secondary'
@@ -106,9 +106,9 @@ withDate(
 None. The service depends on `MatDialog` from `@angular/material/dialog`, so the host app must include Angular Material's animation and dialog modules in its bootstrap (typically already done by the SD shell).
 
 ## Behavior notes
-- **Default labels are Vietnamese**: "Xác nhận", "Đ�ng ý", "Hủy bỏ", "Có", "Không". Override with `title` / `yesTitle` / `noTitle`.
+- **Default labels are Vietnamese**: "Xác nhận", "Đồng ý", "Hủy bỏ", "Có", "Không". Override with `title` / `yesTitle` / `noTitle`.
 - **Backdrop click**: disabled by default (`disableBackdropClose: true`). Pass `false` to allow clicking outside to dismiss.
-- **Cancel rejects, not resolves**: every method returns a `Promise` that **rejects** (with the string `'CANCEL'`) when the user cancels � wrap calls in `try/catch` (or `.then(...).catch(...)`).
+- **Cancel rejects, not resolves**: every method returns a `Promise` that **rejects** (with the string `'CANCEL'`) when the user cancels — wrap calls in `try/catch` (or `.then(...).catch(...)`).
 - **Width**: only `confirm()` exposes `width`. The other variants are fixed at `'400px'`.
 - **`Color`** comes from `@sdcorejs/utils/models` (theme color tokens like `'primary'`, `'secondary'`, etc.).
 
@@ -173,7 +173,7 @@ const dateIso = await confirmSvc.withDate('Schedule for', {
 
 ### In unit / integration tests
 
-`SdConfirmService` delegates to `MatDialog.open(DialogConfirmComponent, ...)` and wraps `afterClosed()` in a `Promise`. No real component or DOM is needed � replace `MatDialog` with a spy:
+`SdConfirmService` delegates to `MatDialog.open(DialogConfirmComponent, ...)` and wraps `afterClosed()` in a `Promise`. No real component or DOM is needed — replace `MatDialog` with a spy:
 
 ```typescript
 import { TestBed } from '@angular/core/testing';
@@ -205,10 +205,10 @@ describe('SdConfirmService', () => {
 ```
 
 Key points:
-- **No `NoopAnimationsModule` needed** � `MatDialog` is fully mocked; no real dialog is opened.
+- **No `NoopAnimationsModule` needed** — `MatDialog` is fully mocked; no real dialog is opened.
 - **`afterClosed$` subject** drives promise resolution: emit `{ action: 'ACCEPT', value: x }` to resolve, `{ action: 'CANCEL', value: null }` to reject.
 - Test `Promise` outcomes with Jasmine's `expectAsync(...).toBeResolvedTo(...)` / `toBeRejectedWith('CANCEL')`.
-- No `fakeAsync` / `tick` required � `Subject.next()` is synchronous.
+- No `fakeAsync` / `tick` required — `Subject.next()` is synchronous.
 
 ### Spec file
 `projects/sdcorejs-angular/services/confirm/src/lib/confirm.service.spec.ts`
@@ -221,13 +221,12 @@ Covers (13 specs total):
 - `withDate()`: opens dialog with `date` data; resolves with selected date string
 
 ## Anti-patterns
-- Do NOT use `await confirmSvc.confirm(...)` without a `try/catch` � Cancel is a rejection, not a resolved `false`.
-- Do NOT pass UI-bound objects in `items` for `withRadio` � only primitive value/display fields are read.
-- Do NOT inject `MatDialog` separately to open `DialogConfirmComponent` directly � that component is internal; use the service.
-- Do NOT use this for long-running async work inside the dialog � the dialog closes synchronously on user action.
+- Do NOT use `await confirmSvc.confirm(...)` without a `try/catch` — Cancel is a rejection, not a resolved `false`.
+- Do NOT pass UI-bound objects in `items` for `withRadio` — only primitive value/display fields are read.
+- Do NOT inject `MatDialog` separately to open `DialogConfirmComponent` directly — that component is internal; use the service.
+- Do NOT use this for long-running async work inside the dialog — the dialog closes synchronously on user action.
 
 ## Related
-- `SdNotifyService` (`@sdcorejs/angular/services/notify`) � for non-blocking confirmations / toasts.
-- `MatDialog` (`@angular/material/dialog`) � underlying dialog driver.
-- `Color` (`@sdcorejs/utils/models`) � color token type for the buttons.
-
+- `SdNotifyService` (`@sdcorejs/angular/services/notify`) — for non-blocking confirmations / toasts.
+- `MatDialog` (`@angular/material/dialog`) — underlying dialog driver.
+- `Color` (`@sdcorejs/utils/models`) — color token type for the buttons.

@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal, viewChild } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -13,17 +13,17 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
 import { ColumnFilterComponent } from '../column-filter/column-filter.component';
 
 /**
- * Mobile-filter â€” side-drawer chiáº¿m ~90% width thiáº¿t bá»‹. DÃ¹ng cho table khi
- * render trÃªn mÃ n hÃ¬nh Ä‘iá»‡n thoáº¡i (inline filter bá»‹ áº©n).
+ * Mobile-filter — side-drawer chiếm ~90% width thiết bị. Dùng cho table khi
+ * render trên màn hình điện thoại (inline filter bị ẩn).
  *
- * Layout (má»—i filter 1 hÃ ng, size='sm'):
- *  1. External filter (render inline â€” KHÃ”NG reuse external-filter component
- *     vÃ¬ component Ä‘Ã³ dÃ¹ng grid 2/3 cá»™t + cÃ³ chá»n áº©n/hiá»‡n khÃ´ng phÃ¹ há»£p mobile).
- *  2. filterDefs â€” custom templates do app khai bÃ¡o qua `[sdTableFilterDef]`.
- *  3. Column filter â€” 1 column-filter / column.
+ * Layout (mỗi filter 1 hàng, size='sm'):
+ *  1. External filter (render inline — KHÔNG reuse external-filter component
+ *     vì component đó dùng grid 2/3 cột + có chọn ẩn/hiện không phù hợp mobile).
+ *  2. filterDefs — custom templates do app khai báo qua `[sdTableFilterDef]`.
+ *  3. Column filter — 1 column-filter / column.
  *
- * State: local working copy. Cancel = Ä‘Ã³ng (khÃ´ng ghi). Apply = flush vÃ o
- * filterRegister + Ä‘Ã³ng.
+ * State: local working copy. Cancel = đóng (không ghi). Apply = flush vào
+ * filterRegister + đóng.
  */
 @Component({
   selector: 'mobile-filter',
@@ -64,7 +64,7 @@ export class MobileFilterComponent {
   drawer = viewChild.required(SdSideDrawer);
 
   // ==========================================
-  // 3. STATE â€” local working copies; chá»‰ flush khi Apply.
+  // 3. STATE — local working copies; chỉ flush khi Apply.
   // ==========================================
   workingColumnFilter = signal<Record<string, any>>({});
   workingColumnOperator = signal<Record<string, Operator>>({});
@@ -110,8 +110,7 @@ export class MobileFilterComponent {
   };
 
   onCancel = () => {
-    // Local working state â€” khÃ´ng ghi gÃ¬ khi cancel, chá»‰ Ä‘Ã³ng drawer.
+    // Local working state — không ghi gì khi cancel, chỉ đóng drawer.
     this.drawer().close();
   };
 }
-

@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
@@ -59,4 +59,3 @@ export class NotifyDemoComponent {
 
   onClear() { this.#notify.clearAll(); }
 }
-

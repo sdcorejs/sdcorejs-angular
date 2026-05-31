@@ -1,4 +1,4 @@
-�# `<sd-switch>`
+# `<sd-switch>`
 
 **Type**: Component (form input)
 **Selector**: `sd-switch`
@@ -8,7 +8,7 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-iOS-style toggle switch � boolean ON/OFF in a single tap. Use for feature flags, settings, "active/inactive" rows where the change applies immediately or as part of a form submission.
+iOS-style toggle switch — boolean ON/OFF in a single tap. Use for feature flags, settings, "active/inactive" rows where the change applies immediately or as part of a form submission.
 
 ## When to use
 - Boolean field whose default state is meaningful to surface ("Active", "Notify me", "Visible to public")
@@ -17,9 +17,9 @@ iOS-style toggle switch � boolean ON/OFF in a single tap. Use for feature fla
 - Forms where the user expects a toggle metaphor rather than a checkbox metaphor
 
 ## When NOT to use
-- Multi-state selection (3+ options) �  use `<sd-radio>` or `<sd-select>`
-- Boolean field embedded in a list of items (with bulk-select semantics) �  use `<sd-checkbox>`
-- "I agree to terms" checkboxes / form-prerequisite booleans �  use `<sd-checkbox>` (checkbox is the established convention for consent)
+- Multi-state selection (3+ options) → use `<sd-radio>` or `<sd-select>`
+- Boolean field embedded in a list of items (with bulk-select semantics) → use `<sd-checkbox>`
+- "I agree to terms" checkboxes / form-prerequisite booleans → use `<sd-checkbox>` (checkbox is the established convention for consent)
 
 ## Inputs
 | Name | Type | Default | Notes |
@@ -35,7 +35,7 @@ iOS-style toggle switch � boolean ON/OFF in a single tap. Use for feature fla
 | `disabled` | `boolean` | `false` | Disables the underlying `FormControl`. Bare attribute = `true`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline `<mat-error>` message. Bare attribute = `true`. |
 
-> **Coerce note**: `required`, `disabled`, `hideInlineError` accept `'' | true | false | null | undefined` � bare attribute presence (e.g. `<sd-switch required>`) is treated as `true`. (Hand-rolled in setters; not the `booleanAttribute` transform.)
+> **Coerce note**: `required`, `disabled`, `hideInlineError` accept `'' | true | false | null | undefined` — bare attribute presence (e.g. `<sd-switch required>`) is treated as `true`. (Hand-rolled in setters; not the `booleanAttribute` transform.)
 
 ## Outputs
 | Name | Type | Notes |
@@ -44,21 +44,21 @@ iOS-style toggle switch � boolean ON/OFF in a single tap. Use for feature fla
 | `sdChange` | `any` | Emitted on every toggle with the new boolean value. |
 
 ## Content projection (slots)
-None � label comes from the `[label]` input.
+None — label comes from the `[label]` input.
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngAfterViewInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
-- **No `[viewed]` mode** � the switch always renders as a toggle. For DETAIL display of a boolean, render plain text yourself (e.g. "Có" / "Không") in the parent view.
-- **Validators**: `[required]` �  `Validators.required` (rejects `null`/`undefined`/empty; `false` is treated as valid). Built-in inline error: required �  "Vui lòng nhập thông tin"; suppressed when `[hideInlineError]="true"`.
+- **No `[viewed]` mode** — the switch always renders as a toggle. For DETAIL display of a boolean, render plain text yourself (e.g. "Có" / "Không") in the parent view.
+- **Validators**: `[required]` → `Validators.required` (rejects `null`/`undefined`/empty; `false` is treated as valid). Built-in inline error: required → "Vui lòng nhập thông tin"; suppressed when `[hideInlineError]="true"`.
 
 ### Three ways to integrate
 
 ```html
-<!-- 1. Template-driven v�:i [(model)] (no FormGroup) -->
+<!-- 1. Template-driven với [(model)] (no FormGroup) -->
 <sd-switch label="Bật thông báo" [(model)]="settings.notify"></sd-switch>
 
-<!-- 2. Reactive FormGroup (truyền form vào �Ồ switch tự addControl) -->
+<!-- 2. Reactive FormGroup (truyền form vào để switch tự addControl) -->
 <form [formGroup]="form">
   <sd-switch label="Bật" name="notify" [form]="form"></sd-switch>
 </form>
@@ -71,11 +71,11 @@ None � label comes from the `[label]` input.
 
 > **How it works**: The setter detects `NgForm` (via `instanceof NgForm`) and unwraps its `.form` (`FormGroup`) automatically. In all three patterns the component manages `addControl` / `removeControl` lifecycle internally.
 
-## Visual cues (helps agent map screenshots �  component)
+## Visual cues (helps agent map screenshots → component)
 - A small horizontal pill (track) with a circular sliding knob; OFF state = gray track + knob on the left, ON state = colored track (`color`) + knob on the right
 - Optional label rendered to the RIGHT of the switch (a single line of text, with optional red `*` if `required`)
 - Inline error message appears below the row in red when `formControl.touched && formControl.errors?.required` (i.e. `required` was set but the toggle is `false`); suppressed when `[hideInlineError]="true"`
-- No outlined `mat-form-field` chrome � visually denser and lighter than `<sd-input>` / `<sd-select>`
+- No outlined `mat-form-field` chrome — visually denser and lighter than `<sd-input>` / `<sd-select>`
 
 ## Examples
 
@@ -83,7 +83,7 @@ None � label comes from the `[label]` input.
 ```html
 <sd-switch
   [form]="form" name="active"
-  label="Hoạt ��"ng"
+  label="Hoạt động"
   [(model)]="model.active"
   (sdChange)="onActiveToggle($event)">
 </sd-switch>
@@ -102,7 +102,7 @@ None � label comes from the `[label]` input.
 ```html
 <sd-switch
   [form]="form" name="acceptedTerms"
-  label="Tôi ��ng ý v�:i �iều khoản" required
+  label="Tôi đồng ý với điều khoản" required
   [(model)]="model.acceptedTerms">
 </sd-switch>
 ```
@@ -110,18 +110,18 @@ None � label comes from the `[label]` input.
 ### 4. Disabled (computed read-only)
 ```html
 <sd-switch
-  label="Đã duy�!t"
+  label="Đã duyệt"
   [model]="model.approved"
   [disabled]="true">
 </sd-switch>
 ```
 
 ## Anti-patterns
-- �R Using `formControlName` / `[(ngModel)]` � not wired; use `[form]+[name]` and `[(model)]`.
-- �R Using `<sd-switch>` for "I agree" / consent checkboxes � convention is `<sd-checkbox>`. Switches imply an immediately-applied setting, not consent.
-- �R Setting `[required]="true"` on a switch you actually want to allow `false` for � `Validators.required` rejects `false`. Drop `required` if `false` is a valid submission.
-- �R Building DETAIL view by setting `[disabled]="true"` � the toggle still renders. Render text ("Có" / "Không") yourself in the parent view.
-- �R Stacking many switches in a tight row without labels or grouping � confusing; use a `<sd-fieldset>` / `<sd-list>` layout.
+- ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
+- ❌ Using `<sd-switch>` for "I agree" / consent checkboxes — convention is `<sd-checkbox>`. Switches imply an immediately-applied setting, not consent.
+- ❌ Setting `[required]="true"` on a switch you actually want to allow `false` for — `Validators.required` rejects `false`. Drop `required` if `false` is a valid submission.
+- ❌ Building DETAIL view by setting `[disabled]="true"` — the toggle still renders. Render text ("Có" / "Không") yourself in the parent view.
+- ❌ Stacking many switches in a tight row without labels or grouping — confusing; use a `<sd-fieldset>` / `<sd-list>` layout.
 
 ## E2E test attributes
 
@@ -129,7 +129,7 @@ None � label comes from the `[label]` input.
 |---|---|---|
 | `data-autoid` | `forms-switch-<autoId>` | input `autoId` |
 | `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
-| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` � true when null |
+| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` — true when null |
 | `data-value` | `"true"` / `"false"` | `sdSerializeDataValue(formControl.value)` |
 | `data-required` | `"true"` / `"false"` | `required` input; always present |
 
@@ -146,7 +146,6 @@ const disabledToggles = page.locator('sd-switch [data-disabled="true"]');
 ```
 
 ## Related
-- `<sd-checkbox>` � boolean with checkbox metaphor (consent / list-row select)
-- `<sd-radio>` � pick-one with > 2 states
-- `<sd-label>` � label primitive used internally
-
+- `<sd-checkbox>` — boolean with checkbox metaphor (consent / list-row select)
+- `<sd-radio>` — pick-one with > 2 states
+- `<sd-label>` — label primitive used internally

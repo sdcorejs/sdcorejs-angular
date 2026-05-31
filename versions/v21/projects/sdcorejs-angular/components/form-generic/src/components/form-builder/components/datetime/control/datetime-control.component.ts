@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 import { filter, Subscription } from 'rxjs';
@@ -29,7 +29,7 @@ export class DatetimeControl {
   
     ngAfterViewInit(): void {
       this.#subscription.add(
-        // Chá»‰ láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i tÆ°Æ¡ng á»©ng vá»›i component dá»±a vÃ o id
+        // Chỉ lắng nghe sự kiện thay đổi tương ứng với component dựa vào id
         this.builderService.componentListeners.pipe(filter(component => component.id === this.component.id)).subscribe(component => {
           if (component) {
             this.ref.markForCheck();
@@ -42,4 +42,3 @@ export class DatetimeControl {
       this.#subscription.unsubscribe();
     }
 }
-

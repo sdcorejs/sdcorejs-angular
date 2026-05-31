@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -49,7 +49,7 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
   }
   form = new FormGroup({});
   definitionHtmls: SdFormGenericDefinitionHtml[] = [];
-  // Mong muá»‘n lÃ  khi attribute changes thÃ´ng bÃ¡o cho control biáº¿t Ä‘á»ƒ control render content tÆ°Æ¡ng á»©ng
+  // Mong muốn là khi attribute changes thông báo cho control biết để control render content tương ứng
   @Output() attributeChanges = new EventEmitter();
 
   #subscription = new Subscription();
@@ -73,14 +73,14 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    // Khi content vÃ  variable thay Ä‘á»•i, delay 0.5s rá»“i má»›i emit output
+    // Khi content và variable thay đổi, delay 0.5s rồi mới emit output
     this.#subscription.add(
       this.form.valueChanges.pipe(debounceTime(500)).subscribe(() => {
         this.builderService.componentEmitters.next(this.component);
       })
     );
     this.#subscription.add(
-      // Chá»‰ láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i tÆ°Æ¡ng á»©ng vá»›i component dá»±a vÃ o id
+      // Chỉ lắng nghe sự kiện thay đổi tương ứng với component dựa vào id
       this.builderService.componentListeners.pipe(filter(component => component.id === this.component.id)).subscribe(component => {
         if (component) {
           this.ref.markForCheck();
@@ -114,4 +114,3 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
     }
   };
 }
-

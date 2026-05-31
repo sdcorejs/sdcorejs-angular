@@ -1,4 +1,4 @@
-﻿---
+---
 name: 2026-05-29-tab-stepper-input-color-ckeditor-styles-showcase
 description: Session summary for the 2026-05-29 work that shipped sd-tab-group/sd-tab, sd-stepper/sd-step, sd-input-color, sd-ckeditor-styles wrapper (editor-only wire), and a brand-new showcase project with 47 demo pages.
 metadata:
@@ -8,7 +8,7 @@ metadata:
   date: 2026-05-29
 ---
 
-# Session 2026-05-29 â€” tab + stepper + input-color + ckeditor-styles wrapper + showcase
+# Session 2026-05-29 — tab + stepper + input-color + ckeditor-styles wrapper + showcase
 
 ## Goal
 Add visual primitives missing from `@sdcorejs/angular` (tabs, stepper, color input), refactor CKEditor CSS loading into a small wrapper so consumers don't need a global SCSS import, and stand up a new showcase site that demos every component visually.
@@ -17,10 +17,10 @@ Add visual primitives missing from `@sdcorejs/angular` (tabs, stepper, color inp
 
 ### Library (`@sdcorejs/angular`)
 
-- **`components/tab`** â€” `<sd-tab-group>` + `<sd-tab>`. Variants `line`/`pills`/`segmented`. Color from SdColor palette via host CSS vars. `stretchTabs` toggle. Lazy content via `matTabContent` + viewChild template ref. 58 specs.
-- **`components/stepper`** â€” `<sd-stepper>` + `<sd-step>` wrapping mat-stepper. linear + stepControl gating, optional, editable, state override (error / done / custom). 26 specs.
-- **`components/ckeditor-styles`** â€” `<sd-ckeditor-styles>` empty-render wrapper that owns the global CKEditor CSS via ViewEncapsulation.None. Embedded inside `<sd-editor>` only (mini-editor + document-builder still pending).
-- **`forms/input-color`** â€” `<sd-input-color>` composing `<sd-input>` + suffix swatch + hidden native picker. Hex pattern validator, clear button when non-required, swatch checkerboard for empty/invalid state. 30 specs.
+- **`components/tab`** — `<sd-tab-group>` + `<sd-tab>`. Variants `line`/`pills`/`segmented`. Color from SdColor palette via host CSS vars. `stretchTabs` toggle. Lazy content via `matTabContent` + viewChild template ref. 58 specs.
+- **`components/stepper`** — `<sd-stepper>` + `<sd-step>` wrapping mat-stepper. linear + stepControl gating, optional, editable, state override (error / done / custom). 26 specs.
+- **`components/ckeditor-styles`** — `<sd-ckeditor-styles>` empty-render wrapper that owns the global CKEditor CSS via ViewEncapsulation.None. Embedded inside `<sd-editor>` only (mini-editor + document-builder still pending).
+- **`forms/input-color`** — `<sd-input-color>` composing `<sd-input>` + suffix swatch + hidden native picker. Hex pattern validator, clear button when non-required, swatch checkerboard for empty/invalid state. 30 specs.
 
 ### Showcase
 
@@ -52,6 +52,5 @@ Add visual primitives missing from `@sdcorejs/angular` (tabs, stepper, color inp
 
 - The branch `release/0.0.1` carries unrelated coverage-batch WIP from earlier sessions. The 2026-05-29 work is additive (new files + edits to `editor.component.{ts,html}` + `angular.json` + `package.json` + the old demo route table for sd-tab).
 - Sidebar item "Stepper" intentionally sits between Splitter and Tab to preserve A-Z order in Components group.
-- `<sd-stepper>` exposes the StepperSelectionEvent type directly from `@angular/cdk/stepper` â€” no re-export to avoid duplication.
+- `<sd-stepper>` exposes the StepperSelectionEvent type directly from `@angular/cdk/stepper` — no re-export to avoid duplication.
 - Showcase initial bundle 2.27 MB (mostly sd-core CSS + base shell). All component-specific deps go into lazy chunks; CKEditor CSS lives in editor-demo chunk (357 kB), mini-editor (359 kB), document-builder (490 kB).
-

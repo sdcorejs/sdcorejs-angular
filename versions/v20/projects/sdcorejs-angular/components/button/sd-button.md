@@ -1,4 +1,4 @@
-�# `<sd-button>`
+# `<sd-button>`
 
 **Type**: Component
 **Selector**: `sd-button`
@@ -8,7 +8,7 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Standard action button � used everywhere a user triggers an action (save, cancel, approve, navigate, ...). Wraps Angular Material with SDCoreJS variants, sizing, and built-in icon/loading/permission support.
+Standard action button — used everywhere a user triggers an action (save, cancel, approve, navigate, ...). Wraps Angular Material with SDCoreJS variants, sizing, and built-in icon/loading/permission support.
 
 ## When to use
 - Submit forms, trigger CRUD actions, confirm dialogs, toolbar actions
@@ -18,18 +18,18 @@ Standard action button � used everywhere a user triggers an action (save, can
 - Header `headerLeft` / `headerRight` slot of `<sd-page>`
 
 ## When NOT to use
-- For pure text links �  use `<sd-anchor>` instead
-- For icon-only "menu launchers" inside complex toolbars �  use `<sd-quick-action>` instead (it adds a popover)
-- For tab switchers �  use `<sd-tab>` instead
-- For status badges �  use `<sd-badge>`
+- For pure text links → use `<sd-anchor>` instead
+- For icon-only "menu launchers" inside complex toolbars → use `<sd-quick-action>` instead (it adds a popover)
+- For tab switchers → use `<sd-tab>` instead
+- For status badges → use `<sd-badge>`
 
 ## Inputs
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Optional. Generates `data-autoId="components-button-<value>"` for E2E selectors. |
 | `type` | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'` | Visual variant. `fill`=primary action, `light`=default, `outline`=secondary, `link`=text-style. |
-| `color` | `Color` | `'secondary'` | Material color tokens (`primary`, `accent`, `warn`, `success`, `info`, `secondary`, ⬦). |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Height: sm �0� 28px, md �0� 36px, lg �0� 44px. |
+| `color` | `Color` | `'secondary'` | Material color tokens (`primary`, `accent`, `warn`, `success`, `info`, `secondary`, …). |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Height: sm ≈ 28px, md ≈ 36px, lg ≈ 44px. |
 | `htmlType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Sets the underlying `<button type="...">`. Use `'submit'` only when the button is INSIDE a `<form>`. |
 | `title` | `string` | `undefined` | Visible label. Required unless icon-only. |
 | `width` | `string` | `undefined` | Optional CSS width override (e.g. `'160px'`, `'100%'`). |
@@ -41,7 +41,7 @@ Standard action button � used everywhere a user triggers an action (save, can
 | `loading` | `boolean` | `false` | Shows spinner instead of prefix icon; clicks suppressed. |
 | `block` | `boolean` | `false` | Stretches to 100% width of parent (`.sd-block` host class). |
 
-> **Coerce note**: `disabled`, `loading`, `block` use `booleanAttribute` transform � bare attribute presence (e.g. `<sd-button disabled>`) is treated as `true`.
+> **Coerce note**: `disabled`, `loading`, `block` use `booleanAttribute` transform — bare attribute presence (e.g. `<sd-button disabled>`) is treated as `true`.
 
 ## Outputs
 | Name | Type | Notes |
@@ -49,24 +49,24 @@ Standard action button � used everywhere a user triggers an action (save, can
 | `click` | `Event` | Throttled to 300ms (leading edge) and suppressed when `disabled` or `loading` is true. Click events are also intercepted in capture phase to prevent re-emission to parents. |
 
 ## Content projection (slots)
-None � text comes from `title` input. The button is intentionally not slot-based to enforce consistent typography.
+None — text comes from `title` input. The button is intentionally not slot-based to enforce consistent typography.
 
-## Visual cues (helps agent map screenshots �  component)
+## Visual cues (helps agent map screenshots → component)
 - A rectangular pill button with rounded corners; height varies by `size`
 - `fill` variant: solid background in `color`, white text
-- `light` variant: tinted background (10% alpha of `color`), `color` text � DEFAULT, what most buttons look like
+- `light` variant: tinted background (10% alpha of `color`), `color` text — DEFAULT, what most buttons look like
 - `outline` variant: transparent background, 1px border in `color`, `color` text
 - `link` variant: no background, no border, just text in `color`
-- When `prefixIcon` only and no `title` �  square icon-only button (`.c-square` class)
+- When `prefixIcon` only and no `title` → square icon-only button (`.c-square` class)
 - Spinner mode (loading): replaces prefix icon with a small Material spinner
 
 ## Permission gating
-The button itself does NOT enforce permission � wrap with the `*sdPermission` directive:
+The button itself does NOT enforce permission — wrap with the `*sdPermission` directive:
 
 ```html
 <sd-button
   *sdPermission="'<MODULE>_C_<ENTITY>_CREATE'; sdPermissionKey: '<module>'"
-  title="Tạo m�:i" type="fill" color="primary" prefixIcon="add"
+  title="Tạo mới" type="fill" color="primary" prefixIcon="add"
   (click)="onCreate()">
 </sd-button>
 ```
@@ -95,7 +95,7 @@ The button itself does NOT enforce permission � wrap with the `*sdPermission`
 <sd-button
   type="link" color="primary" size="sm"
   prefixIcon="edit"
-  tooltip="Ch�0nh sửa"
+  tooltip="Chỉnh sửa"
   (click)="onEdit(row)">
 </sd-button>
 ```
@@ -113,7 +113,7 @@ The button itself does NOT enforce permission � wrap with the `*sdPermission`
 ```html
 <sd-button
   type="fill" color="primary"
-  title="Gửi duy�!t" prefixIcon="send"
+  title="Gửi duyệt" prefixIcon="send"
   [loading]="submitting()"
   (click)="onSubmitForApproval()">
 </sd-button>
@@ -137,17 +137,16 @@ await expect(btn).toHaveAttribute('data-loading', 'false');
 ```
 
 ## Anti-patterns
-- �R `<sd-button (click)="navigate()">` for navigation � use `<sd-anchor>` so right-click "open in new tab" works
-- �R Adding `[routerLink]` directly on `<sd-button>` host � better is wrapping the button in an `<a [routerLink]>` OR using `<sd-anchor>`
-- �R Manually toggling visibility based on permission inside the parent component � use `*sdPermission` directive instead
-- �R Using `disabled` to hide a button � use `*sdPermission` for permission gating, `*ngIf` for conditional rendering, `disabled` ONLY for transient states (form invalid, loading)
-- �R Stacking multiple `<sd-button type="fill">` next to each other � only ONE primary action per region; the rest should be `light` or `outline`
-- �R `htmlType="submit"` outside of a `<form>` � clicks won't behave specially, but it confuses readers
+- ❌ `<sd-button (click)="navigate()">` for navigation — use `<sd-anchor>` so right-click "open in new tab" works
+- ❌ Adding `[routerLink]` directly on `<sd-button>` host — better is wrapping the button in an `<a [routerLink]>` OR using `<sd-anchor>`
+- ❌ Manually toggling visibility based on permission inside the parent component — use `*sdPermission` directive instead
+- ❌ Using `disabled` to hide a button — use `*sdPermission` for permission gating, `*ngIf` for conditional rendering, `disabled` ONLY for transient states (form invalid, loading)
+- ❌ Stacking multiple `<sd-button type="fill">` next to each other — only ONE primary action per region; the rest should be `light` or `outline`
+- ❌ `htmlType="submit"` outside of a `<form>` — clicks won't behave specially, but it confuses readers
 
 ## Related
-- `<sd-anchor>` � text/link variant (use for navigation)
-- `<sd-quick-action>` � icon-only button with popover menu
-- `<sd-badge>` � status indicator (not clickable)
-- `<sd-tab>` � tab-bar selector
-- `*sdPermission` directive � for permission gating
-
+- `<sd-anchor>` — text/link variant (use for navigation)
+- `<sd-quick-action>` — icon-only button with popover menu
+- `<sd-badge>` — status indicator (not clickable)
+- `<sd-tab>` — tab-bar selector
+- `*sdPermission` directive — for permission gating

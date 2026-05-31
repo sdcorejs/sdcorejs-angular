@@ -1,4 +1,4 @@
-﻿# E2E `data-*` Runtime-State Attributes â€” Implementation Plan
+# E2E `data-*` Runtime-State Attributes — Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -16,12 +16,12 @@
 
 ### New files
 
-- `projects/sdcorejs-angular/utilities/src/data-state/data-state.ts` â€” `sdSerializeDataValue`, `sdIsEmpty`
-- `projects/sdcorejs-angular/utilities/src/data-state/data-state.spec.ts` â€” unit tests for above
-- `projects/sdcorejs-angular/utilities/src/data-state/index.ts` â€” barrel re-export (if utilities use barrels)
-- `projects/sdcorejs-angular/forms/models/src/form-control-state.ts` â€” `sdFormControlState`
-- `projects/sdcorejs-angular/forms/models/src/form-control-state.spec.ts` â€” unit tests
-- `projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md` â€” central reference doc (catalog + YAML schema)
+- `projects/sdcorejs-angular/utilities/src/data-state/data-state.ts` — `sdSerializeDataValue`, `sdIsEmpty`
+- `projects/sdcorejs-angular/utilities/src/data-state/data-state.spec.ts` — unit tests for above
+- `projects/sdcorejs-angular/utilities/src/data-state/index.ts` — barrel re-export (if utilities use barrels)
+- `projects/sdcorejs-angular/forms/models/src/form-control-state.ts` — `sdFormControlState`
+- `projects/sdcorejs-angular/forms/models/src/form-control-state.spec.ts` — unit tests
+- `projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md` — central reference doc (catalog + YAML schema)
 
 ### Modified files (per component)
 
@@ -40,7 +40,7 @@
 | `sd-chip` | + `data-count` | + `data-count` | + cases | + row |
 | `sd-chip-calendar` | ditto | ditto | ditto | ditto |
 | `sd-date-range` | + JSON value | + bindings | + cases | + section |
-| `sd-button` | use existing signals | + 2 bindings Ã— 4 type branches | + cases | + section |
+| `sd-button` | use existing signals | + 2 bindings × 4 type branches | + cases | + section |
 | `sd-table` | + host bindings | n/a (host) | + cases | + section |
 | `sd-upload-file` | + computeds | + bindings | + cases | + section |
 | `sd-editor` | + computeds | + bindings | + cases | + section |
@@ -56,7 +56,7 @@
 
 ---
 
-## Phase 1 â€” Foundation utilities
+## Phase 1 — Foundation utilities
 
 ### Task 1: Serialization helpers
 
@@ -133,7 +133,7 @@ describe('sdIsEmpty', () => {
 npm run test -- --watch=false --include=projects/sdcorejs-angular/utilities/src/data-state/data-state.spec.ts
 ```
 
-Expected: FAIL â€” module `./data-state` not found.
+Expected: FAIL — module `./data-state` not found.
 
 - [ ] **Step 3: Implement the helpers**
 
@@ -143,10 +143,10 @@ Expected: FAIL â€” module `./data-state` not found.
 /**
  * Serialize a value for the `data-value` attribute consumed by QA automation.
  *
- * null/undefined/empty-string â†’ ''.
- * Date â†’ ISO string.
- * Array / object â†’ JSON.stringify, '' on failure (circular refs).
- * Primitives â†’ String().
+ * null/undefined/empty-string → ''.
+ * Date → ISO string.
+ * Array / object → JSON.stringify, '' on failure (circular refs).
+ * Primitives → String().
  */
 export function sdSerializeDataValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '';
@@ -272,7 +272,7 @@ describe('sdFormControlState', () => {
 npm run test -- --watch=false --include=projects/sdcorejs-angular/forms/models/src/form-control-state.spec.ts
 ```
 
-Expected: FAIL â€” module not found.
+Expected: FAIL — module not found.
 
 - [ ] **Step 3: Implement the bridge**
 
@@ -348,9 +348,9 @@ git commit -m "feat(forms): add sdFormControlState reactive bridge"
 
 ---
 
-## Phase 2 â€” Reference scalar form implementation
+## Phase 2 — Reference scalar form implementation
 
-### Task 3: `sd-input` â€” full E2E attribute set
+### Task 3: `sd-input` — full E2E attribute set
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/forms/input/src/input.component.ts`
@@ -362,7 +362,7 @@ Anchor element: the existing `<input matInput>` already carrying `[attr.data-aut
 
 - [ ] **Step 1: Write the failing tests**
 
-Open `input.component.spec.ts`. Locate the existing `describe('â€¦ â€” autoId', () => {...})` block (or create one if missing) and **rename** it to `describe('SdInput â€” E2E attributes', () => {...})`. Inside it, after the existing autoId test, append:
+Open `input.component.spec.ts`. Locate the existing `describe('… — autoId', () => {...})` block (or create one if missing) and **rename** it to `describe('SdInput — E2E attributes', () => {...})`. Inside it, after the existing autoId test, append:
 
 ```ts
 it('renders data-disabled reflecting FormControl state', () => {
@@ -426,7 +426,7 @@ Ensure `Validators` import exists at the top of the spec file.
 npm run test -- --watch=false --include=projects/sdcorejs-angular/forms/input/src/input.component.spec.ts
 ```
 
-Expected: FAIL â€” `data-disabled`, `data-value`, `data-empty`, `data-invalid` attributes do not exist.
+Expected: FAIL — `data-disabled`, `data-value`, `data-empty`, `data-invalid` attributes do not exist.
 
 - [ ] **Step 3: Implement TS computeds**
 
@@ -474,7 +474,7 @@ Keep all existing bindings intact.
 npm run test -- --watch=false --include=projects/sdcorejs-angular/forms/input/src/input.component.spec.ts
 ```
 
-Expected: PASS â€” all 5 new specs green, existing autoId spec still green.
+Expected: PASS — all 5 new specs green, existing autoId spec still green.
 
 - [ ] **Step 6: Update `sd-input.md`**
 
@@ -512,9 +512,9 @@ git commit -m "feat(input): render data-disabled/value/empty/invalid for E2E"
 
 ---
 
-## Phase 3 â€” Other scalar forms
+## Phase 3 — Other scalar forms
 
-> Each task in this phase follows the same shape as Task 3. The code shown per task is complete â€” read it on its own without referring back to Task 3.
+> Each task in this phase follows the same shape as Task 3. The code shown per task is complete — read it on its own without referring back to Task 3.
 
 ### Task 4: `sd-textarea`
 
@@ -524,9 +524,9 @@ git commit -m "feat(input): render data-disabled/value/empty/invalid for E2E"
 - Modify: `projects/sdcorejs-angular/forms/textarea/src/textarea.component.spec.ts`
 - Modify: `projects/sdcorejs-angular/forms/textarea/sd-textarea.md`
 
-Anchor: existing `<textarea matInput>`. No password special-case â€” `data-value` always rendered.
+Anchor: existing `<textarea matInput>`. No password special-case — `data-value` always rendered.
 
-- [ ] **Step 1: Write failing tests** â€” open `textarea.component.spec.ts`, rename the autoId describe to `describe('SdTextarea â€” E2E attributes', ...)`, and append four cases analogous to sd-input minus the password one:
+- [ ] **Step 1: Write failing tests** — open `textarea.component.spec.ts`, rename the autoId describe to `describe('SdTextarea — E2E attributes', ...)`, and append four cases analogous to sd-input minus the password one:
 
 ```ts
 it('renders data-disabled reflecting FormControl state', () => {
@@ -576,7 +576,7 @@ it('flips data-invalid after touched + invalid', () => {
 npm run test -- --watch=false --include=projects/sdcorejs-angular/forms/textarea/src/textarea.component.spec.ts
 ```
 
-- [ ] **Step 3: TS â€” add computeds**
+- [ ] **Step 3: TS — add computeds**
 
 In `textarea.component.ts` add imports and computeds (immediately below the existing `autoId = computed(...)`):
 
@@ -592,7 +592,7 @@ readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : '
 readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
 ```
 
-- [ ] **Step 4: HTML â€” add bindings**
+- [ ] **Step 4: HTML — add bindings**
 
 On the `<textarea matInput ...>` element carrying `[attr.data-autoId]`, append:
 
@@ -626,7 +626,7 @@ git commit -m "feat(textarea): render data-disabled/value/empty/invalid for E2E"
 
 Anchor: existing `<input>` carrying `data-autoId`. Value is numeric; `sdSerializeDataValue` coerces via `String()`.
 
-- [ ] **Step 1: Write failing tests** â€” rename autoId describe to `SdInputNumber â€” E2E attributes`. Add:
+- [ ] **Step 1: Write failing tests** — rename autoId describe to `SdInputNumber — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled reflecting FormControl', () => {
@@ -669,10 +669,10 @@ it('flips data-invalid after touched + invalid', () => {
 ```
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” same computed quartet as Task 4 (no password skip).
-- [ ] **Step 4: HTML** â€” add four `[attr.data-*]` bindings on the `<input>` already carrying `data-autoId`.
+- [ ] **Step 3: TS** — same computed quartet as Task 4 (no password skip).
+- [ ] **Step 4: HTML** — add four `[attr.data-*]` bindings on the `<input>` already carrying `data-autoId`.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” append `## E2E test attributes` section (prefix `forms-input-number-`).
+- [ ] **Step 6: MD** — append `## E2E test attributes` section (prefix `forms-input-number-`).
 - [ ] **Step 7: Commit**:
 
 ```
@@ -690,7 +690,7 @@ git commit -m "feat(input-number): render data-disabled/value/empty/invalid for 
 
 Anchor: existing `<mat-slide-toggle>` carrying `[attr.data-autoId]`. Value is boolean. No `data-invalid` needed (boolean switches don't validate in this repo). No password skip.
 
-- [ ] **Step 1: Write failing tests** â€” rename autoId describe to `SdSwitch â€” E2E attributes`. Add:
+- [ ] **Step 1: Write failing tests** — rename autoId describe to `SdSwitch — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled reflecting FormControl', () => {
@@ -727,8 +727,8 @@ it('renders data-empty=false once value set, true when null', () => {
 ```
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” add imports + the same `#state` / `dataDisabled` / `dataEmpty` / `dataValue` computeds (no `dataInvalid`).
-- [ ] **Step 4: HTML** â€” on the `<mat-slide-toggle ...>` already carrying `[attr.data-autoId]`, append:
+- [ ] **Step 3: TS** — add imports + the same `#state` / `dataDisabled` / `dataEmpty` / `dataValue` computeds (no `dataInvalid`).
+- [ ] **Step 4: HTML** — on the `<mat-slide-toggle ...>` already carrying `[attr.data-autoId]`, append:
 
 ```html
 [attr.data-disabled]="dataDisabled()"
@@ -737,7 +737,7 @@ it('renders data-empty=false once value set, true when null', () => {
 ```
 
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” append `## E2E test attributes` (prefix `forms-switch-`).
+- [ ] **Step 6: MD** — append `## E2E test attributes` (prefix `forms-switch-`).
 - [ ] **Step 7: Commit**:
 
 ```
@@ -755,12 +755,12 @@ git commit -m "feat(switch): render data-disabled/value/empty for E2E"
 
 Anchor: existing `<mat-checkbox>` carrying `[attr.data-autoId]`. Same shape as `sd-switch` (bool value, no invalid).
 
-- [ ] **Step 1: Write failing tests** â€” rename autoId describe to `SdCheckbox â€” E2E attributes`. Add three tests identical in shape to sd-switch, swapping selector to `mat-checkbox`.
+- [ ] **Step 1: Write failing tests** — rename autoId describe to `SdCheckbox — E2E attributes`. Add three tests identical in shape to sd-switch, swapping selector to `mat-checkbox`.
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” same imports + computeds as sd-switch.
-- [ ] **Step 4: HTML** â€” on `<mat-checkbox ...>` append `[attr.data-disabled]`, `[attr.data-empty]`, `[attr.data-value]`.
+- [ ] **Step 3: TS** — same imports + computeds as sd-switch.
+- [ ] **Step 4: HTML** — on `<mat-checkbox ...>` append `[attr.data-disabled]`, `[attr.data-empty]`, `[attr.data-value]`.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” `## E2E test attributes` (prefix `forms-checkbox-`).
+- [ ] **Step 6: MD** — `## E2E test attributes` (prefix `forms-checkbox-`).
 - [ ] **Step 7: Commit**:
 
 ```
@@ -776,9 +776,9 @@ git commit -m "feat(checkbox): render data-disabled/value/empty for E2E"
 - Modify: `projects/sdcorejs-angular/forms/radio/src/radio.component.{ts,html,spec.ts}`
 - Modify: `projects/sdcorejs-angular/forms/radio/sd-radio.md`
 
-Anchor: existing `<mat-radio-group>` carrying `[attr.data-autoId]`. Value is the selected key (string). No `data-invalid` (radios typically required-only â€” add if existing spec already covers `Validators.required`; otherwise omit).
+Anchor: existing `<mat-radio-group>` carrying `[attr.data-autoId]`. Value is the selected key (string). No `data-invalid` (radios typically required-only — add if existing spec already covers `Validators.required`; otherwise omit).
 
-- [ ] **Step 1: Write failing tests** â€” rename autoId describe to `SdRadio â€” E2E attributes`. Add:
+- [ ] **Step 1: Write failing tests** — rename autoId describe to `SdRadio — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled reflecting FormControl', () => {
@@ -811,10 +811,10 @@ it('renders data-empty toggling', () => {
 ```
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” same imports + `dataDisabled` / `dataEmpty` / `dataValue` computeds.
-- [ ] **Step 4: HTML** â€” on `<mat-radio-group ...>` append the three `[attr.data-*]` bindings.
+- [ ] **Step 3: TS** — same imports + `dataDisabled` / `dataEmpty` / `dataValue` computeds.
+- [ ] **Step 4: HTML** — on `<mat-radio-group ...>` append the three `[attr.data-*]` bindings.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” `## E2E test attributes` (prefix `forms-radio-`).
+- [ ] **Step 6: MD** — `## E2E test attributes` (prefix `forms-radio-`).
 - [ ] **Step 7: Commit**:
 
 ```
@@ -830,9 +830,9 @@ git commit -m "feat(radio): render data-disabled/value/empty for E2E"
 - Modify: `projects/sdcorejs-angular/forms/date/src/date.component.{ts,html,spec.ts}`
 - Modify: `projects/sdcorejs-angular/forms/date/sd-date.md`
 
-Anchor: existing `<input>` carrying `[attr.data-autoId]`. Value is a `Date` â€” `sdSerializeDataValue` produces ISO string.
+Anchor: existing `<input>` carrying `[attr.data-autoId]`. Value is a `Date` — `sdSerializeDataValue` produces ISO string.
 
-- [ ] **Step 1: Write failing tests** â€” rename autoId describe to `SdDate â€” E2E attributes`. Add tests for disabled, value=ISO, empty toggle, invalid-after-touch. Sample:
+- [ ] **Step 1: Write failing tests** — rename autoId describe to `SdDate — E2E attributes`. Add tests for disabled, value=ISO, empty toggle, invalid-after-touch. Sample:
 
 ```ts
 it('renders data-value as ISO string for Date', () => {
@@ -848,10 +848,10 @@ it('renders data-value as ISO string for Date', () => {
 Plus the three standard `data-disabled` / `data-empty` / `data-invalid` cases (analogous to sd-input).
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” full computed quartet (no password skip).
-- [ ] **Step 4: HTML** â€” bind `data-disabled`, `data-empty`, `data-value`, `data-invalid` on the `<input>` anchor.
+- [ ] **Step 3: TS** — full computed quartet (no password skip).
+- [ ] **Step 4: HTML** — bind `data-disabled`, `data-empty`, `data-value`, `data-invalid` on the `<input>` anchor.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” `## E2E test attributes` (prefix `forms-date-`), note that `data-value` is ISO format.
+- [ ] **Step 6: MD** — `## E2E test attributes` (prefix `forms-date-`), note that `data-value` is ISO format.
 - [ ] **Step 7: Commit**:
 
 ```
@@ -875,7 +875,7 @@ git commit -m "feat(datetime): render data-disabled/value/empty/invalid for E2E"
 
 ---
 
-## Phase 4 â€” Collection / async forms
+## Phase 4 — Collection / async forms
 
 ### Task 11: `sd-select`
 
@@ -883,7 +883,7 @@ git commit -m "feat(datetime): render data-disabled/value/empty/invalid for E2E"
 
 Anchor: existing `<mat-select>` carrying `data-autoId`. Adds `data-loading` driven by the existing async-options loading signal (verify name: likely `loading` or `optionsLoading`; inspect `select.component.ts` before binding).
 
-- [ ] **Step 1: Failing tests** â€” rename autoId describe to `SdSelect â€” E2E attributes`. Add:
+- [ ] **Step 1: Failing tests** — rename autoId describe to `SdSelect — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled', () => {/* analogous to sd-input */});
@@ -899,7 +899,7 @@ it('renders data-invalid after touched + invalid', () => {/* analogous */});
 it('renders data-loading reflecting async options state', () => {
   fixture.componentInstance.autoId = 'country';
   // Trigger whatever sets the loading signal (depends on component API).
-  // Example placeholder â€” adapt to actual API:
+  // Example placeholder — adapt to actual API:
   (fixture.componentInstance as any).setLoading(true);
   fixture.detectChanges();
   const el: HTMLElement = fixture.nativeElement.querySelector('mat-select');
@@ -910,15 +910,15 @@ it('renders data-loading reflecting async options state', () => {
 > **Note for implementer:** confirm the loading signal name. If it doesn't exist yet but async loading does, expose a `readonly loading = signal(false)` set inside the async-options subscription before writing the test.
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” add the standard quartet plus:
+- [ ] **Step 3: TS** — add the standard quartet plus:
 
 ```ts
 readonly dataLoading = computed(() => (this.loading() ? 'true' : 'false'));
 ```
 
-- [ ] **Step 4: HTML** â€” append `[attr.data-loading]="dataLoading()"` along with the standard four.
+- [ ] **Step 4: HTML** — append `[attr.data-loading]="dataLoading()"` along with the standard four.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” `## E2E test attributes` (prefix `forms-select-`) including the `data-loading` row.
+- [ ] **Step 6: MD** — `## E2E test attributes` (prefix `forms-select-`) including the `data-loading` row.
 - [ ] **Step 7: Commit**:
 
 ```
@@ -947,7 +947,7 @@ git commit -m "feat(autocomplete): render data-loading/disabled/value/empty/inva
 
 Anchor: `<input.sd-chip-input>` carrying `data-autoId`. Value is `string[]`. Adds `data-count`.
 
-- [ ] **Step 1: Failing tests** â€” rename autoId describe to `SdChip â€” E2E attributes`. Add:
+- [ ] **Step 1: Failing tests** — rename autoId describe to `SdChip — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled', () => {/* analogous */});
@@ -981,7 +981,7 @@ it('renders data-count reflecting array length', () => {
 ```
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” standard trio + `dataCount`:
+- [ ] **Step 3: TS** — standard trio + `dataCount`:
 
 ```ts
 readonly dataCount = computed(() => {
@@ -990,9 +990,9 @@ readonly dataCount = computed(() => {
 });
 ```
 
-- [ ] **Step 4: HTML** â€” append `[attr.data-disabled]`, `[attr.data-empty]`, `[attr.data-value]`, `[attr.data-count]` on the `<input.sd-chip-input>`.
+- [ ] **Step 4: HTML** — append `[attr.data-disabled]`, `[attr.data-empty]`, `[attr.data-value]`, `[attr.data-count]` on the `<input.sd-chip-input>`.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” `## E2E test attributes` (prefix `forms-chip-`) with the `data-count` row.
+- [ ] **Step 6: MD** — `## E2E test attributes` (prefix `forms-chip-`) with the `data-count` row.
 - [ ] **Step 7: Commit**:
 
 ```
@@ -1004,7 +1004,7 @@ git commit -m "feat(chip): render data-disabled/value/empty/count for E2E"
 
 ### Task 14: `sd-chip-calendar`
 
-Same as `sd-chip` but value is `Date[]` â€” JSON.stringify produces ISO[]. Files: `projects/sdcorejs-angular/forms/chip-calendar/`. Prefix `forms-chip-calendar-`.
+Same as `sd-chip` but value is `Date[]` — JSON.stringify produces ISO[]. Files: `projects/sdcorejs-angular/forms/chip-calendar/`. Prefix `forms-chip-calendar-`.
 
 - [ ] **Step 1-7:** mirror Task 13; selector remains `input.sd-chip-input`. Test sample for value:
 
@@ -1029,7 +1029,7 @@ git commit -m "feat(chip-calendar): render data-disabled/value/empty/count for E
 
 Value is `{ from: Date | null; to: Date | null }`. `data-value` is `JSON.stringify(value)`. `data-empty="true"` when either side is missing.
 
-- [ ] **Step 1: Failing tests** â€” rename autoId describe. Add cases for `data-disabled`, `data-value` (object), `data-empty`, `data-invalid` (after touched + required).
+- [ ] **Step 1: Failing tests** — rename autoId describe. Add cases for `data-disabled`, `data-value` (object), `data-empty`, `data-invalid` (after touched + required).
 
 ```ts
 it('renders data-value as JSON for {from, to}', () => {
@@ -1052,7 +1052,7 @@ it('renders data-empty=true when from or to missing', () => {
 ```
 
 - [ ] **Step 2: Run, FAIL.**
-- [ ] **Step 3: TS** â€” override `dataEmpty`:
+- [ ] **Step 3: TS** — override `dataEmpty`:
 
 ```ts
 readonly dataEmpty = computed(() => {
@@ -1064,9 +1064,9 @@ readonly dataEmpty = computed(() => {
 
 Standard `dataDisabled`, `dataValue` (uses `sdSerializeDataValue`), `dataInvalid` as in sd-input.
 
-- [ ] **Step 4: HTML** â€” append four `[attr.data-*]` on the `<input>` anchor.
+- [ ] **Step 4: HTML** — append four `[attr.data-*]` on the `<input>` anchor.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” `## E2E test attributes` (prefix `forms-date-range-`), note that `data-empty` requires both `from` and `to`.
+- [ ] **Step 6: MD** — `## E2E test attributes` (prefix `forms-date-range-`), note that `data-empty` requires both `from` and `to`.
 - [ ] **Step 7: Commit**:
 
 ```
@@ -1076,7 +1076,7 @@ git commit -m "feat(date-range): render data-disabled/value/empty/invalid for E2
 
 ---
 
-## Phase 5 â€” Components
+## Phase 5 — Components
 
 ### Task 16: `sd-button`
 
@@ -1087,10 +1087,10 @@ git commit -m "feat(date-range): render data-disabled/value/empty/invalid for E2
 
 `sd-button` already has `disabled()` and `loading()` input signals. No TS changes needed beyond ensuring they are reachable from the template (they already are). Add bindings on **all four** `@if` branches.
 
-- [ ] **Step 1: Failing tests** â€” open `button.component.spec.ts`. Add an `E2E attributes` describe block:
+- [ ] **Step 1: Failing tests** — open `button.component.spec.ts`. Add an `E2E attributes` describe block:
 
 ```ts
-describe('SdButton â€” E2E attributes', () => {
+describe('SdButton — E2E attributes', () => {
   let fixture: ComponentFixture<SdButton>;
   let btn: HTMLButtonElement;
 
@@ -1120,7 +1120,7 @@ describe('SdButton â€” E2E attributes', () => {
 
 - [ ] **Step 2: Run, FAIL.**
 
-- [ ] **Step 3: HTML** â€” in `button.component.html`, on **each** of the four `<button mat-*-button>` elements (one per `@if (btnType === 'fill'|'light'|'outline'|'link')`), append:
+- [ ] **Step 3: HTML** — in `button.component.html`, on **each** of the four `<button mat-*-button>` elements (one per `@if (btnType === 'fill'|'light'|'outline'|'link')`), append:
 
 ```html
 [attr.data-disabled]="disabled() ? 'true' : 'false'"
@@ -1130,7 +1130,7 @@ describe('SdButton â€” E2E attributes', () => {
 next to the existing `[attr.data-autoId]="autoId()"`.
 
 - [ ] **Step 4: Run, PASS.**
-- [ ] **Step 5: MD** â€” append `## E2E test attributes` to `sd-button.md`:
+- [ ] **Step 5: MD** — append `## E2E test attributes` to `sd-button.md`:
 
 ```markdown
 ## E2E test attributes
@@ -1162,10 +1162,10 @@ git commit -m "feat(button): render data-disabled/loading for E2E"
 
 `sd-table` currently passes `autoId` to children but does NOT carry `[attr.data-autoId]` on its own host. Both `data-autoId` and `data-loading` should land on the host via the `host:` decorator.
 
-- [ ] **Step 1: Failing tests** â€” in `table.component.spec.ts`, add an E2E attributes describe block:
+- [ ] **Step 1: Failing tests** — in `table.component.spec.ts`, add an E2E attributes describe block:
 
 ```ts
-describe('SdTable â€” E2E attributes', () => {
+describe('SdTable — E2E attributes', () => {
   it('renders data-autoId on host element', () => {
     const fixture = TestBed.createComponent(/* existing host harness */);
     fixture.componentInstance.autoId = 'employees';
@@ -1181,7 +1181,7 @@ describe('SdTable â€” E2E attributes', () => {
     const host = fixture.debugElement.query(By.directive(SdTable)).nativeElement as HTMLElement;
     expect(host.getAttribute('data-loading')).toBe('false');
 
-    // Trigger loading (depends on existing test harness â€” call whatever sets `loading.set(true)`).
+    // Trigger loading (depends on existing test harness — call whatever sets `loading.set(true)`).
     (fixture.componentInstance as any).startLoading?.();
     fixture.detectChanges();
     expect(host.getAttribute('data-loading')).toBe('true');
@@ -1193,7 +1193,7 @@ If a usable host fixture doesn't yet exist in the spec, reuse the pattern alread
 
 - [ ] **Step 2: Run, FAIL.**
 
-- [ ] **Step 3: TS** â€” open `table.component.ts`. Add to the `@Component` decorator:
+- [ ] **Step 3: TS** — open `table.component.ts`. Add to the `@Component` decorator:
 
 ```ts
 @Component({
@@ -1208,7 +1208,7 @@ If a usable host fixture doesn't yet exist in the spec, reuse the pattern alread
 If a `host:` block already exists, merge these two bindings into it.
 
 - [ ] **Step 4: Run, PASS.**
-- [ ] **Step 5: MD** â€” append `## E2E test attributes` to `sd-table.md`:
+- [ ] **Step 5: MD** — append `## E2E test attributes` to `sd-table.md`:
 
 ```markdown
 ## E2E test attributes
@@ -1221,7 +1221,7 @@ Rendered on the `<sd-table>` host element:
 | `data-loading` | `"true"` / `"false"` | `loading` signal (toggled by paging / external-filter submit) |
 ```
 
-Remove the inaccurate row in the existing Inputs table (line 141) that claims the host already renders `data-autoId`, or leave it â€” both are now true.
+Remove the inaccurate row in the existing Inputs table (line 141) that claims the host already renders `data-autoId`, or leave it — both are now true.
 
 - [ ] **Step 6: Commit**:
 
@@ -1240,7 +1240,7 @@ git commit -m "feat(table): render host data-autoId + data-loading for E2E"
 
 Anchor: existing input element carrying `[attr.data-autoId]="autoId()"`. Adds `data-loading`, `data-disabled`, `data-empty`, `data-count`. **No** `data-value` (cannot serialize File).
 
-- [ ] **Step 1: Failing tests** â€” rename autoId describe to `SdUploadFile â€” E2E attributes`. Add:
+- [ ] **Step 1: Failing tests** — rename autoId describe to `SdUploadFile — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled reflecting disabled input', () => { /* setInput('disabled', true), assert "true" */ });
@@ -1260,7 +1260,7 @@ Adapt the harness to whichever input/output API `sd-upload-file` already exposes
 
 - [ ] **Step 2: Run, FAIL.**
 
-- [ ] **Step 3: TS** â€” add imports + computeds. Assume the component already has `files = signal<â€¦[]>([])` and an `uploading = signal(false)` (or equivalent). If `uploading` doesn't exist, add it and set it inside the existing upload subscription:
+- [ ] **Step 3: TS** — add imports + computeds. Assume the component already has `files = signal<…[]>([])` and an `uploading = signal(false)` (or equivalent). If `uploading` doesn't exist, add it and set it inside the existing upload subscription:
 
 ```ts
 import { sdIsEmpty } from '@sdcorejs/angular/utilities';
@@ -1271,7 +1271,7 @@ readonly dataEmpty = computed(() => (sdIsEmpty(this.files()) ? 'true' : 'false')
 readonly dataCount = computed(() => String(this.files()?.length ?? 0));
 ```
 
-- [ ] **Step 4: HTML** â€” on the existing anchor element carrying `[attr.data-autoId]`, append:
+- [ ] **Step 4: HTML** — on the existing anchor element carrying `[attr.data-autoId]`, append:
 
 ```html
 [attr.data-disabled]="dataDisabled()"
@@ -1281,7 +1281,7 @@ readonly dataCount = computed(() => String(this.files()?.length ?? 0));
 ```
 
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” append `## E2E test attributes` (prefix `components-upload-file-`), noting that `data-value` is intentionally not exposed (File objects don't serialize).
+- [ ] **Step 6: MD** — append `## E2E test attributes` (prefix `components-upload-file-`), noting that `data-value` is intentionally not exposed (File objects don't serialize).
 - [ ] **Step 7: Commit**:
 
 ```
@@ -1299,7 +1299,7 @@ git commit -m "feat(upload-file): render data-disabled/loading/empty/count for E
 
 Anchor: existing host (`<sd-editor>`) carrying `[attr.data-autoId]`. Adds `data-loading` (Monaco init), `data-disabled`, `data-empty`. **No** `data-value` (content may be MBs).
 
-- [ ] **Step 1: Failing tests** â€” rename autoId describe to `SdEditor â€” E2E attributes`. Add:
+- [ ] **Step 1: Failing tests** — rename autoId describe to `SdEditor — E2E attributes`. Add:
 
 ```ts
 it('renders data-disabled reflecting disabled input', () => {/* setInput('disabled', true) */});
@@ -1309,7 +1309,7 @@ it('renders data-empty true for blank content, false otherwise', () => {/* setVa
 
 - [ ] **Step 2: Run, FAIL.**
 
-- [ ] **Step 3: TS** â€” add `readonly dataDisabled` / `dataLoading` / `dataEmpty` computeds. The component likely already has a `loading` or `ready` signal; if not, expose a `readonly loading = signal(true)` set to `false` inside the existing Monaco-ready callback.
+- [ ] **Step 3: TS** — add `readonly dataDisabled` / `dataLoading` / `dataEmpty` computeds. The component likely already has a `loading` or `ready` signal; if not, expose a `readonly loading = signal(true)` set to `false` inside the existing Monaco-ready callback.
 
 ```ts
 import { sdIsEmpty } from '@sdcorejs/angular/utilities';
@@ -1321,9 +1321,9 @@ readonly dataEmpty = computed(() => (sdIsEmpty(this.value()) ? 'true' : 'false')
 
 (`this.value()` is the editor's content signal; verify the exact name.)
 
-- [ ] **Step 4: HTML** â€” on the existing anchor, append `[attr.data-disabled]`, `[attr.data-loading]`, `[attr.data-empty]`.
+- [ ] **Step 4: HTML** — on the existing anchor, append `[attr.data-disabled]`, `[attr.data-loading]`, `[attr.data-empty]`.
 - [ ] **Step 5: Run, PASS.**
-- [ ] **Step 6: MD** â€” append `## E2E test attributes` (prefix `components-editor-`); explicitly document that `data-value` is omitted (use `data-empty` instead).
+- [ ] **Step 6: MD** — append `## E2E test attributes` (prefix `components-editor-`); explicitly document that `data-value` is omitted (use `data-empty` instead).
 - [ ] **Step 7: Commit**:
 
 ```
@@ -1333,7 +1333,7 @@ git commit -m "feat(editor): render data-disabled/loading/empty for E2E"
 
 ---
 
-### Task 20: `sd-modal` â€” wrapping root div
+### Task 20: `sd-modal` — wrapping root div
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/modal/src/modal.component.ts`
@@ -1344,7 +1344,7 @@ git commit -m "feat(editor): render data-disabled/loading/empty for E2E"
 
 The modal renders into a MatDialog overlay via `<ng-template>`, so the QA hook must live on a wrapping element inside the template.
 
-- [ ] **Step 1: Failing tests** â€” open `modal.component.spec.ts`. Locate existing autoId block. Rename to `SdModal â€” E2E attributes` and add:
+- [ ] **Step 1: Failing tests** — open `modal.component.spec.ts`. Locate existing autoId block. Rename to `SdModal — E2E attributes` and add:
 
 ```ts
 it('renders data-autoId + data-opened on the wrapping .sd-modal-root', async () => {
@@ -1360,7 +1360,7 @@ it('renders data-autoId + data-opened on the wrapping .sd-modal-root', async () 
 
   hostFixture.componentInstance.modal.close();
   await hostFixture.whenStable();
-  // After close, the dialog is detached â€” element should be gone.
+  // After close, the dialog is detached — element should be gone.
   expect(document.querySelector('.sd-modal-root[data-autoid="components-modal-confirm"]')).toBeNull();
 });
 ```
@@ -1369,13 +1369,13 @@ If the existing test harness doesn't expose the modal instance, adapt to the har
 
 - [ ] **Step 2: Run, FAIL.**
 
-- [ ] **Step 3: TS** â€” add a computed below the existing `closeButtonAutoId`:
+- [ ] **Step 3: TS** — add a computed below the existing `closeButtonAutoId`:
 
 ```ts
 readonly dataOpened = computed(() => (this.isOpened() ? 'true' : 'false'));
 ```
 
-- [ ] **Step 4: HTML** â€” wrap the existing body of `<ng-template #templateRef>` in a new `<div class="sd-modal-root">`:
+- [ ] **Step 4: HTML** — wrap the existing body of `<ng-template #templateRef>` in a new `<div class="sd-modal-root">`:
 
 ```html
 <ng-template #templateRef>
@@ -1389,7 +1389,7 @@ readonly dataOpened = computed(() => (this.isOpened() ? 'true' : 'false'));
 </ng-template>
 ```
 
-- [ ] **Step 5: Inspect SCSS** â€” open `modal.component.scss` and search for selectors that target a direct child of the dialog content (`> div`, `:first-child`, or rely on the previous DOM depth). If any rule needs to traverse through `.sd-modal-root`, update it. Also grep the rest of the repo for `.mat-mdc-dialog-content > sd-modal` style rules; none are expected but worth confirming.
+- [ ] **Step 5: Inspect SCSS** — open `modal.component.scss` and search for selectors that target a direct child of the dialog content (`> div`, `:first-child`, or rely on the previous DOM depth). If any rule needs to traverse through `.sd-modal-root`, update it. Also grep the rest of the repo for `.mat-mdc-dialog-content > sd-modal` style rules; none are expected but worth confirming.
 
 - [ ] **Step 6: Run tests, verify PASS**
 
@@ -1397,7 +1397,7 @@ readonly dataOpened = computed(() => (this.isOpened() ? 'true' : 'false'));
 npm run test -- --watch=false --include=projects/sdcorejs-angular/components/modal/src/modal.component.spec.ts
 ```
 
-- [ ] **Step 7: MD** â€” append `## E2E test attributes` to `sd-modal.md`:
+- [ ] **Step 7: MD** — append `## E2E test attributes` to `sd-modal.md`:
 
 ```markdown
 ## E2E test attributes
@@ -1425,7 +1425,7 @@ git commit -m "feat(modal): wrap template in .sd-modal-root with data-opened for
 
 ---
 
-### Task 21: `sd-side-drawer` â€” signal migration + `autoId` + attrs
+### Task 21: `sd-side-drawer` — signal migration + `autoId` + attrs
 
 **Files:**
 - Modify: `projects/sdcorejs-angular/components/side-drawer/src/side-drawer.component.{ts,html,spec.ts}`
@@ -1439,14 +1439,14 @@ git commit -m "feat(modal): wrap template in .sd-modal-root with data-opened for
 
 This task converts them to signals via `.asReadonly()` accessors, adds the `autoId` input, and wires the three new `data-*` attributes onto the `.sd-side-drawer` root.
 
-- [ ] **Step 1: Failing tests** â€” append to `side-drawer.component.spec.ts`:
+- [ ] **Step 1: Failing tests** — append to `side-drawer.component.spec.ts`:
 
 ```ts
-describe('SdSideDrawer â€” E2E attributes', () => {
+describe('SdSideDrawer — E2E attributes', () => {
   let host: ComponentFixture<HostCmp>;
   let drawer: SdSideDrawer;
 
-  // â€¦ reuse the existing host harness already used for sd-side-drawer specs
+  // … reuse the existing host harness already used for sd-side-drawer specs
 
   beforeEach(() => {
     host = TestBed.createComponent(HostCmp);
@@ -1486,7 +1486,7 @@ describe('SdSideDrawer â€” E2E attributes', () => {
 
 - [ ] **Step 2: Run, FAIL.**
 
-- [ ] **Step 3: TS â€” convert booleans to signals + add `autoId`**
+- [ ] **Step 3: TS — convert booleans to signals + add `autoId`**
 
 Open `side-drawer.component.ts`. Replace:
 
@@ -1514,23 +1514,23 @@ readonly dataLoading = computed(() => (this.#isLoadingSignal() ? 'true' : 'false
 ```
 
 Update every internal mutation:
-- `open()` body: change `this.isOpened = true;` â†’ `this.#isOpenedSignal.set(true);`
-- `close()` body: change `this.isOpened = false;` â†’ `this.#isOpenedSignal.set(false);`
-- `startLoading()` body: change `this.isLoading = true;` â†’ `this.#isLoadingSignal.set(true);`
-- `stopLoading()` body: change `this.isLoading = false;` â†’ `this.#isLoadingSignal.set(false);`
+- `open()` body: change `this.isOpened = true;` → `this.#isOpenedSignal.set(true);`
+- `close()` body: change `this.isOpened = false;` → `this.#isOpenedSignal.set(false);`
+- `startLoading()` body: change `this.isLoading = true;` → `this.#isLoadingSignal.set(true);`
+- `stopLoading()` body: change `this.isLoading = false;` → `this.#isLoadingSignal.set(false);`
 - The `if (this.isOpened) { ... }` block inside `#destroyRef.onDestroy` becomes `if (this.#isOpenedSignal()) { ... }`.
 
 Also import `signal`, `computed`, `input` from `@angular/core` if not already imported.
 
-- [ ] **Step 4: HTML â€” update template reads + add attrs**
+- [ ] **Step 4: HTML — update template reads + add attrs**
 
 Open `side-drawer.component.html`. Replace every `isOpened` (property read) with `isOpened()` (signal call). Specific lines (per current file):
-- Line 7: `[class.sd-side-drawer-active]="isOpened"` â†’ `[class.sd-side-drawer-active]="isOpened()"`
-- Line 9: `@if (isOpened) {` â†’ `@if (isOpened()) {`
-- Line 37: `@if (isOpened) {` â†’ `@if (isOpened()) {`
-- Line 50: `@if (isOpened) {` â†’ `@if (isOpened()) {`
+- Line 7: `[class.sd-side-drawer-active]="isOpened"` → `[class.sd-side-drawer-active]="isOpened()"`
+- Line 9: `@if (isOpened) {` → `@if (isOpened()) {`
+- Line 37: `@if (isOpened) {` → `@if (isOpened()) {`
+- Line 50: `@if (isOpened) {` → `@if (isOpened()) {`
 
-On the root `<div class="sd-side-drawer" â€¦>`, append:
+On the root `<div class="sd-side-drawer" …>`, append:
 
 ```html
 [attr.data-autoId]="autoId()"
@@ -1550,7 +1550,7 @@ Filter to references against `SdSideDrawer`. For each one:
 - If it's a non-template read (`drawer.isOpened`), change to `drawer.isOpened()`.
 - If it's inside an Angular template (`{{ drawer.isOpened }}` or `@if (drawer.isOpened)`), change to `drawer.isOpened()`.
 
-If there are no in-repo consumers, that's fine â€” record this in the commit message.
+If there are no in-repo consumers, that's fine — record this in the commit message.
 
 - [ ] **Step 6: Run all side-drawer tests, verify PASS**
 
@@ -1560,7 +1560,7 @@ npm run test -- --watch=false --include=projects/sdcorejs-angular/components/sid
 
 If any pre-existing test reads `drawer.isOpened` as a property, update it to `drawer.isOpened()`.
 
-- [ ] **Step 7: MD** â€” append `## E2E test attributes` to `sd-side-drawer.md`:
+- [ ] **Step 7: MD** — append `## E2E test attributes` to `sd-side-drawer.md`:
 
 ```markdown
 ## E2E test attributes
@@ -1573,7 +1573,7 @@ Rendered on the `.sd-side-drawer` root element (which lives at `document.body` v
 | `data-opened` | `"true"` / `"false"` | `isOpened` signal |
 | `data-loading` | `"true"` / `"false"` | `isLoading` signal |
 
-> **Breaking change (v0.0.x â†’ v0.1.0):** `isOpened` and `isLoading` are now `Signal<boolean>` (read with `drawer.isOpened()` / `drawer.isLoading()`) instead of plain booleans. Update any external consumer that reads them as properties.
+> **Breaking change (v0.0.x → v0.1.0):** `isOpened` and `isLoading` are now `Signal<boolean>` (read with `drawer.isOpened()` / `drawer.isLoading()`) instead of plain booleans. Update any external consumer that reads them as properties.
 ```
 
 Also add a row for the new `autoId` input to the existing Inputs table.
@@ -1590,7 +1590,7 @@ Use `!` in the commit type to flag the breaking change (matches Conventional Com
 
 ---
 
-## Phase 6 â€” Documentation & final sweep
+## Phase 6 — Documentation & final sweep
 
 ### Task 22: Central `E2E-ATTRIBUTES.md`
 
@@ -1600,7 +1600,7 @@ Use `!` in the commit type to flag the breaking change (matches Conventional Com
 - [ ] **Step 1: Create the file** with the following content:
 
 ```markdown
-# Core UI â€” E2E test attributes reference
+# Core UI — E2E test attributes reference
 
 This document is the source of truth for the `data-*` attributes rendered by `@sdcorejs/angular` components for QA automation. Both human QA engineers and downstream AI agents (e.g. SDCoreJS skill packs that generate e2e tests) should be able to read this file alone and know what each component exposes.
 
@@ -1808,7 +1808,7 @@ sd-upload-file:
   prefix: components-upload-file
   loading: true
   notes:
-    - "data-value omitted â€” File objects don't serialize safely"
+    - "data-value omitted — File objects don't serialize safely"
 
 sd-editor:
   attrs: [data-autoid, data-disabled, data-loading, data-empty]
@@ -1816,7 +1816,7 @@ sd-editor:
   prefix: components-editor
   loading: true
   notes:
-    - "data-value omitted â€” content may be MB-sized"
+    - "data-value omitted — content may be MB-sized"
 ```
 ```
 
@@ -1853,7 +1853,7 @@ git commit -m "docs(sd-angular): link to E2E-ATTRIBUTES from README"
 
 ---
 
-### Task 24: Full sweep â€” run all tests, fix regressions, build verification
+### Task 24: Full sweep — run all tests, fix regressions, build verification
 
 - [ ] **Step 1: Run the entire sd-angular test suite**
 
@@ -1861,7 +1861,7 @@ git commit -m "docs(sd-angular): link to E2E-ATTRIBUTES from README"
 npm run test -- --watch=false --include=projects/sdcorejs-angular/**/*.spec.ts
 ```
 
-Expected: PASS. If any pre-existing test fails, the most likely cause is the side-drawer signal migration (Task 21) â€” a leftover `drawer.isOpened` property read. Fix any failures inline.
+Expected: PASS. If any pre-existing test fails, the most likely cause is the side-drawer signal migration (Task 21) — a leftover `drawer.isOpened` property read. Fix any failures inline.
 
 - [ ] **Step 2: Run the production build**
 
@@ -1869,7 +1869,7 @@ Expected: PASS. If any pre-existing test fails, the most likely cause is the sid
 npm run build:sd-angular
 ```
 
-(or whichever script builds the library â€” check `package.json` scripts before running)
+(or whichever script builds the library — check `package.json` scripts before running)
 
 Expected: build succeeds. Any TypeScript error here typically means a consumer of `sd-side-drawer.isOpened` / `.isLoading` still treats them as plain booleans.
 
@@ -1906,7 +1906,7 @@ If no fixes were needed, skip this commit.
 
 ---
 
-## Acceptance criteria (from spec Â§9)
+## Acceptance criteria (from spec §9)
 
 - [ ] `sdSerializeDataValue` and `sdIsEmpty` exist in `@sdcorejs/angular/utilities`, with unit tests.
 - [ ] `sdFormControlState` exists and emits on value/status changes, with unit tests.
@@ -1924,7 +1924,6 @@ If no fixes were needed, skip this commit.
 
 ## Self-review notes
 
-- **Spec coverage:** Every section/requirement in the spec maps to a task. Spec Â§3 (matrix) â†’ Tasks 3-21. Spec Â§4 (utilities + bridge) â†’ Tasks 1-2. Spec Â§5 (docs) â†’ Tasks 22-23. Spec Â§6 (tests) â†’ embedded in every component task. Spec Â§7 (backwards compat for side-drawer) â†’ Task 21 Steps 3-5. Spec Â§10 (implementation order) â†’ followed by the phase ordering.
+- **Spec coverage:** Every section/requirement in the spec maps to a task. Spec §3 (matrix) → Tasks 3-21. Spec §4 (utilities + bridge) → Tasks 1-2. Spec §5 (docs) → Tasks 22-23. Spec §6 (tests) → embedded in every component task. Spec §7 (backwards compat for side-drawer) → Task 21 Steps 3-5. Spec §10 (implementation order) → followed by the phase ordering.
 - **Type consistency:** `sdFormControlState` returns `Signal<SdFormControlSnapshot<T>>`. All component computeds read `.value` / `.disabled` / `.invalid` from the snapshot. `dataValue` is `Signal<string | null>` (null only when bound for password-omit case). Bindings consistently use `[attr.data-disabled]` etc.
 - **Naming:** Tasks 3-15 follow Conventional Commits with type `feat(<scope>)`. Task 21 uses `feat(side-drawer)!` to flag the breaking change.
-

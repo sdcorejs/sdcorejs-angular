@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
@@ -19,7 +19,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
   imports: [
     CommonModule,
     SdRadio,
-    // Pipe cho pháº§n viewed
+    // Pipe cho phần viewed
     ComponentViewedPipe,
     HyperlinkPipe
   ],
@@ -95,14 +95,14 @@ export class RadioComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.#subscription.add(
       this.#changes.pipe(startWith('')).subscribe(async () => {
-        // Tráº¡ng thÃ¡i viewed thÃ¬ khÃ´ng cáº§n check
+        // Trạng thái viewed thì không cần check
         if (!this.viewed && this.component && !this.component?.properties?.viewed) {
           const values = { ...this.entity, ...this.form.value };
           const items = await this.formGenericService.selection.items(this.component.valuesKey, {
             entity: values,
             component: this.component,
           });
-          // Vá»›i radio thÃ¬ selection buá»™c pháº£i lÃ  values, khÃ´ng pháº£i lÃ  lazyValues
+          // Với radio thì selection buộc phải là values, không phải là lazyValues
           if (Array.isArray(items)) {
             this.items = items;
           } else {
@@ -128,4 +128,3 @@ export class RadioComponent implements AfterViewInit, OnDestroy {
     }
   };
 }
-

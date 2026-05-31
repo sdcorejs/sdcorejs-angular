@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import type { Operator } from '@sdcorejs/angular/utilities/models';
@@ -60,4 +60,3 @@ export class OperatorDemoComponent {
   readonly numberOp = signal<Operator | undefined>('GREATER_OR_EQUAL');
   readonly dateOp = signal<Operator | undefined>('BETWEEN');
 }
-

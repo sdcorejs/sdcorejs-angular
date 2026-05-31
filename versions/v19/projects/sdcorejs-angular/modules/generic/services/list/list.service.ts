@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 // import hash from 'object-hash';
 import { GenericListOption, TList } from './list.model';
 import { SdGenericService } from '../generic.service';
@@ -15,12 +15,12 @@ export class SdGenericListService {
   constructor(private genericService: SdGenericService) {}
 
   loadTableOption = async <T>(option: GenericListOption<T>): Promise<SdTableOption<TList<T>>> => {
-    // Láº¥y menuId tÃ¹y theo kiá»ƒu dá»¯ liá»‡u truyá»n vÃ o
+    // Lấy menuId tùy theo kiểu dữ liệu truyền vào
     const { module, typeCode } = option;
     const register = this.genericService.getRegister(module, typeCode, option?.args);
     const schema = await register.schema();
     const columns = await this.#loadColumns(option);
-    // Láº¥y thÃ´ng tin externalFilters tá»« schema
+    // Lấy thông tin externalFilters từ schema
     const key = Utilities.hash({
       generic: 'configuration',
       module,
@@ -210,7 +210,7 @@ export class SdGenericListService {
       const relationColumn = relationColumns.find(e => e.code === column.field);
       if (relationColumn?.module && relationColumn?.typeCode) {
         const { valueField } = column.option;
-        // Gá»™p identityValues (ids) láº¡i Ä‘á»ƒ gá»i request 1 láº§n duy nháº¥t
+        // Gộp identityValues (ids) lại để gọi request 1 lần duy nhất
         const identityValues: string[] = items
           .filter(e => !!e?.[column.field]?.toString())
           .map(e => e[column.field])
@@ -272,7 +272,7 @@ export class SdGenericListService {
       if (!value.length) {
         return undefined;
       }
-      // Máº£ng thÃ¬ chá»‰ filter theo IN/NOT_IN
+      // Mảng thì chỉ filter theo IN/NOT_IN
       if (operator === 'IN' || operator === 'NOT_IN') {
         return {
           field,
@@ -314,7 +314,7 @@ export class SdGenericListService {
       if (value !== true && value !== false) {
         return undefined;
       }
-      // Boolean thÃ¬ luÃ´n filter theo EQUAL
+      // Boolean thì luôn filter theo EQUAL
       return {
         field,
         data: value,
@@ -404,7 +404,7 @@ export class SdGenericListService {
         return undefined;
       }
     }
-    // Máº·c Ä‘á»‹nh lÃ  CONTAIN
+    // Mặc định là CONTAIN
     return {
       field,
       data: value,
@@ -431,4 +431,3 @@ export class SdGenericListService {
     return ArrayUtilities.distinct([primaryKey, ...columns.map(e => e.field), ...(fields || [])]);
   };
 }
-

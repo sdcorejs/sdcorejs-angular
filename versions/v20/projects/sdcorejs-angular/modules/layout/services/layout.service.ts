@@ -1,17 +1,17 @@
-﻿import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { resolveMaybeAsync } from '@sdcorejs/utils/models';
 import { ISdLayoutConfiguration, ISdSidebarConfiguration, SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../configurations';
 
 @Injectable({
-  providedIn: 'root' // CÃ³ thá»ƒ Ä‘á»•i thÃ nh 'any' hoáº·c khai bÃ¡o trong máº£ng providers cá»§a LayoutModule tÃ¹y kiáº¿n trÃºc cá»§a báº¡n
+  providedIn: 'root' // Có thể đổi thành 'any' hoặc khai báo trong mảng providers của LayoutModule tùy kiến trúc của bạn
 })
 export class SdLayoutService {
   // ==========================================
   // INJECT CONFIGURATIONS
   // ==========================================
-  // WHY: optional=true cho phÃ©p layout module cháº¡y khÃ´ng cáº§n SD_LAYOUT_CONFIGURATION
-  // (use case demo / khá»Ÿi táº¡o nhanh). Khi token khÃ´ng cÃ³ â†’ fallback mock data trong constructor.
+  // WHY: optional=true cho phép layout module chạy không cần SD_LAYOUT_CONFIGURATION
+  // (use case demo / khởi tạo nhanh). Khi token không có → fallback mock data trong constructor.
   #layoutConfiguration = inject<ISdLayoutConfiguration | null>(SD_LAYOUT_CONFIGURATION, { optional: true });
   #i18n = inject(I18nService);
 
@@ -23,14 +23,14 @@ export class SdLayoutService {
 
   constructor() {
     if (!this.#layoutConfiguration) {
-      // WHY: cho phÃ©p layout module cháº¡y khÃ´ng cáº§n config (use case demo / khá»Ÿi táº¡o nhanh).
-      // Fallback dÃ¹ng mock data Ä‘Ã£ i18n hÃ³a; tháº­t táº¿ khi tÃ­ch há»£p portal cáº§n provide SD_LAYOUT_CONFIGURATION.
-      // @i18n-ignore dev-facing console.warn â€” khÃ´ng cáº§n dá»‹ch
+      // WHY: cho phép layout module chạy không cần config (use case demo / khởi tạo nhanh).
+      // Fallback dùng mock data đã i18n hóa; thật tế khi tích hợp portal cần provide SD_LAYOUT_CONFIGURATION.
+      // @i18n-ignore dev-facing console.warn — không cần dịch
       console.warn(
         // @i18n-ignore
-        '[SdLayoutService] SD_LAYOUT_CONFIGURATION chÆ°a Ä‘Æ°á»£c inject â€” Ä‘ang dÃ¹ng mock data. ' +
+        '[SdLayoutService] SD_LAYOUT_CONFIGURATION chưa được inject — đang dùng mock data. ' +
         // @i18n-ignore
-        'Provide token nÃ y (xem ISdLayoutConfiguration) Ä‘á»ƒ custom user info / sidebar / signout.'
+        'Provide token này (xem ISdLayoutConfiguration) để custom user info / sidebar / signout.'
       );
       this.userInfo.set(this.#mockUserInfo());
       this.sidebar.set(this.#mockSidebar());
@@ -76,4 +76,3 @@ export class SdLayoutService {
     };
   }
 }
-

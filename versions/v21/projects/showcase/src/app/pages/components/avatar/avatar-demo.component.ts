@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdAvatar } from '@sdcorejs/angular/components/avatar';
 
@@ -95,4 +95,3 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AvatarDemoComponent {}
-

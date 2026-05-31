@@ -1,4 +1,4 @@
-﻿import { NestedTreeControl } from '@angular/cdk/tree';
+import { NestedTreeControl } from '@angular/cdk/tree';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -14,7 +14,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { BrowserUtilities, StringUtilities } from '@sdcorejs/utils/fns';
 
-// NOTE: Import ná»™i bá»™ trong module layout
+// NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { HighlightSearchPipe, MenuFocusPipe } from '../../../../pipes';
 import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
@@ -44,12 +44,12 @@ import { LayoutUserComponent } from '../user/user.component';
 })
 export class SidebarComponent {
   // ==========================================
-  // INJECT SERVICES (Thay tháº¿ Constructor rÆ°á»m rÃ )
+  // INJECT SERVICES (Thay thế Constructor rườm rà)
   // ==========================================
   #router = inject(Router);
   #layoutStorageService = inject(SdLayoutStorageService);
   #menuFocusPipe = inject(MenuFocusPipe);
-  #destroyRef = inject(DestroyRef); // DÃ¹ng Ä‘á»ƒ unsubscribe RxJS tá»± Ä‘á»™ng
+  #destroyRef = inject(DestroyRef); // Dùng để unsubscribe RxJS tự động
 
   // ==========================================
   // SIGNAL INPUTS & OUTPUTS
@@ -79,7 +79,7 @@ export class SidebarComponent {
   pinnedMenuGroup = signal<SdLayoutChildrenMenu>(
     this.#layoutStorageService.pinnedMenuGroup.get() ?? {
       id: 'pinned-menu-group',
-      title: 'ÄÃ£ ghim',
+      title: 'Đã ghim',
       children: [],
     }
   );
@@ -111,9 +111,9 @@ export class SidebarComponent {
         const lastActiveMenuGroupId = this.#layoutStorageService.lastActiveMenuGroupId.get();
         const pinnedGroup = this.pinnedMenuGroup();
         const isPinEnabled = this.sidebar()?.pin?.enabled;
-        // Xá»­ lÃ½ khi láº§n Ä‘áº§u vÃ o web (náº¿u chÆ°a cÃ³ active group)
+        // Xử lý khi lần đầu vào web (nếu chưa có active group)
         if (!lastActiveMenuGroupId || (lastActiveMenuGroupId === pinnedGroup?.id && !isPinEnabled)) {
-          // Æ¯u tiÃªn pinnedGroup náº¿u Ä‘á»§ Ä‘iá»u kiá»‡n, cÃ²n khÃ´ng láº¥y menu Ä‘áº§u tiá»n dev khai bÃ¡o
+          // Ưu tiên pinnedGroup nếu đủ điều kiện, còn không lấy menu đầu tiền dev khai báo
           const targetId = isPinEnabled && pinnedGroup?.children?.length ? pinnedGroup?.id : currentMenus?.[0]?.id;
           this.#layoutStorageService.lastActiveMenuGroupId.set(targetId ?? '');
         }
@@ -164,7 +164,7 @@ export class SidebarComponent {
       const children = group.children ?? [];
       const exists = children.some(m => this.#getMenuNodeKey(m) === key);
       const updatedChildren = exists ? children.filter(m => this.#getMenuNodeKey(m) !== key) : [...children, node];
-      const updatedGroup = { id: 'pinned-menu-group', title: 'ÄÃ£ ghim', children: updatedChildren };
+      const updatedGroup = { id: 'pinned-menu-group', title: 'Đã ghim', children: updatedChildren };
       this.#layoutStorageService.pinnedMenuGroup.set(updatedGroup);
       return updatedGroup;
     });
@@ -238,7 +238,7 @@ export class SidebarComponent {
   expandMenuGroup = (menuGroupNode: SdLayoutMenu): void => {
     this.titleMenuGroup.set(menuGroupNode?.tooltipTitle || menuGroupNode?.title);
 
-    // Case 1: Menu khÃ´ng cÃ³ children
+    // Case 1: Menu không có children
     if (!('children' in menuGroupNode && menuGroupNode.children?.length)) {
       if ('path' in menuGroupNode) {
         this.navigate({ path: menuGroupNode.path, queryParams: menuGroupNode?.queryParams ?? {} });
@@ -246,7 +246,7 @@ export class SidebarComponent {
       }
     }
 
-    // Case 2: Menu cÃ³ children
+    // Case 2: Menu có children
     if ('children' in menuGroupNode && menuGroupNode.children?.length) {
       this.#setMenusByGroup(menuGroupNode.children);
       this.searchText.set('');
@@ -262,7 +262,7 @@ export class SidebarComponent {
   };
 
   // ==========================================
-  // Cá»¤M HOVER MENU GROUP & NODE
+  // CỤM HOVER MENU GROUP & NODE
   // ==========================================
   onMouseOverMenuGroupNode = (event: MouseEvent, menuNode: SdLayoutMenu): void => {
     if (this.idMenuGroupActive() !== menuNode?.id) {
@@ -301,7 +301,7 @@ export class SidebarComponent {
     const menuNode = event.currentTarget as HTMLElement;
     const brandColor = this.sidebar()?.brandColor || '#2962FF';
 
-    // Náº¿u cÃ³ báº­t config pin menu
+    // Nếu có bật config pin menu
     if (this.sidebar()?.pin?.enabled) {
       const iconPin = menuNode.querySelector('.c-menu-node-description-icon-pin') as HTMLElement;
       if (iconPin) {
@@ -351,7 +351,7 @@ export class SidebarComponent {
   onMouseLeaveMenuNode = (event: MouseEvent, menuItem: SdLayoutMenu): void => {
     const menuNode = event.currentTarget as HTMLElement;
 
-    // Náº¿u cÃ³ báº­t config pin menu
+    // Nếu có bật config pin menu
     if (this.sidebar()?.pin?.enabled) {
       const iconPin = menuNode.querySelector('.c-menu-node-description-icon-pin') as HTMLElement;
       if (iconPin) {
@@ -429,11 +429,11 @@ export class SidebarComponent {
   };
 
   #bindingMenuGroupByCurrentPath = (menus: SdLayoutMenu[]): void => {
-    // Chá»‰ bindingGroup má»›i khi ngÆ°á»i dÃ¹ng khÃ´ng searchText
+    // Chỉ bindingGroup mới khi người dùng không searchText
     if (!this.#getValidSearchText()) {
       const pinnedChildren = this.pinnedMenuGroup()?.children ?? [];
 
-      // Æ¯u tiÃªn: Current path khá»›p vá»›i item trong pinMenuGroup thÃ¬ láº§n Ä‘áº§u vÃ o trang sáº½ hiá»‡n pinnedMenuGroup
+      // Ưu tiên: Current path khớp với item trong pinMenuGroup thì lần đầu vào trang sẽ hiện pinnedMenuGroup
       const isPinnedPathMatchValid =
         this.sidebar()?.pin?.enabled &&
         pinnedChildren?.length &&
@@ -452,10 +452,10 @@ export class SidebarComponent {
       }
 
       let menuGroupByPath = this.#getMenuGroupByCurrentPath(menus);
-      // Náº¿u khÃ´ng tÃ¬m Ä‘Æ°á»£c path nÃ o khá»›p vá»›i menu
+      // Nếu không tìm được path nào khớp với menu
       if (!menuGroupByPath?.length) {
         const lastActiveId = this.#layoutStorageService.lastActiveMenuGroupId.get() || '';
-        // Náº¿u cÃ³ pinned group thÃ¬ hiá»‡n máº­c Ä‘á»‹nh lÃ  pinnedMenuGroup
+        // Nếu có pinned group thì hiện mậc định là pinnedMenuGroup
         if (this.sidebar()?.pin?.enabled && lastActiveId === this.pinnedMenuGroup()?.id && pinnedChildren?.length) {
           const pinned = this.pinnedMenuGroup();
           this.idMenuGroupActive.set(pinned.id);
@@ -464,13 +464,13 @@ export class SidebarComponent {
           this.#expandParentNodesByCurrentPath(pinnedChildren);
           return;
         }
-        // Náº¿u khÃ´ng cÃ³ pinnedMenuGroup thÃ¬ menuGroup láº¥y tá»« thao tÃ¡c cuá»‘i cÃ¹ng cá»§a ngÆ°á»i dÃ¹ng
+        // Nếu không có pinnedMenuGroup thì menuGroup lấy từ thao tác cuối cùng của người dùng
         menuGroupByPath = this.menus()?.filter(menu => menu?.id === lastActiveId) || [];
       }
 
-      // Kiá»ƒm tra láº¡i menuGroupPath Ä‘Ã£ thá»±c sá»± tÃ¬m Ä‘Æ°á»£c chÆ°a?
+      // Kiểm tra lại menuGroupPath đã thực sự tìm được chưa?
       if (menuGroupByPath?.length) {
-        // Náº¿u user Ä‘ang á»Ÿ pinedGroup vÃ  curentPath cÃ³ chá»©a trong pinnedMenuGroup thÃ¬ return luÃ´n, khÃ´ng chuyá»ƒn sang menuGroup má»›i
+        // Nếu user đang ở pinedGroup và curentPath có chứa trong pinnedMenuGroup thì return luôn, không chuyển sang menuGroup mới
         if (
           this.sidebar()?.pin?.enabled &&
           this.idMenuGroupActive() === this.pinnedMenuGroup()?.id &&
@@ -634,4 +634,3 @@ export class SidebarComponent {
     return count;
   };
 }
-

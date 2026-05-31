@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   afterNextRender,
@@ -27,11 +27,11 @@ import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
 type Density = 'compact' | 'comfortable';
 
 /**
- * Completed inline chip (non-string/number â€” those use `<sd-query-inline-value-chip>`).
+ * Completed inline chip (non-string/number — those use `<sd-query-inline-value-chip>`).
  *
- * why: tÃ¡ch edit lifecycle ra khá»i parent `<sd-query-bar>` â€” child tá»± quáº£n lÃ½
- * `isEditing` signal, auto-open picker, focusout exit. Parent chá»‰ pass field/filter
- * vÃ  nháº­n commit/remove outputs.
+ * why: tách edit lifecycle ra khỏi parent `<sd-query-bar>` — child tự quản lý
+ * `isEditing` signal, auto-open picker, focusout exit. Parent chỉ pass field/filter
+ * và nhận commit/remove outputs.
  *
  * Covers types: boolean, date, datetime, values, lazy-values, plus a fallback else
  * branch. BETWEEN (date / datetime) uses a single `<sd-date-range>` (datetime
@@ -61,13 +61,13 @@ export class SdQueryInlineChip {
   // Inputs
   // ---------------------------------------------------------------------------
 
-  /** Resolved field â€” parent passes it (no lookup needed inside). */
+  /** Resolved field — parent passes it (no lookup needed inside). */
   readonly field = input.required<SdQueryField>();
 
-  /** The chip's Filter â€” used for `data` + `operator`. */
+  /** The chip's Filter — used for `data` + `operator`. */
   readonly filter = input.required<Filter>();
 
-  /** Density preset â€” sizes the `.c-token` row. */
+  /** Density preset — sizes the `.c-token` row. */
   readonly density = input<Density>('compact');
 
   /** Whether the active operator is a multi-select (IN/NOT_IN). */
@@ -79,37 +79,37 @@ export class SdQueryInlineChip {
   /** autoId prefix for inner controls (parent passes `inlineAutoId(i, 'value')`). */
   readonly autoId = input<string>('');
 
-  /** Pre-computed display text â€” parent owns `chipValueText(filter)` so we don't recompute. */
+  /** Pre-computed display text — parent owns `chipValueText(filter)` so we don't recompute. */
   readonly valueText = input<string>('');
 
-  /** No-data operator (NULL/NOT_NULL) â€” hide entire value slot when true. */
+  /** No-data operator (NULL/NOT_NULL) — hide entire value slot when true. */
   readonly isNoData = input(false);
 
   // ---------------------------------------------------------------------------
   // Outputs
   // ---------------------------------------------------------------------------
 
-  /** Single-value commit â€” parent runs `updateFilter(i, { data })`. */
+  /** Single-value commit — parent runs `updateFilter(i, { data })`. */
   readonly commit = output<unknown>();
 
-  /** BETWEEN commit (date/datetime) â€” parent runs `setFilterRange(i, ev)`. */
+  /** BETWEEN commit (date/datetime) — parent runs `setFilterRange(i, ev)`. */
   readonly commitRange = output<{ from: unknown; to: unknown } | null>();
 
-  /** Live edit during multi-select â€” parent runs `editValueFn(i)(v)`. */
+  /** Live edit during multi-select — parent runs `editValueFn(i)(v)`. */
   readonly liveChange = output<unknown>();
 
-  /** Ã— removal. */
+  /** × removal. */
   readonly remove = output<void>();
 
   // ---------------------------------------------------------------------------
   // Internal state
   // ---------------------------------------------------------------------------
 
-  /** Edit toggle â€” viewed (false) â†” editable (true). */
+  /** Edit toggle — viewed (false) ↔ editable (true). */
   readonly #editing = signal(false);
   readonly editing = this.#editing.asReadonly();
 
-  /** Active picker reference â€” auto-opened right after entering edit. */
+  /** Active picker reference — auto-opened right after entering edit. */
   private readonly chipPicker = viewChild<SdSelect | SdDate | SdDatetime | SdDateRange>('chipPicker');
 
   // ---------------------------------------------------------------------------
@@ -118,10 +118,10 @@ export class SdQueryInlineChip {
 
   readonly iconName = computed<string>(() => sdQueryFieldIcon(this.field()));
 
-  /** Operator code â€” convenience accessor for template. */
+  /** Operator code — convenience accessor for template. */
   readonly operator = computed<Operator>(() => (this.filter() as any).operator as Operator);
 
-  /** Data payload â€” convenience accessor for template. */
+  /** Data payload — convenience accessor for template. */
   readonly data = computed<unknown>(() => (this.filter() as any).data);
 
   // ---------------------------------------------------------------------------
@@ -140,13 +140,13 @@ export class SdQueryInlineChip {
 
   /**
    * Exit edit only when focus actually leaves the wrapper subtree.
-   * why: focusout fires for every internal blur â€” only exit when relatedTarget
-   * is OUTSIDE the wrapper AND khÃ´ng thuá»™c cdk-overlay (mat-select panel, mat-calendar,
-   * datetime overlay Ä‘á»u render trong document.body). Tick option trong panel multi-
-   * select sáº½ chuyá»ƒn focus sang `<mat-option>` (náº±m trong cdk-overlay-container) â†’
-   * náº¿u exit ngay sáº½ flip viewed â†’ kill panel sá»›m. Chá»‰ exit khi panel Ä‘Ã£ close
-   * (relatedTarget khÃ´ng náº±m trong overlay). markForCheck vÃ¬ overlay focusout
-   * khÃ´ng kÃ©o theo CD cho OnPush parent.
+   * why: focusout fires for every internal blur — only exit when relatedTarget
+   * is OUTSIDE the wrapper AND không thuộc cdk-overlay (mat-select panel, mat-calendar,
+   * datetime overlay đều render trong document.body). Tick option trong panel multi-
+   * select sẽ chuyển focus sang `<mat-option>` (nằm trong cdk-overlay-container) →
+   * nếu exit ngay sẽ flip viewed → kill panel sớm. Chỉ exit khi panel đã close
+   * (relatedTarget không nằm trong overlay). markForCheck vì overlay focusout
+   * không kéo theo CD cho OnPush parent.
    */
   onFocusOut(ev: FocusEvent): void {
     const wrapper = ev.currentTarget as HTMLElement | null;
@@ -157,21 +157,21 @@ export class SdQueryInlineChip {
     if (this.#editing()) {
       this.#editing.set(false);
       this.#cdr.markForCheck();
-      // why: sd-date-range / sd-datetime Ä‘Ã´i khi emit sdChange NGAY SAU focusout â€”
-      // viewed flip xáº£y ra trÆ°á»›c khi model má»›i vá» tá»›i [model] input â†’ viewed text
-      // format dÃ¹ng giÃ¡ trá»‹ cÅ©. Schedule thÃªm 1 CD pass Ä‘á»ƒ re-render vá»›i model má»›i
-      // (user-visible bug: "click ra láº§n Ä‘áº§u chÆ°a update, click vÃ o rá»“i ra láº§n 2 má»›i Ä‘Ãºng").
+      // why: sd-date-range / sd-datetime đôi khi emit sdChange NGAY SAU focusout —
+      // viewed flip xảy ra trước khi model mới về tới [model] input → viewed text
+      // format dùng giá trị cũ. Schedule thêm 1 CD pass để re-render với model mới
+      // (user-visible bug: "click ra lần đầu chưa update, click vào rồi ra lần 2 mới đúng").
       queueMicrotask(() => this.#cdr.markForCheck());
     }
   }
 
-  /** Test-only shim â€” direct call avoids dispatching real FocusEvent in JSDOM. */
+  /** Test-only shim — direct call avoids dispatching real FocusEvent in JSDOM. */
   onFocusOutForTest(ev: FocusEvent): void {
     this.onFocusOut(ev);
   }
 
   // ---------------------------------------------------------------------------
-  // Commit handlers â€” single emit per category
+  // Commit handlers — single emit per category
   // ---------------------------------------------------------------------------
 
   /** Single-value commit (sd-date, sd-datetime, single sd-select). */
@@ -181,10 +181,10 @@ export class SdQueryInlineChip {
   }
 
   /**
-   * BETWEEN commit â€” sd-date-range emits {from, to}.
-   * why: náº¿u cáº£ from + to Ä‘á»u cÃ³ giÃ¡ trá»‹ â†’ coi nhÆ° range Ä‘Ã£ chá»n xong â†’ exit edit
-   * ngay táº¡i commit (Ä‘á»“ng bá»™ vá»›i model.set cá»§a parent), khÃ´ng chá» focusout. TrÃ¡nh
-   * race "focusout firing trÆ°á»›c sdChange" lÃ m viewed text render vá»›i model cÅ©.
+   * BETWEEN commit — sd-date-range emits {from, to}.
+   * why: nếu cả from + to đều có giá trị → coi như range đã chọn xong → exit edit
+   * ngay tại commit (đồng bộ với model.set của parent), không chờ focusout. Tránh
+   * race "focusout firing trước sdChange" làm viewed text render với model cũ.
    */
   emitRangeCommit(ev: { from: unknown; to: unknown } | null): void {
     this.commitRange.emit(ev ?? null);
@@ -194,15 +194,14 @@ export class SdQueryInlineChip {
     }
   }
 
-  /** Multi-select live emit â€” does NOT exit edit (focusout handles exit). */
+  /** Multi-select live emit — does NOT exit edit (focusout handles exit). */
   emitLive(v: unknown): void {
     this.liveChange.emit(v);
   }
 
-  /** Boolean toggle commit â€” exits edit. */
+  /** Boolean toggle commit — exits edit. */
   emitBoolean(v: boolean): void {
     this.commit.emit(v);
     this.#editing.set(false);
   }
 }
-

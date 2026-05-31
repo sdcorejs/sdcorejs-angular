@@ -1,8 +1,8 @@
-﻿import * as uuid from 'uuid';
+import * as uuid from 'uuid';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
 
-// NOTE: Import ná»™i bá»™ trong module layout thÃ¬ dÃ¹ng path tÆ°Æ¡ng Ä‘á»‘i
+// NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdLayoutMenu, Menus } from '../services/menu/menu.model';
 import { Params } from '@angular/router';
 import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
@@ -107,4 +107,3 @@ export class MenuPipe implements PipeTransform {
     return Object.keys(hashData).length > 0 ? Utilities.hash(hashData) : uuid.v4();
   };
 }
-

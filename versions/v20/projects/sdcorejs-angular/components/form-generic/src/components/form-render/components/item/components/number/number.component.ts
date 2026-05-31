@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
@@ -18,7 +18,7 @@ import { filter, Subject, Subscription } from 'rxjs';
   imports: [
     CommonModule,
     SdInputNumber,
-    // Pipe cho pháº§n viewed
+    // Pipe cho phần viewed
     ComponentViewedPipe,
   ],
 })
@@ -75,4 +75,3 @@ export class NumberComponent {
     this.#subscription.unsubscribe();
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import { computed, inject, Injectable, signal, Signal, WritableSignal } from '@angular/core';
+import { computed, inject, Injectable, signal, Signal, WritableSignal } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { I18N_MESSAGES } from './i18n.messages';
 import { I18N_STORAGE_KEY } from './i18n.token';
@@ -7,10 +7,10 @@ import { SUPPORTED_LANGUAGES, I18nParams, Language } from './i18n.types';
 @Injectable({ providedIn: 'root' })
 export class I18nService {
   readonly #config = inject<ISdCoreConfiguration | null>(SD_CORE_CONFIGURATION, { optional: true });
-  // Custom catalog (signal) â€” non-null khi user cáº¥u hÃ¬nh `language: () => I18nCatalog`.
-  // Khi non-null, `messages` computed sáº½ Æ°u tiÃªn tráº£ vá» catalog nÃ y thay vÃ¬ I18N_MESSAGES[lang].
-  // PHáº¢I khai bÃ¡o TRÆ¯á»šC `#language` vÃ¬ `#resolveInitial()` cháº¡y trong initializer cá»§a `#language`
-  // vÃ  cÃ³ thá»ƒ gá»i `this.#customMessages.set(...)` (sync custom catalog path).
+  // Custom catalog (signal) — non-null khi user cấu hình `language: () => I18nCatalog`.
+  // Khi non-null, `messages` computed sẽ ưu tiên trả về catalog này thay vì I18N_MESSAGES[lang].
+  // PHẢI khai báo TRƯỚC `#language` vì `#resolveInitial()` chạy trong initializer của `#language`
+  // và có thể gọi `this.#customMessages.set(...)` (sync custom catalog path).
   readonly #customMessages: WritableSignal<Readonly<Record<string, string>> | null> = signal(null);
   readonly #language: WritableSignal<Language> = signal(this.#resolveInitial());
   readonly #warned = new Set<string>();
@@ -22,13 +22,13 @@ export class I18nService {
     return I18N_MESSAGES[this.#language()];
   });
 
-  // Äá»•i ngÃ´n ngá»¯ require reload trang (model "reload trÃªn Ä‘á»•i"). Pipe `translate` lÃ  pure
-  // nÃªn khÃ´ng tá»± cáº­p nháº­t runtime â€” pháº£i reload Ä‘á»ƒ cache pipe Ä‘Æ°á»£c rebuild vá»›i messages má»›i.
-  // Test cÃ³ thá»ƒ pass `{ reload: false }` Ä‘á»ƒ trÃ¡nh reload page trong Karma.
+  // Đổi ngôn ngữ require reload trang (model "reload trên đổi"). Pipe `translate` là pure
+  // nên không tự cập nhật runtime — phải reload để cache pipe được rebuild với messages mới.
+  // Test có thể pass `{ reload: false }` để tránh reload page trong Karma.
   setLanguage(lang: Language, opts: { reload?: boolean } = { reload: true }): void {
     if (!SUPPORTED_LANGUAGES.includes(lang)) return;
     if (this.#language() === lang && !this.#customMessages()) return;  // no-op if same and not in custom mode
-    // User chá»n 'vi'/'en' rÃµ rÃ ng -> clear custom mode (override custom provider)
+    // User chọn 'vi'/'en' rõ ràng -> clear custom mode (override custom provider)
     this.#customMessages.set(null);
     try { localStorage.setItem(I18N_STORAGE_KEY, lang); } catch { /* ignore */ }
     this.#language.set(lang);
@@ -38,7 +38,7 @@ export class I18nService {
   }
 
   t(key: string, params?: I18nParams): string {
-    // Äá»c tá»« computed `messages()` Ä‘á»ƒ há»— trá»£ cáº£ custom catalog láº«n built-in lang.
+    // Đọc từ computed `messages()` để hỗ trợ cả custom catalog lẫn built-in lang.
     const raw = this.messages()[key] ?? this.#fallback(key);
     return this.#interpolate(raw, params);
   }
@@ -65,7 +65,7 @@ export class I18nService {
   }
 
   #resolveInitial(): Language {
-    // 1) localStorage (only 'vi'/'en' supported there) â€” luÃ´n Æ°u tiÃªn cao nháº¥t
+    // 1) localStorage (only 'vi'/'en' supported there) — luôn ưu tiên cao nhất
     try {
       const stored = localStorage.getItem(I18N_STORAGE_KEY) as Language | null;
       if (stored && SUPPORTED_LANGUAGES.includes(stored)) return stored;
@@ -73,13 +73,13 @@ export class I18nService {
 
     const configured = this.#config?.language;
 
-    // 2) function â€” custom language provider (sync only)
+    // 2) function — custom language provider (sync only)
     if (typeof configured === 'function') {
       this.#loadCustom(configured);
-      return 'vi'; // language() váº«n bÃ¡o 'vi' trong custom mode; messages() Æ°u tiÃªn #customMessages
+      return 'vi'; // language() vẫn báo 'vi' trong custom mode; messages() ưu tiên #customMessages
     }
 
-    // 3) string â€” built-in lang
+    // 3) string — built-in lang
     if (configured && SUPPORTED_LANGUAGES.includes(configured as Language)) return configured as Language;
 
     // 4) default
@@ -95,4 +95,3 @@ export class I18nService {
     }
   }
 }
-

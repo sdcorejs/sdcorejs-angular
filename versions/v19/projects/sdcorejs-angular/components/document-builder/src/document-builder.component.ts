@@ -1,4 +1,4 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
@@ -95,9 +95,9 @@ export class SdDocumentBuilder {
   #colorPickerConfig = getColorPickerConfig();
   #contentChangeSubject = new Subject<string>();
   #idTimeOutScrollHeading: ReturnType<typeof setTimeout> | null = null;
-  #headingElementsMap = new Map<string, ModelElement>(); // Hash lÆ°u trá»¯ cÃ¡c heading
+  #headingElementsMap = new Map<string, ModelElement>(); // Hash lưu trữ các heading
 
-  // Wrapper giá»¯ `this` cá»§a I18nService â€” CKEditor config khÃ´ng truyá»n Ä‘Æ°á»£c class instance cÃ³ private fields.
+  // Wrapper giữ `this` của I18nService — CKEditor config không truyền được class instance có private fields.
   readonly #editorI18n: DocumentBuilderI18n = {
     t: (key, params) => this.#i18n.t(key, params),
   };
@@ -106,7 +106,7 @@ export class SdDocumentBuilder {
   config: DocumentBuilderOption = {
     getOption: () => this.option,
     _i18n: this.#editorI18n,
-    licenseKey: 'GPL', // Hoáº·c key thÆ°Æ¡ng máº¡i náº¿u cÃ³
+    licenseKey: 'GPL', // Hoặc key thương mại nếu có
     plugins: [
       FontSize,
       FontColor,
@@ -126,9 +126,9 @@ export class SdDocumentBuilder {
       TableColumnResize,
       PageBreak,
       Undo,
-      Alignment, // Canh lá»
-      Subscript, // MÅ© dÆ°á»›i (Hâ‚‚O)
-      Superscript, // MÅ© trÃªn (xÂ²)
+      Alignment, // Canh lề
+      Subscript, // Mũ dưới (H₂O)
+      Superscript, // Mũ trên (x²)
       // Image
       Image,
       ImageUpload,
@@ -207,7 +207,7 @@ export class SdDocumentBuilder {
       options: this.#headingOptions,
     },
 
-    // 4. Cáº¥u hÃ¬nh báº£ng mÃ u (TÃ¹y chá»n)
+    // 4. Cấu hình bảng màu (Tùy chọn)
     fontColor: {
       // columns: 5,
       documentColors: 10,
@@ -247,25 +247,25 @@ export class SdDocumentBuilder {
     },
 
     indentBlock: {
-      offset: 48, // ÄÆ¡n vá»‹ px cho má»—i má»©c indent (tÆ°Æ¡ng Ä‘Æ°Æ¡ng 0.5 inch)
+      offset: 48, // Đơn vị px cho mỗi mức indent (tương đương 0.5 inch)
       unit: 'px',
     },
 
-    // Quan trá»ng: Cho phÃ©p paste style tá»« Word nhÆ°ng bá» qua margin/padding
+    // Quan trọng: Cho phép paste style từ Word nhưng bỏ qua margin/padding
     htmlSupport: {
       allow: [
         {
-          name: /.*/, // Cho phÃ©p táº¥t cáº£ tÃªn tháº» HTML
-          attributes: true, // Cho phÃ©p táº¥t cáº£ attributes
-          classes: true, // Cho phÃ©p táº¥t cáº£ classes
-          styles: true, // Cho phÃ©p táº¥t cáº£ styles
+          name: /.*/, // Cho phép tất cả tên thẻ HTML
+          attributes: true, // Cho phép tất cả attributes
+          classes: true, // Cho phép tất cả classes
+          styles: true, // Cho phép tất cả styles
         },
       ],
     },
   };
 
   ngOnInit() {
-    // Debounce trong rxjs khÃ´ng há»— trá»£ leading --> throttleTime
+    // Debounce trong rxjs không hỗ trợ leading --> throttleTime
     this.#subscription.add(
       this.#contentChangeSubject.pipe(throttleTime(500, undefined, { leading: true, trailing: true })).subscribe(content => {
         this.contentChange.emit(normalize(content));
@@ -297,19 +297,19 @@ export class SdDocumentBuilder {
       console.warn('PageOrientation not available:', error);
     }
 
-    // Láº¯ng nghe selection
+    // Lắng nghe selection
     editor.model.document.selection.on('change', $event => {
       this.option.onSelection?.(this.#editor.model.document.selection, $event);
     });
 
-    // Láº¯ng nghe sá»± kiá»‡n thay Ä‘á»•i ná»™i dung
+    // Lắng nghe sự kiện thay đổi nội dung
     editor.model.document.on('change:data', () => {
       const content = editor.getData();
       this.#contentChangeSubject.next(content);
     });
 
     try {
-      // Manual keybinding cho Tab náº¿u cáº§n
+      // Manual keybinding cho Tab nếu cần
       editor.keystrokes.set('Tab', (evt, cancel) => {
         const command = editor.commands.get('indentBlock');
         if (command && command.isEnabled) {
@@ -411,7 +411,7 @@ export class SdDocumentBuilder {
   #updateState(): void {
     if (!this.#editor) return;
     if (this.disabled) {
-      // Báº­t cháº¿ Ä‘á»™ chá»‰ Ä‘á»c vá»›i ID khÃ³a
+      // Bật chế độ chỉ đọc với ID khóa
       this.#editor.enableReadOnlyMode(this.#id);
 
       // Disable page orientation button
@@ -424,7 +424,7 @@ export class SdDocumentBuilder {
         console.warn('Failed to disable orientation button:', error);
       }
     } else {
-      // Táº¯t cháº¿ Ä‘á»™ chá»‰ Ä‘á»c vá»›i ID khÃ³a tÆ°Æ¡ng á»©ng
+      // Tắt chế độ chỉ đọc với ID khóa tương ứng
       this.#editor.disableReadOnlyMode(this.#id);
 
       // Enable page orientation button
@@ -441,7 +441,7 @@ export class SdDocumentBuilder {
 
   #getTextFromElement = (element: ModelElement): string => {
     let text = '';
-    // Heading trong Model chá»©a cÃ¡c text node con
+    // Heading trong Model chứa các text node con
     for (const child of element.getChildren()) {
       if (child.is('$text') || child.is('$textProxy')) {
         text += (child as any).data;
@@ -453,7 +453,7 @@ export class SdDocumentBuilder {
   #getTextFromRange = (range: ModelRange): string => {
     let text = '';
     for (const item of range.getItems()) {
-      // TextProxy lÃ  má»™t pháº§n cá»§a Text Node náº±m trong Range
+      // TextProxy là một phần của Text Node nằm trong Range
       if (item.is('$textProxy') || item.is('$text')) {
         text += (item as any).data;
       }
@@ -462,12 +462,12 @@ export class SdDocumentBuilder {
   };
 
   // ========================================================================
-  // 1. QUáº¢N LÃ HEADING
+  // 1. QUẢN LÝ HEADING
   // ========================================================================
   heading = {
     /**
-     * Láº¥y táº¥t cáº£ headings trong document
-     * @returns Danh sÃ¡ch táº¥t cáº£ headings
+     * Lấy tất cả headings trong document
+     * @returns Danh sách tất cả headings
      */
     all: (): SdDocumentBuilderHeading[] => {
       if (!this.#editor) return [];
@@ -475,27 +475,27 @@ export class SdDocumentBuilder {
       const root = this.#editor.model.document.getRoot();
       if (!root) return [];
 
-      // Reset láº¡i map má»—i láº§n quÃ©t
+      // Reset lại map mỗi lần quét
       this.#headingElementsMap.clear();
 
       const headings: SdDocumentBuilderHeading[] = [];
       const range = this.#editor.model.createRangeIn(root);
 
-      // Biáº¿n Ä‘áº¿m Ä‘á»ƒ táº¡o ID unique
+      // Biến đếm để tạo ID unique
       let index = 0;
 
       for (const item of range.getItems()) {
-        // Kiá»ƒm tra xem item cÃ³ pháº£i lÃ  Element vÃ  tÃªn báº¯t Ä‘áº§u báº±ng 'heading' khÃ´ng
+        // Kiểm tra xem item có phải là Element và tên bắt đầu bằng 'heading' không
         if (item.is('element') && item.name.startsWith('heading')) {
-          // 1. Láº¥y text cá»§a heading
+          // 1. Lấy text của heading
           const text = this.#getTextFromElement(item);
-          // 2. XÃ¡c Ä‘á»‹nh Level (heading1 -> 1, heading2 -> 2)
-          // item.name cÃ³ dáº¡ng 'heading1', 'heading2'
+          // 2. Xác định Level (heading1 -> 1, heading2 -> 2)
+          // item.name có dạng 'heading1', 'heading2'
           const level = parseInt(item.name.replace('heading', ''), 10) || 1;
-          // 3. Táº¡o ID runtime (DÃ¹ng Ä‘á»ƒ map khi click scroll)
-          // Báº¡n cÃ³ thá»ƒ generate slug tá»« text náº¿u muá»‘n, á»Ÿ Ä‘Ã¢y mÃ¬nh dÃ¹ng index cho Ä‘Æ¡n giáº£n vÃ  unique
+          // 3. Tạo ID runtime (Dùng để map khi click scroll)
+          // Bạn có thể generate slug từ text nếu muốn, ở đây mình dùng index cho đơn giản và unique
           const id = `heading_${index}_${Date.now()}`;
-          // 4. LÆ°u tham chiáº¿u Model Element vÃ o Map
+          // 4. Lưu tham chiếu Model Element vào Map
           this.#headingElementsMap.set(id, item as ModelElement);
           headings.push({
             id: id,
@@ -511,8 +511,8 @@ export class SdDocumentBuilder {
     },
 
     /**
-     * Scroll tá»›i vá»‹ trÃ­ cá»§a heading
-     * @param id - ID cá»§a heading cáº§n scroll tá»›i
+     * Scroll tới vị trí của heading
+     * @param id - ID của heading cần scroll tới
      */
     scroll: (id: string) => {
       if (!this.#editor) return;
@@ -521,7 +521,7 @@ export class SdDocumentBuilder {
 
       if (modelElement) {
         this.#editor.model.change(writer => {
-          // XÃ³a marker cÅ©
+          // Xóa marker cũ
           if (this.#idTimeOutScrollHeading) {
             clearTimeout(this.#idTimeOutScrollHeading);
           }
@@ -530,17 +530,17 @@ export class SdDocumentBuilder {
             writer.removeMarker(currentMarker);
           }
 
-          // Táº¡o Range bao trÃ¹m highlight
+          // Tạo Range bao trùm highlight
           const range = writer.createRangeOn(modelElement);
 
-          // ThÃªm Marker má»›i
+          // Thêm Marker mới
           writer.addMarker('highlightMarker', {
             range: range,
             usingOperation: false,
           });
         });
 
-        // Scroll tá»›i vá»‹ trÃ­ tÃ¬m Ä‘Æ°á»£c
+        // Scroll tới vị trí tìm được
         const viewElement = this.#editor.editing.mapper.toViewElement(modelElement);
         if (viewElement) {
           const domElement = this.#editor.editing.view.domConverter.viewToDom(viewElement);
@@ -549,7 +549,7 @@ export class SdDocumentBuilder {
           }
         }
 
-        // Tá»± Ä‘á»™ng táº¯t marker sau 5 giÃ¢y
+        // Tự động tắt marker sau 5 giây
         this.#idTimeOutScrollHeading = setTimeout(() => {
           if (this.#editor) {
             this.#editor.model.change(writer => {
@@ -565,7 +565,7 @@ export class SdDocumentBuilder {
   };
 
   // ========================================================================
-  // 2. QUáº¢N LÃ COMMENT (Marker-based)
+  // 2. QUẢN LÝ COMMENT (Marker-based)
   // ========================================================================
   getCommentPluginAPI() {
     if (!this.#editor) return null;
@@ -579,12 +579,12 @@ export class SdDocumentBuilder {
   }
 
   // ========================================================================
-  // 3. QUáº¢N LÃ VARIABLE
+  // 3. QUẢN LÝ VARIABLE
   // ========================================================================
   getVariablePluginAPI(): VariablePlugin | null {
     if (!this.#editor) return null;
     try {
-      // DÃ¹ng class reference (khÃ´ng dÃ¹ng string) â†’ an toÃ n trong build minified, TypeScript-typed
+      // Dùng class reference (không dùng string) → an toàn trong build minified, TypeScript-typed
       return this.#editor.plugins.get(VariablePlugin);
     } catch (error) {
       console.warn('VariablePlugin not available:', error);
@@ -593,14 +593,14 @@ export class SdDocumentBuilder {
   }
 
   // ========================================================================
-  // 4. HÃ€M EXPORT DOCX (FULL HEADER/FOOTER + PAGE NUMBER)
+  // 4. HÀM EXPORT DOCX (FULL HEADER/FOOTER + PAGE NUMBER)
   // ========================================================================
   /**
-   * Xuáº¥t file Word cÃ³ Header/Footer
-   * @param fileName TÃªn file
-   * @param headerText Ná»™i dung Header (hoáº·c HTML)
-   * '<p style="text-align: center; font-weight: bold;">CÃ”NG TY Cá»” PHáº¦N CÃ”NG NGHá»† ABC</p>'
-   * @param footerText Ná»™i dung Footer (hoáº·c HTML)
+   * Xuất file Word có Header/Footer
+   * @param fileName Tên file
+   * @param headerText Nội dung Header (hoặc HTML)
+   * '<p style="text-align: center; font-weight: bold;">CÔNG TY CỔ PHẦN CÔNG NGHỆ ABC</p>'
+   * @param footerText Nội dung Footer (hoặc HTML)
    * '<p style="text-align: right; font-size: 10pt;">Trang <span style="mso-field-code: PAGE"></span> / <span style="mso-field-code: NUMPAGES"></span></p>'
    */
   exportDocx(args: { fileName?: string; header?: string; footer?: string }): void {
@@ -608,23 +608,23 @@ export class SdDocumentBuilder {
     const fileName = args?.fileName || `document_${Date.now()}.docx`;
     const header = args?.header || ``;
     const footer = args?.footer || ``;
-    // 1. Kiá»ƒm tra xoay giáº¥y
+    // 1. Kiểm tra xoay giấy
     const rootElement = this.#editor.editing.view.document.getRoot();
     const isLandscape = rootElement?.hasClass('landscape');
     const orientation = isLandscape ? 'landscape' : 'portrait';
 
-    // KÃ­ch thÆ°á»›c giáº¥y cho Word (A4)
+    // Kích thước giấy cho Word (A4)
     // Portrait: 21cm x 29.7cm
     // Landscape: 29.7cm x 21cm
-    // @page size trong CSS Word Ä‘Ã´i khi cáº§n set cá»©ng width/height Ä‘á»ƒ header khÃ´ng bá»‹ lá»‡ch
+    // @page size trong CSS Word đôi khi cần set cứng width/height để header không bị lệch
     const pageCss = isLandscape
       ? 'size: 29.7cm 21cm; mso-page-orientation: landscape;'
       : 'size: 21cm 29.7cm; mso-page-orientation: portrait;';
 
     const contentHtml = this.#editor.getData();
 
-    // 2. Táº O HTML CHUáº¨N MICROSOFT WORD XML
-    // Pháº£i cÃ³ xmlns:o vÃ  xmlns:w thÃ¬ Word má»›i hiá»ƒu Ä‘Æ°á»£c cÃ¡c lá»‡nh mso-
+    // 2. TẠO HTML CHUẨN MICROSOFT WORD XML
+    // Phải có xmlns:o và xmlns:w thì Word mới hiểu được các lệnh mso-
     const fullHtml = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
@@ -632,22 +632,22 @@ export class SdDocumentBuilder {
           <title>Export Document</title>
           
           <style>
-            /* --- 1. SETUP TRANG GIáº¤Y & HEADER/FOOTER --- */
+            /* --- 1. SETUP TRANG GIẤY & HEADER/FOOTER --- */
             @page {
               ${pageCss}
-              margin: 2.0cm; /* Lá» chuáº©n 2cm */
+              margin: 2.0cm; /* Lề chuẩn 2cm */
               
-              /* Ká»¹ thuáº­t map ID cá»§a Word */
+              /* Kỹ thuật map ID của Word */
               mso-header: header1;
               mso-footer: footer1;
             }
 
-            /* Quan trá»ng: áº¨n cÃ¡c div header/footer khá»i luá»“ng vÄƒn báº£n chÃ­nh */
-            /* ChÃºng sáº½ chá»‰ hiá»‡n thá»‹ khi Ä‘Æ°á»£c @page gá»i thÃ´ng qua mso-header/footer */
+            /* Quan trọng: Ẩn các div header/footer khỏi luồng văn bản chính */
+            /* Chúng sẽ chỉ hiện thị khi được @page gọi thông qua mso-header/footer */
             div#header1 { display: none; }
             div#footer1 { display: none; }
 
-            /* --- 2. STYLE CÆ  Báº¢N --- */
+            /* --- 2. STYLE CƠ BẢN --- */
             body {
               font-family: 'Times New Roman', serif;
               font-size: 13pt;
@@ -655,18 +655,18 @@ export class SdDocumentBuilder {
               tab-interval: 36pt;
             }
             
-            /* Style Báº£ng */
+            /* Style Bảng */
             table { width: 100%; border-collapse: collapse; }
             td, th { border: 1px solid black; padding: 5px; }
 
-            /* Style Biáº¿n (Giá»¯ nguyÃªn giao diá»‡n Ä‘áº¹p cá»§a báº¡n) */
+            /* Style Biến (Giữ nguyên giao diện đẹp của bạn) */
             .variable-widget {
               color: #1565c0; font-weight: bold;
               background: #e3f2fd; padding: 0 4px; border-radius: 4px;
               border: 1px solid #90caf9;
             }
             
-            /* áº¨n Comment khi in/xuáº¥t file */
+            /* Ẩn Comment khi in/xuất file */
             .ck-comment-marker { background-color: transparent; border: none; text-decoration: none; }
           </style>
         </head>
@@ -694,9 +694,9 @@ export class SdDocumentBuilder {
       </html>
     `;
 
-    // 3. Táº O BLOB VÃ€ Táº¢I XUá»NG
-    // LÆ°u Ã½: DÃ¹ng type 'application/msword' thay vÃ¬ dÃ¹ng thÆ° viá»‡n html-docx-js
-    // ThÃªm '\ufeff' (BOM) Ä‘á»ƒ fix lá»—i font tiáº¿ng Viá»‡t
+    // 3. TẠO BLOB VÀ TẢI XUỐNG
+    // Lưu ý: Dùng type 'application/msword' thay vì dùng thư viện html-docx-js
+    // Thêm '\ufeff' (BOM) để fix lỗi font tiếng Việt
     const blob = new Blob(['\ufeff', fullHtml], { type: 'application/msword' });
     BrowserUtilities.downloadBlob(blob, fileName);
   }
@@ -706,15 +706,15 @@ export class SdDocumentBuilder {
     const editor = this.#editor;
 
     editor.model.change(writer => {
-      // XÃ³a marker cÅ© (náº¿u cÃ³)
+      // Xóa marker cũ (nếu có)
       if (editor.model.markers.has('highlightRange')) {
         writer.removeMarker('highlightRange');
       }
 
-      // Táº¡o marker má»›i
+      // Tạo marker mới
       writer.addMarker('highlightRange', {
-        usingOperation: false, // KhÃ´ng lÆ°u vÃ o lá»‹ch sá»­ Undo/Redo
-        affectsData: false, // KhÃ´ng áº£nh hÆ°á»Ÿng Ä‘áº¿n data láº¥y ra (getData)
+        usingOperation: false, // Không lưu vào lịch sử Undo/Redo
+        affectsData: false, // Không ảnh hưởng đến data lấy ra (getData)
         range: range,
       });
     });
@@ -729,4 +729,3 @@ export class SdDocumentBuilder {
     });
   };
 }
-

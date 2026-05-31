@@ -1,4 +1,4 @@
-﻿import { OverlayContainer } from '@angular/cdk/overlay';
+import { OverlayContainer } from '@angular/cdk/overlay';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -22,7 +22,7 @@ describe('SdQueryBar', () => {
     fixture.detectChanges();
   });
 
-  // Smoke test â€” fuller suite arrives once design lands.
+  // Smoke test — fuller suite arrives once design lands.
   it('creates the component', () => {
     expect(component).toBeTruthy();
   });
@@ -35,7 +35,7 @@ describe('SdQueryBar', () => {
   describe('sd-operator integration (inline mode)', () => {
     // why: string/number completed chips render the seamless value chip (operator implicit).
     // For popover-kind chips the locked <sd-operator> shows only when showOperatorOnChip is
-    // on â€” keeping operator display consistent across every chip kind.
+    // on — keeping operator display consistent across every chip kind.
     it('renders <sd-operator> for a completed popover-kind chip when showOperatorOnChip is on', () => {
       const field = { key: 'joinDate', label: 'Join', type: 'date', operators: true } as SdQueryField;
       fixture.componentRef.setInput('fields', [field]);
@@ -155,7 +155,7 @@ describe('SdQueryBar', () => {
         option: { items: [], valueField: 'id', displayField: 'name' },
       } as unknown as SdQueryField;
       component.beginBuild(valuesField);
-      // single allowed operator IN â†’ build skips operator step
+      // single allowed operator IN → build skips operator step
       expect(component.building()?.operator).toBe('IN');
       component.commitBuildValue('a');
       expect(component.filters()[0]).toEqual(
@@ -229,7 +229,7 @@ describe('SdQueryBar', () => {
       component.pickBuildOperator('CONTAIN');
       fixture.detectChanges();
 
-      // string/number build steps use the seamless chip â€” no .c-token-building, no sd-input
+      // string/number build steps use the seamless chip — no .c-token-building, no sd-input
       expect(fixture.nativeElement.querySelector('.c-token-building')).toBeNull();
       const chipDe = fixture.debugElement.query(By.directive(SdQueryInlineValueChip));
       expect(chipDe).not.toBeNull();
@@ -238,10 +238,10 @@ describe('SdQueryBar', () => {
     });
   });
 
-  describe('popover mode add-filter (regression â€” shared field picker)', () => {
+  describe('popover mode add-filter (regression — shared field picker)', () => {
     const stringField = { key: 'name', label: 'Name', type: 'string', operators: true } as SdQueryField;
 
-    it('picking a field from the field picker adds a chip without emitting (deferred â€” Search triggers the query; popover path uses addFilter, not beginBuild)', () => {
+    it('picking a field from the field picker adds a chip without emitting (deferred — Search triggers the query; popover path uses addFilter, not beginBuild)', () => {
       fixture.componentRef.setInput('mode', 'popover');
       fixture.componentRef.setInput('fields', [stringField]);
       fixture.detectChanges();
@@ -261,7 +261,7 @@ describe('SdQueryBar', () => {
       expect(component.filters().length).toBe(1);
       expect((component.filters()[0] as any).field).toBe('name');
       expect(component.building()).toBeNull(); // popover must NOT start an inline build
-      expect(queryChange).not.toHaveBeenCalled(); // deferred â€” adding a chip no longer emits live
+      expect(queryChange).not.toHaveBeenCalled(); // deferred — adding a chip no longer emits live
       overlay.remove();
     });
   });
@@ -400,7 +400,7 @@ describe('SdQueryBar', () => {
     });
 
     it('renders a bare sd-select at the values build value step', () => {
-      component.beginBuild(valuesField); // single op IN â†’ straight to value step
+      component.beginBuild(valuesField); // single op IN → straight to value step
       fixture.detectChanges();
 
       const building = fixture.nativeElement.querySelector('.c-token-building');
@@ -448,7 +448,7 @@ describe('SdQueryBar', () => {
     });
   });
 
-  // why: "popover auto-apply on close" removed â€” covered by chip-popover spec #14
+  // why: "popover auto-apply on close" removed — covered by chip-popover spec #14
   // (menu close emits (commit) with { field, operator, data } from staging).
 
   describe('compact popover layout', () => {
@@ -551,9 +551,9 @@ describe('SdQueryBar (extras)', () => {
     } as unknown as SdQueryField;
 
     it('a completed values chip renders the bare sd-select inside the token', () => {
-      // why: chip giá» máº·c Ä‘á»‹nh á»Ÿ viewed mode â†’ sd-select swap sang <sd-view>, khÃ´ng
-      // cÃ²n render .mat-mdc-select-value. Re-anchor vá» sá»± tá»“n táº¡i cá»§a sd-select.sd-bare
-      // bÃªn trong .c-token Ä‘á»ƒ giá»¯ Ã½ nghÄ©a: chip values váº«n dÃ¹ng bare select lÃ m trÃ¬nh bÃ y.
+      // why: chip giờ mặc định ở viewed mode → sd-select swap sang <sd-view>, không
+      // còn render .mat-mdc-select-value. Re-anchor về sự tồn tại của sd-select.sd-bare
+      // bên trong .c-token để giữ ý nghĩa: chip values vẫn dùng bare select làm trình bày.
       fixture.componentRef.setInput('mode', 'inline');
       fixture.componentRef.setInput('fields', [valuesField]);
       component.filters.set([{ field: 'status', operator: 'EQUAL', data: 'a' } as any]);
@@ -577,7 +577,7 @@ describe('SdQueryBar (extras)', () => {
       fixture.detectChanges();
     });
 
-    it('child (commit) output â†’ parent updates filter data', () => {
+    it('child (commit) output → parent updates filter data', () => {
       // why: edit lifecycle now lives in <sd-query-inline-chip>; parent only writes
       // data via updateFilter on the child's (commit) output.
       const chipDe = fixture.debugElement.query(By.css('sd-query-inline-chip'));
@@ -697,4 +697,3 @@ describe('SdQueryBar (extras)', () => {
     });
   });
 });
-

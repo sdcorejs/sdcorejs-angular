@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -64,4 +64,3 @@ export class StorageDemoComponent implements OnDestroy {
     this.#subSession.unsubscribe();
   }
 }
-

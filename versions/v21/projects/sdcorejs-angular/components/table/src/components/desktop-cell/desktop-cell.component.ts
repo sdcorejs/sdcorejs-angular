@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -90,7 +90,7 @@ export class DesktopCellComponent {
   };
 
   #checkOverflow = (element: HTMLElement): void => {
-    // NÃ©m vÃ o queue Ä‘á»ƒ Ä‘á»£i DOM render
+    // Ném vào queue để đợi DOM render
     setTimeout(() => {
       const hasOverflow = element.scrollWidth > element.clientWidth || element.scrollHeight > element.clientHeight;
       if (this.isOverflowing() !== hasOverflow) {
@@ -100,4 +100,3 @@ export class DesktopCellComponent {
     });
   };
 }
-

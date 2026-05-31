@@ -1,4 +1,4 @@
-﻿import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, inject } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -7,7 +7,7 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 interface Image {
   id: string;
-  // VÃ¬ NgOptimizedImage khÃ´ng thá»ƒ sá»­ dá»¥ng vá»›i blobSrc nÃªn Ä‘á»‘i vá»›i url tá»« cdn sáº½ váº«n lÆ°u á»Ÿ src
+  // Vì NgOptimizedImage không thể sử dụng với blobSrc nên đối với url từ cdn sẽ vẫn lưu ở src
   blobSrc: string;
   src?: string;
   name: string;
@@ -34,13 +34,13 @@ export class SdPreviewImage {
 
   #loadImages = async (urlOrFiles: (string | File)[]) => {
     urlOrFiles = urlOrFiles.filter(url => !!url);
-    // Xá»­ lÃ½ náº¿u lÃ  url thÃ¬ thá»±c hiá»‡n fetch láº¥y blob rá»“i tá»« blob => file
+    // Xử lý nếu là url thì thực hiện fetch lấy blob rồi từ blob => file
     const promises = urlOrFiles.map<Promise<Image | null>>(async urlOrFile => {
       if (typeof urlOrFile === 'string') {
         return fetch(urlOrFile)
           .then(async r => {
             const blob = await r.blob();
-            // Láº¥y filename dá»±a vÃ o url src
+            // Lấy filename dựa vào url src
             const baseSrc = urlOrFile.split('?')[0];
             const filename = baseSrc.substring(baseSrc.lastIndexOf('/') + 1);
             const file = new File([blob], filename);
@@ -73,7 +73,7 @@ export class SdPreviewImage {
     this.images = (await Promise.all(promises)).filter(image => image !== null);
   };
 
-  // NÃªn sá»­ dá»¥ng urlOrFiles á»Ÿ tham sá»‘ khi open thay vÃ¬ dÃ¹ng @Input Ä‘á»ƒ component sá»­ dá»¥ng sáº½ chá»‰ cáº§n map á»Ÿ hÃ m khi gá»i open thay vÃ¬ pháº£i máº¥t cÃ´ng map má»i lÃºc Ä‘á»ƒ binding vÃ o @Input
+  // Nên sử dụng urlOrFiles ở tham số khi open thay vì dùng @Input để component sử dụng sẽ chỉ cần map ở hàm khi gọi open thay vì phải mất công map mọi lúc để binding vào @Input
   open = async (urlOrFiles: (string | File)[] | undefined | null) => {
     if (!Array.isArray(urlOrFiles)) {
       return;
@@ -113,4 +113,3 @@ export class SdPreviewImage {
     this.activeIndex = 0;
   };
 }
-

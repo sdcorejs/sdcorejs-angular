@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable, Optional, Pipe, PipeTransform } from '@angular/core';
+import { Inject, Injectable, Optional, Pipe, PipeTransform } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 @Pipe({
@@ -20,4 +20,3 @@ export class SdFormatNumberPipe implements PipeTransform {
     return NumberUtilities.toISO(fixedValue);
   }
 }
-

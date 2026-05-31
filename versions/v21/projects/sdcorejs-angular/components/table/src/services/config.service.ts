@@ -1,4 +1,4 @@
-﻿import { Inject, Injectable, Optional } from '@angular/core';
+import { Inject, Injectable, Optional } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
 import { Subject } from 'rxjs';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
@@ -29,14 +29,14 @@ export class ConfigService {
   ) {}
 
   #loadConfiguredTable = (option: SdTableOption): SdStorage<ConfiguredTable> => {
-    // Náº¿u khÃ´ng cÃ³ key thÃ¬ khÃ´ng láº¥y Ä‘Æ°á»£c setting
+    // Nếu không có key thì không lấy được setting
     if (!option?.key) {
       return this.storageService.create<ConfiguredTable>(Utilities.hash(option), {
-        type: 'session', // Náº¿u khÃ´ng cÃ³ key thÃ¬ lÆ°u theo session
+        type: 'session', // Nếu không có key thì lưu theo session
         default: this.#default(option),
       });
     }
-    // Key cá»§a setting lÃ  tá»• há»£p tá»« key truyá»n vÃ o vÃ  prefix Ä‘á»ƒ trÃ¡nh chung key vá»›i cÃ¡c tÃ­nh nÄƒng khÃ¡c cÅ©ng dÃ¹ng key trong core table
+    // Key của setting là tổ hợp từ key truyền vào và prefix để tránh chung key với các tính năng khác cũng dùng key trong core table
     return this.storageService.create<ConfiguredTable>(
       { prefix: this.#prefix, key: option?.key },
       {
@@ -46,7 +46,7 @@ export class ConfigService {
   };
 
   loadConfiguredTable = (option: SdTableOption) => {
-    // Náº¿u khÃ´ng cÃ³ key thÃ¬ tráº£ vá» thÃ´ng tin máº·c Ä‘á»‹nh
+    // Nếu không có key thì trả về thông tin mặc định
     if (!option?.key) {
       return this.#default(option);
     }
@@ -68,7 +68,7 @@ export class ConfigService {
     };
     const { selector, group } = option || {};
     const commands = option?.command?.commands || option?.commands || [];
-    const isCommandRight = option?.command?.align === 'right' || false; // ðŸ‘ˆ thÃªm dÃ²ng nÃ y
+    const isCommandRight = option?.command?.align === 'right' || false; // 👈 thêm dòng này
     const columns = option?.columns?.filter(e => !e.hidden) || [];
     if (selector?.visible) {
       result.firstHeaders.push(this.#COLUMNS.SELECTION);
@@ -78,16 +78,16 @@ export class ConfigService {
       result.firstHeaders.push(this.#COLUMNS.TREE_TOGGLE);
       result.displayedColumns.push(this.#COLUMNS.TREE_TOGGLE);
     }
-    // ðŸ‘‡ Chá»‰ push vÃ o Ä‘áº§u náº¿u lÃ  left (máº·c Ä‘á»‹nh)
+    // 👇 Chỉ push vào đầu nếu là left (mặc định)
     if (commands?.length && !isCommandRight) {
       result.firstHeaders.push(this.#COLUMNS.COMMAND);
       result.displayedColumns.push(this.#COLUMNS.COMMAND);
     }
-    // why: group header row dÃ¹ng matRowDef RIÃŠNG vá»›i column list ['sdGroupHeader'] qua predicate
-    // when:isGroupHeader â€” KHÃ”NG inject vÃ o displayedColumns/firstHeaders Ä‘á»ƒ trÃ¡nh colspan trick
-    // (TDs khÃ¡c váº«n render gÃ¢y overflow row). Data row dÃ¹ng displayedColumns nguyÃªn váº¹n.
-    // group option váº«n cáº§n khai bÃ¡o (qua option.group) Ä‘á»ƒ SdGroupPipe biáº¿t bucket items.
-    // sdIndex Ä‘áº·t sau selector / tree / command-left / group, ngay trÆ°á»›c data columns
+    // why: group header row dùng matRowDef RIÊNG với column list ['sdGroupHeader'] qua predicate
+    // when:isGroupHeader — KHÔNG inject vào displayedColumns/firstHeaders để tránh colspan trick
+    // (TDs khác vẫn render gây overflow row). Data row dùng displayedColumns nguyên vẹn.
+    // group option vẫn cần khai báo (qua option.group) để SdGroupPipe biết bucket items.
+    // sdIndex đặt sau selector / tree / command-left / group, ngay trước data columns
     if (option.index?.enabled) {
       result.firstHeaders.push(this.#COLUMNS.INDEX);
       result.displayedColumns.push(this.#COLUMNS.INDEX);
@@ -95,8 +95,8 @@ export class ConfigService {
     configuration?.columns
       ?.filter(col => !col.invisible)
       .forEach(col => {
-        // Kiá»ƒm tra column trong config cÃ³ cÃ²n Ä‘Æ°á»£c khai bÃ¡o trong option
-        // Náº¿u khÃ´ng thÃ¬ áº©n column Ä‘Ã³ Ä‘i
+        // Kiểm tra column trong config có còn được khai báo trong option
+        // Nếu không thì ẩn column đó đi
         const column = columns.find(e => e.field === col.origin.field);
         if (column) {
           const title =
@@ -140,7 +140,7 @@ export class ConfigService {
           }
         }
       });
-    // Náº¿u cÃ³ thÃªm cÃ¡c column má»›i, chÃ¨n cÃ¡c column Ä‘Ã³ vÃ o cuá»‘i
+    // Nếu có thêm các column mới, chèn các column đó vào cuối
     columns
       ?.filter(column => !configuration?.columns?.some(e => e.origin.field === column.field))
       .forEach(column => {
@@ -167,19 +167,19 @@ export class ConfigService {
       result.firstHeaders.push(this.#COLUMNS.COMMAND);
       result.displayedColumns.push(this.#COLUMNS.COMMAND);
     }
-    // why: filler column á»Ÿ cuá»‘i háº¥p thá»¥ leftover space â€” opt-in qua option.filler.enabled.
-    // Khi báº­t, ngÄƒn cÃ¡c cá»™t utility (selection, index, command) bá»‹ table-layout auto stretch trÃªn mÃ n rá»™ng.
+    // why: filler column ở cuối hấp thụ leftover space — opt-in qua option.filler.enabled.
+    // Khi bật, ngăn các cột utility (selection, index, command) bị table-layout auto stretch trên màn rộng.
     if (option.filler?.enabled) {
       result.firstHeaders.push(this.#COLUMNS.FILLER);
       result.displayedColumns.push(this.#COLUMNS.FILLER);
     }
     result.multipleHeader = result.secondHeaders.length > 0;
-    // Sub infomation khÃ´ng thá»ƒ cÃ³ footer; filler cÅ©ng khÃ´ng cáº§n footer cell.
+    // Sub infomation không thể có footer; filler cũng không cần footer cell.
     result.displayedFooters = result.displayedColumns.filter(
       val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.TREE_TOGGLE && val !== this.#COLUMNS.FILLER
     );
     if (option.filler?.enabled) {
-      // Footer cÅ©ng cáº§n filler cuá»‘i Ä‘á»ƒ giá»¯ width Ä‘á»“ng bá»™ vá»›i data row
+      // Footer cũng cần filler cuối để giữ width đồng bộ với data row
       result.displayedFooters.push(this.#COLUMNS.FILLER);
     }
     if (option?.rowReorder?.enabled) {
@@ -201,8 +201,8 @@ export class ConfigService {
     const columns = current?.columns ? [...current.columns] : [];
     const idx = columns.findIndex(c => c.origin.field === field);
     if (idx < 0) {
-      // Cá»™t chÆ°a cÃ³ trong storage (vd cá»™t má»›i thÃªm vÃ o option) â€” bá» qua;
-      // sáº½ Ä‘Æ°á»£c pick up qua flow loadConfigurationResult bÃ¬nh thÆ°á»ng.
+      // Cột chưa có trong storage (vd cột mới thêm vào option) — bỏ qua;
+      // sẽ được pick up qua flow loadConfigurationResult bình thường.
       return;
     }
     columns[idx] = { ...columns[idx], width };
@@ -234,4 +234,3 @@ export class ConfigService {
     };
   };
 }
-

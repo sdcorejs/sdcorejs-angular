@@ -1,4 +1,4 @@
-�# AuthOM Module
+# AuthOM Module
 
 - **Type:** `EnvironmentProviders` (`provideSdAuthOm`) **or** `NgModule.forRoot` (`SdAuthOmModule`)
 - **Import path:** `@sdcorejs/angular/modules/authom`
@@ -6,7 +6,7 @@
 
 ## One-line purpose
 
-OAuth 2.0 + PKCE authentication client for AuthOM (Auth0-based) � handles login redirect, callback exchange, silent token refresh via hidden iframe, and HTTP `Authorization` header injection.
+OAuth 2.0 + PKCE authentication client for AuthOM (Auth0-based) — handles login redirect, callback exchange, silent token refresh via hidden iframe, and HTTP `Authorization` header injection.
 
 ## When to use
 
@@ -40,8 +40,8 @@ interface SdAuthOmTenantConfig {
   scope?: string;             // default: 'openid profile email'
   secureRoutes?: string[];    // glob patterns ['https://api.example.com/*']
   silentRefreshRedirectUri?: string;  // default: ${origin}/silent-authom.html
-  refreshThresholdSeconds?: number;   // default 30 � refresh this many sec before exp
-  authorizeTimeoutInSeconds?: number; // default 5 � silent iframe timeout
+  refreshThresholdSeconds?: number;   // default 30 — refresh this many sec before exp
+  authorizeTimeoutInSeconds?: number; // default 5 — silent iframe timeout
 }
 
 interface ISdAuthOmConfiguration {
@@ -49,13 +49,13 @@ interface ISdAuthOmConfiguration {
 }
 ```
 
-The factory `loadTenantConfig` is called once at app-init � fetch tenant config from your backend or return a static object.
+The factory `loadTenantConfig` is called once at app-init — fetch tenant config from your backend or return a static object.
 
 ## Setup
 
 **Required app-side files / conditions:**
 1. Copy `silent-authom.html` from this module's source into the app's `public/` folder (referenced as silent-refresh redirect target).
-2. App must run on HTTPS (or `localhost`) � Web Crypto API requires a secure context.
+2. App must run on HTTPS (or `localhost`) — Web Crypto API requires a secure context.
 
 **Standalone (`app.config.ts`):**
 ```ts
@@ -96,15 +96,15 @@ export class AppModule {}
 
 ## Public API
 
-- **`SdAuthOmService`** � inject anywhere:
-  - `accessToken` / `idTokenClaims` � `signal<string | null>` / `signal<Record<string, unknown> | null>`
-  - `isAuthenticated` � `computed<boolean>` derived from `accessToken !== null`
+- **`SdAuthOmService`** — inject anywhere:
+  - `accessToken` / `idTokenClaims` — `signal<string | null>` / `signal<Record<string, unknown> | null>`
+  - `isAuthenticated` — `computed<boolean>` derived from `accessToken !== null`
   - `getAccessToken(): string | null`
-  - `login(options?: { returnTo?: string }): Promise<void>` � full-page redirect to `/authorize`
-  - `logout(options?: { returnTo?: string }): void` � clears state, redirects to `/v2/logout`
-  - `silentRefresh(): Promise<boolean>` � runs hidden iframe + `prompt=none` flow
-  - `handleCallback(): Promise<boolean>` � exchanges `?code=` query for tokens (called automatically by `init`)
-- **`SdAuthOmInterceptor`** � registered via `withInterceptors([...])`. No setup beyond that.
+  - `login(options?: { returnTo?: string }): Promise<void>` — full-page redirect to `/authorize`
+  - `logout(options?: { returnTo?: string }): void` — clears state, redirects to `/v2/logout`
+  - `silentRefresh(): Promise<boolean>` — runs hidden iframe + `prompt=none` flow
+  - `handleCallback(): Promise<boolean>` — exchanges `?code=` query for tokens (called automatically by `init`)
+- **`SdAuthOmInterceptor`** — registered via `withInterceptors([...])`. No setup beyond that.
 
 ## Behavior notes
 
@@ -114,8 +114,8 @@ export class AppModule {}
 - **Silent refresh schedule:** `scheduleRefresh` reads JWT `exp`, schedules a `setTimeout` for `(exp - now - threshold) * 1000`. If `exp` is missing, auto-refresh is disabled (warning logged).
 - **Silent refresh transport:** hidden iframe + `postMessage` from `silent-authom.html` (which must `postMessage` `{ type: 'AUTHOM_SILENT_SUCCESS', code, state }` or `{ type: 'AUTHOM_SILENT_ERROR' }`). Origin check enforces same-origin.
 - **Interceptor matching:** `secureRoutes` uses simple `*`-glob. Non-matching URLs pass through with no header.
-- **SSR safety:** all browser-only paths gate on `isPlatformBrowser` � `init` returns `false` server-side.
-- **Token decoding:** payload-only base64url decode � signature is NOT verified client-side (server is the source of truth).
+- **SSR safety:** all browser-only paths gate on `isPlatformBrowser` — `init` returns `false` server-side.
+- **Token decoding:** payload-only base64url decode — signature is NOT verified client-side (server is the source of truth).
 
 ## Examples
 
@@ -169,14 +169,13 @@ export const authedGuard: CanActivateFn = () => {
 
 ## Anti-patterns
 
-- Do NOT call `silentRefresh()` from app code � the service schedules it automatically. Manual calls are racy.
-- Do NOT add wildcard `secureRoutes: ['*']` � the interceptor will leak tokens to third-party URLs (analytics, CDN, etc.). Always scope to your API origin.
-- Do NOT rely on `idTokenClaims` for authorization decisions on the server � they are unsigned client-side reads.
-- Do NOT forget `silent-authom.html` in `public/` � silent refresh will time out and the user gets logged out at every token expiry.
+- Do NOT call `silentRefresh()` from app code — the service schedules it automatically. Manual calls are racy.
+- Do NOT add wildcard `secureRoutes: ['*']` — the interceptor will leak tokens to third-party URLs (analytics, CDN, etc.). Always scope to your API origin.
+- Do NOT rely on `idTokenClaims` for authorization decisions on the server — they are unsigned client-side reads.
+- Do NOT forget `silent-authom.html` in `public/` — silent refresh will time out and the user gets logged out at every token expiry.
 
 ## Related
 
-- [keycloak module](./sd-keycloak.md) � alternative SSO provider (Keycloak instead of Auth0).
-- [auth module](./sd-auth.md) � generic façade you can layer on top to expose `SdAuthService` to the layout/header.
-- [permission module](./sd-permission.md) � `getToken: () => authom.getAccessToken()` lets the permission service read JWT claims via `decodeToken`.
-
+- [keycloak module](./sd-keycloak.md) — alternative SSO provider (Keycloak instead of Auth0).
+- [auth module](./sd-auth.md) — generic façade you can layer on top to expose `SdAuthService` to the layout/header.
+- [permission module](./sd-permission.md) — `getToken: () => authom.getAccessToken()` lets the permission service read JWT claims via `decodeToken`.

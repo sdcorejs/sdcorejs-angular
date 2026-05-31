@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CdkTableModule } from '@angular/cdk/table';
 import { CommonModule } from '@angular/common';
@@ -73,12 +73,12 @@ export class ConfigComponent {
   // 4. STATE
   // ==========================================
   configuration = signal<ConfiguredTable | undefined>(undefined);
-  // dragDisabled khÃ´ng nÃªn lÃ  signal (mutated trong drag handlers, khÃ´ng trigger render).
+  // dragDisabled không nên là signal (mutated trong drag handlers, không trigger render).
   dragDisabled = true;
   #setting?: SdStorage<ConfiguredTable>;
 
   // ==========================================
-  // 5. WINDOW MOUSEUP â€” tá»± destroy qua takeUntilDestroyed (thay @HostListener)
+  // 5. WINDOW MOUSEUP — tự destroy qua takeUntilDestroyed (thay @HostListener)
   // ==========================================
   constructor() {
     fromEvent(window, 'mouseup')
@@ -133,4 +133,3 @@ export class ConfigComponent {
     this.dragDisabled = true;
   }
 }
-

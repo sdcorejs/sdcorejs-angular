@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, ViewChild, ViewContainerRef } from '@angular/core';
 import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
 import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -15,7 +15,7 @@ export class GenericListComponent<T = any> {
   @ViewChild(SdTable) table?: SdTable<TList>;
   tableOption?: SdTableOption<TList>;
 
-  // Khi muá»‘n sá»­ dá»¥ng generic-list á»Ÿ mÃ n hÃ¬nh custom mÃ  khÃ´ng phá»¥ thuá»™c vÃ o menuId thÃ¬ truyá»n vÃ o
+  // Khi muốn sử dụng generic-list ở màn hình custom mà không phụ thuộc vào menuId thì truyền vào
   #option?: GenericListOption<T>;
   @Input('option') set _option(option: GenericListOption<T>) {
     this.#option = option;
@@ -48,4 +48,3 @@ export class GenericListComponent<T = any> {
     this.table?.reload();
   };
 }
-

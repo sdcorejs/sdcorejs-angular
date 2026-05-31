@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -86,4 +86,3 @@ export class QuickActionDemoComponent {
 
   undo() { this.lastDeleted.set(null); }
 }
-

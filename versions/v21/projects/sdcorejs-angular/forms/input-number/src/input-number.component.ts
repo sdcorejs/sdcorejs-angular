@@ -1,4 +1,4 @@
-﻿import {
+import {
   AfterViewInit,
   booleanAttribute,
   ChangeDetectionStrategy,
@@ -132,15 +132,15 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   name = input<string>(uuid.v4());
 
   size = input<Size>('md');
-  // Ghi (TransformT): any (Ä‘á»ƒ khÃ´ng bá»‹ lá»—i typing khi cha truyá»n vÃ o)
+  // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)
   form = input<FormGroup | undefined, any>(undefined, {
     transform: (val: any): FormGroup | undefined => {
       if (!val) return undefined;
-      // Náº¿u cha truyá»n vÃ o NgForm (template-driven) -> BÃ³c láº¥y FormGroup bÃªn trong
+      // Nếu cha truyền vào NgForm (template-driven) -> Bóc lấy FormGroup bên trong
       if (val instanceof NgForm) return val.form;
-      // Náº¿u cha truyá»n sáºµn FormGroup (reactive) -> Láº¥y luÃ´n
+      // Nếu cha truyền sẵn FormGroup (reactive) -> Lấy luôn
       if (val instanceof FormGroup) return val;
-      // Fallback an toÃ n phÃ²ng trÆ°á»ng há»£p cha truyá»n 1 object chá»©a form
+      // Fallback an toàn phòng trường hợp cha truyền 1 object chứa form
       if (val?.form instanceof FormGroup) return val.form;
       return undefined;
     },
@@ -168,7 +168,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   inlineError = input<string | undefined>();
 
   /**
-   * Tá»•ng há»£p error message Ä‘á»ƒ hiá»ƒn thá»‹ trong tooltip khi hideInlineError = true.
+   * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
@@ -193,14 +193,14 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   valueModel = model<any>(undefined, { alias: 'model' });
 
   // ==========================================
-  // 4. SIGNAL OUTPUTS (Giá»¯ láº¡i sdFocusForceBlur)
+  // 4. SIGNAL OUTPUTS (Giữ lại sdFocusForceBlur)
   // ==========================================
   sdChange = output<any>();
   sdFocus = output<void>();
   sdBlur = output<any>();
   keyupEnter = output<any>();
-  // why: same lÃ½ do nhÆ° sd-input â€” sdChange fire per-keystroke. `cleared` lÃ 
-  // intent dedicated cho X (clear button), consumer dÃ¹ng Ä‘á»ƒ trigger reload ngay.
+  // why: same lý do như sd-input — sdChange fire per-keystroke. `cleared` là
+  // intent dedicated cho X (clear button), consumer dùng để trigger reload ngay.
   cleared = output<void>();
 
   @Output() sdFocusForceBlur = new EventEmitter<void>();
@@ -215,7 +215,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   #preCompositionValue?: string;
   isFocused = false;
 
-  // DÃ¹ng computed thay cho getter cÅ© Ä‘á»ƒ táº­n dá»¥ng cache
+  // Dùng computed thay cho getter cũ để tận dụng cache
   decimalSeparator = computed(() => {
     const fmt = this.format() ?? this.coreConfiguration?.format?.number;
     return fmt === '1.234.567,89' ? ',' : '.';
@@ -242,7 +242,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   });
 
   constructor() {
-    // EFFECT 1: Sync model thay Ä‘á»•i tá»« bÃªn ngoÃ i (Parent -> Component)
+    // EFFECT 1: Sync model thay đổi từ bên ngoài (Parent -> Component)
     effect(() => {
       const val = this.valueModel();
       untracked(() => {
@@ -384,8 +384,8 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     this.formControl.setValue(value ?? null, { emitEvent: false });
   };
 
-  // why: method (khÃ´ng pháº£i computed) Ä‘á»ƒ template re-eval má»—i change-detection.
-  // Required khÃ´ng Ä‘Æ°á»£c clear; disabled/readonly áº©n nÃºt.
+  // why: method (không phải computed) để template re-eval mỗi change-detection.
+  // Required không được clear; disabled/readonly ẩn nút.
   showClear = (): boolean => {
     if (this.required() || this.disabled() || this.readonly()) return false;
     return !sdIsEmpty(this.valueModel());
@@ -394,8 +394,8 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   clear = ($event?: Event) => {
     $event?.stopPropagation();
     if (sdIsEmpty(this.formControl.value)) return;
-    // Reset cáº£ Ã´ hiá»ƒn thá»‹ (inputControl) láº«n giÃ¡ trá»‹ tháº­t (formControl), rá»“i
-    // Ä‘á»“ng bá»™ model + sdChange má»™t láº§n.
+    // Reset cả ô hiển thị (inputControl) lẫn giá trị thật (formControl), rồi
+    // đồng bộ model + sdChange một lần.
     this.inputControl.setValue('', { emitEvent: false });
     this.formControl.setValue(null, { emitEvent: false });
     this.valueModel.set(null);
@@ -464,7 +464,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     this.isFocused = true;
     this.sdFocus.emit();
 
-    // RxJS 7 chuáº©n bÃ i
+    // RxJS 7 chuẩn bài
     if (this.sdFocusForceBlur.observed) {
       this.blur();
       this.sdFocusForceBlur.emit();
@@ -514,4 +514,3 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     }, 100);
   };
 }
-

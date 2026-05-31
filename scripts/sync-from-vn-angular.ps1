@@ -5,6 +5,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# why: PS 5.1 `Set-Content -Encoding UTF8` ghi BOM; vn-angular source KHÔNG có BOM →
+# round-trip read/write làm git diff churn + file format inconsistent. Helper dưới ghi
+# UTF-8 không BOM. Tất cả Set-Content trong script này phải đi qua helper này.
+# Đồng thời `Get-Content -Raw` MẶC ĐỊNH dùng ANSI cp1252 trên PS 5.1 (Windows VN locale)
+# → đọc Vietnamese UTF-8 bytes sai → mojibake. Mọi Get-Content -Raw PHẢI có -Encoding UTF8.
+$Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+function Write-Utf8NoBom {
+  param([string]$Path, [string]$Content)
+  [System.IO.File]::WriteAllText($Path, $Content, $script:Utf8NoBom)
+}
+
 if (!(Test-Path -LiteralPath $SourcePath)) {
   throw "SourcePath not found: $SourcePath"
 }
@@ -21,7 +32,7 @@ function Update-RootTsConfig {
     return
   }
 
-  $content = Get-Content -LiteralPath $TsConfigPath -Raw
+  $content = Get-Content -LiteralPath $TsConfigPath -Raw -Encoding UTF8
   $updated = $content
 
   $updated = $updated -replace '"@sdcorejs/angular":\s*\["dist/sdcorejs-angular"\]', '"@sdcorejs/angular": ["./dist/sdcorejs-angular"]'
@@ -30,7 +41,7 @@ function Update-RootTsConfig {
   $updated = $updated -replace '\s*"ignoreDeprecations"\s*:\s*"[^"]+",\r?\n', ''
 
   if ($updated -ne $content) {
-    Set-Content -LiteralPath $TsConfigPath -Value $updated -Encoding UTF8
+    Write-Utf8NoBom -Path $TsConfigPath -Content $updated
   }
 }
 
@@ -44,7 +55,7 @@ function Update-AngularJson {
   }
 
   try {
-    $content = Get-Content -LiteralPath $AngularJsonPath -Raw
+    $content = Get-Content -LiteralPath $AngularJsonPath -Raw -Encoding UTF8
     $json = ConvertFrom-Json $content
     if ($json.projects.demo) {
       $json.projects.PSObject.Properties.Remove('demo')
@@ -56,7 +67,7 @@ function Update-AngularJson {
                           -replace '\\u2019', [char]0x2019 `
                           -replace '\\u201c', [char]0x201c `
                           -replace '\\u201d', [char]0x201d
-      Set-Content -LiteralPath $AngularJsonPath -Value $updated -Encoding UTF8
+      Write-Utf8NoBom -Path $AngularJsonPath -Content $updated
       Write-Host "    Successfully removed 'demo' project from angular.json" -ForegroundColor Green
     }
   }
@@ -78,7 +89,7 @@ function Update-ChartInputSignalAnnotations {
       continue
     }
 
-    $content = Get-Content -LiteralPath $filePath -Raw
+    $content = Get-Content -LiteralPath $filePath -Raw -Encoding UTF8
     $updated = $content
 
     if ($updated -notmatch "\bInputSignal\b") {
@@ -90,7 +101,7 @@ function Update-ChartInputSignalAnnotations {
     $updated = $updated -replace "plugins = input<Plugin<'$chartType'>\[\]>\(\[\]\);", "plugins: InputSignal<Plugin<'$chartType'>[]> = input<Plugin<'$chartType'>[]>([]);"
 
     if ($updated -ne $content) {
-      Set-Content -LiteralPath $filePath -Value $updated -Encoding UTF8
+      Write-Utf8NoBom -Path $filePath -Content $updated
     }
   }
 }
@@ -136,7 +147,7 @@ $files = Get-ChildItem -Path $v19Path -Recurse -File -Include $extensions |
 
 $modified = 0
 foreach ($file in $files) {
-  $content = Get-Content -LiteralPath $file.FullName -Raw
+  $content = Get-Content -LiteralPath $file.FullName -Raw -Encoding UTF8
   $newContent = $content
 
   $newContent = $newContent -replace [regex]::Escape("@sd-angular/core"), "@sdcorejs/angular"
@@ -147,7 +158,7 @@ foreach ($file in $files) {
   $newContent = $newContent -replace '"sd-angular"\s*:\s*\{', '"sdcorejs-angular": {'
 
   if ($newContent -ne $content) {
-    Set-Content -LiteralPath $file.FullName -Value $newContent -Encoding UTF8
+    Write-Utf8NoBom -Path $file.FullName -Content $newContent
     $modified++
   }
 }
@@ -164,7 +175,7 @@ Update-AngularJson -AngularJsonPath (Join-Path $v19Path "angular.json")
 # Update package.json in v19 to remove start demo and use build:watch
 $v19PackagePath = Join-Path $v19Path "package.json"
 if (Test-Path -LiteralPath $v19PackagePath) {
-  $package = Get-Content -LiteralPath $v19PackagePath -Raw | ConvertFrom-Json
+  $package = Get-Content -LiteralPath $v19PackagePath -Raw -Encoding UTF8 | ConvertFrom-Json
   $needsWrite = $false
 
   if ($package.name -ne "sdcorejs-angular") {
@@ -192,7 +203,7 @@ if (Test-Path -LiteralPath $v19PackagePath) {
                         -replace '\\u2019', [char]0x2019 `
                         -replace '\\u201c', [char]0x201c `
                         -replace '\\u201d', [char]0x201d
-    Set-Content -LiteralPath $v19PackagePath -Value $jsonStr -Encoding UTF8
+    Write-Utf8NoBom -Path $v19PackagePath -Content $jsonStr
   }
 }
 

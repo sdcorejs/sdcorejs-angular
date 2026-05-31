@@ -1,4 +1,4 @@
-﻿/* eslint-disable @angular-eslint/no-input-rename */
+/* eslint-disable @angular-eslint/no-input-rename */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -22,8 +22,8 @@ import { ExpressionFeelPipe } from '../../pipes';
 import { FormGenericService } from '../../services';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
-// Template lÃ  cÃ¡c máº«u do Portal Ä‘á»‹nh nghÄ©a sáºµn (key, label ....) Ä‘á»ƒ ngÆ°á»i dÃ¹ng chá»n nhanh
-// Khi thá»±c hiá»‡n sao chÃ©p 1 template chÃºng ta sáº½ CLONE Ä‘á»ƒ trÃ¡nh áº£nh hÆ°á»Ÿng template gá»‘c
+// Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
+// Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
 @Component({
   selector: 'sd-feel-expression',
   templateUrl: './sd-feel-expression.component.html',
@@ -128,7 +128,7 @@ export class SdFeelExpression extends SdBaseSecureComponent {
     this.ref.markForCheck();
   };
 
-  // Tá»« components map thÃ nh cÃ¡c attributes
+  // Từ components map thành các attributes
   #getAttributes = async (components: (SdFormGenericComponent | SdFormGenericGroup)[]): Promise<Attribute[]> => {
     const attributes: Attribute[] = [];
     if (components.length) {
@@ -171,7 +171,7 @@ export class SdFeelExpression extends SdBaseSecureComponent {
               entity: {},
               component,
             });
-            // Náº¿u lÃ  máº£ng thÃ¬ push vÃ o
+            // Nếu là mảng thì push vào
             if (Array.isArray(values)) {
               attributes.push({
                 value: component.key,
@@ -193,4 +193,3 @@ export class SdFeelExpression extends SdBaseSecureComponent {
     return attributes;
   };
 }
-

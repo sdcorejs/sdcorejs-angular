@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
@@ -8,10 +8,10 @@ import { SdFormGenericHtml } from '../models';
   name: 'htmlPipe',
   standalone: true,
 })
-// Pipe xá»­ lÃ½ hiá»ƒn thá»‹ detail cho component
+// Pipe xử lý hiển thị detail cho component
 export class HtmlPipe implements PipeTransform {
   constructor(private readonly sanitizer: DomSanitizer) {}
-  // Hash component Ä‘á»ƒ pipe nháº­n biáº¿t Ä‘Æ°á»£c content hay variables cÃ³ thay Ä‘á»•i render láº¡i
+  // Hash component để pipe nhận biết được content hay variables có thay đổi render lại
   transform = (hashed: string | undefined | null, content: string, component: SdFormGenericHtml) => {
     if (!content) {
       return '';
@@ -24,4 +24,3 @@ export class HtmlPipe implements PipeTransform {
     return this.sanitizer.sanitize(SecurityContext.HTML, renderedHtml) || '';
   };
 }
-

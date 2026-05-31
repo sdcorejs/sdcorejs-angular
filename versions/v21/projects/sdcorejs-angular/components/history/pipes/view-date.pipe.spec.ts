@@ -1,4 +1,4 @@
-﻿import { ViewDateTimePipe } from './view-date.pipe';
+import { ViewDateTimePipe } from './view-date.pipe';
 import { SD_EMPTY_STR } from '@sdcorejs/angular/utilities';
 
 describe('ViewDateTimePipe', () => {
@@ -38,4 +38,3 @@ describe('ViewDateTimePipe', () => {
     expect(result.startsWith('09:07')).toBe(true);
   });
 });
-

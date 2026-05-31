@@ -1,22 +1,22 @@
-﻿# query-bar inline mode â€” direct value panels (no nested dropdown)
+# query-bar inline mode — direct value panels (no nested dropdown)
 
 **Date:** 2026-05-27
 **Status:** Approved (design)
 **Branch:** query-bar
-**Scope:** `projects/sdcorejs-angular/components/query-bar/` â€” **inline mode value popover only**. Popover mode (chip popover) is unchanged.
+**Scope:** `projects/sdcorejs-angular/components/query-bar/` — **inline mode value popover only**. Popover mode (chip popover) is unchanged.
 
 ## Problem
 
-Inline value editing routes `values` / `lazy-values` / `date` / `datetime` to a small popover (mat-menu) that contains a *collapsed* `sd-select` / `sd-date`. The user must click the trigger to open the popover, then click the inner control to open ITS dropdown/calendar â€” a double-open that looks and feels clumsy. Text/number already edit inline and are fine.
+Inline value editing routes `values` / `lazy-values` / `date` / `datetime` to a small popover (mat-menu) that contains a *collapsed* `sd-select` / `sd-date`. The user must click the trigger to open the popover, then click the inner control to open ITS dropdown/calendar — a double-open that looks and feels clumsy. Text/number already edit inline and are fine.
 
 ## Goal
 
-When the inline value popover opens, show the **selection panel directly** â€” no nested dropdown:
+When the inline value popover opens, show the **selection panel directly** — no nested dropdown:
 
-- **values / lazy-values** â†’ a direct option list (click to pick for single; checkboxes for multi IN/NOT_IN), with a client-side search box.
-- **date** â†’ a `mat-calendar` shown directly.
-- **input / number / boolean** â†’ unchanged (edit inline in the token).
-- **datetime** â†’ keeps the existing `sd-datetime` control in the popover (documented exception â€” an inline datetime+time panel is out of scope this round).
+- **values / lazy-values** → a direct option list (click to pick for single; checkboxes for multi IN/NOT_IN), with a client-side search box.
+- **date** → a `mat-calendar` shown directly.
+- **input / number / boolean** → unchanged (edit inline in the token).
+- **datetime** → keeps the existing `sd-datetime` control in the popover (documented exception — an inline datetime+time panel is out of scope this round).
 
 ## Current state to build on
 
@@ -53,16 +53,16 @@ Replace the `sd-select` in the popover with a direct list rendered from `options
 
 ## Out of scope
 
-- Popover-mode (chip popover) value controls â€” unchanged (still `sd-select` / `sd-date`).
+- Popover-mode (chip popover) value controls — unchanged (still `sd-select` / `sd-date`).
 - `datetime` direct panel (keeps `sd-datetime`).
-- input / number / boolean inline editing â€” unchanged.
+- input / number / boolean inline editing — unchanged.
 - Operator vocabulary, `Filter` shape, `sd-operator`.
 
 ## Testing (TDD)
 
 - `valuePopoverOptions()` filters `optionsFor` by the search term (case-insensitive) and returns all when blank.
 - `isOptionSelected` is true for the current scalar value (single) and for each array member (multi), false otherwise.
-- **Single select:** invoking the row-pick handler commits the option's value to the chip (build â†’ new chip; edit â†’ data changed) and clears ctx.
+- **Single select:** invoking the row-pick handler commits the option's value to the chip (build → new chip; edit → data changed) and clears ctx.
 - **Multi select:** toggling options updates the draft without committing; `onValuePopoverClosed()` commits the accumulated array.
 - **Date:** the calendar `selectedChange` handler commits the picked date.
 - **DOM:** opening the value popover for a `values` field renders the option list + search input (not an `sd-select`); for a `date` field renders a `mat-calendar` (not an `sd-date`).
@@ -71,4 +71,3 @@ Replace the `sd-select` in the popover with a direct list rendered from `options
 
 - `npm run build` passes.
 - Targeted karma run of the query-bar spec is green.
-

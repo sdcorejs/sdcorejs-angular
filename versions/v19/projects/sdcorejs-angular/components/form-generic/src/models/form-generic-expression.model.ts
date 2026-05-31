@@ -1,16 +1,16 @@
-﻿import { Operator as SdOperator } from '@sdcorejs/utils/models';
+import { Operator as SdOperator } from '@sdcorejs/utils/models';
 import { SdFormGenericComponent, SdFormGenericGroup } from './form-generic-component.model';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 
 export interface SdFormGenericExpression {
-  key: string; // Random, phá»¥c vá»¥ cho @for á»Ÿ attribute-expression
+  key: string; // Random, phục vụ cho @for ở attribute-expression
   type: 'combinator';
   combinator: '&&' | '||';
   conditions: (SdFormGenericExpression | SdFormGenericExpressionCondition)[];
 }
 
 export interface SdFormGenericExpressionCondition {
-  key: string; // Random, phá»¥c vá»¥ cho @for á»Ÿ attribute-expression
+  key: string; // Random, phục vụ cho @for ở attribute-expression
   type: 'condition';
   field?: string;
   operator: SdOperator;
@@ -27,42 +27,42 @@ export const Operators: {
   {
     value: 'EQUAL',
     symbol: '=',
-    display: 'Báº±ng',
+    display: 'Bằng',
   },
   {
     value: 'NOT_EQUAL',
-    symbol: 'â‰ ',
-    display: 'KhÃ´ng báº±ng',
+    symbol: '≠',
+    display: 'Không bằng',
   },
   {
     value: 'GREATER_THAN',
     symbol: '>',
-    display: 'Lá»›n hÆ¡n',
+    display: 'Lớn hơn',
   },
   {
     value: 'LESS_THAN',
     symbol: '<',
-    display: 'Nhá» hÆ¡n',
+    display: 'Nhỏ hơn',
   },
   {
     value: 'GREATER_OR_EQUAL',
-    symbol: 'â‰¥',
-    display: 'Lá»›n hÆ¡n, hoáº·c báº±ng',
+    symbol: '≥',
+    display: 'Lớn hơn, hoặc bằng',
   },
   {
     value: 'LESS_OR_EQUAL',
-    symbol: 'â‰¤',
-    display: 'Nhá» hÆ¡n, hoáº·c báº±ng',
+    symbol: '≤',
+    display: 'Nhỏ hơn, hoặc bằng',
   },
   {
     value: 'NULL',
     symbol: 'motion_photos_off',
-    display: 'LÃ  rá»—ng',
+    display: 'Là rỗng',
   },
   {
     value: 'NOT_NULL',
     symbol: 'adjust',
-    display: 'KhÃ´ng rá»—ng',
+    display: 'Không rỗng',
   },
 ];
 
@@ -95,19 +95,19 @@ export interface DayInfo {
 }
 
 export const DayInfoTypes = [
-  { value: 'RELATED', display: 'NgÃ y liÃªn quan' },
-  { value: 'NOW', display: 'NgÃ y hiá»‡n táº¡i' },
-  { value: 'DATETIME', display: 'NgÃ y cá»¥ thá»ƒ' },
-  { value: 'ATTRIBUTE', display: 'TrÆ°á»ng dá»¯ liá»‡u' },
+  { value: 'RELATED', display: 'Ngày liên quan' },
+  { value: 'NOW', display: 'Ngày hiện tại' },
+  { value: 'DATETIME', display: 'Ngày cụ thể' },
+  { value: 'ATTRIBUTE', display: 'Trường dữ liệu' },
 ];
 
 export const DayInfoPreviouses = [
-  { value: 'LASTDAY', display: 'NgÃ y trÆ°á»›c', format: (n: number) => `${n || 1}LastDay` },
-  { value: 'NEXTDAY', display: 'NgÃ y tá»›i', format: (n: number) => `${n || 1}NextDay` },
-  // { value: 'LASTWEEK', display: 'Tuáº§n trÆ°á»›c', format: (n: number) => `${n || 1}LastWeek` },
-  // { value: 'NEXTWEEK', display: 'Tuáº§n tá»›i', format: (n: number) => `${n || 1}NextWeek` },
-  // { value: 'LASTMONTH', display: 'ThÃ¡ng trÆ°á»›c', format: (n: number) => `${n || 1}LastMonth` },
-  // { value: 'NEXTMONTH', display: 'ThÃ¡ng tá»›i', format: (n: number) => `${n || 1}NextMonth` },
+  { value: 'LASTDAY', display: 'Ngày trước', format: (n: number) => `${n || 1}LastDay` },
+  { value: 'NEXTDAY', display: 'Ngày tới', format: (n: number) => `${n || 1}NextDay` },
+  // { value: 'LASTWEEK', display: 'Tuần trước', format: (n: number) => `${n || 1}LastWeek` },
+  // { value: 'NEXTWEEK', display: 'Tuần tới', format: (n: number) => `${n || 1}NextWeek` },
+  // { value: 'LASTMONTH', display: 'Tháng trước', format: (n: number) => `${n || 1}LastMonth` },
+  // { value: 'NEXTMONTH', display: 'Tháng tới', format: (n: number) => `${n || 1}NextMonth` },
 ];
 
 export const GetDatetimeValue = (value: string) => {
@@ -151,22 +151,22 @@ export const AttributeOperators: Record<
     {
       value: 'EQUAL',
       symbol: '=',
-      display: 'Báº±ng',
+      display: 'Bằng',
     },
     {
       value: 'NOT_EQUAL',
-      symbol: 'â‰ ',
-      display: 'KhÃ´ng báº±ng',
+      symbol: '≠',
+      display: 'Không bằng',
     },
     {
       value: 'NULL',
       symbol: 'motion_photos_off',
-      display: 'LÃ  rá»—ng',
+      display: 'Là rỗng',
     },
     {
       value: 'NOT_NULL',
       symbol: 'adjust',
-      display: 'KhÃ´ng rá»—ng',
+      display: 'Không rỗng',
     },
   ],
   number: Operators,
@@ -175,39 +175,39 @@ export const AttributeOperators: Record<
     {
       value: 'EQUAL',
       symbol: '=',
-      display: 'Báº±ng',
+      display: 'Bằng',
     },
     {
       value: 'NOT_EQUAL',
-      symbol: 'â‰ ',
-      display: 'KhÃ´ng báº±ng',
+      symbol: '≠',
+      display: 'Không bằng',
     },
   ],
   values: [
     {
       value: 'EQUAL',
       symbol: '=',
-      display: 'Báº±ng',
+      display: 'Bằng',
     },
     {
       value: 'NOT_EQUAL',
-      symbol: 'â‰ ',
-      display: 'KhÃ´ng báº±ng',
+      symbol: '≠',
+      display: 'Không bằng',
     },
     {
       value: 'NULL',
       symbol: 'motion_photos_off',
-      display: 'LÃ  rá»—ng',
+      display: 'Là rỗng',
     },
     {
       value: 'NOT_NULL',
       symbol: 'adjust',
-      display: 'KhÃ´ng rá»—ng',
+      display: 'Không rỗng',
     },
   ],
 };
 
-// Tá»« components map thÃ nh cÃ¡c attributes
+// Từ components map thành các attributes
 export const GetAttributes = (components: (SdFormGenericComponent | SdFormGenericGroup)[]): Attribute[] => {
   const attributes: Attribute[] = [];
   if (components.length) {
@@ -273,19 +273,19 @@ export const TemplateToCondition = (template: string | undefined | null, entity:
   for (const match of matches) {
     const key = match.slice(2, match.length - 1);
     if (key) {
-      // Xá»­ lÃ½ trong trÆ°á»ng há»£p key cÃ³ Ä‘á»‹nh dáº¡ng a.b.c ...
+      // Xử lý trong trường hợp key có định dạng a.b.c ...
       let val: any = entity;
       const strs = key.split('.');
       for (const str of strs) {
         val = val?.[str];
       }
       if (typeof val === 'string') {
-        // Xá»­ lÃ½ Ä‘á»‘i vá»›i trÆ°á»ng há»£p string lÃ  'datetime' thÃ¬ cáº§n format thÃ nh string Ä‘á»“ng nháº¥t Ä‘á»ƒ compare chÃ­nh xÃ¡c
+        // Xử lý đối với trường hợp string là 'datetime' thì cần format thành string đồng nhất để compare chính xác
         if (DateUtilities.isDate(val)) {
           template = template.replace(match, `'${DateUtilities.toFormat(val, 'yyyy/MM/dd HH:mm:ss')}'`);
         } else {
-          // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y khi replace giÃ¡ trá»‹ Ä‘á»ƒ so sÃ¡nh, vÃ­ dá»¥ 'a' === 'a'
-          // Náº¿u lÃ  sá»‘ hay boolean thÃ¬ khÃ´ng cáº§n, vÃ­ dá»¥ 121 === 121
+          // Nếu là chuỗi thì thêm dấu nháy khi replace giá trị để so sánh, ví dụ 'a' === 'a'
+          // Nếu là số hay boolean thì không cần, ví dụ 121 === 121
           template = template.replace(match, `'${val}'`);
         }
       } else {
@@ -383,7 +383,7 @@ export const ExpressionToJavascriptExpression = (condition: SdFormGenericExpress
         queries.push(`(${ExpressionToJavascriptExpression(child)})`);
       }
     }
-    // Náº¿u nhiá»u hÆ¡n 1 Ä‘iá»u kiá»‡n, bá»c Ä‘iá»u kiá»‡n báº±ng cáº·p ngoáº·c ()
+    // Nếu nhiều hơn 1 điều kiện, bọc điều kiện bằng cặp ngoặc ()
     const query = queries.join(` ${condition.combinator} `);
     if (queries.length > 1) {
       return `(${query})`;
@@ -396,7 +396,7 @@ export const ExpressionToJavascriptExpression = (condition: SdFormGenericExpress
 };
 const ConvertToJavascriptExpression = (condition: SdFormGenericExpressionCondition) => {
   const { value } = condition;
-  // Convert thÃ nh syntax ${field}
+  // Convert thành syntax ${field}
   const field = '${' + condition.field + '}';
   const { operator } = condition;
   if (!operator) {
@@ -411,45 +411,45 @@ const ConvertToJavascriptExpression = (condition: SdFormGenericExpressionConditi
   if (value === undefined || value === null || value === '') {
     return undefined;
   }
-  // Xá»­ lÃ½ Ä‘á»‘i vá»›i trÆ°á»ng há»£p string lÃ  'datetime' thÃ¬ value sáº½ cÃ³ thá»ƒ lÃ  'now', '1LastDay' ....
+  // Xử lý đối với trường hợp string là 'datetime' thì value sẽ có thể là 'now', '1LastDay' ....
   const datetimeValue = GetDatetimeValue(value);
   if (operator === 'EQUAL') {
-    // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y, náº¿u khÃ´ng thÃ¬ bá» qua
+    // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {
       return `${field} === '${datetimeValue || value}'`;
     }
     return `${field} === ${value}`;
   }
   if (operator === 'GREATER_THAN') {
-    // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y, náº¿u khÃ´ng thÃ¬ bá» qua
+    // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {
       return `${field} > '${datetimeValue || value}'`;
     }
     return `${field} > ${value}`;
   }
   if (operator === 'LESS_THAN') {
-    // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y, náº¿u khÃ´ng thÃ¬ bá» qua
+    // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {
       return `${field} < '${datetimeValue || value}'`;
     }
     return `${field} < ${value}`;
   }
   if (operator === 'NOT_EQUAL') {
-    // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y, náº¿u khÃ´ng thÃ¬ bá» qua
+    // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {
       return `${field} !== '${datetimeValue || value}'`;
     }
     return `${field} !== ${value}`;
   }
   if (operator === 'GREATER_OR_EQUAL') {
-    // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y, náº¿u khÃ´ng thÃ¬ bá» qua
+    // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {
       return `${field} >= '${datetimeValue || value}'`;
     }
     return `${field} >= ${value}`;
   }
   if (operator === 'LESS_OR_EQUAL') {
-    // Náº¿u lÃ  chuá»—i thÃ¬ thÃªm dáº¥u nhÃ¡y, náº¿u khÃ´ng thÃ¬ bá» qua
+    // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {
       return `${field} <= '${datetimeValue || value}'`;
     }
@@ -457,4 +457,3 @@ const ConvertToJavascriptExpression = (condition: SdFormGenericExpressionConditi
   }
   return undefined;
 };
-

@@ -1,4 +1,4 @@
-﻿import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdHistoryItem } from '@sdcorejs/angular/components/history';
 import type { SdColor } from '@sdcorejs/angular/utilities';
@@ -105,4 +105,3 @@ export class HistoryDemoComponent {
     },
   ];
 }
-

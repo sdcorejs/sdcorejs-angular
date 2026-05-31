@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@angular/core';
+import { Injectable } from '@angular/core';
 // import hash from 'object-hash';
 import { SdStorageService } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -40,10 +40,10 @@ export class SdTableFilterService {
     });
     const key = filter?.key || tempKey;
     if (!filter?.key) {
-      cacheSession = true; // Náº¿u khÃ´ng cÃ³ key thÃ¬ chá»‰ lÆ°u theo session
+      cacheSession = true; // Nếu không có key thì chỉ lưu theo session
     }
     if (!this.#cache[key]) {
-      // Setting cá»§a filter configuration
+      // Setting của filter configuration
       const filterConfiguration = this.storageService.create<TableFilterConfiguration>(
         {
           prefix: this.#filterConfiguration,
@@ -54,9 +54,9 @@ export class SdTableFilterService {
           type: cacheSession ? 'session' : undefined,
         }
       );
-      // Láº¥y giÃ¡ trá»‹ configuration merge vá»›i giÃ¡ trá»‹ defaultShowing cá»§a args náº¿u nhÆ° args cÃ³ thay Ä‘á»•i
+      // Lấy giá trị configuration merge với giá trị defaultShowing của args nếu như args có thay đổi
       filterConfiguration.set(this.#initConfiguration(args, filterConfiguration.get()));
-      // Setting cá»§a filter value
+      // Setting của filter value
       const filterValue = this.storageService.create<TableFilterValue>(
         {
           prefix: this.#filterValue,
@@ -67,7 +67,7 @@ export class SdTableFilterService {
           type: cacheSession || !filter?.cacheable ? 'session' : undefined,
         }
       );
-      // Láº¥y giÃ¡ trá»‹ value merge vá»›i giÃ¡ trá»‹ default cá»§a args náº¿u nhÆ° args cÃ³ thay Ä‘á»•i
+      // Lấy giá trị value merge với giá trị default của args nếu như args có thay đổi
       filterValue.set(this.#initValue(args, filterValue.get()));
       this.#cache[key] = {
         configuration: {
@@ -88,7 +88,7 @@ export class SdTableFilterService {
           },
           observer: filterConfiguration.observer.pipe(
             startWith(filterConfiguration.get()),
-            // Sá»­ dá»¥ng máº·c Ä‘á»‹nh náº¿u bá»‹ reset
+            // Sử dụng mặc định nếu bị reset
             map(configuration => configuration || this.#defaultConfiguration(args))
           ),
         },
@@ -111,7 +111,7 @@ export class SdTableFilterService {
             };
             filterValue.set({
               ...updatedFilter,
-              // Kiá»ƒm tra cÃ³ Ä‘ang lá»c hay khÃ´ng
+              // Kiểm tra có đang lọc hay không
               filtered: this.#filtered(value),
             });
             return updatedFilter;
@@ -121,7 +121,7 @@ export class SdTableFilterService {
           },
           observer: filterValue.observer.pipe(
             startWith(filterValue.get()),
-            // Sá»­ dá»¥ng máº·c Ä‘á»‹nh náº¿u bá»‹ reset
+            // Sử dụng mặc định nếu bị reset
             map(value => value || this.#defaultValue(args))
           ),
         },
@@ -134,11 +134,11 @@ export class SdTableFilterService {
     const { columnFilter, externalFilter } = filterReq;
     if (
       Object.values({ ...columnFilter, ...externalFilter }).some(val => {
-        // Náº¿u lÃ  máº£ng vÃ  máº£ng cÃ³ pháº§n tá»­ thÃ¬ xem nhÆ° lÃ  cÃ³ filter
+        // Nếu là mảng và mảng có phần tử thì xem như là có filter
         if (Array.isArray(val)) {
           return !!val.length;
         }
-        // Náº¿u lÃ  object (date) vÃ  cÃ³ from/to thÃ¬ xem nhÆ° lÃ  cÃ³ filter
+        // Nếu là object (date) và có from/to thì xem như là có filter
         if (val && typeof val === 'object') {
           if ('from' in val && !!val.from) {
             return true;
@@ -271,4 +271,3 @@ export class SdTableFilterService {
     };
   };
 }
-

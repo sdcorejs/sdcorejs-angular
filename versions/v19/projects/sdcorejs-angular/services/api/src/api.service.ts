@@ -1,4 +1,4 @@
-﻿/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
@@ -8,7 +8,7 @@ import { catchError, map, shareReplay, timeout } from 'rxjs/operators';
 import { v4 } from 'uuid';
 import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler, SdDeleteOption, SdGetOption, SdPostOption, SdPutOption } from './api.model';
 
-// Gom nhÃ³m cÃ¡c Option láº¡i cho gá»n
+// Gom nhóm các Option lại cho gọn
 type SdHttpOptions = SdGetOption & SdPostOption & SdPutOption & SdDeleteOption;
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -22,12 +22,12 @@ export class SdApiService {
   #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) || [];
   #cacheService = inject(SdCacheService);
 
-  // Thay Ä‘á»•i cáº¥u trÃºc Cache: LÆ°u Observable thay vÃ¬ Subject phá»©c táº¡p
+  // Thay đổi cấu trúc Cache: Lưu Observable thay vì Subject phức tạp
   // Key: hash string -> Value: { stream$: Observable, expiry: number }
   #inFlightRequests: Map<string, { stream$: Observable<any>; expiry: number }> = new Map();
 
   constructor() {
-    // Optional: CÆ¡ cháº¿ dá»n dáº¹p cache Ä‘á»‹nh ká»³ (má»—i 1 phÃºt dá»n dáº¹p cÃ¡c key háº¿t háº¡n)
+    // Optional: Cơ chế dọn dẹp cache định kỳ (mỗi 1 phút dọn dẹp các key hết hạn)
     setInterval(() => this.#cleanupCache(), 60000);
   }
 
@@ -53,7 +53,7 @@ export class SdApiService {
     return this.#executeWithLayeredCache<T>(url, 'DELETE', undefined, option);
   };
 
-  // Upload file logic giá»¯ nguyÃªn nhÆ°ng refactor nháº¹
+  // Upload file logic giữ nguyên nhưng refactor nhẹ
   upload = async (url: string, option?: { extensions?: string[]; maxSizeInMb?: number }): Promise<any> => {
     const file = await BrowserUtilities.upload(option);
     if (!Array.isArray(file) && file) {
@@ -67,14 +67,14 @@ export class SdApiService {
 
     const formData = new FormData();
     formData.append('file', file, file.name);
-    // Upload thÆ°á»ng khÃ´ng cáº§n deduplication cache, set autoCache: false
+    // Upload thường không cần deduplication cache, set autoCache: false
     return await this.post(url, formData, { autoCache: false });
   };
 
   // --- PRIVATE CORE LOGIC ---
 
   /**
-   * HÃ m trung gian xá»­ lÃ½ Layer Cache (SdCacheService) trÆ°á»›c khi gá»i API thá»±c táº¿
+   * Hàm trung gian xử lý Layer Cache (SdCacheService) trước khi gọi API thực tế
    */
   #executeWithLayeredCache = async <T>(url: string, method: HttpMethod, body?: any, option?: SdHttpOptions): Promise<T> => {
     // Layer 1: Persistent Cache (SdCacheService)
@@ -91,12 +91,12 @@ export class SdApiService {
       return result;
     }
 
-    // KhÃ´ng cÃ³ cache dÃ i háº¡n thÃ¬ gá»i trá»±c tiáº¿p logic deduplication
+    // Không có cache dài hạn thì gọi trực tiếp logic deduplication
     return this.#request<T>(url, method, body, option);
   };
 
   /**
-   * Core Request: Xá»­ lÃ½ Deduplication, Timeout, Mapping Response
+   * Core Request: Xử lý Deduplication, Timeout, Mapping Response
    */
   #request = <T>(url: string, method: HttpMethod, body: any, option?: SdHttpOptions): Promise<T> => {
     const key = this.#generateKey(url, method, body, option);
@@ -105,22 +105,22 @@ export class SdApiService {
     const now = Date.now();
     const cachedItem = this.#inFlightRequests.get(key);
 
-    // Náº¿u Ä‘Ã£ cÃ³ request Ä‘ang cháº¡y hoáº·c má»›i cháº¡y xong trong vÃ²ng 1s -> Tráº£ vá» stream Ä‘Ã³ luÃ´n
+    // Nếu đã có request đang chạy hoặc mới chạy xong trong vòng 1s -> Trả về stream đó luôn
     if (cachedItem && cachedItem.expiry > now) {
       return lastValueFrom(cachedItem.stream$);
     }
 
-    // Setup request má»›i
+    // Setup request mới
     const handler = this.#getHandler(url);
     const apiTimeout = option?.timeout ?? handler?.timeout ?? this.#defaultTimeout;
 
-    // Táº¡o Observable call API
+    // Tạo Observable call API
     const request$ = this.#httpClient
       .request(method, url, {
         body,
         headers: option?.headers,
         params: option?.params,
-        observe: 'response', // Láº¥y full response Ä‘á»ƒ check status
+        observe: 'response', // Lấy full response để check status
         responseType: option?.responseType,
       })
       .pipe(
@@ -128,9 +128,9 @@ export class SdApiService {
         map(res => {
           // Normalize Response Logic
           const bodyRes = res.body as any;
-          // Logic check response cÅ© cá»§a báº¡n
+          // Logic check response cũ của bạn
           if (bodyRes && typeof bodyRes === 'object' && 'ok' in bodyRes && !bodyRes.ok) {
-            throw bodyRes; // Giáº£ sá»­ structure tráº£ vá» { ok: false, ... } lÃ  lá»—i
+            throw bodyRes; // Giả sử structure trả về { ok: false, ... } là lỗi
           }
 
           if (handler?.mapResponse) {
@@ -140,21 +140,21 @@ export class SdApiService {
           return bodyRes;
         }),
         catchError(err => {
-          // XÃ³a cache ngay láº­p tá»©c náº¿u lá»—i Ä‘á»ƒ user cÃ³ thá»ƒ retry
+          // Xóa cache ngay lập tức nếu lỗi để user có thể retry
           this.#inFlightRequests.delete(key);
           throw err;
         }),
-        // QUAN TRá»ŒNG: shareReplay(1) giÃºp share káº¿t quáº£ cho cÃ¡c subscriber Ä‘áº¿n sau (trong 1s)
+        // QUAN TRỌNG: shareReplay(1) giúp share kết quả cho các subscriber đến sau (trong 1s)
         shareReplay(1)
       );
 
-    // LÆ°u vÃ o Map
+    // Lưu vào Map
     this.#inFlightRequests.set(key, {
       stream$: request$,
       expiry: now + this.#dedupCacheDuration,
     });
 
-    // Chuyá»ƒn Ä‘á»•i sang Promise cho Ä‘Ãºng return type cá»§a báº¡n
+    // Chuyển đổi sang Promise cho đúng return type của bạn
     return lastValueFrom(request$);
   };
 
@@ -166,7 +166,7 @@ export class SdApiService {
   };
 
   #generateKey = (url: string, method: HttpMethod, body: any, option?: SdHttpOptions): string => {
-    // FormData khÃ´ng hash Ä‘Æ°á»£c ná»™i dung file, luÃ´n generate key má»›i
+    // FormData không hash được nội dung file, luôn generate key mới
     if (body instanceof FormData || option?.autoCache === false) {
       return v4();
     }
@@ -179,7 +179,7 @@ export class SdApiService {
     });
   };
 
-  // Dá»n dáº¹p memory leak
+  // Dọn dẹp memory leak
   #cleanupCache() {
     const now = Date.now();
     this.#inFlightRequests.forEach((value, key) => {
@@ -189,4 +189,3 @@ export class SdApiService {
     });
   }
 }
-
