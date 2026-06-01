@@ -1,9 +1,7 @@
 # @sdcorejs/angular
 
-> **VI** — Thư viện UI nội bộ xây dựng trên Angular Material, hỗ trợ Angular 19+  
-> **EN** — Internal UI component library built on Angular Material, supporting Angular 19+
+> Angular UI library built on Angular Material - supports Angular 19 / 20 / 21.
 
-[![Version](https://img.shields.io/badge/version-19.0.0--beta.47-blue)](./package.json)
 [![Angular](https://img.shields.io/badge/Angular-19%2B-red)](https://angular.dev)
 [![Angular Material](https://img.shields.io/badge/Angular_Material-19%2B-purple)](https://material.angular.io)
 
@@ -423,19 +421,18 @@ import {
   SdSelect,       // Dropdown
   SdAutocomplete, // Autocomplete
   SdDate,         // Date picker
-  SdSearch,       // Search với debounce
 } from '@sdcorejs/angular/forms';
 ```
 
 ```html
-<sd-input [(ngModel)]="form.name" label="Họ tên" [required]="true" />
+<sd-input [(model)]="form.name" label="Họ tên" [required]="true" />
 
-<sd-input-number [(ngModel)]="form.price" label="Đơn giá" [min]="0" suffix="VNĐ" />
+<sd-input-number [(model)]="form.price" label="Đơn giá" [min]="0" suffix="VNĐ" />
 
-<sd-select [(ngModel)]="form.status" label="Trạng thái"
+<sd-select [(model)]="form.status" label="Trạng thái"
   [items]="statusList" valueField="value" displayField="label" />
 
-<sd-date [(ngModel)]="form.birthday" label="Ngày sinh" />
+<sd-date [(model)]="form.birthday" label="Ngày sinh" />
 ```
 
 ---
@@ -560,17 +557,17 @@ export class ProductListComponent implements OnInit {
       <sd-section title="Thông tin sản phẩm" icon="inventory">
         <div class="row">
           <div class="col-6">
-            <sd-input [(ngModel)]="formData.code" label="Mã" [required]="true" />
+            <sd-input [(model)]="formData.code" label="Mã" [required]="true" />
           </div>
           <div class="col-6">
-            <sd-select [(ngModel)]="formData.status" label="Trạng thái"
+            <sd-select [(model)]="formData.status" label="Trạng thái"
               [items]="STATUS_LIST" valueField="value" displayField="label" />
           </div>
           <div class="col-12">
-            <sd-input [(ngModel)]="formData.name" label="Tên sản phẩm" [required]="true" />
+            <sd-input [(model)]="formData.name" label="Tên sản phẩm" [required]="true" />
           </div>
           <div class="col-6">
-            <sd-input-number [(ngModel)]="formData.price" label="Đơn giá" suffix="VNĐ" />
+            <sd-input-number [(model)]="formData.price" label="Đơn giá" suffix="VNĐ" />
           </div>
         </div>
       </sd-section>
@@ -591,7 +588,7 @@ export class ProductListComponent implements OnInit {
 ### Cấu trúc thư viện / Project structure
 
 ```
-sd-angular/
+sdcorejs-angular/
 ├── src/
 │   └── public-api.ts           # Entry point chính
 ├── assets/
@@ -714,10 +711,10 @@ Thư viện tuân theo [Semantic Versioning](https://semver.org):
 
 ## QA / E2E
 
-Core UI components expose runtime state via lowercase `data-*` attributes. See [`docs/E2E-ATTRIBUTES.md`](docs/E2E-ATTRIBUTES.md) for the full catalog, component matrix, selector cookbook, and YAML schema for AI agents.
+Core UI components expose runtime state via lowercase `data-*` attributes for e2e selectors. The full catalog, component matrix, selector cookbook, and YAML schema for AI agents live in `docs/E2E-ATTRIBUTES.md` in the source repository.
 
 ---
 
 ## License
 
-Internal use only — © SD Team
+MIT - see the LICENSE file.

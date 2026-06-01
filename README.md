@@ -53,7 +53,7 @@
 * ✅ 9 services (notify, confirm, excel, docx, api interceptor, storage, …)
 * ✅ Auth + Keycloak + permission modules ready out-of-the-box
 * ✅ Signal-first reactivity, OnPush default
-* ✅ i18n bilingual (Vietnamese / English) — extensible to any locale
+* ✅ i18n — built-in Vietnamese / English; `Language` type also declares `ja` / `ko` / `zh`; extensible to any locale
 * ✅ Material 19/20/21 compatible — single package, multi-major peer range
 * ✅ Tree-shakable subpath exports (per-component, per-form-control)
 * ✅ Type-safe end-to-end (`NestedKeyOf<T>`, `Filter<T>`, `Color`, `Size`, …)
@@ -64,10 +64,12 @@
 ## 📦 Installation
 
 ```bash
-npm install @sdcorejs/angular @sdcorejs/utils @angular/material @angular/material-date-fns-adapter
+npm install @sdcorejs/angular @angular/material @angular/material-date-fns-adapter
 ```
 
-**Peer ranges**: `@angular/{common,core,material} ^19.0.0 || ^20.0.0 || ^21.0.0`. Choose the matching `@sdcorejs/angular` version: `19.x.y` for Angular 19, `20.x.y` for Angular 20, `21.x.y` for Angular 21.
+`@sdcorejs/utils` ships as a regular dependency — it installs automatically, no need to add it yourself.
+
+**Peer ranges**: `@angular/{common,core,material}` + `@angular/material-date-fns-adapter` `^19.0.0 || ^20.0.0 || ^21.0.0`. Choose the matching `@sdcorejs/angular` version: `19.x.y` for Angular 19, `20.x.y` for Angular 20, `21.x.y` for Angular 21.
 
 ```bash
 # Angular 19
@@ -235,7 +237,7 @@ Bundled palette: `primary` · `secondary` · `success` · `info` · `warning` ·
 ## 🌍 i18n
 
 ```ts
-inject(SdI18nService).setLanguage('en');
+inject(I18nService).setLanguage('en');
 // Supported: 'vi', 'en', 'ja', 'ko', 'zh'
 ```
 

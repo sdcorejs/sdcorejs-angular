@@ -32,7 +32,7 @@ Multi-version mirror + publish pipeline cho npm package `@sdcorejs/angular`. **�
 
 ## Anti-patterns — TUYỆT ĐỐI KHÔNG
 
-- ❌ Sửa trực tiếp file trong `versions/v19/**`, `v20/**`, `v21/**` — sync script sẽ ghi đè.
+- ❌ Sửa trực tiếp file trong `versions/v19/**`, `v20/**`, `v21/**` — sync script sẽ ghi đè. Gồm cả `versions/*/projects/sdcorejs-angular/README.md` (bị sinh đè mỗi sync) → muốn đổi README npm thì sửa **`docs/npm-README.md`** (canonical, xem dưới).
 - ❌ Commit code logic mới vào repo này — về vn-angular sửa rồi sync lại.
 - ❌ Đổi tên package trong từng version để có `@sdcorejs/angular-v19`/`-v20` — strategy hiện tại là 1 package name, version Angular major.
 - ❌ Publish từ workspace nào KHÔNG khớp Angular major (vd build v20 → publish 21.x.y) — deploy.ps1 đã ràng buộc nhưng đừng workaround.
@@ -114,6 +114,15 @@ Workflow:
 2. Build showcase `--configuration production --base-href=/sdcorejs-angular/`.
 3. Copy `index.html → 404.html` (SPA fallback cho deep links).
 4. Upload `dist/showcase/browser` → deploy-pages action.
+
+## README & CHANGELOG (repo tự sở hữu)
+
+**Sync chỉ đồng bộ CODE.** `@sdcorejs/angular` là bản public (MIT, wording công khai) khác `@sd-angular/core` (nội bộ) → README/CHANGELOG do repo này tự sở hữu, deploy độc lập.
+
+- **CHANGELOG**: `/XF CHANGELOG.md` trong cả 2 sync script (loại khỏi mirror). Canonical = `CHANGELOG.md` ở root repo.
+- **README npm-facing được REPO SINH RA**: canonical là **`docs/npm-README.md`**. Lib folder `versions/*/projects/sdcorejs-angular/` bị delete+rebuild mỗi sync nên KHÔNG dùng `/XF` cho README được (file không sống sót); thay vào đó cuối bước `[4/5]` script copy `docs/npm-README.md` → `versions/v19/projects/sdcorejs-angular/README.md`, rồi rollout (bước 5) copy sang v20/v21. **Muốn đổi README npm → sửa `docs/npm-README.md`** rồi chạy lại sync. README của vn-angular bị copy vào rồi bị đè, không leak ra bản public.
+- **README root** `README.md`: GitHub landing, repo tự sở hữu (nằm ngoài `versions/`, sync không chạm).
+- Component docs (`sd-*.md`) VẪN sync từ vn-angular (code docs, không phải `README.md`).
 
 ## Changelog & semver
 

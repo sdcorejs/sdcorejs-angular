@@ -112,8 +112,9 @@ if (!(Test-Path -LiteralPath $v19Path)) {
 }
 
 Write-Host "[1/5] Mirror copy source -> target v19 workspace" -ForegroundColor Cyan
-# why: /XF CHANGELOG.md — @sdcorejs/angular giữ changelog ĐỘC LẬP (root CHANGELOG.md repo này),
-# deploy theo nhịp riêng. KHÔNG mirror changelog của vn-angular (@sd-angular/core) vào versions/.
+# why: /XF CHANGELOG.md — sync chỉ đồng bộ CODE. CHANGELOG do repo TỰ sở hữu (root CHANGELOG.md), deploy độc lập.
+# README npm-facing KHÔNG /XF ở đây (lib folder bị xoá+dựng lại mỗi sync nên /XF không giữ được file) —
+# thay vào đó được REPO SINH RA ở bước cuối: copy docs/npm-README.md đè lên (xem cuối [4/5]).
 robocopy $SourcePath $v19Path /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
 
 # Clean up projects/demo inside v19 if it was not caught by robocopy
@@ -212,6 +213,31 @@ if (Test-Path -LiteralPath $v19PackagePath) {
 $v19TsConfigPath = Join-Path $v19Path "tsconfig.json"
 Update-RootTsConfig -TsConfigPath $v19TsConfigPath
 Update-ChartInputSignalAnnotations -RootPath $v19Path
+
+# why: bản public @sdcorejs/angular là MIT. Source @sd-angular/core (nội bộ) không có field license.
+# Inject "license":"MIT" vào lib package.json bằng string-insert (tránh ConvertTo-Json reformat churn).
+$v19LibPackagePath = Join-Path $v19Path "projects/sdcorejs-angular/package.json"
+if (Test-Path -LiteralPath $v19LibPackagePath) {
+  $libContent = Get-Content -LiteralPath $v19LibPackagePath -Raw -Encoding UTF8
+  if ($libContent -notmatch '"license"\s*:') {
+    $libUpdated = $libContent -replace '("version"\s*:\s*"[^"]+",)', "`$1`r`n  `"license`": `"MIT`","
+    if ($libUpdated -ne $libContent) {
+      Write-Utf8NoBom -Path $v19LibPackagePath -Content $libUpdated
+    }
+  }
+}
+
+# why: README npm-facing do REPO SINH RA, không lấy từ vn-angular. Lib folder bị delete+rebuild mỗi sync
+# nên không thể giữ file repo-owned bằng /XF — thay vào đó copy bản canonical docs/npm-README.md đè lên.
+# Rollout (bước 5, KHÔNG /XF README) sẽ tự copy bản này sang v20/v21 → 3 bản đồng nhất, chỉ maintain 1 file.
+$canonicalReadme = Join-Path $TargetPath "docs/npm-README.md"
+$v19LibReadme = Join-Path $v19Path "projects/sdcorejs-angular/README.md"
+if (Test-Path -LiteralPath $canonicalReadme) {
+  Copy-Item -LiteralPath $canonicalReadme -Destination $v19LibReadme -Force
+  Write-Host "    Generated lib README from docs/npm-README.md (repo-owned)" -ForegroundColor DarkGray
+} else {
+  Write-Warning "Canonical npm README not found: $canonicalReadme - lib README left as synced from vn-angular."
+}
 
 Write-Host "[5/5] Rollout to v20, v21 based on v19 workspace" -ForegroundColor Cyan
 $multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1"
