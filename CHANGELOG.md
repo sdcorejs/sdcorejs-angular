@@ -15,7 +15,7 @@ _Chưa có thay đổi nào kể từ `[0.0]`._
 ## [0.0] - 2026-06-01
 
 Published: `@sdcorejs/angular@19.0.0` / `@20.0.0` / `@21.0.0` (npm dist-tag `latest`).
-Pre-release: `0.0-rc.1` (dist-tag `beta`).
+Pre-release: `0.0-rc.1`, `0.0-rc.2` (dist-tag `beta`).
 Synced from `vn-angular@50540baf`.
 
 ### Added
