@@ -77,7 +77,10 @@ jobs:
         working-directory: versions/${{ matrix.version }}
 
       - name: Install dependencies
-        run: npm ci --legacy-peer-deps
+        # why: npm install (KHÔNG npm ci). Sync rollout bump Angular major trong package.json (v20→^20, v21→^21)
+        # nhưng KHÔNG regen package-lock.json → lock vẫn pin Angular 19 → `npm ci` (strict) fail ở v20/v21.
+        # `npm install --legacy-peer-deps` resolve lại tree theo package.json. Khớp với scripts/deploy.ps1.
+        run: npm install --legacy-peer-deps
         working-directory: versions/${{ matrix.version }}
 
       - name: Build library

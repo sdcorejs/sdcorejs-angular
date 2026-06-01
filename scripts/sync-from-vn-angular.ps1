@@ -112,7 +112,9 @@ if (!(Test-Path -LiteralPath $v19Path)) {
 }
 
 Write-Host "[1/5] Mirror copy source -> target v19 workspace" -ForegroundColor Cyan
-robocopy $SourcePath $v19Path /MIR /XD .git node_modules dist .angular coverage versions scripts demo /R:1 /W:1 /NFL /NDL /NP | Out-Null
+# why: /XF CHANGELOG.md — @sdcorejs/angular giữ changelog ĐỘC LẬP (root CHANGELOG.md repo này),
+# deploy theo nhịp riêng. KHÔNG mirror changelog của vn-angular (@sd-angular/core) vào versions/.
+robocopy $SourcePath $v19Path /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
 
 # Clean up projects/demo inside v19 if it was not caught by robocopy
 $v19DemoPath = Join-Path $v19Path "projects/demo"

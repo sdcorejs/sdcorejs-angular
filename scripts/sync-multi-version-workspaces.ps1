@@ -180,7 +180,8 @@ foreach ($v in $versions) {
 
   if ($v.Folder -ne "v19") {
     # Mirror copy from versions/v19 to the target version folder
-    robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /R:1 /W:1 /NFL /NDL /NP | Out-Null
+    # why: /XF CHANGELOG.md — changelog độc lập ở root repo, không lan vào versions/ (xem sync-from-vn-angular.ps1).
+    robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
   }
 
   # Explicitly delete projects/demo folder in target if present
