@@ -5,6 +5,8 @@
 [![Angular](https://img.shields.io/badge/Angular-19%2B-red)](https://angular.dev)
 [![Angular Material](https://img.shields.io/badge/Angular_Material-19%2B-purple)](https://material.angular.io)
 
+**🚀 [Showcase](https://sdcorejs.github.io/sdcorejs-angular)** · **📖 [Storybook — code samples, props & API](https://sdcorejs.github.io/portal-template)**
+
 ---
 
 ## Table of Contents / Mục lục

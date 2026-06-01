@@ -10,7 +10,23 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-_Chưa có thay đổi nào kể từ `[0.0]`._
+_Chưa có thay đổi nào kể từ `[0.1]`._
+
+## [0.1] - 2026-06-01
+
+Published: `@sdcorejs/angular@19.0.1` / `@20.0.1` / `@21.0.1` (npm dist-tag `latest`).
+Synced from `vn-angular@00b9a21f` (chỉ thay đổi doc; lib code KHÔNG đổi so với `0.0`).
+
+Bản metadata/docs — không thay đổi API hay code runtime so với `0.0`.
+
+### Fixed
+
+- **`license`** — thêm field `"license": "MIT"` vào `package.json` (bản `0.0` publish thiếu → npm hiển thị UNLICENSED).
+- **README npm-facing** — giờ là bản public do repo sinh ra (`docs/npm-README.md`): bỏ wording "internal use only", thêm link **Showcase** (`https://sdcorejs.github.io/sdcorejs-angular`) + **Storybook** (`https://sdcorejs.github.io/portal-template`), bỏ import `SdSearch` không tồn tại, sửa ví dụ form `[(ngModel)]` → `[(model)]`, bỏ version badge cũ.
+
+### Internal
+
+- Sync chỉ đồng bộ CODE; README + CHANGELOG do repo tự sở hữu/sinh ra (xem `CLAUDE.md`).
 
 ## [0.0] - 2026-06-01
 

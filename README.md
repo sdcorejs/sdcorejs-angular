@@ -41,7 +41,9 @@
   ·
   <a href="https://github.com/sdcorejs/sdcorejs-angular">GitHub</a>
   ·
-  <a href="https://sdcorejs.github.io/sdcorejs-angular/">Live Showcase</a>
+  <a href="https://sdcorejs.github.io/sdcorejs-angular/">Showcase</a>
+  ·
+  <a href="https://sdcorejs.github.io/portal-template">Storybook</a>
 </p>
 
 ---
