@@ -203,8 +203,11 @@ export class SdSplitterComponent {
   #onDragMove(handleIndex: number, deltaSinceStart: number): void {
     if (!this.#dragStartSize) return;
     const incrementalDelta = deltaSinceStart - this.#dragLastDelta;
-    this.#dragLastDelta = deltaSinceStart;
-    this.#state.applyDelta(handleIndex, incrementalDelta, this.#dragStartSize.containerPx, this.snapThreshold());
+    const applied = this.#state.applyDelta(handleIndex, incrementalDelta, this.#dragStartSize.containerPx, this.snapThreshold());
+    // why: chỉ cộng dồn phần delta THỰC SỰ áp được (applyDelta trả về), không phải toàn bộ
+    // dịch chuyển con trỏ. Cộng raw pointer delta → overshoot (kéo quá mép/min/collapse) tích
+    // lũy thành dead-zone: phải kéo ngược đúng bằng overshoot mới thấy handle nhúc nhích.
+    this.#dragLastDelta += applied;
   }
 
   #onDragEnd(_handleIndex: number): void {

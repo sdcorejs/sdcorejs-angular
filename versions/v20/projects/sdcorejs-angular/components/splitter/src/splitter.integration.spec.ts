@@ -87,6 +87,50 @@ describe('sd-splitter integration', () => {
     expect(cmp.getLayout().panels.find(p => p.id === 'a')!.collapsed).toBe(true);
   });
 
+  it('overshoot rồi kéo ngược: handle bám pointer, không bị kẹt dead-zone', async () => {
+    const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
+    spyOn(handle, 'setPointerCapture').and.stub();
+    spyOn(handle, 'releasePointerCapture').and.stub();
+    // rAF mock toàn cục trả 0 → ghi đè #rafPending về non-null, chặn pointermove thứ 2.
+    // Trả undefined để 2 move liên tiếp trong CÙNG 1 drag đều được xử lý (đúng như browser thật).
+    (window.requestAnimationFrame as jasmine.Spy).and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+
+    // A=200px, container=400. Kéo vượt xa mép phải (clientX 600 → +400) — A bão hòa ở 400
+    // (B co về 0, chỉ +200 áp được). Sau đó kéo ngược về clientX 450 (+250): 200+250=450>400
+    // → A vẫn phải = 400. Nếu dead-zone tồn tại, A tụt sai về ~250.
+    dispatchPointer(handle, 'pointerdown', { clientX: 200, clientY: 0, button: 0 });
+    dispatchPointer(handle, 'pointermove', { clientX: 600, clientY: 0 });
+    dispatchPointer(handle, 'pointermove', { clientX: 450, clientY: 0 });
+    dispatchPointer(handle, 'pointerup', { clientX: 450, clientY: 0 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
+    expect(cmp.getLayout().panels.find(p => p.id === 'a')!.size).toBe(400);
+  });
+
+  it('snap collapse rồi kéo ngược chậm: tích lũy delta đủ minSize → expand (không kẹt)', async () => {
+    const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
+    spyOn(handle, 'setPointerCapture').and.stub();
+    spyOn(handle, 'releasePointerCapture').and.stub();
+    (window.requestAnimationFrame as jasmine.Spy).and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+
+    // A=200px, min=50, collapsible. Kéo về 20 (<25) → snap collapse. Sau đó kéo ngược CHẬM
+    // từng bước nhỏ (<50px mỗi bước). applyDelta trả 0 khi chưa đủ minSize → dragLastDelta
+    // đứng yên → bước sau tích lũy đủ 50 → expand. Nếu cộng raw pointer delta thì mỗi bước
+    // nhỏ <50 sẽ không bao giờ tích đủ → A kẹt ở collapsed.
+    dispatchPointer(handle, 'pointerdown', { clientX: 200, clientY: 0, button: 0 });
+    dispatchPointer(handle, 'pointermove', { clientX: 20, clientY: 0 });   // snap collapse
+    dispatchPointer(handle, 'pointermove', { clientX: 30, clientY: 0 });   // +10 tích lũy, chưa đủ
+    dispatchPointer(handle, 'pointermove', { clientX: 50, clientY: 0 });   // +50 tích lũy → expand
+    dispatchPointer(handle, 'pointerup', { clientX: 50, clientY: 0 });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
+    expect(cmp.getLayout().panels.find(p => p.id === 'a')!.collapsed).toBe(false);
+  });
+
   it('disabled splitter → pointer drag không thay đổi state', async () => {
     fixture.componentInstance.disabled.set(true);
     fixture.detectChanges();
@@ -129,6 +173,54 @@ describe('sd-splitter integration', () => {
 
     const cmp = fixture.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
     expect(cmp.getLayout().panels.find(p => p.id === 'a')!.size).toBe(270);
+  });
+});
+
+@Component({
+  standalone: true,
+  imports: [SdSplitterComponent, SdSplitterPanelComponent],
+  template: `
+    <sd-splitter orientation="vertical" style="width:200px;height:400px;">
+      <sd-splitter-panel panelId="top" size="200" unit="px" minSize="50" collapsible>Top</sd-splitter-panel>
+      <sd-splitter-panel panelId="bottom" size="1">Bottom</sd-splitter-panel>
+    </sd-splitter>
+  `,
+})
+class VerticalHost {}
+
+describe('sd-splitter vertical — overshoot dead-zone', () => {
+  let fix: ComponentFixture<VerticalHost>;
+  let splitterEl: HTMLElement;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({ imports: [VerticalHost], providers: [SdStorageService] });
+    fix = TestBed.createComponent(VerticalHost);
+    fix.detectChanges();
+    await fix.whenStable();
+    fix.detectChanges();
+    splitterEl = fix.debugElement.query(By.css('sd-splitter')).nativeElement;
+    spyOn(splitterEl, 'getBoundingClientRect').and.returnValue({
+      x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 400, width: 200, height: 400, toJSON: () => ({}),
+    } as DOMRect);
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+  });
+
+  it('kéo trục Y vượt mép dưới rồi kéo ngược: top bám pointer, không kẹt', async () => {
+    const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
+    spyOn(handle, 'setPointerCapture').and.stub();
+    spyOn(handle, 'releasePointerCapture').and.stub();
+
+    // top=200px, container cao 400. Kéo xuống quá đáy (clientY 600 → +400) — top bão hòa ở 400.
+    // Kéo ngược lên clientY 450 (+250): 200+250=450>400 → top vẫn = 400, không tụt về 250.
+    dispatchPointer(handle, 'pointerdown', { clientX: 0, clientY: 200, button: 0 });
+    dispatchPointer(handle, 'pointermove', { clientX: 0, clientY: 600 });
+    dispatchPointer(handle, 'pointermove', { clientX: 0, clientY: 450 });
+    dispatchPointer(handle, 'pointerup', { clientX: 0, clientY: 450 });
+    fix.detectChanges();
+    await fix.whenStable();
+
+    const cmp = fix.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
+    expect(cmp.getLayout().panels.find(p => p.id === 'top')!.size).toBe(400);
   });
 });
 

@@ -72,6 +72,7 @@ The handle component (`<sd-splitter-handle>`) is internal and NOT exported from 
 ### Behaviors / quirks
 - **Flex normalization**: when multiple panels declare `unit="flex"`, their `[size]` values are treated as weights and normalized so `Σ grow = 1`. Declaring `[size]="0.7"` on a single flex panel still fills the remaining space (not 70% of container).
 - **Snap-to-collapse**: dragging a `[collapsible]` panel below `minSize × snapThreshold` snaps it to `collapsed=true` (size=0). Drag back out past `minSize` to expand.
+- **Drag delta tracking uses the APPLIED delta, not raw pointer displacement**: `#onDragMove` accumulates the value `applyDelta()` returns (`#dragLastDelta += applied`), NOT the raw cursor movement. If it accumulated the raw pointer delta, any overshoot past a clamp / min / edge would build up a **dead-zone** — you'd have to drag back exactly as far as you overshot before the handle moved again ("kéo tới cuối không kéo về được"). The same mechanism (collapsed branch returning `0`) lets a slow reverse drag accumulate enough movement to expand a snap-collapsed panel.
 - **Double-click handle**: toggles the nearest collapsible panel (`prev` first, then `next`). No-op if neither neighbor is collapsible.
 - **Keyboard Enter/Space on focused handle**: same as double-click (toggle nearest collapsible).
 - **Persistence requires `panelId`**: `storageKey` restore matches by `[panelId]` first, falling back to index ONLY when the panel has no `panelId` set. Without `panelId`, reordering panels in the template will mis-restore sizes.
@@ -260,6 +261,15 @@ import type { Color, Size } from '@sdcorejs/utils';
 ```
 
 `SplitterLayoutState.v` is a schema version (`1`) — future migrations of the persisted shape will bump it and reject older `v`.
+
+> `ResolvedPanelMeta` is internal — not exported.
+
+## Tests
+- `splitter-state.service.spec.ts` — unit: `applyDelta` (flex/px/mix), clamp min/max, snap, collapse/expand, reconcile.
+- `splitter.component.spec.ts` — component wiring.
+- `splitter-handle.component.spec.ts`, `splitter-panel.component.spec.ts` — child units.
+- `splitter.integration.spec.ts` — drag, snap, storage roundtrip, nested, **overshoot dead-zone (horizontal + vertical)**, **snap then slow reverse → expand**.
+- Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/splitter/src/splitter.integration.spec.ts'`
 
 ## Related
 - `<sd-tab-group>` — switch between views (mutually exclusive); use when only one region should be visible at a time

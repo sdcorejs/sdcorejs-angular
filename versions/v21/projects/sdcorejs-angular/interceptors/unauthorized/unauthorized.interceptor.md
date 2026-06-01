@@ -2,7 +2,7 @@
 
 **Type**: HttpInterceptor (Angular `HttpInterceptor` class-based, multi-provider)
 **Class**: `SdUnauthorizedInterceptor implements HttpInterceptor`
-**Import path**: `@sdcorejs/angular/interceptors/unauthorized` (or barrel `@sdcorejs/angular/interceptors`)
+**Import path**: `@sdcorejs/angular/interceptors` — single entry point. There is NO `…/unauthorized` secondary entry point: the `interceptors/` folder has one `index.ts` + `ng-package.json` that barrel-exports both `SdUnauthorizedInterceptor` and `SdNoInternetInterceptor`. Always import from `@sdcorejs/angular/interceptors`.
 **Provided in**: NOT provided by default — register via `HTTP_INTERCEPTORS` multi-provider
 **Dependencies**: `SdAuthService`
 
