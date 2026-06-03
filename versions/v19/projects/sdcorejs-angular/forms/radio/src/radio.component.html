@@ -1,26 +1,32 @@
-@if (viewed()) {
-  @if (sdLabelDef()?.templateRef) {
-    <ng-container *ngTemplateOutlet="sdLabelDef()!.templateRef"> </ng-container>
-  } @else if (label()) {
-    <div class="T14R text-black400">{{ label() }}</div>
+@let _sdLabelDef = sdLabelDef();
+@let _label = label();
+@let _display = display();
+@let _valueField = valueField();
+@let _hyperlink = hyperlink();
+
+@if (isViewed()) {
+  @if (_sdLabelDef?.templateRef) {
+    <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
+  } @else if (_label) {
+    <div class="T14R text-black400">{{ _label }}</div>
   }
-  @if (hyperlink()) {
+  @if (_hyperlink) {
     <!-- Nếu có hyperlink thì dùng thẻ a -->
-    <a [sdHref]="hyperlink()!">{{ viewedText() }}</a>
+    <a [sdHref]="_hyperlink!">{{ viewedText() }}</a>
   } @else {
     <!-- Ngoài ra dùng thẻ mặc định -->
     <div class="T14M">{{ viewedText() | sdEmpty }}</div>
   }
 } @else {
-  <section [ngClass]="{ 'c-section': display() === 'row' }">
-    @if (sdLabelDef()?.templateRef) {
-      <ng-container *ngTemplateOutlet="sdLabelDef()!.templateRef"> </ng-container>
-    } @else if (label()) {
-      <sd-label [label]="label()!" [required]="required()"></sd-label>
+  <section [ngClass]="{ 'c-section': _display === 'row' }">
+    @if (_sdLabelDef?.templateRef) {
+      <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
+    } @else if (_label) {
+      <sd-label [label]="_label!" [required]="required()"></sd-label>
     }
     <mat-radio-group
-      [class.c-radio-group-column]="display() === 'column'"
-      [class.c-radio-group-row]="display() === 'row'"
+      [class.c-radio-group-column]="_display === 'column'"
+      [class.c-radio-group-row]="_display === 'row'"
       [formControl]="formControl"
       [attr.data-autoId]="autoId()"
       [attr.data-disabled]="dataDisabled()"
@@ -28,7 +34,7 @@
       [attr.data-value]="dataValue()"
       [attr.data-required]="dataRequired()">
       @for (item of normalizedItems(); track item[valueField()]) {
-        <mat-radio-button [class.m-0]="display() === 'column'" [class.mr-16]="display() === 'row'" [value]="item[valueField()]">
+        <mat-radio-button [class.m-0]="_display === 'column'" [class.mr-16]="_display === 'row'" [value]="item[_valueField]">
           {{ item[displayField()] }}
         </mat-radio-button>
       }

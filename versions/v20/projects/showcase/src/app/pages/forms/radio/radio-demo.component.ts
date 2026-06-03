@@ -41,6 +41,15 @@ interface Option { value: string; display: string; }
             [(model)]="lockedB" [form]="form" viewed></sd-radio>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Radio vẫn chọn được; khi disabled thì hiện text tĩnh (viewed=true).">
+        <div style="display:flex; gap:24px; flex-wrap:wrap; width:100%">
+          <sd-radio style="flex:1" label="inline" [items]="genders" valueField="value" displayField="display"
+            [viewed]="'inline'" [(model)]="inlineChoice" [form]="form"></sd-radio>
+          <sd-radio style="flex:1" label="disabled + inline → tĩnh" [items]="genders" valueField="value" displayField="display"
+            [viewed]="'inline'" [(model)]="inlineChoice" [form]="form" disabled></sd-radio>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -73,6 +82,7 @@ export class RadioDemoComponent {
   payment = signal<string | null>(null);
   lockedA = signal<string | null>('M');
   lockedB = signal<string | null>('F');
+  inlineChoice = signal<string | null>('F');
 
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }

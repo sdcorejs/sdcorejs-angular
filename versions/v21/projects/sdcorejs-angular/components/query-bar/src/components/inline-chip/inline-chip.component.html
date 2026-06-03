@@ -10,6 +10,7 @@
 @let _multi = multiple();
 @let _editing = editing();
 @let _isNoData = isNoData();
+@let _autoId = autoId();
 
 <div class="c-token" [class.c-token-editing]="_editing">
   <mat-icon class="c-token-icon" fontSet="material-icons-outlined">{{ iconName() }}</mat-icon>
@@ -32,7 +33,7 @@
             type="button"
             class="c-bool-btn c-bool-true"
             [class.c-bool-active]="_data === true"
-            [attr.data-autoId]="autoId() + '-true'"
+            [attr.data-autoId]="_autoId + '-true'"
             (click)="emitBoolean(true)">
             {{ $any(_f).trueLabel || 'Có' }}
           </button>
@@ -40,7 +41,7 @@
             type="button"
             class="c-bool-btn c-bool-false"
             [class.c-bool-active]="_data === false"
-            [attr.data-autoId]="autoId() + '-false'"
+            [attr.data-autoId]="_autoId + '-false'"
             (click)="emitBoolean(false)">
             {{ $any(_f).falseLabel || 'Không' }}
           </button>
@@ -53,7 +54,7 @@
            Chip không wiring lifecycle nữa; [clearable]=false vì chip có × riêng. -->
       <span class="c-token-value c-token-value-edit">
         <sd-date-range size="sm"
-          [autoId]="autoId()"
+          [autoId]="_autoId"
           [viewed]="'inline'"
           [clearable]="false"
           [model]="$any(_data)"
@@ -65,7 +66,7 @@
            Chip không wiring lifecycle cho nhánh này nữa (bỏ enterEdit/onFocusOut/bare). -->
       <span class="c-token-value c-token-value-edit">
         <sd-select #chipPicker size="sm" minWidthPanel="300px"
-          [autoId]="autoId()"
+          [autoId]="_autoId"
           [items]="_f.type === 'lazy-values' ? $any(_opt).search : $any(_opt.items)"
           [valueField]="_opt.valueField"
           [displayField]="_opt.displayField"
@@ -88,7 +89,7 @@
     } @else if (_f.type === 'date') {
       <span class="c-token-value c-token-value-edit">
         <sd-date size="sm"
-          [autoId]="autoId()"
+          [autoId]="_autoId"
           [viewed]="'inline'"
           [clearable]="false"
           [model]="$any(_data)"
@@ -97,7 +98,7 @@
     } @else if (_f.type === 'datetime') {
       <span class="c-token-value c-token-value-edit">
         <sd-datetime size="sm"
-          [autoId]="autoId()"
+          [autoId]="_autoId"
           [viewed]="'inline'"
           [clearable]="false"
           [model]="$any(_data)"

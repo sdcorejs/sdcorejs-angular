@@ -31,9 +31,10 @@ Boolean toggle — a single labeled checkbox bound to a form/model. Wraps Angula
 | `color` | `'primary' \| 'warn'` | `'primary'` | Material color of the checked state. |
 | `disabled` | `boolean \| ''` | `false` | Disables interaction. Empty string presence = `true`. |
 | `model` | `any` | `undefined` | Two-way bound boolean. Use `[(model)]`. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = the interactive `mat-checkbox`. `true` = static read-only text ("Có" / "Không" via i18n, plus the label). `'inline'` = keeps the interactive checkbox (no separate face); a **disabled** `'inline'` falls back to `true` (static text). Bare attribute = `true`. |
 | `inlineError` | `string` | `undefined` | When set, attaches a synthetic `inlineError` validator → field renders invalid until cleared. |
 
-> **Coerce**: `disabled` accepts `''` / truthy / nullish — bare attribute = `true`.
+> **Coerce**: `disabled` accepts `''` / truthy / nullish — bare attribute = `true`. `viewed` uses the shared `sdViewedTransform` (bare attribute = `true`, plus the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static text branch.
 
 ## Outputs
 | Name | Type | Notes |
@@ -47,7 +48,7 @@ None — text comes from the `label` input.
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** SDCoreJS pattern: pass `[form]` + `name`; the component appends its internal `FormControl` to that group on `ngAfterViewInit` and removes it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way binding and `[form]+[name]` to register inside a FormGroup.
-- **`[viewed]` is NOT a supported input on `<sd-checkbox>`** (unlike most other form inputs in this batch). For DETAIL/read-only state, drive `[disabled]="true"` instead, or render the boolean as plain text in your DETAIL template.
+- **`[viewed]` DETAIL/read-only** — `[viewed]="true"` renders the boolean as static text ("Có" / "Không") plus the label, instead of the toggle. `[viewed]="'inline'"` keeps the checkbox interactive (it's already compact, so there is no separate text face) but collapses to the static text when `[disabled]`. Prefer this over `[disabled]="true"` when you want the value rendered as words rather than a greyed-out box.
 - **Validators**: only `[inlineError]` is wired (forces an `inlineError` error when truthy). For `Validators.required`-style behavior, manage it on the parent FormGroup or refactor the consumer.
 - **`model` setter deduplication**: the setter skips `formControl.setValue` if the incoming value equals the stored value, preventing redundant change cycles.
 
@@ -112,7 +113,7 @@ Setting `[inlineError]="'Some message'"` triggers an internal `#updateValidator(
 
 ## Anti-patterns
 - ❌ Using `formControlName` or `[(ngModel)]` — not wired in this component.
-- ❌ Using `[viewed]="true"` — input is not exposed; rely on `[disabled]` for read-only display, or render `{{ model.isActive ? 'Có' : 'Không' }}` in DETAIL templates.
+- ❌ Reaching for `[disabled]="true"` to express read-only DETAIL state — use `[viewed]="true"` so the value renders as text ("Có" / "Không") rather than a greyed-out box.
 - ❌ Using a checkbox for a single ON/OFF setting in a settings page — prefer `<sd-switch>` for that visual idiom.
 - ❌ Stacking many checkboxes for mutually exclusive options — use `<sd-radio>`.
 - ❌ Forgetting `[form]` and trying to validate via the parent FormGroup — control won't be registered.

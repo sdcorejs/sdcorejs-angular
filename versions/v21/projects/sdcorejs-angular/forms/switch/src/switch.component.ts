@@ -19,7 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdFormControl, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
@@ -77,7 +77,13 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
     transform: (v): Color => v || 'primary',
   });
   readonly disabled = input(false, { transform: booleanAttribute });
-  readonly viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
+  readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // why: tri-state viewed — `'inline'` keeps the switch interactive; disabled `'inline'` → static.
+  readonly #viewedState = sdViewedInline(this.viewed, undefined, this.disabled);
+  /** `true` when the static read-only view should render. */
+  readonly isViewed = this.#viewedState.isViewed;
   readonly hideInlineError = input(false, { transform: booleanAttribute });
   readonly required = input(false, { transform: booleanAttribute });
 

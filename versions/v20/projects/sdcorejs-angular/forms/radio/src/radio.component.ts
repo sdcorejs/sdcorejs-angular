@@ -26,7 +26,7 @@ import * as uuid from 'uuid';
 
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 
-import { SdFormControl, SdInlineErrorValidator, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, SdInlineErrorValidator, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -99,7 +99,13 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
     transform: (v): string | undefined => v ?? undefined,
   });
   readonly disabled = input(false, { transform: booleanAttribute });
-  readonly viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
+  readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // why: tri-state viewed — `'inline'` keeps the radio group interactive; disabled `'inline'` → static.
+  readonly #viewedState = sdViewedInline(this.viewed, undefined, this.disabled);
+  /** `true` when the static read-only view should render. */
+  readonly isViewed = this.#viewedState.isViewed;
   // why: legacy callers pass `null` → fallback to 'primary'. Color enum mở rộng hơn ThemePalette,
   // áp dụng qua host attr [data-sd-color] + SCSS override MDC token vars (mat [color] không nhận 'success'/'info'/...).
   readonly color = input<Color, Color | null | undefined>('primary', {

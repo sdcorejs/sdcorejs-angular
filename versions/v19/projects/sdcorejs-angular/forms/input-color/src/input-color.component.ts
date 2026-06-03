@@ -12,6 +12,7 @@ import {
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
+import { SdViewed, SdViewedInput, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { Size } from '@sdcorejs/utils/models';
 
 // why: matches #RGB, #RRGGBB, #RRGGBBAA. Capital + lowercase hex allowed.
@@ -49,7 +50,8 @@ export class SdInputColor {
   readonly required = input(false, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly readonly = input(false, { transform: booleanAttribute });
-  readonly viewed = input(false, { transform: booleanAttribute });
+  /** Display mode — forwarded to the inner `<sd-input>`. `'inline'` = borderless inline-edit; disabled `'inline'` → static. */
+  readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
 
   // Two-way model — same alias as <sd-input>
   readonly valueModel = model<string | null | undefined>(undefined, { alias: 'model' });

@@ -1,14 +1,16 @@
-@if (enabled() && !dismissed()) {
+@let _enabled = enabled();
+@let _open = open();
+@if (_enabled && !dismissed()) {
   <div class="sd-autoid-inspector__fab-wrap">
     <button
       type="button"
       class="sd-autoid-inspector__fab"
       data-autoid="sd-autoid-inspector-fab"
       [attr.data-opened]="dataOpened()"
-      [matTooltip]="open() ? 'Đóng AutoId Inspector' : 'Mở AutoId Inspector'"
+      [matTooltip]="_open ? 'Đóng AutoId Inspector' : 'Mở AutoId Inspector'"
       matTooltipPosition="left"
       (click)="togglePanel()">
-      <mat-icon>{{ open() ? 'close' : 'tag' }}</mat-icon>
+      <mat-icon>{{ _open ? 'close' : 'tag' }}</mat-icon>
     </button>
     <button
       type="button"
@@ -23,7 +25,8 @@
 
 }
 
-@if (enabled() && open()) {
+@if (_enabled && _open) {
+    @let _segment = segment();
     <div class="sd-autoid-inspector__backdrop" (click)="closePanel()"></div>
     <section class="sd-autoid-inspector__panel"
              role="dialog"
@@ -38,7 +41,7 @@
         <div class="sd-autoid-inspector__segments">
           <button
             type="button"
-            [class.is-active]="segment() === 'audit'"
+            [class.is-active]="_segment === 'audit'"
             (click)="setSegment('audit')">
             Audit
             @if (audit(); as a) {
@@ -49,14 +52,14 @@
           </button>
           <button
             type="button"
-            [class.is-active]="segment() === 'elements'"
+            [class.is-active]="_segment === 'elements'"
             (click)="setSegment('elements')">
             Elements
             <span class="sd-autoid-inspector__badge">{{ elements().length }}</span>
           </button>
           <button
             type="button"
-            [class.is-active]="segment() === 'export'"
+            [class.is-active]="_segment === 'export'"
             (click)="setSegment('export')">
             Export
           </button>
@@ -85,7 +88,7 @@
       }
 
       <div class="sd-autoid-inspector__body">
-        @switch (segment()) {
+        @switch (_segment) {
           @case ('audit') {
             <ng-container *ngTemplateOutlet="auditTpl"></ng-container>
           }
@@ -101,15 +104,16 @@
 
     <ng-template #auditTpl>
       @if (audit(); as a) {
+        @let _highlightOn = highlightOn();
         <div class="sd-autoid-inspector__audit-toolbar">
           <button
             type="button"
             class="sd-autoid-inspector__toggle"
-            [class.is-on]="highlightOn()"
+            [class.is-on]="_highlightOn"
             (click)="toggleHighlight()">
-            <mat-icon>{{ highlightOn() ? 'visibility' : 'visibility_off' }}</mat-icon>
+            <mat-icon>{{ _highlightOn ? 'visibility' : 'visibility_off' }}</mat-icon>
             <span>Highlight DOM</span>
-            <span class="sd-autoid-inspector__toggle-state">{{ highlightOn() ? 'ON' : 'OFF' }}</span>
+            <span class="sd-autoid-inspector__toggle-state">{{ _highlightOn ? 'ON' : 'OFF' }}</span>
           </button>
         </div>
         <div class="sd-autoid-inspector__summary">
@@ -185,14 +189,15 @@
     </ng-template>
 
     <ng-template #elementsTpl>
+      @let _filter = filter();
       <div class="sd-autoid-inspector__filter">
         <mat-icon>search</mat-icon>
         <input
           type="text"
           placeholder="Lọc theo autoid / name / tag"
-          [ngModel]="filter()"
+          [ngModel]="_filter"
           (ngModelChange)="filter.set($event)"/>
-        @if (filter()) {
+        @if (_filter) {
           <button
             type="button"
             class="sd-autoid-inspector__icon-btn"

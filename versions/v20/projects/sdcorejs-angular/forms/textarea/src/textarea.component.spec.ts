@@ -523,3 +523,46 @@ describe('SdTextarea (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`) — borderless textarea variant
+// ---------------------------------------------------------------------------
+
+describe('SdTextarea (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdTextarea>;
+  let comp: SdTextarea;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdTextarea, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdTextarea);
+    comp = fixture.componentInstance;
+  });
+
+  it('viewed="inline" → isInline true; renders the borderless textarea (no static swap)', () => {
+    // asserts: textarea has no panel — inline IS the editable textarea flattened to look like text
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.sd-inline-textarea')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('textarea[matInput]')).not.toBeNull();
+  });
+
+  it('viewed=true stays static (no textarea)', () => {
+    // asserts: viewed=true unchanged DETAIL — static value text, no editable textarea
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('textarea[matInput]')).toBeNull();
+  });
+
+  it('disabled inline behaves like viewed=true (static, no textarea)', () => {
+    // asserts: disabled 'inline' → isViewed true, isInline false (cannot edit a disabled control)
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(false);
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('textarea[matInput]')).toBeNull();
+  });
+});

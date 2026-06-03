@@ -31,6 +31,17 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
           <sd-textarea style="width: 280px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-textarea>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Hiển thị như text không viền — bấm/focus để sửa tại chỗ. Khi disabled thì rơi về xem tĩnh (viewed=true).">
+        <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
+          <div style="font-size:12px; color:#555">
+            Ghi chú:
+            <sd-textarea [viewed]="'inline'" [(model)]="inlineNote" [form]="form"></sd-textarea>
+          </div>
+          <div style="font-size:12px; color:#555">Giá trị: <b>{{ inlineNote() ?? '(trống)' }}</b></div>
+          <sd-textarea label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="lockedA" [form]="form" disabled></sd-textarea>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +54,7 @@ export class TextareaDemoComponent {
   reason = signal<string | null>(null);
   lockedA = signal<string | null>('Không thể sửa');
   lockedB = signal<string | null>('Chỉ đọc');
+  inlineNote = signal<string | null>('Bấm vào để sửa ghi chú này');
 
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }

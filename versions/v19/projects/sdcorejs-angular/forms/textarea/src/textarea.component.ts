@@ -34,7 +34,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
@@ -49,7 +49,7 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
   templateUrl: './textarea.component.html',
   styleUrls: ['./textarea.component.scss'],
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -138,8 +138,19 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` borderless inline-edit (textarea reads like text). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
   autoHeight = input(false, { transform: booleanAttribute });
+
+  // Tri-state `viewed` — shared primitive. No panel; in `'inline'` the textarea renders borderless.
+  // why: disabled 'inline' falls back to static view (cannot edit a disabled control).
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.textareaRef()?.nativeElement?.focus(), this.disabled);
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no editor). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Focus the inline textarea. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
 
   maxlength = input<number | null, unknown>(null, { 
     transform: (v) => (v != null && NumberUtilities.isPositiveInteger(Number(v))) ? Number(v) : null 

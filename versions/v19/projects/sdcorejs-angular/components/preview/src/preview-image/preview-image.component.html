@@ -4,11 +4,16 @@
   <sd-side-drawer>, a page section, or use inline.
 -->
 <div [ngClass]="shellClass()" role="region">
+  @let _stage = stage();
+  @let _images = images();
+  @let _thumbnailPosition = thumbnailPosition();
+  @let _activeIndex = activeIndex();
+  @let _activeImage = activeImage();
 
   <!-- ============================================
        HEADER BAR
        ============================================ -->
-  @if (stage() !== 'empty' && activeImage(); as img) {
+  @if (_stage !== 'empty' && _activeImage; as img) {
     <div class="sd-preview-header">
       <div class="sd-preview-header__left">
         <mat-icon class="sd-preview-header__icon" fontIcon="image"></mat-icon>
@@ -22,9 +27,9 @@
         </div>
       </div>
 
-      @if (images().length > 1) {
+      @if (_images.length > 1) {
         <div class="sd-preview-header__counter" aria-live="polite">
-          {{ activeIndex() + 1 }} / {{ images().length }}
+          {{ _activeIndex + 1 }} / {{ _images.length }}
         </div>
       }
     </div>
@@ -51,7 +56,7 @@
       (pointercancel)="onPointerCancel($event)"
       (dblclick)="onImageDblClick()">
 
-      @switch (stage()) {
+      @switch (_stage) {
         @case ('empty') {
           <div class="sd-preview-status">
             <div class="sd-preview-status__tile sd-preview-status__tile--muted">
@@ -74,7 +79,7 @@
           </div>
         }
         @default {
-          @if (activeImage(); as img) {
+          @if (_activeImage; as img) {
             @if (img.loading) {
               <!-- Per-image loading (retry inline) — giữ nav/dots/thumbs visible -->
               <div class="sd-preview-image-loading" role="status"
@@ -120,7 +125,7 @@
       }
 
       <!-- KEYBOARD HINT ............................................. -->
-      @if (stage() === 'ready' && images().length > 1) {
+      @if (_stage === 'ready' && _images.length > 1) {
         <div class="sd-preview-kbd-hint" aria-hidden="true">
           <span class="sd-preview-kbd">←</span>
           <span class="sd-preview-kbd">→</span>
@@ -129,7 +134,7 @@
       }
 
       <!-- NAV ARROWS ............................................. -->
-      @if (stage() === 'ready' && images().length > 1) {
+      @if (_stage === 'ready' && _images.length > 1) {
         <button
           type="button"
           class="sd-preview-nav sd-preview-nav--prev"
@@ -151,13 +156,13 @@
       }
 
       <!-- DOTS INDICATOR ......................................... -->
-      @if (thumbnailPosition() === 'dots' && stage() === 'ready' && images().length > 1) {
+      @if (_thumbnailPosition === 'dots' && _stage === 'ready' && _images.length > 1) {
         <div class="sd-preview-dots" role="tablist">
-          @for (img of images(); track img.id; let i = $index) {
+          @for (img of _images; track img.id; let i = $index) {
             <button
               type="button"
               class="sd-preview-dot"
-              [class.sd-preview-dot--active]="i === activeIndex()"
+              [class.sd-preview-dot--active]="i === _activeIndex"
               [attr.aria-label]="'core.component.preview-image.next' | translate"
               [attr.data-autoId]="autoIdDot(i)"
               (click)="onClickThumbnailImage(i)"></button>
@@ -166,7 +171,7 @@
       }
 
       <!-- FLOATING TOOLBAR ....................................... -->
-      @if (showToolbar() && stage() === 'ready') {
+      @if (showToolbar() && _stage === 'ready') {
         <div class="sd-preview-toolbar" role="toolbar">
           @if (zoomable()) {
             <button
@@ -235,22 +240,22 @@
 
     <!-- THUMBNAIL STRIP .................................................... -->
     @if (
-      stage() === 'ready' &&
-      images().length > 1 &&
-      thumbnailPosition() !== 'none' &&
-      thumbnailPosition() !== 'dots'
+      _stage === 'ready' &&
+      _images.length > 1 &&
+      _thumbnailPosition !== 'none' &&
+      _thumbnailPosition !== 'dots'
     ) {
       <div
         class="sd-preview-thumbs"
-        [class.sd-preview-thumbs--vertical]="thumbnailPosition() === 'left' || thumbnailPosition() === 'right'">
-        @for (img of images(); track trackByImage($index, img); let i = $index) {
+        [class.sd-preview-thumbs--vertical]="_thumbnailPosition === 'left' || _thumbnailPosition === 'right'">
+        @for (img of _images; track trackByImage($index, img); let i = $index) {
           <button
             type="button"
             class="sd-preview-thumb"
-            [class.sd-preview-thumb--active]="i === activeIndex()"
+            [class.sd-preview-thumb--active]="i === _activeIndex"
             [id]="'sd-preview-thumb-' + i"
             [attr.aria-label]="img.name"
-            [attr.aria-current]="i === activeIndex() ? 'true' : null"
+            [attr.aria-current]="i === _activeIndex ? 'true' : null"
             [attr.data-autoId]="autoIdThumb(i)"
             (click)="onClickThumbnailImage(i)">
             @if (img.error) {
@@ -261,7 +266,7 @@
               <img class="sd-preview-thumb__img" [src]="img.blobUrl || img.url" [alt]="img.alt || img.name" />
             }
             <span class="sd-preview-thumb__badge">{{ i + 1 }}</span>
-            @if (thumbnailPosition() === 'right' || thumbnailPosition() === 'left') {
+            @if (_thumbnailPosition === 'right' || _thumbnailPosition === 'left') {
               <span class="sd-preview-thumb__name" [title]="img.name">{{ img.name }}</span>
             }
           </button>

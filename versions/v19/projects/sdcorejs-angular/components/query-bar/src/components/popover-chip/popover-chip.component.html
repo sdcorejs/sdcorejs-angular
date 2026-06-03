@@ -1,35 +1,40 @@
 <!-- why: div[role=button] (not <button>) so the nested <sd-operator> isn't button-in-button (invalid HTML). -->
+@let _active = active();
+@let _field = field();
+@let _filterField = filterField();
+@let _filterOperator = filterOperator();
+
 <div
   #chipTrigger="matMenuTrigger"
   role="button"
   tabindex="0"
   class="c-chip"
-  [class.c-chip-active]="active()"
-  [class.c-chip-inactive]="!active()"
-  [attr.data-field]="filterField()"
-  [matTooltip]="field()?.label || filterField()"
+  [class.c-chip-active]="_active"
+  [class.c-chip-inactive]="!_active"
+  [attr.data-field]="_filterField"
+  [matTooltip]="_field?.label || _filterField"
   [matMenuTriggerFor]="menu()"
   (menuOpened)="open.emit()"
   (keydown.enter)="chipTrigger.openMenu()"
   (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
   <mat-icon class="c-chip-icon" fontSet="material-icons-outlined">
-    {{ field() ? iconFor(field()!) : 'tune' }}
+    {{ _field ? iconFor(_field) : 'tune' }}
   </mat-icon>
-  <span class="c-chip-label">{{ field()?.label || filterField() }}</span>
+  <span class="c-chip-label">{{ _field?.label || _filterField }}</span>
 
-  @if (showOperator() && active()) {
-    <sd-operator class="c-chip-operator" [operators]="[filterOperator()]" [model]="filterOperator()" [disabled]="true" />
-  } @else if (active()) {
+  @if (showOperator() && _active) {
+    <sd-operator class="c-chip-operator" [operators]="[_filterOperator]" [model]="_filterOperator" [disabled]="true" />
+  } @else if (_active) {
     <span class="c-chip-sep">:</span>
   }
 
-  @if (active()) {
+  @if (_active) {
     <span class="c-chip-value">{{ valueText() }}</span>
   }
 
   <mat-icon class="c-chip-chevron" fontSet="material-icons-outlined">arrow_drop_down</mat-icon>
 
-  @if (active()) {
+  @if (_active) {
     <span
       role="button"
       tabindex="0"

@@ -38,11 +38,11 @@ Multi-date picker rendered as chips — user opens a calendar popup and toggles 
 | `max` | `number` | `0` | When > 0, adds `Validators.maxLength(max)` (count of dates). |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables interaction. |
-| `viewed` | `boolean` | `false` | DETAIL read-only mode. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = edit. `true` = static read-only `<sd-view>`. `'inline'` = the editable chip strip stays mounted (chips are already compact, no separate face); a **disabled** `'inline'` falls back to `true` (static). |
 | `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorMessage`. |
-| `hyperlink` | `string \| null \| undefined` | `undefined` | Used in `[viewed]` mode for clickable chips. |
+| `hyperlink` | `string \| null \| undefined` | `undefined` | Used in static `[viewed]` mode for clickable chips. |
 
-> **Coerce**: `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+> **Coerce**: `required`, `disabled`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`. `viewed` uses the shared `sdViewedTransform` (also accepts the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static `<sd-view>` branch and the host `.sd-viewed` class.
 
 ## Outputs
 | Name | Type | Notes |
@@ -56,7 +56,7 @@ Applied automatically on `<sd-chip-calendar>` for styling hooks:
 | Class | Condition | Effect |
 | --- | --- | --- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
-| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
+| `sd-viewed` | `isViewed()` — `[viewed]="true"`, or disabled `[viewed]="'inline'"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `#sdLabel` template — custom label
@@ -68,6 +68,7 @@ Applied automatically on `<sd-chip-calendar>` for styling hooks:
 - **Does NOT implement `ControlValueAccessor`.** Standard SDCoreJS pattern: `[form]+[name]` registers the internal `FormControl` into the parent group on `ngAfterViewInit`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[model]` + `(modelChange)` (or `[(model)]`) and `[form]+[name]`.
 - **`[viewed]="true"`** = read-only chip strip (no calendar trigger, no ✕).
+- **`[viewed]="'inline'"`** keeps the editable chip strip + calendar trigger mounted (no separate read-only face); a **disabled** `'inline'` collapses to the static `<sd-view>`.
 - **Validators**: `[required]`, `[min]` (`minLength`), `[max]` (`maxLength`). Tooltip messages mirror `<sd-chip>`.
 
 ## Chip / value structure

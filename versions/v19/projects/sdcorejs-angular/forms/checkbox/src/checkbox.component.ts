@@ -16,7 +16,7 @@ import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Valid
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
-import { sdFormControlState, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { sdFormControlState, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { Color } from '@sdcorejs/utils/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Subscription } from 'rxjs';
@@ -75,7 +75,13 @@ export class SdCheckbox implements OnDestroy, AfterViewInit {
     transform: (v): Color => v || 'primary',
   });
   readonly disabled = input(false, { transform: booleanAttribute });
-  readonly viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
+  readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // why: tri-state viewed — `'inline'` keeps the checkbox interactive; disabled `'inline'` → static.
+  readonly #viewedState = sdViewedInline(this.viewed, undefined, this.disabled);
+  /** `true` when the static read-only view should render. */
+  readonly isViewed = this.#viewedState.isViewed;
   readonly inlineError = input<string, string | null | undefined>('', {
     transform: (v): string => v ?? '',
   });

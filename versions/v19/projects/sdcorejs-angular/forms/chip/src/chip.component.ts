@@ -39,7 +39,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdFormControl, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
@@ -61,7 +61,7 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./chip.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -147,7 +147,13 @@ export class SdChip implements AfterViewInit {
   });
   addable = input(true, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` interactive (disabled `'inline'` → static). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // why: tri-state viewed — `'inline'` keeps the chip interactive; disabled `'inline'` falls back to static.
+  readonly #viewedState = sdViewedInline(this.viewed, undefined, this.disabled);
+  /** `true` when the static view should render (`viewed===true`, or disabled `'inline'`). */
+  readonly isViewed = this.#viewedState.isViewed;
   hyperlink = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });

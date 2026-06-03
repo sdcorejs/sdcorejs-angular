@@ -37,10 +37,10 @@ Radio-button group — user picks exactly ONE option from a small, fixed list. I
 | `required` | `boolean` | `false` | Adds `Validators.required`. Bare attribute = `true`. |
 | `inlineError` | `string` | `undefined` | Forces a synthetic `inlineError` validator with this message. |
 | `disabled` | `boolean` | `false` | Disables the underlying `FormControl`. Bare attribute = `true`. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode — hides the radios, renders the picked item's display text. Bare attribute = `true`. |
-| `hyperlink` | `string \| null \| undefined` | `undefined` | In DETAIL mode, render the value as a link (`[sdHref]`). |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = edit. `true` = static read-only DETAIL — hides the radios, renders the picked item's display text. `'inline'` = the radio group stays interactive (no separate text face); a **disabled** `'inline'` falls back to `true` (static text). Bare attribute = `true`. |
+| `hyperlink` | `string \| null \| undefined` | `undefined` | In static DETAIL mode, render the value as a link (`[sdHref]`). |
 
-> **Coerce note**: `required`, `disabled`, `viewed` accept `'' | true | false | null | undefined` — bare attribute presence (e.g. `<sd-radio required>`) is treated as `true`. (Hand-rolled in setters; not the `booleanAttribute` transform.)
+> **Coerce note**: `required`, `disabled` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-radio required>`) is treated as `true`. `viewed` uses the shared `sdViewedTransform` (bare attribute = `true`, plus the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static branch.
 
 ## Outputs
 | Name | Type | Notes |
@@ -60,6 +60,7 @@ Radio-button group — user picks exactly ONE option from a small, fixed list. I
 
 - **`formControlName` và `[(ngModel)]` KHÔNG được hỗ trợ.** Dùng `[(model)]` cho two-way binding và `[form]+[name]` cho FormGroup integration.
 - **`[viewed]="true"`** chuyển sang DETAIL read-only mode: radio group bị ẩn, giá trị hiển thị là text thuần (hoặc link nếu có `hyperlink`).
+- **`[viewed]="'inline'"`** giữ nguyên radio group có thể tương tác (không có text face riêng); khi `[disabled]` thì rơi về `true` (text tĩnh) vì disabled không cho sửa.
 - **Validators**: `[required]` → `Validators.required`. `[inlineError]="msg"` → synthetic `inlineError` validator. Inline errors: required → "Vui lòng nhập thông tin"; inlineError → echoes `inlineError`.
 
 ## Visual cues (helps agent map screenshots → component)

@@ -75,3 +75,31 @@
 // NOTE: the former `sd-inline-input` mixin (mat-form-field flatten for the input/input-number
 // inline variant) was removed when those controls moved to the <sd-inline-text> primitive
 // (forms/inline-text), which owns its own borderless styling. The panel mixin above stays.
+
+// Multiline input (textarea): no panel, no single-line `<sd-inline-text>` — flatten the
+// mat-form-field so the `<textarea>` reads like text, transparent with a hover/focus affordance.
+@mixin sd-inline-textarea {
+  .sd-inline-textarea {
+    cursor: text;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.04);
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.08);
+    }
+
+    &:focus-within {
+      background-color: rgba(0, 0, 0, 0.06);
+      box-shadow: inset 0 0 0 1px var(--sd-primary, #1f6feb);
+    }
+
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper { padding: 0 6px; background: transparent; }
+      .mat-mdc-form-field-flex { padding: 0; }
+      .mdc-notched-outline { display: none; }
+      .mat-mdc-form-field-subscript-wrapper { display: none; }
+      .mat-mdc-form-field-infix { padding: 4px 0; min-height: 0; border: 0; }
+    }
+  }
+}

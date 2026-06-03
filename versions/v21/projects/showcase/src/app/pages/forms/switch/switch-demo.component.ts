@@ -44,6 +44,14 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
           <sd-switch label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-switch>
         </div>
       </demo-section>
+
+      <demo-section heading="Chế độ xem (viewed)" note="viewed=true hiện chữ Bật/Tắt; 'inline' vẫn gạt được, disabled+inline thì xem tĩnh.">
+        <div style="display:flex; gap:20px; flex-wrap:wrap">
+          <sd-switch label="viewed=true (tĩnh)" [(model)]="viewedFlag" [form]="form" viewed></sd-switch>
+          <sd-switch label="inline (vẫn gạt được)" [viewed]="'inline'" [(model)]="inlineFlag" [form]="form"></sd-switch>
+          <sd-switch label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="viewedFlag" [form]="form" disabled></sd-switch>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,4 +72,7 @@ export class SwitchDemoComponent {
 
   lockedA = signal<boolean>(true);
   lockedB = signal<boolean>(false);
+
+  viewedFlag = signal<boolean>(true);
+  inlineFlag = signal<boolean>(false);
 }

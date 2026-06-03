@@ -38,11 +38,11 @@ Multi-value tag input — user types and presses Enter/comma to add a chip; chip
 | `addable` | `boolean` | `true` | When `false`, typing in new values is suppressed. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables both the chip strip and the input. |
-| `viewed` | `boolean` | `false` | DETAIL read-only mode — chips render but are not editable; `<ng-template sdViewDef>` (if present) overrides the rendering. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = edit. `true` = static read-only `<sd-view>` (chips render, not editable); `<ng-template sdViewDef>` (if present) overrides the rendering. `'inline'` = the editable chip strip stays mounted (no separate read-only face — chips are already compact), but a **disabled** `'inline'` falls back to `true` (static `<sd-view>`). |
 | `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorMessage`. |
-| `hyperlink` | `string \| null \| undefined` | `undefined` | Used in `[viewed]` mode to link the chip text. |
+| `hyperlink` | `string \| null \| undefined` | `undefined` | Used in static `[viewed]` mode to link the chip text. |
 
-> **Coerce**: `addable`, `required`, `disabled`, `viewed`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+> **Coerce**: `addable`, `required`, `disabled`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`. `viewed` uses the shared `sdViewedTransform` (accepts `'' | true | false | null | undefined` plus the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static `<sd-view>` branch and the host `.sd-viewed` class.
 
 ## Outputs
 | Name | Type | Notes |
@@ -56,7 +56,7 @@ Applied automatically on `<sd-chip>` for styling hooks:
 | Class | Condition | Effect |
 | --- | --- | --- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
-| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
+| `sd-viewed` | `isViewed()` — `[viewed]="true"`, or disabled `[viewed]="'inline'"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `#sdLabel` template — custom label rendering
@@ -68,6 +68,7 @@ Applied automatically on `<sd-chip>` for styling hooks:
 - **Does NOT implement `ControlValueAccessor`.** Standard SDCoreJS form pattern: provide `[form]` + `name`, the component will `addControl(name, formControl)` on `ngAfterViewInit` and remove it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[model]` + `(modelChange)` (or `[(model)]` shorthand) and `[form]+[name]`.
 - **`[viewed]="true"`** = DETAIL read-only mode: chips display without ✕, no input box; honors `<ng-template sdViewDef>` for custom rendering and `hyperlink` for clickable values.
+- **`[viewed]="'inline'"`** keeps the editable chip strip (chips are already compact, so there is no separate text face) — except when `[disabled]`, where it collapses to the static `<sd-view>`. Use `'inline'` to embed an editable chip field in a mostly-read-only DETAIL layout without the full mat-form-field shell standing out.
 - **Validators**: `[required]`, `[min]` (→ `minLength`), `[max]` (→ `maxLength`). Error tooltip messages: required → "Vui lòng nhập thông tin"; minlength → "Vui lòng nhập ít nhất N giá trị"; maxlength → "Vui lòng nhập tối đa N giá trị".
 - **Reactive validator updates** — validator inputs (`required` / `min` / `max`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity` whenever any of them changes. Toggle `required` at runtime and the control re-validates automatically.
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` and `inputControl.disable() / enable()` via an effect — both the chip strip and the typing area are gated together.

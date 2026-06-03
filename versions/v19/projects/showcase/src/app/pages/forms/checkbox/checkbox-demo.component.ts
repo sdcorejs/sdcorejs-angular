@@ -42,6 +42,14 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
           <sd-checkbox label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-checkbox>
         </div>
       </demo-section>
+
+      <demo-section heading="Chế độ xem (viewed)" note="viewed=true hiện chữ Có/Không; 'inline' vẫn bấm được, disabled+inline thì xem tĩnh.">
+        <div style="display:flex; gap:16px; flex-wrap:wrap">
+          <sd-checkbox label="viewed=true (tĩnh)" [(model)]="viewedFlag" [form]="form" viewed></sd-checkbox>
+          <sd-checkbox label="inline (vẫn sửa được)" [viewed]="'inline'" [(model)]="inlineFlag" [form]="form"></sd-checkbox>
+          <sd-checkbox label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="viewedFlag" [form]="form" disabled></sd-checkbox>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -62,6 +70,9 @@ export class CheckboxDemoComponent {
 
   lockedA = signal<boolean>(true);
   lockedB = signal<boolean>(false);
+
+  viewedFlag = signal<boolean>(true);
+  inlineFlag = signal<boolean>(false);
 
   summary = () => {
     const items: string[] = [];

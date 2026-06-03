@@ -4,6 +4,7 @@
   the dashed .c-token.c-token-building shell.
 -->
 @let _b = building();
+@let _autoId = autoId();
 
 @if (isSeamless()) {
   <sd-query-inline-value-chip
@@ -12,7 +13,7 @@
     [value]="_b.value ?? null"
     [density]="density()"
     [showOperator]="showOperator()"
-    [autoId]="autoId()"
+    [autoId]="_autoId"
     [autofocus]="true"
     (valueChange)="seamlessCommit.emit($event)"
     (remove)="cancel.emit()" />
@@ -40,7 +41,7 @@
         @let _bopt = $any(_b.field).option;
         <span class="c-token-value c-token-value-edit">
           <sd-select #bPicker size="sm" [viewed]="'inline'" [clearable]="false" minWidthPanel="300px"
-            [autoId]="autoId()"
+            [autoId]="_autoId"
             [items]="_b.field.type === 'lazy-values' ? $any(_bopt).search : $any(_bopt.items)"
             [valueField]="_bopt.valueField"
             [displayField]="_bopt.displayField"
@@ -62,12 +63,12 @@
           @if (_b.operator === 'BETWEEN') {
             <!-- why: 1 sd-date-range thay 2 sd-date — gọn hơn, hành vi thống nhất với completed chip. -->
             <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
-              [autoId]="autoId()"
+              [autoId]="_autoId"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-date-range>
           } @else {
             <sd-date #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
-              [autoId]="autoId()"
+              [autoId]="_autoId"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-date>
           }
@@ -77,12 +78,12 @@
           @if (_b.operator === 'BETWEEN') {
             <!-- why: datetime BETWEEN downgrade về date-range (mất time precision; đã thống nhất). -->
             <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
-              [autoId]="autoId()"
+              [autoId]="_autoId"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-date-range>
           } @else {
             <sd-datetime #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
-              [autoId]="autoId()"
+              [autoId]="_autoId"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-datetime>
           }
@@ -96,7 +97,7 @@
             type="button"
             class="c-bool-btn c-bool-true"
             [class.c-bool-active]="_b.value === true"
-            [attr.data-autoId]="autoId() + '-true'"
+            [attr.data-autoId]="_autoId + '-true'"
             (click)="commitValue.emit(true)">
             {{ $any(_b.field).trueLabel || 'Có' }}
           </button>
@@ -104,7 +105,7 @@
             type="button"
             class="c-bool-btn c-bool-false"
             [class.c-bool-active]="_b.value === false"
-            [attr.data-autoId]="autoId() + '-false'"
+            [attr.data-autoId]="_autoId + '-false'"
             (click)="commitValue.emit(false)">
             {{ $any(_b.field).falseLabel || 'Không' }}
           </button>
@@ -113,7 +114,7 @@
         <!-- Fallback (e.g. unforeseen type) — generic sd-input wired via draft outputs. -->
         <span class="c-token-value c-token-value-edit">
           <sd-input size="sm"
-            [autoId]="autoId()"
+            [autoId]="_autoId"
             [model]="$any(_b.value)"
             (sdChange)="draftChange.emit($event)"
             (keyupEnter)="draftCommit.emit()"></sd-input>

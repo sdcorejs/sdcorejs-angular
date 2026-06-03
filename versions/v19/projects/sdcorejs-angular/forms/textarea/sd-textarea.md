@@ -42,11 +42,11 @@ Multi-line text input — `<textarea>` with label, validators (required/maxlengt
 | `model` | `any` | `undefined` | Two-way bound value (use `[(model)]`). |
 | `required` | `boolean` | `false` | Adds `Validators.required`. Bare attribute = `true`. |
 | `disabled` | `boolean` | `false` | Disables the underlying `FormControl`. Bare attribute = `true`. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode. Bare attribute = `true`. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = edit. `true` = static read-only DETAIL (plain text). `'inline'` = **borderless click-to-edit**: the textarea stays mounted and editable but its mat-form-field chrome is flattened (transparent background, no outline; hover/focus get a faint `rgba` wash) so it reads like text yet edits in place. Disabled `'inline'` falls back to `true` (static) — a disabled field can't be edited. Bare attribute (`<sd-textarea viewed>`) = `true`. |
 | `autoHeight` | `boolean` | `false` | Auto-grow: textarea height tracks content (`scrollHeight`). Disables vertical scroll. Bare attribute = `true`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline `<mat-error>`; surface error via tooltip on a red error icon suffix. Bare attribute = `true`. |
 
-> **Coerce note**: `required`, `disabled`, `viewed`, `autoHeight`, `hideInlineError` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-textarea autoHeight>`) is treated as `true`.
+> **Coerce note**: `required`, `disabled`, `autoHeight`, `hideInlineError` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-textarea autoHeight>`) is treated as `true`. `viewed` uses the shared `sdViewedTransform` (from `forms/models`) — same bare-attribute coercion, but also accepts the literal `'inline'`. Computed `isViewed()` (`true`, or disabled `'inline'`) drives the static branch; `enterInlineEdit()` focuses the textarea from the inline text.
 
 ## Outputs
 | Name | Type | Notes |
@@ -91,7 +91,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 | Class | Condition | Effect |
 | --- | --- | --- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
-| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
+| `sd-viewed` | `[viewed]="true"` or `'inline'` | Removes top padding (read-only / borderless inline). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
 - `<ng-template sdLabelDef>` — custom label rendering (used only when `[appearance]` is null/falsy)
@@ -102,6 +102,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. In `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: textarea is hidden, value is rendered as plain text (or via `<ng-template sdLabelDef>` for the label and `<ng-template sdViewDef>` for the value); falls back to em-dash via `sdEmpty` when empty.
+- **`[viewed]="'inline'"`** keeps the textarea editable but borderless — the mat-form-field shell is flattened (transparent, no outline) so it reads like text and edits in place; a faint background appears on hover/focus as the editable affordance. `[disabled]` + `'inline'` degrades to the static `true` view (nothing to edit).
 - **Validators**: `[required]` → `Validators.required`. `[maxlength]` → `Validators.maxLength`. `[pattern]` → `Validators.pattern` (raw regex string). `[validator]` → async custom validator. `[inlineError]="msg"` → synthetic `inlineError` validator. Error tooltip messages: required → "Vui lòng nhập thông tin"; maxlength → "Số ký tự tối đa: N"; pattern → "Định dạng không hợp lệ"; customValidator → message returned by validator; inlineError → echoes `inlineError`.
 - **Reactive validator updates** — validator inputs (`required` / `maxlength` / `pattern` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. You can flip `required` on/off at runtime and the control re-validates automatically.
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges` emitted).

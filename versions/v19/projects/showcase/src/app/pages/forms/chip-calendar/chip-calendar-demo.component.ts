@@ -35,6 +35,13 @@ import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
           <sd-chip-calendar label="disabled" [(model)]="lockedDates" [form]="form" disabled></sd-chip-calendar>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Chip lịch vẫn sửa được, nhưng khi disabled thì rơi về xem tĩnh (viewed=true).">
+        <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
+          <sd-chip-calendar label="Ngày nghỉ (inline)" [viewed]="'inline'" [(model)]="inlineDates" [form]="form"></sd-chip-calendar>
+          <sd-chip-calendar label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineDates" [form]="form" disabled></sd-chip-calendar>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +53,7 @@ export class ChipCalendarDemoComponent {
   leaves = signal<string[]>(['2025/01/15', '2025/01/20']);
   duty = signal<string[]>([]);
   lockedDates = signal<string[]>(['2025/01/10', '2025/01/11', '2025/01/12']);
+  inlineDates = signal<string[]>(['2026/05/01', '2026/05/20']);
 
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }

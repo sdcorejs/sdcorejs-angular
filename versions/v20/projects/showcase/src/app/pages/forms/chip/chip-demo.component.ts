@@ -41,6 +41,13 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
           <sd-chip label="sm" size="sm" placeholder="Nhập nhãn..." [(model)]="filters" [form]="form"></sd-chip>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Chip strip vẫn sửa được, nhưng khi disabled thì rơi về xem tĩnh (viewed=true).">
+        <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
+          <sd-chip label="Tags (inline)" [viewed]="'inline'" [(model)]="inlineTags" [form]="form"></sd-chip>
+          <sd-chip label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineTags" [form]="form" disabled></sd-chip>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -53,6 +60,7 @@ export class ChipDemoComponent {
   tags = signal<string[]>([]);
   lockedTags = signal<string[]>(['Đã khoá 1', 'Đã khoá 2']);
   filters = signal<string[]>([]);
+  inlineTags = signal<(string | number)[]>(['alpha', 'beta']);
 
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }

@@ -312,3 +312,37 @@ describe('SdInputColor', () => {
     }));
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode — forwarded to the inner <sd-input>
+// ---------------------------------------------------------------------------
+
+describe('SdInputColor (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdInputColor>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdInputColor, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdInputColor);
+  });
+
+  it("viewed='inline' is forwarded to the inner <sd-input>; swatch stays interactive", () => {
+    // asserts: input-color delegates inline to sd-input; in inline (editable) the swatch is enabled
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    const inner = fixture.nativeElement.querySelector('sd-input') as HTMLElement;
+    expect(inner).not.toBeNull();
+    expect(inner.getAttribute('ng-reflect-viewed')).toBe('inline');
+    const swatch = fixture.nativeElement.querySelector('.sd-input-color__swatch') as HTMLButtonElement | null;
+    expect(swatch?.disabled).toBeFalsy();
+  });
+
+  it("disabled + viewed='inline' → inner sd-input is static (no editable suffix swatch)", () => {
+    // asserts: disabled→static flows through — the inner sd-input renders <sd-view> (no suffix),
+    // so the editable swatch is not in the DOM at all.
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('sd-input sd-view')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-input-color__swatch')).toBeNull();
+  });
+});

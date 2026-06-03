@@ -1,21 +1,28 @@
 <div class="d-flex flex-column" style="gap: 4px">
-  @if (!!sdLabelDef()?.templateRef) {
-    <ng-container *ngTemplateOutlet="sdLabelDef()?.templateRef!"> </ng-container>
-  } @else if (label()) {
-    <sd-label [label]="label()!" [description]="generatedDescription()" [helperText]="helperText()" [required]="required()"></sd-label>
+  @let _sdLabelDef = sdLabelDef();
+  @let _label = label();
+  @let _align = align();
+  @let _previewFiles = previewFiles();
+  @let _previewWidth = previewWidth();
+  @let _previewHeight = previewHeight();
+  @let _maxOfImage = maxOfImage();
+  @if (!!_sdLabelDef?.templateRef) {
+    <ng-container *ngTemplateOutlet="_sdLabelDef?.templateRef!"> </ng-container>
+  } @else if (_label) {
+    <sd-label [label]="_label!" [description]="generatedDescription()" [helperText]="helperText()" [required]="required()"></sd-label>
   }
   <div
     cdkDropList
     (cdkDropListDropped)="onDrop($event)"
     cdkDropListOrientation="horizontal"
     class="d-flex"
-    [class.justify-content-center]="align() === 'center'"
-    [class.justify-content-start]="align() === 'left'">
-    @if (previewFiles().length < max() && !formControl.disabled) {
+    [class.justify-content-center]="_align === 'center'"
+    [class.justify-content-start]="_align === 'left'">
+    @if (_previewFiles.length < max() && !formControl.disabled) {
       <div
         class="d-flex justify-content-center align-items-center cursor-pointer c-area-upload"
-        [style.width]="previewWidth()"
-        [style.height]="previewHeight()"
+        [style.width]="_previewWidth"
+        [style.height]="_previewHeight"
         (click)="onUpload()"
         aria-hidden="true"
         [attr.data-autoId]="autoId()"
@@ -26,12 +33,12 @@
         <mat-icon class="c-upload" fontSet="material-icons-outlined"> file_upload </mat-icon>
       </div>
     }
-    @let previewImages = previewFiles() | filterImage;
+    @let previewImages = _previewFiles | filterImage;
     @for (image of previewImages; track $index; let idx = $index) {
-      @if (!formControl.disabled || idx < maxOfImage()) {
-        <div class="c-area c-view" [class.c-loading]="!image.previewSrc && !image.src" [class.c-area-error]="image.isImgError" [style.width]="previewWidth()" [style.height]="previewHeight()" cdkDrag>
-          <div class="c-drag-placeholder" [style.width]="previewWidth()" [style.height]="previewHeight()" *cdkDragPlaceholder></div>
-          <div *cdkDragPreview [style]="{ width: previewWidth(), height: previewHeight() }" class="c-drag-preview">
+      @if (!formControl.disabled || idx < _maxOfImage) {
+        <div class="c-area c-view" [class.c-loading]="!image.previewSrc && !image.src" [class.c-area-error]="image.isImgError" [style.width]="_previewWidth" [style.height]="_previewHeight" cdkDrag>
+          <div class="c-drag-placeholder" [style.width]="_previewWidth" [style.height]="_previewHeight" *cdkDragPlaceholder></div>
+          <div *cdkDragPreview [style]="{ width: _previewWidth, height: _previewHeight }" class="c-drag-preview">
             <div class="c-container">
               <mat-icon>image</mat-icon>
             </div>
@@ -41,21 +48,21 @@
               class="c-img-container"
               [class.c-disabled]="formControl.disabled"
               [class.c-selected]="selectedFile() === image"
-              [class.has-overlay]="idx === maxOfImage() - 1 && formControl.disabled"
+              [class.has-overlay]="idx === _maxOfImage - 1 && formControl.disabled"
               (click)="onSelect(image)"
               aria-hidden="true">
               @if (image.isImgError) {
-                <img class="sd-image-image-error" alt="Image Error" style="max-width: 100%;" [style.max-height]="previewHeight()" />
+                <img class="sd-image-image-error" alt="Image Error" style="max-width: 100%;" [style.max-height]="_previewHeight" />
               } @else if(image.previewSrc) {
-                <img class="c-img" [src]="image.previewSrc" alt="Preview" [style.max-height]="previewHeight()" (error)="onImgError(image)" />
+                <img class="c-img" [src]="image.previewSrc" alt="Preview" [style.max-height]="_previewHeight" (error)="onImgError(image)" />
               } @else if(image.src) {
-                <img class="c-img" [src]="image.src" alt="Preview" [style.max-height]="previewHeight()" (error)="onImgError(image)" />
+                <img class="c-img" [src]="image.src" alt="Preview" [style.max-height]="_previewHeight" (error)="onImgError(image)" />
               } @else {
                 <mat-spinner style="justify-self: center;" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
               }
-              @if (idx === maxOfImage() - 1 && formControl.disabled && previewImages.length > maxOfImage()) {
+              @if (idx === _maxOfImage - 1 && formControl.disabled && previewImages.length > _maxOfImage) {
                 <div class="c-overlay-count" (click)="preview()">
-                  <div class="c-overlay-text">+{{ previewImages.length - maxOfImage() }}</div>
+                  <div class="c-overlay-text">+{{ previewImages.length - _maxOfImage }}</div>
                 </div>
               }
               <div class="c-action">
@@ -72,11 +79,11 @@
       }
     }
   </div>
-  @let previewDocuments = previewFiles() | filterDocument;
+  @let previewDocuments = _previewFiles | filterDocument;
   @for (document of previewDocuments; track $index; let docIdx = $index) {
     <div class="c-document-container">
       <img
-        [style.max-height]="previewHeight()"
+        [style.max-height]="_previewHeight"
         class="c-document-image"
         [class]="{
           png: document.extension === 'png',

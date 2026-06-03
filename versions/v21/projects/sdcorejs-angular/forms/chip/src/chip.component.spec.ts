@@ -568,3 +568,38 @@ describe('SdChip — E2E attributes', () => {
     expect(el.getAttribute('data-count')).toBe('3');
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state) — disabled coerces to static
+// ---------------------------------------------------------------------------
+describe('SdChip (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdChip>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdChip, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdChip);
+  });
+
+  it("viewed='inline' stays interactive: renders the chip input, not <sd-view>", () => {
+    // asserts: inline keeps the editor mounted — the static <sd-view> face is NOT used
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('input.sd-chip-input')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).toBeNull();
+  });
+
+  it('viewed=true renders the static <sd-view> face', () => {
+    // asserts: classic viewed=true path unchanged — read-only <sd-view>
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+
+  it("disabled + viewed='inline' falls back to the static <sd-view>", () => {
+    // asserts: a disabled control can't be edited, so inline degrades to the static view
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+});

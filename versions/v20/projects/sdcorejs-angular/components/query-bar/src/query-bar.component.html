@@ -9,6 +9,9 @@
 @let _density = density();
 @let _showOr = showOrConnector();
 @let _used = usedFieldKeys();
+@let _editingIndex = editingIndex();
+@let _mode = mode();
+@let _showOpOnChip = showOperatorOnChip();
 
 <div
   class="c-query-bar"
@@ -40,22 +43,22 @@
   <sd-query-field-picker
     #switchPicker
     [fields]="_fields"
-    [currentKey]="editingIndex() !== null ? $any(filters()[editingIndex()!])?.field : undefined"
-    (pick)="editingIndex() !== null && changeFilterField(editingIndex()!, $event)" />
+    [currentKey]="_editingIndex !== null ? $any(_filters[_editingIndex!])?.field : undefined"
+    (pick)="_editingIndex !== null && changeFilterField(_editingIndex!, $event)" />
 
   <!-- Chip popover — extracted into <sd-query-chip-popover>. Declared BEFORE chips
        so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`. -->
   <sd-query-chip-popover
     #chipPopover
     [field]="editingField() ?? undefined"
-    [filter]="editingIndex() !== null ? $any(filters()[editingIndex()!]) : undefined"
-    [chipIndex]="editingIndex()"
+    [filter]="_editingIndex !== null ? $any(_filters[_editingIndex!]) : undefined"
+    [chipIndex]="_editingIndex"
     [autoIdBase]="autoIdInput() ?? 'qb'"
     [switchPickerMenu]="switchPicker.menu()!"
     (commit)="onChipPopoverCommit($event)"
-    (swapField)="editingIndex() !== null && changeFilterField(editingIndex()!, $event)" />
+    (swapField)="_editingIndex !== null && changeFilterField(_editingIndex!, $event)" />
 
-  @if (mode() === 'inline') {
+  @if (_mode === 'inline') {
     <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->
 
     <!-- Completed chips -->
@@ -74,7 +77,7 @@
             [operator]="_op"
             [value]="_data"
             [density]="_density"
-            [showOperator]="showOperatorOnChip()"
+            [showOperator]="_showOpOnChip"
             [autoId]="inlineAutoId(i, 'value')"
             (valueChange)="updateFilter(i, { data: $event })"
             (remove)="removeFilter(i)" />
@@ -84,7 +87,7 @@
             [filter]="filter"
             [density]="_density"
             [multiple]="multiple(_op)"
-            [showOperator]="showOperatorOnChip()"
+            [showOperator]="_showOpOnChip"
             [autoId]="inlineAutoId(i, 'value')"
             [valueText]="chipValueText(filter)"
             [isNoData]="isNoDataOperator(_op)"
@@ -103,7 +106,7 @@
         [density]="_density"
         [allowedOperators]="allowedOperatorsFor(_b.field)"
         [multiple]="multiple($any(_b.operator))"
-        [showOperator]="showOperatorOnChip()"
+        [showOperator]="_showOpOnChip"
         (pickOperator)="pickBuildOperator($any($event))"
         (commitValue)="commitBuildValue($event)"
         (cancel)="cancelBuild()"
@@ -133,7 +136,7 @@
         [field]="_field"
         [filter]="filter"
         [active]="_active"
-        [showOperator]="showOperatorOnChip()"
+        [showOperator]="_showOpOnChip"
         [valueText]="chipValueText(filter)"
         [menu]="chipPopover.menu()!"
         (open)="openChipPopover(i)"
@@ -158,7 +161,7 @@
     #addPicker
     [fields]="_fields"
     [usedKeys]="_used"
-    (pick)="mode() === 'inline' ? beginBuild($event) : addFilter($event)" />
+    (pick)="_mode === 'inline' ? beginBuild($event) : addFilter($event)" />
 
   <sd-query-actions-bar
     [showLogicToggle]="showLogicToggle()"

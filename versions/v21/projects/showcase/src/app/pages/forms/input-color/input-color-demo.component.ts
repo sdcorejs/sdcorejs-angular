@@ -43,6 +43,16 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
           <span class="value">Swatch hiển thị: <code>{{ alphaHex() }}</code></span>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Hiển thị như text — bấm vào để sửa. Khi disabled thì rơi về xem tĩnh (viewed=true).">
+        <div class="row">
+          <sd-input-color label="Màu inline" [viewed]="'inline'" [(model)]="inlineColor" />
+          <span class="value">Giá trị: <b>{{ inlineColor() ?? '(trống)' }}</b></span>
+        </div>
+        <div class="row">
+          <sd-input-color label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineColor" [disabled]="true" />
+        </div>
+      </demo-section>
     </demo-page>
   `,
   styles: [`
@@ -75,4 +85,5 @@ export class InputColorDemoComponent {
   readonly tagColor = signal<string | undefined>(undefined);
   readonly shortHex = signal<string | undefined>('#0AF');
   readonly alphaHex = signal<string | undefined>('#1565C088');
+  readonly inlineColor = signal<string | undefined>('#1565C0');
 }

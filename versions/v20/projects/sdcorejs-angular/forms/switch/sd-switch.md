@@ -33,9 +33,10 @@ iOS-style toggle switch — boolean ON/OFF in a single tap. Use for feature flag
 | `model` | `boolean \| null \| undefined` | `false` | Two-way bound boolean (use `[(model)]`). |
 | `required` | `boolean` | `false` | Adds `Validators.required`. Bare attribute = `true`. |
 | `disabled` | `boolean` | `false` | Disables the underlying `FormControl`. Bare attribute = `true`. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = the interactive `mat-slide-toggle`. `true` = static read-only text ("Bật" / "Tắt" via i18n, plus the label). `'inline'` = keeps the interactive toggle (no separate face); a **disabled** `'inline'` falls back to `true` (static text). Bare attribute = `true`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline `<mat-error>` message. Bare attribute = `true`. |
 
-> **Coerce note**: `required`, `disabled`, `hideInlineError` accept `'' | true | false | null | undefined` — bare attribute presence (e.g. `<sd-switch required>`) is treated as `true`. (Hand-rolled in setters; not the `booleanAttribute` transform.)
+> **Coerce note**: `required`, `disabled`, `hideInlineError` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-switch required>`) is treated as `true`. `viewed` uses the shared `sdViewedTransform` (bare attribute = `true`, plus the literal `'inline'`); computed `isViewed()` (`true`, or disabled `'inline'`) drives the static text branch.
 
 ## Outputs
 | Name | Type | Notes |
@@ -49,7 +50,7 @@ None — label comes from the `[label]` input.
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngAfterViewInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
-- **No `[viewed]` mode** — the switch always renders as a toggle. For DETAIL display of a boolean, render plain text yourself (e.g. "Có" / "Không") in the parent view.
+- **`[viewed]` DETAIL/read-only** — `[viewed]="true"` renders the boolean as static text ("Bật" / "Tắt") plus the label, instead of the toggle. `[viewed]="'inline'"` keeps the toggle interactive (it's already compact, so there is no separate text face) but collapses to the static text when `[disabled]`.
 - **Validators**: `[required]` → `Validators.required` (rejects `null`/`undefined`/empty; `false` is treated as valid). Built-in inline error: required → "Vui lòng nhập thông tin"; suppressed when `[hideInlineError]="true"`.
 
 ### Three ways to integrate

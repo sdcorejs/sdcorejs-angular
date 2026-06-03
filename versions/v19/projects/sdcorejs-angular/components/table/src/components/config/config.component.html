@@ -1,4 +1,5 @@
 @let _configuration = configuration();
+@let _autoId = autoId();
 
 <sd-modal width="sm" [title]="'core.component.table.setup' | translate" #modal>
   @if (_configuration) {
@@ -75,8 +76,8 @@
     </div>
   }
   <ng-container sdFooter>
-    <sd-button [autoId]="autoId() ? autoId() + '-config-skip' : null" class="mr-8" (click)="close()" [title]="'core.component.table.skip' | translate" color="secondary"> </sd-button>
-    <sd-button [autoId]="autoId() ? autoId() + '-config-reset' : null" class="mr-8" (click)="onReset()" [title]="'core.component.form-builder.default' | translate" color="primary"> </sd-button>
-    <sd-button [autoId]="autoId() ? autoId() + '-config-apply' : null" (click)="onSave()" [title]="'core.component.table.apply' | translate" type="fill" color="primary"> </sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-config-skip' : null" class="mr-8" (click)="close()" [title]="'core.component.table.skip' | translate" color="secondary"> </sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-config-reset' : null" class="mr-8" (click)="onReset()" [title]="'core.component.form-builder.default' | translate" color="primary"> </sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-config-apply' : null" (click)="onSave()" [title]="'core.component.table.apply' | translate" type="fill" color="primary"> </sd-button>
   </ng-container>
 </sd-modal>

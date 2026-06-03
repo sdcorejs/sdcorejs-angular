@@ -34,7 +34,7 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 | `required` | `boolean` | `false` | Required validator |
 | `disabled` | `boolean` | `false` | Disable input + swatch |
 | `readonly` | `boolean` | `false` | Read-only input + swatch click disabled |
-| `viewed` | `boolean` | `false` | Read-only display mode (no input field) |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode, forwarded verbatim to the inner `<sd-input>`. `false` = edit. `true` = static read-only DETAIL. `'inline'` = borderless click-to-edit (transparent input; the swatch stays interactive). Disabled `'inline'` degrades to the static `true` view inside `<sd-input>` (no editable suffix swatch). Uses the shared `sdViewedTransform`. |
 | `model` | `string \| null \| undefined` (model — two-way) | `undefined` | Hex value `#RGB` / `#RRGGBB` / `#RRGGBBAA` |
 
 ## Outputs
@@ -60,7 +60,8 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 - **Swatch preview** — shows the raw model value (including alpha). When the value is empty or invalid, the swatch falls back to a small checkerboard pattern (CSS-generated) so empty state is visually distinct from a white color.
 - **Click swatch → open picker** — the swatch button programmatically triggers `.click()` on a hidden `<input type="color">`. Browser shows its native picker dialog. The swatch is a clean colored square (no overlay icon) so the chosen color reads at a glance.
 - **Clear button** — rendered by the inner `<sd-input>` (shared `.sd-clear-btn`, thin `close` icon), shown to the left of the swatch when the field has a value AND is editable AND not `required`. It is **hover-gated** (only visible on hover/focus). Click clears the model to `null` and emits `sdChange(null)` (the inner input emits `null`/`''` → `onInputChange` normalizes to `null`; `undefined` stays only for the pristine never-touched state). The clear click does NOT open the picker. `input-color` no longer ships its own clear markup — it relies on the built-in one.
-- **Disabled / readonly / viewed** — swatch button is disabled, picker won't open, clear button is hidden.
+- **Disabled / readonly / `viewed === true`** — swatch button is disabled, picker won't open, clear button is hidden.
+- **`viewed === 'inline'`** — forwarded to the inner `<sd-input>` (borderless click-to-edit). The swatch stays enabled so you can still recolor in place. But disabled + `'inline'` collapses the inner input to its static `<sd-view>` (no suffix), so the swatch is not rendered at all.
 
 ## Example
 

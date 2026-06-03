@@ -1,12 +1,14 @@
 @let _lbl = label();
 @let _app = appearance();
 @let _req = required();
-@let _viewed = viewed();
+@let _viewed = isViewed();
 @let _hideErr = hideInlineError();
 @let _viewDef = sdViewDef();
 @let _labelTemplate = (sdLabelTemplate() ?? sdLabelDef()?.templateRef) || undefined;
 @let _valueTemplate = (sdValueTemplate() ?? _viewDef?.templateRef) || undefined;
 @let _errMsg = errorMessage();
+@let _size = size();
+@let _removable = removable();
 
 @if (_viewed) {
   <sd-view
@@ -37,26 +39,26 @@
       <ng-container *ngTemplateOutlet="_viewDef!.templateRef; context: { value: formControl.value }"></ng-container>
     } @else {
       <mat-form-field
-        [class.sd-md]="size() === 'md'"
-        [class.sd-sm]="size() === 'sm'"
+        [class.sd-md]="_size === 'md'"
+        [class.sd-sm]="_size === 'sm'"
         [class.hide-inline-error]="_hideErr"
         [appearance]="_app"
         [floatLabel]="floatLabel()">
         @if (_app && _lbl) {
           <mat-label>{{ _lbl }}</mat-label>
         }
-        <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="size() === 'md'" [class.sd-sm]="size() === 'sm'">
+        <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
           @for (item of formControl.value; track $index) {
             @if (item) {
               <mat-chip-row
-                [class.sd-md]="size() === 'md'"
-                [class.sd-sm]="size() === 'sm'"
-                [removable]="removable()"
+                [class.sd-md]="_size === 'md'"
+                [class.sd-sm]="_size === 'sm'"
+                [removable]="_removable"
                 (removed)="onRemove(item)"
                 [disabled]="inputControl.disabled"
                 (click)="onClickChip($event, item)">
                 <span>{{ item }}</span>
-                @if (!inputControl.disabled && item | sdRemovableChip: removable()) {
+                @if (!inputControl.disabled && item | sdRemovableChip: _removable) {
                   <mat-icon matChipRemove>cancel</mat-icon>
                 }
               </mat-chip-row>

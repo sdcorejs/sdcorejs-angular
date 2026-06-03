@@ -283,3 +283,37 @@ describe('SdSwitch (NgForm extraction)', () => {
     expect(ngForm.form.contains('agree')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state) — disabled coerces to static
+// ---------------------------------------------------------------------------
+describe('SdSwitch (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdSwitch>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdSwitch, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdSwitch);
+  });
+
+  it("viewed='inline' stays interactive: renders the mat-slide-toggle", () => {
+    // asserts: inline keeps the toggle editable — the read-only text view is NOT used
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('mat-slide-toggle')).not.toBeNull();
+  });
+
+  it('viewed=true renders the static text view (no mat-slide-toggle)', () => {
+    // asserts: classic viewed=true path unchanged — read-only text only
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('mat-slide-toggle')).toBeNull();
+  });
+
+  it("disabled + viewed='inline' falls back to static (no mat-slide-toggle)", () => {
+    // asserts: a disabled control can't be edited, so inline degrades to the static view
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('mat-slide-toggle')).toBeNull();
+  });
+});

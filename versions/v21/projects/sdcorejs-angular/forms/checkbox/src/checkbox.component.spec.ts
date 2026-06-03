@@ -266,3 +266,37 @@ describe('SdCheckbox (FormGroup lifecycle)', () => {
     expect(fg.contains('agree')).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state) — disabled coerces to static
+// ---------------------------------------------------------------------------
+describe('SdCheckbox (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdCheckbox>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdCheckbox, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdCheckbox);
+  });
+
+  it("viewed='inline' stays interactive: renders the mat-checkbox, not the static text", () => {
+    // asserts: inline keeps the toggle editable — the read-only <div class="T14M"> view is NOT used
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('mat-checkbox')).not.toBeNull();
+  });
+
+  it('viewed=true renders the static text view (no mat-checkbox)', () => {
+    // asserts: classic viewed=true path unchanged — read-only text only
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('mat-checkbox')).toBeNull();
+  });
+
+  it("disabled + viewed='inline' falls back to static (no mat-checkbox)", () => {
+    // asserts: a disabled control can't be edited, so inline degrades to the static view
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('mat-checkbox')).toBeNull();
+  });
+});

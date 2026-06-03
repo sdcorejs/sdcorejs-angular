@@ -4,17 +4,24 @@
   floating toolbar mirror Artboards A / C / E from the design handoff.
 -->
 <div class="sd-preview-pdf-shell" role="region">
+  @let _stage = stage();
+  @let _numPages = numPages();
+  @let _activePage = activePage();
+  @let _isSidebarOpen = isSidebarOpen();
+  @let _searchBarOpen = searchBarOpen();
+  @let _searchTerm = searchTerm();
+  @let _searchTotal = searchTotal();
 
   <!-- ============================================
        HEADER BAR — hidden in empty + loading per design
        ============================================ -->
-  @if (stage() === 'ready') {
+  @if (_stage === 'ready') {
     <div class="sd-preview-pdf-header">
       <div class="sd-preview-pdf-header__left">
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
-          [class.sd-preview-pdf-iconbtn--active]="isSidebarOpen()"
+          [class.sd-preview-pdf-iconbtn--active]="_isSidebarOpen"
           [attr.aria-label]="'core.component.preview-pdf.toggle-sidebar' | translate"
           [attr.title]="'core.component.preview-pdf.toggle-sidebar' | translate"
           [attr.data-autoId]="autoIdSidebarToggle()"
@@ -28,7 +35,7 @@
             {{ title() || filename() }}
           </div>
           <div class="sd-preview-pdf-header__sub">
-            {{ 'core.component.preview-pdf.pages-count' | translate: { count: numPages() } }}
+            {{ 'core.component.preview-pdf.pages-count' | translate: { count: _numPages } }}
           </div>
         </div>
       </div>
@@ -37,7 +44,7 @@
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
-          [class.sd-preview-pdf-iconbtn--active]="searchBarOpen()"
+          [class.sd-preview-pdf-iconbtn--active]="_searchBarOpen"
           [attr.aria-label]="'core.component.preview-pdf.search' | translate"
           [attr.title]="'core.component.preview-pdf.search' | translate"
           [attr.data-autoId]="autoIdSearchToggle()"
@@ -70,7 +77,7 @@
     <!-- ============================================
          SEARCH BAR — between header + body, only when bar is open
          ============================================ -->
-    @if (searchBarOpen()) {
+    @if (_searchBarOpen) {
       <div class="sd-preview-pdf-searchbar" role="search">
         <mat-icon class="sd-preview-pdf-searchbar__icon" fontIcon="search"></mat-icon>
         <input
@@ -78,16 +85,16 @@
           type="text"
           class="sd-preview-pdf-searchbar__input"
           [attr.placeholder]="'core.component.preview-pdf.search-placeholder' | translate"
-          [value]="searchTerm()"
+          [value]="_searchTerm"
           [attr.data-autoId]="autoIdSearchInput()"
           (input)="onSearchInput($any($event.target).value)" />
         <span class="sd-preview-pdf-searchbar__counter" aria-live="polite">
-          {{ searchCurrent() }} / {{ searchTotal() }}
+          {{ searchCurrent() }} / {{ _searchTotal }}
         </span>
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
-          [disabled]="searchTotal() === 0"
+          [disabled]="_searchTotal === 0"
           [attr.aria-label]="'core.component.preview-pdf.search-prev' | translate"
           [attr.title]="'core.component.preview-pdf.search-prev' | translate"
           [attr.data-autoId]="autoIdSearchPrev()"
@@ -97,7 +104,7 @@
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
-          [disabled]="searchTotal() === 0"
+          [disabled]="_searchTotal === 0"
           [attr.aria-label]="'core.component.preview-pdf.search-next' | translate"
           [attr.title]="'core.component.preview-pdf.search-next' | translate"
           [attr.data-autoId]="autoIdSearchNext()"
@@ -145,14 +152,15 @@
   <div class="sd-preview-pdf-body">
 
     <!-- SIDEBAR ............................................................. -->
-    @if (stage() === 'ready' && isSidebarOpen()) {
+    @if (_stage === 'ready' && _isSidebarOpen) {
       <aside class="sd-preview-pdf-sidebar" role="complementary">
+        @let _sidebarMode = sidebarMode();
         <div class="sd-preview-pdf-sidebar__tabs" role="tablist">
           <button
             type="button"
             class="sd-preview-pdf-sidebar__tab"
             role="tab"
-            [class.sd-preview-pdf-sidebar__tab--active]="sidebarMode() === 'thumbnails'"
+            [class.sd-preview-pdf-sidebar__tab--active]="_sidebarMode === 'thumbnails'"
             [attr.data-autoId]="autoIdTabThumbnails()"
             (click)="setSidebarMode('thumbnails')">
             <mat-icon fontIcon="view_carousel"></mat-icon>
@@ -162,7 +170,7 @@
             type="button"
             class="sd-preview-pdf-sidebar__tab"
             role="tab"
-            [class.sd-preview-pdf-sidebar__tab--active]="sidebarMode() === 'outline'"
+            [class.sd-preview-pdf-sidebar__tab--active]="_sidebarMode === 'outline'"
             [attr.data-autoId]="autoIdTabOutline()"
             (click)="setSidebarMode('outline')">
             <mat-icon fontIcon="list"></mat-icon>
@@ -172,7 +180,7 @@
             type="button"
             class="sd-preview-pdf-sidebar__tab"
             role="tab"
-            [class.sd-preview-pdf-sidebar__tab--active]="sidebarMode() === 'search'"
+            [class.sd-preview-pdf-sidebar__tab--active]="_sidebarMode === 'search'"
             [attr.data-autoId]="autoIdTabSearch()"
             (click)="setSidebarMode('search')">
             <mat-icon fontIcon="search"></mat-icon>
@@ -181,7 +189,7 @@
         </div>
 
         <div class="sd-preview-pdf-sidebar__content">
-          @switch (sidebarMode()) {
+          @switch (_sidebarMode) {
             @case ('thumbnails') {
               <ul class="sd-preview-pdf-thumb-list">
                 @for (p of pageNumbers(); track trackByPage($index, p); let pi = $index) {
@@ -189,9 +197,9 @@
                     <button
                       type="button"
                       class="sd-preview-pdf-thumb"
-                      [class.sd-preview-pdf-thumb--active]="p === activePage()"
-                      [attr.aria-current]="p === activePage() ? 'page' : null"
-                      [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: p, total: numPages() })"
+                      [class.sd-preview-pdf-thumb--active]="p === _activePage"
+                      [attr.aria-current]="p === _activePage ? 'page' : null"
+                      [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: p, total: _numPages })"
                       [attr.data-autoId]="autoIdThumb(pi)"
                       (click)="goToPage(p)">
                       <div class="sd-preview-pdf-thumb__page">
@@ -215,12 +223,12 @@
               </div>
             }
             @case ('search') {
-              @if (!searchTerm()) {
+              @if (!_searchTerm) {
                 <div class="sd-preview-pdf-sidebar__deferred">
                   <mat-icon fontIcon="search"></mat-icon>
                   <p>{{ 'core.component.preview-pdf.search-placeholder' | translate }}</p>
                 </div>
-              } @else if (searchTotal() === 0) {
+              } @else if (_searchTotal === 0) {
                 <div class="sd-preview-pdf-sidebar__deferred">
                   <mat-icon fontIcon="search_off"></mat-icon>
                   <p>{{ 'core.component.preview-pdf.search-no-results' | translate }}</p>
@@ -255,7 +263,7 @@
 
     <!-- STAGE ............................................................... -->
     <div class="sd-preview-pdf-stage" #stageRef (wheel)="onWheel($event)">
-      @switch (stage()) {
+      @switch (_stage) {
         @case ('empty') {
           <div class="sd-preview-pdf-status">
             <div class="sd-preview-pdf-status__tile sd-preview-pdf-status__tile--muted">
@@ -270,16 +278,17 @@
           </div>
         }
         @case ('loading') {
+          @let _loadPercent = loadPercent();
           <div class="sd-preview-pdf-status">
             <div class="sd-preview-pdf-spinner" role="progressbar"></div>
             <div class="sd-preview-pdf-status__title">
               {{ 'core.component.preview-pdf.loading' | translate }}
-              @if (loadPercent() > 0) {
-                <span class="sd-preview-pdf-progress-pct">&nbsp;{{ loadPercent() }}%</span>
+              @if (_loadPercent > 0) {
+                <span class="sd-preview-pdf-progress-pct">&nbsp;{{ _loadPercent }}%</span>
               }
             </div>
             <div class="sd-preview-pdf-progress">
-              <div class="sd-preview-pdf-progress__fill" [style.width.%]="loadPercent()"></div>
+              <div class="sd-preview-pdf-progress__fill" [style.width.%]="_loadPercent"></div>
             </div>
           </div>
         }
@@ -316,19 +325,23 @@
               #pageCanvas
               class="sd-preview-pdf-page"
               role="img"
-              [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: activePage(), total: numPages() })">
+              [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages })">
             </canvas>
           </div>
         }
       }
 
       <!-- FLOATING TOOLBAR ........................................ -->
-      @if (showToolbar() && stage() === 'ready') {
+      @if (showToolbar() && _stage === 'ready') {
+        @let _canPrev = canPrev();
+        @let _canNext = canNext();
+        @let _zoomMode = zoomMode();
+        @let _scrollModeCurrent = scrollModeCurrent();
         <div class="sd-preview-pdf-toolbar" role="toolbar">
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [disabled]="!canPrev()"
+            [disabled]="!_canPrev"
             [attr.aria-label]="'core.component.preview-pdf.first-page' | translate"
             [attr.title]="'core.component.preview-pdf.first-page' | translate"
             [attr.data-autoId]="autoIdFirst()"
@@ -338,7 +351,7 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [disabled]="!canPrev()"
+            [disabled]="!_canPrev"
             [attr.aria-label]="'core.component.preview-pdf.prev-page' | translate"
             [attr.title]="'core.component.preview-pdf.prev-page' | translate"
             [attr.data-autoId]="autoIdPrev()"
@@ -350,18 +363,18 @@
               type="text"
               inputmode="numeric"
               class="sd-preview-pdf-toolbar__page-input"
-              [value]="activePage()"
+              [value]="_activePage"
               #pageInput
               (keydown.enter)="onPageInputEnter($event)"
               (blur)="onPageInputBlur($event)"
-              [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: activePage(), total: numPages() }"
+              [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages }"
               [attr.data-autoId]="autoIdPageInput()" />
-            <span class="sd-preview-pdf-toolbar__page-total">/ {{ numPages() }}</span>
+            <span class="sd-preview-pdf-toolbar__page-total">/ {{ _numPages }}</span>
           </span>
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [disabled]="!canNext()"
+            [disabled]="!_canNext"
             [attr.aria-label]="'core.component.preview-pdf.next-page' | translate"
             [attr.title]="'core.component.preview-pdf.next-page' | translate"
             [attr.data-autoId]="autoIdNext()"
@@ -371,7 +384,7 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn"
-            [disabled]="!canNext()"
+            [disabled]="!_canNext"
             [attr.aria-label]="'core.component.preview-pdf.last-page' | translate"
             [attr.title]="'core.component.preview-pdf.last-page' | translate"
             [attr.data-autoId]="autoIdLast()"
@@ -406,7 +419,7 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
-            [class.sd-preview-pdf-toolbar__btn--active]="zoomMode() === 'page-fit'"
+            [class.sd-preview-pdf-toolbar__btn--active]="_zoomMode === 'page-fit'"
             [attr.data-autoId]="autoIdFitPage()"
             (click)="setZoom('page-fit')">
             <mat-icon fontIcon="fit_screen"></mat-icon>
@@ -415,7 +428,7 @@
           <button
             type="button"
             class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
-            [class.sd-preview-pdf-toolbar__btn--active]="zoomMode() === 'page-width'"
+            [class.sd-preview-pdf-toolbar__btn--active]="_zoomMode === 'page-width'"
             [attr.data-autoId]="autoIdFitWidth()"
             (click)="setZoom('page-width')">
             <mat-icon fontIcon="swap_horiz"></mat-icon>
@@ -441,10 +454,10 @@
             type="button"
             class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
             [attr.data-autoId]="autoIdScrollMode()"
-            (click)="setScrollMode(scrollModeCurrent() === 'page' ? 'continuous' : 'page')">
-            <mat-icon [fontIcon]="scrollModeCurrent() === 'page' ? 'description' : 'view_day'"></mat-icon>
+            (click)="setScrollMode(_scrollModeCurrent === 'page' ? 'continuous' : 'page')">
+            <mat-icon [fontIcon]="_scrollModeCurrent === 'page' ? 'description' : 'view_day'"></mat-icon>
             <span>
-              {{ (scrollModeCurrent() === 'page'
+              {{ (_scrollModeCurrent === 'page'
                   ? 'core.component.preview-pdf.scroll-page'
                   : 'core.component.preview-pdf.scroll-continuous') | translate }}
             </span>
