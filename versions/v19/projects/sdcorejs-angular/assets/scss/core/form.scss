@@ -296,6 +296,17 @@ mat-checkbox {
   }
 }
 
+// why: reboot `label { display: inline-block; margin-bottom: 0.5rem }` (xem _base.scss) áp lên
+// CẢ <label.mdc-label> RỖNG của mat-radio/mat-checkbox khi control không có label —
+// vd selector của <sd-table> (single → mat-radio-button không truyền nội dung). Label rỗng đó
+// thành một "nub" ~4px + margin-bottom 8px nằm cạnh nút radio → trông như một dấu chấm thừa.
+// Ẩn hẳn label RỖNG để khử artifact; label CÓ nội dung không bị ảnh hưởng.
+.mat-mdc-radio-button label.mdc-label:empty,
+.mat-mdc-checkbox label.mdc-label:empty {
+  display: none;
+  margin: 0;
+}
+
 // Placeholder mặc định 1rem (16px), mong muốn nên là 14px
 .mat-mdc-floating-label {
   font-size: 14px !important;
