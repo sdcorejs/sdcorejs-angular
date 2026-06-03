@@ -55,7 +55,7 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 | --- | --- | --- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
-| `sd-bare` | `[bare]="true"` | Strips the mat-form-field shell for inline contexts (chip, token). |
+| `sd-bare` | (internal — set by `viewed='inline'`) | Flattens the mat-form-field shell for the inline editor. **No longer a public `[bare]` input** (removed); driven by `isInline()`. |
 
 ## Content projection (slots)
 - `<ng-template sdLabelDef>` — custom label rendering (replaces the plain `label` text). The component uses `SdLabelDefDirective` content child.
@@ -63,7 +63,7 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` PLUS two internal start/end controls under random uuids for fine-grained validity. All three are removed in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
-- **No `[viewed]` flag** — unlike `<sd-date>`, `<sd-datetime>`, `<sd-input>` etc., this component has no DETAIL read-only mode. For read-only display, either set `[disabled]="true"` or render the formatted range as plain text outside the component.
+- **`[viewed]` is tri-state** (`boolean | 'inline'`) like the other controls: `true` = static `<sd-view>` DETAIL; `'inline'` = text-face click-to-edit (opens the range picker, text retained until commit); a disabled `'inline'` falls back to static view.
 - **Date adapter**: providers include `provideDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage in `control1`/`control2` uses native `Date` objects; the emitted `model` value is `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }` strings.
 - **Validators**: `[required]` adds `Validators.required` to both internal controls and the aggregate. Material picker auto-emits `matDatepickerMin` / `matDatepickerMax` errors when `min`/`max` are violated. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày bắt đầu không hợp lệ (nhỏ hơn giới hạn)"; max → "Ngày kết thúc không hợp lệ (lớn hơn giới hạn)".
 
@@ -88,7 +88,7 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 
 ## Visual cues (helps agent map screenshots → component)
 - A single Material outlined field with TWO date inputs side-by-side separated by an "→" / dash, each in `dd/MM/yyyy` format (e.g. `01/01/2025  →  31/12/2025`)
-- Trailing icons: a calendar icon to open the picker; an ✕ clear button when a value is set
+- Trailing icons: a calendar icon to open the picker; an ✕ clear button (`cancel` icon) when a value is set. **In `viewed='inline'` the edit chrome is flattened/hidden** (the text face is shown instead); the inline clear-× on the face is gated by `clearable`.
 - Clicking the calendar icon opens a 2-month side-by-side calendar popup; user clicks start date, then end date — the range fills in
 - When focused, both inputs share a single underline/outline (visually one field, not two)
 - Helper-text shows as an info icon next to the label
@@ -126,7 +126,7 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 
 ## Anti-patterns
 - ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
-- ❌ Trying `[viewed]="true"` — no such input on this component. Use `[disabled]` or render plain text.
+- ❌ Passing `[bare]` — the input was removed; use `[viewed]="'inline'"` for the chip/inline editor (it flattens the field internally).
 - ❌ Treating the model as two separate strings — it is `{ from, to }`. Splitting it across two `<sd-date>` defeats the purpose (no shared calendar, no aggregate validation).
 - ❌ Mutating `model.from` / `model.to` directly — assign a new object literal so the `effect` re-runs.
 - ❌ Using this for date-and-time intervals — neither end carries time. Use two `<sd-datetime>` if you need that.
@@ -151,8 +151,8 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 
 | API | Type | Notes |
 |---|---|---|
-| `[bare]` | `boolean` | Strips the form-field shell so the control fits inline in a chip / token. Use inside `<sd-query-bar>` BETWEEN or other inline editors. Default `false`. |
-| `[viewed]` | `boolean` | Read-only mode — renders `<sd-view>` showing `dd/MM/yyyy → dd/MM/yyyy`. Project an `<ng-template #sdValue>` inside `<sd-date-range>` to override the display. Default `false`. |
+| `[clearable]` | `boolean` | In `'inline'`, show a hover clear (cancel) icon on the text face. `false` where the host owns removal (chips). Default `true`. |
+| `[viewed]` | `boolean \| 'inline'` | `false` edit · `true` static `<sd-view>` (`dd/MM/yyyy → dd/MM/yyyy`) · `'inline'` click-to-edit range picker (text retained until commit). Project `<ng-template #sdValue>` to override the display. Default `false`. (The old `[bare]` input was removed — inline flattens the field internally.) |
 | `open()` | method | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode. |
 
 `bare` and `viewed` are independent and complementary:

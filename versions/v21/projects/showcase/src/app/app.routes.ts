@@ -45,6 +45,7 @@ export const routes: Routes = [
   { path: 'forms/date',                  loadComponent: () => import('./pages/forms/date/date-demo.component').then(m => m.DateDemoComponent) },
   { path: 'forms/date-range',            loadComponent: () => import('./pages/forms/date-range/date-range-demo.component').then(m => m.DateRangeDemoComponent) },
   { path: 'forms/datetime',              loadComponent: () => import('./pages/forms/datetime/datetime-demo.component').then(m => m.DatetimeDemoComponent) },
+  { path: 'forms/inline-text',           loadComponent: () => import('./pages/forms/inline-text/inline-text-demo.component').then(m => m.InlineTextDemoComponent) },
   { path: 'forms/input',                 loadComponent: () => import('./pages/forms/input/input-demo.component').then(m => m.InputDemoComponent) },
   { path: 'forms/input-color',           loadComponent: () => import('./pages/forms/input-color/input-color-demo.component').then(m => m.InputColorDemoComponent) },
   { path: 'forms/input-number',          loadComponent: () => import('./pages/forms/input-number/input-number-demo.component').then(m => m.InputNumberDemoComponent) },

@@ -16,7 +16,6 @@ import { SdDateRange } from './date-range.component';
     [label]="label"
     [required]="required"
     [disabled]="disabled"
-    [bare]="bare"
     [viewed]="viewed"
     [min]="min"
     [max]="max"
@@ -28,7 +27,6 @@ class HostComponent {
   label?: string;
   required = false;
   disabled = false;
-  bare = false;
   viewed = false;
   min: any = undefined;
   max: any = undefined;
@@ -362,13 +360,15 @@ describe('SdDateRange', () => {
   });
 
   // -------------------------------------------------------------------------
-  describe('bare + viewed + open()', () => {
-    it('bare host adds .sd-bare', () => {
-      // host bindings reflect from inputs after detectChanges
-      host.bare = true; // add `bare` to the test host component as a passthrough input
+  describe('viewed + open()', () => {
+    const hasClearIcon = () =>
+      Array.from(fixture.nativeElement.querySelectorAll('mat-icon') as NodeListOf<HTMLElement>)
+        .some(i => i.textContent?.trim() === 'cancel');
+
+    it('renders the clear (cancel) icon when a range is set (edit mode)', () => {
+      host.model = { from: '2026/01/01', to: '2026/01/31' };
       fixture.detectChanges();
-      const hostEl = fixture.nativeElement.querySelector('sd-date-range') as HTMLElement;
-      expect(hostEl.classList.contains('sd-bare')).toBe(true);
+      expect(hasClearIcon()).toBe(true);
     });
 
     it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
@@ -459,4 +459,76 @@ describe('SdDateRange (NgForm extraction)', () => {
     expect(ngForm).toBeTruthy();
     expect(ngForm.form.contains('period')).toBe(true);
   }));
+});
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`)
+// ---------------------------------------------------------------------------
+
+describe('SdDateRange (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdDateRange>;
+  let comp: SdDateRange;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdDateRange, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdDateRange);
+    comp = fixture.componentInstance;
+  });
+
+  function seedValue(): void {
+    comp.control1.setValue(new Date(2026, 0, 1));
+    comp.control2.setValue(new Date(2026, 0, 31));
+  }
+
+  it('viewed="inline" → isInline true, isViewed false; text face + (hidden) range editor', () => {
+    // asserts: inline mounts BOTH the sd-view face AND the bare-hidden range editor
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    seedValue();
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-inline-editor')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('mat-date-range-input')).not.toBeNull();
+  });
+
+  it('clicking the text face opens the range picker WITHOUT hiding the text', () => {
+    // asserts: text retained while editing; click → open() via enterInlineEdit
+    const openSpy = spyOn(comp, 'open').and.callThrough();
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    seedValue();
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.sd-inline-view') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(openSpy).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+  });
+
+  it('inline clear-× gated by clearable', () => {
+    // asserts: clearable inline range shows clear-×; [clearable]=false suppresses it
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    seedValue();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view .sd-inline-clear')).not.toBeNull();
+    fixture.componentRef.setInput('clearable', false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  });
+
+  it('disabled inline behaves like viewed=true (static, no editor / no face)', () => {
+    // asserts: disabled 'inline' → isViewed true, isInline false; can't click-to-edit a disabled control
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    seedValue();
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(false);
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
+    expect(fixture.nativeElement.querySelector('mat-date-range-input')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
 });

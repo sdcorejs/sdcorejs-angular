@@ -2,23 +2,43 @@
 @let app = appearance();
 @let hideErr = hideInlineError();
 @let errMsg = errorMessage();
-@let viewDef = sdViewDef();
 @let hText = helperText();
 @let req = required();
+@let _isInline = isInline();
+@let _bare = _isInline;
+@let _hasValue = !!formControl.value;
 
 @let minD = resolvedMin();
 @let maxD = resolvedMax();
 
-@if (viewed()) {
+@if (isViewed()) {
   <sd-view
     [label]="lbl"
     [labelTemplate]="sdLabelTemplate()"
     [value]="formControl.value"
     [display]="formControl.value | date: 'dd/MM/yyyy'"
     [hyperlink]="hyperlink()"
-    [valueTemplate]="sdValueTemplate()">
+    [valueTemplate]="viewTemplate()">
   </sd-view>
 } @else {
+  @if (_isInline) {
+    <!-- why: inline — sd-view là "mặt" + trigger; calendar editor render ẩn (.sd-inline-editor) chỉ để mở panel. -->
+    <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
+      <sd-view
+        [label]="lbl"
+        [labelTemplate]="sdLabelTemplate()"
+        [value]="formControl.value"
+        [display]="formControl.value | date: 'dd/MM/yyyy'"
+        [hyperlink]="hyperlink()"
+        [valueTemplate]="viewTemplate()">
+      </sd-view>
+      @if (clearable() && _hasValue && !req && !formControl.disabled) {
+        <button type="button" class="sd-inline-clear" (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </span>
+  }
   @if (!app) {
     <ng-content select="[sdLabel]">
       @if (lbl) {
@@ -29,14 +49,11 @@
 
   <div
     class="d-flex align-items-center"
-    [class.sd-view]="viewDef?.templateRef"
+    [class.sd-inline-editor]="_isInline"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-    @if (viewDef?.templateRef && !isFocused && !datePicker()?.opened) {
-      <ng-container *ngTemplateOutlet="viewDef!.templateRef; context: { value: formControl.value }"> </ng-container>
-    } @else {
       <mat-form-field
         class="c-form-field-date-input"
         [class.sd-md]="size() === 'md'"
@@ -92,7 +109,7 @@
           <mat-error>{{ errMsg }}</mat-error>
         }
 
-        @if (formControl.value && !req && !formControl.disabled) {
+        @if (formControl.value && !req && !formControl.disabled && !_bare) {
           <button
             type="button"
             class="sd-clear-btn sd-hover"
@@ -106,6 +123,5 @@
 
         <mat-icon class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && picker.open()" #btn matSuffix>today</mat-icon>
       </mat-form-field>
-    }
   </div>
 }

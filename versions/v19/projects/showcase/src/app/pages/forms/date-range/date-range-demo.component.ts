@@ -38,6 +38,12 @@ interface Range { from?: string | null; to?: string | null }
           <sd-date-range style="width: 300px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date-range>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Bấm vào khoảng để mở lịch chọn; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+        <div style="width: 340px; font-size:13px; color:#555">
+          Kỳ: <sd-date-range [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date-range>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

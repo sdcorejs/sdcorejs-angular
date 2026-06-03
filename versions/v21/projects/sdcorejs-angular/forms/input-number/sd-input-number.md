@@ -45,7 +45,7 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `readonly` | `boolean` | `false` | HTML `readonly` — input still focusable. |
 | `disabled` | `boolean` | `false` | Disables the control. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode — hides input, renders formatted number (or `<ng-template sdViewDef>`). |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` edit · `true` static DETAIL (formatted number / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), focus to edit, blur reformats (e.g. `12.345`); NO panel/overlay. Disabled `'inline'` → static view. |
 | `blurOnEnter` | `boolean` | `false` | If `true`, Enter blurs the field after emitting `keyupEnter`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorMessage`. |
 | `model` | `any` (`number \| null`) | `undefined` | Two-way bound numeric value (use `[(model)]`). Stored as a JS number; emitted as number on change. |

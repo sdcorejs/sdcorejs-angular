@@ -108,6 +108,26 @@ export interface ToastData {
 - **Position / styling**: rendered by `SdToastContainerComponent` — not configurable through the service API. Override the component's CSS to change position/animation.
 - **`actionLabel` + `onAction`**: passed through to the toast; the container is responsible for calling `onAction()` on click.
 
+## E2E hooks (data-* attributes)
+
+Each rendered toast (`ToastComponent`, selector `toast`) exposes attributes on its host so `<sd-autoid-inspector>` and E2E suites can read the toast kind + content without scraping inner markup:
+
+| Attribute | Value | Source |
+|---|---|---|
+| `data-autoid` | `services-notify-toast-<type>` (e.g. `services-notify-toast-success`) | `type` |
+| `data-type` | `success` / `info` / `warning` / `error` | `type` |
+| `data-title` | the custom title, or absent when none | `title` |
+| `data-message` | the message; array messages joined with `" | "` | `message` |
+
+The inspector surfaces these as `state.type` / `state.title` / `state.message` in its JSON export. Select a toast by kind:
+
+```ts
+// Playwright — assert a success toast appeared
+await expect(page.locator('[data-autoid="services-notify-toast-success"]')).toBeVisible();
+```
+
+> Multiple toasts of the same type share the same `data-autoid` (flagged `duplicate` by the inspector) — scope by `data-message` / order if you need a specific one.
+
 ## Examples
 
 ### 1. Success after save

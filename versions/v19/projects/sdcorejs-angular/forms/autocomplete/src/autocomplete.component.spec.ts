@@ -638,3 +638,71 @@ describe('SdAutocomplete (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`)
+// ---------------------------------------------------------------------------
+
+describe('SdAutocomplete (viewed inline mode)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fixture: ComponentFixture<SdAutocomplete<any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let comp: SdAutocomplete<any>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdAutocomplete, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdAutocomplete);
+    comp = fixture.componentInstance;
+    fixture.componentRef.setInput('items', [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }]);
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+  });
+
+  it('viewed="inline" → isInline true, isViewed false; text face + (hidden) editor both rendered', () => {
+    // asserts: inline mounts BOTH the sd-view face AND the hidden autocomplete editor
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-inline-editor')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[matInput], input')).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  });
+
+  it('clicking the text face opens the panel WITHOUT hiding the text', () => {
+    // asserts: text retained while editing; click → open() via enterInlineEdit
+    const openSpy = spyOn(comp, 'open').and.callThrough();
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.sd-inline-view') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(openSpy).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+  });
+
+  it('inline clear-× gated by clearable', () => {
+    // asserts: clearable inline autocomplete shows clear-×; [clearable]=false suppresses it
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view .sd-inline-clear')).not.toBeNull();
+    fixture.componentRef.setInput('clearable', false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  });
+
+  it('disabled inline behaves like viewed=true (static, no editor / no face)', () => {
+    // asserts: disabled 'inline' → isViewed true, isInline false
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(false);
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+});

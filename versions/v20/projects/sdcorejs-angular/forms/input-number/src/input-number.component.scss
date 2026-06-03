@@ -1,6 +1,9 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
+// Inline mode (viewed='inline') renders <sd-inline-text> (forms/inline-text) — it owns its
+// own borderless seamless styling, so no inline-input rule is needed here.
+
 :host {
   display: block;
 }
@@ -32,14 +35,6 @@
     }
     .mat-mdc-placeholder-required {
       color: map.get(color.$color_map, 'error');
-    }
-  }
-}
-
-.sd-view {
-  &:not(.c-focused):not(.c-disabled) {
-    &:hover {
-      background-color: #ebecf0;
     }
   }
 }

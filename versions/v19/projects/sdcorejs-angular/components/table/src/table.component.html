@@ -81,6 +81,7 @@
                       </div>
                     } @else {
                       <sd-button
+                        [autoId]="autoId() ? autoId() + '-tree-toggle-' + row.meta.id : null"
                         type="link"
                         [prefixIcon]="row.meta.tree.isExpanded ? 'expand_less' : 'expand_more'"
                         (click)="onTreeToggle(row); $event.stopPropagation()"
@@ -117,6 +118,7 @@
           <td mat-cell *matCellDef="let element">
             @if (!element.isExpanding && !_tableOption.expand?.always) {
               <sd-button
+                [autoId]="autoId() ? autoId() + '-expand-' + element.meta.id : null"
                 type="link"
                 [prefixIcon]="element.isExpanded ? 'expand_less' : 'expand_more'"
                 (click)="onExpand(element)"
@@ -241,6 +243,7 @@
               }
               @if (_tableOption.group?.collapsible) {
                 <sd-button
+                  [autoId]="autoId() ? autoId() + '-group-toggle-' + (item.meta.group?.key || item.meta.id) : null"
                   type="link"
                   [prefixIcon]="item.meta.group.isExpanded ? 'expand_more' : 'chevron_right'"
                   width="32px"
@@ -460,6 +463,7 @@
         <ng-container *sdDesktop>
           @if (_tableOption.reload?.visible) {
             <sd-button
+              [autoId]="autoId() ? autoId() + '-reload' : null"
               class="mr-8"
               [title]="'core.component.table.reload' | translate"
               prefixIcon="refresh"
@@ -471,28 +475,28 @@
         </ng-container>
         @if (_export && _items.length) {
           @if (_export.type === 'custom') {
-            <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportCustom()" type="link"> </sd-button>
+            <sd-button [autoId]="autoId() ? autoId() + '-export' : null" class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportCustom()" type="link"> </sd-button>
           } @else {
             @if (_export.visible) {
               @if (_exporting) {
-                <sd-button class="mr-8" [loading]="_exporting" [title]="exportTitle()" prefixIcon="get_app" type="link"> </sd-button>
+                <sd-button [autoId]="autoId() ? autoId() + '-export' : null" class="mr-8" [loading]="_exporting" [title]="exportTitle()" prefixIcon="get_app" type="link"> </sd-button>
               } @else {
                 @if (_export.visible === 'ALL' || !_export.visible) {
-                  <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" [matMenuTriggerFor]="menu" type="link"> </sd-button>
+                  <sd-button [autoId]="autoId() ? autoId() + '-export' : null" class="mr-8" [title]="exportTitle()" prefixIcon="get_app" [matMenuTriggerFor]="menu" type="link"> </sd-button>
                   <mat-menu #menu="matMenu">
-                    <button mat-menu-item (click)="exportExcel()" type="button">
+                    <button mat-menu-item [attr.data-autoid]="autoId() ? autoId() + '-export-excel' : null" (click)="exportExcel()" type="button">
                       <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
                       <span> {{ 'core.component.table.export-excel' | translate }}</span>
                     </button>
-                    <button mat-menu-item (click)="exportCSV()" type="button">
+                    <button mat-menu-item [attr.data-autoid]="autoId() ? autoId() + '-export-csv' : null" (click)="exportCSV()" type="button">
                       <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
                       <span> {{ 'core.component.table.export-csv' | translate }}</span>
                     </button>
                   </mat-menu>
                 } @else if (_export.visible === 'EXCEL') {
-                  <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportExcel()" type="link"> </sd-button>
+                  <sd-button [autoId]="autoId() ? autoId() + '-export-excel' : null" class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportExcel()" type="link"> </sd-button>
                 } @else if (_export.visible === 'CSV') {
-                  <sd-button class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportCSV()" type="link"> </sd-button>
+                  <sd-button [autoId]="autoId() ? autoId() + '-export-csv' : null" class="mr-8" [title]="exportTitle()" prefixIcon="get_app" (click)="exportCSV()" type="link"> </sd-button>
                 }
               }
             }
@@ -502,6 +506,7 @@
         <ng-container *sdDesktop>
           @if (configComponent()) {
             <sd-button
+              [autoId]="autoId() ? autoId() + '-config' : null"
               class="mr-8"
               [title]="'core.component.table.setup-short' | translate"
               prefixIcon="settings"
@@ -514,7 +519,7 @@
         <ng-container *sdMobile>
           @if (!_tableOption.filter?.disabled && mobileFilter()) {
             <sd-button
-              [autoId]="autoId() + 'mobile-filter-open'"
+              [autoId]="autoId() ? autoId() + '-mobile-filter-open' : null"
               class="mr-8"
               prefixIcon="filter_alt"
               (click)="mobileFilter()!.open()"
@@ -553,9 +558,9 @@
       </ng-container>
     </div>
   </div>
-  <selector-action [tableOption]="_tableOption" [selectedTableItems]="selectedTableItems()" (clear)="onClearSelection(groupedItems)" />
+  <selector-action [autoId]="autoId()" [tableOption]="_tableOption" [selectedTableItems]="selectedTableItems()" (clear)="onClearSelection(groupedItems)" />
   @if (_tableOption.config?.visible) {
-    <config [tableOption]="_tableOption" />
+    <config [autoId]="autoId()" [tableOption]="_tableOption" />
   }
   <!-- Mobile filter drawer — chỉ instantiate khi cần render trên mobile -->
   @if (!_tableOption.filter?.disabled && filterRegister) {

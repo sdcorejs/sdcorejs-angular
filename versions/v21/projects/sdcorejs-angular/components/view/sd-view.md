@@ -32,7 +32,8 @@ Read-only label/value display widget — renders a "label on top, value below" p
 | `display` | `string \| null \| undefined` (REQUIRED) | — | Display string. This is what shows when no custom `valueTemplate` is set. Falls back to `—` (em-dash) via `sdEmpty` pipe when null/empty. |
 | `hyperlink` | `string \| null \| undefined` | `undefined` | If set, value is rendered as `<a [sdHref]="hyperlink">{{ display }}</a>` (click navigates / opens in tab). |
 | `labelTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional template ref injected by a parent (used by `<sd-input>` etc. when delegating their label). Wins over `label` and over `#sdLabel` content. |
-| `valueTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional template ref for value, with context `{ $implicit: display, value }`. Wins over `display` rendering and over `#sdValue` content. |
+| `valueTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional template ref for value, with context `{ $implicit: display, value, selectedItems, selectedItem }` (`selectedItem` = `selectedItems[0] ?? null`). Wins over `display` rendering and over `#sdValue` content. |
+| `selectedItems` | `any[] \| undefined` | `undefined` | Resolved selected item objects passed by the parent (e.g. `<sd-select>`) so the value template can render `head +N` / read fields. Exposed in the `valueTemplate` context. |
 
 > **Required note**: `display` uses `input.required()` — Angular will emit a compile error if you forget to bind it.
 
@@ -42,7 +43,7 @@ None. This is a pure display component.
 ## Content projection (slots)
 You may provide either or both templates inside the host:
 - `<ng-template #sdLabel>…</ng-template>` — custom label rendering. Picked up via `contentChild('sdLabel')`. Used only when `[labelTemplate]` is not bound.
-- `<ng-template #sdValue let-display let-value="value">…</ng-template>` — custom value rendering. Context = `{ $implicit: display, value }`. Used only when `[valueTemplate]` is not bound.
+- `<ng-template #sdValue let-display let-value="value" let-selectedItems="selectedItems" let-selectedItem="selectedItem">…</ng-template>` — custom value rendering. Context = `{ $implicit: display, value, selectedItems, selectedItem }`. Used only when `[valueTemplate]` is not bound.
 
 Resolution order (per `computed` signal):
 1. `[labelTemplate]` / `[valueTemplate]` input

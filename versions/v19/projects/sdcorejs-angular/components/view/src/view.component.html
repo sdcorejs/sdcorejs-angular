@@ -6,11 +6,22 @@
   }
 }
 
+<!--
+  why: context phải đủ cho MỌI consumer template (sdViewDef / #sdValue dùng chung đường này):
+  $implicit = display (cho `let-x`), value = giá trị thô, selectedItems = list item đã chọn
+  (template "head +N"), selectedItem = item đầu (tiện cho single-select). Thiếu key nào là
+  template của consumer mất biến đó → đừng rút gọn.
+-->
 @if (activeValueTemplate()) {
   <ng-container
     *ngTemplateOutlet="
       activeValueTemplate()!;
-      context: { $implicit: display(), value: value(), selectedItems: selectedItems() }
+      context: {
+        $implicit: display(),
+        value: value(),
+        selectedItems: selectedItems(),
+        selectedItem: (selectedItems() ?? [])[0] ?? null,
+      }
     ">
   </ng-container>
 } @else {

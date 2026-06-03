@@ -1,17 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
-  afterNextRender,
   ChangeDetectionStrategy,
-  ChangeDetectorRef,
   Component,
   computed,
-  inject,
-  Injector,
   input,
   output,
   signal,
-  viewChild,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -36,6 +31,11 @@ type Density = 'compact' | 'comfortable';
  * Covers types: boolean, date, datetime, values, lazy-values, plus a fallback else
  * branch. BETWEEN (date / datetime) uses a single `<sd-date-range>` (datetime
  * downgrades to date precision).
+ *
+ * why: `values` / `lazy-values` đã chuyển sang `<sd-select [viewed]="'inline'">` — sd-select
+ * tự quản click→edit + focusout→thoát + bare editor, nên các nhánh đó KHÔNG dùng
+ * `enterEdit` / `onFocusOut` / `#editing` nữa. Các nhánh còn lại (boolean / date / datetime /
+ * BETWEEN) vẫn dùng lifecycle thủ công cho tới khi control tương ứng có inline mode (rollout).
  */
 @Component({
   selector: 'sd-query-inline-chip',
@@ -54,8 +54,6 @@ type Density = 'compact' | 'comfortable';
   ],
 })
 export class SdQueryInlineChip {
-  readonly #injector = inject(Injector);
-  readonly #cdr = inject(ChangeDetectorRef);
 
   // ---------------------------------------------------------------------------
   // Inputs
@@ -105,12 +103,13 @@ export class SdQueryInlineChip {
   // Internal state
   // ---------------------------------------------------------------------------
 
-  /** Edit toggle — viewed (false) ↔ editable (true). */
+  /**
+   * Edit toggle for the BOOLEAN branch only — viewed (false) ↔ toggle buttons (true).
+   * why: boolean isn't a `viewed`-aware form control (no inline mode); it keeps the chip's own
+   * click-to-edit. values/date/datetime/BETWEEN delegate to their control's `viewed='inline'`.
+   */
   readonly #editing = signal(false);
   readonly editing = this.#editing.asReadonly();
-
-  /** Active picker reference — auto-opened right after entering edit. */
-  private readonly chipPicker = viewChild<SdSelect | SdDate | SdDatetime | SdDateRange>('chipPicker');
 
   // ---------------------------------------------------------------------------
   // Template helpers
@@ -128,73 +127,31 @@ export class SdQueryInlineChip {
   // Edit lifecycle
   // ---------------------------------------------------------------------------
 
-  /** Enter edit mode + auto-open the picker on next render. */
+  /** Enter edit mode (BOOLEAN branch — shows the toggle buttons; exits on toggle commit). */
   enterEdit(): void {
     if (this.#editing()) return;
     this.#editing.set(true);
-    afterNextRender(
-      () => (this.chipPicker() as any)?.open?.(),
-      { injector: this.#injector },
-    );
-  }
-
-  /**
-   * Exit edit only when focus actually leaves the wrapper subtree.
-   * why: focusout fires for every internal blur — only exit when relatedTarget
-   * is OUTSIDE the wrapper AND không thuộc cdk-overlay (mat-select panel, mat-calendar,
-   * datetime overlay đều render trong document.body). Tick option trong panel multi-
-   * select sẽ chuyển focus sang `<mat-option>` (nằm trong cdk-overlay-container) →
-   * nếu exit ngay sẽ flip viewed → kill panel sớm. Chỉ exit khi panel đã close
-   * (relatedTarget không nằm trong overlay). markForCheck vì overlay focusout
-   * không kéo theo CD cho OnPush parent.
-   */
-  onFocusOut(ev: FocusEvent): void {
-    const wrapper = ev.currentTarget as HTMLElement | null;
-    const next = ev.relatedTarget as Node | null;
-    if (!wrapper) return;
-    if (next && wrapper.contains(next)) return;
-    if (next instanceof Element && next.closest('.cdk-overlay-container')) return;
-    if (this.#editing()) {
-      this.#editing.set(false);
-      this.#cdr.markForCheck();
-      // why: sd-date-range / sd-datetime đôi khi emit sdChange NGAY SAU focusout —
-      // viewed flip xảy ra trước khi model mới về tới [model] input → viewed text
-      // format dùng giá trị cũ. Schedule thêm 1 CD pass để re-render với model mới
-      // (user-visible bug: "click ra lần đầu chưa update, click vào rồi ra lần 2 mới đúng").
-      queueMicrotask(() => this.#cdr.markForCheck());
-    }
-  }
-
-  /** Test-only shim — direct call avoids dispatching real FocusEvent in JSDOM. */
-  onFocusOutForTest(ev: FocusEvent): void {
-    this.onFocusOut(ev);
   }
 
   // ---------------------------------------------------------------------------
   // Commit handlers — single emit per category
   // ---------------------------------------------------------------------------
 
-  /** Single-value commit (sd-date, sd-datetime, single sd-select). */
+  /**
+   * Single-value commit (sd-date, sd-datetime, single sd-select).
+   * why: date/datetime/values render via `viewed='inline'` (self-managed) — the chip only
+   * forwards the value; it no longer toggles `#editing` (that's boolean-only now).
+   */
   emitSingleCommit(v: unknown): void {
     this.commit.emit(v);
-    this.#editing.set(false);
   }
 
-  /**
-   * BETWEEN commit — sd-date-range emits {from, to}.
-   * why: nếu cả from + to đều có giá trị → coi như range đã chọn xong → exit edit
-   * ngay tại commit (đồng bộ với model.set của parent), không chờ focusout. Tránh
-   * race "focusout firing trước sdChange" làm viewed text render với model cũ.
-   */
+  /** BETWEEN commit — sd-date-range (viewed='inline') emits `{from, to}`; chip just forwards it. */
   emitRangeCommit(ev: { from: unknown; to: unknown } | null): void {
     this.commitRange.emit(ev ?? null);
-    if (ev && ev.from != null && ev.to != null) {
-      this.#editing.set(false);
-      this.#cdr.markForCheck();
-    }
   }
 
-  /** Multi-select live emit — does NOT exit edit (focusout handles exit). */
+  /** Multi-select live emit (sd-select inline). */
   emitLive(v: unknown): void {
     this.liveChange.emit(v);
   }

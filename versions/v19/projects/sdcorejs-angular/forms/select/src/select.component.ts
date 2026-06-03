@@ -54,6 +54,10 @@ import {
   SdInlineErrorValidator,
   SdSearch,
   SdSelectionData,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -69,7 +73,7 @@ import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
   styleUrls: ['./select.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
+  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -98,6 +102,14 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
   itemDef = contentChild(SdItemDefDefDirective);
   sdViewDef = contentChild(SdViewDefDirective);
+
+  /**
+   * View display template. `sdViewDef` is now just a custom override of the view rendering —
+   * it replaces the projected `#sdValue` template when present (fed into `<sd-view>`'s
+   * `valueTemplate`), so there is ONE rendering path. No more `.sd-view` class / focus-swap;
+   * click-to-edit is governed by `viewed='inline'`.
+   */
+  readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   #ref = inject(ChangeDetectorRef);
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
@@ -160,10 +172,25 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (bare editor). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
   multiple = input(false, { transform: booleanAttribute });
-  /** Flatten the field chrome to a chip-friendly trigger (value + caret only). */
-  bare = input(false, { transform: booleanAttribute });
+  /**
+   * Whether the `viewed='inline'` text face shows a hover clear-× to empty the value.
+   * Default `true`. Set `false` where the HOST owns removal (e.g. `<sd-query-bar>` chips,
+   * whose own `×` removes the whole filter) so the chip isn't cluttered with two ×.
+   */
+  clearable = input(true, { transform: booleanAttribute });
+
+  // Tri-state `viewed` (isViewed / isInline) — shared primitive. In `'inline'` the editor is
+  // always rendered (chrome hidden via CSS); the sd-view text face opens the panel on click.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.open(), this.disabled);
+  /** `true` when `viewed === 'inline'` — editor mounted but chrome hidden; sd-view text is the trigger face. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` — static read-only view, no editor mounted. */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Open the picker from the inline text face. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
 
   validator = input<SdCustomValidator | undefined>();
   inlineError = input<string | undefined>();
@@ -297,7 +324,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   });
 
   updatePanelWidth = () => {
-    const minWInput = this.minWidthPanel();
+    let minWInput = this.minWidthPanel();
+    // why: inline mode — trigger là text hẹp (.sd-inline-view), panel tối thiểu 200px cho dễ đọc options.
+    if (this.isInline() && (!minWInput || minWInput === 'auto')) minWInput = '200px';
     if (!minWInput || minWInput === 'auto') {
       this.calculatedPanelWidth.set('auto');
       return;

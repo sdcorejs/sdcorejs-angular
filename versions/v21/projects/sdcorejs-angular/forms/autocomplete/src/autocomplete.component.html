@@ -2,7 +2,6 @@
 @let app = appearance();
 @let hideErr = hideInlineError();
 @let errMsg = errorMessage();
-@let viewDef = sdViewDef();
 @let hText = helperText();
 @let req = required();
 @let dField = displayField();
@@ -10,17 +9,39 @@
 @let iDefTpl = itemDef()?.templateRef;
 @let isLoad = loading();
 @let nVal = $any(normalizedValue());
+@let _isInline = isInline();
+@let _bare = _isInline;
+@let _hasValue = nVal !== undefined && nVal !== null && nVal !== '';
 
-@if (viewed()) {
+@if (isViewed()) {
   <sd-view
     [label]="lbl"
     [labelTemplate]="sdLabelTemplate()"
     [value]="nVal"
     [display]="display()"
     [hyperlink]="hyperlink()"
-    [valueTemplate]="sdValueTemplate()">
+    [valueTemplate]="viewTemplate()">
   </sd-view>
 } @else {
+  @if (_isInline) {
+    <!-- why: inline — sd-view là "mặt" + trigger; autocomplete editor render ẩn (.sd-inline-editor) chỉ để mở panel. -->
+    <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
+      <sd-view
+        [label]="lbl"
+        [labelTemplate]="sdLabelTemplate()"
+        [value]="nVal"
+        [display]="display()"
+        [hyperlink]="hyperlink()"
+        [valueTemplate]="viewTemplate()">
+      </sd-view>
+      @if (clearable() && _hasValue && !req && !formControl.disabled) {
+        <button type="button" class="sd-inline-clear" (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </span>
+  }
+
   @if (!app) {
     <ng-content select="[sdLabel]">
       @if (lbl) {
@@ -31,22 +52,11 @@
 
   <div
     class="d-flex align-items-center"
-    [class.sd-view]="viewDef?.templateRef"
+    [class.sd-inline-editor]="_isInline"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-    @if (viewDef?.templateRef && !autocompleteTrigger()?.panelOpen && !isFocused) {
-      <ng-container
-        *ngTemplateOutlet="
-          viewDef!.templateRef;
-          context: {
-            value: nVal,
-            selectedItem: selected(),
-          }
-        ">
-      </ng-container>
-    } @else {
       <mat-form-field
         [class.sd-md]="size() === 'md'"
         [class.sd-sm]="size() === 'sm'"
@@ -89,7 +99,7 @@
           [attr.data-error-message]="dataErrorMessage()"
           aria-hidden="true" />
 
-        @if (!isLoad && nVal && !inputControl.disabled) {
+        @if (!isLoad && nVal && !inputControl.disabled && !_bare) {
           <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
             <mat-icon>close</mat-icon>
           </button>
@@ -136,6 +146,5 @@
           <mat-error>{{ errMsg }}</mat-error>
         }
       </mat-form-field>
-    }
   </div>
 }

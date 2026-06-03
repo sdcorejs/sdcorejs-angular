@@ -18,6 +18,11 @@ export interface SdAutoidElementState {
   minlength?: string;
   pattern?: string;
   errorMessage?: string;
+  // Notify/toast semantics — read from data-type / data-title / data-message.
+  // Lets E2E assert a toast by its kind (success/info/warning/error) + content.
+  type?: string;
+  title?: string;
+  message?: string;
 }
 
 export interface SdAutoidElement {
@@ -41,6 +46,14 @@ export interface SdAutoidElement {
    * Used by the UI to group table-scoped elements into a separate section.
    */
   tableScope?: string;
+  /**
+   * `true` when the element matched a required selector (sd-button, sd-input, …) but
+   * had NO `data-autoid` — the scanner still emits it with `autoid: ''` and a positional
+   * `xpath` fallback so the export stays usable. The dev should backfill an autoid.
+   */
+  missingAutoid?: boolean;
+  /** Human-readable warning attached to a fallback element (only set when `missingAutoid`). */
+  warning?: string;
 }
 
 export interface SdAutoidMissing {

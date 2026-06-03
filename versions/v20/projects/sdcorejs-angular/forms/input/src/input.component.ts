@@ -36,9 +36,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
+import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { HandleSdCustomValidator, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { HandleSdCustomValidator, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
@@ -61,7 +62,7 @@ import * as uuid from 'uuid';
   styleUrls: ['./input.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -73,6 +74,7 @@ import * as uuid from 'uuid';
     MatButtonModule,
     SdLabel,
     SdView,
+    SdInlineText,
     TranslatePipe,
   ],
 })
@@ -83,6 +85,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   // 1. SIGNAL QUERIES (Thay thế @ViewChild / @ContentChild)
   // ==========================================
   control = viewChild<ElementRef<HTMLInputElement>>('control');
+  /** The inline primitive — only present when `viewed='inline'`; drives focus/blur in that mode. */
+  inlineRef = viewChild(SdInlineText);
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
   sdSuffixDef = contentChild(SdSuffixDefDirective);
@@ -160,7 +164,26 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   required = input(false, { transform: booleanAttribute });
   readonly = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` borderless inline-edit (no panel — the input IS the face). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // Tri-state `viewed` — shared primitive. Input has NO panel; in `'inline'` the input is rendered
+  // borderless/transparent (looks like text), always editable — clicking/focusing it edits directly.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.#focusActiveInput(), this.disabled);
+  /** Focus whichever input is live: the inline primitive in `'inline'` mode, else the mat input. */
+  #focusActiveInput = (): void => {
+    const inline = this.inlineRef();
+    if (inline) inline.focus();
+    else this.control()?.nativeElement?.focus();
+  };
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no input). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Focus the inline input. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
+  /** View display template: `sdViewDef` overrides the projected `#sdValue` for the static view (unified). */
+  readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   minlength = input<number | undefined, unknown>(undefined, { transform: v => (v == null ? undefined : Number(v)) });
   maxlength = input<number | undefined, unknown>(undefined, { transform: v => (v == null ? undefined : Number(v)) });
@@ -393,15 +416,15 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   blur = () => {
     this.isFocused = false;
-    // 🚨 GỌI SIGNAL: Phải thêm () vào control
-    this.control()?.nativeElement?.blur();
+    const inline = this.inlineRef();
+    if (inline) inline.blur();
+    else this.control()?.nativeElement?.blur();
   };
 
   focus = () => {
     this.isFocused = true;
     setTimeout(() => {
-      // 🚨 GỌI SIGNAL: Phải thêm () vào control
-      this.control()?.nativeElement?.focus();
+      this.#focusActiveInput();
     }, 100);
   };
 }

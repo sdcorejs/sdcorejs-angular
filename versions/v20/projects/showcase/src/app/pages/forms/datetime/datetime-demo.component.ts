@@ -34,6 +34,12 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
           <sd-datetime style="width: 260px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-datetime>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+        <div style="width: 300px; font-size:13px; color:#555">
+          Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

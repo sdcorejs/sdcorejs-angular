@@ -150,8 +150,7 @@ describe('SdQueryInlineValueChip', () => {
       const spy = jasmine.createSpy('valueChange');
       component.valueChange.subscribe(spy);
       component.draft.set('typed-but-cancelled');
-      const input = document.createElement('input');
-      component.revertAndBlur(input);
+      component.revertAndBlur({ blur: () => {} });
       expect(component.draft()).toBe('kept');
       expect(spy).not.toHaveBeenCalled();
       expect(component.focused()).toBe(false);
@@ -169,7 +168,7 @@ describe('SdQueryInlineValueChip', () => {
       fixture.componentRef.setInput('density', 'compact');
       fixture.detectChanges();
       const sep = fixture.nativeElement.querySelector('.c-seamless__sep') as HTMLElement;
-      const input = fixture.nativeElement.querySelector('.c-seamless__field-input') as HTMLElement;
+      const input = fixture.nativeElement.querySelector('sd-inline-text') as HTMLElement;
       expect(sep).not.toBeNull();
       expect(input).not.toBeNull();
       const gap = input.getBoundingClientRect().left - sep.getBoundingClientRect().right;
@@ -185,7 +184,7 @@ describe('SdQueryInlineValueChip', () => {
       const icon = fixture.nativeElement.querySelector('.c-seamless__icon') as HTMLElement;
       const fieldEl = fixture.nativeElement.querySelector('.c-seamless__field') as HTMLElement;
       const sep = fixture.nativeElement.querySelector('.c-seamless__sep') as HTMLElement;
-      const input = fixture.nativeElement.querySelector('.c-seamless__field-input') as HTMLElement;
+      const input = fixture.nativeElement.querySelector('sd-inline-text') as HTMLElement;
       const iconToField = fieldEl.getBoundingClientRect().left - icon.getBoundingClientRect().right;
       const sepToInput = input.getBoundingClientRect().left - sep.getBoundingClientRect().right;
       // why: cùng là 4px, sai số <= 2px do sub-pixel rendering.

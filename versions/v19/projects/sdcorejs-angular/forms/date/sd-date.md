@@ -36,7 +36,8 @@ Single-date picker — Material datepicker with date-fns adapter (`dd/MM/yyyy` p
 | `max` / `maxDate` | `Date \| string \| 'TODAY' \| undefined` | `undefined` | Maximum allowed date. `'TODAY'` resolves to `new Date()`. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables the field. |
-| `viewed` | `boolean` | `false` | DETAIL read-only mode — input hidden, formatted date (or `<ng-template sdViewDef>`) rendered. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` edit · `true` static DETAIL (formatted date / `sdViewDef`) · `'inline'` click-to-edit (text face → click opens the calendar; text retained until a value is committed; hover clear-× gated by `clearable`). Disabled `'inline'` falls back to static view. |
+| `clearable` | `boolean` | `true` | In `'inline'`, show a hover clear-× on the text face. `false` where the host owns removal (chips). |
 | `hideInlineError` | `boolean` | `false` | Hide inline error; expose via `errorMessage`. |
 | `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message. |
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Used in `[viewed]` mode to render the date as a link. |
@@ -57,7 +58,7 @@ Applied automatically on `<sd-date>` for styling hooks:
 | --- | --- | --- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
-| `sd-bare` | `[bare]="true"` | Strips the mat-form-field shell for inline contexts (chip, token). |
+| `sd-bare` | (internal — set by `viewed='inline'`) | Flattens the mat-form-field shell for the inline editor. **No longer a public `[bare]` input** (removed); driven by `isInline()`. |
 
 ## Content projection (slots)
 - `#sdLabel` template — custom label
@@ -89,7 +90,7 @@ Applied automatically on `<sd-date>` for styling hooks:
 ## Visual cues (helps agent map screenshots → component)
 - Outlined input field showing `DD/MM/YYYY` formatted date
 - Trailing calendar icon button → opens Material datepicker popup
-- Slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`).
+- Slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - Min/max enforcement: dates outside the range are greyed-out and unselectable in the popup
 - Format error: red underline + tooltip "Sai định dạng" while the typed text doesn't match `D/M/YYYY` regex
 - In `[viewed]="true"` mode: no input, no icon — plain formatted date or hyperlink

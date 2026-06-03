@@ -1,0 +1,163 @@
+@use '../../../assets/scss/core/color.scss' as color;
+@use 'sass:map';
+
+.modal-resizable {
+  position: fixed;
+  right: 12px;
+  top: 80px;
+  bottom: 0;
+  background-color: #fff;
+  z-index: 998;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  transform: translate3d(0, 100%, 0);
+  transition: all 0.3s ease-in-out;
+  pointer-events: none;
+  box-shadow:
+    0px 0.4px 0.8px rgba(0, 0, 0, 0.1),
+    0px 3px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 4px 4px 0 0;
+
+  button.c-action--white:focus {
+    outline: none !important;
+  }
+
+  &.c-minium-of-list {
+    top: auto;
+    bottom: 0;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: all;
+    transform: translate3d(0, 0, 0);
+  }
+
+  &.c-minium {
+    top: auto !important;
+    z-index: 998 !important;
+
+    .modal-resizable__body,
+    .modal-resizable__footer {
+      display: none;
+    }
+  }
+
+  &.c-fullscreen {
+    top: 0;
+    z-index: 999;
+  }
+}
+
+.c-action {
+  color: map.get(color.$color_map, 'secondary');
+
+  &:focus {
+    outline: none;
+  }
+
+  &--white {
+    color: map.get(color.$color_map, 'white');
+
+    &.c-min {
+      margin-bottom: -12px;
+    }
+
+    &.c-max {
+      margin-top: -12px;
+    }
+  }
+}
+
+.modal-resizable__icon {
+  border: 0;
+  background: transparent;
+  color: #212121;
+  overflow: hidden;
+  outline: none;
+
+  .mat-icon {
+    float: left;
+  }
+}
+
+.modal-resizable__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 16px;
+  background-color: #5d6165;
+  color: map.get(color.$color_map, 'white');
+  border-radius: 4px 4px 0 0;
+}
+
+.modal-resizable__body {
+  flex: 1;
+  position: relative;
+}
+
+.modal-resizable__content {
+  position: absolute;
+  padding: 8px 16px 16px 16px;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+}
+
+.modal-resizable__footer {
+  border-top: 1px solid #dde0e5;
+  padding: 5px 0;
+}
+
+.modal-resizable--active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  transform: translate3d(0, 0, 0);
+}
+
+.modal-resizable__title {
+  flex: 1 1 0;
+  min-width: 0;
+  color: map.get(color.$color_map, 'white');
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  > * {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.modal-resizable__actions {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  margin-left: auto;
+
+  .c-action--white {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+
+    &.c-min,
+    &.c-max {
+      margin: 0;
+    }
+
+    .mat-icon {
+      color: map.get(color.$color_map, 'white');
+    }
+  }
+}

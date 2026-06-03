@@ -42,6 +42,12 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
           <sd-date label="sm" size="sm" [(model)]="filter" [form]="form"></sd-date>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+        <div style="width: 260px; font-size:13px; color:#555">
+          Ngày sinh: <sd-date [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

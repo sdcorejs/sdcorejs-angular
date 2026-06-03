@@ -1,4 +1,5 @@
 @use '../../../assets/scss/core/color.scss' as color;
+@use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
 
 :host {
@@ -36,14 +37,8 @@
   }
 }
 
-/* CSS sdViewDef */
-.sd-view {
-  &:not(.c-focused):not(.c-disabled) {
-    &:hover {
-      background-color: #ebecf0;
-    }
-  }
-}
+// Inline mode (viewed='inline') — text-face + editor ẩn. Style chung từ partial.
+@include inline.sd-inline-panel;
 
 // Bare mode — flatten the field so the control fits inline in a chip (sd-query-bar).
 // why: Material's field internals live in MatFormField's own view, so the child

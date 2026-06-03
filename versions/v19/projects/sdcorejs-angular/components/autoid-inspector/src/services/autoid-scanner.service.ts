@@ -3,8 +3,17 @@ import { SdAutoidElement, SdAutoidElementState } from '../models/autoid-element.
 
 @Injectable({ providedIn: 'root' })
 export class SdAutoidScannerService {
-  /** Quét toàn bộ element có [data-autoid] trong root, gắn thông tin name/tag/value/xpath. */
-  scan(root: HTMLElement = document.body): SdAutoidElement[] {
+  /**
+   * Quét element có [data-autoid] trong root, gắn name/tag/value/xpath.
+   * Khi truyền `requireSelectors` (vd các sd-* form/button), những node khớp selector
+   * mà KHÔNG có data-autoid (self lẫn con) sẽ được thêm vào dưới dạng phần tử fallback
+   * (`autoid: ''`, xpath theo vị trí thẻ + cờ `missingAutoid` + warning) — để JSON xuất ra
+   * vẫn dùng được và dev biết chỗ cần bổ sung autoid.
+   */
+  scan(
+    root: HTMLElement = document.body,
+    requireSelectors: ReadonlyArray<string> = []
+  ): SdAutoidElement[] {
     const nodes = root.querySelectorAll<HTMLElement>('[data-autoid]');
     const dupCount: Record<string, number> = {};
     nodes.forEach(n => {
@@ -32,7 +41,52 @@ export class SdAutoidScannerService {
         tableScope,
       });
     });
+
+    if (requireSelectors.length) {
+      stt = this.appendMissing(root, requireSelectors, result, stt);
+    }
     return result;
+  }
+
+  /**
+   * Tìm các node khớp `requireSelectors` nhưng thiếu data-autoid (self + mọi descendant),
+   * thêm vào `result` dưới dạng phần tử fallback. Trả về `stt` kế tiếp.
+   */
+  private appendMissing(
+    root: HTMLElement,
+    requireSelectors: ReadonlyArray<string>,
+    result: SdAutoidElement[],
+    startStt: number
+  ): number {
+    let stt = startStt;
+    const joined = requireSelectors.join(',');
+    root.querySelectorAll<HTMLElement>(joined).forEach(node => {
+      // Cùng quy ước với audit: bỏ qua khi self hoặc con đã có data-autoid.
+      if (node.hasAttribute('data-autoid')) return;
+      if (node.querySelector('[data-autoid]')) return;
+      const tag = node.tagName.toLowerCase();
+      result.push({
+        stt: stt++,
+        name: this.resolveName(node),
+        autoid: '',
+        tag,
+        text: this.resolveText(node),
+        xpath: this.fallbackXpath(node, tag),
+        duplicate: false,
+        state: this.readState(node),
+        tableScope: this.resolveTableScope(node),
+        missingAutoid: true,
+        warning: 'Thiếu data-autoid — dùng xpath fallback theo tag (dev nên bổ sung autoid)',
+      });
+    });
+    return stt;
+  }
+
+  /** XPath theo vị trí thẻ trong document, vd `(//sd-button)[2]`, khi không có autoid. */
+  private fallbackXpath(node: HTMLElement, tag: string): string {
+    const all = Array.from(document.querySelectorAll(tag));
+    const idx = all.indexOf(node);
+    return `(//${tag})[${idx >= 0 ? idx + 1 : 1}]`;
   }
 
   /** Group element theo autoid để consumer lấy duplicate map. */
@@ -66,6 +120,9 @@ export class SdAutoidScannerService {
       minlength: get('data-minlength'),
       pattern: get('data-pattern'),
       errorMessage: get('data-error-message'),
+      type: get('data-type'),
+      title: get('data-title'),
+      message: get('data-message'),
     };
   }
 

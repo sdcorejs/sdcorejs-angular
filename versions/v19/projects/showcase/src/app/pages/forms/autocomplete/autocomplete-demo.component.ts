@@ -48,6 +48,14 @@ interface Country { code: string; name: string; }
             label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-autocomplete>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Bấm vào để mở panel gõ/lọc; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+        <div style="width: 280px; font-size:13px; color:#555">
+          Quốc tịch:
+          <sd-autocomplete [items]="countries" valueField="code" displayField="name"
+            [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-autocomplete>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

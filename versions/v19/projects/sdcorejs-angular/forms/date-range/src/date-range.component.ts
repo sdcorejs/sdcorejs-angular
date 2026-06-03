@@ -27,7 +27,7 @@ import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@ang
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { ISdFormConfiguration, SD_FORM_CONFIGURATION, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -49,7 +49,7 @@ interface Daterange {
   templateUrl: './date-range.component.html',
   styleUrls: ['./date-range.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
+  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; cấp default en-US để parse/format hoạt động.
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
@@ -166,11 +166,20 @@ export class SdDateRange implements OnDestroy, OnInit {
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
 
-  /** Bare mode — strip the form-field shell to fit inline in a chip / token. */
-  bare = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (range picker). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
+  clearable = input(true, { transform: booleanAttribute });
 
-  /** Viewed mode — render a read-only <sd-view> instead of the editable form-field. */
-  viewed = input(false, { transform: booleanAttribute });
+  // Tri-state `viewed` — shared primitive. In `'inline'` the range editor is always mounted
+  // (chrome hidden via CSS); the sd-view text face opens the range picker on click.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.open(), this.disabled);
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no editor). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Open the range picker from the inline text face. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
 
   /** Optional <ng-template #sdValue> projected by consumer to override the viewed text. */
   sdValueTemplate = contentChild<TemplateRef<unknown>>('sdValue');

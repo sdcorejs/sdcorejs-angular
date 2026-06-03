@@ -55,6 +55,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { label: 'Date', path: 'forms/date' },
       { label: 'Date Range', path: 'forms/date-range' },
       { label: 'Datetime', path: 'forms/datetime' },
+      { label: 'Inline Text', path: 'forms/inline-text' },
       { label: 'Input', path: 'forms/input' },
       { label: 'Input Color', path: 'forms/input-color' },
       { label: 'Input Number', path: 'forms/input-number' },

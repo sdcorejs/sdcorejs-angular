@@ -39,6 +39,12 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
           <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
+        <div style="width: 260px; font-size:13px; color:#555">
+          Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

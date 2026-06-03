@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
+import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from './select.component';
 
 // ---------------------------------------------------------------------------
@@ -589,16 +590,6 @@ describe('SdSelect (bare + open)', () => {
     component = fixture.componentInstance;
   });
 
-  it('bare defaults false; bare=true adds .sd-bare host class', () => {
-    fixture.componentRef.setInput('valueField', 'id');
-    fixture.componentRef.setInput('displayField', 'name');
-    fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(false);
-    fixture.componentRef.setInput('bare', true);
-    fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
-  });
-
   it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.componentRef.setInput('valueField', 'id');
     fixture.componentRef.setInput('displayField', 'name');
@@ -627,6 +618,17 @@ describe('SdSelect (bare + open)', () => {
     component.open();
     expect(component.selectRef()?.panelOpen).toBe(true);
   });
+
+  it('non-bare single: still renders .sd-clear-btn when a value is set', fakeAsync(() => {
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.componentRef.setInput('items', [{ id: 'a', name: 'A' }]);
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).not.toBeNull();
+  }));
 });
 
 // ---------------------------------------------------------------------------
@@ -724,4 +726,202 @@ describe('SdSelect (E2E attributes)', () => {
     fixture.detectChanges();
     expect(el.getAttribute('data-loading')).toBe('true');
   });
+});
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`)
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (viewed inline mode)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let fixture: ComponentFixture<SdSelect<any>>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let comp: SdSelect<any>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdSelect, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdSelect);
+    comp = fixture.componentInstance;
+    fixture.componentRef.setInput('valueField', 'id');
+    fixture.componentRef.setInput('displayField', 'name');
+    fixture.componentRef.setInput('items', [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }]);
+  });
+
+  it('viewed="inline" → isInline true, isViewed false; text face + (hidden) editor both rendered', fakeAsync(() => {
+    // asserts: inline mounts BOTH the sd-view text face AND the (bare, hidden) editor — never a swap
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    // text face (sd-view) is the visible trigger
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    // editor is always rendered (chrome hidden) so its panel can open — host is bare
+    expect(fixture.nativeElement.querySelector('mat-select')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-inline-editor')).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  }));
+
+  it('clicking the text face opens the panel WITHOUT hiding the view text', fakeAsync(() => {
+    // asserts: the core UX requirement — text is retained while the panel is open (only a commit changes it)
+    const openSpy = spyOn(comp, 'open').and.callThrough();
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    (fixture.nativeElement.querySelector('.sd-inline-view') as HTMLElement).click();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    expect(openSpy).toHaveBeenCalled();
+    // text face stays — only a committed value changes it
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    expect(comp.isViewed()).toBe(false);
+  }));
+
+  it('inline editor is bare (no inline clear-×) without passing [bare]', fakeAsync(() => {
+    // asserts: inline implies bare → no accidental clear-× next to the trigger (the original chip bug)
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).toBeNull();
+  }));
+
+  it('inline + value renders a hover clear-× that clears WITHOUT opening the panel', fakeAsync(() => {
+    // asserts: inline clear affordance empties the value and stops propagation (no panel open)
+    const openSpy = spyOn(comp, 'open');
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.sd-inline-view .sd-inline-clear') as HTMLElement | null;
+    expect(clearBtn).not.toBeNull();
+    clearBtn!.click();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.valueModel()).toBeNull();
+    expect(openSpy).not.toHaveBeenCalled();
+  }));
+
+  it('inline clear-× is hidden when required (cannot empty a required value)', fakeAsync(() => {
+    // asserts: required inline field exposes no clear affordance
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.componentRef.setInput('required', true);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  }));
+
+  it('inline clear-× is hidden when there is no value', fakeAsync(() => {
+    // asserts: empty inline field has nothing to clear
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  }));
+
+  it('[clearable]="false" hides the inline clear-× (host owns removal, e.g. chip)', fakeAsync(() => {
+    // asserts: a host that owns its own removal (query-bar chip) opts out → no second ×
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.componentRef.setInput('clearable', false);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  }));
+
+  it('inline panel width floors at 200px when the trigger is narrow', () => {
+    // asserts: narrow text trigger doesn't produce a cramped panel — inline floors width at 200px
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    comp.updatePanelWidth();
+    // narrow text face (< 200px) → panel forced to 200px
+    expect(comp.calculatedPanelWidth()).toBe('200px');
+  });
+
+  it('viewed=true stays static (no editor, no inline face)', fakeAsync(() => {
+    // asserts: viewed=true is unchanged DETAIL behaviour — no editor mounts, no inline click target
+    fixture.componentRef.setInput('viewed', true);
+    fixture.componentRef.setInput('model', 'a');
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(false);
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
+    expect(fixture.nativeElement.querySelector('mat-select')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// sdViewDef = unified view-template override (fed into <sd-view> valueTemplate)
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (sdViewDef view-template override)', () => {
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdViewDefDirective],
+    template: `
+      <sd-select [viewed]="mode" valueField="id" displayField="name" [items]="items" [model]="model">
+        <ng-template sdViewDef let-value="value" let-items="selectedItems" let-item="selectedItem">
+          <span class="vd">VD:{{ value }}|{{ items?.length }}|{{ item?.name }}</span>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class VdHost {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mode: any = true;
+    items = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    model: any = 'a';
+  }
+
+  let fixture: ComponentFixture<VdHost>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [VdHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(VdHost);
+  });
+
+  it('viewed=true: renders the sdViewDef template (not the default sd-view text) with full context', fakeAsync(() => {
+    // asserts: sdViewDef overrides the view rendering AND receives value + selectedItems + selectedItem
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const vd = fixture.nativeElement.querySelector('.vd') as HTMLElement | null;
+    expect(vd).not.toBeNull();
+    expect(vd!.textContent).toContain('VD:a'); // value
+    expect(vd!.textContent).toContain('|1|'); // selectedItems.length
+    expect(vd!.textContent).toContain('Alpha'); // selectedItem.name
+  }));
+
+  it('inline: the inline text face also renders via the sdViewDef template', fakeAsync(() => {
+    // asserts: sdViewDef drives BOTH static view and the inline text face — one rendering path
+    fixture.componentInstance.mode = 'inline';
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const vd = fixture.nativeElement.querySelector('.sd-inline-view .vd') as HTMLElement | null;
+    expect(vd).not.toBeNull();
+    expect(vd!.textContent).toContain('VD:a');
+  }));
 });

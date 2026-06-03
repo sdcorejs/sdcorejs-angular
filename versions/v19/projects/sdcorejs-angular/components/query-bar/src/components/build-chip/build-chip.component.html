@@ -39,7 +39,7 @@
       @if (_b.field.type === 'values' || _b.field.type === 'lazy-values') {
         @let _bopt = $any(_b.field).option;
         <span class="c-token-value c-token-value-edit">
-          <sd-select #bPicker bare size="sm" minWidthPanel="300px"
+          <sd-select #bPicker size="sm" [viewed]="'inline'" [clearable]="false" minWidthPanel="300px"
             [autoId]="autoId()"
             [items]="_b.field.type === 'lazy-values' ? $any(_bopt).search : $any(_bopt.items)"
             [valueField]="_bopt.valueField"
@@ -61,12 +61,12 @@
         <span class="c-token-value c-token-value-edit">
           @if (_b.operator === 'BETWEEN') {
             <!-- why: 1 sd-date-range thay 2 sd-date — gọn hơn, hành vi thống nhất với completed chip. -->
-            <sd-date-range #bPicker bare size="sm"
+            <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="autoId()"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-date-range>
           } @else {
-            <sd-date #bPicker bare size="sm"
+            <sd-date #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="autoId()"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-date>
@@ -76,12 +76,12 @@
         <span class="c-token-value c-token-value-edit">
           @if (_b.operator === 'BETWEEN') {
             <!-- why: datetime BETWEEN downgrade về date-range (mất time precision; đã thống nhất). -->
-            <sd-date-range #bPicker bare size="sm"
+            <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="autoId()"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-date-range>
           } @else {
-            <sd-datetime #bPicker bare size="sm"
+            <sd-datetime #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="autoId()"
               [model]="$any(_b.value)"
               (sdChange)="commitValue.emit($event)"></sd-datetime>

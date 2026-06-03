@@ -1,6 +1,8 @@
 <!--
   Seamless string/number chip — the pill IS the input. One border, three flush
-  segments: label · input(s) · ×. State styling driven by [data-state].
+  segments: label · input(s) · ×. State styling driven by [data-state]. The value
+  field is the shared <sd-inline-text> primitive (chrome="seamless") so width hugs
+  content; the chip keeps the envelope + parse/commit logic.
 -->
 <span
   class="c-seamless"
@@ -20,50 +22,53 @@
     }
   </span>
 
-  <!-- Input segment — transparent, borderless; hidden for NULL / NOT_NULL -->
+  <!-- Input segment — seamless borderless primitive; hidden for NULL / NOT_NULL -->
   @if (!isNoData()) {
     <span class="c-seamless__input">
       @if (isBetween()) {
-        <input
+        <sd-inline-text
           #firstInput
-          type="text"
-          class="c-seamless__field-input"
-          [attr.data-autoid]="autoId() ? autoId() + '-from' : null"
-          [ngModel]="draftFrom()"
-          (ngModelChange)="draftFrom.set($event)"
-          [size]="sizeFor(draftFrom(), phFrom())"
+          chrome="seamless"
+          [clearable]="false"
+          [autofocus]="autofocus()"
+          [state]="state()"
+          [value]="draftFrom()"
+          (valueChange)="draftFrom.set($event)"
           [placeholder]="phFrom()"
-          (focus)="onFocus()"
-          (blur)="commitRange()"
-          (keydown.enter)="$any($event.target).blur()"
-          (keydown.escape)="revertAndBlur($any($event.target))" />
+          [autoId]="autoId() ? autoId() + '-from' : undefined"
+          (sdFocus)="onFocus()"
+          (sdBlur)="commitRange()"
+          (keyupEnter)="firstInput.blur()"
+          (keydownEscape)="revertAndBlur(firstInput)" />
         <span class="c-seamless__dash" aria-hidden="true">—</span>
-        <input
-          type="text"
-          class="c-seamless__field-input"
-          [attr.data-autoid]="autoId() ? autoId() + '-to' : null"
-          [ngModel]="draftTo()"
-          (ngModelChange)="draftTo.set($event)"
-          [size]="sizeFor(draftTo(), phTo())"
+        <sd-inline-text
+          #secondInput
+          chrome="seamless"
+          [clearable]="false"
+          [state]="state()"
+          [value]="draftTo()"
+          (valueChange)="draftTo.set($event)"
           [placeholder]="phTo()"
-          (focus)="onFocus()"
-          (blur)="commitRange()"
-          (keydown.enter)="$any($event.target).blur()"
-          (keydown.escape)="revertAndBlur($any($event.target))" />
+          [autoId]="autoId() ? autoId() + '-to' : undefined"
+          (sdFocus)="onFocus()"
+          (sdBlur)="commitRange()"
+          (keyupEnter)="secondInput.blur()"
+          (keydownEscape)="revertAndBlur(secondInput)" />
       } @else {
-        <input
+        <sd-inline-text
           #firstInput
-          type="text"
-          class="c-seamless__field-input"
-          [attr.data-autoid]="autoId() ?? null"
-          [ngModel]="draft()"
-          (ngModelChange)="draft.set($event)"
-          [size]="sizeFor(draft(), ph())"
+          chrome="seamless"
+          [clearable]="false"
+          [autofocus]="autofocus()"
+          [state]="state()"
+          [value]="draft()"
+          (valueChange)="draft.set($event)"
           [placeholder]="ph()"
-          (focus)="onFocus()"
-          (blur)="commitSingle()"
-          (keydown.enter)="$any($event.target).blur()"
-          (keydown.escape)="revertAndBlur($any($event.target))" />
+          [autoId]="autoId() ?? undefined"
+          (sdFocus)="onFocus()"
+          (sdBlur)="commitSingle()"
+          (keyupEnter)="firstInput.blur()"
+          (keydownEscape)="revertAndBlur(firstInput)" />
       }
     </span>
   }

@@ -40,6 +40,34 @@ describe('ToastComponent', () => {
     expect(fix.componentInstance).toBeTruthy();
   });
 
+  // ─── E2E data-* attributes (read by sd-autoid-inspector) ──────────────────
+
+  it('host exposes data-autoid = services-notify-toast-<type>', () => {
+    init(makeData({ type: 'success' }));
+    expect(fix.nativeElement.getAttribute('data-autoid')).toBe('services-notify-toast-success');
+  });
+
+  it('host exposes data-type and a type-scoped data-autoid', () => {
+    init(makeData({ type: 'error' }));
+    expect(fix.nativeElement.getAttribute('data-type')).toBe('error');
+    expect(fix.nativeElement.getAttribute('data-autoid')).toBe('services-notify-toast-error');
+  });
+
+  it('host exposes the custom title via data-title', () => {
+    init(makeData({ title: 'Đã lưu' }));
+    expect(fix.nativeElement.getAttribute('data-title')).toBe('Đã lưu');
+  });
+
+  it('host exposes data-message = the string message', () => {
+    init(makeData({ message: 'hello' }));
+    expect(fix.nativeElement.getAttribute('data-message')).toBe('hello');
+  });
+
+  it('host joins an array message into data-message with " | "', () => {
+    init(makeData({ message: ['a', 'b'] }));
+    expect(fix.nativeElement.getAttribute('data-message')).toBe('a | b');
+  });
+
   // ─── icon / type rendering ────────────────────────────────────────────────
 
   it('renders success icon/colour classes when type=success', () => {

@@ -79,8 +79,10 @@ describe('SdAutoidInspector', () => {
     inspector.togglePanel();
     await settle();
     expect(inspector.open()).toBe(true);
-    // 5 autoid elements: forms-input-email, button-submit×2, components-table-employees, table-input-search
-    expect(inspector.elements().length).toBe(5);
+    // 5 autoid elements (forms-input-email, button-submit×2, components-table-employees,
+    // table-input-search) + 1 fallback cho sd-input thiếu autoid = 6
+    expect(inspector.elements().length).toBe(6);
+    expect(inspector.elements().filter(e => e.missingAutoid).length).toBe(1);
     expect(fixture.nativeElement.querySelector('.sd-autoid-inspector__panel')).toBeTruthy();
   });
 
@@ -159,7 +161,11 @@ describe('SdAutoidInspector', () => {
     inspector.openPanel();
     await settle();
     await inspector.copyJson();
-    expect(captured.startsWith('[')).toBe(true);
+    // JSON export giờ bọc { meta, elements } để mang theo url/route.
+    const parsed = JSON.parse(captured);
+    expect(Array.isArray(parsed)).toBe(false);
+    expect(parsed.meta).toBeDefined();
+    expect(typeof parsed.meta.url).toBe('string');
     expect(captured).toContain('forms-input-email');
     expect(exportSvc).toBeNull(); // private symbol không lộ ra
   });
@@ -281,9 +287,9 @@ describe('SdAutoidInspector', () => {
       expect(panel).toBeTruthy();
       expect(panel.getAttribute('data-segment')).toBe('audit');
       expect(panel.getAttribute('data-highlight-on')).toBe('true');
-      // harness has 5 elements with data-autoid (forms-input-email, button-submit×2,
-      // components-table-employees, table-input-search)
-      expect(panel.getAttribute('data-element-count')).toBe('5');
+      // 5 elements with data-autoid (forms-input-email, button-submit×2,
+      // components-table-employees, table-input-search) + 1 fallback (sd-input thiếu autoid) = 6
+      expect(panel.getAttribute('data-element-count')).toBe('6');
       // harness has 1 missing (sd-input without autoid) → missingCount = 1
       expect(panel.getAttribute('data-missing-count')).toBe('1');
       // harness has 1 duplicate (button-submit appears twice) → duplicateCount = 1

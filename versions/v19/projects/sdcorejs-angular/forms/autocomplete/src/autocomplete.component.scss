@@ -1,5 +1,9 @@
 @use '../../../assets/scss/core/color.scss' as color;
+@use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
+
+// Inline mode (viewed='inline') — text-face + editor ẩn. Style chung từ partial.
+@include inline.sd-inline-panel;
 
 :host {
   display: block;
@@ -104,14 +108,6 @@
   }
 }
 
-/* CSS sdViewDef */
-.sd-view {
-  &:not(.c-focused):not(.c-disabled) {
-    &:hover {
-      background-color: #ebecf0;
-    }
-  }
-}
 
 .sd__option--add {
   position: sticky;

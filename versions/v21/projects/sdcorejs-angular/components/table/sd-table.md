@@ -460,6 +460,30 @@ Selector example:
 await expect(page.locator('sd-table[data-autoid="components-table-employees"]')).toHaveAttribute('data-loading', 'false');
 ```
 
+### Inner elements (derived autoIds)
+
+All interactive children derive their autoId from the table base `components-table-<autoId>` and are emitted by `<sd-button>` as `components-button-<base>-<suffix>`. **They render only when the table `autoId` input is set** — otherwise the attribute is omitted (no `undefined…` ids). Let `B = components-table-<autoId>`:
+
+| Element | autoId (`data-autoid`) |
+|---|---|
+| Reload button | `components-button-<B>-reload` |
+| Export button (custom / menu / excel-only / csv-only) | `components-button-<B>-export` / `-export-excel` / `-export-csv` |
+| Export menu items (Excel / CSV) | `<B>-export-excel` / `<B>-export-csv` |
+| Config (settings) button | `components-button-<B>-config` |
+| Mobile filter open button | `components-button-<B>-mobile-filter-open` |
+| Tree expand toggle (per row) | `components-button-<B>-tree-toggle-<rowId>` |
+| Detail expand toggle (per row) | `components-button-<B>-expand-<rowId>` |
+| Group collapse toggle (per group) | `components-button-<B>-group-toggle-<groupKey>` |
+| Per-row command | `<B>-command-<rowKey>-<commandKey>` (see `desktop-command`) |
+| Selector-action: action buttons | `components-button-<B>-action-<index>` |
+| Selector-action: clear-selection (×) | `components-button-<B>-clear-selection` |
+| Config modal: skip / reset / apply | `components-button-<B>-config-skip` / `-config-reset` / `-config-apply` |
+| External filter: clear / setting / submit | `components-button-<B>clear` / `…setting` / `…submit` |
+
+`<rowId>` / `groupKey` come from `SdTableItem.meta.id` (stable hash) / `meta.group.key`, guaranteeing uniqueness per row/group. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
+
+> Not yet covered: `popup-export` (export-template modal) — its buttons have no autoId (follow-up).
+
 ## Related
 - `<sd-button>`, `<sd-quick-action>` — used in toolbar / per-row commands
 - `<sd-badge>` — used inside cells via `useBadge` or custom cell templates

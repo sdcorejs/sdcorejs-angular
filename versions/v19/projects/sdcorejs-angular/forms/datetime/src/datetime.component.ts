@@ -34,7 +34,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
@@ -79,7 +79,7 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
   templateUrl: './datetime.component.html',
   styleUrls: ['./datetime.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
+  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; cấp default en-US để parse/format hoạt động.
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
@@ -162,12 +162,25 @@ export class SdDatetime implements OnDestroy, OnInit {
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (datetime overlay). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
   /** Hiển thị thêm cột giây trong picker. Mặc định: chỉ HH:MM. */
   showSeconds = input(false, { transform: booleanAttribute });
 
-  /** Flatten the field chrome to a chip-friendly trigger (value + caret only). */
-  bare = input(false, { transform: booleanAttribute });
+  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
+  clearable = input(true, { transform: booleanAttribute });
+
+  // Tri-state `viewed` — shared primitive. In `'inline'` the datetime editor is always mounted
+  // (chrome hidden via CSS); the sd-view text face opens the overlay on click.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.open(), this.disabled);
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no editor). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Open the datetime overlay from the inline text face. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
+  /** View display template: `sdViewDef` overrides the projected `#sdValue` (unified). */
+  readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   inlineError = input<string | undefined>();
 

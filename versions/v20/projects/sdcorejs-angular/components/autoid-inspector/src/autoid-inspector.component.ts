@@ -13,6 +13,7 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRouteSnapshot, Router } from '@angular/router';
 
 import { SdAutoidElement, SdAutoidAuditResult } from './models/autoid-element.model';
 import {
@@ -109,6 +110,8 @@ export class SdAutoidInspector implements OnDestroy {
   #auditSvc = inject(SdAutoidAuditService);
   #highlight = inject(SdAutoidHighlightService);
   #export = inject(SdAutoidExportService);
+  // Optional — chỉ có khi app dùng RouterModule; dùng để lấy route params cho meta.
+  #router = inject(Router, { optional: true });
 
   // ==========================================
   // LIFECYCLE
@@ -142,7 +145,7 @@ export class SdAutoidInspector implements OnDestroy {
 
   refresh = (): void => {
     const root = this.#root();
-    const elements = this.#scanner.scan(root);
+    const elements = this.#scanner.scan(root, this.#requireSelectors());
     const result = this.#auditSvc.audit(elements, {
       root,
       requireSelectors: this.#requireSelectors(),
@@ -171,7 +174,7 @@ export class SdAutoidInspector implements OnDestroy {
   setSegment = (seg: Segment): void => this.segment.set(seg);
 
   copyJson = async (): Promise<void> => {
-    await this.#export.copyToClipboard(this.#export.toJson(this.elements()));
+    await this.#export.copyToClipboard(this.#export.toJson(this.elements(), this.#meta()));
     this.#flashCopyOk();
   };
 
@@ -190,7 +193,7 @@ export class SdAutoidInspector implements OnDestroy {
 
   exportJson = (): void => {
     this.#export.download(
-      this.#export.toJson(this.elements()),
+      this.#export.toJson(this.elements(), this.#meta()),
       this.#filename('json'),
       'application/json'
     );
@@ -251,11 +254,32 @@ export class SdAutoidInspector implements OnDestroy {
   }
 
   #meta(): SdAutoidExportMeta {
+    const loc = window.location;
     return {
-      pageUrl: window.location.pathname + window.location.search,
+      pageUrl: loc.pathname + loc.search,
       pageTitle: document.title || 'Page',
       timestamp: new Date().toISOString(),
+      url: loc.href,
+      pathname: loc.pathname,
+      search: loc.search,
+      queryParams: this.#export.parseQueryParams(loc.search),
+      params: this.#routeParams(),
     };
+  }
+
+  /**
+   * Route path params gộp dọc cây ActivatedRoute (nếu có Router). Trả về undefined khi
+   * không có Router hoặc không có param nào — để `meta.params` được bỏ qua khỏi JSON.
+   */
+  #routeParams(): Record<string, string> | undefined {
+    if (!this.#router) return undefined;
+    const params: Record<string, string> = {};
+    let route: ActivatedRouteSnapshot | null = this.#router.routerState.snapshot.root;
+    while (route) {
+      Object.assign(params, route.params);
+      route = route.firstChild;
+    }
+    return Object.keys(params).length ? params : undefined;
   }
 
   #filename(ext: string): string {

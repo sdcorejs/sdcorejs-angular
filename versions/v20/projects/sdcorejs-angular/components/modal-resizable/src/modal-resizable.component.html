@@ -1,0 +1,55 @@
+<ng-template cdkPortal>
+  <div
+    [id]="id"
+    class="modal-resizable"
+    [style.width]="width()"
+    [class.modal-resizable--active]="isOpened()"
+    [class.modal-resizable--loading]="isLoading()"
+    [class.c-minium]="isMinimum()"
+    [class.c-fullscreen]="isMaximum()"
+    (mouseover)="onFocus()"
+    (focus)="onFocus()"
+    (mouseout)="onBlur()"
+    (blur)="onBlur()">
+    @if (isOpened()) {
+      <div class="modal-resizable__header">
+        <div class="modal-resizable__title">
+          <ng-content select="[sdTitle]"></ng-content>
+        </div>
+        <div class="modal-resizable__actions">
+          @if (!isMinimum()) {
+            <button type="button" class="c-action--white c-min" (click)="minimize()" mat-icon-button title="Thu nhỏ">
+              <mat-icon>remove</mat-icon>
+            </button>
+          }
+          @if (isMinimum()) {
+            <button type="button" class="c-action--white c-max" (click)="maximize()" mat-icon-button title="Phóng to">
+              <mat-icon>remove</mat-icon>
+            </button>
+          }
+          @if (!isMaximum()) {
+            <button type="button" class="c-action--white" (click)="toggleMaximum()" mat-icon-button title="Toàn màn hình">
+              <mat-icon>open_in_full</mat-icon>
+            </button>
+          }
+          @if (isMaximum()) {
+            <button type="button" class="c-action--white" (click)="toggleMaximum()" mat-icon-button title="Thoát toàn màn hình">
+              <mat-icon>fullscreen_exit</mat-icon>
+            </button>
+          }
+          <button type="button" class="c-action--white" (click)="close()" mat-icon-button title="Đóng">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+      <div class="modal-resizable__body">
+        <div class="modal-resizable__content">
+          <ng-content select="[sdBody]"></ng-content>
+        </div>
+      </div>
+      <div class="modal-resizable__footer">
+        <ng-content select="[sdFooter]"></ng-content>
+      </div>
+    }
+  </div>
+</ng-template>

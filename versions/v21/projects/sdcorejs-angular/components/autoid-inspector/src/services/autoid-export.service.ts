@@ -4,8 +4,22 @@ import { SdAutoidExportMeta } from '../models/autoid-export-format.model';
 
 @Injectable({ providedIn: 'root' })
 export class SdAutoidExportService {
-  toJson(elements: SdAutoidElement[]): string {
+  /**
+   * Có `meta` → bọc `{ meta, elements }` (kèm url/queryParams) để consumer biết trang/route.
+   * Không `meta` → giữ mảng thuần (back-compat cho caller cũ chỉ cần elements).
+   */
+  toJson(elements: SdAutoidElement[], meta?: SdAutoidExportMeta): string {
+    if (meta) return JSON.stringify({ meta, elements }, null, 2);
     return JSON.stringify(elements, null, 2);
+  }
+
+  /** Parse a `location.search` string into a flat key/value map (last value wins). */
+  parseQueryParams(search: string): Record<string, string> {
+    const out: Record<string, string> = {};
+    new URLSearchParams(search || '').forEach((v, k) => {
+      out[k] = v;
+    });
+    return out;
   }
 
   toCsv(elements: SdAutoidElement[]): string {
@@ -43,7 +57,8 @@ export class SdAutoidExportService {
     lines.push('```ts');
     lines.push(`export class ${className} {`);
     for (const el of elements) {
-      const propName = this.toCamel(el.autoid);
+      // autoid rỗng (phần tử fallback thiếu autoid) → đặt tên prop theo tag + stt.
+      const propName = el.autoid ? this.toCamel(el.autoid) : this.toCamel(`${el.tag}-${el.stt}`);
       const nameHint = el.name ? ` ${el.name} —` : '';
       const stateSummary = this.buildStateSummary(el.state);
       const stateStr = stateSummary ? ` — ${stateSummary}` : '';

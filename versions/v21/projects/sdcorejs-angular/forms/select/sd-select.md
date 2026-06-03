@@ -46,13 +46,14 @@ Dropdown picker — single OR multi-select from a static array OR an async API. 
 | `model` | `boolean \| number \| string \| (number\|string)[] \| null \| undefined` | `undefined` | Two-way bound value. Single value or array (when `[multiple]`). |
 | `required` | `boolean` | `false` | Adds `Validators.required`. Bare attribute = `true`. |
 | `disabled` | `boolean` | `false` | Disables the underlying `FormControl`. Bare attribute = `true`. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode (renders via `<sd-view>`). Bare attribute = `true`. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` = edit. `true` = static read-only DETAIL (renders via `<sd-view>`, no editor). `'inline'` = **click-to-edit**: the editor is still rendered but its chrome is hidden (host gets `.sd-bare`, no clear-×); the `<sd-view>` text is the visible face/trigger. Click the text → opens the picker panel. **The text is retained while the panel is open — it only changes when a value is committed.** Panel min-width floors at `200px` in inline mode. Bare attribute (`<sd-select viewed>`) = `true`. |
 | `multiple` | `boolean` | `false` | Multi-select with checkboxes; value becomes an array. Bare attribute = `true`. |
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surface error via tooltip on a red error icon. Bare attribute = `true`. |
 | `validator` | `SdCustomValidator \| undefined` | `undefined` | Async custom validator (wrapped via `HandleSdCustomValidator`). |
 | `inlineError` | `string \| undefined` | `undefined` | Forces a synthetic `inlineError` validator with this message. |
+| `clearable` | `boolean` | `true` | In `viewed='inline'`, show a hover clear-× at the end of the text face (clears the value via `clear()`, `stopPropagation` so it does NOT open the panel). Set `false` where the HOST owns removal (e.g. `<sd-query-bar>` chips, whose own `×` removes the whole filter) to avoid two ×. |
 
-> **Coerce note**: `required`, `disabled`, `viewed`, `multiple`, `hideInlineError` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-select multiple>`) is treated as `true`.
+> **Coerce note**: `required`, `disabled`, `multiple`, `hideInlineError`, `clearable` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-select multiple>`) is treated as `true`. `viewed` uses a custom `sdViewedTransform` (shared from `forms/models`) — same bare-attribute coercion, but also accepts the literal `'inline'`. Computeds `isViewed()` (`=== true`, static view) / `isInline()` (`=== 'inline'`) drive the template; `enterInlineEdit()` opens the picker from the inline text face.
 
 ## Outputs
 | Name | Type | Notes |
@@ -71,9 +72,9 @@ Applied automatically on `<sd-select>` for styling hooks:
 
 ## Content projection (slots)
 - `<ng-template #sdLabel>` — custom label template (used by `<sd-view>` in DETAIL mode)
-- `<ng-template #sdValue>` — custom value-display template in DETAIL mode
+- `<ng-template #sdValue>` — custom value-display template for the view layer (DETAIL / inline)
 - `*sdItemDef` (via `SdItemDefDefDirective`) — custom rendering of each option in the dropdown panel
-- `<ng-template sdViewDef>` — custom DETAIL display (receives `{ value, selectedItems }` as context)
+- `<ng-template sdViewDef>` — **custom view-display override** (unified): it simply replaces the view rendering — fed into `<sd-view>`'s `valueTemplate`, so it wins over `#sdValue`. Used wherever the view shows (`viewed=true` static DETAIL **and** `viewed='inline'` text face). Context = `{ $implicit: display, value, selectedItems, selectedItem }`. It no longer does its own focus-swap / `.sd-view` class — click-to-edit is governed by `viewed='inline'`. (Breaking vs the old behaviour where `sdViewDef` on a plain `viewed=false` field swapped to the input on focus; migrate that to `viewed='inline'`.)
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. An `effect()` calls `formGroup.addControl(name, formControl)` and tears it down via `onCleanup` when the component is destroyed OR when `form`/`name` change.
@@ -123,10 +124,11 @@ Applied automatically on `<sd-select>` for styling hooks:
 - Click opens a dropdown panel below; if `items.length > 10` (or `items` is a function) a search input appears at the top of the panel
 - In `[multiple]="true"` mode: each row in the panel has a checkbox; the field shows a comma-joined list of display values, with a hover tooltip listing each as `• <value> - <display>`
 - Loading spinner appears in the panel while an async `SdSearch` is in flight
-- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears as a suffix when a value is set and the field is not `required`/`disabled`; it **replaces the chevron** and clears via `clear()`. Because it replaces the dropdown icon, it is **always shown** when there's a value — NOT hover-gated (unlike `sd-input`/`sd-date`/`sd-datetime`). Styled identically via the shared class in `assets/scss/core/form.scss`.
+- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears as a suffix when a value is set and the field is not `required`/`disabled`; it **replaces the chevron** and clears via `clear()`. Because it replaces the dropdown icon, it is **always shown** when there's a value — NOT hover-gated (unlike `sd-input`/`sd-date`/`sd-datetime`). Styled identically via the shared class in `assets/scss/core/form.scss`. **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip/token contexts; the clear-x duplicated the chip's own remove-× and was easy to hit while dismissing the panel (would clear the value). The caret is shown instead; the host (chip) owns removal.
 - Required marker shows as a red `*` next to the label
 - When `[hideInlineError]="true"`: red error-icon suffix with tooltip; otherwise inline `<mat-error>` below the field
 - In `[viewed]="true"` mode: rendered by `<sd-view>` — plain text (or hyperlink) of the selected display value(s)
+- In `[viewed]="'inline'"` mode: the `<sd-view>` text is a click target (`.sd-inline-view`); the real picker is rendered underneath but invisible (`.sd-inline-editor` — `opacity:0`, `pointer-events:none` incl. descendants) purely to host the panel. Click (or Enter) on the text opens the panel anchored under it; the text stays put and only updates when you pick a value. No visible input box at any point — just text + the dropdown panel. The face has a light background that darkens on hover (editable affordance); a hover clear-× appears at the end when `clearable` (default) + value present + not required/disabled.
 
 ## Examples
 

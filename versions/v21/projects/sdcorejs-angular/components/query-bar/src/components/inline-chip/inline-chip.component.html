@@ -49,30 +49,29 @@
         <button type="button" class="c-token-value" (click)="enterEdit()">{{ valueText() }}</button>
       }
     } @else if ((_f.type === 'date' || _f.type === 'datetime') && _op === 'BETWEEN') {
-      <!-- why: dùng sd-date-range thống nhất cho cả date + datetime BETWEEN (datetime downgrade về date). -->
-      <span
-        class="c-token-value c-token-value-edit"
-        (click)="enterEdit()"
-        (focusout)="onFocusOut($event)">
-        <sd-date-range #chipPicker bare size="sm"
+      <!-- why: sd-date-range [viewed]="'inline'" tự quản click→edit + focusout (datetime downgrade về date).
+           Chip không wiring lifecycle nữa; [clearable]=false vì chip có × riêng. -->
+      <span class="c-token-value c-token-value-edit">
+        <sd-date-range size="sm"
           [autoId]="autoId()"
-          [viewed]="!_editing"
+          [viewed]="'inline'"
+          [clearable]="false"
           [model]="$any(_data)"
           (sdChange)="emitRangeCommit($any($event))"></sd-date-range>
       </span>
     } @else if (_f.type === 'values' || _f.type === 'lazy-values') {
       @let _opt = $any(_f).option;
-      <span
-        class="c-token-value c-token-value-edit"
-        (click)="enterEdit()"
-        (focusout)="onFocusOut($event)">
-        <sd-select #chipPicker bare size="sm" minWidthPanel="300px"
+      <!-- why: sd-select [viewed]="'inline'" tự quản click→edit + focusout→thoát + bare editor.
+           Chip không wiring lifecycle cho nhánh này nữa (bỏ enterEdit/onFocusOut/bare). -->
+      <span class="c-token-value c-token-value-edit">
+        <sd-select #chipPicker size="sm" minWidthPanel="300px"
           [autoId]="autoId()"
           [items]="_f.type === 'lazy-values' ? $any(_opt).search : $any(_opt.items)"
           [valueField]="_opt.valueField"
           [displayField]="_opt.displayField"
           [multiple]="_multi"
-          [viewed]="!_editing"
+          [viewed]="'inline'"
+          [clearable]="false"
           [model]="$any(_data)"
           (sdChange)="_multi ? emitLive($event) : emitSingleCommit($event)">
           <!-- why: viewed mode mặc định dùng comma-joined cho multi — quá dài cho chip.
@@ -87,24 +86,20 @@
         </sd-select>
       </span>
     } @else if (_f.type === 'date') {
-      <span
-        class="c-token-value c-token-value-edit"
-        (click)="enterEdit()"
-        (focusout)="onFocusOut($event)">
-        <sd-date #chipPicker bare size="sm"
+      <span class="c-token-value c-token-value-edit">
+        <sd-date size="sm"
           [autoId]="autoId()"
-          [viewed]="!_editing"
+          [viewed]="'inline'"
+          [clearable]="false"
           [model]="$any(_data)"
           (sdChange)="emitSingleCommit($any($event))"></sd-date>
       </span>
     } @else if (_f.type === 'datetime') {
-      <span
-        class="c-token-value c-token-value-edit"
-        (click)="enterEdit()"
-        (focusout)="onFocusOut($event)">
-        <sd-datetime #chipPicker bare size="sm"
+      <span class="c-token-value c-token-value-edit">
+        <sd-datetime size="sm"
           [autoId]="autoId()"
-          [viewed]="!_editing"
+          [viewed]="'inline'"
+          [clearable]="false"
           [model]="$any(_data)"
           (sdChange)="emitSingleCommit($any($event))"></sd-datetime>
       </span>

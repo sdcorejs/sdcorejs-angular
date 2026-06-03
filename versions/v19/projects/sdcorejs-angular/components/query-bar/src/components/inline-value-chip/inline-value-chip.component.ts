@@ -1,10 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
-  ElementRef,
-  afterNextRender,
   computed,
   effect,
   input,
@@ -12,9 +9,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { Operator } from '@sdcorejs/utils/models';
 
 import {
@@ -41,7 +38,7 @@ type ChipState = 'pending' | 'active' | 'focus' | 'error';
   selector: 'sd-query-inline-value-chip',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, MatIconModule, SdOperator],
+  imports: [MatIconModule, SdOperator, SdInlineText],
   templateUrl: './inline-value-chip.component.html',
   styleUrl: './inline-value-chip.component.scss',
 })
@@ -65,7 +62,7 @@ export class SdQueryInlineValueChip {
   /** Emitted when the user clicks the × segment. */
   readonly remove = output<void>();
 
-  private readonly firstInput = viewChild<ElementRef<HTMLInputElement>>('firstInput');
+  private readonly firstInput = viewChild<SdInlineText>('firstInput');
 
   readonly focused = signal(false);
   readonly hasError = signal(false);
@@ -115,27 +112,15 @@ export class SdQueryInlineValueChip {
       }
     });
 
-    // Build chip lands focused so the user types straight away (no rectangle, no extra click).
-    afterNextRender(() => {
-      if (this.autofocus()) this.firstInput()?.nativeElement.focus();
-    });
-  }
-
-  /**
-   * Width in chars — hugs the current value; falls back to the placeholder width only when
-   * empty. why: using placeholder.length unconditionally left a long trailing gap before the
-   * × for short values (e.g. a 1-digit number under the 'giá trị' placeholder).
-   */
-  sizeFor(text: string, placeholder: string): number {
-    const base = text && text.length > 0 ? text.length : placeholder.length;
-    return Math.max(base, 2);
+    // why: the build chip lands focused (autofocus) so the user types straight away —
+    // <sd-inline-text> owns that via its own [autofocus] input, so no afterNextRender here.
   }
 
   /** Click anywhere in the pill (except × or an input) focuses the first input. */
   focusFromShell(ev: Event): void {
     const target = ev.target as HTMLElement;
     if (target.closest('.c-seamless__x') || target.closest('input')) return;
-    this.firstInput()?.nativeElement.focus();
+    this.firstInput()?.focus();
   }
 
   onFocus(): void {
@@ -168,7 +153,7 @@ export class SdQueryInlineValueChip {
   }
 
   /** Esc — revert drafts to the committed value and blur without emitting. */
-  revertAndBlur(input: HTMLInputElement): void {
+  revertAndBlur(ref?: { blur: () => void }): void {
     const v = this.value();
     if (this.isBetween()) {
       const r = (v ?? {}) as Range;
@@ -179,7 +164,7 @@ export class SdQueryInlineValueChip {
     }
     this.hasError.set(false);
     this.focused.set(false);
-    input.blur();
+    ref?.blur();
   }
 
   onRemove(ev: Event): void {

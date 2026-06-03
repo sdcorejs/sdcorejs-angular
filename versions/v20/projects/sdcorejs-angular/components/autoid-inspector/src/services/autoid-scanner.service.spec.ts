@@ -168,4 +168,67 @@ describe('SdAutoidScannerService', () => {
     expect(el.state.pattern).toBeUndefined();
     expect(el.state.errorMessage).toBeUndefined();
   });
+
+  // ─── notify/toast semantics: data-type / data-title / data-message ──────────
+
+  it('scan reads data-type / data-title / data-message into state', () => {
+    root.innerHTML = `
+      <div data-autoid="services-notify-toast-success"
+           data-type="success"
+           data-title="Thành công"
+           data-message="Đã lưu dữ liệu"></div>
+    `;
+    const [el] = svc.scan(root);
+    expect(el.state.type).toBe('success');
+    expect(el.state.title).toBe('Thành công');
+    expect(el.state.message).toBe('Đã lưu dữ liệu');
+  });
+
+  it('scan returns undefined for notify attrs not on DOM', () => {
+    root.innerHTML = `<input data-autoid="forms-input-email"/>`;
+    const [el] = svc.scan(root);
+    expect(el.state.type).toBeUndefined();
+    expect(el.state.title).toBeUndefined();
+    expect(el.state.message).toBeUndefined();
+  });
+
+  // ─── fallback for sd-* elements missing data-autoid ─────────────────────────
+
+  it('scan(root, requireSelectors) emits a fallback element for sd-* without data-autoid', () => {
+    root.innerHTML = `<sd-button><button>Click</button></sd-button>`;
+    const result = svc.scan(root, ['sd-button']);
+    const miss = result.find(r => r.missingAutoid);
+    expect(miss).toBeTruthy();
+    expect(miss!.autoid).toBe('');
+    expect(miss!.tag).toBe('sd-button');
+    expect(miss!.xpath).toBe('(//sd-button)[1]');
+    expect(miss!.warning).toContain('autoid');
+  });
+
+  it('scan does NOT emit a fallback when the sd-* already has a data-autoid (self or descendant)', () => {
+    root.innerHTML = `<sd-button><button data-autoid="btn-x">x</button></sd-button>`;
+    const result = svc.scan(root, ['sd-button']);
+    expect(result.filter(r => r.missingAutoid).length).toBe(0);
+    expect(result.length).toBe(1);
+    expect(result[0].autoid).toBe('btn-x');
+  });
+
+  it('scan without requireSelectors keeps prior behavior (no fallback)', () => {
+    root.innerHTML = `<sd-button><button>x</button></sd-button>`;
+    expect(svc.scan(root)).toEqual([]);
+  });
+
+  it('scan reads state + tableScope for a fallback (missing-autoid) element too', () => {
+    root.innerHTML = `
+      <sd-table data-autoid="components-table-x">
+        <sd-input data-required="true"><input/></sd-input>
+      </sd-table>
+    `;
+    const result = svc.scan(root, ['sd-input']);
+    const miss = result.find(r => r.missingAutoid);
+    expect(miss).toBeTruthy();
+    expect(miss!.tag).toBe('sd-input');
+    expect(miss!.state.required).toBe('true');
+    expect(miss!.tableScope).toBe('components-table-x');
+  });
 });

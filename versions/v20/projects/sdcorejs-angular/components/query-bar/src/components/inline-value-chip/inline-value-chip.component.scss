@@ -40,28 +40,25 @@ $danger:         #d23535;
   }
 
   // ── States ────────────────────────────────────────────────────────────────
+  // why: the value text colour per state now lives in <sd-inline-text> (chrome="seamless"),
+  // since the field input is encapsulated inside that primitive — the pill only owns the
+  // border / background / overall text colour. "Grey label : brand value" still reads right.
   &[data-state='pending'] {
     border-style: dashed;
     border-color: $border;
     background: $bg;
     color: $text-secondary;
-    .c-seamless__field-input { color: $text; }
-    .c-seamless__field-input::placeholder { color: $text-muted; font-style: italic; }
   }
 
-  // why: label/icon/operator stay grey across states; only the value text takes the
-  // brand colour — keeps the "grey label : primary value" reading consistent everywhere.
   &[data-state='active'] {
     border-color: $primary-light;
     background: $primary-faint;
-    .c-seamless__field-input { color: $primary; }
   }
 
   &[data-state='focus'] {
     border-color: $primary;
     background: $bg;
     box-shadow: 0 0 0 3px $primary-faint;
-    .c-seamless__field-input { color: $text; }
   }
 
   &[data-state='error'] {
@@ -69,7 +66,6 @@ $danger:         #d23535;
     background: #fff5f5;
     color: $danger;
     box-shadow: 0 0 0 3px rgba(210, 53, 53, 0.12);
-    .c-seamless__field-input { color: $danger; }
   }
 }
 
@@ -125,18 +121,6 @@ $danger:         #d23535;
 
 .c-seamless__dash {
   color: $text-muted;
-}
-
-.c-seamless__field-input {
-  appearance: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  font: inherit;
-  font-weight: 500; // value reads as bold as the popover chip value
-  padding: 0;
-  min-width: 24px; // small floor so short values don't reserve a long trailing gap
-  max-width: 200px;
 }
 
 .c-seamless__x {

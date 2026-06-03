@@ -218,7 +218,7 @@ describe('SdQueryBar', () => {
       expect(chipDe).not.toBeNull();
       const chip = chipDe.nativeElement as HTMLElement;
       expect(chip.querySelector('.c-seamless__field')?.textContent).toContain('Name');
-      expect(chip.querySelector('input.c-seamless__field-input')).not.toBeNull();
+      expect(chip.querySelector('sd-inline-text input')).not.toBeNull();
       expect(chip.querySelector('.c-seamless__x')).not.toBeNull();
       // the bound value flows into the chip's draft for display
       expect((chipDe.componentInstance as SdQueryInlineValueChip).value()).toBe('abc');
@@ -233,7 +233,7 @@ describe('SdQueryBar', () => {
       expect(fixture.nativeElement.querySelector('.c-token-building')).toBeNull();
       const chipDe = fixture.debugElement.query(By.directive(SdQueryInlineValueChip));
       expect(chipDe).not.toBeNull();
-      expect((chipDe.nativeElement as HTMLElement).querySelector('input.c-seamless__field-input')).not.toBeNull();
+      expect((chipDe.nativeElement as HTMLElement).querySelector('sd-inline-text input')).not.toBeNull();
       expect(fixture.nativeElement.querySelector('sd-input')).toBeNull();
     });
   });
@@ -394,7 +394,7 @@ describe('SdQueryBar', () => {
       const chipDe = fixture.debugElement.query(By.directive(SdQueryInlineValueChip));
       expect(chipDe).not.toBeNull();
       const chip = chipDe.nativeElement as HTMLElement;
-      expect(chip.querySelector('input.c-seamless__field-input')).not.toBeNull();
+      expect(chip.querySelector('sd-inline-text input')).not.toBeNull();
       expect(chip.querySelector('[matMenuTriggerFor]')).toBeNull();
       expect(fixture.nativeElement.querySelector('sd-input')).toBeNull();
     });
@@ -410,7 +410,9 @@ describe('SdQueryBar', () => {
       expect(building.querySelector('[matMenuTriggerFor]')).toBeNull();
     });
 
-    it('renders a bare sd-select for a completed values chip', () => {
+    it('renders an inline-mode sd-select for a completed values chip', () => {
+      // why: completed values chip dùng sd-select [viewed]="'inline'" — idle hiển thị
+      // view-text (.sd-inline-view), bare editor chỉ xuất hiện khi click (không .sd-bare lúc idle).
       const field = {
         key: 'status', label: 'Status', type: 'values', operators: ['IN'],
         option: { items: [{ id: 'a', name: 'A' }], valueField: 'id', displayField: 'name' },
@@ -422,7 +424,7 @@ describe('SdQueryBar', () => {
 
       const select = fixture.nativeElement.querySelector('.c-token sd-select');
       expect(select).not.toBeNull();
-      expect(select.classList.contains('sd-bare')).toBe(true);
+      expect(select.querySelector('.sd-inline-view')).not.toBeNull();
     });
 
     it('renders a bare sd-date at the date build value step', () => {
@@ -550,16 +552,15 @@ describe('SdQueryBar (extras)', () => {
       option: { items: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }], valueField: 'id', displayField: 'name' },
     } as unknown as SdQueryField;
 
-    it('a completed values chip renders the bare sd-select inside the token', () => {
-      // why: chip giờ mặc định ở viewed mode → sd-select swap sang <sd-view>, không
-      // còn render .mat-mdc-select-value. Re-anchor về sự tồn tại của sd-select.sd-bare
-      // bên trong .c-token để giữ ý nghĩa: chip values vẫn dùng bare select làm trình bày.
+    it('a completed values chip renders an inline-mode sd-select inside the token', () => {
+      // why: chip values dùng sd-select [viewed]="'inline'" → idle render <sd-view> qua
+      // .sd-inline-view (click để sửa). Anchor về sự tồn tại của sd-select inline-view trong .c-token.
       fixture.componentRef.setInput('mode', 'inline');
       fixture.componentRef.setInput('fields', [valuesField]);
       component.filters.set([{ field: 'status', operator: 'EQUAL', data: 'a' } as any]);
       fixture.detectChanges();
 
-      const sel = fixture.nativeElement.querySelector('.c-token sd-select.sd-bare');
+      const sel = fixture.nativeElement.querySelector('.c-token sd-select .sd-inline-view');
       expect(sel).not.toBeNull();
     });
   });
@@ -587,14 +588,15 @@ describe('SdQueryBar (extras)', () => {
       expect((component.filters()[0] as any).data).toBe('b');
     });
 
-    it('clicking the inline chip wrapper enters edit mode (viewed=false reflected)', () => {
-      const wrapper = fixture.nativeElement.querySelector('sd-query-inline-chip .c-token-value-edit') as HTMLElement;
-      expect(wrapper).not.toBeNull();
-      wrapper.click();
-      fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('sd-query-inline-chip .c-token.c-token-editing')).not.toBeNull();
+    it('clicking the inline values view reveals the sd-select editor (viewed=inline)', () => {
+      // why: lifecycle giờ thuộc sd-select [viewed]="'inline'" — click .sd-inline-view để mở editor.
       const sel = fixture.nativeElement.querySelector('sd-query-inline-chip sd-select') as HTMLElement;
-      expect(sel.getAttribute('ng-reflect-viewed')).toBe('false');
+      expect(sel.getAttribute('ng-reflect-viewed')).toBe('inline');
+      const inlineView = fixture.nativeElement.querySelector('sd-query-inline-chip .sd-inline-view') as HTMLElement;
+      expect(inlineView).not.toBeNull();
+      inlineView.click();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('sd-query-inline-chip mat-select')).not.toBeNull();
     });
   });
 
@@ -613,48 +615,43 @@ describe('SdQueryBar (extras)', () => {
       fixture.detectChanges();
     }
 
-    it('values chip renders sd-select with viewed=true by default', () => {
+    it('values chip renders sd-select with viewed="inline" by default', () => {
       seed(valuesField, 'a');
       const sel = fixture.nativeElement.querySelector('.c-token sd-select') as HTMLElement;
       expect(sel).not.toBeNull();
-      expect(sel.hasAttribute('ng-reflect-viewed')).toBe(true);
-      expect(sel.getAttribute('ng-reflect-viewed')).toBe('true');
+      expect(sel.getAttribute('ng-reflect-viewed')).toBe('inline');
     });
 
-    it('date chip renders sd-date with viewed=true by default', () => {
+    it('date chip renders sd-date with viewed="inline" by default', () => {
       seed(dateField, '2024-01-15');
       const d = fixture.nativeElement.querySelector('.c-token sd-date') as HTMLElement;
       expect(d).not.toBeNull();
-      expect(d.getAttribute('ng-reflect-viewed')).toBe('true');
+      expect(d.getAttribute('ng-reflect-viewed')).toBe('inline');
     });
 
-    it('datetime chip renders sd-datetime with viewed=true by default', () => {
+    it('datetime chip renders sd-datetime with viewed="inline" by default', () => {
       seed(dtField, '2024-01-15T08:00:00Z');
       const d = fixture.nativeElement.querySelector('.c-token sd-datetime') as HTMLElement;
       expect(d).not.toBeNull();
-      expect(d.getAttribute('ng-reflect-viewed')).toBe('true');
+      expect(d.getAttribute('ng-reflect-viewed')).toBe('inline');
     });
 
-    it('clicking the chip value wrapper enters edit mode (viewed=false)', () => {
+    it('clicking the inline values view reveals the sd-select editor', () => {
       seed(valuesField, 'a');
-      const wrapper = fixture.nativeElement.querySelector('.c-token .c-token-value-edit') as HTMLElement;
-      wrapper.click();
+      const inlineView = fixture.nativeElement.querySelector('.c-token sd-select .sd-inline-view') as HTMLElement;
+      expect(inlineView).not.toBeNull();
+      inlineView.click();
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.c-token mat-select')).not.toBeNull();
+    });
+
+    it('inline-active values editor is bare (.sd-bare flattens the picker chrome)', () => {
+      seed(valuesField, 'a');
+      const inlineView = fixture.nativeElement.querySelector('.c-token sd-select .sd-inline-view') as HTMLElement;
+      inlineView.click();
+      fixture.detectChanges();
       const sel = fixture.nativeElement.querySelector('.c-token sd-select') as HTMLElement;
-      expect(sel.getAttribute('ng-reflect-viewed')).toBe('false');
-    });
-
-    it('hides the picker .sd-suffix-icon inside .c-token (display:none)', () => {
-      seed(valuesField, 'a');
-      const wrapper = fixture.nativeElement.querySelector('.c-token .c-token-value-edit') as HTMLElement;
-      wrapper.click();
-      fixture.detectChanges();
-      const icon = fixture.nativeElement.querySelector('.c-token .sd-suffix-icon') as HTMLElement | null;
-      if (icon) {
-        expect(getComputedStyle(icon).display).toBe('none');
-      }
-      // (If the element is not present at all in the queryable DOM, the assertion is implicit.)
+      expect(sel.classList.contains('sd-bare')).toBe(true);
     });
   });
 

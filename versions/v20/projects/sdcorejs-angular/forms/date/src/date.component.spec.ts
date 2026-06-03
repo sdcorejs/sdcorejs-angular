@@ -432,14 +432,6 @@ describe('SdDate (bare + open)', () => {
     component = fixture.componentInstance;
   });
 
-  it('bare defaults false; bare=true adds .sd-bare host class', () => {
-    fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(false);
-    fixture.componentRef.setInput('bare', true);
-    fixture.detectChanges();
-    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
-  });
-
   it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
@@ -460,5 +452,81 @@ describe('SdDate (bare + open)', () => {
     fixture.detectChanges();
     component.open();
     expect(component.datePicker()?.opened).toBe(true);
+  });
+
+  it('non-bare: still renders .sd-clear-btn when a value is set', () => {
+    fixture.detectChanges();
+    component.formControl.setValue(new Date(2024, 0, 15));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`)
+// ---------------------------------------------------------------------------
+
+describe('SdDate (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdDate>;
+  let component: SdDate;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [SdDate, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdDate);
+    component = fixture.componentInstance;
+  });
+
+  it('viewed="inline" → isInline true, isViewed false; text face + (hidden) editor both rendered', () => {
+    // asserts: inline mounts BOTH the sd-view face AND the bare-hidden datepicker editor (no swap)
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    component.formControl.setValue(new Date(2024, 0, 15));
+    fixture.detectChanges();
+    expect(component.isInline()).toBe(true);
+    expect(component.isViewed()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-inline-editor')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[matInput]')).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  });
+
+  it('clicking the text face opens the calendar WITHOUT hiding the view text', () => {
+    // asserts: text retained while editing; click → open() (calendar) via enterInlineEdit
+    const openSpy = spyOn(component, 'open').and.callThrough();
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    component.formControl.setValue(new Date(2024, 0, 15));
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.sd-inline-view') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(openSpy).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+  });
+
+  it('inline + value renders a hover clear-× (gated by clearable)', () => {
+    // asserts: clearable inline date exposes the clear affordance; [clearable]=false suppresses it
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    component.formControl.setValue(new Date(2024, 0, 15));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view .sd-inline-clear')).not.toBeNull();
+
+    fixture.componentRef.setInput('clearable', false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  });
+
+  it('viewed=true stays static (no editor, no inline face)', () => {
+    // asserts: viewed=true unchanged DETAIL — sd-view only, no datepicker input mounted
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    component.formControl.setValue(new Date(2024, 0, 15));
+    fixture.detectChanges();
+    expect(component.isInline()).toBe(false);
+    expect(component.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
+    expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
 });

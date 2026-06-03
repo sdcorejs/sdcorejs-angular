@@ -1,7 +1,32 @@
 # Handoff — branch `query-bar`
 
 Full snapshot of in-progress work on `@sdcorejs/angular` so it can be resumed on another machine.
-Last updated: 2026-05-29.
+Last updated: 2026-06-02.
+
+## ⏩ Resume here (2026-06-02) — `viewed='inline'` rollout (on branch `release/0.0.1`)
+
+> The inline-edit feature below was committed on **`release/0.0.1`** (NOT `query-bar`). On the next machine:
+> `git fetch origin && git checkout release/0.0.1 && git pull && npm install && npm run build`
+
+**Shipped (committed + pushed):**
+- Tri-state `viewed` (`boolean | 'inline'`) on `select`, `date`, `datetime`, `date-range`, `autocomplete`, `input`, `input-number`.
+  - Panel controls: text-face (`<sd-view>`) + always-mounted hidden editor (`.sd-inline-editor`); click → `open()` panel; text retained until commit; min panel 200px.
+  - `input` / `input-number`: borderless transparent `<input>` (no overlay); focus to edit, blur reformats.
+  - Disabled `'inline'` ⇒ static view. `clearable` input (default true) → hover clear-× on the face.
+- Shared primitive `forms/models/src/sd-viewed.ts` (`SdViewed`, `sdViewedTransform`, `sdViewedInline(viewed, open?, disabled?)`) + SCSS `assets/scss/core/_inline-edit.scss` (`@mixin sd-inline-panel` / `sd-inline-input`).
+- `[bare]` input **removed** from select/date/datetime/date-range (BREAKING) → `.sd-bare` now driven by `isInline()`.
+- `sdViewDef` unified → fed into `<sd-view>` `[valueTemplate]`; `<sd-view>` context gained `selectedItem`.
+- query-bar `inline-chip` + `build-chip` fully on `[viewed]="'inline'" [clearable]="false"` (boolean branch keeps `#editing`).
+- Showcase: inline example in all 7 form demos.
+- Spec/plan: `docs/superpowers/{specs,plans}/2026-06-02-sd-viewed-inline-rollout.md` (+ `-pilot` / `-edit-mode`).
+- Status: full `sd-angular` suite **2770 green / 0 FAILED**; `npm run build` clean; showcase builds.
+
+**Pending follow-ups (do next):**
+1. **Signal `@let` convention sweep** — CLAUDE.md now requires: a signal read 2+ times in a template MUST be cached via `@let _x = x();`. Applied to the rollout files; the **rest of the repo is NOT swept yet** (table, other components, the 8 untouched `viewed` controls). This is the main pending task.
+2. **Remaining `viewed` controls** — checkbox / radio / switch / chip / chip-calendar / textarea / label / input-color have NOT been given `'inline'` (inline may not fit all; evaluate per control).
+3. **Visual verification** — automated tests can't assert the inline UX. `npx ng serve showcase` → `/forms/*` "Inline edit" sections + `/components/query-bar` inline: confirm text retained on open, hover clear-×, panel ≥200px, borderless inputs.
+
+**Gotchas:** the chip/showcase resolve form controls from `dist/` (tsconfig `@sdcorejs/angular/* → ["dist/sdcorejs-angular/*", …]`, dist wins) → run `npm run build` before any query-bar/showcase spec reflects form-control source edits. Karma output uses `\r` → pipe `tr '\r' '\n'`.
 
 ## Resume quickly
 
@@ -95,12 +120,14 @@ Breaking renames + small API tweaks landed earlier in the branch (`d29a1974`):
 
 ## Test / build status
 
-- **query-bar suite: 131 SUCCESS** (Karma + ChromeHeadless). Per-child counts: build-chip 14, inline-chip 14, chip-popover 15, popover-chip 5, field-picker 7, actions-bar 7, saved-filters-menu 7, inline-value-chip ~15, parent ~47.
+- **query-bar suite green** (Karma + ChromeHeadless); full sd-angular suite **2770 SUCCESS / 0 FAILED**. inline-chip + build-chip now delegate ALL non-string/number branches to `[viewed]="'inline'"` (values/lazy/date/datetime/BETWEEN); boolean keeps the chip `#editing` toggle. inline-chip dropped `enterEdit`/`onFocusOut`/`#editing`(values/date/...)/`#cdr`.
 - Full `npm run build` runs **clean** (~60-75s); the previous pre-existing `form-generic` error mentioned in earlier handoffs no longer reproduces.
 - Entries that build clean: every entry point, including all the new query-bar children.
 
 ## Known issues / next steps
 
+- ✅ **`viewed='inline'` rollout complete** — date / datetime / date-range / autocomplete (panel pattern) + input / input-number (borderless variant) all support `[viewed]="'inline'"`. `[bare]` input REMOVED from select/date/datetime/date-range (breaking; `.sd-bare` now driven by `isInline()`). Disabled `'inline'` = static view. Shared `assets/scss/core/_inline-edit.scss` mixins. inline-chip + build-chip fully migrated. Spec/plan: `docs/superpowers/{specs,plans}/2026-06-02-sd-viewed-inline-rollout.md`.
+- ✅ **Fixed — inline `values` chip "lost display on close without change":** the bare `sd-select` (and `sd-date`/`sd-datetime`/`sd-date-range`) rendered their own `.sd-clear-btn` ×, which sat next to the trigger and was easy to hit while dismissing the panel → `clear()` committed empty `data` → chip value vanished and stuck (recoverable only by re-selecting). Root cause was the slim clear-button (`06eebb29`). Fix: gate `.sd-clear-btn` on `!bare()` in all four form controls — bare = "value + caret only"; the chip's own `.c-token-remove` owns removal. NOTE: the inline-chip spec resolves `sd-select` from `dist/` (tsconfig `@sdcorejs/angular/* → ["dist/sdcorejs-angular/*", …]`, dist wins), so `npm run build` must run before the inline-chip test sees form-control source changes.
 - 🔍 **Visual verification pending** — automated tests cannot assert the UI. Run `ng serve demo` → `/sd-query-bar`, switch to inline, and confirm: values/lazy chips open the native sd-select panel (search + checkboxes), date opens mat-calendar, datetime opens the datetime overlay; bare controls sit flush in the chip; toolbar stays anchored; grey-label/primary-value reads correctly in both modes; saved-filters dropdown saves/applies/deletes; BETWEEN renders one sd-date-range.
 - 📋 **E2E / integration specs** not written. Only per-child unit specs exist. Wire e2e against an external host (the `demo` app under `/sd-query-bar`) when scope expands.
 - ⌨️ **Keyboard polish**: no `Esc` shortcut to cancel the in-progress build chip; no `/` to focus the search input. Both are nice-to-haves.

@@ -41,6 +41,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
+import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -53,6 +54,10 @@ import {
   SdFormControl,
   SdInlineErrorValidator,
   sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
@@ -74,7 +79,7 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./input-number.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -87,6 +92,7 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
     SdLabel,
     SdFormatNumberPipe,
     SdView,
+    SdInlineText,
   ],
 })
 export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
@@ -96,6 +102,8 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   // 1. SIGNAL QUERIES
   // ==========================================
   control = viewChild<ElementRef<HTMLInputElement>>('control');
+  /** The inline primitive — only present when `viewed='inline'`; drives focus/blur in that mode. */
+  inlineRef = viewChild(SdInlineText);
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
   sdViewDef = contentChild(SdViewDefDirective);
@@ -155,7 +163,25 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   required = input(false, { transform: booleanAttribute });
   readonly = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` borderless inline-edit (input IS the face). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+
+  // Tri-state `viewed` — shared primitive. No panel; in `'inline'` the input is borderless/transparent.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.#focusActiveInput(), this.disabled);
+  /** Focus whichever input is live: the inline primitive in `'inline'` mode, else the mat input. */
+  #focusActiveInput = (): void => {
+    const inline = this.inlineRef();
+    if (inline) inline.focus();
+    else this.control()?.nativeElement?.focus();
+  };
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no input). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Focus the inline input. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
+  /** View display template: `sdViewDef` overrides the projected `#sdValue` for the static view (unified). */
+  readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   type = input<'negative' | 'positive' | undefined>();
   precision = input<number>(3);
@@ -504,13 +530,15 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
 
   blur = () => {
     this.isFocused = false;
-    this.control()?.nativeElement?.blur();
+    const inline = this.inlineRef();
+    if (inline) inline.blur();
+    else this.control()?.nativeElement?.blur();
   };
 
   focus = () => {
     this.isFocused = true;
     setTimeout(() => {
-      this.control()?.nativeElement?.focus();
+      this.#focusActiveInput();
     }, 100);
   };
 }

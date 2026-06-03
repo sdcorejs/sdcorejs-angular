@@ -91,73 +91,42 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelector('.c-token-sep')).toBeNull();
   });
 
-  // ---- 3: clicking .c-token-value-edit enters edit mode
-  it('clicking the value wrapper enters edit mode (.c-token-editing)', () => {
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    expect(wrapper).not.toBeNull();
-    wrapper.click();
+  // ---- 3: boolean chip — clicking the value enters edit mode (.c-token-editing)
+  // why: boolean is the only branch still chip-managed (enterEdit/#editing); date/datetime/
+  // values/BETWEEN delegate to their control's viewed='inline'.
+  it('boolean chip: clicking the value enters edit mode (.c-token-editing)', () => {
+    host.field = { key: 'on', label: 'On', type: 'boolean' } as SdQueryField;
+    host.filter = { field: 'on', operator: 'EQUAL', data: true };
+    host.valueText = 'Có';
+    fixture.detectChanges();
+
+    const btn = fixture.nativeElement.querySelector('.c-token .c-token-value') as HTMLElement;
+    expect(btn).not.toBeNull();
+    btn.click();
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
   });
 
-  // ---- 4: edit mode auto-opens picker
-  it('entering edit mode auto-opens the picker', async () => {
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const pickerDe = fixture.debugElement.query(By.css('.c-token sd-date'));
-    expect(pickerDe).not.toBeNull();
-    const openSpy = spyOn(pickerDe.componentInstance as any, 'open');
-    // why: re-trigger the edit to assert open() is called on second entry too.
-    fixture.detectChanges();
-    // Simulate exit then re-enter
-    const outside = document.createElement('button');
-    wrapper.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
-    host.child()!.onFocusOutForTest({ currentTarget: wrapper, relatedTarget: outside } as unknown as FocusEvent);
-    fixture.detectChanges();
-    wrapper.click();
-    fixture.detectChanges();
-    await fixture.whenStable();
-    expect(openSpy).toHaveBeenCalled();
+  // ---- 4: date chip delegates its edit lifecycle to sd-date [viewed]="'inline'"
+  it("date chip drives sd-date with [viewed]=\"'inline'\"", () => {
+    // asserts: date branch no longer chip-managed — sd-date's own inline mode owns click-to-edit
+    const picker = fixture.debugElement.query(By.css('sd-date')).componentInstance as { viewed: () => unknown };
+    expect(picker.viewed()).toBe('inline');
   });
 
-  // ---- 5: focusout - inside stays editing; outside exits
-  it('focusout: inside subtree stays editing; outside exits edit', () => {
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
-
-    const inside = document.createElement('input');
-    wrapper.appendChild(inside);
-    host.child()!.onFocusOutForTest({ currentTarget: wrapper, relatedTarget: inside } as unknown as FocusEvent);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
-
-    const outside = document.createElement('button');
-    host.child()!.onFocusOutForTest({ currentTarget: wrapper, relatedTarget: outside } as unknown as FocusEvent);
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).toBeNull();
-  });
-
-  // ---- 6: single-value commit (sd-date) emits commit + exits edit
-  it('sd-date sdChange emits (commit) and exits edit', () => {
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
-
+  // ---- 6: single-value commit (sd-date) emits (commit)
+  it('sd-date sdChange emits (commit)', () => {
+    // asserts: the chip forwards the picker's committed value via (commit)
     const pickerDe = fixture.debugElement.query(By.css('.c-token sd-date'));
     pickerDe.triggerEventHandler('sdChange', '2024-02-20');
     fixture.detectChanges();
     expect(host.committed).toBe('2024-02-20');
     expect(host.commitCount).toBe(1);
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).toBeNull();
   });
 
-  // ---- 7: multi-select commits emit (liveChange), do NOT exit edit
-  it('multi sd-select sdChange emits (liveChange), no exit', () => {
+  // ---- 7: multi-select commits emit (liveChange)
+  // why: sd-select [viewed]="'inline'" giờ tự quản edit lifecycle; chip chỉ nhận sdChange.
+  it('multi sd-select sdChange emits (liveChange)', () => {
     const valuesField = {
       key: 'status',
       label: 'Status',
@@ -170,10 +139,6 @@ describe('SdQueryInlineChip', () => {
     host.valueText = 'A';
     fixture.detectChanges();
 
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
-
     const selDe = fixture.debugElement.query(By.css('.c-token sd-select'));
     selDe.triggerEventHandler('sdChange', ['a', 'b']);
     fixture.detectChanges();
@@ -181,7 +146,57 @@ describe('SdQueryInlineChip', () => {
     expect(host.lived).toEqual(['a', 'b']);
     expect(host.liveCount).toBe(1);
     expect(host.commitCount).toBe(0);
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
+  });
+
+  // ---- 7a: values chip delegates its edit lifecycle to sd-select [viewed]="'inline'"
+  it("values chip drives sd-select with [viewed]=\"'inline'\"", () => {
+    const valuesField = {
+      key: 'status',
+      label: 'Status',
+      type: 'values',
+      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+    } as unknown as SdQueryField;
+    host.field = valuesField;
+    host.filter = { field: 'status', operator: 'IN', data: ['a'] };
+    host.multiple = true;
+    host.valueText = 'A';
+    fixture.detectChanges();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sel = fixture.debugElement.query(By.css('sd-select')).componentInstance as any;
+    expect(sel.viewed()).toBe('inline');
+  });
+
+  // ---- 7b: editing a values chip must NOT render the bare picker's inline clear-x
+  // why: clear-x trùng với nút × xoá filter của chip (2 dấu ×) + nằm sát trigger → user
+  // dễ bấm nhầm khi đóng panel → clear() xoá data về [] → chip mất hiển thị (regression).
+  // viewed='inline' → editor bare → không render .sd-clear-btn.
+  it('values chip in inline-edit does NOT render the inline .sd-clear-btn (only the chip × remains)', () => {
+    const valuesField = {
+      key: 'status',
+      label: 'Status',
+      type: 'values',
+      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+    } as unknown as SdQueryField;
+    host.field = valuesField;
+    host.filter = { field: 'status', operator: 'IN', data: ['a'] };
+    host.multiple = true;
+    host.valueText = 'A';
+    fixture.detectChanges();
+
+    // sd-select renders its inline view → click to reveal the (bare) editor
+    const inlineView = fixture.nativeElement.querySelector('sd-select .sd-inline-view') as HTMLElement;
+    expect(inlineView).not.toBeNull();
+    inlineView.click();
+    fixture.detectChanges();
+
+    // No inline clear-x from the bare inline editor
+    expect(fixture.nativeElement.querySelector('sd-select .sd-clear-btn')).toBeNull();
+    // why: chip passes [clearable]="false" → the inline text-face clear-× is suppressed too,
+    // so the chip shows exactly ONE × (its own .c-token-remove).
+    expect(fixture.nativeElement.querySelector('sd-select .sd-inline-clear')).toBeNull();
+    // The chip still owns its own removal ×
+    expect(fixture.nativeElement.querySelector('.c-token-remove')).not.toBeNull();
   });
 
   // ---- 8: BETWEEN date renders sd-date-range; sdChange emits commitRange
@@ -192,9 +207,6 @@ describe('SdQueryInlineChip', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelectorAll('.c-token sd-date-range').length).toBe(1);
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
     const rngDe = fixture.debugElement.query(By.css('.c-token sd-date-range'));
     rngDe.triggerEventHandler('sdChange', { from: '2024-02-01', to: '2024-02-28' });
     fixture.detectChanges();
@@ -212,64 +224,29 @@ describe('SdQueryInlineChip', () => {
     expect(fixture.nativeElement.querySelectorAll('.c-token sd-datetime').length).toBe(0);
   });
 
-  // ---- 9a: BETWEEN range commit with full {from,to} exits edit immediately
-  // why: bug "click ra lần đầu chưa update, click vào rồi ra mới đúng" — viewed
-  // text render trước khi model về tới sd-date-range. Fix: commitRange với cả 2
-  // đầu range → exit edit sync, viewed re-render ngay tại tick có model mới.
-  it('BETWEEN range commit with both from + to → exits edit mode synchronously', () => {
+  // ---- 9a: BETWEEN delegates its lifecycle to sd-date-range [viewed]="'inline'"
+  it("BETWEEN chip drives sd-date-range with [viewed]=\"'inline'\"", () => {
+    // asserts: BETWEEN lifecycle delegated to the range control's inline mode (no chip #editing)
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: null, to: null } };
     fixture.detectChanges();
-
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
-
-    const rngDe = fixture.debugElement.query(By.css('.c-token sd-date-range'));
-    rngDe.triggerEventHandler('sdChange', { from: '2024-02-01', to: '2024-02-28' });
-    fixture.detectChanges();
-
-    expect(host.rangeCount).toBe(1);
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).toBeNull();
+    const rng = fixture.debugElement.query(By.css('sd-date-range')).componentInstance as { viewed: () => unknown };
+    expect(rng.viewed()).toBe('inline');
   });
 
-  // ---- 9b: BETWEEN partial commit (only one end) stays in edit
-  // why: user mới chọn `from` chưa chọn `to` → giữ edit để user tiếp tục chọn `to`.
-  it('BETWEEN range commit with only one end → stays in edit', () => {
-    const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
-    host.field = dateField;
-    host.filter = { field: 'd', operator: 'BETWEEN', data: { from: null, to: null } };
-    fixture.detectChanges();
-
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
-    const rngDe = fixture.debugElement.query(By.css('.c-token sd-date-range'));
-
-    rngDe.triggerEventHandler('sdChange', { from: '2024-02-01', to: null });
-    fixture.detectChanges();
-    expect(host.rangeCount).toBe(1);
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
-  });
-
-  // ---- 9c: BETWEEN range commit null payload → emits null + stays in edit
-  it('BETWEEN range commit with null payload → emits null and stays in edit', () => {
+  // ---- 9c: BETWEEN range commit null payload → emits null
+  it('BETWEEN range commit with null payload → emits null', () => {
+    // asserts: chip forwards a null range commit (clear) via (commitRange)
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
     host.filter = { field: 'd', operator: 'BETWEEN', data: { from: '2024-02-01', to: '2024-02-28' } };
     fixture.detectChanges();
 
-    const wrapper = fixture.nativeElement.querySelector('.c-token-value-edit') as HTMLElement;
-    wrapper.click();
-    fixture.detectChanges();
     const rngDe = fixture.debugElement.query(By.css('.c-token sd-date-range'));
-
     rngDe.triggerEventHandler('sdChange', null);
     fixture.detectChanges();
     expect(host.committedRange).toBeNull();
-    expect(fixture.nativeElement.querySelector('.c-token.c-token-editing')).not.toBeNull();
   });
 
   // ---- 10: boolean viewed → button; click → enter edit; toggle emits commit + exit

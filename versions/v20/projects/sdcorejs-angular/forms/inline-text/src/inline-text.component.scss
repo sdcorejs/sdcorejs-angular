@@ -1,0 +1,96 @@
+// Seamless content-hug input. `size` (chars) on the native input drives width; this caps it.
+:host {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.sd-inline-text__input {
+  appearance: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+  min-width: 0;
+  max-width: 240px;
+}
+
+// Standalone — reads as text at rest, light bg on hover, ring on focus (sd-input inline edit).
+:host(.sd-inline-text--standalone) {
+  border-radius: 4px;
+  padding: 1px 6px;
+  background-color: rgba(0, 0, 0, 0.04);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+
+  &[data-state='focus'] {
+    background-color: rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 0 0 1px var(--sd-primary, #1f6feb);
+  }
+
+  &[data-state='error'] {
+    box-shadow: inset 0 0 0 1px var(--sd-error, #b32626);
+  }
+
+  // why: clear-× is an affordance, not chrome — reveal only on hover / focus so the
+  // resting state stays text-like.
+  .sd-inline-text__clear {
+    display: none;
+  }
+
+  &:hover .sd-inline-text__clear,
+  &[data-state='focus'] .sd-inline-text__clear {
+    display: inline-flex;
+  }
+}
+
+// Seamless — no own envelope; the host pill (chip) owns border/bg/state. Only the value
+// text colour follows state so the "grey label : coloured value" reading stays consistent.
+:host(.sd-inline-text--seamless) {
+  // why: in a chip the value reads as bold as the popover chip value (label stays normal).
+  .sd-inline-text__input {
+    font-weight: 500;
+  }
+
+  .sd-inline-text__input::placeholder {
+    font-style: italic;
+  }
+
+  &[data-state='active'] .sd-inline-text__input {
+    color: var(--sd-primary, #1f6feb);
+  }
+
+  &[data-state='error'] .sd-inline-text__input {
+    color: var(--sd-error, #b32626);
+  }
+}
+
+.sd-inline-text__clear {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  color: var(--sd-text-secondary, #6b7280);
+  transition: color 0.15s ease;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--sd-error, #b32626);
+  }
+}

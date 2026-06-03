@@ -31,7 +31,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
+import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -48,7 +48,7 @@ import * as uuid from 'uuid';
   templateUrl: './date.component.html',
   styleUrls: ['./date.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { '[class.sd-bare]': 'bare()', '[class.sd-viewed]': 'viewed()', '[class.sd-has-label]': '!!label()' },
+  host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; nếu undefined sẽ throw khi format/parse.
     // Provide locale en-US tại scope component để hành vi giống Moment cũ (English default).
@@ -140,9 +140,22 @@ export class SdDate implements OnDestroy, OnInit {
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
-  /** Flatten the field chrome to a chip-friendly trigger (value + caret only). */
-  bare = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (calendar). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
+  clearable = input(true, { transform: booleanAttribute });
+
+  // Tri-state `viewed` — shared primitive. In `'inline'` the calendar editor is always mounted
+  // (chrome hidden via CSS); the sd-view text face opens the calendar on click.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.open(), this.disabled);
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no editor). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Open the calendar from the inline text face. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
+  /** View display template: `sdViewDef` overrides the projected `#sdValue` (unified). */
+  readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   inlineError = input<string | undefined>();
 

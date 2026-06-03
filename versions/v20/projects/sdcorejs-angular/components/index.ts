@@ -3,6 +3,7 @@ export * from '@sdcorejs/angular/components/button';
 export * from '@sdcorejs/angular/components/badge';
 export * from '@sdcorejs/angular/components/tab-router';
 export * from '@sdcorejs/angular/components/side-drawer';
+export * from '@sdcorejs/angular/components/modal-resizable';
 export * from '@sdcorejs/angular/components/modal';
 export * from '@sdcorejs/angular/components/table';
 export * from '@sdcorejs/angular/components/quick-action';

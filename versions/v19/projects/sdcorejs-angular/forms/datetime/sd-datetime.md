@@ -39,7 +39,8 @@ Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (
 | `hyperlink` | `string \| null \| undefined` | `undefined` | Render value as a link in `[viewed]` mode. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables input + picker trigger. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode — hides input, renders formatted datetime (or `<ng-template sdViewDef>`). |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` edit · `true` static DETAIL (formatted datetime / `sdViewDef`) · `'inline'` click-to-edit (text face → click opens the datetime overlay; text retained until commit; hover clear-× gated by `clearable`). Disabled `'inline'` → static view. |
+| `clearable` | `boolean` | `true` | In `'inline'`, show a hover clear-× on the text face. `false` where the host owns removal (chips). |
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error as a tooltip via `errorMessage`. |
 | `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message (synthetic `inlineError` validator). |
 | `model` | `string \| number \| Date \| null \| undefined` | `undefined` | Two-way bound value (use `[(model)]`). Stored / emitted as `yyyy/MM/dd HH:mm:ss` string (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`). |
@@ -60,7 +61,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 | --- | --- | --- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
 | `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
-| `sd-bare` | `[bare]="true"` | Strips the mat-form-field shell for inline contexts (chip, token). |
+| `sd-bare` | (internal — set by `viewed='inline'`) | Flattens the mat-form-field shell for the inline editor. **No longer a public `[bare]` input** (removed); driven by `isInline()`. |
 
 ## Content projection (slots)
 - `#sdLabel` template — custom label rendering
@@ -96,7 +97,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - An outlined input field with a single calendar+clock icon on the trailing side
 - The text inside reads as `dd/MM/yyyy HH:mm` (e.g. `09/05/2026 14:30`)
 - Clicking the icon opens a popup: a month-grid calendar on top, a time picker (hours + minutes spinner/slider) below
-- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`).
+- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - In `[viewed]="true"` mode: no input chrome — just the formatted datetime as plain text (or as a hyperlink if `hyperlink` is set)
 
 ## Examples

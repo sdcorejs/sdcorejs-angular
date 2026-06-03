@@ -767,3 +767,50 @@ describe('SdInput (host classes)', () => {
     expect((fixture.nativeElement as HTMLElement).classList.contains('sd-viewed')).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`) — borderless input variant
+// ---------------------------------------------------------------------------
+
+describe('SdInput (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdInput>;
+  let comp: SdInput;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdInput, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdInput);
+    comp = fixture.componentInstance;
+  });
+
+  it('viewed="inline" → isInline true; renders the seamless <sd-inline-text> (NO sd-view swap, NO mat-form-field)', () => {
+    // asserts: inline renders the borderless primitive — a raw input, not a mat-form-field
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    expect(fixture.nativeElement.querySelector('sd-inline-text')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-inline-text input')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).toBeNull();
+  });
+
+  it('viewed=true stays static (sd-view, no input)', () => {
+    // asserts: viewed=true unchanged DETAIL — sd-view only
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+
+  it('disabled inline behaves like viewed=true (static, no input)', () => {
+    // asserts: disabled 'inline' → isViewed true, isInline false (can't edit a disabled input)
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('disabled', true);
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(false);
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+});

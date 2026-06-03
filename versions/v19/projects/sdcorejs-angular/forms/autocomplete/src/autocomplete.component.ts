@@ -56,6 +56,10 @@ import {
   SdSearch,
   SdSelectionData,
   sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
@@ -80,7 +84,7 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   styleUrls: ['./autocomplete.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'viewed()' },
+  host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-bare]': 'isInline()' },
   imports: [
     CommonModule,
     FormsModule,
@@ -170,7 +174,22 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   addable = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
-  viewed = input(false, { transform: booleanAttribute });
+  /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (autocomplete panel). */
+  viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
+  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
+  clearable = input(true, { transform: booleanAttribute });
+
+  // Tri-state `viewed` — shared primitive. In `'inline'` the autocomplete editor is always mounted
+  // (chrome hidden via CSS); the sd-view text face opens the panel on click.
+  readonly #viewedState = sdViewedInline(this.viewed, () => this.open(), this.disabled);
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no editor). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Open the autocomplete panel from the inline text face. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
+  /** View display template: `sdViewDef` overrides the projected `#sdValue` (unified). */
+  readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
   validator = input<SdCustomValidator | undefined>();
   inlineError = input<string | undefined>();
@@ -514,6 +533,12 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
       this.autocompleteTrigger()?.openPanel();
       this.inputRef()?.nativeElement?.focus();
     }, 100);
+  };
+
+  /** Open the autocomplete panel programmatically (anchors to the field input). Used by inline mode. */
+  open = () => {
+    if (this.formControl.disabled) return;
+    this.focus();
   };
 
   clear = ($event?: any) => {

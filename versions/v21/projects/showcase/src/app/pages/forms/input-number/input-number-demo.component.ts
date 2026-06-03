@@ -33,6 +33,12 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
           <sd-input-number style="width: 200px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input-number>
         </div>
       </demo-section>
+
+      <demo-section heading="Inline edit ('inline')" note="Input số trong suốt nhìn như text; focus để sửa, blur format lại (vd 12.345). Hover đậm nền.">
+        <div style="width: 240px; font-size:13px; color:#555">
+          Số lượng: <sd-input-number [viewed]="'inline'" [(model)]="lockedC" [form]="form"></sd-input-number>
+        </div>
+      </demo-section>
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

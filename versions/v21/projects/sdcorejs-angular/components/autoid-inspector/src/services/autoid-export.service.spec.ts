@@ -12,15 +12,43 @@ const meta: SdAutoidExportMeta = {
   pageUrl: '/customers/create',
   pageTitle: 'Customer Create',
   timestamp: '2026-05-25T10:00:00.000Z',
+  url: 'https://app.example.com/customers/create?tab=info&page=2',
+  pathname: '/customers/create',
+  search: '?tab=info&page=2',
+  queryParams: { tab: 'info', page: '2' },
 };
 
 describe('SdAutoidExportService', () => {
   const svc = new SdAutoidExportService();
 
-  it('toJson trả JSON pretty 2 space', () => {
+  it('toJson trả JSON pretty 2 space (bare array khi không có meta — back-compat)', () => {
     const out = svc.toJson([el()]);
     expect(out).toContain('"autoid": "forms-input-email"');
     expect(out.startsWith('[')).toBe(true);
+  });
+
+  it('toJson(elements, meta) bọc thành { meta, elements } kèm url + queryParams', () => {
+    const out = svc.toJson([el()], meta);
+    const parsed = JSON.parse(out);
+    expect(Array.isArray(parsed)).toBe(false);
+    expect(parsed.meta.url).toBe('https://app.example.com/customers/create?tab=info&page=2');
+    expect(parsed.meta.queryParams.tab).toBe('info');
+    expect(parsed.meta.queryParams.page).toBe('2');
+    expect(parsed.elements.length).toBe(1);
+    expect(parsed.elements[0].autoid).toBe('forms-input-email');
+  });
+
+  it('parseQueryParams parse search string → map (rỗng khi không có)', () => {
+    expect(svc.parseQueryParams('?tab=info&page=2')).toEqual({ tab: 'info', page: '2' });
+    expect(svc.parseQueryParams('')).toEqual({});
+  });
+
+  it('toMarkdownPom xử lý element thiếu autoid (missingAutoid) không vỡ — prop name fallback theo tag', () => {
+    const m = el({ stt: 3, autoid: '', tag: 'sd-button', missingAutoid: true, xpath: '(//sd-button)[1]', warning: 'Thiếu data-autoid' });
+    const md = svc.toMarkdownPom([m], meta);
+    expect(md).toContain('(//sd-button)[1]');
+    // prop name không được rỗng (phải có identifier hợp lệ)
+    expect(md).toMatch(/readonly\s+sdButton\w*\s*=/);
   });
 
   it('toCsv header đúng + escape dấu " bằng ""', () => {

@@ -19,9 +19,13 @@ export class SelectorActionComponent {
   // ==========================================
   // 1. SIGNAL INPUTS / OUTPUTS
   // ==========================================
+  autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   tableOption = input<SdTableOption | undefined>(undefined);
   selectedTableItems = input<SdTableItem[] | undefined>(undefined);
   clear = output<void>();
+
+  // Base autoId (đã là `components-table-<scope>` từ parent), '' khi parent không set.
+  autoId = computed(() => this.autoIdInput() || '');
 
   // ==========================================
   // 2. INJECT

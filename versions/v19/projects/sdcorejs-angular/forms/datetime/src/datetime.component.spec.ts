@@ -556,18 +556,6 @@ describe('SdDatetime (bare input + open)', () => {
     bareComp = bareFixture.componentInstance;
   });
 
-  it('bare defaults to false and applies no host class', () => {
-    bareFixture.detectChanges();
-    expect(bareComp.bare()).toBe(false);
-    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(false);
-  });
-
-  it('bare=true adds the .sd-bare host class', () => {
-    bareFixture.componentRef.setInput('bare', true);
-    bareFixture.detectChanges();
-    expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
-  });
-
   it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     bareFixture.detectChanges();
     expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
@@ -588,5 +576,72 @@ describe('SdDatetime (bare input + open)', () => {
     bareFixture.detectChanges();
     bareComp.open();
     expect(bareComp.pickerOpened()).toBe(true);
+  });
+
+});
+
+// ---------------------------------------------------------------------------
+// viewed inline mode (tri-state `viewed`)
+// ---------------------------------------------------------------------------
+
+describe('SdDatetime (viewed inline mode)', () => {
+  let fixture: ComponentFixture<SdDatetime>;
+  let comp: SdDatetime;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [SdDatetime, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(SdDatetime);
+    comp = fixture.componentInstance;
+  });
+
+  it('viewed="inline" → isInline true, isViewed false; text face + (hidden) editor both rendered', () => {
+    // asserts: inline mounts BOTH the sd-view face AND the bare-hidden datetime editor
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    comp.formControl.setValue('2026/05/15 14:30:00');
+    fixture.detectChanges();
+    expect(comp.isInline()).toBe(true);
+    expect(comp.isViewed()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.sd-inline-editor')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('input[matInput]')).not.toBeNull();
+    expect((fixture.nativeElement as HTMLElement).classList.contains('sd-bare')).toBe(true);
+  });
+
+  it('clicking the text face opens the overlay WITHOUT hiding the view text', () => {
+    // asserts: text retained while editing; click → open() via enterInlineEdit
+    const openSpy = spyOn(comp, 'open').and.callThrough();
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    comp.formControl.setValue('2026/05/15 14:30:00');
+    fixture.detectChanges();
+    (fixture.nativeElement.querySelector('.sd-inline-view') as HTMLElement).click();
+    fixture.detectChanges();
+    expect(openSpy).toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view sd-view')).not.toBeNull();
+  });
+
+  it('inline clear-× gated by clearable', () => {
+    // asserts: clearable inline datetime shows clear-×; [clearable]=false suppresses it
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.detectChanges();
+    comp.formControl.setValue('2026/05/15 14:30:00');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-view .sd-inline-clear')).not.toBeNull();
+    fixture.componentRef.setInput('clearable', false);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-clear')).toBeNull();
+  });
+
+  it('viewed=true stays static (no editor, no inline face)', () => {
+    // asserts: viewed=true unchanged DETAIL — sd-view only
+    fixture.componentRef.setInput('viewed', true);
+    fixture.detectChanges();
+    comp.formControl.setValue('2026/05/15 14:30:00');
+    fixture.detectChanges();
+    expect(comp.isViewed()).toBe(true);
+    expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
+    expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
+    expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 @use '../../../assets/scss/core/color.scss' as color;
+@use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
 
 :host {
@@ -99,15 +100,6 @@
     }
     .mat-mdc-placeholder-required {
       color: map.get(color.$color_map, 'error');
-    }
-  }
-}
-
-/* CSS sdViewDef */
-.sd-view {
-  &:not(.c-focused):not(.c-disabled) {
-    &:hover {
-      background-color: #ebecf0;
     }
   }
 }
@@ -222,6 +214,9 @@
   display: inline-flex;
   align-items: center;
 }
+
+// Inline mode (viewed='inline') — text-face + editor ẩn. Style chung từ partial dùng lại cho mọi panel control.
+@include inline.sd-inline-panel;
 
 // Bóc từng lớp visual quanh trigger của mat-select.
 :host(.sd-bare) ::ng-deep {

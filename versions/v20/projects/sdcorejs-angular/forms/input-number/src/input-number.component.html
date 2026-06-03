@@ -2,19 +2,35 @@
 @let app = appearance();
 @let hideErr = hideInlineError();
 @let errMsg = errorMessage();
-@let viewDef = sdViewDef();
 @let hText = helperText();
 @let fmt = format();
+@let _isInline = isInline();
 
-@if (viewed()) {
+@if (isViewed()) {
   <sd-view
     [label]="lbl"
     [labelTemplate]="sdLabelTemplate()"
     [value]="formControl.value"
     [display]="formControl.value | sdFormatNumber : undefined : fmt"
     [hyperlink]="hyperlink()"
-    [valueTemplate]="sdValueTemplate()">
+    [valueTemplate]="viewTemplate()">
   </sd-view>
+} @else if (_isInline) {
+  <sd-inline-text
+    [control]="inputControl"
+    [placeholder]="placeholder() || lbl || ''"
+    [clearable]="!required()"
+    [autoId]="autoId()"
+    [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
+    (sdFocus)="onFocus()"
+    (sdBlur)="onBlur()"
+    (keyupEnter)="onKeyupEnter()"
+    (sdKeydown)="onKeydown($event)"
+    (sdPaste)="onPaste($event)"
+    (sdCompositionStart)="onCompositionStart($event)"
+    (sdCompositionEnd)="onCompositionEnd($event)"
+    (cleared)="cleared.emit()">
+  </sd-inline-text>
 } @else {
   @if (!app) {
     <ng-content select="[sdLabel]">
@@ -26,14 +42,10 @@
 
   <div
     class="d-flex align-items-center"
-    [class.sd-view]="!!viewDef?.templateRef"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-    @if (viewDef?.templateRef && !isFocused) {
-      <ng-container *ngTemplateOutlet="viewDef!.templateRef; context: { value: formControl.value }"> </ng-container>
-    } @else {
       <mat-form-field
         [class.sd-md]="size() === 'md'"
         [class.sd-sm]="size() === 'sm'"
@@ -101,6 +113,5 @@
           <ng-content select="[sdSuffix]"></ng-content>
         </ng-container> -->
       </mat-form-field>
-    }
   </div>
 }

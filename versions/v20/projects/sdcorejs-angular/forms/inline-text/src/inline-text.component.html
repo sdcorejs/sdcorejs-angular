@@ -1,0 +1,47 @@
+@let _autoId = autoId();
+@let _placeholder = placeholder();
+@let _size = sizeOf();
+@let _control = control();
+
+@if (_control) {
+  <input
+    #inputEl
+    class="sd-inline-text__input"
+    type="text"
+    [formControl]="_control"
+    [placeholder]="_placeholder"
+    [size]="_size"
+    [attr.data-autoId]="_autoId"
+    (input)="onInput($event)"
+    (focus)="onFocus($event)"
+    (blur)="onBlur($event)"
+    (keyup)="onKeyup($event)"
+    (keydown)="onKeydown($event)"
+    (paste)="onPaste($event)"
+    (compositionstart)="onCompositionStart($event)"
+    (compositionend)="onCompositionEnd($event)" />
+} @else {
+  <input
+    #inputEl
+    class="sd-inline-text__input"
+    type="text"
+    [value]="currentText()"
+    [disabled]="disabled()"
+    [placeholder]="_placeholder"
+    [size]="_size"
+    [attr.data-autoId]="_autoId"
+    (input)="onInput($event)"
+    (focus)="onFocus($event)"
+    (blur)="onBlur($event)"
+    (keyup)="onKeyup($event)"
+    (keydown)="onKeydown($event)"
+    (paste)="onPaste($event)"
+    (compositionstart)="onCompositionStart($event)"
+    (compositionend)="onCompositionEnd($event)" />
+}
+
+@if (showClear()) {
+  <button type="button" class="sd-inline-text__clear" (click)="clear($event)" aria-label="Clear" tabindex="-1">
+    <mat-icon>close</mat-icon>
+  </button>
+}

@@ -43,7 +43,8 @@ Typeahead single-select dropdown — user types to filter a static array OR an a
 | `addable` | `boolean` | `false` | Show "+" add button → emits `sdAdd`. |
 | `required` | `boolean` | `false` | Adds `Validators.required`. |
 | `disabled` | `boolean` | `false` | Disables both display + filter controls. |
-| `viewed` | `boolean` | `false` | Read-only DETAIL mode — renders display value (or `<sd-view-def>` template) instead of the input. |
+| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` edit · `true` static DETAIL (display value / `sdViewDef`) · `'inline'` click-to-edit (text face → click opens the autocomplete panel; text retained until commit; hover clear-× gated by `clearable`). Disabled `'inline'` → static view. |
+| `clearable` | `boolean` | `true` | In `'inline'`, show a hover clear-× on the text face. `false` where the host owns removal (chips). |
 | `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error as a tooltip instead. |
 | `validator` | `SdCustomValidator \| undefined` | `undefined` | Async custom validator (wrapped via `HandleSdCustomValidator`). |
 | `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message (sets a synthetic `inlineError` validator). |

@@ -39,7 +39,7 @@ interface Employee {
         </div>
       </demo-section>
 
-      <demo-section heading="Chế độ hiển thị (mode) — inline">
+      <demo-section heading="Chế độ hiển thị (mode) — inline" note="Chip values bấm vào giá trị để sửa inline (mở panel ngay, không hiện ô input rời); bấm ra ngoài quay về text. Dùng sd-select [viewed]='inline'.">
         <div class="bar-box">
           <sd-query-bar
             [fields]="fields"

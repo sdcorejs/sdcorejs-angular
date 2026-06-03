@@ -24,7 +24,12 @@ import { SdNotifyService } from '../../notify.service';
   ],
   host: {
     '[@toastAnimation]': 'true',
-    '[class]': '"bg-white sd-toast"'
+    '[class]': '"bg-white sd-toast"',
+    // E2E hooks đọc bởi sd-autoid-inspector: autoid theo loại + state type/title/message.
+    '[attr.data-autoid]': 'autoId',
+    '[attr.data-type]': 'data.type',
+    '[attr.data-title]': 'data.title ?? null',
+    '[attr.data-message]': 'dataMessage'
   }
 })
 export class ToastComponent implements OnInit, OnDestroy {
@@ -109,5 +114,15 @@ export class ToastComponent implements OnInit, OnDestroy {
 
   get hasMore(): boolean {
     return this.isMultiMessage && this.messages.length > this.MAX_SHOW;
+  }
+
+  /** autoid theo loại toast để E2E chọn trực tiếp, vd `services-notify-toast-success`. */
+  get autoId(): string {
+    return `services-notify-toast-${this.data.type}`;
+  }
+
+  /** Gộp message (mảng nối ' | ') để phơi ra data-message cho E2E. */
+  get dataMessage(): string {
+    return Array.isArray(this.data.message) ? this.data.message.join(' | ') : this.data.message;
   }
 }

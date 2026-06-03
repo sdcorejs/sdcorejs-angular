@@ -40,6 +40,17 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
+      <demo-section heading="Inline edit ('inline')" note="Hiển thị như text — bấm vào để mở panel chọn (không hiện ô input). Text giữ nguyên trong lúc panel mở, chỉ đổi khi chọn giá trị mới.">
+        <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
+          <div style="font-size:12px; color:#555">
+            Phòng ban:
+            <sd-select [items]="items" valueField="value" displayField="display"
+              [viewed]="'inline'" [(model)]="inlineDept" [form]="form"></sd-select>
+          </div>
+          <div style="font-size:12px; color:#555">Giá trị: <b>{{ inlineDept() ?? '(trống)' }}</b></div>
+        </div>
+      </demo-section>
+
       <demo-section heading="Kích thước (size)" note="UI gọn cho bảng / toolbar.">
         <div style="width: 280px">
           <sd-select [items]="items" valueField="value" displayField="display"
@@ -65,6 +76,7 @@ export class SelectDemoComponent {
   deptR = signal<string | null>(null);
   lockedA = signal<string | null>('HR');
   lockedB = signal<string | null>('FIN');
+  inlineDept = signal<string | null>('IT');
   quick = signal<string | null>(null);
 
   check() { this.formValid.markAllAsTouched(); }

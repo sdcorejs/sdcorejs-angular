@@ -54,20 +54,20 @@ Không có `@Output()` event. State internal qua public signals (`open`, `segmen
 | `refresh()` | `void` | Scan lại DOM + re-audit + apply highlight (nếu `highlightOn=true`). |
 | `toggleHighlight()` | `void` | Bật / tắt outline xanh-đỏ trên DOM (signal `highlightOn`). |
 | `setSegment(seg)` | `void` | `seg ∈ 'audit' \| 'elements' \| 'export'`. |
-| `copyJson()` | `Promise<void>` | Copy danh sách elements (JSON) vào clipboard. |
+| `copyJson()` | `Promise<void>` | Copy JSON `{ meta, elements }` (meta kèm `url` / `queryParams` / route `params`) vào clipboard. |
 | `copyXpath(autoid)` | `Promise<void>` | Copy `//*[@data-autoid="<autoid>"]`. |
 | `exportCsv()` | `void` | Tải `.csv` (cột: STT, name, autoid, tag, value, xpath). |
-| `exportJson()` | `void` | Tải `.json`. |
+| `exportJson()` | `void` | Tải `.json` dạng `{ meta, elements }`. |
 | `exportMdPom()` | `void` | Tải `.pom.md` — TypeScript POM skeleton, AI copy thành Playwright/Cypress test. |
 | `exportMdTable()` | `void` | Tải `.reference.md` — bảng group theo tag sd-*. |
 
 ## Services (injectable, providedIn: 'root')
 | Service | Purpose |
 | --- | --- |
-| `SdAutoidScannerService` | `scan(root)` → `SdAutoidElement[]`, `groupByAutoid(els)` map autoid → element[]. |
+| `SdAutoidScannerService` | `scan(root, requireSelectors?)` → `SdAutoidElement[]`. Truyền `requireSelectors` (vd các sd-* form/button) → thêm phần tử **fallback** cho node khớp selector mà thiếu `data-autoid` (`autoid: ''`, xpath theo vị trí thẻ, `missingAutoid: true` + `warning`). `groupByAutoid(els)` map autoid → element[]. |
 | `SdAutoidAuditService` | `audit(elements, { root, requireSelectors })` → `SdAutoidAuditResult` (duplicates + missing). |
 | `SdAutoidHighlightService` | `apply(root)` outline xanh / đỏ; `applyMissing(nodes)` dashed cam; `clear(root)` restore inline style gốc. |
-| `SdAutoidExportService` | `toJson / toCsv / toMarkdownPom / toMarkdownTable` + `download(content, filename, mime)` + `copyToClipboard(text)`. |
+| `SdAutoidExportService` | `toJson(elements, meta?)` (có `meta` → bọc `{ meta, elements }`), `parseQueryParams(search)`, `toCsv / toMarkdownPom / toMarkdownTable` + `download(content, filename, mime)` + `copyToClipboard(text)`. |
 
 Reuse được riêng — vd batch audit / CI script chỉ cần `SdAutoidScannerService` + `SdAutoidAuditService` không cần UI.
 
@@ -181,11 +181,37 @@ const md = exporter.toMarkdownPom(elements, {
   pageUrl: location.pathname,
   pageTitle: document.title,
   timestamp: new Date().toISOString(),
+  url: location.href,
+  pathname: location.pathname,
+  search: location.search,
+  queryParams: exporter.parseQueryParams(location.search),
 });
 exporter.download(md, 'page.pom.md', 'text/markdown');
 ```
 
 ## Export formats
+
+### JSON (`copyJson` / `exportJson`)
+
+JSON export bọc trong envelope `{ meta, elements }` — `meta` mang thông tin trang/route để consumer (AI / e2e) biết URL cần điều hướng:
+
+```jsonc
+{
+  "meta": {
+    "pageUrl": "/customers/create",
+    "pageTitle": "Customer Create",
+    "timestamp": "2026-06-01T10:00:00.000Z",
+    "url": "https://app.example.com/customers/create?tab=info",
+    "pathname": "/customers/create",
+    "search": "?tab=info",
+    "queryParams": { "tab": "info" },
+    "params": { "id": "123" }   // chỉ có khi app dùng Angular Router; bỏ qua nếu không
+  },
+  "elements": [ /* SdAutoidElement[] */ ]
+}
+```
+
+> **Breaking (v0.0.1):** JSON export đổi từ mảng `[...]` → `{ meta, elements }`. Tool đọc thẳng mảng phải chuyển sang đọc `.elements`. CSV / MD-POM / MD-Table **không** đổi. `SdAutoidExportService.toJson(elements)` gọi KHÔNG kèm `meta` vẫn trả mảng thuần (back-compat).
 
 ### CSV
 ```
@@ -247,6 +273,7 @@ Mỗi row trong tab Elements có cột **State** hiển thị các `data-*` runt
 - `invalid=true|false` (đỏ khi `true`)
 - `opened=true|false` (xanh info khi `true`)
 - `count=<N>` (xanh info)
+- `type=success|info|warning|error`, `title=...`, `message=...` — notify/toast (đọc từ `data-type` / `data-title` / `data-message`; xem `<sd-notify>`).
 - Cột **Text** ưu tiên hiển thị `data-value` đã serialize; fallback về `input.value` / `textContent` (field `text` trong model).
 
 Element nằm trong `<sd-table>` được tách thành section riêng `Inside <code>components-table-...</code>` để dễ tra cứu trong bảng có vài chục autoid lồng nhau.
@@ -300,14 +327,15 @@ await expect(panel).toHaveAttribute('data-segment', 'elements');
 - `tag` lấy parent gần nhất có prefix `sd-*` (vd `sd-input` cho `<input>` con); fallback `tagName.toLowerCase()`.
 - `text` lấy `input.value` hoặc `textContent` cắt ở 80 ký tự.
 - `missing` chỉ flag khi cả element CHÍNH và mọi descendant đều thiếu `data-autoid` — tránh false-positive với `sd-button` render `<button data-autoid>` bên trong.
+- **Fallback thiếu autoid**: `scan(root, requireSelectors)` thêm phần tử cho node khớp `requireSelectors` (sd-input/sd-button/…) thiếu autoid → `autoid: ''`, `xpath = (//<tag>)[n]` (n theo thứ tự thẻ trong document), `missingAutoid: true`, `warning` nhắc dev bổ sung autoid. Đảm bảo JSON export vẫn dùng được dù dev quên khai báo; vẫn đọc `state` + `tableScope` như element thường. POM đặt tên prop fallback theo `tag + stt` khi autoid rỗng.
 - Highlight service idempotent — gọi `apply()` lần 2 vẫn restore đúng style gốc khi `clear()`.
 - `CSS.escape` được dùng cho id có ký tự đặc biệt khi resolve label.
 
 ## Tests
-- `autoid-scanner.service.spec.ts` — 14 case (resolveName / tag / value, duplicate, CSS.escape, groupByAutoid, + 4 new: readState, tableScope resolve, no-tableScope, self-is-table).
+- `autoid-scanner.service.spec.ts` — 22 case (resolveName / tag / value, duplicate, CSS.escape, groupByAutoid, readState, tableScope, validation meta, + 6 new: data-type/title/message read + undefined, fallback emit/skip/no-requireSelectors, fallback state+tableScope).
 - `autoid-audit.service.spec.ts` — 7 case (duplicate, missing, descendant guard, custom requireSelectors, selector path, outerHtml preview).
 - `autoid-highlight.service.spec.ts` — 6 case (apply unique / duplicate / missing, idempotent, clear restore, skip element đã marker).
-- `autoid-export.service.spec.ts` — 11 case (JSON / CSV escape, POM skeleton, Reference table sort + duplicate flag, MD escape, clipboard fallback, + 3 new: toCsv state+tableScope, toMarkdownPom state summary, toMarkdownTable groupByScope).
-- `autoid-inspector.component.spec.ts` — 19 case (FAB visibility, togglePanel, audit duplicate / missing, highlight ON/OFF, Esc, filter, copyJson, ngOnDestroy cleanup, E2E data-* attributes ×2, + 3 new: topLevelElements, tableGroups, state chip rendering).
+- `autoid-export.service.spec.ts` — 14 case (JSON / CSV escape, POM skeleton, Reference table sort + duplicate flag, MD escape, clipboard fallback, toCsv state+tableScope, POM state summary, MDtable groupByScope, + 3 new: toJson `{meta,elements}` wrap, parseQueryParams, POM missing-autoid prop fallback).
+- `autoid-inspector.component.spec.ts` — 21 case (FAB visibility, togglePanel + fallback count, audit duplicate / missing, highlight ON/OFF, Esc, filter, copyJson `{meta,elements}`, ngOnDestroy cleanup, E2E data-* attributes, topLevelElements, tableGroups, state chip rendering).
 
-Tổng: 57 case xanh.
+Tổng: 70 case xanh.

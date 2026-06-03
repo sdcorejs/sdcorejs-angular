@@ -1,5 +1,6 @@
 @let _actions = selectedTableItems() | actionFilter: tableOption()?.selector?.actions;
 @let _selected = selectedTableItems();
+@let _autoId = autoId();
 
 <sd-quick-action [opened]="opened()">
   <div class="d-flex align-items-center" sdMessage>
@@ -15,6 +16,7 @@
     @for (action of _actions; track $index) {
       @if (action.variant === 'normal') {
         <sd-button
+          [autoId]="_autoId ? _autoId + '-action-' + $index : null"
           class="ml-4"
           [tooltip]="action.tooltip"
           [prefixIcon]="action.icon"
@@ -24,7 +26,9 @@
           [title]="action.title"
           (click)="onClickAction(action)"></sd-button>
       } @else if (action.variant === 'children') {
+        @let _actionIndex = $index;
         <sd-button
+          [autoId]="_autoId ? _autoId + '-action-' + _actionIndex : null"
           class="ml-4"
           [tooltip]="action.tooltip"
           [prefixIcon]="action.icon || 'more_vert'"
@@ -37,7 +41,10 @@
         <mat-menu #menu="matMenu">
           <span>
             @for (child of action.children; track $index) {
-              <button mat-menu-item (click)="onClickAction(child)">
+              <button
+                mat-menu-item
+                [attr.data-autoid]="_autoId ? _autoId + '-action-' + _actionIndex + '-' + $index : null"
+                (click)="onClickAction(child)">
                 @if (child.icon) {
                   <mat-icon [fontSet]="child.fontSet || 'material-icons-outlined'" class="c-icon">{{ child.icon }}</mat-icon>
                 }
@@ -49,6 +56,6 @@
       }
     }
     <!-- Nút close luôn hiện kể cả không có action — đảm bảo user có lối thoát clear selection -->
-    <sd-button class="ml-4" prefixIcon="close" color="secondary" type="outline" (click)="onClear()" width="35px"></sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-clear-selection' : null" class="ml-4" prefixIcon="close" color="secondary" type="outline" (click)="onClear()" width="35px"></sd-button>
   </div>
 </sd-quick-action>

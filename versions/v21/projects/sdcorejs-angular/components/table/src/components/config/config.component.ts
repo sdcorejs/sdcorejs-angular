@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
   Component,
+  computed,
   inject,
   input,
   output,
@@ -52,8 +53,12 @@ export class ConfigComponent {
   // ==========================================
   // 1. SIGNAL INPUTS / OUTPUTS
   // ==========================================
+  autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   tableOption = input<SdTableOption | undefined>(undefined);
   changes = output<ConfiguredTableResult>();
+
+  // Base autoId (đã là `components-table-<scope>` từ parent), '' khi parent không set.
+  autoId = computed(() => this.autoIdInput() || '');
 
   // ==========================================
   // 2. SIGNAL QUERIES
