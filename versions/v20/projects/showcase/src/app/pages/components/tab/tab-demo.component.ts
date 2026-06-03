@@ -17,7 +17,7 @@ interface FileTab {
       title="Tab Group"
       description="Container tab khai báo — hỗ trợ icon, badge, disabled, closable. Nội dung tab được lazy mount.">
 
-      <demo-section heading="Tab cơ bản với text">
+      <demo-section [props]="[{ name: 'label' }]">
         <div class="full">
           <sd-tab-group>
             <sd-tab label="Thông tin">
@@ -33,7 +33,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Tab với icon, badge và disabled">
+      <demo-section [props]="[{ name: 'icon' }, { name: 'badge' }, { name: 'disabled' }]">
         <div class="full">
           <sd-tab-group>
             <sd-tab label="Hồ sơ" icon="person">
@@ -52,7 +52,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Tab đóng được (closable)">
+      <demo-section [props]="[{ name: 'closable' }]">
         <div class="full">
           <sd-tab-group (tabClosed)="onTabClosed($event)">
             @for (file of files(); track file.id) {
@@ -67,7 +67,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Căn tab về phía bên phải (stretchTabs = false + alignTabs = end)" note="Default stretchTabs=true (Material default) làm tabs giãn full width. Tắt stretch + đặt alignTabs để dồn về 1 phía.">
+      <demo-section [props]="[{ name: 'stretchTabs', value: 'false' }, { name: 'alignTabs', value: 'end' }]" note="Default stretchTabs=true (Material default) làm tabs giãn full width. Tắt stretch + đặt alignTabs để dồn về 1 phía.">
         <div class="full">
           <sd-tab-group [stretchTabs]="false" alignTabs="end">
             <sd-tab label="Tổng quan" icon="dashboard">Nội dung Tổng quan.</sd-tab>
@@ -77,7 +77,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Biến thể pills (variant=pills)" note="Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.">
+      <demo-section [props]="[{ name: 'variant', value: 'pills' }]" note="Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.">
         <div class="full">
           <sd-tab-group variant="pills" [stretchTabs]="false">
             <sd-tab label="Tuần này" icon="today">Nội dung tuần này.</sd-tab>
@@ -88,7 +88,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Biến thể segmented (variant=segmented)" note="Container bo tròn với 1 viền — iOS-style. Phù hợp cho toggle nhỏ trong toolbar.">
+      <demo-section [props]="[{ name: 'variant', value: 'segmented' }]" note="Container bo tròn với 1 viền — iOS-style. Phù hợp cho toggle nhỏ trong toolbar.">
         <div class="full">
           <sd-tab-group variant="segmented" [stretchTabs]="false">
             <sd-tab label="Danh sách">Hiển thị dạng danh sách.</sd-tab>
@@ -98,7 +98,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Bảng màu (color)" note="Đổi màu indicator + badge theo bộ Core: primary / secondary / info / success / warning / error.">
+      <demo-section [props]="[{ name: 'color' }]" note="Đổi màu indicator + badge theo bộ Core: primary / secondary / info / success / warning / error.">
         <div class="full color-stack">
           <sd-tab-group [stretchTabs]="false" color="primary">
             <sd-tab label="primary" icon="info" [badge]="3">Mặc định.</sd-tab>
@@ -127,7 +127,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Nested tab — outer line, inner pills" note="Khi tab lồng tab, đặt variant khác nhau để mắt phân biệt rõ outer vs inner. Outer giữ default line; inner đổi sang pills hoặc segmented.">
+      <demo-section [props]="[{ name: 'variant', value: 'pills / segmented' }]" note="Khi tab lồng tab, đặt variant khác nhau để mắt phân biệt rõ outer vs inner. Outer giữ default line; inner đổi sang pills hoặc segmented.">
         <div class="full">
           <sd-tab-group>
             <sd-tab label="Thông tin chung" icon="info">
@@ -152,7 +152,7 @@ interface FileTab {
         </div>
       </demo-section>
 
-      <demo-section heading="Điều khiển tab từ bên ngoài (two-way binding)">
+      <demo-section [props]="[{ name: '[(selectedIndex)]' }]">
         <div style="display: flex; gap: 8px; margin-bottom: 12px;">
           <sd-button type="light" color="secondary" prefixIcon="chevron_left" title="Tab trước" (click)="prev()"></sd-button>
           <sd-button type="light" color="secondary" suffixIcon="chevron_right" title="Tab kế" (click)="next()"></sd-button>

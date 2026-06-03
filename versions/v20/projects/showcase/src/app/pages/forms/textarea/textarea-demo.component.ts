@@ -9,13 +9,13 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdTextarea],
   template: `
     <demo-page title="Textarea" description="sd-textarea – ô nhập nhiều dòng. Hỗ trợ helper text, validator chiều dài, các trạng thái disabled / readonly.">
-      <demo-section heading="cơ bản" note="Bind hai chiều với [(model)].">
+      <demo-section [props]="[{ name: '[(model)]' }]" note="Bind hai chiều với [(model)].">
         <div style="width: 420px">
           <sd-textarea label="Mô tả" placeholder="Nhập mô tả..." helperText="Tối đa 500 ký tự" [(model)]="basic" [form]="form"></sd-textarea>
         </div>
       </demo-section>
 
-      <demo-section heading="Validator (required + maxlength=50)" note="Bấm Kiểm tra để hiện inline error.">
+      <demo-section [props]="[{ name: 'required' }, { name: 'maxlength', value: '50' }]" note="Bấm Kiểm tra để hiện inline error.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <sd-textarea label="required + maxlength=50" [(model)]="reason" [form]="formValid" required [maxlength]="50"></sd-textarea>
           <div style="display:flex; gap:8px">
@@ -25,14 +25,14 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
         </div>
       </demo-section>
 
-      <demo-section heading="Trạng thái (state)" note="Hai trạng thái không cho chỉnh sửa.">
+      <demo-section [props]="[{ name: 'disabled' }, { name: 'readonly' }]" note="Hai trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-textarea style="width: 280px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-textarea>
           <sd-textarea style="width: 280px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-textarea>
         </div>
       </demo-section>
 
-      <demo-section heading="Inline edit ('inline')" note="Hiển thị như text không viền — bấm/focus để sửa tại chỗ. Khi disabled thì rơi về xem tĩnh (viewed=true).">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Hiển thị như text không viền — bấm/focus để sửa tại chỗ. Khi disabled thì rơi về xem tĩnh (viewed=true).">
         <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <div style="font-size:12px; color:#555">
             Ghi chú:

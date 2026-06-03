@@ -13,7 +13,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
       title="Side Drawer"
       description="Panel trượt từ cạnh phải màn hình — dùng cho form tạo / sửa / xem chi tiết khi không muốn rời trang hiện tại.">
 
-      <demo-section heading="Drawer cơ bản với footer">
+      <demo-section [props]="[{ name: 'open()' }, { name: 'sdFooter' }]">
         <sd-button type="fill" color="primary" prefixIcon="add" title="Tạo mới" (click)="createDrawer.open()"></sd-button>
 
         <sd-side-drawer #createDrawer title="Tạo nhân viên mới" width="480px">
@@ -30,7 +30,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
         </sd-side-drawer>
       </demo-section>
 
-      <demo-section heading="Drawer xem chi tiết (chặn backdrop close)">
+      <demo-section [props]="[{ name: 'disableBackdropClose' }]">
         <sd-button type="light" color="primary" prefixIcon="visibility" title="Xem chi tiết" (click)="detailDrawer.open()"></sd-button>
 
         <sd-side-drawer #detailDrawer title="Chi tiết yêu cầu" width="560px" disableBackdropClose>
@@ -51,7 +51,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
         </sd-side-drawer>
       </demo-section>
 
-      <demo-section heading="Drawer rộng với header-right action">
+      <demo-section [props]="[{ name: 'sdHeaderRight' }]">
         <sd-button type="outline" color="primary" prefixIcon="filter_list" title="Bộ lọc" (click)="filterDrawer.open()"></sd-button>
 
         <sd-side-drawer #filterDrawer title="Bộ lọc nâng cao" width="420px">

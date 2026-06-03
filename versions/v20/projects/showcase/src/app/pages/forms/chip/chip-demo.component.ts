@@ -9,7 +9,7 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdChip],
   template: `
     <demo-page title="Chip" description="sd-chip – nhập danh sách tag dưới dạng chuỗi. Gõ rồi Enter để thêm, bấm X để xoá.">
-      <demo-section heading="cơ bản" note="Mỗi chip là một string trong mảng.">
+      <demo-section [props]="[{ name: '[(model)]' }]" note="Mỗi chip là một string trong mảng.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
           <sd-chip label="Kỹ năng" placeholder="Nhập rồi Enter..." helperText="Có thể thêm nhiều giá trị"
             [(model)]="skills" [form]="form"></sd-chip>
@@ -19,7 +19,7 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
         </div>
       </demo-section>
 
-      <demo-section heading="Validator (required + min=3)" note="Cần ít nhất 3 chip. Bấm Kiểm tra để hiện lỗi.">
+      <demo-section [props]="[{ name: 'required' }, { name: 'min', value: '3' }]" note="Cần ít nhất 3 chip. Bấm Kiểm tra để hiện lỗi.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <sd-chip label="required + min=3" placeholder="Nhập rồi Enter..."
             [(model)]="tags" [form]="formValid" required [min]="3"></sd-chip>
@@ -30,19 +30,19 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
         </div>
       </demo-section>
 
-      <demo-section heading="Trạng thái (state)" note="Không cho thêm / xoá chip.">
+      <demo-section [props]="[{ name: 'disabled' }]" note="Không cho thêm / xoá chip.">
         <div style="width: 420px">
           <sd-chip label="disabled" [(model)]="lockedTags" [form]="form" disabled></sd-chip>
         </div>
       </demo-section>
 
-      <demo-section heading="Kích thước (size)" note="Chip thu gọn cho bảng / toolbar.">
+      <demo-section [props]="[{ name: 'size', value: 'sm' }]" note="Chip thu gọn cho bảng / toolbar.">
         <div style="width: 420px">
           <sd-chip label="sm" size="sm" placeholder="Nhập nhãn..." [(model)]="filters" [form]="form"></sd-chip>
         </div>
       </demo-section>
 
-      <demo-section heading="Inline edit ('inline')" note="Chip strip vẫn sửa được, nhưng khi disabled thì rơi về xem tĩnh (viewed=true).">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Chip strip vẫn sửa được, nhưng khi disabled thì rơi về xem tĩnh (viewed=true).">
         <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
           <sd-chip label="Tags (inline)" [viewed]="'inline'" [(model)]="inlineTags" [form]="form"></sd-chip>
           <sd-chip label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineTags" [form]="form" disabled></sd-chip>

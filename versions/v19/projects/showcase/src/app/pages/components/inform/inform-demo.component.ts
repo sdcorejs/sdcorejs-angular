@@ -13,7 +13,7 @@ const LONG = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sem
       title="Inform"
       description="Banner / alert neo trên page — báo lỗi, cảnh báo, thông tin. 6 màu, đóng được, action, line-clamp.">
 
-      <demo-section heading="Bảng màu (color)">
+      <demo-section [props]="[{ name: 'color' }]">
         <sd-inform primary title="primary" description="Message body."></sd-inform>
         <sd-inform secondary title="secondary" description="Message body."></sd-inform>
         <sd-inform info title="info" description="Message body."></sd-inform>
@@ -22,21 +22,21 @@ const LONG = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec sem
         <sd-inform error title="error" description="Message body."></sd-inform>
       </demo-section>
 
-      <demo-section heading="Đóng được + action link">
+      <demo-section [props]="[{ name: 'closable' }, { name: 'actionLabel' }]">
         <sd-inform error closable title="Không tải được dữ liệu" description="Máy chủ không phản hồi." actionLabel="Thử lại"></sd-inform>
         <sd-inform info closable title="Bản nháp đã lưu" description="Tự động lưu lúc 14:30." actionLabel="Xem"></sd-inform>
       </demo-section>
 
-      <demo-section heading="Ẩn icon">
+      <demo-section [props]="[{ name: 'hideIcon' }]">
         <sd-inform success hideIcon title="Đã lưu" description="Không có icon."></sd-inform>
       </demo-section>
 
-      <demo-section heading="Line-clamp (Xem thêm / Thu gọn)">
+      <demo-section [props]="[{ name: 'lineClamp' }]">
         <sd-inform info title="Điều khoản" [description]="long" [lineClamp]="3"></sd-inform>
         <sd-inform success [description]="long" [lineClamp]="2"></sd-inform>
       </demo-section>
 
-      <demo-section heading="Action custom (projection)">
+      <demo-section [props]="[{ name: 'sdInformAction' }]">
         <sd-inform warning title="Chế độ chỉ đọc" description="Bạn không có quyền chỉnh sửa.">
           <button sdInformAction class="demo-action-btn">Yêu cầu quyền</button>
         </sd-inform>

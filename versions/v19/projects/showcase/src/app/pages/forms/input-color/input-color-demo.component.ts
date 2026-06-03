@@ -12,14 +12,14 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
       title="Input Color"
       description="Ô nhập mã màu HEX với swatch hiển thị màu hiện tại. Bấm swatch để mở bảng chọn màu hoặc gõ tay mã HEX (#RGB / #RRGGBB / #RRGGBBAA).">
 
-      <demo-section heading="Cơ bản" note="Giá trị bind hai chiều — pick hoặc gõ tay đều cập nhật signal.">
+      <demo-section [props]="[{ name: '[(model)]' }]" note="Giá trị bind hai chiều — pick hoặc gõ tay đều cập nhật signal.">
         <div class="row">
           <sd-input-color label="Màu thương hiệu" [(model)]="brand" />
           <span class="value">Đang chọn: <code>{{ brand() || '(trống)' }}</code></span>
         </div>
       </demo-section>
 
-      <demo-section heading="Validator (required + hex)" note="Để trống hoặc gõ chuỗi sai định dạng (vd 'red') sẽ hiện lỗi.">
+      <demo-section [props]="[{ name: 'required' }]" note="Để trống hoặc gõ chuỗi sai định dạng (vd 'red') sẽ hiện lỗi.">
         <sd-input-color
           label="required"
           helperText="Định dạng #RGB, #RRGGBB hoặc #RRGGBBAA"
@@ -27,7 +27,7 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
           [(model)]="tagColor" />
       </demo-section>
 
-      <demo-section heading="Trạng thái (state)">
+      <demo-section [props]="[{ name: 'disabled' }, { name: 'readonly' }, { name: 'viewed' }]">
         <sd-input-color label="disabled" [model]="'#1565C0'" [disabled]="true" />
         <sd-input-color label="readonly" [model]="'#4CAF50'" [readonly]="true" />
         <sd-input-color label="viewed" [model]="'#F82C13'" [viewed]="true" />
@@ -44,7 +44,7 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
         </div>
       </demo-section>
 
-      <demo-section heading="Inline edit ('inline')" note="Hiển thị như text — bấm vào để sửa. Khi disabled thì rơi về xem tĩnh (viewed=true).">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Hiển thị như text — bấm vào để sửa. Khi disabled thì rơi về xem tĩnh (viewed=true).">
         <div class="row">
           <sd-input-color label="Màu inline" [viewed]="'inline'" [(model)]="inlineColor" />
           <span class="value">Giá trị: <b>{{ inlineColor() ?? '(trống)' }}</b></span>

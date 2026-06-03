@@ -11,7 +11,7 @@ import { SdEditor } from '@sdcorejs/angular/components/editor';
       title="Editor"
       description="Rich text editor dựa trên CKEditor 5 — đầy đủ thanh công cụ, hỗ trợ chèn ảnh, validation và FormGroup binding.">
 
-      <demo-section heading="Soạn nội dung mô tả sản phẩm">
+      <demo-section [props]="[{ name: 'model' }]">
         <div class="editor-box">
           <sd-editor
             label="Mô tả chi tiết"
@@ -24,7 +24,7 @@ import { SdEditor } from '@sdcorejs/angular/components/editor';
         </div>
       </demo-section>
 
-      <demo-section heading="Chế độ chỉ đọc (xem)">
+      <demo-section [props]="[{ name: 'readonly', value: 'true' }]">
         <div class="editor-box">
           <sd-editor
             label="Điều khoản dịch vụ"

@@ -2,7 +2,7 @@
   title="Stepper"
   description="Component dẫn dắt người dùng qua chuỗi bước tuần tự. Hỗ trợ horizontal/vertical, linear gate qua FormGroup, optional step, error state, custom labelPosition, color palette Core.">
 
-  <demo-section heading="Cơ bản: horizontal, 3 bước">
+  <demo-section [props]="[{ name: 'orientation', value: 'horizontal' }]">
     <div class="full">
       <sd-stepper [(selectedIndex)]="basicIndex">
         <sd-step label="Chọn dịch vụ" icon="storefront">
@@ -30,7 +30,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Hướng dọc (orientation=vertical)">
+  <demo-section [props]="[{ name: 'orientation', value: 'vertical' }]">
     <div class="full">
       <sd-stepper orientation="vertical" [(selectedIndex)]="verticalIndex">
         <sd-step label="Tạo tài khoản" icon="account_circle">
@@ -46,7 +46,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Linear wizard + FormGroup gating"
+  <demo-section [props]="[{ name: 'linear' }, { name: 'stepControl' }]"
                 note="Linear=true: chỉ qua được step sau khi step trước hợp lệ. Mỗi sd-step bind stepControl tới 1 FormGroup.">
     <div class="full">
       <sd-stepper #linear linear="true" color="primary">
@@ -110,7 +110,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Optional step (cho phép bỏ qua)"
+  <demo-section [props]="[{ name: 'optional' }]"
                 note="Step 2 đánh dấu optional — user có thể qua step 3 mà không cần điền.">
     <div class="full">
       <sd-stepper [(selectedIndex)]="optionalIndex">
@@ -137,7 +137,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Error state"
+  <demo-section [props]="[{ name: 'state', value: 'error' }, { name: 'errorMessage' }]"
                 note="Step có thể override state='error' để hiện icon X đỏ + errorMessage.">
     <div class="row" style="margin-bottom: 12px;">
       <button mat-stroked-button color="warn" (click)="toggleError()">
@@ -162,7 +162,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Vị trí nhãn (labelPosition)">
+  <demo-section [props]="[{ name: 'labelPosition' }]">
     <div class="row" style="margin-bottom: 12px;">
       <button mat-stroked-button (click)="labelPos.set('end')">end</button>
       <button mat-stroked-button (click)="labelPos.set('bottom')">bottom</button>
@@ -178,7 +178,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Bảng màu (color)"
+  <demo-section [props]="[{ name: 'color' }]"
                 note="primary / success / warning / error — driving indicator + connector màu.">
     <div class="color-stack">
       <sd-stepper color="primary">
@@ -204,7 +204,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Điều khiển từ bên ngoài (next / previous / goTo / reset)">
+  <demo-section [props]="[{ name: 'next() / previous() / goTo() / reset()' }]">
     <div class="row" style="margin-bottom: 12px;">
       <button mat-stroked-button (click)="externalPrev()">Prev</button>
       <button mat-stroked-button (click)="externalNext()">Next</button>
@@ -220,7 +220,7 @@
     </div>
   </demo-section>
 
-  <demo-section heading="Editable = false (đã đi qua, không quay lại được)"
+  <demo-section [props]="[{ name: 'editable', value: 'false' }]"
                 note="Step 1 đặt editable=false. Sau khi qua step 2, click vào step 1 sẽ không trở lại.">
     <div class="full">
       <sd-stepper [(selectedIndex)]="nonEditableIndex">

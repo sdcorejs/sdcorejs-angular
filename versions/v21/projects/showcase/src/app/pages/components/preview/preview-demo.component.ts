@@ -11,19 +11,19 @@ import { SdPreviewImage, SdPreviewPdf } from '@sdcorejs/angular/components/previ
       title="Preview"
       description="Bộ xem ảnh và PDF dạng lightbox — tự co theo container, hỗ trợ zoom / rotate / fullscreen / tải xuống. Có thể nhúng inline, trong sd-modal hoặc trong sd-side-drawer.">
 
-      <demo-section heading="Thư viện ảnh — thanh thumbnail dưới">
+      <demo-section [props]="[{ name: 'items' }]">
         <div class="preview-box">
           <sd-preview-image [items]="images" [startIndex]="0"></sd-preview-image>
         </div>
       </demo-section>
 
-      <demo-section heading="Ảnh đơn — không hiển thị thumbnail">
+      <demo-section [props]="[{ name: 'thumbnailPosition', value: 'none' }]">
         <div class="preview-box">
           <sd-preview-image [items]="[singleImage]" thumbnailPosition="none"></sd-preview-image>
         </div>
       </demo-section>
 
-      <demo-section heading="Xem PDF mẫu">
+      <demo-section [props]="[{ name: 'source' }, { name: 'sidebar', value: 'thumbnails' }]">
         <div class="preview-box">
           <sd-preview-pdf [source]="pdfUrl()" sidebar="thumbnails"></sd-preview-pdf>
         </div>

@@ -43,12 +43,32 @@ export class DemoPageComponent {
   description = input<string | undefined>(undefined);
 }
 
+/** One demonstrated property of a showcase section. `value` omitted = boolean/bare attribute (badge shows the name only). */
+export interface DemoProp {
+  name: string;
+  value?: string | number | boolean;
+}
+
 @Component({
   selector: 'demo-section',
   standalone: true,
   template: `
+    @let _heading = heading();
     <header class="demo-section__head">
-      <h2>{{ heading() }}</h2>
+      @if (props(); as ps) {
+        <!-- why: format chuẩn — mỗi property 1 badge, tên màu secondary, giá trị màu primary. -->
+        <div class="demo-section__props">
+          @for (p of ps; track p.name) {
+            <span class="demo-prop"
+              ><span class="demo-prop__name">{{ p.name }}</span
+              >@if (p.value !== undefined) {<span class="demo-prop__sep">:</span
+                ><span class="demo-prop__value">{{ p.value }}</span>}</span
+            >
+          }
+        </div>
+      } @else if (_heading) {
+        <h2>{{ _heading }}</h2>
+      }
       @if (note(); as n) {
         <p class="demo-section__note">{{ n }}</p>
       }
@@ -73,6 +93,26 @@ export class DemoPageComponent {
         color: #1565c0;
         margin: 0 0 2px;
       }
+      .demo-section__props {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 0 0 2px;
+      }
+      .demo-prop {
+        display: inline-flex;
+        align-items: center;
+        font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        background: #f3f5f8;
+        border: 1px solid #e6e6e6;
+        border-radius: 6px;
+        padding: 1px 8px;
+      }
+      .demo-prop__name { color: #6b6b6b; }
+      .demo-prop__sep { color: #6b6b6b; margin: 0 1px; }
+      .demo-prop__value { color: #1565c0; font-weight: 600; }
       .demo-section__note {
         font-size: 12px;
         color: #6b6b6b;
@@ -89,6 +129,9 @@ export class DemoPageComponent {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DemoSectionComponent {
-  heading = input.required<string>();
+  /** Optional fallback title — used only when `props` is not supplied (rare; most sections use `props`). */
+  heading = input<string | undefined>(undefined);
+  /** Demonstrated properties, rendered as `name:value` badges. Preferred over `heading`. */
+  props = input<DemoProp[] | undefined>(undefined);
   note = input<string | undefined>(undefined);
 }

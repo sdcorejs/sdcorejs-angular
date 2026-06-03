@@ -14,7 +14,7 @@ import { SdFormControl } from '@sdcorejs/angular/forms/models';
       title="Inline Text"
       description="Primitive input borderless, ôm sát nội dung (content-hug) — bề rộng bám theo độ dài giá trị thay vì kéo full width. Dùng chung cho sd-input/sd-input-number (viewed='inline') và chip query-bar/query-builder.">
 
-      <demo-section heading="Content-hug" note="Vùng hover/click bám theo độ dài giá trị — không kéo full width. Dài/ngắn khác nhau → rộng khác nhau.">
+      <demo-section [props]="[{ name: '[(value)]' }]" note="Vùng hover/click bám theo độ dài giá trị — không kéo full width. Dài/ngắn khác nhau → rộng khác nhau.">
         <div class="stack">
           <span class="row"><sd-inline-text [(value)]="short" /> <code>{{ short() || '(trống)' }}</code></span>
           <span class="row"><sd-inline-text [(value)]="medium" /> <code>{{ medium() }}</code></span>
@@ -23,14 +23,14 @@ import { SdFormControl } from '@sdcorejs/angular/forms/models';
         </div>
       </demo-section>
 
-      <demo-section heading="Chrome: standalone vs seamless" note="standalone tự vẽ nền hover + ring focus; seamless trong suốt để pill cha (chip) vẽ viền/nền.">
+      <demo-section [props]="[{ name: 'chrome', value: 'standalone / seamless' }]" note="standalone tự vẽ nền hover + ring focus; seamless trong suốt để pill cha (chip) vẽ viền/nền.">
         <div class="stack">
           <span class="row">standalone: <sd-inline-text chrome="standalone" [(value)]="cs1" /></span>
           <span class="row pill">seamless trong 1 pill: <span class="fake-chip">Tên: <sd-inline-text chrome="seamless" [clearable]="false" [state]="'active'" [(value)]="cs2" /></span></span>
         </div>
       </demo-section>
 
-      <demo-section heading="State" note="auto suy ra từ focus + value; có thể override (vd error).">
+      <demo-section [props]="[{ name: 'state', value: 'pending / active / error' }]" note="auto suy ra từ focus + value; có thể override (vd error).">
         <div class="stack">
           <span class="row">pending (trống): <sd-inline-text [(value)]="stEmpty" placeholder="…" /></span>
           <span class="row">active (có value): <sd-inline-text [(value)]="stActive" /></span>
@@ -38,14 +38,14 @@ import { SdFormControl } from '@sdcorejs/angular/forms/models';
         </div>
       </demo-section>
 
-      <demo-section heading="Controlled — [control] FormControl" note="Bind FormControl ngoài (chế độ form controls dùng). Disabled qua control.">
+      <demo-section [props]="[{ name: 'control' }]" note="Bind FormControl ngoài (chế độ form controls dùng). Disabled qua control.">
         <div class="stack">
           <span class="row">control: <sd-inline-text [control]="ctrl" /> <code>{{ ctrl.value }}</code></span>
           <span class="row">disabled control: <sd-inline-text [control]="ctrlDisabled" /></span>
         </div>
       </demo-section>
 
-      <demo-section heading="Trong sd-input / sd-input-number (viewed='inline')" note="Cùng primitive — inline edit ôm sát nội dung, không còn full-width.">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Cùng primitive — inline edit ôm sát nội dung, không còn full-width.">
         <div class="stack">
           <span class="row">sd-input: <sd-input [(model)]="inlineStr" [viewed]="'inline'" placeholder="nhập tên…" /></span>
           <span class="row">sd-input-number: <sd-input-number [(model)]="inlineNum" [viewed]="'inline'" placeholder="nhập số…" /></span>

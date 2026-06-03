@@ -25,7 +25,7 @@ interface Contract {
       title="View"
       description="Hiển thị cặp nhãn / giá trị chỉ đọc trên trang chi tiết. Là phiên bản read-only của sd-input / sd-select.">
 
-      <demo-section heading="Cặp nhãn — giá trị cơ bản">
+      <demo-section [props]="[{ name: 'display' }]">
         <div class="grid-3">
           <sd-view label="Mã hợp đồng" [display]="contract.code"></sd-view>
           <sd-view label="Tên hợp đồng" [display]="contract.name"></sd-view>
@@ -36,7 +36,7 @@ interface Contract {
         </div>
       </demo-section>
 
-      <demo-section heading="Giá trị có siêu liên kết (hyperlink)">
+      <demo-section [props]="[{ name: 'hyperlink' }]">
         <div class="grid-3">
           <sd-view
             label="Người tạo"
@@ -51,7 +51,7 @@ interface Contract {
         </div>
       </demo-section>
 
-      <demo-section heading="Custom template cho giá trị (sd-badge)">
+      <demo-section [props]="[{ name: '#sdValue' }]">
         <div class="grid-3">
           <sd-view label="Trạng thái" [display]="contract.statusName" [value]="contract.status">
             <ng-template #sdValue let-display let-status="value">

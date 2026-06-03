@@ -134,31 +134,31 @@ const TASKS: Task[] = [
       title="Table"
       description="Bảng dữ liệu mặc định của SDCoreJS — phân trang, sắp xếp, lọc, chọn nhiều, lệnh dòng, export Excel/CSV. Hỗ trợ chế độ local và server.">
 
-      <demo-section heading="Full demo (local) — selection + command + export + STT + filler + paginate">
+      <demo-section [props]="[{ name: 'selector' }, { name: 'command' }, { name: 'export' }, { name: 'index' }, { name: 'filler' }, { name: 'paginate' }]">
         <div class="table-box">
           <sd-table [option]="employeeOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Tối giản — paginate + boolean/badge cell">
+      <demo-section [props]="[{ name: 'paginate' }]">
         <div class="table-box">
           <sd-table [option]="productOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Single selection (selector.single = true) — chỉ chọn 1 dòng (radio)">
+      <demo-section [props]="[{ name: 'selector.single', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="singleSelectOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Tree rows (option.tree) — children inline, indent theo depth">
+      <demo-section [props]="[{ name: 'tree' }]">
         <div class="table-box">
           <sd-table [option]="treeOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Row grouping (option.group) — group theo field department, collapsible + select-all-in-group">
+      <demo-section [props]="[{ name: 'group' }]">
         <div class="table-box">
           <sd-table [option]="groupOption">
             <ng-template sdTableGroupDef let-values="values" let-data="data" let-isExpanded="isExpanded">
@@ -171,7 +171,7 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Group đơn hàng theo khách hàng (sdTableGroupDef + collapsible + select-all-in-group)">
+      <demo-section [props]="[{ name: 'group' }, { name: 'sdTableGroupDef' }]">
         <div class="table-box">
           <sd-table [option]="customerOrderOption">
             <ng-template sdTableGroupDef let-values="values" let-data="data">
@@ -188,7 +188,7 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Expandable row (option.expand + sdTableExpandDef) — render sub-information">
+      <demo-section [props]="[{ name: 'expand' }, { name: 'sdTableExpandDef' }]">
         <div class="table-box">
           <sd-table [option]="expandOption">
             <ng-template sdTableExpandDef let-item="item">
@@ -204,19 +204,19 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Command align right (option.command.align = 'right')">
+      <demo-section [props]="[{ name: 'command.align', value: 'right' }]">
         <div class="table-box">
           <sd-table [option]="commandRightOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Row reorder (option.rowReorder.enabled = true) — kéo-thả đổi thứ tự">
+      <demo-section [props]="[{ name: 'rowReorder' }]">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Custom cell template (sdTableCellDef) — render giá trị bằng template tự custom">
+      <demo-section [props]="[{ name: 'sdTableCellDef' }]">
         <div class="table-box">
           <sd-table [option]="customCellOption">
             <ng-template [sdTableCellDef]="'name'" let-item="item">
@@ -235,7 +235,7 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Footer aggregation (sdMaterialFooterDef) — tổng lương, count">
+      <demo-section [props]="[{ name: 'sdTableFooterDef' }]">
         <div class="table-box">
           <sd-table [option]="footerOption">
             <ng-template [sdTableFooterDef]="'salary'" let-items="items">
@@ -248,19 +248,19 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Không có filler (mặc định) — so sánh: cột utility bị stretch trên màn rộng">
+      <demo-section [props]="[{ name: 'filler', value: 'false' }]">
         <div class="table-box">
           <sd-table [option]="noFillerOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Server-side (type='server') — mock async fetch + sort/paginate server">
+      <demo-section [props]="[{ name: 'type', value: 'server' }]">
         <div class="table-box">
           <sd-table [option]="serverOption"></sd-table>
         </div>
       </demo-section>
 
-      <demo-section heading="Preserve selection (selector.preserveSelection = true) — chọn item ở page 1, chuyển page 2 / sort / reload vẫn giữ; chỉ clear khi bấm X">
+      <demo-section [props]="[{ name: 'selector.preserveSelection', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="preserveSelectionOption"></sd-table>
         </div>

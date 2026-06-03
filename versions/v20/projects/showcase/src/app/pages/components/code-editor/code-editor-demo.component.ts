@@ -11,19 +11,19 @@ import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
       title="Code Editor"
       description="Trình soạn thảo mã nguồn với highlight cú pháp (Prism) — hỗ trợ TypeScript / JSON / HTML / CSS / SCSS, có nút sao chép sẵn.">
 
-      <demo-section heading="Ngôn ngữ (language) — typescript, chỉnh sửa được">
+      <demo-section [props]="[{ name: 'language', value: 'typescript' }]">
         <div class="code-box">
           <sd-code-editor language="typescript" [(model)]="tsCode" maxHeight="280px"></sd-code-editor>
         </div>
       </demo-section>
 
-      <demo-section heading="Ngôn ngữ (language) — json, chế độ xem (viewed)">
+      <demo-section [props]="[{ name: 'language', value: 'json' }, { name: 'viewed', value: 'true' }]">
         <div class="code-box">
           <sd-code-editor language="json" [model]="jsonValue" [viewed]="true" maxHeight="240px"></sd-code-editor>
         </div>
       </demo-section>
 
-      <demo-section heading="Ngôn ngữ (language) — html">
+      <demo-section [props]="[{ name: 'language', value: 'html' }]">
         <div class="code-box">
           <sd-code-editor language="html" [(model)]="htmlCode" maxHeight="220px"></sd-code-editor>
         </div>

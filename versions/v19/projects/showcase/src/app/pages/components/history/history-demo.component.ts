@@ -22,19 +22,19 @@ interface SdHistoryItemType {
       title="History"
       description="Dòng thời gian dọc hiển thị lịch sử thay đổi / phê duyệt của một bản ghi — kèm trạng thái, thời gian, người thao tác.">
 
-      <demo-section heading="Luồng phê duyệt hợp đồng (đầy đủ)">
+      <demo-section [props]="[{ name: 'items' }]">
         <div class="timeline-box">
           <sd-history [items]="approvalFlow"></sd-history>
         </div>
       </demo-section>
 
-      <demo-section heading="Lịch sử cập nhật ngắn">
+      <demo-section [props]="[{ name: 'items' }]" note="Lịch sử cập nhật ngắn">
         <div class="timeline-box">
           <sd-history [items]="updateLog"></sd-history>
         </div>
       </demo-section>
 
-      <demo-section heading="Timeline rỗng">
+      <demo-section [props]="[{ name: 'items', value: '[]' }]">
         <div class="timeline-box">
           <sd-history [items]="[]"></sd-history>
           <p class="empty-note">Bản ghi chưa có lịch sử thay đổi.</p>

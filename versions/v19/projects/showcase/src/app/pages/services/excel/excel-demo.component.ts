@@ -16,15 +16,15 @@ interface Employee {
   imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
   template: `
     <demo-page title="Excel" description="SdExcelService – export() / exportCSV() / generateTemplate() / upload() / parse(). Sử dụng exceljs nội bộ, tự kèm header có style.">
-      <demo-section heading="xuất file .xlsx" note="export({ columns, items, fileName }) – sheet 'data' có header + dữ liệu.">
+      <demo-section [props]="[{ name: 'export()', value: 'xlsx' }]" note="export({ columns, items, fileName }) – sheet 'data' có header + dữ liệu.">
         <button mat-flat-button color="primary" (click)="onExport()">Tải nhanvien.xlsx</button>
       </demo-section>
 
-      <demo-section heading="xuất file .csv" note="exportCSV() – kèm BOM UTF-8 để Excel mở đúng dấu tiếng Việt.">
+      <demo-section [props]="[{ name: 'exportCSV()', value: 'csv' }]" note="exportCSV() – kèm BOM UTF-8 để Excel mở đúng dấu tiếng Việt.">
         <button mat-flat-button color="primary" (click)="onExportCsv()">Tải nhanvien.csv</button>
       </demo-section>
 
-      <demo-section heading="tải template trống" note="generateTemplate() – tạo file mẫu để người dùng nhập liệu (cột có required, mô tả).">
+      <demo-section [props]="[{ name: 'generateTemplate()' }]" note="generateTemplate() – tạo file mẫu để người dùng nhập liệu (cột có required, mô tả).">
         <button mat-stroked-button (click)="onTemplate()">Tải template-nhanvien.xlsx</button>
       </demo-section>
     </demo-page>

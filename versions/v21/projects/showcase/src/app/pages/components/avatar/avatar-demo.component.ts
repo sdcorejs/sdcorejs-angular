@@ -11,7 +11,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
       title="Avatar"
       description="Ảnh đại diện tròn — tự sinh chữ cái đầu với màu cố định theo tên khi không có URL ảnh.">
 
-      <demo-section heading="Sinh chữ cái đầu từ tên Tiếng Việt">
+      <demo-section [props]="[{ name: 'src' }]">
         <div class="row">
           <div class="card">
             <sd-avatar src="Nguyễn Văn An" [size]="48"></sd-avatar>
@@ -32,7 +32,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
         </div>
       </demo-section>
 
-      <demo-section heading="Avatar dạng ảnh URL">
+      <demo-section [props]="[{ name: 'src', value: 'url' }]">
         <div class="row">
           <sd-avatar src="https://i.pravatar.cc/80?img=11" [size]="48"></sd-avatar>
           <sd-avatar src="https://i.pravatar.cc/80?img=22" [size]="48"></sd-avatar>
@@ -41,7 +41,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
         </div>
       </demo-section>
 
-      <demo-section heading="Kích thước (size)">
+      <demo-section [props]="[{ name: 'size' }]">
         <div class="row size-row">
           <div class="card">
             <sd-avatar src="Nguyễn Văn An" [size]="24"></sd-avatar>
@@ -66,7 +66,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
         </div>
       </demo-section>
 
-      <demo-section heading="Fallback khi không có dữ liệu">
+      <demo-section [props]="[{ name: 'src', value: 'null / empty' }]">
         <div class="row">
           <sd-avatar [src]="null" [size]="48"></sd-avatar>
           <sd-avatar src="" [size]="48"></sd-avatar>

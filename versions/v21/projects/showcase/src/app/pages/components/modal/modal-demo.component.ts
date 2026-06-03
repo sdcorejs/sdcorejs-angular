@@ -12,7 +12,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
       title="Modal"
       description="Hộp thoại trung tâm (hoặc bottom-sheet trên mobile) — mở bằng phương thức open() / close() qua template ref.">
 
-      <demo-section heading="Modal cơ bản với footer">
+      <demo-section [props]="[{ name: 'open()' }, { name: 'width', value: 'md' }]">
         <sd-button type="fill" color="primary" prefixIcon="info" title="Xem chi tiết" (click)="basic.open()"></sd-button>
 
         <sd-modal #basic title="Chi tiết khách hàng" width="md">
@@ -22,7 +22,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
         </sd-modal>
       </demo-section>
 
-      <demo-section heading="Xác nhận xóa (size nhỏ, footer 2 nút)">
+      <demo-section [props]="[{ name: 'width', value: 'sm' }]">
         <sd-button type="fill" color="error" prefixIcon="delete" title="Xóa bản ghi" (click)="confirm.open()"></sd-button>
 
         <sd-modal #confirm title="Xác nhận xóa" width="sm">
@@ -32,7 +32,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
         </sd-modal>
       </demo-section>
 
-      <demo-section heading="Modal lớn với header-right action">
+      <demo-section [props]="[{ name: 'width', value: 'lg' }, { name: 'sdHeaderRight' }]">
         <sd-button type="light" color="primary" prefixIcon="history" title="Xem lịch sử" (click)="history.open()"></sd-button>
 
         <sd-modal #history title="Lịch sử thay đổi" width="lg">
@@ -45,7 +45,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
         </sd-modal>
       </demo-section>
 
-      <demo-section heading="Bottom-sheet (ép chế độ trượt từ dưới lên)">
+      <demo-section [props]="[{ name: 'view', value: 'bottom-sheet' }]">
         <sd-button type="outline" color="primary" prefixIcon="more_vert" title="Tùy chọn" (click)="sheet.open()"></sd-button>
 
         <sd-modal #sheet title="Tùy chọn nhanh" view="bottom-sheet" width="100%">

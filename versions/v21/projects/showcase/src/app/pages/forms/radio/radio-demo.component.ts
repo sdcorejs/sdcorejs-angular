@@ -11,7 +11,7 @@ interface Option { value: string; display: string; }
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdRadio],
   template: `
     <demo-page title="Radio" description="sd-radio – chọn 1 giá trị trong nhóm. Hỗ trợ hiển thị hàng ngang/dọc và các trạng thái khoá.">
-      <demo-section heading="Hiển thị (display)" note="display='row' (mặc định) và display='column' khi danh sách dài.">
+      <demo-section [props]="[{ name: 'display', value: 'row / column' }]" note="display='row' (mặc định) và display='column' khi danh sách dài.">
         <div style="display:flex; flex-direction:column; gap:16px; width:100%">
           <sd-radio label="row" [items]="genders" valueField="value" displayField="display"
             [(model)]="gender" [form]="form"></sd-radio>
@@ -21,7 +21,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Validator (required)" note="Không chọn và bấm Kiểm tra để hiện lỗi.">
+      <demo-section [props]="[{ name: 'required' }]" note="Không chọn và bấm Kiểm tra để hiện lỗi.">
         <div style="display:flex; flex-direction:column; gap:12px; width:100%">
           <sd-radio label="required"
             [items]="payments" valueField="value" displayField="display"
@@ -33,7 +33,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Trạng thái (state)" note="Đã có giá trị mặc định.">
+      <demo-section [props]="[{ name: 'disabled' }, { name: 'viewed' }]" note="Đã có giá trị mặc định.">
         <div style="display:flex; gap:24px; flex-wrap:wrap; width:100%">
           <sd-radio style="flex:1" label="disabled" [items]="genders" valueField="value" displayField="display"
             [(model)]="lockedA" [form]="form" disabled></sd-radio>
@@ -42,7 +42,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Inline edit ('inline')" note="Radio vẫn chọn được; khi disabled thì hiện text tĩnh (viewed=true).">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Radio vẫn chọn được; khi disabled thì hiện text tĩnh (viewed=true).">
         <div style="display:flex; gap:24px; flex-wrap:wrap; width:100%">
           <sd-radio style="flex:1" label="inline" [items]="genders" valueField="value" displayField="display"
             [viewed]="'inline'" [(model)]="inlineChoice" [form]="form"></sd-radio>

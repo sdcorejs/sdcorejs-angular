@@ -11,7 +11,7 @@ interface Option { value: string; display: string; }
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdSelect],
   template: `
     <demo-page title="Select" description="sd-select – dropdown chọn 1 giá trị. Truyền items với valueField + displayField.">
-      <demo-section heading="cơ bản" note="Bind hai chiều, hiển thị giá trị đã chọn.">
+      <demo-section [props]="[{ name: '[(model)]' }]" note="Bind hai chiều, hiển thị giá trị đã chọn.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-select [items]="items" valueField="value" displayField="display"
             label="Chọn phòng ban" placeholder="Chọn..." [(model)]="dept" [form]="form"></sd-select>
@@ -19,7 +19,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Validator (required)" note="Bấm Kiểm tra để hiện lỗi.">
+      <demo-section [props]="[{ name: 'required' }]" note="Bấm Kiểm tra để hiện lỗi.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-select [items]="items" valueField="value" displayField="display"
             label="required" helperText="Chọn phòng đang công tác"
@@ -31,7 +31,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Trạng thái (state)" note="Giá trị đã có sẵn.">
+      <demo-section [props]="[{ name: 'disabled' }, { name: 'viewed' }]" note="Giá trị đã có sẵn.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-select style="width: 240px" [items]="items" valueField="value" displayField="display"
             label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-select>
@@ -40,7 +40,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Inline edit ('inline')" note="Hiển thị như text — bấm vào để mở panel chọn (không hiện ô input). Text giữ nguyên trong lúc panel mở, chỉ đổi khi chọn giá trị mới.">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Hiển thị như text — bấm vào để mở panel chọn (không hiện ô input). Text giữ nguyên trong lúc panel mở, chỉ đổi khi chọn giá trị mới.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <div style="font-size:12px; color:#555">
             Phòng ban:
@@ -51,7 +51,7 @@ interface Option { value: string; display: string; }
         </div>
       </demo-section>
 
-      <demo-section heading="Kích thước (size)" note="UI gọn cho bảng / toolbar.">
+      <demo-section [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho bảng / toolbar.">
         <div style="width: 280px">
           <sd-select [items]="items" valueField="value" displayField="display"
             label="sm" size="sm" [(model)]="quick" [form]="form"></sd-select>

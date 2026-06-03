@@ -24,19 +24,19 @@ import {
       title="Chart"
       description="Bộ biểu đồ dựa trên Chart.js — line / bar / pie / doughnut. Thường dùng trên dashboard và báo cáo.">
 
-      <demo-section heading="Line — Doanh thu 6 tháng đầu năm">
+      <demo-section [props]="[{ name: 'type', value: 'line' }]">
         <div class="chart-box">
           <sd-line-chart [data]="lineData" [options]="lineOptions"></sd-line-chart>
         </div>
       </demo-section>
 
-      <demo-section heading="Bar — Hiệu suất theo phòng ban">
+      <demo-section [props]="[{ name: 'type', value: 'bar' }]">
         <div class="chart-box">
           <sd-bar-chart [data]="barData" [options]="barOptions"></sd-bar-chart>
         </div>
       </demo-section>
 
-      <demo-section heading="Pie & Doughnut — Cơ cấu chi phí">
+      <demo-section [props]="[{ name: 'type', value: 'pie' }, { name: 'type', value: 'doughnut' }]">
         <div class="row">
           <div class="chart-box small">
             <sd-pie-chart [data]="pieData"></sd-pie-chart>

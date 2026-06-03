@@ -11,13 +11,13 @@ import { SdQueryBuilder } from '@sdcorejs/angular/components/query-builder';
       title="Query Builder"
       description="Bộ dựng truy vấn dạng cây — gom các điều kiện 'trường - toán tử - giá trị' theo nhóm AND/OR lồng nhau. Phù hợp cho 'Tìm kiếm nâng cao' và trình chỉnh sửa bộ lọc lưu.">
 
-      <demo-section heading="Bộ lọc nâng cao (mặc định 3 điều kiện + nhóm OR lồng)">
+      <demo-section [props]="[{ name: 'group' }]">
         <div class="builder-box">
           <sd-query-builder></sd-query-builder>
         </div>
       </demo-section>
 
-      <demo-section heading="Khởi tạo với cây rule tự chuẩn bị">
+      <demo-section [props]="[{ name: 'group', value: 'custom' }]">
         <div class="builder-box">
           <sd-query-builder [group]="customGroup"></sd-query-builder>
         </div>

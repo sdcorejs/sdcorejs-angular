@@ -9,13 +9,13 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdInput],
   template: `
     <demo-page title="Input" description="sd-input – ô nhập liệu một dòng. Hỗ trợ helper text, kiểu (text/number/password/email), trạng thái disabled / readonly / viewed và validator chuẩn.">
-      <demo-section heading="cơ bản" note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
+      <demo-section [props]="[{ name: '[(model)]' }]" note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
         <div style="width: 320px">
           <sd-input label="Họ và tên" placeholder="Nhập họ tên..." helperText="Tên đầy đủ theo CMND" [(model)]="basic" [form]="form"></sd-input>
         </div>
       </demo-section>
 
-      <demo-section heading="Validator" note="Bấm Kiểm tra để hiện lỗi inline.">
+      <demo-section [props]="[{ name: 'required' }, { name: 'type', value: 'email' }, { name: 'minlength', value: '6' }]" note="Bấm Kiểm tra để hiện lỗi inline.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-input label="required + type=email" placeholder="vd: a@b.com" type="email" [(model)]="email" [form]="formValid" required></sd-input>
           <sd-input label="required + minlength=6" type="password" [(model)]="password" [form]="formValid" required [minlength]="6"></sd-input>
@@ -26,7 +26,7 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
         </div>
       </demo-section>
 
-      <demo-section heading="Trạng thái (state)" note="Ba trạng thái không cho chỉnh sửa.">
+      <demo-section [props]="[{ name: 'disabled' }, { name: 'readonly' }, { name: 'viewed' }]" note="Ba trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-input style="width: 220px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input>
           <sd-input style="width: 220px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-input>
@@ -34,13 +34,13 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
         </div>
       </demo-section>
 
-      <demo-section heading="Kích thước (size)" note="size='sm' cho UI gọn hơn.">
+      <demo-section [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
         <div style="width: 320px">
           <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
         </div>
       </demo-section>
 
-      <demo-section heading="Inline edit ('inline')" note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
+      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
         <div style="width: 260px; font-size:13px; color:#555">
           Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
         </div>
