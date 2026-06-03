@@ -59,10 +59,12 @@ export class SdOperator {
   readonly currentLabel = computed<string>(() => this.#resolve(this.model())?.display ?? '');
 
   // Resolve một operator → { inner-svg, nhãn đã dịch } từ bảng OPERATORS dùng chung.
+  // why: OPERATORS[].display là i18n KEY ('core.operator.*.display'), KHÔNG phải text —
+  // phải dịch qua I18nService, nếu không UI hiện key thô (code) thay vì nhãn đã dịch.
   #resolve(value: Operator | undefined): { icon: string; display: string } | undefined {
     if (value == null) return undefined;
     const entry = OPERATORS.find((o) => o.value === value);
-    return entry ? { icon: entry.icon, display: entry.display } : undefined;
+    return entry ? { icon: entry.icon, display: this.#i18n.t(entry.display) } : undefined;
   }
 
   // why: OPERATORS.icon là inner SVG (path/line/rect). Bọc <svg> + bypass sanitizer

@@ -5,6 +5,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { OPERATORS } from '@sdcorejs/utils/constants';
 
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdOperator } from './operator.component';
 
 /** Unwrap a SafeHtml produced via bypassSecurityTrustHtml back to its raw string. */
@@ -47,6 +48,17 @@ describe('SdOperator', () => {
       fixture.detectChanges();
       expect(component.items().map((i) => i.value)).toEqual(['EQUAL']);
     });
+
+    it('translates the display i18n key via I18nService (does not leak the raw key)', () => {
+      // asserts: the menu label is the translated text, NOT the raw 'core.operator.*.display' key
+      fixture.componentRef.setInput('operators', ['EQUAL']);
+      fixture.detectChanges();
+      const i18n = TestBed.inject(I18nService);
+      const equalEntry = OPERATORS.find((o) => o.value === 'EQUAL')!;
+      expect(equalEntry.display).toContain('core.operator'); // sanity: utils ships an i18n key
+      expect(component.items()[0].display).toBe(i18n.t(equalEntry.display));
+      expect(component.items()[0].display).not.toBe(equalEntry.display);
+    });
   });
 
   describe('currentIcon / currentLabel', () => {
@@ -59,6 +71,16 @@ describe('SdOperator', () => {
       const equal = OPERATORS.find((o) => o.value === 'EQUAL')!;
       expect(html(sanitizer, component.currentIcon())).toContain(equal.icon.slice(0, 12));
       expect(component.currentLabel()).toBe(component.items()[0].display);
+    });
+
+    it('currentLabel returns the translated label of the selected operator', () => {
+      // asserts: tooltip label is translated, not the raw 'core.operator.equal.display' key
+      fixture.componentRef.setInput('operators', ['EQUAL']);
+      fixture.componentRef.setInput('model', 'EQUAL');
+      fixture.detectChanges();
+      const i18n = TestBed.inject(I18nService);
+      expect(component.currentLabel()).toBe(i18n.t('core.operator.equal.display'));
+      expect(component.currentLabel()).not.toContain('core.operator');
     });
 
     it('falls back to the funnel icon and empty label when model is undefined', () => {
