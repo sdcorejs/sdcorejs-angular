@@ -52,6 +52,24 @@
 
   <!-- ════════════════════════ CENTER CANVAS ═══════════════════════ -->
   <section class="fb-canvas">
+    @let _editing = editingGroup();
+    @if (_editing) {
+      <!-- ── Drill-in header: đang thiết kế children của 1 group ── -->
+      <header class="fb-canvas__header fb-canvas__header--group">
+        <div class="fb-canvas__title fb-groupedit__crumb">
+          <button type="button" class="fb-icon-btn" [matTooltip]="'core.component.form-builder.back-to-design' | translate" (click)="cancelGroupEdit()">
+            <span class="msi">chevron_left</span>
+          </button>
+          <span class="fb-groupedit__icon"><span class="msi">{{ _editing.properties?.icon || 'category' }}</span></span>
+          <span>{{ _editing.label || ('core.component.form-builder.edit-group' | translate) }}</span>
+          <span class="fb-groupedit__hint">{{ 'core.component.form-builder.edit-group' | translate }}</span>
+        </div>
+        <div class="fb-canvas__actions">
+          <sd-button type="outline" [title]="'core.component.form-builder.cancel' | translate" (click)="cancelGroupEdit()"></sd-button>
+          <sd-button type="fill" color="primary" prefixIcon="check" [title]="'core.component.form-builder.confirm' | translate" (click)="confirmGroupEdit()"></sd-button>
+        </div>
+      </header>
+    } @else {
     <header class="fb-canvas__header">
       <div class="fb-canvas__title">
         <span>{{ 'core.component.form-builder.layout' | translate }}</span>
@@ -103,6 +121,7 @@
         </div>
       </div>
     </header>
+    }
 
     <div
       class="fb-canvas__body"
@@ -211,6 +230,12 @@
                       </div>
                       <!-- Floating action toolbar -->
                       <div class="fb-actions">
+                        <!-- why: Detail = mở canvas thiết kế riêng cho group (thay cho drag/drop trong group). -->
+                        <button type="button" class="fb-icon-btn"
+                                [matTooltip]="'core.component.form-builder.edit-group' | translate"
+                                (click)="enterGroupEdit(g); $event.stopPropagation()">
+                          <span class="msi">open_in_full</span>
+                        </button>
                         <button type="button" class="fb-icon-btn"
                                 [matTooltip]="'core.component.form-builder.duplicate' | translate"
                                 (click)="onDuplicate(item); $event.stopPropagation()">
@@ -230,92 +255,22 @@
                         </button>
                       </div>
 
-                      <div
-                        class="fb-group__body"
-                        cdkDropList
-                        cdkDropListOrientation="horizontal"
-                        [cdkDropListData]="g.components"
-                        (cdkDropListDropped)="dropInGroup($event, g)">
+                      <!-- Static preview: children render read-only (không drag/resize/select).
+                           Sửa nội dung group qua nút Detail (enterGroupEdit). -->
+                      <div class="fb-group__body fb-group__body--static" (click)="enterGroupEdit(g); $event.stopPropagation()">
                         @if (!g.components?.length) {
                           <div class="fb-group__empty">
-                            <span class="msi" style="font-size: 16px; margin-right: 6px;">south</span>
-                            {{ 'core.component.form-builder.group-drop-here' | translate }}
+                            <span class="msi" style="font-size: 16px; margin-right: 6px;">open_in_full</span>
+                            {{ 'core.component.form-builder.group-empty-hint' | translate }}
                           </div>
                         }
-                        @for (child of g.components; track child.id; let ci = $index) {
+                        @for (child of g.components; track child.id) {
                           <div
-                            cdkDrag
-                            [id]="child.id"
-                            class="fb-item is-child column-{{ child.layout?.columns || 12 }}"
-                            [class.is-selected]="child.id === selectedComponent()?.id"
-                            [class.is-hidden]="child.properties?.hidden"
-                            [class.is-readonly]="child.properties?.viewed"
-                            (click)="selectComponent(child); $event.stopPropagation()"
-                            (cdkDragStarted)="onAnyDragStarted()"
-                            (cdkDragMoved)="onAnyDragMoved($event)"
-                            (cdkDragEnded)="onAnyDragEnded()">
-                            <!-- Generic puck preview -->
-                            <div *cdkDragPreview class="fb-drag-preview"></div>
+                            class="fb-item is-child fb-item--static column-{{ child.layout?.columns || 12 }}"
+                            [class.is-hidden]="child.properties?.hidden">
                             <ng-container
                               *ngTemplateOutlet="controlTemplate; context: { $implicit: child }">
                             </ng-container>
-                            <!-- Resize handle cho group child — chia 12-col ngay trong group body.
-                                 Wrapping cdkDropList có enterPredicate=false để KHÔNG nhận drop
-                                 (chỉ dùng làm context cho cdkDrag), tránh xung đột với group__body drop list. -->
-                            <div cdkDropList cdkDropListOrientation="horizontal" [cdkDropListEnterPredicate]="noReturnPredicate">
-                              <div
-                                cdkDrag
-                                cdkDragLockAxis="x"
-                                class="fb-resize"
-                                (cdkDragStarted)="onAnyDragStarted()"
-                                (cdkDragMoved)="changeSizeChildInGroup($event, child, g)"
-                                (cdkDragEnded)="dragEndChangeSizeControl($event); onAnyDragEnded()"
-                                [matTooltip]="'core.component.form-builder.flex' | translate"
-                                aria-label="resize"></div>
-                            </div>
-                            <!-- Inline status chips for nested children -->
-                            @if (child.properties?.hidden) {
-                              <span class="fb-status-chip hidden">
-                                <span class="msi">visibility_off</span>
-                                {{ 'core.component.form-builder.hidden' | translate }}
-                              </span>
-                            } @else if (child.properties?.viewed) {
-                              <span class="fb-status-chip readonly">
-                                <span class="msi">edit_off</span>
-                                {{ 'core.component.form-builder.read-only' | translate }}
-                              </span>
-                            } @else if (hasConditional(child)) {
-                              <span class="fb-status-chip conditional">
-                                <span class="msi">bolt</span>
-                                {{ 'core.component.form-builder.conditional' | translate }}
-                              </span>
-                            }
-                            <div class="fb-actions">
-                              <button type="button" class="fb-icon-btn"
-                                      [class.warning]="child.properties?.viewed"
-                                      [class.on]="child.properties?.viewed"
-                                      [matTooltip]="child.properties?.viewed ? ('core.component.form-builder.unset-readonly' | translate) : ('core.component.form-builder.set-readonly' | translate)"
-                                      (click)="onChangeViewed(child); $event.stopPropagation()">
-                                <span class="msi">edit_off</span>
-                              </button>
-                              <button type="button" class="fb-icon-btn"
-                                      [matTooltip]="'core.component.form-builder.duplicate' | translate"
-                                      (click)="onDuplicate(child); $event.stopPropagation()">
-                                <span class="msi">content_copy</span>
-                              </button>
-                              <button type="button" class="fb-icon-btn"
-                                      [class.warning]="child.properties?.hidden"
-                                      [class.on]="child.properties?.hidden"
-                                      [matTooltip]="child.properties?.hidden ? ('core.component.form-builder.show' | translate) : ('core.component.form-builder.hide' | translate)"
-                                      (click)="onChangeHidden(child); $event.stopPropagation()">
-                                <span class="msi">{{ child.properties?.hidden ? 'visibility_off' : 'visibility' }}</span>
-                              </button>
-                              <button type="button" class="fb-icon-btn danger"
-                                      [matTooltip]="'core.component.form-builder.delete' | translate"
-                                      (click)="removeFromGroup(g, child.id); $event.stopPropagation()">
-                                <span class="msi">delete</span>
-                              </button>
-                            </div>
                           </div>
                         }
                       </div>

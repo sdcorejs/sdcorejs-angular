@@ -320,6 +320,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.empty-hint': '왼쪽 패널에서 필드를 드래그하여 양식을 만들거나 다음을 누르세요:',
   'core.component.form-builder.conditional': '조건부',
   'core.component.form-builder.group-drop-here': '필드를 여기에 놓아 이 그룹에 추가',
+  'core.component.form-builder.edit-group': '그룹 편집',
+  'core.component.form-builder.group-empty-hint': '상세를 클릭하여 그룹에 필드 추가',
   'core.component.form-builder.hidden': '숨김',
   'core.component.form-builder.read-only': '읽기 전용',
   'core.component.form-builder.untitled': '제목 없음',

@@ -1538,3 +1538,49 @@ table-control {
     text-decoration: underline;
   }
 }
+
+/* ══════════ Group drill-in (Detail) — static preview + edit header ══════════ */
+// why: trên canvas chính, body group chỉ là PREVIEW tĩnh — children render read-only,
+// pointer-events tắt để mọi click rơi xuống body → mở Detail (enterGroupEdit).
+.fb-group__body--static {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-2, 8px);
+  cursor: pointer;
+  min-height: 48px;
+
+  .fb-item--static {
+    // Children không tương tác: không drag, không resize, không actions, không select.
+    pointer-events: none;
+    position: relative;
+
+    // Tắt mọi handle/action lỡ render bên trong control template.
+    .fb-resize,
+    .fb-actions,
+    .fb-status-chip {
+      display: none !important;
+    }
+  }
+}
+
+// Header khi đang Detail 1 group — breadcrumb trái + OK/Cancel phải.
+.fb-canvas__header--group {
+  .fb-groupedit__crumb {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+  .fb-groupedit__icon .msi {
+    font-size: 18px;
+    color: var(--md-sys-color-primary);
+  }
+  .fb-groupedit__hint {
+    font-weight: 400;
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant, #6b6b6b);
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+  }
+}

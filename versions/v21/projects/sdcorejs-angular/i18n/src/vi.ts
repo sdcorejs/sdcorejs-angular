@@ -320,6 +320,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.empty-hint': 'Tạo form bằng cách kéo các trường từ panel bên trái, hoặc nhấn',
   'core.component.form-builder.conditional': 'Có điều kiện',
   'core.component.form-builder.group-drop-here': 'Kéo trường vào đây để thêm vào group',
+  'core.component.form-builder.edit-group': 'Thiết kế group',
+  'core.component.form-builder.group-empty-hint': 'Bấm Chi tiết để thêm trường vào group',
   'core.component.form-builder.hidden': 'Đã ẩn',
   'core.component.form-builder.read-only': 'Chỉ đọc',
   'core.component.form-builder.untitled': 'Chưa đặt tên',

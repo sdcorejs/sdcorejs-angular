@@ -320,6 +320,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.empty-hint': '左パネルからフィールドをドラッグしてフォームを構築するか、次を押します:',
   'core.component.form-builder.conditional': '条件付き',
   'core.component.form-builder.group-drop-here': 'フィールドをここにドロップしてグループに追加',
+  'core.component.form-builder.edit-group': 'グループを編集',
+  'core.component.form-builder.group-empty-hint': '「詳細」をクリックしてフィールドを追加',
   'core.component.form-builder.hidden': '非表示',
   'core.component.form-builder.read-only': '読み取り専用',
   'core.component.form-builder.untitled': '無題',

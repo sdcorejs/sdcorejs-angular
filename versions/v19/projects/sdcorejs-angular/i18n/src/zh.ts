@@ -320,6 +320,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.form-builder.empty-hint': '从左侧面板拖动字段构建表单,或按',
   'core.component.form-builder.conditional': '条件',
   'core.component.form-builder.group-drop-here': '将字段拖到此处以添加到该分组',
+  'core.component.form-builder.edit-group': '编辑分组',
+  'core.component.form-builder.group-empty-hint': '点击详情以向该分组添加字段',
   'core.component.form-builder.hidden': '已隐藏',
   'core.component.form-builder.read-only': '只读',
   'core.component.form-builder.untitled': '未命名',

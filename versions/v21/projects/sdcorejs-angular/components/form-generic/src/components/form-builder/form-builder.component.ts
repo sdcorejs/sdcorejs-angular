@@ -135,8 +135,11 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   readonly paletteSearch = signal('');
   readonly paletteGroups = computed<{ key: FormBuilderComponentGroup; label: string; items: FormBuilderComponent[] }[]>(() => {
     const term = this.paletteSearch().trim().toLowerCase();
+    // why: trong chế độ Detail group, ẩn item 'group' khỏi palette — không cho group lồng group.
+    const inGroup = !!this.editingGroupId();
     const match = (c: FormBuilderComponent) =>
-      !term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term);
+      (!inGroup || c.type !== 'group') &&
+      (!term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term));
     const buckets: Record<FormBuilderComponentGroup, FormBuilderComponent[]> = { basic: [], choice: [], advanced: [], layout: [] };
     for (const c of this.formBuilderComponents) {
       if (match(c)) buckets[c.group].push(c);
@@ -162,6 +165,24 @@ export class SdFormBuilder extends SdBaseSecureComponent {
 
   readonly selectedComponent = signal<SdFormGenericComponent | SdFormGenericGroup | undefined>(undefined);
   readonly isPreview = signal(false);
+
+  // ── group drill-in (Detail) ─────────────────────────────────────────────
+  // why: bỏ hẳn drag/drop trong group. Thay vào đó "Detail" 1 group → mở canvas
+  // riêng chỉ thiết kế children của group đó (cùng tooling: palette/reorder/resize/
+  // attribute), KHÔNG cho group lồng group. OK = giữ, Cancel = revert. Depth tối đa
+  // 1 (group không chứa group) nên chỉ cần 1 con trỏ editingGroupId, không cần stack.
+  readonly editingGroupId = signal<string | undefined>(undefined);
+  /** Group đang được Detail (tìm ở TOP-LEVEL theo id), undefined = đang ở canvas chính. */
+  readonly editingGroup = computed<SdFormGenericGroup | undefined>(() => {
+    const id = this.editingGroupId();
+    if (!id) return undefined;
+    return this.components.find(c => c.id === id && c.type === 'group') as SdFormGenericGroup | undefined;
+  });
+  /** Snapshot (deep clone JSON) của group.components khi vào Detail — phục vụ Cancel. */
+  #groupSnapshot?: string;
+
+  /** Mảng components đang được canvas thao tác: children của group khi Detail, ngược lại là top-level. */
+  #scope = (): (SdFormGenericComponent | SdFormGenericGroup)[] => this.editingGroup()?.components ?? this.components;
 
   /** Signal toàn cục: TRUE khi BẤT KỲ cdkDrag nào đang active (palette, canvas, group, resize).
    *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
@@ -249,6 +270,8 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   }
 
   addComponent = (item: FormBuilderComponent, index?: number) => {
+    // why: không cho thêm group khi đang Detail trong 1 group (tránh group lồng group).
+    if (item.type === 'group' && this.editingGroupId()) return;
     const id = GenerateId();
     let newComponent: SdFormGenericComponent | SdFormGenericGroup;
     if (item.type === 'group') {
@@ -289,14 +312,15 @@ export class SdFormBuilder extends SdBaseSecureComponent {
         properties: {},
       } as SdFormGenericComponent;
     }
+    const scope = this.#scope();
     if (index !== undefined) {
-      this.components.splice(index, 0, newComponent);
+      scope.splice(index, 0, newComponent);
     } else {
-      this.components.push(newComponent);
+      scope.push(newComponent);
     }
 
     this.#recountTabIndex();
-    const created = this.components?.find(component => component.id === id);
+    const created = scope.find(component => component.id === id);
     this.selectedComponent.set(created);
     this.selectComponent(created);
     this.#ref.markForCheck();
@@ -342,43 +366,45 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.isPreview.set(preview);
   };
 
-  /** Nested drop handler — when dragging a palette item or canvas item INTO a group body. */
-  dropInGroup = (event: CdkDragDrop<any[]>, group: SdFormGenericGroup) => {
-    if (event.previousContainer === event.container) {
-      moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      return;
-    }
-    const dropped = event.previousContainer.data[event.previousIndex];
-    if (dropped && 'symbol' in dropped) {
-      // Palette → group: tạo component mới rồi push vào group.components.
-      const item = dropped as FormBuilderComponent;
-      if (item.type === 'group') {
-        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
-        return;
-      }
-      const newComponent = this.#createComponentFromPalette(item) as SdFormGenericComponent;
-      group.components.splice(event.currentIndex, 0, newComponent);
-      this.selectedComponent.set(newComponent);
-      this.#ref.markForCheck();
-    } else {
-      // Canvas → group: chuyển instance hiện có.
-      const component = dropped as SdFormGenericComponent | SdFormGenericGroup;
-      if (component.type === 'group') {
-        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
-        return;
-      }
-      transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-      this.#syncRowsToComponents();
-    }
+  // ── Group drill-in (Detail) navigation ──────────────────────────────────
+  /** Mở canvas thiết kế riêng cho 1 group (chỉ children của nó). Snapshot để Cancel revert. */
+  enterGroupEdit = (group: SdFormGenericGroup) => {
+    this.#groupSnapshot = JSON.stringify(group.components ?? []);
+    this.editingGroupId.set(group.id);
+    this.selectedComponent.set(undefined);
+    this.#recountTabIndex();
+    this.#ref.markForCheck();
   };
 
-  /** Quick-add break sau row chỉ định.
-   *  Tính component index cuối cùng của row đó trong this.components, splice break vào sau.
-   *  Không qua palette — chỉ là utility action bám theo row trên canvas.
+  /** OK: giữ thay đổi children, quay về canvas chính. */
+  confirmGroupEdit = () => {
+    this.#groupSnapshot = undefined;
+    this.editingGroupId.set(undefined);
+    this.selectedComponent.set(undefined);
+    this.#syncComponentsToRows();
+    this.#ref.markForCheck();
+  };
+
+  /** Cancel: revert children về snapshot lúc vào Detail, rồi quay về canvas chính. */
+  cancelGroupEdit = () => {
+    const g = this.editingGroup();
+    if (g && this.#groupSnapshot !== undefined) {
+      g.components = JSON.parse(this.#groupSnapshot);
+    }
+    this.#groupSnapshot = undefined;
+    this.editingGroupId.set(undefined);
+    this.selectedComponent.set(undefined);
+    this.#syncComponentsToRows();
+    this.#ref.markForCheck();
+  };
+
+  /** Quick-add break sau row chỉ định (theo scope hiện tại — top-level hoặc group).
+   *  Tính component index cuối cùng của row đó trong scope, splice break vào sau.
    */
   insertBreakAfter = (row: DragDropRowItem) => {
+    const scope = this.#scope();
     const lastItemId = row.items[row.items.length - 1]?.id;
-    const insertAfter = lastItemId ? this.components.findIndex(c => c.id === lastItemId) : this.components.length - 1;
+    const insertAfter = lastItemId ? scope.findIndex(c => c.id === lastItemId) : scope.length - 1;
     const newBreak: any = {
       id: GenerateId(),
       key: GenerateKey(),
@@ -389,20 +415,20 @@ export class SdFormBuilder extends SdBaseSecureComponent {
       disabled: false,
       properties: {},
     };
-    this.components.splice(insertAfter + 1, 0, newBreak);
+    scope.splice(insertAfter + 1, 0, newBreak);
     this.#recountTabIndex();
     this.#ref.markForCheck();
   };
 
-  /** Remove a child component from a group's nested list. */
-  removeFromGroup = (group: SdFormGenericGroup, id: string) => {
-    group.components = group.components.filter(c => c.id !== id);
-    if (this.selectedComponent()?.id === id) this.selectedComponent.set(undefined);
-    this.#ref.markForCheck();
-  };
-
+  /** Xoá component theo scope hiện tại (top-level hoặc children của group đang Detail). */
   removeComponent = (id: string) => {
-    this.components = this.components.filter((t: { id: string }) => t.id !== id);
+    const g = this.editingGroup();
+    if (g) {
+      g.components = g.components.filter((t: { id: string }) => t.id !== id);
+    } else {
+      this.components = this.components.filter((t: { id: string }) => t.id !== id);
+    }
+    if (this.selectedComponent()?.id === id) this.selectedComponent.set(undefined);
     this.#recountTabIndex();
   };
 
@@ -425,11 +451,6 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   };
 
   drop = (event: CdkDragDrop<any[]>) => {
-    if (this.#dropIntoGroupAtPointer(event)) {
-      this.#recountTabIndex();
-      return;
-    }
-
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       this.#syncRowsToComponents();
@@ -437,7 +458,7 @@ export class SdFormBuilder extends SdBaseSecureComponent {
       if (!event.isPointerOverContainer) {
         const dragItemId = event.item.element.nativeElement.id;
         if (dragItemId) {
-          const dragItem = this.components.find((t: { id: string }) => t.id === dragItemId);
+          const dragItem = this.#scope().find((t: { id: string }) => t.id === dragItemId);
           this.xuLyKeoCheo(dragItem);
         }
       }
@@ -509,8 +530,9 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   };
 
   #recountTabIndex = () => {
-    // Tránh dùng map vì nó sẽ sinh ra reference mới
-    this.components.forEach((item, index) => {
+    // Tránh dùng map vì nó sẽ sinh ra reference mới. Chạy theo scope hiện tại (top-level hoặc group).
+    const scope = this.#scope();
+    scope.forEach((item, index) => {
       if (item.layout) {
         item.layout!.row = `${index + 1}`;
         item.layout!.columns = item.layout?.columns || '12';
@@ -523,16 +545,16 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     });
     const sel = this.selectedComponent();
     if (sel && sel?.layout?.row) {
-      sel.layout.row = this.components.find(t => t.id === sel.id)?.layout?.row;
+      sel.layout.row = scope.find(t => t.id === sel.id)?.layout?.row;
     }
     this.#syncComponentsToRows();
   };
 
-  // Hàm xử lý chuyển đổi components -> dragDropRows
+  // Hàm xử lý chuyển đổi components (scope hiện tại) -> dragDropRows
   // Dựa vào columns của component để quyết định dragDropRows có bao nhiêu items trên row, đảm bảo columns tổng số items <= 12
   #syncComponentsToRows = () => {
     this.dragDropRows = [];
-    for (const component of this.components) {
+    for (const component of this.#scope()) {
       // lấy dòng cuối cùng của dragDropList
       let lastRow: DragDropRowItem = { rowIndex: this.dragDropRows.length, items: [] };
       if (this.dragDropRows.length) {
@@ -552,103 +574,19 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     }
   };
 
-  // Hàm xử lý chuyển đổi dragDropRows -> components
+  // Hàm xử lý chuyển đổi dragDropRows -> components (ghi về scope hiện tại)
   // Vì khi kéo thả sẽ thay đổi vị trí, do đó cần sắp xếp lại components
   #syncRowsToComponents = () => {
     // rải data ma trận droplist => schema.components
-    this.components = this.dragDropRows?.map(e => e.items)?.reduce((current, next) => [...current, ...next], []) || [];
-  };
-
-  #createComponentFromPalette = (item: FormBuilderComponent): SdFormGenericComponent | SdFormGenericGroup => {
-    const id = GenerateId();
-    if (item.type === 'group') {
-      return {
-        id,
-        type: 'group',
-        label: 'Group',
-        layout: { columns: '12' },
-        components: [],
-        properties: {
-          icon: item.symbol || 'category',
-          color: 'primary',
-        },
-      } as SdFormGenericGroup;
-    }
-    if (item.type === 'break') {
-      return {
-        id,
-        key: GenerateKey(),
-        type: 'break',
-        label: 'Break',
-        layout: { columns: '12' },
-        validate: {},
-        disabled: false,
-        properties: {},
-      } as any;
-    }
-    return {
-      id,
-      key: GenerateKey(),
-      type: item.type as any,
-      label: item.type,
-      layout: { columns: '12' },
-      validate: { required: false },
-      disabled: false,
-      properties: {},
-    } as SdFormGenericComponent;
-  };
-
-  #dropIntoGroupAtPointer = (event: CdkDragDrop<any[]>): boolean => {
-    const dropPoint = (event as any).dropPoint || this.lastDragPointer;
-    if (!dropPoint) return false;
-
-    const bodyEl = document.elementFromPoint(dropPoint.x, dropPoint.y)?.closest('.fb-group__body') as HTMLElement | null;
-    const groupEl = bodyEl?.closest('.fb-group') as HTMLElement | null;
-    const group = groupEl?.id ? this.#findGroupById(groupEl.id) : undefined;
-    if (!group || event.container.data === group.components) return false;
-
-    const dropped = event.previousContainer.data[event.previousIndex];
-    if (!dropped) return false;
-
-    if ('symbol' in dropped) {
-      const paletteItem = dropped as FormBuilderComponent;
-      if (paletteItem.type === 'group') {
-        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
-        return true;
-      }
-      const created = this.#createComponentFromPalette(paletteItem) as SdFormGenericComponent;
-      group.components.push(created);
-      this.selectedComponent.set(created);
+    const flat = this.dragDropRows?.map(e => e.items)?.reduce((current, next) => [...current, ...next], []) || [];
+    const g = this.editingGroup();
+    if (g) {
+      g.components = flat as SdFormGenericComponent[];
     } else {
-      if (!('type' in dropped)) return false;
-      const component = dropped as SdFormGenericComponent | SdFormGenericGroup;
-      if (component.type === 'group') {
-        this.#notifyService.warning('Group lồng group chưa được hỗ trợ.');
-        return true;
-      }
-      transferArrayItem(event.previousContainer.data, group.components, event.previousIndex, group.components.length);
-      this.#syncRowsToComponents();
-      this.selectedComponent.set(component);
+      this.components = flat;
     }
-
-    this.#ref.markForCheck();
-    return true;
   };
 
-  #findGroupById = (
-    id: string,
-    items: (SdFormGenericComponent | SdFormGenericGroup)[] = this.components
-  ): SdFormGenericGroup | undefined => {
-    for (const item of items) {
-      if (item.type === 'group') {
-        const group = item as SdFormGenericGroup;
-        if (group.id === id) return group;
-        const nested = this.#findGroupById(id, group.components || []);
-        if (nested) return nested;
-      }
-    }
-    return undefined;
-  };
 
   changeSizeControl = async (
     event: CdkDragMove<SdFormGenericComponent | SdFormGenericGroup>,
@@ -691,38 +629,6 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.#recountTabIndex();
   };
 
-  /** Resize a child item INSIDE a group.
-   *  Math: lấy bounding của chính item, tính (mouse.x - item.left) / colWidth = newCols.
-   *  Cách này đúng cho cả flex-wrap (item ở wrap row 2+) vì dùng item-relative,
-   *  không phải sum-of-all-preceding-cols (sai khi item wrap xuống row mới).
-   */
-  changeSizeChildInGroup = (
-    event: CdkDragMove<SdFormGenericComponent>,
-    child: SdFormGenericComponent,
-    group: SdFormGenericGroup
-  ) => {
-    const groupEl = document.getElementById(group.id);
-    const bodyEl = groupEl?.querySelector('.fb-group__body') as HTMLElement | null;
-    const childEl = document.getElementById(child.id);
-    if (!bodyEl || !childEl) return;
-
-    const bodyRect = bodyEl.getBoundingClientRect();
-    const childRect = childEl.getBoundingClientRect();
-    // Width của 1 col trong group body (loại trừ padding nếu có).
-    const bodyStyle = getComputedStyle(bodyEl);
-    const padL = parseFloat(bodyStyle.paddingLeft) || 0;
-    const padR = parseFloat(bodyStyle.paddingRight) || 0;
-    const colWidth = (bodyRect.width - padL - padR) / 12;
-    if (colWidth <= 0) return;
-
-    // Mới: new right edge = mouse.x; new width = mouse.x - child.left
-    const newWidth = event.pointerPosition.x - childRect.left;
-    let newCols = Math.round(newWidth / colWidth);
-    if (newCols < 2) newCols = 2;
-    if (newCols > 12) newCols = 12;
-    child.layout!.columns = `${newCols}` as any;
-  };
-
   onChangeViewed = (component: SdFormGenericComponent) => {
     component.properties!.viewed = !component.properties!.viewed;
     // Emit khi có sự thay đổi để control và attribute lắng nghe và render lại
@@ -735,14 +641,15 @@ export class SdFormBuilder extends SdBaseSecureComponent {
     this.#builderService.componentEmitters.next(component);
   };
 
-  // Duplicate component nhưng sẽ clear id và key để tránh trùng lặp
+  // Duplicate component nhưng sẽ clear id và key để tránh trùng lặp (theo scope hiện tại)
   onDuplicate = (component: SdFormGenericComponent | SdFormGenericGroup) => {
     const clonedComponent = JSON.parse(JSON.stringify(component));
     clonedComponent.id = GenerateId();
     clonedComponent.key = GenerateKey();
-    this.components.push(clonedComponent);
+    const scope = this.#scope();
+    scope.push(clonedComponent);
     this.#recountTabIndex();
-    const created = this.components?.find(t => t.id === clonedComponent.id);
+    const created = scope.find(t => t.id === clonedComponent.id);
     this.selectedComponent.set(created);
     this.selectComponent(created);
     this.#ref.markForCheck();

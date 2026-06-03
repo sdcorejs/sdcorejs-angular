@@ -318,6 +318,8 @@ export const EN_MESSAGES = {
   'core.component.form-builder.empty-hint': 'Build your form by dragging fields from the left panel, or press',
   'core.component.form-builder.conditional': 'Conditional',
   'core.component.form-builder.group-drop-here': 'Drop a field here to add it to this group',
+  'core.component.form-builder.edit-group': 'Edit group',
+  'core.component.form-builder.group-empty-hint': 'Click Details to add fields to this group',
   'core.component.form-builder.hidden': 'Hidden',
   'core.component.form-builder.read-only': 'Read only',
   'core.component.form-builder.untitled': 'Untitled',
