@@ -12,7 +12,7 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
       title="Upload File"
       description="Tải lên tệp tin / hình ảnh — kéo thả, đa file, validate đuôi và dung lượng, có preview thumbnail. Hỗ trợ FormGroup và two-way [(model)].">
 
-      <demo-section [props]="[{ name: 'type', value: 'image' }, { name: 'max', value: '5' }, { name: 'maxSize', value: '2' }]">
+      <demo-section heading="Tải nhiều ảnh có giới hạn" [props]="[{ name: 'type', value: 'image' }, { name: 'max', value: '5' }, { name: 'maxSize', value: '2' }, { name: 'model', value: 'two-way' }]">
         <div class="control-box">
           <sd-upload-file
             label="Ảnh sản phẩm"
@@ -26,7 +26,7 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'type', value: 'document' }, { name: 'required' }]">
+      <demo-section heading="Tải tài liệu (PDF, Word, Excel)" [props]="[{ name: 'type', value: 'document' }, { name: 'required', value: 'true' }]">
         <div class="control-box">
           <sd-upload-file
             label="Tài liệu đính kèm"
@@ -42,7 +42,7 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'disabled' }]">
+      <demo-section heading="Vô hiệu hóa (chỉ đọc)" [props]="[{ name: 'disabled', value: 'true' }]">
         <div class="control-box">
           <sd-upload-file
             label="Đã đính kèm"

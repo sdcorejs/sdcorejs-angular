@@ -43,7 +43,12 @@ export class DemoPageComponent {
   description = input<string | undefined>(undefined);
 }
 
-/** One demonstrated property of a showcase section. `value` omitted = boolean/bare attribute (badge shows the name only). */
+/**
+ * One demonstrated property of a showcase section, rendered as a `name:value` badge.
+ * Convention: ALWAYS supply `value` — boolean attr → `true`, two-way binding → `'two-way'`,
+ * content-projection slot → `'template'`, method → `'method'`, enum → list (`'sm / md / lg'`).
+ * `value` stays optional in the type only for backward compatibility.
+ */
 export interface DemoProp {
   name: string;
   value?: string | number | boolean;
@@ -55,8 +60,11 @@ export interface DemoProp {
   template: `
     @let _heading = heading();
     <header class="demo-section__head">
+      <!-- why: heading = mô tả demo (cái gì) · badges = thuộc tính (name secondary : value primary) · note = giải thích thêm. -->
+      @if (_heading) {
+        <h2>{{ _heading }}</h2>
+      }
       @if (props(); as ps) {
-        <!-- why: format chuẩn — mỗi property 1 badge, tên màu secondary, giá trị màu primary. -->
         <div class="demo-section__props">
           @for (p of ps; track p.name) {
             <span class="demo-prop"
@@ -66,8 +74,6 @@ export interface DemoProp {
             >
           }
         </div>
-      } @else if (_heading) {
-        <h2>{{ _heading }}</h2>
       }
       @if (note(); as n) {
         <p class="demo-section__note">{{ n }}</p>
@@ -90,8 +96,8 @@ export interface DemoProp {
       h2 {
         font-size: 15px;
         font-weight: 600;
-        color: #1565c0;
-        margin: 0 0 2px;
+        color: #1f2937;
+        margin: 0 0 6px;
       }
       .demo-section__props {
         display: flex;

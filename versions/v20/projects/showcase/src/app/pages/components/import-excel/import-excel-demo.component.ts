@@ -26,7 +26,7 @@ interface EmployeeRow {
       title="Import Excel"
       description="Quy trình import Excel đầy đủ — tải mẫu, upload file, validate theo dòng & chéo dòng, preview các dòng OK / cảnh báo / lỗi, xuất file lỗi và trả về dữ liệu hợp lệ.">
 
-      <demo-section [props]="[{ name: 'option' }, { name: 'columns' }]">
+      <demo-section heading="Import nhân viên" [props]="[{ name: 'option', value: 'config' }, { name: 'columns', value: 'def' }]">
         <p class="hint">Bấm nút bên dưới để mở modal import. Có thể bấm "Tải file mẫu" trong modal để tải template Excel.</p>
         <sd-button
           type="fill"

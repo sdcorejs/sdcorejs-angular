@@ -9,7 +9,7 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdDate],
   template: `
     <demo-page title="Date" description="sd-date – chọn 1 ngày, hiển thị theo định dạng dd/MM/yyyy. Bind hai chiều với chuỗi ISO.">
-      <demo-section [props]="[{ name: '[(model)]' }]" note="Mở lịch và chọn ngày.">
+      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn ngày.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:8px">
           <sd-date label="Ngày sinh" helperText="Theo CMND/CCCD"
             [(model)]="birthday" [form]="form"></sd-date>
@@ -19,7 +19,7 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'required' }]" note="Để trống và bấm Kiểm tra để hiện lỗi inline.">
+      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Để trống và bấm Kiểm tra để hiện lỗi inline.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-date label="required"
             [(model)]="startDate" [form]="formValid" required></sd-date>
@@ -30,20 +30,20 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'disabled' }, { name: 'viewed' }]" note="Hai trạng thái khoá.">
+      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái khoá.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-date style="width: 240px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-date>
           <sd-date style="width: 240px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-date>
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho toolbar.">
+      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho toolbar.">
         <div style="width: 280px">
           <sd-date label="sm" size="sm" [(model)]="filter" [form]="form"></sd-date>
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào ngày để mở lịch ngay; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
         <div style="width: 260px; font-size:13px; color:#555">
           Ngày sinh: <sd-date [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-date>
         </div>

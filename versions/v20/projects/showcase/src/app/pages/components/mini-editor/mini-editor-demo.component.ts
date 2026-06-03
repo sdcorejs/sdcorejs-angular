@@ -12,7 +12,7 @@ import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/m
       title="Mini Editor"
       description="Editor đơn giản (bold / italic / link / list) dành cho ô comment, ghi chú ngắn. Hỗ trợ mention và xuất HTML hoặc Markdown.">
 
-      <demo-section [props]="[{ name: 'outputFormat', value: 'html' }]">
+      <demo-section heading="Định dạng đầu ra HTML" [props]="[{ name: 'outputFormat', value: 'html' }]">
         <div class="editor-box">
           <sd-mini-editor
             [option]="commentOption"
@@ -22,7 +22,7 @@ import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/m
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'outputFormat', value: 'markdown' }]">
+      <demo-section heading="Định dạng đầu ra Markdown" [props]="[{ name: 'outputFormat', value: 'markdown' }]">
         <div class="editor-box">
           <sd-mini-editor
             [option]="markdownOption"

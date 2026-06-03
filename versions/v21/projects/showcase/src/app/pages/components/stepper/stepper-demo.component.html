@@ -2,7 +2,7 @@
   title="Stepper"
   description="Component dẫn dắt người dùng qua chuỗi bước tuần tự. Hỗ trợ horizontal/vertical, linear gate qua FormGroup, optional step, error state, custom labelPosition, color palette Core.">
 
-  <demo-section [props]="[{ name: 'orientation', value: 'horizontal' }]">
+  <demo-section heading="Cơ bản: horizontal" [props]="[{ name: 'orientation', value: 'horizontal' }, { name: 'selectedIndex', value: 'two-way' }]">
     <div class="full">
       <sd-stepper [(selectedIndex)]="basicIndex">
         <sd-step label="Chọn dịch vụ" icon="storefront">
@@ -30,7 +30,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'orientation', value: 'vertical' }]">
+  <demo-section heading="Hướng dọc" [props]="[{ name: 'orientation', value: 'vertical' }, { name: 'selectedIndex', value: 'two-way' }]">
     <div class="full">
       <sd-stepper orientation="vertical" [(selectedIndex)]="verticalIndex">
         <sd-step label="Tạo tài khoản" icon="account_circle">
@@ -46,7 +46,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'linear' }, { name: 'stepControl' }]"
+  <demo-section heading="Linear wizard" [props]="[{ name: 'linear', value: 'true' }, { name: 'stepControl', value: 'FormGroup' }]"
                 note="Linear=true: chỉ qua được step sau khi step trước hợp lệ. Mỗi sd-step bind stepControl tới 1 FormGroup.">
     <div class="full">
       <sd-stepper #linear linear="true" color="primary">
@@ -110,7 +110,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'optional' }]"
+  <demo-section heading="Optional step" [props]="[{ name: 'optional', value: 'true' }]"
                 note="Step 2 đánh dấu optional — user có thể qua step 3 mà không cần điền.">
     <div class="full">
       <sd-stepper [(selectedIndex)]="optionalIndex">
@@ -137,7 +137,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'state', value: 'error' }, { name: 'errorMessage' }]"
+  <demo-section heading="Error state" [props]="[{ name: 'state', value: 'error' }, { name: 'errorMessage', value: 'text' }]"
                 note="Step có thể override state='error' để hiện icon X đỏ + errorMessage.">
     <div class="row" style="margin-bottom: 12px;">
       <button mat-stroked-button color="warn" (click)="toggleError()">
@@ -162,7 +162,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'labelPosition' }]">
+  <demo-section heading="Vị trí nhãn" [props]="[{ name: 'labelPosition', value: 'end / bottom' }]">
     <div class="row" style="margin-bottom: 12px;">
       <button mat-stroked-button (click)="labelPos.set('end')">end</button>
       <button mat-stroked-button (click)="labelPos.set('bottom')">bottom</button>
@@ -178,7 +178,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'color' }]"
+  <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / success / warning / error' }]"
                 note="primary / success / warning / error — driving indicator + connector màu.">
     <div class="color-stack">
       <sd-stepper color="primary">
@@ -204,7 +204,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'next() / previous() / goTo() / reset()' }]">
+  <demo-section heading="Điều khiển từ ngoài" [props]="[{ name: 'next()', value: 'method' }, { name: 'previous()', value: 'method' }, { name: 'goTo()', value: 'method' }, { name: 'reset()', value: 'method' }]">
     <div class="row" style="margin-bottom: 12px;">
       <button mat-stroked-button (click)="externalPrev()">Prev</button>
       <button mat-stroked-button (click)="externalNext()">Next</button>
@@ -220,7 +220,7 @@
     </div>
   </demo-section>
 
-  <demo-section [props]="[{ name: 'editable', value: 'false' }]"
+  <demo-section heading="Editable = false" [props]="[{ name: 'editable', value: 'false' }]"
                 note="Step 1 đặt editable=false. Sau khi qua step 2, click vào step 1 sẽ không trở lại.">
     <div class="full">
       <sd-stepper [(selectedIndex)]="nonEditableIndex">

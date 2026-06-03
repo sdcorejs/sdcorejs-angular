@@ -11,7 +11,7 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
       title="Anchor"
       description="Điều hướng scroll-spy dạng cột bên — TOC tự highlight khi cuộn qua từng section.">
 
-      <demo-section [props]="[{ name: 'sidebarWidth' }]">
+      <demo-section heading="Anchor mặc định" [props]="[{ name: 'sidebarWidth', value: 'px' }]">
         <div class="anchor-wrap">
           <sd-anchor sidebarWidth="200px">
             <sd-anchor-item title="Thông tin chung" icon="person">
@@ -42,7 +42,7 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'color' }, { name: 'ellipsis' }]">
+      <demo-section heading="Màu và cắt ngắn chữ" [props]="[{ name: 'color', value: 'success' }, { name: 'ellipsis', value: 'true' }]">
         <div class="anchor-wrap">
           <sd-anchor color="success" ellipsis sidebarWidth="180px">
             <sd-anchor-item title="Báo cáo doanh thu chi nhánh quý 4 năm 2026" icon="trending_up">

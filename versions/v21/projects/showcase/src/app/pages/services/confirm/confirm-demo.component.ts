@@ -9,19 +9,19 @@ import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
   imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
   template: `
     <demo-page title="Confirm" description="SdConfirmService – mở hộp thoại xác nhận trả về Promise. Hỗ trợ confirm cơ bản, nhập input, chọn radio, chọn ngày.">
-      <demo-section [props]="[{ name: 'confirm()' }]" note="confirm(message) – Promise resolve khi bấm OK, reject khi Hủy.">
+      <demo-section heading="Xác nhận cơ bản" [props]="[{ name: 'confirm()', value: 'method' }]" note="confirm(message) – Promise resolve khi bấm OK, reject khi Hủy.">
         <button mat-flat-button color="primary" (click)="onBasic()">Xác nhận thao tác</button>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'confirm()', value: 'delete' }]" note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
+      <demo-section heading="Xác nhận xóa" [props]="[{ name: 'confirm()', value: 'method' }]" note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
         <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'withInput()' }]" note="withInput() – yêu cầu nhập nội dung trước khi xác nhận.">
+      <demo-section heading="Nhập lý do" [props]="[{ name: 'withInput()', value: 'method' }]" note="withInput() – yêu cầu nhập nội dung trước khi xác nhận.">
         <button mat-stroked-button color="primary" (click)="onInput()">Nhập lý do từ chối</button>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'withRadio()' }]" note="withRadio() – chọn từ danh sách radio.">
+      <demo-section heading="Chọn mức độ" [props]="[{ name: 'withRadio()', value: 'method' }]" note="withRadio() – chọn từ danh sách radio.">
         <button mat-stroked-button color="primary" (click)="onRadio()">Chọn mức độ</button>
       </demo-section>
 

@@ -12,7 +12,7 @@ import { SdStorage, SdStorageService } from '@sdcorejs/angular/services/storage'
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   template: `
     <demo-page title="Storage" description="SdStorageService.create(key) trả về handle với get/set/has/remove + subject Observable. Dữ liệu được cache trên Map + persist xuống localStorage hoặc sessionStorage.">
-      <demo-section [props]="[{ name: 'type', value: 'local' }]" note="Key 'demo:user-name'. Đóng trình duyệt rồi mở lại vẫn còn.">
+      <demo-section heading="localStorage" [props]="[{ name: 'type', value: 'local' }]" note="Key 'demo:user-name'. Đóng trình duyệt rồi mở lại vẫn còn.">
         <mat-form-field appearance="outline" style="width:240px">
           <mat-label>Tên người dùng</mat-label>
           <input matInput [(ngModel)]="draftLocal" placeholder="Nhập tên...">
@@ -22,7 +22,7 @@ import { SdStorage, SdStorageService } from '@sdcorejs/angular/services/storage'
         <button mat-stroked-button color="warn" (click)="removeLocal()">Xóa</button>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'type', value: 'session' }]" note="Key 'demo:session-note'. Mất khi đóng tab.">
+      <demo-section heading="sessionStorage" [props]="[{ name: 'type', value: 'session' }]" note="Key 'demo:session-note'. Mất khi đóng tab.">
         <mat-form-field appearance="outline" style="width:240px">
           <mat-label>Ghi chú phiên</mat-label>
           <input matInput [(ngModel)]="draftSession" placeholder="Nhập ghi chú...">

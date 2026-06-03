@@ -16,7 +16,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
       title="Tab Router"
       description="Shell router dạng tab kiểu trình duyệt — mỗi URL được mở thành một tab, giữ nguyên state khi chuyển qua lại.">
 
-      <demo-section [props]="[{ name: 'routes' }]">
+      <demo-section heading="Preview dải tab" [props]="[{ name: 'routes', value: '[…]' }]">
         <div class="strip">
           <sd-badge type="tag" primary icon="dashboard" title="Trang chủ"></sd-badge>
           <sd-badge type="tag" info icon="person" title="Nhân viên #001"></sd-badge>
@@ -30,7 +30,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         </p>
       </demo-section>
 
-      <demo-section [props]="[{ name: '@SdTabComponent' }]">
+      <demo-section heading="Tích hợp app shell" [props]="[{ name: '@SdTabComponent', value: 'template' }]">
         <div class="code">
           <pre>{{ snippet1 }}</pre>
         </div>
@@ -40,7 +40,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         </p>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'replaceTab' }, { name: 'beforeClose' }]">
+      <demo-section heading="replaceTab + beforeClose" [props]="[{ name: 'replaceTab', value: 'fn' }, { name: 'beforeClose', value: 'fn' }]">
         <div class="code">
           <pre>{{ snippet2 }}</pre>
         </div>

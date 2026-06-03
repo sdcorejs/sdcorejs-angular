@@ -12,25 +12,25 @@ import type { Operator } from '@sdcorejs/angular/utilities/models';
       title="Operator"
       description="Nút chọn toán tử so sánh (=, ≠, chứa, lớn hơn, có giá trị, …) — dạng icon nhỏ, mở menu khi click. Thường dùng kèm các bộ lọc nâng cao.">
 
-      <demo-section [props]="[{ name: 'operators', value: 'string' }]">
+      <demo-section heading="Toán tử chuỗi" [props]="[{ name: 'operators', value: 'string' }]">
         <span class="row-label">Họ tên</span>
         <sd-operator [(model)]="stringOp" [operators]="stringOps"></sd-operator>
         <span class="row-value">{{ stringOp() ?? '—' }}</span>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'operators', value: 'number' }]">
+      <demo-section heading="Toán tử số" [props]="[{ name: 'operators', value: 'number' }]">
         <span class="row-label">Lương</span>
         <sd-operator [(model)]="numberOp" [operators]="numberOps"></sd-operator>
         <span class="row-value">{{ numberOp() ?? '—' }}</span>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'operators', value: 'date' }]">
+      <demo-section heading="Toán tử ngày" [props]="[{ name: 'operators', value: 'date' }]">
         <span class="row-label">Ngày tạo</span>
         <sd-operator [(model)]="dateOp" [operators]="dateOps"></sd-operator>
         <span class="row-value">{{ dateOp() ?? '—' }}</span>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'disabled' }]">
+      <demo-section heading="Vô hiệu hoá" [props]="[{ name: 'disabled', value: 'true' }]">
         <span class="row-label">disabled</span>
         <sd-operator [(model)]="stringOp" [operators]="stringOps" [disabled]="true"></sd-operator>
       </demo-section>

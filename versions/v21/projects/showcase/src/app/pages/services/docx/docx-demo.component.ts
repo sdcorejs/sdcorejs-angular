@@ -9,11 +9,11 @@ import { SdDocxService } from '@sdcorejs/angular/services/docx';
   imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
   template: `
     <demo-page title="Docx" description="SdDocxService – chuyển đổi file .docx sang HTML qua pandoc.wasm. API chính: open() mở file picker; convertToHtml(file) / convertToHtmlString(file) chuyển trực tiếp một File/Blob.">
-      <demo-section [props]="[{ name: 'open()', value: 'docx' }]" note="open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.">
+      <demo-section heading="Mở file .docx" [props]="[{ name: 'open()', value: 'method' }]" note="open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.">
         <button mat-flat-button color="primary" [disabled]="busy()" (click)="onOpen()">Chọn file .docx</button>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'convertToHtmlString()' }]" note="convertToHtmlString() – không trả mảng cảnh báo.">
+      <demo-section heading="Chuyển đổi sang HTML" [props]="[{ name: 'convertToHtmlString()', value: 'method' }]" note="convertToHtmlString() – không trả mảng cảnh báo.">
         <button mat-stroked-button color="primary" [disabled]="busy()" (click)="onOpenString()">Chọn file & lấy HTML</button>
       </demo-section>
 

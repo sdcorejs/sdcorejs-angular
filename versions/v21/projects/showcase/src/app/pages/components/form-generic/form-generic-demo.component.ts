@@ -158,7 +158,7 @@ const SEED: SdFormGeneric = {
       title="Form Generic"
       description="Bộ dựng form động — kéo thả các field (textfield, number, select, checkbox, table…), nhóm thành group, xuất ra cấu hình JSON dùng cho form-render.">
 
-      <demo-section [props]="[{ name: 'formGeneric' }]">
+      <demo-section heading="Trình dựng form" [props]="[{ name: 'formGeneric', value: 'config' }]">
         <div class="row-actions">
           <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
           <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>

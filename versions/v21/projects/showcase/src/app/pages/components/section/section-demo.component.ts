@@ -14,7 +14,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
       title="Section"
       description="Card chứa nội dung có header (icon + title + subtitle) và body — chuẩn để nhóm thông tin trên trang chi tiết.">
 
-      <demo-section [props]="[{ name: 'title' }]">
+      <demo-section heading="Card thông tin cơ bản" [props]="[{ name: 'title', value: 'text' }]">
         <sd-section
           icon="info"
           iconColor="primary"
@@ -30,7 +30,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         </sd-section>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'sdHeaderRight' }]">
+      <demo-section heading="Nút thao tác ở header" [props]="[{ name: 'sdHeaderRight', value: 'template' }]">
         <sd-section
           icon="group"
           title="Thành viên dự án"
@@ -44,7 +44,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         </sd-section>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'collapsable' }, { name: '[(collapsed)]' }]">
+      <demo-section heading="Section gập" [props]="[{ name: 'collapsable', value: 'true' }, { name: '[(collapsed)]', value: 'two-way' }]">
         <sd-section
           icon="filter_list"
           title="Bộ lọc nâng cao"
@@ -61,7 +61,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         </p>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'hideHeader' }]">
+      <demo-section heading="Section không header" [props]="[{ name: 'hideHeader', value: 'true' }]">
         <sd-section [hideHeader]="true" style="width: 100%; max-width: 640px;">
           <p style="margin: 0;">
             Section không có header — phù hợp khi bạn chỉ cần một card padding 16px, bo góc.

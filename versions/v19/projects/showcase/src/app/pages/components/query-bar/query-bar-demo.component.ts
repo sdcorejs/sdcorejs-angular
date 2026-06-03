@@ -23,7 +23,7 @@ interface Employee {
       title="Query Bar"
       description="Thanh chip lọc thống nhất (Jira / Linear style) — gọn nhẹ, hỗ trợ AND/OR, lưu bộ lọc, popover hoặc inline mode. Thay thế bộ lọc rời rạc trên đầu trang danh sách.">
 
-      <demo-section [props]="[{ name: 'mode', value: 'popover' }]">
+      <demo-section heading="Chế độ popover" [props]="[{ name: 'mode', value: 'popover' }]">
         <div class="bar-box">
           <sd-query-bar
             [fields]="fields"
@@ -39,7 +39,7 @@ interface Employee {
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'mode', value: 'inline' }]" note="Chip values bấm vào giá trị để sửa inline (mở panel ngay, không hiện ô input rời); bấm ra ngoài quay về text. Dùng sd-select [viewed]='inline'.">
+      <demo-section heading="Chế độ inline" [props]="[{ name: 'mode', value: 'inline' }]" note="Chip values bấm vào giá trị để sửa inline (mở panel ngay, không hiện ô input rời); bấm ra ngoài quay về text. Dùng sd-select [viewed]='inline'.">
         <div class="bar-box">
           <sd-query-bar
             [fields]="fields"

@@ -11,7 +11,7 @@ interface Country { code: string; name: string; }
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdAutocomplete],
   template: `
     <demo-page title="Autocomplete" description="sd-autocomplete – gõ để lọc, chọn 1 giá trị. Hỗ trợ cache, addable (thêm mới giá trị), required, disabled.">
-      <demo-section [props]="[{ name: '[(model)]' }]" note="Gõ vài ký tự để lọc danh sách.">
+      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Gõ vài ký tự để lọc danh sách.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"
             label="Quốc tịch" placeholder="Gõ để tìm..."
@@ -20,7 +20,7 @@ interface Country { code: string; name: string; }
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'required' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi inline.">
+      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi inline.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"
             label="required"
@@ -32,7 +32,7 @@ interface Country { code: string; name: string; }
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'addable' }]" note="Cho phép thêm giá trị không có trong danh sách.">
+      <demo-section heading="Thêm mới" [props]="[{ name: 'addable', value: 'true' }]" note="Cho phép thêm giá trị không có trong danh sách.">
         <div style="width: 320px">
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"
             label="addable" placeholder="Gõ và Enter để thêm..."
@@ -40,7 +40,7 @@ interface Country { code: string; name: string; }
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'disabled' }, { name: 'viewed' }]" note="Khoá tương tác.">
+      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Khoá tương tác.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-autocomplete style="width: 240px" [items]="countries" valueField="code" displayField="name"
             label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-autocomplete>
@@ -49,7 +49,7 @@ interface Country { code: string; name: string; }
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào để mở panel gõ/lọc; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
+      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào để mở panel gõ/lọc; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
         <div style="width: 280px; font-size:13px; color:#555">
           Quốc tịch:
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"

@@ -12,7 +12,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
       title="Quick Action"
       description="Thanh toolbar nổi ở đáy màn hình — thường dùng cho bulk action khi user chọn nhiều dòng trong sd-table.">
 
-      <demo-section [props]="[{ name: 'opened' }, { name: 'sdMessage' }, { name: 'sdAction' }]">
+      <demo-section heading="Bulk action — nhiều dòng" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdMessage', value: 'template' }, { name: 'sdAction', value: 'template' }]">
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
           <sd-button type="light" color="primary" prefixIcon="add_circle" title="Thêm chọn (+1 dòng)" (click)="addSelection()"></sd-button>
           <sd-button type="light" color="secondary" prefixIcon="remove_circle" title="Bỏ chọn (-1)" (click)="removeSelection()"></sd-button>
@@ -30,7 +30,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         </sd-quick-action>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'opened' }, { name: 'sdMessage' }]">
+      <demo-section heading="Thông báo trạng thái" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdMessage', value: 'template' }]">
         <sd-button type="light" color="primary" prefixIcon="sync" title="Bật / tắt đồng bộ" (click)="toggleSync()"></sd-button>
 
         <sd-quick-action [opened]="syncing()">
@@ -38,7 +38,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         </sd-quick-action>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'sdAction' }]">
+      <demo-section heading="Undo toast" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdAction', value: 'template' }]">
         <sd-button type="light" color="error" prefixIcon="delete" title="Xóa bản ghi" (click)="simulateDelete()"></sd-button>
 
         <sd-quick-action [opened]="lastDeleted() !== null">

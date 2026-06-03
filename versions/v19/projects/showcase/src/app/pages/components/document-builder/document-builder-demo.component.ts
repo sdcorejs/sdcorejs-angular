@@ -11,7 +11,7 @@ import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/co
       title="Document Builder"
       description="Trình soạn thảo tài liệu đầy đủ — định dạng nâng cao, chèn bảng, ảnh, heading, biến (variable), comment. Dùng để dựng mẫu hợp đồng, văn bản nội bộ.">
 
-      <demo-section [props]="[{ name: 'option' }, { name: 'contentChange' }]">
+      <demo-section heading="Soạn mẫu hợp đồng" [props]="[{ name: 'option', value: 'config' }, { name: 'contentChange', value: 'event' }]">
         <div class="doc-box">
           <sd-document-builder
             style="height: 100%; width: 100%"

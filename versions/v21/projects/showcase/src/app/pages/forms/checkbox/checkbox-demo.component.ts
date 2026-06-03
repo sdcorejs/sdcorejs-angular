@@ -9,14 +9,14 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdCheckbox],
   template: `
     <demo-page title="Checkbox" description="sd-checkbox – ô đánh dấu. Hỗ trợ bind hai chiều boolean, các màu chủ đề, disabled / viewed.">
-      <demo-section [props]="[{ name: '[(model)]' }]" note="Bind [(model)] với boolean — hiển thị giá trị bên dưới.">
+      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind [(model)] với boolean — hiển thị giá trị bên dưới.">
         <div style="display:flex; flex-direction:column; gap:8px; width:100%">
           <sd-checkbox label="Tôi đồng ý điều khoản" [(model)]="accept" [form]="form"></sd-checkbox>
           <div style="font-size:12px; color:#555">Giá trị: <b>{{ accept() ? 'TRUE' : 'FALSE' }}</b></div>
         </div>
       </demo-section>
 
-      <demo-section heading="nhóm tuỳ chọn" note="Mỗi checkbox bind 1 biến độc lập.">
+      <demo-section heading="Nhóm tuỳ chọn" note="Mỗi checkbox bind 1 biến độc lập.">
         <div style="display:flex; flex-direction:column; gap:4px">
           <sd-checkbox label="Email" [(model)]="optEmail" [form]="form"></sd-checkbox>
           <sd-checkbox label="SMS" [(model)]="optSms" [form]="form"></sd-checkbox>
@@ -27,7 +27,7 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'color', value: 'primary / success / warning / error' }]" note="Thuộc tính color thay đổi accent.">
+      <demo-section heading="Màu sắc" [props]="[{ name: 'color', value: 'primary / success / warning / error' }]" note="Thuộc tính color thay đổi accent.">
         <div style="display:flex; gap:16px; flex-wrap:wrap">
           <sd-checkbox label="primary" color="primary" [(model)]="c1" [form]="form"></sd-checkbox>
           <sd-checkbox label="success" color="success" [(model)]="c2" [form]="form"></sd-checkbox>
@@ -36,14 +36,14 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'disabled' }, { name: 'viewed' }]" note="Hai trạng thái khoá.">
+      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái khoá.">
         <div style="display:flex; gap:16px; flex-wrap:wrap">
           <sd-checkbox label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-checkbox>
           <sd-checkbox label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-checkbox>
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'viewed', value: 'true' }, { name: 'viewed', value: 'inline' }]" note="viewed=true hiện chữ Có/Không; 'inline' vẫn bấm được, disabled+inline thì xem tĩnh.">
+      <demo-section heading="Chế độ xem" [props]="[{ name: 'viewed', value: 'true' }, { name: 'viewed', value: 'inline' }]" note="viewed=true hiện chữ Có/Không; 'inline' vẫn bấm được, disabled+inline thì xem tĩnh.">
         <div style="display:flex; gap:16px; flex-wrap:wrap">
           <sd-checkbox label="viewed=true (tĩnh)" [(model)]="viewedFlag" [form]="form" viewed></sd-checkbox>
           <sd-checkbox label="inline (vẫn sửa được)" [viewed]="'inline'" [(model)]="inlineFlag" [form]="form"></sd-checkbox>

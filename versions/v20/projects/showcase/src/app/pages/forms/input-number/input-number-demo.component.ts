@@ -9,14 +9,14 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdInputNumber],
   template: `
     <demo-page title="Input Number" description="sd-input-number – nhập số có format ngăn cách hàng nghìn, hỗ trợ min/max, prefix/suffix và các trạng thái khoá.">
-      <demo-section [props]="[{ name: '[(model)]' }]" note="Tự động format khi gõ.">
+      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Tự động format khi gõ.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-input-number label="Số lượng" placeholder="Nhập số..." [(model)]="qty" [form]="form"></sd-input-number>
           <div style="font-size:12px; color:#555">Giá trị hiện tại: <b>{{ qty() ?? '(trống)' }}</b></div>
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'required' }, { name: 'min', value: '10' }, { name: 'max', value: '100' }]" note="min=10, max=100. Bấm Kiểm tra để hiện lỗi.">
+      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '10' }, { name: 'max', value: '100' }]" note="min=10, max=100. Bấm Kiểm tra để hiện lỗi.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-input-number label="required + min=10 + max=100" [(model)]="age" [form]="formValid" required [min]="10" [max]="100"></sd-input-number>
           <div style="display:flex; gap:8px">
@@ -26,7 +26,7 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'disabled' }, { name: 'readonly' }, { name: 'viewed' }]" note="Ba trạng thái không cho chỉnh sửa.">
+      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Ba trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-input-number style="width: 200px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input-number>
           <sd-input-number style="width: 200px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-input-number>
@@ -34,7 +34,7 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'viewed', value: 'inline' }]" note="Input số trong suốt nhìn như text; focus để sửa, blur format lại (vd 12.345). Hover đậm nền.">
+      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Input số trong suốt nhìn như text; focus để sửa, blur format lại (vd 12.345). Hover đậm nền.">
         <div style="width: 240px; font-size:13px; color:#555">
           Số lượng: <sd-input-number [viewed]="'inline'" [(model)]="lockedC" [form]="form"></sd-input-number>
         </div>

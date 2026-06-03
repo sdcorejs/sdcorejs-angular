@@ -12,7 +12,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
       title="Splitter"
       description="Chia không gian thành các panel có thể kéo để resize — hỗ trợ chiều ngang / dọc, đơn vị flex / px, panel gập được.">
 
-      <demo-section [props]="[{ name: 'orientation', value: 'horizontal' }, { name: 'unit', value: 'flex' }]">
+      <demo-section heading="Ngang 2 panel (flex)" [props]="[{ name: 'orientation', value: 'horizontal' }, { name: 'unit', value: 'flex' }]">
         <div class="wrap" style="height: 240px;">
           <sd-splitter orientation="horizontal">
             <sd-splitter-panel [size]="1" unit="flex">
@@ -25,7 +25,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'orientation', value: 'vertical' }, { name: 'unit', value: 'px' }]">
+      <demo-section heading="Dọc 3 panel (px cố định)" [props]="[{ name: 'orientation', value: 'vertical' }, { name: 'unit', value: 'px' }]">
         <div class="wrap" style="height: 320px;">
           <sd-splitter orientation="vertical">
             <sd-splitter-panel [size]="64" unit="px">
@@ -41,7 +41,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'collapsible' }]">
+      <demo-section heading="Panel gập với API ngoài" [props]="[{ name: 'collapsible', value: 'true' }, { name: 'toggle()', value: 'method' }, { name: 'resetLayout()', value: 'method' }]">
         <div style="display: flex; gap: 8px; margin-bottom: 12px;">
           <sd-button type="light" color="primary" prefixIcon="menu_open" title="Gập / mở sidebar" (click)="toggleSidebar()"></sd-button>
           <sd-button type="light" color="secondary" prefixIcon="restart_alt" title="Reset layout" (click)="reset()"></sd-button>

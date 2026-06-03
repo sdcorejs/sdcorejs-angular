@@ -9,18 +9,18 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
   imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
   template: `
     <demo-page title="Loading" description="SdLoadingService – phủ spinner lên một phần tử bất kỳ qua CSS selector. Hai API chính: start(selector) và stop(selector). Mặc định selector là 'body'.">
-      <demo-section [props]="[{ name: 'start()', value: 'global' }]" note="start('body') -> setTimeout 2000ms -> stop('body').">
+      <demo-section heading="Loading toàn trang" [props]="[{ name: 'start()', value: 'global' }]" note="start('body') -> setTimeout 2000ms -> stop('body').">
         <button mat-flat-button color="primary" [disabled]="busy()" (click)="onFullPage()">Hiển thị loading toàn trang</button>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'start()', value: 'target' }]" note="start('#demo-target') chỉ phủ phần tử có id='demo-target'.">
+      <demo-section heading="Loading ô đích" [props]="[{ name: 'start()', value: 'target' }]" note="start('#demo-target') chỉ phủ phần tử có id='demo-target'.">
         <button mat-flat-button color="primary" (click)="onTarget()">Loading vùng bên dưới</button>
         <div id="demo-target" style="position:relative;width:100%;min-height:120px;background:#fafafa;border:1px dashed #bdbdbd;border-radius:6px;padding:16px;margin-top:8px">
           Nội dung mẫu — loading sẽ phủ chính khung này.
         </div>
       </demo-section>
 
-      <demo-section [props]="[{ name: 'start()' }, { name: 'isLoading()' }]" note="Kiểm tra trạng thái bằng isLoading('body').">
+      <demo-section heading="Bật / tắt thủ công" [props]="[{ name: 'start()', value: 'method' }, { name: 'stop()', value: 'method' }, { name: 'isLoading()', value: 'method' }]" note="Kiểm tra trạng thái bằng isLoading('body').">
         <button mat-stroked-button (click)="onStart()">Bật loading</button>
         <button mat-stroked-button color="warn" (click)="onStop()">Tắt loading</button>
         <button mat-stroked-button (click)="onCheck()">Kiểm tra trạng thái</button>
