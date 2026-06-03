@@ -296,15 +296,19 @@ mat-checkbox {
   }
 }
 
-// why: reboot `label { display: inline-block; margin-bottom: 0.5rem }` (xem _base.scss) áp lên
-// CẢ <label.mdc-label> RỖNG của mat-radio/mat-checkbox khi control không có label —
-// vd selector của <sd-table> (single → mat-radio-button không truyền nội dung). Label rỗng đó
-// thành một "nub" ~4px + margin-bottom 8px nằm cạnh nút radio → trông như một dấu chấm thừa.
-// Ẩn hẳn label RỖNG để khử artifact; label CÓ nội dung không bị ảnh hưởng.
-.mat-mdc-radio-button label.mdc-label:empty,
-.mat-mdc-checkbox label.mdc-label:empty {
-  display: none;
-  margin: 0;
+// why: selector radio của <sd-table> (.c-selection, single mode) hiện một dấu chấm tối thừa
+// nằm cạnh vòng radio. Nguồn gốc THẬT là state-layer padding của Material trên `.mdc-radio`
+// (`padding: calc((var(--mdc-radio-state-layer-size) - 20px) / 2)`): trong cột selector, .c-selection
+// bị scale(0.85) (xem table.component.scss) còn `.mdc-radio` có `will-change: transform` nên lên
+// compositing layer riêng → phần `.mdc-radio__inner-circle` (transform: scale(0), border 10px màu
+// tối) bị render rớt lại ~1px artifact trong dải padding đó, đọc thành "dấu chấm". Bỏ state-layer
+// padding cho radio selector compact là khử sạch (vòng 20px + scale 0.85 vẫn căn giữa). Scope theo
+// `.c-selection` nên KHÔNG ảnh hưởng radio ở nơi khác (giữ nguyên vùng hover/state-layer của chúng).
+//
+// LƯU Ý: cách trước (`label.mdc-label:empty { display:none }`) KHÔNG khử được dot — nó chỉ TÁCH dot
+// thành 2 dấu chấm (label rỗng vốn đang phủ chồng lên artifact). Đã thay bằng fix dưới đây.
+.c-selection.mat-mdc-radio-button .mdc-radio {
+  padding: 0;
 }
 
 // Placeholder mặc định 1rem (16px), mong muốn nên là 14px
