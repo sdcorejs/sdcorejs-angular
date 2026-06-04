@@ -81,7 +81,8 @@ export interface SdNotifyOption {
   duration?: number;          // ms; defaults: 3000 (success/info), 5000 (warning/error)
   title?: string;             // toast title (warning/error get auto-suffix " (N)" if buffered)
   actionLabel?: string;       // optional CTA button text
-  onAction?: () => void;      // CTA click handler
+  onAction?: () => void;      // CTA click handler (app-authored — NOT untrusted input)
+  html?: boolean;             // render message as sanitized HTML (default false = safe text)
 }
 
 export interface ToastData {
@@ -92,6 +93,7 @@ export interface ToastData {
   duration: number;
   actionLabel?: string;
   onAction?: () => void;
+  html?: boolean;
 }
 ```
 
@@ -106,7 +108,12 @@ export interface ToastData {
   - Immediate (`success`/`info`): uses `option.title` verbatim if provided.
   - Buffered (`warning`/`error`): default title is `'Warning'` / `'Error'`; if N > 1, suffix `" (N)"` is appended.
 - **Position / styling**: rendered by `SdToastContainerComponent` — not configurable through the service API. Override the component's CSS to change position/animation.
-- **`actionLabel` + `onAction`**: passed through to the toast; the container is responsible for calling `onAction()` on click.
+- **`actionLabel` + `onAction`**: passed through to the toast; the container calls `onAction()` on click. `onAction` is an **app-authored callback** (the consuming app writes it) — it is not untrusted/attacker input. Don't build it from untrusted data.
+- **Message rendering (XSS-safe by default)**: `message` is rendered as **plain text** (auto-escaped via Angular interpolation) by default — safe for any string, including user-derived content. Pass `html: true` only for **trusted, developer-authored markup**; in that mode the message is rendered via `[innerHTML]` after an explicit `DomSanitizer.sanitize(SecurityContext.HTML, …)` pass (strips `<script>`, `on*` handlers, `javascript:` URLs — no JS execution). **Never** put user-supplied content in an `html: true` toast.
+  ```typescript
+  notify.success('Đã lưu <b>hồ sơ #123</b>', { html: true });   // trusted markup → bold renders
+  notify.error(userInput);                                        // default text → safe, escaped
+  ```
 
 ## E2E hooks (data-* attributes)
 

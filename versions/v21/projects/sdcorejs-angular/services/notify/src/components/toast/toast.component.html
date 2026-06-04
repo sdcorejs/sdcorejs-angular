@@ -25,12 +25,22 @@
 
   <div class="sd-toast__body">
     @if (!isMultiMessage) {
-      <div [innerHTML]="data.message"></div>
-    } 
+      <!-- why: mặc định render TEXT (auto-escape) — an toàn. Chỉ render HTML
+           (đã sanitize) khi data.html=true. -->
+      @if (data.html) {
+        <div [innerHTML]="sanitizeHtml(singleMessage)"></div>
+      } @else {
+        <div>{{ singleMessage }}</div>
+      }
+    }
     @else {
       <ul class="msg-list">
         @for (msg of displayMessages; track msg) {
-          <li [innerHTML]="'- ' + msg"></li>
+          @if (data.html) {
+            <li [innerHTML]="sanitizeHtml('- ' + msg)"></li>
+          } @else {
+            <li>{{ '- ' + msg }}</li>
+          }
         }
       </ul>
 

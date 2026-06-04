@@ -163,6 +163,44 @@ describe('ToastComponent', () => {
     expect(fix.componentInstance.messages).toEqual(['x', 'y']);
   });
 
+  // ─── message rendering: text default / sanitized HTML opt-in (XSS hardening) ──
+
+  it('default (no html flag): renders message as ESCAPED TEXT, not HTML', () => {
+    init(makeData({ message: '<b>x</b>' }));
+    const body = fix.nativeElement.querySelector('.sd-toast__body');
+    expect(body.querySelector('b')).toBeNull();
+    expect(body.textContent).toContain('<b>x</b>');
+  });
+
+  it('html:true: renders trusted HTML (formatting element present)', () => {
+    init(makeData({ message: '<b>bold</b>', html: true }));
+    const body = fix.nativeElement.querySelector('.sd-toast__body');
+    expect(body.querySelector('b')).not.toBeNull();
+    expect(body.textContent).toContain('bold');
+  });
+
+  it('html:true: sanitizes — strips <script> + event handlers', () => {
+    init(makeData({ message: '<img src="x" onerror="alert(1)"><script>alert(2)</script>ok', html: true }));
+    const body = fix.nativeElement.querySelector('.sd-toast__body');
+    expect(body.querySelector('script')).toBeNull();
+    const img = body.querySelector('img');
+    if (img) expect(img.getAttribute('onerror')).toBeNull();
+    expect(body.textContent).toContain('ok');
+  });
+
+  it('multi-message default: escapes HTML in each item', () => {
+    init(makeData({ message: ['<i>a</i>', 'b'] }));
+    const body = fix.nativeElement.querySelector('.sd-toast__body');
+    expect(body.querySelector('i')).toBeNull();
+    expect(body.textContent).toContain('<i>a</i>');
+  });
+
+  it('multi-message html:true: renders HTML in each item', () => {
+    init(makeData({ message: ['<i>a</i>', 'b'], html: true }));
+    const body = fix.nativeElement.querySelector('.sd-toast__body');
+    expect(body.querySelector('i')).not.toBeNull();
+  });
+
   // ─── close / action ───────────────────────────────────────────────────────
 
   it('close() calls notifyService.remove with data.id', () => {

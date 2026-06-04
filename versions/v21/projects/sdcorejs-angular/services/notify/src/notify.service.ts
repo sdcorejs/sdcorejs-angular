@@ -84,7 +84,8 @@ export class SdNotifyService {
       title: option?.title,
       duration: option?.duration ?? this.#DEFAULT_SUCCESS_DURATION,
       actionLabel: option?.actionLabel,
-      onAction: option?.onAction
+      onAction: option?.onAction,
+      html: option?.html
     };
 
     this.toasts.update((current) => {
@@ -131,7 +132,8 @@ export class SdNotifyService {
       title: finalTitle,
       duration: option?.duration ?? this.#DEFAULT_BUFFERED_DURATION,
       actionLabel: option?.actionLabel,
-      onAction: option?.onAction
+      onAction: option?.onAction,
+      html: option?.html
     };
 
     this.toasts.update((current) => {

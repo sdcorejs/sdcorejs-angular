@@ -1,5 +1,6 @@
-import { Component, Input, signal, HostListener, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, signal, HostListener, OnInit, OnDestroy, SecurityContext } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
 import { animate, style, transition, trigger } from '@angular/animations';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { ToastData } from '../../notify.model';
@@ -43,7 +44,25 @@ export class ToastComponent implements OnInit, OnDestroy {
   private start!: number;
   private remaining!: number;
 
-  constructor(private notifyService: SdNotifyService) {}
+  constructor(
+    private notifyService: SdNotifyService,
+    private sanitizer: DomSanitizer
+  ) {}
+
+  /**
+   * Sanitize HTML tường minh trước khi render qua `[innerHTML]` — strip
+   * `<script>`, event handler (`on*`), `javascript:` URL. Chỉ chạy ở nhánh
+   * `data.html === true`; nhánh mặc định render text (auto-escape) nên không
+   * có sink này. // why: phơi rõ việc sanitize cho review/scanner bảo mật.
+   */
+  sanitizeHtml(value: string): string {
+    return this.sanitizer.sanitize(SecurityContext.HTML, value) ?? '';
+  }
+
+  /** Message ở dạng chuỗi đơn (chỉ dùng khi !isMultiMessage). */
+  get singleMessage(): string {
+    return this.data.message as string;
+  }
 
   ngOnInit() {
     // Khởi tạo thời gian còn lại bằng duration ban đầu
