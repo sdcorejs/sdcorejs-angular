@@ -14,7 +14,6 @@ import {
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { Color } from '@sdcorejs/utils/models';
 import { SdTab } from './tab.component';
 
@@ -31,7 +30,7 @@ export interface SdTabClosedEvent {
   styleUrls: ['./tab-group.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SdTabGroup extends SdBaseSecureComponent {
+export class SdTabGroup {
   tabs = contentChildren(SdTab);
 
   selectedIndex = model<number>(0);
@@ -84,7 +83,6 @@ export class SdTabGroup extends SdBaseSecureComponent {
   }
 
   constructor() {
-    super();
     // why: when the active tab is removed (e.g. parent splices the tabs array),
     // selectedIndex may point past the end. Clamp it back to the last valid index
     // so MatTabGroup doesn't render with a stale selection.

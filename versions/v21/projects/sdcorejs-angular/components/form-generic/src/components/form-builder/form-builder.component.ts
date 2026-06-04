@@ -7,7 +7,6 @@ import { ChangeDetectorRef, Component, computed, effect, inject, input, signal, 
 import { FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms/input';
@@ -107,7 +106,7 @@ interface DragDropRowItem {
     SdFormRender,
     ConfigureValidationComponent, TranslatePipe],
 })
-export class SdFormBuilder extends SdBaseSecureComponent {
+export class SdFormBuilder {
   // ── viewChild signals (Angular 17+) ────────────────────────────────────
   readonly popupViewJSON = viewChild<SdModal>('popupViewJSON');
   readonly popupConfigureVariables = viewChild<SdModal>('popupConfigureVariables');
@@ -229,7 +228,6 @@ export class SdFormBuilder extends SdBaseSecureComponent {
   #subscription = new Subscription();
 
   constructor() {
-    super();
     // Khi input `formGeneric` ref thay đổi: clone components/variables/validations
     // sang local arrays và bắn subject tương ứng cho stream debounced (syncRows).
     // untracked() bao bọc các mutation để không tạo cycle (effect chỉ tracks formGeneric()).

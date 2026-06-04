@@ -16,7 +16,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { Color } from '@sdcorejs/utils/models';
 import { DefaultMaterialIconFontSet, MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { Subject, Subscription } from 'rxjs';
@@ -41,7 +40,7 @@ export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
     '[attr.disabled]': 'disabled() ? "true" : null',
   }
 })
-export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy {
+export class SdButton implements OnInit, OnDestroy {
   // ==========================================
   // 1. INJECTS
   // ==========================================
@@ -105,7 +104,6 @@ export class SdButton extends SdBaseSecureComponent implements OnInit, OnDestroy
   #subscription = new Subscription();
 
   constructor() {
-    super();
 
     // Kỹ thuật Đánh chặn sự kiện (Capture Phase)
     // Tóm sống mọi sự kiện click ngay khi nó vừa chạm vào component

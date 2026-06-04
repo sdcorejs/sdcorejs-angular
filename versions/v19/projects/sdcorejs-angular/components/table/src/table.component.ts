@@ -44,7 +44,6 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdDesktopDirective, SdHoverCopyDirective, SdMobileDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
@@ -174,7 +173,7 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     TranslatePipe,
   ],
 })
-export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnInit, AfterViewInit, OnDestroy {
+export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   // ... (Giữ nguyên toàn bộ phần khai báo biến, constructor, lifecycle hooks và các hàm filter, load, export, v.v...)
   // ==========================================
   // 1. SIGNAL INPUTS
@@ -293,7 +292,6 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   tableConfiguration = inject<ISdTableConfiguration>(SD_TABLE_CONFIGURATION, { optional: true });
 
   constructor() {
-    super();
 
     effect(() => {
       const option = this.option();

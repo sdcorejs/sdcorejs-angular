@@ -15,7 +15,6 @@ import {
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
 import { MatIconModule } from '@angular/material/icon';
 import { MatStepperModule, MatStepper } from '@angular/material/stepper';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { Color } from '@sdcorejs/utils/models';
 import { SdStep } from './step.component';
 
@@ -27,7 +26,7 @@ import { SdStep } from './step.component';
   styleUrls: ['./stepper.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SdStepper extends SdBaseSecureComponent {
+export class SdStepper {
   steps = contentChildren(SdStep);
 
   selectedIndex = model<number>(0);
@@ -66,7 +65,6 @@ export class SdStepper extends SdBaseSecureComponent {
   }
 
   constructor() {
-    super();
     // why: clamp selectedIndex when a step is removed past the active one.
     effect(() => {
       const len = this.steps().length;

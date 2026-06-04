@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -31,7 +30,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdInput, SdInputNumber, SdSelect, SdAutocomplete, SdButton, SdSelect, SdModal, TranslatePipe],
 })
-export class SdFeelExpression extends SdBaseSecureComponent {
+export class SdFeelExpression {
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   attributeOperators = AttributeOperators;
@@ -69,7 +68,6 @@ export class SdFeelExpression extends SdBaseSecureComponent {
     private expressionFeelPipe: ExpressionFeelPipe,
     private formGenericService: FormGenericService
   ) {
-    super()
   }
 
   ngOnInit(): void {}

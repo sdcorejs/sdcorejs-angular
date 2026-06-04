@@ -1,7 +1,6 @@
 /* eslint-disable @angular-eslint/no-input-rename */
 import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { Color } from '@sdcorejs/utils/models';
 
 @Component({
@@ -10,7 +9,7 @@ import { Color } from '@sdcorejs/utils/models';
   styleUrls: ['./section.component.scss'],
   imports: [MatIconModule],
 })
-export class SdSection extends SdBaseSecureComponent {
+export class SdSection {
   #el = inject(ElementRef);
 
   title = input<string | undefined | null>(undefined);
@@ -24,7 +23,6 @@ export class SdSection extends SdBaseSecureComponent {
   noPaddingBody = input(false, { transform: booleanAttribute });
 
   constructor() {
-    super();
     effect(() => {
       if (this.title()) {
         this.#el.nativeElement.removeAttribute('title');

@@ -15,7 +15,6 @@ import {
 import { FormControl, FormGroup } from '@angular/forms';
 import { SdSection } from '@sdcorejs/angular/components/section';
 // import { sha1 } from 'object-hash';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
@@ -36,7 +35,7 @@ import { LibItemComponent, VariableComponent } from './components';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdSection, LibItemComponent, WhenExpressionPipe, VariableComponent],
 })
-export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, AfterViewInit {
+export class SdFormRender implements OnDestroy, AfterViewInit {
   @ViewChildren(LibItemComponent) formRenderItems: QueryList<LibItemComponent> = new QueryList<LibItemComponent>();
   @Input() form: FormGroup = new FormGroup({});
   configuration!: SdFormRenderConfiguration;
@@ -83,7 +82,6 @@ export class SdFormRender extends SdBaseSecureComponent implements OnDestroy, Af
     private ref: ChangeDetectorRef,
     @Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null
   ) {
-    super();
   }
 
   ngAfterViewInit(): void {

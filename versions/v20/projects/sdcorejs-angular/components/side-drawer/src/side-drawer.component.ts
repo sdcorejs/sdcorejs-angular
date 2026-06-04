@@ -18,7 +18,6 @@ import {
   signal,
   viewChild
 } from '@angular/core';
-import { SdBaseSecureComponent } from '@sdcorejs/angular/components/base';
 import { SdLoadingService } from '@sdcorejs/angular/services';
 import * as uuid from 'uuid';
 import { fromEvent, merge, Observable, Subject } from 'rxjs';
@@ -32,7 +31,7 @@ import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators'
   standalone: true,
   imports: [CommonModule, PortalModule],
 })
-export class SdSideDrawer extends SdBaseSecureComponent {
+export class SdSideDrawer {
   id = `I${uuid.v4()}`;
   
   portal = viewChild.required(CdkPortal);
@@ -73,7 +72,6 @@ export class SdSideDrawer extends SdBaseSecureComponent {
   #destroyRef = inject(DestroyRef);
 
   constructor() {
-    super();
 
     // Thay thế ngAfterViewInit, tự động chạy nội dung này khi DOM sẵn sàng để render
     afterNextRender(() => {
