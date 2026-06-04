@@ -15,7 +15,6 @@ export class ConfigService {
     GROUP: 'sdGroup',
     REORDER: 'sdReorder',
     INDEX: 'sdIndex',
-    TREE_TOGGLE: 'sdTreeToggle',
     FILLER: 'sdFiller',
   };
   #prefix = 'TABLE_CONFIG';
@@ -74,10 +73,8 @@ export class ConfigService {
       result.firstHeaders.push(this.#COLUMNS.SELECTION);
       result.displayedColumns.push(this.#COLUMNS.SELECTION);
     }
-    if (option.tree) {
-      result.firstHeaders.push(this.#COLUMNS.TREE_TOGGLE);
-      result.displayedColumns.push(this.#COLUMNS.TREE_TOGGLE);
-    }
+    // why: tree toggle KHÔNG còn là cột riêng — icon expand được nhúng vào cột
+    // đầu tiên (cột Index nếu có, ngược lại là cột data đầu). Xem table.component.html.
     // 👇 Chỉ push vào đầu nếu là left (mặc định)
     if (commands?.length && !isCommandRight) {
       result.firstHeaders.push(this.#COLUMNS.COMMAND);
@@ -176,7 +173,7 @@ export class ConfigService {
     result.multipleHeader = result.secondHeaders.length > 0;
     // Sub infomation không thể có footer; filler cũng không cần footer cell.
     result.displayedFooters = result.displayedColumns.filter(
-      val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.TREE_TOGGLE && val !== this.#COLUMNS.FILLER
+      val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.FILLER
     );
     if (option.filler?.enabled) {
       // Footer cũng cần filler cuối để giữ width đồng bộ với data row

@@ -1,7 +1,23 @@
-import { SdTableOptionTree } from '../../models/table-option-tree.model';
+import { SdTableOptionTree, TableOptionTreeLazy } from '../../models/table-option-tree.model';
 import { SdTableItem } from '../../models/table-item.model';
 
-export const getChildrenKey = (option?: SdTableOptionTree): string => option?.childrenKey ?? 'children';
+/**
+ * Type-guard: tree có nạp children lười (lazy) hay không.
+ * Dùng để narrow discriminated union `SdTableOptionTree` một cách an toàn —
+ * thay vì truy cập `option.onExpandChildren` trực tiếp trên union (chỉ tồn tại
+ * ở nhánh lazy).
+ */
+export const isLazyTree = <T = any>(option?: SdTableOptionTree<T>): option is TableOptionTreeLazy<T> =>
+  option?.loadType === 'lazy';
+
+/**
+ * Key chứa mảng children trên object row.
+ * - `static`: lấy `childrenKey` đã cấu hình, mặc định `'children'`.
+ * - `lazy`: không có `childrenKey` riêng → luôn dùng `'children'` làm nơi lưu
+ *   kết quả nạp lười.
+ */
+export const getChildrenKey = (option?: SdTableOptionTree): string =>
+  (option?.loadType === 'static' ? option.childrenKey : undefined) ?? 'children';
 
 export const getChildrenFromData = <T>(data: T, option?: SdTableOptionTree): T[] => {
   const key = getChildrenKey(option);
@@ -9,24 +25,72 @@ export const getChildrenFromData = <T>(data: T, option?: SdTableOptionTree): T[]
   return Array.isArray(raw) ? (raw as T[]) : [];
 };
 
+/**
+ * Trạng thái bung mặc định cho một cấp.
+ * Chỉ `static` mới có `defaultExpanded`; lazy luôn trả `false` (không thể bung
+ * mặc định nhánh chưa nạp).
+ */
 export const resolveDefaultExpanded = (level: number, option?: SdTableOptionTree): boolean => {
-  const def = option?.defaultExpanded ?? false;
+  const def = option?.loadType === 'static' ? option.defaultExpanded ?? false : false;
   if (def === true) return true;
   if (def === false) return false;
   if (typeof def === 'number') return level < def;
   return false;
 };
 
-export const resolveHasChildren = <T>(row: SdTableItem<T>, option?: SdTableOptionTree): boolean => {
+/**
+ * Row có khả năng có children hay không (để hiện nút bung).
+ * - Có children embedded → true.
+ * - Lazy tree: dùng `hasChildren(row.data)` nếu được cấu hình; không thì luôn
+ *   true (chưa biết cho tới khi nạp).
+ */
+export const resolveHasChildren = <T>(row: SdTableItem<T>, option?: SdTableOptionTree<T>): boolean => {
   const embedded = getChildrenFromData(row.data, option);
   if (embedded.length > 0) return true;
-  return !!option?.onExpandChildren;
+  if (isLazyTree(option)) return option.hasChildren ? option.hasChildren(row.data) : true;
+  return false;
 };
 
+/** Row cần nạp lười (lazy) khi bung: là lazy tree và chưa có children embedded. */
 export const hasLazyChildren = <T>(row: SdTableItem<T>, option?: SdTableOptionTree): boolean => {
-  if (!option?.onExpandChildren) return false;
+  if (!isLazyTree(option)) return false;
   return getChildrenFromData(row.data, option).length === 0;
 };
+
+/**
+ * True nếu `data` HOẶC bất kỳ hậu duệ nào (theo `childrenKey`) thoả `predicate`.
+ *
+ * Dùng cho search ở cấp con (static tree, table `type: 'local'`): một nhánh
+ * gốc được giữ lại trong kết quả lọc nếu subtree của nó có ít nhất một node
+ * khớp từ khoá. `visited` chống đệ quy vô hạn khi data có circular reference.
+ */
+export const subtreeMatches = <T>(
+  data: T,
+  predicate: (data: T) => boolean,
+  option?: SdTableOptionTree,
+  visited: Set<unknown> = new Set()
+): boolean => {
+  if (data == null || visited.has(data)) return false;
+  visited.add(data);
+  if (predicate(data)) return true;
+  for (const child of getChildrenFromData(data, option)) {
+    if (subtreeMatches(child, predicate, option, visited)) return true;
+  }
+  return false;
+};
+
+/**
+ * Lọc mảng children: chỉ giữ child có subtree khớp `predicate`.
+ *
+ * Trả về MẢNG MỚI nhưng GIỮ NGUYÊN object reference của từng child (không clone)
+ * — nhờ vậy `meta.id` (hash từ data) ổn định, selection / trạng thái bung không
+ * bị mất khi từ khoá search đổi. Đây là bước "prune" của tính năng search-con.
+ */
+export const filterMatchingChildren = <T>(
+  children: T[],
+  predicate: (data: T) => boolean,
+  option?: SdTableOptionTree
+): T[] => children.filter(child => subtreeMatches(child, predicate, option));
 
 export const flattenTree = <T>(
   roots: SdTableItem<T>[],

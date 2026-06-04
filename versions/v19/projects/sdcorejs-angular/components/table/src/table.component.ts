@@ -76,13 +76,16 @@ import { buildColumnWidthMap } from './services/column-width.util';
 import { SdTableFilterService } from './services/table-filter/table-filter.service';
 import {
   collectFormattedTreeRows,
+  filterMatchingChildren,
   flattenDataTree,
   flattenTree,
   getChildrenFromData,
   getChildrenKey,
   hasLazyChildren,
+  isLazyTree,
   resolveDefaultExpanded,
   resolveHasChildren,
+  subtreeMatches,
 } from './services/tree/tree.util';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
@@ -265,6 +268,13 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
   #itemIndexMap = new WeakMap<SdTableItem<T>, number>();
   #treeExpandState = new Map<string, boolean>();
   treeRevision = signal(0);
+  // Search ở cấp con (static tree + type 'local'): predicate khớp 1 dòng theo
+  // column filter hiện hành. Set ở #filterLocal khi có filter active, đọc lại ở
+  // #render/#initTreeMeta/#ensureChildItemsFormatted để prune + auto-expand các
+  // nhánh có node con khớp. undefined = không search → cây render bình thường.
+  #treeSearchPredicate?: (data: T) => boolean;
+  // Lần render trước có đang ở chế độ search hay không (để xử lý chuyển trạng thái).
+  #treeSearchActive = false;
 
   // 1. Private Services
   #ref = inject(ChangeDetectorRef);
@@ -481,96 +491,120 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     Object.assign(cur, next);
   };
 
-  #filterLocal = (localItems: SdTableItem<T>[], filterInfo: SdTableFilterRequest) => {
-    const opt = this.tableOption()!;
-    const { columns } = opt;
-    const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
-    const items = localItems.filter(tableItem => {
-      const item = tableItem.data;
-      for (const column of columns) {
-        const { field, type } = column;
-        const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
+  // True nếu column filter hiện có ít nhất một giá trị đang lọc (để bật search-con).
+  #hasActiveColumnFilter = (rawColumnFilter: Record<string, any>, columns: SdTableColumn<T>[]): boolean =>
+    columns.some(col => {
+      const v = rawColumnFilter[col.field];
+      if (Array.isArray(v)) return v.length > 0;
+      if (v && typeof v === 'object') return !!v.from || !!v.to;
+      return v !== undefined && v !== null && v !== '';
+    });
 
-        // SỬA: Dùng getNestedValue để hỗ trợ nested field trong filterLocal
-        const rawColVal = Utilities.getNestedValue(item, field);
-        const columnValue: string = (rawColVal || '').toString().trim().toLowerCase();
+  // Predicate khớp MỘT dòng (raw data) theo column filter. Tách riêng để dùng lại
+  // cho cả lọc root lẫn search-con (subtreeMatches/filterMatchingChildren).
+  #matchesColumnFilter = (data: T, columns: SdTableColumn<T>[], rawColumnFilter: Record<string, any>): boolean => {
+    for (const column of columns) {
+      const { field, type } = column;
+      const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
 
-        if (filterValue) {
-          if (!columnValue && type !== 'datetime' && type !== 'date' && type !== 'time') {
+      // SỬA: Dùng getNestedValue để hỗ trợ nested field trong filterLocal
+      const rawColVal = Utilities.getNestedValue(data, field);
+      const columnValue: string = (rawColVal || '').toString().trim().toLowerCase();
+
+      if (filterValue) {
+        if (!columnValue && type !== 'datetime' && type !== 'date' && type !== 'time') {
+          return false;
+        }
+        if (type === 'string') {
+          if (columnValue.indexOf(filterValue) === -1) {
             return false;
           }
-          if (type === 'string') {
-            if (columnValue.indexOf(filterValue) === -1) {
+        } else if (type === 'values' || type === 'lazy-values') {
+          const columnType = column as SdTableColumnValues<T> | SdTableColumnLazyValues<T>;
+          const isMultiple = columnType.option.selection === 'MULTIPLE';
+          if (isMultiple && Array.isArray(rawColVal)) {
+            const columnValues: string[] =
+              rawColVal.map((i: any) =>
+                (Utilities.getNestedValue(i, columnType.option.valueField) ?? '').toString().trim().toLowerCase()
+              ) ?? [];
+            const filterValues: string[] = rawColumnFilter[field]?.map((v: any) => (v ?? '').toString().trim().toLowerCase());
+            if (filterValues?.length && filterValues.every(fv => !columnValues.includes(fv))) {
               return false;
             }
-          } else if (type === 'values' || type === 'lazy-values') {
-            const columnType = column as SdTableColumnValues<T> | SdTableColumnLazyValues<T>;
-            const isMultiple = columnType.option.selection === 'MULTIPLE';
-            if (isMultiple && Array.isArray(rawColVal)) {
-              const columnValues: string[] =
-                rawColVal.map((i: any) =>
-                  (Utilities.getNestedValue(i, columnType.option.valueField) ?? '').toString().trim().toLowerCase()
-                ) ?? [];
-              const filterValues: string[] = rawColumnFilter[field]?.map((v: any) => (v ?? '').toString().trim().toLowerCase());
-              if (filterValues?.length && filterValues.every(fv => !columnValues.includes(fv))) {
-                return false;
-              }
-            } else {
-              if (columnValue !== filterValue) {
-                return false;
-              }
-            }
-          } else if (type === 'number') {
-            const fValue = +filterValue.replace('>=', '').replace('<=', '').replace('>', '').replace('<', '');
-            const cValue = +columnValue;
-            if (fValue || fValue === 0) {
-              if (!cValue && cValue !== 0) {
-                return false;
-              }
-              if (filterValue.indexOf('>=') > -1 && cValue < fValue) {
-                return false;
-              } else if (filterValue.indexOf('<=') > -1 && cValue > fValue) {
-                return false;
-              } else if (filterValue.indexOf('<') > -1 && cValue >= fValue) {
-                return false;
-              } else if (filterValue.indexOf('>') > -1 && cValue <= fValue) {
-                return false;
-              } else if (cValue !== fValue) {
-                return false;
-              }
-            }
-          } else if (type === 'boolean') {
-            if ((filterValue === '1' || filterValue === 'true') && columnValue !== '1' && columnValue !== 'true') {
-              return false;
-            } else if ((filterValue === '0' || filterValue === 'false') && columnValue !== '0' && columnValue !== 'false') {
+          } else {
+            if (columnValue !== filterValue) {
               return false;
             }
-          } else if (type === 'datetime' || type === 'date' || type === 'time') {
-            const from = rawColumnFilter[field]?.from ?? rawColumnFilter[field];
-            const to = rawColumnFilter[field]?.to ?? rawColumnFilter[field];
-            const fromDate = DateUtilities.begin(from);
-            const toDate = DateUtilities.end(to);
-            if (fromDate || toDate) {
-              if (!columnValue) {
-                return false;
-              }
+          }
+        } else if (type === 'number') {
+          const fValue = +filterValue.replace('>=', '').replace('<=', '').replace('>', '').replace('<', '');
+          const cValue = +columnValue;
+          if (fValue || fValue === 0) {
+            if (!cValue && cValue !== 0) {
+              return false;
+            }
+            if (filterValue.indexOf('>=') > -1 && cValue < fValue) {
+              return false;
+            } else if (filterValue.indexOf('<=') > -1 && cValue > fValue) {
+              return false;
+            } else if (filterValue.indexOf('<') > -1 && cValue >= fValue) {
+              return false;
+            } else if (filterValue.indexOf('>') > -1 && cValue <= fValue) {
+              return false;
+            } else if (cValue !== fValue) {
+              return false;
+            }
+          }
+        } else if (type === 'boolean') {
+          if ((filterValue === '1' || filterValue === 'true') && columnValue !== '1' && columnValue !== 'true') {
+            return false;
+          } else if ((filterValue === '0' || filterValue === 'false') && columnValue !== '0' && columnValue !== 'false') {
+            return false;
+          }
+        } else if (type === 'datetime' || type === 'date' || type === 'time') {
+          const from = rawColumnFilter[field]?.from ?? rawColumnFilter[field];
+          const to = rawColumnFilter[field]?.to ?? rawColumnFilter[field];
+          const fromDate = DateUtilities.begin(from);
+          const toDate = DateUtilities.end(to);
+          if (fromDate || toDate) {
+            if (!columnValue) {
+              return false;
+            }
 
-              const columnTime = new Date(columnValue).getTime();
-              const fromDateTime = fromDate?.getTime() || null;
-              const toDateTime = toDate?.getTime() || null;
+            const columnTime = new Date(columnValue).getTime();
+            const fromDateTime = fromDate?.getTime() || null;
+            const toDateTime = toDate?.getTime() || null;
 
-              if (fromDateTime && fromDateTime > columnTime) {
-                return false;
-              }
-              if (toDateTime && columnTime > toDateTime) {
-                return false;
-              }
+            if (fromDateTime && fromDateTime > columnTime) {
+              return false;
+            }
+            if (toDateTime && columnTime > toDateTime) {
+              return false;
             }
           }
         }
       }
-      return true;
-    });
+    }
+    return true;
+  };
+
+  #filterLocal = (localItems: SdTableItem<T>[], filterInfo: SdTableFilterRequest) => {
+    const opt = this.tableOption()!;
+    const { columns } = opt;
+    const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
+
+    const matchesData = (data: T) => this.#matchesColumnFilter(data, columns, rawColumnFilter);
+
+    // Search ở cấp con: chỉ bật cho table local + static tree + đang có filter.
+    // Khi bật, một root được giữ nếu CHÍNH NÓ hoặc bất kỳ hậu duệ nào khớp; và
+    // lưu predicate để #render prune + auto-expand nhánh khớp.
+    const treeOpt = opt.tree;
+    const treeSearch = opt.type === 'local' && treeOpt?.loadType === 'static' && this.#hasActiveColumnFilter(rawColumnFilter, columns);
+    this.#treeSearchPredicate = treeSearch ? matchesData : undefined;
+
+    const items = treeSearch
+      ? localItems.filter(tableItem => subtreeMatches(tableItem.data, matchesData, treeOpt))
+      : localItems.filter(tableItem => matchesData(tableItem.data));
     // Sort
     if (orderBy && orderDirection) {
       const column = columns.find(e => e.field === orderBy);
@@ -758,8 +792,18 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     }
 
     const treeOpt = this.tableOption()?.tree;
+    const searchNow = !!this.#treeSearchPredicate;
     if (treeOpt) {
-      this.#saveTreeExpandState(this.items());
+      // why: KHÔNG persist trạng thái bung bị ÉP trong lúc search (tránh nhánh
+      // tự bung do search bị ghi nhầm thành lựa chọn của user sau khi clear).
+      if (!this.#treeSearchActive) {
+        this.#saveTreeExpandState(this.items());
+      }
+      // why: search vừa tắt → childItems đang là tập đã prune theo từ khoá cũ;
+      // xoá cache để dựng lại đầy đủ children ở chế độ thường.
+      if (this.#treeSearchActive && !searchNow) {
+        this.#clearTreeChildCache(this.#localItems);
+      }
     }
 
     this.items.set(args?.items || []);
@@ -770,6 +814,7 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
       await this.#expandDefaultBranches(this.items(), treeOpt);
       this.treeRevision.update(n => n + 1);
     }
+    this.#treeSearchActive = searchNow;
 
     // Restore selection từ preservedSelectedMap (chỉ khi preserveSelection bật).
     // Phải chạy TRƯỚC applyDefaultSelected để user-selection ưu tiên hơn default.
@@ -875,36 +920,69 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     }
   };
 
+  // Children "nhìn thấy được" của một row: bình thường = toàn bộ embedded;
+  // khi search-con = chỉ giữ child có subtree khớp từ khoá (prune).
+  #visibleChildrenData = (data: T, treeOpt: NonNullable<SdTableOption<T>['tree']>): T[] => {
+    const all = getChildrenFromData(data, treeOpt);
+    const predicate = this.#treeSearchPredicate;
+    return predicate ? filterMatchingChildren(all, predicate, treeOpt) : all;
+  };
+
+  // Xoá cache childItems trên toàn cây — dùng khi tắt search để dựng lại đầy đủ.
+  #clearTreeChildCache = (rows: SdTableItem<T>[]) => {
+    for (const row of rows) {
+      const children = row.meta.tree?.childItems;
+      if (children?.length) {
+        this.#clearTreeChildCache(children);
+        row.meta.tree!.childItems = undefined;
+      }
+    }
+  };
+
   #initTreeMeta = (rows: SdTableItem<T>[], option: NonNullable<SdTableOption<T>['tree']>, level = 0, parentId?: string) => {
+    const searchActive = !!this.#treeSearchPredicate;
     for (const row of rows) {
       const saved = this.#treeExpandState.get(row.meta.id);
+      // Khi search: hasChildren tính theo tập con đã prune; auto-expand nhánh còn con.
+      const hasChildren = searchActive
+        ? this.#visibleChildrenData(row.data, option).length > 0
+        : resolveHasChildren(row, option);
       row.meta.tree = {
         ...row.meta.tree,
         level,
         parentId,
-        hasChildren: resolveHasChildren(row, option),
-        isExpanded: saved ?? resolveDefaultExpanded(level, option),
+        hasChildren,
+        isExpanded: searchActive ? hasChildren : (saved ?? resolveDefaultExpanded(level, option)),
         isExpanding: false,
       };
     }
   };
 
   #ensureChildItemsFormatted = async (row: SdTableItem<T>) => {
-    if (row.meta.tree?.childItems?.length) return;
     const opt = this.tableOption()!;
     const treeOpt = opt.tree!;
-    const raw = getChildrenFromData(row.data, treeOpt);
-    if (!raw.length) return;
+    const searchActive = !!this.#treeSearchPredicate;
+    // Bình thường cache childItems. Khi search, LUÔN dựng lại theo tập đã prune
+    // vì tập này phụ thuộc từ khoá (đổi mỗi lần gõ) nên không thể cache.
+    if (!searchActive && row.meta.tree?.childItems?.length) return;
+    const raw = this.#visibleChildrenData(row.data, treeOpt);
+    if (!raw.length) {
+      if (searchActive && row.meta.tree) row.meta.tree.childItems = [];
+      return;
+    }
     const formatted = await this.#tableFormatService.format(raw, opt.columns, this.cacheValues, this.#cacheObjValues);
     row.meta.tree!.childItems = formatted;
     const childLevel = (row.meta.tree!.level ?? 0) + 1;
     for (const child of formatted) {
       const saved = this.#treeExpandState.get(child.meta.id);
+      const childHasChildren = searchActive
+        ? this.#visibleChildrenData(child.data, treeOpt).length > 0
+        : resolveHasChildren(child, treeOpt);
       child.meta.tree = {
         level: childLevel,
         parentId: row.meta.id,
-        hasChildren: resolveHasChildren(child, treeOpt),
-        isExpanded: saved ?? resolveDefaultExpanded(childLevel, treeOpt),
+        hasChildren: childHasChildren,
+        isExpanded: searchActive ? childHasChildren : (saved ?? resolveDefaultExpanded(childLevel, treeOpt)),
         isExpanding: false,
       };
     }
@@ -938,11 +1016,12 @@ export class SdTable<T = unknown> extends SdBaseSecureComponent implements OnIni
     }
 
     try {
-      if (hasLazyChildren(row, treeOpt)) {
+      // isLazyTree() narrow treeOpt về TableOptionTreeLazy → truy cập onExpandChildren an toàn.
+      if (isLazyTree(treeOpt) && hasLazyChildren(row, treeOpt)) {
         row.meta.tree.isExpanding = true;
         this.#ref.markForCheck();
         const key = getChildrenKey(treeOpt);
-        const result = await Promise.resolve(treeOpt.onExpandChildren!(row.data));
+        const result = await Promise.resolve(treeOpt.onExpandChildren(row.data));
         (row.data as Record<string, unknown>)[key] = Array.isArray(result) ? result : [];
         row.meta.tree.hasChildren = resolveHasChildren(row, treeOpt);
       }

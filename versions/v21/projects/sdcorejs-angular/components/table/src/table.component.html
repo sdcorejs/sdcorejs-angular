@@ -16,6 +16,9 @@
 @let _configComponent = configComponent();
 @let _mobileFilter = mobileFilter();
 @let _selectedTableItems = selectedTableItems();
+<!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
+     cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
+@let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
 
 @if (_configuration) {
   @if (!_tableOption.filter?.disabled && !!_tableOption.filter?.externalFilters?.length && filterRegister) {
@@ -28,6 +31,37 @@
     </external-filter>
   }
   @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState;
+
+  <!-- Tree toggle dùng chung: indent (theo cấp) + slot chevron/spinner. Nhúng vào
+       cột Index hoặc cột data đầu qua *ngTemplateOutlet (context: { row }). -->
+  <ng-template #sdTreeToggle let-row="row">
+    @let _tree = row?.meta?.tree;
+    @if (_tree) {
+      <span class="sd-tree-indent" [style.width.px]="(_tree.level ?? 0) * (_tableOption.tree?.indentSize ?? 20)"></span>
+      <span class="sd-tree-toggle-slot">
+        @if (_tree.hasChildren) {
+          @if (_tree.isExpanding) {
+            <span class="lds-ring sd-tree-spinner">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </span>
+          } @else {
+            @let _aid = _autoId;
+            <button
+              type="button"
+              class="sd-tree-toggle-btn"
+              [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
+              (click)="onTreeToggle(row); $event.stopPropagation()">
+              <mat-icon>{{ _tree.isExpanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+            </button>
+          }
+        }
+      </span>
+    }
+  </ng-template>
+
   <ng-content select="[sdTableTop]"></ng-content>
   <div class="c-container">
     @if (_loading) {
@@ -61,43 +95,6 @@
                 <mat-icon cdkDragHandle [class.sd-reorder-disabled]="isReorderDisabled(row)">
                   {{ _tableOption.rowReorder?.icon || 'drag_indicator' }}
                 </mat-icon>
-              }
-            </td>
-            <td mat-footer-cell *matFooterCellDef></td>
-          </ng-container>
-        }
-
-        @if (_tableOption.tree) {
-          <ng-container matColumnDef="sdTreeToggle">
-            <th
-              mat-header-cell
-              *matHeaderCellDef
-              class="sd-tree-toggle-cell p-0"
-              [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
-            <td mat-cell *matCellDef="let row" class="sd-tree-toggle-cell p-0">
-              @if (row.meta?.tree) {
-                <div
-                  class="sd-tree-toggle-inner"
-                  [style.padding-left.px]="(row.meta.tree.level ?? 0) * (_tableOption.tree?.indentSize ?? 20)">
-                  @if (row.meta.tree.hasChildren) {
-                    @if (row.meta.tree.isExpanding) {
-                      <div class="lds-ring sd-tree-spinner">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                      </div>
-                    } @else {
-                      <sd-button
-                        [autoId]="_autoId ? _autoId + '-tree-toggle-' + row.meta.id : null"
-                        type="link"
-                        [prefixIcon]="row.meta.tree.isExpanded ? 'expand_less' : 'expand_more'"
-                        (click)="onTreeToggle(row); $event.stopPropagation()"
-                        width="35px">
-                      </sd-button>
-                    }
-                  }
-                </div>
               }
             </td>
             <td mat-footer-cell *matFooterCellDef></td>
@@ -185,30 +182,50 @@
         @if (_tableOption.index?.enabled) {
           @let _pageOffset = pageOffset();
           @let _indexWidth = _tableOption.index?.width || '50px';
+          <!-- why: khi tree, cột Index "ôm" thêm chevron + indent. Dùng width:1px +
+               nowrap (.sd-tree-index-cell) để cột co SÁT nội dung, không chiếm chỗ
+               thừa; header "#" canh trái lùi vào (.sd-tree-index-header) cho thẳng số. -->
+          @let _treeIndex = !!_tableOption.tree;
           <ng-container matColumnDef="sdIndex" sticky>
             <th
-              class="text-center p-0"
+              [class.p-0]="!_treeIndex"
+              [class.text-center]="!_treeIndex"
+              [class.sd-tree-index-cell]="_treeIndex"
+              [class.sd-tree-index-header]="_treeIndex"
               mat-header-cell
               *matHeaderCellDef
-              [style.width]="_indexWidth"
-              [style.min-width]="_indexWidth"
-              [style.max-width]="_indexWidth"
+              [style.width]="_treeIndex ? '1px' : _indexWidth"
+              [style.min-width]="_treeIndex ? null : _indexWidth"
+              [style.max-width]="_treeIndex ? null : _indexWidth"
               [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
               {{ _tableOption.index?.title || '#' }}
             </th>
-            <td class="text-center px-4" mat-cell *matCellDef="let item; let i = dataIndex" [style.min-width]="_indexWidth" [style.max-width]="_indexWidth">
+            <td
+              [class.px-4]="!_treeIndex"
+              [class.text-center]="!_treeIndex"
+              [class.sd-tree-index-cell]="_treeIndex"
+              mat-cell
+              *matCellDef="let item; let i = dataIndex"
+              [style.width]="_treeIndex ? '1px' : null"
+              [style.min-width]="_treeIndex ? null : _indexWidth"
+              [style.max-width]="_treeIndex ? null : _indexWidth">
               @if (!item?.meta?.group?.isGroupHeader) {
-                @if (_tableOption.tree && item?.meta?.tree?.indexPath?.length) {
-                  <!-- why: tree → STT phân cấp 1, 1.2, 1.2.1 (indexPath join '.'). Tô đậm root (level 0). -->
-                  <span [class.sd-stt-root]="(item.meta.tree.level ?? 0) === 0">
-                    {{ item.meta.tree.indexPath.join('.') }}
+                @if (_treeIndex) {
+                  <!-- why: tree → chevron + indent + STT phân cấp (1, 1.2, 1.2.1). Tô đậm root (level 0). -->
+                  <span class="sd-tree-line">
+                    <ng-container *ngTemplateOutlet="sdTreeToggle; context: { row: item }"></ng-container>
+                    @if (item?.meta?.tree?.indexPath?.length) {
+                      <span class="sd-tree-stt" [class.sd-stt-root]="(item.meta.tree.level ?? 0) === 0">
+                        {{ item.meta.tree.indexPath.join('.') }}
+                      </span>
+                    }
                   </span>
                 } @else {
                   {{ _pageOffset + i + 1 }}
                 }
               }
             </td>
-            <td mat-footer-cell *matFooterCellDef [style.min-width]="_indexWidth" [style.max-width]="_indexWidth"></td>
+            <td mat-footer-cell *matFooterCellDef [style.width]="_treeIndex ? '1px' : null" [style.min-width]="_treeIndex ? null : _indexWidth" [style.max-width]="_treeIndex ? null : _indexWidth"></td>
           </ng-container>
         }
         <ng-container
@@ -336,7 +353,15 @@
               [sdHoverCopy]="(item.data && item.data[column.field]) || ''"
               [sdHoverCopyDisabled]="!column.cell?.copiable">
               @if (column.type !== 'children' && !item?.meta?.group?.isGroupHeader) {
-                <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="_cellDef"> </desktop-cell>
+                @if (_treeFirstField && column.field === _treeFirstField) {
+                  <!-- why: không có cột Index → chevron + indent nhúng vào cột data đầu (như file explorer). -->
+                  <span class="sd-tree-line px-8">
+                    <ng-container *ngTemplateOutlet="sdTreeToggle; context: { row: item }"></ng-container>
+                    <desktop-cell class="d-block" [column]="column" [item]="item" [cellDef]="_cellDef"></desktop-cell>
+                  </span>
+                } @else {
+                  <desktop-cell class="d-block px-8" [column]="column" [item]="item" [cellDef]="_cellDef"> </desktop-cell>
+                }
               }
             </td>
             <td mat-footer-cell *matFooterCellDef>

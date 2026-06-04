@@ -106,7 +106,7 @@ export interface TableOptionConfig {
 | Field | Type | Notes |
 | --- | --- | --- |
 | `visible` | `boolean` | Shows the column-config (⚙) button in the toolbar. The dialog lets users toggle visibility, drag-reorder columns, and rename headers. |
-| `resizable` | `boolean` | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdTreeToggle`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
+| `resizable` | `boolean` | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
 | `onResize` | `(field, width, columnWidth) => void` | Fires once per `mouseup`. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics. |
 
 **Persistence:** When `option.key` is provided, resize writes to the same storage entry used by the column-config dialog (under the prefix `TABLE_CONFIG`). Without a key it falls back to session storage keyed by `Utilities.hash(option)`.
@@ -123,7 +123,6 @@ The table adds these special columns conditionally — **do not** define a data 
 | --- | --- | --- |
 | `sdReorder` | `rowReorder.enabled` | very first (unshifted) |
 | `sdSelection` | `selector.visible` | left, sticky |
-| `sdTreeToggle` | `tree` configured | left |
 | `sdCommand` | `commands` / `command.commands` | left if `command.align !== 'right'`, else right (stickyEnd) |
 | `sdGroup` | `group.fields.length` | left |
 | `sdIndex` | `index.enabled` | after group, before data columns (sticky) |
@@ -147,30 +146,52 @@ The table adds these special columns conditionally — **do not** define a data 
 `{ disabled?(row), onExpand?(row) => any \| Promise<any>, multiple?, always? }` — `always: true` keeps every row expanded; `multiple` allows multiple expanded simultaneously.
 
 ### Tree option (`SdTableOptionTree<T>`)
-Inline child rows rendered beneath parent rows (tree table).
+Inline child rows rendered beneath parent rows (tree table). **Discriminated union on `loadType`** — pick `'static'` (children embedded) or `'lazy'` (loaded on demand). `loadType` is required.
 
 ```typescript
+// loadType: 'static' — children embedded in each row
 tree?: {
-  childrenKey?: string;           // default 'children'
-  maxDepth?: number;              // undefined = unlimited
-  defaultExpanded?: boolean | number; // false | true | open to depth N
-  onExpandChildren?: (row) => Promise<T[]> | T[];  // lazy load
-  indentSize?: number;              // default 20px per level
+  loadType: 'static';
+  childrenKey?: NestedKeyOf<T> | 'children';  // default 'children'
+  maxDepth?: number;                           // undefined = unlimited
+  defaultExpanded?: boolean | number;          // false | true | open to depth N
+  indentSize?: number;                         // default 20px per level
+}
+
+// loadType: 'lazy' — children fetched on first expand
+tree?: {
+  loadType: 'lazy';
+  maxDepth?: number;                           // undefined = unlimited
+  onExpandChildren: (row: T) => Promise<T[]>;  // required; result cached under 'children'
+  hasChildren?: (row: T) => boolean;           // optional; gate the expand icon (see below)
+  indentSize?: number;                         // default 20px per level
 }
 ```
 
-- **Embedded (default):** each row may contain nested array at `childrenKey`.
-- **Lazy:** if no embedded children, `onExpandChildren` is called on expand; result cached on row.
+- **`static`:** each row may contain a nested array at `childrenKey`. No async call on expand.
+- **`lazy`:** no `childrenKey`/`defaultExpanded` (always stores under `'children'`, can't pre-expand un-loaded branches). On expand, `onExpandChildren(row)` is called once and the result cached on the row.
+  - **`hasChildren?`** — without it, **every** lazy node shows an expand icon (you can't know until you load). Provide it to gate the icon: it shows only when `hasChildren(row)` returns `true` (a `false` row is a leaf — no icon, `onExpandChildren` never called). A row that already has embedded children always shows the icon regardless.
+- **Toggle placement:** there is **no separate toggle column**. The expand icon (`chevron_right` collapsed / `expand_more` expanded, light hover bg) sits in the **first column** — the `sdIndex` cell when `index.enabled` (indent + chevron + hierarchical STT), otherwise the first data column (indent + chevron + cell), indented `level * indentSize`.
 - **Pagination (server):** only root rows are paginated; `total` = root count.
 - **Coexist** with `expand` (master-detail). **Cannot combine** with `group`.
 - **Row reorder:** only root rows (level 0) are draggable.
+- **Child-level search** (`type: 'local'` + `loadType: 'static'` only): when an inline column filter is active, the table searches the **whole subtree**, not just root rows — a branch is kept if the node itself **or any descendant** matches. Matching branches are **pruned** (non-matching siblings hidden) and **auto-expanded** so the matched descendants are revealed. Clearing the filter restores the full tree at its default expand state. (Lazy trees and `type: 'server'` tables filter on the server / root only.)
 
-Example:
+Example (static):
 ```typescript
-tree: { maxDepth: 3, defaultExpanded: 1 },
+tree: { loadType: 'static', maxDepth: 3, defaultExpanded: 1 },
 items: () => [
   { id: 1, name: 'Parent', children: [{ id: 2, name: 'Child' }] },
 ],
+```
+
+Example (lazy):
+```typescript
+tree: {
+  loadType: 'lazy',
+  hasChildren: row => row.type === 'Folder',   // only folders get an expand icon
+  onExpandChildren: row => api.getChildren(row.id),
+},
 ```
 
 ### Filter option (`SdTableOptionFilter`)
@@ -218,7 +239,7 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 ## Visual cues (helps agent map screenshots → component)
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
-- **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle in `sdTreeToggle` column when `tree` configured. Expand caret for master-detail when `expand` configured.
+- **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle (`chevron_right` collapsed / `expand_more` expanded, light hover bg) is **embedded in the first column** — the `sdIndex` cell when `index.enabled`, otherwise the first data column — indented per depth (no separate toggle column). Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
@@ -226,7 +247,7 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `MatPaginatorIntlCro`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
-- **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdTreeToggle`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.
+- **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.
 
 ## Configuration provider
 ```ts
@@ -471,7 +492,7 @@ All interactive children derive their autoId from the table base `components-tab
 | Export menu items (Excel / CSV) | `<B>-export-excel` / `<B>-export-csv` |
 | Config (settings) button | `components-button-<B>-config` |
 | Mobile filter open button | `components-button-<B>-mobile-filter-open` |
-| Tree expand toggle (per row) | `components-button-<B>-tree-toggle-<rowId>` |
+| Tree expand toggle (per row) | `components-button-<B>-tree-toggle-<rowId>` (native `button`, `data-autoid`; embedded in first/index column) |
 | Detail expand toggle (per row) | `components-button-<B>-expand-<rowId>` |
 | Group collapse toggle (per group) | `components-button-<B>-group-toggle-<groupKey>` |
 | Per-row command | `<B>-command-<rowKey>-<commandKey>` (see `desktop-command`) |

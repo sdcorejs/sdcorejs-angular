@@ -48,7 +48,7 @@ const baseOption = (over: Partial<SdTableOption<Node>> = {}): SdTableOption<Node
   columns: [
     { field: 'name', title: 'Name', type: 'string' } as any,
   ],
-  tree: { childrenKey: 'children' },
+  tree: { loadType: 'static', childrenKey: 'children' },
   ...over,
 } as SdTableOption<Node>);
 
@@ -116,7 +116,7 @@ describe('SdTable — tree row API', () => {
       const loader = jasmine
         .createSpy('onExpandChildren')
         .and.returnValue(Promise.resolve([{ id: 11, name: 'lazy-child' }]));
-      cmp.tableOption.set(baseOption({ tree: { childrenKey: 'children', onExpandChildren: loader } } as any));
+      cmp.tableOption.set(baseOption({ tree: { loadType: 'lazy', onExpandChildren: loader } } as any));
       cmp.items.set([lazyRoot]);
       // Format service không có format thật → stub trực tiếp childItems sau khi loader chạy.
       // Chỉ test contract: loader được gọi, isExpanded = true, data.children được ghi.
@@ -132,7 +132,7 @@ describe('SdTable — tree row API', () => {
     it('lazy load trả mảng rỗng → hasChildren tự set false và không expand', async () => {
       const lazyRoot = makeItem({ id: 20, name: 'empty' }, { level: 0, hasChildren: true });
       const loader = jasmine.createSpy().and.returnValue(Promise.resolve([]));
-      cmp.tableOption.set(baseOption({ tree: { childrenKey: 'children', onExpandChildren: loader } } as any));
+      cmp.tableOption.set(baseOption({ tree: { loadType: 'lazy', onExpandChildren: loader } } as any));
       cmp.items.set([lazyRoot]);
       await cmp.onTreeToggle(lazyRoot);
       expect(lazyRoot.meta.tree!.hasChildren).toBe(false);

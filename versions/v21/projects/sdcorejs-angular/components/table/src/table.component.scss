@@ -402,26 +402,85 @@
   }
   
 
-  .sd-tree-toggle-cell {
-    width: 40px;
-    min-width: 40px;
-    max-width: 100px;
+  // Tree (icon expand đã nhúng vào cột đầu / cột Index) —
+  // dòng chứa indent + chevron-slot + nội dung (STT hoặc cell), căn trục dọc.
+  .sd-tree-line {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
   }
 
-  .sd-tree-toggle-inner {
-    display: flex;
+  // Spacer thụt lề theo cấp (width set inline = level * indentSize).
+  .sd-tree-indent {
+    flex: 0 0 auto;
+  }
+
+  // Slot cố định cho chevron — giữ width kể cả node lá (không chevron) để nội
+  // dung các dòng cùng cấp luôn thẳng hàng.
+  .sd-tree-toggle-slot {
+    flex: 0 0 auto;
+    display: inline-flex;
     align-items: center;
-    min-height: 40px;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+  }
+
+  // Nút chevron — hover có nền TRÒN NHỎ (đúng kích thước icon).
+  .sd-tree-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    border-radius: 50%;
+    cursor: pointer;
+    color: var(--sd-text-secondary, #5b6472);
+    transition: background-color 0.15s ease;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+    }
+
+    &:hover {
+      background-color: rgba(15, 23, 42, 0.08);
+    }
   }
 
   .sd-tree-spinner {
-    transform: scale(0.5);
-    margin: 0 auto;
+    transform: scale(0.45);
+  }
+
+  // STT trong cột Index khi tree — chừa khoảng cách nhẹ với chevron.
+  .sd-tree-stt {
+    margin-left: 2px;
+    white-space: nowrap;
+  }
+
+  // Cột Index ở chế độ tree: căn trái + không wrap + co sát nội dung (width:1px ở
+  // template) + chừa gutter trái nhỏ.
+  .sd-tree-index-cell {
+    text-align: left !important;
+    white-space: nowrap;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+
+  // Header "#" của cột Index khi tree — lùi vào cho thẳng hàng với số cấp gốc
+  // (gutter 8px + slot chevron 24px). Đặt SAU .sd-tree-index-cell để thắng padding.
+  .sd-tree-index-header {
+    padding-left: 32px;
   }
 
   // why: tree row visual cues —
   // root (level 0) đậm hơn để mắt nhận ranh giới cha/con dễ; child levels tint nền
-  // nhạt dần theo depth + border-left mảnh tạo vertical guide line từ parent xuống.
+  // nhạt dần theo depth.
   tr.c-row.sd-tree-row.sd-tree-level-0 {
     background: #fbfcfe;
     & > td {
@@ -431,11 +490,6 @@
   tr.c-row.sd-tree-row.sd-tree-level-1 { background: #ffffff; }
   tr.c-row.sd-tree-row.sd-tree-level-2 { background: #fafbfd; }
   tr.c-row.sd-tree-row.sd-tree-level-3 { background: #f6f8fb; }
-  tr.c-row.sd-tree-row:not(.sd-tree-level-0) {
-    & > td.sd-tree-toggle-cell .sd-tree-toggle-inner {
-      border-left: 1px dashed #d8dde6;
-    }
-  }
 
   // STT root level — bold đậm rõ.
   .sd-stt-root {

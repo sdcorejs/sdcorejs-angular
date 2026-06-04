@@ -479,7 +479,7 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
     opt: SdTableOption<OrgNode> = {
       type: 'server',
       items: this.itemsSpy,
-      tree: { childrenKey: 'children', defaultExpanded: 5 },
+      tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: 5 },
       index: { enabled: true },
       columns: [
         { field: 'name', type: 'string', title: 'Name' },
@@ -504,13 +504,24 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
 
   it('STT cell render label hierarchical "1", "1.1", "1.1.1", "1.2"', fakeAsync(() => {
     waitForLoad();
-    const cells = fixture.nativeElement.querySelectorAll('td.cdk-column-sdIndex') as NodeListOf<HTMLTableCellElement>;
-    const labels = Array.from(cells).map(c => c.textContent?.trim()).filter(s => s && s.length > 0);
+    // why: chevron mat-icon nằm cùng cell → query riêng span.sd-tree-stt (chỉ phần số).
+    const sttSpans = fixture.nativeElement.querySelectorAll('td.cdk-column-sdIndex span.sd-tree-stt') as NodeListOf<HTMLElement>;
+    const labels = Array.from(sttSpans).map(s => s.textContent?.trim()).filter(s => s && s.length > 0);
     // ORG flatten với defaultExpanded > depth → 4 rows: root, P1, T1, P2
     expect(labels).toContain('1');
     expect(labels).toContain('1.1');
     expect(labels).toContain('1.1.1');
     expect(labels).toContain('1.2');
+  }));
+
+  it('icon expand đã nhúng vào cột Index — KHÔNG còn cột sdTreeToggle riêng', fakeAsync(() => {
+    waitForLoad();
+    expect(fixture.nativeElement.querySelector('td.cdk-column-sdTreeToggle')).toBeNull();
+    // chevron button nằm trong cell Index, dùng icon chevron_right/expand_more.
+    const toggle = fixture.nativeElement.querySelector('td.cdk-column-sdIndex button.sd-tree-toggle-btn') as HTMLElement;
+    expect(toggle).not.toBeNull();
+    const icon = toggle.querySelector('mat-icon')?.textContent?.trim();
+    expect(['chevron_right', 'expand_more']).toContain(icon!);
   }));
 
   it('Root level (level 0) STT có class .sd-stt-root (bold via SCSS)', fakeAsync(() => {
@@ -522,11 +533,8 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
 
   it('Child level (level > 0) STT KHÔNG có class .sd-stt-root', fakeAsync(() => {
     waitForLoad();
-    const allSpans = fixture.nativeElement.querySelectorAll('td.cdk-column-sdIndex span') as NodeListOf<HTMLElement>;
-    const childSpans = Array.from(allSpans).filter(s => {
-      const t = s.textContent?.trim() ?? '';
-      return t.includes('.');
-    });
+    const sttSpans = fixture.nativeElement.querySelectorAll('td.cdk-column-sdIndex span.sd-tree-stt') as NodeListOf<HTMLElement>;
+    const childSpans = Array.from(sttSpans).filter(s => (s.textContent?.trim() ?? '').includes('.'));
     expect(childSpans.length).toBeGreaterThan(0);
     childSpans.forEach(span => expect(span.classList.contains('sd-stt-root')).toBe(false));
   }));
@@ -539,6 +547,89 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
     expect(lvl0).not.toBeNull();
     expect(lvl1).not.toBeNull();
     expect(lvl2).not.toBeNull();
+  }));
+});
+
+describe('tree toggle nhúng cột data đầu (không có cột Index) + lazy hasChildren', () => {
+  interface Node { id: number; name: string; children?: Node[]; }
+
+  const ORG: Node[] = [{
+    id: 1, name: 'Root', children: [{ id: 11, name: 'Child' }],
+  }];
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="opt"></sd-table>`,
+  })
+  class HostComponent {
+    opt: SdTableOption<Node> = {
+      type: 'local',
+      items: () => ORG,
+      tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: 5 },
+      columns: [{ field: 'name', type: 'string', title: 'Name' }],
+    } as SdTableOption<Node>;
+  }
+
+  let fixture: ComponentFixture<HostComponent>;
+
+  function waitForLoad() {
+    fixture.detectChanges();
+    tick(800); flush(); fixture.detectChanges();
+    tick(); flush(); fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    fixture = TestBed.createComponent(HostComponent);
+  });
+
+  it('không có cột Index → chevron nhúng vào cell cột data đầu (Name)', fakeAsync(() => {
+    waitForLoad();
+    expect(fixture.nativeElement.querySelector('td.cdk-column-sdTreeToggle')).toBeNull();
+    const toggle = fixture.nativeElement.querySelector('td.cdk-column-name button.sd-tree-toggle-btn') as HTMLElement;
+    expect(toggle).not.toBeNull();
+    expect(['chevron_right', 'expand_more']).toContain(toggle.querySelector('mat-icon')?.textContent?.trim()!);
+  }));
+});
+
+describe('lazy tree hasChildren — chỉ hiện chevron khi callback trả true', () => {
+  interface Node { id: number; name: string; }
+
+  const DATA: Node[] = [{ id: 1, name: 'HasKids' }, { id: 2, name: 'Leaf' }];
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="opt"></sd-table>`,
+  })
+  class HostComponent {
+    opt: SdTableOption<Node> = {
+      type: 'local',
+      items: () => DATA,
+      tree: {
+        loadType: 'lazy',
+        hasChildren: (row: Node) => row.id === 1,
+        onExpandChildren: () => Promise.resolve([{ id: 11, name: 'Lazy child' }]),
+      },
+      columns: [{ field: 'name', type: 'string', title: 'Name' }],
+    } as SdTableOption<Node>;
+  }
+
+  let fixture: ComponentFixture<HostComponent>;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    fixture = TestBed.createComponent(HostComponent);
+  });
+
+  it('row hasChildren=true có chevron, row trả false thì không', fakeAsync(() => {
+    fixture.detectChanges();
+    tick(800); flush(); fixture.detectChanges();
+    tick(); flush(); fixture.detectChanges();
+    const toggles = fixture.nativeElement.querySelectorAll('button.sd-tree-toggle-btn') as NodeListOf<HTMLElement>;
+    // Chỉ 1 chevron (cho 'HasKids'); 'Leaf' không có.
+    expect(toggles.length).toBe(1);
   }));
 });
 
@@ -772,5 +863,112 @@ describe('selector.preserveSelection — giữ selection xuyên trang/filter/rel
     flush();
     fixture.detectChanges();
     expect(table.selectedTableItems().length).toBe(0);
+  }));
+});
+
+describe('Tree search ở cấp con (static tree + type local)', () => {
+  interface Node { id: number; name: string; children?: Node[]; }
+
+  const DATA: Node[] = [
+    {
+      id: 1, name: 'Fruits', children: [
+        { id: 11, name: 'Apple' },
+        { id: 12, name: 'Banana', children: [{ id: 121, name: 'Banana Bread' }] },
+      ],
+    },
+    {
+      id: 2, name: 'Vegetables', children: [
+        { id: 21, name: 'Carrot' },
+      ],
+    },
+  ];
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="opt"></sd-table>`,
+  })
+  class HostComponent {
+    opt: SdTableOption<Node> = {
+      type: 'local',
+      items: () => DATA,
+      tree: { loadType: 'static', childrenKey: 'children' },
+      columns: [{ field: 'name', type: 'string', title: 'Name' }],
+    } as SdTableOption<Node>;
+  }
+
+  let fixture: ComponentFixture<HostComponent>;
+  let table: SdTable<Node>;
+
+  function load() {
+    fixture.detectChanges();
+    table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Node>;
+    tick(800); flush(); fixture.detectChanges();
+    tick(); flush(); fixture.detectChanges();
+  }
+
+  function search(term: string) {
+    table.columnFilter = { name: term } as Record<string, unknown>;
+    table.onFilterChange();
+    tick(800); flush(); fixture.detectChanges();
+    tick(); flush(); fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    fixture = TestBed.createComponent(HostComponent);
+  });
+
+  it('match ở cấp con → giữ root chứa nó, loại root không liên quan', fakeAsync(() => {
+    load();
+    search('apple');
+    // Chỉ root 'Fruits' (chứa Apple) được giữ; 'Vegetables' bị loại.
+    expect(table.items().map(i => i.data.id)).toEqual([1]);
+  }));
+
+  it('prune sibling không khớp khỏi nhánh được giữ', fakeAsync(() => {
+    load();
+    search('apple');
+    const root = table.items()[0];
+    // Banana (+ Banana Bread) bị prune; chỉ còn Apple.
+    expect(root.meta.tree!.childItems!.map(c => c.data.id)).toEqual([11]);
+  }));
+
+  it('auto-expand nhánh có node con khớp', fakeAsync(() => {
+    load();
+    search('apple');
+    const root = table.items()[0];
+    expect(root.meta.tree!.isExpanded).toBe(true);
+    expect(root.meta.tree!.hasChildren).toBe(true);
+  }));
+
+  it('match ở cháu (sâu) → giữ + auto-expand toàn nhánh tổ tiên', fakeAsync(() => {
+    load();
+    search('bread');
+    expect(table.items().map(i => i.data.id)).toEqual([1]);
+    const root = table.items()[0];
+    // Chỉ nhánh Banana → Banana Bread được giữ; Apple bị prune.
+    expect(root.meta.tree!.childItems!.map(c => c.data.id)).toEqual([12]);
+    expect(root.meta.tree!.isExpanded).toBe(true);
+    const banana = root.meta.tree!.childItems![0];
+    expect(banana.meta.tree!.isExpanded).toBe(true);
+    expect(banana.meta.tree!.childItems!.map(c => c.data.id)).toEqual([121]);
+  }));
+
+  it('clear filter → khôi phục đầy đủ root; bung lại thấy children đầy đủ (không còn prune)', fakeAsync(() => {
+    load();
+    search('apple');
+    expect(table.items().map(i => i.data.id)).toEqual([1]);
+
+    search('');
+    // Cả 2 root trở lại; cây về trạng thái mặc định (collapsed).
+    expect(table.items().map(i => i.data.id)).toEqual([1, 2]);
+    const fruits = table.items().find(i => i.data.id === 1)!;
+    expect(fruits.meta.tree!.hasChildren).toBe(true);
+
+    // Bung lại → children đầy đủ (Apple + Banana), tập prune cũ đã bị xoá.
+    table.onTreeToggle(fruits);
+    tick(); flush(); fixture.detectChanges();
+    expect(fruits.meta.tree!.childItems!.map(c => c.data.id)).toEqual([11, 12]);
   }));
 });

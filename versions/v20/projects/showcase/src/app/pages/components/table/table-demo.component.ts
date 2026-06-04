@@ -99,6 +99,26 @@ const ORG: OrgNode[] = [
   },
 ];
 
+// Lazy tree demo: chỉ có root sẵn, children nạp theo yêu cầu (giả lập API trễ).
+const LAZY_ROOTS: OrgNode[] = [
+  { id: 1, name: 'Khối Công nghệ', role: 'Division', headcount: 42 },
+  { id: 2, name: 'Khối Kinh doanh', role: 'Division', headcount: 28 },
+];
+const LAZY_CHILDREN: Record<number, OrgNode[]> = {
+  1: [
+    { id: 11, name: 'Phòng Backend', role: 'Department', headcount: 18 },
+    { id: 12, name: 'Phòng Frontend', role: 'Department', headcount: 14 },
+  ],
+  11: [
+    { id: 111, name: 'Nhóm API', role: 'Team', headcount: 8 },
+    { id: 112, name: 'Nhóm Data', role: 'Team', headcount: 10 },
+  ],
+  2: [
+    { id: 21, name: 'Phòng Sales Bắc', role: 'Department', headcount: 16 },
+    { id: 22, name: 'Phòng Sales Nam', role: 'Department', headcount: 12 },
+  ],
+};
+
 const ORDERS: Order[] = [
   { id: 1, code: 'ORD-001', customerId: 1, customerName: 'Nguyễn Văn An', customerPhone: '0912345678', product: 'Laptop Dell', qty: 1, amount: 22_500_000, date: new Date(2026, 4, 1) },
   { id: 2, code: 'ORD-002', customerId: 1, customerName: 'Nguyễn Văn An', customerPhone: '0912345678', product: 'Chuột Logitech', qty: 2, amount: 5_500_000, date: new Date(2026, 4, 3) },
@@ -152,9 +172,42 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
-      <demo-section heading="Tree rows" [props]="[{ name: 'tree', value: 'true' }]">
+      <demo-section
+        heading="Tree rows + search ở cấp con (gõ tên đơn vị con để lọc)"
+        [props]="[
+          { name: 'tree.loadType', value: 'static' },
+          { name: 'tree.childrenKey', value: 'children' },
+          { name: 'tree.defaultExpanded', value: '1' },
+          { name: 'columns[].filter', value: 'config' }
+        ]"
+        note="Search trên table 'local' + tree 'static' lọc cả cấp con: giữ nhánh cha của node khớp, prune sibling không khớp, tự bung tới node khớp.">
         <div class="table-box">
           <sd-table [option]="treeOption"></sd-table>
+        </div>
+      </demo-section>
+
+      <demo-section
+        heading="Tree lazy — nạp con khi bung (có loading)"
+        [props]="[
+          { name: 'tree.loadType', value: 'lazy' },
+          { name: 'tree.onExpandChildren', value: 'Promise' },
+          { name: 'tree.hasChildren', value: 'method' }
+        ]"
+        note="loadType 'lazy': bung dòng → gọi onExpandChildren (giả lập trễ 800ms) → spinner loading hiện trong ô chevron tới khi nạp xong. hasChildren quyết định dòng nào có icon expand (Nhóm/Team là lá → không icon).">
+        <div class="table-box">
+          <sd-table [option]="treeLazyOption"></sd-table>
+        </div>
+      </demo-section>
+
+      <demo-section
+        heading="Tree KHÔNG cột STT — chevron nằm trong cột đầu (Đơn vị)"
+        [props]="[
+          { name: 'tree.loadType', value: 'static' },
+          { name: 'index', value: 'false' }
+        ]"
+        note="Không bật index → icon expand + indent nhúng thẳng vào cột data đầu tiên (kiểu file explorer).">
+        <div class="table-box">
+          <sd-table [option]="treeNoIndexOption"></sd-table>
         </div>
       </demo-section>
 
@@ -430,13 +483,51 @@ export class TableDemoComponent {
   readonly treeOption: SdTableOption<OrgNode> = {
     type: 'local',
     items: () => ORG,
-    tree: { childrenKey: 'children', defaultExpanded: 1, indentSize: 24 },
+    tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: 1, indentSize: 16 },
+    index: { enabled: true },
+    filler: { enabled: true },
+    // why: bật inline filter để demo search ở cấp con — gõ tên đơn vị con,
+    // table giữ nhánh cha + tự bung tới node khớp (static + type 'local').
+    columns: [
+      { field: 'name', type: 'string', title: 'Đơn vị', width: '280px', filter: { default: '' } },
+      { field: 'role', type: 'string', title: 'Cấp', width: '140px' },
+      { field: 'headcount', type: 'number', title: 'Số nhân sự', width: '140px', align: 'right' },
+    ],
+    style: { shadow: true },
+  };
+
+  readonly treeLazyOption: SdTableOption<OrgNode> = {
+    type: 'local',
+    items: () => LAZY_ROOTS,
+    tree: {
+      loadType: 'lazy',
+      indentSize: 16,
+      // hasChildren: chỉ dòng thực sự có con mới hiện icon expand.
+      hasChildren: row => !!LAZY_CHILDREN[row.id]?.length,
+      // onExpandChildren: giả lập API trễ 800ms để thấy spinner loading khi bung.
+      onExpandChildren: row =>
+        new Promise<OrgNode[]>(resolve => setTimeout(() => resolve(LAZY_CHILDREN[row.id] ?? []), 800)),
+    },
     index: { enabled: true },
     filler: { enabled: true },
     columns: [
       { field: 'name', type: 'string', title: 'Đơn vị', width: '280px' },
       { field: 'role', type: 'string', title: 'Cấp', width: '140px' },
       { field: 'headcount', type: 'number', title: 'Số nhân sự', width: '140px', align: 'right' },
+    ],
+    style: { shadow: true },
+  };
+
+  // Tree không bật index → chevron + indent nhúng vào cột data đầu (Đơn vị).
+  readonly treeNoIndexOption: SdTableOption<OrgNode> = {
+    type: 'local',
+    items: () => ORG,
+    tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: 1, indentSize: 16 },
+    filler: { enabled: true },
+    columns: [
+      { field: 'name', type: 'string', title: 'Đơn vị', width: '320px' },
+      { field: 'role', type: 'string', title: 'Cấp', width: '160px' },
+      { field: 'headcount', type: 'number', title: 'Số nhân sự', width: '160px', align: 'right' },
     ],
     style: { shadow: true },
   };

@@ -27,7 +27,7 @@ describe('SdGroupPipe', () => {
       type: 'local',
       items: () => [],
       columns: [],
-      tree: { childrenKey: 'children' },
+      tree: { loadType: 'static', childrenKey: 'children' },
       group: { fields: ['group'] },
     } as any as SdTableOption;
     expect(pipe.transform(items, opt)).toBe(items);

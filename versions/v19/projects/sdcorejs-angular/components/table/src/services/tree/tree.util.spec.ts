@@ -1,15 +1,18 @@
 import { MapToSdTableItem, SdTableItem } from '../../models/table-item.model';
-import { SdTableOptionTree } from '../../models/table-option-tree.model';
+import { SdTableOptionTree, TableOptionTreeLazy, TableOptionTreeStatic } from '../../models/table-option-tree.model';
 import {
   collectFormattedTreeRows,
+  filterMatchingChildren,
   flattenDataTree,
   flattenTree,
   flattenTreeAll,
   getChildrenFromData,
   getChildrenKey,
   hasLazyChildren,
+  isLazyTree,
   resolveDefaultExpanded,
   resolveHasChildren,
+  subtreeMatches,
 } from './tree.util';
 
 interface Node {
@@ -18,8 +21,17 @@ interface Node {
   children?: Node[];
 }
 
-const opt = (over: Partial<SdTableOptionTree<Node>> = {}): SdTableOptionTree<Node> => ({
+// Static option (children embedded). `over` cho phép tinh chỉnh childrenKey/maxDepth/...
+const opt = (over: Partial<TableOptionTreeStatic<Node>> = {}): SdTableOptionTree<Node> => ({
+  loadType: 'static',
   childrenKey: 'children',
+  ...over,
+});
+
+// Lazy option (children nạp lười). Mặc định loader trả mảng rỗng.
+const lazyOpt = (over: Partial<TableOptionTreeLazy<Node>> = {}): SdTableOptionTree<Node> => ({
+  loadType: 'lazy',
+  onExpandChildren: () => Promise.resolve([]),
   ...over,
 });
 
@@ -32,33 +44,59 @@ const item = (data: Node, tree: Partial<NonNullable<SdTableItem<Node>['meta']['t
 describe('tree.util', () => {
   it('getChildrenKey defaults to children', () => {
     expect(getChildrenKey(undefined)).toBe('children');
-    expect(getChildrenKey({ childrenKey: 'items' })).toBe('items');
+    expect(getChildrenKey(opt({ childrenKey: 'items' as any }))).toBe('items');
+  });
+
+  it('getChildrenKey: lazy luôn dùng "children" (không có childrenKey)', () => {
+    expect(getChildrenKey(lazyOpt())).toBe('children');
+  });
+
+  it('isLazyTree phân biệt loadType', () => {
+    expect(isLazyTree(undefined)).toBe(false);
+    expect(isLazyTree(opt())).toBe(false);
+    expect(isLazyTree(lazyOpt())).toBe(true);
   });
 
   it('resolveDefaultExpanded boolean/number', () => {
-    expect(resolveDefaultExpanded(0, { defaultExpanded: false })).toBe(false);
-    expect(resolveDefaultExpanded(1, { defaultExpanded: true })).toBe(true);
-    expect(resolveDefaultExpanded(0, { defaultExpanded: 2 })).toBe(true);
-    expect(resolveDefaultExpanded(1, { defaultExpanded: 2 })).toBe(true);
-    expect(resolveDefaultExpanded(2, { defaultExpanded: 2 })).toBe(false);
-    expect(resolveDefaultExpanded(3, { defaultExpanded: 2 })).toBe(false);
+    expect(resolveDefaultExpanded(0, opt({ defaultExpanded: false }))).toBe(false);
+    expect(resolveDefaultExpanded(1, opt({ defaultExpanded: true }))).toBe(true);
+    expect(resolveDefaultExpanded(0, opt({ defaultExpanded: 2 }))).toBe(true);
+    expect(resolveDefaultExpanded(1, opt({ defaultExpanded: 2 }))).toBe(true);
+    expect(resolveDefaultExpanded(2, opt({ defaultExpanded: 2 }))).toBe(false);
+    expect(resolveDefaultExpanded(3, opt({ defaultExpanded: 2 }))).toBe(false);
+  });
+
+  it('resolveDefaultExpanded = false cho lazy (không có defaultExpanded)', () => {
+    expect(resolveDefaultExpanded(0, lazyOpt())).toBe(false);
   });
 
   it('resolveHasChildren embedded vs lazy', () => {
     const embedded = item({ id: 1, name: 'a', children: [{ id: 2, name: 'b' }] });
     expect(resolveHasChildren(embedded, opt())).toBe(true);
     const lazy = item({ id: 1, name: 'a' });
-    expect(resolveHasChildren(lazy, opt({ onExpandChildren: () => [] }))).toBe(true);
+    expect(resolveHasChildren(lazy, lazyOpt())).toBe(true);
     const leaf = item({ id: 1, name: 'a', children: [] });
     expect(resolveHasChildren(leaf, opt())).toBe(false);
   });
 
+  it('resolveHasChildren lazy + hasChildren callback quyết định hiện icon', () => {
+    const leaf = item({ id: 1, name: 'a' });
+    expect(resolveHasChildren(leaf, lazyOpt({ hasChildren: () => false }))).toBe(false);
+    expect(resolveHasChildren(leaf, lazyOpt({ hasChildren: () => true }))).toBe(true);
+  });
+
+  it('resolveHasChildren lazy + hasChildren=false nhưng có embedded children → vẫn true (embedded thắng)', () => {
+    const withKids = item({ id: 1, name: 'a', children: [{ id: 2, name: 'b' }] });
+    expect(resolveHasChildren(withKids, lazyOpt({ hasChildren: () => false }))).toBe(true);
+  });
+
   it('hasLazyChildren when no embedded data', () => {
     const lazy = item({ id: 1, name: 'a' });
-    expect(hasLazyChildren(lazy, opt({ onExpandChildren: () => [] }))).toBe(true);
+    expect(hasLazyChildren(lazy, lazyOpt())).toBe(true);
     const embedded = item({ id: 1, name: 'a', children: [{ id: 2, name: 'b' }] });
-    expect(hasLazyChildren(embedded, opt({ onExpandChildren: () => [] }))).toBe(false);
+    expect(hasLazyChildren(embedded, lazyOpt())).toBe(false);
   });
+
 
   it('flattenTree collapsed shows roots only', () => {
     const root = item({ id: 1, name: 'root', children: [{ id: 2, name: 'child' }] }, { hasChildren: true, isExpanded: false });
@@ -127,7 +165,7 @@ describe('tree.util', () => {
   });
 
   it('getChildrenFromData reads custom key', () => {
-    expect(getChildrenFromData({ id: 1, items: [{ id: 2 }] } as any, { childrenKey: 'items' })).toEqual([{ id: 2 }] as any);
+    expect(getChildrenFromData({ id: 1, items: [{ id: 2 }] } as any, opt({ childrenKey: 'items' as any }))).toEqual([{ id: 2 }] as any);
   });
 
   it('getChildrenFromData defaults to children and returns [] khi không phải array', () => {
@@ -213,7 +251,7 @@ describe('tree.util', () => {
 
     it('flatten theo childrenKey tuỳ biến', () => {
       const data: any[] = [{ id: 1, items: [{ id: 2, items: [{ id: 3 }] }] }];
-      expect(flattenDataTree(data, opt({ childrenKey: 'items' }) as any).map((d: any) => d.id)).toEqual([1, 2, 3]);
+      expect(flattenDataTree(data, opt({ childrenKey: 'items' as any }) as any).map((d: any) => d.id)).toEqual([1, 2, 3]);
     });
 
     it('respect maxDepth ở data tree', () => {
@@ -230,6 +268,77 @@ describe('tree.util', () => {
         { id: 2, name: 'b', children: [shared] },
       ];
       expect(flattenDataTree(data, opt()).map(d => d.id)).toEqual([1, 99, 2]);
+    });
+  });
+
+  // Search ở cấp con (static tree, type local).
+  describe('subtreeMatches', () => {
+    const byName = (kw: string) => (n: Node) => n.name.toLowerCase().includes(kw.toLowerCase());
+
+    it('true khi chính node khớp', () => {
+      expect(subtreeMatches({ id: 1, name: 'apple' }, byName('app'), opt())).toBe(true);
+    });
+
+    it('true khi node con khớp dù cha không khớp', () => {
+      const root: Node = { id: 1, name: 'root', children: [{ id: 2, name: 'apple' }] };
+      expect(subtreeMatches(root, byName('apple'), opt())).toBe(true);
+    });
+
+    it('true khi cháu (sâu) khớp', () => {
+      const root: Node = {
+        id: 1,
+        name: 'r',
+        children: [{ id: 2, name: 'c', children: [{ id: 3, name: 'target' }] }],
+      };
+      expect(subtreeMatches(root, byName('target'), opt())).toBe(true);
+    });
+
+    it('false khi không node nào trong subtree khớp', () => {
+      const root: Node = { id: 1, name: 'root', children: [{ id: 2, name: 'banana' }] };
+      expect(subtreeMatches(root, byName('apple'), opt())).toBe(false);
+    });
+
+    it('đọc đúng childrenKey tuỳ biến', () => {
+      const root: any = { id: 1, name: 'r', items: [{ id: 2, name: 'apple' }] };
+      expect(subtreeMatches(root, byName('apple'), opt({ childrenKey: 'items' as any }))).toBe(true);
+    });
+
+    it('an toàn với circular reference', () => {
+      const a: any = { id: 1, name: 'a' };
+      a.children = [a];
+      expect(subtreeMatches(a, byName('zzz'), opt())).toBe(false);
+    });
+  });
+
+  describe('filterMatchingChildren', () => {
+    const byName = (kw: string) => (n: Node) => n.name.toLowerCase().includes(kw.toLowerCase());
+
+    it('chỉ giữ child có subtree khớp', () => {
+      const children: Node[] = [
+        { id: 1, name: 'apple' },
+        { id: 2, name: 'banana' },
+        { id: 3, name: 'cherry', children: [{ id: 4, name: 'apple-pie' }] },
+      ];
+      expect(filterMatchingChildren(children, byName('apple'), opt()).map(c => c.id)).toEqual([1, 3]);
+    });
+
+    it('giữ nguyên thứ tự', () => {
+      const children: Node[] = [
+        { id: 3, name: 'apple' },
+        { id: 1, name: 'apricot' },
+        { id: 2, name: 'avocado' },
+      ];
+      expect(filterMatchingChildren(children, byName('a'), opt()).map(c => c.id)).toEqual([3, 1, 2]);
+    });
+
+    it('giữ NGUYÊN object reference (không clone)', () => {
+      const apple: Node = { id: 1, name: 'apple' };
+      const result = filterMatchingChildren([apple, { id: 2, name: 'banana' }], byName('apple'), opt());
+      expect(result[0]).toBe(apple);
+    });
+
+    it('trả mảng rỗng khi không child nào khớp', () => {
+      expect(filterMatchingChildren([{ id: 1, name: 'x' }], byName('zzz'), opt())).toEqual([]);
     });
   });
 });

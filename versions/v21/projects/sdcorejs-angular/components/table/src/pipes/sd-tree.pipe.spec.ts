@@ -14,7 +14,7 @@ describe('SdTreePipe', () => {
     child.meta.tree = { level: 1, hasChildren: false, isExpanded: false };
     const root = MapToSdTableItem({ id: 1 });
     root.meta.tree = { level: 0, hasChildren: true, isExpanded: true, childItems: [child] };
-    const result = pipe.transform([root], { childrenKey: 'children' }, 1);
+    const result = pipe.transform([root], { loadType: 'static', childrenKey: 'children' }, 1);
     expect(result.length).toBe(2);
   });
 });
