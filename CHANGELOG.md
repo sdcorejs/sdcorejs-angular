@@ -10,7 +10,48 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-_Chưa có thay đổi nào kể từ `[0.1]`._
+_Chưa có thay đổi nào kể từ `[0.3]`._
+
+## [0.3] - 2026-06-04
+
+Published: `@sdcorejs/angular@19.0.3` / `@20.0.3` / `@21.0.3` (npm dist-tag `latest`).
+Synced from `vn-angular@9f41cc60`.
+
+> **Đổi scheme version:** bỏ hậu tố `-beta`. Từ bản này version đánh **đồng bộ** giữa `@sd-angular/core` (vn-angular) ↔ `@sdcorejs/angular` theo `<angular-major>.0.<release>` — release này = `.3`.
+
+### Added
+
+- **`SdTable` tree lazy — `hasChildren`** — lazy tree (`loadType: 'lazy'`) nạp con theo yêu cầu qua `onExpandChildren(row) => Promise<T[]>`; thêm tuỳ chọn `hasChildren?: (row) => boolean` để chỉ hiện icon expand ở dòng thực sự có con (không truyền = mọi lazy node đều hiện icon). Spinner loading hiện trong ô chevron khi đang nạp.
+- **`SdTable` tree — search ở cấp con** (table `type: 'local'` + `loadType: 'static'`): khi lọc inline, một nhánh được giữ nếu chính nó HOẶC bất kỳ hậu duệ nào khớp từ khoá; sibling không khớp bị ẩn (prune) + nhánh khớp **tự bung** để lộ node khớp. Clear filter khôi phục cây về trạng thái mặc định.
+
+### Changed (BREAKING for consumers)
+
+- **`SdTableOptionTree` giờ là discriminated union theo `loadType`** — `loadType: 'static' | 'lazy'` là **bắt buộc**.
+
+  **Migration:** thêm `loadType` vào mọi cấu hình `tree`:
+
+  ```diff
+  // Static (children embedded sẵn trong row)
+   tree: {
+  +  loadType: 'static',
+     childrenKey: 'children',
+     defaultExpanded: 1,
+   }
+
+  // Lazy (nạp theo yêu cầu)
+   tree: {
+  +  loadType: 'lazy',
+     onExpandChildren: row => api.getChildren(row.id),
+   }
+  ```
+
+  Lazy **không còn** `childrenKey` / `defaultExpanded`; `onExpandChildren` phải trả `Promise<T[]>` (trước nhận cả `T[]`).
+
+- **Bỏ cột tree-toggle riêng (`sdTreeToggle`)** — icon expand (đổi sang `chevron_right` / `expand_more`, hover nền tròn nhỏ) giờ nhúng vào **cột đầu**: cột STT khi bật `index`, ngược lại cột data đầu tiên — thụt lề theo cấp. Không cần đổi cấu hình; chỉ là thay đổi layout/DOM. **E2E:** không còn cột `sdTreeToggle`; nút toggle giữ `data-autoid="<base>-tree-toggle-<rowId>"` (giờ là `<button>` trong cột đầu).
+
+### Internal
+
+- 212 table specs xanh; lib + showcase build sạch. Showcase `/components/table` có 3 demo tree: static + child-search, lazy + loading + `hasChildren`, và no-index (toggle trong cột data đầu).
 
 ## [0.1] - 2026-06-01
 

@@ -380,6 +380,25 @@ option: SdTableOption<Product> = {
 <sd-table #sdTable [option]="option" />
 ```
 
+**Tree rows / Dòng cây:**
+
+`tree` là discriminated union theo `loadType`. Icon expand (`chevron_right` / `expand_more`) nằm ở **cột đầu** — cột STT khi bật `index`, ngược lại cột data đầu tiên — thụt lề theo cấp.
+
+```typescript
+// loadType: 'static' — children embedded sẵn trong mỗi row
+tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: 1 }
+
+// loadType: 'lazy' — nạp con khi bung (Promise); hasChildren gate icon expand
+tree: {
+  loadType: 'lazy',
+  hasChildren: (row) => row.type === 'Folder',     // chỉ Folder mới có icon expand
+  onExpandChildren: (row) => api.getChildren(row.id),  // () => Promise<T[]>
+}
+```
+
+- **Child-level search** (`type: 'local'` + `loadType: 'static'`): lọc inline tìm cả **cấp con** — giữ nhánh cha của node khớp, ẩn sibling không khớp, tự bung tới node khớp. Clear filter khôi phục cây.
+- **Lazy loading**: spinner hiện trong ô chevron khi `onExpandChildren` đang chạy; `hasChildren` quyết định dòng nào hiện icon (không truyền = mọi node đều hiện).
+
 ---
 
 ### SdAvatar
@@ -703,11 +722,10 @@ ng-packagr -p ng-package.json --watch
 
 ### Versioning
 
-Thư viện tuân theo [Semantic Versioning](https://semver.org):
+Scheme: `<angular-major>.0.<release>`. Major digit **khoá theo Angular line** (19.x = Angular 19, 20.x = Angular 20, 21.x = Angular 21) — **KHÔNG** dùng để báo breaking. Mỗi release publish đồng thời 3 major cùng nội dung feature, chỉ khác Angular shim.
 
-- `MAJOR` — Breaking changes (thay đổi API không tương thích)
-- `MINOR` — Tính năng mới (tương thích ngược)
-- `PATCH` — Bug fixes
+- Luôn pin theo Angular line của bạn: `npm i @sdcorejs/angular@^19` (hoặc `@^20` / `@^21`).
+- Breaking change được ghi rõ ở `CHANGELOG.md`, mục **Changed (BREAKING for consumers)**, kèm migration.
 
 ---
 

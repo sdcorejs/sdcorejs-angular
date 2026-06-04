@@ -150,6 +150,8 @@ opt: SdTableOption<Employee> = {
 </sd-table>
 ```
 
+> **Tree rows** — `tree: { loadType: 'static', childrenKey: 'children' }` (children embedded) hoặc `tree: { loadType: 'lazy', onExpandChildren: row => api.getChildren(row.id), hasChildren: row => … }` (nạp khi bung, có loading spinner). Local + static tree hỗ trợ search inline tới tận cấp con.
+
 ---
 
 ## 📚 Subpath Exports
