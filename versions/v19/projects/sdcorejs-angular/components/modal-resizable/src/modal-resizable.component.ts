@@ -1,12 +1,9 @@
 import {
-  ApplicationRef,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   DestroyRef,
   EmbeddedViewRef,
-  Injector,
-  ViewContainerRef,
   afterNextRender,
   booleanAttribute,
   inject,
@@ -38,9 +35,6 @@ export class SdModalResizable {
   readonly width = input<string>('480px');
   readonly editingChanged = output<boolean>();
   #embeddedViewRef!: EmbeddedViewRef<any>;
-  readonly #viewContainerRef = inject(ViewContainerRef);
-  readonly #ar = inject(ApplicationRef);
-  readonly #injector = inject(Injector);
   readonly #ref = inject(ChangeDetectorRef);
   readonly #loadingService = inject(SdLoadingService);
   readonly #destroyRef = inject(DestroyRef);
@@ -53,7 +47,10 @@ export class SdModalResizable {
 
   constructor() {
     afterNextRender(() => {
-      const outlet = new DomPortalOutlet(document.body, this.#viewContainerRef, this.#ar, this.#injector);
+      // why: attachTemplatePortal tạo embedded view từ VCR của chính CdkPortal →
+      // KHÔNG cần appRef/injector/document. Chỉ truyền outletElement để tương thích
+      // mọi CDK (19 còn slot ComponentFactoryResolver, 20/21 đã bỏ → tránh lệch arg).
+      const outlet = new DomPortalOutlet(document.body);
       this.#embeddedViewRef = outlet.attachTemplatePortal(this.portal());
       this.#detectChanges();
     });

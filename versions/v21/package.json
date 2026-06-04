@@ -10,6 +10,7 @@
                     "pack":  "cd ./dist/sdcorejs-angular && npm pack",
                     "build-pack":  "npm run build && npm run pack",
                     "publish:beta":  "cd ./dist/sdcorejs-angular && npm publish --access public --tag beta",
+                    "publish:latest":  "cd ./dist/sdcorejs-angular && npm publish --access public",
                     "test":  "ng test",
                     "test:ci":  "ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --code-coverage",
                     "lint":  "ng lint",
