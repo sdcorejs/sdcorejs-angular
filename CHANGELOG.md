@@ -10,7 +10,9 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-_Chưa có thay đổi nào kể từ `[0.3]`._
+### Changed
+
+- **Bỏ license-gate `SdBaseSecureComponent` khỏi mọi component** — 9 component không còn `extends SdBaseSecureComponent` (không enforce license khi khởi tạo). Class base + `SdLicenseService` **vẫn giữ lại** (dormant) để gắn lại license sau khi cần. Cho phép dùng/publish thư viện công khai mà không bị chặn license. Synced từ `vn-angular@d2a58656`.
 
 ## [0.3] - 2026-06-04
 
