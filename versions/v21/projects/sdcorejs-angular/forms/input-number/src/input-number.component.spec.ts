@@ -24,6 +24,7 @@ import { queryByCss } from '../../../testing/test-utils';
     [format]="format"
     [hideInlineError]="hideInlineError"
     [inlineError]="inlineError"
+    [validator]="validator"
     [blurOnEnter]="blurOnEnter"
     [(model)]="model"
     (sdChange)="onSdChange($event)"
@@ -41,6 +42,7 @@ class HostComponent {
   format: '1,234,567.89' | '1.234.567,89' | undefined = undefined;
   hideInlineError = false;
   inlineError?: string;
+  validator?: (value: any) => string | Promise<string>;
   blurOnEnter = false;
   model?: any;
   changes: any[] = [];
@@ -594,6 +596,126 @@ describe('SdInputNumber', () => {
       fixture.detectChanges();
 
       expect(spy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('custom [validator] async error message', () => {
+    // why: regression — [validator] cài async validator lên formControl, nhưng giá trị được
+    // mirror sang formControl bằng setValue({emitEvent:false}) → khi async resolve, setErrors
+    // cũng emitEvent:false → #state KHÔNG tick → errorMessage (computed theo #state) không
+    // recompute → message không hiển thị (dù form invalid + viền đỏ). Phải sửa để event lan ra.
+    const matError = () =>
+      fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+    const errorIcon = () =>
+      fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
+
+    it('surfaces the validator message through errorMessage() after async resolves', fakeAsync(() => {
+      host.validator = (v: any) => (v === 5 ? 'Không được nhập 5' : '');
+      fixture.detectChanges();
+
+      // drive a value through the real input pipeline (inputControl → #onChange → formControl)
+      comp.inputControl.setValue('5');
+      comp.formControl.markAsTouched();
+      tick(); // flush the async validator promise
+      fixture.detectChanges();
+
+      expect(comp.formControl.invalid).toBe(true); // form thực sự invalid
+      expect(comp.errorMessage()).toBe('Không được nhập 5');
+    }));
+
+    it('renders the validator message in <mat-error> (inline mode)', fakeAsync(() => {
+      host.validator = (v: any) => (v === 5 ? 'Không được nhập 5' : '');
+      fixture.detectChanges();
+
+      comp.inputControl.setValue('5');
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+
+      expect(matError()?.textContent?.trim()).toBe('Không được nhập 5');
+    }));
+
+    it('surfaces the validator message via the error icon tooltip when hideInlineError', fakeAsync(() => {
+      host.hideInlineError = true;
+      host.validator = (v: any) => (v === 5 ? 'Không được nhập 5' : '');
+      fixture.detectChanges();
+
+      comp.inputControl.setValue('5');
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+
+      expect(errorIcon()).not.toBeNull();
+      expect(comp.errorMessage()).toBe('Không được nhập 5');
+      // inline mode → KHÔNG có <mat-error> dưới field, chỉ có icon + tooltip
+      expect(matError()).toBeNull();
+    }));
+
+    it('surfaces the validator message via preset [(model)] + markAsTouched (demo path)', fakeAsync(() => {
+      host.validator = (v: any) => (v === 13 ? 'Số 13 không được phép' : '');
+      host.model = 13;
+      fixture.detectChanges();
+      tick(); // async validator resolves
+      comp.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      expect(comp.formControl.invalid).toBe(true);
+      expect(comp.errorMessage()).toBe('Số 13 không được phép');
+    }));
+
+    it('clears the validator message once the value becomes valid again', fakeAsync(() => {
+      host.validator = (v: any) => (v === 5 ? 'Không được nhập 5' : '');
+      fixture.detectChanges();
+
+      comp.inputControl.setValue('5');
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('Không được nhập 5');
+
+      comp.inputControl.setValue('6');
+      tick();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBeUndefined();
+      expect(comp.formControl.valid).toBe(true);
+    }));
+  });
+
+  describe('suffix ordering — error icon stays flush at the right edge', () => {
+    // why: nút clear (matSuffix, hover-gated `visibility:hidden`) vẫn chiếm chỗ trong layout
+    // (cố ý — tránh nhảy layout khi hover). Nếu render SAU error icon nó giành slot ngoài cùng
+    // bên phải → error icon (luôn hiển thị) bị đẩy "tụt vào trong". Clear phải render TRƯỚC error
+    // icon để error icon nằm sát mép phải, clear giữ slot vô hình bên trái nó.
+    const errorIconEl = () =>
+      fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
+    const clearBtnEl = () =>
+      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLElement | null;
+
+    const setupErrorWithValue = () => {
+      host.hideInlineError = true;
+      host.max = 10;
+      host.model = 20; // vượt max → lỗi
+      host.required = false; // không required → nút clear hiển thị
+      fixture.detectChanges();
+      comp.formControl.markAsTouched();
+      comp.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+    };
+
+    it('renders BOTH the error icon and the clear button when invalid + has value + not required', () => {
+      setupErrorWithValue();
+      expect(errorIconEl()).not.toBeNull();
+      expect(clearBtnEl()).not.toBeNull();
+    });
+
+    it('orders the clear button BEFORE the error icon in the DOM (error icon flush at edge)', () => {
+      setupErrorWithValue();
+      const clearBtn = clearBtnEl()!;
+      const errorIcon = errorIconEl()!;
+      const errorFollowsClear = !!(
+        clearBtn.compareDocumentPosition(errorIcon) & Node.DOCUMENT_POSITION_FOLLOWING
+      );
+      expect(errorFollowsClear).toBe(true);
     });
   });
 });

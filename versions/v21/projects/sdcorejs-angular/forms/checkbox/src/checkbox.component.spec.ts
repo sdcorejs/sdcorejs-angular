@@ -57,6 +57,23 @@ describe('SdCheckbox', () => {
     if (!checkbox) throw new Error('SdCheckbox not found in fixture');
   });
 
+  describe('inlineError message (OnPush re-render on touch)', () => {
+    // why: probe — template gate cho mat-error đọc formControl.errors/touched (raw). Kiểm tra
+    // dùng autoDetectChanges (tôn trọng OnPush) xem message có hiện khi markAsTouched không.
+    it('renders the inlineError message in the DOM after the control is touched (no forced CD)', async () => {
+      host.inlineError = 'Bắt buộc đồng ý điều khoản';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      // có validator (invalid) nhưng chưa touched → chưa hiện message
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+
+      checkbox.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelector('mat-error')).not.toBeNull();
+    });
+  });
+
   describe('disabled', () => {
     it('disables formControl when disabled = true', () => {
       host.disabled = true;

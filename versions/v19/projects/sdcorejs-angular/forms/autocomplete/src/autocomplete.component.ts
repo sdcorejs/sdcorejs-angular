@@ -479,9 +479,14 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     const vField = this.valueField();
     const dField = this.displayField();
 
+    // why: KHÔNG dùng { emitEvent: false } khi mirror giá trị chọn sang formControl. formControl
+    // mang async [validator] (HandleSdCustomValidator). Nếu chặn event thì khi async resolve,
+    // setErrors cũng im → #state (sdFormControlState) không tick → errorMessage không recompute →
+    // message lỗi không hiện/không clear. Để event lan ra: formControl.valueChanges có subscriber
+    // set valueModel (guard `!==`), và onSelect set lại valueModel cùng giá trị (no-op) → không lặp.
     if (typeof item === 'string' || typeof item === 'number') {
       if (this.formControl.value !== item) {
-        this.formControl.setValue(item, { emitEvent: false });
+        this.formControl.setValue(item);
         this.valueModel.set(item);
         this.sdChange.emit(item);
         this.sdSelection.emit({ values: [item], selectedItems: [item], value: item, selectedItem: item });
@@ -490,7 +495,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
       // [UPDATED]: Lấy giá trị val = getNestedValue(item, vField)
       const val = this.getNestedValue(item, vField) ?? null;
       if (this.formControl.value !== val) {
-        this.formControl.setValue(val, { emitEvent: false });
+        this.formControl.setValue(val);
         this.valueModel.set(val);
         this.sdChange.emit(val);
         this.sdSelection.emit({ values: [val], selectedItems: [item], value: val, selectedItem: item });

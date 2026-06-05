@@ -1,197 +1,296 @@
-// --- CONFIG DIMENSIONS ---
-$indent: 28px;
-$node-mb: 12px;        // Khoảng cách giữa các row
-$line-width: 1px;
-$line-color: #c4c4c4;
+// Theme tokens — primary palette (replaces the previous hardcoded purple prototype).
+$primary: var(--sd-primary, #2a66f4);
+$primary-light: var(--sd-primary-light, #eaf1ff);
+$primary-dark: var(--sd-primary-dark, #1c4ad9);
 
-// 1. Group Switch Dimensions
-$switch-height: 32px;
-$center-group: 16px;   // Vị trí tâm của switch (32/2)
-
-// 2. Rule Card Dimensions
-$card-padding: 10px;
-$input-height: 32px;
-$center-rule: 26px;    // Vị trí tâm của Rule ($card-padding + $input-height/2)
-
-// -------------------------
+$line-color: #d0d5dd;
+$border: #e0e0e0;
+$indent: 24px;
+$node-gap: 12px;
 
 :host {
   display: block;
-  font-family: 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
-  color: #333;
+  color: var(--sd-text, #333);
 }
 
+// ---------------------------------------------------------------------------
+// VIEW MODE — looks like a disabled input, but renders the raw query string
+// with per-token highlight.
+// ---------------------------------------------------------------------------
+.qb-view {
+  display: block;
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid $line-color;
+  border-radius: 6px;
+  background: var(--sd-disabled-bg, #f6f7f9);
+  color: var(--sd-text, #333);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  cursor: default;
+  user-select: text;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.qb-view-empty {
+  color: #98a2b3;
+}
+
+.qb-tok {
+  white-space: pre;
+
+  &.qb-tok-field {
+    color: var(--sd-text, #1d2939);
+    font-weight: 600;
+  }
+  &.qb-tok-op {
+    color: $primary;
+    font-weight: 600;
+  }
+  &.qb-tok-value {
+    color: var(--sd-success, #1a7f37);
+  }
+  &.qb-tok-logic {
+    color: #98a2b3;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  &.qb-tok-paren {
+    color: #667085;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// EDIT MODE
+// ---------------------------------------------------------------------------
 .qb-container {
-  padding: 20px;
+  padding: 16px;
   background: #fff;
+  border: 1px solid $border;
+  border-radius: 6px;
+
+  &.is-disabled {
+    opacity: 0.7;
+    pointer-events: none;
+  }
 }
 
-// --- HEADER STYLES (Giữ nguyên) ---
 .qb-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: $node-mb;
+  margin-bottom: $node-gap;
   position: relative;
   z-index: 1;
-  &.is-open { z-index: 1000; }
+
+  &.is-open {
+    z-index: 1000;
+  }
 }
 
-.qb-condition-switch {
+// AND / OR segmented toggle — active side uses primary.
+.qb-logic-switch {
   display: inline-flex;
+  border: 1px solid $border;
   border-radius: 4px;
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #e0e0e0;
-  height: $switch-height; // 32px
+  height: 30px;
 
   button {
     border: none;
     background: transparent;
-    padding: 0 16px;
+    padding: 0 14px;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 12px;
     cursor: pointer;
-    color: #666;
+    color: #667085;
     height: 100%;
-    &.active { background: #6246a8; color: #fff; }
-    &:hover:not(.active) { background: #f5f5f5; }
+
+    &.active {
+      background: $primary;
+      color: #fff;
+    }
+    &:hover:not(.active):not([disabled]) {
+      background: $primary-light;
+      color: $primary-dark;
+    }
+    &[disabled] {
+      cursor: default;
+    }
   }
 }
 
 .qb-actions {
   position: relative;
   display: flex;
+  align-items: center;
   gap: 4px;
 }
-// ... (Các style button/dropdown giữ nguyên như bài trước) ...
 
-// --- TREE LINES LOGIC (UPDATED) ---
+.qb-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #667085;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
 
-.qb-body { padding-left: $indent; }
-.qb-list { position: relative; }
+  &:hover:not([disabled]) {
+    background: $primary-light;
+    color: $primary;
+  }
+  &[disabled] {
+    cursor: default;
+    color: #cbd2dc;
+  }
+}
+
+.qb-btn-remove,
+.qb-btn-remove-rule {
+  &:hover:not([disabled]) {
+    background: #fee4e2;
+    color: #d92d20;
+  }
+}
+
+.qb-btn-remove-rule {
+  margin-left: auto;
+}
+
+.qb-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid $border;
+  box-shadow: 0 4px 12px rgba(16, 24, 40, 0.12);
+  border-radius: 6px;
+  min-width: 150px;
+  z-index: 100;
+  overflow: hidden;
+
+  button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #344054;
+
+    &:hover {
+      background: $primary-light;
+      color: $primary;
+    }
+  }
+}
+
+// Tree body + indent guides
+.qb-body {
+  padding-left: $indent;
+}
 
 .qb-treenode {
   position: relative;
-  padding-left: 24px;
-  margin-bottom: $node-mb;
+  padding-left: 22px;
+  margin-bottom: $node-gap;
 
-  // 1. Đường dọc (Vertical)
-  // Nối từ node trước (-$node-mb) xuống hết chiều cao node này
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  // vertical guide
   &::before {
     content: '';
     position: absolute;
     left: 0;
-    top: -#{$node-mb}; 
-    bottom: 0;
-    width: 1px;
+    top: -#{$node-gap};
+    bottom: 50%;
     border-left: 1px dashed $line-color;
   }
-
-  // 2. Đường ngang (Horizontal)
+  // horizontal guide
   &::after {
     content: '';
     position: absolute;
     left: 0;
-    width: 24px;
-    height: 1px;
+    top: 50%;
+    width: 18px;
     border-top: 1px dashed $line-color;
   }
-  
-  // FIX: Node đầu tiên nối lên Header cha
-  &:first-child::before {
-    // Chỉ nối lên một chút để chạm vào mép dưới header cha
-    top: -14px; 
-    height: calc(100% + 14px);
-  }
-
-  // --- LOGIC CĂN GIỮA THEO LOẠI NODE ---
-
-  // CASE A: GROUP (Nối vào Switch 32px)
-  &.is-group {
-    &::after {
-      top: $center-group; // 16px
-    }
-    // Xử lý góc L cho group cuối cùng
-    &:last-child::before {
-      height: auto;
-      bottom: auto;
-      top: -14px;
-      height: calc(#{$center-group} + 14px); // Dừng ở 16px + offset
-    }
-  }
-
-  // CASE B: RULE (Nối vào Card ~52px)
-  &.is-rule {
-    &::after {
-      top: $center-rule; // 26px
-    }
-    // Xử lý góc L cho rule cuối cùng
-    &:last-child::before {
-      height: auto;
-      bottom: auto;
-      top: -14px;
-      height: calc(#{$center-rule} + 14px); // Dừng ở 26px + offset
-    }
+  &:last-child::before {
+    bottom: auto;
+    height: calc(50% + #{$node-gap});
   }
 }
 
-// --- CARD & INPUTS ---
-.qb-rule-card {
-  background: #fafafa;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: $card-padding 12px; // padding-top/bottom = 10px
-  transition: 0.2s;
-  &:hover { border-color: #ccc; }
+.qb-empty {
+  color: #98a2b3;
+  font-style: italic;
+  font-size: 13px;
+  padding: 4px 0;
 }
 
-.form-row {
+// Rule row
+.qb-rule {
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: $input-height; // 32px
-}
+  gap: 8px;
+  background: #fafbfc;
+  border: 1px solid $border;
+  border-radius: 6px;
+  padding: 6px 10px;
 
-.form-input {
-  border: none;
-  background: transparent;
-  font-size: 14px;
-  color: #333;
-  outline: none;
-  height: 100%;
-  &::placeholder { color: #aaa; }
-}
-
-.divider { width: 1px; height: 20px; background: #ddd; }
-
-.btn-icon {
-    // ... style cũ
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 18px; color: #666;
-    width: 32px; height: 32px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 4px;
-    &:hover { background: #f0f0f0; color: #6246a8; }
-}
-.btn-remove { color: #999; &:hover { color: #d32f2f; background: #ffebee; } }
-.btn-remove-rule {
-    margin-left: auto; color: #999;
-    &:hover { color: #d32f2f; background: none; }
-}
-
-// Copy lại phần dropdown style từ bài trước để code chạy đầy đủ
-.qb-dropdown {
-  position: absolute; top: 100%; left: 0; margin-top: 4px;
-  background: #fff; border: 1px solid #e0e0e0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 4px;
-  min-width: 160px; z-index: 100;
-  button {
-    display: block; width: 100%; text-align: left; background: none; border: none;
-    padding: 10px 14px; cursor: pointer; font-size: 13px; color: #333;
-    &:hover { background: #f3f0fa; color: #6246a8; }
+  &:hover {
+    border-color: #c2c8d0;
   }
 }
+
+.qb-field {
+  min-width: 150px;
+}
+
+.qb-val {
+  min-width: 140px;
+}
+
+.qb-between {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.qb-dash {
+  color: #98a2b3;
+}
+
+.qb-divider {
+  width: 1px;
+  align-self: stretch;
+  background: $border;
+}
+
+// Nested group card — subtle primary-tinted edge so hierarchy reads clearly.
+.qb-treenode.is-group > .qb-group {
+  border: 1px solid $border;
+  border-left: 2px solid $primary;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fff;
+}
+
+// Relative date editor layout
+.qb-date-mode { min-width: 120px; }
+.qb-rel-amount { width: 72px; }
+.qb-rel-unit { min-width: 110px; }

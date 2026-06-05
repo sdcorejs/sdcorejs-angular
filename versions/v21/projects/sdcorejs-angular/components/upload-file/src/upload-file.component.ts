@@ -25,7 +25,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
@@ -83,6 +83,18 @@ export class SdUploadFile<TArgs = any> {
   #formGroup?: FormGroup;
 
   readonly formControl = new SdFormControl();
+
+  // why: component là OnPush nhưng template đọc formControl.touched/errors như thuộc tính
+  // THƯỜNG (không reactive). Khi cha submit (markAllAsTouched) hoặc validator gắn lỗi, không
+  // có gì markForCheck → view không re-render → message lỗi required không hiện. sdFormControlState
+  // bọc formControl thành signal tick mỗi control event (value/status/touched) → showRequiredError
+  // (computed) đọc signal này → template đọc computed → OnPush tự refresh khi state đổi.
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  /** Hiển thị message "vui lòng upload": không disabled + đã touched + còn lỗi required. */
+  readonly showRequiredError = computed<boolean>(() => {
+    void this.#state(); // phụ thuộc control events để re-eval (OnPush refresh)
+    return !this.formControl.disabled && this.formControl.touched && !!this.formControl.errors?.['required'];
+  });
 
   // ─── Signals (state) ──────────────────────────────────────────────────
   readonly previewFiles = signal<PreviewFile[]>([]);

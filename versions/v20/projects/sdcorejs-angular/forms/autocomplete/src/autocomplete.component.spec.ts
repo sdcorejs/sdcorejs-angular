@@ -24,6 +24,7 @@ import { queryByCss, queryAllByCss } from '../../../testing/test-utils';
     [disabled]="disabled"
     [hideInlineError]="hideInlineError"
     [inlineError]="inlineError"
+    [validator]="validator"
     [(model)]="model"
     (sdChange)="onSdChange($event)"
     (sdSelection)="onSdSelection($event)"></sd-autocomplete>`,
@@ -38,6 +39,7 @@ class HostComponent {
   disabled = false;
   hideInlineError = false;
   inlineError?: string;
+  validator?: (value: any) => string | Promise<string>;
   model?: any;
   changes: any[] = [];
   selections: any[] = [];
@@ -376,6 +378,43 @@ describe('SdAutocomplete', () => {
     it('returns undefined when no errors', () => {
       expect(comp.errorMessage()).toBeUndefined();
     });
+  });
+
+  // -------------------------------------------------------------------------
+  // custom [validator] async error message (Pattern A regression)
+  // -------------------------------------------------------------------------
+  describe('custom [validator] async error message', () => {
+    // why: onSelect mirror sang formControl trước đây dùng { emitEvent: false } → async validator
+    // resolve im → #state không tick → errorMessage không recompute → message lỗi không hiện/không clear.
+    it('surfaces the validator message after selecting an invalid value (async resolves)', fakeAsync(() => {
+      host.validator = (v: any) => (v === 'bad' ? 'Giá trị không hợp lệ' : '');
+      fixture.detectChanges();
+
+      comp.onSelect('bad' as any);
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+
+      expect(comp.formControl.invalid).toBe(true);
+      expect(comp.errorMessage()).toBe('Giá trị không hợp lệ');
+    }));
+
+    it('clears the validator message once a valid value is selected', fakeAsync(() => {
+      host.validator = (v: any) => (v === 'bad' ? 'Giá trị không hợp lệ' : '');
+      fixture.detectChanges();
+
+      comp.onSelect('bad' as any);
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBe('Giá trị không hợp lệ');
+
+      comp.onSelect('good' as any);
+      tick();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBeUndefined();
+      expect(comp.formControl.valid).toBe(true);
+    }));
   });
 
   // -------------------------------------------------------------------------

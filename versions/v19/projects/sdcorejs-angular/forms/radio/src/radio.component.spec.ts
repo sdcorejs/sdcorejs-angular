@@ -74,6 +74,23 @@ describe('SdRadio', () => {
     if (!radio) throw new Error('SdRadio not found in fixture');
   });
 
+  describe('required message (OnPush re-render on touch)', () => {
+    // why: probe — template gate cho mat-error đọc formControl.errors/touched (raw). Kiểm tra
+    // dùng autoDetectChanges (tôn trọng OnPush) xem message required có hiện khi markAsTouched không.
+    it('renders the required message in the DOM after the control is touched (no forced CD)', async () => {
+      host.required = true;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      // required + chưa chọn (invalid) nhưng chưa touched → chưa hiện message
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+
+      radio.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelector('mat-error')).not.toBeNull();
+    });
+  });
+
   describe('creation & rendering', () => {
     it('creates the component', () => {
       expect(radio).toBeTruthy();

@@ -26,8 +26,11 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
         </div>
       </demo-section>
 
-      <demo-section heading="Tải tài liệu (PDF, Word, Excel)" [props]="[{ name: 'type', value: 'document' }, { name: 'required', value: 'true' }]">
-        <div class="control-box">
+      <demo-section
+        heading="Tải tài liệu + báo lỗi required"
+        [props]="[{ name: 'type', value: 'document' }, { name: 'required', value: 'true' }, { name: '[form]', value: 'FormGroup' }]"
+        note="Bấm Kiểm tra (mô phỏng submit → markAllAsTouched) khi chưa đính kèm file: message lỗi đỏ 'Vui lòng tải tệp' hiện ngay dưới vùng upload. Đính kèm 1 file rồi Kiểm tra lại → lỗi biến mất.">
+        <div class="control-box" style="display:flex; flex-direction:column; gap:12px">
           <sd-upload-file
             label="Tài liệu đính kèm"
             type="document"
@@ -39,6 +42,10 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
             [form]="form"
             name="attachments">
           </sd-upload-file>
+          <div style="display:flex; gap:8px">
+            <button type="button" (click)="check()">Kiểm tra</button>
+            <button type="button" (click)="resetForm()">Đặt lại</button>
+          </div>
         </div>
       </demo-section>
 
@@ -65,4 +72,7 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 export class UploadFileDemoComponent {
   readonly productImages = signal<(string | number)[]>([]);
   readonly form = new FormGroup({});
+
+  check() { this.form.markAllAsTouched(); }
+  resetForm() { this.form.reset(); this.form.markAsUntouched(); }
 }

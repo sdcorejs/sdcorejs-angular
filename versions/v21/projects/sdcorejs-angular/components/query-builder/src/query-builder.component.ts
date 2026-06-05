@@ -1,88 +1,413 @@
-import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NgTemplateOutlet } from '@angular/common';
+import { ChangeDetectionStrategy, Component, booleanAttribute, computed, effect, input, model, signal, untracked } from '@angular/core';
+import { SdDate } from '@sdcorejs/angular/forms/date';
+import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdSelect } from '@sdcorejs/angular/forms/select';
+import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { Filter, Operator } from '@sdcorejs/utils/models';
+import {
+  isQbGroup,
+  QB_DATE_MODES,
+  QB_EMPTY_OPTIONS,
+  QB_RELATIVE_UNIT_OPTIONS,
+  QbDateMode,
+  QbGroup,
+  QbNode,
+  QbRule,
+  QbToken,
+  qbAllowedOperators,
+  qbDefaultOperator,
+  qbDefaultRelative,
+  qbIsMultiOperator,
+  qbIsNoDataOperator,
+  qbIsRelativeDate,
+  qbNewGroup,
+  qbNewRule,
+  SdQbRelativeDirection,
+  SdQbRelativeUnit,
+  SdQueryBuilderField,
+  SdQueryBuilderFieldOption,
+} from './query-builder.model';
+import { filterToTokens, filterToTree, treeToFilter } from './query-builder.serializer';
 
-export interface QueryRule {
-  field: string;
-  operator: string;
-  value: any;
+/** A logical `Filter` (AND / OR group) carries a `data[]` array. */
+function isAndOr(filter: any): boolean {
+  return !!filter && (filter.operator === 'AND' || filter.operator === 'OR') && Array.isArray(filter.data);
 }
 
-export interface QueryGroup {
-  condition: 'AND' | 'OR';
-  rules: (QueryRule | QueryGroup)[];
-  isOpen?: boolean; // Trạng thái mở menu
-}
-
+/**
+ * Visual filter / rule builder. Compose nested AND / OR groups of
+ * `field operator value` conditions; emits the canonical `Filter` (root is a
+ * `FilterAndOr` tree) via `[(value)]`, plus a flat `[(filters)]` mirror of the
+ * root group's direct children. `mode="view"` renders a read-only SQL-ish raw
+ * string with highlighted operators + values.
+ */
 @Component({
   selector: 'sd-query-builder',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgTemplateOutlet, SdOperator, SdSelect, SdInput, SdDate, SdDatetime],
   templateUrl: './query-builder.component.html',
-  styleUrls: ['./query-builder.component.scss']
+  styleUrls: ['./query-builder.component.scss'],
 })
 export class SdQueryBuilder {
-  @Input() group: QueryGroup = {
-    condition: 'AND',
-    rules: [
-      { field: 'Employee ID', operator: 'Equal', value: '1' },
-      { field: 'Title', operator: 'Equal', value: 'Sales Manager' },
-      {
-        condition: 'OR',
-        rules: [
-          { field: 'Select Field', operator: '', value: '' }
-        ]
+  // -------------------------------------------------------------------------
+  // Inputs
+  // -------------------------------------------------------------------------
+
+  /** Filterable fields — each declares a `type` that drives the operator set + value editor. */
+  readonly fields = input<SdQueryBuilderField[]>([]);
+
+  /** `'edit'` (default) = interactive tree · `'view'` = read-only raw-query string. */
+  readonly mode = input<'edit' | 'view'>('edit');
+
+  /** Disable all editing controls. */
+  readonly disabled = input(false, { transform: booleanAttribute });
+
+  /** Prefix for `data-autoid` on inner controls (E2E selectors). */
+  readonly autoId = input<string>();
+
+  // -------------------------------------------------------------------------
+  // Two-way models (output contract)
+  // -------------------------------------------------------------------------
+
+  /** Canonical output — the root `FilterAndOr` tree, or `null` when empty. `[(value)]`. */
+  readonly value = model<Filter | null>(null);
+
+  /** Convenience mirror — the root group's direct children. `[(filters)]`. */
+  readonly filters = model<Filter[]>([]);
+
+  /** Root group's logical connector. `[(rootLogic)]`. */
+  readonly rootLogic = model<'AND' | 'OR'>('AND');
+
+  // -------------------------------------------------------------------------
+  // Internal source of truth — the editable tree (carries UI state).
+  // -------------------------------------------------------------------------
+
+  readonly #tree = signal<QbGroup>(qbNewGroup('AND'));
+  readonly tree = this.#tree.asReadonly();
+
+  /** Last filter WE emitted — used to recognise (and ignore) our own echo in the inbound effect. */
+  #lastEmitted: Filter | null | undefined = undefined;
+
+  // -------------------------------------------------------------------------
+  // Derived state
+  // -------------------------------------------------------------------------
+
+  /** `field.key` → field, for fast lookup from a rule. */
+  readonly fieldByKey = computed<Record<string, SdQueryBuilderField>>(() => {
+    const map: Record<string, SdQueryBuilderField> = {};
+    for (const f of this.fields()) map[f.key] = f;
+    return map;
+  });
+
+  /** Boolean fields → their stable `[true,false]` option list. Memoized so the template
+   *  binding hands `sd-select` the SAME array ref each CD (else its `toObservable(items)`
+   *  → `markForCheck()` loops → OOM). Recomputes only when `fields()` changes. */
+  readonly #booleanOptionsByKey = computed<Map<string, SdQueryBuilderFieldOption[]>>(() => {
+    const map = new Map<string, SdQueryBuilderFieldOption[]>();
+    for (const f of this.fields()) {
+      if (f.type === 'boolean') {
+        map.set(f.key, [
+          { value: true, display: f.trueLabel ?? 'Có' },
+          { value: false, display: f.falseLabel ?? 'Không' },
+        ]);
       }
-    ]
-  };
-
-  @Output() groupChange = new EventEmitter<QueryGroup>();
-
-  isGroup(item: any): item is QueryGroup {
-    return (item as QueryGroup).rules !== undefined;
-  }
-
-  toggleCondition(group: QueryGroup, condition: 'AND' | 'OR') {
-    group.condition = condition;
-  }
-
-  // --- LOGIC DROPDOWN & Z-INDEX ---
-  toggleDropdown(group: QueryGroup, event: Event) {
-    event.stopPropagation();
-    // Đóng tất cả các dropdown khác để tránh chồng chéo
-    if (!group.isOpen) {
-        this.closeAllDropdowns(this.group);
     }
-    group.isOpen = !group.isOpen;
-  }
+    return map;
+  });
 
-  @HostListener('document:click')
-  closeAll() {
-    this.closeAllDropdowns(this.group);
-  }
+  /** Stable option list for the date-mode select. */
+  readonly dateModes = QB_DATE_MODES;
+  /** Stable combined unit×direction option list for the relative select. */
+  readonly relativeUnitOptions = QB_RELATIVE_UNIT_OPTIONS;
 
-  closeAllDropdowns(group: QueryGroup) {
-    group.isOpen = false;
-    group.rules.forEach(rule => {
-      if (this.isGroup(rule)) this.closeAllDropdowns(rule);
+  /** View-mode token stream — recomputed from the emitted value. */
+  readonly tokens = computed<QbToken[]>(() => filterToTokens(this.value(), this.fields()));
+
+  readonly isView = computed(() => this.mode() === 'view');
+
+  /** Expose the type-guard to the template. */
+  readonly isGroup = isQbGroup;
+
+  constructor() {
+    // Inbound seeding: an EXTERNAL write to value / filters rebuilds the tree.
+    // Our own emits are recognised via #lastEmitted and skipped (no echo loop).
+    effect(() => {
+      const v = this.value();
+      const fl = this.filters();
+      const incoming = this.#coalesce(v, fl);
+      if (this.#filterEq(incoming, this.#lastEmitted)) return;
+      this.#tree.set(filterToTree(incoming));
+      this.#commit();
     });
   }
-  // --------------------------------
 
-  addRule(group: QueryGroup) {
-    group.rules.push({ field: '', operator: 'Equal', value: '' });
-    group.isOpen = false;
+  #coalesce(v: Filter | null, fl: Filter[]): Filter | null {
+    if (v) return v;
+    if (fl && fl.length) return { operator: untracked(() => this.rootLogic()), data: fl } as Filter;
+    return null;
   }
 
-  addGroup(group: QueryGroup) {
-    group.rules.push({
-      condition: 'OR',
-      rules: [{ field: '', operator: '', value: '' }]
-    } as QueryGroup);
-    group.isOpen = false;
+  #filterEq(a: Filter | null | undefined, b: Filter | null | undefined): boolean {
+    return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
   }
 
-  removeItem(parentGroup: QueryGroup, index: number) {
-    parentGroup.rules.splice(index, 1);
+  // -------------------------------------------------------------------------
+  // Tree mutation → emit
+  // -------------------------------------------------------------------------
+
+  /** New root ref so the template (which reads `tree()`) re-renders. */
+  #bumpTree(): void {
+    this.#tree.set({ ...this.#tree() });
+  }
+
+  /** Recompute the output `Filter` from the tree and push it to value / filters / rootLogic. */
+  #commit(): void {
+    const filter = treeToFilter(this.#tree());
+    this.#lastEmitted = filter;
+    this.value.set(filter);
+    this.filters.set(isAndOr(filter) ? (filter as any).data : filter ? [filter] : []);
+    const logic = this.#tree().logic;
+    if (this.rootLogic() !== logic) this.rootLogic.set(logic);
+  }
+
+  /** Mutate-in-place + re-render + emit. */
+  #apply(): void {
+    this.#bumpTree();
+    this.#commit();
+  }
+
+  // -------------------------------------------------------------------------
+  // Group / rule structural mutations
+  // -------------------------------------------------------------------------
+
+  /** Switch a group's AND/OR connector and re-emit. No-op when disabled or unchanged. */
+  setGroupLogic(group: QbGroup, logic: 'AND' | 'OR'): void {
+    if (this.disabled() || group.logic === logic) return;
+    group.logic = logic;
+    this.#apply();
+  }
+
+  /** Open this group's "+" menu (closing any other open one). UI-only — does not emit. */
+  toggleDropdown(group: QbGroup, event: Event): void {
+    if (this.disabled()) return;
+    event.stopPropagation();
+    const willOpen = !group.open;
+    this.#closeAllDropdowns(this.#tree());
+    group.open = willOpen;
+    this.#bumpTree(); // UI-only — no emit
+  }
+
+  closeAllDropdowns(): void {
+    if (!this.#hasOpenDropdown(this.#tree())) return; // avoid a re-render on every container click
+    this.#closeAllDropdowns(this.#tree());
+    this.#bumpTree();
+  }
+
+  #hasOpenDropdown(node: QbNode): boolean {
+    if (!isQbGroup(node)) return false;
+    return node.open === true || node.children.some(c => this.#hasOpenDropdown(c));
+  }
+
+  #closeAllDropdowns(node: QbNode): void {
+    if (isQbGroup(node)) {
+      node.open = false;
+      node.children.forEach(c => this.#closeAllDropdowns(c));
+    }
+  }
+
+  /** Append a blank rule to `group`. */
+  addRule(group: QbGroup): void {
+    if (this.disabled()) return;
+    group.children.push(qbNewRule());
+    group.open = false;
+    this.#apply();
+  }
+
+  /** Append a nested sub-group (seeded with one blank rule) to `group`. */
+  addGroup(group: QbGroup): void {
+    if (this.disabled()) return;
+    group.children.push(qbNewGroup('AND', [qbNewRule()]));
+    group.open = false;
+    this.#apply();
+  }
+
+  /** Remove the child at `index` from `parent` (a rule or a whole sub-group). */
+  removeNode(parent: QbGroup, index: number): void {
+    if (this.disabled()) return;
+    parent.children.splice(index, 1);
+    this.#apply();
+  }
+
+  // -------------------------------------------------------------------------
+  // Rule field / operator / value mutations
+  // -------------------------------------------------------------------------
+
+  /**
+   * Point `rule` at a new field. Resets operator to the field's default and the value
+   * to that operator's empty shape — the old operator/value rarely fit the new type.
+   *
+   * @param rule - the rule being edited.
+   * @param key - the chosen field key (from the field picker). Swap-only: a null / undefined
+   *   key is a no-op — the field can be changed but never cleared (issue #2).
+   */
+  setField(rule: QbRule, key: any): void {
+    if (this.disabled()) return;
+    if (key == null) return; // swap-only: never clear the field (issue #2)
+    rule.field = key;
+    const field = this.fieldByKey()[rule.field as string];
+    const op = qbDefaultOperator(field);
+    rule.operator = op;
+    rule.value = this.#defaultValueFor(op);
+    this.#apply();
+  }
+
+  /** Change `rule`'s operator and reshape its value to fit the new operator (array / range / none). */
+  setOperator(rule: QbRule, op: Operator | undefined): void {
+    if (this.disabled()) return;
+    rule.operator = op;
+    rule.value = this.#reshapeValue(op, rule.value);
+    this.#apply();
+  }
+
+  /** Set a single-value rule's value (coercing numeric fields to `number`). */
+  setScalar(rule: QbRule, raw: any): void {
+    if (this.disabled()) return;
+    rule.value = this.#coerce(rule, raw);
+    this.#apply();
+  }
+
+  /** Set the lower bound of a BETWEEN rule's `{ from, to }` value. */
+  setBetweenFrom(rule: QbRule, raw: any): void {
+    if (this.disabled()) return;
+    rule.value = { ...(rule.value ?? {}), from: this.#coerce(rule, raw) };
+    this.#apply();
+  }
+
+  /** Set the upper bound of a BETWEEN rule's `{ from, to }` value. */
+  setBetweenTo(rule: QbRule, raw: any): void {
+    if (this.disabled()) return;
+    rule.value = { ...(rule.value ?? {}), to: this.#coerce(rule, raw) };
+    this.#apply();
+  }
+
+  /** Coerce numeric fields to `number` so the emitted Filter carries a real number. */
+  #coerce(rule: QbRule, raw: any): any {
+    const field = this.fieldByKey()[rule.field as string];
+    if (field?.type === 'number' && raw !== null && raw !== undefined && raw !== '') {
+      const n = Number(raw);
+      return Number.isNaN(n) ? raw : n;
+    }
+    return raw;
+  }
+
+  #defaultValueFor(op: Operator | undefined): any {
+    if (qbIsMultiOperator(op)) return [];
+    if (op === 'BETWEEN') return { from: null, to: null };
+    return null;
+  }
+
+  #reshapeValue(op: Operator | undefined, current: any): any {
+    if (qbIsNoDataOperator(op)) return null;
+    if (qbIsMultiOperator(op)) return Array.isArray(current) ? current : current == null ? [] : [current];
+    if (op === 'BETWEEN') {
+      // a relative spec can't be a BETWEEN endpoint — reset to a fresh range
+      return current && typeof current === 'object' && !Array.isArray(current) && !qbIsRelativeDate(current)
+        ? current
+        : { from: null, to: null };
+    }
+    // single value — keep a relative spec; otherwise drop array/range remnants
+    if (qbIsRelativeDate(current)) return current;
+    return Array.isArray(current) || (current && typeof current === 'object') ? null : current;
+  }
+
+  // -------------------------------------------------------------------------
+  // Template helpers
+  // -------------------------------------------------------------------------
+
+  /** The field metadata for a rule's current `field` key (or undefined if unset). */
+  fieldOf(rule: QbRule): SdQueryBuilderField | undefined {
+    return rule.field ? this.fieldByKey()[rule.field] : undefined;
+  }
+
+  /** Operators allowed for a rule, derived from its field's type / override. */
+  allowedOperators(rule: QbRule): Operator[] {
+    return qbAllowedOperators(this.fieldOf(rule));
+  }
+
+  /** Whether to render the operator picker — hidden when only one operator is allowed. */
+  showOperatorSelector(rule: QbRule): boolean {
+    return this.allowedOperators(rule).length > 1;
+  }
+
+  /** True for NULL / NOT_NULL — the template then renders no value editor. */
+  isNoData(op: Operator | undefined): boolean {
+    return qbIsNoDataOperator(op);
+  }
+
+  /** True for IN / NOT_IN — the template then renders a multi-select value editor. */
+  isMulti(op: Operator | undefined): boolean {
+    return qbIsMultiOperator(op);
+  }
+
+  /** `[true/false]` option list for a boolean field's value select (stable reference). */
+  booleanItems(field: SdQueryBuilderField): SdQueryBuilderFieldOption[] {
+    return this.#booleanOptionsByKey().get(field.key) ?? QB_EMPTY_OPTIONS;
+  }
+
+  /** Current date-value mode of a rule, derived from its value (no separate state). */
+  dateMode(rule: QbRule): QbDateMode {
+    const v = rule.value;
+    if (qbIsRelativeDate(v)) return v.rel === 'now' ? 'now' : 'relative';
+    return 'absolute';
+  }
+
+  /** Switch a date/datetime rule's value mode, reseeding the value for the new mode. */
+  setDateMode(rule: QbRule, mode: QbDateMode): void {
+    if (this.disabled()) return;
+    if (mode === 'now') rule.value = { rel: 'now' };
+    else if (mode === 'relative') rule.value = qbDefaultRelative();
+    else rule.value = null; // absolute — pick a concrete date
+    this.#apply();
+  }
+
+  /** Read the offset amount of a relative rule (default 1). */
+  relativeAmount(rule: QbRule): number {
+    const v = rule.value;
+    return qbIsRelativeDate(v) && v.rel === 'offset' ? v.amount ?? 1 : 1;
+  }
+
+  /** Set the offset amount (clamped to an integer >= 1). */
+  setRelativeAmount(rule: QbRule, raw: any): void {
+    if (this.disabled()) return;
+    const n = Math.floor(Number(raw));
+    const amount = Number.isNaN(n) || n < 1 ? 1 : n;
+    const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
+    rule.value = { rel: 'offset', unit: cur.unit ?? 'day', amount, direction: cur.direction ?? 'previous' };
+    this.#apply();
+  }
+
+  /** Read the `'unit:direction'` token of a relative rule (default `'day:previous'`). */
+  relativeUnitDirValue(rule: QbRule): string {
+    const v = rule.value;
+    if (qbIsRelativeDate(v) && v.rel === 'offset') return `${v.unit ?? 'day'}:${v.direction ?? 'previous'}`;
+    return 'day:previous';
+  }
+
+  /** Set the offset unit + direction from a `'unit:direction'` token. */
+  setRelativeUnitDir(rule: QbRule, token: string): void {
+    if (this.disabled()) return;
+    const [unit, direction] = (token ?? 'day:previous').split(':') as [SdQbRelativeUnit, SdQbRelativeDirection];
+    const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
+    rule.value = { rel: 'offset', unit, amount: cur.amount ?? 1, direction };
+    this.#apply();
+  }
+
+  /** Build a `data-autoid` for an inner control under this builder's `autoId` prefix. */
+  autoIdFor(suffix: string): string {
+    return `${this.autoId() ?? 'qb'}-${suffix}`;
   }
 }

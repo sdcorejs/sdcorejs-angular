@@ -88,6 +88,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 - `uploadRef.onRemove(previewFile)` — shows a confirmation dialog and removes the file from `model` + `previewFiles` on confirm.
 - `uploadRef.formControl` — internal `SdFormControl` registered in the parent `FormGroup`. Use for programmatic `touched`/`dirty` checks if needed.
 - `uploadRef.previewFiles()` — read the current `PreviewFile[]` signal (useful for testing or parent inspection).
+- `uploadRef.showRequiredError()` — `computed<boolean>` driving the inline required-error message: `true` when not disabled, the control is touched, and the `required` validator is failing. Backed by `sdFormControlState(formControl)` so it ticks on every control event (value / status / **touched**) — this is what lets the OnPush view re-render the error when the parent form submits (`markAllAsTouched()`), without a manual `detectChanges`.
 
 ## Internal data model: `PreviewFile`
 ```ts
@@ -112,7 +113,7 @@ interface PreviewFile {
 - **Image type**: row of square thumbnails (drop zone first, then images). Hover reveals zoom-in icon + close (X) button. Drag handle to reorder.
 - **Document type**: stacked rows below images. Each row = file-type icon (extension-colored: pdf/doc/xls/png/…) + filename as a link + size in KB + close icon.
 - **Disabled / viewed mode**: drop zone hidden; for image type, only first `maxOfImage` thumbnails shown; if more, an overlay `+N` count appears on the last to open the gallery popup.
-- **Required error**: red text `Vui lòng tải lên tệp/ảnh` below the row when touched and empty.
+- **Required error**: red text `Vui lòng tải lên tệp/ảnh` below the row when touched and empty. Gated by the reactive `showRequiredError()` computed, so it appears as soon as the parent form is submitted (`markAllAsTouched()`) — not only after a direct upload/remove interaction.
 - **Auto description** (when `[description]` not set): renders `Định dạng: png, jpg và tối đa: 5MB` style based on `extensions` + `maxSize`.
 
 ## E2E test attributes

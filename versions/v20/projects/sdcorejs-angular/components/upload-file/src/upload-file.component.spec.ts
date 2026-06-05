@@ -216,6 +216,49 @@ describe('SdUploadFile', () => {
       expect(component.formControl.touched).toBeTrue();
       expect(component.formControl.errors?.['required']).toBeTrue();
     });
+
+    // why: regression — component là OnPush và template đọc formControl.touched/errors
+    // như thuộc tính THƯỜNG (không phải signal). Khi form submit (markAllAsTouched) từ cha,
+    // không có gì markForCheck → view không re-render → message lỗi không hiện dù form invalid.
+    // Dùng autoDetectChanges (tôn trọng OnPush) thay cho detectChanges (ép check, che lỗi).
+    it('renders the required error in the DOM after the control is touched (OnPush re-render, no forced CD)', async () => {
+      setInput(fixture, 'required', true);
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      // chưa touched → chưa hiện lỗi
+      expect(fixture.nativeElement.querySelector('.text-error')).toBeNull();
+
+      // mô phỏng submit form ở cha: chỉ markAsTouched, KHÔNG ép detectChanges
+      component.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      expect(fixture.nativeElement.querySelector('.text-error')).not.toBeNull();
+    });
+
+    it('showRequiredError() reacts to touched/value (signal drives OnPush refresh)', () => {
+      setInput(fixture, 'required', true);
+      fixture.detectChanges();
+
+      // required + empty + chưa touched → false (chưa hiện)
+      expect(component.showRequiredError()).toBeFalse();
+
+      // touched → true (điểm signal phải tick để OnPush refresh)
+      component.formControl.markAsTouched();
+      expect(component.showRequiredError()).toBeTrue();
+
+      // thêm file hợp lệ → hết lỗi required → false
+      component.model.set(['http://example.com/a.png']);
+      fixture.detectChanges();
+      expect(component.showRequiredError()).toBeFalse();
+    });
+
+    it('showRequiredError() stays false when disabled (cannot edit a disabled control)', () => {
+      setInput(fixture, 'required', true);
+      setInput(fixture, 'disabled', true);
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      expect(component.showRequiredError()).toBeFalse();
+    });
   });
 
   // ─── Input: max ───────────────────────────────────────────────────────────

@@ -88,18 +88,21 @@
             [attr.data-pattern]="dataPattern()"
             [attr.data-error-message]="dataErrorMessage()" />
 
-          @if (_hideInlineError && _errorMessage && formControl.touched) {
-            <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
-          }
-
           @if (!_hideInlineError && _errorMessage && formControl.touched) {
             <mat-error>{{ _errorMessage }}</mat-error>
           }
 
+          <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
+               chiếm chỗ trong layout → nếu đứng sau sẽ đẩy error icon "tụt vào trong". Đứng trước
+               thì error icon nằm sát mép phải, clear giữ slot vô hình bên trái. -->
           @if (showClear()) {
             <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
               <mat-icon>close</mat-icon>
             </button>
+          }
+
+          @if (_hideInlineError && _errorMessage && formControl.touched) {
+            <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
           }
 
           @if (sdSuffixDef()?.templateRef; as suffixRef) {

@@ -36,6 +36,19 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
         </div>
       </demo-section>
 
+      <demo-section
+        heading="Báo lỗi (inlineError)"
+        [props]="[{ name: 'inlineError', value: 'text' }]"
+        note="Truyền inlineError + bấm Hiện lỗi (markAsTouched) → message đỏ hiện dưới checkbox. Bấm lại Đặt lại để ẩn.">
+        <div style="display:flex; flex-direction:column; gap:8px; width:100%">
+          <sd-checkbox label="Tôi đồng ý điều khoản" [(model)]="errAccept" [form]="formErr" [inlineError]="'Bạn phải đồng ý điều khoản'"></sd-checkbox>
+          <div style="display:flex; gap:8px">
+            <button type="button" (click)="showErr()">Hiện lỗi</button>
+            <button type="button" (click)="resetErr()">Đặt lại</button>
+          </div>
+        </div>
+      </demo-section>
+
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái khoá.">
         <div style="display:flex; gap:16px; flex-wrap:wrap">
           <sd-checkbox label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-checkbox>
@@ -56,8 +69,10 @@ import { SdCheckbox } from '@sdcorejs/angular/forms/checkbox';
 })
 export class CheckboxDemoComponent {
   form = new FormGroup({});
+  formErr = new FormGroup({});
 
   accept = signal<boolean>(false);
+  errAccept = signal<boolean>(false);
 
   optEmail = signal<boolean>(true);
   optSms = signal<boolean>(false);
@@ -81,4 +96,7 @@ export class CheckboxDemoComponent {
     if (this.optPush()) items.push('Push');
     return items.join(', ');
   };
+
+  showErr() { this.formErr.markAllAsTouched(); }
+  resetErr() { this.formErr.markAsUntouched(); }
 }

@@ -407,7 +407,13 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   #onChange = (value: any) => {
     this.valueModel.set(value ?? null);
     this.sdChange.emit(value ?? null);
-    this.formControl.setValue(value ?? null, { emitEvent: false });
+    // why: KHÔNG dùng { emitEvent: false } ở đây. formControl mang async validator
+    // ([validator] → HandleSdCustomValidator). Nếu set value mà chặn event thì khi async
+    // resolve, setErrors cũng chạy với emitEvent:false → AbstractControl.events không phát →
+    // #state (sdFormControlState) không tick → errorMessage (computed theo #state) không
+    // recompute → message lỗi không hiển thị (dù form invalid + viền đỏ). Để event lan ra để
+    // #state tick. formControl.valueChanges không có subscriber nào nên không gây vòng lặp.
+    this.formControl.setValue(value ?? null);
   };
 
   // why: method (không phải computed) để template re-eval mỗi change-detection.

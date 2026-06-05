@@ -40,6 +40,24 @@ interface Country { code: string; name: string; }
         </div>
       </demo-section>
 
+      <demo-section
+        heading="Các trạng thái báo lỗi"
+        [props]="[{ name: 'required', value: 'true' }, { name: '[validator]', value: 'fn' }, { name: 'inlineError', value: 'text' }]"
+        note="Bấm Hiện lỗi để mark touched. Ô [validator] cấm chọn 'Hoa Kỳ' — chọn Hoa Kỳ để thấy message (đây là lỗi đã sửa: [validator] bất đồng bộ trước kia không hiện được message). Đặt lại gieo lại giá trị mẫu để demo lặp được.">
+        <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+          <sd-autocomplete [items]="countries" valueField="code" displayField="name"
+            label="required (để trống)" [(model)]="errRequired" [form]="formErr" required></sd-autocomplete>
+          <sd-autocomplete [items]="countries" valueField="code" displayField="name"
+            label="[validator] (cấm Hoa Kỳ)" [(model)]="errValidator" [form]="formErr" [validator]="forbidUS"></sd-autocomplete>
+          <sd-autocomplete [items]="countries" valueField="code" displayField="name"
+            label="inlineError (lỗi do cha truyền)" [(model)]="errInline" [form]="formErr" [inlineError]="serverError()"></sd-autocomplete>
+          <div style="display:flex; gap:8px">
+            <button type="button" (click)="showErr()">Hiện lỗi</button>
+            <button type="button" (click)="resetErr()">Đặt lại</button>
+          </div>
+        </div>
+      </demo-section>
+
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Khoá tương tác.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-autocomplete style="width: 240px" [items]="countries" valueField="code" displayField="name"
@@ -63,6 +81,7 @@ interface Country { code: string; name: string; }
 export class AutocompleteDemoComponent {
   form = new FormGroup({});
   formValid = new FormGroup({});
+  formErr = new FormGroup({});
 
   countries: Country[] = [
     { code: 'VN', name: 'Việt Nam' },
@@ -79,6 +98,26 @@ export class AutocompleteDemoComponent {
   lockedA = signal<string | null>('VN');
   lockedB = signal<string | null>('JP');
 
+  // Error-state demo
+  errRequired = signal<string | null>(null);
+  errValidator = signal<string | null>('US'); // 'US' bị validator chặn
+  errInline = signal<string | null>('VN');
+  serverError = signal<string>('Quốc gia này đã được đăng ký');
+
+  // why: SdCustomValidator = (value) => string | Promise<string>. async để minh hoạ validator
+  // bất đồng bộ ([validator] gắn async validator → message phải hiện được sau khi resolve).
+  forbidUS = async (value: any): Promise<string> =>
+    value === 'US' ? 'Tạm thời không hỗ trợ Hoa Kỳ' : '';
+
   check() { this.formValid.markAllAsTouched(); }
   reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
+
+  showErr() { this.formErr.markAllAsTouched(); }
+  // why: gieo lại giá trị mẫu (không fg.reset → reset() set null làm [validator] hết lỗi) để demo lặp được.
+  resetErr() {
+    this.errRequired.set(null);
+    this.errValidator.set('US');
+    this.errInline.set('VN');
+    this.formErr.markAsUntouched();
+  }
 }

@@ -120,7 +120,7 @@ Applied automatically on `<sd-input>` for styling hooks:
 - Required marker shows as a red `*` next to the label
 - Built-in **slim clear button** (`.sd-clear-btn`, thin `close` icon) at the trailing edge when the field has a value AND is not `required`/`disabled`/`readonly`. It is **hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Click resets the value to `null` and emits `sdChange(null)` (clear is an explicit action → `null`, never `''`/`undefined`; `undefined` is reserved for the pristine never-touched state). Shared style/behavior with `sd-input-number`/`sd-input-color`/`sd-date`/`sd-datetime`.
 - Optional suffix slot (`sdSuffixDef`) for an extra icon button at the trailing edge — common patterns: search icon, eye-toggle for password. Renders to the right of the built-in clear button.
-- Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + error tooltip
+- Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + a trailing-edge `error` icon (`.sd-error-icon`) carrying the message as a tooltip. The error icon sits **flush at the right edge**; when the built-in clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - Helper text shows as light-gray text below the field (or as an info icon next to the label, depending on layout)
 - In `[viewed]="true"` mode: no input chrome — just the value as plain text (or as a hyperlink if `hyperlink` is set)
 

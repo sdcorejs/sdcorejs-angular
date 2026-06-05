@@ -113,7 +113,7 @@
       }
     </div>
   }
-  @if (!formControl.disabled && formControl.touched && formControl.errors?.['required']) {
+  @if (showRequiredError()) {
     <div class="text-error T12R" style="padding: 4px 8px">{{ ('core.component.upload-file.please-upload' | translate) }}</div>
   }
 </div>
