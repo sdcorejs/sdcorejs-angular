@@ -115,7 +115,8 @@ describe('SdQueryBuilder', () => {
 
     it('renders two value inputs for a BETWEEN number field', () => {
       setupRule('price', 'BETWEEN');
-      expect(fixture.nativeElement.querySelectorAll('sd-input.qb-val').length).toBe(2);
+      // a number field renders <sd-input-number>, not <sd-input>
+      expect(fixture.nativeElement.querySelectorAll('sd-input-number.qb-val').length).toBe(2);
     });
 
     it('renders no value editor for a NULL operator', () => {
@@ -283,10 +284,10 @@ describe('SdQueryBuilder', () => {
       component.setField(r, 'createdAt');
       component.setOperator(r, 'GREATER_THAN');
       component.setDateMode(r, 'relative'); // added in Task 5
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 1, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 1, direction: 'previous', unit: 'day' });
 
       component.setOperator(r, 'LESS_THAN');
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 1, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 1, direction: 'previous', unit: 'day' });
     });
 
     it('resets a relative value to {from,to} when switching to BETWEEN', () => {
@@ -295,7 +296,7 @@ describe('SdQueryBuilder', () => {
       component.setField(r, 'createdAt');
       component.setOperator(r, 'GREATER_THAN');
       component.setDateMode(r, 'now');
-      expect(r.value).toEqual({ rel: 'now' });
+      expect(r.value).toBe('TODAY');
 
       component.setOperator(r, 'BETWEEN');
       expect(r.value).toEqual({ from: null, to: null });
@@ -395,18 +396,18 @@ describe('SdQueryBuilder', () => {
     it('dateMode derives absolute / now / relative from the value', () => {
       const r = dateRule();
       expect(component.dateMode(r)).toBe('absolute'); // default value is null
-      r.value = { rel: 'now' };
+      r.value = 'TODAY';
       expect(component.dateMode(r)).toBe('now');
-      r.value = { rel: 'offset', unit: 'day', amount: 2, direction: 'next' };
+      r.value = { amount: 2, direction: 'next', unit: 'day' };
       expect(component.dateMode(r)).toBe('relative');
     });
 
     it('setDateMode reseeds the value per mode', () => {
       const r = dateRule();
       component.setDateMode(r, 'now');
-      expect(r.value).toEqual({ rel: 'now' });
+      expect(r.value).toBe('TODAY');
       component.setDateMode(r, 'relative');
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 1, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 1, direction: 'previous', unit: 'day' });
       component.setDateMode(r, 'absolute');
       expect(r.value).toBeNull();
     });
@@ -414,7 +415,7 @@ describe('SdQueryBuilder', () => {
     it('relativeAmount reads the offset amount (default 1)', () => {
       const r = dateRule();
       expect(component.relativeAmount(r)).toBe(1);
-      r.value = { rel: 'offset', unit: 'week', amount: 5, direction: 'previous' };
+      r.value = { amount: 5, direction: 'previous', unit: 'week' };
       expect(component.relativeAmount(r)).toBe(5);
     });
 
@@ -422,7 +423,7 @@ describe('SdQueryBuilder', () => {
       const r = dateRule();
       component.setDateMode(r, 'relative');
       component.setRelativeAmount(r, 4);
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 4, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 4, direction: 'previous', unit: 'day' });
       component.setRelativeAmount(r, 0);
       expect((r.value as any).amount).toBe(1);
       component.setRelativeAmount(r, 'abc');
@@ -436,7 +437,7 @@ describe('SdQueryBuilder', () => {
       component.setDateMode(r, 'relative');
       expect(component.relativeUnitDirValue(r)).toBe('day:previous');
       component.setRelativeUnitDir(r, 'month:next');
-      expect(r.value).toEqual({ rel: 'offset', unit: 'month', amount: 1, direction: 'next' });
+      expect(r.value).toEqual({ amount: 1, direction: 'next', unit: 'month' });
       expect(component.relativeUnitDirValue(r)).toBe('month:next');
     });
 

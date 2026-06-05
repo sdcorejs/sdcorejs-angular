@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Filter } from '@sdcorejs/utils/models';
-import { qbNewGroup, qbNewRule, QbToken, SdQueryBuilderField } from './query-builder.model';
+import { QB_TODAY, qbNewGroup, qbNewRule, QbToken, SdQueryBuilderField } from './query-builder.model';
 import { filterToTokens, filterToTree, treeToFilter } from './query-builder.serializer';
 
 const FIELDS: SdQueryBuilderField[] = [
@@ -213,47 +213,67 @@ describe('query-builder.serializer › filterToTokens (SQL-ish, field = label)',
 describe('query-builder.serializer › relative dates', () => {
   const str = (f: Filter): string => render(filterToTokens(f, FIELDS));
 
-  it('emits a now relative value', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('createdAt', 'GREATER_THAN', { rel: 'now' })]);
+  it('emits a date-today value', () => {
+    const tree = qbNewGroup('AND', [qbNewRule('createdAt', 'GREATER_THAN', QB_TODAY)]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
-      data: [{ field: 'createdAt', operator: 'GREATER_THAN', data: { rel: 'now' } }],
+      data: [{ field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-today', data: 'TODAY' }],
     } as any);
   });
 
-  it('emits a complete offset relative value', () => {
+  it('emits a complete date-relative offset value', () => {
     const tree = qbNewGroup('AND', [
-      qbNewRule('createdAt', 'LESS_THAN', { rel: 'offset', unit: 'day', amount: 3, direction: 'previous' }),
+      qbNewRule('createdAt', 'LESS_THAN', { amount: 3, direction: 'previous', unit: 'day' }),
     ]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
-      data: [{ field: 'createdAt', operator: 'LESS_THAN', data: { rel: 'offset', unit: 'day', amount: 3, direction: 'previous' } }],
+      data: [{ field: 'createdAt', operator: 'LESS_THAN', dataType: 'date-relative', data: { amount: 3, direction: 'previous', unit: 'day' } }],
     } as any);
   });
 
   it('drops an incomplete offset (missing amount / unit / direction)', () => {
-    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { rel: 'offset', unit: 'day' })]))).toBeNull();
-    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { rel: 'offset', amount: 2, direction: 'next' })]))).toBeNull();
-    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { rel: 'offset', unit: 'day', amount: 0, direction: 'next' })]))).toBeNull();
+    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { unit: 'day' } as any)]))).toBeNull();
+    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { amount: 2, direction: 'next' } as any)]))).toBeNull();
+    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { amount: 0, direction: 'next', unit: 'day' } as any)]))).toBeNull();
   });
 
-  it('round-trips a relative offset value without drift', () => {
+  it('round-trips a date-relative offset value without drift', () => {
     const f1 = treeToFilter(qbNewGroup('AND', [
-      qbNewRule('createdAt', 'GREATER_THAN', { rel: 'offset', unit: 'month', amount: 2, direction: 'next' }),
+      qbNewRule('createdAt', 'GREATER_THAN', { amount: 2, direction: 'next', unit: 'month' }),
     ]));
     const f2 = treeToFilter(filterToTree(f1));
     expect(f2).toEqual(f1 as any);
   });
 
-  it('round-trips a now value without drift', () => {
-    const f1 = treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'EQUAL', { rel: 'now' })]));
+  it('round-trips a date-today value without drift', () => {
+    const f1 = treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'EQUAL', QB_TODAY)]));
     const f2 = treeToFilter(filterToTree(f1));
     expect(f2).toEqual(f1 as any);
   });
 
-  it('renders now / offset relative values as readable Vietnamese', () => {
-    expect(str({ field: 'createdAt', operator: 'GREATER_THAN', data: { rel: 'now' } } as any)).toBe('Ngày tạo > hôm nay');
-    expect(str({ field: 'createdAt', operator: 'LESS_THAN', data: { rel: 'offset', unit: 'day', amount: 3, direction: 'previous' } } as any)).toBe('Ngày tạo < 3 ngày trước');
-    expect(str({ field: 'createdAt', operator: 'EQUAL', data: { rel: 'offset', unit: 'month', amount: 1, direction: 'next' } } as any)).toBe('Ngày tạo = 1 tháng tới');
+  it('renders date-today / date-relative values as readable Vietnamese', () => {
+    expect(str({ field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-today', data: 'TODAY' } as any)).toBe('Ngày tạo > hôm nay');
+    expect(str({ field: 'createdAt', operator: 'LESS_THAN', dataType: 'date-relative', data: { amount: 3, direction: 'previous', unit: 'day' } } as any)).toBe('Ngày tạo < 3 ngày trước');
+    expect(str({ field: 'createdAt', operator: 'EQUAL', dataType: 'date-relative', data: { amount: 1, direction: 'next', unit: 'month' } } as any)).toBe('Ngày tạo = 1 tháng tới');
+  });
+
+  it('back-compat: seeds legacy { rel } payloads and re-emits the new dataType shape', () => {
+    const legacyNow: Filter = {
+      operator: 'AND',
+      data: [{ field: 'createdAt', operator: 'EQUAL', data: { rel: 'now' } }],
+    } as any;
+    expect(treeToFilter(filterToTree(legacyNow))).toEqual({
+      operator: 'AND',
+      data: [{ field: 'createdAt', operator: 'EQUAL', dataType: 'date-today', data: 'TODAY' }],
+    } as any);
+
+    const legacyOffset: Filter = {
+      operator: 'AND',
+      data: [{ field: 'createdAt', operator: 'LESS_THAN', data: { rel: 'offset', unit: 'week', amount: 2, direction: 'previous' } }],
+    } as any;
+    expect(treeToFilter(filterToTree(legacyOffset))).toEqual({
+      operator: 'AND',
+      data: [{ field: 'createdAt', operator: 'LESS_THAN', dataType: 'date-relative', data: { amount: 2, direction: 'previous', unit: 'week' } }],
+    } as any);
   });
 });

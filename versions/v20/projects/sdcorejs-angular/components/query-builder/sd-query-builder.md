@@ -46,11 +46,12 @@ interface SdQueryBuilderField {
   key: string;                 // dot-notation path → Filter.field
   label: string;               // field picker + view-mode field token
   type: SdQueryBuilderFieldType;
+  icon?: string;               // leading Material icon in the picker; defaults to QB_TYPE_ICON[type] → 'tune'
   operators?: Operator[];      // override the per-type allowed set
   defaultOperator?: Operator;  // override the starting operator
   values?: { value: any; display: string }[];  // for type 'values'
   trueLabel?: string; falseLabel?: string;       // for type 'boolean'
-  min?: number | string; max?: number | string;
+  min?: number | string; max?: number | string;  // also bound onto the number value editor (sd-input-number)
 }
 ```
 The emitted `value` is a `Filter` (`@sdcorejs/utils/models`): leaf rules become `FilterHasData` / `FilterBetween` / `FilterNoData`; groups become `FilterAndOr { operator, data }`. Incomplete rules (missing field / operator / value) are dropped from the output.

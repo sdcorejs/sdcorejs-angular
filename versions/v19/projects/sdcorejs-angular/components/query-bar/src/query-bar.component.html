@@ -37,26 +37,18 @@
     <span class="c-divider" aria-hidden="true"></span>
   }
 
-  <!-- Field switcher (used by chipPopover header) — declared first so chipPopover's
-       nested ng-template can resolve the template ref. -->
-  <!-- Field switcher used by chipPopover header — current field key comes from editingIndex. -->
-  <sd-query-field-picker
-    #switchPicker
-    [fields]="_fields"
-    [currentKey]="_editingIndex !== null ? $any(_filters[_editingIndex!])?.field : undefined"
-    (pick)="_editingIndex !== null && changeFilterField(_editingIndex!, $event)" />
-
   <!-- Chip popover — extracted into <sd-query-chip-popover>. Declared BEFORE chips
-       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`. -->
+       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`.
+       why: mở popover để EDIT chỉ cho chỉnh operator + value — KHÔNG đổi field.
+       Bỏ [switchPickerMenu] → header render nhãn field tĩnh (read-only). Muốn đổi
+       field thì xoá chip rồi thêm lại. -->
   <sd-query-chip-popover
     #chipPopover
     [field]="editingField() ?? undefined"
     [filter]="_editingIndex !== null ? $any(_filters[_editingIndex!]) : undefined"
     [chipIndex]="_editingIndex"
     [autoIdBase]="autoIdInput() ?? 'qb'"
-    [switchPickerMenu]="switchPicker.menu()!"
-    (commit)="onChipPopoverCommit($event)"
-    (swapField)="_editingIndex !== null && changeFilterField(_editingIndex!, $event)" />
+    (commit)="onChipPopoverCommit($event)" />
 
   @if (_mode === 'inline') {
     <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->

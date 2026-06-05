@@ -50,7 +50,7 @@ import { SdDesktopDirective, SdHoverCopyDirective, SdMobileDirective, SdScrollDi
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 
 // ĐÃ THÊM: Import Utilities để dùng hàm getNestedValue
-import { Operator, PagingReq } from '@sdcorejs/utils/models';
+import { Filter, Operator, PagingReq } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 
@@ -1460,7 +1460,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
               field,
               operator: externalFilter.defaultOperator || 'CONTAIN',
               data: value,
-            });
+            } as Filter);
           }
         } else if (externalFilter.type === 'boolean') {
           filters!.push({
@@ -1548,7 +1548,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
               field,
               operator: externalFilter.defaultOperator || 'EQUAL',
               data: value,
-            });
+            } as Filter);
           }
         }
       }
@@ -1560,11 +1560,13 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
       const operator = columnOperator?.[field] || column.filter?.operator?.default;
       if (value !== undefined && value !== null && value !== '') {
         if (column.type === 'string') {
+          // `operator` is the wide `Operator` union; in this data-bearing path it is a
+          // single-value comparison operator, hence the cast to the `Filter` contract.
           filters!.push({
             field: field,
             operator: operator || 'CONTAIN',
             data: value,
-          });
+          } as Filter);
         } else if (column.type === 'boolean') {
           filters!.push({
             field: field,
@@ -1617,11 +1619,13 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
               });
             }
           } else {
+            // `operator` is the wide `Operator` union; this data-bearing path uses a
+            // single-value comparison operator, hence the cast to the `Filter` contract.
             filters!.push({
               field: field,
               operator: operator || 'EQUAL',
               data: value,
-            });
+            } as Filter);
           }
         }
       }

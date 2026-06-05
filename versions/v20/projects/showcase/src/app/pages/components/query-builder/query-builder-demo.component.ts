@@ -155,7 +155,7 @@ export class QueryBuilderDemoComponent {
       { field: 'active', operator: 'EQUAL', data: true },
       { field: 'status', operator: 'IN', data: ['ACTIVE', 'PROBATION'] },
       { field: 'createdAt', operator: 'GREATER_THAN', data: '2026-01-01' },
-      { field: 'updatedAt', operator: 'EQUAL', data: { rel: 'now' } },
+      { field: 'updatedAt', operator: 'EQUAL', dataType: 'date-today', data: 'TODAY' },
     ],
   } as Filter);
 
@@ -163,8 +163,8 @@ export class QueryBuilderDemoComponent {
   readonly relativeValue = signal<Filter | null>({
     operator: 'AND',
     data: [
-      { field: 'createdAt', operator: 'GREATER_THAN', data: { rel: 'offset', unit: 'day', amount: 7, direction: 'previous' } },
-      { field: 'updatedAt', operator: 'LESS_THAN', data: { rel: 'now' } },
+      { field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-relative', data: { amount: 7, direction: 'previous', unit: 'day' } },
+      { field: 'updatedAt', operator: 'LESS_THAN', dataType: 'date-today', data: 'TODAY' },
     ],
   } as Filter);
 
