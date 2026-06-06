@@ -58,43 +58,54 @@ The emitted `value` is a `Filter` (`@sdcorejs/utils/models`): leaf rules become 
 
 ### Relative-date value types
 
-For `date` and `datetime` fields with single-value operators (`EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `LESS_THAN`), a rule's value may be a structured relative-date object instead of an absolute date string. These types are all exported from `@sdcorejs/angular/components/query-builder`.
+For `date` and `datetime` fields with single-value operators (`EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `LESS_THAN`, `GREATER_OR_EQUAL`, `LESS_OR_EQUAL`), a rule's value may be a **relative date** instead of an absolute date string. As of `@sdcorejs/utils` **1.1.3** the builder **reuses the canonical model from utils** instead of a local one — the offset shape is `DateRelative`, and the emitted `Filter` carries a `dataType` discriminator. Types/helpers are re-exported from `@sdcorejs/angular/components/query-builder`.
 
 ```ts
-type SdQbRelativeUnit      = 'day' | 'week' | 'month';
-type SdQbRelativeDirection = 'previous' | 'next';
-type QbDateMode            = 'absolute' | 'now' | 'relative';
+import { DateRelative } from '@sdcorejs/utils/models';
 
-interface SdQbRelativeDate {
-  rel: 'now' | 'offset';
-  unit?:      SdQbRelativeUnit;       // only for rel:'offset'
-  amount?:    number;                 // >= 1; only for rel:'offset'
-  direction?: SdQbRelativeDirection;  // only for rel:'offset'
+// offset spec (utils) — what 'relative' mode stores
+interface DateRelative {
+  amount: number;
+  direction: 'previous' | 'next';
+  unit: 'hour' | 'day' | 'week' | 'month';   // builder UI offers day/week/month
 }
+
+type SdQbRelativeUnit      = DateRelative['unit'];       // alias of the utils member type
+type SdQbRelativeDirection = DateRelative['direction'];
+type QbDateMode            = 'absolute' | 'now' | 'relative';
+type QbToday               = 'TODAY';                    // the date-today sentinel
 ```
 
-Helper functions also exported:
-- `qbIsRelativeDate(v): v is SdQbRelativeDate` — type guard
-- `qbDefaultRelative(): SdQbRelativeDate` — returns `{ rel:'offset', unit:'day', amount:1, direction:'previous' }` (fresh object each call)
+A date rule's internal `value` is exactly one of:
+- `null` or a concrete date string → **absolute**
+- `'TODAY'` (the `QB_TODAY` sentinel) → **now / today**
+- a `DateRelative` object → **relative offset**
 
-Constants (stable module references — safe to pass as `[items]`):
+Helpers / constants exported:
+- `qbIsRelativeDate(v): v is DateRelative` — type guard (delegates to `FilterUtilities.isDateRelative`)
+- `qbIsToday(v): v is 'TODAY'` — narrows the today sentinel
+- `qbDefaultRelative(): DateRelative` — returns `{ amount: 1, direction: 'previous', unit: 'day' }` (fresh object each call)
+- `QB_TODAY` — the `'TODAY'` string sentinel
 - `QB_DATE_MODES` — `[{ value:'absolute', display:'Ngày cụ thể' }, { value:'now', display:'Hôm nay' }, { value:'relative', display:'Tương đối' }]`
 - `QB_RELATIVE_UNIT_OPTIONS` — 6 combined `unit:direction` tokens (`'day:previous'` … `'month:next'`) with Vietnamese display labels
 
-**Emitted `Filter.data` shapes for a relative rule:**
+**Emitted `Filter` shapes for a relative rule** — the discriminator is `dataType` (sibling of `data`):
 
 ```ts
-// rel:'now' — current moment / today
-{ field: 'createdAt', operator: 'GREATER_THAN', data: { rel: 'now' } }
+// today → date-today
+{ field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-today', data: 'TODAY' }
 
-// rel:'offset' — N units ago or ahead
-{ field: 'createdAt', operator: 'LESS_THAN', data: { rel: 'offset', unit: 'day', amount: 7, direction: 'previous' } }
+// N units ago / ahead → date-relative
+{ field: 'createdAt', operator: 'LESS_THAN', dataType: 'date-relative',
+  data: { amount: 7, direction: 'previous', unit: 'day' } }
 
 // BETWEEN — no relative mode; always emits absolute { from, to }
 { field: 'createdAt', operator: 'BETWEEN', data: { from: '2026-01-01', to: '2026-12-31' } }
 ```
 
-An incomplete offset rule (missing `unit`, `direction`, or `amount < 1`) is treated as invalid and **dropped** from the emitted `Filter` (same as a null value).
+An incomplete offset (missing `unit` / `direction`, or `amount < 1`) is invalid and **dropped** from the emitted `Filter` (same as a null value).
+
+**Back-compat:** filters persisted before the migration stored `data: { rel: 'now' | 'offset', … }`. `filterToTree` still reads that legacy shape when seeding `[value]` and re-emits the new `dataType` form on the next change, so old saved queries keep working.
 
 ## Operator vocabulary
 Allowed operators come from `QB_OPERATORS_BY_TYPE[type]` unless `field.operators` overrides. The starting operator is `field.defaultOperator ?? QB_DEFAULT_OPERATOR_BY_TYPE[type]`. The operator selector (`<sd-operator>`) is **hidden** when only one operator is allowed. Helpers exported alongside the component: `qbAllowedOperators`, `qbDefaultOperator`, `qbIsNoDataOperator`, `qbIsMultiOperator`.
@@ -106,8 +117,8 @@ For `date` and `datetime` fields, the value editor behaviour depends on the acti
 - **`BETWEEN`** — always shows two absolute date pickers (`from` / `to`). No mode select; relative dates are not supported for BETWEEN (switching to BETWEEN resets any relative value to `{ from: null, to: null }`).
 - **Single-value operators** (`EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `LESS_THAN`) — shows a mode select with three options:
   - **Ngày cụ thể** (`absolute`) — renders an `<sd-date>` / `<sd-datetime>` picker. Emits a date string in `Filter.data`.
-  - **Hôm nay** (`now`) — no further input; emits `{ rel: 'now' }` in `Filter.data`.
-  - **Tương đối** (`relative`) — renders a number input for the amount + a combined unit×direction select (`ngày/tuần/tháng × trước/tới`). Emits `{ rel: 'offset', unit, amount, direction }` in `Filter.data`.
+  - **Hôm nay** (`now`) — no further input; emits `dataType: 'date-today', data: 'TODAY'`.
+  - **Tương đối** (`relative`) — renders a number input for the amount + a combined unit×direction select (`ngày/tuần/tháng × trước/tới`). Emits `dataType: 'date-relative', data: { amount, direction, unit }`.
 - **`NULL` / `NOT_NULL`** — no value editor at all (same as other types).
 
 The mode is **derived from the rule's value** — no separate state. The component exposes:
@@ -134,7 +145,7 @@ Renders a `<div class="qb-view">` (disabled-input look) containing the rules as 
 - `EQUAL =`, `NOT_EQUAL !=`, `> < >= <=`, `CONTAIN → like '%v%'`, `START_WITH → like 'v%'`, `END_WITH → like '%v'` (NOT_* → `not like`), `IN → in (…)`, `BETWEEN → between a and b`, `NULL → is null`, `NOT_NULL → is not null`
 - `and` / `or` lowercase; nested multi-child groups wrapped in `( … )`; string values single-quoted (`'` escaped to `''`); `values` shown via their display label; boolean shown via `trueLabel`/`falseLabel`
 - each piece is a `<span class="qb-tok qb-tok-<kind>">` so operators (`qb-tok-op`) and values (`qb-tok-value`) are highlighted distinctly from field/logic/paren
-- relative date values render as readable Vietnamese: `hôm nay` (for `rel:'now'`) or `N ngày|tuần|tháng trước|tới` (for `rel:'offset'`)
+- relative date values render as readable Vietnamese: `hôm nay` (for `dataType:'date-today'`) or `N ngày|tuần|tháng trước|tới` (for `dataType:'date-relative'`)
 
 Example output: `(Mã = 'ABC' and Tên like '%abc%') or Giá > 100`
 Relative example: `Ngày tạo > 7 ngày trước`
