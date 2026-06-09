@@ -6,11 +6,11 @@
   "count": 79,
   "docs": [
     {
-      "id": "assets/scss/README",
+      "id": "assets/STYLE-GUIDE",
       "title": "@sdcorejs/angular — Assets & SCSS Reference",
       "category": "assets",
-      "path": "assets/scss/README.md",
-      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.4/assets/scss/README.md"
+      "path": "assets/STYLE-GUIDE.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.4/assets/STYLE-GUIDE.md"
     },
     {
       "id": "components/anchor/sd-anchor",
@@ -559,5 +559,5 @@
       "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.4/utilities/models/models.md"
     }
   ],
-  "syncedFrom": "2e8158f7"
+  "syncedFrom": "ac91fdea"
 }

@@ -46,6 +46,7 @@
 
 ```
 projects/sdcorejs-angular/assets/
+├── STYLE-GUIDE.md                     # Tài liệu này (assets + SCSS reference cho người + AI agent)
 ├── fonts/
 │   ├── fonts.scss                     # @font-face khai báo cho Roboto + Material Icons + Material Symbols
 │   ├── material-icons/                # 2 file .woff2 (icons-v145 + outlined-v110)
