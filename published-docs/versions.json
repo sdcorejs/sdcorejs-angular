@@ -1,0 +1,13 @@
+{
+  "package": "@sdcorejs/angular",
+  "latest": "19.0.4",
+  "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs",
+  "versions": [
+    {
+      "version": "19.0.4",
+      "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.4/index.json",
+      "released": "2026-06-09",
+      "count": 79
+    }
+  ]
+}

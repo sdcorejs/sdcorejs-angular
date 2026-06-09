@@ -19,6 +19,8 @@ on:
       - 'versions/v19/angular.json'
       - 'versions/v19/package.json'
       - 'versions/v19/package-lock.json'
+      - 'published-docs/**'
+      - 'scripts/collect-docs.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
@@ -61,6 +63,22 @@ jobs:
             --configuration production \
             --base-href=/sdcorejs-angular/
         working-directory: versions/v19
+
+      - name: Publish versioned API docs into Pages output
+        # Copy the repo-owned published-docs/** archive into the served site and build a
+        # `latest` alias. Pages serves existing static files (.md/.json) directly, BEFORE the
+        # SPA 404 fallback — so /docs/<version>/index.json + raw .md resolve for AI agents.
+        # Runs at repo root (published-docs/ lives there, NOT under versions/).
+        run: |
+          DEST="versions/v19/dist/showcase/browser/docs"
+          mkdir -p "$DEST"
+          cp -R published-docs/. "$DEST"/
+          LATEST=$(node -e "process.stdout.write(require('./published-docs/versions.json').latest || '')")
+          if [ -n "$LATEST" ] && [ -d "$DEST/$LATEST" ]; then
+            rm -rf "$DEST/latest"
+            cp -R "$DEST/$LATEST" "$DEST/latest"
+          fi
+          echo "Published docs: latest=$LATEST · versions: $(ls published-docs | grep -v '\.json$' | tr '\n' ' ')"
 
       - name: SPA fallback — copy index.html → 404.html
         # Angular SPA: deep links phải fallback về index. GitHub Pages serve 404.html khi route không tồn tại.

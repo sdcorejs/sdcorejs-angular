@@ -102,7 +102,7 @@ Yêu cầu auth local: `npm login --scope=@sdcorejs`.
 Workflow: `.github/workflows/deploy-pages.yml`. Build showcase v19 → upload Pages artifact → deploy.
 
 **Trigger**:
-- Push lên `main` khi đổi file trong `versions/v19/projects/{showcase,sdcorejs-angular}/**`, `angular.json`, `package*.json`, hoặc workflow.
+- Push lên `main` khi đổi file trong `versions/v19/projects/{showcase,sdcorejs-angular}/**`, `angular.json`, `package*.json`, `published-docs/**`, `scripts/collect-docs.mjs`, hoặc workflow.
 - Manual dispatch.
 
 **Yêu cầu setup repo** (1 lần): Settings > Pages > Source = **"GitHub Actions"** (KHÔNG dùng branch source).
@@ -112,8 +112,22 @@ URL Pages sau deploy: `https://sdcorejs.github.io/sdcorejs-angular/` (theo repo 
 Workflow:
 1. Build `sdcorejs-angular` lib (showcase phụ thuộc qua tsconfig path).
 2. Build showcase `--configuration production --base-href=/sdcorejs-angular/`.
-3. Copy `index.html → 404.html` (SPA fallback cho deep links).
-4. Upload `dist/showcase/browser` → deploy-pages action.
+3. Copy `published-docs/**` → `dist/showcase/browser/docs/` + dựng alias `docs/latest/` (xem "API docs cho AI agent" dưới).
+4. Copy `index.html → 404.html` (SPA fallback cho deep links).
+5. Upload `dist/showcase/browser` → deploy-pages action.
+
+### API docs cho AI agent (versioned, public trên Pages)
+
+Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trên Pages, namespaced theo version, để AI agent fetch qua URL mà KHÔNG cần clone local.
+
+- **Nguồn**: `versions/v19/projects/sdcorejs-angular/**/*.md` (đã sync + đã rewrite `@sd-angular/core`→`@sdcorejs/angular`). Loại `HANDOFF.md` (nội bộ).
+- **Generator**: `scripts/collect-docs.mjs` (`npm run collect-docs`) → ghi **`published-docs/<version>/`** (repo-committed, append mỗi release) + refresh **`published-docs/versions.json`** registry.
+- **URL** (sau deploy):
+  - `…/docs/versions.json` — registry mọi version + `latest`
+  - `…/docs/<version>/index.json` — manifest (`{ id, title, category, path, url }` × ~79 doc)
+  - `…/docs/<version>/forms/select/sd-select.md` — raw doc
+  - `…/docs/latest/index.json` — alias bản mới nhất (dựng ở deploy, không commit)
+- **Archive vĩnh viễn**: Pages thay artifact mỗi deploy → muốn nhiều version cùng sống thì docs phải **committed** trong `published-docs/`; deploy chỉ copy vào dist. ĐỪNG hand-edit `published-docs/<version>/**` (re-run `collect-docs`) hay `versions/**` (sync ghi đè).
 
 ## README & CHANGELOG (repo tự sở hữu)
 
@@ -140,6 +154,9 @@ Changelog viết TRỰC TIẾP ở repo này (không cắt ở vn-angular):
 ```
 1. sdcorejs-angular: npm run sync                  (sync CODE từ vn-angular; changelog KHÔNG bị đụng)
                      → ghi nhớ commit hash từ output / SYNC-STATUS.md
+1b. sdcorejs-angular: node scripts/collect-docs.mjs --version 19.0.<patch>
+                     → snapshot API docs vào published-docs/19.0.<patch>/ + refresh versions.json
+                     (version dùng major 19 vì showcase deploy v19; docs giống nhau across major)
 2. sdcorejs-angular: sửa root CHANGELOG.md
                      ## [Unreleased]  →  ## [<patch>] - YYYY-MM-DD
                      thêm: Published 19.<patch>/20.<patch>/21.<patch> + Synced from vn-angular@<commit>

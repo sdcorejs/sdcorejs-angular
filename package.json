@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "sync": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-from-vn-angular.ps1",
+    "collect-docs": "node scripts/collect-docs.mjs",
     "changeset": "changeset"
   },
   "devDependencies": {
