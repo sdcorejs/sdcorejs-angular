@@ -1,0 +1,72 @@
+@let _items = items();
+@let _templateRef = resolvedItemTemplate();
+
+<div class="sd-org-chart" role="tree">
+  <ul class="sd-org-chart__tree">
+    @for (item of _items; track trackByItem($index, item)) {
+      <ng-container
+        *ngTemplateOutlet="nodeTemplate; context: { $implicit: item, item: item, depth: 0, parent: null, templateRef: _templateRef }" />
+    }
+  </ul>
+</div>
+
+<ng-template #nodeTemplate let-item let-depth="depth" let-parent="parent" let-templateRef="templateRef">
+  @let _children = childrenOf(item);
+  @let _hasChildren = _children.length > 0;
+  @let _expanded = isExpanded(item);
+  @let _context = createContext(item, depth, parent);
+
+  <li
+    class="sd-org-chart__node"
+    [class.sd-org-chart__node--expanded]="_hasChildren && _expanded"
+    [class.sd-org-chart__node--collapsed]="_hasChildren && !_expanded"
+    role="treeitem"
+    [attr.aria-expanded]="_hasChildren ? _expanded : null">
+    <div class="sd-org-chart__node-shell">
+      <div
+        class="sd-org-chart__card"
+        [class.sd-org-chart__card--no-image]="!item.image"
+        [class.sd-org-chart__card--compact]="!item.image && !item.description"
+        [attr.data-node-id]="item.id"
+        [attr.data-autoid]="nodeAutoId(item, 'node')"
+        [attr.data-depth]="depth"
+        [style.--sd-org-node-color]="item.color || null">
+        @if (templateRef) {
+          <ng-container *ngTemplateOutlet="templateRef; context: _context" />
+        } @else {
+          @if (item.image) {
+            <img class="sd-org-chart__image" [src]="item.image" [alt]="item.title" [attr.data-autoid]="nodeAutoId(item, 'image')" />
+          }
+          <div class="sd-org-chart__title" [attr.data-autoid]="nodeAutoId(item, 'title')">{{ item.title }}</div>
+          @if (item.description) {
+            <div class="sd-org-chart__description" [attr.data-autoid]="nodeAutoId(item, 'description')">{{ item.description }}</div>
+          }
+        }
+      </div>
+
+      @if (_hasChildren && collapsible()) {
+        <button
+          type="button"
+          class="sd-org-chart__toggle"
+          [attr.aria-label]="_expanded ? 'Collapse children' : 'Expand children'"
+          [attr.aria-expanded]="_expanded"
+          [attr.data-autoid]="nodeAutoId(item, 'toggle')"
+          (click)="toggle(item, $event)">
+          <mat-icon>{{ _expanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+        </button>
+      }
+    </div>
+
+    @if (_hasChildren && _expanded) {
+      <ul class="sd-org-chart__children" role="group">
+        @for (child of _children; track trackByItem($index, child)) {
+          <ng-container
+            *ngTemplateOutlet="
+              nodeTemplate;
+              context: { $implicit: child, item: child, depth: depth + 1, parent: item, templateRef: templateRef }
+            " />
+        }
+      </ul>
+    }
+  </li>
+</ng-template>

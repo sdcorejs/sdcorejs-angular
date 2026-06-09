@@ -23,6 +23,7 @@ export const routes: Routes = [
   { path: 'components/mini-editor',      loadComponent: () => import('./pages/components/mini-editor/mini-editor-demo.component').then(m => m.MiniEditorDemoComponent) },
   { path: 'components/modal',            loadComponent: () => import('./pages/components/modal/modal-demo.component').then(m => m.ModalDemoComponent) },
   { path: 'components/operator',         loadComponent: () => import('./pages/components/operator/operator-demo.component').then(m => m.OperatorDemoComponent) },
+  { path: 'components/org-chart',        loadComponent: () => import('./pages/components/org-chart/org-chart-demo.component').then(m => m.OrgChartDemoComponent) },
   { path: 'components/preview',          loadComponent: () => import('./pages/components/preview/preview-demo.component').then(m => m.PreviewDemoComponent) },
   { path: 'components/query-bar',        loadComponent: () => import('./pages/components/query-bar/query-bar-demo.component').then(m => m.QueryBarDemoComponent) },
   { path: 'components/query-builder',    loadComponent: () => import('./pages/components/query-builder/query-builder-demo.component').then(m => m.QueryBuilderDemoComponent) },

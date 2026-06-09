@@ -29,6 +29,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { label: 'Mini Editor', path: 'components/mini-editor' },
       { label: 'Modal', path: 'components/modal' },
       { label: 'Operator', path: 'components/operator' },
+      { label: 'Org Chart', path: 'components/org-chart' },
       { label: 'Preview', path: 'components/preview' },
       { label: 'Query Bar', path: 'components/query-bar' },
       { label: 'Query Builder', path: 'components/query-builder' },
