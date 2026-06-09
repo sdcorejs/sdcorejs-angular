@@ -2,7 +2,6 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { By } from '@angular/platform-browser';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from './select.component';
@@ -924,76 +923,5 @@ describe('SdSelect (sdViewDef view-template override)', () => {
     const vd = fixture.nativeElement.querySelector('.sd-inline-view .vd') as HTMLElement | null;
     expect(vd).not.toBeNull();
     expect(vd!.textContent).toContain('VD:a');
-  }));
-});
-
-describe('SdSelect (#sdSelected editable-trigger template)', () => {
-  @Component({
-    standalone: true,
-    imports: [SdSelect],
-    template: `
-      <sd-select valueField="id" displayField="name" [items]="items" [model]="model" [multiple]="multiple">
-        <ng-template #sdSelected let-item let-items="items" let-multiple="multiple" let-display="display">
-          <span class="sel">SEL:{{ multiple ? items?.length : item?.name }}|{{ display }}</span>
-        </ng-template>
-      </sd-select>
-    `,
-  })
-  class SelHost {
-    items = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    model: any = 'a';
-    multiple = false;
-  }
-
-  // A second host WITHOUT the template — proves the default display fallback.
-  @Component({
-    standalone: true,
-    imports: [SdSelect],
-    template: `<sd-select valueField="id" displayField="name" [items]="items" [model]="model"></sd-select>`,
-  })
-  class PlainHost {
-    items = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    model: any = 'a';
-  }
-
-  // Material renders a custom <mat-select-trigger> only once the select is non-empty,
-  // which needs its options registered → open the panel to force selection resolution.
-  function openSelect(fixture: ComponentFixture<unknown>): void {
-    fixture.detectChanges();
-    tick(600);
-    fixture.detectChanges();
-    const sd = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
-    sd.open();
-    fixture.detectChanges();
-    tick(600);
-    fixture.detectChanges();
-  }
-
-  it('single mode: renders #sdSelected in the trigger with item + display context', fakeAsync(() => {
-    const fixture = TestBed.createComponent(SelHost);
-    openSelect(fixture);
-    const sel = fixture.nativeElement.querySelector('.sel') as HTMLElement | null;
-    expect(sel).not.toBeNull();
-    expect(sel!.textContent).toContain('SEL:Alpha'); // item.name (single)
-    expect(sel!.textContent).toContain('Alpha'); // display
-  }));
-
-  it('multiple mode: context.multiple is true and items is the selected array', fakeAsync(() => {
-    const fixture = TestBed.createComponent(SelHost);
-    fixture.componentInstance.multiple = true;
-    fixture.componentInstance.model = ['a', 'b'];
-    openSelect(fixture);
-    const sel = fixture.nativeElement.querySelector('.sel') as HTMLElement | null;
-    expect(sel).not.toBeNull();
-    expect(sel!.textContent).toContain('SEL:2'); // items.length in multiple branch
-  }));
-
-  it('falls back to plain display text when #sdSelected is not projected', fakeAsync(() => {
-    const fixture = TestBed.createComponent(PlainHost);
-    openSelect(fixture);
-    expect(fixture.nativeElement.querySelector('.sel')).toBeNull();
-    expect((fixture.nativeElement.textContent || '')).toContain('Alpha');
   }));
 });

@@ -110,15 +110,9 @@
             [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
             [matTooltip]="tooltip() || ''">
             <mat-select-trigger>
-              @if (sdSelectedTemplate(); as _selTpl) {
-                <ng-container
-                  *ngTemplateOutlet="_selTpl; context: { $implicit: selectedItems(), item: selectedItems(), items: selectedItems(), display: _display, multiple: true }">
-                </ng-container>
-              } @else {
-                <div class="sd-trigger-text" [matTooltip]="_display || ''" matTooltipPosition="above">
-                  {{ _display }}
-                </div>
-              }
+              <div class="sd-trigger-text" [matTooltip]="_display || ''" matTooltipPosition="above">
+                {{ _display }}
+              </div>
             </mat-select-trigger>
 
             @if (filtered()) {
@@ -236,13 +230,7 @@
             [matTooltipDisabled]="!formControl.disabled || !_normalizedValue?.length"
             [matTooltip]="tooltip() || ''">
             <mat-select-trigger>
-              @if (sdSelectedTemplate(); as _selTpl) {
-                <ng-container
-                  *ngTemplateOutlet="_selTpl; context: { $implicit: selectedItems()[0], item: selectedItems()[0], items: selectedItems(), display: _display, multiple: false }">
-                </ng-container>
-              } @else {
-                {{ _display }}
-              }
+              {{ _display }}
             </mat-select-trigger>
 
             @if (filtered()) {

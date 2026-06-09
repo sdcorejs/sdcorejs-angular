@@ -100,14 +100,6 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
-  /**
-   * Custom render for the SELECTED value shown in the editable trigger (`<mat-select-trigger>`).
-   * Distinct from `#sdValue`/`sdViewDef` which only drive the read-only `viewed`/`inline` face.
-   * Context: `{ $implicit, item, items: selectedItems(), display, multiple }` — `item`/`$implicit`
-   * is the single selected item object (single mode) or the selected-item array (multiple mode).
-   * Falls back to the plain `display` text when not projected, so existing usages are unaffected.
-   */
-  sdSelectedTemplate = contentChild<TemplateRef<any>>('sdSelected');
   itemDef = contentChild(SdItemDefDefDirective);
   sdViewDef = contentChild(SdViewDefDirective);
 
@@ -515,7 +507,33 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       })
     );
 
-    const filteredItems$ = allItems$.pipe(map(allItems => ArrayUtilities.paging(allItems, this.limit())));
+    const filteredItems$ = allItems$.pipe(
+      map(allItems => {
+        const limit = this.limit();
+        const val = this.valueModel();
+        if (!this.multiple() || !Array.isArray(val) || val.length === 0) {
+          return ArrayUtilities.paging(allItems, limit);
+        }
+
+        // multiple mode: keep ALL selected items (for checkmarks) + limit unselected items
+        // why: if selected.length >= limit, paging would show only selected items → user can't pick new ones
+        const vField = this.valueField();
+        const selectedSet = new Set(val.map(String));
+        const selected: T[] = [];
+        const unselected: T[] = [];
+
+        for (const item of allItems) {
+          const itemVal = vField ? String(this.itemValue(item) ?? '') : String(item ?? '');
+          if (selectedSet.has(itemVal)) {
+            selected.push(item);
+          } else {
+            unselected.push(item);
+          }
+        }
+
+        return [...selected, ...ArrayUtilities.paging(unselected, limit)];
+      })
+    );
 
     const display$ = selectedItems$.pipe(
       map(items => items?.map(item => (this.displayField() ? this.itemDisplay(item) : item))?.join(', ') || '')

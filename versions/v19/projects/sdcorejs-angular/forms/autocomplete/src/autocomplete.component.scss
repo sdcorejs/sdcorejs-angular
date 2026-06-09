@@ -103,14 +103,8 @@
   // Nếu option của bạn có chứa checkbox tự build (trong trường hợp custom multiple autocomplete)
   // thì áp dụng luôn scale như mat-select
   .mat-pseudo-checkbox {
-    transform: scale(0.7);
+    transform: scale(0.75);
     margin-right: 8px !important;
-  }
-
-  // Dấu tick "đã chọn" (minimal variant) — thu nhỏ cho cân với dòng option 36px.
-  .mat-pseudo-checkbox-minimal {
-    transform: scale(0.7);
-    transform-origin: center right;
   }
 }
 

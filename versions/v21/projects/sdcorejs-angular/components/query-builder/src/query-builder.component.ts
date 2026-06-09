@@ -1,21 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, booleanAttribute, computed, effect, input, model, signal, untracked } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
-import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import { SdItemDefDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
-import { DateRelative, Filter, Operator } from '@sdcorejs/utils/models';
+import { Filter, Operator } from '@sdcorejs/utils/models';
 import {
   isQbGroup,
   QB_DATE_MODES,
   QB_EMPTY_OPTIONS,
   QB_RELATIVE_UNIT_OPTIONS,
-  QB_TODAY,
   QbDateMode,
   QbGroup,
   QbNode,
@@ -27,10 +23,10 @@ import {
   qbIsMultiOperator,
   qbIsNoDataOperator,
   qbIsRelativeDate,
-  qbIsToday,
-  qbFieldIcon,
   qbNewGroup,
   qbNewRule,
+  SdQbRelativeDirection,
+  SdQbRelativeUnit,
   SdQueryBuilderField,
   SdQueryBuilderFieldOption,
 } from './query-builder.model';
@@ -52,7 +48,7 @@ function isAndOr(filter: any): boolean {
   selector: 'sd-query-builder',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, MatIconModule, SdOperator, SdSelect, SdInput, SdInputNumber, SdDate, SdDatetime, SdItemDefDefDirective],
+  imports: [NgTemplateOutlet, SdOperator, SdSelect, SdInput, SdDate, SdDatetime],
   templateUrl: './query-builder.component.html',
   styleUrls: ['./query-builder.component.scss'],
 })
@@ -135,9 +131,6 @@ export class SdQueryBuilder {
 
   /** Expose the type-guard to the template. */
   readonly isGroup = isQbGroup;
-
-  /** Resolve the leading icon for a field (own `icon` → per-type → `'tune'`) — used by the field picker. */
-  readonly fieldIcon = qbFieldIcon;
 
   constructor() {
     // Inbound seeding: an EXTERNAL write to value / filters rebuilds the tree.
@@ -321,13 +314,13 @@ export class SdQueryBuilder {
     if (qbIsNoDataOperator(op)) return null;
     if (qbIsMultiOperator(op)) return Array.isArray(current) ? current : current == null ? [] : [current];
     if (op === 'BETWEEN') {
-      // a relative spec / 'TODAY' can't be a BETWEEN endpoint — reset to a fresh range
+      // a relative spec can't be a BETWEEN endpoint — reset to a fresh range
       return current && typeof current === 'object' && !Array.isArray(current) && !qbIsRelativeDate(current)
         ? current
         : { from: null, to: null };
     }
-    // single value — keep a relative spec or the 'TODAY' sentinel; else drop array/range remnants
-    if (qbIsToday(current) || qbIsRelativeDate(current)) return current;
+    // single value — keep a relative spec; otherwise drop array/range remnants
+    if (qbIsRelativeDate(current)) return current;
     return Array.isArray(current) || (current && typeof current === 'object') ? null : current;
   }
 
@@ -368,15 +361,14 @@ export class SdQueryBuilder {
   /** Current date-value mode of a rule, derived from its value (no separate state). */
   dateMode(rule: QbRule): QbDateMode {
     const v = rule.value;
-    if (qbIsToday(v)) return 'now';
-    if (qbIsRelativeDate(v)) return 'relative';
+    if (qbIsRelativeDate(v)) return v.rel === 'now' ? 'now' : 'relative';
     return 'absolute';
   }
 
   /** Switch a date/datetime rule's value mode, reseeding the value for the new mode. */
   setDateMode(rule: QbRule, mode: QbDateMode): void {
     if (this.disabled()) return;
-    if (mode === 'now') rule.value = QB_TODAY;
+    if (mode === 'now') rule.value = { rel: 'now' };
     else if (mode === 'relative') rule.value = qbDefaultRelative();
     else rule.value = null; // absolute — pick a concrete date
     this.#apply();
@@ -385,7 +377,7 @@ export class SdQueryBuilder {
   /** Read the offset amount of a relative rule (default 1). */
   relativeAmount(rule: QbRule): number {
     const v = rule.value;
-    return qbIsRelativeDate(v) ? v.amount ?? 1 : 1;
+    return qbIsRelativeDate(v) && v.rel === 'offset' ? v.amount ?? 1 : 1;
   }
 
   /** Set the offset amount (clamped to an integer >= 1). */
@@ -394,23 +386,23 @@ export class SdQueryBuilder {
     const n = Math.floor(Number(raw));
     const amount = Number.isNaN(n) || n < 1 ? 1 : n;
     const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
-    rule.value = { amount, direction: cur.direction, unit: cur.unit } satisfies DateRelative;
+    rule.value = { rel: 'offset', unit: cur.unit ?? 'day', amount, direction: cur.direction ?? 'previous' };
     this.#apply();
   }
 
   /** Read the `'unit:direction'` token of a relative rule (default `'day:previous'`). */
   relativeUnitDirValue(rule: QbRule): string {
     const v = rule.value;
-    if (qbIsRelativeDate(v)) return `${v.unit}:${v.direction}`;
+    if (qbIsRelativeDate(v) && v.rel === 'offset') return `${v.unit ?? 'day'}:${v.direction ?? 'previous'}`;
     return 'day:previous';
   }
 
   /** Set the offset unit + direction from a `'unit:direction'` token. */
   setRelativeUnitDir(rule: QbRule, token: string): void {
     if (this.disabled()) return;
-    const [unit, direction] = (token ?? 'day:previous').split(':') as [DateRelative['unit'], DateRelative['direction']];
+    const [unit, direction] = (token ?? 'day:previous').split(':') as [SdQbRelativeUnit, SdQbRelativeDirection];
     const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
-    rule.value = { amount: cur.amount, direction, unit } satisfies DateRelative;
+    rule.value = { rel: 'offset', unit, amount: cur.amount ?? 1, direction };
     this.#apply();
   }
 

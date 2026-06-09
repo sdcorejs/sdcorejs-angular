@@ -211,15 +211,13 @@ $node-gap: 12px;
     margin-bottom: 0;
   }
 
-  // vertical guide — chạy LIÊN TỤC từ cạnh dưới node trước (top: -gap) xuống hết
-  // node hiện tại (bottom: 0). Node kế tiếp bắt đầu đúng tại đáy node này nên trục
-  // dọc nối liền mạch, không còn đứt quãng ở khoảng [center → bottom] như trước.
+  // vertical guide
   &::before {
     content: '';
     position: absolute;
     left: 0;
     top: -#{$node-gap};
-    bottom: 0;
+    bottom: 50%;
     border-left: 1px dashed $line-color;
   }
   // horizontal guide
@@ -231,7 +229,6 @@ $node-gap: 12px;
     width: 18px;
     border-top: 1px dashed $line-color;
   }
-  // node cuối: trục dọc dừng tại đầu nối ngang (center) — không thừa đuôi xuống dưới.
   &:last-child::before {
     bottom: auto;
     height: calc(50% + #{$node-gap});
@@ -261,53 +258,11 @@ $node-gap: 12px;
 }
 
 .qb-field {
-  min-width: 170px;
+  min-width: 150px;
 }
 
 .qb-val {
   min-width: 140px;
-}
-
-// Ngày chỉ có dd/MM/yyyy + icon lịch → không cần rộng như value mặc định.
-.qb-date-val {
-  min-width: 0;
-  width: 132px;
-  flex: 0 0 auto;
-}
-
-// Option/trigger có icon đứng trước (field picker + date-mode).
-// why: ::ng-deep KHÔNG bọc :host (global, neo theo tên class riêng .qb-opt*) để chạm tới
-// CẢ dropdown panel — render trong overlay NGOÀI host nên style encapsulated không với tới —
-// lẫn trigger trong component. Tên class riêng nên rò rỉ global vô hại.
-::ng-deep .qb-opt {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-::ng-deep .qb-opt .qb-opt-icon.mat-icon {
-  flex: 0 0 auto;
-  // Flex-center để glyph Material Icons nằm chính giữa ô — tránh lệch do line-height mặc định.
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  // Huỷ margin-right:16px mặc định của `.mat-mdc-option .mat-icon` — đây là nguồn gây hở lớn.
-  // Selector 3 class (.qb-opt .qb-opt-icon.mat-icon) thắng specificity, không cần !important.
-  margin: 0;
-  font-size: 18px;
-  width: 18px;
-  height: 18px;
-  line-height: 1;
-  color: #667085;
-}
-
-::ng-deep .qb-opt .qb-opt-label {
-  // KHÔNG ép nowrap: text dài tự xuống dòng như mặc định Material → dấu tick "đã chọn"
-  // (trailing minimal pseudo-checkbox) không bị đẩy tràn ra ngoài / khuất.
-  // KHÔNG set line-height: để label thừa hưởng line-height của dòng option → text canh
-  // giữa thẳng hàng với icon (line-height riêng làm hộp text lệch tâm so với icon).
-  min-width: 0;
 }
 
 .qb-between {
@@ -336,7 +291,6 @@ $node-gap: 12px;
 }
 
 // Relative date editor layout
-// Rộng hơn (icon + nhãn dài nhất "Ngày cụ thể") để text không bị xuống hàng khi chọn.
-.qb-date-mode { min-width: 160px; }
+.qb-date-mode { min-width: 120px; }
 .qb-rel-amount { width: 72px; }
 .qb-rel-unit { min-width: 110px; }

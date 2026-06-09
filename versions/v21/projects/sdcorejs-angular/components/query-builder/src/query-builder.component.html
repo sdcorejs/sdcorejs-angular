@@ -72,22 +72,7 @@
       [clearable]="false"
       hideInlineError
       [autoId]="autoIdFor('field-' + index)"
-    >
-      <!-- Option trong dropdown: icon thể hiện type + label. -->
-      <ng-template sdItemDef let-item="item">
-        <span class="qb-opt">
-          <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ fieldIcon(item) }}</mat-icon>
-          <span class="qb-opt-label">{{ item.label }}</span>
-        </span>
-      </ng-template>
-      <!-- Giá trị đã chọn ở trigger: icon mặc định theo type khi field chưa có icon riêng. -->
-      <ng-template #sdSelected let-item="item">
-        <span class="qb-opt">
-          <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ fieldIcon(item) }}</mat-icon>
-          <span class="qb-opt-label">{{ item?.label }}</span>
-        </span>
-      </ng-template>
-    </sd-select>
+    ></sd-select>
 
     @if (rule.field) {
       <div class="qb-divider"></div>
@@ -110,14 +95,14 @@
           <div class="qb-between">
             @switch (fieldOf(rule)?.type) {
               @case ('number') {
-                <sd-input-number class="qb-val" placeholder="Từ" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-input-number>
+                <sd-input class="qb-val" type="number" placeholder="Từ" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-input>
                 <span class="qb-dash">—</span>
-                <sd-input-number class="qb-val" placeholder="Đến" size="sm" [model]="rule.value?.to" (modelChange)="setBetweenTo(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('to-' + index)"></sd-input-number>
+                <sd-input class="qb-val" type="number" placeholder="Đến" size="sm" [model]="rule.value?.to" (modelChange)="setBetweenTo(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('to-' + index)"></sd-input>
               }
               @case ('date') {
-                <sd-date class="qb-val qb-date-val" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-date>
+                <sd-date class="qb-val" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-date>
                 <span class="qb-dash">—</span>
-                <sd-date class="qb-val qb-date-val" size="sm" [model]="rule.value?.to" (modelChange)="setBetweenTo(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('to-' + index)"></sd-date>
+                <sd-date class="qb-val" size="sm" [model]="rule.value?.to" (modelChange)="setBetweenTo(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('to-' + index)"></sd-date>
               }
               @case ('datetime') {
                 <sd-datetime class="qb-val" size="sm" [model]="rule.value?.from" (modelChange)="setBetweenFrom(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('from-' + index)"></sd-datetime>
@@ -132,59 +117,33 @@
               <sd-input class="qb-val" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input>
             }
             @case ('number') {
-              <sd-input-number class="qb-val" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [min]="fieldOf(rule)?.min" [max]="fieldOf(rule)?.max" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input-number>
+              <sd-input class="qb-val" type="number" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-input>
             }
             @case ('boolean') {
               <sd-select class="qb-val" [items]="booleanItems(fieldOf(rule)!)" valueField="value" displayField="display" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
             }
             @case ('date') {
               @let _dateMode = dateMode(rule);
-              <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dateMode" (modelChange)="setDateMode(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
-                <ng-template sdItemDef let-item="item">
-                  <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item.icon }}</mat-icon>
-                    <span class="qb-opt-label">{{ item.display }}</span>
-                  </span>
-                </ng-template>
-                <ng-template #sdSelected let-item="item">
-                  <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item?.icon }}</mat-icon>
-                    <span class="qb-opt-label">{{ item?.display }}</span>
-                  </span>
-                </ng-template>
-              </sd-select>
+              <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dateMode" (modelChange)="setDateMode(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)"></sd-select>
               @switch (_dateMode) {
                 @case ('absolute') {
-                  <sd-date class="qb-val qb-date-val" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-date>
+                  <sd-date class="qb-val" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-date>
                 }
                 @case ('relative') {
-                  <sd-input-number class="qb-rel-amount" type="positive" [precision]="0" size="sm" [model]="relativeAmount(rule)" (modelChange)="setRelativeAmount(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('rel-amount-' + index)"></sd-input-number>
+                  <sd-input class="qb-rel-amount" type="number" size="sm" [model]="relativeAmount(rule)" (modelChange)="setRelativeAmount(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('rel-amount-' + index)"></sd-input>
                   <sd-select class="qb-rel-unit" [items]="relativeUnitOptions" valueField="value" displayField="display" size="sm" [model]="relativeUnitDirValue(rule)" (modelChange)="setRelativeUnitDir(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('rel-unit-' + index)"></sd-select>
                 }
               }
             }
             @case ('datetime') {
               @let _dtMode = dateMode(rule);
-              <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dtMode" (modelChange)="setDateMode(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
-                <ng-template sdItemDef let-item="item">
-                  <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item.icon }}</mat-icon>
-                    <span class="qb-opt-label">{{ item.display }}</span>
-                  </span>
-                </ng-template>
-                <ng-template #sdSelected let-item="item">
-                  <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item?.icon }}</mat-icon>
-                    <span class="qb-opt-label">{{ item?.display }}</span>
-                  </span>
-                </ng-template>
-              </sd-select>
+              <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dtMode" (modelChange)="setDateMode(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)"></sd-select>
               @switch (_dtMode) {
                 @case ('absolute') {
                   <sd-datetime class="qb-val" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-datetime>
                 }
                 @case ('relative') {
-                  <sd-input-number class="qb-rel-amount" type="positive" [precision]="0" size="sm" [model]="relativeAmount(rule)" (modelChange)="setRelativeAmount(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('rel-amount-' + index)"></sd-input-number>
+                  <sd-input class="qb-rel-amount" type="number" size="sm" [model]="relativeAmount(rule)" (modelChange)="setRelativeAmount(rule, $event)" [disabled]="disabled()" hideInlineError [autoId]="autoIdFor('rel-amount-' + index)"></sd-input>
                   <sd-select class="qb-rel-unit" [items]="relativeUnitOptions" valueField="value" displayField="display" size="sm" [model]="relativeUnitDirValue(rule)" (modelChange)="setRelativeUnitDir(rule, $event)" [disabled]="disabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('rel-unit-' + index)"></sd-select>
                 }
               }

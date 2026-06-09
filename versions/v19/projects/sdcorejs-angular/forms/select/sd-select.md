@@ -74,10 +74,7 @@ Applied automatically on `<sd-select>` for styling hooks:
 - `<ng-template #sdLabel>` — custom label template (used by `<sd-view>` in DETAIL mode)
 - `<ng-template #sdValue>` — custom value-display template for the view layer (DETAIL / inline)
 - `*sdItemDef` (via `SdItemDefDefDirective`) — custom rendering of each option in the dropdown panel
-- `<ng-template #sdSelected>` — **custom rendering of the SELECTED value inside the editable trigger** (Material `<mat-select-trigger>`). Distinct from `#sdValue` / `sdViewDef`, which only drive the read-only `viewed` / `inline` face — `#sdSelected` affects the **edit-mode** trigger only. Context = `{ $implicit, item, items, display, multiple }`: in single mode `$implicit` / `item` is the selected **item object** (`items` is still the full selected array); in multiple mode `item` is the selected-item **array**, `items` the same array, `multiple` = `true`; `display` is the default comma-joined display text. Falls back to plain `display` text when not projected, so existing usages are unaffected. Only renders once the select has a value (Material shows the custom trigger only when non-empty).
 - `<ng-template sdViewDef>` — **custom view-display override** (unified): it simply replaces the view rendering — fed into `<sd-view>`'s `valueTemplate`, so it wins over `#sdValue`. Used wherever the view shows (`viewed=true` static DETAIL **and** `viewed='inline'` text face). Context = `{ $implicit: display, value, selectedItems, selectedItem }`. It no longer does its own focus-swap / `.sd-view` class — click-to-edit is governed by `viewed='inline'`. (Breaking vs the old behaviour where `sdViewDef` on a plain `viewed=false` field swapped to the input on focus; migrate that to `viewed='inline'`.)
-
-> **`#sdSelected` vs `sdViewDef`**: `#sdSelected` styles the value shown while EDITING (the dropdown trigger); `sdViewDef` styles the value shown in read-only/inline DETAIL. They are independent — project both if you want a custom face in both modes.
 
 ## Form integration
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. An `effect()` calls `formGroup.addControl(name, formControl)` and tears it down via `onCleanup` when the component is destroyed OR when `form`/`name` change.
@@ -192,29 +189,6 @@ Applied automatically on `<sd-select>` for styling hooks:
   [model]="model.orgUnitCode"
   [viewed]="true"
   hyperlink="/org-unit/{{ model.orgUnitCode }}">
-</sd-select>
-```
-
-### 6. Custom selected-value rendering in the trigger (`#sdSelected`)
-```html
-<!-- single: show an avatar + name as the picked value -->
-<sd-select
-  [items]="users" valueField="id" displayField="name"
-  [(model)]="model.userId">
-  <ng-template #sdSelected let-item>
-    <span class="d-flex align-items-center gap-6">
-      <img [src]="item?.avatar" class="avatar-20" /> {{ item?.name }}
-    </span>
-  </ng-template>
-</sd-select>
-
-<!-- multiple: render a count chip instead of the comma list -->
-<sd-select
-  [items]="tags" valueField="id" displayField="label" multiple
-  [(model)]="model.tagIds">
-  <ng-template #sdSelected let-items="items" let-display="display">
-    <span class="chip">{{ items?.length }} đã chọn</span>
-  </ng-template>
 </sd-select>
 ```
 
