@@ -6,6 +6,7 @@ import { By } from '@angular/platform-browser';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from './select.component';
+import { SdSelectFooterActionDirective } from './select-footer-action.directive';
 
 // ---------------------------------------------------------------------------
 // Host wrappers
@@ -995,5 +996,161 @@ describe('SdSelect (#sdSelected editable-trigger template)', () => {
     openSelect(fixture);
     expect(fixture.nativeElement.querySelector('.sel')).toBeNull();
     expect((fixture.nativeElement.textContent || '')).toContain('Alpha');
+  }));
+});
+
+describe('SdSelect (sdSelectFooterAction)', () => {
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action always" (click)="add('always', '')">Always</button>
+        </ng-template>
+
+        <ng-template sdSelectFooterAction when="empty" let-searchText="searchText">
+          <button type="button" class="footer-action empty" (click)="add('empty', searchText)">Add {{ searchText }}</button>
+        </ng-template>
+
+        <ng-template sdSelectFooterAction when="has-result" let-searchText="searchText">
+          <button type="button" class="footer-action has-result" (click)="add('has-result', searchText)">Use {{ searchText }}</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FooterHost {
+    items = LARGE_ITEMS;
+    calls: Array<{ type: string; searchText: string }> = [];
+
+    add(type: string, searchText: string): void {
+      this.calls.push({ type, searchText });
+    }
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action first">First</button>
+        </ng-template>
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action second">Second</button>
+        </ng-template>
+        <ng-template sdSelectFooterAction>
+          <button type="button" class="footer-action third">Third</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class MultiFooterHost {
+    items = FRUIT_ITEMS;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction when="empty" let-searchText="searchText">
+          <button type="button" class="footer-action empty">Add {{ searchText }}</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class EmptyOnlyFooterHost {
+    items = FRUIT_ITEMS;
+  }
+
+  function openFooterSelect<T>(fixture: ComponentFixture<T>): SdSelect<any> {
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const sd = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+    sd.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    return sd;
+  }
+
+  function footerActions(): HTMLElement[] {
+    return Array.from(document.body.querySelectorAll<HTMLElement>('.sd-select-panel .footer-action'));
+  }
+
+  function footerContainer(): HTMLElement | null {
+    return document.body.querySelector<HTMLElement>('.sd-select-panel .sd-select-footer-actions');
+  }
+
+  afterEach(() => {
+    document.body.querySelectorAll('.cdk-overlay-container').forEach(el => {
+      el.innerHTML = '';
+    });
+  });
+
+  it('renders when="always" regardless of search results', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    openFooterSelect(fixture);
+    const actions = footerActions();
+    expect(actions.some(el => el.classList.contains('always'))).toBe(true);
+  }));
+
+  it('does not render the footer container when no footer action is visible', fakeAsync(() => {
+    const fixture = TestBed.createComponent(EmptyOnlyFooterHost);
+    openFooterSelect(fixture);
+    expect(footerContainer()).toBeNull();
+  }));
+
+  it('renders when="empty" only when search text is present and filtered option count is 0', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('missing-item');
+    tick(600);
+    fixture.detectChanges();
+
+    const actions = footerActions();
+    expect(sd.filteredItems().length).toBe(0);
+    expect(actions.some(el => el.classList.contains('empty'))).toBe(true);
+    expect(actions.some(el => el.classList.contains('has-result'))).toBe(false);
+  }));
+
+  it('renders when="has-result" when filtered option count is greater than 0', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('Item 1');
+    tick(600);
+    fixture.detectChanges();
+
+    const actions = footerActions();
+    expect(sd.filteredItems().length).toBeGreaterThan(0);
+    expect(actions.some(el => el.classList.contains('has-result'))).toBe(true);
+    expect(actions.some(el => el.classList.contains('empty'))).toBe(false);
+  }));
+
+  it('preserves declaration order for multiple footer actions', fakeAsync(() => {
+    const fixture = TestBed.createComponent(MultiFooterHost);
+    openFooterSelect(fixture);
+    expect(footerActions().map(el => el.textContent?.trim())).toEqual(['First', 'Second', 'Third']);
+  }));
+
+  it('passes searchText context and keeps consumer click bindings working', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FooterHost);
+    const host = fixture.componentInstance;
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('Dragonfruit');
+    tick(600);
+    fixture.detectChanges();
+
+    const emptyAction = footerActions().find(el => el.classList.contains('empty'))!;
+    expect(emptyAction.textContent).toContain('Dragonfruit');
+    emptyAction.click();
+    fixture.detectChanges();
+
+    expect(host.calls).toEqual([{ type: 'empty', searchText: 'Dragonfruit' }]);
   }));
 });

@@ -145,6 +145,17 @@
       }
     }
   }
+
+  .sd-select-footer-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid #f2f2f2;
+    background-color: #fff;
+  }
 }
 
 ::ng-deep .sd-multiline-tooltip {

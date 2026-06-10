@@ -8,6 +8,7 @@ import {
   Component,
   computed,
   contentChild,
+  contentChildren,
   DestroyRef,
   effect,
   ElementRef,
@@ -66,6 +67,7 @@ import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';
 import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { SdSelectFooterActionDirective } from './select-footer-action.directive';
 
 @Component({
   selector: 'sd-select',
@@ -87,6 +89,7 @@ import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
     MatProgressSpinnerModule,
     SdLabel,
     SdView,
+    SdSelectFooterActionDirective,
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit {
@@ -110,6 +113,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   sdSelectedTemplate = contentChild<TemplateRef<any>>('sdSelected');
   itemDef = contentChild(SdItemDefDefDirective);
   sdViewDef = contentChild(SdViewDefDirective);
+  footerActions = contentChildren(SdSelectFooterActionDirective);
 
   /**
    * View display template. `sdViewDef` is now just a custom override of the view rendering —
@@ -267,6 +271,10 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   display = signal<string>('');
   calculatedPanelWidth = signal<string | number>('auto');
 
+  readonly searchText = signal<string>('');
+  readonly footerActionContext = computed(() => ({ searchText: this.searchText() }));
+  readonly visibleFooterActions = computed(() => this.footerActions().filter(action => this.shouldRenderFooterAction(action)));
+
   normalizedValue = computed(() => {
     const val = this.valueModel();
     if (this.multiple() && val !== undefined && val !== null && !Array.isArray(val)) {
@@ -304,6 +312,14 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     if (!path || item == null) return false;
     return Boolean(Utilities.getNestedValue(item, path as string));
   };
+
+  shouldRenderFooterAction(action: SdSelectFooterActionDirective): boolean {
+    const when = action.when();
+    if (when === 'always') return true;
+    if (when === 'empty') return this.searchText().length > 0 && this.filteredItems().length === 0;
+    if (when === 'has-result') return this.filteredItems().length > 0;
+    return false;
+  }
 
   setNestedValue = (obj: any, path: string, value: any) => {
     if (!path) return;
@@ -433,6 +449,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
     const search$ = this.inputControl.valueChanges.pipe(
       startWith(''),
+      tap(searchText => this.searchText.set(searchText?.toString() || '')),
       tap(() => {
         if (typeof this.actualItems() === 'function' && this.focused()) {
           this.loading.set(true);

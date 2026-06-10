@@ -177,6 +177,15 @@
                 <mat-spinner diameter="24"></mat-spinner>
               </mat-option>
             }
+
+            @let renderedFooterActions = visibleFooterActions();
+            @if (renderedFooterActions.length) {
+              <div class="sd-select-footer-actions">
+                @for (action of renderedFooterActions; track action) {
+                  <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
+                }
+              </div>
+            }
           </mat-select>
 
           @if (_hideInlineError && _errorMessage && formControl.touched) {
@@ -301,6 +310,15 @@
               <mat-option disabled class="sd-loading-option">
                 <mat-spinner diameter="24"></mat-spinner>
               </mat-option>
+            }
+
+            @let renderedFooterActions = visibleFooterActions();
+            @if (renderedFooterActions.length) {
+              <div class="sd-select-footer-actions">
+                @for (action of renderedFooterActions; track action) {
+                  <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
+                }
+              </div>
             }
           </mat-select>
 
