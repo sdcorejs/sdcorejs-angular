@@ -1,9 +1,12 @@
 name: Publish @sdcorejs/angular to npm
 
-# Convention: tag = `v<patch>` (vd `v0.5`, `v0.5-beta.1`) — KHÔNG có major.
-# Workflow tự nhân lên 3 phiên bản: 19.<patch> / 20.<patch> / 21.<patch>.
-# Vd: push tag `v0.5` → publish @sdcorejs/angular@19.0.5, @20.0.5, @21.0.5 (npm tag=latest).
-#     push tag `v0.5-beta.1` → publish 19.0.5-beta.1 / 20.0.5-beta.1 / 21.0.5-beta.1 (npm tag=beta).
+# Convention: tag = `v<patch>` (example `v0.5`, `v0.5-beta.1`) with no Angular major.
+# The workflow expands one release tag into 3 package versions:
+#   v0.5        -> 19.0.5 / 20.0.5 / 21.0.5 (npm dist-tag latest)
+#   v0.5-beta.1 -> 19.0.5-beta.1 / 20.0.5-beta.1 / 21.0.5-beta.1 (npm dist-tag beta)
+#
+# After all 3 npm publishes succeed, the tag workflow snapshots published-docs
+# for the same 3 versions and commits the archive back to `main`.
 
 on:
   push:
@@ -12,7 +15,7 @@ on:
   workflow_dispatch:
     inputs:
       patch:
-        description: 'Patch suffix (vd "0.5" hoặc "0.5-beta.1"). Sẽ publish 19.<patch> / 20.<patch> / 21.<patch>.'
+        description: 'Patch suffix, for example "0.5" or "0.5-beta.1". Publishes 19.<patch> / 20.<patch> / 21.<patch>.'
         required: true
         type: string
       tag:
@@ -23,6 +26,9 @@ on:
         options:
           - beta
           - latest
+
+permissions:
+  contents: write
 
 concurrency:
   group: publish-npm
@@ -45,6 +51,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure release tag is current main
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          git fetch origin main --depth=1
+          TAG_SHA="$(git rev-parse HEAD)"
+          MAIN_SHA="$(git rev-parse origin/main)"
+          if [ "$TAG_SHA" != "$MAIN_SHA" ]; then
+            echo "::error::Release tag $GITHUB_REF_NAME must point at origin/main before npm publish."
+            echo "tag=$TAG_SHA main=$MAIN_SHA"
+            exit 1
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -61,12 +81,15 @@ jobs:
             PATCH="${{ github.event.inputs.patch }}"
             TAG="${{ github.event.inputs.tag }}"
           else
-            # Strip leading 'v' from tag ref: v0.5 → 0.5
             PATCH="${GITHUB_REF_NAME#v}"
             if echo "$PATCH" | grep -qE '(beta|alpha|rc)'; then TAG="beta"; else TAG="latest"; fi
           fi
+          if ! echo "$PATCH" | grep -qE '^[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?$'; then
+            echo "::error::Invalid patch '$PATCH'. Expected 0.5 or 0.5-beta.1."
+            exit 1
+          fi
           echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG"     >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=${{ matrix.major }}.$PATCH" >> "$GITHUB_OUTPUT"
 
       - name: Write version into library package.json
@@ -77,9 +100,8 @@ jobs:
         working-directory: versions/${{ matrix.version }}
 
       - name: Install dependencies
-        # why: npm install (KHÔNG npm ci). Sync rollout bump Angular major trong package.json (v20→^20, v21→^21)
-        # nhưng KHÔNG regen package-lock.json → lock vẫn pin Angular 19 → `npm ci` (strict) fail ở v20/v21.
-        # `npm install --legacy-peer-deps` resolve lại tree theo package.json. Khớp với scripts/deploy.ps1.
+        # npm install is intentional here. v20/v21 package-lock files can still
+        # contain Angular 19 pins after sync, so npm ci would be too strict.
         run: npm install --legacy-peer-deps
         working-directory: versions/${{ matrix.version }}
 
@@ -92,3 +114,53 @@ jobs:
         working-directory: versions/${{ matrix.version }}/dist/sdcorejs-angular
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-docs:
+    name: Publish versioned API docs
+    needs: build-and-publish
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure release tag is current main
+        run: |
+          git fetch origin main --depth=1
+          TAG_SHA="$(git rev-parse HEAD)"
+          MAIN_SHA="$(git rev-parse origin/main)"
+          if [ "$TAG_SHA" != "$MAIN_SHA" ]; then
+            echo "::error::Docs are generated from the tag tree and committed to main. Tag $GITHUB_REF_NAME must point at origin/main."
+            echo "tag=$TAG_SHA main=$MAIN_SHA"
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Resolve release patch
+        id: resolve
+        run: echo "patch=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate published-docs for 19/20/21
+        run: |
+          RELEASE_DATE="$(date -u +%F)"
+          npm run collect-release-docs -- --patch "${{ steps.resolve.outputs.patch }}" --date "$RELEASE_DATE" --skip-existing
+
+      - name: Commit published-docs archive
+        run: |
+          if [ -z "$(git status --porcelain published-docs)" ]; then
+            echo "No published-docs changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add published-docs
+          git commit -m "docs: publish API docs for v${{ steps.resolve.outputs.patch }}"
+          git push origin HEAD:main

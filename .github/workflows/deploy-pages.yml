@@ -20,7 +20,7 @@ on:
       - 'versions/v19/package.json'
       - 'versions/v19/package-lock.json'
       - 'published-docs/**'
-      - 'scripts/collect-docs.mjs'
+      - 'scripts/collect-*.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 

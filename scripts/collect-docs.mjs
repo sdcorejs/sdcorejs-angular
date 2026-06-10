@@ -1,46 +1,48 @@
 #!/usr/bin/env node
-// Collect public API docs (*.md) from the synced v19 library into a versioned,
-// repo-owned archive under `published-docs/<version>/`, and refresh the
-// `published-docs/versions.json` registry.
+// Collect public API docs (*.md) from one synced Angular workspace into a
+// versioned, repo-owned archive under `published-docs/<version>/`, and refresh
+// the `published-docs/versions.json` registry.
 //
-// The archive is committed to the repo (NOT a build artifact) so every published
-// version persists. The deploy-pages workflow copies `published-docs/**` into the
-// GitHub Pages output, where an AI agent can fetch docs by URL without a local clone:
+// The archive is committed to the repo so every published version persists.
+// The deploy-pages workflow copies `published-docs/**` into the GitHub Pages
+// output, where an AI agent can fetch docs by URL without a local clone:
 //
-//   https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json   (registry)
+//   https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/index.json
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/forms/select/sd-select.md
-//   https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json (alias built at deploy)
+//   https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json
 //
-// Source of truth is the synced lib at `versions/v19/projects/sdcorejs-angular`,
-// where the sync step has already rewritten `@sd-angular/core` -> `@sdcorejs/angular`.
-// Do NOT hand-edit `versions/**` or `published-docs/<version>/**` — re-run this script.
+// Source of truth is the synced lib at `versions/v<N>/projects/sdcorejs-angular`.
+// Do not hand-edit `versions/**` or `published-docs/<version>/**`; re-run this script.
 //
 // Usage:
-//   node scripts/collect-docs.mjs                       # version from lib package.json
-//   node scripts/collect-docs.mjs --version 19.0.4      # explicit release version
-//   node scripts/collect-docs.mjs --version 19.0.4 --commit a9a19e7c --date 2026-06-09
+//   node scripts/collect-docs.mjs --workspace v19 --version 19.0.5
+//   node scripts/collect-docs.mjs --workspace v20 --version 20.0.5 --date 2026-06-10
+//   node scripts/collect-docs.mjs --workspace v21 --version 21.0.5 --skip-existing
 
 import {
-  readFileSync,
-  writeFileSync,
-  readdirSync,
-  statSync,
-  mkdirSync,
   copyFileSync,
   existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
   rmSync,
+  statSync,
+  writeFileSync,
 } from 'node:fs';
-import { join, relative, dirname, sep } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '..');
-const SRC_ROOT = join(REPO_ROOT, 'versions', 'v19', 'projects', 'sdcorejs-angular');
-const OUT_ROOT = join(REPO_ROOT, 'published-docs');
 
 const PACKAGE = '@sdcorejs/angular';
 const BASE_URL = 'https://sdcorejs.github.io/sdcorejs-angular/docs';
+const WORKSPACES = new Map([
+  ['v19', 19],
+  ['v20', 20],
+  ['v21', 21],
+]);
 
 // Internal / non-API md that must never be published.
 const EXCLUDE_FILES = new Set(['HANDOFF.md']);
@@ -51,22 +53,57 @@ function getArg(name) {
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
 
-function resolveVersion() {
+function hasFlag(name) {
+  return process.argv.includes(`--${name}`);
+}
+
+function resolvePathArg(name, fallback) {
+  const explicit = getArg(name);
+  if (!explicit) return fallback;
+  return isAbsolute(explicit) ? explicit : resolve(REPO_ROOT, explicit);
+}
+
+function resolveWorkspace() {
+  const explicit = getArg('workspace') || getArg('major') || 'v19';
+  const workspace = explicit.startsWith('v') ? explicit : `v${explicit}`;
+  if (!WORKSPACES.has(workspace)) {
+    throw new Error(`Unsupported workspace "${explicit}". Expected one of: ${[...WORKSPACES.keys()].join(', ')}.`);
+  }
+  return workspace;
+}
+
+function resolveVersion(srcRoot) {
   const explicit = getArg('version');
   if (explicit) return explicit;
-  const pkgPath = join(SRC_ROOT, 'package.json');
+  const pkgPath = join(srcRoot, 'package.json');
   if (!existsSync(pkgPath)) {
     throw new Error(`Cannot resolve version: pass --version, or ensure ${pkgPath} exists.`);
   }
   return JSON.parse(readFileSync(pkgPath, 'utf8')).version;
 }
 
-function resolveCommit() {
+function assertVersionMatchesWorkspace(version, major, workspace) {
+  const m = version.match(/^(\d+)\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
+  if (!m) {
+    throw new Error(`Invalid package version "${version}". Expected format like 19.0.5 or 19.0.5-beta.1.`);
+  }
+  const versionMajor = Number(m[1]);
+  if (versionMajor !== major) {
+    throw new Error(`Version ${version} does not match workspace ${workspace}. Expected major ${major}.`);
+  }
+}
+
+function resolveCommit(workspace) {
   const explicit = getArg('commit');
   if (explicit) return explicit;
+
   // Best-effort: parse the source commit recorded by the sync step.
-  const statusPath = join(REPO_ROOT, 'versions', 'v19', 'SYNC-STATUS.md');
-  if (existsSync(statusPath)) {
+  const statusCandidates = [
+    join(REPO_ROOT, 'versions', workspace, 'SYNC-STATUS.md'),
+    join(REPO_ROOT, 'versions', 'v19', 'SYNC-STATUS.md'),
+  ];
+  for (const statusPath of statusCandidates) {
+    if (!existsSync(statusPath)) continue;
     const text = readFileSync(statusPath, 'utf8');
     const m = text.match(/[Ss]ource\s*[Cc]ommit[^\n|]*[|:]\s*([0-9a-f]{7,40})/);
     if (m) return m[1];
@@ -101,35 +138,63 @@ function titleOf(content, fallback) {
   return fallback;
 }
 
-// Descending semver-ish comparison (numeric segments; beta suffixes sort low).
+function displayPath(path) {
+  const rel = relative(REPO_ROOT, path).split(sep).join('/');
+  return rel && !rel.startsWith('..') ? rel : path;
+}
+
+// Descending semver-ish comparison. Stable releases sort above prereleases.
 function cmpVersionDesc(a, b) {
-  const parse = v => v.split('.').map(s => parseInt(s, 10) || 0);
+  const parse = v => {
+    const [core, prerelease = ''] = v.split('-', 2);
+    return { nums: core.split('.').map(s => parseInt(s, 10) || 0), prerelease };
+  };
   const pa = parse(a);
   const pb = parse(b);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pb[i] || 0) - (pa[i] || 0);
+  for (let i = 0; i < Math.max(pa.nums.length, pb.nums.length); i++) {
+    const d = (pb.nums[i] || 0) - (pa.nums[i] || 0);
     if (d) return d;
   }
+  if (pa.prerelease && !pb.prerelease) return 1;
+  if (!pa.prerelease && pb.prerelease) return -1;
+  if (pa.prerelease || pb.prerelease) return pb.prerelease.localeCompare(pa.prerelease);
   return 0;
 }
 
 function main() {
-  if (!existsSync(SRC_ROOT)) {
-    throw new Error(`Synced library not found: ${SRC_ROOT}. Run \`npm run sync\` first.`);
+  const workspace = resolveWorkspace();
+  const workspaceMajor = WORKSPACES.get(workspace);
+  const srcRoot = join(REPO_ROOT, 'versions', workspace, 'projects', 'sdcorejs-angular');
+  const outRoot = resolvePathArg('out-root', join(REPO_ROOT, 'published-docs'));
+
+  if (!existsSync(srcRoot)) {
+    throw new Error(`Synced library not found: ${srcRoot}. Run \`npm run sync\` first.`);
   }
 
-  const version = resolveVersion();
+  const version = resolveVersion(srcRoot);
+  assertVersionMatchesWorkspace(version, workspaceMajor, workspace);
   const released = getArg('date') || todayIso();
-  const syncedFrom = resolveCommit();
+  const syncedFrom = resolveCommit(workspace);
 
-  const outVersionDir = join(OUT_ROOT, version);
-  // Idempotent: rebuild only this version's folder.
-  if (existsSync(outVersionDir)) rmSync(outVersionDir, { recursive: true, force: true });
+  const outVersionDir = join(outRoot, version);
+  const outVersionLabel = displayPath(outVersionDir);
+  if (existsSync(outVersionDir)) {
+    if (hasFlag('skip-existing')) {
+      console.log(`[collect-docs] skip existing ${PACKAGE}@${version}: ${outVersionLabel}/ already exists`);
+      return;
+    }
+    if (!hasFlag('force')) {
+      throw new Error(
+        `${outVersionLabel}/ already exists. Refusing to overwrite a release archive; pass --force to rebuild intentionally.`,
+      );
+    }
+    rmSync(outVersionDir, { recursive: true, force: true });
+  }
   mkdirSync(outVersionDir, { recursive: true });
 
   const docs = [];
-  for (const file of walk(SRC_ROOT)) {
-    const rel = relative(SRC_ROOT, file).split(sep).join('/');
+  for (const file of walk(srcRoot)) {
+    const rel = relative(srcRoot, file).split(sep).join('/');
     const content = readFileSync(file, 'utf8');
     const id = rel.replace(/\.md$/, '');
     const category = rel.split('/')[0];
@@ -154,14 +219,13 @@ function main() {
   if (syncedFrom) index.syncedFrom = syncedFrom;
   writeFileSync(join(outVersionDir, 'index.json'), JSON.stringify(index, null, 2) + '\n');
 
-  // Refresh registry.
-  const registryPath = join(OUT_ROOT, 'versions.json');
+  const registryPath = join(outRoot, 'versions.json');
   let registry = { package: PACKAGE, latest: version, baseUrl: BASE_URL, versions: [] };
   if (existsSync(registryPath)) {
     try {
       registry = JSON.parse(readFileSync(registryPath, 'utf8'));
     } catch {
-      /* corrupt registry — rebuild from scratch */
+      // Corrupt registry: rebuild from scratch.
     }
   }
   registry.package = PACKAGE;
@@ -172,7 +236,7 @@ function main() {
   registry.latest = registry.versions[0].version;
   writeFileSync(registryPath, JSON.stringify(registry, null, 2) + '\n');
 
-  console.log(`[collect-docs] ${PACKAGE}@${version}: ${docs.length} docs -> published-docs/${version}/`);
+  console.log(`[collect-docs] ${workspace} ${PACKAGE}@${version}: ${docs.length} docs -> ${outVersionLabel}/`);
   console.log(`[collect-docs] registry: ${registry.versions.length} version(s), latest=${registry.latest}`);
 }
 
