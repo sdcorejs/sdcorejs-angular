@@ -200,6 +200,10 @@ foreach ($v in $versions) {
   Update-SideDrawerPortalCall -FilePath $sideDrawerPath -Major $v.Major
 
   # Write sync status
+  # why: build the arrow at runtime ([char]0x2192) instead of embedding a literal `→`.
+  # PS 5.1 reads this .ps1 as cp1252 (no BOM) → a literal U+2192 decodes to mojibake `â€™`
+  # and gets written into SYNC-STATUS.md. Keeping the source ASCII avoids that round-trip.
+  $arrow = [char]0x2192
   $domNote = if ($v.Major -eq "19") { "4-arg constructor (with ViewContainerRef)" } else { "3-arg constructor" }
   $statusLines = @(
     "# Sync Status - $($v.Folder)",
@@ -209,7 +213,7 @@ foreach ($v in $versions) {
     "| Angular Major | $($v.Major) |",
     "| Source Commit | $syncCommit |",
     "| Synced At | $syncDate |",
-    "| Source | vn-angular → versions/v19 → $($v.Folder) |",
+    "| Source | vn-angular $arrow versions/v19 $arrow $($v.Folder) |",
     "",
     "## Notes",
     "- Sync rule: v19 is synced first (primary). v20 and v21 are rollout targets.",
