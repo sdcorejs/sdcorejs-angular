@@ -2,7 +2,7 @@
 import { TemplateRef } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
-import { NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
+import { Filter, NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';
 import { SdTableColumn } from '../../models/table-column.model';
 
@@ -70,6 +70,9 @@ export interface SdTableOptionFilter<T = any> {
   manualFilter?: boolean;
 
   /** Có thể thu gọn bộ lọc hay không */
+  collapsible?: boolean;
+
+  /** @deprecated Use `collapsible` instead. */
   collapsable?: boolean;
 
   /** Ẩn toolbar (xóa bộ lọc, thiết lập) của external filter, khi có ít external filter user không cần chức năng này */
@@ -108,7 +111,7 @@ export const SdConvertToPagingReq = (
           field,
           operator: externalFilter.defaultOperator || 'CONTAIN',
           data: value,
-        });
+        } as Filter);
       } else if (externalFilter.type === 'boolean') {
         filters!.push({
           field,
@@ -163,7 +166,7 @@ export const SdConvertToPagingReq = (
             field,
             operator: externalFilter.defaultOperator || 'EQUAL',
             data: value,
-          });
+          } as Filter);
         }
       }
     }
@@ -180,7 +183,7 @@ export const SdConvertToPagingReq = (
           field,
           operator: operator || 'CONTAIN',
           data: value,
-        });
+        } as Filter);
       } else if (column.type === 'boolean') {
         filters!.push({
           field,
@@ -237,7 +240,7 @@ export const SdConvertToPagingReq = (
             field,
             operator: operator || 'EQUAL',
             data: value,
-          });
+          } as Filter);
         }
       }
     }

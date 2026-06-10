@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Operator } from '@sdcorejs/utils/models';
+import { DateRelative, Filter, Operator } from '@sdcorejs/utils/models';
+import { FilterUtilities } from '@sdcorejs/utils/fns';
 
 // ---------------------------------------------------------------------------
 // Field metadata — the public config a consumer declares so the builder knows
@@ -30,6 +31,8 @@ export interface SdQueryBuilderField {
   label: string;
   /** Field type — picks the default operator set + value editor control. */
   type: SdQueryBuilderFieldType;
+  /** Material icon shown before the label in the field picker; falls back to `QB_TYPE_ICON[type]` then `'tune'`. */
+  icon?: string;
   /** Override the allowed operator set (otherwise `QB_OPERATORS_BY_TYPE[type]`). */
   operators?: Operator[];
   /** Override the starting operator (otherwise `QB_DEFAULT_OPERATOR_BY_TYPE[type]`). */
@@ -44,6 +47,24 @@ export interface SdQueryBuilderField {
   min?: number | string;
   /** Upper bound for number / date value editors. */
   max?: number | string;
+  /** Optional domain guard for field-to-field comparison candidates. */
+  compareGroup?: string;
+  /** Set false to hide this field from field-to-field comparison. */
+  allowFieldCompare?: boolean;
+}
+
+export interface SdQueryBuilderOption {
+  autoId?: string;
+  fields: SdQueryBuilderField[];
+  mode?: 'edit' | 'view';
+  comparisonMode?: QbComparisonMode;
+  disabled?: boolean;
+  value?: Filter | null;
+  filters?: Filter[];
+  rootLogic?: 'AND' | 'OR';
+  onValueChange?: (value: Filter | null) => void;
+  onFiltersChange?: (filters: Filter[]) => void;
+  onRootLogicChange?: (logic: 'AND' | 'OR') => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,6 +73,12 @@ export interface SdQueryBuilderField {
 // ---------------------------------------------------------------------------
 
 export type QbNode = QbGroup | QbRule;
+
+/** Component-level capability for right-hand operands. */
+export type QbComparisonMode = 'value-only' | 'value-or-field';
+
+/** Per-rule right-hand operand source. */
+export type QbValueSource = 'literal' | 'field';
 
 /** A logical group of nodes joined by AND / OR. Maps to `FilterAndOr`. */
 export interface QbGroup {
@@ -71,6 +98,10 @@ export interface QbRule {
   operator?: Operator;
   /** Single value, `{ from, to }` for BETWEEN, or an array for IN / NOT_IN. */
   value?: any;
+  /** Internal UI state: literal input or a same-type field reference. */
+  valueSource?: QbValueSource;
+  /** Right-hand field key when `valueSource` is `'field'`. */
+  compareField?: string;
 }
 
 /** Type guard — narrows a `QbNode` to a `QbGroup`. */
@@ -149,6 +180,34 @@ export function qbIsMultiOperator(op: Operator | undefined): boolean {
   return !!op && QB_MULTI_OPERATORS.includes(op);
 }
 
+/** True when the operator accepts one right-hand operand, including a field reference. */
+export function qbSupportsFieldCompareOperator(op: Operator | undefined): boolean {
+  return !!op && !qbIsNoDataOperator(op) && !qbIsMultiOperator(op) && op !== 'BETWEEN';
+}
+
+/**
+ * Icon fallback per field type when `SdQueryBuilderField.icon` is not set.
+ * Mirrors query-bar's `SD_QUERY_TYPE_ICON` so the two components read consistently,
+ * but kept local so query-builder has no dependency on the query-bar package.
+ */
+export const QB_TYPE_ICON: Record<SdQueryBuilderFieldType, string> = {
+  string:   'text_fields',
+  number:   'tag',
+  boolean:  'toggle_on',
+  date:     'event',
+  datetime: 'schedule',
+  values:   'list',
+};
+
+/**
+ * Icon shown before a field in the field picker / selected trigger.
+ * Priority: `field.icon` → `QB_TYPE_ICON[field.type]` → `'tune'` (default, like query-bar).
+ */
+export function qbFieldIcon(field: SdQueryBuilderField | undefined): string {
+  if (!field) return 'tune';
+  return field.icon ?? QB_TYPE_ICON[field.type] ?? 'tune';
+}
+
 // ---------------------------------------------------------------------------
 // Node factories — monotonic counter for stable, render-safe ids (no Math.random
 // / Date.now so SSR + tests stay deterministic).
@@ -162,8 +221,8 @@ export function qbId(prefix = 'qb'): string {
 }
 
 /** Build a fresh rule node (optionally pre-filled). */
-export function qbNewRule(field?: string, operator?: Operator, value?: any): QbRule {
-  return { id: qbId('r'), kind: 'rule', field, operator, value };
+export function qbNewRule(field?: string, operator?: Operator, value?: any, valueSource?: QbValueSource, compareField?: string): QbRule {
+  return { id: qbId('r'), kind: 'rule', field, operator, value, valueSource, compareField };
 }
 
 /** Build a fresh group node. */
@@ -173,46 +232,68 @@ export function qbNewGroup(logic: 'AND' | 'OR' = 'AND', children: QbNode[] = [])
 
 // ---------------------------------------------------------------------------
 // Relative dates — a date/datetime rule's value may be a relative spec resolved
-// at query time on the backend, instead of an absolute picked date. Emitted as a
-// structured object inside Filter.data. Only for single-value operators (not BETWEEN).
+// at query time, instead of an absolute picked date. The model is REUSED from
+// `@sdcorejs/utils`: an offset is a `DateRelative` ({ amount, direction, unit });
+// "today" is the `'TODAY'` sentinel. The serializer maps these to the Filter
+// `dataType` discriminator (`'date-relative'` / `'date-today'`). The builder UI
+// only offers day/week/month even though `DateRelative` also allows `'hour'`.
+// Single-value operators only (not BETWEEN).
 // ---------------------------------------------------------------------------
 
-/** Offset unit for a relative date. */
-export type SdQbRelativeUnit = 'day' | 'week' | 'month';
+/** Offset unit for a relative date — re-exported from the utils `DateRelative` model. */
+export type SdQbRelativeUnit = DateRelative['unit'];
 
-/** Offset direction for a relative date. */
-export type SdQbRelativeDirection = 'previous' | 'next';
+/** Offset direction for a relative date — re-exported from the utils `DateRelative` model. */
+export type SdQbRelativeDirection = DateRelative['direction'];
 
-/** A relative (resolved-at-query-time) date value stored in `Filter.data`. */
-export interface SdQbRelativeDate {
-  /** `'now'` = current moment / today · `'offset'` = now ± amount × unit. */
-  rel: 'now' | 'offset';
-  /** Offset unit — only for `rel: 'offset'`. */
-  unit?: SdQbRelativeUnit;
-  /** Offset magnitude (>= 1) — only for `rel: 'offset'`. */
-  amount?: number;
-  /** Offset direction — only for `rel: 'offset'`. */
-  direction?: SdQbRelativeDirection;
-}
+/** Sentinel held as a rule value (and emitted as `data`) for the "today" date mode. */
+export const QB_TODAY = 'TODAY';
+/** The `'TODAY'` sentinel type (matches the utils `date-today` data literal). */
+export type QbToday = typeof QB_TODAY;
 
 /** Date value editor mode for a date/datetime rule (derived from the rule value). */
 export type QbDateMode = 'absolute' | 'now' | 'relative';
 
-/** Type guard — narrows an arbitrary value to a relative-date spec. */
-export function qbIsRelativeDate(v: any): v is SdQbRelativeDate {
-  return !!v && typeof v === 'object' && (v.rel === 'now' || v.rel === 'offset');
+/** Type guard — narrows a rule value to a utils `DateRelative` (offset spec). */
+export const qbIsRelativeDate = FilterUtilities.isDateRelative;
+
+/** Type guard — narrows a rule value to the `'TODAY'` sentinel ("now"/today mode). */
+export function qbIsToday(v: any): v is QbToday {
+  return v === QB_TODAY;
 }
 
 /** Starting relative value when a rule first switches to "relative" mode. */
-export function qbDefaultRelative(): SdQbRelativeDate {
-  return { rel: 'offset', unit: 'day', amount: 1, direction: 'previous' };
+export function qbDefaultRelative(): DateRelative {
+  return { amount: 1, direction: 'previous', unit: 'day' };
+}
+
+/** One date-mode option — carries a Material icon shown in the dropdown + selected trigger. */
+export interface QbDateModeOption {
+  value: QbDateMode;
+  display: string;
+  /** Material icon name (outlined set). */
+  icon: string;
 }
 
 /** Stable option list for the date-mode select (module ref — never reallocated). */
-export const QB_DATE_MODES: ReadonlyArray<{ value: QbDateMode; display: string }> = [
-  { value: 'absolute', display: 'Ngày cụ thể' },
-  { value: 'now', display: 'Hôm nay' },
-  { value: 'relative', display: 'Tương đối' },
+export const QB_DATE_MODES: ReadonlyArray<QbDateModeOption> = [
+  { value: 'absolute', display: 'Ngày cụ thể', icon: 'event' },
+  { value: 'now', display: 'Hôm nay', icon: 'today' },
+  { value: 'relative', display: 'Tương đối', icon: 'history' },
+];
+
+/** One value-source option for field-to-field comparison UI. */
+export interface QbValueSourceOption {
+  value: QbValueSource;
+  display: string;
+  /** Material icon name (outlined set). */
+  icon: string;
+}
+
+/** Stable option list for choosing between a literal value and another field. */
+export const QB_VALUE_SOURCE_OPTIONS: ReadonlyArray<QbValueSourceOption> = [
+  { value: 'literal', display: 'Nhập giá trị', icon: 'edit_note' },
+  { value: 'field', display: 'Chọn trường', icon: 'view_column' },
 ];
 
 /** Stable combined direction×unit option list (token `'unit:direction'`). */

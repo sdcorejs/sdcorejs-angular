@@ -115,8 +115,15 @@ Operator labels + icons live in `@sdcorejs/utils` `OPERATORS` table (v1.1.2 adds
 
 ## Inputs
 
+New usage should bind only `[option]`, like `sd-table`. Put `autoId`, `fields`, initial `filters` / `logic` / `search`, display flags, and callbacks (`onQueryChange`, `onApply`) inside `SdQueryBarOption`. The split inputs and model outputs below remain as a migration bridge.
+
+```html
+<sd-query-bar [option]="queryBarOption"></sd-query-bar>
+```
+
 | Name | Type | Default | Notes |
 |---|---|---|---|
+| `option` | `SdQueryBarOption` | `undefined` | Main option object for new usage. |
 | `autoId` | `string` | `undefined` | Prefix for `data-autoid` on inner controls. |
 | `fields` | `SdQueryField[]` | `[]` | Available fields. null/undefined coerced to `[]`. |
 | `filters` | `Filter[]` (model) | `[]` | Two-way: `[(filters)]`. |

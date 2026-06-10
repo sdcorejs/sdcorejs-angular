@@ -123,6 +123,29 @@ export interface SdQuery<T = any> {
   search?: string;
 }
 
+export interface SdQueryBarOption<T = any> {
+  /** Prefix for auto-generated `data-autoid` on inner controls. */
+  autoId?: string;
+  /** Available fields the user can filter by. */
+  fields: SdQueryField<T>[];
+  /** Initial active filter chips. */
+  filters?: Filter<T>[];
+  /** Initial global connector between filters. */
+  logic?: SdQueryLogic;
+  /** Initial free-text search string. */
+  search?: string;
+  mode?: 'popover' | 'inline';
+  density?: 'compact' | 'comfortable';
+  showSearch?: boolean;
+  showSavedFilters?: boolean;
+  savedFiltersKey?: string;
+  showLogicToggle?: boolean;
+  showClearAll?: boolean;
+  showOperatorOnChip?: boolean;
+  onQueryChange?: (query: SdQuery<T>) => void;
+  onApply?: (query: SdQuery<T>) => void;
+}
+
 /** Persisted bookmark of a query (filters + logic + search) — managed by `[savedFiltersKey]`. */
 export interface SdSavedFilter<T = any> {
   id: string;

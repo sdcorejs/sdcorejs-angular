@@ -1,0 +1,546 @@
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { Component, signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdTree } from './tree.component';
+import { SdTreeItemDefDirective } from './tree-item-def.directive';
+import {
+  SdTreeCommand,
+  SdTreeComponentOption,
+  SdTreeItemLazy,
+  SdTreeItemStatic,
+  SdTreeLazyOption,
+  SdTreeSelectionEvent,
+  SdTreeStaticOption,
+  SdTreeToggleEvent,
+} from './tree.model';
+
+interface NodeItem {
+  id: string;
+  title: string;
+  description?: string;
+  locked?: boolean;
+}
+
+const ROOT_DATA: NodeItem = { id: 'root', title: 'Ph\u00f2ng K\u1ebf to\u00e1n' };
+const PAYABLE_DATA: NodeItem = { id: 'payable', title: 'C\u00f4ng n\u1ee3 ph\u1ea3i tr\u1ea3' };
+const RECEIVABLE_DATA: NodeItem = {
+  id: 'receivable',
+  title: 'C\u00f4ng n\u1ee3 ph\u1ea3i thu r\u1ea5t d\u00e0i c\u1ea7n hi\u1ec3n th\u1ecb t\u1ed1i \u0111a hai d\u00f2ng v\u00e0 kh\u00f4ng \u0111\u00e8 l\u00ean command cu\u1ed1i d\u00f2ng',
+};
+const HR_DATA: NodeItem = { id: 'hr', title: 'Nh\u00e2n s\u1ef1' };
+const CONTRACT_DATA: NodeItem = { id: 'contract', title: 'H\u1ee3p \u0111\u1ed3ng lao \u0111\u1ed9ng' };
+
+const STATIC_ITEMS: SdTreeItemStatic<NodeItem>[] = [
+  treeItem(ROOT_DATA, [
+    treeItem(PAYABLE_DATA),
+    treeItem(RECEIVABLE_DATA, undefined, 'description'),
+  ]),
+  treeItem(HR_DATA, [treeItem(CONTRACT_DATA)]),
+];
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `
+    <sd-tree
+      [option]="option"
+      (selectChange)="onSelect($event)"
+      (expandChange)="onExpand($event)"
+      (collapseChange)="onCollapse($event)" />
+  `,
+})
+class StaticHostComponent {
+  items = STATIC_ITEMS;
+  tree: SdTreeStaticOption<NodeItem> = {
+    loadType: 'static',
+    defaultExpanded: 1,
+  };
+  get option(): SdTreeComponentOption<NodeItem> {
+    return {
+      autoId: 'static',
+      items: this.items,
+      tree: this.tree,
+      commands: this.commands,
+      selector: this.selector,
+    };
+  }
+  selectedEvents: SdTreeSelectionEvent<NodeItem>[] = [];
+  expandedEvents: SdTreeToggleEvent<NodeItem>[] = [];
+  collapsedEvents: SdTreeToggleEvent<NodeItem>[] = [];
+  editSpy = jasmine.createSpy('edit');
+  deleteSpy = jasmine.createSpy('delete');
+  selectionActionSpy = jasmine.createSpy('selectionAction');
+  selector = {
+    visible: true,
+    message: (items: NodeItem[]) => `Đã chọn ${items.length} dòng`,
+    actions: [
+      {
+        icon: 'archive',
+        title: 'Archive',
+        click: this.selectionActionSpy,
+      },
+    ],
+  };
+  commands: SdTreeCommand<NodeItem>[] = [
+    {
+      key: 'edit',
+      title: item => `Edit ${item.title}`,
+      icon: 'edit',
+      hidden: item => item.id === 'hr',
+      click: this.editSpy,
+    },
+    {
+      key: 'delete',
+      title: 'Delete',
+      icon: 'delete',
+      disabled: item => item.id === 'root',
+      click: this.deleteSpy,
+    },
+  ];
+
+  onSelect(event: SdTreeSelectionEvent<NodeItem>): void {
+    this.selectedEvents.push(event);
+  }
+
+  onExpand(event: SdTreeToggleEvent<NodeItem>): void {
+    this.expandedEvents.push(event);
+  }
+
+  onCollapse(event: SdTreeToggleEvent<NodeItem>): void {
+    this.collapsedEvents.push(event);
+  }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class SelectedHostComponent {
+  items = STATIC_ITEMS;
+  selectedItems = [PAYABLE_DATA];
+  selector = { visible: true };
+  get option(): SdTreeComponentOption<NodeItem> {
+    return {
+      autoId: 'selected',
+      items: this.items,
+      selectedItems: this.selectedItems,
+      selector: this.selector,
+      tree: { loadType: 'static', defaultExpanded: true },
+    };
+  }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class LazyHostComponent {
+  child = lazyTreeItem({ id: 'lazy-child', title: 'Lazy child' }, false);
+  items: SdTreeItemLazy<NodeItem>[] = [lazyTreeItem({ id: 'lazy-root', title: 'Lazy root' }, true)];
+  loader = jasmine.createSpy('loader').and.returnValue(Promise.resolve([this.child]));
+  get option(): SdTreeComponentOption<NodeItem> {
+    return {
+      autoId: 'lazy',
+      items: this.items,
+      tree: {
+        loadType: 'lazy',
+        onExpandChildren: this.loader,
+      },
+    };
+  }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree, SdTreeItemDefDirective],
+  template: `
+    <sd-tree [option]="option">
+      <ng-template sdTreeItemDef let-item let-level="level" let-selected="selected" let-isLeaf="isLeaf" let-toggle="toggle">
+        <button type="button" class="custom-item" (click)="toggle()">{{ level }}:{{ item.id }}:{{ selected }}:{{ isLeaf }}</button>
+      </ng-template>
+    </sd-tree>
+  `,
+})
+class CustomTemplateHostComponent {
+  items = STATIC_ITEMS;
+  get option(): SdTreeComponentOption<NodeItem> {
+    return {
+      autoId: 'custom',
+      items: this.items,
+      tree: { loadType: 'static', defaultExpanded: false },
+    };
+  }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class SignalSourceHostComponent {
+  items = signal<SdTreeItemStatic<NodeItem>[]>([treeItem({ id: 'initial', title: 'Initial' })]);
+  option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'signal',
+    items: this.items,
+    tree: { loadType: 'static' },
+  };
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class ReloadHostComponent {
+  first = [treeItem({ id: 'first', title: 'First load' })];
+  second = [treeItem({ id: 'second', title: 'Second load' })];
+  loader = jasmine.createSpy('loader').and.returnValues(Promise.resolve(this.first), Promise.resolve(this.second));
+  itemsSource = () => this.loader();
+  option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'reload',
+    items: this.itemsSource,
+    tree: { loadType: 'static' },
+  };
+}
+
+describe('SdTree', () => {
+  it('renders static tree rows from SdTreeItem, default expansion, roles and stable auto ids', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+
+    const host = fixture.nativeElement as HTMLElement;
+    const rows = visibleRows(host);
+
+    expect(host.querySelector('sd-tree')?.getAttribute('data-autoid')).toBe('components-tree-static');
+    expect(rows.map(row => row.textContent?.trim())).toEqual([
+      jasmine.stringContaining(ROOT_DATA.title),
+      jasmine.stringContaining(PAYABLE_DATA.title),
+      jasmine.stringContaining(RECEIVABLE_DATA.title.slice(0, 20)),
+      jasmine.stringContaining(HR_DATA.title),
+      jasmine.stringContaining(CONTRACT_DATA.title),
+    ]);
+    expect(row(host, 'root').getAttribute('aria-expanded')).toBe('true');
+    expect(row(host, 'payable').getAttribute('aria-expanded')).toBeNull();
+    expect(host.querySelector('[data-autoid="components-tree-static-row-root"]')).toBeTruthy();
+    expect(host.querySelector('[data-autoid="components-tree-static-label-receivable"]')).toBeTruthy();
+  });
+
+  it('uses folder icons for branch nodes and hides the icon for leaves unless item.icon is provided', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(icon(host, 'root')?.textContent?.trim()).toBe('folder_open');
+    expect(icon(host, 'payable')).toBeNull();
+    expect(icon(host, 'receivable')?.textContent?.trim()).toBe('description');
+  });
+
+  it('emits selection events and supports selecting multiple rows', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+    const payable = tree.visibleNodes().find(node => node.id === 'payable')!;
+    const receivable = tree.visibleNodes().find(node => node.id === 'receivable')!;
+
+    tree.toggleSelection(payable);
+    tree.toggleSelection(receivable);
+    fixture.detectChanges();
+
+    expect(component.selectedEvents.length).toBe(2);
+    expect(component.selectedEvents[0]).toEqual(
+      jasmine.objectContaining({
+        item: PAYABLE_DATA,
+        selected: true,
+      }),
+    );
+    expect(component.selectedEvents[1].selectedItems.map(item => item.id)).toEqual(['payable', 'receivable']);
+    expect(row(fixture.nativeElement, 'payable').getAttribute('aria-selected')).toBe('true');
+    expect(row(fixture.nativeElement, 'receivable').getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('renders selected rows without border radius', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const tree = treeComponent<NodeItem>(fixture);
+    const payable = tree.visibleNodes().find(node => node.id === 'payable')!;
+
+    tree.toggleSelection(payable);
+    fixture.detectChanges();
+
+    expect(getComputedStyle(row(fixture.nativeElement, 'payable')).borderRadius).toBe('0px');
+  });
+
+  it('renders quick action when selection is visible and rows are selected', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+    const payable = tree.visibleNodes().find(node => node.id === 'payable')!;
+
+    tree.toggleSelection(payable);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.sd-tree__qa-count')?.textContent?.trim()).toBe('1');
+    expect(fixture.nativeElement.textContent).toContain('Đã chọn 1 dòng');
+
+    tree.onSelectionAction(component.selector.actions[0]);
+
+    expect(component.selectionActionSpy).toHaveBeenCalledOnceWith([PAYABLE_DATA]);
+
+    tree.clearSelection();
+    fixture.detectChanges();
+
+    expect(row(fixture.nativeElement, 'payable').getAttribute('aria-selected')).toBe('false');
+  });
+
+  it('honors selectedItems input as the initial selected state', async () => {
+    const fixture = await createFixture(SelectedHostComponent);
+    const tree = treeComponent<NodeItem>(fixture);
+    const payable = tree.visibleNodes().find(node => node.id === 'payable')!;
+
+    expect(row(fixture.nativeElement, 'payable').getAttribute('aria-selected')).toBe('true');
+    expect(tree.isSelected(payable)).toBeTrue();
+  });
+
+  it('collapses and expands static branches from the toggle and emits events', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+
+    toggle(fixture.nativeElement, 'root').click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain(PAYABLE_DATA.title);
+    expect(component.collapsedEvents[0]).toEqual(jasmine.objectContaining({ item: ROOT_DATA, expanded: false }));
+
+    toggle(fixture.nativeElement, 'root').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain(PAYABLE_DATA.title);
+    expect(component.expandedEvents[0]).toEqual(jasmine.objectContaining({ item: ROOT_DATA, expanded: true }));
+  });
+
+  it('lazy-loads children once, shows loading state and caches children internally', async () => {
+    const fixture = await createFixture(LazyHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+
+    void tree.toggle(tree.visibleNodes()[0]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('mat-progress-spinner')).toBeTruthy();
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.loader).toHaveBeenCalledOnceWith(component.items[0]);
+    expect((component.items[0] as unknown as { children?: unknown }).children).toBeUndefined();
+    expect(tree.visibleNodes().some(node => node.id === 'lazy-child')).toBeTrue();
+    expect(fixture.nativeElement.textContent).toContain('Lazy child');
+
+    toggle(fixture.nativeElement, 'lazy-root').click();
+    fixture.detectChanges();
+    toggle(fixture.nativeElement, 'lazy-root').click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.loader).toHaveBeenCalledTimes(1);
+  });
+
+  it('filters loaded items using Vietnamese accent-insensitive search and keeps matching ancestors visible', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+
+    treeComponent<NodeItem>(fixture).filter('ke toan');
+    fixture.detectChanges();
+
+    expect(text(fixture)).toContain(ROOT_DATA.title);
+    expect(text(fixture)).not.toContain(HR_DATA.title);
+
+    treeComponent<NodeItem>(fixture).filter('cong no phai thu');
+    fixture.detectChanges();
+
+    expect(text(fixture)).toContain(ROOT_DATA.title);
+    expect(text(fixture)).toContain(RECEIVABLE_DATA.title);
+    expect(text(fixture)).not.toContain(PAYABLE_DATA.title);
+
+    treeComponent<NodeItem>(fixture).filter('');
+    fixture.detectChanges();
+
+    expect(text(fixture)).toContain(HR_DATA.title);
+  });
+
+  it('renders command trigger only for rows with visible commands and resolves command metadata', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+    const rootNode = tree.visibleNodes().find(node => node.id === 'root')!;
+    const hrNode = tree.visibleNodes().find(node => node.id === 'hr')!;
+
+    expect(fixture.nativeElement.querySelector('[data-autoid="components-tree-static-command-root"]')).toBeTruthy();
+    expect(tree.visibleCommands(rootNode).map(command => command.key)).toEqual(['edit', 'delete']);
+    expect(tree.visibleCommands(hrNode).map(command => command.key)).toEqual(['delete']);
+    expect(tree.commandTitle(component.commands[0], rootNode.data)).toBe(`Edit ${ROOT_DATA.title}`);
+    expect(tree.isCommandDisabled(component.commands[1], rootNode.data)).toBeTrue();
+    expect(tree.visibleViewNodes().find(node => node.id === 'root')?.commands[0]).toEqual(
+      jasmine.objectContaining({
+        title: `Edit ${ROOT_DATA.title}`,
+        icon: 'edit',
+        fontSet: 'material-icons-outlined',
+      }),
+    );
+  });
+
+  it('opens command menu with centered icon, compact label spacing and working click callback', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+    const overlay = TestBed.inject(OverlayContainer).getContainerElement();
+    const trigger = fixture.nativeElement.querySelector(
+      '[data-autoid="components-tree-static-command-receivable"]',
+    ) as HTMLButtonElement;
+
+    trigger.click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const editButton = overlay.querySelector(
+      '[data-autoid="components-tree-static-command-receivable-edit"]',
+    ) as HTMLButtonElement;
+    const content = editButton.querySelector('.sd-tree__command-menu-content') as HTMLElement;
+    const iconEl = editButton.querySelector('.sd-tree__command-menu-icon') as HTMLElement;
+    const title = editButton.querySelector('.sd-tree__command-title') as HTMLElement;
+
+    expect(editButton).toBeTruthy();
+    expect(content).toBeTruthy();
+    expect(iconEl).toBeTruthy();
+    expect(title).toBeTruthy();
+    expect(content.children[0]).toBe(iconEl);
+    expect(content.children[1]).toBe(title);
+    expect(title.textContent?.trim()).toBe(`Edit ${RECEIVABLE_DATA.title}`);
+    expect(getComputedStyle(content).display).toBe('flex');
+    expect(getComputedStyle(content).alignItems).toBe('center');
+    expect(getComputedStyle(content).gap).toBe('6px');
+    expect(getComputedStyle(iconEl).display).toBe('flex');
+    expect(getComputedStyle(iconEl).alignItems).toBe('center');
+    expect(getComputedStyle(iconEl).justifyContent).toBe('center');
+    expect(getComputedStyle(iconEl).marginRight).toBe('0px');
+    expect(getComputedStyle(title).lineHeight).toBe('20px');
+
+    editButton.click();
+    fixture.detectChanges();
+
+    expect(component.editSpy).toHaveBeenCalledOnceWith(RECEIVABLE_DATA);
+  });
+
+  it('uses sdTreeItemDef context and lets the projected template toggle the row', async () => {
+    const fixture = await createFixture(CustomTemplateHostComponent);
+
+    expect(fixture.nativeElement.querySelector('.custom-item')?.textContent?.trim()).toBe('0:root:false:false');
+
+    (fixture.nativeElement.querySelector('.custom-item') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('0:root:false:false');
+    expect(fixture.nativeElement.textContent).toContain('1:payable:false:true');
+  });
+
+  it('keeps label content constrained separately from command column', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+
+    const content = fixture.nativeElement.querySelector('[data-autoid="components-tree-static-label-receivable"]') as HTMLElement;
+    const command = fixture.nativeElement.querySelector('[data-autoid="components-tree-static-command-receivable"]') as HTMLElement;
+
+    expect(getComputedStyle(content).webkitLineClamp).toBe('2');
+    expect(getComputedStyle(content).overflow).toBe('hidden');
+    expect(command).toBeTruthy();
+  });
+
+  it('updates when items is a signal data source', async () => {
+    const fixture = await createFixture(SignalSourceHostComponent);
+    const component = fixture.componentInstance;
+
+    expect(text(fixture)).toContain('Initial');
+
+    component.items.set([treeItem({ id: 'updated', title: 'Updated' })]);
+    fixture.detectChanges();
+
+    expect(text(fixture)).toContain('Updated');
+    expect(text(fixture)).not.toContain('Initial');
+  });
+
+  it('loads items from an async source and reloads manually', async () => {
+    const fixture = await createFixture(ReloadHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+
+    expect(component.loader).toHaveBeenCalledTimes(1);
+    expect(text(fixture)).toContain('First load');
+
+    tree.reload();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.loader).toHaveBeenCalledTimes(2);
+    expect(text(fixture)).toContain('Second load');
+    expect(text(fixture)).not.toContain('First load');
+  });
+});
+
+async function createFixture<T>(component: new () => T): Promise<ComponentFixture<T>> {
+  await TestBed.configureTestingModule({
+    imports: [NoopAnimationsModule, component],
+  }).compileComponents();
+
+  const fixture = TestBed.createComponent(component);
+  fixture.detectChanges();
+  await fixture.whenStable();
+  fixture.detectChanges();
+  return fixture;
+}
+
+function treeItem(data: NodeItem, children?: SdTreeItemStatic<NodeItem>[], icon?: string): SdTreeItemStatic<NodeItem> {
+  return {
+    id: data.id,
+    label: data.title,
+    icon,
+    data,
+    children,
+  };
+}
+
+function lazyTreeItem(data: NodeItem, hasChildren?: boolean, icon?: string): SdTreeItemLazy<NodeItem> {
+  return {
+    id: data.id,
+    label: data.title,
+    icon,
+    data,
+    hasChildren,
+  };
+}
+
+function treeComponent<T>(fixture: ComponentFixture<unknown>): SdTree<T> {
+  return fixture.debugElement.query(By.directive(SdTree)).componentInstance as SdTree<T>;
+}
+
+function visibleRows(host: HTMLElement): HTMLElement[] {
+  return Array.from(host.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+}
+
+function row(host: HTMLElement, id: string): HTMLElement {
+  return host.querySelector(`[data-autoid$="-row-${id}"]`) as HTMLElement;
+}
+
+function toggle(host: HTMLElement, id: string): HTMLButtonElement {
+  return host.querySelector(`[data-autoid$="-toggle-${id}"]`) as HTMLButtonElement;
+}
+
+function icon(host: HTMLElement, id: string): HTMLElement | null {
+  return host.querySelector(`[data-autoid$="-icon-${id}"]`);
+}
+
+function text(fixture: ComponentFixture<unknown>): string {
+  return fixture.nativeElement.textContent;
+}

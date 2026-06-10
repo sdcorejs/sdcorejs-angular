@@ -89,16 +89,6 @@
   content: '';
 }
 
-.sd-org-chart__node--expanded > .sd-org-chart__node-shell::after {
-  position: absolute;
-  bottom: calc(var(--sd-org-gap-y) * -1);
-  left: 50%;
-  width: 0;
-  height: var(--sd-org-gap-y);
-  border-left: 1px solid var(--sd-org-line);
-  content: '';
-}
-
 .sd-org-chart__tree > .sd-org-chart__node > .sd-org-chart__node-shell::before {
   display: none;
 }

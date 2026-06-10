@@ -3,7 +3,7 @@
 **Type**: Component (two related components, documented together — they are typically used as a pair)
 **Selectors**: `sd-section`, `sd-section-item`
 **Import path**: `@sdcorejs/angular/components/section` (or barrel: `@sdcorejs/angular/components`)
-**Classes**: `SdSection extends SdBaseSecureComponent`, `SdSectionItem`
+**Classes**: `SdSection`, `SdSectionItem`
 **Standalone**: yes
 **Change detection**: default (signals-driven)
 
@@ -35,12 +35,13 @@ Card-style content panel with a header (icon + title + sub-title), optional coll
 | `subTitle` | `string \| null \| undefined` | `undefined` | Smaller second-line text under the title (`T12R text-secondary`). |
 | `icon` | `string \| null \| undefined` | `undefined` | Material icon name shown left of the title (only renders when no `[sdHeaderLeft]` slot content overrides it). |
 | `iconColor` | `Color` (`'primary' \| 'secondary' \| 'error' \| 'warning' \| 'success' \| ...`) | `'primary'` | Icon color token. Maps to `text-primary` / `text-secondary` / `text-error` / `text-warning` / `text-success` classes. |
-| `collapsed` | `boolean` (model — two-way) | `false` | Two-way bindable via `[(collapsed)]`. When true and `collapsable` is true, hides the body. |
-| `collapsable` | `boolean` | `false` | Bare attribute = true. Enables the click-to-collapse behavior on the header and shows the chevron icon (`expand_more` / `expand_less`). |
+| `collapsed` | `boolean` (model — two-way) | `false` | Two-way bindable via `[(collapsed)]`. When true and `collapsible` is true, hides the body. |
+| `collapsible` | `boolean` | `false` | Bare attribute = true. Enables the click-to-collapse behavior on the header and shows the chevron icon (`expand_more` / `expand_less`). |
+| `collapsable` | `boolean` | `false` | Deprecated alias for `collapsible`; kept for backward compatibility. |
 | `hideHeader` | `boolean` | `false` | Bare attribute = true. Hides the entire header row; body renders without a top border. |
 | `noPaddingBody` | `boolean` | `false` | Bare attribute = true. Removes the default `p-16` padding from the body (use when embedding a full-width table). |
 
-> **Coerce note**: `collapsable`, `hideHeader`, `noPaddingBody` use `booleanAttribute` transform.
+> **Coerce note**: `collapsible`, deprecated `collapsable`, `hideHeader`, `noPaddingBody` use `booleanAttribute` transform.
 
 ### Outputs
 | Name | Type | Notes |
@@ -50,13 +51,13 @@ Card-style content panel with a header (icon + title + sub-title), optional coll
 ### Public API
 | Method | Signature | Notes |
 | --- | --- | --- |
-| `toggleCollapse()` | `() => void` | Flips `collapsed` if `collapsable()` is true. If `collapsable` is false but the section is collapsed, forces it back to `false`. Safe to call programmatically (e.g. from a toolbar button or keyboard shortcut). |
+| `toggleCollapse()` | `() => void` | Flips `collapsed` if `collapsible()` is true. If both `collapsible` and deprecated `collapsable` are false but the section is collapsed, forces it back to `false`. Safe to call programmatically (e.g. from a toolbar button or keyboard shortcut). |
 
 ### Content projection (slots)
 | Slot selector | Purpose |
 | --- | --- |
 | `[sdHeaderLeft]` | Override the default title block (icon + title + subTitle). Use for richer headers (e.g. avatar + name). |
-| `[sdHeaderRight]` | Right-side header content — typically `<sd-button>`s ("Edit", "Add", filter chips). Sits left of the chevron when collapsable. |
+| `[sdHeaderRight]` | Right-side header content — typically `<sd-button>`s ("Edit", "Add", filter chips). Sits left of the chevron when collapsible. |
 | (default) | The body content. Wrapped in a div with `p-16` padding (unless `noPaddingBody`) and a 1px top border (unless `hideHeader`). |
 
 ### Visual cues (helps agent map screenshots → component)
@@ -64,13 +65,13 @@ Card-style content panel with a header (icon + title + sub-title), optional coll
 - Header row: 16px horizontal / 8px vertical padding, flex row with title block on the left, action area on the right
 - Title: 16px medium (`T16M`); sub-title (if set): 12px regular gray (`T12R text-secondary`)
 - Icon: a Material outlined icon (`material-icons-outlined`), 8px right margin, color from `iconColor`
-- Chevron: when `collapsable`, a Material `expand_more` (collapsed) / `expand_less` (expanded) icon at the far right
+- Chevron: when `collapsible`, a Material `expand_more` (collapsed) / `expand_less` (expanded) icon at the far right
 - Body: 1px top border (`#e6e6e6`) separating header from content, 16px padding by default
 - Collapsed state: shadow disappears (so collapsed sections feel "thinner") and body is removed from DOM
-- Header is `cursor: pointer` only when `collapsable` is true (still clickable structurally either way, but click toggles only when allowed)
+- Header is `cursor: pointer` only when `collapsible` is true (still clickable structurally either way, but click toggles only when allowed)
 
 ### Behaviors / quirks
-- Clicking the header calls `toggleCollapse()` — but only flips `collapsed` if `collapsable()` is true (otherwise it forces `collapsed` to `false`)
+- Clicking the header calls `toggleCollapse()` — but only flips `collapsed` if `collapsible()` is true (otherwise it forces `collapsed` to `false`)
 - When `hideHeader` is true, the body is always rendered regardless of `collapsed` (header click is impossible)
 - Custom `[sdHeaderLeft]` slot completely replaces the default icon + title block
 
@@ -83,7 +84,7 @@ Card-style content panel with a header (icon + title + sub-title), optional coll
   iconColor="primary"
   title="Thông tin chung"
   subTitle="Thông tin cơ bản của nhân viên"
-  [collapsable]="true">
+  [collapsible]="true">
   <sd-section-item label="Họ và tên">Nguyễn Văn A</sd-section-item>
   <sd-section-item label="Email">a.nv@onemount.com</sd-section-item>
   <sd-section-item label="Phòng ban">Sales</sd-section-item>
@@ -119,15 +120,15 @@ Card-style content panel with a header (icon + title + sub-title), optional coll
 ```html
 <sd-section
   title="Lọc nâng cao"
-  [collapsable]="true"
+  [collapsible]="true"
   [(collapsed)]="advancedFilterCollapsed">
-  <sd-query-builder [group]="filter"></sd-query-builder>
+  <sd-query-builder [fields]="fields" [(value)]="filter"></sd-query-builder>
 </sd-section>
 ```
 
 ### Anti-patterns
 - ❌ Nesting `<sd-section>` inside `<sd-section>` — visually heavy; prefer flat structure with multiple sibling sections
-- ❌ Setting `collapsed="true"` without `collapsable="true"` — the section will be expanded and never collapsible (the toggle silently re-opens it)
+- ❌ Setting `collapsed="true"` without `collapsible="true"` — the section will be expanded and never collapsible (the toggle silently re-opens it)
 - ❌ Adding margin to the host instead of letting the page layout handle spacing — sections are designed to stack with parent `gap-*`
 - ❌ Placing `<sd-section-item>` outside `<sd-section>` — it works but looks orphaned; design intent is grouped rows
 - ❌ Using as a modal substitute — modals need backdrop, focus-trap, escape; use `<sd-modal>`

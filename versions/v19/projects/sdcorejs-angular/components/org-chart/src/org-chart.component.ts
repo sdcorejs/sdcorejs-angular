@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, TemplateRef, booleanAttribute, computed, contentChild, input, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SdOrgChartItemDefDirective } from './org-chart-item-def.directive';
-import { SdOrgChartItem, SdOrgChartItemContext } from './org-chart.model';
+import { SdOrgChartItem, SdOrgChartItemContext, SdOrgChartOption } from './org-chart.model';
 
 @Component({
   selector: 'sd-org-chart',
@@ -17,16 +17,22 @@ import { SdOrgChartItem, SdOrgChartItemContext } from './org-chart.model';
 })
 export class SdOrgChart {
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  readonly autoId = computed(() => (this.autoIdInput() ? `components-org-chart-${this.autoIdInput()}` : undefined));
+  readonly option = input<SdOrgChartOption | undefined>(undefined);
+  readonly autoId = computed(() => {
+    const scope = this.option()?.autoId ?? this.autoIdInput();
+    return scope ? `components-org-chart-${scope}` : undefined;
+  });
 
-  readonly items = input.required<SdOrgChartItem[]>();
+  readonly items = input<SdOrgChartItem[] | undefined>(undefined);
   readonly itemTemplate = input<TemplateRef<SdOrgChartItemContext> | undefined | null>(undefined);
   readonly collapsible = input(true, { transform: booleanAttribute });
 
   readonly itemDef = contentChild(SdOrgChartItemDefDirective);
+  readonly resolvedItems = computed(() => this.option()?.items ?? this.items() ?? []);
+  readonly resolvedCollapsible = computed(() => this.option()?.collapsible ?? this.collapsible());
 
   readonly resolvedItemTemplate = computed<TemplateRef<SdOrgChartItemContext> | undefined>(() => {
-    return this.itemDef()?.templateRef || this.itemTemplate() || undefined;
+    return this.itemDef()?.templateRef || this.option()?.itemTemplate || this.itemTemplate() || undefined;
   });
 
   readonly #expandedState = signal<Record<string, boolean>>({});
@@ -42,7 +48,7 @@ export class SdOrgChart {
   };
 
   isExpanded = (item: SdOrgChartItem): boolean => {
-    if (!this.collapsible()) {
+    if (!this.resolvedCollapsible()) {
       return true;
     }
 
@@ -54,15 +60,17 @@ export class SdOrgChart {
   toggle = (item: SdOrgChartItem, event?: Event): void => {
     event?.stopPropagation();
 
-    if (!this.collapsible() || !this.hasChildren(item)) {
+    if (!this.resolvedCollapsible() || !this.hasChildren(item)) {
       return;
     }
 
     const key = this.#itemKey(item);
+    const expanded = !(this.#expandedState()[key] ?? item.expanded ?? true);
     this.#expandedState.update(state => ({
       ...state,
-      [key]: !(state[key] ?? item.expanded ?? true),
+      [key]: expanded,
     }));
+    this.option()?.onToggle?.({ item, expanded });
   };
 
   createContext = (item: SdOrgChartItem, depth: number, parent: SdOrgChartItem | null): SdOrgChartItemContext => {

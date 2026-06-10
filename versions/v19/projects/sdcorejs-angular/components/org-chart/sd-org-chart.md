@@ -9,28 +9,34 @@
 
 ## One-line purpose
 
-Hiển thị dữ liệu phân cấp dạng organization chart: mỗi node là một người/nhóm/phòng ban, nối bằng đường cây ngang-dọc, có thể thu gọn/mở rộng và custom template cho từng item.
+Hiá»ƒn thá»‹ dá»¯ liá»‡u phÃ¢n cáº¥p dáº¡ng organization chart: má»—i node lÃ  má»™t ngÆ°á»i/nhÃ³m/phÃ²ng ban, ná»‘i báº±ng Ä‘Æ°á»ng cÃ¢y ngang-dá»c, cÃ³ thá»ƒ thu gá»n/má»Ÿ rá»™ng vÃ  custom template cho tá»«ng item.
 
 ## When to use
 
-- Sơ đồ tổ chức công ty, phòng ban, đội nhóm.
-- Cây phân cấp quản trị: đơn vị, chi nhánh, nhóm quyền, tuyến báo cáo.
-- Cần render card mặc định nhanh với `image`, `title`, `description`, `color`.
-- Cần thay toàn bộ nội dung node bằng template riêng nhưng vẫn giữ layout tree + connector.
+- SÆ¡ Ä‘á»“ tá»• chá»©c cÃ´ng ty, phÃ²ng ban, Ä‘á»™i nhÃ³m.
+- CÃ¢y phÃ¢n cáº¥p quáº£n trá»‹: Ä‘Æ¡n vá»‹, chi nhÃ¡nh, nhÃ³m quyá»n, tuyáº¿n bÃ¡o cÃ¡o.
+- Cáº§n render card máº·c Ä‘á»‹nh nhanh vá»›i `image`, `title`, `description`, `color`.
+- Cáº§n thay toÃ n bá»™ ná»™i dung node báº±ng template riÃªng nhÆ°ng váº«n giá»¯ layout tree + connector.
 
 ## When NOT to use
 
-- Dữ liệu rất lớn cần virtual scroll hoặc pan/zoom chuyên dụng.
-- Cây cần drag-drop, chỉnh sửa inline, hoặc layout ngang nhiều hướng.
-- Quan hệ dạng graph nhiều cha/nhiều cạnh. Component này là tree: mỗi item có một parent trực tiếp.
+- Dá»¯ liá»‡u ráº¥t lá»›n cáº§n virtual scroll hoáº·c pan/zoom chuyÃªn dá»¥ng.
+- CÃ¢y cáº§n drag-drop, chá»‰nh sá»­a inline, hoáº·c layout ngang nhiá»u hÆ°á»›ng.
+- Quan há»‡ dáº¡ng graph nhiá»u cha/nhiá»u cáº¡nh. Component nÃ y lÃ  tree: má»—i item cÃ³ má»™t parent trá»±c tiáº¿p.
 
 ## Inputs
+New usage should bind only `[option]`, like `sd-table`. Put `autoId`, `items`, `itemTemplate`, `collapsible`, and `onToggle` inside `SdOrgChartOption`. The split inputs below remain as a migration bridge.
+
+```html
+<sd-org-chart [option]="orgChartOption"></sd-org-chart>
+```
 
 | Name           | Type                                                      | Default     | Notes                                                                                                       |
 | -------------- | --------------------------------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
-| `items`        | `SdOrgChartItem[]`                                        | required    | Root nodes. Mỗi item có `id`, `title`, optional `image`, `description`, `color`, `children`, `expanded`.    |
-| `itemTemplate` | `TemplateRef<SdOrgChartItemContext> \| null \| undefined` | `undefined` | TemplateRef input để custom toàn bộ node. Bị override bởi projected `sdOrgChartItemDef` nếu cả hai cùng có. |
-| `collapsible`  | `boolean`                                                 | `true`      | Cho phép click nút chevron để ẩn/hiện children. Nếu `false`, mọi node có children luôn mở.                  |
+| `option`       | `SdOrgChartOption`                                       | `undefined` | Main option object for new usage.                                                                           |
+| `items`        | `SdOrgChartItem[]`                                        | required    | Root nodes. Má»—i item cÃ³ `id`, `title`, optional `image`, `description`, `color`, `children`, `expanded`.    |
+| `itemTemplate` | `TemplateRef<SdOrgChartItemContext> \| null \| undefined` | `undefined` | TemplateRef input Ä‘á»ƒ custom toÃ n bá»™ node. Bá»‹ override bá»Ÿi projected `sdOrgChartItemDef` náº¿u cáº£ hai cÃ¹ng cÃ³. |
+| `collapsible`  | `boolean`                                                 | `true`      | Cho phÃ©p click nÃºt chevron Ä‘á»ƒ áº©n/hiá»‡n children. Náº¿u `false`, má»i node cÃ³ children luÃ´n má»Ÿ.                  |
 | `autoId`       | `string \| undefined \| null`                             | `undefined` | Host emits `data-autoid="components-org-chart-<autoId>"`; child node parts emit stable ids too.             |
 
 ## Model
@@ -47,7 +53,7 @@ export interface SdOrgChartItem {
 }
 ```
 
-`color` được áp dụng vào CSS variable `--sd-org-node-color` của card. Bỏ trống `color` thì card nền trắng viền nhẹ; truyền màu pastel để ra layout giống ví dụ colored.
+`color` Ä‘Æ°á»£c Ã¡p dá»¥ng vÃ o CSS variable `--sd-org-node-color` cá»§a card. Bá» trá»‘ng `color` thÃ¬ card ná»n tráº¯ng viá»n nháº¹; truyá»n mÃ u pastel Ä‘á»ƒ ra layout giá»‘ng vÃ­ dá»¥ colored.
 
 ## Custom item template
 
@@ -152,17 +158,17 @@ const orgItems: SdOrgChartItem[] = [
 ## Visual cues
 
 - Card radius `6px`, connector lines neutral `#d9e2ef`.
-- Node có `image` render avatar tròn `44px`.
-- Node không có `image` + không có `description` dùng compact card, hợp với leaf như `Sales`, `Marketing`.
-- Chevron button nằm giữa card và connector, chỉ render khi node có children và `collapsible=true`.
+- Node cÃ³ `image` render avatar trÃ²n `44px`.
+- Node khÃ´ng cÃ³ `image` + khÃ´ng cÃ³ `description` dÃ¹ng compact card, há»£p vá»›i leaf nhÆ° `Sales`, `Marketing`.
+- Chevron button náº±m giá»¯a card vÃ  connector, chá»‰ render khi node cÃ³ children vÃ  `collapsible=true`.
 
 ## Anti-patterns
 
-- Dùng index làm `id`; collapse state bám theo `id`, nên `id` phải ổn định.
-- Trộn graph nhiều parent vào `children`; component không resolve cạnh graph.
-- Custom template quá rộng mà không tự giới hạn text; card custom nên tự set `max-width` / `overflow-wrap`.
+- DÃ¹ng index lÃ m `id`; collapse state bÃ¡m theo `id`, nÃªn `id` pháº£i á»•n Ä‘á»‹nh.
+- Trá»™n graph nhiá»u parent vÃ o `children`; component khÃ´ng resolve cáº¡nh graph.
+- Custom template quÃ¡ rá»™ng mÃ  khÃ´ng tá»± giá»›i háº¡n text; card custom nÃªn tá»± set `max-width` / `overflow-wrap`.
 
 ## Related
 
-- `<sd-table>` tree mode: dùng khi dữ liệu phân cấp cần cột, sort, filter, paging.
-- `<sd-avatar>`: dùng riêng cho avatar người dùng nếu không cần layout org chart.
+- `<sd-table>` tree mode: dÃ¹ng khi dá»¯ liá»‡u phÃ¢n cáº¥p cáº§n cá»™t, sort, filter, paging.
+- `<sd-avatar>`: dÃ¹ng riÃªng cho avatar ngÆ°á»i dÃ¹ng náº¿u khÃ´ng cáº§n layout org chart.

@@ -166,6 +166,13 @@
   }
 }
 
+// Single-select chỉ báo "đã chọn" là dấu tick (minimal pseudo-checkbox của MDC),
+// mặc định hơi to so với dòng option 36px → thu nhỏ cho cân đối.
+::ng-deep .sd-select-panel .mat-pseudo-checkbox-minimal {
+  transform: scale(0.7);
+  transform-origin: center right;
+}
+
 ::ng-deep .sd-select-panel.sd-multiple {
   // Thu nhỏ Checkbox
   .mat-pseudo-checkbox {

@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { SdSection } from '@sdcorejs/angular/components/section';
 import { BehaviorSubject } from 'rxjs';
 import { ExternalFilterComponent } from './external-filter.component';
 import { TableFilterConfiguration, TableFilterRegister, TableFilterValue } from '../../../services/table-filter/table-filter.model';
@@ -97,4 +99,24 @@ describe('ExternalFilterComponent — OOM regression (effect + startWith)', () =
     expect(second.valueSubscribeSpy).toHaveBeenCalledTimes(1);
     expect(first.valueSubscribeSpy).toHaveBeenCalledTimes(1);
   }));
+
+  it('maps filter.collapsible to the inner sd-section', () => {
+    fixture.componentRef.setInput('filter', { collapsible: false });
+    fixture.componentRef.setInput('externalFilters', [{ field: 'name', title: 'Tên', type: 'string' }]);
+    fixture.detectChanges();
+
+    const section = fixture.debugElement.query(By.directive(SdSection)).componentInstance as SdSection;
+    expect(section.collapsible()).toBeFalse();
+    expect(section.isCollapsible()).toBeFalse();
+  });
+
+  it('still maps deprecated filter.collapsable to the inner sd-section', () => {
+    fixture.componentRef.setInput('filter', { collapsable: false });
+    fixture.componentRef.setInput('externalFilters', [{ field: 'name', title: 'Tên', type: 'string' }]);
+    fixture.detectChanges();
+
+    const section = fixture.debugElement.query(By.directive(SdSection)).componentInstance as SdSection;
+    expect(section.collapsible()).toBeFalse();
+    expect(section.isCollapsible()).toBeFalse();
+  });
 });

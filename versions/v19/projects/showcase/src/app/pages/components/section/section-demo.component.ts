@@ -44,12 +44,12 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         </sd-section>
       </demo-section>
 
-      <demo-section heading="Section gập" [props]="[{ name: 'collapsable', value: 'true' }, { name: '[(collapsed)]', value: 'two-way' }]">
+      <demo-section heading="Section gập" [props]="[{ name: 'collapsible', value: 'true' }, { name: '[(collapsed)]', value: 'two-way' }]">
         <sd-section
           icon="filter_list"
           title="Bộ lọc nâng cao"
           subTitle="Click vào header để gập / mở"
-          [collapsable]="true"
+          [collapsible]="true"
           [(collapsed)]="filterCollapsed"
           style="width: 100%; max-width: 640px;">
           <sd-section-item label="Trạng thái">Đang hoạt động</sd-section-item>

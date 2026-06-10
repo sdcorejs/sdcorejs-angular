@@ -1,5 +1,5 @@
 /* eslint-disable @angular-eslint/no-input-rename */
-import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
+import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Color } from '@sdcorejs/utils/models';
 
@@ -18,7 +18,13 @@ export class SdSection {
   iconColor = input<Color>('primary', { alias: 'iconColor' });
 
   collapsed = model<boolean>(false, { alias: 'collapsed' });
+  collapsible = input(false, { transform: booleanAttribute });
+
+  /** @deprecated Use `collapsible` instead. */
   collapsable = input(false, { transform: booleanAttribute });
+
+  readonly isCollapsible = computed(() => this.collapsible() || this.collapsable());
+
   hideHeader = input(false, { transform: booleanAttribute });
   noPaddingBody = input(false, { transform: booleanAttribute });
 
@@ -31,7 +37,7 @@ export class SdSection {
   }
 
   toggleCollapse = () => {
-    if (this.collapsable()) {
+    if (this.isCollapsible()) {
       this.collapsed.set(!this.collapsed());
     } else {
       if (this.collapsed()) {

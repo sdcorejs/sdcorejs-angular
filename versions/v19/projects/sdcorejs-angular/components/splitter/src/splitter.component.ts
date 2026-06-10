@@ -1,7 +1,7 @@
 import { afterNextRender, booleanAttribute, Component, ComponentRef, computed, contentChildren, createComponent, DestroyRef, effect, ElementRef, EnvironmentInjector, inject, Injector, input, numberAttribute, output } from '@angular/core';
 import { SdSplitterHandleComponent } from './splitter-handle/splitter-handle.component';
 import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
-import { ResolvedPanelMeta, SplitterLayoutState, SplitterOrientation } from './splitter.models';
+import { ResolvedPanelMeta, SdSplitterOption, SplitterLayoutState, SplitterOrientation } from './splitter.models';
 import { SplitterStateService } from './splitter-state.service';
 import { SdStorageService } from '@sdcorejs/angular/services/storage';
 
@@ -13,9 +13,9 @@ import { SdStorageService } from '@sdcorejs/angular/services/storage';
   providers: [SplitterStateService],
   host: {
     'class': 'sd-splitter',
-    '[class.sd-splitter--horizontal]': 'orientation() === "horizontal"',
-    '[class.sd-splitter--vertical]': 'orientation() === "vertical"',
-    '[class.sd-splitter--disabled]': 'disabled()',
+    '[class.sd-splitter--horizontal]': 'resolvedOrientation() === "horizontal"',
+    '[class.sd-splitter--vertical]': 'resolvedOrientation() === "vertical"',
+    '[class.sd-splitter--disabled]': 'resolvedDisabled()',
   },
 })
 export class SdSplitterComponent {
@@ -29,15 +29,22 @@ export class SdSplitterComponent {
   #storage = inject(SdStorageService);
 
   #storageHandle = computed(() => {
-    const key = this.storageKey();
+    const key = this.resolvedStorageKey();
     return key ? this.#storage.create<SplitterLayoutState>(key) : null;
   });
 
+  option = input<SdSplitterOption | undefined>(undefined);
   orientation = input<SplitterOrientation>('horizontal');
   disabled = input(false, { transform: booleanAttribute });
   storageKey = input<string | undefined>(undefined);
   snapThreshold = input<number, unknown>(0.5, { transform: numberAttribute });
   keyboardStep = input<number, unknown>(10, { transform: numberAttribute });
+
+  resolvedOrientation = computed(() => this.option()?.orientation ?? this.orientation());
+  resolvedDisabled = computed(() => this.option()?.disabled ?? this.disabled());
+  resolvedStorageKey = computed(() => this.option()?.storageKey ?? this.storageKey());
+  resolvedSnapThreshold = computed(() => this.option()?.snapThreshold ?? this.snapThreshold());
+  resolvedKeyboardStep = computed(() => this.option()?.keyboardStep ?? this.keyboardStep());
 
   readonly resizeEnd = output<SplitterLayoutState>();
   readonly collapsedChange = output<{ panelId: string | number; collapsed: boolean }>();
@@ -73,6 +80,7 @@ export class SdSplitterComponent {
     effect(() => {
       const layout = this.#state.committedLayout();
       if (layout.panels.length === 0) return;
+      this.option()?.onLayoutChange?.(layout);
       this.layoutChange.emit(layout);
 
       // Detect collapsed change qua diff với prev map
@@ -80,7 +88,9 @@ export class SdSplitterComponent {
       for (const [id, isCollapsed] of currMap) {
         const prev = this.#prevCollapsedMap.get(id) ?? false;
         if (prev !== isCollapsed) {
-          this.collapsedChange.emit({ panelId: id, collapsed: isCollapsed });
+          const event = { panelId: id, collapsed: isCollapsed };
+          this.option()?.onCollapsedChange?.(event);
+          this.collapsedChange.emit(event);
         }
       }
       this.#prevCollapsedMap = new Map(currMap);
@@ -126,9 +136,9 @@ export class SdSplitterComponent {
     // Sync handles sau khi DOM render xong (panels đã projected vào host)
     effect(() => {
       const panelCount = this.panels().length;
-      const orientation = this.orientation();
-      const disabled = this.disabled();
-      const keyboardStep = this.keyboardStep();
+      const orientation = this.resolvedOrientation();
+      const disabled = this.resolvedDisabled();
+      const keyboardStep = this.resolvedKeyboardStep();
       afterNextRender(
         () => this.#syncHandles(panelCount, orientation, disabled, keyboardStep),
         { injector: this.#injector }   // component-scoped → auto-cancel khi component destroy
@@ -194,7 +204,7 @@ export class SdSplitterComponent {
 
   #onDragStart(handleIndex: number): void {
     const rect = this.#host.nativeElement.getBoundingClientRect();
-    const containerPx = this.orientation() === 'horizontal' ? rect.width : rect.height;
+    const containerPx = this.resolvedOrientation() === 'horizontal' ? rect.width : rect.height;
     this.#dragStartSize = { handleIndex, containerPx };
     this.#dragLastDelta = 0;
     this.#host.nativeElement.classList.add('sd-splitter--dragging');
@@ -203,7 +213,7 @@ export class SdSplitterComponent {
   #onDragMove(handleIndex: number, deltaSinceStart: number): void {
     if (!this.#dragStartSize) return;
     const incrementalDelta = deltaSinceStart - this.#dragLastDelta;
-    const applied = this.#state.applyDelta(handleIndex, incrementalDelta, this.#dragStartSize.containerPx, this.snapThreshold());
+    const applied = this.#state.applyDelta(handleIndex, incrementalDelta, this.#dragStartSize.containerPx, this.resolvedSnapThreshold());
     // why: chỉ cộng dồn phần delta THỰC SỰ áp được (applyDelta trả về), không phải toàn bộ
     // dịch chuyển con trỏ. Cộng raw pointer delta → overshoot (kéo quá mép/min/collapse) tích
     // lũy thành dead-zone: phải kéo ngược đúng bằng overshoot mới thấy handle nhúc nhích.
@@ -214,7 +224,9 @@ export class SdSplitterComponent {
     this.#dragStartSize = null;
     this.#host.nativeElement.classList.remove('sd-splitter--dragging');
     this.#state.commit();
-    this.resizeEnd.emit(this.#state.committedLayout());
+    const layout = this.#state.committedLayout();
+    this.option()?.onResizeEnd?.(layout);
+    this.resizeEnd.emit(layout);
   }
 
   #onHandleToggle(handleIndex: number): void {

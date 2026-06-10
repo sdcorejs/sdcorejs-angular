@@ -41,6 +41,7 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { label: 'Tab', path: 'components/tab' },
       { label: 'Tab Router', path: 'components/tab-router' },
       { label: 'Table', path: 'components/table' },
+      { label: 'Tree', path: 'components/tree' },
       { label: 'Upload File', path: 'components/upload-file' },
       { label: 'View', path: 'components/view' },
     ],

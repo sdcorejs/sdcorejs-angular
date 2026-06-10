@@ -1,18 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Filter, Operator } from '@sdcorejs/utils/models';
+import { DateRelative, Filter, Operator } from '@sdcorejs/utils/models';
 import {
   isQbGroup,
   QB_MULTI_OPERATORS,
   QB_NO_DATA_OPERATORS,
+  QB_TODAY,
   qbIsRelativeDate,
+  qbIsToday,
+  qbSupportsFieldCompareOperator,
   QbGroup,
   QbNode,
   QbRule,
+  QbToday,
   QbToken,
   qbNewGroup,
   qbNewRule,
-  SdQbRelativeDate,
-  SdQbRelativeUnit,
   SdQueryBuilderField,
 } from './query-builder.model';
 
@@ -49,6 +51,11 @@ function ruleToFilter(rule: QbRule): Filter | null {
     return { field: rule.field as any, operator } as Filter;
   }
 
+  if (rule.valueSource === 'field') {
+    if (!qbSupportsFieldCompareOperator(operator) || isEmptyValue(rule.compareField)) return null;
+    return { field: rule.field as any, operator, dataType: 'field', data: rule.compareField } as Filter;
+  }
+
   if (operator === 'BETWEEN') {
     const v = rule.value;
     if (!v || typeof v !== 'object') return null;
@@ -62,20 +69,26 @@ function ruleToFilter(rule: QbRule): Filter | null {
     return { field: rule.field as any, operator, data: arr } as Filter;
   }
 
+  if (qbIsToday(rule.value)) {
+    return { field: rule.field as any, operator, dataType: 'date-today', data: QB_TODAY } as Filter;
+  }
+
   if (qbIsRelativeDate(rule.value)) {
     const v = rule.value;
-    if (v.rel === 'now') return { field: rule.field as any, operator, data: { rel: 'now' } } as Filter;
-    // offset — only emit when fully specified, else drop the incomplete rule
+    // emit only when fully specified, else drop the incomplete rule
     if (v.unit && v.direction && typeof v.amount === 'number' && v.amount >= 1) {
       return {
         field: rule.field as any,
         operator,
-        data: { rel: 'offset', unit: v.unit, amount: v.amount, direction: v.direction },
+        dataType: 'date-relative',
+        data: { amount: v.amount, direction: v.direction, unit: v.unit },
       } as Filter;
     }
     return null;
   }
 
+  // A non-relative plain object is an incomplete/stray shape (e.g. a partial offset) — drop it.
+  if (rule.value !== null && typeof rule.value === 'object' && !Array.isArray(rule.value)) return null;
   if (isEmptyValue(rule.value)) return null;
   return { field: rule.field as any, operator, data: rule.value } as Filter;
 }
@@ -110,7 +123,33 @@ function ruleFromFilter(filter: any): QbRule {
   if (QB_NO_DATA_OPERATORS.includes(operator)) {
     return qbNewRule(filter.field, operator);
   }
+  if (filter.dataType === 'field') {
+    return qbNewRule(filter.field, operator, undefined, 'field', filter.data);
+  }
+  // Relative dates: read the utils `dataType` discriminator back into the internal value.
+  if (filter.dataType === 'date-today') {
+    return qbNewRule(filter.field, operator, QB_TODAY);
+  }
+  if (filter.dataType === 'date-relative') {
+    return qbNewRule(filter.field, operator, filter.data);
+  }
+  // Back-compat: legacy `{ rel: 'now' | 'offset' }` payloads (pre-dataType migration)
+  // still seed the editor correctly.
+  const legacy = readLegacyRelative(filter.data);
+  if (legacy !== undefined) {
+    return qbNewRule(filter.field, operator, legacy);
+  }
   return qbNewRule(filter.field, operator, filter.data);
+}
+
+/** Map a pre-migration `{ rel }` payload to the new internal value, or `undefined` if not legacy. */
+function readLegacyRelative(data: any): QbToday | DateRelative | undefined {
+  if (!data || typeof data !== 'object') return undefined;
+  if (data.rel === 'now') return QB_TODAY;
+  if (data.rel === 'offset' && data.unit && data.direction && typeof data.amount === 'number') {
+    return { amount: data.amount, direction: data.direction, unit: data.unit };
+  }
+  return undefined;
 }
 
 function nodeFromFilter(filter: Filter): QbNode {
@@ -143,18 +182,18 @@ function escapeStr(s: string): string {
   return s.replace(/'/g, "''");
 }
 
-const REL_UNIT_VI: Record<SdQbRelativeUnit, string> = { day: 'ngày', week: 'tuần', month: 'tháng' };
+const REL_UNIT_VI: Record<DateRelative['unit'], string> = { hour: 'giờ', day: 'ngày', week: 'tuần', month: 'tháng' };
 
-/** Render a relative-date spec as readable Vietnamese for the view string. */
-function formatRelative(v: SdQbRelativeDate): string {
-  if (v.rel === 'now') return 'hôm nay';
-  const unit = REL_UNIT_VI[v.unit ?? 'day'];
+/** Render a relative-date offset as readable Vietnamese for the view string. */
+function formatRelative(v: DateRelative): string {
+  const unit = REL_UNIT_VI[v.unit] ?? REL_UNIT_VI.day;
   const dir = v.direction === 'next' ? 'tới' : 'trước';
-  return `${v.amount ?? 1} ${unit} ${dir}`;
+  return `${v.amount} ${unit} ${dir}`;
 }
 
 /** Format one scalar value for the view string — quoted/labelled per field type. */
 function formatScalar(field: SdQueryBuilderField | undefined, raw: any): string {
+  if (qbIsToday(raw)) return 'hôm nay';
   if (qbIsRelativeDate(raw)) return formatRelative(raw);
   if (raw === null || raw === undefined) return '';
   if (field?.type === 'boolean') {
@@ -176,6 +215,11 @@ function likePattern(operator: Operator, raw: string): string {
   if (operator === 'CONTAIN' || operator === 'NOT_CONTAIN') return `'%${esc}%'`;
   if (operator === 'START_WITH' || operator === 'NOT_START_WITH') return `'${esc}%'`;
   return `'%${esc}'`; // END_WITH / NOT_END_WITH
+}
+
+function operatorToken(operator: Operator): string {
+  if (LIKE_OPERATORS.includes(operator)) return operator.startsWith('NOT_') ? 'not like' : 'like';
+  return SYMBOL[operator] ?? operator;
 }
 
 function ruleTokens(filter: any, fields: SdQueryBuilderField[]): QbToken[] {
@@ -209,16 +253,25 @@ function ruleTokens(filter: any, fields: SdQueryBuilderField[]): QbToken[] {
     return out;
   }
 
+  if (filter.dataType === 'field') {
+    const compareField = fields.find(f => f.key === filter.data);
+    sp();
+    out.push({ kind: 'op', text: operatorToken(operator) });
+    sp();
+    out.push({ kind: 'field', text: compareField?.label ?? String(filter.data) });
+    return out;
+  }
+
   if (LIKE_OPERATORS.includes(operator)) {
     sp();
-    out.push({ kind: 'op', text: operator.startsWith('NOT_') ? 'not like' : 'like' });
+    out.push({ kind: 'op', text: operatorToken(operator) });
     sp();
     out.push({ kind: 'value', text: likePattern(operator, String(filter.data ?? '')) });
     return out;
   }
 
   sp();
-  out.push({ kind: 'op', text: SYMBOL[operator] ?? operator });
+  out.push({ kind: 'op', text: operatorToken(operator) });
   sp();
   out.push({ kind: 'value', text: formatScalar(field, filter.data) });
   return out;

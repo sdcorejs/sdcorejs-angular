@@ -14,6 +14,17 @@ export interface SplitterLayoutState {
   panels: SplitterPanelState[];
 }
 
+export interface SdSplitterOption {
+  orientation?: SplitterOrientation;
+  disabled?: boolean;
+  storageKey?: string;
+  snapThreshold?: number;
+  keyboardStep?: number;
+  onResizeEnd?: (state: SplitterLayoutState) => void;
+  onCollapsedChange?: (event: { panelId: string | number; collapsed: boolean }) => void;
+  onLayoutChange?: (state: SplitterLayoutState) => void;
+}
+
 // Internal — không export ra index.ts
 export interface ResolvedPanelMeta {
   id: string | number;          // panelId nếu có, else index

@@ -100,6 +100,14 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
+  /**
+   * Custom render for the SELECTED value shown in the editable trigger (`<mat-select-trigger>`).
+   * Distinct from `#sdValue`/`sdViewDef` which only drive the read-only `viewed`/`inline` face.
+   * Context: `{ $implicit, item, items: selectedItems(), display, multiple }` — `item`/`$implicit`
+   * is the single selected item object (single mode) or the selected-item array (multiple mode).
+   * Falls back to the plain `display` text when not projected, so existing usages are unaffected.
+   */
+  sdSelectedTemplate = contentChild<TemplateRef<any>>('sdSelected');
   itemDef = contentChild(SdItemDefDefDirective);
   sdViewDef = contentChild(SdViewDefDirective);
 

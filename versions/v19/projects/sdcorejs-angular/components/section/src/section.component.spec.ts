@@ -17,7 +17,7 @@ import { SdSectionItem } from './section-item/section-item.component';
       [title]="title"
       [subTitle]="subTitle"
       [icon]="icon"
-      [collapsable]="collapsable"
+      [collapsible]="collapsible"
       [(collapsed)]="collapsed"
       [hideHeader]="hideHeader"
       [noPaddingBody]="noPaddingBody">
@@ -30,7 +30,7 @@ class HostComponent {
   title: string | null | undefined = 'Section Title';
   subTitle: string | null | undefined = undefined;
   icon: string | null | undefined = undefined;
-  collapsable = false;
+  collapsible = false;
   collapsed = false;
   hideHeader = false;
   noPaddingBody = false;
@@ -40,13 +40,26 @@ class HostComponent {
   standalone: true,
   imports: [SdSection],
   template: `
-    <sd-section [collapsable]="true" [(collapsed)]="collapsed">
+    <sd-section [collapsible]="true" [(collapsed)]="collapsed">
       <button sdHeaderRight>Action</button>
       <p class="body-content">Body text</p>
     </sd-section>
   `,
 })
 class HostWithSlotsComponent {
+  collapsed = false;
+}
+
+@Component({
+  standalone: true,
+  imports: [SdSection],
+  template: `
+    <sd-section [collapsable]="true" [(collapsed)]="collapsed">
+      <p class="body-content">Body text</p>
+    </sd-section>
+  `,
+})
+class HostWithDeprecatedCollapsableComponent {
   collapsed = false;
 }
 
@@ -184,30 +197,30 @@ describe('SdSection', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Input: collapsable + collapse behavior
+  // Input: collapsible + collapse behavior
   // -------------------------------------------------------------------------
 
-  describe('input: collapsable + collapse behavior', () => {
+  describe('input: collapsible + collapse behavior', () => {
     it('defaults collapsed to false', () => {
       expect(component.collapsed()).toBeFalse();
     });
 
-    it('does NOT show chevron icon when collapsable is false', () => {
+    it('does NOT show chevron icon when collapsible is false', () => {
       const el = getSectionEl(fixture);
       const chevron = el.querySelector('mat-icon');
       expect(chevron).toBeNull();
     });
 
-    it('shows chevron mat-icon when collapsable is true', () => {
-      host.collapsable = true;
+    it('shows chevron mat-icon when collapsible is true', () => {
+      host.collapsible = true;
       fixture.detectChanges();
       const el = getSectionEl(fixture);
       const chevron = el.querySelector('mat-icon');
       expect(chevron).not.toBeNull();
     });
 
-    it('toggleCollapse() sets collapsed to true when collapsable is true', () => {
-      host.collapsable = true;
+    it('toggleCollapse() sets collapsed to true when collapsible is true', () => {
+      host.collapsible = true;
       fixture.detectChanges();
       component.toggleCollapse();
       fixture.detectChanges();
@@ -215,7 +228,7 @@ describe('SdSection', () => {
     });
 
     it('toggleCollapse() sets collapsed back to false on second call', () => {
-      host.collapsable = true;
+      host.collapsible = true;
       fixture.detectChanges();
       component.toggleCollapse();
       fixture.detectChanges();
@@ -225,7 +238,7 @@ describe('SdSection', () => {
     });
 
     it('hides body content when collapsed is true', () => {
-      host.collapsable = true;
+      host.collapsible = true;
       host.collapsed = true;
       fixture.detectChanges();
       const el = getSectionEl(fixture);
@@ -233,12 +246,27 @@ describe('SdSection', () => {
       expect(el.querySelector('.extra-content')).toBeNull();
     });
 
-    it('toggleCollapse() forces collapsed to false when collapsable is false but collapsed is true', () => {
+    it('toggleCollapse() forces collapsed to false when collapsible is false but collapsed is true', () => {
       host.collapsed = true;
       fixture.detectChanges();
       component.toggleCollapse();
       fixture.detectChanges();
       expect(component.collapsed()).toBeFalse();
+    });
+
+    it('still accepts deprecated collapsable input', async () => {
+      await TestBed.resetTestingModule();
+      await TestBed.configureTestingModule({
+        imports: [HostWithDeprecatedCollapsableComponent, NoopAnimationsModule],
+      }).compileComponents();
+
+      const deprecatedFixture = TestBed.createComponent(HostWithDeprecatedCollapsableComponent);
+      deprecatedFixture.detectChanges();
+      const deprecatedComponent = getSdSection(deprecatedFixture);
+
+      expect(deprecatedComponent.collapsable()).toBeTrue();
+      expect(deprecatedComponent.isCollapsible()).toBeTrue();
+      expect(getSectionEl(deprecatedFixture).querySelector('mat-icon')).not.toBeNull();
     });
   });
 

@@ -56,6 +56,23 @@ import { Filter } from '@sdcorejs/utils/models';
       </demo-section>
 
       <demo-section
+        heading="So sánh giữa các trường"
+        note="Bật comparisonMode='value-or-field' để mỗi rule có thể chọn nhập giá trị hoặc so sánh với một field khác cùng type. Field bên phải emit ra Filter dạng { dataType: 'field', data: '<fieldKey>' }."
+        [props]="[{ name: 'comparisonMode', value: 'value-or-field' }, { name: 'dataType', value: 'field' }]">
+        <div class="builder-box">
+          <sd-query-builder [fields]="fields" comparisonMode="value-or-field" [(value)]="fieldComparisonValue"></sd-query-builder>
+        </div>
+        <div class="qb-demo-preview">
+          <strong>View</strong>
+          <sd-query-builder [fields]="fields" [value]="fieldComparisonValue()" mode="view"></sd-query-builder>
+        </div>
+        <div class="qb-demo-out">
+          <strong>Filter</strong>
+          <sd-code-editor language="json" [model]="fieldComparisonValue()" viewed maxHeight="280px"></sd-code-editor>
+        </div>
+      </demo-section>
+
+      <demo-section
         heading="Nhóm AND/OR lồng nhau"
         note="Bấm + → Nhóm để tạo nhóm con. Nhóm con nhiều điều kiện được bọc ngoặc ( … ) khi xem ở chế độ View."
         [props]="[{ name: 'operator', value: 'AND / OR' }, { name: 'mode', value: 'edit | view' }]">
@@ -100,6 +117,8 @@ import { Filter } from '@sdcorejs/utils/models';
       border-radius: 4px; padding: 4px 14px; cursor: pointer; font-size: 13px;
     }
     .qb-demo-btn.active { background: var(--sd-primary, #2a66f4); color: #fff; }
+    .qb-demo-preview { margin-top: 16px; }
+    .qb-demo-preview strong { display: block; margin-bottom: 6px; font-size: 13px; color: var(--sd-text-secondary, #5b6b7b); }
     .qb-demo-out { margin-top: 16px; }
     .qb-demo-out strong { display: block; margin-bottom: 6px; font-size: 13px; color: var(--sd-text-secondary, #5b6b7b); }
     .qb-demo-out sd-code-editor { display: block; }
@@ -113,7 +132,9 @@ export class QueryBuilderDemoComponent {
   readonly fields: SdQueryBuilderField[] = [
     { key: 'code', label: 'Mã', type: 'string' },
     { key: 'name', label: 'Tên', type: 'string' },
-    { key: 'price', label: 'Giá', type: 'number' },
+    { key: 'price', label: 'Giá bán', type: 'number', compareGroup: 'money' },
+    { key: 'cost', label: 'Giá vốn', type: 'number', compareGroup: 'money' },
+    { key: 'quantity', label: 'Số lượng', type: 'number', allowFieldCompare: false },
     {
       key: 'status',
       label: 'Trạng thái',
@@ -125,7 +146,8 @@ export class QueryBuilderDemoComponent {
       ],
     },
     { key: 'active', label: 'Kích hoạt', type: 'boolean', trueLabel: 'Có', falseLabel: 'Không' },
-    { key: 'createdAt', label: 'Ngày tạo', type: 'date' },
+    { key: 'createdAt', label: 'Ngày tạo', type: 'date', compareGroup: 'lifecycle' },
+    { key: 'expiredAt', label: 'Ngày hết hạn', type: 'date', compareGroup: 'lifecycle' },
     { key: 'updatedAt', label: 'Cập nhật lúc', type: 'datetime' },
   ];
 
@@ -155,7 +177,7 @@ export class QueryBuilderDemoComponent {
       { field: 'active', operator: 'EQUAL', data: true },
       { field: 'status', operator: 'IN', data: ['ACTIVE', 'PROBATION'] },
       { field: 'createdAt', operator: 'GREATER_THAN', data: '2026-01-01' },
-      { field: 'updatedAt', operator: 'EQUAL', data: { rel: 'now' } },
+      { field: 'updatedAt', operator: 'EQUAL', dataType: 'date-today', data: 'TODAY' },
     ],
   } as Filter);
 
@@ -163,8 +185,17 @@ export class QueryBuilderDemoComponent {
   readonly relativeValue = signal<Filter | null>({
     operator: 'AND',
     data: [
-      { field: 'createdAt', operator: 'GREATER_THAN', data: { rel: 'offset', unit: 'day', amount: 7, direction: 'previous' } },
-      { field: 'updatedAt', operator: 'LESS_THAN', data: { rel: 'now' } },
+      { field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-relative', data: { amount: 7, direction: 'previous', unit: 'day' } },
+      { field: 'updatedAt', operator: 'LESS_THAN', dataType: 'date-today', data: 'TODAY' },
+    ],
+  } as Filter);
+
+  /** Seed for field comparison: Giá bán > Giá vốn and Ngày hết hạn >= Ngày tạo. */
+  readonly fieldComparisonValue = signal<Filter | null>({
+    operator: 'AND',
+    data: [
+      { field: 'price', operator: 'GREATER_THAN', dataType: 'field', data: 'cost' },
+      { field: 'expiredAt', operator: 'GREATER_OR_EQUAL', dataType: 'field', data: 'createdAt' },
     ],
   } as Filter);
 

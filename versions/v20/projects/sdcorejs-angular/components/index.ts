@@ -14,6 +14,7 @@ export * from '@sdcorejs/angular/components/section';
 export * from '@sdcorejs/angular/components/anchor';
 export * from '@sdcorejs/angular/components/query-builder';
 export * from '@sdcorejs/angular/components/org-chart';
+export * from '@sdcorejs/angular/components/tree';
 export * from '@sdcorejs/angular/components/import-excel';
 export * from '@sdcorejs/angular/components/document-builder';
 export * from '@sdcorejs/angular/components/mini-editor';

@@ -322,6 +322,8 @@ p-{n}   pt-{n}   pr-{n}   pb-{n}   pl-{n}   px-{n}   py-{n}
 
 Ví dụ: `m-0`, `mt-8`, `px-16`, `py-24`, `mb-4`.
 
+**Spacing scale rule:** với spacing dùng cho layout element, chỉ dùng giá trị là **bội số của 4px**: `m-4`, `m-8`, `m-12`, `m-16`, `p-4`, `p-8`, `px-16`, `py-24`, `gap-8`, `gap-16`... Tránh sinh các class lẻ như `m-3`, `p-5`, `gap-7` trừ khi đang xử lý pixel-perfect exception đã được review rõ ràng.
+
 **Auto margin:** `m-auto`, `mt-auto`, `mr-auto`, `mb-auto`, `ml-auto`, `mx-auto`, `my-auto`.
 
 ### 7.2 Gap (px-based, 0–200)

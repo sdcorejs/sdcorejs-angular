@@ -29,8 +29,18 @@ Resizable split-pane container — divides its area horizontally or vertically i
 - For tree/explorer rows that expand inline — splitter is about layout regions, not row hierarchy
 
 ### Inputs
+New usage should bind only `[option]`, like `sd-table`. Put `orientation`, `disabled`, `storageKey`, `snapThreshold`, `keyboardStep`, and callbacks (`onResizeEnd`, `onLayoutChange`, `onCollapsedChange`) inside `SdSplitterOption`. The split inputs/outputs below remain as a migration bridge.
+
+```html
+<sd-splitter [option]="splitterOption">
+  <sd-splitter-panel panelId="left" [size]="1">Left</sd-splitter-panel>
+  <sd-splitter-panel panelId="right" [size]="2">Right</sd-splitter-panel>
+</sd-splitter>
+```
+
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `option` | `SdSplitterOption` | `undefined` | Main option object for new usage. |
 | `orientation` | `SplitterOrientation` (`'horizontal' \| 'vertical'`) | `'horizontal'` | `'horizontal'` = panels arranged left-to-right with vertical drag handles; `'vertical'` = panels stacked top-to-bottom with horizontal drag handles. Drives host class `sd-splitter--horizontal` / `sd-splitter--vertical` and the handle's `aria-orientation`. |
 | `disabled` | `boolean` | `false` | `booleanAttribute` transform. Disables ALL handles (drag + keyboard + dbl-click toggle). Adds host class `sd-splitter--disabled`. Per-panel `[resizable]="false"` disables only the surrounding handles. |
 | `storageKey` | `string \| undefined` | `undefined` | When set, layout is persisted via `SdStorageService.create<SplitterLayoutState>(key)`. Auto-restore on init, auto-save on commit (drag-end / keyboard / API call). Use stable keys per layout (e.g. `'orders-list.splitter'`). |

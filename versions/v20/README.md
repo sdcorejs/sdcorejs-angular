@@ -156,6 +156,8 @@ opt: SdTableOption<Employee> = {
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdTable, SdTableOption, SdTableGroupDefDirective } from '@sdcorejs/angular/components/table';
+import { SdTree, SdTreeComponentOption } from '@sdcorejs/angular/components/tree';
+import { SdOrgChart } from '@sdcorejs/angular/components/org-chart';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdNotifyService } from '@sdcorejs/angular/services';
 import { SdAuthService } from '@sdcorejs/angular/modules/auth';
@@ -174,11 +176,13 @@ Mỗi component / form control / service / module là 1 entry point độc lập
 | Display | `badge` · `avatar` · `chart` · `section` · `view` · `inform` |
 | Action | `button` · `quick-action` · `operator` |
 | Layout | `splitter` · `side-drawer` · `tab` · `tab-router` · `stepper` · `modal` · `anchor` |
-| Data | `table` · `query-bar` · `query-builder` · `preview` · `history` |
+| Data | `table` · `tree` · `org-chart` · `query-bar` · `query-builder` · `preview` · `history` |
 | Editor | `editor` · `mini-editor` · `code-editor` · `document-builder` |
 | Workflow | `form-generic` · `upload-file` · `import-excel` |
 
 **Table highlights**: server/local mode · paginate · sort · column filter · external filter · row selection (single/multi/preserve cross-page) · row reorder · row group (collapsible, select-all-in-group, sdTableGroupDef template) · tree rows (hierarchical STT 1/1.1/1.2.1) · expandable sub-info · custom cell template · footer aggregation · export Excel/CSV.
+
+**Tree highlights**: static/lazy loading · lazy child spinner · signal/array/function item sources · manual `reload()` · accent-insensitive `filter(searchText)` · multi-select quick action · row command menu · `sdTreeItemDef` custom item template.
 
 ### Forms (14)
 

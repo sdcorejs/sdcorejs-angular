@@ -39,6 +39,14 @@ const ORG_ITEMS: SdOrgChartItem[] = [
   },
 ];
 
+const SPECIAL_ID_ITEMS: SdOrgChartItem[] = [
+  {
+    id: 'sales & marketing/1',
+    title: 'Sales & Marketing',
+    description: null,
+  },
+];
+
 @Component({
   standalone: true,
   imports: [SdOrgChart],
@@ -50,11 +58,58 @@ class DefaultHostComponent {
 
 @Component({
   standalone: true,
+  imports: [SdOrgChart],
+  template: `<sd-org-chart [items]="items" autoId="special" />`,
+})
+class SpecialIdHostComponent {
+  items = SPECIAL_ID_ITEMS;
+}
+
+@Component({
+  standalone: true,
+  imports: [SdOrgChart],
+  template: `<sd-org-chart [items]="items" autoId="collapsed" />`,
+})
+class InitiallyCollapsedHostComponent {
+  items: SdOrgChartItem[] = [
+    {
+      ...ORG_ITEMS[0],
+      expanded: false,
+    },
+  ];
+}
+
+@Component({
+  standalone: true,
+  imports: [SdOrgChart],
+  template: `<sd-org-chart [items]="items" [collapsible]="false" autoId="locked" />`,
+})
+class NonCollapsibleHostComponent {
+  items: SdOrgChartItem[] = [
+    {
+      ...ORG_ITEMS[0],
+      expanded: false,
+    },
+  ];
+}
+
+@Component({
+  standalone: true,
   imports: [SdOrgChart, SdOrgChartItemDefDirective],
   template: `
     <sd-org-chart [items]="items">
-      <ng-template sdOrgChartItemDef let-item let-depth="depth">
-        <span class="custom-node">{{ depth }}:{{ item.title }}</span>
+      <ng-template
+        sdOrgChartItemDef
+        let-item
+        let-depth="depth"
+        let-parent="parent"
+        let-expanded="expanded"
+        let-hasChildren="hasChildren"
+        let-isLeaf="isLeaf"
+        let-toggle="toggle">
+        <button type="button" class="custom-node" (click)="toggle()">
+          {{ depth }}:{{ parent?.id || 'root' }}:{{ item.title }}:{{ expanded }}:{{ hasChildren }}:{{ isLeaf }}
+        </button>
       </ng-template>
     </sd-org-chart>
   `,
@@ -95,6 +150,30 @@ describe('SdOrgChart', () => {
     expect(chart.textContent).toContain('UI/UX Design');
   });
 
+  it('renders the expected treeitem roles, hierarchy and aria state for expanded nodes', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+
+    const chart = fixture.nativeElement as HTMLElement;
+    const tree = chart.querySelector('[role="tree"]') as HTMLElement;
+    const treeItems = Array.from(chart.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+    const groups = Array.from(chart.querySelectorAll<HTMLElement>('[role="group"]'));
+
+    expect(tree).withContext('tree wrapper is rendered').toBeTruthy();
+    expect(treeItems.map(item => item.querySelector<HTMLElement>('[data-node-id]')?.dataset['nodeId'])).toEqual([
+      'ceo',
+      'cmo',
+      'sales',
+      'marketing',
+      'cto',
+      'development',
+      'design',
+    ]);
+    expect(groups.length).toBe(3);
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('true');
+    expect(nodeElement(chart, 'cmo').getAttribute('aria-expanded')).toBe('true');
+    expect(nodeElement(chart, 'sales').getAttribute('aria-expanded')).toBeNull();
+  });
+
   it('renders stable data-autoid attributes for nodes and default node parts', async () => {
     const fixture = await createFixture(DefaultHostComponent);
 
@@ -108,7 +187,17 @@ describe('SdOrgChart', () => {
     expect(chart.querySelector('[data-autoid="components-org-chart-basic-node-development"]')).toBeTruthy();
   });
 
-  it('collapses and expands descendants from the node toggle', async () => {
+  it('sanitizes node ids before appending them to data-autoid attributes', async () => {
+    const fixture = await createFixture(SpecialIdHostComponent);
+
+    const chart = fixture.nativeElement as HTMLElement;
+
+    expect(chart.querySelector('[data-autoid="components-org-chart-special-node-sales---marketing-1"]')).toBeTruthy();
+    expect(chart.querySelector('[data-autoid="components-org-chart-special-title-sales---marketing-1"]')).toBeTruthy();
+    expect(chart.querySelector('[data-autoid*="sales & marketing/1"]')).toBeNull();
+  });
+
+  it('collapses and expands descendants from the component API', async () => {
     const fixture = await createFixture(DefaultHostComponent);
     const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
 
@@ -123,13 +212,89 @@ describe('SdOrgChart', () => {
     expect(fixture.nativeElement.textContent).toContain('Anna Fali');
   });
 
+  it('collapses and expands descendants from the node toggle button', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+
+    const chart = fixture.nativeElement as HTMLElement;
+    const toggle = chart.querySelector('[data-autoid="components-org-chart-basic-toggle-ceo"]') as HTMLButtonElement;
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Anna Fali');
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(toggle.querySelector('mat-icon')?.textContent?.trim()).toBe('chevron_right');
+
+    toggle.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Anna Fali');
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('true');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(toggle.querySelector('mat-icon')?.textContent?.trim()).toBe('expand_more');
+  });
+
+  it('honors item.expanded as the initial collapsible state', async () => {
+    const fixture = await createFixture(InitiallyCollapsedHostComponent);
+
+    const chart = fixture.nativeElement as HTMLElement;
+
+    expect(fixture.nativeElement.textContent).not.toContain('Anna Fali');
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('false');
+    expect(chart.querySelector('[data-autoid="components-org-chart-collapsed-toggle-ceo"]')?.getAttribute('aria-expanded')).toBe(
+      'false',
+    );
+  });
+
+  it('keeps all descendants visible and suppresses toggles when collapsible is false', async () => {
+    const fixture = await createFixture(NonCollapsibleHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+
+    const chart = fixture.nativeElement as HTMLElement;
+
+    expect(fixture.nativeElement.textContent).toContain('Anna Fali');
+    expect(chart.querySelector('[data-autoid="components-org-chart-locked-toggle-ceo"]')).toBeNull();
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('true');
+
+    component.toggle(ORG_ITEMS[0]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Anna Fali');
+  });
+
+  it('ignores toggle requests for leaf nodes', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+
+    component.toggle(ORG_ITEMS[0].children![0].children![0]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).toContain('Sales');
+    expect(component.isExpanded(ORG_ITEMS[0])).toBeTrue();
+  });
+
   it('uses sdOrgChartItemDef as the projected item template', async () => {
     const fixture = await createFixture(DirectiveTemplateHostComponent);
 
     const chart = fixture.nativeElement as HTMLElement;
 
-    expect(chart.querySelector('.custom-node')?.textContent?.trim()).toBe('0:Amy Elsner');
+    expect(chart.querySelector('.custom-node')?.textContent?.trim()).toBe('0:root:Amy Elsner:true:true:false');
+    expect(Array.from(chart.querySelectorAll('.custom-node')).map(node => node.textContent?.trim())).toContain(
+      '2:cmo:Sales:true:false:true',
+    );
     expect(chart.querySelector('.sd-org-chart__title')).toBeNull();
+  });
+
+  it('passes a working toggle function through the projected template context', async () => {
+    const fixture = await createFixture(DirectiveTemplateHostComponent);
+
+    const rootTemplateButton = fixture.nativeElement.querySelector('.custom-node') as HTMLButtonElement;
+
+    rootTemplateButton.click();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Anna Fali');
   });
 
   it('uses the itemTemplate input when no projected item template is provided', async () => {
@@ -139,6 +304,59 @@ describe('SdOrgChart', () => {
 
     expect(chart.querySelector('.input-template')?.textContent?.trim()).toBe('Amy Elsner:true');
     expect(chart.querySelector('.sd-org-chart__title')).toBeNull();
+  });
+
+  it('exposes public helpers for children, expansion state, context and tracking', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+    const cmo = ORG_ITEMS[0].children![0];
+    const sales = cmo.children![0];
+
+    const cmoContext = component.createContext(cmo, 1, ORG_ITEMS[0]);
+    const salesContext = component.createContext(sales, 2, cmo);
+
+    expect(component.trackByItem(0, cmo)).toBe('cmo');
+    expect(component.childrenOf({ id: 'empty', title: 'Empty' })).toEqual([]);
+    expect(component.hasChildren(cmo)).toBeTrue();
+    expect(component.hasChildren(sales)).toBeFalse();
+    expect(cmoContext).toEqual(
+      jasmine.objectContaining({
+        $implicit: cmo,
+        item: cmo,
+        depth: 1,
+        parent: ORG_ITEMS[0],
+        expanded: true,
+        hasChildren: true,
+        isLeaf: false,
+      }),
+    );
+    expect(salesContext).toEqual(
+      jasmine.objectContaining({
+        $implicit: sales,
+        item: sales,
+        depth: 2,
+        parent: cmo,
+        expanded: true,
+        hasChildren: false,
+        isLeaf: true,
+      }),
+    );
+
+    cmoContext.toggle();
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Sales');
+    expect(component.isExpanded(cmo)).toBeFalse();
+  });
+
+  it('does not include the old expanded-parent connector selector that drew an extra line', async () => {
+    await createFixture(DefaultHostComponent);
+
+    const orgChartCss = collectCssText('.sd-org-chart__node');
+
+    expect(orgChartCss).toContain('.sd-org-chart__children');
+    expect(orgChartCss).not.toContain('.sd-org-chart__node--expanded');
+    expect(orgChartCss).not.toContain('.sd-org-chart__node-shell::after');
   });
 });
 
@@ -150,4 +368,22 @@ async function createFixture<T>(component: new () => T): Promise<ComponentFixtur
   const fixture = TestBed.createComponent(component);
   fixture.detectChanges();
   return fixture;
+}
+
+function nodeElement(chart: HTMLElement, id: string): HTMLElement {
+  return chart.querySelector(`[data-node-id="${id}"]`)?.closest('[role="treeitem"]') as HTMLElement;
+}
+
+function collectCssText(selectorNeedle: string): string {
+  return Array.from(document.styleSheets)
+    .flatMap(styleSheet => {
+      try {
+        return Array.from(styleSheet.cssRules);
+      } catch {
+        return [];
+      }
+    })
+    .map(rule => rule.cssText)
+    .filter(cssText => cssText.includes(selectorNeedle))
+    .join('\n');
 }

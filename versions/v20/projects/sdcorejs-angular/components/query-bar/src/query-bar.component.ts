@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   Injector,
   input,
@@ -13,6 +14,7 @@ import {
   model,
   output,
   signal,
+  untracked,
   viewChild,
   viewChildren,
 } from '@angular/core';
@@ -35,6 +37,7 @@ import {
   SD_QUERY_MULTI_OPERATORS,
   SD_QUERY_NO_DATA_OPERATORS,
   SdQuery,
+  SdQueryBarOption,
   SdQueryField,
   SdQueryLogic,
   SdSavedFilter,
@@ -100,6 +103,9 @@ export class SdQueryBar {
   // ---------------------------------------------------------------------------
   // Inputs — all accept null|undefined at boundary, transform to canonical shape
   // ---------------------------------------------------------------------------
+
+  /** Main option object. Prefer this API for new usage; individual inputs stay as a migration bridge. */
+  readonly option = input<SdQueryBarOption | undefined>(undefined);
 
   /** Prefix for auto-generated `data-autoid` on inner controls (chips, operator/value editors, buttons). */
   readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
@@ -194,9 +200,32 @@ export class SdQueryBar {
   // ---------------------------------------------------------------------------
 
   /** Map of `field.key` → `SdQueryField` for fast lookup from filters[]. */
+  readonly resolvedAutoId = computed(() => this.option()?.autoId ?? this.autoIdInput() ?? undefined);
+  readonly resolvedFields = computed(() => this.option()?.fields ?? this.fields());
+  readonly resolvedMode = computed(() => this.option()?.mode ?? this.mode());
+  readonly resolvedDensity = computed(() => this.option()?.density ?? this.density());
+  readonly resolvedShowSearch = computed(() => this.option()?.showSearch ?? this.showSearch());
+  readonly resolvedShowSavedFilters = computed(() => this.option()?.showSavedFilters ?? this.showSavedFilters());
+  readonly resolvedSavedFiltersKey = computed(() => this.option()?.savedFiltersKey ?? this.savedFiltersKey());
+  readonly resolvedShowLogicToggle = computed(() => this.option()?.showLogicToggle ?? this.showLogicToggle());
+  readonly resolvedShowClearAll = computed(() => this.option()?.showClearAll ?? this.showClearAll());
+  readonly resolvedShowOperatorOnChip = computed(() => this.option()?.showOperatorOnChip ?? this.showOperatorOnChip());
+
+  constructor() {
+    effect(() => {
+      const option = this.option();
+      if (!option) return;
+      untracked(() => {
+        if (option.filters && this.filters() !== option.filters) this.filters.set(option.filters);
+        if (option.logic && this.logic() !== option.logic) this.logic.set(option.logic);
+        if (option.search !== undefined && this.search() !== option.search) this.search.set(option.search);
+      });
+    });
+  }
+
   readonly fieldByKey = computed<Record<string, SdQueryField>>(() => {
     const map: Record<string, SdQueryField> = {};
-    for (const f of this.fields()) map[f.key as string] = f;
+    for (const f of this.resolvedFields()) map[f.key as string] = f;
     return map;
   });
 
@@ -211,7 +240,7 @@ export class SdQueryBar {
 
   /** Render the global AND/OR connector text between chips when `logic === 'OR'`. */
   readonly showOrConnector = computed(
-    () => this.showLogicToggle() && this.logic() === 'OR' && this.filters().length >= 2,
+    () => this.resolvedShowLogicToggle() && this.logic() === 'OR' && this.filters().length >= 2,
   );
 
   /** Search button is actionable only when there is something to apply. */
@@ -292,7 +321,7 @@ export class SdQueryBar {
   }
 
   inlineAutoId(index: number, role: string): string {
-    const base = this.autoIdInput() ?? 'qb';
+    const base = this.resolvedAutoId() ?? 'qb';
     return `${base}-inline${index}-${role}`;
   }
 
@@ -467,7 +496,9 @@ export class SdQueryBar {
     // why: single deferred trigger — fire both the change notification and the reload
     // signal once, from here only (mutations no longer emit).
     const q = this.#buildQuery();
+    this.option()?.onQueryChange?.(q);
     this.queryChange.emit(q);
+    this.option()?.onApply?.(q);
     this.apply.emit(q);
   }
 
@@ -505,7 +536,7 @@ export class SdQueryBar {
     return {
       filters: this.filters(),
       logic: this.logic(),
-      ...(this.showSearch() ? { search: this.search() } : {}),
+      ...(this.resolvedShowSearch() ? { search: this.search() } : {}),
     };
   }
 

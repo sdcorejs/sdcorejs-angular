@@ -5,13 +5,13 @@
   with extracted sub-components driven by CDK overlay.
 -->
 @let _filters = filters();
-@let _fields = fields();
-@let _density = density();
+@let _fields = resolvedFields();
+@let _density = resolvedDensity();
 @let _showOr = showOrConnector();
 @let _used = usedFieldKeys();
 @let _editingIndex = editingIndex();
-@let _mode = mode();
-@let _showOpOnChip = showOperatorOnChip();
+@let _mode = resolvedMode();
+@let _showOpOnChip = resolvedShowOperatorOnChip();
 
 <div
   class="c-query-bar"
@@ -23,7 +23,7 @@
   <div class="c-query-bar__main">
 
   <!-- Free-text search (left, optional) -->
-  @if (showSearch()) {
+  @if (resolvedShowSearch()) {
     <div class="c-search">
       <mat-icon class="c-search-icon" fontSet="material-icons-outlined">search</mat-icon>
       <input
@@ -37,26 +37,18 @@
     <span class="c-divider" aria-hidden="true"></span>
   }
 
-  <!-- Field switcher (used by chipPopover header) — declared first so chipPopover's
-       nested ng-template can resolve the template ref. -->
-  <!-- Field switcher used by chipPopover header — current field key comes from editingIndex. -->
-  <sd-query-field-picker
-    #switchPicker
-    [fields]="_fields"
-    [currentKey]="_editingIndex !== null ? $any(_filters[_editingIndex!])?.field : undefined"
-    (pick)="_editingIndex !== null && changeFilterField(_editingIndex!, $event)" />
-
   <!-- Chip popover — extracted into <sd-query-chip-popover>. Declared BEFORE chips
-       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`. -->
+       so the popover-mode @for chips can bind their [menu] to `chipPopover.menu()`.
+       why: mở popover để EDIT chỉ cho chỉnh operator + value — KHÔNG đổi field.
+       Bỏ [switchPickerMenu] → header render nhãn field tĩnh (read-only). Muốn đổi
+       field thì xoá chip rồi thêm lại. -->
   <sd-query-chip-popover
     #chipPopover
     [field]="editingField() ?? undefined"
     [filter]="_editingIndex !== null ? $any(_filters[_editingIndex!]) : undefined"
     [chipIndex]="_editingIndex"
-    [autoIdBase]="autoIdInput() ?? 'qb'"
-    [switchPickerMenu]="switchPicker.menu()!"
-    (commit)="onChipPopoverCommit($event)"
-    (swapField)="_editingIndex !== null && changeFilterField(_editingIndex!, $event)" />
+    [autoIdBase]="resolvedAutoId() ?? 'qb'"
+    (commit)="onChipPopoverCommit($event)" />
 
   @if (_mode === 'inline') {
     <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->
@@ -164,14 +156,14 @@
     (pick)="_mode === 'inline' ? beginBuild($event) : addFilter($event)" />
 
   <sd-query-actions-bar
-    [showLogicToggle]="showLogicToggle()"
+    [showLogicToggle]="resolvedShowLogicToggle()"
     [(logic)]="logic"
     [filtersCount]="_filters.length"
-    [showSavedFilters]="showSavedFilters()"
-    [savedFiltersKey]="savedFiltersKey()"
+    [showSavedFilters]="resolvedShowSavedFilters()"
+    [savedFiltersKey]="resolvedSavedFiltersKey()"
     [query]="currentQuery()"
     (applyFilter)="onApplyFilter($event)"
-    [showClearAll]="showClearAll()"
+    [showClearAll]="resolvedShowClearAll()"
     [canSearch]="canSearch()"
     (clear)="clearAll()"
     (search)="triggerApply()" />

@@ -1,9 +1,11 @@
 @let _hideHeader = hideHeader();
-@let _collapsable = collapsable();
+@let _collapsible = isCollapsible();
 @let _collapsed = collapsed();
 @let _title = title();
 @let _subTitle = subTitle();
+@let _icon = icon();
 @let _iconColor = iconColor();
+@let _noPaddingBody = noPaddingBody();
 <div class="rounded-8 bg-white" [class.c-shadow-section]="!_collapsed">
   @if (!_hideHeader) {
     <div
@@ -12,7 +14,7 @@
       aria-hidden="true">
       <div class="d-flex align-items-center">
         <ng-content select="[sdHeaderLeft]">
-          @if (icon()) {
+          @if (_icon) {
             <span
               class="mr-8 material-icons-outlined"
               [class.text-primary]="_iconColor === 'primary'"
@@ -20,7 +22,7 @@
               [class.text-error]="_iconColor === 'error'"
               [class.text-warning]="_iconColor === 'warning'"
               [class.text-success]="_iconColor === 'success'">
-              {{ icon() }}
+              {{ _icon }}
             </span>
           }
           <div>
@@ -35,7 +37,7 @@
       </div>
       <div class="d-flex">
         <ng-content select="[sdHeaderRight]"></ng-content>
-        @if (_collapsable) {
+        @if (_collapsible) {
           <div class="d-flex align-items-center">
             @if (_collapsed) {
               <mat-icon>expand_more</mat-icon>
@@ -49,7 +51,7 @@
   }
   @if (!_collapsed || _hideHeader) {
     <!-- Nếu header bị ẩn thì không cần border top -->
-    <div [class.p-16]="!noPaddingBody()" [class.c-no-padding-body]="noPaddingBody()" [style.border-top]="_hideHeader ? 'none' : '1px solid #e6e6e6'">
+    <div [class.p-16]="!_noPaddingBody" [class.c-no-padding-body]="_noPaddingBody" [style.border-top]="_hideHeader ? 'none' : '1px solid #e6e6e6'">
       <ng-content></ng-content>
     </div>
   }

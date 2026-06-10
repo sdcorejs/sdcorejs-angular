@@ -35,6 +35,7 @@ export const routes: Routes = [
   { path: 'components/tab',              loadComponent: () => import('./pages/components/tab/tab-demo.component').then(m => m.TabDemoComponent) },
   { path: 'components/tab-router',       loadComponent: () => import('./pages/components/tab-router/tab-router-demo.component').then(m => m.TabRouterDemoComponent) },
   { path: 'components/table',            loadComponent: () => import('./pages/components/table/table-demo.component').then(m => m.TableDemoComponent) },
+  { path: 'components/tree',             loadComponent: () => import('./pages/components/tree/tree-demo.component').then(m => m.TreeDemoComponent) },
   { path: 'components/upload-file',      loadComponent: () => import('./pages/components/upload-file/upload-file-demo.component').then(m => m.UploadFileDemoComponent) },
   { path: 'components/view',             loadComponent: () => import('./pages/components/view/view-demo.component').then(m => m.ViewDemoComponent) },
 

@@ -49,7 +49,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `reload` | `{ visible?, onReload? }` | no | Show reload button + callback when data refreshes. |
 | `export` | `SdTableOptionExportDefault \| SdTableOptionExportCustom` | no | Excel/CSV/Custom export config. |
 | `group` | `{ fields: string[]; htmlTemplate: (rows) => string }` | no | Group rows by `fields` and render an HTML group header. |
-| `filter` | `SdTableOptionFilter` | no | `{ hideInlineFilter?, externalFilterPerRow?, manualFilter?, hideExternalFilterToolbar?, externalFilters?, operatorChange? }`. |
+| `filter` | `SdTableOptionFilter` | no | `{ hideInlineFilter?, externalFilterPerRow?, manualFilter?, collapsible?, hideExternalFilterToolbar?, externalFilters?, operatorChange? }`. |
 | `commands` | `SdTableCommand<T>[]` | no | Per-row action buttons. |
 | `command` | `{ align?: 'left' \| 'right'; commands?: SdTableCommand<T>[] }` | no | Newer per-row commands API with alignment. |
 | `style` | `{ shadow?, maxHeight?, minHeight?, rowCss? }` | no | Shadow toggle, scroll bounds, per-row CSS. |

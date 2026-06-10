@@ -9,6 +9,8 @@ const FIELDS: SdQueryBuilderField[] = [
   { key: 'code', label: 'Mã', type: 'string' },
   { key: 'name', label: 'Tên', type: 'string' },
   { key: 'price', label: 'Giá', type: 'number' },
+  { key: 'cost', label: 'Cost', type: 'number' },
+  { key: 'updatedAt', label: 'Updated', type: 'date' },
   {
     key: 'status',
     label: 'Trạng thái',
@@ -115,12 +117,49 @@ describe('SdQueryBuilder', () => {
 
     it('renders two value inputs for a BETWEEN number field', () => {
       setupRule('price', 'BETWEEN');
-      expect(fixture.nativeElement.querySelectorAll('sd-input.qb-val').length).toBe(2);
+      // a number field renders <sd-input-number>, not <sd-input>
+      expect(fixture.nativeElement.querySelectorAll('sd-input-number.qb-val').length).toBe(2);
     });
 
     it('renders no value editor for a NULL operator', () => {
       setupRule('name', 'NULL');
       expect(fixture.nativeElement.querySelector('.qb-val')).toBeNull();
+    });
+
+    it('hides the value source selector in value-only mode', () => {
+      setupRule('price', 'GREATER_THAN');
+      expect(fixture.nativeElement.querySelector('.qb-value-source')).toBeNull();
+    });
+
+    it('allows each rule to switch between literal value and same-type field operand', () => {
+      fixture.componentRef.setInput('comparisonMode', 'value-or-field');
+      const r = setupRule('price', 'GREATER_THAN');
+
+      expect(component.compareFields(r).map(f => f.key)).toEqual(['cost']);
+      expect(fixture.nativeElement.querySelector('.qb-value-source')).not.toBeNull();
+
+      component.setValueSource(r, 'field');
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('sd-select.qb-compare-field')).not.toBeNull();
+
+      component.setCompareField(r, 'cost');
+      expect(component.value()).toEqual({
+        operator: 'AND',
+        data: [{ field: 'price', operator: 'GREATER_THAN', dataType: 'field', data: 'cost' }],
+      } as any);
+    });
+
+    it('resets a field operand when switching to an unsupported operator', () => {
+      fixture.componentRef.setInput('comparisonMode', 'value-or-field');
+      const r = setupRule('price', 'GREATER_THAN');
+      component.setValueSource(r, 'field');
+      component.setCompareField(r, 'cost');
+
+      component.setOperator(r, 'BETWEEN');
+
+      expect(r.valueSource).toBe('literal');
+      expect(r.compareField).toBeUndefined();
+      expect(r.value).toEqual({ from: null, to: null });
     });
   });
 
@@ -283,10 +322,10 @@ describe('SdQueryBuilder', () => {
       component.setField(r, 'createdAt');
       component.setOperator(r, 'GREATER_THAN');
       component.setDateMode(r, 'relative'); // added in Task 5
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 1, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 1, direction: 'previous', unit: 'day' });
 
       component.setOperator(r, 'LESS_THAN');
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 1, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 1, direction: 'previous', unit: 'day' });
     });
 
     it('resets a relative value to {from,to} when switching to BETWEEN', () => {
@@ -295,7 +334,7 @@ describe('SdQueryBuilder', () => {
       component.setField(r, 'createdAt');
       component.setOperator(r, 'GREATER_THAN');
       component.setDateMode(r, 'now');
-      expect(r.value).toEqual({ rel: 'now' });
+      expect(r.value).toBe('TODAY');
 
       component.setOperator(r, 'BETWEEN');
       expect(r.value).toEqual({ from: null, to: null });
@@ -395,18 +434,18 @@ describe('SdQueryBuilder', () => {
     it('dateMode derives absolute / now / relative from the value', () => {
       const r = dateRule();
       expect(component.dateMode(r)).toBe('absolute'); // default value is null
-      r.value = { rel: 'now' };
+      r.value = 'TODAY';
       expect(component.dateMode(r)).toBe('now');
-      r.value = { rel: 'offset', unit: 'day', amount: 2, direction: 'next' };
+      r.value = { amount: 2, direction: 'next', unit: 'day' };
       expect(component.dateMode(r)).toBe('relative');
     });
 
     it('setDateMode reseeds the value per mode', () => {
       const r = dateRule();
       component.setDateMode(r, 'now');
-      expect(r.value).toEqual({ rel: 'now' });
+      expect(r.value).toBe('TODAY');
       component.setDateMode(r, 'relative');
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 1, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 1, direction: 'previous', unit: 'day' });
       component.setDateMode(r, 'absolute');
       expect(r.value).toBeNull();
     });
@@ -414,7 +453,7 @@ describe('SdQueryBuilder', () => {
     it('relativeAmount reads the offset amount (default 1)', () => {
       const r = dateRule();
       expect(component.relativeAmount(r)).toBe(1);
-      r.value = { rel: 'offset', unit: 'week', amount: 5, direction: 'previous' };
+      r.value = { amount: 5, direction: 'previous', unit: 'week' };
       expect(component.relativeAmount(r)).toBe(5);
     });
 
@@ -422,7 +461,7 @@ describe('SdQueryBuilder', () => {
       const r = dateRule();
       component.setDateMode(r, 'relative');
       component.setRelativeAmount(r, 4);
-      expect(r.value).toEqual({ rel: 'offset', unit: 'day', amount: 4, direction: 'previous' });
+      expect(r.value).toEqual({ amount: 4, direction: 'previous', unit: 'day' });
       component.setRelativeAmount(r, 0);
       expect((r.value as any).amount).toBe(1);
       component.setRelativeAmount(r, 'abc');
@@ -436,7 +475,7 @@ describe('SdQueryBuilder', () => {
       component.setDateMode(r, 'relative');
       expect(component.relativeUnitDirValue(r)).toBe('day:previous');
       component.setRelativeUnitDir(r, 'month:next');
-      expect(r.value).toEqual({ rel: 'offset', unit: 'month', amount: 1, direction: 'next' });
+      expect(r.value).toEqual({ amount: 1, direction: 'next', unit: 'month' });
       expect(component.relativeUnitDirValue(r)).toBe('month:next');
     });
 
