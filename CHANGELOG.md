@@ -10,9 +10,19 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5] - 2026-06-10
+
+Published: `@sdcorejs/angular@19.0.5` / `@20.0.5` / `@21.0.5` (npm dist-tag `latest`).
+Synced from `vn-angular@a5250948`.
+
 ### Added
 
 - **`components/org-chart`** — new `<sd-org-chart>` organization tree component with default item cards, collapse/expand support, projected `sdOrgChartItemDef`, `[itemTemplate]` customization, and stable autoId selectors for node parts. Includes secondary entry points and showcase wiring for Angular 19/20/21. Synced from `vn-angular@c744efa0`.
+
+## [0.4] - 2026-06-05
+
+Published: `@sdcorejs/angular@19.0.4` / `@20.0.4` / `@21.0.4` (npm dist-tag `latest`).
+Synced from `vn-angular@69f56d6a`.
 
 ### Security
 
