@@ -228,6 +228,93 @@ describe('sd-splitter vertical — overshoot dead-zone', () => {
   standalone: true,
   imports: [SdSplitterComponent, SdSplitterPanelComponent],
   template: `
+    <sd-splitter orientation="vertical" style="width:200px;height:320px;">
+      <sd-splitter-panel panelId="header" size="64" unit="px">Header</sd-splitter-panel>
+      <sd-splitter-panel panelId="content" size="1" unit="flex">Content</sd-splitter-panel>
+      <sd-splitter-panel panelId="footer" size="100" unit="px">Footer</sd-splitter-panel>
+    </sd-splitter>
+  `,
+})
+class VerticalFixedPxHost {}
+
+describe('sd-splitter vertical — fixed px header/footer with flex content', () => {
+  let fix: ComponentFixture<VerticalFixedPxHost>;
+  let splitterEl: HTMLElement;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({ imports: [VerticalFixedPxHost], providers: [SdStorageService] });
+    fix = TestBed.createComponent(VerticalFixedPxHost);
+    fix.detectChanges();
+    await fix.whenStable();
+    fix.detectChanges();
+    splitterEl = fix.debugElement.query(By.css('sd-splitter')).nativeElement;
+    spyOn(splitterEl, 'getBoundingClientRect').and.returnValue({
+      x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 320, width: 200, height: 320, toJSON: () => ({}),
+    } as DOMRect);
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+  });
+
+  function component(): SdSplitterComponent {
+    return fix.debugElement.query(By.directive(SdSplitterComponent)).componentInstance as SdSplitterComponent;
+  }
+
+  function panel(id: string) {
+    return component().getLayout().panels.find(p => p.id === id)!;
+  }
+
+  it('kéo divider header/content sát xuống dưới rồi kéo ngược ở drag mới không làm content kẹt 0', async () => {
+    const firstHandle = splitterEl.querySelectorAll<HTMLElement>('sd-splitter-handle')[0];
+    spyOn(firstHandle, 'setPointerCapture').and.stub();
+    spyOn(firstHandle, 'releasePointerCapture').and.stub();
+
+    dispatchPointer(firstHandle, 'pointerdown', { clientX: 0, clientY: 64, button: 0 });
+    dispatchPointer(firstHandle, 'pointermove', { clientX: 0, clientY: 1000 });
+    dispatchPointer(firstHandle, 'pointerup', { clientX: 0, clientY: 1000 });
+    fix.detectChanges();
+    await fix.whenStable();
+
+    expect(panel('header').size).toBe(220);
+    expect(panel('content').size).toBeGreaterThan(0);
+
+    dispatchPointer(firstHandle, 'pointerdown', { clientX: 0, clientY: 220, button: 0 });
+    dispatchPointer(firstHandle, 'pointermove', { clientX: 0, clientY: 180 });
+    dispatchPointer(firstHandle, 'pointerup', { clientX: 0, clientY: 180 });
+    fix.detectChanges();
+    await fix.whenStable();
+
+    expect(panel('header').size).toBe(180);
+    expect(panel('content').size).toBeGreaterThan(0);
+  });
+
+  it('kéo divider content/footer sát lên trên rồi kéo ngược ở drag mới không làm content kẹt 0', async () => {
+    const secondHandle = splitterEl.querySelectorAll<HTMLElement>('sd-splitter-handle')[1];
+    spyOn(secondHandle, 'setPointerCapture').and.stub();
+    spyOn(secondHandle, 'releasePointerCapture').and.stub();
+
+    dispatchPointer(secondHandle, 'pointerdown', { clientX: 0, clientY: 220, button: 0 });
+    dispatchPointer(secondHandle, 'pointermove', { clientX: 0, clientY: -1000 });
+    dispatchPointer(secondHandle, 'pointerup', { clientX: 0, clientY: -1000 });
+    fix.detectChanges();
+    await fix.whenStable();
+
+    expect(panel('footer').size).toBe(256);
+    expect(panel('content').size).toBeGreaterThan(0);
+
+    dispatchPointer(secondHandle, 'pointerdown', { clientX: 0, clientY: 64, button: 0 });
+    dispatchPointer(secondHandle, 'pointermove', { clientX: 0, clientY: 104 });
+    dispatchPointer(secondHandle, 'pointerup', { clientX: 0, clientY: 104 });
+    fix.detectChanges();
+    await fix.whenStable();
+
+    expect(panel('footer').size).toBe(216);
+    expect(panel('content').size).toBeGreaterThan(0);
+  });
+});
+
+@Component({
+  standalone: true,
+  imports: [SdSplitterComponent, SdSplitterPanelComponent],
+  template: `
     <sd-splitter orientation="horizontal" style="width:400px;height:200px;">
       <sd-splitter-panel panelId="left" size="1">Left</sd-splitter-panel>
       <sd-splitter-panel panelId="right" size="2">

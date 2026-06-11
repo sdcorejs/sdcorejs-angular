@@ -192,10 +192,59 @@ describe('SplitterStateService.applyDelta', () => {
     ]);
     // container 200, fixed=100px, fluid=100px (1 weight). Delta +20:
     // - prev (px) lên 120px (giá trị raw signal = 120)
-    // - next (flex) co còn 80px → weight = 80/100 = 0.8
+    // - next (flex) co còn 80px vì flex budget mới còn 80px. Chỉ có 1 flex panel
+    //   nên giữ weight = 1 để tránh mất mốc phục hồi khi flex budget về 0.
     service.applyDelta(0, 20, 200);
     expect(service.liveSizes().get('fixed')).toBe(120);
-    expect(service.liveSizes().get('fluid')).toBeCloseTo(0.8, 5);
+    expect(service.liveSizes().get('fluid')).toBeCloseTo(1, 5);
+  });
+
+  it('mix px/flex/px: flex panel giữ weight dương khi bị ép về 0px ở sát biên', () => {
+    setup([
+      { id: 'top', unit: 'px', size: 64 },
+      { id: 'content', unit: 'flex', size: 1 },
+      { id: 'footer', unit: 'px', size: 100 },
+    ]);
+
+    // container=320, content ban đầu 156px. Kéo handle top/content xuống hết mức:
+    // top chỉ tăng được 156px, content còn 0px, footer vẫn 100px.
+    const applied = service.applyDelta(0, 1000, 320);
+
+    expect(applied).toBe(156);
+    expect(service.liveSizes().get('top')).toBe(220);
+    expect(service.liveSizes().get('content')).toBeGreaterThan(0);
+  });
+
+  it('mix px/flex/px: sau khi sát biên, kéo ngược phục hồi flex ngay lập tức', () => {
+    setup([
+      { id: 'top', unit: 'px', size: 64 },
+      { id: 'content', unit: 'flex', size: 1 },
+      { id: 'footer', unit: 'px', size: 100 },
+    ]);
+
+    service.applyDelta(0, 1000, 320);
+    const applied = service.applyDelta(0, -40, 320);
+
+    expect(applied).toBe(-40);
+    expect(service.liveSizes().get('top')).toBe(180);
+    expect(service.liveSizes().get('content')).toBeGreaterThan(0);
+  });
+
+  it('mix px/flex/px: footer handle cũng phục hồi flex sau khi kéo sát lên trên', () => {
+    setup([
+      { id: 'top', unit: 'px', size: 64 },
+      { id: 'content', unit: 'flex', size: 1 },
+      { id: 'footer', unit: 'px', size: 100 },
+    ]);
+
+    // Kéo handle content/footer lên hết mức: content còn 0px, footer tăng lên 256px.
+    const appliedToTop = service.applyDelta(1, -1000, 320);
+    const appliedBack = service.applyDelta(1, 40, 320);
+
+    expect(appliedToTop).toBe(-156);
+    expect(appliedBack).toBe(40);
+    expect(service.liveSizes().get('footer')).toBe(216);
+    expect(service.liveSizes().get('content')).toBeGreaterThan(0);
   });
 
   it('clamp tại minSize của panel prev (flex)', () => {

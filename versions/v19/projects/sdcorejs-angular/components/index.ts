@@ -10,6 +10,7 @@ export * from '@sdcorejs/angular/components/quick-action';
 export * from '@sdcorejs/angular/components/query-bar';
 export * from '@sdcorejs/angular/components/upload-file';
 export * from '@sdcorejs/angular/components/section';
+export * from '@sdcorejs/angular/components/inform';
 // export * from '@sdcorejs/angular/components/form-generic';
 export * from '@sdcorejs/angular/components/anchor';
 export * from '@sdcorejs/angular/components/query-builder';

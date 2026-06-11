@@ -143,9 +143,11 @@ export class SplitterStateService {
 
     const newPrevPx = prevPx + delta;
     const newNextPx = nextPx - delta;
+    const pxBudgetDelta = (prev.unit === 'px' ? delta : 0) + (next.unit === 'px' ? -delta : 0);
+    const nextFlexBudgetPx = Math.max(flexBudgetPx - pxBudgetDelta, 0);
     const liveNext = new Map(this.liveSizes());
-    liveNext.set(prev.id, prev.unit === 'px' ? newPrevPx : (newPrevPx * totalFlexWeight) / Math.max(flexBudgetPx, NEAR_ZERO));
-    liveNext.set(next.id, next.unit === 'px' ? newNextPx : (newNextPx * totalFlexWeight) / Math.max(flexBudgetPx, NEAR_ZERO));
+    liveNext.set(prev.id, this.#pxToLiveSize(prev, prevSize, newPrevPx, nextFlexBudgetPx, totalFlexWeight));
+    liveNext.set(next.id, this.#pxToLiveSize(next, nextSize, newNextPx, nextFlexBudgetPx, totalFlexWeight));
     this.liveSizes.set(liveNext);
 
     return delta;
@@ -175,6 +177,23 @@ export class SplitterStateService {
 
   #sizeToPx(meta: ResolvedPanelMeta, value: number, flexBudgetPx: number, totalFlexWeight: number): number {
     return meta.unit === 'px' ? value : (flexBudgetPx * value) / Math.max(totalFlexWeight, NEAR_ZERO);
+  }
+
+  #pxToLiveSize(
+    meta: ResolvedPanelMeta,
+    currentSize: number,
+    nextPx: number,
+    nextFlexBudgetPx: number,
+    totalFlexWeight: number,
+  ): number {
+    if (meta.unit === 'px') return nextPx;
+    if (nextFlexBudgetPx <= NEAR_ZERO || totalFlexWeight <= NEAR_ZERO) {
+      // A flex pane can be visually 0px because sibling px panes consume the whole
+      // container. Keep a positive weight so dragging back has a stable anchor.
+      return Math.max(currentSize, meta.lastSize, meta.declaredSize, meta.minSize, NEAR_ZERO);
+    }
+    if (nextPx <= 0) return 0;
+    return (nextPx * totalFlexWeight) / nextFlexBudgetPx;
   }
 
   collapsePanel(id: string | number): void {

@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import {
   SdTable,
   SdTableOption,
@@ -148,6 +149,7 @@ const TASKS: Task[] = [
     SdTableExpandDefDirective,
     SdTableGroupDefDirective,
     SdMaterialFooterDefDirective,
+    SdButton,
   ],
   template: `
     <demo-page
@@ -208,6 +210,38 @@ const TASKS: Task[] = [
         note="Không bật index → icon expand + indent nhúng thẳng vào cột data đầu tiên (kiểu file explorer).">
         <div class="table-box">
           <sd-table [option]="treeNoIndexOption"></sd-table>
+        </div>
+      </demo-section>
+
+      <demo-section
+        heading="Tree + selector + command + chỉnh indent"
+        [props]="[
+          { name: 'tree.indentSize', value: treeCommandIndentSize() + 'px' },
+          { name: 'selector.visible', value: 'true' },
+          { name: 'command.align', value: 'right' }
+        ]"
+        note="Demo phối hợp tree rows với checkbox selector, bulk actions, command theo từng dòng và thay đổi indent trực tiếp.">
+        <div class="table-box">
+          <div class="tree-command-toolbar">
+            <span class="tree-command-toolbar__label">Indent: {{ treeCommandIndentSize() }}px</span>
+            <sd-button
+              type="light"
+              color="secondary"
+              prefixIcon="format_indent_decrease"
+              title="Giảm indent"
+              [disabled]="treeCommandIndentSize() <= 8"
+              (click)="decreaseTreeCommandIndent()">
+            </sd-button>
+            <sd-button
+              type="light"
+              color="primary"
+              prefixIcon="format_indent_increase"
+              title="Tăng indent"
+              [disabled]="treeCommandIndentSize() >= 32"
+              (click)="increaseTreeCommandIndent()">
+            </sd-button>
+          </div>
+          <sd-table [option]="treeCommandOption()"></sd-table>
         </div>
       </demo-section>
 
@@ -322,6 +356,18 @@ const TASKS: Task[] = [
   `,
   styles: [`
     .table-box { width: 100%; }
+    .tree-command-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tree-command-toolbar__label {
+      color: #4b5563;
+      font-size: 13px;
+      font-weight: 600;
+    }
     .expand-box {
       padding: 12px 16px;
       background: #fafafa;
@@ -532,6 +578,53 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  readonly treeCommandIndentSize = signal(16);
+
+  readonly treeCommandOption = computed<SdTableOption<OrgNode>>(() => ({
+    type: 'local',
+    key: 'showcase-tree-selector-command-table',
+    items: () => ORG,
+    tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: true, indentSize: this.treeCommandIndentSize() },
+    selector: {
+      visible: true,
+      actions: [
+        { icon: 'download', title: 'Xuất đơn vị', click: items => alert(`Xuất ${items?.length ?? 0} đơn vị`) },
+        { icon: 'account_tree', title: 'Gộp báo cáo', click: items => alert(`Gộp báo cáo cho ${items?.length ?? 0} đơn vị`) },
+      ],
+      message: items => `Đã chọn ${items?.length ?? 0} đơn vị`,
+    },
+    command: {
+      align: 'right',
+      commands: [
+        {
+          icon: row => row.children?.length ? 'account_tree' : 'person',
+          title: row => `Xem ${this.describeOrgNode(row)}`,
+          click: row => alert(`Xem ${this.describeOrgNode(row)}`),
+        },
+        {
+          icon: 'add',
+          title: 'Thêm đơn vị con',
+          hidden: row => !row.children?.length,
+          click: row => alert(`Thêm đơn vị con vào ${row.name}`),
+        },
+        {
+          icon: 'delete',
+          title: 'Xóa đơn vị lá',
+          color: 'error',
+          hidden: row => !!row.children?.length,
+          click: row => alert(`Xóa ${row.name}`),
+        },
+      ],
+    },
+    filler: { enabled: true },
+    columns: [
+      { field: 'name', type: 'string', title: 'Đơn vị', width: '320px', filter: { default: '' } },
+      { field: 'role', type: 'string', title: 'Cấp', width: '140px' },
+      { field: 'headcount', type: 'number', title: 'Số nhân sự', width: '140px', align: 'right' },
+    ],
+    style: { shadow: true, maxHeight: '420px' },
+  }));
+
   readonly groupOption: SdTableOption<Employee> = {
     type: 'local',
     items: () => EMPLOYEES,
@@ -706,5 +799,17 @@ export class TableDemoComponent {
 
   totalOrderAmount(orders: Order[]): number {
     return (orders || []).reduce((sum, o) => sum + (o?.amount ?? 0), 0);
+  }
+
+  increaseTreeCommandIndent(): void {
+    this.treeCommandIndentSize.update(value => Math.min(value + 4, 32));
+  }
+
+  decreaseTreeCommandIndent(): void {
+    this.treeCommandIndentSize.update(value => Math.max(value - 4, 8));
+  }
+
+  describeOrgNode(row: OrgNode): string {
+    return `${row.name} (${row.role}, ${row.headcount} nhân sự)`;
   }
 }
