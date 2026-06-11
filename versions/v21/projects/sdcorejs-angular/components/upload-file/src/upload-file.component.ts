@@ -652,23 +652,32 @@ export class SdUploadFile<TArgs = any> {
 
   /**
    * Tải xuống một tệp tin dựa trên đối tượng PreviewFile.
-   * * Ưu tiên:
-   * 1. Tải xuống từ thuộc tính `file`.
-   * 2. Tải xuống từ thuộc tính `src`.
-   * 3. Gọi hàm download dựa vào `idOrKey`.
+   *
+   * Ưu tiên:
+   * 1. Nếu consumer CÓ implement hàm download (input `download` hoặc configuration) VÀ file có
+   *    `idOrKey` (file đã lưu trên server) → LUÔN gọi hàm download. KHÔNG mở `src` (URL lấy từ detail).
+   *    Dùng cho trường hợp tải file qua API có xác thực thay vì truy cập trực tiếp URL.
+   * 2. Ngược lại (không có hàm download, hoặc file local chưa upload nên chưa có `idOrKey`) →
+   *    tải trực tiếp từ `file` (blob) hoặc `src` (URL).
    *
    * @param previewFile Đối tượng PreviewFile chứa thông tin tệp tin.
    */
   onDownload = (previewFile: PreviewFile) => {
+    const downloadHandler = this.#getDownloadHandler();
+
+    // (1) Có hàm download + file đã lưu (idOrKey) → luôn trigger hàm download, bỏ qua URL từ detail.
+    if (downloadHandler && previewFile.idOrKey) {
+      downloadHandler(previewFile.idOrKey, this.args());
+      return;
+    }
+
+    // (2) Không có hàm download (hoặc file local chưa có idOrKey) → tải trực tiếp từ blob/URL.
     if (previewFile.file || previewFile.src) {
       BrowserUtilities.download(previewFile.file! || previewFile.src!, previewFile.fileName);
       return;
     }
-    if (previewFile.idOrKey) {
-      this.#getDownloadHandler()?.(previewFile.idOrKey, this.args());
-      return;
-    }
-    console.error('Invalid preview file', previewFile);
+
+    console.error('Invalid preview file (no download handler / file / src)', previewFile);
   };
 
   isLastVisibleOverlay(fileIndex: number): boolean {

@@ -55,7 +55,7 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 | `align` | `'left' \| 'center'` | `'left'` | Horizontal alignment of the thumbnail row. |
 | `upload` | `SdUploadFileFuncUpload<TArgs>` | `undefined` | `(files, args) => Promise<string[]>` — returns idOrKeys after server upload. Overrides config. |
 | `details` | `SdUploadFileFuncDetails<TArgs>` | `undefined` | `(idOrKeys, args) => Promise<SdUploadFileDetail[]>` — fetches metadata to render existing files. Overrides config. |
-| `download` | `SdUploadFileFuncDownload<TArgs>` | `undefined` | `(idOrKey, args) => …` — used when user clicks a file in viewed mode. Overrides config. |
+| `download` | `SdUploadFileFuncDownload<TArgs>` | `undefined` | `(idOrKey, args) => Promise<void>` — called when the user clicks a file. **When set, it ALWAYS takes priority over the detail `src` URL** for server files (those that have an `idOrKey`): the click triggers this handler instead of opening the URL. Use it for authenticated / proxied downloads. A freshly-picked local `File` (not yet uploaded, no `idOrKey`) still downloads directly from the blob. Overrides config. |
 | `type` | `'image' \| 'document' \| 'file'` | `'file'` | Layout switch: `image`=square thumbnails, `document`=row with file-type icon, `file`=mixed. |
 | `max` | `number` | `10` | Max number of files allowed in `model`. |
 | `maxOfImage` | `number` | `3` | When disabled (viewed mode), only first N image thumbs render with a `+N` overlay on the last to open the popup gallery. |
@@ -194,6 +194,12 @@ onSubmit = async () => {
   [model]="record.imageKeys">
 </sd-upload-file>
 ```
+
+> **Download behavior on click.** If a `download` handler is provided (via the `[download]` input or
+> `SD_UPLOAD_FILE_CONFIGURATION`), clicking a server file (one with an `idOrKey`) **always** invokes that
+> handler — it does NOT open the `src` URL returned by `details()`. This lets you route downloads through an
+> authenticated/proxied endpoint instead of exposing the raw CDN URL. Without a handler, the click falls back
+> to downloading directly from `src` (or the local `File` blob for not-yet-uploaded picks).
 
 ### 4. Centered image gallery, larger thumbnails
 ```html
