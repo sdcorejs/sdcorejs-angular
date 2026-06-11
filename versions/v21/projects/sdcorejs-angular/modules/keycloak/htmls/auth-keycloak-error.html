@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lỗi đăng nhập</title>
+    <!--
+      Trang lỗi tĩnh (fallback) cho luồng đăng nhập Keycloak — đích redirect khi keycloak.init() thất bại.
+
+      MẪU TỔNG QUÁT TỪ CORE: dùng được NGAY, không cần chỉnh sửa gì. Consumer COPY file này vào
+      `public/auth-keycloak-error.html` (hoặc tên theo `authErrorUrl`). Khi muốn, tuỳ biến tại các
+      placeholder bên dưới (logo, thông tin hỗ trợ, nội dung, ngôn ngữ).
+
+      Nguyên tắc: KHÔNG phụ thuộc JS/CSS/ảnh bên ngoài (bundle app có thể đã lỗi) → style để inline,
+      mặc định không nhúng tài nguyên nào.
+    -->
+    <style>
+      * { box-sizing: border-box; }
+      html, body { height: 100%; margin: 0; }
+      body {
+        display: flex; align-items: center; justify-content: center;
+        min-height: 100vh; padding: 24px;
+        font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        color: #1f2937; background: #f5f6f8;
+      }
+      .box {
+        max-width: 480px; width: 100%; text-align: center;
+        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        padding: 40px 32px; box-shadow: 0 1px 3px rgba(0, 0, 0, .08);
+      }
+      h1 { font-size: 20px; margin: 0 0 12px; }
+      p { margin: 8px 0; line-height: 1.6; color: #4b5563; font-size: 14px; }
+      .actions { margin-top: 24px; }
+      .btn {
+        display: inline-block; padding: 10px 20px; border-radius: 8px;
+        background: #2563eb; color: #fff; text-decoration: none; font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="box">
+      <!-- (Tuỳ chọn) Logo — bỏ comment và sửa src:
+           <img src="/your-logo.svg" alt="logo" style="height: 40px; margin-bottom: 24px;" /> -->
+      <h1>Có lỗi xảy ra khi đăng nhập</h1>
+      <p>Hệ thống đang gặp sự cố kỹ thuật trong quá trình xác thực. Trang chưa thể tải đầy đủ thông tin.</p>
+      <p>Vui lòng thử lại sau ít phút.</p>
+      <!-- (Tuỳ chọn) Thông tin hỗ trợ — bỏ comment và sửa email/đường dẫn:
+           <p>Cần hỗ trợ? Liên hệ <a href="mailto:you@example.com">you@example.com</a></p> -->
+      <div class="actions">
+        <a class="btn" href="/">Thử lại</a>
+      </div>
+    </main>
+  </body>
+</html>

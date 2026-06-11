@@ -145,7 +145,7 @@ describe('SdKeycloakService', () => {
       keycloakMock.onTokenExpired = () => {
         keycloakMock.updateToken(30).catch(() => {
           // eslint-disable-next-line no-console
-          console.warn('Không thể làm mới token. Yêu cầu đăng nhập lại.');
+          console.warn('Token refresh failed. Re-authentication required.');
           keycloakMock.login();
         });
       };
@@ -164,7 +164,7 @@ describe('SdKeycloakService', () => {
 
       keycloakMock.onTokenExpired = () => {
         keycloakMock.updateToken(30).catch(() => {
-          console.warn('Không thể làm mới token. Yêu cầu đăng nhập lại.');
+          console.warn('Token refresh failed. Re-authentication required.');
           keycloakMock.login();
         });
       };
