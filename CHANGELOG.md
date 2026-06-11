@@ -13,12 +13,12 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.6] - 2026-06-10
 
 Published: `@sdcorejs/angular@19.0.6` / `@20.0.6` / `@21.0.6` (npm dist-tag `latest`).
-Synced from `vn-angular@c986fbec`.
+Synced from `vn-angular@62048fed`.
 
 ### Added
 
-- **`forms/select` — footer actions** — hỗ trợ project custom action vào sticky footer của panel qua `ng-template[sdSelectFooterAction]`. Template nhận context `{ searchText }`, giữ đúng thứ tự khai báo, và event binding của consumer như `(click)="addNew(searchText)"` hoạt động bình thường. Synced từ `vn-angular@c986fbec`.
-- **`forms/select` — footer visibility modes** — thêm `when="always" | "empty" | "has-result"`: luôn hiện, chỉ hiện khi có search text nhưng không có option khớp, hoặc chỉ hiện khi filter còn kết quả. Synced từ `vn-angular@c986fbec`.
+- **`forms/select` — footer actions** — hỗ trợ project custom action vào sticky footer của panel qua `ng-template[sdSelectFooterAction]`. Template nhận context `{ searchText }`, giữ đúng thứ tự khai báo, và event binding của consumer như `(click)="addNew(searchText)"` hoạt động bình thường. Synced từ `vn-angular@62048fed`.
+- **`forms/select` — footer visibility modes** — thêm `when="always" | "empty" | "has-result"`: luôn hiện, chỉ hiện khi có search text nhưng không có option khớp, hoặc chỉ hiện khi filter còn kết quả. Synced từ `vn-angular@62048fed`.
 - **Showcase `/forms/select`** — bổ sung ví dụ đầy đủ cho footer actions: add button theo search text, nhiều action cùng lúc, consumer tự thêm padding, và ví dụ dùng `div role="button"` + custom CSS để action nhìn như một dropdown item không viền button.
 
 ### Changed
