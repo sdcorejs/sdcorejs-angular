@@ -50,6 +50,33 @@ const WORKSPACES = new Map([
 const EXCLUDE_FILES = new Set(['HANDOFF.md']);
 const EXCLUDE_DIRS = new Set(['node_modules', 'dist', '.angular', 'coverage', '.git']);
 
+// UTF-8-as-CP1252 double-encode mojibake (e.g. "Hiển" saved as "Hiá»ƒn"). Matches
+// only multi-char digraphs + C1 controls that never occur in valid Vietnamese/English,
+// so legitimate precomposed VN (ể U+1EC3) and uppercase words (ĐÃ, NÂNG) are NOT flagged.
+// eslint-disable-next-line no-control-regex
+const MOJIBAKE = /á»|áº|Æ°|Ä‘|Ã¡|Ã |Ã¢|Ã£|Ã©|Ã¨|Ã­|Ã¬|Ã³|Ã²|Ã´|Ãµ|Ãº|Ã¹|Ã½|Ã«|Ã¶|Ã¼|â€“|â€”|â€œ|â€™|â€¦|ï¿½|[-]/;
+
+// Fail-closed gate: scan every doc BEFORE creating output, refuse to publish if any
+// is mojibaked. The fix is upstream — repair the source in vn-angular, re-`npm run sync`.
+function assertNoMojibake(srcRoot) {
+  const hits = [];
+  for (const file of walk(srcRoot)) {
+    const lines = readFileSync(file, 'utf8').split(/\r?\n/);
+    const bad = [];
+    lines.forEach((l, i) => {
+      if (MOJIBAKE.test(l)) bad.push(i + 1);
+    });
+    if (bad.length) hits.push({ file: displayPath(file), lines: bad });
+  }
+  if (hits.length) {
+    const detail = hits.map(h => `  - ${h.file} (line${h.lines.length > 1 ? 's' : ''} ${h.lines.join(', ')})`).join('\n');
+    throw new Error(
+      `Refusing to publish: ${hits.length} doc(s) contain UTF-8-as-CP1252 mojibake:\n${detail}\n` +
+        `Fix the source in vn-angular, re-run \`npm run sync\`, then retry \`collect-docs\`.`,
+    );
+  }
+}
+
 function getArg(name) {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? process.argv[i + 1] : undefined;
@@ -259,6 +286,9 @@ function main() {
   if (!existsSync(srcRoot)) {
     throw new Error(`Synced library not found: ${srcRoot}. Run \`npm run sync\` first.`);
   }
+
+  // Fail-closed mojibake gate — runs before any output is created/overwritten.
+  assertNoMojibake(srcRoot);
 
   const version = resolveVersion(srcRoot);
   assertVersionMatchesWorkspace(version, workspaceMajor, workspace);
