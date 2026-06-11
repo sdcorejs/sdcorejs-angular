@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // Collect public API docs (*.md) from one synced Angular workspace into a
 // versioned, repo-owned archive under `published-docs/<version>/`, and refresh
-// the `published-docs/versions.json` registry.
+// the `published-docs/versions.json` registry + `published-docs/catalog.json`
+// aggregate.
 //
 // The archive is committed to the repo so every published version persists.
 // The deploy-pages workflow copies `published-docs/**` into the GitHub Pages
 // output, where an AI agent can fetch docs by URL without a local clone:
 //
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json
+//   https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/index.json
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/forms/select/sd-select.md
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json
@@ -143,6 +145,20 @@ function displayPath(path) {
   return rel && !rel.startsWith('..') ? rel : path;
 }
 
+function readJson(path, fallback) {
+  if (!existsSync(path)) return fallback;
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return fallback;
+  }
+}
+
+function majorOf(version) {
+  const m = version.match(/^(\d+)/);
+  return m ? Number(m[1]) : 0;
+}
+
 // Descending semver-ish comparison. Stable releases sort above prereleases.
 function cmpVersionDesc(a, b) {
   const parse = v => {
@@ -161,11 +177,84 @@ function cmpVersionDesc(a, b) {
   return 0;
 }
 
+function refreshDocsCatalog(outRoot, registry) {
+  const versions = [];
+
+  for (const entry of registry.versions || []) {
+    if (!entry?.version) continue;
+
+    const version = entry.version;
+    const indexPath = join(outRoot, version, 'index.json');
+    const index = readJson(indexPath, null);
+    if (!index) continue;
+
+    const docs = (index.docs || []).map(doc => ({
+      id: doc.id,
+      title: doc.title,
+      category: doc.category,
+      path: doc.path,
+      url: doc.url,
+    }));
+
+    const versionEntry = {
+      version,
+      major: majorOf(version),
+      released: index.released || entry.released || '',
+      count: index.count ?? docs.length,
+      baseUrl: index.baseUrl || `${BASE_URL}/${version}`,
+      index: entry.index || `${BASE_URL}/${version}/index.json`,
+      docs,
+    };
+    if (index.syncedFrom) versionEntry.syncedFrom = index.syncedFrom;
+
+    versions.push(versionEntry);
+  }
+
+  versions.sort((a, b) => cmpVersionDesc(a.version, b.version));
+
+  const majorsByName = new Map();
+  for (const item of versions) {
+    const key = String(item.major);
+    if (!majorsByName.has(key)) {
+      majorsByName.set(key, { major: item.major, latest: item.version, versions: [] });
+    }
+
+    majorsByName.get(key).versions.push({
+      version: item.version,
+      released: item.released,
+      count: item.count,
+      index: item.index,
+    });
+  }
+
+  const majors = [...majorsByName.values()]
+    .sort((a, b) => b.major - a.major)
+    .map(major => ({
+      ...major,
+      versions: major.versions.sort((a, b) => cmpVersionDesc(a.version, b.version)),
+    }));
+
+  const catalog = {
+    package: PACKAGE,
+    schemaVersion: 1,
+    baseUrl: BASE_URL,
+    registry: `${BASE_URL}/versions.json`,
+    latest: registry.latest || versions[0]?.version || '',
+    majors,
+    versions,
+  };
+
+  const catalogPath = join(outRoot, 'catalog.json');
+  writeFileSync(catalogPath, JSON.stringify(catalog, null, 2) + '\n');
+  console.log(`[collect-docs] catalog: ${versions.length} version(s) -> ${displayPath(catalogPath)}`);
+}
+
 function main() {
   const workspace = resolveWorkspace();
   const workspaceMajor = WORKSPACES.get(workspace);
   const srcRoot = join(REPO_ROOT, 'versions', workspace, 'projects', 'sdcorejs-angular');
   const outRoot = resolvePathArg('out-root', join(REPO_ROOT, 'published-docs'));
+  const registryPath = join(outRoot, 'versions.json');
 
   if (!existsSync(srcRoot)) {
     throw new Error(`Synced library not found: ${srcRoot}. Run \`npm run sync\` first.`);
@@ -181,6 +270,8 @@ function main() {
   if (existsSync(outVersionDir)) {
     if (hasFlag('skip-existing')) {
       console.log(`[collect-docs] skip existing ${PACKAGE}@${version}: ${outVersionLabel}/ already exists`);
+      const registry = readJson(registryPath, { package: PACKAGE, latest: version, baseUrl: BASE_URL, versions: [] });
+      refreshDocsCatalog(outRoot, registry);
       return;
     }
     if (!hasFlag('force')) {
@@ -219,7 +310,6 @@ function main() {
   if (syncedFrom) index.syncedFrom = syncedFrom;
   writeFileSync(join(outVersionDir, 'index.json'), JSON.stringify(index, null, 2) + '\n');
 
-  const registryPath = join(outRoot, 'versions.json');
   let registry = { package: PACKAGE, latest: version, baseUrl: BASE_URL, versions: [] };
   if (existsSync(registryPath)) {
     try {
@@ -235,6 +325,7 @@ function main() {
   registry.versions.sort((a, b) => cmpVersionDesc(a.version, b.version));
   registry.latest = registry.versions[0].version;
   writeFileSync(registryPath, JSON.stringify(registry, null, 2) + '\n');
+  refreshDocsCatalog(outRoot, registry);
 
   console.log(`[collect-docs] ${workspace} ${PACKAGE}@${version}: ${docs.length} docs -> ${outVersionLabel}/`);
   console.log(`[collect-docs] registry: ${registry.versions.length} version(s), latest=${registry.latest}`);

@@ -293,10 +293,15 @@ version that matches the installed package, then read the per-doc Markdown:
 
 ```
 https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json        # all versions + latest
+https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json         # all versions + every doc URL
 https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json    # newest version manifest
 https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/index.json # pinned version manifest
 https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/forms/select/sd-select.md
 ```
+
+`catalog.json` is the best single entry point for AI agents: it groups available releases by
+Angular major and includes every `{ id, title, category, path, url }` entry per version, so an
+agent can choose a target version first and then fetch the exact Markdown file it needs.
 
 Each `index.json` lists `{ id, title, category, path, url }` for ~79 docs (components, forms,
 directives, services, pipes, modules, utilities + SCSS/asset reference). Pin the version that
