@@ -17,5 +17,12 @@
     "chart.js",
     "pdfjs-dist"
   ],
-  "assets": ["assets"]
+  "assets": [
+    "assets",
+    {
+      "glob": "*.html",
+      "input": "modules/keycloak/htmls",
+      "output": "/modules/keycloak/htmls"
+    }
+  ]
 }
