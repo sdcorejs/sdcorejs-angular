@@ -3,6 +3,7 @@ name: Deploy showcase (v19) to GitHub Pages
 # Build showcase Angular app trong versions/v19 và deploy lên GitHub Pages.
 # Trigger:
 #   - Push lên branch main khi có thay đổi.
+#   - Sau khi workflow publish npm chạy xong thành công.
 #   - Manual dispatch để re-build on demand.
 #
 # Setup yêu cầu trong repo Settings > Pages:
@@ -22,6 +23,11 @@ on:
       - 'published-docs/**'
       - 'scripts/collect-*.mjs'
       - '.github/workflows/deploy-pages.yml'
+  workflow_run:
+    workflows:
+      - 'Publish @sdcorejs/angular to npm'
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -35,6 +41,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
