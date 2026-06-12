@@ -9,7 +9,7 @@ import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { Color } from '@sdcorejs/utils/models';
-import * as uuid from 'uuid';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 export interface DialogData {
   icon?: string;
@@ -52,7 +52,7 @@ export interface DialogData {
 export class DialogConfirmComponent {
   value: any;
   required = false;
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
   constructor(
     public dialogRef: MatDialogRef<DialogConfirmComponent>,
     @Inject(MAT_DIALOG_DATA) public data: DialogData

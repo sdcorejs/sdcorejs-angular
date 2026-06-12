@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { SdAutoidElement, SdAutoidAuditResult, SdAutoidMissing } from '../models/autoid-element.model';
-import { SD_AUTOID_DEFAULT_REQUIRE_SELECTORS } from '../models/autoid-inspector-config.model';
+import { AutoidElement, AutoidAuditResult, AutoidMissing } from '../models/autoid-element.model';
+import { AUTOID_DEFAULT_REQUIRE_SELECTORS } from '../models/autoid-inspector-config.model';
 
 @Injectable({ providedIn: 'root' })
 export class SdAutoidAuditService {
@@ -9,11 +9,8 @@ export class SdAutoidAuditService {
    * - duplicates: map autoid → count khi count > 1
    * - missing: element khớp selector yêu cầu nhưng KHÔNG có [data-autoid]
    */
-  audit(
-    elements: SdAutoidElement[],
-    options: { requireSelectors?: ReadonlyArray<string>; root?: HTMLElement } = {}
-  ): SdAutoidAuditResult {
-    const requireSelectors = options.requireSelectors ?? SD_AUTOID_DEFAULT_REQUIRE_SELECTORS;
+  audit(elements: AutoidElement[], options: { requireSelectors?: readonly string[]; root?: HTMLElement } = {}): AutoidAuditResult {
+    const requireSelectors = options.requireSelectors ?? AUTOID_DEFAULT_REQUIRE_SELECTORS;
     const root = options.root ?? document.body;
 
     const duplicates: Record<string, number> = {};
@@ -34,11 +31,11 @@ export class SdAutoidAuditService {
     };
   }
 
-  private findMissing(root: HTMLElement, selectors: ReadonlyArray<string>): SdAutoidMissing[] {
+  private findMissing(root: HTMLElement, selectors: readonly string[]): AutoidMissing[] {
     if (!selectors.length) return [];
     const joined = selectors.join(',');
     const nodes = root.querySelectorAll<HTMLElement>(joined);
-    const missing: SdAutoidMissing[] = [];
+    const missing: AutoidMissing[] = [];
 
     nodes.forEach(node => {
       // Coi là missing khi element + mọi descendant đều không có data-autoid.
@@ -84,10 +81,8 @@ export class SdAutoidAuditService {
   }
 
   private resolveNameHint(node: HTMLElement): string {
-    return node.getAttribute('label')
-      ?? node.getAttribute('placeholder')
-      ?? node.getAttribute('aria-label')
-      ?? node.getAttribute('title')
-      ?? '';
+    return (
+      node.getAttribute('label') ?? node.getAttribute('placeholder') ?? node.getAttribute('aria-label') ?? node.getAttribute('title') ?? ''
+    );
   }
 }

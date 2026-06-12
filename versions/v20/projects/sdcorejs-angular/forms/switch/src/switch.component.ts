@@ -1,3 +1,4 @@
+import { Utilities } from '@sdcorejs/utils/fns';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   AfterViewInit,
@@ -23,7 +24,6 @@ import { SdFormControl, sdFormControlState, SdViewed, SdViewedInput, sdViewedInl
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 
 @Component({
   selector: 'sd-switch',
@@ -46,8 +46,8 @@ import * as uuid from 'uuid';
 export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);
 
-  id = `I${uuid.v4()}`;
-  #name = uuid.v4();
+  id = `I${Utilities.generateUuid()}`;
+  #name = Utilities.generateUuid();
   #model: boolean | null | undefined = false;
   formControl = new SdFormControl();
   #subscription = new Subscription();

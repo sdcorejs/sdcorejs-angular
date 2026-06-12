@@ -3,14 +3,14 @@
  * Every field is OPTIONAL — only present when the component actually renders that attribute.
  * All values are the raw DOM string (already "true"/"false" or stringified number/value).
  */
-export interface SdAutoidElementState {
+export interface AutoidElementState {
   disabled?: string;
   loading?: string;
   empty?: string;
   invalid?: string;
   opened?: string;
   count?: string;
-  /** Serialized DOM `data-value` (NOT `input.value`). Distinct from `SdAutoidElement.text` field. */
+  /** Serialized DOM `data-value` (NOT `input.value`). Distinct from `AutoidElement.text` field. */
   dataValue?: string;
   // Validation meta — new in v0.0.1
   required?: string;
@@ -25,7 +25,7 @@ export interface SdAutoidElementState {
   message?: string;
 }
 
-export interface SdAutoidElement {
+export interface AutoidElement {
   stt: number;
   name: string;
   autoid: string;
@@ -39,7 +39,7 @@ export interface SdAutoidElement {
   xpath: string;
   duplicate: boolean;
   /** Runtime state attributes read from the DOM. Always an object — may be empty `{}`. */
-  state: SdAutoidElementState;
+  state: AutoidElementState;
   /**
    * `data-autoid` of the closest ancestor `<sd-table>` that contains this element,
    * or `undefined` if this element is top-level (not inside any `sd-table`).
@@ -56,17 +56,17 @@ export interface SdAutoidElement {
   warning?: string;
 }
 
-export interface SdAutoidMissing {
+export interface AutoidMissing {
   tag: string;
   selector: string;
   outerHtmlPreview: string;
   nameHint: string;
 }
 
-export interface SdAutoidAuditResult {
+export interface AutoidAuditResult {
   total: number;
   duplicates: Record<string, number>;
   duplicateCount: number;
-  missing: SdAutoidMissing[];
+  missing: AutoidMissing[];
   missingCount: number;
 }

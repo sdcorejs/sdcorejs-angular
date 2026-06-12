@@ -1,4 +1,4 @@
-@let _current = model();
+@let _model = model();
 
 <button
   type="button"
@@ -17,7 +17,7 @@
       type="button"
       mat-menu-item
       class="c-op-row"
-      [class.c-op-active]="item.value === _current"
+      [class.c-op-active]="item.value === _model"
       (click)="select(item.value)">
       <span class="c-op-icon" [innerHTML]="item.icon"></span>
       <span class="c-op-label">{{ item.display }}</span>

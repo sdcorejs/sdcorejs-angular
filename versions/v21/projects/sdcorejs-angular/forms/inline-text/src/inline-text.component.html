@@ -1,6 +1,6 @@
 @let _autoId = autoId();
 @let _placeholder = placeholder();
-@let _size = sizeOf();
+@let _sizeOf = sizeOf();
 @let _control = control();
 
 @if (_control) {
@@ -10,7 +10,7 @@
     type="text"
     [formControl]="_control"
     [placeholder]="_placeholder"
-    [size]="_size"
+    [size]="_sizeOf"
     [attr.data-autoId]="_autoId"
     (input)="onInput($event)"
     (focus)="onFocus($event)"
@@ -28,7 +28,7 @@
     [value]="currentText()"
     [disabled]="disabled()"
     [placeholder]="_placeholder"
-    [size]="_size"
+    [size]="_sizeOf"
     [attr.data-autoId]="_autoId"
     (input)="onInput($event)"
     (focus)="onFocus($event)"

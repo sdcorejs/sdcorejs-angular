@@ -1,21 +1,21 @@
 <sd-ckeditor-styles />
-@let lbl = label();
-@let hText = helperText();
-@let hideErr = hideInlineError();
-@let errMsg = errorMessage;
-@let req = required();
-@let maxLen = maxlength();
-@let showCounter = !!maxLen && !formControl.disabled && !hideErr;
+@let _label = label();
+@let _helperText = helperText();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage;
+@let _required = required();
+@let _maxLength = maxlength();
+@let _showCounter = !!_maxLength && !formControl.disabled && !_hideInlineError;
 
-@if (lbl) {
-  <sd-label [label]="lbl" [required]="req" [helperText]="hText"></sd-label>
+@if (_label) {
+  <sd-label [label]="_label" [required]="_required" [helperText]="_helperText"></sd-label>
 }
 
 <div
   class="sd-editor"
   [class.sd-editor--readonly]="readonly()"
   [class.sd-editor--error]="formControl.invalid && formControl.touched"
-  [class.has-counter]="showCounter"
+  [class.has-counter]="_showCounter"
   [style.--sd-editor-content-min-height]="height()"
   [style.--sd-editor-content-max-height]="maxHeight()"
   [attr.data-autoId]="autoId()"
@@ -23,19 +23,19 @@
   [attr.data-empty]="dataEmpty()">
   <ckeditor [editor]="Editor" [config]="editorConfig()" [disabled]="formControl.disabled" (ready)="onReady($event)"></ckeditor>
 
-  @if (showCounter) {
+  @if (_showCounter) {
     <div class="sd-editor-counter-row">
-      <span class="sd-editor-counter" [class.sd-editor-counter--over]="isOverLimit()"> {{ _textLength() }}/{{ maxLen }} </span>
+      <span class="sd-editor-counter" [class.sd-editor-counter--over]="isOverLimit()"> {{ _textLength() }}/{{ _maxLength }} </span>
     </div>
   }
 
-  @if (hideErr && errMsg && formControl.touched) {
-    <mat-icon class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above">error</mat-icon>
+  @if (_hideInlineError && _errorMessage && formControl.touched) {
+    <mat-icon class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above">error</mat-icon>
   }
 </div>
 
 <div class="sd-editor-footer">
-  @if (!hideErr && errMsg && formControl.touched) {
-    <mat-error>{{ errMsg }}</mat-error>
+  @if (!_hideInlineError && _errorMessage && formControl.touched) {
+    <mat-error>{{ _errorMessage }}</mat-error>
   }
 </div>

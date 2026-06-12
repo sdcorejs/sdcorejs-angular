@@ -17,6 +17,7 @@ import {
   TemplateRef,
   viewChild,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import {
   AsyncValidatorFn,
   FormControl,
@@ -44,7 +45,6 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 import { SdRemovableChipPipe } from './pipes';
 
 class SdChipErrorStateMatcher implements ErrorStateMatcher {
@@ -82,7 +82,7 @@ export class SdChip implements AfterViewInit {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
   #subscription = new Subscription();
-  #name = uuid.v4();
+  #name = Utilities.generateUuid();
 
   // Signals - inputs (accept null|undefined at boundary, transform to canonical)
   autoIdInput = input<string | undefined, string | null | undefined>(undefined, {

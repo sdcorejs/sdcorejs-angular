@@ -1,21 +1,21 @@
-@let lblDef = sdLabelDef();
-@let lbl = label();
-@let app = appearance();
-@let req = required();
-@let hideErr = hideInlineError();
-@let errMsg = errorMessage();
-@let hText = helperText();
-@let minD = resolvedMin();
-@let maxD = resolvedMax();
-@let sz = size();
+@let _sdLabelDef = sdLabelDef();
+@let _label = label();
+@let _appearance = appearance();
+@let _required = required();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _helperText = helperText();
+@let _resolvedMin = resolvedMin();
+@let _resolvedMax = resolvedMax();
+@let _size = size();
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = !!(control1.value || control2.value);
 
 @if (isViewed()) {
   <sd-view
-    [label]="lbl"
-    [labelTemplate]="lblDef?.templateRef ?? null"
+    [label]="_label"
+    [labelTemplate]="_sdLabelDef?.templateRef ?? null"
     [value]="valueModel()"
     [display]="formatted()"
     [valueTemplate]="sdValueTemplate()">
@@ -25,13 +25,13 @@
     <!-- why: inline — sd-view là "mặt" + trigger; range editor render ẩn (.sd-inline-editor) chỉ để mở picker. -->
     <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
       <sd-view
-        [label]="lbl"
-        [labelTemplate]="lblDef?.templateRef ?? null"
+        [label]="_label"
+        [labelTemplate]="_sdLabelDef?.templateRef ?? null"
         [value]="valueModel()"
         [display]="formatted()"
         [valueTemplate]="sdValueTemplate()">
       </sd-view>
-      @if (clearable() && _hasValue && !req && !formControl.disabled) {
+      @if (clearable() && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="$event.stopPropagation(); clear()" title="Xóa" aria-label="Xóa">
           <mat-icon>close</mat-icon>
         </button>
@@ -40,31 +40,31 @@
   }
 
   <div [class.sd-inline-editor]="_isInline">
-@if (!app && lblDef?.templateRef) {
-  <ng-container *ngTemplateOutlet="lblDef!.templateRef"> </ng-container>
+@if (!_appearance && _sdLabelDef?.templateRef) {
+  <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
 }
-@if (!app && lbl && !lblDef?.templateRef) {
-  <sd-label [label]="lbl" [required]="req"></sd-label>
+@if (!_appearance && _label && !_sdLabelDef?.templateRef) {
+  <sd-label [label]="_label" [required]="_required"></sd-label>
 }
 
 <mat-form-field
-  [class.sd-md]="sz === 'md'"
-  [class.sd-sm]="sz === 'sm'"
-  [class.hide-inline-error]="hideErr"
-  [appearance]="app!"
+  [class.sd-md]="_size === 'md'"
+  [class.sd-sm]="_size === 'sm'"
+  [class.hide-inline-error]="_hideInlineError"
+  [appearance]="_appearance!"
   [floatLabel]="floatLabel()">
-  @if (app && lbl) {
+  @if (_appearance && _label) {
     <mat-label style="display: inline-block">
       <div style="display: flex; align-items: center; gap: 4px">
-        <span>{{ lbl }}</span>
-        @if (hText) {
-          <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+        <span>{{ _label }}</span>
+        @if (_helperText) {
+          <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
         }
       </div>
     </mat-label>
   }
 
-  <mat-date-range-input [max]="maxD" [min]="minD" [rangePicker]="picker" [disabled]="formControl.disabled" [required]="req"
+  <mat-date-range-input [max]="_resolvedMax" [min]="_resolvedMin" [rangePicker]="picker" [disabled]="formControl.disabled" [required]="_required"
     [attr.data-autoId]="autoId()"
     [attr.data-disabled]="dataDisabled()"
     [attr.data-invalid]="dataInvalid()"
@@ -84,7 +84,7 @@
       (focus)="onFocus()"
       (blur)="onBlur()"
       (keyup.enter)="onEnter()"
-      [attr.data-qclabel]="lbl"
+      [attr.data-qclabel]="_label"
       [attr.data-autoId]="autoId() + '-from'" />
 
     <input
@@ -99,16 +99,16 @@
       (focus)="onFocus()"
       (blur)="onBlur()"
       (keyup.enter)="onEnter()"
-      [attr.data-qclabel]="lbl"
+      [attr.data-qclabel]="_label"
       [attr.data-autoId]="autoId() + '-to'" />
   </mat-date-range-input>
 
-  @if (hideErr && errMsg && (formControl.touched || control1.touched || control2.touched)) {
-    <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+  @if (_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
+    <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
   }
 
-  @if (!hideErr && errMsg && (formControl.touched || control1.touched || control2.touched)) {
-    <mat-error>{{ errMsg }}</mat-error>
+  @if (!_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
+    <mat-error>{{ _errorMessage }}</mat-error>
   }
 
   @if ((control1.value || control2.value) && !_bare) {

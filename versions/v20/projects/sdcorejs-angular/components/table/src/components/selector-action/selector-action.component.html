@@ -1,11 +1,11 @@
 @let _actions = selectedTableItems() | actionFilter: tableOption()?.selector?.actions;
-@let _selected = selectedTableItems();
+@let _selectedTableItems = selectedTableItems();
 @let _autoId = autoId();
 
 <sd-quick-action [opened]="opened()">
   <div class="d-flex align-items-center" sdMessage>
     <div class="c-bg-length">
-      <span class="c-length">{{ _selected?.length }}</span>
+      <span class="c-length">{{ _selectedTableItems?.length }}</span>
     </div>
     <div class="c-message">
       {{ message() }}

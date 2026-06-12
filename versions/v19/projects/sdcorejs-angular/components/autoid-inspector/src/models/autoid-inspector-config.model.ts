@@ -1,12 +1,19 @@
-export interface SdAutoidInspectorConfig {
-  /** Selector phụ thêm cần audit (mặc định component đã cover sd-* form + sd-button). */
+import { InjectionToken } from '@angular/core';
+
+export interface SdAutoidInspectorConfiguration {
+  /** Base URL cua backend sinh E2E test, vi du `http://localhost:3012`. */
+  host?: string;
+  /** Selector phu them can audit (mac dinh component da cover sd-* form + sd-button). */
   extraRequireSelectors?: string[];
-  /** Root scan, mặc định document.body. */
+  /** Root scan, mac dinh document.body. */
   root?: HTMLElement;
 }
 
-/** Selector mặc định coi là phải có data-autoid. */
-export const SD_AUTOID_DEFAULT_REQUIRE_SELECTORS: ReadonlyArray<string> = [
+/** Cau hinh global cho AutoId Inspector. `[config]` tren component co the override theo instance. */
+export const SD_AUTOID_INSPECTOR_CONFIGURATION = new InjectionToken<SdAutoidInspectorConfiguration>('sd.autoid-inspector.configuration');
+
+/** Selector mac dinh coi la phai co data-autoid. */
+export const AUTOID_DEFAULT_REQUIRE_SELECTORS: readonly string[] = [
   'sd-input',
   'sd-input-number',
   'sd-textarea',

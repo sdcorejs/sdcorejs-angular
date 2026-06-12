@@ -36,31 +36,17 @@ module.exports = tseslint.config(
       '@angular-eslint/no-input-rename': 'off',
       '@angular-eslint/directive-selector': [
         'error',
-        // Chìa ra ngoài thì dùng prefix sd
         {
           type: 'attribute',
-          prefix: 'sd',
-          style: 'camelCase',
-        },
-        // Sử dụng nội bộ thì dùng prefix lib
-        {
-          type: 'attribute',
-          prefix: 'lib',
+          prefix: ['sd', 'lib'],
           style: 'camelCase',
         },
       ],
       '@angular-eslint/component-selector': [
         'error',
-        // Chìa ra ngoài thì dùng prefix sd
         {
           type: 'element',
-          prefix: 'sd',
-          style: 'kebab-case',
-        },
-        // Sử dụng nội bộ thì dùng prefix lib
-        {
-          type: 'element',
-          prefix: 'lib',
+          prefix: ['sd', 'lib'],
           style: 'kebab-case',
         },
       ],
@@ -69,10 +55,7 @@ module.exports = tseslint.config(
   },
   {
     files: ['**/*.html'],
-    extends: [
-      ...angular.configs.templateRecommended,
-      ...angular.configs.templateAccessibility,
-    ],
+    extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
     rules: {},
   }
 );

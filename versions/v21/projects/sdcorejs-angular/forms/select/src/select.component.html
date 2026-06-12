@@ -136,16 +136,16 @@
               </div>
             }
 
-            @let asyncItems = filteredItems();
-            @if (asyncItems) {
-              @if (!asyncItems.length && !loading()) {
+            @let _filteredItems = filteredItems();
+            @if (_filteredItems) {
+              @if (!_filteredItems.length && !loading()) {
                 <mat-option class="sd-empty" disabled>
                   <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
                 </mat-option>
               } @else {
                 @let iDefTpl = itemDef()?.templateRef;
                 @if (_valueField && _displayField) {
-                  @for (item of asyncItems; track itemValue(item)) {
+                  @for (item of _filteredItems; track itemValue(item)) {
                     <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
                       <div>
                         @if (iDefTpl) {
@@ -157,7 +157,7 @@
                     </mat-option>
                   }
                 } @else if (!_valueField && !_displayField) {
-                  @for (item of asyncItems; track item) {
+                  @for (item of _filteredItems; track item) {
                     <mat-option [value]="item">
                       <div>
                         @if (iDefTpl) {
@@ -178,10 +178,10 @@
               </mat-option>
             }
 
-            @let renderedFooterActions = visibleFooterActions();
-            @if (renderedFooterActions.length) {
+            @let _visibleFooterActions = visibleFooterActions();
+            @if (_visibleFooterActions.length) {
               <div class="sd-select-footer-actions">
-                @for (action of renderedFooterActions; track action) {
+                @for (action of _visibleFooterActions; track action) {
                   <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
                 }
               </div>
@@ -269,9 +269,9 @@
               </div>
             }
 
-            @let asyncItems = filteredItems();
-            @if (asyncItems) {
-              @if (!asyncItems.length && !loading()) {
+            @let _filteredItems = filteredItems();
+            @if (_filteredItems) {
+              @if (!_filteredItems.length && !loading()) {
                 <mat-option class="sd-empty" disabled>
                   <img class="sd-image-data-empty" alt="empty-image" style="width: 95px" />
                 </mat-option>
@@ -279,7 +279,7 @@
                 @let iDefTpl = itemDef()?.templateRef;
 
                 @if (_valueField && _displayField) {
-                  @for (item of asyncItems; track itemValue(item)) {
+                  @for (item of _filteredItems; track itemValue(item)) {
                     <mat-option [value]="itemValue(item)" [disabled]="itemDisabled(item)">
                       <div>
                         @if (iDefTpl) {
@@ -291,7 +291,7 @@
                     </mat-option>
                   }
                 } @else if (!_valueField && !_displayField) {
-                  @for (item of asyncItems; track item) {
+                  @for (item of _filteredItems; track item) {
                     <mat-option [value]="item">
                       <div>
                         @if (iDefTpl) {
@@ -312,10 +312,10 @@
               </mat-option>
             }
 
-            @let renderedFooterActions = visibleFooterActions();
-            @if (renderedFooterActions.length) {
+            @let _visibleFooterActions = visibleFooterActions();
+            @if (_visibleFooterActions.length) {
               <div class="sd-select-footer-actions">
-                @for (action of renderedFooterActions; track action) {
+                @for (action of _visibleFooterActions; track action) {
                   <ng-container *ngTemplateOutlet="action.templateRef; context: footerActionContext()"> </ng-container>
                 }
               </div>

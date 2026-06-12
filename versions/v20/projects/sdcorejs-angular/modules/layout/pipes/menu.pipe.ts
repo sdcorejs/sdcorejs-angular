@@ -1,4 +1,3 @@
-import * as uuid from 'uuid';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
 
@@ -72,7 +71,7 @@ export class MenuPipe implements PipeTransform {
       }
       return {
         ...menu,
-        id: uuid.v4(),
+        id: Utilities.generateUuid(),
       };
     };
 
@@ -104,6 +103,6 @@ export class MenuPipe implements PipeTransform {
       {} as Record<string, any>
     );
 
-    return Object.keys(hashData).length > 0 ? Utilities.hash(hashData) : uuid.v4();
+    return Object.keys(hashData).length > 0 ? Utilities.hash(hashData) : Utilities.generateUuid();
   };
 }

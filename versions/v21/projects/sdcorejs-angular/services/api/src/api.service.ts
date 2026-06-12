@@ -5,7 +5,6 @@ import { SdCacheService } from '@sdcorejs/angular/services/cache';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { lastValueFrom, Observable } from 'rxjs';
 import { catchError, map, shareReplay, timeout } from 'rxjs/operators';
-import { v4 } from 'uuid';
 import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler, SdDeleteOption, SdGetOption, SdPostOption, SdPutOption } from './api.model';
 
 // Gom nhóm các Option lại cho gọn
@@ -168,7 +167,7 @@ export class SdApiService {
   #generateKey = (url: string, method: HttpMethod, body: any, option?: SdHttpOptions): string => {
     // FormData không hash được nội dung file, luôn generate key mới
     if (body instanceof FormData || option?.autoCache === false) {
-      return v4();
+      return Utilities.generateUuid();
     }
     return Utilities.hash({
       url,

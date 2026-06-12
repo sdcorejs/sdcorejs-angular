@@ -17,6 +17,7 @@ import {
   TemplateRef,
   viewChild,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import {
   AsyncValidatorFn,
   FormControl,
@@ -47,7 +48,6 @@ import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/dat
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 import { SdRemovableChipPipe } from './pipes';
 
 class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
@@ -88,7 +88,7 @@ export class SdChipCalendar implements AfterViewInit {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
   #subscription = new Subscription();
-  #name = uuid.v4();
+  #name = Utilities.generateUuid();
   #isBlurring = false;
 
   menuTrigger = viewChild(MatMenuTrigger);

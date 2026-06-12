@@ -1,13 +1,13 @@
-@let lbl = label();
-@let app = appearance();
-@let hideErr = hideInlineError();
-@let errMsg = errorMessage();
-@let hText = helperText();
-@let req = required();
-@let dField = displayField();
-@let disField = disabledField();
+@let _label = label();
+@let _appearance = appearance();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _helperText = helperText();
+@let _required = required();
+@let _displayField = displayField();
+@let _disabledField = disabledField();
 @let iDefTpl = itemDef()?.templateRef;
-@let isLoad = loading();
+@let _loading = loading();
 @let nVal = $any(normalizedValue());
 @let _isInline = isInline();
 @let _bare = _isInline;
@@ -15,7 +15,7 @@
 
 @if (isViewed()) {
   <sd-view
-    [label]="lbl"
+    [label]="_label"
     [labelTemplate]="sdLabelTemplate()"
     [value]="nVal"
     [display]="display()"
@@ -27,14 +27,14 @@
     <!-- why: inline — sd-view là "mặt" + trigger; autocomplete editor render ẩn (.sd-inline-editor) chỉ để mở panel. -->
     <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
       <sd-view
-        [label]="lbl"
+        [label]="_label"
         [labelTemplate]="sdLabelTemplate()"
         [value]="nVal"
         [display]="display()"
         [hyperlink]="hyperlink()"
         [valueTemplate]="viewTemplate()">
       </sd-view>
-      @if (clearable() && _hasValue && !req && !formControl.disabled) {
+      @if (clearable() && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="clear($event)" title="Xóa" aria-label="Xóa">
           <mat-icon>close</mat-icon>
         </button>
@@ -42,10 +42,10 @@
     </span>
   }
 
-  @if (!app) {
+  @if (!_appearance) {
     <ng-content select="[sdLabel]">
-      @if (lbl) {
-        <sd-label [label]="lbl" [required]="req"></sd-label>
+      @if (_label) {
+        <sd-label [label]="_label" [required]="_required"></sd-label>
       }
     </ng-content>
   }
@@ -60,15 +60,15 @@
       <mat-form-field
         [class.sd-md]="size() === 'md'"
         [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="hideErr"
+        [class.hide-inline-error]="_hideInlineError"
         [floatLabel]="nVal ? 'always' : 'auto'"
-        [appearance]="app || 'outline'">
-        @if (app && lbl) {
+        [appearance]="_appearance || 'outline'">
+        @if (_appearance && _label) {
           <mat-label style="display: inline-block">
             <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ lbl }}</span>
-              @if (hText) {
-                <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+              <span>{{ _label }}</span>
+              @if (_helperText) {
+                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
               }
             </div>
           </mat-label>
@@ -86,7 +86,7 @@
           [autocomplete]="id"
           autocorrect="off"
           [errorStateMatcher]="matcher"
-          [required]="req"
+          [required]="_required"
           #input
           #autocompleteTrigger="matAutocompleteTrigger"
           [attr.data-autoId]="autoId()"
@@ -99,34 +99,34 @@
           [attr.data-error-message]="dataErrorMessage()"
           aria-hidden="true" />
 
-        @if (!isLoad && nVal && !inputControl.disabled && !_bare) {
+        @if (!_loading && nVal && !inputControl.disabled && !_bare) {
           <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
             <mat-icon>close</mat-icon>
           </button>
-        } @else if (isLoad) {
+        } @else if (_loading) {
           <mat-spinner [diameter]="20" matSuffix></mat-spinner>
         } @else {
           <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>search</mat-icon>
         }
 
         <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelect($event.option.value)" class="sd-autocomplete-panel">
-          @let itemsList = filteredItems();
+          @let _filteredItems = filteredItems();
 
-          @if (itemsList?.length) {
-            @for (item of itemsList; track $index) {
+          @if (_filteredItems?.length) {
+            @for (item of _filteredItems; track $index) {
               <mat-option
                 [value]="item"
                 matTooltipPosition="above"
-                [matTooltip]="dField ? getNestedValue(item, dField) : item"
-                [disabled]="disField ? getNestedValue(item, disField) : false">
+                [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
+                [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false">
                 @if (iDefTpl) {
                   <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
                 } @else {
-                  {{ dField ? getNestedValue(item, dField) : item }}
+                  {{ _displayField ? getNestedValue(item, _displayField) : item }}
                 }
               </mat-option>
             }
-          } @else if (!itemsList?.length && inputControl.value && !isTyping() && !isLoad) {}
+          } @else if (!_filteredItems?.length && inputControl.value && !isTyping() && !_loading) {}
 
           @if (addable() && sdAdd.observed) {
             <mat-option class="sd__option--add" (keyup.Space)="$event.stopPropagation()" disabled="true">
@@ -138,12 +138,12 @@
           }
         </mat-autocomplete>
 
-        @if (hideErr && errMsg && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
         }
 
-        @if (!hideErr && errMsg && formControl.touched) {
-          <mat-error>{{ errMsg }}</mat-error>
+        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-error>{{ _errorMessage }}</mat-error>
         }
       </mat-form-field>
   </div>

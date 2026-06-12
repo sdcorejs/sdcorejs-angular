@@ -1,18 +1,18 @@
-@let _lbl = label();
-@let _app = appearance();
-@let _req = required();
-@let _viewed = isViewed();
-@let _hideErr = hideInlineError();
-@let _viewDef = sdViewDef();
+@let _label = label();
+@let _appearance = appearance();
+@let _required = required();
+@let _isViewed = isViewed();
+@let _hideInlineError = hideInlineError();
+@let _sdViewDef = sdViewDef();
 @let _labelTemplate = (sdLabelTemplate() ?? sdLabelDef()?.templateRef) || undefined;
-@let _valueTemplate = (sdValueTemplate() ?? _viewDef?.templateRef) || undefined;
-@let _errMsg = errorMessage();
+@let _valueTemplate = (sdValueTemplate() ?? _sdViewDef?.templateRef) || undefined;
+@let _errorMessage = errorMessage();
 @let _size = size();
 @let _removable = removable();
 
-@if (_viewed) {
+@if (_isViewed) {
   <sd-view
-    [label]="_lbl"
+    [label]="_label"
     [labelTemplate]="_labelTemplate"
     [value]="formControl.value"
     [display]="formControl.value"
@@ -20,32 +20,32 @@
     [valueTemplate]="_valueTemplate">
   </sd-view>
 } @else {
-  @if (!_app && _labelTemplate) {
+  @if (!_appearance && _labelTemplate) {
     <ng-container *ngTemplateOutlet="_labelTemplate"></ng-container>
   }
-  @if (!_app && _lbl && !_labelTemplate) {
-    <sd-label [label]="_lbl" [required]="_req"></sd-label>
+  @if (!_appearance && _label && !_labelTemplate) {
+    <sd-label [label]="_label" [required]="_required"></sd-label>
   }
 
   <div
     class="d-flex align-items-center"
-    [class.sd-view]="!!_viewDef?.templateRef"
+    [class.sd-view]="!!_sdViewDef?.templateRef"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
     (keydown.enter)="onClick()"
     tabindex="0"
     (click)="onClick()">
-    @if (_viewDef?.templateRef && !isFocused) {
-      <ng-container *ngTemplateOutlet="_viewDef!.templateRef; context: { value: formControl.value }"></ng-container>
+    @if (_sdViewDef?.templateRef && !isFocused) {
+      <ng-container *ngTemplateOutlet="_sdViewDef!.templateRef; context: { value: formControl.value }"></ng-container>
     } @else {
       <mat-form-field
         [class.sd-md]="_size === 'md'"
         [class.sd-sm]="_size === 'sm'"
-        [class.hide-inline-error]="_hideErr"
-        [appearance]="_app"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance"
         [floatLabel]="floatLabel()">
-        @if (_app && _lbl) {
-          <mat-label>{{ _lbl }}</mat-label>
+        @if (_appearance && _label) {
+          <mat-label>{{ _label }}</mat-label>
         }
         <mat-chip-grid [formControl]="formControl" #chipList [class.sd-md]="_size === 'md'" [class.sd-sm]="_size === 'sm'">
           @for (item of formControl.value; track $index) {
@@ -67,7 +67,7 @@
           <input
             class="sd-chip-input"
             [formControl]="inputControl"
-            [placeholder]="placeholder() || _lbl"
+            [placeholder]="placeholder() || _label"
             [matChipInputFor]="chipList"
             [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
             (matChipInputTokenEnd)="onAdd($event)"
@@ -75,7 +75,7 @@
             [errorStateMatcher]="matcher"
             (focus)="onFocus()"
             (blur)="onBlur()"
-            [required]="_req"
+            [required]="_required"
             matInput
             [attr.data-autoId]="autoId()"
             [attr.data-disabled]="dataDisabled()"
@@ -86,12 +86,12 @@
             [attr.data-error-message]="dataErrorMessage()"
             #input />
         </mat-chip-grid>
-        @if (_hideErr && _errMsg && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errMsg" matTooltipPosition="above"> error </mat-icon>
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
         }
 
-        @if (!_hideErr && _errMsg && formControl.touched) {
-          <mat-error>{{ _errMsg }}</mat-error>
+        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-error>{{ _errorMessage }}</mat-error>
         }
       </mat-form-field>
     }

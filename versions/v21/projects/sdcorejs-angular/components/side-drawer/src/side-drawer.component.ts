@@ -19,7 +19,7 @@ import {
   viewChild
 } from '@angular/core';
 import { SdLoadingService } from '@sdcorejs/angular/services';
-import * as uuid from 'uuid';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { fromEvent, merge, Observable, Subject } from 'rxjs';
 import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators';
 
@@ -32,7 +32,7 @@ import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators'
   imports: [CommonModule, PortalModule],
 })
 export class SdSideDrawer {
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
   
   portal = viewChild.required(CdkPortal);
   

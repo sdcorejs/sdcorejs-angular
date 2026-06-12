@@ -1,78 +1,78 @@
-@let btnType = type();
-@let btnLoad = loading();
-@let btnTitle = title();
-@let pIcon = prefixIcon();
-@let sIcon = suffixIcon();
-@let fSet = fontSet();
-@let hType = htmlType();
+@let _type = type();
+@let _loading = loading();
+@let _title = title();
+@let _prefixIcon = prefixIcon();
+@let _suffixIcon = suffixIcon();
+@let _fontSet = fontSet();
+@let _htmlType = htmlType();
 @let _disabled = disabled();
 @let _color = color();
 @let _autoId = autoId();
 @let _width = width();
 @let _tooltip = tooltip();
 
-@if (btnType === 'fill') {
+@if (_type === 'fill') {
   <button
     mat-flat-button
     class="c-button c-fill"
-    [type]="hType"
+    [type]="_htmlType"
     [ngClass]="buttonClasses()"
     [disabled]="_disabled"
     [color]="_color"
     [attr.data-autoId]="_autoId"
     [attr.data-disabled]="_disabled ? 'true' : 'false'"
-    [attr.data-loading]="btnLoad ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
     [style.width]="_width"
     [matTooltip]="_tooltip || ''"
     matTooltipPosition="above"
     (click)="onInternalClick($event)">
     <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
   </button>
-} @else if (btnType === 'light') {
+} @else if (_type === 'light') {
   <button
     mat-flat-button
     class="c-button c-light"
-    [type]="hType"
+    [type]="_htmlType"
     [ngClass]="buttonClasses()"
     [disabled]="_disabled"
     [color]="_color"
     [attr.data-autoId]="_autoId"
     [attr.data-disabled]="_disabled ? 'true' : 'false'"
-    [attr.data-loading]="btnLoad ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
     [style.width]="_width"
     [matTooltip]="_tooltip || ''"
     matTooltipPosition="above"
     (click)="onInternalClick($event)">
     <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
   </button>
-} @else if (btnType === 'outline') {
+} @else if (_type === 'outline') {
   <button
     mat-stroked-button
     class="c-button c-outline"
-    [type]="hType"
+    [type]="_htmlType"
     [ngClass]="buttonClasses()"
     [disabled]="_disabled"
     [color]="_color"
     [attr.data-autoId]="_autoId"
     [attr.data-disabled]="_disabled ? 'true' : 'false'"
-    [attr.data-loading]="btnLoad ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
     [style.width]="_width"
     [matTooltip]="_tooltip || ''"
     matTooltipPosition="above"
     (click)="onInternalClick($event)">
     <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
   </button>
-} @else if (btnType === 'link') {
+} @else if (_type === 'link') {
   <button
     mat-button
     class="c-button c-link"
-    [type]="hType"
+    [type]="_htmlType"
     [ngClass]="buttonClasses()"
     [disabled]="_disabled"
     [color]="_color"
     [attr.data-autoId]="_autoId"
     [attr.data-disabled]="_disabled ? 'true' : 'false'"
-    [attr.data-loading]="btnLoad ? 'true' : 'false'"
+    [attr.data-loading]="_loading ? 'true' : 'false'"
     [style.width]="_width"
     [matTooltip]="_tooltip || ''"
     matTooltipPosition="above"
@@ -83,24 +83,24 @@
 
 <ng-template #contentTpl>
   <div class="c-button-content-wrapper">
-    @if (btnLoad) {
+    @if (_loading) {
       <mat-spinner mode="indeterminate" diameter="18" strokeWidth="2" class="c-spinner"></mat-spinner>
-    } @else if (pIcon) {
-      <mat-icon [fontSet]="fSet" class="c-icon-prefix">{{ pIcon }}</mat-icon>
+    } @else if (_prefixIcon) {
+      <mat-icon [fontSet]="_fontSet" class="c-icon-prefix">{{ _prefixIcon }}</mat-icon>
     }
 
-    @if (btnTitle) {
-      <span class="c-title" [class.ml-8]="btnLoad || pIcon" [class.mr-8]="sIcon && !btnLoad">
-        {{ btnTitle }}
+    @if (_title) {
+      <span class="c-title" [class.ml-8]="_loading || _prefixIcon" [class.mr-8]="_suffixIcon && !_loading">
+        {{ _title }}
       </span>
     }
 
-    @if (sIcon && !btnLoad) {
-      <mat-icon [fontSet]="fSet" class="c-icon-suffix">{{ sIcon }}</mat-icon>
+    @if (_suffixIcon && !_loading) {
+      <mat-icon [fontSet]="_fontSet" class="c-icon-suffix">{{ _suffixIcon }}</mat-icon>
     }
 
-    @if (!btnTitle && !pIcon && !btnLoad && sIcon) {
-      <mat-icon [fontSet]="fSet">{{ sIcon }}</mat-icon>
+    @if (!_title && !_prefixIcon && !_loading && _suffixIcon) {
+      <mat-icon [fontSet]="_fontSet">{{ _suffixIcon }}</mat-icon>
     }
   </div>
 </ng-template>

@@ -37,11 +37,10 @@ import { sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 
 @Component({
   selector: 'sd-date',
@@ -78,7 +77,7 @@ import * as uuid from 'uuid';
   ],
 })
 export class SdDate implements OnDestroy, OnInit {
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -117,7 +116,7 @@ export class SdDate implements OnDestroy, OnInit {
     return msg && msg.length > 0 ? msg : null;
   });
 
-  name = input<string>(uuid.v4());
+  name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)

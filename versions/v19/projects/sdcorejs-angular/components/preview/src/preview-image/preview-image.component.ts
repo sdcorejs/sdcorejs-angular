@@ -14,9 +14,9 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import * as uuid from 'uuid';
 import {
   NormalizedImage,
   PreviewItem,
@@ -657,7 +657,7 @@ export class SdPreviewImage implements OnDestroy {
     url: string,
     override?: { name?: string; caption?: string; alt?: string },
   ): Promise<NormalizedImage> {
-    const id = uuid.v4();
+    const id = Utilities.generateUuid();
     // Lấy filename từ phần path cuối — bỏ query string.
     const baseSrc = url.split('?')[0];
     const inferredName = override?.name || baseSrc.substring(baseSrc.lastIndexOf('/') + 1) || 'image';
@@ -708,7 +708,7 @@ export class SdPreviewImage implements OnDestroy {
     const blobUrl = URL.createObjectURL(file);
     this.#ownedBlobUrls.add(blobUrl);
     return {
-      id: uuid.v4(),
+      id: Utilities.generateUuid(),
       blobUrl,
       name: override?.name || file.name,
       size: file.size,

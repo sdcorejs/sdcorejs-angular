@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { SdAutoidElement, SdAutoidElementState } from '../models/autoid-element.model';
+import { AutoidElement, AutoidElementState } from '../models/autoid-element.model';
 
 @Injectable({ providedIn: 'root' })
 export class SdAutoidScannerService {
@@ -10,10 +10,7 @@ export class SdAutoidScannerService {
    * (`autoid: ''`, xpath theo vị trí thẻ + cờ `missingAutoid` + warning) — để JSON xuất ra
    * vẫn dùng được và dev biết chỗ cần bổ sung autoid.
    */
-  scan(
-    root: HTMLElement = document.body,
-    requireSelectors: ReadonlyArray<string> = []
-  ): SdAutoidElement[] {
+  scan(root: HTMLElement = document.body, requireSelectors: readonly string[] = []): AutoidElement[] {
     const nodes = root.querySelectorAll<HTMLElement>('[data-autoid]');
     const dupCount: Record<string, number> = {};
     nodes.forEach(n => {
@@ -22,7 +19,7 @@ export class SdAutoidScannerService {
       dupCount[id] = (dupCount[id] ?? 0) + 1;
     });
 
-    const result: SdAutoidElement[] = [];
+    const result: AutoidElement[] = [];
     let stt = 1;
     nodes.forEach(node => {
       const autoid = node.getAttribute('data-autoid');
@@ -52,12 +49,7 @@ export class SdAutoidScannerService {
    * Tìm các node khớp `requireSelectors` nhưng thiếu data-autoid (self + mọi descendant),
    * thêm vào `result` dưới dạng phần tử fallback. Trả về `stt` kế tiếp.
    */
-  private appendMissing(
-    root: HTMLElement,
-    requireSelectors: ReadonlyArray<string>,
-    result: SdAutoidElement[],
-    startStt: number
-  ): number {
+  private appendMissing(root: HTMLElement, requireSelectors: readonly string[], result: AutoidElement[], startStt: number): number {
     let stt = startStt;
     const joined = requireSelectors.join(',');
     root.querySelectorAll<HTMLElement>(joined).forEach(node => {
@@ -90,8 +82,8 @@ export class SdAutoidScannerService {
   }
 
   /** Group element theo autoid để consumer lấy duplicate map. */
-  groupByAutoid(elements: SdAutoidElement[]): Record<string, SdAutoidElement[]> {
-    const map: Record<string, SdAutoidElement[]> = {};
+  groupByAutoid(elements: AutoidElement[]): Record<string, AutoidElement[]> {
+    const map: Record<string, AutoidElement[]> = {};
     for (const el of elements) {
       (map[el.autoid] ??= []).push(el);
     }
@@ -102,7 +94,7 @@ export class SdAutoidScannerService {
    * Read the optional `data-*` E2E state attributes off the same node.
    * Only includes fields actually present on the DOM (skipped fields stay undefined).
    */
-  private readState(node: HTMLElement): SdAutoidElementState {
+  private readState(node: HTMLElement): AutoidElementState {
     const get = (n: string): string | undefined => {
       const v = node.getAttribute(n);
       return v === null ? undefined : v;
@@ -147,10 +139,7 @@ export class SdAutoidScannerService {
       const text = label?.textContent?.trim();
       if (text) return text;
     }
-    return node.getAttribute('aria-label')?.trim()
-      ?? node.getAttribute('placeholder')?.trim()
-      ?? node.getAttribute('title')?.trim()
-      ?? '';
+    return node.getAttribute('aria-label')?.trim() ?? node.getAttribute('placeholder')?.trim() ?? node.getAttribute('title')?.trim() ?? '';
   }
 
   private resolveSdTag(node: HTMLElement): string {

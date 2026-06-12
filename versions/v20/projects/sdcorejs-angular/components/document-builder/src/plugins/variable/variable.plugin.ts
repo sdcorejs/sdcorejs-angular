@@ -1,7 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
 import { Config, Plugin, Widget, toWidget } from 'ckeditor5';
 import { DocumentBuilderOption, SdDocumentBuilderVariable } from '../../document-builder.model';
 import { resolveMaybeAsync } from '@sdcorejs/utils/models';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 export class VariablePlugin extends Plugin {
   // Tên plugin đăng ký với CKEditor — bắt buộc để tìm kiếm bằng string và ổn định trong build minified
@@ -168,7 +168,7 @@ export class VariablePlugin extends Plugin {
         return modelWriter.createElement('variable', {
           id: viewElement.getAttribute('data-id'),
           // Fix trùng uuid: Nếu đang paste, TẠO MỚI uuid thay vì dùng uuid cũ từ HTML
-          uuid: isPasting ? uuidv4() : (viewElement.getAttribute('data-uuid') ?? uuidv4()),
+          uuid: isPasting ? Utilities.generateUuid() : (viewElement.getAttribute('data-uuid') ?? Utilities.generateUuid()),
           value: viewElement.getAttribute('data-value'),
           display: viewElement.getAttribute('data-display'),
           ...(bindingValue ? { bindingValue } : {}),
@@ -216,7 +216,7 @@ export class VariablePlugin extends Plugin {
         let insertedUuid = '';
         editor.model.change(writer => {
           // 4.1. Chèn biến
-          insertedUuid = uuidv4();
+          insertedUuid = Utilities.generateUuid();
           const variableElem = writer.createElement('variable', {
             id: variable.id,
             uuid: insertedUuid,
@@ -494,7 +494,7 @@ export class VariablePlugin extends Plugin {
               content: fragment.content,
               variable: resolved ?? {
                 id: '',
-                uuid: uuidv4(),
+                uuid: Utilities.generateUuid(),
                 value: fragment.display,
                 display: fragment.display,
               },
@@ -519,7 +519,7 @@ export class VariablePlugin extends Plugin {
             } else if (fragment.type === 'variable' && fragment.variable) {
               const variableElem = writer.createElement('variable', {
                 id: fragment.variable.id,
-                uuid: uuidv4(),
+                uuid: Utilities.generateUuid(),
                 value: fragment.variable.value,
                 display: fragment.variable.display,
               });

@@ -12,6 +12,7 @@ import {
   OnDestroy,
   output,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,7 +21,6 @@ import { sdFormControlState, SdInlineErrorValidator, SdViewed, SdViewedInput, sd
 import { Color } from '@sdcorejs/utils/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 
 @Component({
   selector: 'sd-checkbox',
@@ -42,8 +42,8 @@ import * as uuid from 'uuid';
 export class SdCheckbox implements OnDestroy, AfterViewInit {
   readonly #ref = inject(ChangeDetectorRef);
 
-  id = `I${uuid.v4()}`;
-  #name = uuid.v4();
+  id = `I${Utilities.generateUuid()}`;
+  #name = Utilities.generateUuid();
   formControl = new FormControl();
   #subscription = new Subscription();
   #model: unknown;

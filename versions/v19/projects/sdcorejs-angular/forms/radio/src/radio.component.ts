@@ -1,3 +1,4 @@
+import { Utilities } from '@sdcorejs/utils/fns';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
@@ -22,7 +23,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 
@@ -56,8 +56,8 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
 export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);
 
-  id = `I${uuid.v4()}`;
-  #name = uuid.v4();
+  id = `I${Utilities.generateUuid()}`;
+  #name = Utilities.generateUuid();
   formControl = new SdFormControl();
   #subscription = new Subscription();
 

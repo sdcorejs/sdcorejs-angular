@@ -1,15 +1,15 @@
-@let badgeType = type();
-@let tt = tooltip();
-@let titleText = title();
-@let descText = description();
+@let _type = type();
+@let _tooltip = tooltip();
+@let _title = title();
+@let _description = description();
 @let iconName = icon() || defaultIcon;
 @let isPointer = click.observed;
 
-@if (badgeType === 'round') {
+@if (_type === 'round') {
   <div
     class="c-badge"
     matTooltipPosition="above"
-    [matTooltip]="tt || ''"
+    [matTooltip]="_tooltip || ''"
     matTooltipClass="sd-multiline-tooltip"
     [ngClass]="containerCombinedClasses()"
     [class.c-badge--has-icon]="!!icon()"
@@ -21,13 +21,13 @@
         {{ iconName }}
       </span>
     }
-    <span class="c-badge-title">{{ titleText }}</span>
+    <span class="c-badge-title">{{ _title }}</span>
   </div>
-} @else if (badgeType === 'tag') {
+} @else if (_type === 'tag') {
   <div
     class="c-badge c-badge--tag"
     matTooltipPosition="above"
-    [matTooltip]="tt || ''"
+    [matTooltip]="_tooltip || ''"
     matTooltipClass="sd-multiline-tooltip"
     [ngClass]="containerCombinedClasses()"
     [class.pointer]="isPointer"
@@ -40,9 +40,9 @@
         </span>
       }
       <div class="d-flex flex-column align-items-start">
-        <span class="T14R c-badge-title">{{ titleText }}</span>
-        @if (descText) {
-          <span class="T12R c-badge-description">{{ descText }}</span>
+        <span class="T14R c-badge-title">{{ _title }}</span>
+        @if (_description) {
+          <span class="T12R c-badge-description">{{ _description }}</span>
         }
       </div>
     </div>
@@ -51,9 +51,9 @@
   <div
     class="d-flex"
     matTooltipPosition="above"
-    [matTooltip]="tt || ''"
+    [matTooltip]="_tooltip || ''"
     matTooltipClass="sd-multiline-tooltip"
-    [class.c-badge-icon]="badgeType === 'icon'"
+    [class.c-badge-icon]="_type === 'icon'"
     [class.pointer]="isPointer"
     (click)="onClick($event)"
     aria-hidden="true">
@@ -62,9 +62,9 @@
         {{ iconName }}
       </span>
       <div class="d-flex flex-column">
-        <span class="T14R c-badge-title">{{ titleText }}</span>
-        @if (descText) {
-          <span class="T10R c-badge-description">{{ descText }}</span>
+        <span class="T14R c-badge-title">{{ _title }}</span>
+        @if (_description) {
+          <span class="T10R c-badge-description">{{ _description }}</span>
         }
       </div>
     </div>

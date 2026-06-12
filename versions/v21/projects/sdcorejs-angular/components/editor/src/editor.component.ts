@@ -12,6 +12,7 @@ import {
   output,
   signal,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncValidatorFn, FormGroup, NgForm, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -34,7 +35,6 @@ import {
 } from 'ckeditor5';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
-import * as uuid from 'uuid';
 import { ISdEditorConfiguration, SD_EDITOR_CONFIGURATION, SdEditorUploadFileFuncUpload } from './configurations';
 import { SdNotifyService } from '@sdcorejs/angular/services';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -99,7 +99,7 @@ export class SdEditor {
   readonly autoId = computed(() => (this.autoIdInput() ? `components-editor-${this.autoIdInput()}` : undefined));
   readonly dataDisabled = computed(() => (this.disabled() ? 'true' : 'false'));
   readonly dataEmpty = computed(() => (sdIsEmpty(this.valueModel()) ? 'true' : 'false'));
-  readonly name = input<string>(uuid.v4());
+  readonly name = input<string>(Utilities.generateUuid());
   readonly valueModel = model<string>('', { alias: 'model' });
 
   // Output

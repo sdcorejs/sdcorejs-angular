@@ -4,6 +4,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 
 import { SdAutoidInspector } from './autoid-inspector.component';
+import { SD_AUTOID_INSPECTOR_CONFIGURATION, SdAutoidInspectorConfiguration } from './models/autoid-inspector-config.model';
 
 @Component({
   standalone: true,
@@ -11,13 +12,12 @@ import { SdAutoidInspector } from './autoid-inspector.component';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   template: `
     <div id="harness-root">
-      <sd-input><input data-autoid="forms-input-email" placeholder="Email"
-                       data-disabled="false" data-empty="true"/></sd-input>
-      <sd-input><input placeholder="No autoid"/></sd-input>
+      <sd-input><input data-autoid="forms-input-email" placeholder="Email" data-disabled="false" data-empty="true" /></sd-input>
+      <sd-input><input placeholder="No autoid" /></sd-input>
       <sd-button><button data-autoid="button-submit">Submit</button></sd-button>
       <sd-button><button data-autoid="button-submit">Dup</button></sd-button>
       <sd-table data-autoid="components-table-employees">
-        <input data-autoid="table-input-search" data-invalid="false"/>
+        <input data-autoid="table-input-search" data-invalid="false" />
       </sd-table>
     </div>
     <sd-autoid-inspector [enabled]="enabled" [config]="cfg"></sd-autoid-inspector>
@@ -25,7 +25,7 @@ import { SdAutoidInspector } from './autoid-inspector.component';
 })
 class HostComponent {
   enabled = true;
-  cfg = { root: undefined as HTMLElement | undefined };
+  cfg: SdAutoidInspectorConfiguration = { root: undefined };
 }
 
 describe('SdAutoidInspector', () => {
@@ -48,8 +48,7 @@ describe('SdAutoidInspector', () => {
     fixture.componentInstance.cfg = { root: document.querySelector('#harness-root') as HTMLElement };
     await settle();
 
-    inspector = fixture.debugElement.query(By.directive(SdAutoidInspector))
-      .componentInstance as SdAutoidInspector;
+    inspector = fixture.debugElement.query(By.directive(SdAutoidInspector)).componentInstance as SdAutoidInspector;
   });
 
   afterEach(() => {
@@ -151,7 +150,6 @@ describe('SdAutoidInspector', () => {
   });
 
   it('copyJson gọi export.copyToClipboard với JSON', async () => {
-    const exportSvc = (inspector as any)['#export'] ?? null;
     // Spy clipboard navigator API.
     let captured = '';
     spyOn(navigator.clipboard, 'writeText').and.callFake((text: string) => {
@@ -167,7 +165,6 @@ describe('SdAutoidInspector', () => {
     expect(parsed.meta).toBeDefined();
     expect(typeof parsed.meta.url).toBe('string');
     expect(captured).toContain('forms-input-email');
-    expect(exportSvc).toBeNull(); // private symbol không lộ ra
   });
 
   it('dismissFab ẩn FAB + đóng panel; reset signal hiện lại', async () => {
@@ -228,7 +225,7 @@ describe('SdAutoidInspector', () => {
       // forms-input-email has data-disabled + data-empty on the DOM
       const chips = fixture.nativeElement.querySelectorAll('.sd-autoid-inspector__state-chip');
       expect(chips.length).toBeGreaterThan(0);
-      const chipTexts = Array.from(chips).map((c: any) => c.textContent.trim());
+      const chipTexts = Array.from(chips).map(c => (c as HTMLElement).textContent?.trim() ?? '');
       expect(chipTexts.some((t: string) => t.includes('disabled='))).toBe(true);
       expect(chipTexts.some((t: string) => t.includes('empty='))).toBe(true);
     });
@@ -251,7 +248,7 @@ describe('SdAutoidInspector', () => {
       fixture.detectChanges();
 
       const allChips = fixture.nativeElement.querySelectorAll('.sd-autoid-inspector__state-chip');
-      const texts = Array.from(allChips).map((c: any) => c.textContent.trim());
+      const texts = Array.from(allChips).map(c => (c as HTMLElement).textContent?.trim() ?? '');
 
       expect(texts.some((t: string) => t.includes('required='))).toBe(true);
       expect(texts.some((t: string) => t.includes('maxlength='))).toBe(true);
@@ -303,5 +300,203 @@ describe('SdAutoidInspector', () => {
       await settle();
       expect(panel.getAttribute('data-highlight-on')).toBe('false');
     });
+  });
+});
+
+describe('SdAutoidInspector E2E test generation', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let inspector: SdAutoidInspector;
+
+  const settle = async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.cfg = { root: document.querySelector('#harness-root') as HTMLElement };
+    await settle();
+
+    inspector = fixture.debugElement.query(By.directive(SdAutoidInspector)).componentInstance as SdAutoidInspector;
+  });
+
+  afterEach(() => {
+    inspector?.closePanel();
+    fixture?.destroy();
+  });
+
+  it('hides E2E test generation when config host is missing', async () => {
+    inspector.openPanel();
+    inspector.setSegment('export');
+    await settle();
+
+    expect(fixture.nativeElement.querySelector('.sd-autoid-inspector__export-section')).toBeNull();
+  });
+
+  it('shows Playwright and Robot Framework actions when config has host', async () => {
+    fixture.componentInstance.cfg = {
+      root: document.querySelector('#harness-root') as HTMLElement,
+      host: 'http://forge.test',
+    };
+    await settle();
+
+    inspector.openPanel();
+    inspector.setSegment('export');
+    await settle();
+
+    const section = fixture.nativeElement.querySelector('.sd-autoid-inspector__export-section');
+    expect(section).toBeTruthy();
+    expect(section.textContent).toContain('Tạo E2E test');
+    expect(section.textContent).toContain('Playwright');
+    expect(section.textContent).toContain('Robot Framework');
+  });
+
+  it('exportE2eTest posts to forge backend and downloads the returned zip', async () => {
+    fixture.componentInstance.cfg = {
+      root: document.querySelector('#harness-root') as HTMLElement,
+      host: 'http://forge.test/',
+    };
+    await settle();
+
+    const fetchSpy = spyOn(window, 'fetch').and.resolveTo(
+      new Response(new Blob(['zip'], { type: 'application/zip' }), {
+        status: 200,
+        headers: { 'Content-Disposition': 'attachment; filename="customer-playwright.zip"' },
+      })
+    );
+    const clickSpy = spyOn(HTMLAnchorElement.prototype, 'click');
+
+    inspector.openPanel();
+    await settle();
+    await inspector.exportE2eTest('playwright');
+
+    expect(fetchSpy).toHaveBeenCalled();
+    const [url, init] = fetchSpy.calls.mostRecent().args;
+    expect(String(url)).toBe('http://forge.test/e2e/test-generator/playwright');
+    expect((init as RequestInit).method).toBe('POST');
+    expect((init as RequestInit).headers).toEqual({ 'Content-Type': 'application/json' });
+
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.payload.meta).toBeDefined();
+    expect(body.payload.elements.length).toBe(6);
+    expect(body.options.language).toBe('vi');
+    expect(body.options.mode).toBe('happy-path');
+    expect(body.options.outputName).toContain('playwright');
+    expect(clickSpy).toHaveBeenCalled();
+    expect(inspector.e2eExportError()).toBeNull();
+    expect(inspector.e2eExportOk()).toBe('Playwright');
+  });
+
+  it('opens Robot context dialog and sends QC context before export', async () => {
+    fixture.componentInstance.cfg = {
+      root: document.querySelector('#harness-root') as HTMLElement,
+      host: 'http://forge.test/',
+    };
+    await settle();
+
+    const fetchSpy = spyOn(window, 'fetch').and.resolveTo(
+      new Response(new Blob(['zip'], { type: 'application/zip' }), {
+        status: 200,
+        headers: { 'Content-Disposition': 'attachment; filename="customer-robot.zip"' },
+      })
+    );
+    spyOn(HTMLAnchorElement.prototype, 'click');
+
+    inspector.openPanel();
+    inspector.setSegment('export');
+    await settle();
+
+    inspector.openRobotExportContext();
+    await settle();
+    expect(fixture.nativeElement.querySelector('.sd-autoid-inspector__context-dialog')).toBeTruthy();
+    expect(inspector.hasRobotExportContext()).toBe(false);
+
+    inspector.updateRobotExportContext('requirement', 'AC1: Người dùng tạo giao dịch ví thành công.');
+    inspector.updateRobotExportContext('testCases', 'TC-001 Tạo giao dịch ví thành công');
+    inspector.updateRobotExportContext('testData', 'wallet=Ví A');
+    inspector.updateRobotExportContext('component', 'SP-Wallet');
+    inspector.updateRobotExportContext('storyLinkages', 'US-001');
+    expect(inspector.hasRobotExportContext()).toBe(true);
+
+    await inspector.confirmRobotExport();
+
+    expect(fetchSpy).toHaveBeenCalled();
+    const [url, init] = fetchSpy.calls.mostRecent().args;
+    expect(String(url)).toBe('http://forge.test/e2e/test-generator/robot');
+
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body.prompt).toContain('Robot Framework');
+    expect(body.context.requirement).toContain('AC1');
+    expect(body.context.testCases).toContain('TC-001');
+    expect(body.context.testData).toBe('wallet=Ví A');
+    expect(body.context.component).toBe('SP-Wallet');
+    expect(body.context.storyLinkages).toBe('US-001');
+    expect(inspector.robotContextOpen()).toBe(false);
+    expect(inspector.e2eExportOk()).toBe('Robot Framework');
+  });
+
+  it('exportE2eTest stores backend validation errors', async () => {
+    fixture.componentInstance.cfg = {
+      root: document.querySelector('#harness-root') as HTMLElement,
+      host: 'http://forge.test',
+    };
+    await settle();
+
+    spyOn(window, 'fetch').and.resolveTo(
+      new Response(JSON.stringify({ message: 'Invalid test generation request.' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
+
+    inspector.openPanel();
+    await settle();
+    await inspector.exportE2eTest('robot');
+
+    expect(inspector.e2eExportOk()).toBeNull();
+    expect(inspector.e2eExportError()).toBe('Invalid test generation request.');
+  });
+});
+
+describe('SdAutoidInspector global configuration', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let inspector: SdAutoidInspector;
+
+  const settle = async () => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        {
+          provide: SD_AUTOID_INSPECTOR_CONFIGURATION,
+          useValue: { host: 'http://global-forge.test/' },
+        },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.componentInstance.cfg = { root: document.querySelector('#harness-root') as HTMLElement };
+    await settle();
+
+    inspector = fixture.debugElement.query(By.directive(SdAutoidInspector)).componentInstance as SdAutoidInspector;
+  });
+
+  afterEach(() => {
+    inspector?.closePanel();
+    fixture?.destroy();
+  });
+
+  it('reads host from SD_AUTOID_INSPECTOR_CONFIGURATION', () => {
+    expect(inspector.e2eGeneratorHost()).toBe('http://global-forge.test');
   });
 });

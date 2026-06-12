@@ -21,6 +21,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import {
   AsyncValidatorFn,
   FormGroup,
@@ -54,7 +55,6 @@ const LEGACY_PATTERN_ALIAS: Record<string, ValidationPatternType> = {
   IDVN_OR_PASSPORT: 'VN_ID_OR_PASSPORT',
 };
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 
 @Component({
   selector: 'sd-input',
@@ -79,7 +79,7 @@ import * as uuid from 'uuid';
   ],
 })
 export class SdInput implements OnDestroy, OnInit, AfterViewInit {
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
   // 1. SIGNAL QUERIES (Thay thế @ViewChild / @ContentChild)
@@ -126,7 +126,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     return msg && msg.length > 0 ? msg : null;
   });
 
-  name = input<string>(uuid.v4());
+  name = input<string>(Utilities.generateUuid());
 
   // ==========================================
   // 3. INJECT (Thay thế Constructor DI)

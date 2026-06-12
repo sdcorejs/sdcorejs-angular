@@ -22,196 +22,276 @@
       <mat-icon>close</mat-icon>
     </button>
   </div>
-
 }
 
 @if (_enabled && _open) {
-    @let _segment = segment();
-    <div class="sd-autoid-inspector__backdrop" (click)="closePanel()"></div>
-    <section class="sd-autoid-inspector__panel"
-             role="dialog"
-             aria-label="AutoId Inspector"
-             data-autoid="sd-autoid-inspector-panel"
-             [attr.data-segment]="dataSegment()"
-             [attr.data-highlight-on]="dataHighlightOn()"
-             [attr.data-element-count]="dataElementCount()"
-             [attr.data-missing-count]="dataMissingCount()"
-             [attr.data-duplicate-count]="dataDuplicateCount()">
-      <header class="sd-autoid-inspector__header">
-        <div class="sd-autoid-inspector__segments">
-          <button
-            type="button"
-            [class.is-active]="_segment === 'audit'"
-            (click)="setSegment('audit')">
-            Audit
-            @if (audit(); as a) {
-              <span class="sd-autoid-inspector__badge" [class.is-warn]="a.missingCount + a.duplicateCount > 0">
-                {{ a.missingCount + a.duplicateCount }}
-              </span>
-            }
-          </button>
-          <button
-            type="button"
-            [class.is-active]="_segment === 'elements'"
-            (click)="setSegment('elements')">
-            Elements
-            <span class="sd-autoid-inspector__badge">{{ elements().length }}</span>
-          </button>
-          <button
-            type="button"
-            [class.is-active]="_segment === 'export'"
-            (click)="setSegment('export')">
-            Export
-          </button>
-        </div>
-        <div class="sd-autoid-inspector__actions">
-          <button
-            type="button"
-            class="sd-autoid-inspector__icon-btn"
-            matTooltip="Quét lại"
-            (click)="refresh()">
-            <mat-icon>refresh</mat-icon>
-          </button>
-          <button
-            type="button"
-            class="sd-autoid-inspector__close-btn"
-            matTooltip="Đóng"
-            aria-label="Đóng panel"
-            (click)="closePanel()">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-      </header>
-
-      @if (copyOk()) {
-        <div class="sd-autoid-inspector__toast">Đã copy ✓</div>
-      }
-
-      <div class="sd-autoid-inspector__body">
-        @switch (_segment) {
-          @case ('audit') {
-            <ng-container *ngTemplateOutlet="auditTpl"></ng-container>
+  @let _segment = segment();
+  <button type="button" class="sd-autoid-inspector__backdrop" aria-label="Đóng AutoId Inspector" (click)="closePanel()"></button>
+  <section
+    class="sd-autoid-inspector__panel"
+    role="dialog"
+    aria-label="AutoId Inspector"
+    data-autoid="sd-autoid-inspector-panel"
+    [attr.data-segment]="dataSegment()"
+    [attr.data-highlight-on]="dataHighlightOn()"
+    [attr.data-element-count]="dataElementCount()"
+    [attr.data-missing-count]="dataMissingCount()"
+    [attr.data-duplicate-count]="dataDuplicateCount()">
+    <header class="sd-autoid-inspector__header">
+      <div class="sd-autoid-inspector__segments">
+        <button type="button" [class.is-active]="_segment === 'audit'" (click)="setSegment('audit')">
+          Audit
+          @if (audit(); as a) {
+            <span class="sd-autoid-inspector__badge" [class.is-warn]="a.missingCount + a.duplicateCount > 0">
+              {{ a.missingCount + a.duplicateCount }}
+            </span>
           }
-          @case ('elements') {
-            <ng-container *ngTemplateOutlet="elementsTpl"></ng-container>
-          }
-          @case ('export') {
-            <ng-container *ngTemplateOutlet="exportTpl"></ng-container>
-          }
-        }
+        </button>
+        <button type="button" [class.is-active]="_segment === 'elements'" (click)="setSegment('elements')">
+          Elements
+          <span class="sd-autoid-inspector__badge">{{ elements().length }}</span>
+        </button>
+        <button type="button" [class.is-active]="_segment === 'export'" (click)="setSegment('export')">Export</button>
       </div>
-    </section>
+      <div class="sd-autoid-inspector__actions">
+        <button type="button" class="sd-autoid-inspector__icon-btn" matTooltip="Quét lại" (click)="refresh()">
+          <mat-icon>refresh</mat-icon>
+        </button>
+        <button type="button" class="sd-autoid-inspector__close-btn" matTooltip="Đóng" aria-label="Đóng panel" (click)="closePanel()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </header>
 
-    <ng-template #auditTpl>
-      @if (audit(); as a) {
-        @let _highlightOn = highlightOn();
-        <div class="sd-autoid-inspector__audit-toolbar">
-          <button
-            type="button"
-            class="sd-autoid-inspector__toggle"
-            [class.is-on]="_highlightOn"
-            (click)="toggleHighlight()">
-            <mat-icon>{{ _highlightOn ? 'visibility' : 'visibility_off' }}</mat-icon>
-            <span>Highlight DOM</span>
-            <span class="sd-autoid-inspector__toggle-state">{{ _highlightOn ? 'ON' : 'OFF' }}</span>
-          </button>
-        </div>
-        <div class="sd-autoid-inspector__summary">
-          <div class="sd-autoid-inspector__stat is-info">
-            <div class="sd-autoid-inspector__stat-value">{{ a.total }}</div>
-            <div class="sd-autoid-inspector__stat-label">Tổng autoid</div>
-          </div>
-          <div class="sd-autoid-inspector__stat" [class.is-error]="a.duplicateCount > 0" [class.is-success]="a.duplicateCount === 0">
-            <div class="sd-autoid-inspector__stat-value">{{ a.duplicateCount }}</div>
-            <div class="sd-autoid-inspector__stat-label">Trùng</div>
-          </div>
-          <div class="sd-autoid-inspector__stat" [class.is-warning]="a.missingCount > 0" [class.is-success]="a.missingCount === 0">
-            <div class="sd-autoid-inspector__stat-value">{{ a.missingCount }}</div>
-            <div class="sd-autoid-inspector__stat-label">Thiếu</div>
-          </div>
-        </div>
+    @if (copyOk()) {
+      <div class="sd-autoid-inspector__toast">Đã copy ✓</div>
+    }
 
-        @if (a.duplicateCount > 0) {
-          <h4 class="sd-autoid-inspector__section-title">
-            <mat-icon class="is-error">error_outline</mat-icon>
-            Autoid bị trùng
-          </h4>
-          <div class="sd-autoid-inspector__table-wrap">
-            <table class="sd-autoid-inspector__table">
-              <thead>
-                <tr><th>Autoid</th><th>Số lần</th></tr>
-              </thead>
-              <tbody>
-                @for (entry of a.duplicates | keyvalue; track entry.key) {
-                  <tr class="is-error">
-                    <td><code>{{ entry.key }}</code></td>
-                    <td>{{ entry.value }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+    <div class="sd-autoid-inspector__body">
+      @switch (_segment) {
+        @case ('audit') {
+          <ng-container *ngTemplateOutlet="auditTpl"></ng-container>
         }
-
-        @if (a.missingCount > 0) {
-          <h4 class="sd-autoid-inspector__section-title">
-            <mat-icon class="is-warning">warning_amber</mat-icon>
-            Element thiếu autoid
-          </h4>
-          <div class="sd-autoid-inspector__table-wrap">
-            <table class="sd-autoid-inspector__table">
-              <thead>
-                <tr><th>Tag</th><th>Name hint</th><th>Selector</th></tr>
-              </thead>
-              <tbody>
-                @for (m of a.missing; track $index) {
-                  <tr class="is-warning">
-                    <td><code>{{ m.tag }}</code></td>
-                    <td>{{ m.nameHint }}</td>
-                    <td><code>{{ m.selector }}</code></td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
+        @case ('elements') {
+          <ng-container *ngTemplateOutlet="elementsTpl"></ng-container>
         }
-
-        @if (a.duplicateCount === 0 && a.missingCount === 0) {
-          <div class="sd-autoid-inspector__success-card">
-            <mat-icon>check_circle</mat-icon>
-            <div>
-              <strong>Không có element thiếu hoặc trùng autoid.</strong>
-              <small>Trang đã đạt chuẩn convention autoid.</small>
-            </div>
-          </div>
+        @case ('export') {
+          <ng-container *ngTemplateOutlet="exportTpl"></ng-container>
         }
       }
-    </ng-template>
+    </div>
+  </section>
 
-    <ng-template #elementsTpl>
-      @let _filter = filter();
-      <div class="sd-autoid-inspector__filter">
-        <mat-icon>search</mat-icon>
-        <input
-          type="text"
-          placeholder="Lọc theo autoid / name / tag"
-          [ngModel]="_filter"
-          (ngModelChange)="filter.set($event)"/>
-        @if (_filter) {
-          <button
-            type="button"
-            class="sd-autoid-inspector__icon-btn"
-            matTooltip="Xoá filter"
-            (click)="filter.set('')">
-            <mat-icon>close</mat-icon>
-          </button>
-        }
+  <ng-template #auditTpl>
+    @if (audit(); as a) {
+      @let _highlightOn = highlightOn();
+      <div class="sd-autoid-inspector__audit-toolbar">
+        <button type="button" class="sd-autoid-inspector__toggle" [class.is-on]="_highlightOn" (click)="toggleHighlight()">
+          <mat-icon>{{ _highlightOn ? 'visibility' : 'visibility_off' }}</mat-icon>
+          <span>Highlight DOM</span>
+          <span class="sd-autoid-inspector__toggle-state">{{ _highlightOn ? 'ON' : 'OFF' }}</span>
+        </button>
+      </div>
+      <div class="sd-autoid-inspector__summary">
+        <div class="sd-autoid-inspector__stat is-info">
+          <div class="sd-autoid-inspector__stat-value">{{ a.total }}</div>
+          <div class="sd-autoid-inspector__stat-label">Tổng autoid</div>
+        </div>
+        <div class="sd-autoid-inspector__stat" [class.is-error]="a.duplicateCount > 0" [class.is-success]="a.duplicateCount === 0">
+          <div class="sd-autoid-inspector__stat-value">{{ a.duplicateCount }}</div>
+          <div class="sd-autoid-inspector__stat-label">Trùng</div>
+        </div>
+        <div class="sd-autoid-inspector__stat" [class.is-warning]="a.missingCount > 0" [class.is-success]="a.missingCount === 0">
+          <div class="sd-autoid-inspector__stat-value">{{ a.missingCount }}</div>
+          <div class="sd-autoid-inspector__stat-label">Thiếu</div>
+        </div>
       </div>
 
-      <!-- Top-level elements (not inside any sd-table) -->
+      @if (a.duplicateCount > 0) {
+        <h4 class="sd-autoid-inspector__section-title">
+          <mat-icon class="is-error">error_outline</mat-icon>
+          Autoid bị trùng
+        </h4>
+        <div class="sd-autoid-inspector__table-wrap">
+          <table class="sd-autoid-inspector__table">
+            <thead>
+              <tr>
+                <th>Autoid</th>
+                <th>Số lần</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (entry of a.duplicates | keyvalue; track entry.key) {
+                <tr class="is-error">
+                  <td>
+                    <code>{{ entry.key }}</code>
+                  </td>
+                  <td>{{ entry.value }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (a.missingCount > 0) {
+        <h4 class="sd-autoid-inspector__section-title">
+          <mat-icon class="is-warning">warning_amber</mat-icon>
+          Element thiếu autoid
+        </h4>
+        <div class="sd-autoid-inspector__table-wrap">
+          <table class="sd-autoid-inspector__table">
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Name hint</th>
+                <th>Selector</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of a.missing; track $index) {
+                <tr class="is-warning">
+                  <td>
+                    <code>{{ m.tag }}</code>
+                  </td>
+                  <td>{{ m.nameHint }}</td>
+                  <td>
+                    <code>{{ m.selector }}</code>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+
+      @if (a.duplicateCount === 0 && a.missingCount === 0) {
+        <div class="sd-autoid-inspector__success-card">
+          <mat-icon>check_circle</mat-icon>
+          <div>
+            <strong>Không có element thiếu hoặc trùng autoid.</strong>
+            <small>Trang đã đạt chuẩn convention autoid.</small>
+          </div>
+        </div>
+      }
+    }
+  </ng-template>
+
+  <ng-template #elementsTpl>
+    @let _filter = filter();
+    <div class="sd-autoid-inspector__filter">
+      <mat-icon>search</mat-icon>
+      <input type="text" placeholder="Lọc theo autoid / name / tag" [ngModel]="_filter" (ngModelChange)="filter.set($event)" />
+      @if (_filter) {
+        <button type="button" class="sd-autoid-inspector__icon-btn" matTooltip="Xoá filter" (click)="filter.set('')">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
+    </div>
+
+    <!-- Top-level elements (not inside any sd-table) -->
+    <h4 class="sd-autoid-inspector__section-title">
+      Top-level elements
+      <span class="sd-autoid-inspector__badge">{{ topLevelElements().length }}</span>
+    </h4>
+    <div class="sd-autoid-inspector__table-wrap">
+      <table class="sd-autoid-inspector__table">
+        <thead>
+          <tr>
+            <th class="is-num">STT</th>
+            <th>Name</th>
+            <th>Autoid</th>
+            <th>Tag</th>
+            <th>State</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (el of topLevelElements(); track el.autoid + $index) {
+            <tr [class.is-error]="el.duplicate">
+              <td class="is-num">{{ el.stt }}</td>
+              <td>{{ el.name || '—' }}</td>
+              <td>
+                <div class="sd-autoid-inspector__autoid-cell">
+                  <code>{{ el.autoid }}</code>
+                  <button
+                    type="button"
+                    class="sd-autoid-inspector__icon-btn is-primary"
+                    matTooltip="Copy xpath"
+                    (click)="copyXpath(el.autoid)">
+                    <mat-icon>content_copy</mat-icon>
+                  </button>
+                </div>
+              </td>
+              <td>
+                <span class="sd-autoid-inspector__tag-chip">{{ el.tag }}</span>
+              </td>
+              <td class="sd-autoid-inspector__state-cell">
+                @if (el.state.disabled !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip" [class.is-error]="el.state.disabled === 'true'">
+                    disabled={{ el.state.disabled }}
+                  </span>
+                }
+                @if (el.state.loading !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip" [class.is-warning]="el.state.loading === 'true'">
+                    loading={{ el.state.loading }}
+                  </span>
+                }
+                @if (el.state.empty !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip" [class.is-info]="el.state.empty === 'true'">
+                    empty={{ el.state.empty }}
+                  </span>
+                }
+                @if (el.state.invalid !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip" [class.is-error]="el.state.invalid === 'true'">
+                    invalid={{ el.state.invalid }}
+                  </span>
+                }
+                @if (el.state.opened !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip" [class.is-info]="el.state.opened === 'true'">
+                    opened={{ el.state.opened }}
+                  </span>
+                }
+                @if (el.state.count !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip is-info"> count={{ el.state.count }} </span>
+                }
+                @if (el.state.required !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip" [class.is-warning]="el.state.required === 'true'">
+                    required={{ el.state.required }}
+                  </span>
+                }
+                @if (el.state.maxlength !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip is-info"> maxlength={{ el.state.maxlength }} </span>
+                }
+                @if (el.state.minlength !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip is-info"> minlength={{ el.state.minlength }} </span>
+                }
+                @if (el.state.pattern !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip is-info"> pattern={{ el.state.pattern }} </span>
+                }
+                @if (el.state.errorMessage !== undefined) {
+                  <span class="sd-autoid-inspector__state-chip is-error"> error: {{ el.state.errorMessage }} </span>
+                }
+              </td>
+              <td class="sd-autoid-inspector__value" [matTooltip]="el.state.dataValue || el.text || ''">
+                {{ el.state.dataValue || el.text || '—' }}
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="sd-autoid-inspector__empty">Không có kết quả.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- One section per sd-table group -->
+    @for (group of tableGroups(); track group.scope) {
       <h4 class="sd-autoid-inspector__section-title">
-        Top-level elements
-        <span class="sd-autoid-inspector__badge">{{ topLevelElements().length }}</span>
+        <mat-icon class="is-info">table_chart</mat-icon>
+        Inside <code>{{ group.scope }}</code>
+        <span class="sd-autoid-inspector__badge">{{ group.items.length }}</span>
       </h4>
       <div class="sd-autoid-inspector__table-wrap">
         <table class="sd-autoid-inspector__table">
@@ -226,7 +306,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (el of topLevelElements(); track el.autoid + $index) {
+            @for (el of group.items; track el.autoid + $index) {
               <tr [class.is-error]="el.duplicate">
                 <td class="is-num">{{ el.stt }}</td>
                 <td>{{ el.name || '—' }}</td>
@@ -242,219 +322,225 @@
                     </button>
                   </div>
                 </td>
-                <td><span class="sd-autoid-inspector__tag-chip">{{ el.tag }}</span></td>
+                <td>
+                  <span class="sd-autoid-inspector__tag-chip">{{ el.tag }}</span>
+                </td>
                 <td class="sd-autoid-inspector__state-cell">
                   @if (el.state.disabled !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip"
-                          [class.is-error]="el.state.disabled === 'true'">
+                    <span class="sd-autoid-inspector__state-chip" [class.is-error]="el.state.disabled === 'true'">
                       disabled={{ el.state.disabled }}
                     </span>
                   }
                   @if (el.state.loading !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip"
-                          [class.is-warning]="el.state.loading === 'true'">
+                    <span class="sd-autoid-inspector__state-chip" [class.is-warning]="el.state.loading === 'true'">
                       loading={{ el.state.loading }}
                     </span>
                   }
                   @if (el.state.empty !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip"
-                          [class.is-info]="el.state.empty === 'true'">
+                    <span class="sd-autoid-inspector__state-chip" [class.is-info]="el.state.empty === 'true'">
                       empty={{ el.state.empty }}
                     </span>
                   }
                   @if (el.state.invalid !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip"
-                          [class.is-error]="el.state.invalid === 'true'">
+                    <span class="sd-autoid-inspector__state-chip" [class.is-error]="el.state.invalid === 'true'">
                       invalid={{ el.state.invalid }}
                     </span>
                   }
                   @if (el.state.opened !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip"
-                          [class.is-info]="el.state.opened === 'true'">
+                    <span class="sd-autoid-inspector__state-chip" [class.is-info]="el.state.opened === 'true'">
                       opened={{ el.state.opened }}
                     </span>
                   }
                   @if (el.state.count !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip is-info">
-                      count={{ el.state.count }}
-                    </span>
+                    <span class="sd-autoid-inspector__state-chip is-info"> count={{ el.state.count }} </span>
                   }
                   @if (el.state.required !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip"
-                          [class.is-warning]="el.state.required === 'true'">
+                    <span class="sd-autoid-inspector__state-chip" [class.is-warning]="el.state.required === 'true'">
                       required={{ el.state.required }}
                     </span>
                   }
                   @if (el.state.maxlength !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip is-info">
-                      maxlength={{ el.state.maxlength }}
-                    </span>
+                    <span class="sd-autoid-inspector__state-chip is-info"> maxlength={{ el.state.maxlength }} </span>
                   }
                   @if (el.state.minlength !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip is-info">
-                      minlength={{ el.state.minlength }}
-                    </span>
+                    <span class="sd-autoid-inspector__state-chip is-info"> minlength={{ el.state.minlength }} </span>
                   }
                   @if (el.state.pattern !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip is-info">
-                      pattern={{ el.state.pattern }}
-                    </span>
+                    <span class="sd-autoid-inspector__state-chip is-info"> pattern={{ el.state.pattern }} </span>
                   }
                   @if (el.state.errorMessage !== undefined) {
-                    <span class="sd-autoid-inspector__state-chip is-error">
-                      error: {{ el.state.errorMessage }}
-                    </span>
+                    <span class="sd-autoid-inspector__state-chip is-error"> error: {{ el.state.errorMessage }} </span>
                   }
                 </td>
                 <td class="sd-autoid-inspector__value" [matTooltip]="el.state.dataValue || el.text || ''">
                   {{ el.state.dataValue || el.text || '—' }}
                 </td>
               </tr>
-            } @empty {
-              <tr><td colspan="6" class="sd-autoid-inspector__empty">Không có kết quả.</td></tr>
             }
           </tbody>
         </table>
       </div>
+    }
+  </ng-template>
 
-      <!-- One section per sd-table group -->
-      @for (group of tableGroups(); track group.scope) {
+  <ng-template #exportTpl>
+    <div class="sd-autoid-inspector__export-grid">
+      <button type="button" matTooltip="Copy JSON vào clipboard" (click)="copyJson()">
+        <mat-icon>content_copy</mat-icon>
+        <span>Copy JSON</span>
+        <small>clipboard</small>
+      </button>
+      <button type="button" matTooltip="Tải file JSON" (click)="exportJson()">
+        <mat-icon>download</mat-icon>
+        <span>JSON</span>
+        <small>.json</small>
+      </button>
+      <button type="button" matTooltip="Tải file CSV" (click)="exportCsv()">
+        <mat-icon>table_view</mat-icon>
+        <span>CSV</span>
+        <small>.csv</small>
+      </button>
+      <button type="button" matTooltip="Tải MD POM skeleton — cho AI viết auto-test" (click)="exportMdPom()">
+        <mat-icon>code</mat-icon>
+        <span>MD POM</span>
+        <small>AI test</small>
+      </button>
+      <button type="button" matTooltip="Tải MD reference table — group theo tag sd-*" (click)="exportMdTable()">
+        <mat-icon>view_list</mat-icon>
+        <span>MD Table</span>
+        <small>reference</small>
+      </button>
+    </div>
+
+    @if (e2eGeneratorHost()) {
+      @let _e2eExporting = e2eExporting();
+      <div class="sd-autoid-inspector__export-section">
         <h4 class="sd-autoid-inspector__section-title">
-          <mat-icon class="is-info">table_chart</mat-icon>
-          Inside <code>{{ group.scope }}</code>
-          <span class="sd-autoid-inspector__badge">{{ group.items.length }}</span>
+          <mat-icon class="is-info">auto_awesome</mat-icon>
+          Tạo E2E test
         </h4>
-        <div class="sd-autoid-inspector__table-wrap">
-          <table class="sd-autoid-inspector__table">
-            <thead>
-              <tr>
-                <th class="is-num">STT</th>
-                <th>Name</th>
-                <th>Autoid</th>
-                <th>Tag</th>
-                <th>State</th>
-                <th>Value</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (el of group.items; track el.autoid + $index) {
-                <tr [class.is-error]="el.duplicate">
-                  <td class="is-num">{{ el.stt }}</td>
-                  <td>{{ el.name || '—' }}</td>
-                  <td>
-                    <div class="sd-autoid-inspector__autoid-cell">
-                      <code>{{ el.autoid }}</code>
-                      <button
-                        type="button"
-                        class="sd-autoid-inspector__icon-btn is-primary"
-                        matTooltip="Copy xpath"
-                        (click)="copyXpath(el.autoid)">
-                        <mat-icon>content_copy</mat-icon>
-                      </button>
-                    </div>
-                  </td>
-                  <td><span class="sd-autoid-inspector__tag-chip">{{ el.tag }}</span></td>
-                  <td class="sd-autoid-inspector__state-cell">
-                    @if (el.state.disabled !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip"
-                            [class.is-error]="el.state.disabled === 'true'">
-                        disabled={{ el.state.disabled }}
-                      </span>
-                    }
-                    @if (el.state.loading !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip"
-                            [class.is-warning]="el.state.loading === 'true'">
-                        loading={{ el.state.loading }}
-                      </span>
-                    }
-                    @if (el.state.empty !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip"
-                            [class.is-info]="el.state.empty === 'true'">
-                        empty={{ el.state.empty }}
-                      </span>
-                    }
-                    @if (el.state.invalid !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip"
-                            [class.is-error]="el.state.invalid === 'true'">
-                        invalid={{ el.state.invalid }}
-                      </span>
-                    }
-                    @if (el.state.opened !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip"
-                            [class.is-info]="el.state.opened === 'true'">
-                        opened={{ el.state.opened }}
-                      </span>
-                    }
-                    @if (el.state.count !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip is-info">
-                        count={{ el.state.count }}
-                      </span>
-                    }
-                    @if (el.state.required !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip"
-                            [class.is-warning]="el.state.required === 'true'">
-                        required={{ el.state.required }}
-                      </span>
-                    }
-                    @if (el.state.maxlength !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip is-info">
-                        maxlength={{ el.state.maxlength }}
-                      </span>
-                    }
-                    @if (el.state.minlength !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip is-info">
-                        minlength={{ el.state.minlength }}
-                      </span>
-                    }
-                    @if (el.state.pattern !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip is-info">
-                        pattern={{ el.state.pattern }}
-                      </span>
-                    }
-                    @if (el.state.errorMessage !== undefined) {
-                      <span class="sd-autoid-inspector__state-chip is-error">
-                        error: {{ el.state.errorMessage }}
-                      </span>
-                    }
-                  </td>
-                  <td class="sd-autoid-inspector__value" [matTooltip]="el.state.dataValue || el.text || ''">
-                    {{ el.state.dataValue || el.text || '—' }}
-                  </td>
-                </tr>
-              }
-            </tbody>
-          </table>
+        <div class="sd-autoid-inspector__export-grid is-e2e">
+          <button
+            type="button"
+            matTooltip="Tạo bộ test Playwright (.zip)"
+            [disabled]="_e2eExporting !== null"
+            (click)="exportE2eTest('playwright')">
+            <mat-icon>{{ _e2eExporting === 'playwright' ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+            <span>Playwright</span>
+            <small>.zip</small>
+          </button>
+          <button
+            type="button"
+            matTooltip="Tạo bộ test Robot Framework (.zip)"
+            [disabled]="_e2eExporting !== null"
+            (click)="openRobotExportContext()">
+            <mat-icon>{{ _e2eExporting === 'robot' ? 'hourglass_empty' : 'smart_toy' }}</mat-icon>
+            <span>Robot Framework</span>
+            <small>.zip</small>
+          </button>
         </div>
-      }
-    </ng-template>
 
-    <ng-template #exportTpl>
-      <div class="sd-autoid-inspector__export-grid">
-        <button type="button" matTooltip="Copy JSON vào clipboard" (click)="copyJson()">
-          <mat-icon>content_copy</mat-icon>
-          <span>Copy JSON</span>
-          <small>clipboard</small>
-        </button>
-        <button type="button" matTooltip="Tải file JSON" (click)="exportJson()">
-          <mat-icon>download</mat-icon>
-          <span>JSON</span>
-          <small>.json</small>
-        </button>
-        <button type="button" matTooltip="Tải file CSV" (click)="exportCsv()">
-          <mat-icon>table_view</mat-icon>
-          <span>CSV</span>
-          <small>.csv</small>
-        </button>
-        <button type="button" matTooltip="Tải MD POM skeleton — cho AI viết auto-test" (click)="exportMdPom()">
-          <mat-icon>code</mat-icon>
-          <span>MD POM</span>
-          <small>AI test</small>
-        </button>
-        <button type="button" matTooltip="Tải MD reference table — group theo tag sd-*" (click)="exportMdTable()">
-          <mat-icon>view_list</mat-icon>
-          <span>MD Table</span>
-          <small>reference</small>
-        </button>
+        @if (robotContextOpen()) {
+          <div class="sd-autoid-inspector__context-backdrop" role="presentation" (click)="closeRobotExportContext()"></div>
+          <section
+            class="sd-autoid-inspector__context-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sd-autoid-robot-context-title">
+            <header class="sd-autoid-inspector__context-header">
+              <div>
+                <h4 id="sd-autoid-robot-context-title">Ngữ cảnh QC cho Robot Framework</h4>
+                <small>Requirement, test case, test data</small>
+              </div>
+              <button type="button" class="sd-autoid-inspector__icon-btn" matTooltip="Đóng" (click)="closeRobotExportContext()">
+                <mat-icon>close</mat-icon>
+              </button>
+            </header>
+
+            <div class="sd-autoid-inspector__context-form">
+              <label>
+                <span>Component</span>
+                <input
+                  type="text"
+                  placeholder="SP-Wallet"
+                  [ngModel]="robotExportContext().component || ''"
+                  (ngModelChange)="updateRobotExportContext('component', $event)" />
+              </label>
+              <label>
+                <span>Story / Trace</span>
+                <input
+                  type="text"
+                  placeholder="US-001, AC-01"
+                  [ngModel]="robotExportContext().storyLinkages || ''"
+                  (ngModelChange)="updateRobotExportContext('storyLinkages', $event)" />
+              </label>
+              <label class="is-full">
+                <span>Requirement / AC / BR</span>
+                <textarea
+                  rows="4"
+                  placeholder="Dán requirement hoặc acceptance criteria..."
+                  [ngModel]="robotExportContext().requirement || ''"
+                  (ngModelChange)="updateRobotExportContext('requirement', $event)"></textarea>
+              </label>
+              <label class="is-full">
+                <span>Test case QC đã định nghĩa</span>
+                <textarea
+                  rows="4"
+                  placeholder="TC-001: ..."
+                  [ngModel]="robotExportContext().testCases || ''"
+                  (ngModelChange)="updateRobotExportContext('testCases', $event)"></textarea>
+              </label>
+              <label class="is-full">
+                <span>Test data</span>
+                <textarea
+                  rows="3"
+                  placeholder="wallet=Ví A, amount=100000..."
+                  [ngModel]="robotExportContext().testData || ''"
+                  (ngModelChange)="updateRobotExportContext('testData', $event)"></textarea>
+              </label>
+              <label class="is-full">
+                <span>Precondition</span>
+                <textarea
+                  rows="2"
+                  placeholder="User đã đăng nhập, dữ liệu ví đã tồn tại..."
+                  [ngModel]="robotExportContext().precondition || ''"
+                  (ngModelChange)="updateRobotExportContext('precondition', $event)"></textarea>
+              </label>
+              <label class="is-full">
+                <span>Ghi chú format QC</span>
+                <textarea
+                  rows="3"
+                  placeholder="Smoke=Y, Auto=Y, ưu tiên happy path..."
+                  [ngModel]="robotExportContext().qcNotes || ''"
+                  (ngModelChange)="updateRobotExportContext('qcNotes', $event)"></textarea>
+              </label>
+            </div>
+
+            <footer class="sd-autoid-inspector__context-actions">
+              <button type="button" class="is-secondary" [disabled]="_e2eExporting !== null" (click)="closeRobotExportContext()">
+                Huỷ
+              </button>
+              <button
+                type="button"
+                class="is-primary"
+                [disabled]="_e2eExporting !== null || !hasRobotExportContext()"
+                (click)="confirmRobotExport()">
+                <mat-icon>{{ _e2eExporting === 'robot' ? 'hourglass_empty' : 'download' }}</mat-icon>
+                <span>Đồng ý xuất</span>
+              </button>
+            </footer>
+          </section>
+        }
+
+        @if (e2eExportOk(); as targetLabel) {
+          <div class="sd-autoid-inspector__export-message is-success">Đã tải bộ test {{ targetLabel }}.</div>
+        }
+        @if (e2eExportError(); as error) {
+          <div class="sd-autoid-inspector__export-message is-error">
+            {{ error }}
+          </div>
+        }
       </div>
-    </ng-template>
+    }
+  </ng-template>
 }

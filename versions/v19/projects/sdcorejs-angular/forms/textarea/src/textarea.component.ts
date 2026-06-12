@@ -1,3 +1,4 @@
+import { Utilities } from '@sdcorejs/utils/fns';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
@@ -39,7 +40,6 @@ import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/dat
 import { Size } from '@sdcorejs/utils/models';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Subscription } from 'rxjs';
-import * as uuid from 'uuid';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
@@ -64,7 +64,7 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
   ],
 })
 export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -108,7 +108,7 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
     return msg && msg.length > 0 ? msg : null;
   });
 
-  name = input<string>(uuid.v4());
+  name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)

@@ -5,18 +5,18 @@
   with extracted sub-components driven by CDK overlay.
 -->
 @let _filters = filters();
-@let _fields = resolvedFields();
-@let _density = resolvedDensity();
-@let _showOr = showOrConnector();
-@let _used = usedFieldKeys();
+@let _resolvedFields = resolvedFields();
+@let _resolvedDensity = resolvedDensity();
+@let _showOrConnector = showOrConnector();
+@let _usedFieldKeys = usedFieldKeys();
 @let _editingIndex = editingIndex();
-@let _mode = resolvedMode();
-@let _showOpOnChip = resolvedShowOperatorOnChip();
+@let _resolvedMode = resolvedMode();
+@let _resolvedShowOperatorOnChip = resolvedShowOperatorOnChip();
 
 <div
   class="c-query-bar"
-  [class.c-density-compact]="_density === 'compact'"
-  [class.c-density-comfortable]="_density === 'comfortable'">
+  [class.c-density-compact]="_resolvedDensity === 'compact'"
+  [class.c-density-comfortable]="_resolvedDensity === 'comfortable'">
 
   <!-- Main region — search + filters + add-filter. Wraps internally; the right
        action toolbar stays anchored and does NOT flow with this. -->
@@ -50,12 +50,12 @@
     [autoIdBase]="resolvedAutoId() ?? 'qb'"
     (commit)="onChipPopoverCommit($event)" />
 
-  @if (_mode === 'inline') {
+  @if (_resolvedMode === 'inline') {
     <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->
 
     <!-- Completed chips -->
     @for (filter of _filters; track $index; let i = $index) {
-      @if (_showOr && i > 0) {
+      @if (_showOrConnector && i > 0) {
         <span class="c-or-connector" aria-hidden="true">OR</span>
       }
       @let _field = fieldByKey()[$any(filter).field];
@@ -68,8 +68,8 @@
             [field]="_field"
             [operator]="_op"
             [value]="_data"
-            [density]="_density"
-            [showOperator]="_showOpOnChip"
+            [density]="_resolvedDensity"
+            [showOperator]="_resolvedShowOperatorOnChip"
             [autoId]="inlineAutoId(i, 'value')"
             (valueChange)="updateFilter(i, { data: $event })"
             (remove)="removeFilter(i)" />
@@ -77,9 +77,9 @@
           <sd-query-inline-chip
             [field]="_field"
             [filter]="filter"
-            [density]="_density"
+            [density]="_resolvedDensity"
             [multiple]="multiple(_op)"
-            [showOperator]="_showOpOnChip"
+            [showOperator]="_resolvedShowOperatorOnChip"
             [autoId]="inlineAutoId(i, 'value')"
             [valueText]="chipValueText(filter)"
             [isNoData]="isNoDataOperator(_op)"
@@ -95,10 +95,10 @@
     @if (building(); as _b) {
       <sd-query-build-chip
         [building]="_b"
-        [density]="_density"
+        [density]="_resolvedDensity"
         [allowedOperators]="allowedOperatorsFor(_b.field)"
         [multiple]="multiple($any(_b.operator))"
-        [showOperator]="_showOpOnChip"
+        [showOperator]="_resolvedShowOperatorOnChip"
         (pickOperator)="pickBuildOperator($any($event))"
         (commitValue)="commitBuildValue($event)"
         (cancel)="cancelBuild()"
@@ -110,14 +110,14 @@
       type="button"
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
-      [disabled]="_fields.length === 0 || _used.size >= _fields.length"
-      [matTooltip]="_fields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
+      [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
       <mat-icon fontSet="material-icons-outlined">add</mat-icon>
     </button>
   } @else {
     <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
     @for (filter of _filters; track $index; let i = $index) {
-      @if (_showOr && i > 0) {
+      @if (_showOrConnector && i > 0) {
         <span class="c-or-connector" aria-hidden="true">OR</span>
       }
       @let _field = fieldByKey()[$any(filter).field];
@@ -128,7 +128,7 @@
         [field]="_field"
         [filter]="filter"
         [active]="_active"
-        [showOperator]="_showOpOnChip"
+        [showOperator]="_resolvedShowOperatorOnChip"
         [valueText]="chipValueText(filter)"
         [menu]="chipPopover.menu()!"
         (open)="openChipPopover(i)"
@@ -140,8 +140,8 @@
       type="button"
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
-      [disabled]="_fields.length === 0 || _used.size >= _fields.length"
-      [matTooltip]="_fields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
+      [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
       <mat-icon fontSet="material-icons-outlined">add</mat-icon>
     </button>
   }
@@ -151,9 +151,9 @@
   <!-- Field picker — list available fields, fade ones already in use. -->
   <sd-query-field-picker
     #addPicker
-    [fields]="_fields"
-    [usedKeys]="_used"
-    (pick)="_mode === 'inline' ? beginBuild($event) : addFilter($event)" />
+    [fields]="_resolvedFields"
+    [usedKeys]="_usedFieldKeys"
+    (pick)="_resolvedMode === 'inline' ? beginBuild($event) : addFilter($event)" />
 
   <sd-query-actions-bar
     [showLogicToggle]="resolvedShowLogicToggle()"

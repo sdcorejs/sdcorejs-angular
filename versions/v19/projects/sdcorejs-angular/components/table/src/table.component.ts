@@ -24,7 +24,6 @@ import { MatTable, MatTableModule } from '@angular/material/table';
 import { SdExcelColumn, SdNotifyService } from '@sdcorejs/angular/services';
 import { Subject, Subscription, firstValueFrom, isObservable } from 'rxjs';
 import { debounceTime, map, startWith, switchMap } from 'rxjs/operators';
-import * as uuid from 'uuid';
 import { SdTableCellDefDirective } from './directives/sd-table-cell-def.directive';
 import { SdTableExpandDefDirective } from './directives/sd-table-expand-def.directive';
 import { SdTableGroupDefDirective, SdTableGroupDefContext } from './directives/sd-table-group-def.directive';
@@ -250,9 +249,9 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   isFiltered = signal(false);
   requireFiltered = signal(false);
 
-  #tableId = uuid.v4();
+  #tableId = Utilities.generateUuid();
   filterRegister!: TableFilterRegister;
-  key = uuid.v4();
+  key = Utilities.generateUuid();
 
   columnOperator: Record<string, Operator> = {};
   columnFilter?: Record<string, any> = {};

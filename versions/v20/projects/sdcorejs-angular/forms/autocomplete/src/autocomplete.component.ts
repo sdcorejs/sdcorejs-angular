@@ -68,7 +68,6 @@ import { Size } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Observable, Subscription, combineLatest, defer, from, of, timer } from 'rxjs';
 import { catchError, debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
-import * as uuid from 'uuid';
 
 class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   constructor(private formControl: FormControl) {}
@@ -100,7 +99,7 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   ],
 })
 export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit {
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -141,7 +140,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     return msg && msg.length > 0 ? msg : null;
   });
 
-  name = input<string>(uuid.v4());
+  name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)

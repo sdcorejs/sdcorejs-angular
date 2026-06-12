@@ -28,9 +28,8 @@ import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdFormControl, sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
-import * as uuid from 'uuid';
 import { PreviewComponent } from './components/preview/preview.component';
 import {
   ISdUploadFileConfiguration,
@@ -75,11 +74,11 @@ export class SdUploadFile<TArgs = any> {
   readonly #i18n = inject(I18nService);
 
   // ─── Internal State ───────────────────────────────────────────────────
-  readonly id = `I${uuid.v4()}`;
+  readonly id = `I${Utilities.generateUuid()}`;
   readonly #isMobileOrTablet = BrowserUtilities.isMobile();
-  readonly #canvas1 = `C${uuid.v4()}`;
-  readonly #canvas2 = `C${uuid.v4()}`;
-  #name = uuid.v4();
+  readonly #canvas1 = `C${Utilities.generateUuid()}`;
+  readonly #canvas2 = `C${Utilities.generateUuid()}`;
+  #name = Utilities.generateUuid();
   #formGroup?: FormGroup;
 
   readonly formControl = new SdFormControl();
@@ -147,9 +146,9 @@ export class SdUploadFile<TArgs = any> {
     },
   });
 
-  readonly nameInput = input<string, string | undefined>(uuid.v4(), {
+  readonly nameInput = input<string, string | undefined>(Utilities.generateUuid(), {
     alias: 'name',
-    transform: (val): string => val || uuid.v4(),
+    transform: (val): string => val || Utilities.generateUuid(),
   });
 
   readonly required = input<boolean, boolean | '' | undefined | null>(false, {

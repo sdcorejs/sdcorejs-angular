@@ -15,7 +15,6 @@ import { FormGroup, NgForm } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 // import * as hash from 'object-hash';
-import * as uuid from 'uuid';
 import { Router } from '@angular/router';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -93,7 +92,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
   relationMappedTo: string;
   @Input('relationMappedTo') set _relationMappedTo(val: string) {
     this.relationMappedTo = val;
-    this.#queryChanges.next(uuid.v4());
+    this.#queryChanges.next(Utilities.generateUuid());
   }
 
   // Khi sử dụng multiple trong form detail, sẽ cần truyền nếu là update, nếu tạo mới thì để trống
@@ -101,14 +100,14 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
 
   @Input('relationType') set _relationType(val: PropertyRelationType) {
     this.relationType = val;
-    this.#queryChanges.next(uuid.v4());
+    this.#queryChanges.next(Utilities.generateUuid());
   }
 
   #multipleRelationValue: string;
 
   @Input('multipleRelationValue') set _multipleRelationValue(val: string) {
     this.#multipleRelationValue = val;
-    this.#queryChanges.next(uuid.v4());
+    this.#queryChanges.next(Utilities.generateUuid());
   }
 
   valueField?: string;
@@ -137,7 +136,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
 
   @Input('query') set _query(val: Record<string, any>) {
     this.query = val || {};
-    this.#queryChanges.next(uuid.v4());
+    this.#queryChanges.next(Utilities.generateUuid());
   }
 
   addable = false;
@@ -182,7 +181,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
       })
     );
     this.#subscription.add(
-      this.#queryChanges.pipe(startWith(uuid.v4())).subscribe(prefix => {
+      this.#queryChanges.pipe(startWith(Utilities.generateUuid())).subscribe(prefix => {
         if (this.relationMappedTo && this.#multipleRelationValue && this.relationType === 'OneToMany') {
           this.cacheChecksum = Utilities.hash({
             prefix,
@@ -275,7 +274,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
       // TODO: Submit selected
     }
     // Update cache checksum
-    this.#queryChanges.next(uuid.v4());
+    this.#queryChanges.next(Utilities.generateUuid());
     await this.items();
     this.ref.markForCheck();
     // if (entity?.sdNew && !this.newEntities.some(e => e[this.valueField] === entity[this.valueField])) {
@@ -290,7 +289,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
     //     this.sdSelection.emit(entity);
     //   }
     //   // Update cache checksum
-    //   this.#queryChanges.next(uuid.v4());
+    //   this.#queryChanges.next(Utilities.generateUuid());
     //   await this.items();
     //   this.ref.markForCheck();
     // }

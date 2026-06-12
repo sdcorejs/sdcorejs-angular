@@ -1,5 +1,4 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
-import * as uuid from 'uuid';
 
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { Subscription } from 'rxjs';

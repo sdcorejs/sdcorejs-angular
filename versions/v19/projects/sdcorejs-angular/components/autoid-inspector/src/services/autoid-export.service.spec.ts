@@ -1,14 +1,14 @@
 import { SdAutoidExportService } from './autoid-export.service';
-import { SdAutoidElement } from '../models/autoid-element.model';
-import { SdAutoidExportMeta } from '../models/autoid-export-format.model';
+import { AutoidElement } from '../models/autoid-element.model';
+import { AutoidExportMeta } from '../models/autoid-export-format.model';
 
-const el = (over: Partial<SdAutoidElement> = {}): SdAutoidElement => ({
+const el = (over: Partial<AutoidElement> = {}): AutoidElement => ({
   stt: 1, name: 'Email', autoid: 'forms-input-email', tag: 'sd-input',
   text: '', xpath: '//*[@data-autoid="forms-input-email"]', duplicate: false,
   state: {}, tableScope: undefined, ...over,
 });
 
-const meta: SdAutoidExportMeta = {
+const meta: AutoidExportMeta = {
   pageUrl: '/customers/create',
   pageTitle: 'Customer Create',
   timestamp: '2026-05-25T10:00:00.000Z',

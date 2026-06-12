@@ -1,23 +1,23 @@
-@let lbl = label();
-@let app = appearance();
-@let hideErr = hideInlineError();
-@let errMsg = errorMessage();
-@let hText = helperText();
-@let req = required();
+@let _label = label();
+@let _appearance = appearance();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _helperText = helperText();
+@let _required = required();
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = !!formControl.value;
 
-@let minD = resolvedMin();
-@let maxD = resolvedMax();
+@let _resolvedMin = resolvedMin();
+@let _resolvedMax = resolvedMax();
 
-@let vDate = viewedDate();
+@let _viewedDate = viewedDate();
 @if (isViewed()) {
   <sd-view
-    [label]="lbl"
+    [label]="_label"
     [labelTemplate]="sdLabelTemplate()"
-    [value]="vDate"
-    [display]="vDate | date: (showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm')"
+    [value]="_viewedDate"
+    [display]="_viewedDate | date: (showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm')"
     [hyperlink]="hyperlink()"
     [valueTemplate]="viewTemplate()">
   </sd-view>
@@ -26,24 +26,24 @@
     <!-- why: inline — sd-view là "mặt" + trigger; datetime editor render ẩn (.sd-inline-editor) chỉ để mở overlay. -->
     <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
       <sd-view
-        [label]="lbl"
+        [label]="_label"
         [labelTemplate]="sdLabelTemplate()"
-        [value]="vDate"
-        [display]="vDate | date: (showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm')"
+        [value]="_viewedDate"
+        [display]="_viewedDate | date: (showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm')"
         [hyperlink]="hyperlink()"
         [valueTemplate]="viewTemplate()">
       </sd-view>
-      @if (clearable() && _hasValue && !req && !formControl.disabled) {
+      @if (clearable() && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="clear($event)" title="Xóa" aria-label="Xóa">
           <mat-icon>close</mat-icon>
         </button>
       }
     </span>
   }
-  @if (!app) {
+  @if (!_appearance) {
     <ng-content select="[sdLabel]">
-      @if (lbl) {
-        <sd-label [label]="lbl" [required]="req"></sd-label>
+      @if (_label) {
+        <sd-label [label]="_label" [required]="_required"></sd-label>
       }
     </ng-content>
   }
@@ -59,15 +59,15 @@
         class="c-form-field-datetime-input"
         [class.sd-md]="size() === 'md'"
         [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="hideErr"
-        [appearance]="app || 'outline'"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance || 'outline'"
         [floatLabel]="floatLabel()">
-        @if (app && lbl) {
+        @if (_appearance && _label) {
           <mat-label style="display: inline-block">
             <div class="d-flex align-items-center gap-4">
-              <span>{{ lbl }}</span>
-              @if (hText) {
-                <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+              <span>{{ _label }}</span>
+              @if (_helperText) {
+                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
               }
             </div>
           </mat-label>
@@ -89,24 +89,24 @@
           [autocomplete]="id"
           autocorrect="off"
           [formControl]="formControl"
-          [required]="req"
-          [placeholder]="placeholder() || lbl || ''"
-          [min]="minD"
-          [max]="maxD"
+          [required]="_required"
+          [placeholder]="placeholder() || _label || ''"
+          [min]="_resolvedMin"
+          [max]="_resolvedMax"
           (focus)="onFocus()"
           (blur)="onBlur()"
           #input
           matInput />
 
-        @if (hideErr && errMsg && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
         }
 
-        @if (!hideErr && errMsg && formControl.touched) {
-          <mat-error>{{ errMsg }}</mat-error>
+        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-error>{{ _errorMessage }}</mat-error>
         }
 
-        @if (formControl.value && !req && !formControl.disabled && !_bare) {
+        @if (formControl.value && !_required && !formControl.disabled && !_bare) {
           <button
             type="button"
             class="sd-clear-btn sd-hover"

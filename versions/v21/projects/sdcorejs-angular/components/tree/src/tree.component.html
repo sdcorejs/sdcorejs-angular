@@ -1,8 +1,8 @@
-@let _templateRef = resolvedItemTemplate();
+@let _resolvedItemTemplate = resolvedItemTemplate();
 @let _selectionVisible = selectionVisible();
 @let _selectedCount = selectedCount();
 @let _selectionMessage = selectionMessage();
-@let _selectionActions = selectionActionViews();
+@let _selectionActionViews = selectionActionViews();
 
 <div class="sd-tree" role="tree" [style.--sd-tree-indent-size]="indentSize() + 'px'">
   @for (node of visibleViewNodes(); track node.id) {
@@ -44,9 +44,9 @@
           <mat-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon">{{ node.icon }}</mat-icon>
         }
 
-        <div class="sd-tree__content" [class.sd-tree__content--custom]="_templateRef" [attr.data-autoid]="node.autoIds.label">
-          @if (_templateRef) {
-            <ng-container *ngTemplateOutlet="_templateRef; context: node.context" />
+        <div class="sd-tree__content" [class.sd-tree__content--custom]="_resolvedItemTemplate" [attr.data-autoid]="node.autoIds.label">
+          @if (_resolvedItemTemplate) {
+            <ng-container *ngTemplateOutlet="_resolvedItemTemplate; context: node.context" />
           } @else {
             <span class="sd-tree__label">{{ node.label }}</span>
           }
@@ -101,7 +101,7 @@
   </div>
 
   <div class="d-flex align-items-center mr-8 sd-tree__qa-actions" sdAction>
-    @for (actionView of _selectionActions; track $index) {
+    @for (actionView of _selectionActionViews; track $index) {
       <sd-button
         [autoId]="actionView.autoId"
         class="ml-4"

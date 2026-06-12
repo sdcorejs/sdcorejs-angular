@@ -33,11 +33,10 @@ import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
-import * as uuid from 'uuid';
 
 interface Daterange {
   from?: string | null;
@@ -79,10 +78,10 @@ interface Daterange {
   ],
 })
 export class SdDateRange implements OnDestroy, OnInit {
-  id1 = `I${uuid.v4()}`;
-  id2 = `I${uuid.v4()}`;
-  #c1 = uuid.v4();
-  #c2 = uuid.v4();
+  id1 = `I${Utilities.generateUuid()}`;
+  id2 = `I${Utilities.generateUuid()}`;
+  #c1 = Utilities.generateUuid();
+  #c2 = Utilities.generateUuid();
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -120,7 +119,7 @@ export class SdDateRange implements OnDestroy, OnInit {
     return msg && msg.length > 0 ? msg : null;
   });
 
-  name = input<string>(uuid.v4());
+  name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)

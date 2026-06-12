@@ -1,5 +1,5 @@
 @if (!dismissed()) {
-  @let ic = effectiveIcon();
+  @let _effectiveIcon = effectiveIcon();
   <div
     class="c-inform"
     [attr.role]="liveRole()"
@@ -7,11 +7,11 @@
     [attr.data-autoId]="autoId() || null"
     [attr.data-autoid]="autoId() || null">
 
-    @if (ic) {
-      <mat-icon class="c-inform-icon c-material-icon" aria-hidden="true" [ngClass]="fontSetClasses()">{{ ic }}</mat-icon>
+    @if (_effectiveIcon) {
+      <mat-icon class="c-inform-icon c-material-icon" aria-hidden="true" [ngClass]="fontSetClasses()">{{ _effectiveIcon }}</mat-icon>
     }
 
-    @let al = actionLabel();
+    @let _actionLabel = actionLabel();
     <div class="c-inform-content">
       @if (title(); as t) {
         <div class="c-inform-title">{{ t }}</div>
@@ -35,9 +35,9 @@
         <div class="c-inform-action">
           <ng-content select="[sdInformAction]"></ng-content>
         </div>
-      } @else if (al) {
+      } @else if (_actionLabel) {
         <button type="button" class="c-inform-action c-inform-action-link" (click)="onAction($event)">
-          {{ al }}
+          {{ _actionLabel }}
         </button>
       }
     </div>

@@ -52,16 +52,16 @@
 
   <!-- ════════════════════════ CENTER CANVAS ═══════════════════════ -->
   <section class="fb-canvas">
-    @let _editing = editingGroup();
-    @if (_editing) {
+    @let _editingGroup = editingGroup();
+    @if (_editingGroup) {
       <!-- ── Drill-in header: đang thiết kế children của 1 group ── -->
       <header class="fb-canvas__header fb-canvas__header--group">
         <div class="fb-canvas__title fb-groupedit__crumb">
           <button type="button" class="fb-icon-btn" [matTooltip]="'core.component.form-builder.back-to-design' | translate" (click)="cancelGroupEdit()">
             <span class="msi">chevron_left</span>
           </button>
-          <span class="fb-groupedit__icon"><span class="msi">{{ _editing.properties?.icon || 'category' }}</span></span>
-          <span>{{ _editing.label || ('core.component.form-builder.edit-group' | translate) }}</span>
+          <span class="fb-groupedit__icon"><span class="msi">{{ _editingGroup.properties?.icon || 'category' }}</span></span>
+          <span>{{ _editingGroup.label || ('core.component.form-builder.edit-group' | translate) }}</span>
           <span class="fb-groupedit__hint">{{ 'core.component.form-builder.edit-group' | translate }}</span>
         </div>
         <div class="fb-canvas__actions">
@@ -406,50 +406,50 @@
       <div class="fb-panel-header__title">{{ 'core.component.form-builder.attribute' | translate }}</div>
     </div>
 
-    @let sel = selectedComponent();
-    @if (sel) {
+    @let _selectedComponent = selectedComponent();
+    @if (_selectedComponent) {
       <!-- Selection header: type icon + name + key/type -->
       <div class="fb-attrs__selection">
-        <span class="fb-attrs__sel-icon"><span class="msi">{{ symbolFor(sel) }}</span></span>
+        <span class="fb-attrs__sel-icon"><span class="msi">{{ symbolFor(_selectedComponent) }}</span></span>
         <div class="fb-attrs__sel-meta">
-          <div class="fb-attrs__sel-name">{{ $any(sel).label || ('core.component.form-builder.untitled' | translate) }}</div>
+          <div class="fb-attrs__sel-name">{{ $any(_selectedComponent).label || ('core.component.form-builder.untitled' | translate) }}</div>
           <div class="fb-attrs__sel-key">
-            @if ($any(sel).key) {
-              {{ $any(sel).key }} · {{ typeLabelFor(sel) }}
+            @if ($any(_selectedComponent).key) {
+              {{ $any(_selectedComponent).key }} · {{ typeLabelFor(_selectedComponent) }}
             } @else {
-              {{ typeLabelFor(sel) }}
+              {{ typeLabelFor(_selectedComponent) }}
             }
           </div>
         </div>
       </div>
 
       <div class="fb-attrs__body" aria-hidden="true">
-        @if (sel.type === 'textfield') {
-          <textfield-attribute [components]="components" [variables]="variables" [component]="sel"></textfield-attribute>
-        } @else if (sel.type === 'textarea') {
-          <textarea-attribute [components]="components" [variables]="variables" [component]="sel"></textarea-attribute>
-        } @else if (sel.type === 'chip-string') {
-          <chip-string-attribute [components]="components" [variables]="variables" [component]="sel"></chip-string-attribute>
-        } @else if (sel.type === 'chip-calendar') {
-          <chip-calendar-attribute [components]="components" [variables]="variables" [component]="sel"></chip-calendar-attribute>
-        } @else if (sel.type === 'number') {
-          <number-attribute [components]="components" [variables]="variables" [component]="sel"></number-attribute>
-        } @else if (sel.type === 'datetime') {
-          <datetime-attribute [components]="components" [variables]="variables" [component]="sel"></datetime-attribute>
-        } @else if (sel.type === 'select') {
-          <select-attribute [components]="components" [variables]="variables" [component]="sel"></select-attribute>
-        } @else if (sel.type === 'radio') {
-          <radio-attribute [components]="components" [variables]="variables" [component]="sel"></radio-attribute>
-        } @else if (sel.type === 'checkbox') {
-          <checkbox-attribute [components]="components" [variables]="variables" [component]="sel"></checkbox-attribute>
-        } @else if (sel.type === 'html') {
-          <html-attribute [components]="components" [variables]="variables" [component]="sel"></html-attribute>
-        } @else if (sel.type === 'upload') {
-          <upload-attribute [components]="components" [variables]="variables" [component]="sel"></upload-attribute>
-        } @else if (sel.type === 'table') {
-          <table-attribute [components]="components" [variables]="variables" [component]="sel"></table-attribute>
-        } @else if (sel.type === 'group') {
-          <group-attribute [group]="$any(sel)"></group-attribute>
+        @if (_selectedComponent.type === 'textfield') {
+          <textfield-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></textfield-attribute>
+        } @else if (_selectedComponent.type === 'textarea') {
+          <textarea-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></textarea-attribute>
+        } @else if (_selectedComponent.type === 'chip-string') {
+          <chip-string-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></chip-string-attribute>
+        } @else if (_selectedComponent.type === 'chip-calendar') {
+          <chip-calendar-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></chip-calendar-attribute>
+        } @else if (_selectedComponent.type === 'number') {
+          <number-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></number-attribute>
+        } @else if (_selectedComponent.type === 'datetime') {
+          <datetime-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></datetime-attribute>
+        } @else if (_selectedComponent.type === 'select') {
+          <select-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></select-attribute>
+        } @else if (_selectedComponent.type === 'radio') {
+          <radio-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></radio-attribute>
+        } @else if (_selectedComponent.type === 'checkbox') {
+          <checkbox-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></checkbox-attribute>
+        } @else if (_selectedComponent.type === 'html') {
+          <html-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></html-attribute>
+        } @else if (_selectedComponent.type === 'upload') {
+          <upload-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></upload-attribute>
+        } @else if (_selectedComponent.type === 'table') {
+          <table-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></table-attribute>
+        } @else if (_selectedComponent.type === 'group') {
+          <group-attribute [group]="$any(_selectedComponent)"></group-attribute>
         }
       </div>
     } @else {

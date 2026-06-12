@@ -20,6 +20,7 @@ import {
   contentChild,
   Output,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import {
   AsyncValidatorFn,
   FormControl,
@@ -31,7 +32,6 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import * as uuid from 'uuid';
 
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -96,7 +96,7 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
   ],
 })
 export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
-  id = `I${uuid.v4()}`;
+  id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -114,7 +114,6 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   // ==========================================
   private ref = inject(ChangeDetectorRef);
   private coreConfiguration = inject(SD_CORE_CONFIGURATION, { optional: true });
-  private formatNumberPipe = inject(SdFormatNumberPipe);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
 
@@ -137,7 +136,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     return msg && msg.length > 0 ? msg : null;
   });
 
-  name = input<string>(uuid.v4());
+  name = input<string>(Utilities.generateUuid());
 
   size = input<Size>('md');
   // Ghi (TransformT): any (để không bị lỗi typing khi cha truyền vào)

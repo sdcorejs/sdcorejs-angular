@@ -1,25 +1,26 @@
-@let lbl = label();
-@let app = appearance();
-@let hideErr = hideInlineError();
-@let errMsg = errorMessage();
-@let hText = helperText();
-@let fmt = format();
+@let _label = label();
+@let _appearance = appearance();
+@let _hideInlineError = hideInlineError();
+@let _errorMessage = errorMessage();
+@let _helperText = helperText();
+@let _format = format();
+@let _required = required();
 @let _isInline = isInline();
 
 @if (isViewed()) {
   <sd-view
-    [label]="lbl"
+    [label]="_label"
     [labelTemplate]="sdLabelTemplate()"
     [value]="formControl.value"
-    [display]="formControl.value | sdFormatNumber : undefined : fmt"
+    [display]="formControl.value | sdFormatNumber : undefined : _format"
     [hyperlink]="hyperlink()"
     [valueTemplate]="viewTemplate()">
   </sd-view>
 } @else if (_isInline) {
   <sd-inline-text
     [control]="inputControl"
-    [placeholder]="placeholder() || lbl || ''"
-    [clearable]="!required()"
+    [placeholder]="placeholder() || _label || ''"
+    [clearable]="!_required"
     [autoId]="autoId()"
     [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
     (sdFocus)="onFocus()"
@@ -32,10 +33,10 @@
     (cleared)="cleared.emit()">
   </sd-inline-text>
 } @else {
-  @if (!app) {
+  @if (!_appearance) {
     <ng-content select="[sdLabel]">
-      @if (lbl) {
-        <sd-label [label]="lbl" [required]="required()"></sd-label>
+      @if (_label) {
+        <sd-label [label]="_label" [required]="_required"></sd-label>
       }
     </ng-content>
   }
@@ -49,15 +50,15 @@
       <mat-form-field
         [class.sd-md]="size() === 'md'"
         [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="hideErr"
-        [appearance]="app!"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance!"
         [floatLabel]="floatLabel()">
-        @if (app && lbl) {
+        @if (_appearance && _label) {
           <mat-label style="display: inline-block">
             <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ lbl }}</span>
-              @if (hText) {
-                <mat-icon [matTooltip]="hText" matTooltipPosition="below">info_outline</mat-icon>
+              <span>{{ _label }}</span>
+              @if (_helperText) {
+                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
               }
             </div>
           </mat-label>
@@ -69,7 +70,7 @@
           [formControl]="inputControl"
           #control
           matInput
-          [placeholder]="placeholder() || lbl || ''"
+          [placeholder]="placeholder() || _label || ''"
           [errorStateMatcher]="matcher"
           (keyup.enter)="onKeyupEnter()"
           (focus)="onFocus()"
@@ -77,7 +78,7 @@
           (keydown)="onKeydown($event)"
           (compositionstart)="onCompositionStart($event)"
           (compositionend)="onCompositionEnd($event)"
-          [required]="required()"
+          [required]="_required"
           [readonly]="readonly()"
           [autocomplete]="id"
           (paste)="onPaste($event)"
@@ -90,12 +91,12 @@
           [attr.data-required]="dataRequired()"
           [attr.data-error-message]="dataErrorMessage()" />
 
-        @if (!hideErr && errMsg && formControl.touched) {
-          <mat-error>{{ errMsg }}</mat-error>
+        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-error>{{ _errorMessage }}</mat-error>
         }
 
         <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
-             chiếm chỗ trong layout → nếu đứng sau sẽ đẩy error icon "tụt vào trong". Đứng trước
+             chiếm chỗ trong layout -> nếu đứng sau sẽ đẩy error icon "tụt vào trong". Đứng trước
              thì error icon nằm sát mép phải, clear giữ slot vô hình bên trái. -->
         @if (showClear()) {
           <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
@@ -103,8 +104,8 @@
           </button>
         }
 
-        @if (hideErr && errMsg && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="errMsg" matTooltipPosition="above"> error </mat-icon>
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
         }
 
         @if (sdSuffixDef()?.templateRef; as suffixRef) {

@@ -1,5 +1,5 @@
 @let _hideHeader = hideHeader();
-@let _collapsible = isCollapsible();
+@let _isCollapsible = isCollapsible();
 @let _collapsed = collapsed();
 @let _title = title();
 @let _subTitle = subTitle();
@@ -37,7 +37,7 @@
       </div>
       <div class="d-flex">
         <ng-content select="[sdHeaderRight]"></ng-content>
-        @if (_collapsible) {
+        @if (_isCollapsible) {
           <div class="d-flex align-items-center">
             @if (_collapsed) {
               <mat-icon>expand_more</mat-icon>

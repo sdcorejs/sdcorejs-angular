@@ -12,13 +12,13 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { CdkPortal, DomPortalOutlet, PortalModule } from '@angular/cdk/portal';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { SdLoadingService } from '@sdcorejs/angular/services';
-import * as uuid from 'uuid';
 
 @Component({
   selector: 'sd-modal-resizable',
@@ -29,7 +29,7 @@ import * as uuid from 'uuid';
   imports: [CommonModule, MatIconModule, MatDialogModule, MatButtonModule, PortalModule],
 })
 export class SdModalResizable {
-  readonly id = `I${uuid.v4()}`;
+  readonly id = `I${Utilities.generateUuid()}`;
   readonly portal = viewChild.required(CdkPortal);
   readonly editable = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
   readonly width = input<string>('480px');

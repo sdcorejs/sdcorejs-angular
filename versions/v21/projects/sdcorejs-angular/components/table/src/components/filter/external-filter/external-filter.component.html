@@ -1,13 +1,13 @@
 @let _filter = filter();
 @let _autoId = autoId();
-@let _items = filterItems();
+@let _filterItems = filterItems();
 @let _externalFilter = externalFilter();
 @let _inlineExternal = inlineExternal();
 @let _filtered = filtered();
 @let _col = col();
 
 @if (!_filter?.disabled) {
-  @if (!isMobileOrTablet && _items.length) {
+  @if (!isMobileOrTablet && _filterItems.length) {
     <sd-section
       [hideHeader]="_filter?.hideExternalFilterToolbar"
       icon="filter_alt"
@@ -30,7 +30,7 @@
           [matMenuTriggerFor]="menu"
           (click)="$event.stopPropagation()"></sd-button>
         <mat-menu #menu="matMenu" class="sd-custom-panel-filter-configuration" [attr.data-autoid]="_autoId + 'setting-menu'">
-          @for (externalFilter of _items; track externalFilter.field) {
+          @for (externalFilter of _filterItems; track externalFilter.field) {
             <button
               [attr.data-autoid]="_autoId + 'setting-' + externalFilter.field"
               mat-menu-item
@@ -46,7 +46,7 @@
         </mat-menu>
       </div>
       <div class="row mx-0" style="row-gap: 16px">
-        @for (item of _items; track item.field) {
+        @for (item of _filterItems; track item.field) {
           @if (_inlineExternal[item.field]) {
             <div class="col-md-3 col-sm-6 px-8" [class.col-lg-2]="_col === 2" [class.col-lg-3]="_col === 3">
               @if (item.type === 'string') {

@@ -1,7 +1,7 @@
 @let _autoId = autoId();
-@let _externalFilters = externalFilterItems();
-@let _columns = columnItems();
-@let _filterDefs = filterDefItems();
+@let _externalFilterItems = externalFilterItems();
+@let _columnItems = columnItems();
+@let _filterDefItems = filterDefItems();
 @let _workingColumnFilter = workingColumnFilter();
 @let _workingColumnOperator = workingColumnOperator();
 @let _workingExternalFilter = workingExternalFilter();
@@ -15,9 +15,9 @@
     <!-- ============================ -->
     <!-- 1. External filters (inline) -->
     <!-- ============================ -->
-    @if (_externalFilters.length) {
+    @if (_externalFilterItems.length) {
       <section class="mobile-filter-section">
-        @for (item of _externalFilters; track item.field) {
+        @for (item of _externalFilterItems; track item.field) {
           <div class="mobile-filter-row">
             @if (item.type === 'string') {
               <sd-input
@@ -136,9 +136,9 @@
     <!-- ============================ -->
     <!-- 2. Custom filterDef templates -->
     <!-- ============================ -->
-    @if (_filterDefs.length) {
+    @if (_filterDefItems.length) {
       <section class="mobile-filter-section">
-        @for (def of _filterDefs; track def.sdTableFilterDef()) {
+        @for (def of _filterDefItems; track def.sdTableFilterDef()) {
           <div class="mobile-filter-row" [attr.data-autoid]="_autoId + 'def-' + def.sdTableFilterDef()">
             <ng-container
               *ngTemplateOutlet="def.templateRef!; context: { externalFilter: _workingExternalFilter }">
@@ -151,9 +151,9 @@
     <!-- ============================ -->
     <!-- 3. Column filters             -->
     <!-- ============================ -->
-    @if (_columns.length) {
+    @if (_columnItems.length) {
       <section class="mobile-filter-section">
-        @for (column of _columns; track column.field) {
+        @for (column of _columnItems; track column.field) {
           <div class="mobile-filter-row" [attr.data-autoid]="_autoId + 'col-' + column.field">
             <column-filter
               [autoId]="_autoId + 'col'"

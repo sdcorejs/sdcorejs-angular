@@ -1,7 +1,7 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, ElementRef, effect, inject, input } from '@angular/core';
-import { v4 as uuidv4 } from 'uuid';
 import { IAnchorItem } from '../../models';
+import { Utilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'sd-anchor-item',
@@ -15,7 +15,7 @@ export class SdAnchorItem implements IAnchorItem {
   icon = input<string | undefined>();
   // Stable key dùng cho data-autoId. Nếu không truyền thì fallback về uuid (không stable giữa các lần render).
   key = input<string | undefined>(undefined);
-  id: string = uuidv4();
+  id: string = Utilities.generateUuid();
   elementRef = inject(ElementRef);
 
   constructor() {

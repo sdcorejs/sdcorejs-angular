@@ -3,14 +3,14 @@
   Seamless string/number branch keeps its own pill; everything else renders inside
   the dashed .c-token.c-token-building shell.
 -->
-@let _b = building();
+@let _building = building();
 @let _autoId = autoId();
 
 @if (isSeamless()) {
   <sd-query-inline-value-chip
-    [field]="_b.field"
-    [operator]="$any(_b.operator)"
-    [value]="_b.value ?? null"
+    [field]="_building.field"
+    [operator]="$any(_building.operator)"
+    [value]="_building.value ?? null"
     [density]="density()"
     [showOperator]="showOperator()"
     [autoId]="_autoId"
@@ -19,34 +19,34 @@
     (remove)="cancel.emit()" />
 } @else {
   <div class="c-token c-token-building">
-    <span class="c-token-field">{{ _b.field.label }}</span>
+    <span class="c-token-field">{{ _building.field.label }}</span>
 
-    @if (_b.step === 'operator') {
+    @if (_building.step === 'operator') {
       <sd-operator
         #buildOperator
         class="c-token-op"
         [operators]="allowedOperators()"
-        [model]="_b.operator"
+        [model]="_building.operator"
         (modelChange)="pickOperator.emit($any($event))" />
     } @else {
       <!-- why: badge readonly cho operator đã chọn — vẫn render <sd-operator>
            để giữ thị giác giống chip hoàn thành (icon + tooltip). -->
       <sd-operator
         class="c-token-op"
-        [operators]="[$any(_b.operator)]"
-        [model]="$any(_b.operator)"
+        [operators]="[$any(_building.operator)]"
+        [model]="$any(_building.operator)"
         [disabled]="true" />
 
-      @if (_b.field.type === 'values' || _b.field.type === 'lazy-values') {
-        @let _bopt = $any(_b.field).option;
+      @if (_building.field.type === 'values' || _building.field.type === 'lazy-values') {
+        @let _bopt = $any(_building.field).option;
         <span class="c-token-value c-token-value-edit">
           <sd-select #bPicker size="sm" [viewed]="'inline'" [clearable]="false" minWidthPanel="300px"
             [autoId]="_autoId"
-            [items]="_b.field.type === 'lazy-values' ? $any(_bopt).search : $any(_bopt.items)"
+            [items]="_building.field.type === 'lazy-values' ? $any(_bopt).search : $any(_bopt.items)"
             [valueField]="_bopt.valueField"
             [displayField]="_bopt.displayField"
             [multiple]="multiple()"
-            [model]="$any(_b.value)"
+            [model]="$any(_building.value)"
             (sdChange)="commitValue.emit($event)">
             <!-- why: build chip multi-select cũng cần "head +N" để gọn (giống completed chip). -->
             <ng-template #sdValue let-selectedItems="selectedItems">
@@ -58,37 +58,37 @@
             </ng-template>
           </sd-select>
         </span>
-      } @else if (_b.field.type === 'date') {
+      } @else if (_building.field.type === 'date') {
         <span class="c-token-value c-token-value-edit">
-          @if (_b.operator === 'BETWEEN') {
+          @if (_building.operator === 'BETWEEN') {
             <!-- why: 1 sd-date-range thay 2 sd-date — gọn hơn, hành vi thống nhất với completed chip. -->
             <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
-              [model]="$any(_b.value)"
+              [model]="$any(_building.value)"
               (sdChange)="commitValue.emit($event)"></sd-date-range>
           } @else {
             <sd-date #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
-              [model]="$any(_b.value)"
+              [model]="$any(_building.value)"
               (sdChange)="commitValue.emit($event)"></sd-date>
           }
         </span>
-      } @else if (_b.field.type === 'datetime') {
+      } @else if (_building.field.type === 'datetime') {
         <span class="c-token-value c-token-value-edit">
-          @if (_b.operator === 'BETWEEN') {
+          @if (_building.operator === 'BETWEEN') {
             <!-- why: datetime BETWEEN downgrade về date-range (mất time precision; đã thống nhất). -->
             <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
-              [model]="$any(_b.value)"
+              [model]="$any(_building.value)"
               (sdChange)="commitValue.emit($event)"></sd-date-range>
           } @else {
             <sd-datetime #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
-              [model]="$any(_b.value)"
+              [model]="$any(_building.value)"
               (sdChange)="commitValue.emit($event)"></sd-datetime>
           }
         </span>
-      } @else if (_b.field.type === 'boolean') {
+      } @else if (_building.field.type === 'boolean') {
         <!-- why: native button thay sd-button (tránh mat-button baseline 36px gây tràn).
              Pill nhỏ vẽ bằng CSS scoped trong chip — giữ semantic colour qua class
              .c-bool-true / .c-bool-false. -->
@@ -96,18 +96,18 @@
           <button
             type="button"
             class="c-bool-btn c-bool-true"
-            [class.c-bool-active]="_b.value === true"
+            [class.c-bool-active]="_building.value === true"
             [attr.data-autoId]="_autoId + '-true'"
             (click)="commitValue.emit(true)">
-            {{ $any(_b.field).trueLabel || 'Có' }}
+            {{ $any(_building.field).trueLabel || 'Có' }}
           </button>
           <button
             type="button"
             class="c-bool-btn c-bool-false"
-            [class.c-bool-active]="_b.value === false"
+            [class.c-bool-active]="_building.value === false"
             [attr.data-autoId]="_autoId + '-false'"
             (click)="commitValue.emit(false)">
-            {{ $any(_b.field).falseLabel || 'Không' }}
+            {{ $any(_building.field).falseLabel || 'Không' }}
           </button>
         </span>
       } @else {
@@ -115,7 +115,7 @@
         <span class="c-token-value c-token-value-edit">
           <sd-input size="sm"
             [autoId]="_autoId"
-            [model]="$any(_b.value)"
+            [model]="$any(_building.value)"
             (sdChange)="draftChange.emit($event)"
             (keyupEnter)="draftCommit.emit()"></sd-input>
         </span>

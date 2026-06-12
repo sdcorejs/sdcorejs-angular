@@ -1,11 +1,11 @@
-@let _items = resolvedItems();
-@let _templateRef = resolvedItemTemplate();
+@let _resolvedItems = resolvedItems();
+@let _resolvedItemTemplate = resolvedItemTemplate();
 
 <div class="sd-org-chart" role="tree">
   <ul class="sd-org-chart__tree">
-    @for (item of _items; track trackByItem($index, item)) {
+    @for (item of _resolvedItems; track trackByItem($index, item)) {
       <ng-container
-        *ngTemplateOutlet="nodeTemplate; context: { $implicit: item, item: item, depth: 0, parent: null, templateRef: _templateRef }" />
+        *ngTemplateOutlet="nodeTemplate; context: { $implicit: item, item: item, depth: 0, parent: null, templateRef: _resolvedItemTemplate }" />
     }
   </ul>
 </div>

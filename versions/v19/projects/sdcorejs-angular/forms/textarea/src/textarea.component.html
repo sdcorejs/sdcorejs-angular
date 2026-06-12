@@ -2,24 +2,24 @@
 @let _appearance = appearance();
 @let _hideInlineError = hideInlineError();
 @let _errorMessage = errorMessage();
-@let _labelDef = sdLabelDef();
+@let _sdLabelDef = sdLabelDef();
 @let _helperText = helperText();
 @let _required = required();
 @let _maxLength = maxlength();
 @let _isInline = isInline();
 
 @if (isViewed()) {
-  @if (_labelDef?.templateRef) {
-    <ng-container *ngTemplateOutlet="_labelDef!.templateRef"> </ng-container>
+  @if (_sdLabelDef?.templateRef) {
+    <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
   } @else if (_label) {
     <div class="T14R text-black400">{{ _label }}</div>
   }
   <div class="T14M">{{ formControl.value | sdEmpty }}</div>
 } @else {
-  @if (!_appearance && _labelDef?.templateRef) {
-    <ng-container *ngTemplateOutlet="_labelDef!.templateRef"> </ng-container>
+  @if (!_appearance && _sdLabelDef?.templateRef) {
+    <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
   }
-  @if (!_appearance && _label && !_labelDef?.templateRef) {
+  @if (!_appearance && _label && !_sdLabelDef?.templateRef) {
     <sd-label [label]="_label" [required]="_required"></sd-label>
   }
 
