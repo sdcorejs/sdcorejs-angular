@@ -18,6 +18,7 @@ import {
   signal,
   viewChild
 } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { SdLoadingService } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { fromEvent, merge, Observable, Subject } from 'rxjs';
@@ -29,7 +30,7 @@ import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators'
   styleUrls: ['./side-drawer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, PortalModule],
+  imports: [CommonModule, PortalModule, MatIconModule],
 })
 export class SdSideDrawer {
   id = `I${Utilities.generateUuid()}`;

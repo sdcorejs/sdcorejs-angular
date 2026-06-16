@@ -14,6 +14,13 @@ Provider-agnostic auth abstraction: app supplies sign-out / change-password acti
 - Need `SdAuthGuard` / `SdPortalGuard` route guards that an app can wire into `canActivate` / `canActivateChild` without coupling to a specific auth library.
 - Pair with `@sdcorejs/angular/modules/keycloak` or `@sdcorejs/angular/modules/authom` — those modules implement the actual sign-in / token logic, while this module gives the app shell a stable surface to consume.
 
+## When NOT to use
+
+- Do not use it as the actual OAuth / SSO client. Use `keycloak`, `authom`, or an app-owned provider for token lifecycle.
+- Do not use it for RBAC checks. Use the `permission` module for `*sdPermission`, permission caching, and route permission gates.
+- Do not expect guards to block routes by default. Without configured callbacks, `SdAuthGuard` and `SdPortalGuard` intentionally pass through.
+- Do not inject it into low-level HTTP interceptors as the token source unless your `SD_AUTH_CONFIGURATION` explicitly exposes token access elsewhere; this facade only owns user/action/guard callbacks.
+
 ## What it provides
 
 | Symbol | Kind | Purpose |

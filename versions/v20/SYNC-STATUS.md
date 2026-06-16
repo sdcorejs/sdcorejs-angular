@@ -3,8 +3,8 @@
 | Key | Value |
 |-----|-------|
 | Angular Major | 20 |
-| Source Commit | 31d97772 |
-| Synced At | 2026-06-12 18:22:49 |
+| Source Commit | 076d38e2 |
+| Synced At | 2026-06-16 16:50:37 |
 | Source | vn-angular → versions/v19 → v20 |
 
 ## Notes

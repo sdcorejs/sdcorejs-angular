@@ -293,6 +293,14 @@ export class CustomerCreatePage {
 | Search | `table-input-search` | `//*[@data-autoid="table-input-search"]` | invalid=false |           |
 ```
 
+## Anti-patterns
+
+- Do NOT enable the inspector for production users. Gate it with `[enabled]="!environment.production"` or an equivalent runtime flag.
+- Do NOT use the floating panel as a product feature or user-facing help UI. It is a dev/QA tool.
+- Do NOT treat exported POM / Markdown as final tests without review; it is a selector skeleton for automation authors or AI.
+- Do NOT pass a backend `host` unless the current environment is allowed to generate E2E ZIPs.
+- Do NOT use this component for CI-wide autoid audits. Use a headless script for batch checks and keep the component for interactive inspection.
+
 ## Styling
 
 - Dùng **CSS custom properties** từ `@sdcorejs/angular` theme (`--sd-primary`, `--sd-primary-light/dark`, `--sd-info`, `--sd-success`, `--sd-warning`, `--sd-error` + `--sd-black100..500`).

@@ -26,7 +26,7 @@ iOS-style toggle switch — boolean ON/OFF in a single tap. Use for feature flag
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-switch-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Reserved; current template does not branch on this. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Reserved; current template does not branch on this, so `size="sm"` does not compact switch UI yet. |
 | `form` | `NgForm \| FormGroup \| undefined \| null` | `undefined` | Parent form. `NgForm` is auto-unwrapped to its inner `FormGroup`. |
 | `label` | `string \| undefined` | `undefined` | Label rendered to the right of the toggle (via `<sd-label>`). |
 | `color` | `Color` | `'primary'` | Material color for the ON state knob/track. |

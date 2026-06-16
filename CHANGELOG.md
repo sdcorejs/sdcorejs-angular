@@ -10,6 +10,27 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.8] - 2026-06-16
+
+Published: `@sdcorejs/angular@19.0.8` / `@20.0.8` / `@21.0.8` (npm dist-tag `latest`).
+Synced from `vn-angular@076d38e2`; includes the prior untagged sync from `vn-angular@31d97772`.
+
+### Added
+
+- **`components/autoid-inspector` — Forge E2E export** — inspector export tab can call a configured backend host to generate Playwright / Robot Framework E2E ZIPs from the current autoid scan payload, while API keys stay server-side. Synced from `vn-angular@31d97772`.
+- **Core UI source-of-truth docs for AI rendering** — expanded component/form/service/module/pipe markdown so downstream agents can choose existing Core UI primitives before writing local CSS or custom markup. Notable docs cover `sd-operator`, `sd-tree`, `sd-query-bar`, `sd-query-builder`, `sd-inline-text`, `sd-input-color`, module `When NOT to use` guidance, pipe misuse guidance, and concrete copyable examples. Synced from `vn-angular@076d38e2`.
+- **`STYLE-GUIDE.md` AI rendering guardrails** — added rules for 4px-based spacing, Core UI utilities/components first, `sd-view` for label/value display, `sd-badge` for status rendering, and `size="sm"` for dense/table form controls. Synced from `vn-angular@076d38e2`.
+
+### Changed
+
+- **`sd-modal` and `sd-side-drawer` close buttons** — close affordances now render as accessible icon buttons with a stable hit area, neutral hover/active states, focus-visible ring, and theme CSS variables. Synced from `vn-angular@076d38e2`.
+- **`sd-table` and form docs** — table docs now call out `useBadge` / `sd-badge` for status columns and `size="sm"` for filters or inline editors in dense table contexts; form docs mirror the same compact-size convention. Synced from `vn-angular@076d38e2`.
+- **`sd-query-bar` docs** — clarified that `SdQuery.filters` is already the canonical `Filter[]` payload and must not be copied into `sd-table.filter.externalFilters`, which describes built-in toolbar controls. Synced from `vn-angular@076d38e2`.
+
+### Fixed
+
+- **Docs copy-paste safety** — replaced placeholder snippets in public examples with concrete column definitions so AI-generated code does not inherit non-compiling skeletons. Synced from `vn-angular@076d38e2`.
+
 ## [0.7] - 2026-06-11
 
 Published: `@sdcorejs/angular@19.0.7` / `@20.0.7` / `@21.0.7` (npm dist-tag `latest`).

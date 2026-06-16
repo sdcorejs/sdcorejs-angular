@@ -14,7 +14,14 @@
             <ng-content select="[sdHeaderRight]"></ng-content>
             <ng-content select="[sdHeader]"></ng-content>
             @if (!hideClose()) {
-              <mat-icon class="text-secondary cursor-pointer" fontIcon="close" (click)="close()" [attr.data-autoId]="closeButtonAutoId()"></mat-icon>
+              <button
+                type="button"
+                class="sd-modal-close-btn"
+                aria-label="Close"
+                (click)="close()"
+                [attr.data-autoId]="closeButtonAutoId()">
+                <mat-icon>close</mat-icon>
+              </button>
             }
           </div>
         </div>

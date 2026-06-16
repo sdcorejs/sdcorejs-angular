@@ -481,6 +481,20 @@ describe('SdModal', () => {
       expect(root.classList.contains('sd-modal-root')).toBeTrue();
     });
 
+    it('renders a compact close button with the derived autoId', () => {
+      const vcr = eFixture.debugElement.query(By.directive(SdModal)).injector.get(ViewContainerRef);
+      const view = eModal.templateRef().createEmbeddedView({});
+      vcr.insert(view);
+      eFixture.detectChanges();
+
+      const root = view.rootNodes[0] as HTMLElement;
+      const closeButton = root.querySelector('button.sd-modal-close-btn') as HTMLButtonElement | null;
+
+      expect(closeButton).not.toBeNull();
+      expect(closeButton?.getAttribute('data-autoid')).toBe('components-modal-confirm-close');
+      expect(closeButton?.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
+    });
+
     it('autoId() computes to "components-modal-confirm"', () => {
       expect(eModal.autoId()).toBe('components-modal-confirm');
     });

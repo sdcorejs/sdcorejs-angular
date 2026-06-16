@@ -15,6 +15,13 @@ RBAC permission layer: `*sdPermission` directive conditionally renders templates
 - Portal aggregates several products with different permission APIs — multiple `SD_PERMISSION_CONFIGURATION` providers (using `multi: true`) let you scope by `key`, with `key === undefined` acting as the portal-wide fallback.
 - Need cached, session-persisted permission lists (backed by `SdCacheService` with `type: 'session'`).
 
+## When NOT to use
+
+- Do not use it as the only security layer. It hides UI and blocks client routes; APIs must enforce permissions again.
+- Do not use it for authentication or token refresh. Pair it with `auth`, `keycloak`, or `authom`.
+- Do not use `SdPermissionGuard.canActivate` on each leaf route. Use it once at the portal layer to preload; enforce children with `canActivateChild`.
+- Do not use permission codes as labels or feature names in the UI. Keep them as stable backend-facing identifiers.
+
 ## What it provides
 
 | Symbol | Kind | Purpose |

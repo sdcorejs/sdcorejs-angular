@@ -13,6 +13,12 @@ Replaces `null`, `undefined`, or empty-string values with the project-wide "empt
 - Display values in tables / detail panels where a missing field should render a consistent placeholder
 - Anywhere you'd otherwise write `{{ value || '-' }}` — unifies the placeholder across the app
 
+## When NOT to use
+
+- Do not use it when `0`, `false`, `[]`, or `{}` should be treated as empty; this pipe intentionally preserves those values.
+- Do not use it to format numbers, dates, booleans, or statuses. Format first, then apply `sdEmpty` only for missing-display fallback.
+- Do not use it in editable inputs; keep placeholders and validation messages inside the form control.
+
 ## Signature
 ```ts
 transform(value: any): string

@@ -29,7 +29,7 @@ Right-edge slide-in panel rendered into `document.body` via CDK Portal — used 
 | --- | --- | --- | --- |
 | `title` | `string` | `''` | Header title. Replaced wholesale if `[sdHeaderLeft]` slot is provided. |
 | `width` | `string` | `'480px'` | CSS width of the drawer (e.g. `'640px'`, `'40vw'`, `'100%'`). |
-| `hideClose` | `boolean` | `false` | Bare attribute = true. Hides the built-in `×` close button in the header. |
+| `hideClose` | `boolean` | `false` | Bare attribute = true. Hides the built-in close button in the header. |
 | `disableBackdropClose` | `boolean` | `false` | Bare attribute = true. Clicking the backdrop will NOT close the drawer (force the user to click an explicit action button). |
 | `drawerClass` | `any` (string \| string[] \| object) | `''` | Custom CSS classes for the root `.sd-side-drawer` container — bound via `[ngClass]`. |
 | `autoId` | `string \| undefined \| null` | `undefined` | Stable E2E identifier. When set, renders `data-autoid="components-side-drawer-<autoId>"` on the root element. |
@@ -71,7 +71,7 @@ Right-edge slide-in panel rendered into `document.body` via CDK Portal — used 
 - Slides in from the **right edge** of the viewport (CSS class `sd-side-drawer-active` toggles transform)
 - Width: `width` input (default 480px); height: full viewport
 - Backdrop: semi-transparent dark overlay covering the rest of the viewport; clicking it closes (unless `disableBackdropClose`)
-- Header: top bar with title on the left, action area on the right ending in a hairline `×` close button (24×24 SVG of two crossed lines)
+- Header: top bar with title on the left, action area on the right ending in a compact 32px rounded close button with a Material `close` icon
 - Body: scrollable content area between header and footer
 - Footer: separated from the body, holds projected `[sdFooter]` content (typically Cancel + primary CTA)
 - Background body scroll is locked while the drawer is open; mouse-wheel and touchmove on the backdrop are blocked via `preventScroll`

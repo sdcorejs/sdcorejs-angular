@@ -365,7 +365,13 @@ option: SdTableOption<Product> = {
     });
     return { items: res.data, total: res.total };
   },
-  columns: [...],
+  columns: [
+    { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+    { field: 'name', type: 'string', title: 'Tên', sortable: true },
+    { field: 'status', type: 'values', title: 'Trạng thái',
+      useBadge: (val) => ({ color: val === 'ACTIVE' ? 'success' : 'secondary', title: val })
+    },
+  ],
   command: {
     align: 'right',
     commands: [

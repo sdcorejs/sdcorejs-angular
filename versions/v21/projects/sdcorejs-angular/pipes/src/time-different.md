@@ -14,6 +14,12 @@ Streams a relative time string ("2 phút trước") that updates every second wh
 - "Last seen" / "updated N ago" badges
 - Anywhere you want the current relative time to stay accurate without manual change-detection
 
+## When NOT to use
+
+- Do not use it without `| async`; the pipe returns an `Observable<string>`.
+- Do not use it for thousands of rows in a large table; each rendered instance owns a 1-second interval.
+- Do not use it for strict audit/legal timestamps where absolute time must always be visible.
+
 ## Signature
 ```ts
 transform(

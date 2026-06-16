@@ -22,6 +22,7 @@
 14. [Custom theme](#14-custom-theme)
 15. [Fonts & Images shipped](#15-fonts--images-shipped)
 16. [What is NOT shipped](#16-what-is-not-shipped) — anti-confusion cho AI
+17. [AI rendering guardrails](#17-ai-rendering-guardrails) — ưu tiên Core UI trước khi viết CSS mới
 
 ---
 
@@ -605,3 +606,15 @@ Tham chiếu qua `core/image.scss` utility hoặc trực tiếp `assets/images/<
 | `modal`              | dùng `<sd-modal>` |
 
 > Lưu ý lớn nhất: **spacing scale đã đổi từ Bootstrap multiplier (1=4px, 2=8px…) sang px tuyệt đối**. `mb-3` trong Bootstrap = 16px; trong `@sdcorejs/angular` `mb-3` = **3px**. Reading code cũ cần convert (× 4) cẩn thận hoặc thay bằng `mb-16`.
+
+---
+
+## 17. AI rendering guardrails
+
+Khi sinh UI mới, agent phải rà docs Core UI trước và ưu tiên component/utility đã có thay vì tự tạo class SCSS trong component.
+
+- **Spacing layout dùng bội số 4px**: ưu tiên `4`, `8`, `12`, `16`, `24`, `32`... cho margin, padding, gap, gutter. Không sinh spacing lẻ như `3px`, `5px`, `7px` trừ khi có yêu cầu pixel-perfect rõ ràng.
+- **Hạn chế class CSS cục bộ**: trước khi viết `.field-label`, `.status-pill`, `.detail-row`, `.cell-input`..., kiểm tra có utility class hoặc component `sd-*` phù hợp không. Chỉ thêm SCSS mới khi Core UI không có pattern tương đương.
+- **View/read-only label + value**: dùng `<sd-view>` hoặc `[viewed]="true"` trên form component. Không tự dựng cặp label/value bằng class riêng cho các màn hình DETAIL.
+- **Trạng thái, nhãn, counter**: dùng `<sd-badge>` hoặc `useBadge` của `<sd-table>`. Không tự viết badge/pill/status class trong component nếu chỉ để thể hiện trạng thái.
+- **Input trong table hoặc vùng dense**: trong `<sd-table>`, inline filter, editable cell, toolbar/cell dày đặc, truyền `size="sm"` cho các form component hỗ trợ size như `<sd-input>`, `<sd-select>`, `<sd-autocomplete>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-input-number>`, `<sd-textarea>`, `<sd-chip>`, `<sd-chip-calendar>`, `<sd-input-color>`.

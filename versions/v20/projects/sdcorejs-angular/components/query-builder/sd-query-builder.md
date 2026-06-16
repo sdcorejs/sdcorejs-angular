@@ -46,6 +46,24 @@ New usage should bind only `[option]`, like `sd-table`. Put `autoId`, `fields`, 
 
 `value` is the source of truth; `filters` is kept in sync. Seeding either rebuilds the internal tree once, then normalizes — no echo loop.
 
+## Outputs
+The component uses Angular model outputs for `value`, `filters`, and `rootLogic`:
+
+| Output | Payload | Notes |
+| --- | --- | --- |
+| `valueChange` | `Filter \| null` | Canonical nested filter tree. |
+| `filtersChange` | `Filter[]` | Flat root-level mirror. |
+| `rootLogicChange` | `'AND' \| 'OR'` | Root connector mirror. |
+
+When using `[option]`, the equivalent callbacks are `onValueChange`, `onFiltersChange`, and `onRootLogicChange`.
+
+## Visual cues
+- Edit mode renders nested groups of rule rows with field picker, operator picker, and value editor.
+- Group connectors are AND/OR controls, with nested groups visually indented.
+- Value editors reuse Core UI controls according to field type: input, number, select, date, datetime.
+- View mode renders a disabled-input-like raw query string with highlighted field/operator/value tokens.
+- Incomplete rules are visible while editing but are dropped from emitted `Filter`.
+
 ### Type shapes
 ```ts
 type SdQueryBuilderFieldType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'values';

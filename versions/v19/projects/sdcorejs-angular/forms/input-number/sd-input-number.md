@@ -28,7 +28,7 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoid="forms-input-number-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`. |
 | `label` | `string \| undefined` | `undefined` | Field label (rendered via `<sd-label>`). |
 | `helperText` | `string \| undefined` | `undefined` | Hint text under the field. |

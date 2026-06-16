@@ -27,7 +27,7 @@ Multi-line text input — `<textarea>` with label, validators (required/maxlengt
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoid="forms-textarea-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height (applied via `.sd-md` / `.sd-sm` class). |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height (applied via `.sd-md` / `.sd-sm` class). Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `FormGroup \| NgForm \| { form: FormGroup } \| undefined` | `undefined` | Parent form. `NgForm` and `{ form }` wrappers are auto-unwrapped to `FormGroup`. |
 | `label` | `string \| undefined` | `undefined` | Field label. |
 | `helperText` | `string \| undefined` | `undefined` | Hint text (rendered as info icon next to label). |

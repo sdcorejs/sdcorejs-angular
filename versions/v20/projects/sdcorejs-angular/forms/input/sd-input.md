@@ -30,7 +30,7 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
 | `appearance` | `MatFormFieldAppearance` | from `SD_FORM_CONFIGURATION` ?? `'outline'` | Material form-field style. |
 | `floatLabel` | `FloatLabelType` | `'auto'` | Material float-label behaviour. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`. |
 | `label` | `string \| undefined` | `undefined` | Field label (rendered via `<sd-label>`). |
 | `helperText` | `string \| undefined` | `undefined` | Hint text under the field. |

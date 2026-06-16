@@ -16,6 +16,13 @@ OAuth 2.0 + PKCE authentication client for AuthOM (Auth0-based) — handles logi
 - Differs from `keycloak` module: AuthOM targets Auth0-style `/authorize` + `/oauth/token` endpoints with PKCE; Keycloak module wraps `keycloak-js` directly.
 - Differs from `auth` module: this module **owns** the actual sign-in flow and token state; `auth` is a façade you can additionally wire on top.
 
+## When NOT to use
+
+- Do not use it for Keycloak realms. Use the `keycloak` module so `keycloak-js` owns the provider-specific behavior.
+- Do not use it when the app needs a backend-confidential client secret flow; this module is for browser SPA Authorization Code + PKCE only.
+- Do not use it only to expose current user info in a header. Wire the generic `auth` module on top if the login flow is already handled elsewhere.
+- Do not attach it to every outbound request. Scope `secureRoutes` to trusted API origins so tokens are not sent to third parties.
+
 ## What it provides
 
 | Symbol | Kind | Purpose |

@@ -15,6 +15,13 @@ Schema-driven CRUD/list scaffolding: products register `(module, typeCode) → S
 - Need automatic relation column rendering — given a property whose `type === 'relation'`, the generic table fetches the referenced records and shows their `displayField`.
 - Need search-with-filter combobox UIs (`<sd-generic-select>`) that automatically read schema's `valueField` / `displayField`.
 
+## When NOT to use
+
+- Do not use it for a bespoke screen with hand-crafted UX, complex local state, or custom workflow actions. Build directly with `<sd-table>`, forms, and domain services.
+- Do not use it when the backend cannot expose a stable schema (`properties`, `primaryKey`, value/display fields). The module depends on schema metadata.
+- Do not use `<sd-generic-select>` just to render a small static enum. Use `<sd-select>` / `<sd-autocomplete>` directly.
+- Do not put authorization decisions only in schema metadata. Pair with the `permission` module and backend enforcement.
+
 ## What it provides
 
 | Symbol | Kind | Purpose |

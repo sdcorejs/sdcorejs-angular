@@ -104,6 +104,19 @@ export class EmployeeDetailComponent { ... }
 
 The decorator self-registers via `SdTabDecoratorService` so metadata is resolved when the route activates.
 
+## Public API
+
+| API | Kind | Use it when |
+| --- | --- | --- |
+| `<sd-tab-router-outlet [disabled]>` | Component | Replacing the app shell's `<router-outlet>` with a persistent multi-tab router host. |
+| `<sd-tab-router-nav [tabs]>` | Component | Rendering the tab strip supplied by the outlet. Usually used internally, not by feature screens. |
+| `<sd-tab-router-item [tab]>` | Component | Rendering one draggable/closable tab pill inside the nav. Usually used internally. |
+| `@SdTabComponent({...})` | Decorator | Supplying route-component tab metadata: name, icon, tooltip, and color. |
+| `SdTabRouterService` | Service | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first. |
+| `SdTab` / `SdTabInfo` | Interfaces | Strongly typing custom tab metadata or service integrations. |
+
+Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.navigate(...)`. App shells wire `<sd-tab-router-outlet>` once.
+
 ## Tab data model
 
 ```ts

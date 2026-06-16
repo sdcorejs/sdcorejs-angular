@@ -34,7 +34,7 @@ Centered dialog (or mobile bottom-sheet) with optional title/header/footer slots
 | `view` | `'dialog' \| 'bottom-sheet' \| undefined` | `undefined` | `undefined` = auto (dialog on desktop, bottom-sheet on mobile). Force a mode by setting explicitly. |
 | `modalClass` | `string \| string[] \| Record<string, boolean>` | `''` | Extra panel CSS class(es) for the underlying Material dialog/bottom-sheet. |
 | `lazyLoadContent` | `boolean` | `true` | If `true`, projected content is rendered only after the first `open()` call. Saves work for modals that may never open. |
-| `hideClose` | `boolean` | `false` | Hide the top-right `close` icon. Bare attribute = true. |
+| `hideClose` | `boolean` | `false` | Hide the top-right close button. Bare attribute = true. |
 | `disableBackdropClose` | `boolean` | `true` | If `true`, clicking the backdrop or pressing ESC does NOT close the modal. Default keeps users from losing form input. Bare attribute = true. |
 
 > **Coerce note**: `lazyLoadContent`, `hideClose`, `disableBackdropClose` use `booleanAttribute` — bare attribute presence is treated as `true`.
@@ -64,7 +64,7 @@ These are typically called via a `#modal` template reference: `<sd-modal #modal>
 ## Visual cues
 - A centered rectangular dialog floating over a dimmed backdrop (desktop)
 - On mobile (or `view="bottom-sheet"`), the panel slides up from the bottom and pins to the bottom edge
-- Top row: title on the left, optional header-right actions, then a small grey close icon
+- Top row: title on the left, optional header-right actions, then a compact 32px rounded close button with a Material `close` icon
 - Body: scrollable (caps at 80vh), `px-16` horizontal padding
 - Footer: left-aligned and right-aligned action groups
 - Width tokens map to viewport-relative widths so the modal grows on big screens

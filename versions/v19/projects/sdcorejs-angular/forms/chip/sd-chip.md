@@ -27,7 +27,7 @@ Multi-value tag input — user types and presses Enter/comma to add a chip; chip
 | `name` | `string \| undefined` | random uuid | Control name registered into `[form]`. |
 | `appearance` | `MatFormFieldAppearance` | `'outline'` | Material form-field style. |
 | `floatLabel` | `FloatLabelType` | `'auto'` | When the label floats (`auto \| always`). |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form; NgForm auto-unwrapped. |
 | `label` | `string` | `''` | Field label. |
 | `placeholder` | `string \| undefined` | `undefined` | Placeholder for the typing area. |

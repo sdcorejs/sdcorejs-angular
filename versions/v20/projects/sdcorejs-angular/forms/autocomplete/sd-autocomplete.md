@@ -27,7 +27,7 @@ Typeahead single-select dropdown — user types to filter a static array OR an a
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-autocomplete-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`. |
 | `label` | `string \| undefined` | `undefined` | Field label (rendered via `<sd-label>`). |
 | `helperText` | `string \| undefined` | `undefined` | Hint text under the field. |

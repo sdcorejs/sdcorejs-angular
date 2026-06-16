@@ -28,7 +28,7 @@ Two-date range picker — user picks a start date AND an end date through a sing
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-date-range-<value>"` for E2E selectors. |
 | `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. The component also registers two internal sub-controls (random uuids) for the start/end inputs. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`. |
 | `label` | `string \| undefined` | `undefined` | Field label (rendered via `<sd-label>`). |
 | `helperText` | `string \| undefined` | `undefined` | Hint icon + tooltip in the label area. |

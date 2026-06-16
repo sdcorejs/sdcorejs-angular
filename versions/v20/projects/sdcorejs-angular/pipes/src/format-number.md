@@ -14,6 +14,12 @@ Locale-aware number formatting — uses Vietnamese style (`1.234.567,89`) when `
 - Anywhere consistent locale-aware decimal/thousand separators are required
 - Pair with `| sdEmpty` to handle missing values gracefully
 
+## When NOT to use
+
+- Do not pass already-formatted strings such as `"1.234,5"`; pass raw numeric values.
+- Do not use it for editable form values where caret position and parsing matter. Use a form control with numeric formatting instead.
+- Do not use it to append units, currency symbols, or percent signs by itself; compose those labels explicitly around the formatted number.
+
 ## Signature
 ```ts
 transform(value: any, digits?: number): string | null

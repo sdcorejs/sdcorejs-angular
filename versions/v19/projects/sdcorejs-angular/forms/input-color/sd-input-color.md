@@ -26,7 +26,7 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 | `label` | `string \| undefined` | — | Label above / inside the field |
 | `helperText` | `string \| undefined` | — | Tooltip text on the label info icon |
 | `placeholder` | `string` | `'#RRGGBB'` | Input placeholder |
-| `size` | `'sm' \| 'md'` | `'md'` | Forwarded |
+| `size` | `'sm' \| 'md'` | `'md'` | Forwarded to inner `<sd-input>`. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `appearance` | `MatFormFieldAppearance \| undefined` | inherits | Forwarded |
 | `form` | `FormGroup \| NgForm \| undefined` | — | When set, the inner control registers under `name` |
 | `name` | `string \| undefined` | — | FormGroup control name |
@@ -63,7 +63,14 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 - **Disabled / readonly / `viewed === true`** — swatch button is disabled, picker won't open, clear button is hidden.
 - **`viewed === 'inline'`** — forwarded to the inner `<sd-input>` (borderless click-to-edit). The swatch stays enabled so you can still recolor in place. But disabled + `'inline'` collapses the inner input to its static `<sd-view>` (no suffix), so the swatch is not rendered at all.
 
-## Example
+## Visual cues
+- Looks like `<sd-input>` with a square color swatch suffix.
+- The swatch shows the current color when the hex value is valid.
+- Empty or invalid values render a checkerboard fallback so white and empty are visually different.
+- The browser native color picker opens when the user clicks the swatch.
+- The built-in `<sd-input>` clear button appears only when editable, non-empty, and not required.
+
+## Examples
 
 ```html
 <sd-input-color
@@ -82,3 +89,11 @@ brandColor = signal<string | undefined>('#1565C0');
 - ❌ Two-way binding to a non-string (number, object) — the model expects a hex string or null/undefined
 - ❌ Passing names like `'red'` / `'blue'` — pattern validator will reject; use a `<sd-select>` if you need named colors
 - ❌ Skipping `[required]` then trying to enforce non-empty downstream — let the built-in required validator do it
+
+## E2E test attributes
+`autoId` is forwarded to the inner `<sd-input>`, so selectors follow the `<sd-input>` autoId scheme.
+
+## Related
+- `<sd-input>` — inner text field and validation surface.
+- `<sd-select>` — better for curated palettes / named colors.
+- `<sd-badge>` — often consumes selected color tokens visually, but is not a color picker.

@@ -152,6 +152,14 @@ All `boolean` inputs go through `booleanAttribute` (bare attribute = true). All 
 
 > **Trigger model:** mutations (`addFilter`, `updateFilter`, …) ONLY mutate `filters` / `logic` / `search` models. The composite `(queryChange)` + `(apply)` outputs fire exactly once per Search action.
 
+## Visual cues
+- One horizontal filter bar with optional free-text search input on the left and actions on the right.
+- Popover mode renders compact chips; chip click opens a Material menu editor for operator/value.
+- Inline mode renders GitLab-style tokens where operator/value controls sit directly in the chip row.
+- Active chips show field label, value summary, optional operator, and a remove `×`.
+- Saved filters appear as bookmark controls near the Search action when enabled.
+- AND/OR toggle appears only when enabled and there are at least two filters.
+
 ## Public API
 
 | Method | Purpose |
@@ -222,25 +230,79 @@ When both are set, the toolbar exposes two adjacent buttons next to Search:
 
 Without a key both buttons stay disabled / hidden. `<sd-query-saved-filters-menu>` owns persistence — the host only reacts to `(applyFilter)`.
 
-## Integration with sd-table
+## Examples
+
+### 1. Popover query bar with explicit apply
 
 ```html
 <sd-query-bar
   [fields]="fields"
-  [(filters)]="filters"
+  [showSearch]="true"
+  (apply)="reload($event)">
+</sd-query-bar>
+```
+
+```ts
+fields: SdQueryField<Order>[] = [
+  { key: 'code', label: 'Mã đơn', type: 'string' },
+  { key: 'status', label: 'Trạng thái', type: 'values',
+    option: { items: STATUSES, valueField: 'value', displayField: 'label' } },
+  { key: 'createdAt', label: 'Ngày tạo', type: 'date' },
+];
+
+reload(query: SdQuery<Order>): void {
+  this.query.set(query);
+  this.table.reload();
+}
+```
+
+### 2. Inline mode with saved filters
+
+```html
+<sd-query-bar
+  mode="inline"
+  [fields]="fields"
   [showSearch]="true"
   [showSavedFilters]="true"
-  savedFiltersKey="orders-page"
-  (apply)="reload()">
+  savedFiltersKey="orders.list"
+  [showLogicToggle]="true"
+  (apply)="onApplyQuery($event)">
+</sd-query-bar>
+```
+
+### 3. Drive an `<sd-table>` server request
+
+```html
+<sd-query-bar
+  [fields]="fields"
+  [showSearch]="true"
+  (apply)="query.set($event); tableRef.reload()">
 </sd-query-bar>
 
 <sd-table
-  [items]="rows"
-  [tableOption]="{ filter: { externalFilters: filters, disabled: true } }">
+  #tableRef
+  [option]="tableOption">
 </sd-table>
 ```
 
-`filters` is the **single source of truth** — share it between query-bar and table.
+```ts
+query = signal<SdQuery<Order>>({ filters: [], logic: 'AND', search: '' });
+
+tableOption: SdTableOption<Order> = {
+  type: 'server',
+  items: (_filterReq, pagingReq) => this.api.searchOrders({
+    ...pagingReq,
+    filters: this.query().filters,
+    logic: this.query().logic ?? 'AND',
+    search: this.query().search,
+  }),
+  columns: [
+    { field: 'code', title: 'Mã đơn', type: 'string' },
+  ],
+};
+```
+
+`SdQuery.filters` is already the canonical `Filter[]` payload. Do not try to stuff it into `sd-table`'s `filter.externalFilters`; that config describes built-in toolbar controls, not query-bar chip state.
 
 ## Dependencies
 
@@ -262,3 +324,16 @@ External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
 - Operator picker dropdown doesn't support keyboard arrow navigation yet (planned).
 - No `Esc` shortcut to cancel an in-progress build chip (planned).
 - `(values | lazy-values).option.items` async-function variant is loaded once per popover open — no caching across opens. Acceptable for the current usage; revisit if a heavy endpoint hurts UX.
+
+## Anti-patterns
+- ❌ Using query-bar for a single simple filter — one form control is lighter.
+- ❌ Passing `SdQuery.filters` into `sd-table.filter.externalFilters` — those are different contracts.
+- ❌ Recreating `fields` inline in the template — keep field config stable so chips/pickers do not churn.
+- ❌ Enabling saved filters without `savedFiltersKey` — the UI cannot persist anything without a namespace.
+- ❌ Using `mode="inline"` for very complex fields if the row becomes crowded — prefer `popover` mode or `<sd-query-builder>`.
+
+## Related
+- `<sd-query-builder>` — nested AND/OR rule builder for advanced filters.
+- `<sd-table>` — common consumer of the query via server `items()`.
+- `<sd-operator>` — operator picker reused inside chips.
+- `<sd-select>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-input>` — value editors used by query fields.

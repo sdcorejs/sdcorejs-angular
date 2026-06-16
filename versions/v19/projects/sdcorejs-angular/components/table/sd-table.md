@@ -93,6 +93,8 @@ A discriminated union over `type`. All variants share `SdTableColumnBase`:
 
 `Badge` shape: `{ type?, color?, icon?, title? }` — maps to a `<sd-badge>` rendered in the cell.
 
+**Rendering convention:** status/state columns should use `useBadge` or a projected `<sd-badge>`. Do not hand-roll `.status-*`, `.pill-*`, or badge-like CSS classes for plain state display.
+
 ### Config option (`TableOptionConfig`) — gear button + column resize
 
 ```ts
@@ -202,6 +204,7 @@ tree: {
 - **Blur** (focus rời input) → commit value vào `filterRegister` với `notReload: true` — **không** gọi API. Đảm bảo giá trị typed-but-not-entered không bị mất nếu user chuyển sang filter khác hoặc bấm Reload.
 - **Click nút Reload** (`reload()`) → table tự commit `this.columnFilter` snapshot vào `filterRegister` (notReload:true) trước khi build filter request — đảm bảo giá trị input vẫn còn focus cũng được gửi lên.
 - **`sd-select` / `sd-date-range` / `sd-date`** vẫn dùng `(sdChange)` → commit + reload tức thì.
+- **Dense controls:** custom `sdTableFilterDef` templates and editable table-cell controls must use `size="sm"` on SD form components (`sd-input`, `sd-select`, `sd-autocomplete`, `sd-date`, `sd-date-range`, `sd-datetime`, `sd-input-number`, `sd-textarea`, `sd-chip`, `sd-chip-calendar`, `sd-input-color`) so inputs do not inflate table row/header height.
 
 ### Commands (`SdTableCommandNormal<T>`)
 `{ color?, icon?: string \| (row)=>string, fontSet?, title?: string \| (row)=>string, disabled?: boolean \| (row)=>boolean, hidden?: boolean \| (row)=>boolean \| Promise<boolean>, click(row), htmlTemplate?(row)=>string }`. Group via `{ ... children: SdTableCommandNormal<T>[] }`.
@@ -412,7 +415,7 @@ tableOption: SdTableOption<Order> = {
 ```html
 <sd-table [option]="tableOption">
   <ng-template sdTableFilterDef="customField" let-filter let-update="update">
-    <sd-input [(model)]="filter.customField" (modelChange)="update()"></sd-input>
+    <sd-input size="sm" [(model)]="filter.customField" (modelChange)="update()"></sd-input>
   </ng-template>
 </sd-table>
 ```
@@ -465,6 +468,8 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Using `column.minWidth: '30%'` (or any non-`px` unit) and expecting the resize clamp to honor it — the directive's parser only accepts `'NNpx'`. Other units render fine for static width but are treated as "no clamp" by the resize logic (falls back to default `min = 40px`).
 - ❌ Writing to `column.width` programmatically while `config.resizable: true` on a table that already has `option.key` — the persisted user width takes precedence over `column.width` in `option`. Reset via the gear dialog → "Đưa về mặc định" if you want option-defined widths back.
 - ❌ Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering — the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
+- ❌ Rendering statuses with custom pill CSS inside cells — use `useBadge` or a projected `<sd-badge>`.
+- ❌ Placing default `md`/`lg` form controls inside table filters or editable cells — use `size="sm"` for dense table UI.
 
 ## E2E test attributes
 

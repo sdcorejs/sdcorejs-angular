@@ -5,12 +5,27 @@
 **Import path**: `@sdcorejs/angular/components/tree`
 **Class**: `SdTree`
 **Standalone**: yes
+**Change detection**: `OnPush`
 
-## Purpose
+## One-line purpose
 
 Standalone hierarchical tree for folders, categories, organization units, or parent-child data. Supports static/lazy loading, loading state, multi-selection, row commands, custom item templates, manual reload, and Vietnamese accent-insensitive filtering.
 
-## Main Option API
+## When to use
+- Hierarchical pickers or explorers: folders, categories, product groups, org units, permissions.
+- Static trees where all nodes are already loaded and can be expanded/filter-searched client-side.
+- Lazy trees where expanding a branch calls an API for children.
+- Trees with checkbox selection and bulk actions.
+- Trees with row commands such as edit, delete, view detail, or custom item templates.
+
+## When NOT to use
+- Flat tabular data → use `<sd-table>`.
+- A small nested display with no expand/select/command behavior → plain nested markup is lighter.
+- Tree rows that must be edited like spreadsheet cells → use a dedicated grid/tree-grid pattern.
+- Route navigation menus → use `<sd-anchor>` / app shell navigation, not a data tree.
+- Parent-detail rows inside a table → use `<sd-table>` tree or expand options instead.
+
+## Inputs
 
 New usage should bind only `[option]`, following the same style as `sd-table`.
 
@@ -60,6 +75,26 @@ const option: SdTreeComponentOption<Category> = {
 ```
 
 Legacy split inputs (`items`, `tree`, `selectedItems`, `selector`, `commands`, `selectable`, `itemTemplate`, `autoId`) are still accepted as a migration bridge, but new examples should use only `[option]`.
+
+| Name | Type | Default | Notes |
+| --- | --- | --- | --- |
+| `option` | `SdTreeComponentOption<T>` | `undefined` | Main option object for new usage. |
+| `autoId` | `string \| null \| undefined` | `undefined` | Migration bridge. Prefer `option.autoId`. |
+| `items` | `SdTreeDataSource<SdTreeItem<T>>` | `[]` | Migration bridge. Prefer `option.items`. |
+| `tree` | `SdTreeOption<T>` | `{ loadType: 'static' }` | Migration bridge. Prefer `option.tree`. |
+| `selectedItems` | `T[] \| null \| undefined` | `undefined` | Controlled selected raw data items. Prefer `option.selectedItems`. |
+| `selector` | `SdTreeSelectorOption<T> \| null` | `undefined` | Checkbox/action config. Prefer `option.selector`. |
+| `commands` | `SdTreeCommand<T>[] \| null` | `[]` | Row command menu config. Prefer `option.commands`. |
+| `selectable` | `boolean` | `true` | Back-compat selection switch. Prefer `selector.visible`. |
+| `itemTemplate` | `TemplateRef<SdTreeItemContext<T>> \| null` | `undefined` | Custom item template. Projected `sdTreeItemDef` wins. |
+
+## Outputs
+| Name | Type | Notes |
+| --- | --- | --- |
+| `selectedItemsChange` | `T[]` | Emits when selection changes. Also calls `option.onSelectedItemsChange`. |
+| `selectChange` | `SdTreeSelectionEvent<T>` | Emits when a row is selected/unselected. Also calls `option.onSelect`. |
+| `expandChange` | `SdTreeToggleEvent<T>` | Emits when a branch expands. Also calls `option.onExpand`. |
+| `collapseChange` | `SdTreeToggleEvent<T>` | Emits when a branch collapses. Also calls `option.onCollapse`. |
 
 ## Option Shape
 
@@ -168,7 +203,7 @@ Command menu icons default to `fontSet: 'material-icons-outlined'` and `color: '
 
 Custom templates can grow row height; the tree row stretches instead of clipping taller item content.
 
-## Public Methods
+## Public API
 
 ```ts
 tree.filter(searchText);
@@ -176,3 +211,72 @@ tree.reload();
 ```
 
 Filtering searches loaded items only. Text is normalized to Vietnamese without accents, so `ke toan` matches labels with Vietnamese accents.
+
+## Visual cues
+- Vertical list of tree rows with indentation per level (`indentSize`, default 20px).
+- Branch nodes show a toggle icon and default folder / folder-open icon when no explicit node icon is provided.
+- Leaf nodes have no default icon unless `treeItem.icon` is set.
+- Checkbox column appears only when `selector.visible === true`.
+- Row command trigger appears at the end of a row only when visible commands exist, usually on hover.
+- Loading spinner appears on a lazy node while `onExpandChildren` is resolving.
+
+## Examples
+
+### 1. Static selectable tree
+```html
+<sd-tree [option]="categoryTree"></sd-tree>
+```
+
+```ts
+categoryTree: SdTreeComponentOption<Category> = {
+  autoId: 'category',
+  items: categories,
+  tree: { loadType: 'static', defaultExpanded: 1 },
+  selector: { visible: true },
+  onSelectedItemsChange: items => this.selectedCategories.set(items),
+};
+```
+
+### 2. Lazy tree with row commands
+```ts
+treeOption: SdTreeComponentOption<Category> = {
+  autoId: 'category',
+  items: [{ id: 'root', label: 'Tất cả', data: root, hasChildren: true }],
+  tree: {
+    loadType: 'lazy',
+    onExpandChildren: item => this.api.children(item.id),
+  },
+  commands: [
+    { key: 'edit', icon: 'edit', title: 'Sửa', click: item => this.edit(item) },
+  ],
+};
+```
+
+## Anti-patterns
+- ❌ Mixing `[option]` and split inputs for the same concern — pick `[option]` for new code.
+- ❌ Omitting stable `id` on tree items — selection, expansion, and autoId derivation depend on it.
+- ❌ Expecting lazy children to be searched before they are loaded — filtering only searches loaded nodes.
+- ❌ Using `selectedItems` with objects that cannot be matched by reference or `id` / `code` / `value` — controlled selection cannot resolve rows reliably.
+- ❌ Rendering large expensive subtrees in a custom template without guarding heavy child components.
+
+## E2E test attributes
+When `autoId: 'category'` is set, the host renders `data-autoid="components-tree-category"`.
+
+| Element | Derived value |
+| --- | --- |
+| Row | `components-tree-<autoId>-row-<nodeId>` |
+| Toggle | `components-tree-<autoId>-toggle-<nodeId>` |
+| Checkbox | `components-tree-<autoId>-checkbox-<nodeId>` |
+| Icon | `components-tree-<autoId>-icon-<nodeId>` |
+| Label | `components-tree-<autoId>-label-<nodeId>` |
+| Command menu trigger | `components-tree-<autoId>-command-<nodeId>` |
+| Command item | `components-tree-<autoId>-command-<nodeId>-<commandKey>` |
+| Selection action | `components-tree-<autoId>-selection-action-<index>` |
+| Clear selection | `components-tree-<autoId>-clear-selection` |
+
+`nodeId` and `commandKey` are sanitized to alphanumeric / `_` / `-`.
+
+## Related
+- `<sd-table>` — use for tabular data, including tree rows when data must stay table-shaped.
+- `<sd-query-bar>` / `<sd-query-builder>` — filtering surfaces that may drive the tree's data source.
+- `<sd-button>` / `<sd-quick-action>` — command/action controls used by the tree.

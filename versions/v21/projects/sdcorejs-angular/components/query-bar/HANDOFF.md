@@ -1,5 +1,8 @@
 # Handoff — branch `query-bar`
 
+> Historical handoff only. Do NOT use this file as the API source of truth for AI UI generation.
+> Use `sd-query-bar.md` for current component API, examples, anti-patterns, and `sd-table` integration.
+
 Full snapshot of in-progress work on `@sdcorejs/angular` so it can be resumed on another machine.
 Last updated: 2026-06-02.
 

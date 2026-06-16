@@ -14,6 +14,13 @@ App shell for back-office portals: provides `<sd-layout>` (sidebar + content hos
 - Need ready-made `/home`, `/not-found`, `/forbidden` routes for landing / error / access-denied pages.
 - Want menus driven from a typed `SdLayoutMenu[]` model with permission-aware filtering and search highlight.
 
+## When NOT to use
+
+- Do not use it inside a modal, side drawer, widget, or nested feature region. It is the top-level portal shell.
+- Do not use `<sd-page>` as a generic card replacement outside `<sd-layout>`. It expects the layout CSS context.
+- Do not use it for public marketing / content sites. Build a purpose-made page layout instead.
+- Do not rely on it to authenticate users. Feed it user info and actions from `auth`, `keycloak`, or `authom`.
+
 ## What it provides
 
 **Components (standalone):**

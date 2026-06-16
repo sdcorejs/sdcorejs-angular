@@ -112,8 +112,11 @@ async onAccept() {
 ### 3. With reference sheets in template
 ```ts
 option: SdImportExcelOption = {
-  columns: [...],
-  accept: ...,
+  columns: [
+    { field: 'unitCode', title: 'Mã đơn vị', type: 'values', values: ['PCS', 'BOX'], required: true },
+    { field: 'quantity', title: 'Số lượng', type: 'number', min: 1 },
+  ],
+  accept: async (items) => this.api.importUnits(items),
   sheets: [
     { name: 'Đơn vị', items: () => this.api.getUnits(), headers: [
       { value: 'code', display: 'Mã' }, { value: 'name', display: 'Tên' },
@@ -125,9 +128,12 @@ option: SdImportExcelOption = {
 ### 4. With pre-validation transform (e.g. trim & uppercase)
 ```ts
 option: SdImportExcelOption = {
-  columns: [...],
+  columns: [
+    { field: 'code', title: 'Mã', type: 'string', required: true },
+    { field: 'name', title: 'Tên', type: 'string', required: true },
+  ],
   transform: items => items.map(i => ({ ...i, data: { ...i.data, code: i.data.code?.trim().toUpperCase() } })),
-  accept: ...,
+  accept: async (items) => this.api.importItems(items),
 };
 ```
 

@@ -154,7 +154,11 @@ await excel.export({
 ```typescript
 await excel.exportCSV({
   fileName: 'orders',  // → orders_2026-05-10-14-23-04.csv
-  columns: [...],
+  columns: [
+    { field: 'id', title: 'Order ID' },
+    { field: 'total', title: 'Total' },
+    { field: 'status', title: 'Status' },
+  ],
   items: orders,
 });
 ```

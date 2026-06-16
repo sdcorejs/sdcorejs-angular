@@ -25,7 +25,7 @@ Single-date picker — Material datepicker with date-fns adapter (`dd/MM/yyyy` p
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoId="forms-date-<value>"` for E2E hooks. |
 | `name` | `string` | random uuid | Control name registered into `[form]`. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. |
+| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
 | `form` | `FormGroup \| NgForm \| undefined` | `undefined` | Parent form. NgForm auto-unwrapped. Object containing a `.form` is also accepted. |
 | `label` | `string \| undefined` | `undefined` | Field label. |
 | `helperText` | `string \| undefined` | `undefined` | Hint under field. |

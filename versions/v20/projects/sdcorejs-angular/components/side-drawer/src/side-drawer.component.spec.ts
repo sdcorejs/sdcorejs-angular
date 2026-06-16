@@ -405,5 +405,18 @@ describe('SdSideDrawer', () => {
       tick();
       expect(root?.getAttribute('data-loading')).toBe('false');
     }));
+
+    it('renders a compact close button with a Material close icon while open', fakeAsync(() => {
+      fixture.detectChanges();
+      tick();
+
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      const closeButton = getDrawerRoot()?.querySelector('button.sd-side-drawer-close-btn') as HTMLButtonElement | null;
+      expect(closeButton).not.toBeNull();
+      expect(closeButton?.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
+    }));
   });
 });

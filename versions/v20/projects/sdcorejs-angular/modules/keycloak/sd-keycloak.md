@@ -15,6 +15,13 @@ Thin wrapper around the official `keycloak-js` SDK: bootstraps Keycloak at app-i
 - You need automatic 30-second-ahead silent token refresh, with auto-redirect to login on refresh failure.
 - Differs from `authom`: this module uses the canonical `keycloak-js` SDK (full Keycloak feature set: `loginRequired`, account console, role mappings) — not a hand-rolled OAuth/PKCE implementation.
 
+## When NOT to use
+
+- Do not use it for Auth0/AuthOM tenants. Use the `authom` module for Auth0-style PKCE endpoints.
+- Do not use it in SSR-only contexts. The service assumes browser globals from `keycloak-js`.
+- Do not use it as a UI permission layer by itself. Decode roles or call your backend, then wire the `permission` module for UI/route checks.
+- Do not import it if the app only needs a generic sign-out facade and another provider already handles tokens. Wire the `auth` module instead.
+
 ## What it provides
 
 | Symbol | Kind | Purpose |
