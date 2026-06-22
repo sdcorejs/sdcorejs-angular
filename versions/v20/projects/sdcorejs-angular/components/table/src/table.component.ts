@@ -6,8 +6,6 @@ import {
   Component,
   Injectable,
   OnDestroy,
-  OnInit,
-  TemplateRef,
   computed,
   contentChild,
   contentChildren,
@@ -30,12 +28,17 @@ import { SdTableGroupDefDirective, SdTableGroupDefContext } from './directives/s
 import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.directive';
 import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.directive';
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
-import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from './models/table-column.model';
+import { SdTableColumn } from './models/table-column.model';
 import { SdTableOption } from './models/table-option.model';
-import { SdTableFilterRequest, TableFilterRegister } from './services/table-filter/table-filter.model';
+import {
+  SdConvertToPagingReq,
+  SdTableFilterRequest,
+  TableFilterRegister,
+  TableFilterValue,
+} from './services/table-filter/table-filter.model';
 
 import { CdkColumnDef } from '@angular/cdk/table';
-import { CdkDrag, CdkDragDrop, CdkDropList, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDropList, DragDropModule } from '@angular/cdk/drag-drop';
 import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -48,10 +51,9 @@ import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdDesktopDirective, SdHoverCopyDirective, SdMobileDirective, SdScrollDirective } from '@sdcorejs/angular/directives';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 
-// ĐÃ THÊM: Import Utilities để dùng hàm getNestedValue
-import { Filter, Operator, PagingReq } from '@sdcorejs/utils/models';
+import { Operator } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 
 import { ColumnFilterComponent, ColumnTitleComponent, ExternalFilterComponent, MobileFilterComponent } from './components';
 import { ConfigComponent } from './components/config/config.component';
@@ -71,19 +73,28 @@ import { SdSelectionVisiblePipe } from './pipes/selection-visible.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
 import { buildColumnWidthMap } from './services/column-width.util';
+import { filterLocalItems } from './services/table-local/table-local.util';
+import { canSortReorder, isReorderDisabled as isReorderItemDisabled, reorderTableItems } from './services/table-reorder/table-reorder.util';
+import {
+  applyDefaultSelected,
+  getSelectedRowData,
+  getSelectionRows,
+  resolveSelectAllState,
+  restorePreservedSelection,
+  syncPreservedSelection,
+} from './services/table-selection/table-selection.util';
 import { SdTableFilterService } from './services/table-filter/table-filter.service';
 import {
-  collectFormattedTreeRows,
-  filterMatchingChildren,
+  clearTreeChildCache,
   flattenDataTree,
-  flattenTree,
   getChildrenFromData,
   getChildrenKey,
+  getVisibleChildrenData,
   hasLazyChildren,
+  initTreeMeta,
   isLazyTree,
-  resolveDefaultExpanded,
   resolveHasChildren,
-  subtreeMatches,
+  saveTreeExpandState,
 } from './services/tree/tree.util';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
@@ -172,7 +183,7 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     TranslatePipe,
   ],
 })
-export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
+export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // ... (Giữ nguyên toàn bộ phần khai báo biến, constructor, lifecycle hooks và các hàm filter, load, export, v.v...)
   // ==========================================
   // 1. SIGNAL INPUTS
@@ -254,21 +265,25 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   key = Utilities.generateUuid();
 
   columnOperator: Record<string, Operator> = {};
-  columnFilter?: Record<string, any> = {};
+  columnFilter?: NonNullable<TableFilterValue['columnFilter']> = {};
 
   #localItems: SdTableItem<T>[] = [];
   #subscription = new Subscription();
-  #reload = new Subject<{ force: boolean }>();
+  #configurationSubscription?: Subscription;
+  #filterRegisterSubscription?: Subscription;
+  #optionInstance?: SdTableOption<T>;
+  #optionRevision = 0;
+  #reload = new Subject<{ force: boolean; revision: number }>();
   #loadCompleted = false;
 
-  cacheValues: Record<string, any[]> = {};
+  cacheValues: Record<string, unknown[]> = {};
   #cacheObjValues: Record<string, Record<string, string>> = {};
   #itemIndexMap = new WeakMap<SdTableItem<T>, number>();
   #treeExpandState = new Map<string, boolean>();
   treeRevision = signal(0);
   // Search ở cấp con (static tree + type 'local'): predicate khớp 1 dòng theo
   // column filter hiện hành. Set ở #filterLocal khi có filter active, đọc lại ở
-  // #render/#initTreeMeta/#ensureChildItemsFormatted để prune + auto-expand các
+  // #render/#ensureChildItemsFormatted dùng predicate này để prune + auto-expand các
   // nhánh có node con khớp. undefined = không search → cây render bình thường.
   #treeSearchPredicate?: (data: T) => boolean;
   // Lần render trước có đang ở chế độ search hay không (để xử lý chuyển trạng thái).
@@ -291,39 +306,46 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   tableConfiguration = inject<ISdTableConfiguration>(SD_TABLE_CONFIGURATION, { optional: true });
 
   constructor() {
-
     effect(() => {
       const option = this.option();
       if (option) {
         untracked(() => {
+          if (this.#optionInstance !== option) {
+            this.#optionInstance = option;
+            this.#resetStateForNewOption();
+          }
+          const optionRevision = this.#optionRevision;
           const initOpt = this.#initConfiguration({ ...option });
           this.tableOption.set(initOpt);
           this.#loadCompleted = false;
 
           const storage = this.#configService.init(initOpt);
-          this.#subscription.add(
-            storage.observer.pipe(startWith(storage.subject.getValue())).subscribe(() => {
-              const configurationResult = this.#configService.loadConfigurationResult(initOpt, storage.get());
-              const displayColumns = configurationResult.displayedColumns || [];
-              this.#ref.detectChanges();
-              this.#tableFormatService
-                .loadValues(
-                  initOpt.columns.filter(column => displayColumns.includes(column.field)),
-                  this.cacheValues,
-                  this.#cacheObjValues
-                )
-                .then(() => {
-                  this.configuration.set(configurationResult);
-                  this.#loadFilterRegister();
-                  if (this.filterRegister) {
-                    this.#reload.next({ force: true });
-                  }
-                })
-                .finally(() => {
-                  this.#ref.detectChanges();
-                });
-            })
-          );
+          this.#configurationSubscription?.unsubscribe();
+          this.#configurationSubscription = storage.observer.pipe(startWith(storage.subject.getValue())).subscribe(() => {
+            if (optionRevision !== this.#optionRevision) return;
+            const configurationResult = this.#configService.loadConfigurationResult(initOpt, storage.get());
+            const displayColumns = configurationResult.displayedColumns || [];
+            this.#ref.detectChanges();
+            this.#tableFormatService
+              .loadValues(
+                initOpt.columns.filter(column => displayColumns.includes(column.field)),
+                this.cacheValues,
+                this.#cacheObjValues
+              )
+              .then(() => {
+                if (optionRevision !== this.#optionRevision) return;
+                this.configuration.set(configurationResult);
+                this.#loadFilterRegister();
+                if (this.filterRegister) {
+                  this.#requestReload(true);
+                }
+              })
+              .finally(() => {
+                if (optionRevision !== this.#optionRevision) return;
+                this.#ref.detectChanges();
+              });
+          });
+          this.#subscription.add(this.#configurationSubscription);
         });
       }
     });
@@ -332,7 +354,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
       const paginator = this.paginator();
       if (paginator) {
         untracked(() => {
-          this.#subscription.add(paginator.page.subscribe(() => this.#reload.next({ force: false })));
+          this.#subscription.add(paginator.page.subscribe(() => this.#requestReload(false)));
         });
       }
     });
@@ -341,7 +363,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
       const sort = this.sort();
       if (sort) {
         untracked(() => {
-          this.#subscription.add(sort.sortChange.subscribe(() => this.#reload.next({ force: false })));
+          this.#subscription.add(sort.sortChange.subscribe(() => this.#requestReload(false)));
         });
       }
     });
@@ -357,9 +379,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
         // Update configuration signal local — KHÔNG gọi loadValues/reload
         const conf = this.configuration();
         if (!conf) return;
-        const firstColumns = conf.firstColumns.map(c =>
-          c.field === field ? { ...c, width } : c
-        );
+        const firstColumns = conf.firstColumns.map(c => (c.field === field ? { ...c, width } : c));
         const column = { ...conf.column };
         if (column[field]) {
           column[field] = { ...column[field], width };
@@ -373,21 +393,27 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  ngOnInit() {}
-
   ngAfterViewInit() {
     this.#subscription.add(
       this.#reload
         .pipe(
           debounceTime(200),
           switchMap(async data => {
+            if (data.revision !== this.#optionRevision || !this.filterRegister) return undefined;
             const filterInfo = this.getFilterRequest();
             const result = await this.#load(filterInfo, !this.#loadCompleted || data.force);
+            if (data.revision !== this.#optionRevision) return undefined;
             this.#loadCompleted = true;
-            return result;
+            return {
+              result,
+              revision: data.revision,
+            };
           })
         )
-        .subscribe(this.#render)
+        .subscribe(loadResult => {
+          if (!loadResult || loadResult.revision !== this.#optionRevision) return;
+          this.#render(loadResult.result);
+        })
     );
   }
 
@@ -410,6 +436,55 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     };
   };
 
+  #requestReload = (force: boolean) => {
+    this.#reload.next({ force, revision: this.#optionRevision });
+  };
+
+  #resetStateForNewOption = () => {
+    this.#optionRevision += 1;
+    this.#configurationSubscription?.unsubscribe();
+    this.#configurationSubscription = undefined;
+    this.#filterRegisterSubscription?.unsubscribe();
+    this.#filterRegisterSubscription = undefined;
+    this.filterRegister = undefined!;
+
+    this.#tableId = Utilities.generateUuid();
+    this.key = Utilities.generateUuid();
+    this.#loadCompleted = false;
+
+    this.tableOption.set(undefined);
+    this.configuration.set(undefined);
+    this.items.set([]);
+    this.selectedTableItems.set([]);
+    this.total.set(undefined);
+    this.loading.set(false);
+    this.isSelectAll.set(false);
+    this.isFiltered.set(false);
+    this.requireFiltered.set(false);
+
+    this.columnOperator = {};
+    this.#syncColumnFilterInPlace({});
+    this.#localItems = [];
+    this.cacheValues = {};
+    this.#cacheObjValues = {};
+    this.#itemIndexMap = new WeakMap();
+    this.#treeExpandState.clear();
+    this.#treeSearchPredicate = undefined;
+    this.#treeSearchActive = false;
+    this.groupExpandState.clear();
+    this.#preservedSelectedMap.clear();
+    this.treeRevision.update(n => n + 1);
+
+    if (this.paginator()) {
+      this.paginator()!.pageIndex = 0;
+    }
+    const sort = this.sort();
+    if (sort) {
+      sort.active = '';
+      sort.direction = '';
+    }
+  };
+
   #initConfiguration = (option: SdTableOption): SdTableOption => {
     option.paginate = {
       hidden: option?.paginate?.hidden,
@@ -430,7 +505,10 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
           column.filter.operator.list = this.tableConfiguration?.filter?.operator?.list?.[column.type] || [];
         }
 
-        this.columnOperator[column?.field] = this.tableConfiguration?.filter?.operator?.default?.[column.type]!;
+        const defaultOperator = this.tableConfiguration?.filter?.operator?.default?.[column.type];
+        if (defaultOperator) {
+          this.columnOperator[column.field] = defaultOperator;
+        }
         if (column.filter.operator.default && column.filter.operator.list?.some(el => el === column.filter?.operator?.default)) {
           this.columnOperator[column.field] = column.filter.operator.default;
         }
@@ -441,45 +519,50 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
 
   #loadFilterRegister = () => {
     const opt = this.tableOption();
-    if (opt && !this.filterRegister) {
-      this.filterRegister = this.#gridFilterService.register(opt?.filter, {
-        id: this.#tableId,
-        columns: opt?.columns,
-        externalFilters: opt?.filter?.externalFilters,
-        filterDefs: [...this.sdFilterDefs()],
-        columnOperator: this.columnOperator,
-      });
+    if (!opt || this.filterRegister) return;
 
-      this.#subscription.add(
-        this.filterRegister.value.observer
-          .pipe(
-            debounceTime(500),
-            map(filterValue => {
-              const { columnOperator, columnFilter, notReload } = filterValue;
-              this.columnOperator = columnOperator || {};
-              // Sync IN PLACE — không gán object clone mới. column-filter chia sẻ
-              // reference this.columnFilter qua [columnFilter] input; nếu gán clone
-              // mới, cf giữ ref cũ (do OnPush + reload async lag) → ghi clear vào
-              // object orphan → giá trị cũ persist. Giữ ref ổn định để cf + table
-              // luôn trỏ cùng 1 object.
-              this.#syncColumnFilterInPlace(columnFilter || {});
-              if (!notReload) {
-                if (this.paginator()) {
-                  this.paginator()!.pageIndex = 0;
-                }
-                this.#reload.next({ force: false });
-              }
-            })
-          )
-          .subscribe()
-      );
-    }
+    this.filterRegister = this.#gridFilterService.register(opt?.filter, {
+      id: this.#tableId,
+      columns: opt?.columns,
+      externalFilters: opt?.filter?.externalFilters,
+      filterDefs: [...this.sdFilterDefs()],
+      columnOperator: this.columnOperator,
+      force: true,
+    });
+
+    const { columnOperator, columnFilter } = this.filterRegister.value.get();
+    this.columnOperator = columnOperator || {};
+    this.#syncColumnFilterInPlace(columnFilter || {});
+
+    this.#filterRegisterSubscription?.unsubscribe();
+    this.#filterRegisterSubscription = this.filterRegister.value.observer
+      .pipe(
+        debounceTime(500),
+        map(filterValue => {
+          const { columnOperator, columnFilter, notReload } = filterValue;
+          this.columnOperator = columnOperator || {};
+          // Sync IN PLACE — không gán object clone mới. column-filter chia sẻ
+          // reference this.columnFilter qua [columnFilter] input; nếu gán clone
+          // mới, cf giữ ref cũ (do OnPush + reload async lag) → ghi clear vào
+          // object orphan → giá trị cũ persist. Giữ ref ổn định để cf + table
+          // luôn trỏ cùng 1 object.
+          this.#syncColumnFilterInPlace(columnFilter || {});
+          if (!notReload) {
+            if (this.paginator()) {
+              this.paginator()!.pageIndex = 0;
+            }
+            this.#requestReload(false);
+          }
+        })
+      )
+      .subscribe();
+    this.#subscription.add(this.#filterRegisterSubscription);
   };
 
   // Đồng bộ this.columnFilter với `next` mà GIỮ NGUYÊN reference object.
   // column-filter chia sẻ ref này qua [columnFilter] — reassign clone mới sẽ
   // orphan ref cũ (cf vẫn ghi vào đó do CD lag) khiến clear/giá trị stale.
-  #syncColumnFilterInPlace = (next: Record<string, any>) => {
+  #syncColumnFilterInPlace = (next: NonNullable<TableFilterValue['columnFilter']>) => {
     const cur = this.columnFilter ?? (this.columnFilter = {});
     if (cur === next) return;
     for (const key of Object.keys(cur)) {
@@ -488,160 +571,12 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     Object.assign(cur, next);
   };
 
-  // True nếu column filter hiện có ít nhất một giá trị đang lọc (để bật search-con).
-  #hasActiveColumnFilter = (rawColumnFilter: Record<string, any>, columns: SdTableColumn<T>[]): boolean =>
-    columns.some(col => {
-      const v = rawColumnFilter[col.field];
-      if (Array.isArray(v)) return v.length > 0;
-      if (v && typeof v === 'object') return !!v.from || !!v.to;
-      return v !== undefined && v !== null && v !== '';
-    });
-
-  // Predicate khớp MỘT dòng (raw data) theo column filter. Tách riêng để dùng lại
-  // cho cả lọc root lẫn search-con (subtreeMatches/filterMatchingChildren).
-  #matchesColumnFilter = (data: T, columns: SdTableColumn<T>[], rawColumnFilter: Record<string, any>): boolean => {
-    for (const column of columns) {
-      const { field, type } = column;
-      const filterValue: string = (rawColumnFilter[field] || '').toString().trim().toLowerCase();
-
-      // SỬA: Dùng getNestedValue để hỗ trợ nested field trong filterLocal
-      const rawColVal = Utilities.getNestedValue(data, field);
-      const columnValue: string = (rawColVal || '').toString().trim().toLowerCase();
-
-      if (filterValue) {
-        if (!columnValue && type !== 'datetime' && type !== 'date' && type !== 'time') {
-          return false;
-        }
-        if (type === 'string') {
-          if (columnValue.indexOf(filterValue) === -1) {
-            return false;
-          }
-        } else if (type === 'values' || type === 'lazy-values') {
-          const columnType = column as SdTableColumnValues<T> | SdTableColumnLazyValues<T>;
-          const isMultiple = columnType.option.selection === 'MULTIPLE';
-          if (isMultiple && Array.isArray(rawColVal)) {
-            const columnValues: string[] =
-              rawColVal.map((i: any) =>
-                (Utilities.getNestedValue(i, columnType.option.valueField) ?? '').toString().trim().toLowerCase()
-              ) ?? [];
-            const filterValues: string[] = rawColumnFilter[field]?.map((v: any) => (v ?? '').toString().trim().toLowerCase());
-            if (filterValues?.length && filterValues.every(fv => !columnValues.includes(fv))) {
-              return false;
-            }
-          } else {
-            if (columnValue !== filterValue) {
-              return false;
-            }
-          }
-        } else if (type === 'number') {
-          const fValue = +filterValue.replace('>=', '').replace('<=', '').replace('>', '').replace('<', '');
-          const cValue = +columnValue;
-          if (fValue || fValue === 0) {
-            if (!cValue && cValue !== 0) {
-              return false;
-            }
-            if (filterValue.indexOf('>=') > -1 && cValue < fValue) {
-              return false;
-            } else if (filterValue.indexOf('<=') > -1 && cValue > fValue) {
-              return false;
-            } else if (filterValue.indexOf('<') > -1 && cValue >= fValue) {
-              return false;
-            } else if (filterValue.indexOf('>') > -1 && cValue <= fValue) {
-              return false;
-            } else if (cValue !== fValue) {
-              return false;
-            }
-          }
-        } else if (type === 'boolean') {
-          if ((filterValue === '1' || filterValue === 'true') && columnValue !== '1' && columnValue !== 'true') {
-            return false;
-          } else if ((filterValue === '0' || filterValue === 'false') && columnValue !== '0' && columnValue !== 'false') {
-            return false;
-          }
-        } else if (type === 'datetime' || type === 'date' || type === 'time') {
-          const from = rawColumnFilter[field]?.from ?? rawColumnFilter[field];
-          const to = rawColumnFilter[field]?.to ?? rawColumnFilter[field];
-          const fromDate = DateUtilities.begin(from);
-          const toDate = DateUtilities.end(to);
-          if (fromDate || toDate) {
-            if (!columnValue) {
-              return false;
-            }
-
-            const columnTime = new Date(columnValue).getTime();
-            const fromDateTime = fromDate?.getTime() || null;
-            const toDateTime = toDate?.getTime() || null;
-
-            if (fromDateTime && fromDateTime > columnTime) {
-              return false;
-            }
-            if (toDateTime && columnTime > toDateTime) {
-              return false;
-            }
-          }
-        }
-      }
-    }
-    return true;
-  };
-
-  #filterLocal = (localItems: SdTableItem<T>[], filterInfo: SdTableFilterRequest) => {
-    const opt = this.tableOption()!;
-    const { columns } = opt;
-    const { rawColumnFilter, orderBy, orderDirection, pageSize, pageNumber } = filterInfo;
-
-    const matchesData = (data: T) => this.#matchesColumnFilter(data, columns, rawColumnFilter);
-
-    // Search ở cấp con: chỉ bật cho table local + static tree + đang có filter.
-    // Khi bật, một root được giữ nếu CHÍNH NÓ hoặc bất kỳ hậu duệ nào khớp; và
-    // lưu predicate để #render prune + auto-expand nhánh khớp.
-    const treeOpt = opt.tree;
-    const treeSearch = opt.type === 'local' && treeOpt?.loadType === 'static' && this.#hasActiveColumnFilter(rawColumnFilter, columns);
-    this.#treeSearchPredicate = treeSearch ? matchesData : undefined;
-
-    const items = treeSearch
-      ? localItems.filter(tableItem => subtreeMatches(tableItem.data, matchesData, treeOpt))
-      : localItems.filter(tableItem => matchesData(tableItem.data));
-    // Sort
-    if (orderBy && orderDirection) {
-      const column = columns.find(e => e.field === orderBy);
-      if (column) {
-        const { type, field } = column;
-        items.sort((tableItemCurrent, tableItemNext) => {
-          const data = tableItemCurrent.data;
-          const next = tableItemNext.data;
-          // SỬA: Dùng getNestedValue cho sorting
-          const dataVal = Utilities.getNestedValue(data, field);
-          const nextVal = Utilities.getNestedValue(next, field);
-
-          if (type === 'number') {
-            return (dataVal || 0) - (nextVal || 0);
-          }
-          if (type === 'date' || type === 'datetime' || type === 'time') {
-            const d1 = new Date(dataVal || '').getTime();
-            const d2 = new Date(nextVal || '').getTime();
-            return d1 - d2;
-          }
-          const s1 = (dataVal || '').toString();
-          const s2 = (nextVal || '').toString();
-          if (s1 > s2) {
-            return 1;
-          }
-          if (s1 < s2) {
-            return -1;
-          }
-          return 0;
-        });
-        if (orderDirection === 'DESC') {
-          items.reverse();
-        }
-      }
-    }
+  #filterLocal = <TItem extends SdTableItem<T> | T>(localItems: TItem[], filterInfo: SdTableFilterRequest<T>) => {
+    const result = filterLocalItems(localItems, this.tableOption()!, filterInfo);
+    this.#treeSearchPredicate = result.treeSearchPredicate;
     return {
-      items: items.filter((item, index) => {
-        return index >= pageNumber * pageSize && index < (pageNumber + 1) * pageSize;
-      }),
-      total: items.length,
+      items: result.items,
+      total: result.total,
     };
   };
 
@@ -739,7 +674,10 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
           total: 0,
         };
       }
-      const pagingReq = this.#convertPagingReq(filterReq);
+      const pagingReq = SdConvertToPagingReq(filterReq, {
+        columns: opt.columns,
+        externalFilters: opt.filter?.externalFilters,
+      });
       const data = await items(filterReq, pagingReq).catch(err => {
         console.error(err);
         return {
@@ -794,12 +732,12 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
       // why: KHÔNG persist trạng thái bung bị ÉP trong lúc search (tránh nhánh
       // tự bung do search bị ghi nhầm thành lựa chọn của user sau khi clear).
       if (!this.#treeSearchActive) {
-        this.#saveTreeExpandState(this.items());
+        saveTreeExpandState(this.items(), this.#treeExpandState);
       }
       // why: search vừa tắt → childItems đang là tập đã prune theo từ khoá cũ;
       // xoá cache để dựng lại đầy đủ children ở chế độ thường.
       if (this.#treeSearchActive && !searchNow) {
-        this.#clearTreeChildCache(this.#localItems);
+        clearTreeChildCache(this.#localItems);
       }
     }
 
@@ -807,7 +745,10 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     this.total.set(args?.total || 0);
 
     if (treeOpt) {
-      this.#initTreeMeta(this.items(), treeOpt);
+      initTreeMeta(this.items(), treeOpt, {
+        expandState: this.#treeExpandState,
+        treeSearchPredicate: this.#treeSearchPredicate,
+      });
       await this.#expandDefaultBranches(this.items(), treeOpt);
       this.treeRevision.update(n => n + 1);
     }
@@ -850,20 +791,23 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
         return result;
       }
       if (isObservable(result)) {
-        result = firstValueFrom(result) as any;
+        result = firstValueFrom(result) as typeof result;
       }
       if (isObservable(result)) {
-        result = firstValueFrom(result) as any;
+        result = firstValueFrom(result) as typeof result;
       }
       return await result;
     } else {
       const filterReq = this.#filterExportInfo(pageNumber, pageSize);
       if (opt.type === 'server') {
-        const pagingReq = this.#convertPagingReq(filterReq);
+        const pagingReq = SdConvertToPagingReq(filterReq, {
+          columns: opt.columns,
+          externalFilters: opt.filter?.externalFilters,
+        });
         const result = opt.items(filterReq, pagingReq);
         return await result;
       } else {
-        let exportedItems: any[] = [];
+        let exportedItems: T[] = [];
         if (typeof opt.items === 'function') {
           const results = opt.items();
           if (results instanceof Promise) {
@@ -906,55 +850,6 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     this.#tableExportService.exportCustom(this.#createExportContext());
   };
 
-  #saveTreeExpandState = (rows: SdTableItem<T>[]) => {
-    for (const row of rows) {
-      if (row.meta.tree?.isExpanded) {
-        this.#treeExpandState.set(row.meta.id, true);
-      }
-      for (const child of row.meta.tree?.childItems ?? []) {
-        this.#saveTreeExpandState([child]);
-      }
-    }
-  };
-
-  // Children "nhìn thấy được" của một row: bình thường = toàn bộ embedded;
-  // khi search-con = chỉ giữ child có subtree khớp từ khoá (prune).
-  #visibleChildrenData = (data: T, treeOpt: NonNullable<SdTableOption<T>['tree']>): T[] => {
-    const all = getChildrenFromData(data, treeOpt);
-    const predicate = this.#treeSearchPredicate;
-    return predicate ? filterMatchingChildren(all, predicate, treeOpt) : all;
-  };
-
-  // Xoá cache childItems trên toàn cây — dùng khi tắt search để dựng lại đầy đủ.
-  #clearTreeChildCache = (rows: SdTableItem<T>[]) => {
-    for (const row of rows) {
-      const children = row.meta.tree?.childItems;
-      if (children?.length) {
-        this.#clearTreeChildCache(children);
-        row.meta.tree!.childItems = undefined;
-      }
-    }
-  };
-
-  #initTreeMeta = (rows: SdTableItem<T>[], option: NonNullable<SdTableOption<T>['tree']>, level = 0, parentId?: string) => {
-    const searchActive = !!this.#treeSearchPredicate;
-    for (const row of rows) {
-      const saved = this.#treeExpandState.get(row.meta.id);
-      // Khi search: hasChildren tính theo tập con đã prune; auto-expand nhánh còn con.
-      const hasChildren = searchActive
-        ? this.#visibleChildrenData(row.data, option).length > 0
-        : resolveHasChildren(row, option);
-      row.meta.tree = {
-        ...row.meta.tree,
-        level,
-        parentId,
-        hasChildren,
-        isExpanded: searchActive ? hasChildren : (saved ?? resolveDefaultExpanded(level, option)),
-        isExpanding: false,
-      };
-    }
-  };
-
   #ensureChildItemsFormatted = async (row: SdTableItem<T>) => {
     const opt = this.tableOption()!;
     const treeOpt = opt.tree!;
@@ -962,27 +857,19 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     // Bình thường cache childItems. Khi search, LUÔN dựng lại theo tập đã prune
     // vì tập này phụ thuộc từ khoá (đổi mỗi lần gõ) nên không thể cache.
     if (!searchActive && row.meta.tree?.childItems?.length) return;
-    const raw = this.#visibleChildrenData(row.data, treeOpt);
+    const raw = getVisibleChildrenData(row.data, treeOpt, this.#treeSearchPredicate);
     if (!raw.length) {
       if (searchActive && row.meta.tree) row.meta.tree.childItems = [];
       return;
     }
     const formatted = await this.#tableFormatService.format(raw, opt.columns, this.cacheValues, this.#cacheObjValues);
     row.meta.tree!.childItems = formatted;
-    const childLevel = (row.meta.tree!.level ?? 0) + 1;
-    for (const child of formatted) {
-      const saved = this.#treeExpandState.get(child.meta.id);
-      const childHasChildren = searchActive
-        ? this.#visibleChildrenData(child.data, treeOpt).length > 0
-        : resolveHasChildren(child, treeOpt);
-      child.meta.tree = {
-        level: childLevel,
-        parentId: row.meta.id,
-        hasChildren: childHasChildren,
-        isExpanded: searchActive ? childHasChildren : (saved ?? resolveDefaultExpanded(childLevel, treeOpt)),
-        isExpanding: false,
-      };
-    }
+    initTreeMeta(formatted, treeOpt, {
+      level: (row.meta.tree!.level ?? 0) + 1,
+      parentId: row.meta.id,
+      expandState: this.#treeExpandState,
+      treeSearchPredicate: this.#treeSearchPredicate,
+    });
   };
 
   #expandDefaultBranches = async (rows: SdTableItem<T>[], option: NonNullable<SdTableOption<T>['tree']>) => {
@@ -1145,30 +1032,17 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   };
 
   #getSelectionRows = (): SdTableItem<T>[] => {
-    const roots = this.items();
-    const treeOpt = this.tableOption()?.tree;
-    if (!treeOpt) return roots;
-    return flattenTree(roots, treeOpt);
+    return getSelectionRows(this.items(), this.tableOption()?.tree);
   };
 
-  #getSelectedRowData = (): T[] =>
-    this.#getSelectionRows()
-      .filter(e => e.meta.selector!.isSelected)
-      .map(e => e.data);
+  #getSelectedRowData = (): T[] => getSelectedRowData(this.#getSelectionRows());
 
   #applyDefaultSelected = () => {
-    const defaultSelected = this.tableOption()?.selector?.defaultSelected;
-    if (!defaultSelected) return;
-    const treeOpt = this.tableOption()?.tree;
-    const rows = treeOpt ? collectFormattedTreeRows(this.items()) : this.items();
-    rows.forEach(item => {
-      item.meta.selector!.isSelected = defaultSelected(item.data);
-    });
+    applyDefaultSelected(this.items(), this.tableOption()?.tree, this.tableOption()?.selector?.defaultSelected);
   };
 
   #syncSelectAllState = () => {
-    const visible = this.#getSelectionRows();
-    this.isSelectAll.set(visible.length > 0 && visible.every(e => e.meta.selector?.isSelected));
+    this.isSelectAll.set(resolveSelectAllState(this.#getSelectionRows()));
   };
 
   // ==========================================
@@ -1216,9 +1090,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     if (!header.meta.group?.key) return;
     const key = header.meta.group.key;
     const defaultExpanded = !this.tableOption()?.group?.defaultCollapsed;
-    const current = this.groupExpandState.has(key)
-      ? !!this.groupExpandState.get(key)
-      : defaultExpanded;
+    const current = this.groupExpandState.has(key) ? !!this.groupExpandState.get(key) : defaultExpanded;
     this.groupExpandState.set(key, !current);
     header.meta.group.isExpanded = !current;
     // why: trigger pipe re-eval — Map mutation không thay đổi reference items() nên cần update.
@@ -1230,16 +1102,14 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
    * Group header row dùng matRowDef riêng với column list ['sdGroupHeader'] (1 cell duy nhất).
    * Data row dùng displayedColumns nguyên vẹn.
    */
-  isGroupHeaderRow = (_idx: number, row: SdTableItem<T>): boolean =>
-    row?.meta?.group?.isGroupHeader === true;
-  isDataRow = (_idx: number, row: SdTableItem<T>): boolean =>
-    row?.meta?.group?.isGroupHeader !== true;
+  isGroupHeaderRow = (_idx: number, row: SdTableItem<T>): boolean => row?.meta?.group?.isGroupHeader === true;
+  isDataRow = (_idx: number, row: SdTableItem<T>): boolean => row?.meta?.group?.isGroupHeader !== true;
 
   /**
    * Colspan cho cell sdGroupHeader trên group row = displayedColumns.length.
    * Span TOÀN BỘ width data row vì group row chỉ có 1 cell.
    */
-  sdGroupColspan = computed(() => (this.configuration()?.displayedColumns?.length || 1));
+  sdGroupColspan = computed(() => this.configuration()?.displayedColumns?.length || 1);
 
   /** Build context object truyền vào SdTableGroupDefDirective template. */
   groupContext = (header: SdTableItem<T>): SdTableGroupDefContext<T> => {
@@ -1263,9 +1133,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     if (!fn) return null;
     const tree = row.meta?.tree;
     const ctx =
-      this.tableOption()?.tree && tree
-        ? { level: tree.level, hasChildren: tree.hasChildren, isExpanded: tree.isExpanded }
-        : undefined;
+      this.tableOption()?.tree && tree ? { level: tree.level, hasChildren: tree.hasChildren, isExpanded: tree.isExpanded } : undefined;
     return fn(row.data, index, ctx);
   };
 
@@ -1281,13 +1149,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   // re-fetch tạo refs mới, ta muốn map giữ ref hiện hành để các tham chiếu downstream OK).
   #restorePreservedSelection = () => {
     if (!this.#preserveEnabled()) return;
-    const rows = this.#getSelectionRows();
-    rows.forEach(item => {
-      if (this.#preservedSelectedMap.has(item.meta.id)) {
-        item.meta.selector!.isSelected = true;
-        this.#preservedSelectedMap.set(item.meta.id, item);
-      }
-    });
+    restorePreservedSelection(this.#getSelectionRows(), this.#preservedSelectedMap);
   };
 
   #updateSelectedItems = () => {
@@ -1295,15 +1157,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     if (this.#preserveEnabled()) {
       // Sync map theo state visible: add nếu selected, remove nếu deselected.
       // Off-page items giữ nguyên trong map (không bị visit ở đây).
-      rows.forEach(item => {
-        const id = item.meta.id;
-        if (item.meta.selector!.isSelected) {
-          this.#preservedSelectedMap.set(id, item);
-        } else {
-          this.#preservedSelectedMap.delete(id);
-        }
-      });
-      this.selectedTableItems.set(Array.from(this.#preservedSelectedMap.values()));
+      this.selectedTableItems.set(syncPreservedSelection(rows, this.#preservedSelectedMap));
     } else {
       this.selectedTableItems.set(rows.filter(item => item.meta.selector!.isSelected));
     }
@@ -1314,7 +1168,7 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
     this.filterRegister.value.remove();
   };
 
-  setFilter = (args: { columnFilter?: Record<string, any>; externalFilter?: Record<string, any> }) => {
+  setFilter = (args?: Pick<TableFilterValue, 'columnFilter' | 'externalFilter'>) => {
     const { columnFilter, externalFilter } = args || {};
     if (columnFilter) {
       // Giữ reference ổn định cho column-filter (xem #syncColumnFilterInPlace).
@@ -1363,279 +1217,42 @@ export class SdTable<T = unknown> implements OnInit, AfterViewInit, OnDestroy {
   });
 
   isReorderDisabled(item: SdTableItem<T>): boolean {
-    if ((item.meta.tree?.level ?? 0) > 0) return true;
     const opt = this.tableOption()?.rowReorder;
-    if (!opt?.disabled || item.meta?.group?.items?.length) return false;
     const idx = this.#itemIndexMap.get(item) ?? -1;
-    return opt.disabled(item.data, idx);
-  }
-
-  #sameGroup(a: SdTableItem<T>, b: SdTableItem<T>, allItems: SdTableItem<T>[]): boolean {
-    const groupOf = (item: SdTableItem<T>): number => {
-      let lastGroupIdx = -1;
-      for (let i = 0; i < allItems.length; i++) {
-        if (allItems[i].meta?.group?.items?.length) lastGroupIdx = i;
-        if (allItems[i] === item) return lastGroupIdx;
-      }
-      return -1;
-    };
-    return groupOf(a) === groupOf(b);
+    return isReorderItemDisabled(item, opt, idx);
   }
 
   reorderSortPredicate = (index: number, drag: CdkDrag<SdTableItem<T>>, drop: CdkDropList<SdTableItem<T>[]>): boolean => {
     const opt = this.tableOption()?.rowReorder;
-    if (!opt?.enabled) return false;
-    const allItems = drop.data;
-    const targetItem = allItems?.[index];
-    if (!targetItem) return false;
-    if ((targetItem.meta.tree?.level ?? 0) > 0) return false;
-    if ((drag.data.meta.tree?.level ?? 0) > 0) return false;
-    if (targetItem.meta?.group?.items?.length) return false;
-    if (this.tableOption()?.group) {
-      return this.#sameGroup(drag.data, targetItem, allItems);
-    }
-    return true;
+    return canSortReorder({
+      enabled: opt?.enabled,
+      index,
+      dragItem: drag.data,
+      allItems: drop.data,
+      hasGroup: !!this.tableOption()?.group,
+    });
   };
 
   onReorderDrop(event: CdkDragDrop<SdTableItem<T>[]>): void {
     const { previousIndex, currentIndex } = event;
     if (previousIndex === currentIndex) return;
-    const groupedItems = event.container.data;
-    const toItemsIndex = (domIdx: number): number => {
-      let count = 0;
-      for (let i = 0; i < domIdx; i++) {
-        if (!groupedItems[i]?.meta?.group?.items?.length && (groupedItems[i]?.meta?.tree?.level ?? 0) === 0) count++;
-      }
-      return count;
-    };
-    const fromIdx = toItemsIndex(previousIndex);
-    const toIdx = toItemsIndex(currentIndex);
-    const current = [...this.items()];
-    const localPositions = current.map(item => this.#localItems.indexOf(item));
-    moveItemInArray(current, fromIdx, toIdx);
-    this.items.set(current);
-    if (this.tableOption()?.type === 'local' && localPositions.every(p => p >= 0)) {
-      const newLocal = [...this.#localItems];
-      current.forEach((item, i) => {
-        newLocal[localPositions[i]] = item;
-      });
-      this.#localItems = newLocal;
+    const result = reorderTableItems({
+      items: this.items(),
+      renderedItems: event.container.data,
+      previousRenderedIndex: previousIndex,
+      currentRenderedIndex: currentIndex,
+      localItems: this.tableOption()?.type === 'local' ? this.#localItems : undefined,
+    });
+    this.items.set(result.items);
+    if (this.tableOption()?.type === 'local' && result.localItems) {
+      this.#localItems = result.localItems;
     }
     this.table()?.renderRows();
     this.tableOption()?.rowReorder?.onChange?.(
-      current.map(i => i.data),
+      result.items.map(i => i.data),
       event.item.data.data,
-      fromIdx,
-      toIdx
+      result.fromIndex,
+      result.toIndex
     );
   }
-
-  #convertPagingReq = (filterReq: SdTableFilterRequest): PagingReq => {
-    const opt = this.tableOption()!;
-    const { columns, filter } = opt;
-    const externalFilters = filter?.externalFilters || [];
-    const req: PagingReq = {
-      filters: [],
-      orders: [],
-      pageNumber: filterReq.pageNumber,
-      pageSize: filterReq.pageSize,
-    };
-    const { filters, orders } = req;
-    const { rawColumnFilter, columnOperator, rawExternalFilter, orderBy, orderDirection } = filterReq;
-
-    for (const externalFilter of externalFilters || []) {
-      const { field } = externalFilter;
-      const value = rawExternalFilter?.[field];
-      if (value !== undefined && value !== null && value !== '') {
-        if (externalFilter.type === 'string') {
-          if (externalFilter.defaultOperator === 'EQUAL' && value?.includes(',')) {
-            filters!.push({
-              field,
-              operator: 'IN',
-              data: (value as string).split(',').map(val => val.trim()),
-            });
-          } else {
-            filters!.push({
-              field,
-              operator: externalFilter.defaultOperator || 'CONTAIN',
-              data: value,
-            } as Filter);
-          }
-        } else if (externalFilter.type === 'boolean') {
-          filters!.push({
-            field,
-            operator: 'EQUAL',
-            data: value === true || value === 1 || value === 'true' || value === '1',
-          });
-        } else if (externalFilter.type === 'daterange') {
-          if (typeof value === 'object' && 'from' in value && 'to' in value) {
-            if (value?.from) {
-              filters!.push({
-                field,
-                operator: 'GREATER_OR_EQUAL',
-                data: DateUtilities.begin(value?.from)!.toISOString(),
-              });
-            }
-            if (value?.to) {
-              filters!.push({
-                field,
-                operator: 'LESS_THAN',
-                data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
-              });
-            }
-          }
-        } else if (externalFilter.type === 'date' || externalFilter.type === 'datetime') {
-          if (DateUtilities.isDate(value)) {
-            if (externalFilter.type === 'date') {
-              if (externalFilter.defaultOperator === 'GREATER_OR_EQUAL') {
-                filters!.push({
-                  field,
-                  operator: 'GREATER_OR_EQUAL',
-                  data: DateUtilities.begin(value)!.toISOString(),
-                });
-              }
-              if (externalFilter.defaultOperator === 'LESS_OR_EQUAL') {
-                filters!.push({
-                  field,
-                  operator: 'LESS_THAN',
-                  data: DateUtilities.begin(DateUtilities.addDays(value, 1))!.toISOString(),
-                });
-              }
-            } else {
-              if (externalFilter.defaultOperator === 'GREATER_OR_EQUAL') {
-                filters!.push({
-                  field,
-                  operator: 'GREATER_OR_EQUAL',
-                  data: new Date(value).toISOString(),
-                });
-              }
-              if (externalFilter.defaultOperator === 'LESS_OR_EQUAL') {
-                filters!.push({
-                  field,
-                  operator: 'LESS_OR_EQUAL',
-                  data: new Date(value).toISOString(),
-                });
-              }
-            }
-          }
-        } else {
-          if (Array.isArray(value)) {
-            if (value.length) {
-              filters!.push({
-                field,
-                operator: 'IN',
-                data: value,
-              });
-            }
-          } else if (typeof value === 'object' && 'from' in value && 'to' in value) {
-            if (value?.from) {
-              filters!.push({
-                field,
-                operator: 'GREATER_OR_EQUAL',
-                data: DateUtilities.begin(value?.from)!.toISOString(),
-              });
-            }
-            if (value?.to) {
-              filters!.push({
-                field,
-                operator: 'LESS_THAN',
-                data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
-              });
-            }
-          } else {
-            filters!.push({
-              field,
-              operator: externalFilter.defaultOperator || 'EQUAL',
-              data: value,
-            } as Filter);
-          }
-        }
-      }
-    }
-
-    for (const column of columns || []) {
-      const { field } = column;
-      const value: any = rawColumnFilter?.[field];
-      const operator = columnOperator?.[field] || column.filter?.operator?.default;
-      if (value !== undefined && value !== null && value !== '') {
-        if (column.type === 'string') {
-          // `operator` is the wide `Operator` union; in this data-bearing path it is a
-          // single-value comparison operator, hence the cast to the `Filter` contract.
-          filters!.push({
-            field: field,
-            operator: operator || 'CONTAIN',
-            data: value,
-          } as Filter);
-        } else if (column.type === 'boolean') {
-          filters!.push({
-            field: field,
-            operator: 'EQUAL',
-            data: value === true || value === 1 || value === 'true' || value === '1',
-          });
-        } else if (column.type === 'date' || column.type === 'datetime') {
-          if (value && typeof value === 'object' && 'from' in value && 'to' in value) {
-            if (value?.from && value?.to) {
-              filters!.push({
-                field: field,
-                operator: 'BETWEEN',
-                data: {
-                  from: DateUtilities.begin(value?.from)!.toISOString(),
-                  to: DateUtilities.end(value?.to)!.toISOString(),
-                },
-              });
-            } else if (value?.from) {
-              filters!.push({
-                field: field,
-                operator: 'GREATER_OR_EQUAL',
-                data: DateUtilities.begin(value?.from)!.toISOString(),
-              });
-            } else if (value?.to) {
-              filters!.push({
-                field: field,
-                operator: 'LESS_THAN',
-                data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
-              });
-            }
-          } else {
-            if (DateUtilities.isDate(value)) {
-              filters!.push({
-                field: field,
-                operator: 'BETWEEN',
-                data: {
-                  from: DateUtilities.begin(value)!.toISOString(),
-                  to: DateUtilities.end(value)!.toISOString(),
-                },
-              });
-            }
-          }
-        } else {
-          if (Array.isArray(value)) {
-            if (value.length) {
-              filters!.push({
-                field: field,
-                operator: 'IN',
-                data: value,
-              });
-            }
-          } else {
-            // `operator` is the wide `Operator` union; this data-bearing path uses a
-            // single-value comparison operator, hence the cast to the `Filter` contract.
-            filters!.push({
-              field: field,
-              operator: operator || 'EQUAL',
-              data: value,
-            } as Filter);
-          }
-        }
-      }
-    }
-
-    if (orderBy && orderDirection) {
-      orders!.push({
-        field: orderBy,
-        direction: orderDirection,
-      });
-    }
-    return req;
-  };
 }

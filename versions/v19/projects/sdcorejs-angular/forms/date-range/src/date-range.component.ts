@@ -101,6 +101,14 @@ export class SdDateRange implements OnDestroy, OnInit {
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   autoId = computed(() => this.autoIdInput() ? `forms-date-range-${this.autoIdInput()}` : undefined);
+  fromAutoId = computed(() => {
+    const id = this.autoId();
+    return id ? `${id}-from` : undefined;
+  });
+  toAutoId = computed(() => {
+    const id = this.autoId();
+    return id ? `${id}-to` : undefined;
+  });
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));

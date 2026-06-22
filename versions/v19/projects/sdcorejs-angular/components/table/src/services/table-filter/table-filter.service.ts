@@ -20,6 +20,32 @@ export class SdTableFilterService {
   #filterValue = 'GRID-FILTER-VALUE';
   #cache: Record<string, TableFilterRegister> = {};
   constructor(private storageService: SdStorageService) {}
+
+  #hasOwnValue = (values: Record<string, unknown> | undefined, field: string): boolean => {
+    return !!values && Object.prototype.hasOwnProperty.call(values, field);
+  };
+
+  #resolveKey = (
+    filter: SdTableOptionFilter | undefined,
+    args: {
+      id: string;
+      columns: SdTableColumn[] | undefined;
+      externalFilters: SdTableExternalFilter[] | undefined;
+    }
+  ) => {
+    const { id, columns, externalFilters } = args;
+    const tempKey = Utilities.hash({
+      id,
+      columns: columns?.map(e => e.field).filter(field => !!field) || [],
+      externalFilters: externalFilters?.map(e => e.field).filter(field => !!field) || [],
+    });
+    return {
+      tempKey,
+      key: filter?.key || tempKey,
+      cacheSession: !filter?.key,
+    };
+  };
+
   register = (
     filter: SdTableOptionFilter | undefined,
     args: {
@@ -28,19 +54,12 @@ export class SdTableFilterService {
       externalFilters: SdTableExternalFilter[] | undefined;
       filterDefs: SdTableFilterDefDirective[] | undefined;
       columnOperator?: Record<string, Operator>;
+      force?: boolean;
     }
   ) => {
-    let cacheSession = false;
-
-    const { id, columns, externalFilters } = args;
-    const tempKey = Utilities.hash({
-      id,
-      columns: columns?.map(e => e.field).filter(field => !!field) || [],
-      externalFilters: externalFilters?.map(e => e.field).filter(field => !!field) || [],
-    });
-    const key = filter?.key || tempKey;
-    if (!filter?.key) {
-      cacheSession = true; // Nếu không có key thì chỉ lưu theo session
+    const { key, tempKey, cacheSession } = this.#resolveKey(filter, args);
+    if (args.force) {
+      delete this.#cache[key];
     }
     if (!this.#cache[key]) {
       // Setting của filter configuration
@@ -177,8 +196,8 @@ export class SdTableFilterService {
     externalFilters: SdTableExternalFilter[] | undefined;
     columnOperator?: Record<string, Operator>;
   }): TableFilterValue => {
-    const columnFilter: Record<string, any> = {};
-    const externalFilter: Record<string, any> = {};
+    const columnFilter: Record<string, unknown> = {};
+    const externalFilter: Record<string, unknown> = {};
     const columnOperator: Record<string, Operator> = args.columnOperator || {};
     const { columns, externalFilters } = args;
     // Filter column
@@ -239,26 +258,30 @@ export class SdTableFilterService {
     },
     value: TableFilterValue
   ): TableFilterValue => {
-    const columnFilter: Record<string, any> = {};
-    const externalFilter: Record<string, any> = {};
+    const columnFilter: Record<string, unknown> = {};
+    const externalFilter: Record<string, unknown> = {};
     const columnOperator: Record<string, Operator> = args.columnOperator || {};
     const { columns, externalFilters } = args;
     // Filter column
     for (const item of columns || []) {
-      columnFilter[item.field] = value?.columnFilter?.[item.field] ?? item?.filter?.default;
+      // why: null is a deliberate cached clear from SD controls; only a missing key should fall back to default.
+      columnFilter[item.field] = this.#hasOwnValue(value?.columnFilter, item.field)
+        ? value?.columnFilter?.[item.field]
+        : item?.filter?.default;
       if (item?.filter?.operator?.enable && item?.filter?.operator?.default) {
         columnOperator[item.field] = item.filter.operator.default;
       }
     }
     // Filter external
     for (const item of externalFilters || []) {
+      const hasExternalValue = this.#hasOwnValue(value?.externalFilter, item.field);
       if (item.type === 'daterange') {
         externalFilter[item.field] = {
-          from: value?.externalFilter?.[item.field]?.from ?? item.default?.from,
-          to: value?.externalFilter?.[item.field]?.to ?? item.default?.to,
+          from: hasExternalValue ? value?.externalFilter?.[item.field]?.from : item.default?.from,
+          to: hasExternalValue ? value?.externalFilter?.[item.field]?.to : item.default?.to,
         };
       } else {
-        externalFilter[item.field] = value?.externalFilter?.[item.field] ?? item?.default;
+        externalFilter[item.field] = hasExternalValue ? value?.externalFilter?.[item.field] : item?.default;
       }
     }
     return {

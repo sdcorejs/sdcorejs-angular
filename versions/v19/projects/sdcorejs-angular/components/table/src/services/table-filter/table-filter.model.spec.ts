@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Filter, Operator, PagingReq } from '@sdcorejs/utils/models';
+import { Filter, PagingReq } from '@sdcorejs/utils/models';
 import { SdConvertToPagingReq, SdTableExternalFilter, SdTableFilterRequest } from './table-filter.model';
 import { SdTableColumn } from '../../models/table-column.model';
 
@@ -38,10 +38,9 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
   });
 
   it('forwards supplied orders and appends orderBy/orderDirection', () => {
-    const req = SdConvertToPagingReq(
-      makeReq({ orderBy: 'name', orderDirection: 'ASC' as any }),
-      { orders: [{ field: 'createdAt', direction: 'DESC' } as any] }
-    );
+    const req = SdConvertToPagingReq(makeReq({ orderBy: 'name', orderDirection: 'ASC' as any }), {
+      orders: [{ field: 'createdAt', direction: 'DESC' } as any],
+    });
     expect(req.orders).toEqual([
       { field: 'createdAt', direction: 'DESC' },
       { field: 'name', direction: 'ASC' },
@@ -72,6 +71,14 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
       expect(byField(r2, 'code')[0]).toEqual({ field: 'code', operator: 'EQUAL', data: 'X1' });
     });
 
+    it('string EQUAL with comma-separated value → IN list, matching the table component mapper', () => {
+      const req = SdConvertToPagingReq(makeReq({ rawExternalFilter: { code: 'A, B,C' } }), {
+        externalFilters: [ext({ field: 'code', type: 'string', defaultOperator: 'EQUAL' })],
+      });
+
+      expect(byField(req, 'code')[0]).toEqual({ field: 'code', operator: 'IN', data: ['A', 'B', 'C'] });
+    });
+
     it('boolean → EQUAL with a real boolean (coerces 1 / "true" / "1")', () => {
       for (const v of [true, 1, 'true', '1']) {
         const r = SdConvertToPagingReq(makeReq({ rawExternalFilter: { active: v } }), {
@@ -86,13 +93,22 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
     });
 
     it('date range { from, to } → GREATER_OR_EQUAL + LESS_THAN, ISO data', () => {
-      const r = SdConvertToPagingReq(
-        makeReq({ rawExternalFilter: { createdAt: { from: '2025-01-01', to: '2025-01-31' } } }),
-        { externalFilters: [ext({ field: 'createdAt', type: 'date' })] }
-      );
+      const r = SdConvertToPagingReq(makeReq({ rawExternalFilter: { createdAt: { from: '2025-01-01', to: '2025-01-31' } } }), {
+        externalFilters: [ext({ field: 'createdAt', type: 'date' })],
+      });
       const fs = byField(r, 'createdAt');
       expect(fs.map(f => f.operator).sort()).toEqual(['GREATER_OR_EQUAL', 'LESS_THAN']);
       fs.forEach(f => expect(typeof f.data).toBe('string'));
+    });
+
+    it('daterange external filter → GREATER_OR_EQUAL + LESS_THAN, ISO data', () => {
+      const req = SdConvertToPagingReq(makeReq({ rawExternalFilter: { period: { from: '2025-01-01', to: '2025-01-31' } } }), {
+        externalFilters: [ext({ field: 'period', type: 'daterange' })],
+      });
+
+      const filters = byField(req, 'period');
+      expect(filters.map(f => f.operator).sort()).toEqual(['GREATER_OR_EQUAL', 'LESS_THAN']);
+      filters.forEach(f => expect(typeof f.data).toBe('string'));
     });
 
     it('single date honours defaultOperator GREATER_OR_EQUAL / LESS_OR_EQUAL', () => {
@@ -106,6 +122,19 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
       });
       // LESS_OR_EQUAL is emitted as LESS_THAN of (date + 1 day)
       expect(byField(le, 'd')[0].operator).toBe('LESS_THAN');
+    });
+
+    it('single datetime honours GREATER_OR_EQUAL / LESS_OR_EQUAL without day-boundary conversion', () => {
+      const value = '2025-06-15T08:30:00.000Z';
+      const ge = SdConvertToPagingReq(makeReq({ rawExternalFilter: { at: value } }), {
+        externalFilters: [ext({ field: 'at', type: 'datetime', defaultOperator: 'GREATER_OR_EQUAL' })],
+      });
+      const le = SdConvertToPagingReq(makeReq({ rawExternalFilter: { at: value } }), {
+        externalFilters: [ext({ field: 'at', type: 'datetime', defaultOperator: 'LESS_OR_EQUAL' })],
+      });
+
+      expect(byField(ge, 'at')[0]).toEqual({ field: 'at', operator: 'GREATER_OR_EQUAL', data: value });
+      expect(byField(le, 'at')[0]).toEqual({ field: 'at', operator: 'LESS_OR_EQUAL', data: value });
     });
 
     it('values: array → IN, scalar → EQUAL (override via defaultOperator)', () => {
@@ -128,16 +157,9 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
     });
 
     it('skips undefined / null / empty-string values', () => {
-      const r = SdConvertToPagingReq(
-        makeReq({ rawExternalFilter: { a: undefined, b: null, c: '' } }),
-        {
-          externalFilters: [
-            ext({ field: 'a', type: 'string' }),
-            ext({ field: 'b', type: 'string' }),
-            ext({ field: 'c', type: 'string' }),
-          ],
-        }
-      );
+      const r = SdConvertToPagingReq(makeReq({ rawExternalFilter: { a: undefined, b: null, c: '' } }), {
+        externalFilters: [ext({ field: 'a', type: 'string' }), ext({ field: 'b', type: 'string' }), ext({ field: 'c', type: 'string' })],
+      });
       expect(req_filters(r)).toEqual([]);
     });
 
@@ -161,10 +183,9 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
       });
       expect(byField(r1, 'name')[0]).toEqual({ field: 'name', operator: 'CONTAIN', data: 'abc' });
 
-      const r2 = SdConvertToPagingReq(
-        makeReq({ rawColumnFilter: { name: 'abc' } as any, columnOperator: { name: 'EQUAL' } as any }),
-        { columns: [col({ field: 'name', type: 'string' })] }
-      );
+      const r2 = SdConvertToPagingReq(makeReq({ rawColumnFilter: { name: 'abc' } as any, columnOperator: { name: 'EQUAL' } as any }), {
+        columns: [col({ field: 'name', type: 'string' })],
+      });
       expect(byField(r2, 'name')[0].operator).toBe('EQUAL');
     });
 
@@ -176,10 +197,9 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
     });
 
     it('date { from, to } → BETWEEN with { from, to } ISO payload', () => {
-      const r = SdConvertToPagingReq(
-        makeReq({ rawColumnFilter: { d: { from: '2025-01-01', to: '2025-01-31' } } as any }),
-        { columns: [col({ field: 'd', type: 'date' })] }
-      );
+      const r = SdConvertToPagingReq(makeReq({ rawColumnFilter: { d: { from: '2025-01-01', to: '2025-01-31' } } as any }), {
+        columns: [col({ field: 'd', type: 'date' })],
+      });
       const f = byField(r, 'd')[0];
       expect(f.operator).toBe('BETWEEN');
       expect(typeof f.data.from).toBe('string');
@@ -237,13 +257,10 @@ describe('table-filter.model › SdConvertToPagingReq', () => {
   });
 
   it('combines external + column filters in one request', () => {
-    const r = SdConvertToPagingReq(
-      makeReq({ rawExternalFilter: { q: 'hello' }, rawColumnFilter: { status: ['A'] } as any }),
-      {
-        externalFilters: [{ field: 'q', title: '', type: 'string' } as any],
-        columns: [{ field: 'status', type: 'values' } as any],
-      }
-    );
+    const r = SdConvertToPagingReq(makeReq({ rawExternalFilter: { q: 'hello' }, rawColumnFilter: { status: ['A'] } as any }), {
+      externalFilters: [{ field: 'q', title: '', type: 'string' } as any],
+      columns: [{ field: 'status', type: 'values' } as any],
+    });
     expect((r.filters as Filter[]).length).toBe(2);
     expect(byField(r, 'q')[0].operator).toBe('CONTAIN');
     expect(byField(r, 'status')[0].operator).toBe('IN');

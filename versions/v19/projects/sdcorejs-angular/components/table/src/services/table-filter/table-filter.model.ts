@@ -44,6 +44,7 @@ export interface SdTableFilterRequest<T = any> {
   visibledColumns?: SdTableColumn[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
 export interface SdTableOptionFilter<T = any> {
   /** Key định danh nếu muốn lưu cache */
   key?: string;
@@ -107,18 +108,26 @@ export const SdConvertToPagingReq = (
     // Nếu có giá trị thì mới xử lý filter
     if (value !== undefined && value !== null && value !== '') {
       if (externalFilter.type === 'string') {
-        filters!.push({
-          field,
-          operator: externalFilter.defaultOperator || 'CONTAIN',
-          data: value,
-        } as Filter);
+        if (externalFilter.defaultOperator === 'EQUAL' && typeof value === 'string' && value.includes(',')) {
+          filters!.push({
+            field,
+            operator: 'IN',
+            data: value.split(',').map(val => val.trim()),
+          });
+        } else {
+          filters!.push({
+            field,
+            operator: externalFilter.defaultOperator || 'CONTAIN',
+            data: value,
+          } as Filter);
+        }
       } else if (externalFilter.type === 'boolean') {
         filters!.push({
           field,
           operator: 'EQUAL',
           data: value === true || value === 1 || value === 'true' || value === '1',
         });
-      } else if (externalFilter.type === 'date') {
+      } else if (externalFilter.type === 'daterange') {
         if (typeof value === 'object' && 'from' in value && 'to' in value) {
           if (value?.from) {
             filters!.push({
@@ -134,8 +143,25 @@ export const SdConvertToPagingReq = (
               data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
             });
           }
-        } else {
-          if (DateUtilities.isDate(value)) {
+        }
+      } else if (externalFilter.type === 'date' || externalFilter.type === 'datetime') {
+        if (typeof value === 'object' && 'from' in value && 'to' in value) {
+          if (value?.from) {
+            filters!.push({
+              field,
+              operator: 'GREATER_OR_EQUAL',
+              data: DateUtilities.begin(value?.from)!.toISOString(),
+            });
+          }
+          if (value?.to) {
+            filters!.push({
+              field,
+              operator: 'LESS_THAN',
+              data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
+            });
+          }
+        } else if (DateUtilities.isDate(value)) {
+          if (externalFilter.type === 'date') {
             if (externalFilter.defaultOperator === 'GREATER_OR_EQUAL') {
               filters!.push({
                 field,
@@ -150,6 +176,21 @@ export const SdConvertToPagingReq = (
                 data: DateUtilities.begin(DateUtilities.addDays(value, 1))!.toISOString(),
               });
             }
+          } else {
+            if (externalFilter.defaultOperator === 'GREATER_OR_EQUAL') {
+              filters!.push({
+                field,
+                operator: 'GREATER_OR_EQUAL',
+                data: new Date(value).toISOString(),
+              });
+            }
+            if (externalFilter.defaultOperator === 'LESS_OR_EQUAL') {
+              filters!.push({
+                field,
+                operator: 'LESS_OR_EQUAL',
+                data: new Date(value).toISOString(),
+              });
+            }
           }
         }
       } else {
@@ -159,6 +200,21 @@ export const SdConvertToPagingReq = (
               field,
               operator: 'IN',
               data: value,
+            });
+          }
+        } else if (typeof value === 'object' && 'from' in value && 'to' in value) {
+          if (value?.from) {
+            filters!.push({
+              field,
+              operator: 'GREATER_OR_EQUAL',
+              data: DateUtilities.begin(value?.from)!.toISOString(),
+            });
+          }
+          if (value?.to) {
+            filters!.push({
+              field,
+              operator: 'LESS_THAN',
+              data: DateUtilities.begin(DateUtilities.addDays(value?.to, 1))!.toISOString(),
             });
           }
         } else {

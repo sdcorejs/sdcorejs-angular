@@ -7,7 +7,7 @@
 @let _label = label();
 @let _context = { columnFilter: _columnFilter, autoId: _autoId };
 
-<div class="d-flex c-inline-column align-items-end" style="width: 100%; max-width: 100%">
+<div class="d-flex c-inline-column align-items-center" style="width: 100%; max-width: 100%">
   @if (
     _column.type === 'string' ||
     _column.type === 'number' ||
@@ -20,9 +20,7 @@
   ) {
     <!-- Operator filter -->
     @if (_operators.length) {
-      <div class="d-flex align-items-center" [ngClass]="operatorWrapperClass()">
-        <sd-operator [(model)]="operator" [operators]="operatorValues()" />
-      </div>
+      <sd-operator class="mr-4" [(model)]="operator" [operators]="operatorValues()" />
     }
 
     <!-- Nếu filter nhận vào template -->
@@ -60,8 +58,7 @@
             hideInlineError>
           </sd-input-number>
         } @else if (_column.filter?.type === 'split-number') {
-          <ng-container
-            *ngTemplateOutlet="splitNumberTpl; context: { field: _column.field, disabled: _column.filter?.disabled }">
+          <ng-container *ngTemplateOutlet="splitNumberTpl; context: { field: _column.field, disabled: _column.filter?.disabled }">
           </ng-container>
         }
       } @else if (_column.type === 'boolean') {
@@ -148,8 +145,7 @@
             hideInlineError>
           </sd-date>
         } @else if (_column.filter?.type === 'split-date') {
-          <ng-container
-            *ngTemplateOutlet="splitDateTpl; context: { field: _column.field, disabled: _column.filter?.disabled }">
+          <ng-container *ngTemplateOutlet="splitDateTpl; context: { field: _column.field, disabled: _column.filter?.disabled }">
           </ng-container>
         }
       }

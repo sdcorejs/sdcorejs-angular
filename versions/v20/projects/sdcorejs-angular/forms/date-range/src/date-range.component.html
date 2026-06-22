@@ -85,7 +85,7 @@
       (blur)="onBlur()"
       (keyup.enter)="onEnter()"
       [attr.data-qclabel]="_label"
-      [attr.data-autoId]="autoId() + '-from'" />
+      [attr.data-autoId]="fromAutoId()" />
 
     <input
       aria-hidden="true"
@@ -100,7 +100,7 @@
       (blur)="onBlur()"
       (keyup.enter)="onEnter()"
       [attr.data-qclabel]="_label"
-      [attr.data-autoId]="autoId() + '-to'" />
+      [attr.data-autoId]="toAutoId()" />
   </mat-date-range-input>
 
   @if (_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {

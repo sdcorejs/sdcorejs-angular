@@ -2,16 +2,20 @@ import { MapToSdTableItem, SdTableItem } from '../../models/table-item.model';
 import { SdTableOptionTree, TableOptionTreeLazy, TableOptionTreeStatic } from '../../models/table-option-tree.model';
 import {
   collectFormattedTreeRows,
+  clearTreeChildCache,
   filterMatchingChildren,
   flattenDataTree,
   flattenTree,
   flattenTreeAll,
   getChildrenFromData,
   getChildrenKey,
+  getVisibleChildrenData,
   hasLazyChildren,
+  initTreeMeta,
   isLazyTree,
   resolveDefaultExpanded,
   resolveHasChildren,
+  saveTreeExpandState,
   subtreeMatches,
 } from './tree.util';
 
@@ -95,6 +99,53 @@ describe('tree.util', () => {
     expect(hasLazyChildren(lazy, lazyOpt())).toBe(true);
     const embedded = item({ id: 1, name: 'a', children: [{ id: 2, name: 'b' }] });
     expect(hasLazyChildren(embedded, lazyOpt())).toBe(false);
+  });
+
+  it('getVisibleChildrenData prunes children by subtree predicate when search is active', () => {
+    const data: Node = {
+      id: 1,
+      name: 'root',
+      children: [
+        { id: 2, name: 'keep', children: [{ id: 3, name: 'needle' }] },
+        { id: 4, name: 'drop' },
+      ],
+    };
+
+    expect(getVisibleChildrenData(data, opt()).map(i => i.id)).toEqual([2, 4]);
+    expect(getVisibleChildrenData(data, opt(), row => row.name === 'needle').map(i => i.id)).toEqual([2]);
+  });
+
+  it('saveTreeExpandState stores expanded rows from nested formatted children', () => {
+    const child = item({ id: 2, name: 'child' }, { level: 1, isExpanded: true });
+    const root = item({ id: 1, name: 'root' }, { isExpanded: true, childItems: [child] });
+    const state = new Map<string, boolean>();
+
+    saveTreeExpandState([root], state);
+
+    expect(state.get(root.meta.id)).toBe(true);
+    expect(state.get(child.meta.id)).toBe(true);
+  });
+
+  it('clearTreeChildCache clears childItems recursively', () => {
+    const grand = item({ id: 3, name: 'grand' });
+    const child = item({ id: 2, name: 'child' }, { childItems: [grand] });
+    const root = item({ id: 1, name: 'root' }, { childItems: [child] });
+
+    clearTreeChildCache([root]);
+
+    expect(root.meta.tree?.childItems).toBeUndefined();
+    expect(child.meta.tree?.childItems).toBeUndefined();
+  });
+
+  it('initTreeMeta restores saved expand state outside search and auto-expands matching search branches', () => {
+    const root = item({ id: 1, name: 'root', children: [{ id: 2, name: 'needle' }] });
+    const state = new Map<string, boolean>([[root.meta.id, false]]);
+
+    initTreeMeta([root], opt({ defaultExpanded: true }), { expandState: state });
+    expect(root.meta.tree).toEqual(jasmine.objectContaining({ level: 0, hasChildren: true, isExpanded: false }));
+
+    initTreeMeta([root], opt({ defaultExpanded: false }), { treeSearchPredicate: row => row.name === 'needle' });
+    expect(root.meta.tree).toEqual(jasmine.objectContaining({ level: 0, hasChildren: true, isExpanded: true }));
   });
 
 

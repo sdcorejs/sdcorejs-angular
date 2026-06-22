@@ -151,6 +151,56 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
     });
   }
 
+  let defaultFilterKey = '';
+
+  @Component({
+    selector: 'sd-spec-default-filter-host',
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="tableOption()"></sd-table>`,
+  })
+  class DefaultFilterHostComponent {
+    itemsSpy = jasmine.createSpy('items').and.callFake(() => Promise.resolve({ items: [], total: 0 }));
+    tableOption = signal<SdTableOption<Row>>({
+      type: 'server',
+      items: this.itemsSpy,
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name', filter: { default: 'Alice' } },
+      ],
+      filter: { key: defaultFilterKey, cacheable: true },
+    });
+  }
+
+  @Component({
+    selector: 'sd-spec-late-default-filter-host',
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="tableOption()"></sd-table>`,
+  })
+  class LateDefaultFilterHostComponent {
+    itemsSpy = jasmine.createSpy('items').and.callFake(() => Promise.resolve({ items: [], total: 0 }));
+    tableOption = signal<SdTableOption<Row>>({
+      type: 'server',
+      items: this.itemsSpy,
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+      filter: {},
+    });
+
+    applyNameDefault() {
+      this.tableOption.update(option => ({
+        ...option,
+        columns: [
+          { field: 'id', type: 'number', title: 'ID' },
+          { field: 'name', type: 'string', title: 'Name', filter: { default: 'Alice' } },
+        ],
+      }));
+    }
+  }
+
   let fixture: ComponentFixture<HostComponent>;
   let host: HostComponent;
   let table: SdTable<Row>;
@@ -163,7 +213,7 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
   }
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ imports: [HostComponent] });
+    TestBed.configureTestingModule({ imports: [HostComponent, DefaultFilterHostComponent, LateDefaultFilterHostComponent] });
   });
 
   it('onFilterCommit ghi columnFilter vào filterRegister với notReload:true — không trigger reload', fakeAsync(() => {
@@ -277,6 +327,79 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
     expect(table.columnFilter).withContext('ref ổn định').toBe(stableRef);
     expect('name' in table.columnFilter!).withContext('key đã clear bị xóa in place').toBe(false);
     expect(table.columnFilter!['id']).toBe(5);
+  }));
+
+  it('keeps a cached null clear instead of reapplying column filter default on re-create', fakeAsync(() => {
+    defaultFilterKey = `inline-default-clear-${Math.random()}`;
+
+    const firstFixture = TestBed.createComponent(DefaultFilterHostComponent);
+    const firstHost = firstFixture.componentInstance;
+    firstFixture.detectChanges();
+    const firstTable = firstFixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
+    tick(800);
+    flush();
+    firstFixture.detectChanges();
+
+    let firstCall = firstHost.itemsSpy.calls.first().args as [
+      { rawColumnFilter: Record<string, unknown> },
+      { filters: Array<{ field: string; operator: string; data: unknown }> },
+    ];
+    let filterReq = firstCall[0];
+    let pagingReq = firstCall[1];
+    expect(filterReq.rawColumnFilter['name']).toBe('Alice');
+    expect(pagingReq.filters).toContain(jasmine.objectContaining({ field: 'name', operator: 'CONTAIN', data: 'Alice' }));
+
+    firstTable.columnFilter!['name'] = null;
+    firstTable.onFilterChange();
+    tick(800);
+    flush();
+    firstFixture.detectChanges();
+    expect(firstTable.filterRegister.value.get().columnFilter?.['name']).toBeNull();
+    firstFixture.destroy();
+
+    const secondFixture = TestBed.createComponent(DefaultFilterHostComponent);
+    const secondHost = secondFixture.componentInstance;
+    secondFixture.detectChanges();
+    tick(800);
+    flush();
+    secondFixture.detectChanges();
+
+    firstCall = secondHost.itemsSpy.calls.first().args as [
+      { rawColumnFilter: Record<string, unknown> },
+      { filters: Array<{ field: string; operator: string; data: unknown }> },
+    ];
+    filterReq = firstCall[0];
+    pagingReq = firstCall[1];
+    expect(filterReq.rawColumnFilter['name']).toBeNull();
+    expect(pagingReq.filters).toEqual([]);
+    secondFixture.destroy();
+  }));
+
+  it('applies a column filter default added after the filter register was created on the next first load', fakeAsync(() => {
+    const lateFixture = TestBed.createComponent(LateDefaultFilterHostComponent);
+    const lateHost = lateFixture.componentInstance;
+    lateFixture.detectChanges();
+    tick(800);
+    flush();
+    lateFixture.detectChanges();
+    const lateTable = lateFixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
+    const firstRegister = lateTable.filterRegister;
+    lateHost.itemsSpy.calls.reset();
+
+    lateHost.applyNameDefault();
+    lateFixture.detectChanges();
+    tick(800);
+    flush();
+    lateFixture.detectChanges();
+
+    const firstCall = lateHost.itemsSpy.calls.first().args as [
+      { rawColumnFilter: Record<string, unknown> },
+      { filters: Array<{ field: string; operator: string; data: unknown }> },
+    ];
+    expect(lateTable.filterRegister).not.toBe(firstRegister);
+    expect(firstCall[0].rawColumnFilter['name']).toBe('Alice');
+    expect(firstCall[1].filters).toContain(jasmine.objectContaining({ field: 'name', operator: 'CONTAIN', data: 'Alice' }));
+    lateFixture.destroy();
   }));
 });
 

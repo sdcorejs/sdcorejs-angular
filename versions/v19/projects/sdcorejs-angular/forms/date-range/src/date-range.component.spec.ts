@@ -19,6 +19,7 @@ import { SdDateRange } from './date-range.component';
     [viewed]="viewed"
     [min]="min"
     [max]="max"
+    [autoId]="autoId"
     [model]="model"
     (modelChange)="model = $event"
     (sdChange)="onSdChange($event)"></sd-date-range>`,
@@ -30,6 +31,7 @@ class HostComponent {
   viewed = false;
   min: any = undefined;
   max: any = undefined;
+  autoId: string | null | undefined = undefined;
   model: any = undefined;
   changes: any[] = [];
   onSdChange(v: any) { this.changes.push(v); }
@@ -356,6 +358,25 @@ describe('SdDateRange', () => {
       comp.formControl.markAsDirty();
       fixture.detectChanges();
       expect(el.getAttribute('data-invalid')).toBe('true');
+    });
+
+    it('does not render undefined-from/undefined-to when autoId is not provided', () => {
+      fixture.detectChanges();
+      const startInput = fixture.nativeElement.querySelector('input[matStartDate]');
+      const endInput = fixture.nativeElement.querySelector('input[matEndDate]');
+      expect(startInput.getAttribute('data-autoid')).toBeNull();
+      expect(endInput.getAttribute('data-autoid')).toBeNull();
+    });
+
+    it('renders namespaced data-autoid for range input and both date endpoints', () => {
+      host.autoId = 'createdAt';
+      fixture.detectChanges();
+      const rangeInput = fixture.nativeElement.querySelector('mat-date-range-input');
+      const startInput = fixture.nativeElement.querySelector('input[matStartDate]');
+      const endInput = fixture.nativeElement.querySelector('input[matEndDate]');
+      expect(rangeInput.getAttribute('data-autoid')).toBe('forms-date-range-createdAt');
+      expect(startInput.getAttribute('data-autoid')).toBe('forms-date-range-createdAt-from');
+      expect(endInput.getAttribute('data-autoid')).toBe('forms-date-range-createdAt-to');
     });
   });
 

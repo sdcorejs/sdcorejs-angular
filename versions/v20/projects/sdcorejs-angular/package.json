@@ -1,6 +1,6 @@
 {
   "name": "@sdcorejs/angular",
-  "version": "19.0.8",
+  "version": "19.0.9",
   "license": "MIT",
   "peerDependencies": {
     "@angular/common": "^19.0.0 || ^20.0.0 || ^21.0.0",

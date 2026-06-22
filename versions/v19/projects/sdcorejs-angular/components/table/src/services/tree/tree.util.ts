@@ -7,8 +7,7 @@ import { SdTableItem } from '../../models/table-item.model';
  * thay vì truy cập `option.onExpandChildren` trực tiếp trên union (chỉ tồn tại
  * ở nhánh lazy).
  */
-export const isLazyTree = <T = any>(option?: SdTableOptionTree<T>): option is TableOptionTreeLazy<T> =>
-  option?.loadType === 'lazy';
+export const isLazyTree = <T = unknown>(option?: SdTableOptionTree<T>): option is TableOptionTreeLazy<T> => option?.loadType === 'lazy';
 
 /**
  * Key chứa mảng children trên object row.
@@ -31,7 +30,7 @@ export const getChildrenFromData = <T>(data: T, option?: SdTableOptionTree): T[]
  * mặc định nhánh chưa nạp).
  */
 export const resolveDefaultExpanded = (level: number, option?: SdTableOptionTree): boolean => {
-  const def = option?.loadType === 'static' ? option.defaultExpanded ?? false : false;
+  const def = option?.loadType === 'static' ? (option.defaultExpanded ?? false) : false;
   if (def === true) return true;
   if (def === false) return false;
   if (typeof def === 'number') return level < def;
@@ -86,17 +85,65 @@ export const subtreeMatches = <T>(
  * — nhờ vậy `meta.id` (hash từ data) ổn định, selection / trạng thái bung không
  * bị mất khi từ khoá search đổi. Đây là bước "prune" của tính năng search-con.
  */
-export const filterMatchingChildren = <T>(
-  children: T[],
-  predicate: (data: T) => boolean,
-  option?: SdTableOptionTree
-): T[] => children.filter(child => subtreeMatches(child, predicate, option));
+export const filterMatchingChildren = <T>(children: T[], predicate: (data: T) => boolean, option?: SdTableOptionTree): T[] =>
+  children.filter(child => subtreeMatches(child, predicate, option));
 
-export const flattenTree = <T>(
-  roots: SdTableItem<T>[],
-  option?: SdTableOptionTree,
-  visited: Set<string> = new Set()
-): SdTableItem<T>[] => {
+export const getVisibleChildrenData = <T>(data: T, option: SdTableOptionTree<T>, predicate?: (data: T) => boolean): T[] => {
+  const children = getChildrenFromData(data, option);
+  return predicate ? filterMatchingChildren(children, predicate, option) : children;
+};
+
+export const saveTreeExpandState = <T>(rows: SdTableItem<T>[], expandState: Map<string, boolean>): void => {
+  for (const row of rows) {
+    if (row.meta.tree?.isExpanded) {
+      expandState.set(row.meta.id, true);
+    }
+    const children = row.meta.tree?.childItems;
+    if (children?.length) {
+      saveTreeExpandState(children, expandState);
+    }
+  }
+};
+
+export const clearTreeChildCache = <T>(rows: SdTableItem<T>[]): void => {
+  for (const row of rows) {
+    const children = row.meta.tree?.childItems;
+    if (children?.length) {
+      clearTreeChildCache(children);
+      row.meta.tree!.childItems = undefined;
+    }
+  }
+};
+
+export const initTreeMeta = <T>(
+  rows: SdTableItem<T>[],
+  option: SdTableOptionTree<T>,
+  args: {
+    expandState?: Map<string, boolean>;
+    treeSearchPredicate?: (data: T) => boolean;
+    level?: number;
+    parentId?: string;
+  } = {}
+): void => {
+  const { expandState, treeSearchPredicate, level = 0, parentId } = args;
+  const searchActive = !!treeSearchPredicate;
+  for (const row of rows) {
+    const saved = expandState?.get(row.meta.id);
+    const hasChildren = searchActive
+      ? getVisibleChildrenData(row.data, option, treeSearchPredicate).length > 0
+      : resolveHasChildren(row, option);
+    row.meta.tree = {
+      ...row.meta.tree,
+      level,
+      parentId,
+      hasChildren,
+      isExpanded: searchActive ? hasChildren : (saved ?? resolveDefaultExpanded(level, option)),
+      isExpanding: false,
+    };
+  }
+};
+
+export const flattenTree = <T>(roots: SdTableItem<T>[], option?: SdTableOptionTree, visited: Set<string> = new Set()): SdTableItem<T>[] => {
   if (!option) return roots;
   const maxDepth = option.maxDepth;
   const result: SdTableItem<T>[] = [];

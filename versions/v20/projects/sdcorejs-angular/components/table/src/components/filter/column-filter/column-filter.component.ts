@@ -85,9 +85,6 @@ export class ColumnFilterComponent {
   // Chỉ các Operator value cho phép — truyền vào <sd-operator [operators]>.
   operatorValues = computed(() => this.operators().map(o => o.value));
 
-  // Margin wrapper operator: số + đang chọn operator → thêm mb-4 (canh baseline với sd-input-number).
-  operatorWrapperClass = computed(() => (this.column()?.type === 'number' && this.operator() ? 'mb-4 mr-2' : 'mr-2'));
-
   // Items cho sd-select khi column type = values / lazy-values
   items = computed<any[] | Signal<any[]> | SdSearch>(() => {
     const col = this.column();
