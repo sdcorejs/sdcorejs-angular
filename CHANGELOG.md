@@ -10,6 +10,20 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.9] - 2026-06-22
+
+Published: `@sdcorejs/angular@19.0.9` / `@20.0.9` / `@21.0.9` (npm dist-tag `latest`).
+Synced from `vn-angular@26a54976`.
+
+### Fixed
+
+- **`sd-table` inline column filter defaults** — table option replacement now recreates the table/filter state so default inline filter values are applied on first load and stale state is not carried across option instances. Synced from `vn-angular@81c6e4fe`.
+- **Date-range and operator autoId stability** — cleaned up generated selectors for `sd-date-range` and table column operators so automation targets remain deterministic. Synced from `vn-angular@25a812b6`.
+
+### Changed
+
+- **`sd-table` internals** — extracted paging/filter mapping, local filtering, row reorder, tree render state, and selection preservation helpers behind focused unit coverage. Public table APIs remain unchanged. Synced from `vn-angular@81c6e4fe`, `ea23b017`, `4c56a158`, and `df63de49`.
+
 ## [0.8] - 2026-06-16
 
 Published: `@sdcorejs/angular@19.0.8` / `@20.0.8` / `@21.0.8` (npm dist-tag `latest`).
