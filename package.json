@@ -6,6 +6,12 @@
     "sync": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-multi-version-workspaces.ps1",
     "rollout": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-multi-version-workspaces.ps1",
     "legacy:sync-from-vn-angular": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-from-vn-angular.ps1 -AllowLegacySync",
+    "lint:v19": "npm --prefix versions/v19 run lint",
+    "lint:v20": "npm --prefix versions/v20 run lint",
+    "lint:v21": "npm --prefix versions/v21 run lint",
+    "lint:release": "npm run lint:v19 && npm run lint:v20 && npm run lint:v21",
+    "lint:phase": "node scripts/lint-phase.mjs",
+    "lint:phase:release": "node scripts/lint-phase.mjs --workspace v19 --phase release-touched",
     "collect-docs": "node scripts/collect-docs.mjs",
     "collect-release-docs": "node scripts/collect-release-docs.mjs",
     "changeset": "changeset"
