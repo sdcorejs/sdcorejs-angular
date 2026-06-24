@@ -1,13 +1,9 @@
 import { DOCUMENT } from '@angular/common';
-import {
-  ApplicationRef,
-  createComponent,
-  EnvironmentInjector,
-  Inject,
-  Injectable,
-  signal
-} from '@angular/core';
+import { ApplicationRef, createComponent, EnvironmentInjector, inject, Inject, Injectable, signal } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
+
+import { I18nService } from '@sdcorejs/angular/i18n';
+
 import { ToastContainerComponent } from './components/toast-container.component';
 import { NotifyOption, ToastData, ToastType } from './notify.model';
 
@@ -34,6 +30,8 @@ export class SdNotifyService {
   ) {
     this.#initContainer();
   }
+
+  readonly #i18n = inject(I18nService);
 
   #initContainer() {
     const componentRef = createComponent(ToastContainerComponent, {
@@ -63,7 +61,7 @@ export class SdNotifyService {
   }
 
   remove(id: string) {
-    this.toasts.update((current) => current.filter((t) => t.id !== id));
+    this.toasts.update(current => current.filter(t => t.id !== id));
   }
 
   clearAll() {
@@ -72,7 +70,7 @@ export class SdNotifyService {
   }
 
   clearByType(type: ToastType) {
-    this.toasts.update((current) => current.filter((t) => t.type !== type));
+    this.toasts.update(current => current.filter(t => t.type !== type));
   }
 
   // Private helpers
@@ -85,10 +83,10 @@ export class SdNotifyService {
       duration: option?.duration ?? this.#DEFAULT_SUCCESS_DURATION,
       actionLabel: option?.actionLabel,
       onAction: option?.onAction,
-      html: option?.html
+      html: option?.html,
     };
 
-    this.toasts.update((current) => {
+    this.toasts.update(current => {
       const updated = [newToast, ...current];
       return updated.slice(0, this.#MAX_TOASTS);
     });
@@ -98,7 +96,7 @@ export class SdNotifyService {
     if (!this.#buffer[type]) {
       this.#buffer[type] = [];
     }
-    
+
     const msgs = Array.isArray(message) ? message : [message];
     this.#buffer[type].push(...msgs);
 
@@ -114,29 +112,28 @@ export class SdNotifyService {
 
   #flushBuffer(type: ToastType, option?: NotifyOption) {
     const messages = [...new Set(this.#buffer[type])];
-    
+
     // Cleanup
     this.#buffer[type] = [];
     this.#timers[type] = null;
 
     if (messages.length === 0) return;
 
-    const typeLabel = type === 'error' ? 'Error' : 'Warning';
-    const title = option?.title ?? typeLabel;
+    const title = option?.title ?? this.#i18n.t(`core.notify.type.${type}`);
     const finalTitle = messages.length > 1 ? `${title} (${messages.length})` : title;
 
     const newToast: ToastData = {
       id: Utilities.generateUuid(),
       type,
-      message: messages.length === 1 ? messages[0] : messages, 
+      message: messages.length === 1 ? messages[0] : messages,
       title: finalTitle,
       duration: option?.duration ?? this.#DEFAULT_BUFFERED_DURATION,
       actionLabel: option?.actionLabel,
       onAction: option?.onAction,
-      html: option?.html
+      html: option?.html,
     };
 
-    this.toasts.update((current) => {
+    this.toasts.update(current => {
       const updated = [newToast, ...current];
       return updated.slice(0, this.#MAX_TOASTS);
     });

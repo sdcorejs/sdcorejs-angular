@@ -251,15 +251,23 @@ Custom keys: dùng `TranslatePipe` (`{{ 'my.key' | translate }}`) hoặc service
 
 ## 🏗 Repository Layout
 
-This repo is the **multi-version publish mirror**. Code lives upstream in `vn-angular` workspace.
+This repo is the **canonical source and multi-version publish workspace** for `@sdcorejs/angular`.
+It was last synced from the legacy `vn-angular` workspace at `vn-angular@d12478a1`
+on 2026-06-24; future development happens here independently.
 
 ```
 sdcorejs-angular/
-├── versions/v19/   ← canonical sync from vn-angular (Angular 19)
+├── versions/v19/   ← primary source workspace (Angular 19)
 ├── versions/v20/   ← derived workspace (Angular 20)
 ├── versions/v21/   ← derived workspace (Angular 21)
-└── scripts/        ← sync + deploy PowerShell scripts
+└── scripts/        ← rollout, docs, and deploy scripts
 ```
+
+Develop features, docs, tests, and showcase screens in `versions/v19` first.
+After v19 verification, run `npm run sync` from the repo root to roll the same
+feature surface to `v20` and `v21`, then publish the three Angular-major package
+lines together. The old `vn-angular` sync script is kept only as a guarded
+legacy recovery tool via `npm run legacy:sync-from-vn-angular`.
 
 Push tag `v<patch>` → GitHub Actions publishes `19.<patch>` + `20.<patch>` + `21.<patch>` in parallel. After all 3 npm publishes succeed, the same tag workflow snapshots `published-docs` for those 3 versions and commits the archive to `main`. See `.github/workflows/publish-npm.yml`.
 

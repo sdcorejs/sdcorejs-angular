@@ -61,6 +61,16 @@ Dropdown picker — single OR multi-select from a static array OR an async API. 
 | `sdChange` | `any` | Emitted **only when the panel closes** AND the value changed since opening (intentional — avoids spamming on each click in `[multiple]` mode). |
 | `sdSelection` | `SdSelectionData` | Emitted alongside `sdChange`. Shape varies by `[multiple]`: single → `{ multiple: false, value, selectedItem, values, selectedItems }`; multi → `{ multiple: true, values, selectedItems }`. |
 
+## Public methods
+| Name | Signature | Notes |
+| --- | --- | --- |
+| `clear($event?)` | `(Event?) => void` | Clears the selected value (`null` / `[]`) and emits `sdChange` + `sdSelection`. |
+| `clearSearch()` | `() => void` | Clears the panel search/filter input and resets `searchText`. |
+| `open()` | `() => void` | Opens the dropdown panel programmatically. |
+| `focus()` | `() => void` | Focuses and opens the picker (legacy path for `sdViewDef` click-to-edit). |
+| `enterInlineEdit()` | `() => void` | Opens the picker from the `viewed='inline'` text face. |
+| `reValidate()` | `() => void` | Re-runs validators on the underlying control. |
+
 ## Host classes
 Applied automatically on `<sd-select>` for styling hooks:
 
@@ -76,6 +86,7 @@ Applied automatically on `<sd-select>` for styling hooks:
 - `*sdItemDef` (via `SdItemDefDefDirective`) — custom rendering of each option in the dropdown panel
 - `<ng-template #sdSelected>` — **custom rendering of the SELECTED value inside the editable trigger** (Material `<mat-select-trigger>`). Distinct from `#sdValue` / `sdViewDef`, which only drive the read-only `viewed` / `inline` face — `#sdSelected` affects the **edit-mode** trigger only. Context = `{ $implicit, item, items, display, multiple }`: in single mode `$implicit` / `item` is the selected **item object** (`items` is still the full selected array); in multiple mode `item` is the selected-item **array**, `items` the same array, `multiple` = `true`; `display` is the default comma-joined display text. Falls back to plain `display` text when not projected, so existing usages are unaffected. Only renders once the select has a value (Material shows the custom trigger only when non-empty).
 - `<ng-template sdViewDef>` — **custom view-display override** (unified): it simply replaces the view rendering — fed into `<sd-view>`'s `valueTemplate`, so it wins over `#sdValue`. Used wherever the view shows (`viewed=true` static DETAIL **and** `viewed='inline'` text face). Context = `{ $implicit: display, value, selectedItems, selectedItem }`. It no longer does its own focus-swap / `.sd-view` class — click-to-edit is governed by `viewed='inline'`. (Breaking vs the old behaviour where `sdViewDef` on a plain `viewed=false` field swapped to the input on focus; migrate that to `viewed='inline'`.)
+- `<ng-template sdSelectFooterAction>` — sticky footer action below the option list (`SdSelectFooterActionDirective`). Input on the template: `when` (`'always' | 'empty' | 'has-result' | (ctx: SdSelectFooterActionContext) => boolean | Promise<boolean>`, default `'always'`). String values: `always` = always render; `empty` = searchText non-empty AND no item value exactly matches searchText; `has-result` = ≥1 filtered item visible. Function value: called with `{ searchText, filteredItems, selectedItems }` context on every change — supports both sync and async (the result is cached in a signal until the Promise resolves, initial value is `false`). Context: `let-searchText="searchText"` / `let-filteredItems="filteredItems"` / `let-selectedItems="selectedItems"`. Import `SdSelectFooterActionDirective` alongside `SdSelect` in standalone hosts. Use the function form instead of the old `pattern` input (which has been removed) to gate visibility by regexp or any custom logic. **Do not** call parent component methods inside the template *expression* to gate visibility — use `[when]="myFn"` instead.
 
 > **`#sdSelected` vs `sdViewDef`**: `#sdSelected` styles the value shown while EDITING (the dropdown trigger); `sdViewDef` styles the value shown in read-only/inline DETAIL. They are independent — project both if you want a custom face in both modes.
 
@@ -232,7 +243,7 @@ Rendered on the `<mat-select>` element (same anchor as `data-autoid`):
 | `data-required` | `"true"` / `"false"` | `required` input; always present |
 | `data-error-message` | string | present only when the component is currently showing an error tooltip message |
 
-> **Note**: `sd-select` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
+> **Note**: `sd-select` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted. The `pattern` input on `SdSelectFooterActionDirective` has been removed — use a function `[when]` instead.
 
 Selector example:
 

@@ -1,12 +1,12 @@
 import { Component, ViewChild } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from './select.component';
-import { SdSelectFooterActionDirective } from './select-footer-action.directive';
+import { SdSelectFooterActionContext, SdSelectFooterActionDirective } from './select-footer-action.directive';
 
 // ---------------------------------------------------------------------------
 // Host wrappers
@@ -254,6 +254,21 @@ describe('SdSelect', () => {
       tick(600);
       fixture.detectChanges();
       expect(comp.filteredItems().length).toBe(0);
+    }));
+
+    it('clearSearch() resets inputControl, searchText and filteredItems', fakeAsync(() => {
+      comp.inputControl.setValue('Item 1');
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.searchText()).toBe('Item 1');
+
+      comp.clearSearch();
+      tick(600);
+      fixture.detectChanges();
+
+      expect(comp.inputControl.value).toBe('');
+      expect(comp.searchText()).toBe('');
+      expect(comp.filteredItems().length).toBeGreaterThan(1);
     }));
   });
 
@@ -1152,5 +1167,173 @@ describe('SdSelect (sdSelectFooterAction)', () => {
     fixture.detectChanges();
 
     expect(host.calls).toEqual([{ type: 'empty', searchText: 'Dragonfruit' }]);
+  }));
+
+  // -----------------------------------------------------------------------
+  // when() as function (sync + async)
+  // -----------------------------------------------------------------------
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-true">Fn True</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnTrueHost {
+    items = FRUIT_ITEMS;
+    readonly whenFn = (): boolean => true;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-false">Fn False</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnFalseHost {
+    items = FRUIT_ITEMS;
+    readonly whenFn = (): boolean => false;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-async">Fn Async</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnAsyncHost {
+    items = FRUIT_ITEMS;
+    readonly whenFn = async (): Promise<boolean> => true;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="whenFn">
+          <button type="button" class="footer-action fn-ctx">Ctx Check</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnContextHost {
+    items = FRUIT_ITEMS;
+    capturedCtx: SdSelectFooterActionContext | null = null;
+    whenFn = (ctx: SdSelectFooterActionContext): boolean => {
+      this.capturedCtx = ctx;
+      return true;
+    };
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, SdSelectFooterActionDirective],
+    template: `
+      <sd-select valueField="id" displayField="name" [items]="items">
+        <ng-template sdSelectFooterAction [when]="emailWhen" let-searchText="searchText">
+          <button type="button" class="footer-action email-fn">Add {{ searchText }}</button>
+        </ng-template>
+      </sd-select>
+    `,
+  })
+  class FnEmailHost {
+    items = LARGE_ITEMS;
+    readonly emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+    readonly emailWhen = (ctx: SdSelectFooterActionContext): boolean =>
+      ctx.searchText.trim().length > 0 &&
+      this.emailPattern.test(ctx.searchText.trim()) &&
+      (ctx.filteredItems as { id: number; name: string }[]).length === 0;
+  }
+
+  it('renders footer action when sync when() function returns true', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnTrueHost);
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().some(el => el.classList.contains('fn-true'))).toBe(true);
+  }));
+
+  it('hides footer action when sync when() function returns false', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnFalseHost);
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().some(el => el.classList.contains('fn-false'))).toBe(false);
+  }));
+
+  it('renders footer action when async when() function resolves to true', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnAsyncHost);
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().some(el => el.classList.contains('fn-async'))).toBe(true);
+  }));
+
+  it('passes filteredItems and selectedItems in context to when() function', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnContextHost);
+    const host = fixture.componentInstance;
+    openFooterSelect(fixture);
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(host.capturedCtx).not.toBeNull();
+    expect(Array.isArray(host.capturedCtx!.filteredItems)).toBe(true);
+    expect(Array.isArray(host.capturedCtx!.selectedItems)).toBe(true);
+  }));
+
+  it('when() function replaces pattern — gates action by email format + no matching results', fakeAsync(() => {
+    const fixture = TestBed.createComponent(FnEmailHost);
+    const sd = openFooterSelect(fixture);
+
+    sd.inputControl.setValue('invalid');
+    tick(600);
+    fixture.detectChanges();
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().find(el => el.classList.contains('email-fn'))).toBeUndefined();
+
+    sd.inputControl.setValue('new.user@example.com');
+    tick(600);
+    fixture.detectChanges();
+    flushMicrotasks();
+    fixture.detectChanges();
+    expect(footerActions().find(el => el.classList.contains('email-fn'))?.textContent).toContain('new.user@example.com');
+  }));
+
+  it('SdSelectFooterActionDirective does not have a pattern input', fakeAsync(() => {
+    // why: đảm bảo breaking change được enforce — pattern đã bị xóa
+    @Component({
+      standalone: true,
+      imports: [SdSelect, SdSelectFooterActionDirective],
+      template: `
+        <sd-select valueField="id" displayField="name" [items]="items">
+          <ng-template sdSelectFooterAction></ng-template>
+        </sd-select>
+      `,
+    })
+    class PatternCheckHost {
+      items = FRUIT_ITEMS;
+    }
+
+    const fixture = TestBed.createComponent(PatternCheckHost);
+    openFooterSelect(fixture);
+    const sd = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+    const dir = sd.footerActions()[0];
+    expect((dir as any).pattern).toBeUndefined();
   }));
 });

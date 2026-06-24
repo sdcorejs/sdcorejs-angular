@@ -7,6 +7,8 @@ name: Publish @sdcorejs/angular to npm
 #
 # After all 3 npm publishes succeed, the tag workflow snapshots published-docs
 # for the same 3 versions and commits the archive back to `main`.
+# Release commits are expected to have already run the v19 -> v20/v21 rollout
+# (`npm run sync`); this workflow builds and publishes the checked-in workspaces.
 
 on:
   push:

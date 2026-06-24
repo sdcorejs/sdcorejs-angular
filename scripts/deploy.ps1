@@ -10,10 +10,10 @@ $ErrorActionPreference = "Stop"
 if ([string]::IsNullOrWhiteSpace($PatchVersion)) {
   Write-Host ""
   Write-Host "==============================================" -ForegroundColor Cyan
-  Write-Host "  @sdcorejs/angular — Multi-Version Deploy" -ForegroundColor Cyan
+  Write-Host "  @sdcorejs/angular - Multi-Version Deploy" -ForegroundColor Cyan
   Write-Host "==============================================" -ForegroundColor Cyan
   Write-Host ""
-  Write-Host "Enter patch version suffix (e.g. '0.5' → publishes 19.0.5 / 20.0.5 / 21.0.5)" -ForegroundColor Yellow
+  Write-Host "Enter patch version suffix (e.g. '0.5' -> publishes 19.0.5 / 20.0.5 / 21.0.5)" -ForegroundColor Yellow
   $PatchVersion = Read-Host "Patch version"
 }
 
@@ -63,18 +63,18 @@ foreach ($t in $targets) {
   $libPackagePath = Join-Path $versionDir "projects\sdcorejs-angular\package.json"
 
   if (!(Test-Path -LiteralPath $versionDir)) {
-    Write-Warning "Version folder not found: $versionDir — skipping."
+    Write-Warning "Version folder not found: $versionDir - skipping."
     continue
   }
 
   Write-Host ""
-  Write-Host "[$step/3] $($t.Folder) — @sdcorejs/angular@$fullVersion" -ForegroundColor Cyan
+  Write-Host "[$step/3] $($t.Folder) - @sdcorejs/angular@$fullVersion" -ForegroundColor Cyan
 
   # --- 1. Update library package.json version ---
   Write-Host "  Updating library version..." -ForegroundColor Gray
   if (!$DryRun) {
-    # why: encoding hygiene — UTF8 explicit cho read (tránh ANSI cp1252 mặc định PS 5.1)
-    # + no-BOM cho write (consistent với vn-angular source).
+    # why: explicit UTF8 read avoids ANSI cp1252 defaults in Windows PowerShell 5.1.
+    # Use no-BOM writes to stay consistent with repo-owned source files.
     $pkg = Get-Content -LiteralPath $libPackagePath -Raw -Encoding UTF8 | ConvertFrom-Json
     $pkg.version = $fullVersion
     $jsonOut = $pkg | ConvertTo-Json -Depth 100
@@ -99,7 +99,7 @@ foreach ($t in $targets) {
   Write-Host "  Building @sdcorejs/angular..." -ForegroundColor Gray
   if (!$DryRun) {
     Push-Location $versionDir
-    # Skip prebuild (test:ci) — use ng directly
+    # Skip prebuild (test:ci) - use ng directly.
     node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular
     if ($LASTEXITCODE -ne 0) {
       Pop-Location
@@ -129,7 +129,7 @@ foreach ($t in $targets) {
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
 if ($DryRun) {
-  Write-Host "  DRY RUN complete — nothing was published" -ForegroundColor Magenta
+  Write-Host "  DRY RUN complete - nothing was published" -ForegroundColor Magenta
 } else {
   Write-Host "  Deploy complete!" -ForegroundColor Green
   Write-Host "  Published: @sdcorejs/angular@19.$PatchVersion, 20.$PatchVersion, 21.$PatchVersion" -ForegroundColor White
