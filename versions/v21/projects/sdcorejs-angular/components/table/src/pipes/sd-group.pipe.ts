@@ -19,11 +19,7 @@ export class SdGroupPipe implements PipeTransform {
    * @example
    * `_items | sdGroup: _tableOption : groupExpandState`
    */
-  transform(
-    items: SdTableItem[],
-    gridOption: SdTableOption,
-    expandState?: Map<string, boolean>,
-  ): SdTableItem[] {
+  transform(items: SdTableItem[], gridOption: SdTableOption, expandState?: Map<string, boolean>): SdTableItem[] {
     if (gridOption?.tree) {
       if (typeof ngDevMode !== 'undefined' && ngDevMode && gridOption.group) {
         console.warn('[sd-table] option.tree and option.group cannot be used together. group is ignored.');

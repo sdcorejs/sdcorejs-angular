@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { FormControl, FormGroup } from '@angular/forms';
 import { filter, Subject, Subscription } from 'rxjs';
 import { SdFormGenericVariable } from '../../../../models';
@@ -10,7 +8,7 @@ import { SdFormGenericVariable } from '../../../../models';
   templateUrl: './variable.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VariableComponent {
+export class VariableComponent implements OnInit, OnDestroy {
   @Input({ required: true }) variables?: SdFormGenericVariable[];
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @Input() form = new FormGroup<any>({});

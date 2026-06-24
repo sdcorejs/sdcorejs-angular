@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';

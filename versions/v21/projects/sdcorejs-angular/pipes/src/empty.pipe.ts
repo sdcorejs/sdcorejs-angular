@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pipe, PipeTransform } from '@angular/core';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 @Pipe({

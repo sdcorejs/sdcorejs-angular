@@ -1,7 +1,7 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdDateRange } from './date-range.component';
 
@@ -34,7 +34,9 @@ class HostComponent {
   autoId: string | null | undefined = undefined;
   model: any = undefined;
   changes: any[] = [];
-  onSdChange(v: any) { this.changes.push(v); }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
 }
 
 @Component({
@@ -72,8 +74,7 @@ describe('SdDateRange', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)
-      ?.componentInstance as SdDateRange;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)?.componentInstance as SdDateRange;
     if (!comp) throw new Error('SdDateRange not found in fixture');
   });
 
@@ -291,9 +292,9 @@ describe('SdDateRange', () => {
       fixture.detectChanges();
       comp.clear();
       fixture.detectChanges();
-      const dateErrors = spy.calls.allArgs().filter(args =>
-        args.some(a => typeof a === 'string' && (a.includes('DatePipe') || a.includes('Invalid Date')))
-      );
+      const dateErrors = spy.calls
+        .allArgs()
+        .filter(args => args.some(a => typeof a === 'string' && (a.includes('DatePipe') || a.includes('Invalid Date'))));
       expect(dateErrors.length).toBe(0);
     });
   });
@@ -383,8 +384,9 @@ describe('SdDateRange', () => {
   // -------------------------------------------------------------------------
   describe('viewed + open()', () => {
     const hasClearIcon = () =>
-      Array.from(fixture.nativeElement.querySelectorAll('mat-icon') as NodeListOf<HTMLElement>)
-        .some(i => i.textContent?.trim() === 'cancel');
+      Array.from(fixture.nativeElement.querySelectorAll('mat-icon') as NodeListOf<HTMLElement>).some(
+        i => i.textContent?.trim() === 'cancel'
+      );
 
     it('renders the clear (cancel) icon when a range is set (edit mode)', () => {
       host.model = { from: '2026/01/01', to: '2026/01/31' };

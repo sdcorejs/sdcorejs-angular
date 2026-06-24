@@ -1,6 +1,3 @@
-/* eslint-disable @angular-eslint/component-class-suffix */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -305,15 +302,13 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     );
     this.#subscription.add(this.formControl.sdChanges.subscribe(() => this.ref.markForCheck()));
     this.#subscription.add(this.inputControl.sdChanges.subscribe(() => this.ref.markForCheck()));
-    
-    this.#subscription.add(
-      this.inputControl.valueChanges.subscribe(() => this.isTyping.set(true))
-    );
+
+    this.#subscription.add(this.inputControl.valueChanges.subscribe(() => this.isTyping.set(true)));
 
     const cleanItems$ = this.#items$.pipe(
       tap(() => {
         this.#cache = {};
-      }), 
+      }),
       map(items => {
         if (!items) return [];
         if (Array.isArray(items)) return items.filter(e => e !== null && e !== undefined);
@@ -331,7 +326,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
       tap(() => this.isTyping.set(false)),
       switchMap(([items, searchText]) => {
         const sText = searchText || '';
-        
+
         if (typeof items !== 'function') {
           // [UPDATED]: Hỗ trợ search lồng nhau (nested) local
           const filtered = items.filter((e: any) => {
@@ -342,7 +337,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
           });
           return of(ArrayUtilities.paging(filtered, this.limit()));
         }
-        
+
         const key = Utilities.hash({
           checksum: this.cacheChecksum() || null,
           searchText: sText,
@@ -352,7 +347,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
           return of(this.#cache[key]);
         }
 
-        this.loading.set(true); 
+        this.loading.set(true);
 
         let obs: Observable<T[]>;
         const func = items({ type: 'SEARCH', searchText: sText });
@@ -371,10 +366,10 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
             });
             return this.#cache[key];
           }),
-          catchError(() => of([])) 
+          catchError(() => of([]))
         );
       }),
-      tap(() => this.loading.set(false)) 
+      tap(() => this.loading.set(false))
     );
 
     const selected$ = combineLatest([cleanItems$, this.#valueModel$]).pipe(
@@ -388,8 +383,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
           if (typeof items === 'function') {
             if (this.#item[val as any]) return of(this.#item[val as any]);
 
-            this.loading.set(true); 
-            
+            this.loading.set(true);
+
             let obs: Observable<T[]>;
             const func = items({ type: 'VALUE', value: val as any });
             if (func instanceof Promise) obs = defer(() => from(func));
@@ -428,8 +423,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     const display$ = selected$.pipe(
       map((item: T) => {
         // [UPDATED]: Đọc Display bằng getNestedValue
-        const dField = this.displayField(); 
-        
+        const dField = this.displayField();
+
         if (dField && typeof item === 'object' && !!item) {
           return this.getNestedValue(item, dField) ?? '';
         }
@@ -440,22 +435,30 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
       })
     );
 
-    this.#subscription.add(filteredItems$.subscribe(val => {
-      this.filteredItems.set(val || []);
-      this.ref.markForCheck();
-    }));
-    this.#subscription.add(selected$.subscribe(val => {
-      this.selected.set(val);
-      this.ref.markForCheck();
-    }));
-    this.#subscription.add(controlPlaceHolder$.subscribe(val => {
-      this.controlPlaceHolder.set(val || '');
-      this.ref.markForCheck();
-    }));
-    this.#subscription.add(display$.subscribe(val => {
-      this.display.set(val || '');
-      this.ref.markForCheck();
-    }));
+    this.#subscription.add(
+      filteredItems$.subscribe(val => {
+        this.filteredItems.set(val || []);
+        this.ref.markForCheck();
+      })
+    );
+    this.#subscription.add(
+      selected$.subscribe(val => {
+        this.selected.set(val);
+        this.ref.markForCheck();
+      })
+    );
+    this.#subscription.add(
+      controlPlaceHolder$.subscribe(val => {
+        this.controlPlaceHolder.set(val || '');
+        this.ref.markForCheck();
+      })
+    );
+    this.#subscription.add(
+      display$.subscribe(val => {
+        this.display.set(val || '');
+        this.ref.markForCheck();
+      })
+    );
   }
 
   ngAfterViewInit() {
@@ -467,7 +470,7 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     this.#subscription.unsubscribe();
     const formGroup = this.form();
     formGroup?.removeControl(this.name());
-    
+
     this.#cache = {};
     this.#item = {};
   }
@@ -505,10 +508,10 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
 
   onFocus = () => {
     this.isFocused = true;
-    this.filteredItems.set([]); 
-    
+    this.filteredItems.set([]);
+
     if (typeof this.items() === 'function') {
-      this.loading.set(true); 
+      this.loading.set(true);
     }
 
     this.inputControl.setValue('', { emitEvent: true });

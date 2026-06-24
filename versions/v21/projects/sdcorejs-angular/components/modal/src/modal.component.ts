@@ -11,7 +11,7 @@ import {
   input,
   output,
   signal,
-  viewChild
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatBottomSheet, MatBottomSheetModule, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -44,12 +44,16 @@ export class SdModal {
   readonly closeButtonAutoId = computed(() => (this.autoId() ? `${this.autoId()}-close` : undefined));
   readonly dataOpened = computed(() => (this.isOpened() ? 'true' : 'false'));
 
-  title = input<string, string | null | undefined>('', { transform: (v) => v ?? '' });
-  color = input<Color, Color | null | undefined>('primary', { transform: (v) => v ?? 'primary' });
-  width = input<Size | string, Size | string | null | undefined>('md', { transform: (v) => v ?? 'md' });
-  height = input<string, string | null | undefined>('auto', { transform: (v) => v ?? 'auto' });
-  view = input<'dialog' | 'bottom-sheet' | undefined, 'dialog' | 'bottom-sheet' | null | undefined>(undefined, { transform: (v) => v ?? undefined });
-  modalClass = input<string | string[] | Record<string, boolean>, string | string[] | Record<string, boolean> | null | undefined>('', { transform: (v) => v ?? '' });
+  title = input<string, string | null | undefined>('', { transform: v => v ?? '' });
+  color = input<Color, Color | null | undefined>('primary', { transform: v => v ?? 'primary' });
+  width = input<Size | string, Size | string | null | undefined>('md', { transform: v => v ?? 'md' });
+  height = input<string, string | null | undefined>('auto', { transform: v => v ?? 'auto' });
+  view = input<'dialog' | 'bottom-sheet' | undefined, 'dialog' | 'bottom-sheet' | null | undefined>(undefined, {
+    transform: v => v ?? undefined,
+  });
+  modalClass = input<string | string[] | Record<string, boolean>, string | string[] | Record<string, boolean> | null | undefined>('', {
+    transform: v => v ?? '',
+  });
   lazyLoadContent = input(true, { transform: booleanAttribute });
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
   disableBackdropClose = input<boolean, boolean | ''>(true, { transform: booleanAttribute }); // default to true to keep backward compatibility
@@ -76,11 +80,16 @@ export class SdModal {
     const w = this.width() || '80vw';
     if (this.#isMobile) return w;
     switch (w) {
-      case 'lg': return '80vw';
-      case 'md': return '60vw';
-      case 'sm': return '40vw';
-      case 'sx': return '20vw';
-      default: return w;
+      case 'lg':
+        return '80vw';
+      case 'md':
+        return '60vw';
+      case 'sm':
+        return '40vw';
+      case 'sx':
+        return '20vw';
+      default:
+        return w;
     }
   }
 
@@ -95,9 +104,10 @@ export class SdModal {
     if ((!this.view() && this.#isMobile) || this.view() === 'bottom-sheet') {
       this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), {
         panelClass: this.modalClass() as string | string[],
-        disableClose: this.disableBackdropClose()
+        disableClose: this.disableBackdropClose(),
       });
-      this.#bottomSheetRef.afterDismissed()
+      this.#bottomSheetRef
+        .afterDismissed()
         .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe(() => {
           this.isOpened.set(false);
@@ -110,7 +120,8 @@ export class SdModal {
         panelClass: this.modalClass() as string | string[],
         disableClose: this.disableBackdropClose(),
       });
-      this.#dialogRef.afterClosed()
+      this.#dialogRef
+        .afterClosed()
         .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe(() => {
           this.isOpened.set(false);

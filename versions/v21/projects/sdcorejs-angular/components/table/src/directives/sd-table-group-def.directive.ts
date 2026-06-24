@@ -39,10 +39,7 @@ export interface SdTableGroupDefContext<T = any> {
  */
 @Directive({ selector: '[sdTableGroupDef]' })
 export class SdTableGroupDefDirective<T = any> {
-  static ngTemplateContextGuard<T>(
-    _dir: SdTableGroupDefDirective<T>,
-    _ctx: unknown,
-  ): _ctx is SdTableGroupDefContext<T> {
+  static ngTemplateContextGuard<T>(_dir: SdTableGroupDefDirective<T>, _ctx: unknown): _ctx is SdTableGroupDefContext<T> {
     return true;
   }
   templateRef: TemplateRef<SdTableGroupDefContext<T>> = inject(TemplateRef);

@@ -4,7 +4,6 @@ import { By } from '@angular/platform-browser';
 import { SdStorageService } from '../../../services/storage';
 import { SdSplitterComponent } from './splitter.component';
 import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
-import { SplitterLayoutState } from './splitter.models';
 
 function dispatchPointer(target: EventTarget, type: string, init: Partial<PointerEventInit>) {
   const ev = new PointerEvent(type, { bubbles: true, cancelable: true, pointerId: 1, pointerType: 'mouse', ...init });
@@ -43,9 +42,20 @@ describe('sd-splitter integration', () => {
     splitterEl = fixture.debugElement.query(By.css('sd-splitter')).nativeElement;
     // Mock container bounding rect cho deterministic px calculations
     spyOn(splitterEl, 'getBoundingClientRect').and.returnValue({
-      x: 0, y: 0, top: 0, left: 0, right: 400, bottom: 200, width: 400, height: 200, toJSON: () => ({}),
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 400,
+      bottom: 200,
+      width: 400,
+      height: 200,
+      toJSON: () => ({}),
     } as DOMRect);
-    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return 0; });
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
   });
 
   it('mix px+flex: panel A 200px, panel B fill phần còn lại', async () => {
@@ -93,7 +103,10 @@ describe('sd-splitter integration', () => {
     spyOn(handle, 'releasePointerCapture').and.stub();
     // rAF mock toàn cục trả 0 → ghi đè #rafPending về non-null, chặn pointermove thứ 2.
     // Trả undefined để 2 move liên tiếp trong CÙNG 1 drag đều được xử lý (đúng như browser thật).
-    (window.requestAnimationFrame as jasmine.Spy).and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+    (window.requestAnimationFrame as jasmine.Spy).and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return undefined as unknown as number;
+    });
 
     // A=200px, container=400. Kéo vượt xa mép phải (clientX 600 → +400) — A bão hòa ở 400
     // (B co về 0, chỉ +200 áp được). Sau đó kéo ngược về clientX 450 (+250): 200+250=450>400
@@ -113,16 +126,19 @@ describe('sd-splitter integration', () => {
     const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
     spyOn(handle, 'setPointerCapture').and.stub();
     spyOn(handle, 'releasePointerCapture').and.stub();
-    (window.requestAnimationFrame as jasmine.Spy).and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+    (window.requestAnimationFrame as jasmine.Spy).and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return undefined as unknown as number;
+    });
 
     // A=200px, min=50, collapsible. Kéo về 20 (<25) → snap collapse. Sau đó kéo ngược CHẬM
     // từng bước nhỏ (<50px mỗi bước). applyDelta trả 0 khi chưa đủ minSize → dragLastDelta
     // đứng yên → bước sau tích lũy đủ 50 → expand. Nếu cộng raw pointer delta thì mỗi bước
     // nhỏ <50 sẽ không bao giờ tích đủ → A kẹt ở collapsed.
     dispatchPointer(handle, 'pointerdown', { clientX: 200, clientY: 0, button: 0 });
-    dispatchPointer(handle, 'pointermove', { clientX: 20, clientY: 0 });   // snap collapse
-    dispatchPointer(handle, 'pointermove', { clientX: 30, clientY: 0 });   // +10 tích lũy, chưa đủ
-    dispatchPointer(handle, 'pointermove', { clientX: 50, clientY: 0 });   // +50 tích lũy → expand
+    dispatchPointer(handle, 'pointermove', { clientX: 20, clientY: 0 }); // snap collapse
+    dispatchPointer(handle, 'pointermove', { clientX: 30, clientY: 0 }); // +10 tích lũy, chưa đủ
+    dispatchPointer(handle, 'pointermove', { clientX: 50, clientY: 0 }); // +50 tích lũy → expand
     dispatchPointer(handle, 'pointerup', { clientX: 50, clientY: 0 });
     fixture.detectChanges();
     await fixture.whenStable();
@@ -200,9 +216,20 @@ describe('sd-splitter vertical — overshoot dead-zone', () => {
     fix.detectChanges();
     splitterEl = fix.debugElement.query(By.css('sd-splitter')).nativeElement;
     spyOn(splitterEl, 'getBoundingClientRect').and.returnValue({
-      x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 400, width: 200, height: 400, toJSON: () => ({}),
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 200,
+      bottom: 400,
+      width: 200,
+      height: 400,
+      toJSON: () => ({}),
     } as DOMRect);
-    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return undefined as unknown as number;
+    });
   });
 
   it('kéo trục Y vượt mép dưới rồi kéo ngược: top bám pointer, không kẹt', async () => {
@@ -249,9 +276,20 @@ describe('sd-splitter vertical — fixed px header/footer with flex content', ()
     fix.detectChanges();
     splitterEl = fix.debugElement.query(By.css('sd-splitter')).nativeElement;
     spyOn(splitterEl, 'getBoundingClientRect').and.returnValue({
-      x: 0, y: 0, top: 0, left: 0, right: 200, bottom: 320, width: 200, height: 320, toJSON: () => ({}),
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 200,
+      bottom: 320,
+      width: 200,
+      height: 320,
+      toJSON: () => ({}),
     } as DOMRect);
-    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return undefined as unknown as number; });
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return undefined as unknown as number;
+    });
   });
 
   function component(): SdSplitterComponent {
@@ -259,7 +297,9 @@ describe('sd-splitter vertical — fixed px header/footer with flex content', ()
   }
 
   function panel(id: string) {
-    return component().getLayout().panels.find(p => p.id === id)!;
+    return component()
+      .getLayout()
+      .panels.find(p => p.id === id)!;
   }
 
   it('kéo divider header/content sát xuống dưới rồi kéo ngược ở drag mới không làm content kẹt 0', async () => {

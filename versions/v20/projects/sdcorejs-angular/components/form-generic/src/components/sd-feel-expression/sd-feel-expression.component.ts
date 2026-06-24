@@ -1,6 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -30,7 +28,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdInput, SdInputNumber, SdSelect, SdAutocomplete, SdButton, SdSelect, SdModal, TranslatePipe],
 })
-export class SdFeelExpression {
+export class SdFeelExpression implements OnInit {
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   attributeOperators = AttributeOperators;
@@ -67,8 +65,7 @@ export class SdFeelExpression {
     private ref: ChangeDetectorRef,
     private expressionFeelPipe: ExpressionFeelPipe,
     private formGenericService: FormGenericService
-  ) {
-  }
+  ) {}
 
   ngOnInit(): void {}
 
@@ -86,7 +83,7 @@ export class SdFeelExpression {
       field: undefined,
       operator: 'EQUAL',
       value: undefined,
-      dayInfo: {}
+      dayInfo: {},
     });
     this.ref.markForCheck();
   };

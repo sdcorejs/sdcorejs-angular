@@ -67,7 +67,7 @@ export interface PasteOfficeHtmlParseResult {
   /**
    * Array of native `CSSStyleSheet` objects, each representing separate `style` tag from the source HTML.
    */
-  styles: Array<CSSStyleSheet>;
+  styles: CSSStyleSheet[];
 
   /**
    * All `style` tags contents combined in the order of occurrence into one string.
@@ -98,7 +98,7 @@ function documentToView(htmlDocument: Document, stylesProcessor: StylesProcessor
  *
  * @param htmlDocument Native `Document` object from which styles will be extracted.
  */
-function extractStyles(htmlDocument: Document): { styles: Array<CSSStyleSheet>; stylesString: string } {
+function extractStyles(htmlDocument: Document): { styles: CSSStyleSheet[]; stylesString: string } {
   const styles = [];
   const stylesString = [];
   const styleTags = Array.from(htmlDocument.getElementsByTagName('style'));

@@ -355,7 +355,10 @@ const EvaluateExpressionCondition = (condition: SdFormGenericExpressionCondition
   return undefined;
 };
 
-export const EvaluateExpression = (condition: SdFormGenericExpression | SdFormGenericExpressionCondition, entity: Record<string, any>): boolean | undefined => {
+export const EvaluateExpression = (
+  condition: SdFormGenericExpression | SdFormGenericExpressionCondition,
+  entity: Record<string, any>
+): boolean | undefined => {
   if (condition.type === 'combinator') {
     if (!condition.conditions?.length) {
       return undefined;

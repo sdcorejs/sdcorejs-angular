@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
@@ -24,11 +23,7 @@ describe('SdApiService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        SdCacheService,
-      ],
+      providers: [provideHttpClient(), provideHttpClientTesting(), SdCacheService],
     });
     service = TestBed.inject(SdApiService);
     httpMock = TestBed.inject(HttpTestingController);
@@ -216,10 +211,12 @@ describe('SdApiService', () => {
   it('uses handler mapResponse when URL matches a registered host', async () => {
     TestBed.resetTestingModule();
     const config: ISdApiConfiguration = {
-      handlers: [{
-        hosts: ['https://api.example.com'],
-        mapResponse: ((res: any) => res?.data ?? res) as any,
-      }],
+      handlers: [
+        {
+          hosts: ['https://api.example.com'],
+          mapResponse: ((res: any) => res?.data ?? res) as any,
+        },
+      ],
     };
     TestBed.configureTestingModule({
       providers: [
@@ -244,10 +241,12 @@ describe('SdApiService', () => {
   it('no handler matched when URL does not start with registered host', async () => {
     TestBed.resetTestingModule();
     const config: ISdApiConfiguration = {
-      handlers: [{
-        hosts: ['https://api.example.com'],
-        mapResponse: ((res: any) => 'MAPPED') as any,
-      }],
+      handlers: [
+        {
+          hosts: ['https://api.example.com'],
+          mapResponse: ((res: any) => 'MAPPED') as any,
+        },
+      ],
     };
     TestBed.configureTestingModule({
       providers: [
@@ -283,8 +282,7 @@ describe('SdApiService', () => {
 
   it('uploadFile() throws "Invalid file extension" when filename has no dot', async () => {
     const fileWithNoDot = new File(['content'], 'filewithoutdot', { type: 'text/plain' });
-    await expectAsync(service.uploadFile('/api/upload', fileWithNoDot))
-      .toBeRejectedWithError('Invalid file extension');
+    await expectAsync(service.uploadFile('/api/upload', fileWithNoDot)).toBeRejectedWithError('Invalid file extension');
   });
 
   it('uploadFile() returns null when file is falsy', async () => {

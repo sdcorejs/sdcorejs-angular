@@ -19,9 +19,7 @@ function buildSchema(): any[] {
       type: 'group',
       label: 'Group 1',
       layout: { columns: '12' },
-      components: [
-        { id: 'c1', key: 'k_c1', type: 'textfield', label: 'Child 1', layout: { columns: '12' }, validate: {}, properties: {} },
-      ],
+      components: [{ id: 'c1', key: 'k_c1', type: 'textfield', label: 'Child 1', layout: { columns: '12' }, validate: {}, properties: {} }],
       properties: { icon: 'category', color: 'primary' },
     },
   ];
@@ -50,7 +48,7 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     return component.paletteGroups().some(g => g.items.some(i => i.type === 'group'));
   }
 
-  it("enterGroupEdit() focuses the group: editingGroupId + rows scoped to its children", () => {
+  it('enterGroupEdit() focuses the group: editingGroupId + rows scoped to its children', () => {
     // asserts: drill-in points the canvas at the group's children and clears selection
     const g = group1();
     component.enterGroupEdit(g);

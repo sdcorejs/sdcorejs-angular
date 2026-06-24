@@ -405,7 +405,7 @@ export class SdTree<T = any> {
     selectedIds: Set<string>,
     selectedItems: T[],
     selector: SdTreeSelectorOption<T> | undefined | null,
-    commands: SdTreeCommand<T>[],
+    commands: SdTreeCommand<T>[]
   ): SdTreeViewNode<T> {
     const selected = selectedIds.has(node.id);
     const selectionDisabled = selector?.disabled ? selector.disabled(node.data, selectedItems) : false;

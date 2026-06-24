@@ -140,7 +140,11 @@ export class SidebarV1Component {
       // Toggle component MatSidenav
       const sidenavComp = this.sidenav();
       if (sidenavComp) {
-        data ? sidenavComp.open() : sidenavComp.close();
+        if (data) {
+          sidenavComp.open();
+        } else {
+          sidenavComp.close();
+        }
       }
     }
   };

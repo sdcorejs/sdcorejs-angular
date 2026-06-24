@@ -1,24 +1,37 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
-import { SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericNumber, SdFormGenericVariable } from '../../../../../models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  SdFormatComponent,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormGenericNumber,
+  SdFormGenericVariable,
+} from '../../../../../models';
 import { AttributeInputNumber } from '../../attribute-input-number/attribute-input-number.component';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
 import { AttributeTemplate } from '../../attribute-template/attribute-template.component';
-import { debounceTime, filter, Subject, Subscription } from 'rxjs';
+import { debounceTime, filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
 import { FormGroup } from '@angular/forms';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
-import { AttributeTextarea } from "../../attribute-textarea/attribute-textarea.component";
+import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'number-attribute',
   templateUrl: './number-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeInputNumber, AttributeSwitch, AttributeExpression, AttributeTextarea, TranslatePipe],
+  imports: [
+    AttributeTemplate,
+    AttributeInput,
+    AttributeInputNumber,
+    AttributeSwitch,
+    AttributeExpression,
+    AttributeTextarea,
+    TranslatePipe,
+  ],
 })
-export class NumberAttribute {
+export class NumberAttribute implements AfterViewInit, OnDestroy {
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];
   form = new FormGroup({});

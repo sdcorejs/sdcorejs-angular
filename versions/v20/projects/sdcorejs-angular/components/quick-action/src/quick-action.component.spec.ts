@@ -31,16 +31,13 @@ class HostComponent {
 // ---------------------------------------------------------------------------
 
 function getComponent(fixture: ComponentFixture<HostComponent>): SdQuickAction {
-  const de: DebugElement = fixture.debugElement.query(
-    By.directive(SdQuickAction),
-  );
+  const de: DebugElement = fixture.debugElement.query(By.directive(SdQuickAction));
   if (!de) throw new Error('SdQuickAction not found in fixture');
   return de.componentInstance as SdQuickAction;
 }
 
 function getHostEl(fixture: ComponentFixture<HostComponent>): HTMLElement {
-  return fixture.debugElement.query(By.directive(SdQuickAction))
-    .nativeElement as HTMLElement;
+  return fixture.debugElement.query(By.directive(SdQuickAction)).nativeElement as HTMLElement;
 }
 
 // ---------------------------------------------------------------------------

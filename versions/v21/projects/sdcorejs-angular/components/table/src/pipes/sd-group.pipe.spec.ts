@@ -2,7 +2,11 @@ import { SdGroupPipe } from './sd-group.pipe';
 import { MapToSdTableItem, SdTableItem } from '../models/table-item.model';
 import { SdTableOption } from '../models/table-option.model';
 
-interface Row { id: number; group: string; value: number; }
+interface Row {
+  id: number;
+  group: string;
+  value: number;
+}
 
 function mk(items: Row[]): SdTableItem<Row>[] {
   return items.map(i => MapToSdTableItem(i));
@@ -134,7 +138,10 @@ describe('SdGroupPipe', () => {
   });
 
   it('field dot-notation → resolve nested value qua Utilities.getNestedValue', () => {
-    interface Nested { id: number; customer: { id: number; name: string }; }
+    interface Nested {
+      id: number;
+      customer: { id: number; name: string };
+    }
     const nest: Nested[] = [
       { id: 1, customer: { id: 10, name: 'A' } },
       { id: 2, customer: { id: 10, name: 'A' } },

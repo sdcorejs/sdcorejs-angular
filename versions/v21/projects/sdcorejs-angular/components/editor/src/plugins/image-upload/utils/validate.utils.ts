@@ -40,8 +40,7 @@ const getImageInfo = async (file: File): Promise<{ width: number; height: number
 };
 
 // Helper: gọi i18n.t khi có service; nếu thiếu thì trả empty (Angular wrapper luôn truyền i18n)
-const tr = (i18n: I18nService | undefined, key: string, params: Record<string, unknown>): string =>
-  i18n?.t(key, params as any) ?? '';
+const tr = (i18n: I18nService | undefined, key: string, params: Record<string, unknown>): string => i18n?.t(key, params as any) ?? '';
 
 const validateImageFile = async (
   file: File,

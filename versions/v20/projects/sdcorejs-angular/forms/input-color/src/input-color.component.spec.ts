@@ -1,6 +1,6 @@
-import { Component, DebugElement, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdInputColor } from './input-color.component';
@@ -32,7 +32,7 @@ class HostComponent {
   readOnly = false;
   viewed = false;
   value: string | null | undefined = undefined;
-  changes: Array<string | null | undefined> = [];
+  changes: (string | null | undefined)[] = [];
 }
 
 function getColor(fixture: ComponentFixture<HostComponent>): SdInputColor {

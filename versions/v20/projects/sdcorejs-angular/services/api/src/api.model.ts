@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient, HttpErrorResponse, HttpRequest, HttpResponse } from '@angular/common/http';
 import { InjectionToken } from '@angular/core';
 import { SdCacheOption } from '@sdcorejs/angular/services/cache';
@@ -29,9 +28,7 @@ export interface SdApiHandler {
   /** Hook chạy TRƯỚC khi gửi request (dùng để log, tracking...) */
   beforeRemote?: (request: HttpRequest<any>) => void | Promise<void>;
   /** Hook chạy SAU khi nhận response (xử lý lỗi, notify...) */
-  afterRemote?: (
-    response: HttpResponse<any> | HttpErrorResponse | Error
-  ) => void | Promise<void>;
+  afterRemote?: (response: HttpResponse<any> | HttpErrorResponse | Error) => void | Promise<void>;
   /** Transform response body thành kiểu dữ liệu mong muốn */
   mapResponse?: <Tres = any, Tdata = any>(response: Tres) => Tdata;
   /** Timeout tính bằng milliseconds. Mặc định: 30000 (30 giây) */

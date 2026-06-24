@@ -1,14 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  ElementRef,
-  input,
-  model,
-  output,
-  viewChild,
-} from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, ElementRef, input, model, output, viewChild } from '@angular/core';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
@@ -42,7 +32,7 @@ export class SdInputColor {
   readonly size = input<Size>('md');
   readonly appearance = input<MatFormFieldAppearance | undefined>(undefined);
   // why: type as `any` — the inner <sd-input> applies the FormGroup|NgForm transform.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   readonly form = input<any>(undefined);
   readonly name = input<string | undefined>();
   readonly autoId = input<string | undefined>();

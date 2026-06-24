@@ -1,6 +1,14 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -24,10 +32,10 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
 })
-export class BuildVariables {
+export class BuildVariables implements OnInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;
-   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-    @Input({ required: true }) variables!: SdFormGenericVariable[];
+  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
+  @Input({ required: true }) variables!: SdFormGenericVariable[];
   form = new FormGroup({});
   @Input() label?: string;
   @Input({ required: true }) selections: SdFormGenericDefinitionSelection[] = [];
@@ -78,7 +86,7 @@ export class BuildVariables {
   }
 
   edit = async () => {
-    this.leftProperties = [...GetComponentAttributes(this.components),...GetVariableAttributes(this.variables)];
+    this.leftProperties = [...GetComponentAttributes(this.components), ...GetVariableAttributes(this.variables)];
     this.rightProperties =
       this.selection?.variables?.items?.map(e => ({
         value: '${' + e.value + '}',

@@ -11,12 +11,7 @@ import { LayoutUserComponent } from '../user/user.component';
 @Component({
   selector: 'sd-sidebar-mobile-overlay',
   standalone: true,
-  imports: [
-    CommonModule,
-    RouterModule,
-    MatIconModule,
-    LayoutUserComponent,
-  ],
+  imports: [CommonModule, RouterModule, MatIconModule, LayoutUserComponent],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
@@ -181,5 +176,5 @@ export class SidebarMobileOverlayComponent {
     return this.#normalizePath(this.currentPath()).startsWith(this.#normalizePath(path));
   };
 
-  #normalizePath = (p: string): string => p.endsWith('/') ? p : p + '/';
+  #normalizePath = (p: string): string => (p.endsWith('/') ? p : p + '/');
 }

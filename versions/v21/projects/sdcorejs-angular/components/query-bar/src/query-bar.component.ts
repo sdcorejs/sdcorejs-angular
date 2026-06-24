@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   afterNextRender,
@@ -47,7 +46,10 @@ import {
 } from './query-bar.model';
 
 type Density = 'compact' | 'comfortable';
-type Range = { from?: string | number | null; to?: string | number | null };
+interface Range {
+  from?: string | number | null;
+  to?: string | number | null;
+}
 
 /** Shared empty array — stable reference so template bindings don't churn change detection. */
 const EMPTY_ARRAY: any[] = [];
@@ -239,9 +241,7 @@ export class SdQueryBar {
   });
 
   /** Render the global AND/OR connector text between chips when `logic === 'OR'`. */
-  readonly showOrConnector = computed(
-    () => this.resolvedShowLogicToggle() && this.logic() === 'OR' && this.filters().length >= 2,
-  );
+  readonly showOrConnector = computed(() => this.resolvedShowLogicToggle() && this.logic() === 'OR' && this.filters().length >= 2);
 
   /** Search button is actionable only when there is something to apply. */
   readonly canSearch = computed(() => this.filters().length > 0 || this.search().trim().length > 0);
@@ -306,7 +306,6 @@ export class SdQueryBar {
   isNoDataOperator(op: Operator | string): boolean {
     return SD_QUERY_NO_DATA_OPERATORS.includes(op as Operator);
   }
-
 
   // ---------------------------------------------------------------------------
   // Inline mode — per-field helpers + live mutators (no popover / no Apply gate)
@@ -394,11 +393,7 @@ export class SdQueryBar {
    */
   onBuildSeamlessCommit(value: unknown): void {
     const empty =
-      value == null ||
-      value === '' ||
-      (typeof value === 'object' &&
-        (value as Range).from == null &&
-        (value as Range).to == null);
+      value == null || value === '' || (typeof value === 'object' && (value as Range).from == null && (value as Range).to == null);
     if (empty) {
       this.cancelBuild();
       return;
@@ -410,7 +405,6 @@ export class SdQueryBar {
   cancelBuild(): void {
     this.#building.set(null);
   }
-
 
   /**
    * Commit both ends of a BETWEEN range at once — called from `<sd-query-inline-chip>`'s
@@ -434,10 +428,7 @@ export class SdQueryBar {
     this.filters.set([...this.filters(), next]);
     // why: user added a field — open its edit popover immediately so they can pick
     // operator + value in one continuous flow (no second click required).
-    afterNextRender(
-      () => this.popoverChips()[newIndex]?.openMenu(),
-      { injector: this.#injector },
-    );
+    afterNextRender(() => this.popoverChips()[newIndex]?.openMenu(), { injector: this.#injector });
   }
 
   /** Swap the field of an existing chip — reset operator + value to the new field's defaults. */
@@ -451,10 +442,7 @@ export class SdQueryBar {
     // why: clicking an item in the nested fieldSwitchPicker closes both the picker AND
     // the parent chipPopover. Re-open the chip's popover on the next render so user can
     // continue picking operator + value without a second manual click.
-    afterNextRender(
-      () => this.popoverChips()[index]?.openMenu(),
-      { injector: this.#injector },
-    );
+    afterNextRender(() => this.popoverChips()[index]?.openMenu(), { injector: this.#injector });
   }
 
   updateFilter(index: number, patch: Partial<Filter>): void {

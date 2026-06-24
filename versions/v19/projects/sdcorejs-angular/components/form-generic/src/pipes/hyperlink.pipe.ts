@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Pipe, PipeTransform } from '@angular/core';
 import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
 

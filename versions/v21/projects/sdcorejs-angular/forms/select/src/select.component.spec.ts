@@ -41,8 +41,12 @@ class HostComponent {
   model?: any;
   changes: any[] = [];
   selections: any[] = [];
-  onSdChange(v: any) { this.changes.push(v); }
-  onSdSelection(v: any) { this.selections.push(v); }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdSelection(v: any) {
+    this.selections.push(v);
+  }
 }
 
 /** Multi-select host — multiple is static so MatSelect doesn't throw */
@@ -63,8 +67,12 @@ class MultiHostComponent {
   model?: any;
   changes: any[] = [];
   selections: any[] = [];
-  onSdChange(v: any) { this.changes.push(v); }
-  onSdSelection(v: any) { this.selections.push(v); }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdSelection(v: any) {
+    this.selections.push(v);
+  }
 }
 
 @Component({
@@ -99,8 +107,7 @@ const FRUIT_ITEMS = [
 const LARGE_ITEMS = Array.from({ length: 15 }, (_, i) => ({ id: i + 1, name: `Item ${i + 1}` }));
 
 function getComp(fixture: ComponentFixture<any>): SdSelect {
-  const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect)
-    ?.componentInstance as SdSelect;
+  const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect)?.componentInstance as SdSelect;
   if (!comp) throw new Error('SdSelect not found in fixture');
   return comp;
 }
@@ -594,9 +601,8 @@ describe('SdSelect (NgForm extraction)', () => {
 // ---------------------------------------------------------------------------
 
 describe('SdSelect (bare + open)', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let fixture: ComponentFixture<SdSelect<any>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let component: SdSelect<any>;
 
   beforeEach(async () => {
@@ -750,9 +756,8 @@ describe('SdSelect (E2E attributes)', () => {
 // ---------------------------------------------------------------------------
 
 describe('SdSelect (viewed inline mode)', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let fixture: ComponentFixture<SdSelect<any>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let comp: SdSelect<any>;
 
   beforeEach(async () => {
@@ -761,7 +766,10 @@ describe('SdSelect (viewed inline mode)', () => {
     comp = fixture.componentInstance;
     fixture.componentRef.setInput('valueField', 'id');
     fixture.componentRef.setInput('displayField', 'name');
-    fixture.componentRef.setInput('items', [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }]);
+    fixture.componentRef.setInput('items', [
+      { id: 'a', name: 'A' },
+      { id: 'b', name: 'B' },
+    ]);
   });
 
   it('viewed="inline" → isInline true, isViewed false; text face + (hidden) editor both rendered', fakeAsync(() => {
@@ -905,10 +913,12 @@ describe('SdSelect (sdViewDef view-template override)', () => {
     `,
   })
   class VdHost {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mode: any = true;
-    items = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+
     model: any = 'a';
   }
 
@@ -956,8 +966,11 @@ describe('SdSelect (#sdSelected editable-trigger template)', () => {
     `,
   })
   class SelHost {
-    items = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+
     model: any = 'a';
     multiple = false;
   }
@@ -969,8 +982,11 @@ describe('SdSelect (#sdSelected editable-trigger template)', () => {
     template: `<sd-select valueField="id" displayField="name" [items]="items" [model]="model"></sd-select>`,
   })
   class PlainHost {
-    items = [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items = [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ];
+
     model: any = 'a';
   }
 
@@ -1010,7 +1026,7 @@ describe('SdSelect (#sdSelected editable-trigger template)', () => {
     const fixture = TestBed.createComponent(PlainHost);
     openSelect(fixture);
     expect(fixture.nativeElement.querySelector('.sel')).toBeNull();
-    expect((fixture.nativeElement.textContent || '')).toContain('Alpha');
+    expect(fixture.nativeElement.textContent || '').toContain('Alpha');
   }));
 });
 
@@ -1036,7 +1052,7 @@ describe('SdSelect (sdSelectFooterAction)', () => {
   })
   class FooterHost {
     items = LARGE_ITEMS;
-    calls: Array<{ type: string; searchText: string }> = [];
+    calls: { type: string; searchText: string }[] = [];
 
     add(type: string, searchText: string): void {
       this.calls.push({ type, searchText });

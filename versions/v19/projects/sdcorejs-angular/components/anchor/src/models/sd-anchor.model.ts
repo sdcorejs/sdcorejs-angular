@@ -1,4 +1,4 @@
-﻿import { ElementRef, InputSignal } from "@angular/core";
+﻿import { ElementRef, InputSignal } from '@angular/core';
 
 export interface IAnchorItem {
   id: string;
@@ -6,4 +6,3 @@ export interface IAnchorItem {
   icon: InputSignal<string | undefined>;
   elementRef: ElementRef;
 }
-

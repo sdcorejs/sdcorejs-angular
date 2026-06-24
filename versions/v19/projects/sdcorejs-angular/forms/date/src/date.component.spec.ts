@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdDate } from './date.component';
-import { queryByCss } from '../../../testing/test-utils';
 
 // ---------------------------------------------------------------------------
 // Host components
@@ -36,8 +35,12 @@ class HostComponent {
   model: any = undefined;
   changes: any[] = [];
   focused = false;
-  onSdChange(v: any) { this.changes.push(v); }
-  onSdFocus() { this.focused = true; }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdFocus() {
+    this.focused = true;
+  }
 }
 
 @Component({
@@ -75,8 +78,7 @@ describe('SdDate', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate)
-      ?.componentInstance as SdDate;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate)?.componentInstance as SdDate;
     if (!comp) throw new Error('SdDate not found in fixture');
   });
 
@@ -128,7 +130,11 @@ describe('SdDate', () => {
     it('emits null via clear() when value is cleared', () => {
       host.model = '2026/05/15';
       fixture.detectChanges();
-      const event = { stopPropagation: () => { /* noop */ } };
+      const event = {
+        stopPropagation: () => {
+          /* noop */
+        },
+      };
       comp.clear(event);
       expect(host.changes[host.changes.length - 1]).toBeNull();
     });
@@ -211,7 +217,11 @@ describe('SdDate', () => {
     it('clears formControl and emits null via clear()', () => {
       host.model = '2026/05/15';
       fixture.detectChanges();
-      const event = { stopPropagation: () => { /* noop */ } };
+      const event = {
+        stopPropagation: () => {
+          /* noop */
+        },
+      };
       comp.clear(event);
       expect(comp.formControl.value).toBeNull();
       expect(host.changes).toContain(null);
@@ -258,9 +268,7 @@ describe('SdDate', () => {
       host.viewed = true;
       host.model = '2026/05/15';
       expect(() => fixture.detectChanges()).not.toThrow();
-      const datePipeErrors = spy.calls.allArgs().filter(args =>
-        args.some(a => typeof a === 'string' && a.includes('DatePipe'))
-      );
+      const datePipeErrors = spy.calls.allArgs().filter(args => args.some(a => typeof a === 'string' && a.includes('DatePipe')));
       expect(datePipeErrors.length).toBe(0);
     });
 
@@ -270,9 +278,7 @@ describe('SdDate', () => {
       host.viewed = true;
       host.model = '2025-10-23';
       expect(() => fixture.detectChanges()).not.toThrow();
-      const datePipeErrors = spy.calls.allArgs().filter(args =>
-        args.some(a => typeof a === 'string' && a.includes('DatePipe'))
-      );
+      const datePipeErrors = spy.calls.allArgs().filter(args => args.some(a => typeof a === 'string' && a.includes('DatePipe')));
       expect(datePipeErrors.length).toBe(0);
       const sdView = fixture.nativeElement.querySelector('sd-view');
       expect(sdView.textContent).toContain('23/10/2025');

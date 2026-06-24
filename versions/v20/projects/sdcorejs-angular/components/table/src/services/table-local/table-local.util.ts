@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn, SdTableColumnLazyValues, SdTableColumnValues } from '../../models/table-column.model';

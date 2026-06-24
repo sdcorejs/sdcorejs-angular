@@ -21,7 +21,7 @@ export class SdSelectionDisabledPipe implements PipeTransform {
     // Dữ liệu chưa được check thì kiểm tra hàm disable nếu có
     if (disabled && !rowData.meta.selector!.isSelected) {
       // Nếu disabled và dữ liệu chưa được check
-      if(disabled(rowData, selectedItems)) {
+      if (disabled(rowData, selectedItems)) {
         return true;
       }
     }

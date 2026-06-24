@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -13,6 +11,7 @@ import {
   QueryList,
   ViewChild,
   ViewChildren,
+  OnInit,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -21,12 +20,7 @@ import { SdTableCellDefDirective, SdTable, SdTableColumn, SdTableOption } from '
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { SdAutocomplete, SdInput, SdInputNumber, SdRadio, SdSearch } from '@sdcorejs/angular/forms';
 import { filter, startWith, Subject, Subscription } from 'rxjs';
-import {
-  SdFormGenericTableColumn,
-  SdFormGenericSelectionItem,
-  SdFormGenericTable,
-  SdFormGenericSelectionStaticItem,
-} from '../../../../../../models';
+import { SdFormGenericTableColumn, SdFormGenericSelectionItem, SdFormGenericTable } from '../../../../../../models';
 import { FormGenericService } from '../../../../../../services';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -55,7 +49,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     TranslatePipe,
   ],
 })
-export class TableComponent implements AfterViewInit, OnDestroy {
+export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   @ViewChildren(SdUploadFile) uploadFiles?: QueryList<SdUploadFile>;
   @ViewChild(SdTable) table?: SdTable;
   @ViewChild(SdSideDrawer) sideDrawer?: SdSideDrawer;
@@ -401,7 +395,6 @@ export class TableComponent implements AfterViewInit, OnDestroy {
     }
     return undefined;
   }
-
 
   upload = async () => {
     if (this.uploadFiles?.length) {

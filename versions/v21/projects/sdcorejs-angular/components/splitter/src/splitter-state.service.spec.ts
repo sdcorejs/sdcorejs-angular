@@ -31,8 +31,28 @@ describe('SplitterStateService — basic mutations', () => {
     service.setLiveSize('p2', 200);
     service.setCollapsed('p2', true);
     service.setPanelMeta([
-      { id: 'p1', index: 0, unit: 'flex', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 1, lastSize: 1 },
-      { id: 'p2', index: 1, unit: 'flex', minSize: 0, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 1, lastSize: 1 },
+      {
+        id: 'p1',
+        index: 0,
+        unit: 'flex',
+        minSize: 0,
+        maxSize: undefined,
+        collapsible: false,
+        resizable: true,
+        declaredSize: 1,
+        lastSize: 1,
+      },
+      {
+        id: 'p2',
+        index: 1,
+        unit: 'flex',
+        minSize: 0,
+        maxSize: undefined,
+        collapsible: true,
+        resizable: true,
+        declaredSize: 1,
+        lastSize: 1,
+      },
     ]);
 
     service.commit();
@@ -56,9 +76,15 @@ describe('SplitterStateService.reconcile', () => {
   });
 
   const meta = (id: string | number, unit: 'flex' | 'px' = 'flex', declaredSize = 1): import('./splitter.models').ResolvedPanelMeta => ({
-    id, index: typeof id === 'number' ? id : 0, unit,
-    minSize: 0, maxSize: undefined, collapsible: false, resizable: true,
-    declaredSize, lastSize: declaredSize,
+    id,
+    index: typeof id === 'number' ? id : 0,
+    unit,
+    minSize: 0,
+    maxSize: undefined,
+    collapsible: false,
+    resizable: true,
+    declaredSize,
+    lastSize: declaredSize,
   });
 
   it('uses declaredSize khi không có stored state', () => {
@@ -69,10 +95,13 @@ describe('SplitterStateService.reconcile', () => {
   });
 
   it('matches by panelId (string id)', () => {
-    const stored = { v: 1 as const, panels: [
-      { id: 'a', size: 100, unit: 'flex' as const, collapsed: false },
-      { id: 'b', size: 200, unit: 'flex' as const, collapsed: true },
-    ]};
+    const stored = {
+      v: 1 as const,
+      panels: [
+        { id: 'a', size: 100, unit: 'flex' as const, collapsed: false },
+        { id: 'b', size: 200, unit: 'flex' as const, collapsed: true },
+      ],
+    };
     service.reconcile([meta('a'), meta('b')], stored);
     expect(service.liveSizes().get('a')).toBe(100);
     expect(service.liveSizes().get('b')).toBe(200);
@@ -82,14 +111,20 @@ describe('SplitterStateService.reconcile', () => {
   it('falls back to index khi panel không có panelId', () => {
     // Setup: stored có numeric id 99, 100 — KHÔNG khớp với current meta id 0, 1
     // → byId fail, buộc phải qua nhánh fallback index để match đúng vị trí.
-    const stored = { v: 1 as const, panels: [
-      { id: 99, size: 50, unit: 'flex' as const, collapsed: false },
-      { id: 100, size: 150, unit: 'flex' as const, collapsed: true },
-    ]};
-    service.reconcile([
-      { ...meta(0), id: 0, index: 0 },
-      { ...meta(1), id: 1, index: 1 },
-    ], stored);
+    const stored = {
+      v: 1 as const,
+      panels: [
+        { id: 99, size: 50, unit: 'flex' as const, collapsed: false },
+        { id: 100, size: 150, unit: 'flex' as const, collapsed: true },
+      ],
+    };
+    service.reconcile(
+      [
+        { ...meta(0), id: 0, index: 0 },
+        { ...meta(1), id: 1, index: 1 },
+      ],
+      stored
+    );
     // size lấy theo position match
     expect(service.liveSizes().get(0)).toBe(50);
     expect(service.liveSizes().get(1)).toBe(150);
@@ -99,39 +134,36 @@ describe('SplitterStateService.reconcile', () => {
 
   it('không fallback index khi panel có panelId string (tránh match nhầm)', () => {
     // String-id panel không khớp id → không được phép lấy stored[index]
-    const stored = { v: 1 as const, panels: [
-      { id: 'other', size: 999, unit: 'flex' as const, collapsed: false },
-    ]};
+    const stored = { v: 1 as const, panels: [{ id: 'other', size: 999, unit: 'flex' as const, collapsed: false }] };
     service.reconcile([meta('a', 'flex', 3)], stored);
-    expect(service.liveSizes().get('a')).toBe(3);   // declaredSize, không phải 999
+    expect(service.liveSizes().get('a')).toBe(3); // declaredSize, không phải 999
   });
 
   it('skips stale entry trong storage (panel cũ không còn trong template)', () => {
-    const stored = { v: 1 as const, panels: [
-      { id: 'gone', size: 999, unit: 'flex' as const, collapsed: false },
-      { id: 'a', size: 80, unit: 'flex' as const, collapsed: false },
-    ]};
+    const stored = {
+      v: 1 as const,
+      panels: [
+        { id: 'gone', size: 999, unit: 'flex' as const, collapsed: false },
+        { id: 'a', size: 80, unit: 'flex' as const, collapsed: false },
+      ],
+    };
     service.reconcile([meta('a', 'flex', 5)], stored);
     expect(service.liveSizes().get('a')).toBe(80);
     expect(service.liveSizes().has('gone')).toBe(false);
   });
 
   it('uses declaredSize khi panel mới chưa có trong storage', () => {
-    const stored = { v: 1 as const, panels: [
-      { id: 'a', size: 80, unit: 'flex' as const, collapsed: false },
-    ]};
+    const stored = { v: 1 as const, panels: [{ id: 'a', size: 80, unit: 'flex' as const, collapsed: false }] };
     service.reconcile([meta('a'), meta('newPanel', 'flex', 7)], stored);
     expect(service.liveSizes().get('a')).toBe(80);
     expect(service.liveSizes().get('newPanel')).toBe(7);
   });
 
   it('bỏ qua storage entry khi unit lệch — collapsed cũng phải reset false', () => {
-    const stored = { v: 1 as const, panels: [
-      { id: 'a', size: 250, unit: 'px' as const, collapsed: true },
-    ]};
+    const stored = { v: 1 as const, panels: [{ id: 'a', size: 250, unit: 'px' as const, collapsed: true }] };
     service.reconcile([meta('a', 'flex', 2)], stored);
     expect(service.liveSizes().get('a')).toBe(2);
-    expect(service.collapsedMap().get('a')).toBe(false);   // không kế thừa collapsed từ stored
+    expect(service.collapsedMap().get('a')).toBe(false); // không kế thừa collapsed từ stored
   });
 
   it('handle stored.panels = [] (empty array, không crash)', () => {
@@ -153,12 +185,17 @@ describe('SplitterStateService.applyDelta', () => {
     service = TestBed.inject(SplitterStateService);
   });
 
-  function setup(metas: Array<{ id: string; unit: 'flex' | 'px'; size: number; min?: number; max?: number }>): SplitterStateService {
+  function setup(metas: { id: string; unit: 'flex' | 'px'; size: number; min?: number; max?: number }[]): SplitterStateService {
     const resolved = metas.map((m, i) => ({
-      id: m.id, index: i, unit: m.unit,
-      minSize: m.min ?? 0, maxSize: m.max,
-      collapsible: false, resizable: true,
-      declaredSize: m.size, lastSize: m.size,
+      id: m.id,
+      index: i,
+      unit: m.unit,
+      minSize: m.min ?? 0,
+      maxSize: m.max,
+      collapsible: false,
+      resizable: true,
+      declaredSize: m.size,
+      lastSize: m.size,
     }));
     service.reconcile(resolved, null);
     return service;
@@ -292,7 +329,7 @@ describe('SplitterStateService.applyDelta', () => {
   });
 
   it('handleIndex out of bounds → return 0, no-op', () => {
-    setup([{ id: 'a', unit: 'px', size: 100 }]);   // 1 panel, không có handle nào hợp lệ
+    setup([{ id: 'a', unit: 'px', size: 100 }]); // 1 panel, không có handle nào hợp lệ
     const beforeRef = service.liveSizes();
     const result = service.applyDelta(99, 10, 200);
     expect(result).toBe(0);
@@ -307,7 +344,7 @@ describe('SplitterStateService.applyDelta', () => {
     service.setCollapsed('a', true);
     const beforeSize = service.liveSizes().get('a');
     service.applyDelta(0, 30, 200);
-    expect(service.liveSizes().get('a')).toBe(beforeSize);   // unchanged
+    expect(service.liveSizes().get('a')).toBe(beforeSize); // unchanged
   });
 });
 
@@ -320,10 +357,33 @@ describe('SplitterStateService.collapse/expand', () => {
   });
 
   function setup(): SplitterStateService {
-    service.reconcile([
-      { id: 'a', index: 0, unit: 'flex', minSize: 0, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 2, lastSize: 2 },
-      { id: 'b', index: 1, unit: 'flex', minSize: 0, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 1, lastSize: 1 },
-    ], null);
+    service.reconcile(
+      [
+        {
+          id: 'a',
+          index: 0,
+          unit: 'flex',
+          minSize: 0,
+          maxSize: undefined,
+          collapsible: true,
+          resizable: true,
+          declaredSize: 2,
+          lastSize: 2,
+        },
+        {
+          id: 'b',
+          index: 1,
+          unit: 'flex',
+          minSize: 0,
+          maxSize: undefined,
+          collapsible: true,
+          resizable: true,
+          declaredSize: 1,
+          lastSize: 1,
+        },
+      ],
+      null
+    );
     return service;
   }
 
@@ -349,9 +409,22 @@ describe('SplitterStateService.collapse/expand', () => {
   });
 
   it('expandPanel khi không có lastSize hợp lệ → fallback minSize', () => {
-    service.reconcile([
-      { id: 'a', index: 0, unit: 'flex', minSize: 0.5, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 1, lastSize: 0 },
-    ], null);
+    service.reconcile(
+      [
+        {
+          id: 'a',
+          index: 0,
+          unit: 'flex',
+          minSize: 0.5,
+          maxSize: undefined,
+          collapsible: true,
+          resizable: true,
+          declaredSize: 1,
+          lastSize: 0,
+        },
+      ],
+      null
+    );
     service.setCollapsed('a', true);
     service.expandPanel('a');
     expect(service.liveSizes().get('a')).toBe(0.5);
@@ -366,9 +439,22 @@ describe('SplitterStateService.collapse/expand', () => {
   });
 
   it('collapsePanel no-op nếu panel không collapsible', () => {
-    service.reconcile([
-      { id: 'a', index: 0, unit: 'flex', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 1, lastSize: 1 },
-    ], null);
+    service.reconcile(
+      [
+        {
+          id: 'a',
+          index: 0,
+          unit: 'flex',
+          minSize: 0,
+          maxSize: undefined,
+          collapsible: false,
+          resizable: true,
+          declaredSize: 1,
+          lastSize: 1,
+        },
+      ],
+      null
+    );
     service.collapsePanel('a');
     expect(service.collapsedMap().get('a')).toBeFalsy();
   });
@@ -383,34 +469,103 @@ describe('SplitterStateService — snap-to-collapse', () => {
   });
 
   it('kéo collapsible panel xuống dưới minSize × snapThreshold → snap collapse', () => {
-    service.reconcile([
-      { id: 'a', index: 0, unit: 'px', minSize: 80, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 100, lastSize: 100 },
-      { id: 'b', index: 1, unit: 'px', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
-    ], null);
+    service.reconcile(
+      [
+        {
+          id: 'a',
+          index: 0,
+          unit: 'px',
+          minSize: 80,
+          maxSize: undefined,
+          collapsible: true,
+          resizable: true,
+          declaredSize: 100,
+          lastSize: 100,
+        },
+        {
+          id: 'b',
+          index: 1,
+          unit: 'px',
+          minSize: 0,
+          maxSize: undefined,
+          collapsible: false,
+          resizable: true,
+          declaredSize: 100,
+          lastSize: 100,
+        },
+      ],
+      null
+    );
     // Kéo a từ 100 xuống ≤ 40 (= 80 * 0.5) → snap
     service.applyDelta(0, -70, 200, 0.5);
     expect(service.collapsedMap().get('a')).toBe(true);
   });
 
   it('không snap nếu panel không collapsible — clamp tại minSize', () => {
-    service.reconcile([
-      { id: 'a', index: 0, unit: 'px', minSize: 80, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
-      { id: 'b', index: 1, unit: 'px', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
-    ], null);
+    service.reconcile(
+      [
+        {
+          id: 'a',
+          index: 0,
+          unit: 'px',
+          minSize: 80,
+          maxSize: undefined,
+          collapsible: false,
+          resizable: true,
+          declaredSize: 100,
+          lastSize: 100,
+        },
+        {
+          id: 'b',
+          index: 1,
+          unit: 'px',
+          minSize: 0,
+          maxSize: undefined,
+          collapsible: false,
+          resizable: true,
+          declaredSize: 100,
+          lastSize: 100,
+        },
+      ],
+      null
+    );
     service.applyDelta(0, -50, 200, 0.5);
     expect(service.collapsedMap().get('a')).toBeFalsy();
-    expect(service.liveSizes().get('a')).toBe(80);   // clamp tại min
+    expect(service.liveSizes().get('a')).toBe(80); // clamp tại min
   });
 
   it('kéo ngược lại (delta dương vượt minSize) → expand từ collapsed', () => {
-    service.reconcile([
-      { id: 'a', index: 0, unit: 'px', minSize: 80, maxSize: undefined, collapsible: true, resizable: true, declaredSize: 100, lastSize: 120 },
-      { id: 'b', index: 1, unit: 'px', minSize: 0, maxSize: undefined, collapsible: false, resizable: true, declaredSize: 100, lastSize: 100 },
-    ], null);
+    service.reconcile(
+      [
+        {
+          id: 'a',
+          index: 0,
+          unit: 'px',
+          minSize: 80,
+          maxSize: undefined,
+          collapsible: true,
+          resizable: true,
+          declaredSize: 100,
+          lastSize: 120,
+        },
+        {
+          id: 'b',
+          index: 1,
+          unit: 'px',
+          minSize: 0,
+          maxSize: undefined,
+          collapsible: false,
+          resizable: true,
+          declaredSize: 100,
+          lastSize: 100,
+        },
+      ],
+      null
+    );
     service.setCollapsed('a', true);
     service.setLiveSize('a', 0);
     service.applyDelta(0, 90, 200, 0.5);
     expect(service.collapsedMap().get('a')).toBe(false);
-    expect(service.liveSizes().get('a')).toBe(120);   // restore lastSize
+    expect(service.liveSizes().get('a')).toBe(120); // restore lastSize
   });
 });

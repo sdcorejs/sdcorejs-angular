@@ -20,7 +20,6 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { ViewComponent } from './view/view.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
-
 @Component({
   selector: 'desktop-cell',
   templateUrl: './desktop-cell.component.html',

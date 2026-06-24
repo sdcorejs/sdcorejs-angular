@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdRadio } from '@sdcorejs/angular/forms';
 import { filter, startWith, Subject, Subscription } from 'rxjs';
@@ -21,10 +19,10 @@ import { Utilities } from '@sdcorejs/utils/fns';
     SdRadio,
     // Pipe cho phần viewed
     ComponentViewedPipe,
-    HyperlinkPipe
+    HyperlinkPipe,
   ],
 })
-export class RadioComponent implements AfterViewInit, OnDestroy {
+export class RadioComponent implements AfterViewInit, OnDestroy, OnInit {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   form = new FormGroup({});
   @Input({ alias: 'form', required: true }) set _form(form: FormGroup) {
@@ -119,10 +117,13 @@ export class RadioComponent implements AfterViewInit, OnDestroy {
   }
 
   onNavigate = (url: string) => {
-    if (url?.startsWith('http')) {
+    if (!url) {
+      return;
+    }
+    if (url.startsWith('http')) {
       window.open(url);
     } else {
-      const [path, queryString] = url?.split('?');
+      const [path, queryString] = url.split('?');
       const queryParams = Utilities.parseQueryParams(queryString);
       this.router.navigate([path], { queryParams });
     }

@@ -17,13 +17,7 @@ import {
 import { Utilities } from '@sdcorejs/utils/fns';
 import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import {
-  NormalizedImage,
-  PreviewItem,
-  PreviewStage,
-  PreviewTheme,
-  ThumbnailPosition,
-} from './preview-image.types';
+import { NormalizedImage, PreviewItem, PreviewStage, PreviewTheme, ThumbnailPosition } from './preview-image.types';
 
 @Component({
   selector: 'sd-preview-image',
@@ -147,9 +141,7 @@ export class SdPreviewImage implements OnDestroy {
   readonly stage = this.#stage.asReadonly();
   readonly isFullscreen = this.#isFullscreen.asReadonly();
 
-  readonly activeImage = computed<NormalizedImage | undefined>(
-    () => this.#images()[this.#activeIndex()],
-  );
+  readonly activeImage = computed<NormalizedImage | undefined>(() => this.#images()[this.#activeIndex()]);
   readonly hasPrev = computed(() => {
     const len = this.#images().length;
     return len > 1 && (this.loop() || this.#activeIndex() > 0);
@@ -273,7 +265,7 @@ export class SdPreviewImage implements OnDestroy {
   rotate(direction: 'left' | 'right'): void {
     const delta = direction === 'right' ? 90 : -90;
     // Wrap về [0, 360) cho gọn — không strictly cần thiết về mặt visual.
-    this.#rotation.update(r => ((r + delta) % 360 + 360) % 360);
+    this.#rotation.update(r => (((r + delta) % 360) + 360) % 360);
   }
 
   downloadCurrent(): void {
@@ -622,10 +614,7 @@ export class SdPreviewImage implements OnDestroy {
     this.#ownedBlobUrls.clear();
   }
 
-  async #normalize(
-    item: PreviewItem,
-    override?: { name?: string; caption?: string; alt?: string },
-  ): Promise<NormalizedImage | null> {
+  async #normalize(item: PreviewItem, override?: { name?: string; caption?: string; alt?: string }): Promise<NormalizedImage | null> {
     try {
       if (typeof item === 'string') {
         return await this.#fromUrl(item, override);
@@ -653,10 +642,7 @@ export class SdPreviewImage implements OnDestroy {
     }
   }
 
-  async #fromUrl(
-    url: string,
-    override?: { name?: string; caption?: string; alt?: string },
-  ): Promise<NormalizedImage> {
+  async #fromUrl(url: string, override?: { name?: string; caption?: string; alt?: string }): Promise<NormalizedImage> {
     const id = Utilities.generateUuid();
     // Lấy filename từ phần path cuối — bỏ query string.
     const baseSrc = url.split('?')[0];
@@ -696,10 +682,7 @@ export class SdPreviewImage implements OnDestroy {
     }
   }
 
-  #fromFile(
-    file: File,
-    override?: { name?: string; caption?: string; alt?: string },
-  ): NormalizedImage | null {
+  #fromFile(file: File, override?: { name?: string; caption?: string; alt?: string }): NormalizedImage | null {
     if (!file.type.startsWith('image/')) {
       // Silently filter — handoff yêu cầu non-image File bị drop yên lặng để
       // tương thích với upload form nơi user trộn lẫn ảnh và tài liệu.

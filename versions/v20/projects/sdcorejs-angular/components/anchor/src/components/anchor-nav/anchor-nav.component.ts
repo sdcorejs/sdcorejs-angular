@@ -14,7 +14,6 @@ import { SdAnchorItem } from '../anchor-item/anchor-item.component';
   imports: [CommonModule, MatIconModule],
   standalone: true,
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class AnchorNav implements OnDestroy {
   sections = input.required<readonly SdAnchorItem[]>();
   activeSectionId = input<string>('');
@@ -41,11 +40,7 @@ export class AnchorNav implements OnDestroy {
   #subscription = new Subscription();
 
   constructor() {
-    this.#subscription.add(
-      this.#clickSectionSubject
-        .pipe(debounceTime(this.#delay))
-        .subscribe((id: string) => this.clickSection.emit(id))
-    );
+    this.#subscription.add(this.#clickSectionSubject.pipe(debounceTime(this.#delay)).subscribe((id: string) => this.clickSection.emit(id)));
   }
 
   onClickSection = (id: string): void => {

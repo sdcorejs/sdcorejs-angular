@@ -2,10 +2,8 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { of } from 'rxjs';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdAutocomplete } from './autocomplete.component';
-import { queryByCss, queryAllByCss } from '../../../testing/test-utils';
 
 // ---------------------------------------------------------------------------
 // Host wrappers
@@ -43,8 +41,12 @@ class HostComponent {
   model?: any;
   changes: any[] = [];
   selections: any[] = [];
-  onSdChange(v: any) { this.changes.push(v); }
-  onSdSelection(v: any) { this.selections.push(v); }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdSelection(v: any) {
+    this.selections.push(v);
+  }
 }
 
 @Component({
@@ -76,8 +78,7 @@ const FRUIT_ITEMS = [
 ];
 
 function getComp(fixture: ComponentFixture<any>): SdAutocomplete {
-  const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdAutocomplete)
-    ?.componentInstance as SdAutocomplete;
+  const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdAutocomplete)?.componentInstance as SdAutocomplete;
   if (!comp) throw new Error('SdAutocomplete not found in fixture');
   return comp;
 }
@@ -683,16 +684,18 @@ describe('SdAutocomplete (host classes)', () => {
 // ---------------------------------------------------------------------------
 
 describe('SdAutocomplete (viewed inline mode)', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let fixture: ComponentFixture<SdAutocomplete<any>>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   let comp: SdAutocomplete<any>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [SdAutocomplete, NoopAnimationsModule] }).compileComponents();
     fixture = TestBed.createComponent(SdAutocomplete);
     comp = fixture.componentInstance;
-    fixture.componentRef.setInput('items', [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }]);
+    fixture.componentRef.setInput('items', [
+      { id: 'a', name: 'Alpha' },
+      { id: 'b', name: 'Beta' },
+    ]);
     fixture.componentRef.setInput('valueField', 'id');
     fixture.componentRef.setInput('displayField', 'name');
   });

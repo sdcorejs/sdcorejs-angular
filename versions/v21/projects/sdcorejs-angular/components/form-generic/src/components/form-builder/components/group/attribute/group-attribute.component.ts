@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, input, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, inject, input, untracked } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { COMPONENT_ICONS, SdFormGenericComponent, SdFormGenericGroup } from '../../../../../models';

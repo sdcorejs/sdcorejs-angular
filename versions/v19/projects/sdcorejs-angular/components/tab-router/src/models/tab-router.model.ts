@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Type } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
 import { Subject } from 'rxjs';

@@ -132,12 +132,12 @@ describe('SdNotifyService', () => {
 
   it('error() should reset the debounce timer on each new call', fakeAsync(() => {
     service.error('First');
-    tick(400);                 // nearly flushed
-    service.error('Second');   // resets the timer
-    tick(400);                 // original timer would have fired — but was reset
+    tick(400); // nearly flushed
+    service.error('Second'); // resets the timer
+    tick(400); // original timer would have fired — but was reset
     expect(service.toasts().length).toBe(0); // still debouncing
 
-    tick(100);                 // now 500 ms since last call
+    tick(100); // now 500 ms since last call
     expect(service.toasts().length).toBe(1);
   }));
 
@@ -193,7 +193,7 @@ describe('SdNotifyService', () => {
   it('clearAll() should cancel pending buffered timers', fakeAsync(() => {
     service.error('pending error');
     service.clearAll(); // cancels the timer
-    tick(500);          // timer fires but buffer was already cleared → no-op
+    tick(500); // timer fires but buffer was already cleared → no-op
 
     expect(service.toasts().length).toBe(0);
   }));

@@ -6,7 +6,6 @@ import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angula
 
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
 import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../models/table-item.model';
-import { ConfiguredTableResult } from '../../models/table-option-config.model';
 
 @Injectable()
 export class TableFormatService {

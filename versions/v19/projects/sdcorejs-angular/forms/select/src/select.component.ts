@@ -1,5 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,

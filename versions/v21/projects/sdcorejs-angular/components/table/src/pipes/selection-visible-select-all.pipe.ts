@@ -22,7 +22,7 @@ export class SdSelectionVisibleSelectAllPipe implements PipeTransform {
     await new Promise(resolve => setTimeout(resolve, 500));
     const first = items.find(t => t.meta.selector?.actions?.length);
     if (first) {
-      for (const action of first.meta.selector?.actions!) {
+      for (const action of first.meta.selector?.actions ?? []) {
         if (items.filter(t => t.meta.selector?.actions?.length).every(e => e.meta.selector?.actions?.includes(action))) {
           return true;
         }

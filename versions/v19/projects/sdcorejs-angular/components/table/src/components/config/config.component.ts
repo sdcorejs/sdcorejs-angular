@@ -1,17 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CdkTableModule } from '@angular/cdk/table';
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  computed,
-  inject,
-  input,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectorRef, Component, computed, inject, input, output, signal, viewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { fromEvent } from 'rxjs';
 import { FormsModule } from '@angular/forms';
@@ -48,7 +38,6 @@ import { ConfigService } from '../../services/config.service';
   ],
   providers: [ConfigService],
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class ConfigComponent {
   // ==========================================
   // 1. SIGNAL INPUTS / OUTPUTS

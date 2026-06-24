@@ -6,7 +6,7 @@
  * the bridging internally — caller never touches pdfjs types.
  */
 export type PdfSource =
-  | string                                                                  // CDN/HTTP URL
+  | string // CDN/HTTP URL
   | File
   | Blob
   | ArrayBuffer

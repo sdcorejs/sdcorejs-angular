@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SdSection } from '@sdcorejs/angular/components/section';
@@ -20,7 +19,9 @@ function createMockRegister() {
   const valueSubject = new BehaviorSubject<TableFilterValue>({ externalFilter: undefined });
   const cfgSubject = new BehaviorSubject<TableFilterConfiguration>({ inlineExternal: {} });
 
-  const valueSubscribeSpy = jasmine.createSpy('value.subscribe').and.callFake((...args: any[]) => valueSubject.subscribe(...(args as [any])));
+  const valueSubscribeSpy = jasmine
+    .createSpy('value.subscribe')
+    .and.callFake((...args: any[]) => valueSubject.subscribe(...(args as [any])));
   const cfgSubscribeSpy = jasmine.createSpy('cfg.subscribe').and.callFake((...args: any[]) => cfgSubject.subscribe(...(args as [any])));
 
   const register: TableFilterRegister = {

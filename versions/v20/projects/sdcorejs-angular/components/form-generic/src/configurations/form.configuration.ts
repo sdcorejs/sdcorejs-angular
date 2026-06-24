@@ -5,7 +5,7 @@ import {
   SdFormGenericDefinitionSelection,
   SdFormGenericDefinitionTable,
   SdFormGenericSelectionItem,
-  SdFormGenericTemplate
+  SdFormGenericTemplate,
 } from '../models';
 import { SdFormGenericValidationConfiguration } from '../models/form-generic-validation.model';
 
@@ -13,9 +13,15 @@ export interface IWorkflowConfigurationForm<TSelectionArgs = any> {
   // Mẫu chung chọn nhanh
   templates: SdFormGenericTemplate[];
   // Definition cho select/radio/checklist
-  selections:  SdFormGenericDefinitionSelection<any, TSelectionArgs>[] | (() => SdFormGenericDefinitionSelection<any, TSelectionArgs>[]) | (() => Promise<SdFormGenericDefinitionSelection[]>);
+  selections:
+    | SdFormGenericDefinitionSelection<any, TSelectionArgs>[]
+    | (() => SdFormGenericDefinitionSelection<any, TSelectionArgs>[])
+    | (() => Promise<SdFormGenericDefinitionSelection[]>);
   getValues?: (key: string, selectionArgs?: TSelectionArgs) => Promise<SdFormGenericSelectionItem[]>; // Nếu sử dụng valuesKey
-  getLazyValues?: (key: string, selectionArgs?: TSelectionArgs) => ((searchArgs: Parameters<SdSearch>[0], args: SdFormGenericArgs) => Promise<SdFormGenericSelectionItem[]>); // Nếu sử dụng lazyValuesKey
+  getLazyValues?: (
+    key: string,
+    selectionArgs?: TSelectionArgs
+  ) => (searchArgs: Parameters<SdSearch>[0], args: SdFormGenericArgs) => Promise<SdFormGenericSelectionItem[]>; // Nếu sử dụng lazyValuesKey
   // Definition cho table
   tables: SdFormGenericDefinitionTable[];
   // Definition cho table

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -25,7 +24,6 @@ function setup(data: DialogData): {
 }
 
 describe('DialogConfirmComponent', () => {
-
   // ─── construction / data binding ──────────────────────────────────────────
 
   it('creates with default value (no input/date/radio configured)', () => {
@@ -37,7 +35,10 @@ describe('DialogConfirmComponent', () => {
 
   it('seeds value/required from data.input when present', () => {
     const { fix } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       input: { defaultValue: 'preset', required: true, maxlength: 100 },
     });
     expect(fix.componentInstance.value).toBe('preset');
@@ -47,7 +48,10 @@ describe('DialogConfirmComponent', () => {
   it('seeds value/required from data.date when present', () => {
     const date = new Date('2024-01-15');
     const { fix } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       date: { defaultValue: date, required: true },
     });
     expect(fix.componentInstance.value).toBe(date);
@@ -56,11 +60,16 @@ describe('DialogConfirmComponent', () => {
 
   it('seeds value/required from data.radio when present', () => {
     const { fix } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       radio: {
-        defaultValue: 'A', required: true,
+        defaultValue: 'A',
+        required: true,
         items: [{ value: 'A', label: 'A' }],
-        valueField: 'value', displayField: 'label',
+        valueField: 'value',
+        displayField: 'label',
       },
     });
     expect(fix.componentInstance.value).toBe('A');
@@ -69,7 +78,10 @@ describe('DialogConfirmComponent', () => {
 
   it('falls back to empty string when input.defaultValue is missing', () => {
     const { fix } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       input: {},
     });
     expect(fix.componentInstance.value).toBe('');
@@ -133,7 +145,10 @@ describe('DialogConfirmComponent', () => {
 
   it('onAccept closes with current value when input is configured', () => {
     const { fix, ref } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       input: { defaultValue: 'first' },
     });
     fix.componentInstance.value = 'user typed';
@@ -143,7 +158,10 @@ describe('DialogConfirmComponent', () => {
 
   it('onAccept closes with current value when date is configured', () => {
     const { fix, ref } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       date: {},
     });
     fix.componentInstance.value = '2024-01-15';
@@ -153,7 +171,10 @@ describe('DialogConfirmComponent', () => {
 
   it('onAccept closes with current value when radio is configured', () => {
     const { fix, ref } = setup({
-      title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N',
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
       radio: { items: [], valueField: 'v', displayField: 'd' },
     });
     fix.componentInstance.value = 'B';

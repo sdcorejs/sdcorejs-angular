@@ -1,5 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Inject, Input, Optional, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
@@ -41,7 +39,9 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     AttributeInput,
     AttributeSelect,
     AttributeSwitch,
-    AttributeParameter, TranslatePipe],
+    AttributeParameter,
+    TranslatePipe,
+  ],
 })
 export class AttributeTable {
   @ViewChild(SdModal) modal?: SdModal;

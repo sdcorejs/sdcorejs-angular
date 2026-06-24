@@ -13,14 +13,16 @@ const TENANT_CONFIG: SdKeycloakTenantConfig = {
 };
 
 /** Returns a partial Keycloak instance mock with spies. */
-function makeKeycloakMock(overrides: Partial<{
-  token: string | undefined;
-  authenticated: boolean | undefined;
-  init: jasmine.Spy;
-  login: jasmine.Spy;
-  logout: jasmine.Spy;
-  updateToken: jasmine.Spy;
-}> = {}): Keycloak {
+function makeKeycloakMock(
+  overrides: Partial<{
+    token: string | undefined;
+    authenticated: boolean | undefined;
+    init: jasmine.Spy;
+    login: jasmine.Spy;
+    logout: jasmine.Spy;
+    updateToken: jasmine.Spy;
+  }> = {}
+): Keycloak {
   return {
     token: 'mock-token',
     authenticated: true,
@@ -97,9 +99,7 @@ describe('SdKeycloakService', () => {
       const mock = makeKeycloakMock();
       service.keycloak = mock;
       service.logout();
-      expect(mock.logout).toHaveBeenCalledWith(
-        jasmine.objectContaining({ redirectUri: window.location.origin })
-      );
+      expect(mock.logout).toHaveBeenCalledWith(jasmine.objectContaining({ redirectUri: window.location.origin }));
     });
   });
 
@@ -144,7 +144,6 @@ describe('SdKeycloakService', () => {
       // Re-wire onTokenExpired as the real init() does:
       keycloakMock.onTokenExpired = () => {
         keycloakMock.updateToken(30).catch(() => {
-          // eslint-disable-next-line no-console
           console.warn('Token refresh failed. Re-authentication required.');
           keycloakMock.login();
         });

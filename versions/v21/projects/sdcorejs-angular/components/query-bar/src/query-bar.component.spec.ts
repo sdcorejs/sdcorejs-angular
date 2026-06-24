@@ -134,9 +134,7 @@ describe('SdQueryBar', () => {
       component.pickBuildOperator('CONTAIN');
       component.commitBuildValue('abc');
       expect(component.building()).toBeNull();
-      expect(component.filters()).toEqual([
-        jasmine.objectContaining({ field: 'name', operator: 'CONTAIN', data: 'abc' }),
-      ]);
+      expect(component.filters()).toEqual([jasmine.objectContaining({ field: 'name', operator: 'CONTAIN', data: 'abc' })]);
     });
 
     it('cancelBuild discards the in-progress chip', () => {
@@ -158,9 +156,7 @@ describe('SdQueryBar', () => {
       // single allowed operator IN → build skips operator step
       expect(component.building()?.operator).toBe('IN');
       component.commitBuildValue('a');
-      expect(component.filters()[0]).toEqual(
-        jasmine.objectContaining({ field: 'status', operator: 'IN', data: ['a'] }),
-      );
+      expect(component.filters()[0]).toEqual(jasmine.objectContaining({ field: 'status', operator: 'IN', data: ['a'] }));
     });
   });
 
@@ -176,9 +172,7 @@ describe('SdQueryBar', () => {
     it('updateFilter changes only data, keeps operator/field', () => {
       seedOneChip();
       component.updateFilter(0, { data: 'xyz' } as any);
-      expect(component.filters()[0]).toEqual(
-        jasmine.objectContaining({ field: 'name', operator: 'CONTAIN', data: 'xyz' }),
-      );
+      expect(component.filters()[0]).toEqual(jasmine.objectContaining({ field: 'name', operator: 'CONTAIN', data: 'xyz' }));
     });
 
     it('build / edit / remove do NOT emit queryChange; Search emits apply once', () => {
@@ -326,7 +320,6 @@ describe('SdQueryBar', () => {
       expect(queryChange).toHaveBeenCalledTimes(1);
       expect(apply).toHaveBeenCalledTimes(1);
     });
-
   });
 
   describe('search trigger button', () => {
@@ -377,7 +370,10 @@ describe('SdQueryBar', () => {
   describe('compact inline value editing', () => {
     const textField = { key: 'name', label: 'Name', type: 'string', operators: true } as SdQueryField;
     const valuesField = {
-      key: 'status', label: 'Status', type: 'values', operators: ['IN'],
+      key: 'status',
+      label: 'Status',
+      type: 'values',
+      operators: ['IN'],
       option: { items: [{ id: 'a', name: 'A' }], valueField: 'id', displayField: 'name' },
     } as unknown as SdQueryField;
 
@@ -414,7 +410,10 @@ describe('SdQueryBar', () => {
       // why: completed values chip dùng sd-select [viewed]="'inline'" — idle hiển thị
       // view-text (.sd-inline-view), bare editor chỉ xuất hiện khi click (không .sd-bare lúc idle).
       const field = {
-        key: 'status', label: 'Status', type: 'values', operators: ['IN'],
+        key: 'status',
+        label: 'Status',
+        type: 'values',
+        operators: ['IN'],
         option: { items: [{ id: 'a', name: 'A' }], valueField: 'id', displayField: 'name' },
       } as unknown as SdQueryField;
       fixture.componentRef.setInput('mode', 'inline');
@@ -530,7 +529,6 @@ describe('SdQueryBar', () => {
       expect((component.filters()[0] as any).data).toEqual({ from: '2024-02-01', to: '2024-02-28' });
     });
   });
-
 });
 
 describe('SdQueryBar (extras)', () => {
@@ -548,8 +546,18 @@ describe('SdQueryBar (extras)', () => {
 
   describe('inline chip alignment + bare select selected display', () => {
     const valuesField = {
-      key: 'status', label: 'Status', type: 'values', operators: ['EQUAL'],
-      option: { items: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }], valueField: 'id', displayField: 'name' },
+      key: 'status',
+      label: 'Status',
+      type: 'values',
+      operators: ['EQUAL'],
+      option: {
+        items: [
+          { id: 'a', name: 'Alpha' },
+          { id: 'b', name: 'Beta' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
 
     it('a completed values chip renders an inline-mode sd-select inside the token', () => {
@@ -567,8 +575,18 @@ describe('SdQueryBar (extras)', () => {
 
   describe('inline chip edit lifecycle (now owned by <sd-query-inline-chip>)', () => {
     const valuesField = {
-      key: 'status', label: 'Status', type: 'values', operators: ['EQUAL'],
-      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+      key: 'status',
+      label: 'Status',
+      type: 'values',
+      operators: ['EQUAL'],
+      option: {
+        items: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
 
     beforeEach(() => {
@@ -602,8 +620,18 @@ describe('SdQueryBar (extras)', () => {
 
   describe('inline chip viewed mode + clear-icon hidden', () => {
     const valuesField = {
-      key: 'status', label: 'Status', type: 'values', operators: ['EQUAL'],
-      option: { items: [{ id: 'a', name: 'Alpha' }, { id: 'b', name: 'Beta' }], valueField: 'id', displayField: 'name' },
+      key: 'status',
+      label: 'Status',
+      type: 'values',
+      operators: ['EQUAL'],
+      option: {
+        items: [
+          { id: 'a', name: 'Alpha' },
+          { id: 'b', name: 'Beta' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
     const dateField = { key: 'created', label: 'Created', type: 'date', operators: ['EQUAL'] } as unknown as SdQueryField;
     const dtField = { key: 'updatedAt', label: 'Updated', type: 'datetime', operators: ['EQUAL'] } as unknown as SdQueryField;
@@ -657,14 +685,18 @@ describe('SdQueryBar (extras)', () => {
 
   describe('chip multi sd-select "head +N" view', () => {
     const valuesField = {
-      key: 'depts', label: 'Departments', type: 'values', operators: ['IN'],
+      key: 'depts',
+      label: 'Departments',
+      type: 'values',
+      operators: ['IN'],
       option: {
         items: [
           { id: 'a', name: 'Alpha' },
           { id: 'b', name: 'Beta' },
           { id: 'c', name: 'Gamma' },
         ],
-        valueField: 'id', displayField: 'name',
+        valueField: 'id',
+        displayField: 'name',
       },
     } as unknown as SdQueryField;
 

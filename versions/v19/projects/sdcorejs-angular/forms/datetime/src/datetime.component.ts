@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { CommonModule } from '@angular/common';
@@ -34,7 +32,16 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SD_FORM_CONFIGURATION,
+  SdFormControl,
+  SdInlineErrorValidator,
+  sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
@@ -123,7 +130,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   // 3. SIGNAL INPUTS & MODEL
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  autoId = computed(() => this.autoIdInput() ? `forms-datetime-${this.autoIdInput()}` : undefined);
+  autoId = computed(() => (this.autoIdInput() ? `forms-datetime-${this.autoIdInput()}` : undefined));
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
@@ -192,8 +199,14 @@ export class SdDatetime implements OnDestroy, OnInit {
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.datetime.required');
-    if (errors['matDatepickerMin']) { const d = this.resolvedMin(); return this.#i18n.t('core.form.datetime.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' }); }
-    if (errors['matDatepickerMax']) { const d = this.resolvedMax(); return this.#i18n.t('core.form.datetime.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' }); }
+    if (errors['matDatepickerMin']) {
+      const d = this.resolvedMin();
+      return this.#i18n.t('core.form.datetime.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+    }
+    if (errors['matDatepickerMax']) {
+      const d = this.resolvedMax();
+      return this.#i18n.t('core.form.datetime.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+    }
     if (errors['date']) return errors['date'] as string;
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
@@ -263,9 +276,7 @@ export class SdDatetime implements OnDestroy, OnInit {
           this.#date = val;
           // Cập nhật formControl với chuỗi hiển thị dd/MM/yyyy HH:mm
           const fmt = this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm';
-          const displayStr = DateUtilities.isDate(this.#date)
-            ? DateUtilities.toFormat(this.#date, fmt)
-            : null;
+          const displayStr = DateUtilities.isDate(this.#date) ? DateUtilities.toFormat(this.#date, fmt) : null;
           this.formControl.setValue(displayStr, { emitEvent: false });
         }
       });

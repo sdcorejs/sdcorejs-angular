@@ -35,9 +35,9 @@ describe('SdOperator', () => {
       const sanitizer = TestBed.inject(DomSanitizer);
 
       const items = component.items();
-      expect(items.map((i) => i.value)).toEqual(['CONTAIN', 'EQUAL']);
+      expect(items.map(i => i.value)).toEqual(['CONTAIN', 'EQUAL']);
 
-      const containEntry = OPERATORS.find((o) => o.value === 'CONTAIN')!;
+      const containEntry = OPERATORS.find(o => o.value === 'CONTAIN')!;
       expect(html(sanitizer, items[0].icon)).toContain('<svg');
       expect(html(sanitizer, items[0].icon)).toContain(containEntry.icon.slice(0, 12));
       expect(items[0].display).toBeTruthy();
@@ -46,7 +46,7 @@ describe('SdOperator', () => {
     it('skips operators not present in OPERATORS', () => {
       fixture.componentRef.setInput('operators', ['EQUAL', 'NOT_A_REAL_OP' as any]);
       fixture.detectChanges();
-      expect(component.items().map((i) => i.value)).toEqual(['EQUAL']);
+      expect(component.items().map(i => i.value)).toEqual(['EQUAL']);
     });
 
     it('translates the display i18n key via I18nService (does not leak the raw key)', () => {
@@ -54,7 +54,7 @@ describe('SdOperator', () => {
       fixture.componentRef.setInput('operators', ['EQUAL']);
       fixture.detectChanges();
       const i18n = TestBed.inject(I18nService);
-      const equalEntry = OPERATORS.find((o) => o.value === 'EQUAL')!;
+      const equalEntry = OPERATORS.find(o => o.value === 'EQUAL')!;
       expect(equalEntry.display).toContain('core.operator'); // sanity: utils ships an i18n key
       expect(component.items()[0].display).toBe(i18n.t(equalEntry.display));
       expect(component.items()[0].display).not.toBe(equalEntry.display);
@@ -68,7 +68,7 @@ describe('SdOperator', () => {
       fixture.detectChanges();
       const sanitizer = TestBed.inject(DomSanitizer);
 
-      const equal = OPERATORS.find((o) => o.value === 'EQUAL')!;
+      const equal = OPERATORS.find(o => o.value === 'EQUAL')!;
       expect(html(sanitizer, component.currentIcon())).toContain(equal.icon.slice(0, 12));
       expect(component.currentLabel()).toBe(component.items()[0].display);
     });
@@ -145,7 +145,7 @@ describe('SdOperator', () => {
       const rows = panel.querySelectorAll('.c-op-row');
       expect(rows.length).toBe(3);
 
-      const codes = Array.from(panel.querySelectorAll('.c-op-code')).map((n) => n.textContent?.trim());
+      const codes = Array.from(panel.querySelectorAll('.c-op-code')).map(n => n.textContent?.trim());
       expect(codes).toEqual(['EQUAL', 'NOT_EQUAL', 'CONTAIN']);
     });
 

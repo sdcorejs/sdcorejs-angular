@@ -1,14 +1,5 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  ElementRef,
-  HostListener,
-  inject,
-  input,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, inject, input, viewChild } from '@angular/core';
 
 import { SdTab } from '../../models/tab-router.model';
 import { SdTabRouterItemComponent } from '../tab-router-item/tab-router-item.component';

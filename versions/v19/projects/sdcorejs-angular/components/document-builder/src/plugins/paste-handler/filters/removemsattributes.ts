@@ -15,42 +15,38 @@ import { ViewUpcastWriter, type ViewDocumentFragment, type ViewElement } from 'c
  * @param documentFragment element `data.content` obtained from clipboard.
  * @internal
  */
-export function removeMSAttributes( documentFragment: ViewDocumentFragment ): void {
-	const elementsToUnwrap: Array<ViewElement> = [];
+export function removeMSAttributes(documentFragment: ViewDocumentFragment): void {
+  const elementsToUnwrap: ViewElement[] = [];
 
-	const writer = new ViewUpcastWriter( documentFragment.document );
+  const writer = new ViewUpcastWriter(documentFragment.document);
 
-	for ( const { item } of writer.createRangeIn( documentFragment ) ) {
-		if ( !item.is( 'element' ) ) {
-			continue;
-		}
+  for (const { item } of writer.createRangeIn(documentFragment)) {
+    if (!item.is('element')) {
+      continue;
+    }
 
-		for ( const className of item.getClassNames() ) {
-			if ( /\bmso/gi.exec( className ) ) {
-				writer.removeClass( className, item );
-			}
-		}
+    for (const className of item.getClassNames()) {
+      if (/\bmso/gi.exec(className)) {
+        writer.removeClass(className, item);
+      }
+    }
 
-		for ( const styleName of item.getStyleNames() ) {
-			if ( /\bmso/gi.exec( styleName ) ) {
-				writer.removeStyle( styleName, item );
-			}
-		}
+    for (const styleName of item.getStyleNames()) {
+      if (/\bmso/gi.exec(styleName)) {
+        writer.removeStyle(styleName, item);
+      }
+    }
 
-		if (
-			item.is( 'element', 'w:sdt' ) ||
-			item.is( 'element', 'w:sdtpr' ) && item.isEmpty ||
-			item.is( 'element', 'o:p' ) && item.isEmpty
-		) {
-			elementsToUnwrap.push( item );
-		}
-	}
+    if (item.is('element', 'w:sdt') || (item.is('element', 'w:sdtpr') && item.isEmpty) || (item.is('element', 'o:p') && item.isEmpty)) {
+      elementsToUnwrap.push(item);
+    }
+  }
 
-	for ( const item of elementsToUnwrap ) {
-		const itemParent = item.parent!;
-		const childIndex = itemParent.getChildIndex( item );
+  for (const item of elementsToUnwrap) {
+    const itemParent = item.parent!;
+    const childIndex = itemParent.getChildIndex(item);
 
-		writer.insertChild( childIndex, item.getChildren(), itemParent );
-		writer.remove( item );
-	}
+    writer.insertChild(childIndex, item.getChildren(), itemParent);
+    writer.remove(item);
+  }
 }

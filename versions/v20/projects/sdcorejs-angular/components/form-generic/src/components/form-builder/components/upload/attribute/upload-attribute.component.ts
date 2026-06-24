@@ -1,6 +1,11 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject } from '@angular/core';
-import { SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericUpload, SdFormGenericVariable } from '../../../../../models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  SdFormatComponent,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormGenericUpload,
+  SdFormGenericVariable,
+} from '../../../../../models';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
 import { AttributeSelect } from '../../attribute-select/attribute-select.component';
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
@@ -17,9 +22,18 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
   selector: 'upload-attribute',
   templateUrl: './upload-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeInputNumber, AttributeSwitch, AttributeSelect, AttributeExpression , AttributeParameter, TranslatePipe],
+  imports: [
+    AttributeTemplate,
+    AttributeInput,
+    AttributeInputNumber,
+    AttributeSwitch,
+    AttributeSelect,
+    AttributeExpression,
+    AttributeParameter,
+    TranslatePipe,
+  ],
 })
-export class UploadAttribute {
+export class UploadAttribute implements AfterViewInit, OnDestroy {
   form = new FormGroup({});
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];
@@ -37,16 +51,20 @@ export class UploadAttribute {
   sources: {
     value: 'ALL' | 'PHOTO_LIBRARY' | 'CAPTURE';
     display: string;
-  }[] = [{
-    value: 'ALL',
-    display: this.#i18n.t('core.component.form-builder.upload-source.all')
-  },{
-    value: 'PHOTO_LIBRARY',
-    display: this.#i18n.t('core.component.form-builder.upload-source.photo-library')
-  },{
-    value: 'CAPTURE',
-    display: this.#i18n.t('core.component.form-builder.upload-source.capture')
-  }];
+  }[] = [
+    {
+      value: 'ALL',
+      display: this.#i18n.t('core.component.form-builder.upload-source.all'),
+    },
+    {
+      value: 'PHOTO_LIBRARY',
+      display: this.#i18n.t('core.component.form-builder.upload-source.photo-library'),
+    },
+    {
+      value: 'CAPTURE',
+      display: this.#i18n.t('core.component.form-builder.upload-source.capture'),
+    },
+  ];
   constructor(
     private ref: ChangeDetectorRef,
     private builderService: BuilderService

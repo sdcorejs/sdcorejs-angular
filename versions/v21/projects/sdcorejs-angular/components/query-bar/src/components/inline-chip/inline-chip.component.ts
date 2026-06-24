@@ -1,13 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  output,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
@@ -43,18 +35,9 @@ type Density = 'compact' | 'comfortable';
   styleUrl: './inline-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    MatIconModule,
-    SdOperator,
-    SdDate,
-    SdDateRange,
-    SdDatetime,
-    SdSelect,
-  ],
+  imports: [CommonModule, MatIconModule, SdOperator, SdDate, SdDateRange, SdDatetime, SdSelect],
 })
 export class SdQueryInlineChip {
-
   // ---------------------------------------------------------------------------
   // Inputs
   // ---------------------------------------------------------------------------

@@ -15,10 +15,10 @@ import type { ViewUpcastWriter, ViewDocumentFragment } from 'ckeditor5';
  * @param documentFragment element `data.content` obtained from clipboard
  * @internal
  */
-export function removeStyleBlock( documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter ): void {
-	for ( const child of Array.from( documentFragment.getChildren() ) ) {
-		if ( child.is( 'element', 'style' ) ) {
-			writer.remove( child );
-		}
-	}
+export function removeStyleBlock(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): void {
+  for (const child of Array.from(documentFragment.getChildren())) {
+    if (child.is('element', 'style')) {
+      writer.remove(child);
+    }
+  }
 }

@@ -28,12 +28,7 @@ describe('SdItemDefDefDirective', () => {
   });
 
   it('ngTemplateContextGuard always narrows to the Context shape', () => {
-    expect(
-      SdItemDefDefDirective.ngTemplateContextGuard(
-        {} as SdItemDefDefDirective<unknown>,
-        { item: 'x', $implicit: 'x' },
-      ),
-    ).toBe(true);
+    expect(SdItemDefDefDirective.ngTemplateContextGuard({} as SdItemDefDefDirective<unknown>, { item: 'x', $implicit: 'x' })).toBe(true);
     // Returns true regardless of ctx shape (compile-time guard only).
     expect(SdItemDefDefDirective.ngTemplateContextGuard({} as SdItemDefDefDirective<unknown>, null)).toBe(true);
   });

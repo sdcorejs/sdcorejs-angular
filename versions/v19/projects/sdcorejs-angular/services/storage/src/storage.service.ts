@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Inject, Injectable, Optional } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
@@ -88,7 +87,7 @@ export class SdStorageService {
       setSilent,
       has,
       remove,
-      // @ts-ignore: Bổ sung vào interface nếu cần
+      // @ts-expect-error: Bổ sung vào interface nếu cần
       destroy,
       subject: subject,
       observer: subject.asObservable().pipe(map(() => get())),
@@ -121,7 +120,7 @@ export class SdStorageService {
           // Convert string date back to Date object nếu cần
           entry = {
             data: parsed.data,
-            createdOn: new Date(parsed.createdOn)
+            createdOn: new Date(parsed.createdOn),
           };
           // Sync ngược vào RAM
           this.#memoryCache.set(key, entry);

@@ -4,14 +4,13 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
-  Inject,
   Input,
   OnDestroy,
   OnInit,
   Output,
   ViewChild,
 } from '@angular/core';
-import { FormGroup, NgForm } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
 // import * as hash from 'object-hash';
@@ -29,7 +28,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
   templateUrl: './generic-select.component.html',
   styleUrls: ['generic-select.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdSelect, TranslatePipe]
+  imports: [SdAutocomplete, SdSelect, TranslatePipe],
 })
 export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(SdAutocomplete) autocomplete?: SdAutocomplete;
@@ -306,7 +305,7 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
   };
 
   items = async (searchText?: any | any[], isFormValue?: boolean): Promise<any[]> => {
-    let query = {
+    const query = {
       ...this.query,
       // Nếu là multiple thì chỉ load giá trị
       ...(this.relationMappedTo &&

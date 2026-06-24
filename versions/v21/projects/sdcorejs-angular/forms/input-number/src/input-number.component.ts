@@ -42,13 +42,12 @@ import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
-import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
+import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import {
   HandleSdCustomValidator,
-  ISdFormConfiguration,
   SD_FORM_CONFIGURATION,
   SdCustomValidator,
   SdFormControl,
@@ -368,7 +367,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (fmt === '1.234.567,89') {
       return NumberUtilities.toVN((text?.toString() || '').replace(/\./g, ''));
     } else {
-      return NumberUtilities.toISO((text?.toString() || '').replace(/\,/g, ''));
+      return NumberUtilities.toISO((text?.toString() || '').replace(/,/g, ''));
     }
   };
 

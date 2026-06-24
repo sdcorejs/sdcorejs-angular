@@ -237,7 +237,6 @@ describe('SdInform', () => {
 
   describe('line clamp + toggle', () => {
     function stubBody(fix: ComponentFixture<SdInform>, scrollHeight: number, clientHeight: number) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (fix.componentInstance as any).bodyRef = () => ({
         nativeElement: { scrollHeight, clientHeight } as unknown as HTMLElement,
       });

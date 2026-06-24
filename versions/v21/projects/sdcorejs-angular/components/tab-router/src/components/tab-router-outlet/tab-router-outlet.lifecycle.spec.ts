@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Lifecycle invariants for sd-tab-router-outlet.
  *
@@ -8,18 +7,11 @@
  * NOT re-instantiate. If the tab is closed we MUST run ngOnDestroy so
  * subscriptions/intervals inside the tab body do not leak.
  */
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import {
-  NavigationEnd,
-  Router,
-  RoutesRecognized,
-  Scroll,
-  provideRouter,
-  withInMemoryScrolling,
-} from '@angular/router';
+import { NavigationEnd, Router, RoutesRecognized, Scroll, provideRouter, withInMemoryScrolling } from '@angular/router';
 
 import { SdTabRouterOutletComponent } from './tab-router-outlet.component';
 import { SdTabRouterService } from '../../services/tab-router.service';
@@ -40,16 +32,28 @@ const counters = {
 
 @Component({ standalone: true, template: '<span data-cy="page-a">page A</span>' })
 class PageAComponent implements OnInit, OnDestroy {
-  constructor() { counters.pageA.ctor++; }
-  ngOnInit(): void { counters.pageA.init++; }
-  ngOnDestroy(): void { counters.pageA.destroy++; }
+  constructor() {
+    counters.pageA.ctor++;
+  }
+  ngOnInit(): void {
+    counters.pageA.init++;
+  }
+  ngOnDestroy(): void {
+    counters.pageA.destroy++;
+  }
 }
 
 @Component({ standalone: true, template: '<span>page B</span>' })
 class PageBComponent implements OnInit, OnDestroy {
-  constructor() { counters.pageB.ctor++; }
-  ngOnInit(): void { counters.pageB.init++; }
-  ngOnDestroy(): void { counters.pageB.destroy++; }
+  constructor() {
+    counters.pageB.ctor++;
+  }
+  ngOnInit(): void {
+    counters.pageB.init++;
+  }
+  ngOnDestroy(): void {
+    counters.pageB.destroy++;
+  }
 }
 
 @Component({
@@ -86,14 +90,13 @@ describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
             { path: 'a', component: PageAComponent },
             { path: 'b', component: PageBComponent },
           ],
-          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
         ),
         SdTabRouterService,
         SdTabDecoratorService,
         {
           provide: SdNotifyService,
-          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(),
-            error: jasmine.createSpy(), info: jasmine.createSpy() },
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(), error: jasmine.createSpy(), info: jasmine.createSpy() },
         },
         { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
       ],
@@ -105,8 +108,7 @@ describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
 
     await settle(fixture);
 
-    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
   });
 
   it('instantiates page exactly once on first navigation (even with withInMemoryScrolling enabled)', async () => {
@@ -235,14 +237,13 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
             { path: '', redirectTo: 'a', pathMatch: 'full' },
             { path: 'a', component: PageAComponent },
           ],
-          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' }),
+          withInMemoryScrolling({ scrollPositionRestoration: 'enabled' })
         ),
         SdTabRouterService,
         SdTabDecoratorService,
         {
           provide: SdNotifyService,
-          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(),
-            error: jasmine.createSpy(), info: jasmine.createSpy() },
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(), error: jasmine.createSpy(), info: jasmine.createSpy() },
         },
         { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
       ],
@@ -277,8 +278,7 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     const lateFixture = TestBed.createComponent(HostComponent);
     await settle(lateFixture);
 
-    const outlet = lateFixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    const outlet = lateFixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
 
     expect(outlet.tabs().length).toBe(1);
     expect(outlet.tabs()[0].url).toBe('/a');
@@ -297,8 +297,7 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     await router.navigateByUrl('/a');
     await settle(fixture);
 
-    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
     expect(outlet.tabs().length).toBe(1);
     expect(counters.pageA.ctor).toBe(1);
   });
@@ -308,8 +307,7 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     await router.navigateByUrl('/a?x=1');
     const fixture = TestBed.createComponent(HostComponent);
     await settle(fixture);
-    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
 
     expect(outlet.tabs().length).toBe(1);
     expect(outlet.tabs()[0].url).toBe('/a');
@@ -330,10 +328,14 @@ describe('SdTabRouterOutletComponent — initial navigation (F5 / direct URL)', 
     await router.navigateByUrl('/a?x=2');
     await settle(fixture);
 
-    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    const outlet = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
     expect(outlet.tabs().length).toBe(2);
-    expect(outlet.tabs().map(t => t.queryParams?.['x']).sort()).toEqual(['1', '2']);
+    expect(
+      outlet
+        .tabs()
+        .map(t => t.queryParams?.['x'])
+        .sort()
+    ).toEqual(['1', '2']);
     expect(counters.pageA.ctor).toBe(2);
   });
 });

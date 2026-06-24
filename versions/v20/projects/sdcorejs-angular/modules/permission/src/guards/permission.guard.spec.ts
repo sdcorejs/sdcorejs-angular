@@ -69,7 +69,9 @@ describe('SdPermissionGuard', () => {
       const permSvc = makePermissionService(false);
       // Return a rejection that has an attached catch so zone.js does not flag it as unhandled
       const rejectedPromise = Promise.reject(new Error('load failed'));
-      rejectedPromise.catch(() => { /* swallowed — the guard's own .catch handles it */ });
+      rejectedPromise.catch(() => {
+        /* swallowed — the guard's own .catch handles it */
+      });
       permSvc.loadAllPermissions.and.returnValue(rejectedPromise);
       const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
 
@@ -107,10 +109,7 @@ describe('SdPermissionGuard', () => {
       const permSvc = makePermissionService(true);
       const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
 
-      const result = await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_A' }),
-        stateSnap
-      );
+      const result = await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_A' }), stateSnap);
       expect(result).toBeTrue();
     });
 
@@ -118,10 +117,7 @@ describe('SdPermissionGuard', () => {
       const permSvc = makePermissionService(true);
       const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
 
-      await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_A', permissionKey: 'pcm' }),
-        stateSnap
-      );
+      await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_A', permissionKey: 'pcm' }), stateSnap);
       expect(permSvc.hasPermission).toHaveBeenCalledWith('PERM_A', 'pcm');
     });
 
@@ -129,10 +125,7 @@ describe('SdPermissionGuard', () => {
       const permSvc = makePermissionService(false);
       const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
 
-      const result = await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_DENIED' }),
-        stateSnap
-      );
+      const result = await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_DENIED' }), stateSnap);
       expect(result).toBeFalse();
     });
 
@@ -145,10 +138,7 @@ describe('SdPermissionGuard', () => {
       };
       const guard = makeGuard(config, permSvc);
 
-      await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_DENIED' }),
-        stateSnap
-      );
+      await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_DENIED' }), stateSnap);
       expect(onForbidenSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -161,10 +151,7 @@ describe('SdPermissionGuard', () => {
       };
       const guard = makeGuard(config, permSvc);
 
-      await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_OK' }),
-        stateSnap
-      );
+      await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_OK' }), stateSnap);
       expect(onForbidenSpy).not.toHaveBeenCalled();
     });
 
@@ -178,10 +165,7 @@ describe('SdPermissionGuard', () => {
       ];
       const guard = makeGuard(configs, permSvc);
 
-      await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_DENIED', permissionKey: 'pcm' }),
-        stateSnap
-      );
+      await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_DENIED', permissionKey: 'pcm' }), stateSnap);
       expect(pcmForbiden).toHaveBeenCalledTimes(1);
       expect(portalForbiden).not.toHaveBeenCalled();
     });
@@ -195,10 +179,7 @@ describe('SdPermissionGuard', () => {
       const guard = makeGuard(config, permSvc);
 
       // Should not throw
-      const result = await guard.canActivateChild(
-        makeRouteSnap({ permission: 'PERM_DENIED' }),
-        stateSnap
-      );
+      const result = await guard.canActivateChild(makeRouteSnap({ permission: 'PERM_DENIED' }), stateSnap);
       expect(result).toBeFalse();
     });
 
@@ -206,10 +187,7 @@ describe('SdPermissionGuard', () => {
       const permSvc = makePermissionService(true);
       const guard = makeGuard({ loadPermissions: () => [] }, permSvc);
 
-      const result = await guard.canActivateChild(
-        makeRouteSnap({ permission: ['PERM_A', 'PERM_B'] }),
-        stateSnap
-      );
+      const result = await guard.canActivateChild(makeRouteSnap({ permission: ['PERM_A', 'PERM_B'] }), stateSnap);
       expect(result).toBeTrue();
       expect(permSvc.hasPermission).toHaveBeenCalledWith(['PERM_A', 'PERM_B'], undefined);
     });

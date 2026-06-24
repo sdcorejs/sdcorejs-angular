@@ -1,4 +1,21 @@
-import { afterNextRender, booleanAttribute, Component, ComponentRef, computed, contentChildren, createComponent, DestroyRef, effect, ElementRef, EnvironmentInjector, inject, Injector, input, numberAttribute, output } from '@angular/core';
+import {
+  afterNextRender,
+  booleanAttribute,
+  Component,
+  ComponentRef,
+  computed,
+  contentChildren,
+  createComponent,
+  DestroyRef,
+  effect,
+  ElementRef,
+  EnvironmentInjector,
+  inject,
+  Injector,
+  input,
+  numberAttribute,
+  output,
+} from '@angular/core';
 import { SdSplitterHandleComponent } from './splitter-handle/splitter-handle.component';
 import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
 import { ResolvedPanelMeta, SdSplitterOption, SplitterLayoutState, SplitterOrientation } from './splitter.models';
@@ -12,7 +29,7 @@ import { SdStorageService } from '@sdcorejs/angular/services/storage';
   styleUrls: ['./splitter.component.scss'],
   providers: [SplitterStateService],
   host: {
-    'class': 'sd-splitter',
+    class: 'sd-splitter',
     '[class.sd-splitter--horizontal]': 'resolvedOrientation() === "horizontal"',
     '[class.sd-splitter--vertical]': 'resolvedOrientation() === "vertical"',
     '[class.sd-splitter--disabled]': 'resolvedDisabled()',
@@ -72,7 +89,7 @@ export class SdSplitterComponent {
       const layout = this.#state.committedLayout();
       const handle = this.#storageHandle();
       if (handle && layout.panels.length > 0) {
-        handle.setSilent(layout);   // setSilent: không emit qua storage subject
+        handle.setSilent(layout); // setSilent: không emit qua storage subject
       }
     });
 
@@ -141,7 +158,7 @@ export class SdSplitterComponent {
       const keyboardStep = this.resolvedKeyboardStep();
       afterNextRender(
         () => this.#syncHandles(panelCount, orientation, disabled, keyboardStep),
-        { injector: this.#injector }   // component-scoped → auto-cancel khi component destroy
+        { injector: this.#injector } // component-scoped → auto-cancel khi component destroy
       );
     });
 

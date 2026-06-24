@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TemplateRef } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
@@ -44,7 +43,6 @@ export interface SdTableFilterRequest<T = any> {
   visibledColumns?: SdTableColumn[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
 export interface SdTableOptionFilter<T = any> {
   /** Key định danh nếu muốn lưu cache */
   key?: string;

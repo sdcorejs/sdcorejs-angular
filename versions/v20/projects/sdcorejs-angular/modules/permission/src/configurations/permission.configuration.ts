@@ -16,9 +16,9 @@ import { MaybeAsync } from '@sdcorejs/utils/models';
 export interface ISdPermissionConfiguration {
   /**
    * Khóa định danh cấu hình.
-    * Dùng để phân biệt khi hệ thống mở rộng theo nhiều profile permission.
-    *
-    * Lưu ý: `undefined` cũng được xem là một key hợp lệ (cấu hình mặc định).
+   * Dùng để phân biệt khi hệ thống mở rộng theo nhiều profile permission.
+   *
+   * Lưu ý: `undefined` cũng được xem là một key hợp lệ (cấu hình mặc định).
    */
   key?: string;
 
@@ -66,5 +66,6 @@ export interface ISdPermissionConfiguration {
  *   }
  * }
  */
-export const SD_PERMISSION_CONFIGURATION =
-  new InjectionToken<ISdPermissionConfiguration | ISdPermissionConfiguration[]>('sd-permission.configuration');
+export const SD_PERMISSION_CONFIGURATION = new InjectionToken<ISdPermissionConfiguration | ISdPermissionConfiguration[]>(
+  'sd-permission.configuration'
+);

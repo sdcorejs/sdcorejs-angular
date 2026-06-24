@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { SdSearch } from '@sdcorejs/angular/forms/models';
 import { SdFormGenericArgs } from './form-render/form-render-args.model';
 

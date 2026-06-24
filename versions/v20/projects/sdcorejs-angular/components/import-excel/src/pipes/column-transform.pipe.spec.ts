@@ -11,7 +11,7 @@ describe('ColumnTransformPipe', () => {
 
   const makeItem = <T extends Record<string, any>>(
     data: T,
-    overrides: Partial<SdImportExcelItem<T>['meta']> = {},
+    overrides: Partial<SdImportExcelItem<T>['meta']> = {}
   ): SdImportExcelItem<T> => ({
     data,
     meta: {
@@ -30,10 +30,7 @@ describe('ColumnTransformPipe', () => {
     sanitizer.bypassSecurityTrustHtml.and.returnValue(SAFE_HTML as any);
 
     TestBed.configureTestingModule({
-      providers: [
-        ColumnTransformPipe,
-        { provide: DomSanitizer, useValue: sanitizer },
-      ],
+      providers: [ColumnTransformPipe, { provide: DomSanitizer, useValue: sanitizer }],
     });
     pipe = TestBed.inject(ColumnTransformPipe);
   });
@@ -61,7 +58,9 @@ describe('ColumnTransformPipe', () => {
   describe('custom transform branch', () => {
     it('invokes sync transform with (data, value) and returns its result', async () => {
       const col: SdUploadExcelColumn = {
-        field: 'x', title: 'X', type: 'string',
+        field: 'x',
+        title: 'X',
+        type: 'string',
         transform: (data, value) => `${data.x}=${value}`,
       };
       const item = makeItem({ x: 'a' });
@@ -70,7 +69,9 @@ describe('ColumnTransformPipe', () => {
 
     it('awaits async transform', async () => {
       const col: SdUploadExcelColumn = {
-        field: 'x', title: 'X', type: 'string',
+        field: 'x',
+        title: 'X',
+        type: 'string',
         transform: async (_data, value) => `async:${value}`,
       };
       const item = makeItem({ x: 'v' });
@@ -79,7 +80,9 @@ describe('ColumnTransformPipe', () => {
 
     it('returns "" when transform resolves to null/undefined', async () => {
       const col: SdUploadExcelColumn = {
-        field: 'x', title: 'X', type: 'string',
+        field: 'x',
+        title: 'X',
+        type: 'string',
         transform: () => null as any,
       };
       const item = makeItem({ x: 'v' });
@@ -88,7 +91,9 @@ describe('ColumnTransformPipe', () => {
 
     it('transform takes precedence over type formatting', async () => {
       const col: SdUploadExcelColumn = {
-        field: 'n', title: 'N', type: 'number',
+        field: 'n',
+        title: 'N',
+        type: 'number',
         transform: () => 'overridden',
       };
       const item = makeItem({ n: 1234 });

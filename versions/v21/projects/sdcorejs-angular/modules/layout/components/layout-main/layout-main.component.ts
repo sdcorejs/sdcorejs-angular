@@ -1,4 +1,4 @@
-import {Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, inject, input, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 
 // Import nội bộ trong module layout

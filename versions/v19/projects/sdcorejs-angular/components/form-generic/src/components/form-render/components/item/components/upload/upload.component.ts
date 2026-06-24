@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, ViewChild, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
@@ -15,7 +13,7 @@ import { SdFormGenericUpload } from '../../../../../../models';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, SdUploadFile],
 })
-export class UploadComponent implements OnDestroy {
+export class UploadComponent implements OnDestroy, OnInit {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @ViewChild(SdUploadFile) sdUploadFile?: SdUploadFile;
   @Input() form = new FormGroup({});
@@ -80,7 +78,6 @@ export class UploadComponent implements OnDestroy {
       })
     );
   }
-
 
   upload = async () => {
     return await this.sdUploadFile?.upload();

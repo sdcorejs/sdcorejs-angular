@@ -55,13 +55,24 @@ export class SdKeycloakService {
    * `'silent-renew'` | `'/silent-renew'` | `'silent-renew.html'` → `${origin}/silent-renew.html`.
    */
   private toPublicHtmlUrl(name: string): string {
-    const base = name.trim().replace(/^\/+/, '').replace(/\.html$/i, '');
+    const base = name
+      .trim()
+      .replace(/^\/+/, '')
+      .replace(/\.html$/i, '');
     return `${window.location.origin}/${base}.html`;
   }
 
   // Tiện ích nhanh cho Dev sử dụng
-  login() { return this.keycloak.login(); }
-  logout() { return this.keycloak.logout({ redirectUri: window.location.origin }); }
-  getToken() { return this.keycloak.token; }
-  getIsAuthenticated() { return this.keycloak.authenticated; }
+  login() {
+    return this.keycloak.login();
+  }
+  logout() {
+    return this.keycloak.logout({ redirectUri: window.location.origin });
+  }
+  getToken() {
+    return this.keycloak.token;
+  }
+  getIsAuthenticated() {
+    return this.keycloak.authenticated;
+  }
 }

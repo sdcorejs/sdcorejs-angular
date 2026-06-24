@@ -12,7 +12,7 @@ export class FormGenericService {
   constructor(
     @Inject(SD_FORM_GENERIC_CONFIGURATION)
     @Optional()
-    private readonly configuration: ISdFormGenericConfiguration,
+    private readonly configuration: ISdFormGenericConfiguration
   ) {}
 
   get selections() {

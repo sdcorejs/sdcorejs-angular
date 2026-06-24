@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { TestBed } from '@angular/core/testing';
 import { SdCacheService } from './cache.service';
 
@@ -94,7 +93,7 @@ describe('SdCacheService', () => {
 
   // ─── destroy() ────────────────────────────────────────────────────────────
 
-  it('destroy() completes the observer stream', (done) => {
+  it('destroy() completes the observer stream', done => {
     const cache = service.create<number>('key-destroy');
     cache.observer.subscribe({
       complete: () => {

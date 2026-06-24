@@ -141,10 +141,13 @@ describe('SdSplitterComponent — storage', () => {
 
   it('storageKey có và localStorage đã có state → restore khi init', async () => {
     const handle = storage.create<SplitterLayoutState>('test-splitter');
-    handle.set({ v: 1, panels: [
-      { id: 'a', size: 0.3, unit: 'flex', collapsed: false },
-      { id: 'b', size: 1.7, unit: 'flex', collapsed: false },
-    ]});
+    handle.set({
+      v: 1,
+      panels: [
+        { id: 'a', size: 0.3, unit: 'flex', collapsed: false },
+        { id: 'b', size: 1.7, unit: 'flex', collapsed: false },
+      ],
+    });
 
     const fixture = TestBed.createComponent(HostWithStorage);
     fixture.detectChanges();
@@ -219,7 +222,7 @@ describe('SdSplitterComponent — imperative API', () => {
     cmp.resizePanel('a', 99);
     cmp.resetLayout();
     const layout = cmp.getLayout();
-    expect(layout.panels.find(p => p.id === 'a')!.size).toBe(1);   // declared
+    expect(layout.panels.find(p => p.id === 'a')!.size).toBe(1); // declared
     expect(layout.panels.find(p => p.id === 'b')!.size).toBe(2);
     expect(layout.panels.find(p => p.id === 'c')!.size).toBe(1);
   });
@@ -243,9 +246,9 @@ describe('SdSplitterComponent — imperative API', () => {
   });
 
   it('resizePanel clamp theo min/max', () => {
-    cmp.resizePanel('b', 999);   // max 5
+    cmp.resizePanel('b', 999); // max 5
     expect(cmp.getLayout().panels.find(p => p.id === 'b')!.size).toBe(5);
-    cmp.resizePanel('a', 0);    // min 0.2
+    cmp.resizePanel('a', 0); // min 0.2
     expect(cmp.getLayout().panels.find(p => p.id === 'a')!.size).toBe(0.2);
   });
 
@@ -259,7 +262,8 @@ describe('SdSplitterComponent — outputs', () => {
     standalone: true,
     imports: [SdSplitterComponent, SdSplitterPanelComponent],
     template: `
-      <sd-splitter style="width:400px;height:200px;"
+      <sd-splitter
+        style="width:400px;height:200px;"
         (resizeEnd)="captured.resizeEnd.push($event)"
         (collapsedChange)="captured.collapsedChange.push($event)"
         (layoutChange)="captured.layoutChange.push($event)">
@@ -270,7 +274,9 @@ describe('SdSplitterComponent — outputs', () => {
   })
   class HostWithEvents {
     captured: { resizeEnd: any[]; collapsedChange: any[]; layoutChange: any[] } = {
-      resizeEnd: [], collapsedChange: [], layoutChange: []
+      resizeEnd: [],
+      collapsedChange: [],
+      layoutChange: [],
     };
   }
 

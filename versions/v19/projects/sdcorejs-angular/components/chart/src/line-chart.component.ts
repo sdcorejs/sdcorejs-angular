@@ -1,4 +1,15 @@
-import { ChangeDetectionStrategy, Component, ElementRef, InputSignal, OnDestroy, OnInit, effect, input, computed, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  InputSignal,
+  OnDestroy,
+  OnInit,
+  effect,
+  input,
+  computed,
+  viewChild,
+} from '@angular/core';
 import { Chart, ChartData, ChartOptions, Plugin, registerables } from 'chart.js';
 
 Chart.register(...registerables);
@@ -39,7 +50,7 @@ export class SdLineChartComponent implements OnInit, OnDestroy {
     effect(() => {
       const currentData = this.data();
       const currentOptions = this.options();
-      
+
       if (this.chart) {
         this.chart.data = currentData;
         if (currentOptions) {

@@ -26,52 +26,58 @@ export class TableCustom extends Plugin {
       // Xử lý data-column-widths từ colgroup preservation
       editor.conversion.for('upcast').attributeToAttribute({
         view: 'data-column-widths',
-        model: 'tableColumnWidth'
+        model: 'tableColumnWidth',
       });
       console.log('[TableCustom] Registered data-column-widths upcast converter');
 
       // Xử lý border-style: none cho tableCell - phải explicit set 'none'
-      dispatcher.on('element:td', (evt, data) => {
-        if (!data.modelRange || !data.viewItem) return;
+      dispatcher.on(
+        'element:td',
+        (evt, data) => {
+          if (!data.modelRange || !data.viewItem) return;
 
-        const viewElement = data.viewItem;
-        const borderStyle = viewElement.getStyle('border-style') ||
-                           this._parseBorderStyleFromShorthand(viewElement.getStyle('border'));
+          const viewElement = data.viewItem;
+          const borderStyle = viewElement.getStyle('border-style') || this._parseBorderStyleFromShorthand(viewElement.getStyle('border'));
 
-        // Nếu border-style là none hoặc border shorthand là none/0, explicit set 'none'
-        if (borderStyle === 'none' || borderStyle === 'hidden') {
-          for (const item of data.modelRange.getItems()) {
-            if (item.is('element', 'tableCell')) {
-              editor.model.change(writer => {
-                writer.setAttribute('tableCellBorderStyle', 'none', item);
-                // Khi border là none, set width về 0 để không có border
-                writer.setAttribute('tableCellBorderWidth', '0pt', item);
-              });
+          // Nếu border-style là none hoặc border shorthand là none/0, explicit set 'none'
+          if (borderStyle === 'none' || borderStyle === 'hidden') {
+            for (const item of data.modelRange.getItems()) {
+              if (item.is('element', 'tableCell')) {
+                editor.model.change(writer => {
+                  writer.setAttribute('tableCellBorderStyle', 'none', item);
+                  // Khi border là none, set width về 0 để không có border
+                  writer.setAttribute('tableCellBorderWidth', '0pt', item);
+                });
+              }
             }
           }
-        }
-      }, { priority: 'high' });
+        },
+        { priority: 'high' }
+      );
 
-      dispatcher.on('element:th', (evt, data) => {
-        if (!data.modelRange || !data.viewItem) return;
+      dispatcher.on(
+        'element:th',
+        (evt, data) => {
+          if (!data.modelRange || !data.viewItem) return;
 
-        const viewElement = data.viewItem;
-        const borderStyle = viewElement.getStyle('border-style') ||
-                           this._parseBorderStyleFromShorthand(viewElement.getStyle('border'));
+          const viewElement = data.viewItem;
+          const borderStyle = viewElement.getStyle('border-style') || this._parseBorderStyleFromShorthand(viewElement.getStyle('border'));
 
-        // Nếu border-style là none hoặc border shorthand là none/0, explicit set 'none'
-        if (borderStyle === 'none' || borderStyle === 'hidden') {
-          for (const item of data.modelRange.getItems()) {
-            if (item.is('element', 'tableCell')) {
-              editor.model.change(writer => {
-                writer.setAttribute('tableCellBorderStyle', 'none', item);
-                // Khi border là none, set width về 0 để không có border
-                writer.setAttribute('tableCellBorderWidth', '0pt', item);
-              });
+          // Nếu border-style là none hoặc border shorthand là none/0, explicit set 'none'
+          if (borderStyle === 'none' || borderStyle === 'hidden') {
+            for (const item of data.modelRange.getItems()) {
+              if (item.is('element', 'tableCell')) {
+                editor.model.change(writer => {
+                  writer.setAttribute('tableCellBorderStyle', 'none', item);
+                  // Khi border là none, set width về 0 để không có border
+                  writer.setAttribute('tableCellBorderWidth', '0pt', item);
+                });
+              }
             }
           }
-        }
-      }, { priority: 'high' });
+        },
+        { priority: 'high' }
+      );
     });
 
     const findInnerTable = (viewElement: any): any => {
@@ -183,7 +189,7 @@ export class TableCustom extends Plugin {
       'resizeTableRow',
       'resizeTableColumn',
       'setTableColumnWidth',
-      'tableColumnWidth'
+      'tableColumnWidth',
     ];
 
     tableCommands.forEach(cmdName => {
@@ -249,9 +255,11 @@ export class TableCustom extends Plugin {
     for (const row of tableElement.getChildren()) {
       for (const cell of row.getChildren()) {
         // Nếu cell đã có border attribute nào rồi thì bỏ qua
-        if (cell.hasAttribute('tableCellBorderStyle') ||
-            cell.hasAttribute('tableCellBorderColor') ||
-            cell.hasAttribute('tableCellBorderWidth')) {
+        if (
+          cell.hasAttribute('tableCellBorderStyle') ||
+          cell.hasAttribute('tableCellBorderColor') ||
+          cell.hasAttribute('tableCellBorderWidth')
+        ) {
           continue;
         }
 
@@ -316,8 +324,7 @@ export class TableCustom extends Plugin {
       }
 
       if (change.type === 'insert' && change.position) {
-        const tableElement = change.position.findAncestor?.('table') ||
-                            change.position.parent?.findAncestor?.('table');
+        const tableElement = change.position.findAncestor?.('table') || change.position.parent?.findAncestor?.('table');
         if (tableElement) tablesToFix.add(tableElement);
       }
     }

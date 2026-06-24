@@ -1,13 +1,11 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import {
   Attribute,
   GetAttributes,
   SdFormGenericComponent,
   SdFormGenericExpression,
   SdFormGenericGroup,
-  SdFormGenericVariable
+  SdFormGenericVariable,
 } from '../../../../models';
 import { FormGenericService } from '../../../../services';
 import { ExpressionBuilderComponent } from '../expression-builder/expression-builder.component';
@@ -20,7 +18,7 @@ import { ExpressionBuilderComponent } from '../expression-builder/expression-bui
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ExpressionBuilderComponent],
 })
-export class AttributeExpression {
+export class AttributeExpression implements OnInit {
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];
   attributes: Attribute[] = [];
@@ -44,7 +42,6 @@ export class AttributeExpression {
     this.attributes = await this.#getAttributes(this.components, this.variables);
     this.ref.markForCheck();
   };
- 
 
   onChange = (value: any) => {
     this.modelChange.emit(value);

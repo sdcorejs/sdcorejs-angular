@@ -1,11 +1,25 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
-import { GetComponentAttributes, GetVariableAttributes, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericVariable } from '../../../../../../../models';
+import {
+  GetComponentAttributes,
+  GetVariableAttributes,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormGenericVariable,
+} from '../../../../../../../models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
@@ -15,7 +29,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
 })
-export class BuildQueries {
+export class BuildQueries implements OnInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   @Input() label?: string;

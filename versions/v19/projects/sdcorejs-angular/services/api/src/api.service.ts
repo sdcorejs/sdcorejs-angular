@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
@@ -23,7 +22,7 @@ export class SdApiService {
 
   // Thay đổi cấu trúc Cache: Lưu Observable thay vì Subject phức tạp
   // Key: hash string -> Value: { stream$: Observable, expiry: number }
-  #inFlightRequests: Map<string, { stream$: Observable<any>; expiry: number }> = new Map();
+  #inFlightRequests = new Map<string, { stream$: Observable<any>; expiry: number }>();
 
   constructor() {
     // Optional: Cơ chế dọn dẹp cache định kỳ (mỗi 1 phút dọn dẹp các key hết hạn)

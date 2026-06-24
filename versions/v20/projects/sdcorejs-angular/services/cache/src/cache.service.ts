@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -68,16 +67,12 @@ export class SdCacheService {
       }
 
       // Cache miss -> Gọi API
-      try {
-        const result = await callback();
-        // Chỉ lưu nếu kết quả hợp lệ (khác undefined/null)
-        if (result !== undefined && result !== null) {
-          set(result);
-        }
-        return result;
-      } catch (error) {
-        throw error;
+      const result = await callback();
+      // Chỉ lưu nếu kết quả hợp lệ (khác undefined/null)
+      if (result !== undefined && result !== null) {
+        set(result);
       }
+      return result;
     };
 
     return {

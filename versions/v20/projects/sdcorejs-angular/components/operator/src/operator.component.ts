@@ -63,7 +63,7 @@ export class SdOperator {
   // phải dịch qua I18nService, nếu không UI hiện key thô (code) thay vì nhãn đã dịch.
   #resolve(value: Operator | undefined): { icon: string; display: string } | undefined {
     if (value == null) return undefined;
-    const entry = OPERATORS.find((o) => o.value === value);
+    const entry = OPERATORS.find(o => o.value === value);
     return entry ? { icon: entry.icon, display: this.#i18n.t(entry.display) } : undefined;
   }
 
@@ -71,7 +71,7 @@ export class SdOperator {
   // (nguồn là hằng số nội bộ, không phải input người dùng) để Angular không strip svg con.
   #svg(inner: string): SafeHtml {
     return this.#sanitizer.bypassSecurityTrustHtml(
-      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`,
+      `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`
     );
   }
 

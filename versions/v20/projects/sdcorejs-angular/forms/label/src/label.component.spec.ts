@@ -7,11 +7,7 @@ import { queryByCss } from '../../../testing/test-utils';
 @Component({
   standalone: true,
   imports: [SdLabel],
-  template: `<sd-label
-    [label]="label"
-    [description]="description"
-    [helperText]="helperText"
-    [required]="required"></sd-label>`,
+  template: `<sd-label [label]="label" [description]="description" [helperText]="helperText" [required]="required"></sd-label>`,
 })
 class HostComponent {
   label?: string | null = undefined;

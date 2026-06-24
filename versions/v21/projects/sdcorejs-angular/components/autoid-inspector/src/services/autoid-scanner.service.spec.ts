@@ -118,7 +118,7 @@ describe('SdAutoidScannerService', () => {
     expect(el.state.count).toBeUndefined();
   });
 
-  it('scan resolves tableScope to closest sd-table\'s data-autoid', () => {
+  it("scan resolves tableScope to closest sd-table's data-autoid", () => {
     root.innerHTML = `
       <sd-table data-autoid="components-table-employees">
         <input data-autoid="forms-input-search"/>

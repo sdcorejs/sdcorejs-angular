@@ -16,12 +16,10 @@ import { SdNotifyService } from '../../notify.service';
     trigger('toastAnimation', [
       transition(':enter', [
         style({ transform: 'translateX(100%)', opacity: 0 }),
-        animate('300ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))
+        animate('300ms ease-out', style({ transform: 'translateX(0)', opacity: 1 })),
       ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ transform: 'translateX(100%)', opacity: 0 }))
-      ])
-    ])
+      transition(':leave', [animate('200ms ease-in', style({ transform: 'translateX(100%)', opacity: 0 }))]),
+    ]),
   ],
   host: {
     '[@toastAnimation]': 'true',
@@ -30,12 +28,12 @@ import { SdNotifyService } from '../../notify.service';
     '[attr.data-autoid]': 'autoId',
     '[attr.data-type]': 'data.type',
     '[attr.data-title]': 'data.title ?? null',
-    '[attr.data-message]': 'dataMessage'
-  }
+    '[attr.data-message]': 'dataMessage',
+  },
 })
 export class ToastComponent implements OnInit, OnDestroy {
   @Input({ required: true }) data!: ToastData;
-  
+
   isExpanded = signal(false);
   readonly MAX_SHOW = 2;
 

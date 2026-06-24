@@ -1,6 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -15,8 +13,8 @@ import {
   SdFormGenericVariable,
 } from '../../../../models';
 import { FormGenericService } from '../../../../services';
-import { BuildQueries } from "./components/build-queries/build-queries.component";
-import { BuildVariables } from "./components/build-variables/build-variables.component";
+import { BuildQueries } from './components/build-queries/build-queries.component';
+import { BuildVariables } from './components/build-variables/build-variables.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
@@ -27,9 +25,9 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, TranslatePipe],
 })
-export class AttributeSelection {
+export class AttributeSelection implements OnInit {
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-   @Input({ required: true }) variables!: SdFormGenericVariable[];
+  @Input({ required: true }) variables!: SdFormGenericVariable[];
   @Input({ required: true }) component!: SdFormGenericValues | SdFormGenericTableColumn;
   // ValuesKey
   valuesKey?: string;

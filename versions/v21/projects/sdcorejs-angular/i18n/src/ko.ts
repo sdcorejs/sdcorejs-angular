@@ -491,7 +491,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.upload-file.confirm-yes': '확인',
   'core.component.upload-file.confirm-no': '취소',
   'core.component.upload-file.no-configuration': 'SD_UPLOAD_FILE_CONFIGURATION 을 inject 하거나 컴포넌트에 [upload] 를 직접 전달해 주세요',
-  'core.component.upload-file.no-configuration-key': 'key=\'{key}\' 에 대한 업로드 설정을 찾을 수 없습니다. provider 를 확인하거나 [upload] 를 직접 전달해 주세요',
+  'core.component.upload-file.no-configuration-key':
+    "key='{key}' 에 대한 업로드 설정을 찾을 수 없습니다. provider 를 확인하거나 [upload] 를 직접 전달해 주세요",
   'core.component.upload-file.preview-title': '이미지 미리보기',
 
   // ---- Module: layout (sidebar / user menu) ----
@@ -517,7 +518,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.not-found.title': '404 - 페이지를 찾을 수 없습니다',
-  'core.module.layout.not-found.message': '찾으시는 페이지가 존재하지 않거나 삭제되었습니다. URL을 확인하거나 홈으로 돌아가 계속 진행해 주세요.',
+  'core.module.layout.not-found.message':
+    '찾으시는 페이지가 존재하지 않거나 삭제되었습니다. URL을 확인하거나 홈으로 돌아가 계속 진행해 주세요.',
   'core.module.layout.not-found.back': '돌아가기',
 
   // ---- Module: layout (home page) ----

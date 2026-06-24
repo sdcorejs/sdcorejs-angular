@@ -14,14 +14,14 @@ import { SdAuthOmService } from './authom.service';
 
 interface ProvideOptions {
   useClass?: Type<ISdAuthOmConfiguration>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   useFactory?: (...args: any[]) => ISdAuthOmConfiguration;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   deps?: any[];
 }
 
 export function provideSdAuthOm(options: ProvideOptions): EnvironmentProviders {
-  const providers: Array<Provider | EnvironmentProviders> = [SdAuthOmService];
+  const providers: (Provider | EnvironmentProviders)[] = [SdAuthOmService];
 
   if (options.useFactory) {
     providers.push({ provide: SD_AUTHOM_CONFIGURATION, useFactory: options.useFactory, deps: options.deps || [] });
@@ -33,7 +33,7 @@ export function provideSdAuthOm(options: ProvideOptions): EnvironmentProviders {
     provideAppInitializer(() => {
       const configLoader = inject(SD_AUTHOM_CONFIGURATION);
       const authom = inject(SdAuthOmService);
-      return configLoader.loadTenantConfig().then((config) => authom.init(config));
+      return configLoader.loadTenantConfig().then(config => authom.init(config));
     })
   );
 
@@ -49,15 +49,14 @@ export class SdAuthOmModule {
         SdAuthOmService,
         ...(options.useFactory
           ? [{ provide: SD_AUTHOM_CONFIGURATION, useFactory: options.useFactory, deps: options.deps || [] }]
-          : [{ provide: SD_AUTHOM_CONFIGURATION, useClass: options.useClass! }]
-        ),
+          : [{ provide: SD_AUTHOM_CONFIGURATION, useClass: options.useClass! }]),
         {
           provide: APP_INITIALIZER,
           multi: true,
           useFactory: () => {
             const configLoader = inject(SD_AUTHOM_CONFIGURATION);
             const authom = inject(SdAuthOmService);
-            return () => configLoader.loadTenantConfig().then((config) => authom.init(config));
+            return () => configLoader.loadTenantConfig().then(config => authom.init(config));
           },
         },
       ],

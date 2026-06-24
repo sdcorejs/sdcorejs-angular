@@ -7,38 +7,28 @@
  * @module paste-from-office/filters/bookmark
  */
 
-import {
-	type ViewUpcastWriter,
-	type ViewDocumentFragment
-} from 'ckeditor5';
+import { type ViewUpcastWriter, type ViewDocumentFragment } from 'ckeditor5';
 
 /**
  * Transforms `<a>` elements which are bookmarks by moving their children after the element.
  *
  * @internal
  */
-export function transformBookmarks(
-	documentFragment: ViewDocumentFragment,
-	writer: ViewUpcastWriter
-): void {
-	const elementsToChange = [];
+export function transformBookmarks(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): void {
+  const elementsToChange = [];
 
-	for ( const value of writer.createRangeIn( documentFragment ) ) {
-		const element = value.item;
+  for (const value of writer.createRangeIn(documentFragment)) {
+    const element = value.item;
 
-		if (
-			element.is( 'element', 'a' ) &&
-			!element.hasAttribute( 'href' ) &&
-			( element.hasAttribute( 'id' ) || element.hasAttribute( 'name' ) ) )
-		{
-			elementsToChange.push( element );
-		}
-	}
+    if (element.is('element', 'a') && !element.hasAttribute('href') && (element.hasAttribute('id') || element.hasAttribute('name'))) {
+      elementsToChange.push(element);
+    }
+  }
 
-	for ( const element of elementsToChange ) {
-		const index = element.parent!.getChildIndex( element ) + 1;
-		const children = element.getChildren();
+  for (const element of elementsToChange) {
+    const index = element.parent!.getChildIndex(element) + 1;
+    const children = element.getChildren();
 
-		writer.insertChild( index, children, element.parent! );
-	}
+    writer.insertChild(index, children, element.parent!);
+  }
 }

@@ -1,6 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericUpload } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
@@ -11,7 +9,7 @@ import { filter, Subscription } from 'rxjs';
   styleUrls: ['./upload-control.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class UploadControl {
+export class UploadControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericUpload;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericUpload) {
     if (this.component !== component) {

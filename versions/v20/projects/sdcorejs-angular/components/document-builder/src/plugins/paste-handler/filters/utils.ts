@@ -12,31 +12,27 @@
  *
  * @internal
  */
-export function convertCssLengthToPx( value: string ): string {
-	const numericValue = parseFloat( value );
+export function convertCssLengthToPx(value: string): string {
+  const numericValue = parseFloat(value);
 
-	if ( value.endsWith( 'pt' ) ) {
-		// 1pt = 1in / 72
-		return toPx( numericValue * 96 / 72 );
-	}
-	else if ( value.endsWith( 'pc' ) ) {
-		// 1pc = 12pt = 1in / 6.
-		return toPx( numericValue * 12 * 96 / 72 );
-	}
-	else if ( value.endsWith( 'in' ) ) {
-		// 1in = 2.54cm = 96px
-		return toPx( numericValue * 96 );
-	}
-	else if ( value.endsWith( 'cm' ) ) {
-		// 1cm = 96px / 2.54
-		return toPx( numericValue * 96 / 2.54 );
-	}
-	else if ( value.endsWith( 'mm' ) ) {
-		// 1mm = 1cm / 10
-		return toPx( numericValue / 10 * 96 / 2.54 );
-	}
+  if (value.endsWith('pt')) {
+    // 1pt = 1in / 72
+    return toPx((numericValue * 96) / 72);
+  } else if (value.endsWith('pc')) {
+    // 1pc = 12pt = 1in / 6.
+    return toPx((numericValue * 12 * 96) / 72);
+  } else if (value.endsWith('in')) {
+    // 1in = 2.54cm = 96px
+    return toPx(numericValue * 96);
+  } else if (value.endsWith('cm')) {
+    // 1cm = 96px / 2.54
+    return toPx((numericValue * 96) / 2.54);
+  } else if (value.endsWith('mm')) {
+    // 1mm = 1cm / 10
+    return toPx(((numericValue / 10) * 96) / 2.54);
+  }
 
-	return value;
+  return value;
 }
 
 /**
@@ -44,8 +40,8 @@ export function convertCssLengthToPx( value: string ): string {
  *
  * @internal
  */
-export function isPx( value?: string ): value is string {
-	return value !== undefined && value.endsWith( 'px' );
+export function isPx(value?: string): value is string {
+  return value !== undefined && value.endsWith('px');
 }
 
 /**
@@ -53,6 +49,6 @@ export function isPx( value?: string ): value is string {
  *
  * @internal
  */
-export function toPx( value: number ): string {
-	return Math.round( value ) + 'px';
+export function toPx(value: number): string {
+  return Math.round(value) + 'px';
 }

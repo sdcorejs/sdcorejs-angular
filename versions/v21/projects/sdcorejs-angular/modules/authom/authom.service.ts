@@ -29,7 +29,7 @@ export class SdAuthOmService {
 
   private base64UrlEncode(bytes: Uint8Array): string {
     let binary = '';
-    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    for (const byte of bytes) binary += String.fromCharCode(byte);
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   }
 
@@ -43,12 +43,7 @@ export class SdAuthOmService {
     return StringUtilities.sha256(verifier);
   }
 
-  private buildAuthorizeUrl(params: {
-    state: string;
-    codeChallenge: string;
-    redirectUri: string;
-    prompt?: 'none';
-  }): string {
+  private buildAuthorizeUrl(params: { state: string; codeChallenge: string; redirectUri: string; prompt?: 'none' }): string {
     const search = new URLSearchParams({
       response_type: 'code',
       client_id: this.config.clientId,
@@ -90,7 +85,7 @@ export class SdAuthOmService {
     const state = crypto.randomUUID();
     const codeVerifier = this.generateCodeVerifier();
     const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-    const returnTo = options?.returnTo || (window.location.pathname + window.location.search);
+    const returnTo = options?.returnTo || window.location.pathname + window.location.search;
 
     sessionStorage.setItem(STORAGE_KEY_STATE, state);
     sessionStorage.setItem(STORAGE_KEY_CODE_VERIFIER, codeVerifier);
@@ -136,7 +131,7 @@ export class SdAuthOmService {
         body: body.toString(),
       });
       if (!res.ok) return false;
-      const data = await res.json() as { access_token?: string; id_token?: string };
+      const data = (await res.json()) as { access_token?: string; id_token?: string };
       if (!data.access_token) return false;
 
       this.accessToken.set(data.access_token);
@@ -170,16 +165,16 @@ export class SdAuthOmService {
     }, delayMs);
   }
 
-  silentRefresh(): Promise<boolean> {
-    if (!this.isBrowser) return Promise.resolve(false);
+  async silentRefresh(): Promise<boolean> {
+    if (!this.isBrowser) return false;
 
-    return new Promise(async (resolve) => {
-      const state = crypto.randomUUID();
-      const codeVerifier = this.generateCodeVerifier();
-      const codeChallenge = await this.generateCodeChallenge(codeVerifier);
-      const redirectUri = this.getSilentRedirectUri();
-      const timeoutMs = (this.config.authorizeTimeoutInSeconds ?? DEFAULT_AUTHORIZE_TIMEOUT_SECONDS) * 1000;
+    const state = crypto.randomUUID();
+    const codeVerifier = this.generateCodeVerifier();
+    const codeChallenge = await this.generateCodeChallenge(codeVerifier);
+    const redirectUri = this.getSilentRedirectUri();
+    const timeoutMs = (this.config.authorizeTimeoutInSeconds ?? DEFAULT_AUTHORIZE_TIMEOUT_SECONDS) * 1000;
 
+    return new Promise(resolve => {
       const iframe = document.createElement('iframe');
       iframe.style.display = 'none';
 

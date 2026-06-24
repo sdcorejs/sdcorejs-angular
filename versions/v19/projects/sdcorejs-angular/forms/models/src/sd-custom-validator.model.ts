@@ -16,8 +16,8 @@ export type SdCustomValidator = (value: any) => string | Promise<string>;
 export const SdInlineErrorValidator: ValidatorFn = (): Record<string, unknown> | null => ({ inlineError: true });
 
 export const HandleSdCustomValidator = (func: SdCustomValidator): AsyncValidatorFn => {
-  return async (c: AbstractControl): Promise<Record<string, any> | null> => {    
-    const value = c.value===0 ? c.value : c.value || null;
+  return async (c: AbstractControl): Promise<Record<string, any> | null> => {
+    const value = c.value === 0 ? c.value : c.value || null;
     if (func && typeof func === 'function') {
       const result = func(value);
       if (result instanceof Promise) {

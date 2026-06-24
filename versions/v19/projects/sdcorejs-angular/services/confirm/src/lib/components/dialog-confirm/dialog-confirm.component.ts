@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, Inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdDate } from '@sdcorejs/angular/forms/date';

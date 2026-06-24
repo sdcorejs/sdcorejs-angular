@@ -108,7 +108,10 @@ describe('SdConfirmService', () => {
   // ─── withRadio() ───────────────────────────────────────────────────────────
 
   it('withRadio() should open dialog with radio data and resolve selected value on ACCEPT', async () => {
-    const items = [{ value: 'A', label: 'Option A' }, { value: 'B', label: 'Option B' }];
+    const items = [
+      { value: 'A', label: 'Option A' },
+      { value: 'B', label: 'Option B' },
+    ];
     const promise = service.withRadio('Pick one', {
       items,
       valueField: 'value',

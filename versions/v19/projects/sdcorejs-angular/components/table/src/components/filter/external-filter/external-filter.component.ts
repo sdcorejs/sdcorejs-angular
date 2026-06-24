@@ -1,16 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  signal,
-  untracked,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -46,7 +35,6 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
     TranslatePipe,
   ],
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class ExternalFilterComponent {
   // ==========================================
   // 1. SIGNAL INPUTS

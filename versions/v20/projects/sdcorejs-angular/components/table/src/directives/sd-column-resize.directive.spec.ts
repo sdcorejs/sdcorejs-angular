@@ -52,8 +52,15 @@ describe('SdColumnResizeDirective', () => {
     thEl = fixture.debugElement.query(By.css('th')).nativeElement;
     // bbox cố định cho test: stub getBoundingClientRect width = 100
     spyOn(thEl, 'getBoundingClientRect').and.returnValue({
-      x: 0, y: 0, top: 0, left: 0, right: 100, bottom: 40,
-      width: 100, height: 40, toJSON: () => ({}),
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 100,
+      bottom: 40,
+      width: 100,
+      height: 40,
+      toJSON: () => ({}),
     } as DOMRect);
   });
 
@@ -73,7 +80,7 @@ describe('SdColumnResizeDirective', () => {
   it('mousedown + mousemove + mouseup → emit width mới', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 150);  // delta +50
+    dispatchMouse(document, 'mousemove', 150); // delta +50
     dispatchMouse(document, 'mouseup', 150);
 
     expect(host.lastWidth).toBe('150px');
@@ -82,7 +89,7 @@ describe('SdColumnResizeDirective', () => {
   it('clamp width về minWidth (default 40px)', () => {
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 0);    // delta -100 → 100-100=0 → clamp 40
+    dispatchMouse(document, 'mousemove', 0); // delta -100 → 100-100=0 → clamp 40
     dispatchMouse(document, 'mouseup', 0);
 
     expect(host.lastWidth).toBe('40px');
@@ -104,7 +111,7 @@ describe('SdColumnResizeDirective', () => {
     fixture.detectChanges();
     const handle = thEl.querySelector('.sd-col-resize-handle')!;
     dispatchMouse(handle, 'mousedown', 100);
-    dispatchMouse(document, 'mousemove', 30);  // delta -70 → 30 → clamp 60
+    dispatchMouse(document, 'mousemove', 30); // delta -70 → 30 → clamp 60
     dispatchMouse(document, 'mouseup', 30);
 
     expect(host.lastWidth).toBe('60px');

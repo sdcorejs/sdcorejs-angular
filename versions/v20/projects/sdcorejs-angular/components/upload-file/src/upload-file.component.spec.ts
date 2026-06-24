@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -93,9 +92,7 @@ describe('SdUploadFile', () => {
       // it does not later overwrite the manual previewFiles.set() below
       await fixture.whenStable();
 
-      component.previewFiles.set([
-        makeImagePreviewFile({ isImgError: true }),
-      ]);
+      component.previewFiles.set([makeImagePreviewFile({ isImgError: true })]);
       fixture.detectChanges();
 
       const errImg = fixture.nativeElement.querySelector('img.sd-image-image-error');
@@ -109,9 +106,7 @@ describe('SdUploadFile', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      component.previewFiles.set([
-        makeImagePreviewFile({ isImgError: true }),
-      ]);
+      component.previewFiles.set([makeImagePreviewFile({ isImgError: true })]);
       fixture.detectChanges();
 
       const wrapper = fixture.nativeElement.querySelector('.c-area.c-area-error');
@@ -123,9 +118,7 @@ describe('SdUploadFile', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      component.previewFiles.set([
-        makeImagePreviewFile({ isImgError: false }),
-      ]);
+      component.previewFiles.set([makeImagePreviewFile({ isImgError: false })]);
       fixture.detectChanges();
 
       expect(fixture.nativeElement.querySelector('img.sd-image-image-error')).toBeNull();
@@ -395,13 +388,12 @@ describe('SdUploadFile', () => {
       const bigContent = new Uint8Array(2 * 1024 * 1024); // 2 MB
       const bigFile = new File([bigContent], 'big.pdf', { type: 'application/pdf' });
 
-      await (component as any).onUpload$testHook?.([bigFile])
-        .catch(() => {});  // may throw; we check the side-effect
+      await (component as any).onUpload$testHook?.([bigFile]).catch(() => {}); // may throw; we check the side-effect
 
       // Trigger via the internal method using the arrow fn stored on the class
-      const uploadFileFn: Function = (component as any)['onUpload$testHook']
-        || (component as any)['_uploadFile']
-        || null;
+      const uploadFileFn = ((component as any)['onUpload$testHook'] || (component as any)['_uploadFile'] || null) as
+        | ((files: File[]) => Promise<void>)
+        | null;
 
       if (!uploadFileFn) {
         // Fallback: directly spy on notifyService and call #uploadFile via uploadFileFn
@@ -556,9 +548,7 @@ describe('SdUploadFile', () => {
       setInput(fixture, 'maxOfImage', 3);
       fixture.detectChanges();
       // 4 files, maxOfImage=3, disabled=true → index 2 is last overlay
-      component.previewFiles.set([
-        makeImagePreviewFile(), makeImagePreviewFile(), makeImagePreviewFile(), makeImagePreviewFile(),
-      ]);
+      component.previewFiles.set([makeImagePreviewFile(), makeImagePreviewFile(), makeImagePreviewFile(), makeImagePreviewFile()]);
       expect(component.isLastVisibleOverlay(2)).toBeTrue();
     });
 
@@ -582,9 +572,7 @@ describe('SdUploadFile', () => {
       await TestBed.resetTestingModule();
       await TestBed.configureTestingModule({
         imports: [SdUploadFile, NoopAnimationsModule],
-        providers: [
-          { provide: SD_UPLOAD_FILE_CONFIGURATION, useValue: duplicateConfig },
-        ],
+        providers: [{ provide: SD_UPLOAD_FILE_CONFIGURATION, useValue: duplicateConfig }],
       }).compileComponents();
 
       expect(() => {
@@ -615,8 +603,7 @@ describe('SdUploadFile', () => {
       }).compileComponents();
       hostFixture = TestBed.createComponent(AutoIdHost);
       hostFixture.detectChanges();
-      comp = hostFixture.debugElement.query(el => el.componentInstance instanceof SdUploadFile)
-        ?.componentInstance as SdUploadFile;
+      comp = hostFixture.debugElement.query(el => el.componentInstance instanceof SdUploadFile)?.componentInstance as SdUploadFile;
       if (!comp) throw new Error('SdUploadFile not found');
     });
 
@@ -662,14 +649,13 @@ describe('SdUploadFile', () => {
       }).compileComponents();
       hostFixture = TestBed.createComponent(E2eHost);
       hostFixture.detectChanges();
-      comp = hostFixture.debugElement.query(el => el.componentInstance instanceof SdUploadFile)
-        ?.componentInstance as SdUploadFile;
+      comp = hostFixture.debugElement.query(el => el.componentInstance instanceof SdUploadFile)?.componentInstance as SdUploadFile;
       if (!comp) throw new Error('SdUploadFile not found');
     });
 
     it('renders data-disabled reflecting disabled input', () => {
       hostFixture.detectChanges();
-      let dropZone = hostFixture.nativeElement.querySelector('.c-area-upload');
+      const dropZone = hostFixture.nativeElement.querySelector('.c-area-upload');
 
       // Initial: disabled=false → data-disabled="false"
       expect(dropZone?.getAttribute('data-disabled')).toBe('false');
@@ -694,10 +680,7 @@ describe('SdUploadFile', () => {
       expect(dropZone?.getAttribute('data-count')).toBe('0');
 
       // Add 2 mock preview files
-      comp.previewFiles.set([
-        makePreviewFile({ fileName: 'file1.pdf' }),
-        makePreviewFile({ fileName: 'file2.pdf' }),
-      ]);
+      comp.previewFiles.set([makePreviewFile({ fileName: 'file1.pdf' }), makePreviewFile({ fileName: 'file2.pdf' })]);
       hostFixture.detectChanges();
 
       // After adding 2 files: data-empty should be "false", data-count should be "2"

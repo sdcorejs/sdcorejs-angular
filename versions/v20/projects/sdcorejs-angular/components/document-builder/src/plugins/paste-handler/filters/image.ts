@@ -61,7 +61,7 @@ export function _convertHexToBase64(hexString: string): string {
  * @param documentFragment Document fragment from which to extract shape ids.
  * @returns Array of shape ids.
  */
-function findAllShapesIds(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): Array<string> {
+function findAllShapesIds(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): string[] {
   const range = writer.createRangeIn(documentFragment);
 
   const shapeElementsMatcher = new Matcher({
@@ -104,7 +104,7 @@ function findAllShapesIds(documentFragment: ViewDocumentFragment, writer: ViewUp
  * @param documentFragment Document fragment from which to remove `<img>` elements.
  */
 function removeAllImgElementsRepresentingShapes(
-  shapesIds: Array<string>,
+  shapesIds: string[],
   documentFragment: ViewDocumentFragment,
   writer: ViewUpcastWriter
 ): void {
@@ -163,10 +163,10 @@ function removeAllShapeElements(documentFragment: ViewDocumentFragment, writer: 
 /**
  * Inserts `img` tags if there is none after a shape.
  */
-function insertMissingImgs(shapeIds: Array<string>, documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter) {
+function insertMissingImgs(shapeIds: string[], documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter) {
   const range = writer.createRangeIn(documentFragment);
 
-  const shapes: Array<ViewElement> = [];
+  const shapes: ViewElement[] = [];
 
   for (const value of range) {
     if (value.type == 'elementStart' && value.item.is('element', 'v:shape')) {
@@ -233,14 +233,14 @@ function insertMissingImgs(shapeIds: Array<string>, documentFragment: ViewDocume
  * @param documentFragment Document fragment in which to look for `<img>` elements.
  * @returns Array of found images along with their position index in the document.
  */
-function findAllImageElementsWithLocalSource(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): Array<ImageWithIndex> {
+function findAllImageElementsWithLocalSource(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): ImageWithIndex[] {
   const range = writer.createRangeIn(documentFragment);
 
   const imageElementsMatcher = new Matcher({
     name: 'img',
   });
 
-  const imgs: Array<ImageWithIndex> = [];
+  const imgs: ImageWithIndex[] = [];
   let currentImageIndex = 0;
 
   for (const value of range) {
@@ -264,7 +264,7 @@ function findAllImageElementsWithLocalSource(documentFragment: ViewDocumentFragm
  * This index is crucial for correctly matching images with their
  * corresponding hexadecimal representations in RTF data.
  */
-type ImageWithIndex = {
+interface ImageWithIndex {
   /**
    * The position index of the image in the document.
    * Used to map the image to its corresponding hexadecimal representation in RTF data.
@@ -277,7 +277,7 @@ type ImageWithIndex = {
    * The image element.
    */
   element: ViewElement;
-};
+}
 
 /**
  * Extracts all images HEX representations from a given RTF data.
@@ -288,7 +288,7 @@ type ImageWithIndex = {
  * * hex Image representation in HEX format.
  * * type Type of image, `image/png` or `image/jpeg`.
  */
-function extractImageDataFromRtf(rtfData: string): Array<{ hex: string; type: string }> {
+function extractImageDataFromRtf(rtfData: string): { hex: string; type: string }[] {
   if (!rtfData) {
     return [];
   }
@@ -330,7 +330,7 @@ function extractImageDataFromRtf(rtfData: string): Array<{ hex: string; type: st
  * In XML documents, the same image might be defined both as base64 in HTML and as hexadecimal in RTF data.
  */
 function replaceImagesFileSourceWithInlineRepresentation(
-  imageElements: Array<ImageWithIndex>,
+  imageElements: ImageWithIndex[],
   imagesHexSources: ReturnType<typeof extractImageDataFromRtf>,
   writer: ViewUpcastWriter
 ) {

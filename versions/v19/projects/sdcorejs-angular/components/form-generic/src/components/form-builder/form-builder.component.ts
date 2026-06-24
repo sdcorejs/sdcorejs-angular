@@ -1,9 +1,18 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { CdkDragDrop, CdkDragMove, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -104,9 +113,11 @@ interface DragDropRowItem {
     SdTextarea,
     SdButton,
     SdFormRender,
-    ConfigureValidationComponent, TranslatePipe],
+    ConfigureValidationComponent,
+    TranslatePipe,
+  ],
 })
-export class SdFormBuilder {
+export class SdFormBuilder implements OnInit, OnDestroy {
   // ── viewChild signals (Angular 17+) ────────────────────────────────────
   readonly popupViewJSON = viewChild<SdModal>('popupViewJSON');
   readonly popupConfigureVariables = viewChild<SdModal>('popupConfigureVariables');
@@ -137,8 +148,7 @@ export class SdFormBuilder {
     // why: trong chế độ Detail group, ẩn item 'group' khỏi palette — không cho group lồng group.
     const inGroup = !!this.editingGroupId();
     const match = (c: FormBuilderComponent) =>
-      (!inGroup || c.type !== 'group') &&
-      (!term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term));
+      (!inGroup || c.type !== 'group') && (!term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term));
     const buckets: Record<FormBuilderComponentGroup, FormBuilderComponent[]> = { basic: [], choice: [], advanced: [], layout: [] };
     for (const c of this.formBuilderComponents) {
       if (match(c)) buckets[c.group].push(c);
@@ -200,9 +210,7 @@ export class SdFormBuilder {
 
   onAnyDragMoved = (event: CdkDragMove<any>) => {
     this.lastDragPointer = event.pointerPosition;
-    const rowEl = document
-      .elementFromPoint(event.pointerPosition.x, event.pointerPosition.y)
-      ?.closest('.fb-row') as HTMLElement | null;
+    const rowEl = document.elementFromPoint(event.pointerPosition.x, event.pointerPosition.y)?.closest('.fb-row') as HTMLElement | null;
     const rowIndex = rowEl?.id?.startsWith('row_') ? Number(rowEl.id.replace('row_', '')) : NaN;
     const row = Number.isNaN(rowIndex) ? undefined : this.dragDropRows.find(t => t.rowIndex === rowIndex);
     if (row && this.targetItem !== row) {
@@ -584,7 +592,6 @@ export class SdFormBuilder {
       this.components = flat;
     }
   };
-
 
   changeSizeControl = async (
     event: CdkDragMove<SdFormGenericComponent | SdFormGenericGroup>,

@@ -1,4 +1,3 @@
-/* eslint-disable @angular-eslint/no-output-rename */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,

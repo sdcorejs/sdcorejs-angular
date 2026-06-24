@@ -7,7 +7,7 @@ import { SplitterOrientation } from '../splitter.models';
   templateUrl: './splitter-handle.component.html',
   styleUrls: ['./splitter-handle.component.scss'],
   host: {
-    'class': 'sd-splitter__handle',
+    class: 'sd-splitter__handle',
     '[class.sd-splitter__handle--horizontal]': 'orientation() === "horizontal"',
     '[class.sd-splitter__handle--vertical]': 'orientation() === "vertical"',
     '[class.sd-splitter__handle--disabled]': 'disabled()',
@@ -53,10 +53,18 @@ export class SdSplitterHandleComponent {
     const step = this.keyboardStep();
     let delta: number | null = null;
     switch (ev.key) {
-      case 'ArrowRight': if (isH) delta = step; break;
-      case 'ArrowLeft':  if (isH) delta = -step; break;
-      case 'ArrowDown':  if (!isH) delta = step; break;
-      case 'ArrowUp':    if (!isH) delta = -step; break;
+      case 'ArrowRight':
+        if (isH) delta = step;
+        break;
+      case 'ArrowLeft':
+        if (isH) delta = -step;
+        break;
+      case 'ArrowDown':
+        if (!isH) delta = step;
+        break;
+      case 'ArrowUp':
+        if (!isH) delta = -step;
+        break;
       case 'Enter':
       case ' ':
         ev.preventDefault();

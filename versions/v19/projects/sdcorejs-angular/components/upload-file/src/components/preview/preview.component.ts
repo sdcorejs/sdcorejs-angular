@@ -1,9 +1,9 @@
-import { CommonModule, NgOptimizedImage } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, inject } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { PreviewFile } from '../../services';
-import { MatIcon } from "@angular/material/icon";
+import { MatIcon } from '@angular/material/icon';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({

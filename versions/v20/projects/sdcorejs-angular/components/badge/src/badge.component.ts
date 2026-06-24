@@ -1,10 +1,9 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttribute, computed, input } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Color, Size } from '@sdcorejs/utils/models';
-import { MaterialIconFontSet, DefaultMaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
+import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 
 // Export các Type để dùng chung
 export type SdBadgeType = 'tag' | 'round' | 'icon';

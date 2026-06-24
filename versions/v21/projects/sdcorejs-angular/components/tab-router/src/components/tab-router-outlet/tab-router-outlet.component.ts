@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   afterNextRender,
   booleanAttribute,
@@ -13,14 +12,7 @@ import {
   createNgModule,
   NgModuleFactory,
 } from '@angular/core';
-import {
-  ActivatedRoute,
-  ActivatedRouteSnapshot,
-  NavigationEnd,
-  Router,
-  RouterOutlet,
-  RoutesRecognized,
-} from '@angular/router';
+import { ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet, RoutesRecognized } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -37,7 +29,6 @@ import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
 
-// eslint-disable-next-line @angular-eslint/no-unused-standalone-imports
 @Component({
   selector: 'sd-tab-router-outlet',
   templateUrl: './tab-router-outlet.component.html',
@@ -81,8 +72,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
           // Hybrid: cần CẢ HAI event vì mỗi event chứa data khác nhau ở thời điểm khác nhau.
           // - RoutesRecognized: navigation đang in-flight → getCurrentNavigation().extras.state đọc được
           // - NavigationEnd: navigation hoàn tất → routerState.root đã update với route mới (cần cho lazy routes)
-          filter((event): event is RoutesRecognized | NavigationEnd =>
-            event instanceof RoutesRecognized || event instanceof NavigationEnd),
+          filter((event): event is RoutesRecognized | NavigationEnd => event instanceof RoutesRecognized || event instanceof NavigationEnd),
           // Serialize: #handleEvent async (await getBestInjector). 2 nav liên tiếp
           // không await xen kẽ → tránh race đọc this.tabs() = [] khi tab đầu chưa kịp set.
           concatMap(event => from(this.#handleEvent(event)))
@@ -197,11 +187,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
   };
 
-  #activeRoute = async (
-    fullUrl: string,
-    route: ActivatedRouteSnapshot | null,
-    state: Record<string, any> = {}
-  ) => {
+  #activeRoute = async (fullUrl: string, route: ActivatedRouteSnapshot | null, state: Record<string, any> = {}) => {
     if (this.disabled()) return;
     if (!route?.component) return;
 
@@ -320,9 +306,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       // component → tab bị "reload" mỗi khi click lại hoặc navigate cùng URL.
       //
       // splice phía trên có thể đã shift index nếu activatedIndex < existedIndex.
-      const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex
-        ? existedIndex - 1
-        : existedIndex;
+      const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex ? existedIndex - 1 : existedIndex;
       this.#tabRouterService.setCurrentTab(updatedTabs[idx]);
       this.#tabRouterService.pushEvent(updatedTabs[idx], SdTabActivated);
       this.tabs.set(updatedTabs);
@@ -347,10 +331,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   };
 
   // DFS match leaf snapshot → ActivatedRoute instance (ổn định hơn so với so sánh component class).
-  #findActivatedRouteForSnapshot = (
-    activatedRoute: ActivatedRoute,
-    targetSnapshot: ActivatedRouteSnapshot,
-  ): ActivatedRoute | null => {
+  #findActivatedRouteForSnapshot = (activatedRoute: ActivatedRoute, targetSnapshot: ActivatedRouteSnapshot): ActivatedRoute | null => {
     if (activatedRoute.snapshot === targetSnapshot) {
       return activatedRoute;
     }

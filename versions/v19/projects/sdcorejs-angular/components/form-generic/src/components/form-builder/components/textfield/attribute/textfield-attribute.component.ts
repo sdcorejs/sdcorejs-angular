@@ -1,24 +1,37 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
-import { SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericTextfield, SdFormGenericVariable } from '../../../../../models';
+import {
+  SdFormatComponent,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormGenericTextfield,
+  SdFormGenericVariable,
+} from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
 import { AttributeInputNumber } from '../../attribute-input-number/attribute-input-number.component';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
 import { AttributeTemplate } from '../../attribute-template/attribute-template.component';
-import { AttributeTextarea } from "../../attribute-textarea/attribute-textarea.component";
+import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'textfield-attribute',
   templateUrl: './textfield-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeExpression, AttributeInput, AttributeInputNumber, AttributeSwitch, AttributeTextarea, TranslatePipe],
+  imports: [
+    AttributeTemplate,
+    AttributeExpression,
+    AttributeInput,
+    AttributeInputNumber,
+    AttributeSwitch,
+    AttributeTextarea,
+    TranslatePipe,
+  ],
 })
-export class TextfieldAttribute {
+export class TextfieldAttribute implements AfterViewInit, OnDestroy {
   form = new FormGroup({});
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];

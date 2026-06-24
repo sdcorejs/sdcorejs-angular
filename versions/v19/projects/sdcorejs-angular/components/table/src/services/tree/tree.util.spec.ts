@@ -148,7 +148,6 @@ describe('tree.util', () => {
     expect(root.meta.tree).toEqual(jasmine.objectContaining({ level: 0, hasChildren: true, isExpanded: true }));
   });
 
-
   it('flattenTree collapsed shows roots only', () => {
     const root = item({ id: 1, name: 'root', children: [{ id: 2, name: 'child' }] }, { hasChildren: true, isExpanded: false });
     root.meta.tree!.childItems = [item({ id: 2, name: 'child' }, { level: 1, hasChildren: false })];
@@ -294,9 +293,7 @@ describe('tree.util', () => {
     });
 
     it('flatten dữ liệu thô theo childrenKey mặc định', () => {
-      const data: Node[] = [
-        { id: 1, name: 'r', children: [{ id: 2, name: 'c', children: [{ id: 3, name: 'g' }] }] },
-      ];
+      const data: Node[] = [{ id: 1, name: 'r', children: [{ id: 2, name: 'c', children: [{ id: 3, name: 'g' }] }] }];
       expect(flattenDataTree(data, opt()).map(d => d.id)).toEqual([1, 2, 3]);
     });
 
@@ -306,9 +303,7 @@ describe('tree.util', () => {
     });
 
     it('respect maxDepth ở data tree', () => {
-      const data: Node[] = [
-        { id: 1, name: 'r', children: [{ id: 2, name: 'c', children: [{ id: 3, name: 'g' }] }] },
-      ];
+      const data: Node[] = [{ id: 1, name: 'r', children: [{ id: 2, name: 'c', children: [{ id: 3, name: 'g' }] }] }];
       expect(flattenDataTree(data, opt({ maxDepth: 1 })).map(d => d.id)).toEqual([1, 2]);
     });
 

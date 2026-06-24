@@ -1,6 +1,14 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  ViewChild,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -23,7 +31,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
 })
-export class BuildQueries {
+export class BuildQueries implements OnInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];

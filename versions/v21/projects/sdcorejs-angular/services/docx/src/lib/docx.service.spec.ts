@@ -38,19 +38,14 @@ function makeBlob(bytes = 64): Blob {
 function installConversionSpy(
   service: SdDocxService,
   notifySpy: jasmine.SpyObj<SdNotifyService>,
-  successHtml = '<html><body>converted</body></html>',
+  successHtml = '<html><body>converted</body></html>'
 ): jasmine.Spy {
   const VALID_EXTENSIONS = ['.doc', '.docx'];
-  const ERROR_FORMAT =
-    'Định dạng không hợp lệ. Vui lòng chọn Mẫu có định dạng DOC hoặc DOCX';
-  const ERROR_SIZE =
-    'Kích thước tệp mẫu vượt quá tiêu chuẩn hỗ trợ của hệ thống. Vui lòng thử lại';
+  const ERROR_FORMAT = 'Định dạng không hợp lệ. Vui lòng chọn Mẫu có định dạng DOC hoặc DOCX';
+  const ERROR_SIZE = 'Kích thước tệp mẫu vượt quá tiêu chuẩn hỗ trợ của hệ thống. Vui lòng thử lại';
 
   return spyOn(service, 'convertToHtml').and.callFake(
-    async (
-      input: File | Blob | ArrayBuffer,
-      options?: SdDocxConvertOptions,
-    ): Promise<SdDocxConvertResult | null> => {
+    async (input: File | Blob | ArrayBuffer, options?: SdDocxConvertOptions): Promise<SdDocxConvertResult | null> => {
       const opts = {
         validateFormat: true,
         validateSize: true,
@@ -86,7 +81,7 @@ function installConversionSpy(
       }
 
       return { html: successHtml, messages: [] };
-    },
+    }
   );
 }
 
@@ -98,17 +93,9 @@ describe('SdDocxService', () => {
   let loadingService: jasmine.SpyObj<SdLoadingService>;
 
   beforeEach(() => {
-    notifyService = jasmine.createSpyObj<SdNotifyService>('SdNotifyService', [
-      'error',
-      'success',
-      'info',
-      'warning',
-    ]);
+    notifyService = jasmine.createSpyObj<SdNotifyService>('SdNotifyService', ['error', 'success', 'info', 'warning']);
 
-    loadingService = jasmine.createSpyObj<SdLoadingService>('SdLoadingService', [
-      'start',
-      'stop',
-    ]);
+    loadingService = jasmine.createSpyObj<SdLoadingService>('SdLoadingService', ['start', 'stop']);
 
     TestBed.configureTestingModule({
       providers: [
@@ -122,9 +109,7 @@ describe('SdDocxService', () => {
   });
 
   afterEach(() => {
-    document.body
-      .querySelectorAll('input[type="file"]')
-      .forEach(el => el.remove());
+    document.body.querySelectorAll('input[type="file"]').forEach(el => el.remove());
   });
 
   // ─── 1. Instantiation ───────────────────────────────────────────────────────
@@ -169,9 +154,7 @@ describe('SdDocxService', () => {
     installConversionSpy(service, notifyService);
     const result = await service.convertToHtml(makeFile('report.pdf'));
     expect(result).toBeNull();
-    expect(notifyService.error).toHaveBeenCalledWith(
-      jasmine.stringContaining('Định dạng không hợp lệ'),
-    );
+    expect(notifyService.error).toHaveBeenCalledWith(jasmine.stringContaining('Định dạng không hợp lệ'));
   });
 
   it('skips format check when validateFormat is false', async () => {
@@ -180,9 +163,7 @@ describe('SdDocxService', () => {
       validateFormat: false,
     });
     expect(result).not.toBeNull();
-    expect(notifyService.error).not.toHaveBeenCalledWith(
-      jasmine.stringContaining('Định dạng không hợp lệ'),
-    );
+    expect(notifyService.error).not.toHaveBeenCalledWith(jasmine.stringContaining('Định dạng không hợp lệ'));
   });
 
   // ─── 5. convertToHtml — size validation ──────────────────────────────────
@@ -194,9 +175,7 @@ describe('SdDocxService', () => {
 
     const result = await service.convertToHtml(file);
     expect(result).toBeNull();
-    expect(notifyService.error).toHaveBeenCalledWith(
-      jasmine.stringContaining('Kích thước tệp mẫu'),
-    );
+    expect(notifyService.error).toHaveBeenCalledWith(jasmine.stringContaining('Kích thước tệp mẫu'));
   });
 
   it('respects a custom maxSizeInMb option', async () => {
@@ -206,9 +185,7 @@ describe('SdDocxService', () => {
 
     const result = await service.convertToHtml(file, { maxSizeInMb: 2 });
     expect(result).toBeNull();
-    expect(notifyService.error).toHaveBeenCalledWith(
-      jasmine.stringContaining('Kích thước tệp mẫu'),
-    );
+    expect(notifyService.error).toHaveBeenCalledWith(jasmine.stringContaining('Kích thước tệp mẫu'));
   });
 
   it('skips size check when validateSize is false', async () => {

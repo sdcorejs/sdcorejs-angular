@@ -27,13 +27,13 @@ export interface SdSplitterOption {
 
 // Internal — không export ra index.ts
 export interface ResolvedPanelMeta {
-  id: string | number;          // panelId nếu có, else index
+  id: string | number; // panelId nếu có, else index
   index: number;
   unit: SplitterPanelUnit;
   minSize: number;
   maxSize: number | undefined;
   collapsible: boolean;
   resizable: boolean;
-  declaredSize: number;         // size khai báo trong template, dùng cho resetLayout
-  lastSize: number;             // size trước khi collapse (cho expand restore)
+  declaredSize: number; // size khai báo trong template, dùng cho resetLayout
+  lastSize: number; // size trước khi collapse (cho expand restore)
 }

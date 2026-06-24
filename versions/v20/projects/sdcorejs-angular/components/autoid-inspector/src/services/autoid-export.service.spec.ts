@@ -3,9 +3,16 @@ import { AutoidElement } from '../models/autoid-element.model';
 import { AutoidExportMeta } from '../models/autoid-export-format.model';
 
 const el = (over: Partial<AutoidElement> = {}): AutoidElement => ({
-  stt: 1, name: 'Email', autoid: 'forms-input-email', tag: 'sd-input',
-  text: '', xpath: '//*[@data-autoid="forms-input-email"]', duplicate: false,
-  state: {}, tableScope: undefined, ...over,
+  stt: 1,
+  name: 'Email',
+  autoid: 'forms-input-email',
+  tag: 'sd-input',
+  text: '',
+  xpath: '//*[@data-autoid="forms-input-email"]',
+  duplicate: false,
+  state: {},
+  tableScope: undefined,
+  ...over,
 });
 
 const meta: AutoidExportMeta = {
@@ -62,7 +69,7 @@ describe('SdAutoidExportService', () => {
     expect(md).toContain('# CustomerCreatePage');
     expect(md).toContain('```ts');
     expect(md).toContain('export class CustomerCreatePage');
-    expect(md).toContain("readonly formsInputEmail = '//*[@data-autoid=\"forms-input-email\"]';");
+    expect(md).toContain('readonly formsInputEmail = \'//*[@data-autoid="forms-input-email"]\';');
   });
 
   it('toMarkdownPom comment chứa tag + name', () => {
@@ -71,10 +78,7 @@ describe('SdAutoidExportService', () => {
   });
 
   it('toMarkdownTable group theo tag, sort tên tag', () => {
-    const md = svc.toMarkdownTable(
-      [el({ tag: 'sd-button', autoid: 'button-x' }), el({ tag: 'sd-input' })],
-      meta
-    );
+    const md = svc.toMarkdownTable([el({ tag: 'sd-button', autoid: 'button-x' }), el({ tag: 'sd-input' })], meta);
     const idxButton = md.indexOf('### sd-button');
     const idxInput = md.indexOf('### sd-input');
     expect(idxButton).toBeGreaterThan(-1);
@@ -108,9 +112,9 @@ describe('SdAutoidExportService', () => {
     const csv = svc.toCsv([element]);
     const row = csv.split('\n')[1];
     expect(row).toContain('"components-table-employees"');
-    expect(row).toContain('"true"');  // disabled
+    expect(row).toContain('"true"'); // disabled
     expect(row).toContain('"false"'); // empty
-    expect(row).toContain('"foo"');   // data_value
+    expect(row).toContain('"foo"'); // data_value
   });
 
   it('toMarkdownPom includes state summary in JSDoc when state is non-empty', () => {

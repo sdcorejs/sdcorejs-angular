@@ -11,9 +11,7 @@ import { SdView } from './view.component';
 @Component({
   standalone: true,
   imports: [SdView],
-  template: `
-    <sd-view [label]="label" [display]="display" [value]="value" [hyperlink]="hyperlink"></sd-view>
-  `,
+  template: ` <sd-view [label]="label" [display]="display" [value]="value" [hyperlink]="hyperlink"></sd-view> `,
 })
 class HostComponent {
   label: string | null | undefined = undefined;

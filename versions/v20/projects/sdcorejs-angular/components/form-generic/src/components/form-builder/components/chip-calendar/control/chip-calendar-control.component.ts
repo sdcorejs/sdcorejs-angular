@@ -1,6 +1,5 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericChipCalendar } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
@@ -12,7 +11,7 @@ import { BuilderService } from '../../../services';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })
-export class ChipCalendarControl {
+export class ChipCalendarControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericChipCalendar;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericChipCalendar) {
     if (this.component !== component) {
@@ -32,7 +31,7 @@ export class ChipCalendarControl {
       // Chỉ lắng nghe sự kiện thay đổi tương ứng với component dựa vào id
       this.builderService.componentListeners.pipe(filter(component => component.id === this.component.id)).subscribe(component => {
         if (component) {
-           // Vì đã đúng theo id nên có thể ép kiểu any
+          // Vì đã đúng theo id nên có thể ép kiểu any
           this.ref.markForCheck();
         }
       })

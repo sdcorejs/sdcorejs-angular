@@ -94,7 +94,7 @@ export class SidebarComponent {
   // ==========================================
   // DATA STRUCTURES
   // ==========================================
-  #pinIconHoverTimerDelay: number = 300;
+  #pinIconHoverTimerDelay = 300;
   #isFirstBindingMenu = signal<boolean>(true);
   dataSource = new MatTreeNestedDataSource<SdLayoutMenu>();
   treeControl = new NestedTreeControl<SdLayoutMenu>(node => ('children' in node && node.children?.length ? node.children : []));
@@ -597,7 +597,6 @@ export class SidebarComponent {
 
     const rgbMatch = input.match(rgbRegex);
     if (rgbMatch) {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const [_, r, g, b] = rgbMatch;
       return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }

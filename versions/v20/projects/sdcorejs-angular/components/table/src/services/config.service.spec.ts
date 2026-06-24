@@ -21,11 +21,7 @@ describe('ConfigService.persistColumnWidth', () => {
     localStorage.clear();
     sessionStorage.clear();
     TestBed.configureTestingModule({
-      providers: [
-        ConfigService,
-        SdStorageService,
-        { provide: SD_TABLE_CONFIGURATION, useValue: null },
-      ],
+      providers: [ConfigService, SdStorageService, { provide: SD_TABLE_CONFIGURATION, useValue: null }],
     });
     service = TestBed.inject(ConfigService);
   });
@@ -37,7 +33,7 @@ describe('ConfigService.persistColumnWidth', () => {
     expect(emitted).toBeNull();
   });
 
-  it('cập nhật width của đúng field và emit widthChange\$', () => {
+  it('cập nhật width của đúng field và emit widthChange$', () => {
     const storage = service.init(option);
     let emitted: any = null;
     service.widthChange$.subscribe(v => (emitted = v));
@@ -76,25 +72,22 @@ describe('ConfigService.persistColumnWidth', () => {
 describe('ConfigService.loadConfigurationResult — filler column', () => {
   let service: ConfigService;
 
-  const baseOption = (overrides: Partial<SdTableOption> = {}): SdTableOption => ({
-    type: 'local',
-    items: () => [],
-    columns: [
-      { field: 'name', title: 'Name', type: 'string', width: '120px' },
-      { field: 'age', title: 'Age', type: 'number', width: '80px' },
-    ],
-    ...overrides,
-  } as SdTableOption);
+  const baseOption = (overrides: Partial<SdTableOption> = {}): SdTableOption =>
+    ({
+      type: 'local',
+      items: () => [],
+      columns: [
+        { field: 'name', title: 'Name', type: 'string', width: '120px' },
+        { field: 'age', title: 'Age', type: 'number', width: '80px' },
+      ],
+      ...overrides,
+    }) as SdTableOption;
 
   beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
     TestBed.configureTestingModule({
-      providers: [
-        ConfigService,
-        SdStorageService,
-        { provide: SD_TABLE_CONFIGURATION, useValue: null },
-      ],
+      providers: [ConfigService, SdStorageService, { provide: SD_TABLE_CONFIGURATION, useValue: null }],
     });
     service = TestBed.inject(ConfigService);
   });

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Định nghĩa các Components của Form Render
 import { SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
@@ -484,7 +483,7 @@ export const FormBuilderComponents: FormBuilderComponent[] = [
 /** Lookup: component type → Material Symbol + label, used by attribute panel header. */
 export const COMPONENT_ICONS: Record<string, { symbol: string; label: string }> = FormBuilderComponents.reduce(
   (acc, c) => ({ ...acc, [c.type]: { symbol: c.symbol, label: c.name } }),
-  {} as Record<string, { symbol: string; label: string }>,
+  {} as Record<string, { symbol: string; label: string }>
 );
 
 export const GetComponentAttributes = (components: (SdFormGenericComponent | SdFormGenericGroup)[]) => {

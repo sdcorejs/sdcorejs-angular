@@ -51,9 +51,10 @@ class KeyedHostComponent {
 // Fixture factories
 // ---------------------------------------------------------------------------
 
-function setupFixture(
-  permissionSpyResult: boolean
-): { fixture: ComponentFixture<HostComponent>; permSvc: jasmine.SpyObj<SdPermissionService> } {
+function setupFixture(permissionSpyResult: boolean): {
+  fixture: ComponentFixture<HostComponent>;
+  permSvc: jasmine.SpyObj<SdPermissionService>;
+} {
   const permSvc = makePermissionService(permissionSpyResult);
   TestBed.configureTestingModule({
     imports: [HostComponent],
@@ -67,9 +68,10 @@ function setupFixture(
   return { fixture, permSvc };
 }
 
-function setupKeyedFixture(
-  permissionSpyResult: boolean
-): { fixture: ComponentFixture<KeyedHostComponent>; permSvc: jasmine.SpyObj<SdPermissionService> } {
+function setupKeyedFixture(permissionSpyResult: boolean): {
+  fixture: ComponentFixture<KeyedHostComponent>;
+  permSvc: jasmine.SpyObj<SdPermissionService>;
+} {
   const permSvc = makePermissionService(permissionSpyResult);
   TestBed.configureTestingModule({
     imports: [KeyedHostComponent],

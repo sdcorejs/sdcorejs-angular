@@ -53,10 +53,10 @@ export class SdLicenseService {
     // Điều kiện > 2 để đảm bảo không check các case vô nghĩa như *.mobi hay *.com
     while (parts.length > 2) {
       parts.shift(); // Bỏ phần đầu: ["uat", "nexa", "mobi"]
-      
+
       // Tạo domain wildcard: "*.uat.nexa.mobi"
-      const wildcardDomain = '*.' + parts.join('.'); 
-      
+      const wildcardDomain = '*.' + parts.join('.');
+
       // Hash chuỗi: "*.uat.nexa.mobi" + SALT
       if (this.#checkMatch(wildcardDomain, configKeys)) {
         this.#isValid = true;

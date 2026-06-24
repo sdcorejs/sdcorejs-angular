@@ -44,7 +44,7 @@ import {
 // webpack / vite) emit and rewrite the asset automatically. If a downstream
 // app's bundler can't resolve the worker via import.meta.url, the consumer
 // must point pdfjsLib.GlobalWorkerOptions.workerSrc to their own copy.
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+
 import * as pdfjsLib from 'pdfjs-dist';
 
 /**
@@ -68,11 +68,7 @@ export const SD_PDFJS_LIB = new InjectionToken<SdPdfJsLib>('SD_PDFJS_LIB', {
     // import.meta.url can't be resolved or the worker bundle isn't shipped.
     try {
       if (pdfjsLib?.GlobalWorkerOptions && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          'pdfjs-dist/build/pdf.worker.min.mjs' as any,
-          import.meta.url,
-        ).toString();
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs' as any, import.meta.url).toString();
       }
     } catch {
       // Consumer app must set workerSrc manually (documented in sd-preview.md).
@@ -93,14 +89,15 @@ interface PdfViewport {
 }
 // pdfjs TextContent.items is heterogeneous (text + marked-content markers);
 // we narrow to the text-bearing entries we actually use for search.
-interface PdfTextItem { str: string; }
-interface PdfTextContent { items: Array<PdfTextItem | unknown> }
+interface PdfTextItem {
+  str: string;
+}
+interface PdfTextContent {
+  items: (PdfTextItem | unknown)[];
+}
 interface PdfPageProxy {
   getViewport(p: { scale: number; rotation?: number }): PdfViewport;
-  render(p: {
-    canvasContext: CanvasRenderingContext2D;
-    viewport: PdfViewport;
-  }): PdfRenderTask;
+  render(p: { canvasContext: CanvasRenderingContext2D; viewport: PdfViewport }): PdfRenderTask;
   getTextContent(): Promise<PdfTextContent | unknown>;
   cleanup(): void;
 }
@@ -165,8 +162,7 @@ export class SdPreviewPdf implements OnDestroy {
   // Every thumbnail <canvas> in the sidebar — populated when sidebar is open +
   // mode==='thumbnails'. We feed these to the IntersectionObserver below so a
   // thumb only renders when it scrolls into the viewport (lazy fill).
-  protected readonly thumbCanvases =
-    viewChildren<ElementRef<HTMLCanvasElement>>('thumbCanvas');
+  protected readonly thumbCanvases = viewChildren<ElementRef<HTMLCanvasElement>>('thumbCanvas');
 
   // ==========================================
   // INPUTS (signal-based, Angular 19 style)
@@ -342,9 +338,7 @@ export class SdPreviewPdf implements OnDestroy {
     if (p.total <= 0) return 0;
     return Math.min(100, Math.round((p.loaded / p.total) * 100));
   });
-  readonly isSidebarOpen = computed(
-    () => this.#sidebarOpenInternal() && this.#sidebarModeInternal() !== 'none',
-  );
+  readonly isSidebarOpen = computed(() => this.#sidebarOpenInternal() && this.#sidebarModeInternal() !== 'none');
   readonly pageList = computed(() => {
     const n = this.numPages();
     return n > 0 ? Array.from({ length: n }, (_, i) => i + 1) : [];
@@ -409,8 +403,7 @@ export class SdPreviewPdf implements OnDestroy {
       // input value so consumer code is forward-compatible.
       if (m === 'continuous') {
         console.warn(
-          // eslint-disable-next-line max-len
-          '[sd-preview-pdf] scrollMode="continuous" is deferred; falling back to single-page rendering.', // @i18n-ignore
+          '[sd-preview-pdf] scrollMode="continuous" is deferred; falling back to single-page rendering.' // @i18n-ignore
         );
       }
       this.#scrollModeInternal.set(m);
@@ -510,10 +503,18 @@ export class SdPreviewPdf implements OnDestroy {
     this.#renderActivePage();
   }
 
-  nextPage(): void { this.goToPage(this.#activePage() + 1); }
-  prevPage(): void { this.goToPage(this.#activePage() - 1); }
-  firstPage(): void { this.goToPage(1); }
-  lastPage(): void { this.goToPage(this.numPages()); }
+  nextPage(): void {
+    this.goToPage(this.#activePage() + 1);
+  }
+  prevPage(): void {
+    this.goToPage(this.#activePage() - 1);
+  }
+  firstPage(): void {
+    this.goToPage(1);
+  }
+  lastPage(): void {
+    this.goToPage(this.numPages());
+  }
 
   zoomIn(): void {
     this.#zoomMode.set(this.#zoom() + SdPreviewPdf.ZOOM_STEP);
@@ -538,7 +539,7 @@ export class SdPreviewPdf implements OnDestroy {
 
   rotate(direction: 'left' | 'right'): void {
     const delta = direction === 'right' ? 90 : -90;
-    this.#rotation.update(r => ((r + delta) % 360 + 360) % 360);
+    this.#rotation.update(r => (((r + delta) % 360) + 360) % 360);
     this.#renderActivePage();
   }
 
@@ -564,8 +565,7 @@ export class SdPreviewPdf implements OnDestroy {
   setScrollMode(mode: PdfScrollMode): void {
     if (mode === 'continuous') {
       console.warn(
-        // eslint-disable-next-line max-len
-        '[sd-preview-pdf] setScrollMode("continuous") is deferred; staying in single-page mode.', // @i18n-ignore
+        '[sd-preview-pdf] setScrollMode("continuous") is deferred; staying in single-page mode.' // @i18n-ignore
       );
     }
     this.#scrollModeInternal.set(mode);
@@ -626,7 +626,7 @@ export class SdPreviewPdf implements OnDestroy {
   // Search is now implemented below.
   printFile(): void {
     console.warn(
-      '[sd-preview-pdf] printFile() is deferred to a follow-up commit.', // @i18n-ignore
+      '[sd-preview-pdf] printFile() is deferred to a follow-up commit.' // @i18n-ignore
     );
   }
 
@@ -646,10 +646,7 @@ export class SdPreviewPdf implements OnDestroy {
    * sidesteps the find-controller's dependency on a real text layer (which
    * we don't render).
    */
-  async search(
-    term: string,
-    options?: { caseSensitive?: boolean; wholeWord?: boolean },
-  ): Promise<number> {
+  async search(term: string, options?: { caseSensitive?: boolean; wholeWord?: boolean }): Promise<number> {
     const token = ++this.#searchToken;
     const cleanTerm = (term ?? '').trim();
     if (options?.caseSensitive !== undefined) {
@@ -675,11 +672,7 @@ export class SdPreviewPdf implements OnDestroy {
       return 0;
     }
 
-    const re = this.#buildSearchRegex(
-      cleanTerm,
-      this.#searchCaseSensitive(),
-      this.#searchWholeWord(),
-    );
+    const re = this.#buildSearchRegex(cleanTerm, this.#searchCaseSensitive(), this.#searchWholeWord());
     if (!re) {
       this.#searchResults.set([]);
       this.#searchActiveIndex.set(-1);
@@ -789,14 +782,9 @@ export class SdPreviewPdf implements OnDestroy {
   @HostListener('keydown', ['$event'])
   onKeyDown(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
-    const isSearchInput =
-      !!target && target === this.searchInputRef()?.nativeElement;
+    const isSearchInput = !!target && target === this.searchInputRef()?.nativeElement;
     const isOtherEditable =
-      !!target &&
-      !isSearchInput &&
-      (target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable);
+      !!target && !isSearchInput && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
 
     // Ctrl/Cmd+F: open the search bar from anywhere (even when input has
     // focus, e.g. re-focus the search bar from the page input). Handled
@@ -1018,7 +1006,11 @@ export class SdPreviewPdf implements OnDestroy {
     }
     if (token !== this.#loadToken) {
       // A newer source replaced us mid-load. Cleanup this stale doc.
-      try { await pdfDoc.destroy(); } catch { /* ignore */ }
+      try {
+        await pdfDoc.destroy();
+      } catch {
+        /* ignore */
+      }
       return;
     }
 
@@ -1102,10 +1094,7 @@ export class SdPreviewPdf implements OnDestroy {
   #resolveScale(baseViewport: PdfViewport): number {
     const mode = this.#zoomMode();
     if (typeof mode === 'number') {
-      return Math.min(
-        SdPreviewPdf.MAX_ZOOM,
-        Math.max(SdPreviewPdf.MIN_ZOOM, mode),
-      );
+      return Math.min(SdPreviewPdf.MAX_ZOOM, Math.max(SdPreviewPdf.MIN_ZOOM, mode));
     }
     if (mode === 'page-actual') return 1;
     const stage = this.stageEl()?.nativeElement;
@@ -1124,7 +1113,11 @@ export class SdPreviewPdf implements OnDestroy {
 
   #cancelRender(): void {
     if (this.#currentRenderTask) {
-      try { this.#currentRenderTask.cancel(); } catch { /* ignore */ }
+      try {
+        this.#currentRenderTask.cancel();
+      } catch {
+        /* ignore */
+      }
       this.#currentRenderTask = null;
     }
   }
@@ -1133,14 +1126,15 @@ export class SdPreviewPdf implements OnDestroy {
     const doc = this.#pdfDoc();
     if (!doc) return;
     this.#pdfDoc.set(null);
-    try { await doc.destroy(); } catch { /* ignore */ }
+    try {
+      await doc.destroy();
+    } catch {
+      /* ignore */
+    }
   }
 
   #setZoom(value: number): void {
-    const clamped = Math.min(
-      SdPreviewPdf.MAX_ZOOM,
-      Math.max(SdPreviewPdf.MIN_ZOOM, value),
-    );
+    const clamped = Math.min(SdPreviewPdf.MAX_ZOOM, Math.max(SdPreviewPdf.MIN_ZOOM, value));
     this.#zoom.set(clamped);
     this.#renderActivePage();
   }
@@ -1187,8 +1181,7 @@ export class SdPreviewPdf implements OnDestroy {
       }
       if ('data' in src && (src.data instanceof ArrayBuffer || src.data instanceof Uint8Array)) {
         this.#filename.set('document.pdf');
-        const data =
-          src.data instanceof ArrayBuffer ? new Uint8Array(src.data) : src.data;
+        const data = src.data instanceof ArrayBuffer ? new Uint8Array(src.data) : src.data;
         this.#fileSize.set(data.byteLength);
         return { data };
       }
@@ -1326,17 +1319,14 @@ export class SdPreviewPdf implements OnDestroy {
     const activePage = this.activePage();
     if (!term || results.length === 0) return;
 
-    const pageHits = results
-      .map((r, i) => ({ r, i }))
-      .filter(({ r }) => r.page === activePage);
+    const pageHits = results.map((r, i) => ({ r, i })).filter(({ r }) => r.page === activePage);
     if (pageHits.length === 0) return;
 
     const overlay = document.createElement('div');
     overlay.className = 'sd-pdf-search-overlay';
     for (const { r, i } of pageHits) {
       const m = document.createElement('mark');
-      m.className =
-        i === activeIdx ? 'sd-pdf-search-hi sd-pdf-search-hi--active' : 'sd-pdf-search-hi';
+      m.className = i === activeIdx ? 'sd-pdf-search-hi sd-pdf-search-hi--active' : 'sd-pdf-search-hi';
       m.textContent = r.term;
       overlay.appendChild(m);
     }
@@ -1390,7 +1380,7 @@ export class SdPreviewPdf implements OnDestroy {
           void this.#renderThumbnail(n, c);
         }
       },
-      { rootMargin: '120px 0px 120px 0px', threshold: 0.01 },
+      { rootMargin: '120px 0px 120px 0px', threshold: 0.01 }
     );
     for (const c of canvases) this.#thumbObserver.observe(c);
   }

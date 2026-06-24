@@ -172,9 +172,7 @@ export class ConfigService {
     }
     result.multipleHeader = result.secondHeaders.length > 0;
     // Sub infomation không thể có footer; filler cũng không cần footer cell.
-    result.displayedFooters = result.displayedColumns.filter(
-      val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.FILLER
-    );
+    result.displayedFooters = result.displayedColumns.filter(val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.FILLER);
     if (option.filler?.enabled) {
       // Footer cũng cần filler cuối để giữ width đồng bộ với data row
       result.displayedFooters.push(this.#COLUMNS.FILLER);

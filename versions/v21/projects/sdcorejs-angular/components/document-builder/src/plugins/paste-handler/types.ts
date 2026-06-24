@@ -18,19 +18,18 @@ import type { PasteOfficeHtmlParseResult } from './filters/parse';
  * They detect environment-specific quirks and transform it into a form compatible with other CKEditor features.
  */
 export interface PasteFromOfficeNormalizer {
+  /**
+   * Must return `true` if the `htmlString` contains content which this normalizer can transform.
+   */
+  isActive(htmlString: string): boolean;
 
-	/**
-	 * Must return `true` if the `htmlString` contains content which this normalizer can transform.
-	 */
-	isActive( htmlString: string ): boolean;
-
-	/**
-	 * Executes the normalization of a given data.
-	 */
-	execute( data: PasteFromOfficeNormalizerData ): void;
+  /**
+   * Executes the normalization of a given data.
+   */
+  execute(data: PasteFromOfficeNormalizerData): void;
 }
 
 export interface PasteFromOfficeNormalizerData extends ClipboardInputTransformationData {
-	_isTransformedWithPasteFromOffice?: boolean;
-	_parsedData: PasteOfficeHtmlParseResult;
+  _isTransformedWithPasteFromOffice?: boolean;
+  _parsedData: PasteOfficeHtmlParseResult;
 }

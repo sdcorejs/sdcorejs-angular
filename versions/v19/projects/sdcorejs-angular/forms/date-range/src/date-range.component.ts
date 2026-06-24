@@ -1,5 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -17,7 +15,7 @@ import {
   output,
   TemplateRef,
   viewChild,
-  contentChild
+  contentChild,
 } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
 import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
@@ -27,7 +25,14 @@ import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@ang
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SD_FORM_CONFIGURATION,
+  sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -100,7 +105,7 @@ export class SdDateRange implements OnDestroy, OnInit {
   // 3. SIGNAL INPUTS & MODEL
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  autoId = computed(() => this.autoIdInput() ? `forms-date-range-${this.autoIdInput()}` : undefined);
+  autoId = computed(() => (this.autoIdInput() ? `forms-date-range-${this.autoIdInput()}` : undefined));
   fromAutoId = computed(() => {
     const id = this.autoId();
     return id ? `${id}-from` : undefined;
@@ -143,7 +148,7 @@ export class SdDateRange implements OnDestroy, OnInit {
       return undefined;
     },
   });
-  
+
   label = input<string | undefined>();
   helperText = input<string | undefined>();
 
@@ -244,10 +249,10 @@ export class SdDateRange implements OnDestroy, OnInit {
   control1 = new FormControl();
   control2 = new FormControl();
 
-  #isFocus: boolean = false;
-  #isModelChange: boolean = false;
-  #isSdChangeEmittedByEnter: boolean = false;
-  #isSdChangeEmittedByClear: boolean = false;
+  #isFocus = false;
+  #isModelChange = false;
+  #isSdChangeEmittedByEnter = false;
+  #isSdChangeEmittedByClear = false;
 
   constructor() {
     this.cdRef.markForCheck();
@@ -361,10 +366,10 @@ export class SdDateRange implements OnDestroy, OnInit {
     this.control1.setValue(null, { emitEvent: false });
     this.control2.setValue(null, { emitEvent: false });
     this.formControl.setValue(emptyModel, { emitEvent: false });
-    
+
     this.valueModel.set(emptyModel);
     this.sdChange.emit(emptyModel);
-    
+
     this.#isSdChangeEmittedByClear = true;
     this.cdRef.markForCheck();
   };

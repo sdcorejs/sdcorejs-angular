@@ -1,5 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import {
@@ -17,7 +15,7 @@ import {
   output,
   signal,
   viewChild,
-  viewChildren
+  viewChildren,
 } from '@angular/core';
 import { FormGroup, NgForm, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -59,16 +57,17 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
     FilterImagePipe,
     FilterDocumentPipe,
     SdFormatNumberPipe,
-    MatProgressSpinner, TranslatePipe],
+    MatProgressSpinner,
+    TranslatePipe,
+  ],
 })
 export class SdUploadFile<TArgs = any> {
   // ─── Injected Services ────────────────────────────────────────────────
   readonly #notifyService = inject(SdNotifyService);
   readonly #confirmService = inject(SdConfirmService);
-  readonly #configuration = inject<ISdUploadFileConfiguration | ISdUploadFileConfiguration[]>(
-    SD_UPLOAD_FILE_CONFIGURATION,
-    { optional: true }
-  );
+  readonly #configuration = inject<ISdUploadFileConfiguration | ISdUploadFileConfiguration[]>(SD_UPLOAD_FILE_CONFIGURATION, {
+    optional: true,
+  });
   readonly #uploadFileService = inject(UploadFileService);
   readonly #destroyRef = inject(DestroyRef);
   readonly #i18n = inject(I18nService);
@@ -108,8 +107,7 @@ export class SdUploadFile<TArgs = any> {
   // autoId prefix `upload-file-`. Mỗi nút remove dùng index-based suffix để ổn định khi filename trùng nhau.
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `components-upload-file-${this.autoIdInput()}` : undefined));
-  readonly removeAutoId = (index: number): string | undefined =>
-    (this.autoId() ? `${this.autoId()}-remove-${index}` : undefined);
+  readonly removeAutoId = (index: number): string | undefined => (this.autoId() ? `${this.autoId()}-remove-${index}` : undefined);
 
   // ─── E2E data attributes ──────────────────────────────────────────────
   readonly dataDisabled = computed(() => (this.disabled() ? 'true' : 'false'));
@@ -270,7 +268,6 @@ export class SdUploadFile<TArgs = any> {
     });
   }
 
-
   // ─── Drop container setup ─────────────────────────────────────────────
   #setupDropContainer() {
     const dropEls = this.dropElements();
@@ -414,8 +411,7 @@ export class SdUploadFile<TArgs = any> {
       const reader = new FileReader();
       reader.onload = evt => {
         previewFile.previewSrc = evt.target!.result;
-        previewFile.isPreviewImage =
-          previewFile.file?.type.split('/')[0] === 'image' && previewFile.file?.type !== 'image/tiff';
+        previewFile.isPreviewImage = previewFile.file?.type.split('/')[0] === 'image' && previewFile.file?.type !== 'image/tiff';
         // trigger signal update
         this.previewFiles.set([...this.previewFiles()]);
       };

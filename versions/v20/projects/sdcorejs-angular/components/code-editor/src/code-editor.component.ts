@@ -11,7 +11,7 @@ import {
   signal,
   untracked,
   ViewEncapsulation,
-  booleanAttribute
+  booleanAttribute,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -45,10 +45,10 @@ export class SdCodeEditor {
   // ==========================================
   // Nhận bất kỳ kiểu dữ liệu nào (string, array, object)
   valueModel = model<any>(undefined, { alias: 'model' });
-  
+
   language = input<CodeLanguage>('typescript');
   maxHeight = input<string>('500px');
-  
+
   // Trạng thái Viewed (true = Read Only, false = Editable)
   viewed = input(false, { transform: booleanAttribute });
 
@@ -56,11 +56,11 @@ export class SdCodeEditor {
   // 2. INTERNAL STATE
   // ==========================================
   copied = signal<boolean>(false);
-  
+
   // Chuỗi text nội bộ dùng để map với thẻ <textarea>
   textValue = signal<string>('');
-  
-  prismLang = computed(() => this.language() === 'html' ? 'markup' : this.language());
+
+  prismLang = computed(() => (this.language() === 'html' ? 'markup' : this.language()));
 
   // Cờ lưu vết để chống Loop (Vòng lặp vô tận khi bắn 2 chiều)
   private _lastEmittedValue: any = undefined;
@@ -72,7 +72,7 @@ export class SdCodeEditor {
     effect(() => {
       const extVal = this.valueModel();
       const lang = this.language();
-      
+
       untracked(() => {
         // Nếu giá trị này do chính component bắn ra, bỏ qua để tránh loop
         if (extVal === this._lastEmittedValue) return;
@@ -102,10 +102,10 @@ export class SdCodeEditor {
   // ==========================================
   highlightedCode = computed<SafeHtml>(() => {
     // Dùng khoảng trắng để giữ độ cao cho thẻ pre nếu rỗng
-    const rawCode = this.textValue() || ' '; 
+    const rawCode = this.textValue() || ' ';
     const langKey = this.prismLang();
     const grammar = Prism.languages[langKey] || Prism.languages['markup'];
-    
+
     // Cộng thêm \n ở cuối để chống lỗi con trỏ textarea ăn lẹm dòng cuối
     const highlightedString = Prism.highlight(rawCode, grammar, langKey) + '\n';
     return this.#sanitizer.bypassSecurityTrustHtml(highlightedString);
@@ -114,23 +114,23 @@ export class SdCodeEditor {
   // ==========================================
   // EVENTS
   // ==========================================
-  
+
   // Khi người dùng gõ vào Textarea (TextValue -> Model)
   onTextChange(newText: string) {
     this.textValue.set(newText);
-    
+
     let valToEmit: any = newText;
-    
+
     // Nếu ngôn ngữ là JSON, cố gắng trả về Object thật
     if (this.language() === 'json') {
       try {
         valToEmit = JSON.parse(newText);
       } catch {
         // Nếu gõ dở ngoặc/sai cú pháp -> Trả về chuỗi String tạm
-        valToEmit = newText; 
+        valToEmit = newText;
       }
     }
-    
+
     // Ghi sổ và bắn ra ngoài
     this._lastEmittedValue = valToEmit;
     this.valueModel.set(valToEmit);
@@ -139,7 +139,7 @@ export class SdCodeEditor {
   copyToClipboard() {
     const rawCode = this.textValue();
     if (!rawCode) return;
-    
+
     if (this.#clipboard.copy(rawCode)) {
       this.copied.set(true);
       setTimeout(() => this.copied.set(false), 2000);

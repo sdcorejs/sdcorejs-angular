@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Utilities, StringUtilities } from '@sdcorejs/utils/fns';
 // import { sha1 } from 'object-hash';
@@ -16,7 +14,7 @@ import { FormGenericService } from '../../../../../../services';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HtmlPipe],
 })
-export class HtmlComponent implements AfterViewInit, OnDestroy {
+export class HtmlComponent implements AfterViewInit, OnDestroy, OnInit {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
 
   form = new FormGroup({});
@@ -135,7 +133,7 @@ export class HtmlComponent implements AfterViewInit, OnDestroy {
           // Nếu query có thay đổi thì thực hiện gán lại items
           if (hashedQuery !== this.#hashedQuery) {
             this.#hashedQuery = hashedQuery;
-            this.entity[this.key] = await this.formRenderService.html.getContent(this.component.template!, query)
+            this.entity[this.key] = await this.formRenderService.html.getContent(this.component.template!, query);
             this.ref.markForCheck();
           }
         })

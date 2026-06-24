@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Signal, TemplateRef } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdSearch } from '@sdcorejs/angular/forms';
@@ -50,7 +49,7 @@ interface ColumnCellOption {
   truncate?: {
     enable?: boolean;
     type?: 'more' | 'tooltip';
-  }
+  };
 }
 
 interface SdTableColumnBase<T = any> {
@@ -77,7 +76,7 @@ interface SdTableColumnBase<T = any> {
       enable?: boolean;
       list?: Operator[];
     };
-    filterDef?: TemplateRef<any>
+    filterDef?: TemplateRef<any>;
   };
   export?: {
     disabled?: boolean;

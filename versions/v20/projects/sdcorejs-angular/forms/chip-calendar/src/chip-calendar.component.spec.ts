@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdChipCalendar } from './chip-calendar.component';
-import { queryAllByCss, queryByCss } from '../../../testing/test-utils';
+import { queryAllByCss } from '../../../testing/test-utils';
 
 // ---------------------------------------------------------------------------
 // Host components
@@ -75,8 +75,7 @@ describe('SdChipCalendar', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)
-      ?.componentInstance as SdChipCalendar;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)?.componentInstance as SdChipCalendar;
     if (!comp) throw new Error('SdChipCalendar not found in fixture');
   });
 
@@ -469,8 +468,7 @@ describe('SdChipCalendar — autoId', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(AutoIdHost);
     fixture.detectChanges();
-    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)
-      ?.componentInstance as SdChipCalendar;
+    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)?.componentInstance as SdChipCalendar;
     if (!chip) throw new Error('SdChipCalendar not found');
   });
 
@@ -508,8 +506,7 @@ describe('SdChipCalendar — E2E attributes', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)
-      ?.componentInstance as SdChipCalendar;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)?.componentInstance as SdChipCalendar;
     if (!comp) throw new Error('SdChipCalendar not found in fixture');
   });
 

@@ -10,7 +10,6 @@ import {
   SdTreeComponentOption,
   SdTreeItemLazy,
   SdTreeItemStatic,
-  SdTreeLazyOption,
   SdTreeSelectionEvent,
   SdTreeStaticOption,
   SdTreeToggleEvent,
@@ -27,16 +26,14 @@ const ROOT_DATA: NodeItem = { id: 'root', title: 'Ph\u00f2ng K\u1ebf to\u00e1n' 
 const PAYABLE_DATA: NodeItem = { id: 'payable', title: 'C\u00f4ng n\u1ee3 ph\u1ea3i tr\u1ea3' };
 const RECEIVABLE_DATA: NodeItem = {
   id: 'receivable',
-  title: 'C\u00f4ng n\u1ee3 ph\u1ea3i thu r\u1ea5t d\u00e0i c\u1ea7n hi\u1ec3n th\u1ecb t\u1ed1i \u0111a hai d\u00f2ng v\u00e0 kh\u00f4ng \u0111\u00e8 l\u00ean command cu\u1ed1i d\u00f2ng',
+  title:
+    'C\u00f4ng n\u1ee3 ph\u1ea3i thu r\u1ea5t d\u00e0i c\u1ea7n hi\u1ec3n th\u1ecb t\u1ed1i \u0111a hai d\u00f2ng v\u00e0 kh\u00f4ng \u0111\u00e8 l\u00ean command cu\u1ed1i d\u00f2ng',
 };
 const HR_DATA: NodeItem = { id: 'hr', title: 'Nh\u00e2n s\u1ef1' };
 const CONTRACT_DATA: NodeItem = { id: 'contract', title: 'H\u1ee3p \u0111\u1ed3ng lao \u0111\u1ed9ng' };
 
 const STATIC_ITEMS: SdTreeItemStatic<NodeItem>[] = [
-  treeItem(ROOT_DATA, [
-    treeItem(PAYABLE_DATA),
-    treeItem(RECEIVABLE_DATA, undefined, 'description'),
-  ]),
+  treeItem(ROOT_DATA, [treeItem(PAYABLE_DATA), treeItem(RECEIVABLE_DATA, undefined, 'description')]),
   treeItem(HR_DATA, [treeItem(CONTRACT_DATA)]),
 ];
 
@@ -44,11 +41,7 @@ const STATIC_ITEMS: SdTreeItemStatic<NodeItem>[] = [
   standalone: true,
   imports: [SdTree],
   template: `
-    <sd-tree
-      [option]="option"
-      (selectChange)="onSelect($event)"
-      (expandChange)="onExpand($event)"
-      (collapseChange)="onCollapse($event)" />
+    <sd-tree [option]="option" (selectChange)="onSelect($event)" (expandChange)="onExpand($event)" (collapseChange)="onCollapse($event)" />
   `,
 })
 class StaticHostComponent {
@@ -254,7 +247,7 @@ describe('SdTree', () => {
       jasmine.objectContaining({
         item: PAYABLE_DATA,
         selected: true,
-      }),
+      })
     );
     expect(component.selectedEvents[1].selectedItems.map(item => item.id)).toEqual(['payable', 'receivable']);
     expect(row(fixture.nativeElement, 'payable').getAttribute('aria-selected')).toBe('true');
@@ -387,7 +380,7 @@ describe('SdTree', () => {
         title: `Edit ${ROOT_DATA.title}`,
         icon: 'edit',
         fontSet: 'material-icons-outlined',
-      }),
+      })
     );
   });
 
@@ -395,18 +388,14 @@ describe('SdTree', () => {
     const fixture = await createFixture(StaticHostComponent);
     const component = fixture.componentInstance;
     const overlay = TestBed.inject(OverlayContainer).getContainerElement();
-    const trigger = fixture.nativeElement.querySelector(
-      '[data-autoid="components-tree-static-command-receivable"]',
-    ) as HTMLButtonElement;
+    const trigger = fixture.nativeElement.querySelector('[data-autoid="components-tree-static-command-receivable"]') as HTMLButtonElement;
 
     trigger.click();
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
 
-    const editButton = overlay.querySelector(
-      '[data-autoid="components-tree-static-command-receivable-edit"]',
-    ) as HTMLButtonElement;
+    const editButton = overlay.querySelector('[data-autoid="components-tree-static-command-receivable-edit"]') as HTMLButtonElement;
     const content = editButton.querySelector('.sd-tree__command-menu-content') as HTMLElement;
     const iconEl = editButton.querySelector('.sd-tree__command-menu-icon') as HTMLElement;
     const title = editButton.querySelector('.sd-tree__command-title') as HTMLElement;

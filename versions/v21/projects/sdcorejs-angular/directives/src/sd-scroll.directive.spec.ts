@@ -101,7 +101,9 @@ describe('SdScrollDirective', () => {
       let assignedValue: number | undefined;
       Object.defineProperty(el, 'scrollTop', {
         get: () => assignedValue ?? 0,
-        set: (v: number) => { assignedValue = v; },
+        set: (v: number) => {
+          assignedValue = v;
+        },
         configurable: true,
       });
 

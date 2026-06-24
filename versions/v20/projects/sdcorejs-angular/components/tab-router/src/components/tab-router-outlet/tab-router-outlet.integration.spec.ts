@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -29,12 +28,7 @@ class HostComponent {
   disabled = false;
 }
 
-const navigateAndStabilize = async (
-  router: Router,
-  fixture: ComponentFixture<HostComponent>,
-  url: string,
-  extras: any = {},
-) => {
+const navigateAndStabilize = async (router: Router, fixture: ComponentFixture<HostComponent>, url: string, extras: any = {}) => {
   await router.navigateByUrl(url, { state: extras.state });
   fixture.detectChanges();
   await fixture.whenStable();
@@ -84,8 +78,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
   });
 
   describe('navigation → tab creation', () => {

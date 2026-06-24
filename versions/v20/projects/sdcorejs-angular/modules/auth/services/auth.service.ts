@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional, signal, Signal } from '@angular/core';
-import { from, Observable, Subject } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { ISdAuthConfiguration, SD_AUTH_CONFIGURATION } from '../configurations';
 import { normalizeAsync, resolveMaybeAsync } from '@sdcorejs/utils/models';
 import { SdAuthInfo } from './auth.model';

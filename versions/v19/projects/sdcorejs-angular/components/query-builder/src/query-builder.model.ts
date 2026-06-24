@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DateRelative, Filter, Operator } from '@sdcorejs/utils/models';
 import { FilterUtilities } from '@sdcorejs/utils/fns';
 
@@ -191,12 +190,12 @@ export function qbSupportsFieldCompareOperator(op: Operator | undefined): boolea
  * but kept local so query-builder has no dependency on the query-bar package.
  */
 export const QB_TYPE_ICON: Record<SdQueryBuilderFieldType, string> = {
-  string:   'text_fields',
-  number:   'tag',
-  boolean:  'toggle_on',
-  date:     'event',
+  string: 'text_fields',
+  number: 'tag',
+  boolean: 'toggle_on',
+  date: 'event',
   datetime: 'schedule',
-  values:   'list',
+  values: 'list',
 };
 
 /**
@@ -276,7 +275,7 @@ export interface QbDateModeOption {
 }
 
 /** Stable option list for the date-mode select (module ref — never reallocated). */
-export const QB_DATE_MODES: ReadonlyArray<QbDateModeOption> = [
+export const QB_DATE_MODES: readonly QbDateModeOption[] = [
   { value: 'absolute', display: 'Ngày cụ thể', icon: 'event' },
   { value: 'now', display: 'Hôm nay', icon: 'today' },
   { value: 'relative', display: 'Tương đối', icon: 'history' },
@@ -291,13 +290,13 @@ export interface QbValueSourceOption {
 }
 
 /** Stable option list for choosing between a literal value and another field. */
-export const QB_VALUE_SOURCE_OPTIONS: ReadonlyArray<QbValueSourceOption> = [
+export const QB_VALUE_SOURCE_OPTIONS: readonly QbValueSourceOption[] = [
   { value: 'literal', display: 'Nhập giá trị', icon: 'edit_note' },
   { value: 'field', display: 'Chọn trường', icon: 'view_column' },
 ];
 
 /** Stable combined direction×unit option list (token `'unit:direction'`). */
-export const QB_RELATIVE_UNIT_OPTIONS: ReadonlyArray<{ value: string; display: string }> = [
+export const QB_RELATIVE_UNIT_OPTIONS: readonly { value: string; display: string }[] = [
   { value: 'day:previous', display: 'ngày trước' },
   { value: 'day:next', display: 'ngày tới' },
   { value: 'week:previous', display: 'tuần trước' },

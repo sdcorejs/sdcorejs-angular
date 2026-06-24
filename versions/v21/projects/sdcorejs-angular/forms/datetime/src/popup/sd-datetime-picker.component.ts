@@ -1,13 +1,5 @@
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  EventEmitter,
-  Output,
-  booleanAttribute,
-  input,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttribute, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -91,12 +83,7 @@ export class SdDatetimePicker {
     // Tạo Date mới từ selectedDate + hours/minutes/seconds hiện tại.
     const base = this.selectedDate();
     const result = new Date(base.getTime());
-    result.setHours(
-      this.hours(),
-      this.minutes(),
-      this.showSeconds() ? this.seconds() : 0,
-      0,
-    );
+    result.setHours(this.hours(), this.minutes(), this.showSeconds() ? this.seconds() : 0, 0);
     this.confirmed.emit(result);
   }
 

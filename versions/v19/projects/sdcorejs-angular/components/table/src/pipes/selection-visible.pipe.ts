@@ -15,7 +15,7 @@ export class SdSelectionVisiblePipe implements PipeTransform {
       rowData.meta.selector!.selectable = true;
       return rowData.meta.selector!.selectable;
     }
-    for (const action of selection?.actions) {
+    for (const action of selection.actions) {
       if ('children' in action) {
         let flag = false;
         let hasGroup = false;

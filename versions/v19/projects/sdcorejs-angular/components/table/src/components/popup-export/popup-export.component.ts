@@ -1,4 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, inject } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
@@ -27,7 +26,6 @@ import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
   standalone: true,
   imports: [CommonModule, MatTableModule, MatIconModule, MatChipsModule, SdButton, SdInput, SdModal],
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class SdPopupExport {
   tableOption!: SdTableOption;
   columns: SdExcelColumn[] = [];
@@ -217,7 +215,7 @@ export class SdPopupExport {
   generateAndUploadTemplate = async (fileName?: string) => {
     const sheets: SdExcelSheet[] = [];
     if (Array.isArray(this.exportOption?.sheets)) {
-      for (const sheet of this.exportOption?.sheets) {
+      for (const sheet of this.exportOption.sheets) {
         if (sheet.name && sheet.items && sheet.headers) {
           if (Array.isArray(sheet.items)) {
             sheets.push({

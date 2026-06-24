@@ -1,26 +1,15 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  input,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { Operator } from '@sdcorejs/utils/models';
 
-import {
-  SD_QUERY_NO_DATA_OPERATORS,
-  SdQueryField,
-  sdQueryFieldIcon,
-} from '../../query-bar.model';
+import { SD_QUERY_NO_DATA_OPERATORS, SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
 
-type Range = { from?: any; to?: any };
+interface Range {
+  from?: any;
+  to?: any;
+}
 type ChipState = 'pending' | 'active' | 'focus' | 'error';
 
 /**

@@ -29,10 +29,7 @@ describe('FilterImagePipe', () => {
   });
 
   it('drops non-image even when it has file or src', () => {
-    const items = [
-      file({ isPreviewImage: false, file: new File([], 'a.pdf') }),
-      file({ isPreviewImage: false, src: 'http://x/b.txt' }),
-    ];
+    const items = [file({ isPreviewImage: false, file: new File([], 'a.pdf') }), file({ isPreviewImage: false, src: 'http://x/b.txt' })];
     expect(pipe.transform(items)).toEqual([]);
   });
 

@@ -1,7 +1,7 @@
 export type SdFormGenericDefinitionHtml = SdFormGenericDefinitionHtmlStatic | SdFormGenericDefinitionHtmlQuery;
 
 interface SdFormGenericDefinitionHtmlStatic {
-  type: 'static'
+  type: 'static';
   value: string;
   display: string;
   content: string;

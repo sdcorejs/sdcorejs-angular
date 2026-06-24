@@ -20,7 +20,6 @@ import { CommandFilterPipe } from './pipes/filter.pipe';
   },
   imports: [CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule, MatIconModule, CommandPipe, CommandFilterPipe],
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class DesktopCommand {
   // ==========================================
   // 1. SIGNAL INPUTS

@@ -26,7 +26,7 @@ describe('SdGlobalErrorHandler', () => {
     confirmSpy = spyOn(window, 'confirm').and.returnValue(false);
 
     consoleErrorSpy = spyOn(console, 'error').and.stub();
-    consoleWarnSpy  = spyOn(console, 'warn').and.stub();
+    consoleWarnSpy = spyOn(console, 'warn').and.stub();
 
     TestBed.configureTestingModule({
       providers: [
@@ -73,10 +73,7 @@ describe('SdGlobalErrorHandler', () => {
 
   it('should detect "Loading chunk" (Webpack) and show confirm', () => {
     handler.handleError(new Error('Loading chunk 42 failed'));
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
-      jasmine.stringContaining('Chunk Load error detected:'),
-      jasmine.any(String)
-    );
+    expect(consoleWarnSpy).toHaveBeenCalledWith(jasmine.stringContaining('Chunk Load error detected:'), jasmine.any(String));
     expect(confirmSpy).toHaveBeenCalled();
   });
 

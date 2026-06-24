@@ -69,8 +69,7 @@ describe('SdRadio', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    radio = fixture.debugElement.query(el => el.componentInstance instanceof SdRadio)
-      ?.componentInstance as SdRadio;
+    radio = fixture.debugElement.query(el => el.componentInstance instanceof SdRadio)?.componentInstance as SdRadio;
     if (!radio) throw new Error('SdRadio not found in fixture');
   });
 
@@ -242,8 +241,7 @@ describe('SdRadio', () => {
       }).compileComponents();
       aFixture = TestBed.createComponent(AutoIdHost);
       aFixture.detectChanges();
-      aRadio = aFixture.debugElement.query(el => el.componentInstance instanceof SdRadio)
-        ?.componentInstance as SdRadio;
+      aRadio = aFixture.debugElement.query(el => el.componentInstance instanceof SdRadio)?.componentInstance as SdRadio;
       if (!aRadio) throw new Error('SdRadio not found');
     });
 
@@ -392,7 +390,7 @@ describe('SdRadio (viewed + color)', () => {
     f.componentInstance.model = null;
     f.detectChanges();
     // SdEmptyPipe renders some empty placeholder ('-' or similar) — assert no [object Object] leak.
-    const txt = (f.nativeElement.textContent as string);
+    const txt = f.nativeElement.textContent as string;
     expect(txt).not.toContain('[object');
   });
 

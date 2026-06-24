@@ -103,13 +103,9 @@ export class VariablePlugin extends Plugin {
             // Không nhét DOM con vào serialized HTML; upcast đọc binding từ data-binding-value.
             return;
           }
-          const htmlHost = viewWriter.createRawElement(
-            'span',
-            { class: 'variable-html-content' },
-            (domElement: HTMLElement) => {
-              domElement.innerHTML = raw;
-            }
-          );
+          const htmlHost = viewWriter.createRawElement('span', { class: 'variable-html-content' }, (domElement: HTMLElement) => {
+            domElement.innerHTML = raw;
+          });
           viewWriter.insert(viewWriter.createPositionAt(viewElement, 0), htmlHost);
         } else {
           viewWriter.setAttribute('data-binding', 'true', viewElement);
@@ -415,7 +411,7 @@ export class VariablePlugin extends Plugin {
 
         // Nếu có HTML chứa variable-widget thì để CKEditor xử lý (upcast converter)
         // Việc chống trùng uuid (regenerate) đã được xử lý ở upcast converter dựa vào biến isPasting
-        let html = dataTransfer.getData('text/html');
+        const html = dataTransfer.getData('text/html');
         if (html && html.includes('variable-widget')) {
           return;
         }
@@ -443,7 +439,7 @@ export class VariablePlugin extends Plugin {
         // Tách text thành các phần: normal text và variables
         let lastIndex = 0;
         let match;
-        const fragments: Array<{ type: 'text' | 'variable'; content: string; display?: string }> = [];
+        const fragments: { type: 'text' | 'variable'; content: string; display?: string }[] = [];
 
         while ((match = variablePattern.exec(text)) !== null) {
           // Thêm text trước variable
@@ -467,7 +463,7 @@ export class VariablePlugin extends Plugin {
         // khi copy-paste nội bộ bị mất HTML (chỉ còn plain text {{display}})
         const existingVariableMap = this.#buildDisplayMap();
 
-        const resolvedFragments: Array<{ type: 'text' | 'variable'; content: string; variable?: SdDocumentBuilderVariable }> = [];
+        const resolvedFragments: { type: 'text' | 'variable'; content: string; variable?: SdDocumentBuilderVariable }[] = [];
         for (const fragment of fragments) {
           if (fragment.type === 'variable' && fragment.display) {
             let resolved: SdDocumentBuilderVariable | null = null;

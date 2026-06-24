@@ -1,6 +1,5 @@
 import { Utilities } from '@sdcorejs/utils/fns';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
+
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -18,7 +17,7 @@ import {
   OnInit,
   output,
   viewChild,
-  contentChild
+  contentChild,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -35,7 +34,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SD_FORM_CONFIGURATION,
+  SdCustomValidator,
+  SdFormControl,
+  sdFormControlState,
+  SdInlineErrorValidator,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
@@ -85,7 +94,7 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   // 3. SIGNAL INPUTS & MODEL
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  autoId = computed(() => this.autoIdInput() ? `forms-textarea-${this.autoIdInput()}` : undefined);
+  autoId = computed(() => (this.autoIdInput() ? `forms-textarea-${this.autoIdInput()}` : undefined));
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
@@ -134,7 +143,7 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
     transform: (v: string | undefined | null): string | undefined => v ?? undefined,
   });
   rows = input<number>(5);
-  
+
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
@@ -152,10 +161,10 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   /** Focus the inline textarea. No-op unless `viewed='inline'`. */
   enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
 
-  maxlength = input<number | null, unknown>(null, { 
-    transform: (v) => (v != null && NumberUtilities.isPositiveInteger(Number(v))) ? Number(v) : null 
+  maxlength = input<number | null, unknown>(null, {
+    transform: v => (v != null && NumberUtilities.isPositiveInteger(Number(v)) ? Number(v) : null),
   });
-  
+
   pattern = input<string | undefined, string | undefined | null>(undefined, {
     transform: (v: string | undefined | null): string | undefined => v ?? undefined,
   });
@@ -300,8 +309,11 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   };
 
   #updateValidator = (
-    req: boolean, maxLen: number | null, pat: string | undefined, 
-    val: SdCustomValidator | undefined, inl: string | undefined
+    req: boolean,
+    maxLen: number | null,
+    pat: string | undefined,
+    val: SdCustomValidator | undefined,
+    inl: string | undefined
   ) => {
     this.formControl.clearValidators();
     this.formControl.clearAsyncValidators();

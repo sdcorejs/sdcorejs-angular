@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
@@ -19,11 +17,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../configurations';
-import {
-  EvaluateExpression,
-  SdFormatComponent,
-  SdFormRenderConfiguration
-} from '../../models';
+import { EvaluateExpression, SdFormatComponent, SdFormRenderConfiguration } from '../../models';
 import { SdFormGenericValidation } from '../../models/form-generic-validation.model';
 import { WhenExpressionPipe } from '../../pipes';
 import { LibItemComponent, VariableComponent } from './components';
@@ -81,8 +75,7 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
   constructor(
     private ref: ChangeDetectorRef,
     @Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null
-  ) {
-  }
+  ) {}
 
   ngAfterViewInit(): void {
     this.#subscription.add(

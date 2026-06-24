@@ -1,6 +1,11 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
-import { SdFormatComponent, SdFormGenericComponent, SdFormGenericDatetime, SdFormGenericGroup, SdFormGenericVariable } from '../../../../../models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  SdFormatComponent,
+  SdFormGenericComponent,
+  SdFormGenericDatetime,
+  SdFormGenericGroup,
+  SdFormGenericVariable,
+} from '../../../../../models';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
 import { AttributeTemplate } from '../../attribute-template/attribute-template.component';
@@ -9,7 +14,7 @@ import { AttributeExpression } from '../../attribute-expression/attribute-expres
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
-import { AttributeTextarea } from "../../attribute-textarea/attribute-textarea.component";
+import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
@@ -18,7 +23,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, AttributeTextarea, TranslatePipe],
 })
-export class DatetimeAttribute {
+export class DatetimeAttribute implements AfterViewInit, OnDestroy {
   form = new FormGroup({});
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];

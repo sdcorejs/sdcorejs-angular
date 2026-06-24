@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -170,9 +169,7 @@ describe('SdQueryBuildChip', () => {
     host.building = { field, operator: 'EQUAL', step: 'value' };
     fixture.detectChanges();
 
-    const buttons = fixture.nativeElement.querySelectorAll(
-      '.c-token-building .c-bool-btn',
-    ) as NodeListOf<HTMLButtonElement>;
+    const buttons = fixture.nativeElement.querySelectorAll('.c-token-building .c-bool-btn') as NodeListOf<HTMLButtonElement>;
     expect(buttons.length).toBe(2);
     expect(buttons[0].classList.contains('c-bool-true')).toBe(true);
     expect(buttons[1].classList.contains('c-bool-false')).toBe(true);
@@ -188,9 +185,14 @@ describe('SdQueryBuildChip', () => {
   });
 
   // ---- 10: × button emits (cancel)
-  it("× button (.c-token-remove) emits (cancel)", () => {
+  it('× button (.c-token-remove) emits (cancel)', () => {
     host.building = {
-      field: { key: 'status', label: 'Status', type: 'values', option: { items: [], valueField: 'id', displayField: 'name' } } as unknown as SdQueryField,
+      field: {
+        key: 'status',
+        label: 'Status',
+        type: 'values',
+        option: { items: [], valueField: 'id', displayField: 'name' },
+      } as unknown as SdQueryField,
       operator: 'IN',
       step: 'value',
     };

@@ -12,13 +12,7 @@ import { SdTab } from './tab.component';
   standalone: true,
   imports: [SdTab],
   template: `
-    <sd-tab
-      [label]="label"
-      [icon]="icon"
-      [badge]="badge"
-      [disabled]="disabled"
-      [closable]="closable"
-      (close)="onClose()">
+    <sd-tab [label]="label" [icon]="icon" [badge]="badge" [disabled]="disabled" [closable]="closable" (close)="onClose()">
       <p class="tab-body">Body text</p>
     </sd-tab>
   `,

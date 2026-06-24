@@ -1,6 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericTextfield } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
@@ -11,7 +9,7 @@ import { BuilderService } from '../../../services';
   styleUrls: ['./textfield-control.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TextFieldControl {
+export class TextFieldControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericTextfield;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTextfield) {
     if (this.component !== component) {

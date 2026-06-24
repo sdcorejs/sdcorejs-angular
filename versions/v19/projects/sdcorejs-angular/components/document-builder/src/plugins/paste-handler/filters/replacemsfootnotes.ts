@@ -147,8 +147,8 @@ export function replaceMSFootnotes(documentFragment: ViewDocumentFragment, write
  * @returns The trimmed element.
  */
 function removeMSReferences(writer: ViewUpcastWriter, element: ViewElement): ViewElement {
-  const elementsToRemove: Array<ViewElement> = [];
-  const textNodesToTrim: Array<ViewText> = [];
+  const elementsToRemove: ViewElement[] = [];
+  const textNodesToTrim: ViewText[] = [];
 
   for (const { item } of writer.createRangeIn(element)) {
     if (item.is('element') && item.getStyle('mso-footnote-id')) {

@@ -28,17 +28,9 @@ describe('SdViewDefDirective', () => {
 
   it('ngTemplateContextGuard always narrows to Context', () => {
     expect(
-      SdViewDefDirective.ngTemplateContextGuard(
-        {} as SdViewDefDirective<unknown, unknown>,
-        { value: 1, selectedItem: { label: 'x' } },
-      ),
+      SdViewDefDirective.ngTemplateContextGuard({} as SdViewDefDirective<unknown, unknown>, { value: 1, selectedItem: { label: 'x' } })
     ).toBe(true);
-    expect(
-      SdViewDefDirective.ngTemplateContextGuard(
-        {} as SdViewDefDirective<unknown, unknown>,
-        null,
-      ),
-    ).toBe(true);
+    expect(SdViewDefDirective.ngTemplateContextGuard({} as SdViewDefDirective<unknown, unknown>, null)).toBe(true);
   });
 
   it('renders projected template with bound context (value + selectedItem)', () => {

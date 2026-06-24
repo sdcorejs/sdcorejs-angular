@@ -33,7 +33,9 @@ const getSdUploadLang = (): SdUploadLang => {
   try {
     const stored = localStorage.getItem('sd-core.language');
     if (stored && stored in SD_UPLOAD_MESSAGES) return stored as SdUploadLang;
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return 'vi';
 };
 
@@ -57,7 +59,7 @@ const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validato
     }
     element.style.display = 'none';
     body.appendChild(element);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     element.addEventListener('change', (evt: any) => {
       try {
         const target = evt.target as DataTransfer;
@@ -335,7 +337,6 @@ const getClientPublicIp = async (): Promise<string | null> => {
   }
 };
 
-
 // Helper function với fallback
 const generateUuid = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -373,7 +374,6 @@ const SdUtilities = {
   parseQueryParams,
   getClientPublicIp,
   generateUuid,
-  getNestedValue
+  getNestedValue,
 };
 export { SdUtilities };
-

@@ -1,13 +1,13 @@
-import { 
-  ModuleWithProviders, 
-  NgModule, 
-  Provider, 
-  Type, 
-  EnvironmentProviders, 
-  makeEnvironmentProviders, 
-  provideAppInitializer, 
+import {
+  ModuleWithProviders,
+  NgModule,
+  Provider,
+  Type,
+  EnvironmentProviders,
+  makeEnvironmentProviders,
+  provideAppInitializer,
   inject,
-  APP_INITIALIZER
+  APP_INITIALIZER,
 } from '@angular/core';
 import { ISdKeycloakConfiguration, SD_KEYCLOAK_CONFIGURATION } from './keycloak.configuration';
 import { SdKeycloakService } from './keycloak.service';
@@ -17,14 +17,13 @@ import { SdKeycloakService } from './keycloak.service';
 // =======================================================================
 export function provideSdKeycloak(options: {
   useClass?: Type<ISdKeycloakConfiguration>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   useFactory?: (...args: any[]) => ISdKeycloakConfiguration;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   deps?: any[];
 }): EnvironmentProviders {
-  
   // FIX 1: Khai báo mảng nhận cả Provider (cho Service/Token) lẫn EnvironmentProviders (cho AppInitializer)
-  const providers: Array<Provider | EnvironmentProviders> = [SdKeycloakService];
+  const providers: (Provider | EnvironmentProviders)[] = [SdKeycloakService];
 
   if (options.useFactory) {
     providers.push({ provide: SD_KEYCLOAK_CONFIGURATION, useFactory: options.useFactory, deps: options.deps || [] });
@@ -37,7 +36,7 @@ export function provideSdKeycloak(options: {
     provideAppInitializer(() => {
       const configLoader = inject(SD_KEYCLOAK_CONFIGURATION);
       const keycloakService = inject(SdKeycloakService);
-      return configLoader.loadTenantConfig().then((config) => keycloakService.init(config));
+      return configLoader.loadTenantConfig().then(config => keycloakService.init(config));
     })
   );
 
@@ -51,21 +50,19 @@ export function provideSdKeycloak(options: {
 export class SdKeycloakModule {
   static forRoot(options: {
     useClass?: Type<ISdKeycloakConfiguration>;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     useFactory?: (...args: any[]) => ISdKeycloakConfiguration;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     deps?: any[];
   }): ModuleWithProviders<SdKeycloakModule> {
-    
     return {
       ngModule: SdKeycloakModule,
       providers: [
         SdKeycloakService,
-        ...(options.useFactory 
+        ...(options.useFactory
           ? [{ provide: SD_KEYCLOAK_CONFIGURATION, useFactory: options.useFactory, deps: options.deps || [] }]
-          : [{ provide: SD_KEYCLOAK_CONFIGURATION, useClass: options.useClass! }]
-        ),
-        
+          : [{ provide: SD_KEYCLOAK_CONFIGURATION, useClass: options.useClass! }]),
+
         // FIX 2: NgModule bắt buộc phải dùng APP_INITIALIZER (nhưng viết kiểu xịn của Angular 14+, dùng inject)
         {
           provide: APP_INITIALIZER,
@@ -73,10 +70,10 @@ export class SdKeycloakModule {
           useFactory: () => {
             const configLoader = inject(SD_KEYCLOAK_CONFIGURATION);
             const keycloakService = inject(SdKeycloakService);
-            return () => configLoader.loadTenantConfig().then((config) => keycloakService.init(config));
-          }
-        }
-      ]
+            return () => configLoader.loadTenantConfig().then(config => keycloakService.init(config));
+          },
+        },
+      ],
     };
   }
 }

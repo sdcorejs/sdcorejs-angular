@@ -1,9 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { SdLicenseService } from './license.service';
-import {
-  ISdCoreConfiguration,
-  SD_CORE_CONFIGURATION,
-} from '@sdcorejs/angular/configurations';
+import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 
 /**
  * Hash pre-computed from the same algorithm in SdLicenseService:
@@ -20,9 +17,9 @@ import {
 // ---------------------------------------------------------------------------
 // Pre-computed hashes for test domains
 // ---------------------------------------------------------------------------
-const HASH_APP_EXAMPLE_COM = 'LTE1NDQ2NjExNTNzaWduZWQ=';        // app.example.com
-const HASH_WILDCARD_EXAMPLE_COM = 'LTIwNzgyNTI2ODJzaWduZWQ=';  // *.example.com
-const HASH_STORE_UAT_NEXA_MOBI = 'MjEwMjMxNjA3NXNpZ25lZA==';  // store.uat.nexa.mobi
+const HASH_APP_EXAMPLE_COM = 'LTE1NDQ2NjExNTNzaWduZWQ='; // app.example.com
+const HASH_WILDCARD_EXAMPLE_COM = 'LTIwNzgyNTI2ODJzaWduZWQ='; // *.example.com
+const HASH_STORE_UAT_NEXA_MOBI = 'MjEwMjMxNjA3NXNpZ25lZA=='; // store.uat.nexa.mobi
 const HASH_WILDCARD_UAT_NEXA_MOBI = 'LTE0NzAyMDkyMTRzaWduZWQ='; // *.uat.nexa.mobi
 
 // ---------------------------------------------------------------------------
@@ -50,7 +47,9 @@ function withHostname(fakeHostname: string, fn: () => void) {
       if (originalDescriptor) {
         Object.defineProperty(window, 'location', originalDescriptor);
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   });
 
   fn();
@@ -95,7 +94,6 @@ describe('SdLicenseService', () => {
   // GROUP 2: non-localhost paths — uses Object.defineProperty to fake hostname
   // -------------------------------------------------------------------------
   describe('non-localhost paths', () => {
-
     // -----------------------------------------------------------------------
     // 2a. No configuration → throw on non-localhost
     // -----------------------------------------------------------------------
@@ -126,10 +124,7 @@ describe('SdLicenseService', () => {
           }
           const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           const service = TestBed.inject(SdLicenseService);
           expect(() => service.enforceLicense()).not.toThrow();
@@ -151,10 +146,7 @@ describe('SdLicenseService', () => {
             licenseKey: ['INVALID_HASH', HASH_STORE_UAT_NEXA_MOBI],
           };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           const service = TestBed.inject(SdLicenseService);
           expect(() => service.enforceLicense()).not.toThrow();
@@ -174,10 +166,7 @@ describe('SdLicenseService', () => {
           }
           const config: ISdCoreConfiguration = { licenseKey: HASH_WILDCARD_UAT_NEXA_MOBI };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           const service = TestBed.inject(SdLicenseService);
           expect(() => service.enforceLicense()).not.toThrow();
@@ -197,10 +186,7 @@ describe('SdLicenseService', () => {
           }
           const config: ISdCoreConfiguration = { licenseKey: HASH_WILDCARD_EXAMPLE_COM };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           const service = TestBed.inject(SdLicenseService);
           expect(() => service.enforceLicense()).not.toThrow();
@@ -220,10 +206,7 @@ describe('SdLicenseService', () => {
           }
           const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
         });
@@ -243,10 +226,7 @@ describe('SdLicenseService', () => {
           const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
 
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
 
           let thrownError: Error | undefined;
@@ -275,10 +255,7 @@ describe('SdLicenseService', () => {
           }
           const config: ISdCoreConfiguration = { licenseKey: [] as any };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
         });
@@ -297,10 +274,7 @@ describe('SdLicenseService', () => {
           }
           const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
           TestBed.configureTestingModule({
-            providers: [
-              SdLicenseService,
-              { provide: SD_CORE_CONFIGURATION, useValue: config },
-            ],
+            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
           });
           expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
         });

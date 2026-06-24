@@ -1,6 +1,5 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
-import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION } from '../../configurations';
 import { SdLayoutChildrenMenu } from '../menu/menu.model';
 
 @Injectable({

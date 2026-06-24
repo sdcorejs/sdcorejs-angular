@@ -21,7 +21,7 @@ describe('SdButton', () => {
     });
 
     it('renders correct variant for each type', () => {
-      const variants: Array<[string, string]> = [
+      const variants: [string, string][] = [
         ['fill', 'c-fill'],
         ['light', 'c-light'],
         ['outline', 'c-outline'],

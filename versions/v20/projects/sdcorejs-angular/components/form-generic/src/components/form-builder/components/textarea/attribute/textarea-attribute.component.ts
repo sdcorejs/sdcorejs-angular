@@ -1,5 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import {
@@ -22,9 +21,17 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   selector: 'textarea-attribute',
   templateUrl: './textarea-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeInputNumber, AttributeSwitch, AttributeExpression, AttributeTextarea, TranslatePipe],
+  imports: [
+    AttributeTemplate,
+    AttributeInput,
+    AttributeInputNumber,
+    AttributeSwitch,
+    AttributeExpression,
+    AttributeTextarea,
+    TranslatePipe,
+  ],
 })
-export class TextareaAttribute {
+export class TextareaAttribute implements AfterViewInit, OnDestroy {
   form = new FormGroup({});
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];

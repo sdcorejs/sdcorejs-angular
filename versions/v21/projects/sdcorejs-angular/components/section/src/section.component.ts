@@ -1,4 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Color } from '@sdcorejs/utils/models';

@@ -9,10 +9,13 @@ export class SdPermissionService {
   #permissionMapByKey: Record<string, Record<string, boolean>> = {};
   readonly #configuration = inject<ISdPermissionConfiguration | ISdPermissionConfiguration[]>(SD_PERMISSION_CONFIGURATION);
   readonly #cacheService = inject(SdCacheService);
-  #permissionsByKey: SdCache<Record<string, string[]>> = this.#cacheService.create<Record<string, string[]>>('212a51fa-38d5-43b2-bd46-922d85950ba3', {
-    type: 'session',
-    default: {},
-  });
+  #permissionsByKey: SdCache<Record<string, string[]>> = this.#cacheService.create<Record<string, string[]>>(
+    '212a51fa-38d5-43b2-bd46-922d85950ba3',
+    {
+      type: 'session',
+      default: {},
+    }
+  );
   readonly #loadedKeys = new Set<string>();
 
   constructor() {

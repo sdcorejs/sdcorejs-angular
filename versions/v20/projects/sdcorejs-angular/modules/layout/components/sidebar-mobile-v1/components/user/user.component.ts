@@ -77,4 +77,3 @@ export class LayoutUserComponent {
     this.toggleMenuLock.emit(event);
   };
 }
-

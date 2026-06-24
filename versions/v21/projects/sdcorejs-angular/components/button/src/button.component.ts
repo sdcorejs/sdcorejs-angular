@@ -1,4 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -38,7 +37,7 @@ export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
     '[class.sd-loading]': 'loading()',
     '[class.sd-block]': 'block()',
     '[attr.disabled]': 'disabled() ? "true" : null',
-  }
+  },
 })
 export class SdButton implements OnInit, OnDestroy {
   // ==========================================
@@ -50,21 +49,21 @@ export class SdButton implements OnInit, OnDestroy {
   // 2. SIGNAL INPUTS (Bảo mật 100% với Null/Undefined)
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  
+
   type = input<SdButtonType, SdButtonType | undefined | null>('light', {
-    transform: (value) => value || 'light'
+    transform: value => value || 'light',
   });
 
   color = input<Color, Color | undefined | null>('secondary', {
-    transform: (value) => value || 'secondary'
+    transform: value => value || 'secondary',
   });
 
   size = input<SdButtonSize, SdButtonSize | undefined | null>('sm', {
-    transform: (value) => value || 'sm'
+    transform: value => value || 'sm',
   });
 
   fontSet = input<MaterialIconFontSet, MaterialIconFontSet | undefined | null>(DefaultMaterialIconFontSet, {
-    transform: (value) => value || DefaultMaterialIconFontSet
+    transform: value => value || DefaultMaterialIconFontSet,
   });
 
   title = input<string | undefined | null>(undefined);
@@ -78,14 +77,14 @@ export class SdButton implements OnInit, OnDestroy {
   block = input(false, { transform: booleanAttribute });
 
   htmlType = input<SdButtonHtmlType, SdButtonHtmlType | undefined | null>('button', {
-    transform: (value) => value || 'button'
+    transform: value => value || 'button',
   });
 
   // ==========================================
   // 3. COMPUTED STATE
   // ==========================================
-  autoId = computed(() => this.autoIdInput() ? `components-button-${this.autoIdInput()}` : undefined);
-  
+  autoId = computed(() => (this.autoIdInput() ? `components-button-${this.autoIdInput()}` : undefined));
+
   buttonClasses = computed(() => ({
     'c-square': (this.prefixIcon() || this.suffixIcon()) && !this.title(),
     'c-sm': this.size() === 'sm',
@@ -104,7 +103,6 @@ export class SdButton implements OnInit, OnDestroy {
   #subscription = new Subscription();
 
   constructor() {
-
     // Kỹ thuật Đánh chặn sự kiện (Capture Phase)
     // Tóm sống mọi sự kiện click ngay khi nó vừa chạm vào component
     this.el.nativeElement.addEventListener(
@@ -137,7 +135,7 @@ export class SdButton implements OnInit, OnDestroy {
   // Nhận click từ thẻ button con bên trong
   onInternalClick(event: Event) {
     event.stopPropagation();
-    
+
     if (this.disabled() || this.loading()) {
       return;
     }

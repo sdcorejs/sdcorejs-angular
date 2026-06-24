@@ -56,7 +56,10 @@ describe('sdFormControlState', () => {
     fixture.componentInstance.controlSig.set(undefined as unknown as FormControl<string | null>);
     fixture.detectChanges();
     expect(fixture.componentInstance.state()).toEqual({
-      value: undefined, disabled: false, invalid: false, touched: false,
+      value: undefined,
+      disabled: false,
+      invalid: false,
+      touched: false,
     });
   });
 
