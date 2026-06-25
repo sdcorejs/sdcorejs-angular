@@ -75,6 +75,7 @@ interface DragDropRowItem extends FormBuilderLayoutRow {
 
 interface ResizeState {
   itemId: string;
+  rowId: string;
   columns: string;
 }
 
@@ -201,6 +202,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   /** Signal toàn cục: TRUE khi BẤT KỲ cdkDrag nào đang active (palette, canvas, group, resize).
    *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
   readonly isAnyDragging = signal(false);
+  readonly dragSource = signal<'palette' | 'row' | 'canvas' | 'resize' | undefined>(undefined);
   readonly resizeState = signal<ResizeState | undefined>(undefined);
   readonly isResizing = computed(() => !!this.resizeState());
 
@@ -213,6 +215,16 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   /** Handler chung cho mọi cdkDragStarted — set signal global true. */
   onAnyDragStarted = () => {
     this.isAnyDragging.set(true);
+  };
+
+  onPaletteDragStarted = () => {
+    this.dragSource.set('palette');
+    this.onAnyDragStarted();
+  };
+
+  onRowDragStarted = () => {
+    this.dragSource.set('row');
+    this.onAnyDragStarted();
   };
 
   onAnyDragMoved = (event: CdkDragMove<any>) => {
@@ -230,15 +242,17 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   onAnyDragEnded = () => {
     setTimeout(() => {
       this.isAnyDragging.set(false);
+      this.dragSource.set(undefined);
       this.lastDragPointer = undefined;
       this.targetItem = undefined;
       this.#ref.markForCheck();
     }, 0);
   };
 
-  startResizeControl = (item: SdFormGenericComponent | SdFormGenericGroup) => {
+  startResizeControl = (item: SdFormGenericComponent | SdFormGenericGroup, row: DragDropRowItem) => {
+    this.dragSource.set('resize');
     this.isAnyDragging.set(true);
-    this.resizeState.set({ itemId: item.id, columns: `${item.layout?.columns || '12'}` });
+    this.resizeState.set({ itemId: item.id, rowId: row.id, columns: `${item.layout?.columns || '12'}` });
     this.#ref.markForCheck();
   };
 
@@ -293,10 +307,11 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     this.#subscription.unsubscribe();
   }
 
-  addComponent = (item: FormBuilderComponent, index?: number) => {
+  addComponent = (item: FormBuilderComponent, index?: number, layoutColumns = '12') => {
     // why: không cho thêm group khi đang Detail trong 1 group (tránh group lồng group).
     if (item.type === 'group' && this.editingGroupId()) return;
     const id = GenerateId();
+    const columns = item.type === 'break' ? '12' : layoutColumns;
     let newComponent: SdFormGenericComponent | SdFormGenericGroup;
     if (item.type === 'group') {
       // Group là layout container, không có key/validate; có nested components[] + properties{icon,color}.
@@ -304,7 +319,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
         id,
         type: 'group',
         label: 'Group',
-        layout: { columns: '12' },
+        layout: { columns },
         components: [],
         properties: {
           icon: item.symbol || 'category',
@@ -330,7 +345,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
         key: GenerateKey(),
         type: item.type as any,
         label: item.type,
-        layout: { columns: '12' },
+        layout: { columns },
         validate: { required: false },
         disabled: false,
         properties: {},
@@ -491,7 +506,8 @@ export class SdFormBuilder implements OnInit, OnDestroy {
       if (drop && 'symbol' in drop) {
         // transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
         const droppedItem = event.previousContainer.data[event.previousIndex] as FormBuilderComponent;
-        this.addComponent(droppedItem, this.#scopeIndexFromDrop(event.container.data, event.currentIndex));
+        const placement = this.#paletteDropPlacement(event.container.data, event.currentIndex, droppedItem);
+        this.addComponent(droppedItem, placement.index, placement.columns);
       } else {
         const movedItem = event.previousContainer.data[event.previousIndex] as SdFormGenericComponent | SdFormGenericGroup;
         const targetRow = this.#rowForItems(event.container.data);
@@ -508,6 +524,9 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   };
 
   dragStartComponentItem = (event: any) => {
+    void event;
+    this.dragSource.set('canvas');
+    this.onAnyDragStarted();
     this.isDragging = true;
   };
 
@@ -521,6 +540,8 @@ export class SdFormBuilder implements OnInit, OnDestroy {
       this.#ref.markForCheck();
     }
   };
+
+  isRowFull = (row: DragDropRowItem): boolean => this.#usedColumns(row) >= 12;
 
   onFocus = (event: FocusEvent) => {
     void event;
@@ -607,7 +628,11 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     }
     const currentResizeState = this.resizeState();
     if (currentResizeState?.itemId !== item.id || currentResizeState?.columns !== newCols) {
-      this.resizeState.set({ itemId: item.id, columns: newCols });
+      this.resizeState.set({
+        itemId: item.id,
+        rowId: currentResizeState?.rowId ?? this.#rowForItems(items)?.id ?? `row-${item.id}`,
+        columns: newCols,
+      });
       this.#ref.markForCheck();
     }
 
@@ -763,6 +788,42 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   #rowForItems = (items: any[]): DragDropRowItem | undefined => {
     return this.dragDropRows.find(row => row.items === items);
+  };
+
+  #usedColumns = (row: DragDropRowItem): number => {
+    return row.items.reduce((sum, item) => sum + +(item.layout?.columns || 12), 0);
+  };
+
+  #availableColumns = (row: DragDropRowItem): number => {
+    return Math.max(0, 12 - this.#usedColumns(row));
+  };
+
+  #scopeIndexAfterRow = (row: DragDropRowItem): number => {
+    const scope = this.#scope();
+    const lastItem = row.items[row.items.length - 1];
+    const lastIndex = lastItem ? scope.findIndex(component => component.id === lastItem.id) : -1;
+    return lastIndex >= 0 ? lastIndex + 1 : scope.length;
+  };
+
+  #paletteDropPlacement = (
+    containerData: any[],
+    currentIndex: number,
+    item: FormBuilderComponent
+  ): { index?: number; columns?: string } => {
+    const row = this.#rowForItems(containerData);
+    if (!row || item.type === 'break') {
+      return { index: this.#scopeIndexFromDrop(containerData, currentIndex) };
+    }
+
+    const availableColumns = this.#availableColumns(row);
+    if (availableColumns >= 2) {
+      return {
+        index: this.#scopeIndexFromDrop(containerData, currentIndex),
+        columns: `${availableColumns}`,
+      };
+    }
+
+    return { index: this.#scopeIndexAfterRow(row), columns: '12' };
   };
 
   #scopeIndexFromDrop = (containerData: any[], currentIndex: number): number | undefined => {

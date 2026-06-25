@@ -3,6 +3,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
 
 import { SdFormBuilder } from './form-builder.component';
+import { buildFormBuilderRows } from './form-builder-layout';
 
 // ---------------------------------------------------------------------------
 // Group drill-in (Detail) — replaces in-group drag/drop.
@@ -128,11 +129,13 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
   it('tracks resize state while a column handle is being dragged', () => {
     const item = component.components[0] as any;
     item.layout.columns = '6';
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    const row = component.dragDropRows[0];
 
-    component.startResizeControl(item);
+    component.startResizeControl(item, row);
 
     expect(component.isResizing()).toBeTrue();
-    expect(component.resizeState()).toEqual({ itemId: 't1', columns: '6' });
+    expect(component.resizeState()).toEqual({ itemId: 't1', rowId: 'row-t1', columns: '6' });
 
     component.endResizeControl({} as any);
 
@@ -145,6 +148,55 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
 
     expect(styles).toContain('Material Icons Outlined');
     expect(styles).not.toContain('Material Symbols Rounded');
+  });
+
+  it('keeps palette drops in the indicated row when that row has free columns', () => {
+    const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+
+    component.drop({
+      previousContainer: { data: [paletteTextfield] },
+      container: { data: component.dragDropRows[0].items },
+      previousIndex: 0,
+      currentIndex: 1,
+      isPointerOverContainer: true,
+      item: { element: { nativeElement: { id: '' } } },
+    } as any);
+
+    expect(component.components.map((item: any) => item.layout.columns)).toEqual(['6', '6']);
+    expect(component.dragDropRows[0].items.length).toBe(2);
+  });
+
+  it('places palette drops after a full row instead of splitting its items', () => {
+    const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+
+    component.drop({
+      previousContainer: { data: [paletteTextfield] },
+      container: { data: component.dragDropRows[0].items },
+      previousIndex: 0,
+      currentIndex: 1,
+      isPointerOverContainer: true,
+      item: { element: { nativeElement: { id: '' } } },
+    } as any);
+
+    expect(component.components.slice(0, 2).map((item: any) => item.id)).toEqual(['a', 'b']);
+    expect((component.components[2] as any).layout.columns).toBe('12');
+    expect(component.dragDropRows[0].items.map((item: any) => item.id)).toEqual(['a', 'b']);
+    expect(component.dragDropRows[1].items.length).toBe(1);
+  });
+
+  it('does not draw a second row-level drop rail on top of the CDK placeholder', () => {
+    const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
+
+    expect(styles).not.toContain('is-drag-target::after');
   });
 
   it('onDuplicate() regenerates nested child ids and keys when duplicating a group', () => {
