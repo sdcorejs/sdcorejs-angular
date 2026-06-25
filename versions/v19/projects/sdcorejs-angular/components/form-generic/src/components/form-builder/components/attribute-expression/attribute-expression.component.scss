@@ -1,22 +1,94 @@
-.c-builder {
-  padding: 8px;
+:host {
+  display: block;
+  padding: 8px 0;
+}
+
+.fb-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fb-field__label {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.fb-expr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--r-xs, 4px);
+  background: var(--md-sys-color-surface-container-lowest);
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.fb-expr:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 72%, transparent);
+  outline-offset: 2px;
+}
+
+.fb-expr__badge {
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  padding: 0 6px;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-primary);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.fb-expr__code,
+.empty {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fb-expr__code {
+  color: var(--md-sys-color-on-surface);
+  font-family: 'Roboto Mono', monospace;
+  font-size: 11px;
+}
+
+.empty {
+  font-size: 12px;
+}
+
+.fb-icon-btn {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-right: 2px;
+  color: var(--md-sys-color-primary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.msi {
+  font-family: 'Material Symbols Rounded';
+  font-size: 18px;
+  font-weight: normal;
+  line-height: 1;
+}
+
+.fb-expression-query {
   width: 100%;
-  border: 1px solid #e6e6e6;
-  border-radius: 4px;
-  .c-condition {
-    width: 80px;
-    .c-where {
-      width: 80px;
-      border: 1px solid #e6e6e6;
-      background-color: #f2f2f2;
-      color: #757575;
-      border-radius: 4px;
-      padding: 4px;
-      text-align: center;
-    }
-    .c-select {
-      margin-left: 10px;
-      width: 70px;
-    }
-  }
+  min-height: 180px;
 }

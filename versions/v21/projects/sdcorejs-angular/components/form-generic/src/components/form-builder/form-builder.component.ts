@@ -65,11 +65,11 @@ import {
   UploadControl,
 } from './components';
 import { ConfigureValidationComponent } from './components/configure-validation/configure-validation.component';
+import { buildFormBuilderRows, canPlaceInRow, flattenFormBuilderRows, FormBuilderLayoutRow, moveItemToRow } from './form-builder-layout';
 import { BuilderService } from './services';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
-interface DragDropRowItem {
-  items: (SdFormGenericComponent | SdFormGenericGroup)[];
+interface DragDropRowItem extends FormBuilderLayoutRow {
   rowIndex?: number;
 }
 
@@ -211,8 +211,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   onAnyDragMoved = (event: CdkDragMove<any>) => {
     this.lastDragPointer = event.pointerPosition;
     const rowEl = document.elementFromPoint(event.pointerPosition.x, event.pointerPosition.y)?.closest('.fb-row') as HTMLElement | null;
-    const rowIndex = rowEl?.id?.startsWith('row_') ? Number(rowEl.id.replace('row_', '')) : NaN;
-    const row = Number.isNaN(rowIndex) ? undefined : this.dragDropRows.find(t => t.rowIndex === rowIndex);
+    const row = rowEl?.id ? this.dragDropRows.find(t => t.id === rowEl.id) : undefined;
     if (row && this.targetItem !== row) {
       this.targetItem = row;
       this.#ref.markForCheck();
@@ -473,16 +472,17 @@ export class SdFormBuilder implements OnInit, OnDestroy {
       if (drop && 'symbol' in drop) {
         // transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
         const droppedItem = event.previousContainer.data[event.previousIndex] as FormBuilderComponent;
-        const rowIndex = event.currentIndex;
-        const rowItem = this.dragDropRows?.find(t => t.rowIndex === rowIndex);
-        if (rowItem) {
-          this.addComponent(droppedItem, +(rowItem.items[0]?.layout?.row || 12) - 1);
-          // this.addComponent(droppedItem, parseInt(rowItem.items[rowItem.items.length - 1].layout.row, 0));
-        } else {
-          this.addComponent(droppedItem);
-        }
+        this.addComponent(droppedItem, this.#scopeIndexFromDrop(event.container.data, event.currentIndex));
       } else {
+        const movedItem = event.previousContainer.data[event.previousIndex] as SdFormGenericComponent | SdFormGenericGroup;
+        const targetRow = this.#rowForItems(event.container.data);
+        if (targetRow && !canPlaceInRow(targetRow, movedItem, movedItem.id)) {
+          this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
+          return;
+        }
+
         transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+        this.#syncRowsToComponents();
       }
     }
     this.#recountTabIndex();
@@ -503,40 +503,30 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     }
   };
 
-  // Mouseover thì phải có Focus không thì thẻ sẽ báo lỗi
   onFocus = (event: FocusEvent) => {
-    //console.log(event);
+    void event;
   };
 
   xuLyKeoCheo = (dragItem?: SdFormGenericComponent | SdFormGenericGroup) => {
-    if (dragItem) {
-      if (this.targetItem) {
-        // kiểm tra target đã full column chưa?
-        const totalColumnInRow = this.targetItem.items.map(t => +t.layout!.columns || 12).reduce((acc, curr) => acc + curr, 0);
-        if (totalColumnInRow + +dragItem.layout!.columns <= 12) {
-          // xóa vị trí cũ
-          this.dragDropRows.forEach(t => {
-            if (t.items.some((k: { id: any }) => k.id === dragItem.id)) {
-              t.items = t.items.filter((k: { id: any }) => k.id !== dragItem.id) || [];
-            }
-          });
-          // thêm vào vị trí mới
-          this.targetItem.items.push(dragItem);
-          this.#syncRowsToComponents();
-        } else {
-          this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
-        }
+    if (dragItem && this.targetItem) {
+      const result = moveItemToRow(this.dragDropRows, {
+        itemId: dragItem.id,
+        targetRowId: this.targetItem.id,
+      });
+      if (result.moved) {
+        this.dragDropRows = this.#withRowIndexes(result.rows);
+        this.#syncRowsToComponents();
+      } else if (result.reason === 'row-overflow') {
+        this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
       }
     }
     this.targetItem = undefined;
   };
-
   noReturnPredicate = () => {
     return false;
   };
 
   #recountTabIndex = () => {
-    // Tránh dùng map vì nó sẽ sinh ra reference mới. Chạy theo scope hiện tại (top-level hoặc group).
     const scope = this.#scope();
     scope.forEach((item, index) => {
       if (item.layout) {
@@ -557,34 +547,12 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   };
 
   // Hàm xử lý chuyển đổi components (scope hiện tại) -> dragDropRows
-  // Dựa vào columns của component để quyết định dragDropRows có bao nhiêu items trên row, đảm bảo columns tổng số items <= 12
   #syncComponentsToRows = () => {
-    this.dragDropRows = [];
-    for (const component of this.#scope()) {
-      // lấy dòng cuối cùng của dragDropList
-      let lastRow: DragDropRowItem = { rowIndex: this.dragDropRows.length, items: [] };
-      if (this.dragDropRows.length) {
-        lastRow = this.dragDropRows[this.dragDropRows.length - 1];
-      } else {
-        this.dragDropRows.push(lastRow);
-      }
-      // tính tổng cột trên 1 dòng
-      const columns = +component.layout!.columns || 12;
-      const totalColumnInRow = lastRow.items.map(t => +t.layout!.columns || 12).reduce((acc: number, curr) => acc + curr, 0);
-      if (+totalColumnInRow + columns <= 12) {
-        lastRow.items.push(component);
-      } else {
-        const newRow = { rowIndex: this.dragDropRows.length, items: [component] };
-        this.dragDropRows.push(newRow);
-      }
-    }
+    this.dragDropRows = this.#withRowIndexes(buildFormBuilderRows(this.#scope()));
   };
 
-  // Hàm xử lý chuyển đổi dragDropRows -> components (ghi về scope hiện tại)
-  // Vì khi kéo thả sẽ thay đổi vị trí, do đó cần sắp xếp lại components
   #syncRowsToComponents = () => {
-    // rải data ma trận droplist => schema.components
-    const flat = this.dragDropRows?.map(e => e.items)?.reduce((current, next) => [...current, ...next], []) || [];
+    const flat = flattenFormBuilderRows(this.dragDropRows);
     const g = this.editingGroup();
     if (g) {
       g.components = flat as SdFormGenericComponent[];
@@ -648,9 +616,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   // Duplicate component nhưng sẽ clear id và key để tránh trùng lặp (theo scope hiện tại)
   onDuplicate = (component: SdFormGenericComponent | SdFormGenericGroup) => {
-    const clonedComponent = JSON.parse(JSON.stringify(component));
-    clonedComponent.id = GenerateId();
-    clonedComponent.key = GenerateKey();
+    const clonedComponent = this.#cloneComponentWithNewIdentity(component);
     const scope = this.#scope();
     scope.push(clonedComponent);
     this.#recountTabIndex();
@@ -762,5 +728,56 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     } else {
       this.#notifyService.success('Submit success');
     }
+  };
+
+  #withRowIndexes = (rows: FormBuilderLayoutRow[]): DragDropRowItem[] => {
+    return rows.map((row, index) => ({
+      ...row,
+      rowIndex: index,
+    }));
+  };
+
+  #rowForItems = (items: any[]): DragDropRowItem | undefined => {
+    return this.dragDropRows.find(row => row.items === items);
+  };
+
+  #scopeIndexFromDrop = (containerData: any[], currentIndex: number): number | undefined => {
+    const scope = this.#scope();
+    const row = this.#rowForItems(containerData);
+    if (row) {
+      const anchor = row.items[currentIndex] ?? row.items[row.items.length - 1];
+      if (!anchor) return scope.length;
+
+      const anchorIndex = scope.findIndex(component => component.id === anchor.id);
+      if (anchorIndex < 0) return scope.length;
+      return currentIndex >= row.items.length ? anchorIndex + 1 : anchorIndex;
+    }
+
+    if (containerData === this.dragDropRows) {
+      const rowAtIndex = this.dragDropRows[currentIndex];
+      const anchor = rowAtIndex?.items[0];
+      if (!anchor) return scope.length;
+
+      const anchorIndex = scope.findIndex(component => component.id === anchor.id);
+      return anchorIndex >= 0 ? anchorIndex : scope.length;
+    }
+
+    return undefined;
+  };
+
+  #cloneComponentWithNewIdentity = <T extends SdFormGenericComponent | SdFormGenericGroup>(component: T): T => {
+    const clonedComponent = JSON.parse(JSON.stringify(component)) as T;
+    this.#regenerateComponentIdentity(clonedComponent);
+    return clonedComponent;
+  };
+
+  #regenerateComponentIdentity = (component: SdFormGenericComponent | SdFormGenericGroup) => {
+    component.id = GenerateId();
+    if (component.type === 'group') {
+      component.components = component.components.map(child => this.#cloneComponentWithNewIdentity(child));
+      return;
+    }
+
+    component.key = GenerateKey();
   };
 }

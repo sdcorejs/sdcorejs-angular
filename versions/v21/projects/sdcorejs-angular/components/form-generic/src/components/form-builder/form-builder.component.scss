@@ -942,6 +942,9 @@
   &.is-selected {
     border: 1.5px solid var(--md-sys-color-primary);
     background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent),
+      inset 3px 0 0 var(--md-sys-color-primary);
   }
   &.is-hidden {
     opacity: 0.45;
@@ -1185,6 +1188,9 @@ table-control {
   }
   &.is-selected {
     border: 1.5px solid var(--md-sys-color-primary);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent),
+      inset 3px 0 0 var(--md-sys-color-primary);
   }
   &.is-hidden {
     opacity: 0.55;

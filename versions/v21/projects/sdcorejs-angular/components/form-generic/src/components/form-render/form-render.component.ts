@@ -17,7 +17,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../configurations';
-import { EvaluateExpression, SdFormatComponent, SdFormRenderConfiguration } from '../../models';
+import { EvaluateExpression, SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormRenderConfiguration } from '../../models';
 import { SdFormGenericValidation } from '../../models/form-generic-validation.model';
 import { WhenExpressionPipe } from '../../pipes';
 import { LibItemComponent, VariableComponent } from './components';
@@ -34,9 +34,8 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
   @Input() form: FormGroup = new FormGroup({});
   configuration!: SdFormRenderConfiguration;
   @Input({ alias: 'configuration', required: true }) set _configuration(val: SdFormRenderConfiguration) {
-    this.configuration = val;
+    this.configuration = this.#cloneAndFormatConfiguration(val);
     // Luôn format lại component trước khi render
-    this.configuration?.components?.forEach(SdFormatComponent);
     this.#configurationChanges.next(this.configuration);
   }
 
@@ -166,4 +165,22 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
     }
     return messages;
   };
+
+  #cloneAndFormatConfiguration(configuration: SdFormRenderConfiguration): SdFormRenderConfiguration {
+    return {
+      ...configuration,
+      components: (configuration?.components || []).map(component => this.#cloneAndFormatComponent(component)),
+    };
+  }
+
+  #cloneAndFormatComponent(component: SdFormGenericComponent | SdFormGenericGroup): SdFormGenericComponent | SdFormGenericGroup {
+    const clonedComponent = JSON.parse(JSON.stringify(component)) as SdFormGenericComponent | SdFormGenericGroup;
+    SdFormatComponent(clonedComponent);
+
+    if (clonedComponent.type === 'group') {
+      clonedComponent.components = clonedComponent.components.map(child => this.#cloneAndFormatComponent(child) as SdFormGenericComponent);
+    }
+
+    return clonedComponent;
+  }
 }

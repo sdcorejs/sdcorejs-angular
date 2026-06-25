@@ -1,4 +1,9 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, viewChild } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+import { SdModal } from '@sdcorejs/angular/components/modal';
+import { SdQueryBuilder, SdQueryBuilderField } from '@sdcorejs/angular/components/query-builder';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { Filter } from '@sdcorejs/utils/models';
 import {
   Attribute,
   GetAttributes,
@@ -7,48 +12,59 @@ import {
   SdFormGenericGroup,
   SdFormGenericVariable,
 } from '../../../../models';
+import { ExpressionQueryPipe } from '../../../../pipes';
 import { FormGenericService } from '../../../../services';
-import { ExpressionBuilderComponent } from '../expression-builder/expression-builder.component';
+import { filterToFormExpression, formAttributesToQueryFields, formExpressionToFilter } from './form-expression-query-adapter';
 
-// Component xây dựng Expression dựa vào SdFormGenericExpression
 @Component({
   selector: 'attribute-expression',
   templateUrl: './attribute-expression.component.html',
   styleUrl: './attribute-expression.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ExpressionBuilderComponent],
+  imports: [SdButton, SdModal, SdQueryBuilder, ExpressionQueryPipe, TranslatePipe],
 })
-export class AttributeExpression implements OnInit {
+export class AttributeExpression {
+  readonly modal = viewChild(SdModal);
+
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];
-  attributes: Attribute[] = [];
   @Input() label?: string;
+
+  queryFields: SdQueryBuilderField[] = [];
+  draftFilter: Filter | null = null;
   model?: SdFormGenericExpression;
+
   @Input({ alias: 'model', required: true }) set _model(model: SdFormGenericExpression | undefined) {
     if (this.model !== model) {
       this.model = model;
     }
   }
+
   @Output() modelChange = new EventEmitter<SdFormGenericExpression>();
   @Output() sdChange = new EventEmitter<SdFormGenericExpression>();
+
   constructor(
-    private ref: ChangeDetectorRef,
-    private formGenericService: FormGenericService
+    private readonly ref: ChangeDetectorRef,
+    private readonly formGenericService: FormGenericService
   ) {}
 
-  ngOnInit(): void {}
-
   onEdit = async () => {
-    this.attributes = await this.#getAttributes(this.components, this.variables);
+    const attributes = await this.#getAttributes(this.components, this.variables);
+    this.queryFields = formAttributesToQueryFields(attributes);
+    this.draftFilter = formExpressionToFilter(this.model);
+    this.modal()?.open();
     this.ref.markForCheck();
   };
 
-  onChange = (value: any) => {
-    this.modelChange.emit(value);
-    this.sdChange.emit(value);
+  onAccept = () => {
+    const nextModel = filterToFormExpression(this.draftFilter);
+    this.model = nextModel;
+    this.modelChange.emit(nextModel);
+    this.sdChange.emit(nextModel);
+    this.modal()?.close();
+    this.ref.markForCheck();
   };
 
-  // Từ components map thành các attributes
   #getAttributes = async (
     components: (SdFormGenericComponent | SdFormGenericGroup)[],
     variables: SdFormGenericVariable[]
@@ -69,6 +85,12 @@ export class AttributeExpression implements OnInit {
             value: component.key,
             display: component.label,
             type: 'number',
+          });
+        } else if (component.type === 'datetime') {
+          attributes.push({
+            value: component.key,
+            display: component.label,
+            type: 'datetime',
           });
         } else if (component.type === 'checkbox') {
           attributes.push({
@@ -94,7 +116,6 @@ export class AttributeExpression implements OnInit {
               entity: {},
               component,
             });
-            // Nếu là mảng thì push vào
             if (Array.isArray(values)) {
               attributes.push({
                 value: component.key,
@@ -113,6 +134,7 @@ export class AttributeExpression implements OnInit {
         }
       }
     }
+
     if (variables?.length) {
       for (const variable of variables) {
         attributes.push({

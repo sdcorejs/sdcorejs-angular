@@ -58,6 +58,15 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(component.dragDropRows.flatMap(r => r.items).map((i: any) => i.id)).toEqual(['c1']);
   });
 
+  it('enterGroupEdit() creates stable row ids from the schema item ids, not row indexes', () => {
+    const g = group1();
+    g.components.push({ id: 'c2', key: 'k_c2', type: 'number', label: 'Child 2', layout: { columns: '12' }, validate: {}, properties: {} });
+
+    component.enterGroupEdit(g);
+
+    expect(component.dragDropRows.map((row: any) => row.id)).toEqual(['row-c1', 'row-c2']);
+  });
+
   it('addComponent() while editing pushes into the GROUP, not the top level', () => {
     // asserts: scope is the group — new fields land in g1.components, top level untouched
     const g = group1();
@@ -114,5 +123,17 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     component.removeComponent('c1');
     expect(g.components.length).toBe(0);
     expect(component.components.length).toBe(2); // top level unchanged
+  });
+
+  it('onDuplicate() regenerates nested child ids and keys when duplicating a group', () => {
+    const g = group1();
+
+    component.onDuplicate(g);
+
+    const duplicated = component.components[component.components.length - 1] as any;
+    expect(duplicated.id).not.toBe(g.id);
+    expect(duplicated.components[0].id).not.toBe(g.components[0].id);
+    expect(duplicated.components[0].key).not.toBe(g.components[0].key);
+    expect(duplicated.components[0].label).toBe(g.components[0].label);
   });
 });
