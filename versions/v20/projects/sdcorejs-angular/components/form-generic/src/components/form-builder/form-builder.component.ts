@@ -1,4 +1,4 @@
-import { CdkDragDrop, CdkDragMove, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDragMove, CdkDropList, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectorRef,
@@ -493,7 +493,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       this.#syncRowsToComponents();
-      // xử lý kéo chéo
+      // Xử lý kéo chéo giữa các row khi pointer rời khỏi container hiện tại.
       if (!event.isPointerOverContainer) {
         const dragItemId = event.item.element.nativeElement.id;
         if (dragItemId) {
@@ -542,6 +542,24 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   };
 
   isRowFull = (row: DragDropRowItem): boolean => this.#usedColumns(row) >= 12;
+
+  isRowInlineDropLocked = (row: DragDropRowItem): boolean => this.#availableColumns(row) < 2;
+
+  canEnterRowDropList = (
+    drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup>,
+    drop: CdkDropList<(SdFormGenericComponent | SdFormGenericGroup)[]>
+  ): boolean => {
+    const row = this.#rowForItems(drop.data);
+    if (!row) return true;
+
+    const data = drag.data;
+    if (!data || this.#isPaletteComponent(data)) return true;
+    if ('layout' in data && 'id' in data) {
+      return canPlaceInRow(row, data, data.id);
+    }
+
+    return true;
+  };
 
   onFocus = (event: FocusEvent) => {
     void event;
@@ -788,6 +806,10 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   #rowForItems = (items: any[]): DragDropRowItem | undefined => {
     return this.dragDropRows.find(row => row.items === items);
+  };
+
+  #isPaletteComponent = (item: unknown): item is FormBuilderComponent => {
+    return !!item && typeof item === 'object' && 'symbol' in item && 'type' in item;
   };
 
   #usedColumns = (row: DragDropRowItem): number => {

@@ -7,6 +7,14 @@
   [class.fb-shell--dragging]="isAnyDragging()"
   [class.fb-shell--palette-dragging]="dragSource() === 'palette'"
   [class.fb-shell--resizing]="isResizing()">
+  <ng-template #dragPreviewTemplate>
+    <span class="fb-drag-preview__glyph" aria-hidden="true"></span>
+    <span class="fb-drag-preview__body" aria-hidden="true">
+      <span class="fb-drag-preview__line is-strong"></span>
+      <span class="fb-drag-preview__line"></span>
+    </span>
+  </ng-template>
+
   <!-- ════════════════════════ LEFT PALETTE ════════════════════════ -->
   <aside class="fb-palette">
     <div class="fb-panel-header">
@@ -31,6 +39,7 @@
           @for (formBuilderComponent of group.items; track formBuilderComponent.type) {
             <div
               cdkDrag
+              [cdkDragData]="formBuilderComponent"
               class="fb-palette-item"
               [matTooltip]="formBuilderComponent.name"
               matTooltipPosition="right"
@@ -44,10 +53,8 @@
               >
               <span class="fb-palette-item__name">{{ formBuilderComponent.name }}</span>
               <span class="fb-palette-item__drag"><span class="msi">drag_indicator</span></span>
-              <!-- Generic drag preview: chỉ icon (puck), label ẩn -->
-              <div *cdkDragPreview class="fb-drag-preview">
-                <span class="msi">{{ formBuilderComponent.symbol }}</span>
-                <span>{{ formBuilderComponent.name }}</span>
+              <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
+                <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
               </div>
             </div>
           }
@@ -169,6 +176,7 @@
           @for (row of dragDropRows; track row.id) {
             <div
               cdkDrag
+              [cdkDragData]="row"
               class="fb-row"
               (mouseover)="onMouseover($event, row)"
               (focus)="onFocus($event)"
@@ -177,16 +185,15 @@
               (cdkDragEnded)="onAnyDragEnded()"
               [class.is-drag-target]="targetItem === row"
               [class.is-row-full]="isRowFull(row)"
+              [class.is-row-inline-locked]="isRowInlineDropLocked(row)"
               [class.is-resizing-row]="resizeState()?.rowId === row.id"
               [id]="row.id"
               aria-hidden="true">
               <div class="fb-row__drag" [matTooltip]="'core.component.form-builder.drag-vertically' | translate" cdkDragHandle>
                 <span class="msi">drag_indicator</span>
               </div>
-              <!-- Generic puck preview -->
-              <div *cdkDragPreview class="fb-drag-preview">
-                <span class="msi">drag_indicator</span>
-                <span>Row</span>
+              <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
+                <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
               </div>
               <!-- Quick-add break button — show on row hover, insert break after this row -->
               <button
@@ -204,6 +211,7 @@
                 cdkDropList
                 cdkDropListOrientation="horizontal"
                 [cdkDropListData]="row.items"
+                [cdkDropListEnterPredicate]="canEnterRowDropList"
                 (cdkDropListDropped)="drop($event)">
                 @for (item of row.items; track item.id; let i = $index) {
                   <!-- Group component renders as outlined card with colored header bar -->
@@ -212,6 +220,7 @@
                     @let cv = groupColorVars(g.properties?.color);
                     <div
                       cdkDrag
+                      [cdkDragData]="item"
                       [id]="item.id"
                       class="fb-group column-{{ item.layout?.columns || 12 }}"
                       [class.fb-item]="false"
@@ -224,10 +233,8 @@
                       (cdkDragMoved)="onAnyDragMoved($event)"
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
                       aria-hidden="true">
-                      <!-- Generic puck preview -->
-                      <div *cdkDragPreview class="fb-drag-preview">
-                        <span class="msi">{{ g.properties?.icon || 'category' }}</span>
-                        <span>{{ item.label || typeLabelFor(item) }}</span>
+                      <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
+                        <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
                       <!-- cdkDragHandle: chỉ cho phép kéo group qua header — body free cho click vào child. -->
                       <div class="fb-group__header" cdkDragHandle [style.background]="cv.bg" [style.color]="cv.fg">
@@ -304,6 +311,7 @@
                     <!-- Break: row separator cố định. Render 12-col line, không có resize/edit attribute. -->
                     <div
                       cdkDrag
+                      [cdkDragData]="item"
                       [id]="item.id"
                       class="fb-item is-break column-12"
                       [class.is-selected]="item.id === selectedComponent()?.id"
@@ -313,10 +321,8 @@
                       (cdkDragMoved)="onAnyDragMoved($event)"
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
                       aria-hidden="true">
-                      <!-- Generic puck preview -->
-                      <div *cdkDragPreview class="fb-drag-preview">
-                        <span class="msi">horizontal_rule</span>
-                        <span>{{ 'core.component.form-builder.break' | translate }}</span>
+                      <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
+                        <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
                       <div class="fb-break-line">
                         <span class="msi">horizontal_rule</span>
@@ -349,6 +355,7 @@
                     <!-- Regular form component -->
                     <div
                       cdkDrag
+                      [cdkDragData]="item"
                       [id]="item.id"
                       class="fb-item column-{{ item.layout?.columns || 12 }}"
                       [class.is-selected]="item.id === selectedComponent()?.id"
@@ -360,10 +367,8 @@
                       (cdkDragMoved)="onAnyDragMoved($event)"
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
                       aria-hidden="true">
-                      <!-- Generic puck preview -->
-                      <div *cdkDragPreview class="fb-drag-preview">
-                        <span class="msi">{{ symbolFor(item) }}</span>
-                        <span>{{ item.label || typeLabelFor(item) }}</span>
+                      <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
+                        <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
 
                       <!-- Status chip (mutually exclusive priority: hidden > readonly > conditional) -->

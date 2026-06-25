@@ -199,6 +199,37 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(styles).not.toContain('is-drag-target::after');
   });
 
+  it('uses text-free skeleton drag previews instead of icon/name ligature text', () => {
+    const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
+
+    expect(styles).toContain('fb-drag-preview__glyph');
+    expect(styles).toContain('fb-drag-preview__line');
+    expect(styles).not.toContain('span:not(.msi)');
+  });
+
+  it('centers drop rails inside spacer placeholders', () => {
+    const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
+
+    expect(styles).toContain('.cdk-drag-placeholder::before');
+    expect(styles).toContain('background: transparent !important');
+    expect(styles).toContain('height: 20px !important');
+  });
+
+  it('blocks existing items from entering rows where their columns cannot fit', () => {
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '8' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+
+    expect(
+      component.canEnterRowDropList({ data: component.components[1] } as any, { data: component.dragDropRows[0].items } as any)
+    ).toBeFalse();
+    expect(
+      component.canEnterRowDropList({ data: component.components[0] } as any, { data: component.dragDropRows[0].items } as any)
+    ).toBeTrue();
+  });
+
   it('onDuplicate() regenerates nested child ids and keys when duplicating a group', () => {
     const g = group1();
 

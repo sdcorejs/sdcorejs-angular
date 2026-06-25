@@ -385,22 +385,18 @@
   //     của parent flex), không phải placeholder box. Cảm giác giống Notion/Linear.
   //   - Source slot trống hoàn toàn khi drag (display:none placeholder mặc định).
   //
-  // ── 1) Drag preview: elevated M3 chip — generic cho mọi loại item ───────
-  // Nổi rõ hơn bản cũ: icon có primary fill, border primary nhẹ, label contrast cao.
+  // ── 1) Drag preview: text-free skeleton — generic cho mọi loại item ─────
   .cdk-drag-preview.fb-drag-preview,
   .fb-drag-preview {
-    width: max-content;
-    max-width: 240px;
-    min-height: 42px;
+    width: 132px;
+    height: 44px;
     box-sizing: border-box;
-    border-radius: 18px;
+    border-radius: 14px;
     background: var(--md-sys-color-surface-container-lowest, #ffffff);
-    color: var(--md-sys-color-on-surface, #1c1b1f);
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 0 14px 0 8px;
+    gap: 10px;
+    padding: 8px 12px;
     box-shadow:
       0 14px 32px rgba(0, 0, 0, 0.24),
       0 5px 14px rgba(0, 0, 0, 0.16);
@@ -412,40 +408,45 @@
     overflow: hidden;
     z-index: 10000;
 
-    .msi {
+    .fb-drag-preview__glyph {
       width: 28px;
       height: 28px;
       border-radius: 50%;
       background: var(--md-sys-color-primary);
-      color: var(--md-sys-color-on-primary);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
       flex-shrink: 0;
-      font-size: 17px;
+      box-shadow: inset 0 0 0 5px color-mix(in srgb, var(--md-sys-color-on-primary) 18%, transparent);
     }
 
-    span:not(.msi) {
+    .fb-drag-preview__body {
+      flex: 1;
       min-width: 0;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12.5px;
-      font-weight: 600;
+      display: grid;
+      gap: 7px;
+    }
+
+    .fb-drag-preview__line {
+      height: 7px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--md-sys-color-outline-variant) 72%, transparent);
+    }
+
+    .fb-drag-preview__line.is-strong {
+      width: 74%;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 26%, var(--md-sys-color-outline-variant));
     }
   }
 
   // ── 2) Drop indicator: insertion rail mảnh, ít chiếm layout ─────────────
   .cdk-drag-placeholder {
-    background: color-mix(in srgb, var(--md-sys-color-primary) 86%, transparent) !important;
+    position: relative;
+    background: transparent !important;
     border: none !important;
     border-radius: 999px !important;
     padding: 0 !important;
     transform: none !important;
     transition: none !important;
     pointer-events: none;
-    overflow: hidden;
+    overflow: visible;
     animation: none !important;
     opacity: 1 !important;
     box-shadow: none !important;
@@ -455,36 +456,61 @@
     }
   }
 
+  .cdk-drag-placeholder::before {
+    content: '';
+    position: absolute;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--md-sys-color-primary) 86%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
+  }
+
   // Palette: ẨN hoàn toàn — source slot trống.
   .fb-palette__list > .cdk-drag-placeholder {
     display: none !important;
   }
 
-  // Trong horizontal flex (.fb-row__items, .fb-group__body): thanh dọc 1px.
+  // Trong horizontal flex (.fb-row__items, .fb-group__body): spacer 14px, line ở giữa.
   .fb-row__items > .cdk-drag-placeholder,
   .fb-group__body > .cdk-drag-placeholder {
-    width: 1px !important;
-    min-width: 1px !important;
-    max-width: 1px !important;
+    width: 14px !important;
+    min-width: 14px !important;
+    max-width: 14px !important;
     height: auto !important;
-    min-height: 28px !important;
+    min-height: 40px !important;
     align-self: stretch;
-    flex: 0 0 1px !important;
-    margin: 7px 7px 9px !important;
+    flex: 0 0 14px !important;
+    margin: 0 2px !important;
   }
 
-  // Trong vertical list (canvas rows): thanh ngang 1px full-width.
+  .fb-row__items > .cdk-drag-placeholder::before,
+  .fb-group__body > .cdk-drag-placeholder::before {
+    top: 8px;
+    bottom: 8px;
+    left: 50%;
+    width: 1px;
+    transform: translateX(-50%);
+  }
+
+  // Trong vertical list (canvas rows): spacer 20px, line ở giữa spacer.
   [cdkDropListOrientation='vertical'] > .cdk-drag-placeholder {
     width: auto !important;
-    height: 1px !important;
-    min-height: 1px !important;
-    max-height: 1px !important;
-    flex: 0 0 1px !important;
-    margin: 9px 14px 11px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    flex: 0 0 20px !important;
+    margin: 2px 14px 4px !important;
     align-self: stretch;
   }
 
-  .fb-shell--palette-dragging .fb-row.is-row-full .fb-row__items > .cdk-drag-placeholder {
+  [cdkDropListOrientation='vertical'] > .cdk-drag-placeholder::before {
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1px;
+    transform: translateY(-50%);
+  }
+
+  .fb-shell--palette-dragging .fb-row.is-row-inline-locked .fb-row__items > .cdk-drag-placeholder {
     display: none !important;
   }
 
@@ -648,6 +674,55 @@
       max-width 120ms cubic-bezier(0.2, 0, 0, 1),
       border-color 0.12s,
       background 0.12s;
+  }
+}
+
+::ng-deep .cdk-drag-preview.fb-drag-preview {
+  width: 132px;
+  height: 44px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.24),
+    0 5px 14px rgba(0, 0, 0, 0.16);
+  border: 1.5px solid color-mix(in srgb, var(--sd-primary, #2a66f4) 46%, #d6d2da);
+  cursor: grabbing;
+  pointer-events: none;
+  user-select: none;
+  opacity: 1;
+  overflow: hidden;
+  z-index: 10000;
+
+  .fb-drag-preview__glyph {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--sd-primary, #2a66f4);
+    flex-shrink: 0;
+    box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.18);
+  }
+
+  .fb-drag-preview__body {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 7px;
+  }
+
+  .fb-drag-preview__line {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(214, 210, 218, 0.72);
+  }
+
+  .fb-drag-preview__line.is-strong {
+    width: 74%;
+    background: color-mix(in srgb, var(--sd-primary, #2a66f4) 26%, #d6d2da);
   }
 }
 
@@ -934,12 +1009,15 @@
   position: relative;
   min-width: 0;
 }
-.fb-shell--palette-dragging .fb-row.is-row-full.is-drag-target .fb-row__items::after {
+.fb-shell--palette-dragging .fb-row.is-row-inline-locked.is-drag-target {
+  margin-bottom: 18px;
+}
+.fb-shell--palette-dragging .fb-row.is-row-inline-locked.is-drag-target .fb-row__items::after {
   content: '';
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: -9px;
+  bottom: -12px;
   height: 1px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--md-sys-color-primary) 86%, transparent);
