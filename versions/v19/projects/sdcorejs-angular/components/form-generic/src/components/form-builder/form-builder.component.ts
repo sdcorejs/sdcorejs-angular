@@ -73,6 +73,11 @@ interface DragDropRowItem extends FormBuilderLayoutRow {
   rowIndex?: number;
 }
 
+interface ResizeState {
+  itemId: string;
+  columns: string;
+}
+
 @Component({
   selector: 'sd-form-builder',
   templateUrl: './form-builder.component.html',
@@ -196,6 +201,8 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   /** Signal toàn cục: TRUE khi BẤT KỲ cdkDrag nào đang active (palette, canvas, group, resize).
    *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
   readonly isAnyDragging = signal(false);
+  readonly resizeState = signal<ResizeState | undefined>(undefined);
+  readonly isResizing = computed(() => !!this.resizeState());
 
   expand = true;
   dragDropRows: DragDropRowItem[] = [];
@@ -227,6 +234,18 @@ export class SdFormBuilder implements OnInit, OnDestroy {
       this.targetItem = undefined;
       this.#ref.markForCheck();
     }, 0);
+  };
+
+  startResizeControl = (item: SdFormGenericComponent | SdFormGenericGroup) => {
+    this.isAnyDragging.set(true);
+    this.resizeState.set({ itemId: item.id, columns: `${item.layout?.columns || '12'}` });
+    this.#ref.markForCheck();
+  };
+
+  endResizeControl = (event: any) => {
+    this.dragEndChangeSizeControl(event);
+    this.resizeState.set(undefined);
+    this.onAnyDragEnded();
   };
 
   #componentsChanges = new Subject<void>();
@@ -585,6 +604,11 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     const newCols = t > 12 ? '12' : t < 2 ? '2' : `${t}`;
     if (item.layout!.columns !== newCols) {
       item.layout!.columns = newCols as any;
+    }
+    const currentResizeState = this.resizeState();
+    if (currentResizeState?.itemId !== item.id || currentResizeState?.columns !== newCols) {
+      this.resizeState.set({ itemId: item.id, columns: newCols });
+      this.#ref.markForCheck();
     }
 
     //     document.getElementById('test').innerHTML = `<pre>

@@ -82,10 +82,16 @@
 }
 
 .msi {
-  font-family: 'Material Symbols Rounded';
+  font-family: 'Material Icons Outlined';
   font-size: 18px;
   font-weight: normal;
   line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
 }
 
 .fb-expression-query {

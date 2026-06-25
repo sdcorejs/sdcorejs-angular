@@ -74,10 +74,10 @@
   background: var(--md-sys-color-surface);
 }
 
-// ── Material Symbols + builder primitives (need ::ng-deep so attribute child components reach them) ──
+// ── Material Icons Outlined + builder primitives (need ::ng-deep so attribute child components reach them) ──
 :host ::ng-deep {
   .msi {
-    font-family: 'Material Symbols Rounded';
+    font-family: 'Material Icons Outlined';
     font-weight: normal;
     font-style: normal;
     line-height: 1;
@@ -90,18 +90,9 @@
     font-feature-settings: 'liga';
     -webkit-font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
-    font-variation-settings:
-      'wght' 300,
-      'opsz' 24,
-      'GRAD' 0,
-      'FILL' 0;
   }
   .msi.filled {
-    font-variation-settings:
-      'wght' 300,
-      'opsz' 24,
-      'GRAD' 0,
-      'FILL' 1;
+    font-family: 'Material Icons';
   }
   .mono {
     font-family: 'Roboto Mono', ui-monospace, monospace;
@@ -396,45 +387,44 @@
   //     của parent flex), không phải placeholder box. Cảm giác giống Notion/Linear.
   //   - Source slot trống hoàn toàn khi drag (display:none placeholder mặc định).
   //
-  // ── 1) Drag preview: M3 PUCK — generic cho mọi loại item ────────────────
-  // Triết lý: ONE preview cho tất cả drag (palette / row / item / group / break).
-  // Tròn 48×48 primary FAB style — gọn, không cản nhìn, không "loè", luôn nhất quán.
+  // ── 1) Drag preview: elevated M3 chip — generic cho mọi loại item ───────
+  // Nổi rõ hơn bản cũ: icon có primary fill, border primary nhẹ, label contrast cao.
   .cdk-drag-preview.fb-drag-preview,
   .fb-drag-preview {
     width: max-content;
     max-width: 240px;
-    min-height: 40px;
+    min-height: 42px;
     box-sizing: border-box;
-    border-radius: var(--r-pill);
+    border-radius: 18px;
     background: var(--md-sys-color-surface-container-lowest, #ffffff);
     color: var(--md-sys-color-on-surface, #1c1b1f);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 0 14px 0 10px;
+    padding: 0 14px 0 8px;
     box-shadow:
-      0 12px 28px rgba(0, 0, 0, 0.2),
-      0 4px 10px rgba(0, 0, 0, 0.12);
-    border: 1px solid var(--md-sys-color-outline-variant);
+      0 14px 32px rgba(0, 0, 0, 0.24),
+      0 5px 14px rgba(0, 0, 0, 0.16);
+    border: 1.5px solid color-mix(in srgb, var(--md-sys-color-primary) 46%, var(--md-sys-color-outline-variant));
     cursor: grabbing;
     pointer-events: none;
     user-select: none;
-    opacity: 0.98;
+    opacity: 1;
     overflow: hidden;
     z-index: 10000;
 
     .msi {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: var(--md-sys-color-primary-container);
-      color: var(--md-sys-color-primary);
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      font-size: 16px;
+      font-size: 17px;
     }
 
     span:not(.msi) {
@@ -443,21 +433,19 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 12.5px;
+      font-weight: 600;
     }
   }
 
-  // ── 2) Drop indicator: thanh PULSE primary (di chuyển realtime với mouse) ──
-  // Placeholder = chính nó là thanh primary có pulse glow. CDK reorder
-  // placeholder theo pointer mỗi khi pass qua trung tâm sibling khác → thanh
-  // VISUALLY moves vị trí giữa items khi user kéo.
+  // ── 2) Drop indicator: insertion rail mảnh, ít chiếm layout ─────────────
+  // Placeholder là line 2px, có halo 1px để thấy rõ mà không thành cục xanh lớn.
   @keyframes fb-drop-pulse {
     0%, 100% {
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-info) 16%, transparent);
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-sys-color-info) 18%, transparent);
     }
     50% {
-      box-shadow: 0 0 0 5px color-mix(in srgb, var(--md-sys-color-info) 24%, transparent);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-sys-color-info) 26%, transparent);
     }
   }
   .cdk-drag-placeholder {
@@ -469,9 +457,9 @@
     transition: none !important;
     pointer-events: none;
     overflow: hidden;
-    animation: fb-drop-pulse 0.9s ease-in-out infinite !important;
+    animation: fb-drop-pulse 1s ease-in-out infinite !important;
     opacity: 1 !important;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-info) 16%, transparent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--md-sys-color-info) 18%, transparent);
     & > * {
       visibility: hidden !important;
       pointer-events: none !important;
@@ -483,27 +471,27 @@
     display: none !important;
   }
 
-  // Trong horizontal flex (.fb-row__items, .fb-group__body): thanh dọc 5px, min-height đủ to.
+  // Trong horizontal flex (.fb-row__items, .fb-group__body): thanh dọc 2px.
   .fb-row__items > .cdk-drag-placeholder,
   .fb-group__body > .cdk-drag-placeholder {
-    width: 4px !important;
-    min-width: 4px !important;
-    max-width: 4px !important;
+    width: 2px !important;
+    min-width: 2px !important;
+    max-width: 2px !important;
     height: auto !important;
-    min-height: 36px !important;
+    min-height: 32px !important;
     align-self: stretch;
-    flex: 0 0 4px !important;
-    margin: 2px 2px !important;
+    flex: 0 0 2px !important;
+    margin: 3px 3px !important;
   }
 
-  // Trong vertical list (canvas rows): thanh ngang 5px full-width.
+  // Trong vertical list (canvas rows): thanh ngang 2px full-width.
   [cdkDropListOrientation='vertical'] > .cdk-drag-placeholder {
     width: auto !important;
-    height: 4px !important;
-    min-height: 4px !important;
-    max-height: 4px !important;
-    flex: 0 0 4px !important;
-    margin: 4px 10px !important;
+    height: 2px !important;
+    min-height: 2px !important;
+    max-height: 2px !important;
+    flex: 0 0 2px !important;
+    margin: 5px 12px !important;
     align-self: stretch;
   }
 
@@ -514,8 +502,8 @@
   }
   .fb-group__body.cdk-drop-list-receiving,
   .fb-group__body.cdk-drop-list-dragging {
-    background: color-mix(in srgb, var(--md-sys-color-primary) 10%, transparent) !important;
-    outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 78%, transparent);
+    background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent) !important;
+    outline: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 72%, transparent);
     outline-offset: -6px;
     border-radius: var(--r-sm);
   }
@@ -574,9 +562,9 @@
     // Cho user thấy rõ "đây là vùng drop để thêm vào group", min-height cao,
     // dashed outline primary + bg primary tint nhẹ + transition glow.
     .fb-group__body {
-      min-height: 80px !important;
-      background: color-mix(in srgb, var(--md-sys-color-primary) 5%, transparent) !important;
-      outline: 2px dashed color-mix(in srgb, var(--md-sys-color-primary) 50%, transparent) !important;
+      min-height: 72px !important;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent) !important;
+      outline: 1px dashed color-mix(in srgb, var(--md-sys-color-primary) 48%, transparent) !important;
       outline-offset: -6px;
       border-radius: var(--r-sm);
       transition: background 0.16s ease, outline 0.16s ease, min-height 0.16s ease;
@@ -590,8 +578,55 @@
     // Group body khi pointer đang ở trên → highlight đậm hơn (drop sẽ chính xác).
     .fb-group__body.cdk-drop-list-receiving,
     .fb-group__body.cdk-drop-list-dragging {
-      background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent) !important;
-      outline: 2px solid var(--md-sys-color-primary) !important;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 9%, transparent) !important;
+      outline: 1.5px solid var(--md-sys-color-primary) !important;
+    }
+  }
+
+  .fb-shell--resizing {
+    .fb-row:has(.fb-item.is-resizing) {
+      outline-color: color-mix(in srgb, var(--md-sys-color-primary) 42%, transparent);
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent calc(8.333% - 1px),
+          color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent) calc(8.333% - 1px),
+          color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent) 8.333%
+        ),
+        color-mix(in srgb, var(--md-sys-color-primary) 3%, transparent);
+    }
+
+    .fb-item.is-resizing {
+      border-color: var(--md-sys-color-primary) !important;
+      background: color-mix(in srgb, var(--md-sys-color-primary) 6%, var(--md-sys-color-surface-container-lowest));
+      box-shadow:
+        0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent),
+        inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+      cursor: col-resize;
+      z-index: 2;
+    }
+
+    .fb-item.is-resizing::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent 0,
+        transparent calc(8.333% - 1px),
+        color-mix(in srgb, var(--md-sys-color-primary) 22%, transparent) calc(8.333% - 1px),
+        color-mix(in srgb, var(--md-sys-color-primary) 22%, transparent) 8.333%
+      );
+      pointer-events: none;
+    }
+
+    .fb-item.is-resizing .fb-resize {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      background: var(--md-sys-color-primary);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-primary) 16%, transparent);
     }
   }
 
@@ -859,14 +894,6 @@
       background: var(--md-sys-color-primary-container);
       color: var(--md-sys-color-primary);
       box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
-
-      .msi {
-        font-variation-settings:
-          'wght' 400,
-          'opsz' 24,
-          'GRAD' 0,
-          'FILL' 1;
-      }
     }
   }
 }
@@ -1143,28 +1170,52 @@ table-control {
   }
 }
 
+.fb-resize-chip {
+  position: absolute;
+  right: 14px;
+  bottom: -18px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  background: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  box-shadow: var(--elev-2);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
 // ── Resize handle (replaces blue rectangle) ─────────────────────────────
 .fb-resize {
   position: absolute;
-  top: 8px;
-  bottom: 8px;
-  right: -5px;
-  width: 6px;
+  top: 10px;
+  bottom: 10px;
+  right: -6px;
+  width: 8px;
   border-radius: 999px;
-  background: var(--md-sys-color-primary);
+  border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 28%, transparent);
+  background: var(--md-sys-color-surface-container-lowest);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: col-resize;
   opacity: 0;
-  transition: opacity 0.12s ease;
+  transition: opacity 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
   z-index: 3;
   &::before {
     content: '';
     width: 2px;
-    height: 18px;
-    background: var(--md-sys-color-on-primary);
+    height: 20px;
+    background: var(--md-sys-color-primary);
     border-radius: 999px;
+  }
+  &:hover {
+    background: var(--md-sys-color-primary-container);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
   }
 }
 .fb-item:hover .fb-resize {

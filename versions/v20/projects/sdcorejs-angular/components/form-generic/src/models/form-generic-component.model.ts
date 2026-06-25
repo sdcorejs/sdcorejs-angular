@@ -452,7 +452,7 @@ export type FormBuilderComponentGroup = 'basic' | 'choice' | 'advanced' | 'layou
 
 export interface FormBuilderComponent {
   type: string;
-  /** Material Symbols Rounded icon name. Rendered via <span class="msi">{symbol}</span>. */
+  /** Material Icons Outlined icon name. Rendered via the builder icon alias. */
   symbol: string;
   /** Category group for the left palette grouping. */
   group: FormBuilderComponentGroup;
@@ -477,10 +477,10 @@ export const FormBuilderComponents: FormBuilderComponent[] = [
   // ── Layout ──────────────────────────────────────────────────
   // Break KHÔNG có trong palette — thêm qua per-row "+ Break" quick-add button.
   { type: 'group', symbol: 'category', group: 'layout', name: 'Group' },
-  { type: 'html', symbol: 'code_blocks', group: 'layout', name: 'HTML' },
+  { type: 'html', symbol: 'code', group: 'layout', name: 'HTML' },
 ];
 
-/** Lookup: component type → Material Symbol + label, used by attribute panel header. */
+/** Lookup: component type → Material icon + label, used by attribute panel header. */
 export const COMPONENT_ICONS: Record<string, { symbol: string; label: string }> = FormBuilderComponents.reduce(
   (acc, c) => ({ ...acc, [c.type]: { symbol: c.symbol, label: c.name } }),
   {} as Record<string, { symbol: string; label: string }>

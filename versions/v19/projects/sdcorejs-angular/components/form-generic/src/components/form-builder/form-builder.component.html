@@ -1,7 +1,7 @@
 <!-- cdkDropListGroup: auto-connect tất cả cdkDropList trong palette, canvas rows, group bodies.
      [class.fb-shell--dragging]: JS-driven flag để ẩn hover/actions/resize toàn diện
      trong lúc drag (CSS :has() không bắt 100% trường hợp với CDK preview clone). -->
-<div class="fb-shell" cdkDropListGroup [class.fb-shell--dragging]="isAnyDragging()">
+<div class="fb-shell" cdkDropListGroup [class.fb-shell--dragging]="isAnyDragging()" [class.fb-shell--resizing]="isResizing()">
   <!-- ════════════════════════ LEFT PALETTE ════════════════════════ -->
   <aside class="fb-palette">
     <div class="fb-panel-header">
@@ -332,6 +332,7 @@
                       [class.is-selected]="item.id === selectedComponent()?.id"
                       [class.is-hidden]="item.properties?.hidden"
                       [class.is-readonly]="item.properties?.viewed"
+                      [class.is-resizing]="resizeState()?.itemId === item.id"
                       (click)="selectComponent(item); $event.stopPropagation()"
                       (cdkDragStarted)="dragStartComponentItem($event); onAnyDragStarted()"
                       (cdkDragMoved)="onAnyDragMoved($event)"
@@ -393,6 +394,10 @@
                         *ngTemplateOutlet="controlTemplate; context: { $implicit: item }">
                       </ng-container>
 
+                      @if (resizeState()?.itemId === item.id) {
+                        <span class="fb-resize-chip">{{ resizeState()?.columns }}/12</span>
+                      }
+
                       <!-- Resize handle (pill) — cdkDragLockAxis="x" để chỉ kéo ngang.
                            Wrapping cdkDropList có enterPredicate=false, không nhận drop. -->
                       <div cdkDropList cdkDropListOrientation="horizontal" [cdkDropListEnterPredicate]="noReturnPredicate">
@@ -400,9 +405,9 @@
                           cdkDrag
                           cdkDragLockAxis="x"
                           class="fb-resize"
-                          (cdkDragStarted)="onAnyDragStarted()"
+                          (cdkDragStarted)="startResizeControl(item)"
                           (cdkDragMoved)="changeSizeControl($event, item, row.items, i)"
-                          (cdkDragEnded)="dragEndChangeSizeControl($event); onAnyDragEnded()"
+                          (cdkDragEnded)="endResizeControl($event)"
                           [matTooltip]="'core.component.form-builder.flex' | translate"
                           aria-label="resize"></div>
                       </div>

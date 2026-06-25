@@ -125,6 +125,28 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(component.components.length).toBe(2); // top level unchanged
   });
 
+  it('tracks resize state while a column handle is being dragged', () => {
+    const item = component.components[0] as any;
+    item.layout.columns = '6';
+
+    component.startResizeControl(item);
+
+    expect(component.isResizing()).toBeTrue();
+    expect(component.resizeState()).toEqual({ itemId: 't1', columns: '6' });
+
+    component.endResizeControl({} as any);
+
+    expect(component.isResizing()).toBeFalse();
+    expect(component.resizeState()).toBeUndefined();
+  });
+
+  it('uses Material Icons Outlined instead of Material Symbols for builder glyphs', () => {
+    const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
+
+    expect(styles).toContain('Material Icons Outlined');
+    expect(styles).not.toContain('Material Symbols Rounded');
+  });
+
   it('onDuplicate() regenerates nested child ids and keys when duplicating a group', () => {
     const g = group1();
 
