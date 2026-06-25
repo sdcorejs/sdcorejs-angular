@@ -42,7 +42,10 @@
               <span class="fb-palette-item__name">{{ formBuilderComponent.name }}</span>
               <span class="fb-palette-item__drag"><span class="msi">drag_indicator</span></span>
               <!-- Generic drag preview: chỉ icon (puck), label ẩn -->
-              <div *cdkDragPreview class="fb-drag-preview"></div>
+              <div *cdkDragPreview class="fb-drag-preview">
+                <span class="msi">{{ formBuilderComponent.symbol }}</span>
+                <span>{{ formBuilderComponent.name }}</span>
+              </div>
             </div>
           }
         </div>
@@ -106,6 +109,7 @@
             type="button"
             role="tab"
             [class.is-active]="!isPreview()"
+            [attr.aria-selected]="!isPreview()"
             (click)="setMode(false)">
             <span class="msi">edit</span>
             <span>{{ 'core.component.form-builder.design' | translate }}</span>
@@ -114,6 +118,7 @@
             type="button"
             role="tab"
             [class.is-active]="isPreview()"
+            [attr.aria-selected]="isPreview()"
             (click)="setMode(true)">
             <span class="msi">visibility</span>
             <span>{{ 'core.component.form-builder.preview' | translate }}</span>
@@ -176,7 +181,10 @@
                 <span class="msi">drag_indicator</span>
               </div>
               <!-- Generic puck preview -->
-              <div *cdkDragPreview class="fb-drag-preview"></div>
+              <div *cdkDragPreview class="fb-drag-preview">
+                <span class="msi">drag_indicator</span>
+                <span>Row</span>
+              </div>
               <!-- Quick-add break button — show on row hover, insert break after this row -->
               <button
                 type="button"
@@ -215,7 +223,10 @@
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
                       aria-hidden="true">
                       <!-- Generic puck preview -->
-                      <div *cdkDragPreview class="fb-drag-preview"></div>
+                      <div *cdkDragPreview class="fb-drag-preview">
+                        <span class="msi">{{ g.properties?.icon || 'category' }}</span>
+                        <span>{{ item.label || typeLabelFor(item) }}</span>
+                      </div>
                       <!-- cdkDragHandle: chỉ cho phép kéo group qua header — body free cho click vào child. -->
                       <div class="fb-group__header" cdkDragHandle [style.background]="cv.bg" [style.color]="cv.fg">
                         <span class="fb-group__icon"><span class="msi">{{ g.properties?.icon || 'category' }}</span></span>
@@ -289,7 +300,10 @@
                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
                      aria-hidden="true">
                       <!-- Generic puck preview -->
-                      <div *cdkDragPreview class="fb-drag-preview"></div>
+                      <div *cdkDragPreview class="fb-drag-preview">
+                        <span class="msi">horizontal_rule</span>
+                        <span>{{ 'core.component.form-builder.break' | translate }}</span>
+                      </div>
                       <div class="fb-break-line">
                         <span class="msi">horizontal_rule</span>
                         <span class="fb-break-label">{{ 'core.component.form-builder.break' | translate }}</span>
@@ -324,7 +338,10 @@
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
                       aria-hidden="true">
                       <!-- Generic puck preview -->
-                      <div *cdkDragPreview class="fb-drag-preview"></div>
+                      <div *cdkDragPreview class="fb-drag-preview">
+                        <span class="msi">{{ symbolFor(item) }}</span>
+                        <span>{{ item.label || typeLabelFor(item) }}</span>
+                      </div>
 
                       <!-- Status chip (mutually exclusive priority: hidden > readonly > conditional) -->
                       @if (item.properties?.hidden) {

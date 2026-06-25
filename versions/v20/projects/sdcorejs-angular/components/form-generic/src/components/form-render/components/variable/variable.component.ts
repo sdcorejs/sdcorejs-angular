@@ -38,7 +38,11 @@ export class VariableComponent implements OnInit, OnDestroy {
       this.#subscription.add(
         this.setVariables.pipe(filter(variable => !!this.variables?.some(e => e.key === variable.key))).subscribe(variable => {
           this.entity[variable.key] = variable.value;
-          this.form.setValue(this.entity);
+          if (this.form.controls[variable.key]) {
+            this.form.patchValue({ [variable.key]: variable.value });
+          }
+          this.form.controls['sdRaw']?.setValue({ ...this.entity });
+          this.ref.markForCheck();
         })
       );
     }

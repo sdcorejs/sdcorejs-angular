@@ -99,16 +99,13 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
         for (const key of Object.keys({ ...defaultEntity })) {
           this.entity[key] = this.entity[key] ?? defaultEntity[key];
         }
-        this.form.setValue(this.entity);
+        this.#patchRegisteredControls(this.entity);
+        this.#syncRawControl(this.entity);
       })
     );
     this.#subscription.add(
       this.#entityChanges.pipe(startWith(this.entity)).subscribe(entity => {
-        if (!this.form.controls['sdRaw']) {
-          this.form.addControl('sdRaw', new FormControl({ ...entity }));
-        } else {
-          this.form.controls['sdRaw'].setValue({ ...entity });
-        }
+        this.#syncRawControl(entity);
       })
     );
     this.#subscription.add(
@@ -171,6 +168,27 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
       ...configuration,
       components: (configuration?.components || []).map(component => this.#cloneAndFormatComponent(component)),
     };
+  }
+
+  #patchRegisteredControls(entity: Record<string, any>): void {
+    const registeredValue: Record<string, any> = {};
+    for (const key of Object.keys(entity)) {
+      if (key !== 'sdRaw' && this.form.controls[key]) {
+        registeredValue[key] = entity[key];
+      }
+    }
+
+    if (Object.keys(registeredValue).length) {
+      this.form.patchValue(registeredValue);
+    }
+  }
+
+  #syncRawControl(entity: Record<string, any>): void {
+    if (!this.form.controls['sdRaw']) {
+      this.form.addControl('sdRaw', new FormControl({ ...entity }));
+    } else {
+      this.form.controls['sdRaw'].setValue({ ...entity });
+    }
   }
 
   #cloneAndFormatComponent(component: SdFormGenericComponent | SdFormGenericGroup): SdFormGenericComponent | SdFormGenericGroup {

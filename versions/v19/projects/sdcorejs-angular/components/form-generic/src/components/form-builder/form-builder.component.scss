@@ -401,35 +401,50 @@
   // Tròn 48×48 primary FAB style — gọn, không cản nhìn, không "loè", luôn nhất quán.
   .cdk-drag-preview.fb-drag-preview,
   .fb-drag-preview {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    max-width: 36px;
-    max-height: 36px;
+    width: max-content;
+    max-width: 240px;
+    min-height: 40px;
     box-sizing: border-box;
-    border-radius: 50%;
-    background: var(--md-sys-color-primary, #6750a4);
+    border-radius: var(--r-pill);
+    background: var(--md-sys-color-surface-container-lowest, #ffffff);
+    color: var(--md-sys-color-on-surface, #1c1b1f);
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+    padding: 0 14px 0 10px;
     box-shadow:
-      0 10px 24px rgba(0, 0, 0, 0.26),
-      0 3px 8px rgba(0, 0, 0, 0.14);
-    border: 3px solid var(--md-sys-color-on-primary, #ffffff);
+      0 12px 28px rgba(0, 0, 0, 0.2),
+      0 4px 10px rgba(0, 0, 0, 0.12);
+    border: 1px solid var(--md-sys-color-outline-variant);
     cursor: grabbing;
     pointer-events: none;
     user-select: none;
-    opacity: 0.96;
+    opacity: 0.98;
     overflow: hidden;
     z-index: 10000;
-    &::after {
-      content: '';
-      width: 8px;
-      height: 8px;
+
+    .msi {
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      background: var(--md-sys-color-on-primary, #ffffff);
-      opacity: 0.9;
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 16px;
+    }
+
+    span:not(.msi) {
+      min-width: 0;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 500;
     }
   }
 
@@ -446,7 +461,7 @@
     }
   }
   .cdk-drag-placeholder {
-    background: transparent !important;
+    background: var(--md-sys-color-info) !important;
     border: none !important;
     border-radius: 999px !important;
     padding: 0 !important;
@@ -454,8 +469,9 @@
     transition: none !important;
     pointer-events: none;
     overflow: hidden;
-    animation: none !important;
-    opacity: 0 !important;
+    animation: fb-drop-pulse 0.9s ease-in-out infinite !important;
+    opacity: 1 !important;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-sys-color-info) 16%, transparent);
     & > * {
       visibility: hidden !important;
       pointer-events: none !important;
@@ -470,24 +486,24 @@
   // Trong horizontal flex (.fb-row__items, .fb-group__body): thanh dọc 5px, min-height đủ to.
   .fb-row__items > .cdk-drag-placeholder,
   .fb-group__body > .cdk-drag-placeholder {
-    width: 0 !important;
-    min-width: 0 !important;
-    max-width: 0 !important;
+    width: 4px !important;
+    min-width: 4px !important;
+    max-width: 4px !important;
     height: auto !important;
-    min-height: 0 !important;
+    min-height: 36px !important;
     align-self: stretch;
-    flex: 0 0 0 !important;
-    margin: 0 !important;
+    flex: 0 0 4px !important;
+    margin: 2px 2px !important;
   }
 
   // Trong vertical list (canvas rows): thanh ngang 5px full-width.
   [cdkDropListOrientation='vertical'] > .cdk-drag-placeholder {
     width: auto !important;
-    height: 0 !important;
-    min-height: 0 !important;
-    max-height: 0 !important;
-    flex: 0 0 0 !important;
-    margin: 0 !important;
+    height: 4px !important;
+    min-height: 4px !important;
+    max-height: 4px !important;
+    flex: 0 0 4px !important;
+    margin: 4px 10px !important;
     align-self: stretch;
   }
 
@@ -799,15 +815,20 @@
 // ── M3 segmented Design/Preview toggle ──────────────────────────────────
 .fb-mode-toggle {
   display: inline-flex;
-  height: 28px;
-  border: 1px solid var(--md-sys-color-outline);
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--r-pill);
-  overflow: hidden;
+  background: var(--md-sys-color-surface-container-lowest);
   flex-shrink: 0;
+  gap: 2px;
+  box-shadow: var(--elev-1);
+
   button {
     border: 0;
     background: transparent;
-    padding: 0 var(--gap-3);
+    border-radius: var(--r-pill);
+    padding: 0 12px;
     font-size: 12px;
     font-weight: 500;
     display: inline-flex;
@@ -815,12 +836,37 @@
     gap: 6px;
     color: var(--md-sys-color-on-surface-variant);
     cursor: pointer;
+    transition:
+      background 0.12s ease,
+      color 0.12s ease,
+      box-shadow 0.12s ease;
+
     .msi {
       font-size: 16px;
     }
+
+    &:hover {
+      background: color-mix(in srgb, var(--md-sys-color-primary) 7%, transparent);
+      color: var(--md-sys-color-on-surface);
+    }
+
+    &:focus-visible {
+      outline: 2px solid color-mix(in srgb, var(--md-sys-color-primary) 48%, transparent);
+      outline-offset: 1px;
+    }
+
     &.is-active {
-      background: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
+      background: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-primary);
+      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+
+      .msi {
+        font-variation-settings:
+          'wght' 400,
+          'opsz' 24,
+          'GRAD' 0,
+          'FILL' 1;
+      }
     }
   }
 }
