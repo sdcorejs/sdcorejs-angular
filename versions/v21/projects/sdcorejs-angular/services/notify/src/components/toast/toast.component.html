@@ -20,20 +20,18 @@
 <div class="sd-toast__content">
   <div class="sd-toast__header">
     <strong class="sd-toast__title">{{ data.title || ('core.notify.type.' + data.type | translate) }}</strong>
-    <button class="sd-toast__close" (click)="close()">✕</button>
+    <button class="sd-toast__close" (click)="close()">&times;</button>
   </div>
 
   <div class="sd-toast__body">
     @if (!isMultiMessage) {
-      <!-- why: mặc định render TEXT (auto-escape) — an toàn. Chỉ render HTML
-           (đã sanitize) khi data.html=true. -->
+      <!-- Text rendering is the default safe path; HTML is opt-in and sanitized. -->
       @if (data.html) {
         <div [innerHTML]="sanitizeHtml(singleMessage)"></div>
       } @else {
         <div>{{ singleMessage }}</div>
       }
-    }
-    @else {
+    } @else {
       <ul class="msg-list">
         @for (msg of displayMessages; track msg) {
           @if (data.html) {
@@ -45,10 +43,11 @@
       </ul>
 
       @if (hasMore) {
-        <button type="button" 
-                class="toggle-more btn-link" 
-                [class]="'text-' + data.type" 
-                (click)="toggleExpand()">
+        <button
+          type="button"
+          class="toggle-more btn-link"
+          [class]="'text-' + data.type"
+          (click)="toggleExpand()">
           {{ isExpanded() ? ('core.notify.show-less' | translate) : ('core.notify.show-more' | translate: { count: restCount }) }}
         </button>
       }
@@ -57,9 +56,10 @@
 
   @if (data.actionLabel) {
     <div class="sd-toast__actions">
-      <button class="btn-action" 
-              [class]="'bg-' + data.type + '-light text-' + data.type"
-              (click)="onActionClick()">
+      <button
+        class="btn-action"
+        [class]="'bg-' + data.type + '-light text-' + data.type"
+        (click)="onActionClick()">
         {{ data.actionLabel }}
       </button>
     </div>

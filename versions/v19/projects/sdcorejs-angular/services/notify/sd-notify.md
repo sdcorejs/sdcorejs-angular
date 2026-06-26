@@ -188,7 +188,6 @@ The recommended pattern is to spy on `document.body.appendChild` and on `Applica
 ```typescript
 import { ApplicationRef } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdNotifyService } from './notify.service';
 
 describe('SdNotifyService', () => {
@@ -198,7 +197,6 @@ describe('SdNotifyService', () => {
     spyOn(document.body, 'appendChild').and.stub();
 
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule],
       providers: [SdNotifyService],
     });
 

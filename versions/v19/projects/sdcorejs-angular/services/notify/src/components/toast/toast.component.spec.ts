@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdNotifyService } from '../../notify.service';
 import { ToastData } from '../../notify.model';
 import { ToastComponent } from './toast.component';
+
+const TOAST_EXIT_ANIMATION_MS = 200;
 
 function makeData(over: Partial<ToastData> = {}): ToastData {
   return {
@@ -22,7 +24,7 @@ describe('ToastComponent', () => {
     notify = jasmine.createSpyObj<SdNotifyService>('SdNotifyService', ['remove']);
 
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, ToastComponent],
+      imports: [ToastComponent],
       providers: [{ provide: SdNotifyService, useValue: notify }],
     });
 
@@ -30,7 +32,7 @@ describe('ToastComponent', () => {
   });
 
   function init(data: ToastData) {
-    fix.componentInstance.data = data;
+    fix.componentRef.setInput('data', data);
     fix.detectChanges();
   }
 
@@ -152,7 +154,7 @@ describe('ToastComponent', () => {
     init(makeData({ message: ['a', 'b'] }));
     expect(fix.nativeElement.querySelector('.toggle-more')).toBeNull();
     // now with 3 messages
-    fix.componentInstance.data = makeData({ message: ['a', 'b', 'c'] });
+    fix.componentRef.setInput('data', makeData({ message: ['a', 'b', 'c'] }));
     fix.detectChanges();
     expect(fix.nativeElement.querySelector('.toggle-more')).not.toBeNull();
   });
@@ -202,18 +204,33 @@ describe('ToastComponent', () => {
 
   // ─── close / action ───────────────────────────────────────────────────────
 
-  it('close() calls notifyService.remove with data.id', () => {
+  it('close() marks closing then removes after the CSS exit duration', fakeAsync(() => {
     init(makeData({ id: 'abc' }));
     fix.componentInstance.close();
-    expect(notify.remove).toHaveBeenCalledWith('abc');
-  });
+    fix.detectChanges();
 
-  it('clicking the close button triggers remove', () => {
+    expect(fix.nativeElement.classList.contains('sd-toast--closing')).toBeTrue();
+    expect(notify.remove).not.toHaveBeenCalled();
+
+    tick(TOAST_EXIT_ANIMATION_MS);
+    expect(notify.remove).toHaveBeenCalledWith('abc');
+  }));
+
+  it('clicking the close button triggers delayed remove', fakeAsync(() => {
     init(makeData({ id: 'def' }));
     const btn = fix.nativeElement.querySelector('.sd-toast__close') as HTMLButtonElement;
     btn.click();
+    tick(TOAST_EXIT_ANIMATION_MS);
     expect(notify.remove).toHaveBeenCalledWith('def');
-  });
+  }));
+
+  it('close() is idempotent while the exit animation is running', fakeAsync(() => {
+    init(makeData({ id: 'same' }));
+    fix.componentInstance.close();
+    fix.componentInstance.close();
+    tick(TOAST_EXIT_ANIMATION_MS);
+    expect(notify.remove).toHaveBeenCalledOnceWith('same');
+  }));
 
   it('renders action button when actionLabel is set; clicking invokes onAction', () => {
     const action = jasmine.createSpy('onAction');
@@ -240,6 +257,8 @@ describe('ToastComponent', () => {
     init(makeData({ duration: 1000, id: 'auto' }));
     expect(notify.remove).not.toHaveBeenCalled();
     tick(1000);
+    expect(notify.remove).not.toHaveBeenCalled();
+    tick(TOAST_EXIT_ANIMATION_MS);
     expect(notify.remove).toHaveBeenCalledWith('auto');
   }));
 
@@ -252,16 +271,18 @@ describe('ToastComponent', () => {
     fix.componentInstance.resumeTimer();
     // 1000 - 300 = 700 remaining
     tick(700);
+    expect(notify.remove).not.toHaveBeenCalled();
+    tick(TOAST_EXIT_ANIMATION_MS);
     expect(notify.remove).toHaveBeenCalledWith('pause');
   }));
 
   it('resumeTimer is a no-op when remaining is 0 or below', fakeAsync(() => {
     init(makeData({ duration: 100, id: 'gone' }));
     tick(100); // auto-fired
-    expect(notify.remove).toHaveBeenCalledTimes(1);
+    expect(notify.remove).not.toHaveBeenCalled();
     // try to resume — should not schedule another timer (remaining drops below 0 over time but timer is null)
     fix.componentInstance.resumeTimer();
-    tick(500);
+    tick(TOAST_EXIT_ANIMATION_MS);
     expect(notify.remove).toHaveBeenCalledTimes(1);
   }));
 
@@ -269,6 +290,14 @@ describe('ToastComponent', () => {
     init(makeData({ duration: 5000, id: 'destroy' }));
     fix.destroy();
     tick(10000);
+    expect(notify.remove).not.toHaveBeenCalled();
+  }));
+
+  it('ngOnDestroy clears a pending close animation timer', fakeAsync(() => {
+    init(makeData({ duration: 5000, id: 'closing-destroy' }));
+    fix.componentInstance.close();
+    fix.destroy();
+    tick(TOAST_EXIT_ANIMATION_MS);
     expect(notify.remove).not.toHaveBeenCalled();
   }));
 

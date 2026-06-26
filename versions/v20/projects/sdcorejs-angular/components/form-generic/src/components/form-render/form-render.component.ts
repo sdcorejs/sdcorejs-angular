@@ -65,6 +65,8 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
   #configurationChanges = new Subject<SdFormRenderConfiguration>();
   #defaultEntityChanges = new Subject<Record<string, any>>();
   #entityChanges = new Subject<Record<string, any>>();
+  #renderScheduled = false;
+  #destroyed = false;
   loadCompleted = false;
   hashedValues?: string;
   formValue: Record<string, any> = {};
@@ -83,7 +85,7 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
         .subscribe(async () => {
           if (this.entity && this.configuration?.components?.length) {
             this.loadCompleted = true;
-            this.ref.markForCheck(); // Vì loadCompleted ko phải là @Input nên component sẽ ko load lại
+            this.#scheduleRender();
             if (this.configuration?.onLoaded) {
               try {
                 this.configuration.onLoaded();
@@ -115,13 +117,14 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
           this.hashedValues = hashedValues;
           // Ở trạng thái view thì không có FormControl nên phải binding entity mới có dữ liệu cho formValue
           this.formValue = { ...this.entity, ...values };
-          this.ref.markForCheck();
+          this.#scheduleRender();
         }
       })
     );
   }
 
   ngOnDestroy(): void {
+    this.#destroyed = true;
     this.#subscription.unsubscribe();
   }
 
@@ -200,5 +203,19 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
     }
 
     return clonedComponent;
+  }
+
+  #scheduleRender(): void {
+    if (this.#renderScheduled || this.#destroyed) {
+      return;
+    }
+
+    this.#renderScheduled = true;
+    queueMicrotask(() => {
+      this.#renderScheduled = false;
+      if (!this.#destroyed) {
+        this.ref.detectChanges();
+      }
+    });
   }
 }

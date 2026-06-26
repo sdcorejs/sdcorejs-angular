@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdNotifyService } from '../notify.service';
 import { ToastData } from '../notify.model';
 import { ToastContainerComponent } from './toast-container.component';
@@ -9,7 +8,7 @@ describe('ToastContainerComponent', () => {
     // why: SdNotifyService constructor attaches a real toast-container to body —
     // here we test the container directly, so we don't bootstrap the service.
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, ToastContainerComponent],
+      imports: [ToastContainerComponent],
       providers: [
         // why: child <toast> needs the service; minimal stub is enough since we
         // do not exercise close behaviour here.
