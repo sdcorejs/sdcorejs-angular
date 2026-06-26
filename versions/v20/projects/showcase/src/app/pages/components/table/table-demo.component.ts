@@ -168,6 +168,22 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
+      <demo-section
+        heading="Filter onChange"
+        [props]="[
+          { name: 'columns[].filter.onChange', value: 'callback' },
+          { name: 'input / input-number', value: 'Enter / blur' }
+        ]"
+        note="Callback chỉ chạy khi giá trị filter đã commit và khác lần trước; input text/number commit bằng Enter hoặc blur.">
+        <div class="table-box">
+          <div class="filter-change-log">
+            <span class="filter-change-log__label">Callback cuối:</span>
+            <span>{{ filterOnChangeEvent() }}</span>
+          </div>
+          <sd-table [option]="filterOnChangeOption"></sd-table>
+        </div>
+      </demo-section>
+
       <demo-section heading="Chọn một dòng" [props]="[{ name: 'selector.single', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="singleSelectOption"></sd-table>
@@ -419,10 +435,24 @@ const TASKS: Task[] = [
     }
     .group-label { font-weight: 600; }
     .group-meta { color: #777; font-size: 12px; }
+    .filter-change-log {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      color: #374151;
+      font-size: 13px;
+    }
+    .filter-change-log__label {
+      color: #6b7280;
+      font-weight: 600;
+    }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TableDemoComponent {
+  readonly filterOnChangeEvent = signal('Chưa có thay đổi');
+
   readonly employeeOption: SdTableOption<Employee> = {
     type: 'local',
     key: 'showcase-employee-table',
@@ -508,6 +538,46 @@ export class TableDemoComponent {
             : { title: `${v}`, color: 'success' },
       },
       { field: 'active', type: 'boolean', title: 'Kích hoạt', width: '120px', option: { displayOnTrue: 'Có', displayOnFalse: 'Không' } },
+    ],
+    style: { shadow: true },
+  };
+
+  readonly filterOnChangeOption: SdTableOption<Product> = {
+    type: 'local',
+    key: 'showcase-filter-on-change-table',
+    items: () => PRODUCTS,
+    sort: { enable: true },
+    paginate: { pageSize: 5, hidePageSize: true },
+    filler: { enabled: true },
+    columns: [
+      { field: 'code', type: 'string', title: 'Mã SP', width: '120px' },
+      {
+        field: 'name',
+        type: 'string',
+        title: 'Tên sản phẩm',
+        width: '320px',
+        filter: {
+          default: '',
+          onChange: value => this.recordFilterOnChange('Tên sản phẩm', value),
+        },
+      },
+      {
+        field: 'stock',
+        type: 'number',
+        title: 'Tồn kho',
+        width: '120px',
+        align: 'right',
+        filter: {
+          onChange: value => this.recordFilterOnChange('Tồn kho', value),
+        },
+      },
+      {
+        field: 'active',
+        type: 'boolean',
+        title: 'Kích hoạt',
+        width: '120px',
+        option: { displayOnTrue: 'Có', displayOnFalse: 'Không' },
+      },
     ],
     style: { shadow: true },
   };
@@ -799,6 +869,19 @@ export class TableDemoComponent {
 
   totalOrderAmount(orders: Order[]): number {
     return (orders || []).reduce((sum, o) => sum + (o?.amount ?? 0), 0);
+  }
+
+  recordFilterOnChange(label: string, value: unknown): void {
+    const displayValue = this.formatFilterValue(value);
+    this.filterOnChangeEvent.set(`${label}: ${displayValue}`);
+  }
+
+  formatFilterValue(value: unknown): string {
+    if (value === null || value === undefined || value === '') return '(trống)';
+    if (value instanceof Date) return value.toLocaleDateString('vi-VN');
+    if (Array.isArray(value)) return value.map(item => this.formatFilterValue(item)).join(', ');
+    if (typeof value === 'object') return JSON.stringify(value);
+    return `${value}`;
   }
 
   increaseTreeCommandIndent(): void {

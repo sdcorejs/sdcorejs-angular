@@ -1,11 +1,13 @@
+@use "sass:math";
+
 // --------------------------------------------------------------------------
-// Grid — row/col 12-column flexbox + native CSS Grid container
-//   Thuần CSS Flexbox / CSS Grid, không phụ thuộc framework ngoài.
-//   Breakpoint convention (sm/md/lg/xl) trùng Bootstrap để host app dễ migrate.
+// Grid - row/col 12-column flexbox + native CSS Grid container
+// Pure CSS Flexbox / CSS Grid, with no external framework dependency.
+// Breakpoint convention (sm/md/lg/xl) matches Bootstrap to ease host migration.
 // --------------------------------------------------------------------------
 
 // --------------------------------------------------------------------------
-// 1. Flexbox row/col  (.row, .col-{1-12})
+// 1. Flexbox row/col (.row, .col-{1-12})
 // --------------------------------------------------------------------------
 $grid-columns: 12;
 $grid-gutter: 16px;
@@ -45,13 +47,15 @@ $grid-gutter: 16px;
   > * { padding-left: 2px; padding-right: 2px; }
 }
 
-// .col-1 … .col-12
+// .col-1 ... .col-12
 @for $i from 1 through $grid-columns {
+  $col-size: math.percentage(math.div($i, $grid-columns));
+
   .col-#{$i} {
     box-sizing: border-box;
-    width: percentage(calc($i / $grid-columns));
-    flex: 0 0 percentage(calc($i / $grid-columns));
-    max-width: percentage(calc($i / $grid-columns));
+    width: $col-size;
+    flex: 0 0 $col-size;
+    max-width: $col-size;
     padding-left: calc($grid-gutter / 2);
     padding-right: calc($grid-gutter / 2);
   }
@@ -65,12 +69,12 @@ $grid-gutter: 16px;
 
 // --------------------------------------------------------------------------
 // 1b. Responsive columns
-//   col-sm-{1-12} : ≥ 576px
-//   col-md-{1-12} : ≥ 768px
-//   col-lg-{1-12} : ≥ 992px
-//   col-xl-{1-12} : ≥ 1200px
+//   col-sm-{1-12}: >= 576px
+//   col-md-{1-12}: >= 768px
+//   col-lg-{1-12}: >= 992px
+//   col-xl-{1-12}: >= 1200px
 //
-//   Mobile-first: mặc định width: 100%, áp dụng kích thước khi đủ rộng.
+// Mobile-first: default width is 100%; column size applies from breakpoint up.
 // --------------------------------------------------------------------------
 $grid-breakpoints: (
   'sm': 576px,
@@ -79,7 +83,7 @@ $grid-breakpoints: (
   'xl': 1200px,
 );
 
-// col-{bp} — chiếm hết chiều rộng tại breakpoint đó
+// col-{bp} - full-width flexible column at the breakpoint
 @each $bp, $min-width in $grid-breakpoints {
   @media (min-width: $min-width) {
     .col-#{$bp} {
@@ -90,15 +94,17 @@ $grid-breakpoints: (
   }
 }
 
-// col-{bp}-{1-12} — chiếm n/12 chiều rộng tại breakpoint đó
+// col-{bp}-{1-12} - n/12 column width at the breakpoint
 @each $bp, $min-width in $grid-breakpoints {
   @media (min-width: $min-width) {
     @for $i from 1 through $grid-columns {
+      $col-size: math.percentage(math.div($i, $grid-columns));
+
       .col-#{$bp}-#{$i} {
         box-sizing: border-box;
-        width: percentage(calc($i / $grid-columns));
-        flex: 0 0 percentage(calc($i / $grid-columns));
-        max-width: percentage(calc($i / $grid-columns));
+        width: $col-size;
+        flex: 0 0 $col-size;
+        max-width: $col-size;
         padding-left: calc($grid-gutter / 2);
         padding-right: calc($grid-gutter / 2);
       }
@@ -107,7 +113,7 @@ $grid-breakpoints: (
 }
 
 // --------------------------------------------------------------------------
-// 2. CSS Grid container  (.grid-container)
+// 2. CSS Grid container (.grid-container)
 //    grid-container + grid-cols-{1-12} + col-span-{1-12}
 // --------------------------------------------------------------------------
 .grid-container {

@@ -243,26 +243,23 @@ describe('SdTabRouterItem', () => {
     expect(closeSpy).toHaveBeenCalledWith(host.tab);
   });
 
-  it('close() is skipped when beforeClose returns false', fakeAsync(async () => {
+  it('close() delegates to service even when beforeClose returns false', () => {
     const closeSpy = spyOn(tabRouterService, 'close');
+    const beforeCloseSpy = jasmine.createSpy('beforeClose').and.returnValue(false);
     host.tab = makeTab({
       key: 'k2',
       url: '/b',
-      beforeClose: () => false,
+      beforeClose: beforeCloseSpy,
     });
     fixture.detectChanges();
 
     const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;
 
-    const ev = new MouseEvent('click');
-    const closeHandled = await (cmp as any)['_SdTabRouterItemComponent__closeTab']?.call(cmp);
-    if (!closeHandled) {
-      cmp.close(ev);
-    }
-    tick();
+    cmp.close(new MouseEvent('click'));
 
-    expect(closeSpy).not.toHaveBeenCalled();
-  }));
+    expect(closeSpy).toHaveBeenCalledWith(host.tab);
+    expect(beforeCloseSpy).not.toHaveBeenCalled();
+  });
 
   it('onMousedown with middle-click (button=1) prevents default', () => {
     const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;

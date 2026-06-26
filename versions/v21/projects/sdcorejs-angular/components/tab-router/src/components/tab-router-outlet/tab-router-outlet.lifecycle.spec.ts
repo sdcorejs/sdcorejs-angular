@@ -7,7 +7,7 @@
  * NOT re-instantiate. If the tab is closed we MUST run ngOnDestroy so
  * subscriptions/intervals inside the tab body do not leak.
  */
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -18,6 +18,7 @@ import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { SD_TAB, SdTab } from '../../models/tab-router.model';
 
 // Shared counters across instances per class — we don't share state across tests though
 // (re-initialised in beforeEach via reset()).
@@ -222,6 +223,79 @@ describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
     expect(outletCmp.tabs().length).toBe(1);
     expect(counters.pageA.ctor).toBe(1);
     expect(counters.pageA.init).toBe(1);
+  });
+});
+
+describe('SdTabRouterOutletComponent - SD_TAB injection', () => {
+  const captured: { tabA?: SdTab | null; tabB?: SdTab | null } = {};
+
+  @Component({ standalone: true, template: '<span data-cy="sd-tab-a"></span>' })
+  class SdTabAComponent {
+    constructor() {
+      captured.tabA = inject(SD_TAB, { optional: true });
+    }
+  }
+
+  @Component({ standalone: true, template: '<span data-cy="sd-tab-b"></span>' })
+  class SdTabBComponent {
+    constructor() {
+      captured.tabB = inject(SD_TAB, { optional: true });
+    }
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdTabRouterOutletComponent],
+    template: `<sd-tab-router-outlet></sd-tab-router-outlet>`,
+  })
+  class SdTabHostComponent {}
+
+  let fixture: ComponentFixture<SdTabHostComponent>;
+  let sdTabRouter: Router;
+
+  beforeEach(async () => {
+    Object.assign(captured, { tabA: undefined, tabB: undefined });
+
+    await TestBed.configureTestingModule({
+      imports: [SdTabHostComponent, NoopAnimationsModule],
+      providers: [
+        provideRouter([
+          { path: 'sd-a', component: SdTabAComponent },
+          { path: 'sd-b', component: SdTabBComponent },
+        ]),
+        SdTabRouterService,
+        SdTabDecoratorService,
+        {
+          provide: SdNotifyService,
+          useValue: { warning: jasmine.createSpy(), success: jasmine.createSpy(), error: jasmine.createSpy(), info: jasmine.createSpy() },
+        },
+        { provide: I18nService, useValue: { t: (k: string) => k, instant: (k: string) => k, get: (k: string) => k } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SdTabHostComponent);
+    sdTabRouter = TestBed.inject(Router);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  });
+
+  it('provides a different SdTab instance for each tab via SD_TAB', async () => {
+    await sdTabRouter.navigateByUrl('/sd-a');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    await sdTabRouter.navigateByUrl('/sd-b');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(captured.tabA).not.toBeNull();
+    expect(captured.tabB).not.toBeNull();
+    expect(captured.tabA).not.toBe(captured.tabB as any);
+    expect(captured.tabA!.url).toBe('/sd-a');
+    expect(captured.tabB!.url).toBe('/sd-b');
   });
 });
 

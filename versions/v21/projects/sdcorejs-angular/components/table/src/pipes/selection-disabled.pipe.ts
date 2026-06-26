@@ -7,21 +7,33 @@ import { Utilities } from '@sdcorejs/utils/fns';
   name: 'selectionDisabled',
 })
 export class SdSelectionDisabledPipe implements PipeTransform {
-  transform = (selectedItems: SdTableItem[], rowData: SdTableItem, selection: SdTableOptionSelector): boolean => {
+  transform = <T>(selectedItems: SdTableItem<T>[], rowData: SdTableItem<T>, selection: SdTableOptionSelector<T>): boolean => {
     const { disabled, actions } = selection;
+    if (rowData.meta.selector!.isSelected) {
+      rowData.meta.selector!.selectable = true;
+      return false;
+    }
     if (!actions?.length) {
       if (!disabled) {
         rowData.meta.selector!.selectable = true;
         return false;
       }
-      rowData.meta.selector!.selectable = !disabled(rowData, selectedItems);
+      rowData.meta.selector!.selectable = !disabled(
+        rowData.data,
+        selectedItems.map(e => e.data)
+      );
       return !rowData.meta.selector!.selectable;
     }
     // Kiểm tra có bị disabled theo function không
     // Dữ liệu chưa được check thì kiểm tra hàm disable nếu có
-    if (disabled && !rowData.meta.selector!.isSelected) {
+    if (disabled) {
       // Nếu disabled và dữ liệu chưa được check
-      if (disabled(rowData, selectedItems)) {
+      if (
+        disabled(
+          rowData.data,
+          selectedItems.map(e => e.data)
+        )
+      ) {
         return true;
       }
     }

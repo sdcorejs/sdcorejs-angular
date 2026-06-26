@@ -256,4 +256,72 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       expect(outletCmp.tabs().length).toBe(1);
     }));
   });
+
+  describe('beforeClose guard', () => {
+    let tabRouterService: SdTabRouterService;
+
+    beforeEach(() => {
+      tabRouterService = TestBed.inject(SdTabRouterService);
+    });
+
+    it('does not close tab when beforeClose returns false', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      const tab = outletCmp.tabs().find(t => t.url === '/a')!;
+      tab.beforeClose = () => false;
+
+      tabRouterService.close(tab);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(outletCmp.tabs().length).toBe(2);
+      expect(outletCmp.tabs().find(t => t.url === '/a')).toBeTruthy();
+    });
+
+    it('closes tab normally when beforeClose returns true', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      const tab = outletCmp.tabs().find(t => t.url === '/a')!;
+      tab.beforeClose = () => true;
+
+      tabRouterService.close(tab);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(outletCmp.tabs().length).toBe(1);
+      expect(outletCmp.tabs()[0].url).toBe('/b');
+    });
+
+    it('does not close tab when async beforeClose resolves to false', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      const tab = outletCmp.tabs().find(t => t.url === '/a')!;
+      tab.beforeClose = () => Promise.resolve(false);
+
+      tabRouterService.close(tab);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(outletCmp.tabs().length).toBe(2);
+    });
+
+    it('closes tab when beforeClose throws', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      const tab = outletCmp.tabs().find(t => t.url === '/a')!;
+      tab.beforeClose = () => {
+        throw new Error('unexpected');
+      };
+
+      tabRouterService.close(tab);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(outletCmp.tabs().length).toBe(1);
+    });
+  });
 });
