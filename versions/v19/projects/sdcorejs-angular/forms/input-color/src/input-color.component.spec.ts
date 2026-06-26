@@ -16,6 +16,7 @@ import { SdInputColor } from './input-color.component';
       [required]="required"
       [disabled]="disabled"
       [readonly]="readOnly"
+      [hideInlineError]="hideInlineError"
       [viewed]="viewed"
       [(model)]="value"
       (sdChange)="changes.push($event)">
@@ -30,6 +31,7 @@ class HostComponent {
   required = false;
   disabled = false;
   readOnly = false;
+  hideInlineError = false;
   viewed = false;
   value: string | null | undefined = undefined;
   changes: (string | null | undefined)[] = [];
@@ -59,6 +61,12 @@ function getTextInput(fixture: ComponentFixture<HostComponent>): HTMLInputElemen
   const el = fixture.nativeElement.querySelector('input[matInput]') as HTMLInputElement;
   if (!el) throw new Error('matInput not found');
   return el;
+}
+
+function getInnerSdInput<TFixture>(fixture: ComponentFixture<TFixture>): { hideInlineError: () => boolean; viewed: () => unknown } {
+  const debugElement = fixture.debugElement.query(By.css('sd-input'));
+  if (!debugElement?.componentInstance) throw new Error('inner sd-input not found');
+  return debugElement.componentInstance as { hideInlineError: () => boolean; viewed: () => unknown };
 }
 
 describe('SdInputColor', () => {
@@ -99,6 +107,12 @@ describe('SdInputColor', () => {
     it('defaults placeholder to #RRGGBB', () => {
       const text = getTextInput(fixture);
       expect(text.placeholder).toBe('#RRGGBB');
+    });
+
+    it('forwards hideInlineError to the inner sd-input', () => {
+      host.hideInlineError = true;
+      fixture.detectChanges();
+      expect(getInnerSdInput(fixture).hideInlineError()).toBeTrue();
     });
   });
 
@@ -329,9 +343,7 @@ describe('SdInputColor (viewed inline mode)', () => {
     // asserts: input-color delegates inline to sd-input; in inline (editable) the swatch is enabled
     fixture.componentRef.setInput('viewed', 'inline');
     fixture.detectChanges();
-    const inner = fixture.nativeElement.querySelector('sd-input') as HTMLElement;
-    expect(inner).not.toBeNull();
-    expect(inner.getAttribute('ng-reflect-viewed')).toBe('inline');
+    expect(getInnerSdInput(fixture).viewed()).toBe('inline');
     const swatch = fixture.nativeElement.querySelector('.sd-input-color__swatch') as HTMLButtonElement | null;
     expect(swatch?.disabled).toBeFalsy();
   });

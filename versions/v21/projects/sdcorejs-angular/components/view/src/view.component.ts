@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, TemplateRef, input, contentChild, computed } from '@angular/core';
 import { SdHrefDirective } from '@sdcorejs/angular/directives';
-import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
+import { SdViewPipe } from '@sdcorejs/angular/pipes';
 
 /**
  * `<sd-view>` — pure read-only display of a value (text, hyperlink, or a custom template).
@@ -16,7 +16,7 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 @Component({
   selector: 'sd-view',
   standalone: true,
-  imports: [SdEmptyPipe, SdHrefDirective, NgTemplateOutlet],
+  imports: [SdViewPipe, SdHrefDirective, NgTemplateOutlet],
   templateUrl: './view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -37,7 +37,7 @@ export class SdView {
    * why: `input.required()` forces the parent to bind `[display]` (compile error otherwise),
    * so the component never has to guess a fallback string from `value`.
    */
-  display = input.required<string | null | undefined>();
+  display = input.required<unknown>();
 
   /** When set, the value renders as a link (`<a [sdHref]>`) instead of plain text. */
   hyperlink = input<string | null | undefined>();

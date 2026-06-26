@@ -1,15 +1,17 @@
 import { Injectable, inject, isSignal } from '@angular/core';
-import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
+import { SdFormatDatePipe, SdFormatDatetimePipe, SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
 import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../models/table-item.model';
 
 @Injectable()
 export class TableFormatService {
-  // Inject các pipe/service dùng để format dữ liệu
+  // Keep table display formatting aligned with the public template pipes.
+  #formatDatePipe = inject(SdFormatDatePipe);
+  #formatDatetimePipe = inject(SdFormatDatetimePipe);
   #formatNumberPipe = inject(SdFormatNumberPipe);
 
   // ==========================================
@@ -208,13 +210,13 @@ export class TableFormatService {
   // ==========================================
 
   #formatDateDisplay(value: any, type: 'date' | 'datetime' | 'time'): string {
-    const date = DateUtilities.toFormat(value, 'dd/MM/yyyy');
-    const time = DateUtilities.toFormat(value, 'HH:mm:ss');
+    const date = this.#formatDatePipe.transform(value);
+    const time = this.#formatDatetimePipe.transform(value, 'HH:mm:ss');
     if (type === 'datetime') {
       return time && date ? `<div class="T14R">${date}<span class="T14R text-black400 ml-4">${time}</span></div>` : '';
     }
-    if (type === 'date') return date || '';
-    if (type === 'time') return time || '';
+    if (type === 'date') return date ?? '';
+    if (type === 'time') return time ?? '';
     return '';
   }
 

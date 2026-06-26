@@ -1,62 +1,103 @@
 # `sdEmpty` pipe (`| sdEmpty`)
 
 **Type**: Pipe
-**Pure**: yes (default; no explicit `pure: false`)
+**Pure**: yes (default)
 **Class**: `SdEmptyPipe`
 **Standalone**: yes
-**Import path**: `@sdcorejs/angular/pipes` (or direct: `@sdcorejs/angular/pipes/empty`)
+**Import path**: `@sdcorejs/angular/pipes`
 
 ## One-line purpose
-Replaces `null`, `undefined`, or empty-string values with the project-wide "empty" placeholder constant `EMPTY_STR` (typically `"-"` or `"--"` depending on configuration).
+
+Legacy/simple empty-value fallback. It replaces `null`, `undefined`, or empty-string values with `EMPTY_STR` (currently `--`).
+
+## Prefer `sdView` for new display code
+
+For new table cells, detail views, and AI-generated templates, prefer `sdView` because it handles the wider display contract:
+
+| Value                       | `sdEmpty`                 | `sdView`                   |
+| --------------------------- | ------------------------- | -------------------------- |
+| `null` / `undefined` / `''` | `--`                      | `--`                       |
+| `NaN`                       | `NaN`                     | `--`                       |
+| `[]`                        | array object/pass-through | `--`                       |
+| `['A', 'B']`                | array object/pass-through | `A, B`                     |
+| `0` / `false`               | preserved                 | preserved as `0` / `false` |
+
+Use `sdEmpty` only when you intentionally want the old narrow behavior.
 
 ## When to use
-- Display values in tables / detail panels where a missing field should render a consistent placeholder
-- Anywhere you'd otherwise write `{{ value || '-' }}` — unifies the placeholder across the app
+
+- Existing templates that already rely on the narrow empty-only behavior.
+- Simple text values where only `null`, `undefined`, and `''` need fallback.
+- Backward-compatible code where changing array/`NaN` behavior would be risky.
 
 ## When NOT to use
 
-- Do not use it when `0`, `false`, `[]`, or `{}` should be treated as empty; this pipe intentionally preserves those values.
-- Do not use it to format numbers, dates, booleans, or statuses. Format first, then apply `sdEmpty` only for missing-display fallback.
-- Do not use it in editable inputs; keep placeholders and validation messages inside the form control.
+- New table cells or detail pages with unknown data shape - use `sdView`.
+- Arrays that should display as comma-separated labels.
+- Number/date formatting. Format first with `sdFormatNumber`, `sdFormatDate`, or `sdFormatDatetime`, then apply `sdView`.
+- Editable inputs; placeholders and validation belong in the form component.
 
 ## Signature
+
 ```ts
 transform(value: any): string
 ```
 
-| Param | Type | Notes |
-| --- | --- | --- |
-| `value` | `any` | Any input. Returns `EMPTY_STR` when value is `undefined`, `null`, or `''`. Otherwise returns `value` as-is (note: not coerced to string for non-empty inputs — pipe return type is declared `string` but TypeScript allows pass-through). |
+| Param   | Type  | Notes                                                                                    |
+| ------- | ----- | ---------------------------------------------------------------------------------------- |
+| `value` | `any` | Returns `EMPTY_STR` for `undefined`, `null`, or `''`. Otherwise returns the value as-is. |
+
+## Standalone import checklist
+
+Every standalone component that uses `| sdEmpty` must import `SdEmptyPipe`.
+
+```ts
+import { Component } from '@angular/core';
+import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
+
+@Component({
+  standalone: true,
+  imports: [SdEmptyPipe],
+  template: `<span>{{ user.phone | sdEmpty }}</span>`,
+})
+export class UserSummaryComponent {
+  user = { phone: null };
+}
+```
 
 ## Examples
 
-### 1. Table cell fallback
+### 1. Legacy table cell fallback
+
 ```html
 <td>{{ row.note | sdEmpty }}</td>
 ```
 
-### 2. Detail-panel value
-```html
-<span class="val">{{ user.phone | sdEmpty }}</span>
-```
+### 2. Prefer this for new code
 
-### 3. Combined with another pipe
 ```html
-<span>{{ (record.amount | sdFormatNumber) | sdEmpty }}</span>
+<td>{{ row.note | sdView }}</td>
+<td>{{ row.tags | sdView }}</td>
+<td>{{ row.amount | sdFormatNumber : 0 | sdView }}</td>
 ```
 
 ## Edge cases / null behavior
-- `undefined` → `EMPTY_STR`
-- `null` → `EMPTY_STR`
-- `''` (empty string) → `EMPTY_STR`
-- `0`, `false`, `[]`, `{}` → returned as-is (these are NOT considered empty by this pipe)
-- Non-string non-empty values (e.g. a number or Date) are returned untransformed
+
+- `undefined` -> `--`
+- `null` -> `--`
+- `''` -> `--`
+- `0`, `false`, `[]`, `{}` -> returned as-is
+- `NaN` -> returned as-is
 
 ## Anti-patterns
-- Treating `0` or `false` as empty — this pipe does not. Use a custom expression if you need that.
-- Using in tight loops over very large lists with frequent reference changes — pipe is pure, but verify referential stability of inputs.
-- Relying on pipe to coerce non-strings to string — only the empty-replacement path returns the constant; pass-through values keep their original type.
+
+- Treating `sdEmpty` as the default display pipe for all data. Use `sdView` for new UI.
+- Expecting arrays to be joined. `sdEmpty` does not join arrays.
+- Expecting `NaN` to become `--`. `sdEmpty` preserves `NaN`; `sdView` handles it.
+- Relying on the pipe to coerce non-strings to string; pass-through values keep their original type.
 
 ## Related
-- `EMPTY_STR` constant from `@sdcorejs/angular/utilities/models` — the placeholder string itself.
-- `| sdFormatNumber` — pair with `| sdEmpty` for "missing number" cells.
+
+- `EMPTY_STR` constant from `@sdcorejs/utils/constants`.
+- `sdView` - preferred display fallback pipe for new table/detail templates.
+- `sdFormatNumber`, `sdFormatDate`, `sdFormatDatetime` - format first, then apply `sdView`.

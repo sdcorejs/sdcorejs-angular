@@ -40,6 +40,7 @@ export class SdInputColor {
   readonly required = input(false, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly readonly = input(false, { transform: booleanAttribute });
+  readonly hideInlineError = input(false, { transform: booleanAttribute });
   /** Display mode — forwarded to the inner `<sd-input>`. `'inline'` = borderless inline-edit; disabled `'inline'` → static. */
   readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
 

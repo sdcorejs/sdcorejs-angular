@@ -377,6 +377,31 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     return this.componentIcons[item.type]?.label ?? item.type;
   };
 
+  placeholderSymbolFor = (
+    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
+  ): string => {
+    if (!item) return 'add';
+    if (this.#isPaletteComponent(item)) return item.symbol;
+    if ('items' in item) return 'view_week';
+    return this.symbolFor(item);
+  };
+
+  placeholderTitleFor = (
+    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
+  ): string => {
+    if (!item) return 'Component';
+    if (this.#isPaletteComponent(item)) return item.name;
+    if ('items' in item) return 'Row';
+    return ('label' in item && item.label) || this.typeLabelFor(item);
+  };
+
+  placeholderMetaFor = (item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined): string => {
+    if (!item) return '';
+    if (this.#isPaletteComponent(item)) return 'New field';
+    if ('items' in item) return `${item.items.length} field${item.items.length === 1 ? '' : 's'}`;
+    return this.typeLabelFor(item);
+  };
+
   /** True nếu component có expression điều kiện — drives the "conditional" status chip. */
   hasConditional = (item: SdFormGenericComponent | SdFormGenericGroup): boolean => {
     const p: any = item.properties || {};
@@ -502,12 +527,11 @@ export class SdFormBuilder implements OnInit, OnDestroy {
         }
       }
     } else {
-      const drop = event.previousContainer.data[0];
-      if (drop && 'symbol' in drop) {
+      const draggedData = this.#draggedDataFromDropEvent(event);
+      if (this.#isPaletteComponent(draggedData)) {
         // transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-        const droppedItem = event.previousContainer.data[event.previousIndex] as FormBuilderComponent;
-        const placement = this.#paletteDropPlacement(event.container.data, event.currentIndex, droppedItem);
-        this.addComponent(droppedItem, placement.index, placement.columns);
+        const placement = this.#paletteDropPlacement(event.container.data, event.currentIndex, draggedData);
+        this.addComponent(draggedData, placement.index, placement.columns);
       } else {
         const movedItem = event.previousContainer.data[event.previousIndex] as SdFormGenericComponent | SdFormGenericGroup;
         const targetRow = this.#rowForItems(event.container.data);
@@ -553,7 +577,10 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     if (!row) return true;
 
     const data = drag.data;
-    if (!data || this.#isPaletteComponent(data)) return true;
+    if (!data) return true;
+    if (this.#isPaletteComponent(data)) {
+      return data.type === 'break' || this.#availableColumns(row) >= 2;
+    }
     if ('layout' in data && 'id' in data) {
       return canPlaceInRow(row, data, data.id);
     }
@@ -810,6 +837,10 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   #isPaletteComponent = (item: unknown): item is FormBuilderComponent => {
     return !!item && typeof item === 'object' && 'symbol' in item && 'type' in item;
+  };
+
+  #draggedDataFromDropEvent = (event: CdkDragDrop<any[]>): unknown => {
+    return event.item.data ?? event.previousContainer.data[event.previousIndex];
   };
 
   #usedColumns = (row: DragDropRowItem): number => {

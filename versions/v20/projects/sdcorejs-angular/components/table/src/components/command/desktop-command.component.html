@@ -13,20 +13,16 @@
         aria-hidden="true"
         [disabled]="_meta.disabled"
         mat-icon-button>
-        <mat-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet!">
+        <mat-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet || defaultIconFontSet">
           {{ _meta.icon }}
         </mat-icon>
       </button>
     } @else {
-      <button
-        [attr.data-autoid]="_autoId + '-' + command.key"
-        [matMenuTriggerFor]="menu"
-        aria-hidden="true"
-        mat-icon-button>
+      <button [attr.data-autoid]="_autoId + '-' + command.key" [matMenuTriggerFor]="menu" aria-hidden="true" mat-icon-button>
         @if (_meta.icon) {
-          <mat-icon class="c-icon" [fontSet]="command.fontSet!">{{ _meta.icon }}</mat-icon>
+          <mat-icon class="c-icon" [fontSet]="command.fontSet || defaultIconFontSet">{{ _meta.icon }}</mat-icon>
         } @else {
-          <mat-icon class="c-icon">more_vert</mat-icon>
+          <mat-icon class="c-icon" [fontSet]="command.fontSet || defaultIconFontSet">more_vert</mat-icon>
         }
       </button>
       <mat-menu #menu="matMenu" [attr.data-autoid]="_autoId + '-' + command.key + '-menu'">
@@ -41,12 +37,15 @@
               @if (_childMeta.htmlTemplate) {
                 <div [innerHTML]="_childMeta.htmlTemplate"></div>
               } @else {
-                <div>
-                  <mat-icon [color]="childCommand.color || 'secondary'" [fontSet]="command.fontSet!">
+                <span class="sd-command-menu-item__content">
+                  <mat-icon
+                    class="sd-command-menu-item__icon"
+                    [color]="childCommand.color || 'secondary'"
+                    [fontSet]="childCommand.fontSet || defaultIconFontSet">
                     {{ _childMeta.icon }}
                   </mat-icon>
-                  <span> {{ _childMeta.title }}</span>
-                </div>
+                  <span class="sd-command-menu-item__title">{{ _childMeta.title }}</span>
+                </span>
               }
             </button>
           }

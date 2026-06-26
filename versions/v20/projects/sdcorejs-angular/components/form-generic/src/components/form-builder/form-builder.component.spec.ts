@@ -170,6 +170,32 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(component.dragDropRows[0].items.length).toBe(2);
   });
 
+  it('uses the dragged palette data instead of the first palette item when creating a component', () => {
+    const advancedPaletteItems = component.formBuilderComponents.filter(c => c.group === 'advanced');
+    const chipCalendar = component.formBuilderComponents.find(c => c.type === 'chip-calendar')!;
+    const upload = component.formBuilderComponents.find(c => c.type === 'upload')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+
+    for (const draggedItem of [chipCalendar, upload]) {
+      component.drop({
+        previousContainer: { data: advancedPaletteItems },
+        container: { data: component.dragDropRows[0].items },
+        previousIndex: 0,
+        currentIndex: 1,
+        isPointerOverContainer: true,
+        item: {
+          data: draggedItem,
+          element: { nativeElement: { id: '' } },
+        },
+      } as any);
+    }
+
+    expect(component.components.map((item: any) => item.type)).toEqual(['textfield', 'chip-calendar', 'upload']);
+  });
+
   it('places palette drops after a full row instead of splitting its items', () => {
     const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
     component.components = [
@@ -207,12 +233,12 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(styles).not.toContain('span:not(.msi)');
   });
 
-  it('centers drop rails inside spacer placeholders', () => {
+  it('renders dashed content placeholders instead of rail-only drop indicators', () => {
     const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
 
-    expect(styles).toContain('.cdk-drag-placeholder::before');
-    expect(styles).toContain('background: transparent !important');
-    expect(styles).toContain('height: 20px !important');
+    expect(styles).toContain('.fb-drop-placeholder');
+    expect(styles).toContain('border: 1.5px dashed');
+    expect(styles).not.toContain('.cdk-drag-placeholder::before');
   });
 
   it('blocks existing items from entering rows where their columns cannot fit', () => {
@@ -228,6 +254,17 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(
       component.canEnterRowDropList({ data: component.components[0] } as any, { data: component.dragDropRows[0].items } as any)
     ).toBeTrue();
+  });
+
+  it('blocks palette inline drops on full rows so the placeholder matches the after-row insertion', () => {
+    const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+
+    expect(component.canEnterRowDropList({ data: paletteTextfield } as any, { data: component.dragDropRows[0].items } as any)).toBeFalse();
   });
 
   it('onDuplicate() regenerates nested child ids and keys when duplicating a group', () => {
