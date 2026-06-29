@@ -84,7 +84,7 @@ interface ActionNormal<T = any> {
 }
 
 interface ActionChildren<T = any> {
-  variant: 'children'
+  variant: 'children';
   icon?: string;
   fontSet?: SdUnwrapSignal<SdButton['fontSet']>;
   tooltip?: SdUnwrapSignal<SdButton['tooltip']>;

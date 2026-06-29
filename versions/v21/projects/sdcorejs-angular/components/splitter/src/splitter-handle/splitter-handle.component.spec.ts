@@ -30,7 +30,9 @@ class Host {
   disabled = signal(false);
   events: string[] = [];
   deltas: number[] = [];
-  onMove(d: number) { this.deltas.push(d); }
+  onMove(d: number) {
+    this.deltas.push(d);
+  }
 }
 
 function dispatchPointer(target: EventTarget, type: string, init: PointerEventInit) {
@@ -51,7 +53,10 @@ describe('SdSplitterHandleComponent — pointer drag', () => {
     handleEl = fixture.debugElement.query(By.css('sd-splitter-handle')).nativeElement;
     spyOn(handleEl, 'setPointerCapture').and.stub();
     spyOn(handleEl, 'releasePointerCapture').and.stub();
-    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => { cb(0); return 0; });
+    spyOn(window, 'requestAnimationFrame').and.callFake((cb: FrameRequestCallback) => {
+      cb(0);
+      return 0;
+    });
   });
 
   it('pointerdown → emit dragStart và setPointerCapture', () => {

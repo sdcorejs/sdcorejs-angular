@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { detectIncognito } from './detect-incognito';
 
 // why: detect-incognito branches on `navigator.vendor` + `eval.toString().length`
@@ -89,9 +88,7 @@ describe('detectIncognito', () => {
     // ensure isMSIE() is false (no msSaveBlob), isFirefox() false (no MozAppearance)
     delete (navigator as any).msSaveBlob;
     try {
-      await expectAsync(detectIncognito()).toBeRejectedWithError(
-        /detectIncognito cannot determine the browser/
-      );
+      await expectAsync(detectIncognito()).toBeRejectedWithError(/detectIncognito cannot determine the browser/);
     } finally {
       Object.defineProperty(Navigator.prototype, 'vendor', vendorDesc);
     }

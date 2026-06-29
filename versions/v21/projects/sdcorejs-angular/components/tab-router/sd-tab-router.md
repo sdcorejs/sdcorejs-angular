@@ -28,7 +28,7 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 | --- | --- | --- |
 | Outlet | `sd-tab-router-outlet` | Replaces `<router-outlet>`. Listens to router events, builds the tab list, hosts component instances via `*ngComponentOutlet`, manages activate / deactivate / close, supports `replaceTab` & `switchTab` navigation states. |
 | Nav | `sd-tab-router-nav` | Renders the horizontal tab strip on top. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis). Auto-switches between `default` and `compact` modes based on available width / number of tabs. |
-| Item | `sd-tab-router-item` | One tab pill — contains an `<sd-badge>` showing icon + name + tooltip, plus a close `×` button. Supports middle-click close, calls `beforeClose` hook if defined. |
+| Item | `sd-tab-router-item` | One tab pill — contains an `<sd-badge>` showing icon + name + tooltip, plus a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set). |
 
 > Tab metadata (name, icon, tooltip, color) is provided **per-component** via the `@SdTabComponent` decorator (see Decorator below). Routes don't declare the metadata — the destination component does.
 
@@ -76,7 +76,7 @@ None.
 ### Behaviors
 - Click → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
-- Close `×` → calls `tab.beforeClose` if defined (must return `true` or `Promise<true>` to actually close); otherwise closes immediately
+- Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined (must return `true` or resolve to `true` to actually close)
 - Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
 - `<sd-badge>` renders the visual: icon, name, tooltip, color
 
@@ -114,6 +114,7 @@ The decorator self-registers via `SdTabDecoratorService` so metadata is resolved
 | `@SdTabComponent({...})` | Decorator | Supplying route-component tab metadata: name, icon, tooltip, and color. |
 | `SdTabRouterService` | Service | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first. |
 | `SdTab` / `SdTabInfo` | Interfaces | Strongly typing custom tab metadata or service integrations. |
+| `SD_TAB` | `InjectionToken<SdTab>` | Inject `SdTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
 
 Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.navigate(...)`. App shells wire `<sd-tab-router-outlet>` once.
 
@@ -187,16 +188,27 @@ this.router.navigate(['/employees', id, 'edit'], {
 });
 ```
 
-### 4. `beforeClose` hook (warn on unsaved changes)
+### 4. `beforeClose` hook — cảnh báo unsaved changes
+
 ```ts
-constructor(private tabRouter: SdTabRouterService) {
-  // assume the service exposes the current tab; otherwise wire via tab-decorator
-  this.tab.beforeClose = async () => {
-    if (!this.form.dirty) return true;
-    return await this.confirm.ask('Bạn có thay đổi chưa lưu. Đóng tab?');
-  };
+import { SD_TAB } from '@sdcorejs/angular/components/tab-router';
+
+@Component({ ... })
+export class EmployeeDetailComponent {
+  // inject SD_TAB để lấy SdTab của chính tab này (scoped per-tab qua DI)
+  readonly #tab = inject(SD_TAB);
+
+  constructor() {
+    // Set trong constructor dưới dạng closure — đọc live state tại thời điểm close
+    this.#tab.beforeClose = () => {
+      if (!this.form.dirty) return true;
+      return this.confirm.ask('Bạn có thay đổi chưa lưu. Đóng tab?');
+    };
+  }
 }
 ```
+
+Component dùng cả trong lẫn ngoài tab-router: dùng `inject(SD_TAB, { optional: true })` (trả về `null` ngoài tab-router context).
 
 ### 5. Updating tab info at runtime
 ```ts

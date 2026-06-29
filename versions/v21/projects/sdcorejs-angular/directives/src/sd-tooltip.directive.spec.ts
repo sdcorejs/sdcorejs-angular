@@ -8,12 +8,7 @@ import { SdTooltipDirective } from './sd-tooltip.directive';
   standalone: true,
   imports: [SdTooltipDirective],
   template: `
-    <button
-      data-testid="trigger"
-      [sdTooltip]="content"
-      [sdTooltipPosition]="position"
-      [sdTooltipDelay]="delay"
-      [sdTooltipColor]="color">
+    <button data-testid="trigger" [sdTooltip]="content" [sdTooltipPosition]="position" [sdTooltipDelay]="delay" [sdTooltipColor]="color">
       Hover me
     </button>
     <ng-template #tplContent>

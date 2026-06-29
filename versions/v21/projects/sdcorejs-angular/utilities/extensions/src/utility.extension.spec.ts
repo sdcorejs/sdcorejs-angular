@@ -174,9 +174,7 @@ describe('SdUtilities', () => {
     });
 
     it('returns true for an Android user agent', () => {
-      const spy = spyOnProperty(navigator, 'userAgent').and.returnValue(
-        'Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36'
-      );
+      const spy = spyOnProperty(navigator, 'userAgent').and.returnValue('Mozilla/5.0 (Linux; Android 12; SM-G991B) AppleWebKit/537.36');
       expect(SdUtilities.isMobile()).toBeTrue();
       spy.and.callThrough();
     });
@@ -281,9 +279,7 @@ describe('SdUtilities', () => {
   describe('allWithPaging', () => {
     it('fetches all items in a single page when total equals page size', async () => {
       const items = [{ id: 1 }, { id: 2 }, { id: 3 }];
-      const func = jasmine.createSpy('func').and.returnValue(
-        Promise.resolve({ items, total: 3 })
-      );
+      const func = jasmine.createSpy('func').and.returnValue(Promise.resolve({ items, total: 3 }));
       const result = await SdUtilities.allWithPaging(func);
       expect(result).toEqual(items);
       expect(func).toHaveBeenCalledTimes(1);
@@ -291,7 +287,7 @@ describe('SdUtilities', () => {
 
     it('fetches all items across multiple pages', async () => {
       const allItems = Array.from({ length: 5 }, (_, i) => ({ id: i + 1 }));
-      let call = 0;
+      const call = 0;
       const func = jasmine.createSpy('func').and.callFake((_pageSize: number, pageNumber: number) => {
         const start = pageNumber * 2;
         const page = allItems.slice(start, start + 2);
@@ -304,25 +300,19 @@ describe('SdUtilities', () => {
     });
 
     it('returns empty array when total is 0', async () => {
-      const func = jasmine.createSpy('func').and.returnValue(
-        Promise.resolve({ items: [], total: 0 })
-      );
+      const func = jasmine.createSpy('func').and.returnValue(Promise.resolve({ items: [], total: 0 }));
       const result = await SdUtilities.allWithPaging(func);
       expect(result).toEqual([]);
     });
 
     it('uses defaultPageSize of 1000 when not specified', async () => {
-      const func = jasmine.createSpy('func').and.returnValue(
-        Promise.resolve({ items: [{ id: 1 }], total: 1 })
-      );
+      const func = jasmine.createSpy('func').and.returnValue(Promise.resolve({ items: [{ id: 1 }], total: 1 }));
       await SdUtilities.allWithPaging(func);
       expect(func).toHaveBeenCalledWith(1000, 0);
     });
 
     it('uses provided defaultPageSize', async () => {
-      const func = jasmine.createSpy('func').and.returnValue(
-        Promise.resolve({ items: [{ id: 1 }], total: 1 })
-      );
+      const func = jasmine.createSpy('func').and.returnValue(Promise.resolve({ items: [{ id: 1 }], total: 1 }));
       await SdUtilities.allWithPaging(func, 50);
       expect(func).toHaveBeenCalledWith(50, 0);
     });
@@ -515,7 +505,9 @@ describe('SdUtilities', () => {
       const fakeFileList = {
         length: files.length,
         item: (i: number) => files[i] ?? null,
-        [Symbol.iterator]: function* () { yield* files; },
+        [Symbol.iterator]: function* () {
+          yield* files;
+        },
       };
       Object.defineProperty(fakeFileList, 'files', { value: fakeFileList });
       const event = new Event('change', { bubbles: true });
@@ -549,10 +541,7 @@ describe('SdUtilities', () => {
       input?.dispatchEvent(event);
       // Promise never resolves when file is null — just ensure no throw yet
       // We'll race with a timeout
-      const raceResult = await Promise.race([
-        promise,
-        new Promise(resolve => setTimeout(() => resolve('timeout'), 50)),
-      ]);
+      const raceResult = await Promise.race([promise, new Promise(resolve => setTimeout(() => resolve('timeout'), 50))]);
       expect(raceResult).toBe('timeout'); // still pending — no crash
     });
 
@@ -598,7 +587,9 @@ describe('SdUtilities', () => {
       const fakeFileList = {
         length: files.length,
         item: (i: number) => files[i] ?? null,
-        [Symbol.iterator]: function* () { yield* files; },
+        [Symbol.iterator]: function* () {
+          yield* files;
+        },
       };
       const event = new Event('change', { bubbles: true });
       Object.defineProperty(event, 'target', { writable: false, value: { files: fakeFileList } });
@@ -617,7 +608,9 @@ describe('SdUtilities', () => {
       const fakeFileList = {
         length: files.length,
         item: (i: number) => files[i] ?? null,
-        [Symbol.iterator]: function* () { yield* files; },
+        [Symbol.iterator]: function* () {
+          yield* files;
+        },
       };
       const event = new Event('change', { bubbles: true });
       Object.defineProperty(event, 'target', { writable: false, value: { files: fakeFileList } });
@@ -635,7 +628,9 @@ describe('SdUtilities', () => {
       const fakeFileList = {
         length: files.length,
         item: (i: number) => files[i] ?? null,
-        [Symbol.iterator]: function* () { yield* files; },
+        [Symbol.iterator]: function* () {
+          yield* files;
+        },
       };
       const event = new Event('change', { bubbles: true });
       Object.defineProperty(event, 'target', { writable: false, value: { files: fakeFileList } });
@@ -653,7 +648,9 @@ describe('SdUtilities', () => {
       const fakeFileList = {
         length: files.length,
         item: (i: number) => files[i] ?? null,
-        [Symbol.iterator]: function* () { yield* files; },
+        [Symbol.iterator]: function* () {
+          yield* files;
+        },
       };
       const event = new Event('change', { bubbles: true });
       Object.defineProperty(event, 'target', { writable: false, value: { files: fakeFileList } });
@@ -678,7 +675,9 @@ describe('SdUtilities', () => {
       const fakeFileList = {
         length: 1,
         item: (i: number) => (i === 0 ? file : null),
-        [Symbol.iterator]: function* () { yield file; },
+        [Symbol.iterator]: function* () {
+          yield file;
+        },
       };
       const event = new Event('change', { bubbles: true });
       Object.defineProperty(event, 'target', { writable: false, value: { files: fakeFileList } });
@@ -714,9 +713,7 @@ describe('SdUtilities', () => {
   // ---------------------------------------------------------------------------
   describe('getClientPublicIp', () => {
     it('returns the IP string on success', async () => {
-      spyOn(window, 'fetch').and.returnValue(
-        Promise.resolve(new Response(JSON.stringify({ ip: '1.2.3.4' }), { status: 200 }))
-      );
+      spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response(JSON.stringify({ ip: '1.2.3.4' }), { status: 200 })));
       const result = await SdUtilities.getClientPublicIp();
       expect(result).toBe('1.2.3.4');
     });
@@ -730,9 +727,7 @@ describe('SdUtilities', () => {
     });
 
     it('returns null when response is not ok', async () => {
-      spyOn(window, 'fetch').and.returnValue(
-        Promise.resolve(new Response('Not Found', { status: 404 }))
-      );
+      spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response('Not Found', { status: 404 })));
       const errorSpy = spyOn(console, 'error');
       const result = await SdUtilities.getClientPublicIp();
       expect(result).toBeNull();

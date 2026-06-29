@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* Pandoc WASM core logic — adapted from pandoc-wasm/src/core.js
  *
  * This file is a local copy of the environment-agnostic pandoc core.
@@ -9,13 +10,7 @@
  */
 
 // @ts-nocheck
-import {
-  ConsoleStdout,
-  File,
-  OpenFile,
-  PreopenDirectory,
-  WASI,
-} from '@bjorn3/browser_wasi_shim';
+import { ConsoleStdout, File, OpenFile, PreopenDirectory, WASI } from '@bjorn3/browser_wasi_shim';
 
 export interface PandocConvertResult {
   stdout: string;
@@ -26,11 +21,7 @@ export interface PandocConvertResult {
 }
 
 export interface PandocInstance {
-  convert(
-    options: Record<string, any>,
-    stdin: string | null,
-    files: Record<string, Blob | string>
-  ): Promise<PandocConvertResult>;
+  convert(options: Record<string, any>, stdin: string | null, files: Record<string, Blob | string>): Promise<PandocConvertResult>;
 }
 
 export function createPandocInstance(wasmBinary: ArrayBuffer): Promise<PandocInstance> {
@@ -39,7 +30,7 @@ export function createPandocInstance(wasmBinary: ArrayBuffer): Promise<PandocIns
   const fileSystem = new Map();
   const fds = [
     new OpenFile(new File(new Uint8Array(), { readonly: true })),
-    ConsoleStdout.lineBuffered((msg: string) => console.log(`[WASI stdout] ${msg}`)),
+    ConsoleStdout.lineBuffered(() => undefined),
     ConsoleStdout.lineBuffered((msg: string) => console.warn(`[WASI stderr] ${msg}`)),
     new PreopenDirectory('/', fileSystem),
   ];
@@ -61,10 +52,7 @@ export function createPandocInstance(wasmBinary: ArrayBuffer): Promise<PandocIns
     const argv = instance.exports.malloc(4 * (args.length + 1));
     for (let i = 0; i < args.length; ++i) {
       const arg = instance.exports.malloc(args[i].length + 1);
-      new TextEncoder().encodeInto(
-        args[i],
-        new Uint8Array(instance.exports.memory.buffer, arg, args[i].length)
-      );
+      new TextEncoder().encodeInto(args[i], new Uint8Array(instance.exports.memory.buffer, arg, args[i].length));
       memory_data_view().setUint8(arg + args[i].length, 0);
       memory_data_view().setUint32(argv + 4 * i, arg, true);
     }
@@ -94,10 +82,7 @@ export function createPandocInstance(wasmBinary: ArrayBuffer): Promise<PandocIns
       const opts_str = JSON.stringify(options);
       const encoded = new TextEncoder().encode(opts_str);
       const opts_ptr = instance.exports.malloc(encoded.length);
-      new TextEncoder().encodeInto(
-        opts_str,
-        new Uint8Array(instance.exports.memory.buffer, opts_ptr, encoded.length)
-      );
+      new TextEncoder().encodeInto(opts_str, new Uint8Array(instance.exports.memory.buffer, opts_ptr, encoded.length));
 
       files = { ...files };
 

@@ -17,7 +17,6 @@ export class SdTabRouterService {
   updateTabs = new BehaviorSubject<SdTab | undefined>(undefined);
   #currentTab: SdTab | undefined = undefined;
   #componentBuilders: SdTabComponentBuilder[] = [];
-  constructor() {}
 
   addBuilder = (builder: SdTabComponentBuilder) => {
     if (!this.#componentBuilders.some(e => e.component === builder.component)) {

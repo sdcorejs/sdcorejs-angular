@@ -1,7 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, TemplateRef, input, contentChild, computed } from '@angular/core';
 import { SdHrefDirective } from '@sdcorejs/angular/directives';
-import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
+import { SdViewPipe } from '@sdcorejs/angular/pipes';
 
 /**
  * `<sd-view>` — pure read-only display of a value (text, hyperlink, or a custom template).
@@ -16,7 +16,7 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 @Component({
   selector: 'sd-view',
   standalone: true,
-  imports: [SdEmptyPipe, SdHrefDirective, NgTemplateOutlet],
+  imports: [SdViewPipe, SdHrefDirective, NgTemplateOutlet],
   templateUrl: './view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -29,7 +29,7 @@ export class SdView {
   label = input<string | null | undefined>();
 
   /** Raw selected value — NOT rendered directly; only exposed in the `valueTemplate` context as `value`. */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   value = input<any>();
 
   /**
@@ -37,17 +37,17 @@ export class SdView {
    * why: `input.required()` forces the parent to bind `[display]` (compile error otherwise),
    * so the component never has to guess a fallback string from `value`.
    */
-  display = input.required<string | null | undefined>();
+  display = input.required<unknown>();
 
   /** When set, the value renders as a link (`<a [sdHref]>`) instead of plain text. */
   hyperlink = input<string | null | undefined>();
 
   /** Label template handed down by a parent control (wins over `label` + `#sdLabel`). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   labelTemplate = input<TemplateRef<any> | undefined>();
 
   /** Value template handed down by a parent control (wins over `display` + `#sdValue`). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   valueTemplate = input<TemplateRef<any> | undefined>();
 
   /**
@@ -55,7 +55,7 @@ export class SdView {
    * why: the parent owns option/lazy resolution — `<sd-view>` is a proxy and must NOT rebuild
    * the list. Exposed in the value-template context so a "head +N" template can read `displayField`.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   selectedItems = input<any[] | undefined>();
 
   // ==========================================
@@ -63,11 +63,11 @@ export class SdView {
   // ==========================================
 
   /** `#sdLabel` template projected directly into `<sd-view>` (fallback when no `[labelTemplate]`). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   contentLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
 
   /** `#sdValue` template projected directly into `<sd-view>` (fallback when no `[valueTemplate]`). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   contentValueTemplate = contentChild<TemplateRef<any>>('sdValue');
 
   // ==========================================

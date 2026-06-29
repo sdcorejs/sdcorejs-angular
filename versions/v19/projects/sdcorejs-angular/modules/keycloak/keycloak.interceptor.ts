@@ -22,7 +22,7 @@ export const SdKeycloakInterceptor: HttpInterceptorFn = (req, next) => {
   return from(keycloak.updateToken(30)).pipe(
     switchMap(() => {
       const authReq = req.clone({
-        headers: req.headers.set('Authorization', `Bearer ${keycloak.token}`)
+        headers: req.headers.set('Authorization', `Bearer ${keycloak.token}`),
       });
       return next(authReq);
     })

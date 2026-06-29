@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Signal, TemplateRef } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdSearch } from '@sdcorejs/angular/forms';
@@ -50,7 +49,7 @@ interface ColumnCellOption {
   truncate?: {
     enable?: boolean;
     type?: 'more' | 'tooltip';
-  }
+  };
 }
 
 interface SdTableColumnBase<T = any> {
@@ -71,13 +70,14 @@ interface SdTableColumnBase<T = any> {
   filter?: {
     disabled?: boolean;
     default?: any;
+    onChange?: (value: any, column?: SdTableColumn<T>, columnFilter?: Record<string, any>) => void;
     // Chỉ dành cho filter inline column
     operator?: {
       default?: Operator;
       enable?: boolean;
       list?: Operator[];
     };
-    filterDef?: TemplateRef<any>
+    filterDef?: TemplateRef<any>;
   };
   export?: {
     disabled?: boolean;
@@ -95,7 +95,7 @@ interface SdTableColumnNumber<T = any> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'number';
   useBadge?: UseBadgeFunc<T>;
-  filter?: SdTableColumnBase['filter'] & { type?: 'split-number' };
+  filter?: SdTableColumnBase<T>['filter'] & { type?: 'split-number' };
 }
 
 interface SdTableColumnBool<T = any> extends SdTableColumnBase<T> {
@@ -112,7 +112,7 @@ interface SdTableColumnDate<T = any> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'date' | 'datetime' | 'time';
   useBadge?: UseBadgeFunc<T>;
-  filter?: SdTableColumnBase['filter'] & { type?: 'daterange' | 'date' | 'split-date' };
+  filter?: SdTableColumnBase<T>['filter'] & { type?: 'daterange' | 'date' | 'split-date' };
 }
 
 // Thêm Generic K (mặc định là any hoặc Record<string, any> để không lỗi code cũ)

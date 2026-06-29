@@ -14,7 +14,7 @@ export const Routes: Route[] = [
     path: 'not-found',
     loadChildren: () => import('./modules/not-found').then(m => m.NotFoundModule),
   },
-    {
+  {
     path: 'forbidden',
     loadChildren: () => import('./modules/forbidden').then(m => m.ForbiddenModule),
   },

@@ -4,7 +4,6 @@
 :host {
   display: flex;
   align-items: center;
-  //justify-content: center; --> Căn trái actions
 }
 
 button[mat-icon-button] {
@@ -22,4 +21,28 @@ mat-icon {
     font-size: 16px;
     line-height: 16px;
   }
+}
+
+.sd-command-menu-item__content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.sd-command-menu-item__icon {
+  color: map.get(color.$color_map, 'black400') !important;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  line-height: 24px !important;
+  margin-right: 0 !important;
+  flex: 0 0 24px;
+}
+
+.sd-command-menu-item__title {
+  min-width: 0;
+  line-height: 20px;
+  white-space: nowrap;
 }

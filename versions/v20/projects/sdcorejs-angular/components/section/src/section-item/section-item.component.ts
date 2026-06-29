@@ -3,7 +3,7 @@ import { Component, input } from '@angular/core';
 @Component({
   selector: 'sd-section-item',
   templateUrl: './section-item.component.html',
-  styleUrls: ['section-item.component.scss'],
+  styleUrl: 'section-item.component.scss',
   standalone: true,
 })
 export class SdSectionItem {

@@ -1,4 +1,3 @@
-/* eslint-disable @angular-eslint/no-output-rename */
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -33,7 +32,7 @@ const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
 @Component({
   selector: 'sd-inform',
   templateUrl: './inform.component.html',
-  styleUrls: ['./inform.component.scss'],
+  styleUrl: './inform.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatIconModule, TranslatePipe],

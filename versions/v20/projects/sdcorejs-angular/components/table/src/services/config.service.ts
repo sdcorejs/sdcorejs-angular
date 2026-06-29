@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
 import { Subject } from 'rxjs';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
@@ -21,11 +21,8 @@ export class ConfigService {
   #storage?: SdStorage<ConfiguredTable>;
   #widthChange = new Subject<{ field: string; width: string }>();
   widthChange$ = this.#widthChange.asObservable();
-
-  constructor(
-    private storageService: SdStorageService,
-    @Inject(SD_TABLE_CONFIGURATION) @Optional() public tableConfiguration: ISdTableConfiguration
-  ) {}
+  private readonly storageService = inject(SdStorageService);
+  public readonly tableConfiguration: ISdTableConfiguration | null = inject(SD_TABLE_CONFIGURATION, { optional: true });
 
   #loadConfiguredTable = (option: SdTableOption): SdStorage<ConfiguredTable> => {
     // Nếu không có key thì không lấy được setting
@@ -172,9 +169,7 @@ export class ConfigService {
     }
     result.multipleHeader = result.secondHeaders.length > 0;
     // Sub infomation không thể có footer; filler cũng không cần footer cell.
-    result.displayedFooters = result.displayedColumns.filter(
-      val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.FILLER
-    );
+    result.displayedFooters = result.displayedColumns.filter(val => val !== this.#COLUMNS.SUBINFORMATION && val !== this.#COLUMNS.FILLER);
     if (option.filler?.enabled) {
       // Footer cũng cần filler cuối để giữ width đồng bộ với data row
       result.displayedFooters.push(this.#COLUMNS.FILLER);

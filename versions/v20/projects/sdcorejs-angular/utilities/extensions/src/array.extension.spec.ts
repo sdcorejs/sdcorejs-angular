@@ -16,7 +16,7 @@ describe('ArrayUtilities', () => {
 
     it('returns all items when items array is empty or null', () => {
       expect(ArrayUtilities.search([], 'test', ['name'])).toEqual([]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(ArrayUtilities.search(null as any, 'test', ['name'])).toBeNull();
     });
 
@@ -69,9 +69,8 @@ describe('ArrayUtilities', () => {
     });
 
     it('returns empty array for null or undefined input', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(ArrayUtilities.distinct(null as any)).toEqual([]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(ArrayUtilities.distinct(undefined as any)).toEqual([]);
     });
 
@@ -105,9 +104,8 @@ describe('ArrayUtilities', () => {
     });
 
     it('returns empty array for null or undefined input', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(ArrayUtilities.paging(null as any, 3)).toEqual([]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(ArrayUtilities.paging(undefined as any, 3)).toEqual([]);
     });
   });
@@ -173,7 +171,11 @@ describe('ArrayUtilities', () => {
     });
 
     it('works with a single array (deduplication)', () => {
-      const dupes = [{ id: 1, v: 'a' }, { id: 1, v: 'b' }, { id: 2, v: 'c' }];
+      const dupes = [
+        { id: 1, v: 'a' },
+        { id: 1, v: 'b' },
+        { id: 2, v: 'c' },
+      ];
       const result = ArrayUtilities.union('id', dupes);
       expect(result.length).toBe(2);
     });

@@ -1,9 +1,15 @@
 param(
   [string]$SourcePath = "C:/Users/Admin/Documents/lib-core-angular/vn-angular",
-  [string]$TargetPath = "C:/Users/Admin/Documents/sdcorejs/sdcorejs-angular"
+  [string]$TargetPath = "C:/Users/Admin/Documents/sdcorejs/sdcorejs-angular",
+  [switch]$AllowLegacySync,
+  [switch]$SkipCommit
 )
 
 $ErrorActionPreference = "Stop"
+
+if (-not $AllowLegacySync) {
+  throw "Legacy sync is archived. Final sync was confirmed from vn-angular@d12478a1 on 2026-06-24; @sdcorejs/angular is repo-owned from now on. Do not run this for normal development. If you intentionally need to reproduce the old mirror on a clean branch, rerun with -AllowLegacySync."
+}
 
 # why: PS 5.1 `Set-Content -Encoding UTF8` ghi BOM; vn-angular source KHÔNG có BOM →
 # round-trip read/write làm git diff churn + file format inconsistent. Helper dưới ghi
@@ -115,7 +121,7 @@ Write-Host "[1/5] Mirror copy source -> target v19 workspace" -ForegroundColor C
 # why: /XF CHANGELOG.md — sync chỉ đồng bộ CODE. CHANGELOG do repo TỰ sở hữu (root CHANGELOG.md), deploy độc lập.
 # README npm-facing KHÔNG /XF ở đây (lib folder bị xoá+dựng lại mỗi sync nên /XF không giữ được file) —
 # thay vào đó được REPO SINH RA ở bước cuối: copy docs/npm-README.md đè lên (xem cuối [4/5]).
-robocopy $SourcePath $v19Path /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
+robocopy $SourcePath $v19Path /MIR /XD .git .sdcorejs node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
 
 # Clean up projects/demo inside v19 if it was not caught by robocopy
 $v19DemoPath = Join-Path $v19Path "projects/demo"
@@ -245,14 +251,19 @@ $multiVersionScript = Join-Path $PSScriptRoot "sync-multi-version-workspaces.ps1
 
 # Git commit in target workspace
 Write-Host "Creating git commit in target repository..." -ForegroundColor Cyan
-git -C $TargetPath add -A
-$hasChanges = (git -C $TargetPath status --porcelain 2>$null)
-if ($hasChanges) {
+if ($SkipCommit) {
+  Write-Host "SkipCommit requested. Leaving changes unstaged for review." -ForegroundColor Yellow
+}
+else {
+  git -C $TargetPath add -A
+  $hasChanges = (git -C $TargetPath status --porcelain 2>$null)
+  if ($hasChanges) {
   $commitMsg = "Sync with vn-angular@$commitId (standardized monorepo, demo removed)"
   git -C $TargetPath commit -m $commitMsg
   Write-Host "Committed changes: $commitMsg" -ForegroundColor Green
-} else {
-  Write-Host "No changes detected. Workspace is clean and up to date." -ForegroundColor Yellow
+  } else {
+    Write-Host "No changes detected. Workspace is clean and up to date." -ForegroundColor Yellow
+  }
 }
 
 Write-Host "All done. Synced vn-angular@$commitId -> versions/v19 -> v20/v21. Reorganized monorepo structure." -ForegroundColor Green

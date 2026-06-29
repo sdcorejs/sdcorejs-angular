@@ -5,9 +5,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# why: same encoding hygiene như sync-from-vn-angular.ps1.
+# why: same encoding hygiene as the archived legacy sync script.
 # Get-Content -Raw mặc định ANSI cp1252 trên PS 5.1 → mojibake với Vietnamese.
-# Set-Content -Encoding UTF8 ghi BOM → inconsistent với vn-angular source (no BOM).
+# Set-Content -Encoding UTF8 ghi BOM → inconsistent with repo-owned source files.
 $Utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 function Write-Utf8NoBom {
   param([string]$Path, [string]$Content)
@@ -22,9 +22,11 @@ if (!(Test-Path -LiteralPath $RootPath)) {
   throw "RootPath not found: $RootPath"
 }
 
-# --- SYNC RULE ---
-# v19 is synced FIRST as the primary target (closest to source vn-angular).
-# v20 and v21 are rollout targets derived from v19 — version patches applied on top.
+# --- WORKSPACE ROLLOUT RULE ---
+# After the final legacy sync from vn-angular@d12478a1 (2026-06-24), v19 is the
+# repo-owned primary workspace. Build features, docs, tests, and showcase in v19,
+# then use this script to roll the same surface to v20 and v21. Direct edits in
+# v20/v21 should be limited to Angular-major-specific dependency/shim work.
 # Order: v19 → v20 → v21. Never change this order.
 $versions = @(
   @{ Folder = "v19"; Major = "19" },
@@ -180,8 +182,9 @@ foreach ($v in $versions) {
 
   if ($v.Folder -ne "v19") {
     # Mirror copy from versions/v19 to the target version folder
-    # why: /XF CHANGELOG.md — changelog độc lập ở root repo, không lan vào versions/ (xem sync-from-vn-angular.ps1).
-    robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
+    # why: package-lock.json stays major-specific after each workspace install.
+    # CHANGELOG.md is independent at the root repo and is not rolled into versions/.
+    robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md package-lock.json /R:1 /W:1 /NFL /NDL /NP | Out-Null
   }
 
   # Explicitly delete projects/demo folder in target if present
@@ -199,24 +202,30 @@ foreach ($v in $versions) {
   $sideDrawerPath = Join-Path $dest "projects/sdcorejs-angular/components/side-drawer/src/side-drawer.component.ts"
   Update-SideDrawerPortalCall -FilePath $sideDrawerPath -Major $v.Major
 
-  # Write sync status
+  # Write workspace status
   # why: build the arrow at runtime ([char]0x2192) instead of embedding a literal `→`.
-  # PS 5.1 reads this .ps1 as cp1252 (no BOM) → a literal U+2192 decodes to mojibake `â€™`
+  # PS 5.1 reads this .ps1 as cp1252 (no BOM), so a literal U+2192 can decode to mojibake
   # and gets written into SYNC-STATUS.md. Keeping the source ASCII avoids that round-trip.
   $arrow = [char]0x2192
+  $legacyCommit = if ($syncCommit -ne "unknown") { $syncCommit } else { "d12478a1" }
+  $originLabel = if ($syncCommit -ne "unknown") { "legacy vn-angular@$syncCommit" } else { "repo-owned versions/v19 (final legacy sync vn-angular@d12478a1)" }
+  $workspaceFlow = if ($v.Folder -eq "v19") { "versions/v19" } else { "versions/v19 $arrow $($v.Folder)" }
   $domNote = if ($v.Major -eq "19") { "4-arg constructor (with ViewContainerRef)" } else { "3-arg constructor" }
   $statusLines = @(
-    "# Sync Status - $($v.Folder)",
+    "# Workspace Status - $($v.Folder)",
     "",
     "| Key | Value |",
     "|-----|-------|",
     "| Angular Major | $($v.Major) |",
-    "| Source Commit | $syncCommit |",
-    "| Synced At | $syncDate |",
-    "| Source | vn-angular $arrow versions/v19 $arrow $($v.Folder) |",
+    "| Legacy Source Commit | $legacyCommit |",
+    "| Updated At | $syncDate |",
+    "| Origin | $originLabel |",
+    "| Workspace Flow | $workspaceFlow |",
+    "| Development Mode | repo-owned independent pack |",
     "",
     "## Notes",
-    "- Sync rule: v19 is synced first (primary). v20 and v21 are rollout targets.",
+    "- Final legacy sync was confirmed from vn-angular@d12478a1 on 2026-06-24.",
+    "- Normal development happens in this repo: change v19 first, then roll out to v20/v21.",
     "- DomPortalOutlet: $domNote"
   )
   Write-Utf8NoBom -Path (Join-Path $dest "SYNC-STATUS.md") -Content (($statusLines -join "`n") + "`n")

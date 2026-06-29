@@ -6,7 +6,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, input, signal } f
   standalone: true,
   imports: [CommonModule],
   templateUrl: './avatar.component.html',
-  styleUrls: ['./avatar.component.scss'],
+  styleUrl: './avatar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdAvatar {

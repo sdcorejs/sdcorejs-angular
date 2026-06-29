@@ -1,5 +1,5 @@
 import { Utilities } from '@sdcorejs/utils/fns';
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { CommonModule } from '@angular/common';
 import {
   AfterViewInit,
@@ -26,7 +26,15 @@ import { Subscription } from 'rxjs';
 
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 
-import { SdFormControl, SdInlineErrorValidator, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SdFormControl,
+  SdInlineErrorValidator,
+  sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -37,7 +45,7 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
 @Component({
   selector: 'sd-radio',
   templateUrl: './radio.component.html',
-  styleUrls: ['./radio.component.scss'],
+  styleUrl: './radio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
@@ -50,9 +58,19 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
     '[class.sd-c-warning]': "color() === 'warning'",
     '[class.sd-c-error]': "color() === 'error'",
   },
-  imports: [CommonModule, ReactiveFormsModule, MatTooltipModule, MatFormFieldModule, MatIconModule, MatRadioModule, SdLabel, SdEmptyPipe, SdHrefDirective, TranslatePipe],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatTooltipModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatRadioModule,
+    SdLabel,
+    SdEmptyPipe,
+    SdHrefDirective,
+    TranslatePipe,
+  ],
 })
-// eslint-disable-next-line @angular-eslint/component-class-suffix
 export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);
 

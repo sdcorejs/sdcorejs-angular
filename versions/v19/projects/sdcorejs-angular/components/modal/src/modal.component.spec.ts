@@ -22,8 +22,7 @@ import { SdModal } from './modal.component';
       [width]="width"
       [hideClose]="hideClose"
       [disableBackdropClose]="disableBackdropClose"
-      (sdClosed)="onClosed()"
-    >
+      (sdClosed)="onClosed()">
       <span id="body-content">modal body</span>
       <span sdFooterRight id="footer-content">footer</span>
     </sd-modal>
@@ -35,7 +34,9 @@ class HostComponent {
   hideClose = false;
   disableBackdropClose = true;
   closedCount = 0;
-  onClosed(): void { this.closedCount++; }
+  onClosed(): void {
+    this.closedCount++;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -421,14 +422,7 @@ describe('SdModal', () => {
     @Component({
       standalone: true,
       imports: [SdModal],
-      template: `
-        <sd-modal
-          view="dialog"
-          [autoId]="autoId"
-          [title]="'E2E Test'"
-          [lazyLoadContent]="false"
-        ></sd-modal>
-      `,
+      template: ` <sd-modal view="dialog" [autoId]="autoId" [title]="'E2E Test'" [lazyLoadContent]="false"></sd-modal> `,
     })
     class E2EHost {
       autoId = 'confirm';

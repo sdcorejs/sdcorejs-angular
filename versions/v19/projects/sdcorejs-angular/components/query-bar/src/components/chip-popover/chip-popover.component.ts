@@ -1,15 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  isSignal,
-  output,
-  signal,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, isSignal, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuModule } from '@angular/material/menu';
@@ -34,7 +24,10 @@ import {
   sdQueryShowOperatorSelector,
 } from '../../query-bar.model';
 
-type Range = { from?: string | number | null; to?: string | number | null };
+interface Range {
+  from?: string | number | null;
+  to?: string | number | null;
+}
 
 /**
  * Popover-mode chip editor — the entire `<mat-menu>` that opens when a popover-mode

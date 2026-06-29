@@ -12,7 +12,7 @@
         {
           "version": "21.0.9",
           "released": "2026-06-22",
-          "count": 81,
+          "count": 84,
           "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/index.json"
         },
         {
@@ -48,7 +48,7 @@
         {
           "version": "20.0.9",
           "released": "2026-06-22",
-          "count": 81,
+          "count": 84,
           "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/index.json"
         },
         {
@@ -84,7 +84,7 @@
         {
           "version": "19.0.9",
           "released": "2026-06-22",
-          "count": 81,
+          "count": 84,
           "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/index.json"
         },
         {
@@ -125,7 +125,7 @@
       "version": "21.0.9",
       "major": 21,
       "released": "2026-06-22",
-      "count": 81,
+      "count": 84,
       "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9",
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/index.json",
       "docs": [
@@ -592,6 +592,20 @@
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/pipes/src/empty.md"
         },
         {
+          "id": "pipes/src/format-date",
+          "title": "sdFormatDate pipe (| sdFormatDate)",
+          "category": "pipes",
+          "path": "pipes/src/format-date.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/pipes/src/format-date.md"
+        },
+        {
+          "id": "pipes/src/format-datetime",
+          "title": "sdFormatDatetime pipe (| sdFormatDatetime)",
+          "category": "pipes",
+          "path": "pipes/src/format-datetime.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/pipes/src/format-datetime.md"
+        },
+        {
           "id": "pipes/src/format-number",
           "title": "sdFormatNumber pipe (| sdFormatNumber)",
           "category": "pipes",
@@ -611,6 +625,13 @@
           "category": "pipes",
           "path": "pipes/src/time-different.md",
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/pipes/src/time-different.md"
+        },
+        {
+          "id": "pipes/src/view",
+          "title": "sdView pipe (| sdView)",
+          "category": "pipes",
+          "path": "pipes/src/view.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/pipes/src/view.md"
         },
         {
           "id": "README",
@@ -696,8 +717,7 @@
           "path": "utilities/models/models.md",
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.9/utilities/models/models.md"
         }
-      ],
-      "syncedFrom": "26a54976"
+      ]
     },
     {
       "version": "21.0.8",
@@ -3015,7 +3035,7 @@
       "version": "20.0.9",
       "major": 20,
       "released": "2026-06-22",
-      "count": 81,
+      "count": 84,
       "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9",
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/index.json",
       "docs": [
@@ -3482,6 +3502,20 @@
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/pipes/src/empty.md"
         },
         {
+          "id": "pipes/src/format-date",
+          "title": "sdFormatDate pipe (| sdFormatDate)",
+          "category": "pipes",
+          "path": "pipes/src/format-date.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/pipes/src/format-date.md"
+        },
+        {
+          "id": "pipes/src/format-datetime",
+          "title": "sdFormatDatetime pipe (| sdFormatDatetime)",
+          "category": "pipes",
+          "path": "pipes/src/format-datetime.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/pipes/src/format-datetime.md"
+        },
+        {
           "id": "pipes/src/format-number",
           "title": "sdFormatNumber pipe (| sdFormatNumber)",
           "category": "pipes",
@@ -3501,6 +3535,13 @@
           "category": "pipes",
           "path": "pipes/src/time-different.md",
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/pipes/src/time-different.md"
+        },
+        {
+          "id": "pipes/src/view",
+          "title": "sdView pipe (| sdView)",
+          "category": "pipes",
+          "path": "pipes/src/view.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/pipes/src/view.md"
         },
         {
           "id": "README",
@@ -3586,8 +3627,7 @@
           "path": "utilities/models/models.md",
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.0.9/utilities/models/models.md"
         }
-      ],
-      "syncedFrom": "26a54976"
+      ]
     },
     {
       "version": "20.0.8",
@@ -5905,7 +5945,7 @@
       "version": "19.0.9",
       "major": 19,
       "released": "2026-06-22",
-      "count": 81,
+      "count": 84,
       "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9",
       "index": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/index.json",
       "docs": [
@@ -6372,6 +6412,20 @@
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/pipes/src/empty.md"
         },
         {
+          "id": "pipes/src/format-date",
+          "title": "sdFormatDate pipe (| sdFormatDate)",
+          "category": "pipes",
+          "path": "pipes/src/format-date.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/pipes/src/format-date.md"
+        },
+        {
+          "id": "pipes/src/format-datetime",
+          "title": "sdFormatDatetime pipe (| sdFormatDatetime)",
+          "category": "pipes",
+          "path": "pipes/src/format-datetime.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/pipes/src/format-datetime.md"
+        },
+        {
           "id": "pipes/src/format-number",
           "title": "sdFormatNumber pipe (| sdFormatNumber)",
           "category": "pipes",
@@ -6391,6 +6445,13 @@
           "category": "pipes",
           "path": "pipes/src/time-different.md",
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/pipes/src/time-different.md"
+        },
+        {
+          "id": "pipes/src/view",
+          "title": "sdView pipe (| sdView)",
+          "category": "pipes",
+          "path": "pipes/src/view.md",
+          "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/pipes/src/view.md"
         },
         {
           "id": "README",
@@ -6476,8 +6537,7 @@
           "path": "utilities/models/models.md",
           "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.0.9/utilities/models/models.md"
         }
-      ],
-      "syncedFrom": "26a54976"
+      ]
     },
     {
       "version": "19.0.8",

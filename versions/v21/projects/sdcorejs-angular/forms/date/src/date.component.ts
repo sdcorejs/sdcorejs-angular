@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -18,7 +16,7 @@ import {
   output,
   TemplateRef,
   viewChild,
-  contentChild
+  contentChild,
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
@@ -31,7 +29,15 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { ISdFormConfiguration, SD_FORM_CONFIGURATION, SdFormControl, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SD_FORM_CONFIGURATION,
+  SdFormControl,
+  SdInlineErrorValidator,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -45,7 +51,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'sd-date',
   templateUrl: './date.component.html',
-  styleUrls: ['./date.component.scss'],
+  styleUrl: './date.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [
@@ -73,7 +79,7 @@ import { Subscription } from 'rxjs';
     MatFormFieldModule,
     MatDatepickerModule,
     SdLabel,
-    SdView
+    SdView,
   ],
 })
 export class SdDate implements OnDestroy, OnInit {
@@ -101,7 +107,7 @@ export class SdDate implements OnDestroy, OnInit {
   // 3. SIGNAL INPUTS & MODEL
   // ==========================================
   autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  autoId = computed(() => this.autoIdInput() ? `forms-date-${this.autoIdInput()}` : undefined);
+  autoId = computed(() => (this.autoIdInput() ? `forms-date-${this.autoIdInput()}` : undefined));
 
   readonly #state = sdFormControlState(computed(() => this.formControl));
   readonly dataDisabled = computed(() => (this.#state().disabled ? 'true' : 'false'));
@@ -135,7 +141,7 @@ export class SdDate implements OnDestroy, OnInit {
   label = input<string | undefined>();
   helperText = input<string | undefined>();
   placeholder = input<string | undefined>();
-  
+
   hideInlineError = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
@@ -167,9 +173,16 @@ export class SdDate implements OnDestroy, OnInit {
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.date.required');
-    if (errors['matDatepickerMin']) { const d = this.resolvedMin(); return this.#i18n.t('core.form.date.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' }); }
-    if (errors['matDatepickerMax']) { const d = this.resolvedMax(); return this.#i18n.t('core.form.date.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' }); }
-    if (errors['matDatetimePickerParse']) return this.#i18n.t('core.form.date.parse-error', { text: errors['matDatetimePickerParse']?.text ?? '' });
+    if (errors['matDatepickerMin']) {
+      const d = this.resolvedMin();
+      return this.#i18n.t('core.form.date.min-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+    }
+    if (errors['matDatepickerMax']) {
+      const d = this.resolvedMax();
+      return this.#i18n.t('core.form.date.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
+    }
+    if (errors['matDatetimePickerParse'])
+      return this.#i18n.t('core.form.date.parse-error', { text: errors['matDatetimePickerParse']?.text ?? '' });
     if (errors['date']) return errors['date'] as string;
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
@@ -207,7 +220,7 @@ export class SdDate implements OnDestroy, OnInit {
   formControl = new SdFormControl();
   isFocused = false;
   isValid?: boolean;
-  
+
   #date: string | undefined | null;
   #subscription = new Subscription();
 
@@ -224,8 +237,8 @@ export class SdDate implements OnDestroy, OnInit {
         if (this.#date !== val) {
           this.#date = val;
           const dateObj = DateUtilities.isDate(this.#date)
-              ? parseDate(DateUtilities.toFormat(this.#date, 'yyyy/MM/dd'), 'yyyy/MM/dd', new Date())
-              : null;
+            ? parseDate(DateUtilities.toFormat(this.#date, 'yyyy/MM/dd'), 'yyyy/MM/dd', new Date())
+            : null;
           this.formControl.setValue(dateObj, { emitEvent: false });
         }
       });
@@ -246,7 +259,7 @@ export class SdDate implements OnDestroy, OnInit {
         const validators: ValidatorFn[] = [];
         if (req) validators.push(Validators.required);
         if (inl) validators.push(SdInlineErrorValidator);
-        
+
         this.formControl.setValidators(validators.length ? validators : null);
         this.formControl.updateValueAndValidity({ emitEvent: false });
       });
@@ -362,7 +375,7 @@ export class SdDate implements OnDestroy, OnInit {
     // event.value giờ là native Date (date-fns adapter), không cần .toDate() như Moment.
     const value = DateUtilities.toFormat(event.value, 'yyyy/MM/dd');
     this.inputRef()?.nativeElement?.focus();
-    
+
     if (!this.isValid) {
       if (this.#date !== value) {
         this.valueModel.set(value);

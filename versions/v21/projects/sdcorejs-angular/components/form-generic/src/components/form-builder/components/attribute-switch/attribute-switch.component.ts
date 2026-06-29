@@ -1,8 +1,5 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { SdSwitch } from '@sdcorejs/angular/forms/switch';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 

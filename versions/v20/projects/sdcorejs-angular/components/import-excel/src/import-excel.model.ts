@@ -107,7 +107,7 @@ export interface SdUploadExcelColumnStringArray<T = any> extends SdUploadExcelBa
   maxlength?: number;
 }
 
-export type SdImportExcelItem<T = any> = {
+export interface SdImportExcelItem<T = any> {
   data: T;
   meta: {
     excelIndex: number;
@@ -117,7 +117,7 @@ export type SdImportExcelItem<T = any> = {
     warning: Record<string, string>;
     warningMessages: string[];
   };
-};
+}
 
 // export type ExcelItem<T> = {
 //   origin?: T;

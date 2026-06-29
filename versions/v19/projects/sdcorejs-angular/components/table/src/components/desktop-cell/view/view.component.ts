@@ -33,7 +33,7 @@ export class ToStringPipe implements PipeTransform {
 @Component({
   selector: 'view',
   templateUrl: './view.component.html',
-  styleUrls: ['./view.component.scss'],
+  styleUrl: './view.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, SdBadge, SdSafeHtmlPipe, SdTooltipDirective, ToStringPipe, TranslatePipe],

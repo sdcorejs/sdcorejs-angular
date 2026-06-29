@@ -1,5 +1,5 @@
 import { Utilities } from '@sdcorejs/utils/fns';
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   AfterViewInit,
   booleanAttribute,
@@ -20,7 +20,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdFormControl, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SdFormControl,
+  sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';

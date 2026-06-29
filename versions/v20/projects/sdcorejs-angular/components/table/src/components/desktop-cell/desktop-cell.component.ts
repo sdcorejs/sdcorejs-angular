@@ -20,11 +20,10 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { ViewComponent } from './view/view.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
-
 @Component({
   selector: 'desktop-cell',
   templateUrl: './desktop-cell.component.html',
-  styleUrls: ['./desktop-cell.component.scss'],
+  styleUrl: './desktop-cell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, SdTooltipDirective, ViewComponent, TranslatePipe],

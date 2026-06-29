@@ -5,12 +5,12 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
-import { SdLayoutService, SdLayoutStorageService } from '../../../../services';
+import { SdLayoutService } from '../../../../services';
 // End
 
 @Component({
   templateUrl: './root.component.html',
-  styleUrls: ['./root.component.scss'],
+  styleUrl: './root.component.scss',
   imports: [SdButton, SdPageComponent, TranslatePipe],
 })
 export class RootComponent {

@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
-import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { SdFormGenericComponent, SdFormGenericHtml } from '../models';
 import { FormGenericService } from '../services';

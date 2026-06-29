@@ -1,10 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
 import { SdFormGenericComponent } from '../../../../models';
-import { HtmlPipe } from '../../../../pipes';
 import {
   ChipCalendarComponent,
   ChipStringComponent,
@@ -18,12 +15,12 @@ import {
   UploadComponent,
 } from './components';
 import { Subject } from 'rxjs';
-import { HtmlComponent } from "./components/html/html.component";
+import { HtmlComponent } from './components/html/html.component';
 
 @Component({
   selector: 'lib-item',
   templateUrl: './item.component.html',
-  styleUrls: ['./item.component.scss'],
+  styleUrl: './item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TextfieldComponent,
@@ -36,8 +33,8 @@ import { HtmlComponent } from "./components/html/html.component";
     RadioComponent,
     TableComponent,
     UploadComponent,
-    HtmlComponent
-],
+    HtmlComponent,
+  ],
 })
 export class LibItemComponent {
   @ViewChild(UploadComponent) itemUpload?: UploadComponent;

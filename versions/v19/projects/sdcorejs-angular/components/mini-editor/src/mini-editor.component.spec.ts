@@ -44,14 +44,16 @@ function buildFixture(option: SdMiniEditorOption = defaultOption): ComponentFixt
 // ---------------------------------------------------------------------------
 
 function makeFakeEditor() {
-  const dataChangeListeners: Array<() => void> = [];
-  const focusListeners: Array<(evt: any) => void> = [];
-  const blurListeners: Array<(evt: any) => void> = [];
+  const dataChangeListeners: (() => void)[] = [];
+  const focusListeners: ((evt: any) => void)[] = [];
+  const blurListeners: ((evt: any) => void)[] = [];
 
   const fakeEditor: any = {
     _data: '',
     getData: jasmine.createSpy('getData').and.callFake(() => fakeEditor._data),
-    setData: jasmine.createSpy('setData').and.callFake((v: string) => { fakeEditor._data = v; }),
+    setData: jasmine.createSpy('setData').and.callFake((v: string) => {
+      fakeEditor._data = v;
+    }),
     destroy: jasmine.createSpy('destroy'),
     execute: jasmine.createSpy('execute'),
     model: {
@@ -274,9 +276,7 @@ describe('SdMiniEditor', () => {
 
     it('insertMention does not throw when editor not ready', () => {
       const fixture = buildFixture();
-      expect(() =>
-        fixture.componentInstance.insertMention({ id: '1', name: 'user' })
-      ).not.toThrow();
+      expect(() => fixture.componentInstance.insertMention({ id: '1', name: 'user' })).not.toThrow();
     });
 
     it('getMentions returns empty array when editor not ready', () => {

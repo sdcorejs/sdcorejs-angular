@@ -11,7 +11,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
 @Component({
   selector: 'sidebar-v1',
   templateUrl: './main.component.html',
-  styleUrls: ['./main.component.scss'],
+  styleUrl: './main.component.scss',
   imports: [MatSidenavModule, CommonModule, SidebarComponent],
   standalone: true,
 })
@@ -140,7 +140,11 @@ export class SidebarV1Component {
       // Toggle component MatSidenav
       const sidenavComp = this.sidenav();
       if (sidenavComp) {
-        data ? sidenavComp.open() : sidenavComp.close();
+        if (data) {
+          sidenavComp.open();
+        } else {
+          sidenavComp.close();
+        }
       }
     }
   };

@@ -11,15 +11,15 @@ export class CkCommentPlugin extends Plugin {
     return [ContextualBalloon];
   }
 
-  #comments: Map<string | number, CkComment> = new Map();
+  #comments = new Map<string | number, CkComment>();
   // i18n đọc từ editor.config — plugin không có DI nên dùng pattern này; fallback giữ VI để consumer chưa setup vẫn chạy
   #getI18n(): DocumentBuilderI18n | undefined {
     return (this.editor.config as { get(key: string): unknown }).get('_i18n') as DocumentBuilderI18n | undefined;
   }
   #selectedId: string | number | null = null;
   #pendingId: string | null = null; // ID cho pending highlight
-  #isCreatingPending: boolean = false; // Flag để prevent clearing pending khi đang tạo
-  #isProcessingClick: boolean = false; // Flag để prevent duplicate click events
+  #isCreatingPending = false; // Flag để prevent clearing pending khi đang tạo
+  #isProcessingClick = false; // Flag để prevent duplicate click events
   #balloon!: ContextualBalloon;
   #config: CkCommentConfig = {};
 
@@ -615,7 +615,7 @@ export class CkCommentPlugin extends Plugin {
   /**
    * Chọn comment theo id - chỉ thêm class highlight, không bôi đen text
    */
-  selectComment(id: string | number, scrollIntoView: boolean = true): void {
+  selectComment(id: string | number, scrollIntoView = true): void {
     this.#log('selectComment called with id:', id, 'hasComment:', this.#comments.has(id));
 
     if (!this.#comments.has(id)) {
@@ -776,7 +776,9 @@ export class CkCommentPlugin extends Plugin {
       const errorI18n = this.#getI18n();
       this.#config.onError?.({
         code: 'TEXT_TOO_LONG',
-        message: errorI18n?.t('core.component.document-builder.ck-comment.text-too-long', { length: trimmedText.length, max: maxTextLength }) ?? '',
+        message:
+          errorI18n?.t('core.component.document-builder.ck-comment.text-too-long', { length: trimmedText.length, max: maxTextLength }) ??
+          '',
         data: { textLength: trimmedText.length, maxLength: maxTextLength },
       });
       return null;
@@ -805,7 +807,6 @@ export class CkCommentPlugin extends Plugin {
       text: trimmedText,
     };
   }
-
 
   /**
    * Điều chỉnh range để loại bỏ khoảng trắng đầu/cuối.
@@ -863,8 +864,6 @@ export class CkCommentPlugin extends Plugin {
       return writer.createRange(startPos, endPos);
     });
   }
-
-
 
   // ========================================================================
   // INTERNAL HELPERS
@@ -971,10 +970,10 @@ export class CkCommentPlugin extends Plugin {
     try {
       // Get the model range from marker
       const modelRange = marker.getRange();
-      
+
       // Convert model range to view range
       const viewRange = editor.editing.mapper.toViewRange(modelRange);
-      
+
       // Convert view range to DOM range
       const domRange = editor.editing.view.domConverter.viewRangeToDom(viewRange);
 
@@ -982,7 +981,7 @@ export class CkCommentPlugin extends Plugin {
 
       // Get the start position of the range
       let targetElement: Element | Node = domRange.startContainer;
-      
+
       // If it's a text node, get its parent
       if (targetElement.nodeType === Node.TEXT_NODE) {
         targetElement = targetElement.parentElement!;

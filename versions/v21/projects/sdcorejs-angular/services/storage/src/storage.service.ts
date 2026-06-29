@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Inject, Injectable, Optional } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,12 +16,7 @@ export class SdStorageService {
   // Dùng Map để quản lý bộ nhớ tốt hơn Record
   #memoryCache = new Map<string, StorageCacheEntry<any>>();
   #subjects = new Map<string, BehaviorSubject<any>>();
-
-  constructor(
-    @Inject(SD_STORAGE_CONFIG)
-    @Optional()
-    private configuration: ISdStorageConfiguration
-  ) {}
+  private readonly configuration: ISdStorageConfiguration | null = inject(SD_STORAGE_CONFIG, { optional: true });
 
   create<T = any>(key: string | object, option?: SdStorageOption<T>): SdStorage<T> {
     if (!key) throw new Error('Key is required');
@@ -88,7 +82,7 @@ export class SdStorageService {
       setSilent,
       has,
       remove,
-      // @ts-ignore: Bổ sung vào interface nếu cần
+      // @ts-expect-error: Bổ sung vào interface nếu cần
       destroy,
       subject: subject,
       observer: subject.asObservable().pipe(map(() => get())),
@@ -121,7 +115,7 @@ export class SdStorageService {
           // Convert string date back to Date object nếu cần
           entry = {
             data: parsed.data,
-            createdOn: new Date(parsed.createdOn)
+            createdOn: new Date(parsed.createdOn),
           };
           // Sync ngược vào RAM
           this.#memoryCache.set(key, entry);

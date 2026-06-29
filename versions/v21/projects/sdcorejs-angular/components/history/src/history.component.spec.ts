@@ -25,10 +25,7 @@ describe('SdHistoryItem', () => {
   });
 
   it('renders one card per item with title', () => {
-    const data: SdHistoryItemType[] = [
-      { title: 'Created' },
-      { title: 'Approved' },
-    ];
+    const data: SdHistoryItemType[] = [{ title: 'Created' }, { title: 'Approved' }];
     component.items = data;
     fixture.detectChanges();
 
@@ -41,10 +38,7 @@ describe('SdHistoryItem', () => {
   });
 
   it('renders sd-badge only when status is present', () => {
-    component.items = [
-      { title: 'no-status' },
-      { title: 'with-status', status: { title: 'Done', color: 'success' } },
-    ];
+    component.items = [{ title: 'no-status' }, { title: 'with-status', status: { title: 'Done', color: 'success' } }];
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;
@@ -61,10 +55,7 @@ describe('SdHistoryItem', () => {
   });
 
   it('renders actor block only when actor present', () => {
-    component.items = [
-      { title: 'no actor' },
-      { title: 'has actor', actor: 'alice' },
-    ];
+    component.items = [{ title: 'no actor' }, { title: 'has actor', actor: 'alice' }];
     fixture.detectChanges();
 
     const host = fixture.nativeElement as HTMLElement;

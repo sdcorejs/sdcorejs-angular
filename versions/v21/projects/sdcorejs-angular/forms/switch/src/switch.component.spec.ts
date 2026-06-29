@@ -1,7 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
-import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdSwitch } from './switch.component';
 
@@ -61,8 +60,7 @@ describe('SdSwitch', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    switchInstance = fixture.debugElement.query(el => el.componentInstance instanceof SdSwitch)
-      ?.componentInstance as SdSwitch;
+    switchInstance = fixture.debugElement.query(el => el.componentInstance instanceof SdSwitch)?.componentInstance as SdSwitch;
   });
 
   describe('disabled', () => {
@@ -196,7 +194,7 @@ describe('SdSwitch', () => {
       host.model = true;
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('mat-slide-toggle')).toBeNull();
-      const txt = (fixture.nativeElement.textContent as string);
+      const txt = fixture.nativeElement.textContent as string;
       // i18n keys core.form.switch.on/off; default locale fallback could be the raw key — accept either.
       expect(/Bật|On|オン|开|켜짐|core\.form\.switch\.on/.test(txt)).toBe(true);
     });
@@ -205,7 +203,7 @@ describe('SdSwitch', () => {
       host.viewed = true;
       host.model = false;
       fixture.detectChanges();
-      const txt = (fixture.nativeElement.textContent as string);
+      const txt = fixture.nativeElement.textContent as string;
       expect(/Tắt|Off|オフ|关|꺼짐|core\.form\.switch\.off/.test(txt)).toBe(true);
     });
   });

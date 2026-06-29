@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, input, untracked } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, inject, input, untracked } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { COMPONENT_ICONS, SdFormGenericComponent, SdFormGenericGroup } from '../../../../../models';
@@ -12,7 +12,7 @@ const COLOR_PRESETS = ['primary', 'secondary', 'success', 'warning', 'error'] as
 @Component({
   selector: 'group-attribute',
   templateUrl: './group-attribute.component.html',
-  styleUrls: ['./group-attribute.component.scss'],
+  styleUrl: './group-attribute.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AttributeInput, AttributeExpression, TranslatePipe],
 })

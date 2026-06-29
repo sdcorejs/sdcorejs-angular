@@ -26,7 +26,7 @@ export class SdDoughnutChartComponent implements OnInit, OnDestroy {
     effect(() => {
       const currentData = this.data();
       const currentOptions = this.options();
-      
+
       if (this.chart) {
         this.chart.data = currentData;
         if (currentOptions) {

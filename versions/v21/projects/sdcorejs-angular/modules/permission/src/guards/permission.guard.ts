@@ -1,15 +1,12 @@
-import { Inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, CanActivateChild, RouterStateSnapshot } from '@angular/router';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
 import { SdPermissionService } from '../services';
 
 @Injectable({ providedIn: 'root' })
 export class SdPermissionGuard implements CanActivate, CanActivateChild {
-  constructor(
-    @Inject(SD_PERMISSION_CONFIGURATION)
-    private configuration: ISdPermissionConfiguration | ISdPermissionConfiguration[],
-    private permissionService: SdPermissionService
-  ) {}
+  private readonly configuration: ISdPermissionConfiguration | ISdPermissionConfiguration[] = inject(SD_PERMISSION_CONFIGURATION);
+  private readonly permissionService = inject(SdPermissionService);
 
   #getConfigurations = (): ISdPermissionConfiguration[] => {
     const config = this.configuration;

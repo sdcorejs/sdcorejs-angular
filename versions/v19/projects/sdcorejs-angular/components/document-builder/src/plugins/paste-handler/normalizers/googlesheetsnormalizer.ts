@@ -23,36 +23,36 @@ const googleSheetsMatch = /<google-sheets-html-origin/i;
  * @internal
  */
 export class GoogleSheetsNormalizer implements PasteFromOfficeNormalizer {
-	public readonly document: ViewDocument;
+  public readonly document: ViewDocument;
 
-	/**
-	 * Creates a new `GoogleSheetsNormalizer` instance.
-	 *
-	 * @param document View document.
-	 */
-	constructor( document: ViewDocument ) {
-		this.document = document;
-	}
+  /**
+   * Creates a new `GoogleSheetsNormalizer` instance.
+   *
+   * @param document View document.
+   */
+  constructor(document: ViewDocument) {
+    this.document = document;
+  }
 
-	/**
-	 * @inheritDoc
-	 */
-	public isActive( htmlString: string ): boolean {
-		return googleSheetsMatch.test( htmlString );
-	}
+  /**
+   * @inheritDoc
+   */
+  public isActive(htmlString: string): boolean {
+    return googleSheetsMatch.test(htmlString);
+  }
 
-	/**
-	 * @inheritDoc
-	 */
-	public execute( data: PasteFromOfficeNormalizerData ): void {
-		const writer = new ViewUpcastWriter( this.document );
-		const { body: documentFragment } = data._parsedData;
+  /**
+   * @inheritDoc
+   */
+  public execute(data: PasteFromOfficeNormalizerData): void {
+    const writer = new ViewUpcastWriter(this.document);
+    const { body: documentFragment } = data._parsedData;
 
-		removeGoogleSheetsTag( documentFragment, writer );
-		removeXmlns( documentFragment, writer );
-		removeInvalidTableWidth( documentFragment, writer );
-		removeStyleBlock( documentFragment, writer );
+    removeGoogleSheetsTag(documentFragment, writer);
+    removeXmlns(documentFragment, writer);
+    removeInvalidTableWidth(documentFragment, writer);
+    removeStyleBlock(documentFragment, writer);
 
-		data.content = documentFragment;
-	}
+    data.content = documentFragment;
+  }
 }

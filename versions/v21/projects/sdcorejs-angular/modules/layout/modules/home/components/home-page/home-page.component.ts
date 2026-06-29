@@ -6,15 +6,14 @@ import { Language } from '@sdcorejs/angular/models';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
-import { SdLayoutService, SdLayoutStorageService } from '../../../../services';
-import { ActivatedRoute } from '@angular/router';
+import { SdLayoutService } from '../../../../services';
 // End
 
 @Component({
   selector: 'app-home-page',
   imports: [SdPageComponent, TranslatePipe, MatIconModule],
   templateUrl: './home-page.component.html',
-  styleUrls: ['./home-page.component.scss'],
+  styleUrl: './home-page.component.scss',
   standalone: true,
 })
 @SdTabComponent({
@@ -26,7 +25,9 @@ import { ActivatedRoute } from '@angular/router';
       try {
         const stored = localStorage.getItem(I18N_STORAGE_KEY) as Language | null;
         if (stored) return stored;
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       return 'vi';
     })();
     return I18N_MESSAGES[lang]?.['core.module.layout.home.tab-name'] ?? I18N_MESSAGES.vi['core.module.layout.home.tab-name'];

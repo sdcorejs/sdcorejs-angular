@@ -1,6 +1,5 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericSelect } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
@@ -8,11 +7,11 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'select-control',
   templateUrl: './select-control.component.html',
-  styleUrls: ['./select-control.component.scss'],
+  styleUrl: './select-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })
-export class SelectControl {
+export class SelectControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericSelect;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericSelect) {
     if (this.component !== component) {

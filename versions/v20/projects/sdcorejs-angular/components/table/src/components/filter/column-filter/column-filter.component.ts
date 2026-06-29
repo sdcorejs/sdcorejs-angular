@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -17,18 +16,21 @@ import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdDate, SdInput, SdInputNumber, SdSearch, SdSelect } from '@sdcorejs/angular/forms';
 import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
 import { OPERATORS } from '@sdcorejs/utils/constants';
+import { Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
 import { SdTableColumn } from '../../../models/table-column.model';
 
 @Component({
   selector: 'column-filter',
   templateUrl: './column-filter.component.html',
-  styleUrls: ['./column-filter.component.scss'],
+  styleUrl: './column-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, SdOperator, SdInput, SdInputNumber, SdSelect, SdDate, SdDateRange, SdBadge],
 })
 export class ColumnFilterComponent {
+  #lastOnChangeValueHash?: string;
+
   // ==========================================
   // 1. SIGNAL INPUTS
   // ==========================================
@@ -116,14 +118,36 @@ export class ColumnFilterComponent {
       if (col.type === 'number' && col.filter?.type === 'split-number') {
         filter[col.field] = filter[col.field] || { from: null, to: null };
       }
+      this.#lastOnChangeValueHash = this.#filterValueHash(filter[col.field]);
     });
   }
 
   // ==========================================
   // 4. HANDLERS
   // ==========================================
-  onFilterChange = () => this.filterChange.emit();
+  onFilterChange = () => {
+    this.#emitFilterOnChange();
+    this.filterChange.emit();
+  };
 
   // Blur input: commit giá trị KHÔNG trigger reload.
-  onFilterCommit = () => this.filterCommit.emit();
+  onFilterCommit = () => {
+    this.#emitFilterOnChange();
+    this.filterCommit.emit();
+  };
+
+  #emitFilterOnChange = () => {
+    const col = this.column();
+    const filter = this.columnFilter();
+    if (!col?.filter?.onChange || !filter) return;
+
+    const value = filter[col.field];
+    const hash = this.#filterValueHash(value);
+    if (hash === this.#lastOnChangeValueHash) return;
+
+    this.#lastOnChangeValueHash = hash;
+    col.filter.onChange(value, col, filter);
+  };
+
+  #filterValueHash = (value: any): string => Utilities.hash({ value });
 }

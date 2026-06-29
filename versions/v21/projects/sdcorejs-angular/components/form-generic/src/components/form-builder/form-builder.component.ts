@@ -1,9 +1,18 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { CdkDragDrop, CdkDragMove, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragDrop, CdkDragMove, CdkDropList, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import {
+  ChangeDetectorRef,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+  viewChild,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -56,12 +65,18 @@ import {
   UploadControl,
 } from './components';
 import { ConfigureValidationComponent } from './components/configure-validation/configure-validation.component';
+import { buildFormBuilderRows, canPlaceInRow, flattenFormBuilderRows, FormBuilderLayoutRow, moveItemToRow } from './form-builder-layout';
 import { BuilderService } from './services';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
-interface DragDropRowItem {
-  items: (SdFormGenericComponent | SdFormGenericGroup)[];
+interface DragDropRowItem extends FormBuilderLayoutRow {
   rowIndex?: number;
+}
+
+interface ResizeState {
+  itemId: string;
+  rowId: string;
+  columns: string;
 }
 
 @Component({
@@ -104,9 +119,11 @@ interface DragDropRowItem {
     SdTextarea,
     SdButton,
     SdFormRender,
-    ConfigureValidationComponent, TranslatePipe],
+    ConfigureValidationComponent,
+    TranslatePipe,
+  ],
 })
-export class SdFormBuilder {
+export class SdFormBuilder implements OnInit, OnDestroy {
   // ── viewChild signals (Angular 17+) ────────────────────────────────────
   readonly popupViewJSON = viewChild<SdModal>('popupViewJSON');
   readonly popupConfigureVariables = viewChild<SdModal>('popupConfigureVariables');
@@ -137,8 +154,7 @@ export class SdFormBuilder {
     // why: trong chế độ Detail group, ẩn item 'group' khỏi palette — không cho group lồng group.
     const inGroup = !!this.editingGroupId();
     const match = (c: FormBuilderComponent) =>
-      (!inGroup || c.type !== 'group') &&
-      (!term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term));
+      (!inGroup || c.type !== 'group') && (!term || c.name.toLowerCase().includes(term) || c.type.toLowerCase().includes(term));
     const buckets: Record<FormBuilderComponentGroup, FormBuilderComponent[]> = { basic: [], choice: [], advanced: [], layout: [] };
     for (const c of this.formBuilderComponents) {
       if (match(c)) buckets[c.group].push(c);
@@ -186,6 +202,9 @@ export class SdFormBuilder {
   /** Signal toàn cục: TRUE khi BẤT KỲ cdkDrag nào đang active (palette, canvas, group, resize).
    *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
   readonly isAnyDragging = signal(false);
+  readonly dragSource = signal<'palette' | 'row' | 'canvas' | 'resize' | undefined>(undefined);
+  readonly resizeState = signal<ResizeState | undefined>(undefined);
+  readonly isResizing = computed(() => !!this.resizeState());
 
   expand = true;
   dragDropRows: DragDropRowItem[] = [];
@@ -198,13 +217,20 @@ export class SdFormBuilder {
     this.isAnyDragging.set(true);
   };
 
+  onPaletteDragStarted = () => {
+    this.dragSource.set('palette');
+    this.onAnyDragStarted();
+  };
+
+  onRowDragStarted = () => {
+    this.dragSource.set('row');
+    this.onAnyDragStarted();
+  };
+
   onAnyDragMoved = (event: CdkDragMove<any>) => {
     this.lastDragPointer = event.pointerPosition;
-    const rowEl = document
-      .elementFromPoint(event.pointerPosition.x, event.pointerPosition.y)
-      ?.closest('.fb-row') as HTMLElement | null;
-    const rowIndex = rowEl?.id?.startsWith('row_') ? Number(rowEl.id.replace('row_', '')) : NaN;
-    const row = Number.isNaN(rowIndex) ? undefined : this.dragDropRows.find(t => t.rowIndex === rowIndex);
+    const rowEl = document.elementFromPoint(event.pointerPosition.x, event.pointerPosition.y)?.closest('.fb-row') as HTMLElement | null;
+    const row = rowEl?.id ? this.dragDropRows.find(t => t.id === rowEl.id) : undefined;
     if (row && this.targetItem !== row) {
       this.targetItem = row;
       this.#ref.markForCheck();
@@ -216,10 +242,24 @@ export class SdFormBuilder {
   onAnyDragEnded = () => {
     setTimeout(() => {
       this.isAnyDragging.set(false);
+      this.dragSource.set(undefined);
       this.lastDragPointer = undefined;
       this.targetItem = undefined;
       this.#ref.markForCheck();
     }, 0);
+  };
+
+  startResizeControl = (item: SdFormGenericComponent | SdFormGenericGroup, row: DragDropRowItem) => {
+    this.dragSource.set('resize');
+    this.isAnyDragging.set(true);
+    this.resizeState.set({ itemId: item.id, rowId: row.id, columns: `${item.layout?.columns || '12'}` });
+    this.#ref.markForCheck();
+  };
+
+  endResizeControl = (event: any) => {
+    this.dragEndChangeSizeControl(event);
+    this.resizeState.set(undefined);
+    this.onAnyDragEnded();
   };
 
   #componentsChanges = new Subject<void>();
@@ -267,10 +307,11 @@ export class SdFormBuilder {
     this.#subscription.unsubscribe();
   }
 
-  addComponent = (item: FormBuilderComponent, index?: number) => {
+  addComponent = (item: FormBuilderComponent, index?: number, layoutColumns = '12') => {
     // why: không cho thêm group khi đang Detail trong 1 group (tránh group lồng group).
     if (item.type === 'group' && this.editingGroupId()) return;
     const id = GenerateId();
+    const columns = item.type === 'break' ? '12' : layoutColumns;
     let newComponent: SdFormGenericComponent | SdFormGenericGroup;
     if (item.type === 'group') {
       // Group là layout container, không có key/validate; có nested components[] + properties{icon,color}.
@@ -278,7 +319,7 @@ export class SdFormBuilder {
         id,
         type: 'group',
         label: 'Group',
-        layout: { columns: '12' },
+        layout: { columns },
         components: [],
         properties: {
           icon: item.symbol || 'category',
@@ -304,7 +345,7 @@ export class SdFormBuilder {
         key: GenerateKey(),
         type: item.type as any,
         label: item.type,
-        layout: { columns: '12' },
+        layout: { columns },
         validate: { required: false },
         disabled: false,
         properties: {},
@@ -334,6 +375,31 @@ export class SdFormBuilder {
   /** Human-readable type label (e.g. "Text field", "Date"). */
   typeLabelFor = (item: SdFormGenericComponent | SdFormGenericGroup): string => {
     return this.componentIcons[item.type]?.label ?? item.type;
+  };
+
+  placeholderSymbolFor = (
+    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
+  ): string => {
+    if (!item) return 'add';
+    if (this.#isPaletteComponent(item)) return item.symbol;
+    if ('items' in item) return 'view_week';
+    return this.symbolFor(item);
+  };
+
+  placeholderTitleFor = (
+    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
+  ): string => {
+    if (!item) return 'Component';
+    if (this.#isPaletteComponent(item)) return item.name;
+    if ('items' in item) return 'Row';
+    return ('label' in item && item.label) || this.typeLabelFor(item);
+  };
+
+  placeholderMetaFor = (item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined): string => {
+    if (!item) return '';
+    if (this.#isPaletteComponent(item)) return 'New field';
+    if ('items' in item) return `${item.items.length} field${item.items.length === 1 ? '' : 's'}`;
+    return this.typeLabelFor(item);
   };
 
   /** True nếu component có expression điều kiện — drives the "conditional" status chip. */
@@ -452,7 +518,7 @@ export class SdFormBuilder {
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
       this.#syncRowsToComponents();
-      // xử lý kéo chéo
+      // Xử lý kéo chéo giữa các row khi pointer rời khỏi container hiện tại.
       if (!event.isPointerOverContainer) {
         const dragItemId = event.item.element.nativeElement.id;
         if (dragItemId) {
@@ -461,26 +527,30 @@ export class SdFormBuilder {
         }
       }
     } else {
-      const drop = event.previousContainer.data[0];
-      if (drop && 'symbol' in drop) {
+      const draggedData = this.#draggedDataFromDropEvent(event);
+      if (this.#isPaletteComponent(draggedData)) {
         // transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-        const droppedItem = event.previousContainer.data[event.previousIndex] as FormBuilderComponent;
-        const rowIndex = event.currentIndex;
-        const rowItem = this.dragDropRows?.find(t => t.rowIndex === rowIndex);
-        if (rowItem) {
-          this.addComponent(droppedItem, +(rowItem.items[0]?.layout?.row || 12) - 1);
-          // this.addComponent(droppedItem, parseInt(rowItem.items[rowItem.items.length - 1].layout.row, 0));
-        } else {
-          this.addComponent(droppedItem);
-        }
+        const placement = this.#paletteDropPlacement(event.container.data, event.currentIndex, draggedData);
+        this.addComponent(draggedData, placement.index, placement.columns);
       } else {
+        const movedItem = event.previousContainer.data[event.previousIndex] as SdFormGenericComponent | SdFormGenericGroup;
+        const targetRow = this.#rowForItems(event.container.data);
+        if (targetRow && !canPlaceInRow(targetRow, movedItem, movedItem.id)) {
+          this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
+          return;
+        }
+
         transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
+        this.#syncRowsToComponents();
       }
     }
     this.#recountTabIndex();
   };
 
   dragStartComponentItem = (event: any) => {
+    void event;
+    this.dragSource.set('canvas');
+    this.onAnyDragStarted();
     this.isDragging = true;
   };
 
@@ -495,40 +565,53 @@ export class SdFormBuilder {
     }
   };
 
-  // Mouseover thì phải có Focus không thì thẻ sẽ báo lỗi
+  isRowFull = (row: DragDropRowItem): boolean => this.#usedColumns(row) >= 12;
+
+  isRowInlineDropLocked = (row: DragDropRowItem): boolean => this.#availableColumns(row) < 2;
+
+  canEnterRowDropList = (
+    drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup>,
+    drop: CdkDropList<(SdFormGenericComponent | SdFormGenericGroup)[]>
+  ): boolean => {
+    const row = this.#rowForItems(drop.data);
+    if (!row) return true;
+
+    const data = drag.data;
+    if (!data) return true;
+    if (this.#isPaletteComponent(data)) {
+      return data.type === 'break' || this.#availableColumns(row) >= 2;
+    }
+    if ('layout' in data && 'id' in data) {
+      return canPlaceInRow(row, data, data.id);
+    }
+
+    return true;
+  };
+
   onFocus = (event: FocusEvent) => {
-    //console.log(event);
+    void event;
   };
 
   xuLyKeoCheo = (dragItem?: SdFormGenericComponent | SdFormGenericGroup) => {
-    if (dragItem) {
-      if (this.targetItem) {
-        // kiểm tra target đã full column chưa?
-        const totalColumnInRow = this.targetItem.items.map(t => +t.layout!.columns || 12).reduce((acc, curr) => acc + curr, 0);
-        if (totalColumnInRow + +dragItem.layout!.columns <= 12) {
-          // xóa vị trí cũ
-          this.dragDropRows.forEach(t => {
-            if (t.items.some((k: { id: any }) => k.id === dragItem.id)) {
-              t.items = t.items.filter((k: { id: any }) => k.id !== dragItem.id) || [];
-            }
-          });
-          // thêm vào vị trí mới
-          this.targetItem.items.push(dragItem);
-          this.#syncRowsToComponents();
-        } else {
-          this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
-        }
+    if (dragItem && this.targetItem) {
+      const result = moveItemToRow(this.dragDropRows, {
+        itemId: dragItem.id,
+        targetRowId: this.targetItem.id,
+      });
+      if (result.moved) {
+        this.dragDropRows = this.#withRowIndexes(result.rows);
+        this.#syncRowsToComponents();
+      } else if (result.reason === 'row-overflow') {
+        this.#notifyService.warning(this.#i18n.t('core.component.form-builder.row-overflow'));
       }
     }
     this.targetItem = undefined;
   };
-
   noReturnPredicate = () => {
     return false;
   };
 
   #recountTabIndex = () => {
-    // Tránh dùng map vì nó sẽ sinh ra reference mới. Chạy theo scope hiện tại (top-level hoặc group).
     const scope = this.#scope();
     scope.forEach((item, index) => {
       if (item.layout) {
@@ -549,34 +632,12 @@ export class SdFormBuilder {
   };
 
   // Hàm xử lý chuyển đổi components (scope hiện tại) -> dragDropRows
-  // Dựa vào columns của component để quyết định dragDropRows có bao nhiêu items trên row, đảm bảo columns tổng số items <= 12
   #syncComponentsToRows = () => {
-    this.dragDropRows = [];
-    for (const component of this.#scope()) {
-      // lấy dòng cuối cùng của dragDropList
-      let lastRow: DragDropRowItem = { rowIndex: this.dragDropRows.length, items: [] };
-      if (this.dragDropRows.length) {
-        lastRow = this.dragDropRows[this.dragDropRows.length - 1];
-      } else {
-        this.dragDropRows.push(lastRow);
-      }
-      // tính tổng cột trên 1 dòng
-      const columns = +component.layout!.columns || 12;
-      const totalColumnInRow = lastRow.items.map(t => +t.layout!.columns || 12).reduce((acc: number, curr) => acc + curr, 0);
-      if (+totalColumnInRow + columns <= 12) {
-        lastRow.items.push(component);
-      } else {
-        const newRow = { rowIndex: this.dragDropRows.length, items: [component] };
-        this.dragDropRows.push(newRow);
-      }
-    }
+    this.dragDropRows = this.#withRowIndexes(buildFormBuilderRows(this.#scope()));
   };
 
-  // Hàm xử lý chuyển đổi dragDropRows -> components (ghi về scope hiện tại)
-  // Vì khi kéo thả sẽ thay đổi vị trí, do đó cần sắp xếp lại components
   #syncRowsToComponents = () => {
-    // rải data ma trận droplist => schema.components
-    const flat = this.dragDropRows?.map(e => e.items)?.reduce((current, next) => [...current, ...next], []) || [];
+    const flat = flattenFormBuilderRows(this.dragDropRows);
     const g = this.editingGroup();
     if (g) {
       g.components = flat as SdFormGenericComponent[];
@@ -584,7 +645,6 @@ export class SdFormBuilder {
       this.components = flat;
     }
   };
-
 
   changeSizeControl = async (
     event: CdkDragMove<SdFormGenericComponent | SdFormGenericGroup>,
@@ -610,6 +670,15 @@ export class SdFormBuilder {
     const newCols = t > 12 ? '12' : t < 2 ? '2' : `${t}`;
     if (item.layout!.columns !== newCols) {
       item.layout!.columns = newCols as any;
+    }
+    const currentResizeState = this.resizeState();
+    if (currentResizeState?.itemId !== item.id || currentResizeState?.columns !== newCols) {
+      this.resizeState.set({
+        itemId: item.id,
+        rowId: currentResizeState?.rowId ?? this.#rowForItems(items)?.id ?? `row-${item.id}`,
+        columns: newCols,
+      });
+      this.#ref.markForCheck();
     }
 
     //     document.getElementById('test').innerHTML = `<pre>
@@ -641,9 +710,7 @@ export class SdFormBuilder {
 
   // Duplicate component nhưng sẽ clear id và key để tránh trùng lặp (theo scope hiện tại)
   onDuplicate = (component: SdFormGenericComponent | SdFormGenericGroup) => {
-    const clonedComponent = JSON.parse(JSON.stringify(component));
-    clonedComponent.id = GenerateId();
-    clonedComponent.key = GenerateKey();
+    const clonedComponent = this.#cloneComponentWithNewIdentity(component);
     const scope = this.#scope();
     scope.push(clonedComponent);
     this.#recountTabIndex();
@@ -755,5 +822,100 @@ export class SdFormBuilder {
     } else {
       this.#notifyService.success('Submit success');
     }
+  };
+
+  #withRowIndexes = (rows: FormBuilderLayoutRow[]): DragDropRowItem[] => {
+    return rows.map((row, index) => ({
+      ...row,
+      rowIndex: index,
+    }));
+  };
+
+  #rowForItems = (items: any[]): DragDropRowItem | undefined => {
+    return this.dragDropRows.find(row => row.items === items);
+  };
+
+  #isPaletteComponent = (item: unknown): item is FormBuilderComponent => {
+    return !!item && typeof item === 'object' && 'symbol' in item && 'type' in item;
+  };
+
+  #draggedDataFromDropEvent = (event: CdkDragDrop<any[]>): unknown => {
+    return event.item.data ?? event.previousContainer.data[event.previousIndex];
+  };
+
+  #usedColumns = (row: DragDropRowItem): number => {
+    return row.items.reduce((sum, item) => sum + +(item.layout?.columns || 12), 0);
+  };
+
+  #availableColumns = (row: DragDropRowItem): number => {
+    return Math.max(0, 12 - this.#usedColumns(row));
+  };
+
+  #scopeIndexAfterRow = (row: DragDropRowItem): number => {
+    const scope = this.#scope();
+    const lastItem = row.items[row.items.length - 1];
+    const lastIndex = lastItem ? scope.findIndex(component => component.id === lastItem.id) : -1;
+    return lastIndex >= 0 ? lastIndex + 1 : scope.length;
+  };
+
+  #paletteDropPlacement = (
+    containerData: any[],
+    currentIndex: number,
+    item: FormBuilderComponent
+  ): { index?: number; columns?: string } => {
+    const row = this.#rowForItems(containerData);
+    if (!row || item.type === 'break') {
+      return { index: this.#scopeIndexFromDrop(containerData, currentIndex) };
+    }
+
+    const availableColumns = this.#availableColumns(row);
+    if (availableColumns >= 2) {
+      return {
+        index: this.#scopeIndexFromDrop(containerData, currentIndex),
+        columns: `${availableColumns}`,
+      };
+    }
+
+    return { index: this.#scopeIndexAfterRow(row), columns: '12' };
+  };
+
+  #scopeIndexFromDrop = (containerData: any[], currentIndex: number): number | undefined => {
+    const scope = this.#scope();
+    const row = this.#rowForItems(containerData);
+    if (row) {
+      const anchor = row.items[currentIndex] ?? row.items[row.items.length - 1];
+      if (!anchor) return scope.length;
+
+      const anchorIndex = scope.findIndex(component => component.id === anchor.id);
+      if (anchorIndex < 0) return scope.length;
+      return currentIndex >= row.items.length ? anchorIndex + 1 : anchorIndex;
+    }
+
+    if (containerData === this.dragDropRows) {
+      const rowAtIndex = this.dragDropRows[currentIndex];
+      const anchor = rowAtIndex?.items[0];
+      if (!anchor) return scope.length;
+
+      const anchorIndex = scope.findIndex(component => component.id === anchor.id);
+      return anchorIndex >= 0 ? anchorIndex : scope.length;
+    }
+
+    return undefined;
+  };
+
+  #cloneComponentWithNewIdentity = <T extends SdFormGenericComponent | SdFormGenericGroup>(component: T): T => {
+    const clonedComponent = JSON.parse(JSON.stringify(component)) as T;
+    this.#regenerateComponentIdentity(clonedComponent);
+    return clonedComponent;
+  };
+
+  #regenerateComponentIdentity = (component: SdFormGenericComponent | SdFormGenericGroup) => {
+    component.id = GenerateId();
+    if (component.type === 'group') {
+      component.components = component.components.map(child => this.#cloneComponentWithNewIdentity(child));
+      return;
+    }
+
+    component.key = GenerateKey();
   };
 }

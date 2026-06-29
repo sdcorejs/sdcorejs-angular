@@ -26,12 +26,7 @@ import { SdTabClosedEvent, SdTabGroup } from './tab-group.component';
       [autoId]="autoId"
       (tabClosed)="onTabClosed($event)">
       @for (t of tabs(); track t.id) {
-        <sd-tab
-          [label]="t.label"
-          [icon]="t.icon"
-          [badge]="t.badge"
-          [disabled]="t.disabled"
-          [closable]="t.closable">
+        <sd-tab [label]="t.label" [icon]="t.icon" [badge]="t.badge" [disabled]="t.disabled" [closable]="t.closable">
           <div class="tab-content" [attr.data-tab]="t.id">Content {{ t.id }}</div>
         </sd-tab>
       }
@@ -42,14 +37,14 @@ class HostComponent {
   @ViewChild(SdTabGroup) group!: SdTabGroup;
 
   tabs = signal<
-    Array<{
+    {
       id: string;
       label: string;
       icon?: string;
       badge?: string | number | null;
       disabled?: boolean;
       closable?: boolean;
-    }>
+    }[]
   >([
     { id: 'a', label: 'Alpha' },
     { id: 'b', label: 'Beta' },
@@ -124,7 +119,7 @@ describe('SdTabGroup', () => {
     });
 
     it('updates tabs signal when tab list changes', () => {
-      host.tabs.update((arr) => arr.slice(0, 2));
+      host.tabs.update(arr => arr.slice(0, 2));
       fixture.detectChanges();
       expect(group.tabs().length).toBe(2);
     });
@@ -134,7 +129,7 @@ describe('SdTabGroup', () => {
     });
 
     it('renders the tab label text', () => {
-      const labels = getTabLabels(fixture).map((el) => el.textContent?.trim());
+      const labels = getTabLabels(fixture).map(el => el.textContent?.trim());
       expect(labels[0]).toContain('Alpha');
       expect(labels[1]).toContain('Beta');
       expect(labels[2]).toContain('Gamma');
@@ -186,7 +181,7 @@ describe('SdTabGroup', () => {
       flush();
       expect(group.selectedIndex()).toBe(2);
 
-      host.tabs.update((arr) => arr.slice(0, 2));
+      host.tabs.update(arr => arr.slice(0, 2));
       fixture.detectChanges();
       flush();
 
@@ -236,7 +231,7 @@ describe('SdTabGroup', () => {
 
   describe('label rendering: icon + badge', () => {
     it('renders mat-icon when icon is set', () => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 0 ? { ...t, icon: 'info' } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, icon: 'info' } : t)));
       fixture.detectChanges();
       const firstLabel = getTabLabels(fixture)[0];
       const icon = firstLabel.querySelector('mat-icon');
@@ -252,7 +247,7 @@ describe('SdTabGroup', () => {
     });
 
     it('renders badge span with text when badge=5', () => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 0 ? { ...t, badge: 5 } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, badge: 5 } : t)));
       fixture.detectChanges();
       const firstLabel = getTabLabels(fixture)[0];
       const badge = firstLabel.querySelector('.sd-tab__badge');
@@ -261,7 +256,7 @@ describe('SdTabGroup', () => {
     });
 
     it('renders badge span when badge=0 (zero is meaningful)', () => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 0 ? { ...t, badge: 0 } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, badge: 0 } : t)));
       fixture.detectChanges();
       const firstLabel = getTabLabels(fixture)[0];
       const badge = firstLabel.querySelector('.sd-tab__badge');
@@ -270,7 +265,7 @@ describe('SdTabGroup', () => {
     });
 
     it('does NOT render badge span when badge is null', () => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 0 ? { ...t, badge: null } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, badge: null } : t)));
       fixture.detectChanges();
       const firstLabel = getTabLabels(fixture)[0];
       expect(firstLabel.querySelector('.sd-tab__badge')).toBeNull();
@@ -346,7 +341,7 @@ describe('SdTabGroup', () => {
     });
 
     it('supports each Core palette value', () => {
-      const colors: Array<'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error'> = [
+      const colors: ('primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error')[] = [
         'primary',
         'secondary',
         'info',
@@ -370,14 +365,14 @@ describe('SdTabGroup', () => {
 
   describe('disabled tab', () => {
     it('mat-tab gets disabled class when sd-tab is disabled', () => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 1 ? { ...t, disabled: true } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 1 ? { ...t, disabled: true } : t)));
       fixture.detectChanges();
       const labels = getTabLabels(fixture);
       expect(labels[1].classList.contains('mat-mdc-tab-disabled')).toBeTrue();
     });
 
     it('sets aria-disabled on the disabled tab', () => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 1 ? { ...t, disabled: true } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 1 ? { ...t, disabled: true } : t)));
       fixture.detectChanges();
       const labels = getTabLabels(fixture);
       expect(labels[1].getAttribute('aria-disabled')).toBe('true');
@@ -390,7 +385,7 @@ describe('SdTabGroup', () => {
 
   describe('closable tab', () => {
     beforeEach(() => {
-      host.tabs.update((arr) => arr.map((t, i) => (i === 0 ? { ...t, closable: true } : t)));
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, closable: true } : t)));
       fixture.detectChanges();
     });
 
@@ -445,10 +440,8 @@ describe('SdTabGroup', () => {
       flush();
       fixture.detectChanges();
 
-      const contents = Array.from(
-        fixture.nativeElement.querySelectorAll('.tab-content'),
-      ) as HTMLElement[];
-      const ids = contents.map((el) => el.dataset['tab']);
+      const contents = Array.from(fixture.nativeElement.querySelectorAll('.tab-content')) as HTMLElement[];
+      const ids = contents.map(el => el.dataset['tab']);
       expect(ids).toContain('b');
     }));
   });

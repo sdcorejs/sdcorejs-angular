@@ -16,10 +16,16 @@ function makeCacheServiceStub(): SdCacheService {
       let value: T | undefined = undefined;
       return {
         get: () => (value !== undefined ? value : undefined) as T,
-        set: (v: T) => { value = v; },
+        set: (v: T) => {
+          value = v;
+        },
         has: () => value !== undefined,
-        remove: () => { value = undefined; },
-        destroy: () => { value = undefined; },
+        remove: () => {
+          value = undefined;
+        },
+        destroy: () => {
+          value = undefined;
+        },
         load: async (cb: () => Promise<T>) => {
           if (value !== undefined) return value;
           const result = await cb();
@@ -34,9 +40,7 @@ function makeCacheServiceStub(): SdCacheService {
   return stub as SdCacheService;
 }
 
-function makeService(
-  configs: ISdPermissionConfiguration | ISdPermissionConfiguration[]
-): SdPermissionService {
+function makeService(configs: ISdPermissionConfiguration | ISdPermissionConfiguration[]): SdPermissionService {
   TestBed.configureTestingModule({
     providers: [
       SdPermissionService,
@@ -56,9 +60,7 @@ describe('SdPermissionService', () => {
   // -------------------------------------------------------------------------
   describe('constructor', () => {
     it('instantiates with a single configuration', () => {
-      expect(() =>
-        makeService({ loadPermissions: () => Promise.resolve(['PERM_A']) })
-      ).not.toThrow();
+      expect(() => makeService({ loadPermissions: () => Promise.resolve(['PERM_A']) })).not.toThrow();
     });
 
     it('instantiates with multiple configurations with distinct keys', () => {
@@ -94,9 +96,7 @@ describe('SdPermissionService', () => {
   // -------------------------------------------------------------------------
   describe('loadPermissions()', () => {
     it('calls configuration.loadPermissions and returns the resolved array', async () => {
-      const loadSpy = jasmine.createSpy('loadPermissions').and.returnValue(
-        Promise.resolve(['PERM_A', 'PERM_B'])
-      );
+      const loadSpy = jasmine.createSpy('loadPermissions').and.returnValue(Promise.resolve(['PERM_A', 'PERM_B']));
       const service = makeService({ loadPermissions: loadSpy });
 
       const result = await service.loadPermissions();
@@ -115,9 +115,7 @@ describe('SdPermissionService', () => {
     });
 
     it('is idempotent — loadPermissions loader called only once on repeated calls', async () => {
-      const loadSpy = jasmine.createSpy('loadPermissions').and.returnValue(
-        Promise.resolve(['PERM_A'])
-      );
+      const loadSpy = jasmine.createSpy('loadPermissions').and.returnValue(Promise.resolve(['PERM_A']));
       const service = makeService({ loadPermissions: loadSpy });
 
       await service.loadPermissions();
@@ -319,8 +317,7 @@ describe('SdPermissionService', () => {
      * header.payload.signature  (signature can be any placeholder)
      */
     function buildJwt(payload: Record<string, unknown>): string {
-      const encode = (obj: object) =>
-        btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+      const encode = (obj: object) => btoa(JSON.stringify(obj)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
       return `${encode({ alg: 'none' })}.${encode(payload)}.sig`;
     }
 

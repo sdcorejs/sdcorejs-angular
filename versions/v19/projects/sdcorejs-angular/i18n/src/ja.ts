@@ -80,7 +80,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Global error handler ----
   'core.handler.global-error.update-title': '新しいシステムアップデートがあります',
-  'core.handler.global-error.update-body': '現在のバージョンが古いため、リソースを読み込めませんでした。\nOKを押してページを再読み込みしてください。',
+  'core.handler.global-error.update-body':
+    '現在のバージョンが古いため、リソースを読み込めませんでした。\nOKを押してページを再読み込みしてください。',
 
   // ---- Interceptor: no-internet ----
   'core.interceptor.no-internet.offline': 'ネットワーク接続がありません。接続を待機中...',
@@ -490,8 +491,10 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.upload-file.confirm-delete-title': '削除の確認',
   'core.component.upload-file.confirm-yes': '確認',
   'core.component.upload-file.confirm-no': 'キャンセル',
-  'core.component.upload-file.no-configuration': 'SD_UPLOAD_FILE_CONFIGURATION をインジェクトするか、コンポーネントに [upload] を直接渡してください',
-  'core.component.upload-file.no-configuration-key': 'key=\'{key}\' に対応するアップロード設定が見つかりません。プロバイダーを確認するか [upload] を直接渡してください',
+  'core.component.upload-file.no-configuration':
+    'SD_UPLOAD_FILE_CONFIGURATION をインジェクトするか、コンポーネントに [upload] を直接渡してください',
+  'core.component.upload-file.no-configuration-key':
+    "key='{key}' に対応するアップロード設定が見つかりません。プロバイダーを確認するか [upload] を直接渡してください",
   'core.component.upload-file.preview-title': '画像プレビュー',
 
   // ---- Module: layout (sidebar / user menu) ----
@@ -512,12 +515,14 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (forbidden page) ----
   'core.module.layout.forbidden.title': 'アクセスが拒否されました',
-  'core.module.layout.forbidden.message': 'このページにアクセスする権限がありません。管理者にお問い合わせいただくか、ホームページに戻ってください',
+  'core.module.layout.forbidden.message':
+    'このページにアクセスする権限がありません。管理者にお問い合わせいただくか、ホームページに戻ってください',
   'core.module.layout.forbidden.back-home': 'ホームに戻る',
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.not-found.title': '404 - ページが見つかりません',
-  'core.module.layout.not-found.message': 'お探しのページは存在しないか、削除されました。URLを確認するか、ホームページに戻って続行してください。',
+  'core.module.layout.not-found.message':
+    'お探しのページは存在しないか、削除されました。URLを確認するか、ホームページに戻って続行してください。',
   'core.module.layout.not-found.back': '戻る',
 
   // ---- Module: layout (home page) ----

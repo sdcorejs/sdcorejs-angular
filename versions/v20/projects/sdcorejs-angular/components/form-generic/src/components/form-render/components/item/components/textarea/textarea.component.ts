@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { SdFormGenericTextarea } from '../../../../../../models';
@@ -11,7 +9,7 @@ import { filter, Subject, Subscription } from 'rxjs';
 @Component({
   selector: 'lib-textarea',
   templateUrl: './textarea.component.html',
-  styleUrls: ['./textarea.component.scss'],
+  styleUrl: './textarea.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -20,7 +18,7 @@ import { filter, Subject, Subscription } from 'rxjs';
     ComponentViewedPipe,
   ],
 })
-export class TextareaComponent {
+export class TextareaComponent implements OnInit, OnDestroy {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @Input() form = new FormGroup({});
   value: any;

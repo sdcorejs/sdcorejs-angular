@@ -37,8 +37,12 @@ class HostComponent {
   model: any = undefined;
   changes: any[] = [];
   focused = false;
-  onSdChange(v: any) { this.changes.push(v); }
-  onSdFocus() { this.focused = true; }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdFocus() {
+    this.focused = true;
+  }
 }
 
 @Component({
@@ -76,8 +80,7 @@ describe('SdDatetime', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDatetime)
-      ?.componentInstance as SdDatetime;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDatetime)?.componentInstance as SdDatetime;
     if (!comp) throw new Error('SdDatetime not found in fixture');
   });
 
@@ -112,7 +115,11 @@ describe('SdDatetime', () => {
     it('upward via clear(): emits null and resets valueModel', () => {
       host.model = '2026/05/15 14:30:00';
       fixture.detectChanges();
-      const event = { stopPropagation: () => { /* noop */ } };
+      const event = {
+        stopPropagation: () => {
+          /* noop */
+        },
+      };
       comp.clear(event);
       expect(comp.formControl.value).toBeNull();
       expect(host.changes).toContain(null);
@@ -121,8 +128,7 @@ describe('SdDatetime', () => {
 
   // -------------------------------------------------------------------------
   describe('clear button (slim)', () => {
-    const clearBtn = () =>
-      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+    const clearBtn = () => fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
 
     it('renders the slim clear button when a value is set', () => {
       host.model = '2026/05/15 14:30:00';
@@ -252,7 +258,11 @@ describe('SdDatetime', () => {
     it('sdChange emits null via clear()', () => {
       host.model = '2026/05/15 14:30:00';
       fixture.detectChanges();
-      const event = { stopPropagation: () => { /* noop */ } };
+      const event = {
+        stopPropagation: () => {
+          /* noop */
+        },
+      };
       comp.clear(event);
       const last = host.changes[host.changes.length - 1];
       expect(last).toBeNull();
@@ -363,9 +373,7 @@ describe('SdDatetime', () => {
       host.viewed = true;
       host.model = '2025-10-23';
       expect(() => fixture.detectChanges()).not.toThrow();
-      const datePipeErrors = spy.calls.allArgs().filter(args =>
-        args.some(a => typeof a === 'string' && a.includes('DatePipe'))
-      );
+      const datePipeErrors = spy.calls.allArgs().filter(args => args.some(a => typeof a === 'string' && a.includes('DatePipe')));
       expect(datePipeErrors.length).toBe(0);
       const sdView = fixture.nativeElement.querySelector('sd-view');
       expect(sdView.textContent).toContain('23/10/2025');
@@ -398,9 +406,7 @@ describe('SdDatetime', () => {
       host.model = '2026/05/15 14:30:00';
       expect(() => fixture.detectChanges()).not.toThrow();
       // Bonus: không có lỗi DatePipe nào được log.
-      const datePipeErrors = spy.calls.allArgs().filter(args =>
-        args.some(a => typeof a === 'string' && a.includes('DatePipe'))
-      );
+      const datePipeErrors = spy.calls.allArgs().filter(args => args.some(a => typeof a === 'string' && a.includes('DatePipe')));
       expect(datePipeErrors.length).toBe(0);
     });
 
@@ -577,7 +583,6 @@ describe('SdDatetime (bare input + open)', () => {
     bareComp.open();
     expect(bareComp.pickerOpened()).toBe(true);
   });
-
 });
 
 // ---------------------------------------------------------------------------

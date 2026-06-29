@@ -8,9 +8,11 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
+
 Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.89`), keystroke filtering, optional negative/positive constraint, decimal precision, and min/max validators. Use for any monetary or quantity field.
 
 ## When to use
+
 - VND / USD / any currency amount field (price, total, balance, …)
 - Quantity / count fields (stock qty, headcount, items)
 - Rates and percentages (entered as a number — pair with a `%` suffix label)
@@ -18,68 +20,72 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 - DETAIL state via `[viewed]="true"` to render the formatted number (or a hyperlink)
 
 ## When NOT to use
+
 - Free text containing digits but not a quantity (phone number, tax code, IDs) → use `<sd-input>` with appropriate `pattern`
 - Date / time → use `<sd-date>` / `<sd-datetime>` / `<sd-date-range>`
 - A picker from a list of numeric codes → use `<sd-select>` / `<sd-autocomplete>`
 - Sliders for ranges → not in this component; use a Material slider directly
 
 ## Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `autoId` | `string \| null \| undefined` | `undefined` | Generates `data-autoid="forms-input-number-<value>"` for E2E selectors. |
-| `name` | `string` | random uuid | FormGroup control name when bound via `[form]`. |
-| `size` | `Size` (`'sm' \| 'md' \| 'lg'`) | `'md'` | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
-| `form` | `NgForm \| FormGroup \| undefined` | `undefined` | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`. |
-| `label` | `string \| undefined` | `undefined` | Field label (rendered via `<sd-label>`). |
-| `helperText` | `string \| undefined` | `undefined` | Hint text under the field. |
-| `placeholder` | `string \| undefined` | `undefined` | Placeholder when empty. |
-| `appearance` | `MatFormFieldAppearance` | from `SD_FORM_CONFIGURATION` ?? `'outline'` | Material form-field style. |
-| `floatLabel` | `FloatLabelType` | `'auto'` | Material float-label behaviour. |
-| `type` | `'negative' \| 'positive' \| undefined` | `undefined` | Constrain sign. `undefined` = both signs allowed; `'negative'` = must be negative; `'positive'` = no minus sign accepted. |
-| `precision` | `number` | `3` | Max decimal places. `0` = integer only. |
-| `min` | `number \| undefined` | `undefined` | Adds `Validators.min`. |
-| `max` | `number \| undefined` | `undefined` | Adds `Validators.max`. |
-| `validator` | `SdCustomValidator \| undefined` | `undefined` | Async custom validator (wrapped via `HandleSdCustomValidator`). |
-| `inlineError` | `string \| undefined` | `undefined` | Forces an inline error message (synthetic `inlineError` validator). |
-| `hyperlink` | `string \| null \| undefined` | `undefined` | Render value as a link in `[viewed]` mode. |
-| `required` | `boolean` | `false` | Adds `Validators.required`. |
-| `readonly` | `boolean` | `false` | HTML `readonly` — input still focusable. |
-| `disabled` | `boolean` | `false` | Disables the control. |
-| `viewed` | `boolean \| 'inline'` | `false` | Display mode. `false` edit · `true` static DETAIL (formatted number / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), focus to edit, blur reformats (e.g. `12.345`); NO panel/overlay. Disabled `'inline'` → static view. |
-| `blurOnEnter` | `boolean` | `false` | If `true`, Enter blurs the field after emitting `keyupEnter`. |
-| `hideInlineError` | `boolean` | `false` | Hide inline message; surfaces error via `errorMessage`. |
-| `model` | `any` (`number \| null`) | `undefined` | Two-way bound numeric value (use `[(model)]`). Stored as a JS number; emitted as number on change. |
+
+| Name              | Type                                    | Default                                     | Notes                                                                                                                                                                                                                                                                                                 |
+| ----------------- | --------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoId`          | `string \| null \| undefined`           | `undefined`                                 | Generates `data-autoid="forms-input-number-<value>"` for E2E selectors.                                                                                                                                                                                                                               |
+| `name`            | `string`                                | random uuid                                 | FormGroup control name when bound via `[form]`.                                                                                                                                                                                                                                                       |
+| `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)         | `'md'`                                      | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI.                                                                                                                                                                                                              |
+| `form`            | `NgForm \| FormGroup \| undefined`      | `undefined`                                 | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`.                                                                                                                                                                                                                                       |
+| `label`           | `string \| undefined`                   | `undefined`                                 | Field label (rendered via `<sd-label>`).                                                                                                                                                                                                                                                              |
+| `helperText`      | `string \| undefined`                   | `undefined`                                 | Hint text under the field.                                                                                                                                                                                                                                                                            |
+| `placeholder`     | `string \| undefined`                   | `undefined`                                 | Placeholder when empty.                                                                                                                                                                                                                                                                               |
+| `appearance`      | `MatFormFieldAppearance`                | from `SD_FORM_CONFIGURATION` ?? `'outline'` | Material form-field style.                                                                                                                                                                                                                                                                            |
+| `floatLabel`      | `FloatLabelType`                        | `'auto'`                                    | Material float-label behaviour.                                                                                                                                                                                                                                                                       |
+| `type`            | `'negative' \| 'positive' \| undefined` | `undefined`                                 | Constrain sign. `undefined` = both signs allowed; `'negative'` = must be negative; `'positive'` = no minus sign accepted.                                                                                                                                                                             |
+| `precision`       | `number`                                | `3`                                         | Max decimal places. `0` = integer only.                                                                                                                                                                                                                                                               |
+| `min`             | `number \| undefined`                   | `undefined`                                 | Adds `Validators.min`.                                                                                                                                                                                                                                                                                |
+| `max`             | `number \| undefined`                   | `undefined`                                 | Adds `Validators.max`.                                                                                                                                                                                                                                                                                |
+| `validator`       | `SdCustomValidator \| undefined`        | `undefined`                                 | Async custom validator (wrapped via `HandleSdCustomValidator`).                                                                                                                                                                                                                                       |
+| `inlineError`     | `string \| undefined`                   | `undefined`                                 | Forces an inline error message (synthetic `inlineError` validator).                                                                                                                                                                                                                                   |
+| `hyperlink`       | `string \| null \| undefined`           | `undefined`                                 | Render value as a link in `[viewed]` mode.                                                                                                                                                                                                                                                            |
+| `required`        | `boolean`                               | `false`                                     | Adds `Validators.required`.                                                                                                                                                                                                                                                                           |
+| `readonly`        | `boolean`                               | `false`                                     | HTML `readonly` — input still focusable.                                                                                                                                                                                                                                                              |
+| `disabled`        | `boolean`                               | `false`                                     | Disables the control.                                                                                                                                                                                                                                                                                 |
+| `viewed`          | `boolean \| 'inline'`                   | `false`                                     | Display mode. `false` edit · `true` static DETAIL (formatted number / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), focus to edit, blur reformats (e.g. `12.345`); NO panel/overlay. Disabled `'inline'` → static view. |
+| `blurOnEnter`     | `boolean`                               | `false`                                     | If `true`, Enter blurs the field after emitting `keyupEnter`.                                                                                                                                                                                                                                         |
+| `hideInlineError` | `boolean`                               | `false`                                     | Hide inline message; surfaces error via `errorMessage`.                                                                                                                                                                                                                                               |
+| `model`           | `any` (`number \| null`)                | `undefined`                                 | Two-way bound numeric value (use `[(model)]`). Stored as a JS number; emitted as number on change.                                                                                                                                                                                                    |
 
 > **Coerce**: `required`, `readonly`, `disabled`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
 
 ## Outputs
-| Name | Type | Notes |
-| --- | --- | --- |
-| `sdChange` | `number \| null` | Emitted when the parsed numeric value changes. |
-| `sdFocus` | `void` | Fires on focus. |
-| `sdBlur` | `number \| null` | Fires on blur, payload = current numeric value (or `null` if cleared). |
-| `keyupEnter` | `string` | Fires on Enter keyup, payload = the formatted display string. |
+
+| Name               | Type                  | Notes                                                                        |
+| ------------------ | --------------------- | ---------------------------------------------------------------------------- |
+| `sdChange`         | `number \| null`      | Emitted when the parsed numeric value changes.                               |
+| `sdFocus`          | `void`                | Fires on focus.                                                              |
+| `sdBlur`           | `number \| null`      | Fires on blur, payload = current numeric value (or `null` if cleared).       |
+| `keyupEnter`       | `string`              | Fires on Enter keyup, payload = the formatted display string.                |
 | `sdFocusForceBlur` | `void` (EventEmitter) | When a parent subscribes, focusing the input immediately blurs it and emits. |
 
 ## Public methods
-| Name | Signature | Notes |
-| --- | --- | --- |
+
+| Name             | Signature          | Notes                                                                                                           |
+| ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- |
 | `clear($event?)` | `(Event?) => void` | Resets display + value to `null` and emits `sdChange(null)`. No-op when empty. Backs the built-in clear button. |
-| `showClear()` | `() => boolean` | Whether the built-in clear button renders: has a value AND not `required`/`disabled`/`readonly`. |
+| `showClear()`    | `() => boolean`    | Whether the built-in clear button renders: has a value AND not `required`/`disabled`/`readonly`.                |
 
 ## E2E test attributes
 
 Rendered on the inner `<input matInput>` element (same anchor as `data-autoid`):
 
-| Attribute | Value | Source |
-|---|---|---|
-| `data-autoid` | `forms-input-number-<autoId>` | input `autoId` |
-| `data-disabled` | `"true"` / `"false"` | `formControl.disabled` |
-| `data-invalid` | `"true"` / `"false"` | `formControl.invalid && (touched \|\| dirty)` |
-| `data-empty` | `"true"` / `"false"` | `sdIsEmpty(formControl.value)` |
-| `data-value` | string | `sdSerializeDataValue(formControl.value)` |
-| `data-required` | `"true"` / `"false"` | `required` input; always present |
-| `data-error-message` | string | present only when the component is currently showing an error tooltip message |
+| Attribute            | Value                         | Source                                                                        |
+| -------------------- | ----------------------------- | ----------------------------------------------------------------------------- |
+| `data-autoid`        | `forms-input-number-<autoId>` | input `autoId`                                                                |
+| `data-disabled`      | `"true"` / `"false"`          | `formControl.disabled`                                                        |
+| `data-invalid`       | `"true"` / `"false"`          | `formControl.invalid && (touched \|\| dirty)`                                 |
+| `data-empty`         | `"true"` / `"false"`          | `sdIsEmpty(formControl.value)`                                                |
+| `data-value`         | string                        | `sdSerializeDataValue(formControl.value)`                                     |
+| `data-required`      | `"true"` / `"false"`          | `required` input; always present                                              |
+| `data-error-message` | string                        | present only when the component is currently showing an error tooltip message |
 
 > **Note**: `sd-input-number` does not support `maxlength` / `minlength` / `pattern` (it uses `min` / `max` for numeric bounds). No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
 
@@ -96,20 +102,23 @@ await expect(el).toHaveAttribute('data-error-message', 'Vui lòng nhập thông 
 ```
 
 ## Host classes
+
 Applied automatically on `<sd-input-number>` for styling hooks:
 
-| Class | Condition | Effect |
-| --- | --- | --- |
-| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding. |
-| `sd-viewed` | `[viewed]="true"` | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
+| Class          | Condition           | Effect                                                                                                |
+| -------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
+| `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding.   |
+| `sd-viewed`    | `[viewed]="true"`   | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
 
 ## Content projection (slots)
+
 - `#sdLabel` template — custom label rendering
 - `#sdValue` template — custom display rendering
 - `<ng-template sdSuffixDef>` — custom suffix (e.g. currency symbol, unit) at the trailing edge
 - `<ng-template sdViewDef>` — read-only display template used in `[viewed]` mode
 
 ## Form integration
+
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngAfterViewInit`, the component calls `formGroup.addControl(name, formControl)` and removes it in `ngOnDestroy`. Internally there are TWO controls (`formControl` for the parsed numeric value; `inputControl` for the raw display string with separators) but only `formControl` is registered to the parent form.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: the input is hidden and the formatted number (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
@@ -142,6 +151,7 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 > **How it works**: the `[form]` signal-input has a `transform` that detects `NgForm` (via `instanceof NgForm` — unwraps `.form`) and `FormGroup` (used directly). It also accepts an object literal of shape `{ form: FormGroup }` as a safety fallback. In all three patterns the component manages `addControl` / `removeControl` lifecycle internally — never call them yourself.
 
 ## Visual cues (helps agent map screenshots → component)
+
 - An outlined input field that visually looks like `<sd-input>` BUT typed digits are auto-grouped — typing `1234567` shows `1.234.567` (VN) or `1,234,567` (ISO)
 - Text often right-aligned (matches accountant convention) — actual alignment is set in the component CSS
 - Optional currency symbol or unit shows in the suffix slot via `sdSuffixDef` (e.g. `đ`, `VND`, `%`)
@@ -149,15 +159,56 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 - With `[hideInlineError]="true"`: an `error` icon (`.sd-error-icon`) sits **flush at the right edge** carrying the message as a tooltip; when the clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - In `[viewed]="true"` mode: no input chrome — just the formatted number as plain text (or as a hyperlink if `hyperlink` is set)
 
+## Standalone imports and table-cell usage
+
+Every standalone host that uses `<sd-input-number>` must import `SdInputNumber`. Projected suffix/view templates require their directives in `imports`.
+
+```ts
+import { Component } from '@angular/core';
+import { SdTable, SdTableCellDefDirective, SdTableOption } from '@sdcorejs/angular/components/table';
+import { SdInputNumber } from '@sdcorejs/angular/forms';
+import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
+
+@Component({
+  standalone: true,
+  imports: [SdTable, SdTableCellDefDirective, SdInputNumber, SdSuffixDefDirective, SdViewDefDirective],
+  template: `
+    <sd-table [option]="tableOption">
+      <ng-template sdTableCellDef="amount" let-row>
+        <sd-input-number size="sm" hideInlineError type="positive" [precision]="0" [(model)]="row.amount">
+          <ng-template sdSuffixDef>
+            <span class="text-black400">VND</span>
+          </ng-template>
+        </sd-input-number>
+      </ng-template>
+    </sd-table>
+  `,
+})
+export class AmountTableComponent {
+  tableOption!: SdTableOption<unknown>;
+}
+```
+
+Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"` and `hideInlineError`.
+
+```html
+<ng-template sdTableCellDef="quantity" let-row>
+  <sd-input-number size="sm" hideInlineError type="positive" [precision]="0" [(model)]="row.quantity"> </sd-input-number>
+</ng-template>
+```
+
+For read-only numeric display, do not create a custom pipe. Use `sdFormatNumber` and `sdView`.
+
+```html
+{{ row.amount | sdFormatNumber : 0 | sdView }}
+```
+
 ## Examples
 
 ### 1. VND amount with currency suffix
+
 ```html
-<sd-input-number
-  [form]="form" name="amount"
-  label="Số tiền" required
-  type="positive" [precision]="0"
-  [(model)]="model.amount">
+<sd-input-number [form]="form" name="amount" label="Số tiền" required type="positive" [precision]="0" [(model)]="model.amount">
   <ng-template sdSuffixDef>
     <span class="text-secondary">đ</span>
   </ng-template>
@@ -165,36 +216,35 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 ```
 
 ### 2. Quantity (integer only)
+
 ```html
 <sd-input-number
-  [form]="form" name="quantity"
+  [form]="form"
+  name="quantity"
   label="Số lượng"
-  type="positive" [precision]="0"
-  [min]="1" [max]="999"
+  type="positive"
+  [precision]="0"
+  [min]="1"
+  [max]="999"
   [(model)]="model.quantity">
 </sd-input-number>
 ```
 
 ### 3. Percentage with 2 decimals
+
 ```html
-<sd-input-number
-  [form]="form" name="rate"
-  label="Lãi suất (%)"
-  [precision]="2" [min]="0" [max]="100"
-  [(model)]="model.rate">
+<sd-input-number [form]="form" name="rate" label="Lãi suất (%)" [precision]="2" [min]="0" [max]="100" [(model)]="model.rate">
 </sd-input-number>
 ```
 
 ### 4. DETAIL state read-only formatted display
+
 ```html
-<sd-input-number
-  label="Tổng giá trị hợp đồng"
-  [model]="contract.totalValue"
-  [viewed]="true">
-</sd-input-number>
+<sd-input-number label="Tổng giá trị hợp đồng" [model]="contract.totalValue" [viewed]="true"> </sd-input-number>
 ```
 
 ## Anti-patterns
+
 - ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
 - ❌ Using `<sd-input type="number">` instead — that variant has no thousand-separator grouping and will not match the VN locale.
 - ❌ Storing the model as a formatted string — the component emits a JS `number`. Keep `model.amount: number | null` in the parent.
@@ -203,6 +253,7 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 - ❌ Using `type="positive"` AND a negative `[min]` simultaneously — the keystroke filter will block the minus sign and the validator will never trigger.
 
 ## Related
+
 - `<sd-input>` — text input variant
 - `<sd-label>` — label primitive used internally
 - `SdSuffixDefDirective` — custom suffix template

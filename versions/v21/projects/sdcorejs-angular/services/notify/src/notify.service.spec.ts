@@ -1,6 +1,5 @@
 import { ApplicationRef } from '@angular/core';
 import { TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdNotifyService } from './notify.service';
 
 // ─── Suite ────────────────────────────────────────────────────────────────────
@@ -15,7 +14,6 @@ describe('SdNotifyService', () => {
     appendChildSpy = spyOn(document.body, 'appendChild').and.stub();
 
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule],
       providers: [SdNotifyService],
     });
 
@@ -113,7 +111,7 @@ describe('SdNotifyService', () => {
 
     const toasts = service.toasts();
     expect(toasts.length).toBe(1);
-    expect(toasts[0].title).toBe('Error (2)');
+    expect(toasts[0].title).toBe('Lỗi (2)');
     expect(Array.isArray(toasts[0].message)).toBeTrue();
     expect((toasts[0].message as string[]).length).toBe(2);
   }));
@@ -127,17 +125,17 @@ describe('SdNotifyService', () => {
     expect(toasts.length).toBe(1);
     // deduped → single string; title has no count suffix
     expect(toasts[0].message).toBe('Duplicate error');
-    expect(toasts[0].title).toBe('Error');
+    expect(toasts[0].title).toBe('Lỗi');
   }));
 
   it('error() should reset the debounce timer on each new call', fakeAsync(() => {
     service.error('First');
-    tick(400);                 // nearly flushed
-    service.error('Second');   // resets the timer
-    tick(400);                 // original timer would have fired — but was reset
+    tick(400); // nearly flushed
+    service.error('Second'); // resets the timer
+    tick(400); // original timer would have fired — but was reset
     expect(service.toasts().length).toBe(0); // still debouncing
 
-    tick(100);                 // now 500 ms since last call
+    tick(100); // now 500 ms since last call
     expect(service.toasts().length).toBe(1);
   }));
 
@@ -158,7 +156,7 @@ describe('SdNotifyService', () => {
 
     const toasts = service.toasts();
     expect(toasts.length).toBe(1);
-    expect(toasts[0].title).toBe('Warning (3)');
+    expect(toasts[0].title).toBe('Cảnh báo (3)');
     expect(Array.isArray(toasts[0].message)).toBeTrue();
   }));
 
@@ -193,7 +191,7 @@ describe('SdNotifyService', () => {
   it('clearAll() should cancel pending buffered timers', fakeAsync(() => {
     service.error('pending error');
     service.clearAll(); // cancels the timer
-    tick(500);          // timer fires but buffer was already cleared → no-op
+    tick(500); // timer fires but buffer was already cleared → no-op
 
     expect(service.toasts().length).toBe(0);
   }));

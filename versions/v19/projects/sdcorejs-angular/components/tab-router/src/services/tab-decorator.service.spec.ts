@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, Type } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
@@ -25,8 +24,7 @@ describe('SdTabDecoratorService', () => {
     // Backup-and-reset the static BehaviorSubject so each test starts clean.
     // The service uses a STATIC BehaviorSubject — without reset, prior tests leak state.
     originalSubject = SdTabDecoratorService.tabRouterService;
-    (SdTabDecoratorService as any).tabRouterService =
-      new (originalSubject.constructor as any)(undefined);
+    (SdTabDecoratorService as any).tabRouterService = new (originalSubject.constructor as any)(undefined);
   });
 
   afterEach(() => {
@@ -60,9 +58,7 @@ describe('SdTabDecoratorService', () => {
 
       TestBed.inject(SdTabDecoratorService);
 
-      expect(addSpy).toHaveBeenCalledOnceWith(
-        jasmine.objectContaining({ component: FooComponent, name: 'Foo' }),
-      );
+      expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: FooComponent, name: 'Foo' }));
     });
 
     it('registers immediately if service was already constructed', () => {
@@ -75,9 +71,7 @@ describe('SdTabDecoratorService', () => {
       const addSpy = spyOn(router, 'addBuilder').and.callThrough();
       SdTabComponent({ component: BarComponent, name: 'Bar' })(BarComponent);
 
-      expect(addSpy).toHaveBeenCalledOnceWith(
-        jasmine.objectContaining({ component: BarComponent, name: 'Bar' }),
-      );
+      expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: BarComponent, name: 'Bar' }));
     });
 
     it('take(1): does not re-fire when service is republished', () => {
@@ -115,9 +109,7 @@ describe('SdTabDecoratorService', () => {
 
       TestBed.inject(SdTabDecoratorService);
 
-      expect(addSpy).toHaveBeenCalledOnceWith(
-        jasmine.objectContaining({ component: LateComponent }),
-      );
+      expect(addSpy).toHaveBeenCalledOnceWith(jasmine.objectContaining({ component: LateComponent }));
     });
   });
 });

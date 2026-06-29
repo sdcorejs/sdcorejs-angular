@@ -10,7 +10,11 @@ export function sdSerializeDataValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '';
   if (value instanceof Date) return value.toISOString();
   if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
-    try { return JSON.stringify(value); } catch { return ''; }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return '';
+    }
   }
   return String(value);
 }

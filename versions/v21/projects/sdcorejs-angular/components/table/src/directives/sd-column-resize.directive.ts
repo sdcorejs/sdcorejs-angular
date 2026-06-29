@@ -1,14 +1,4 @@
-import {
-  Directive,
-  ElementRef,
-  NgZone,
-  OnDestroy,
-  Renderer2,
-  effect,
-  inject,
-  input,
-  output,
-} from '@angular/core';
+import { Directive, ElementRef, NgZone, OnDestroy, Renderer2, effect, inject, input, output } from '@angular/core';
 
 @Directive({
   selector: '[sdColumnResize]',
@@ -64,9 +54,7 @@ export class SdColumnResizeDirective implements OnDestroy {
 
     // mousedown listen ngoài Angular zone — drag không trigger CD
     this.#zone.runOutsideAngular(() => {
-      this.#unlistenMousedown = this.#renderer.listen(handle, 'mousedown', (e: MouseEvent) =>
-        this.#onMousedown(e)
-      );
+      this.#unlistenMousedown = this.#renderer.listen(handle, 'mousedown', (e: MouseEvent) => this.#onMousedown(e));
     });
   }
 
@@ -95,9 +83,7 @@ export class SdColumnResizeDirective implements OnDestroy {
     this.#renderer.addClass(th, 'sd-resizing');
 
     this.#zone.runOutsideAngular(() => {
-      this.#unlistenMove = this.#renderer.listen('document', 'mousemove', (e: MouseEvent) =>
-        this.#onMousemove(e)
-      );
+      this.#unlistenMove = this.#renderer.listen('document', 'mousemove', (e: MouseEvent) => this.#onMousemove(e));
       this.#unlistenUp = this.#renderer.listen('document', 'mouseup', () => this.#onMouseup());
       // Nếu user kéo ra ngoài window: cleanup an toàn
       this.#unlistenBlur = this.#renderer.listen('window', 'blur', () => this.#onMouseup());

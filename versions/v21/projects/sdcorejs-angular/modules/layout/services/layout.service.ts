@@ -4,7 +4,7 @@ import { resolveMaybeAsync } from '@sdcorejs/utils/models';
 import { ISdLayoutConfiguration, ISdSidebarConfiguration, SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../configurations';
 
 @Injectable({
-  providedIn: 'root' // Có thể đổi thành 'any' hoặc khai báo trong mảng providers của LayoutModule tùy kiến trúc của bạn
+  providedIn: 'root', // Có thể đổi thành 'any' hoặc khai báo trong mảng providers của LayoutModule tùy kiến trúc của bạn
 })
 export class SdLayoutService {
   // ==========================================
@@ -29,8 +29,8 @@ export class SdLayoutService {
       console.warn(
         // @i18n-ignore
         '[SdLayoutService] SD_LAYOUT_CONFIGURATION chưa được inject — đang dùng mock data. ' +
-        // @i18n-ignore
-        'Provide token này (xem ISdLayoutConfiguration) để custom user info / sidebar / signout.'
+          // @i18n-ignore
+          'Provide token này (xem ISdLayoutConfiguration) để custom user info / sidebar / signout.'
       );
       this.userInfo.set(this.#mockUserInfo());
       this.sidebar.set(this.#mockSidebar());

@@ -43,7 +43,10 @@ export class MenuPipe implements PipeTransform {
           return null;
         }
 
-        if ((typeof menu.permission === 'string' || Array.isArray(menu.permission)) && this.permissionService.hasPermission(menu.permission, menu.permissionKey)) {
+        if (
+          (typeof menu.permission === 'string' || Array.isArray(menu.permission)) &&
+          this.permissionService.hasPermission(menu.permission, menu.permissionKey)
+        ) {
           return {
             ...menu,
             path,
@@ -91,7 +94,16 @@ export class MenuPipe implements PipeTransform {
       permissionKey?: string;
       queryParams?: Params;
     };
-    const hashKeys: (keyof typeof extendedMenu)[] = ['title', 'path', 'permission', 'permissionKey', 'queryParams', 'icon', 'level', 'tooltipTitle'];
+    const hashKeys: (keyof typeof extendedMenu)[] = [
+      'title',
+      'path',
+      'permission',
+      'permissionKey',
+      'queryParams',
+      'icon',
+      'level',
+      'tooltipTitle',
+    ];
     const hashData = hashKeys.reduce(
       (acc, key) => {
         const value = extendedMenu[key];

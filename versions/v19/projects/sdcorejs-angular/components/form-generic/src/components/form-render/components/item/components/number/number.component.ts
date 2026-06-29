@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { SdInput } from '@sdcorejs/angular/forms';
-import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
-import { SdFormGenericNumber, SdFormGenericTextfield } from '../../../../../../models';
+import { SdFormGenericNumber } from '../../../../../../models';
 import { ComponentViewedPipe } from '../../../../../../pipes';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { filter, Subject, Subscription } from 'rxjs';
@@ -13,7 +9,7 @@ import { filter, Subject, Subscription } from 'rxjs';
 @Component({
   selector: 'lib-number',
   templateUrl: './number.component.html',
-  styleUrls: ['./number.component.scss'],
+  styleUrl: './number.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -22,7 +18,7 @@ import { filter, Subject, Subscription } from 'rxjs';
     ComponentViewedPipe,
   ],
 })
-export class NumberComponent {
+export class NumberComponent implements OnInit, OnDestroy {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @Input() form = new FormGroup({});
   value: any;

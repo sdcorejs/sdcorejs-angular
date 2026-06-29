@@ -490,8 +490,10 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.upload-file.confirm-delete-title': 'Xác nhận xóa?',
   'core.component.upload-file.confirm-yes': 'Xác nhận',
   'core.component.upload-file.confirm-no': 'Hủy',
-  'core.component.upload-file.no-configuration': 'Vui lòng inject SD_UPLOAD_FILE_CONFIGURATION hoặc truyền [upload] trực tiếp vào component',
-  'core.component.upload-file.no-configuration-key': 'Không tìm thấy upload configuration theo key=\'{key}\'. Vui lòng kiểm tra providers hoặc truyền [upload] trực tiếp',
+  'core.component.upload-file.no-configuration':
+    'Vui lòng inject SD_UPLOAD_FILE_CONFIGURATION hoặc truyền [upload] trực tiếp vào component',
+  'core.component.upload-file.no-configuration-key':
+    "Không tìm thấy upload configuration theo key='{key}'. Vui lòng kiểm tra providers hoặc truyền [upload] trực tiếp",
   'core.component.upload-file.preview-title': 'Xem ảnh',
 
   // ---- Module: layout (sidebar / user menu) ----
@@ -517,7 +519,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.not-found.title': '404 - Trang không tồn tại',
-  'core.module.layout.not-found.message': 'Trang bạn tìm không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại địa chỉ URL hoặc quay lại trang chủ để tiếp tục.',
+  'core.module.layout.not-found.message':
+    'Trang bạn tìm không tồn tại hoặc đã bị xóa. Vui lòng kiểm tra lại địa chỉ URL hoặc quay lại trang chủ để tiếp tục.',
   'core.module.layout.not-found.back': 'Quay trở lại',
 
   // ---- Module: layout (home page) ----

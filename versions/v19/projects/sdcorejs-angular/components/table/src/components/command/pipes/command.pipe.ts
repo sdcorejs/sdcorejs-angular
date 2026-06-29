@@ -3,20 +3,9 @@ import { SdTableCommand, SdTableCommandNormal } from '../../../models/table-comm
 import { SdTableItem } from '../../../models/table-item.model';
 
 /**
- * Pipe gộp resolve metadata của 1 command theo row hiện tại — return 1 object
- * chứa `disabled`, `title`, `icon`, và `htmlTemplate` (khi command là child có
- * htmlTemplate). Một lần gọi cho cả 4 truy vấn, template dùng `@let` để alias.
- *
- * Trước đây tách thành 3 pipe `commandDisable` / `commandTitle` / `commandIcon`.
- *
- * @example
- *   @let meta = item | command:cmd;
- *   <button [disabled]="meta.disabled" [matTooltip]="meta.title">
- *     <mat-icon>{{ meta.icon }}</mat-icon>
- *     <div [innerHTML]="meta.htmlTemplate"></div>
- *   </button>
+ * Resolves command metadata for the current row once, then lets the template reuse it with `@let`.
  */
-@Pipe({ name: 'command' })
+@Pipe({ name: 'command', standalone: true })
 export class CommandPipe implements PipeTransform {
   transform(item: SdTableItem, command: SdTableCommand): CommandMeta {
     return {
@@ -43,8 +32,7 @@ export class CommandPipe implements PipeTransform {
     return typeof command.icon === 'string' ? command.icon : command.icon(item.data);
   };
 
-  // Chỉ child command (SdTableCommandNormal) mới có htmlTemplate.
-  // Parent (SdTableCommandChildren) không khai báo — trả về undefined.
+  // Only child commands can provide htmlTemplate.
   #htmlTemplate = (item: SdTableItem, command: SdTableCommand): string | undefined => {
     const tpl = (command as SdTableCommandNormal)?.htmlTemplate;
     return typeof tpl === 'function' ? tpl(item.data) : undefined;

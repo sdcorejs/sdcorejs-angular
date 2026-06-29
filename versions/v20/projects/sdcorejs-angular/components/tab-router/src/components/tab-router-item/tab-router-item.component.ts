@@ -13,7 +13,7 @@ import { SdTabInfoPipe } from '../../pipes/tab-info.pipe';
 @Component({
   selector: 'sd-tab-router-item',
   templateUrl: './tab-router-item.component.html',
-  styleUrls: ['./tab-router-item.component.scss'],
+  styleUrl: './tab-router-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatIconModule, SdBadge, SdTabInfoPipe],
@@ -78,23 +78,7 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
     }
   };
 
-  #closeTab = async () => {
-    if (this.tab?.beforeClose) {
-      //
-      if (this.tab?.beforeClose()) {
-        const result = this.tab?.beforeClose();
-        if (typeof result === 'boolean') {
-          if (result) {
-            this.tabRouterService.close(this.tab);
-          }
-        } else {
-          if (await result) {
-            this.tabRouterService.close(this.tab);
-          }
-        }
-      }
-    } else {
-      this.tabRouterService.close(this.tab);
-    }
+  #closeTab = () => {
+    this.tabRouterService.close(this.tab);
   };
 }

@@ -359,7 +359,11 @@ export class SdEditor {
   #setupEffects(): void {
     // Lắng nghe disabled
     effect(() => {
-      this.disabled() ? this.formControl.disable({ emitEvent: false }) : this.formControl.enable({ emitEvent: false });
+      if (this.disabled()) {
+        this.formControl.disable({ emitEvent: false });
+      } else {
+        this.formControl.enable({ emitEvent: false });
+      }
     });
 
     // Lắng nghe readonly

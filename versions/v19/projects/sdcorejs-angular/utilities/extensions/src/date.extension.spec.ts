@@ -279,7 +279,7 @@ describe('DateUtilities', () => {
 
     it('returns null when format is missing', () => {
       expect(DateUtilities.parseFrom('15/01/2024', '')).toBeNull();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(DateUtilities.parseFrom('15/01/2024', null as any)).toBeNull();
     });
   });

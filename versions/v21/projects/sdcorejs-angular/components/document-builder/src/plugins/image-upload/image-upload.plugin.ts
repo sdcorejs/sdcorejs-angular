@@ -7,7 +7,7 @@ export class ImageUploadPlugin extends Plugin {
 
   init() {
     const editor = this.editor;
-    
+
     editor.plugins.get('FileRepository').createUploadAdapter = (loader: any) => {
       return new Base64UploadAdapter(loader);
     };

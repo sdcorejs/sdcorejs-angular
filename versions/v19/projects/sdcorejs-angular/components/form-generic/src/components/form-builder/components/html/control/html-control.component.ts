@@ -1,5 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericHtml } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
@@ -10,11 +9,11 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'html-control',
   templateUrl: './html-control.component.html',
-  styleUrls: ['./html-control.component.scss'],
+  styleUrl: './html-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HtmlPipe],
 })
-export class HtmlControl {
+export class HtmlControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericHtml;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericHtml) {
     this.component = component;

@@ -1,6 +1,5 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericTable } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
@@ -8,11 +7,11 @@ import { filter, Subscription } from 'rxjs';
 @Component({
   selector: 'table-control',
   templateUrl: './table-control.component.html',
-  styleUrls: ['./table-control.component.scss'],
+  styleUrl: './table-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })
-export class TableControl {
+export class TableControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericTable;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTable) {
     if (this.component !== component) {

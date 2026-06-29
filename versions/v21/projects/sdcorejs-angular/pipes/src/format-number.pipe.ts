@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional, Pipe, PipeTransform } from '@angular/core';
+import { inject, Injectable, Pipe, PipeTransform } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 @Pipe({
@@ -9,8 +9,9 @@ import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
   providedIn: 'root',
 })
 export class SdFormatNumberPipe implements PipeTransform {
-  constructor(@Inject(SD_CORE_CONFIGURATION) @Optional() private readonly coreConfiguration: ISdCoreConfiguration | undefined) {}
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private readonly coreConfiguration: ISdCoreConfiguration | null = inject(SD_CORE_CONFIGURATION, { optional: true });
+
+
   transform(value: any, digits?: number, format?: '1,234,567.89' | '1.234.567,89') {
     const resolvedFormat = format ?? this.coreConfiguration?.format?.number;
     const fixedValue = NumberUtilities.isNumber(value) ? (+value).toFixed(digits ?? 2) : null;

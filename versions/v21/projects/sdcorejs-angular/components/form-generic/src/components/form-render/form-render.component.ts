@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import {
   AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  Inject,
+  inject,
   Input,
   OnDestroy,
-  Optional,
   QueryList,
   ViewChildren,
 } from '@angular/core';
@@ -19,11 +16,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { combineLatest, Subject, Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../configurations';
-import {
-  EvaluateExpression,
-  SdFormatComponent,
-  SdFormRenderConfiguration
-} from '../../models';
+import { EvaluateExpression, SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormRenderConfiguration } from '../../models';
 import { SdFormGenericValidation } from '../../models/form-generic-validation.model';
 import { WhenExpressionPipe } from '../../pipes';
 import { LibItemComponent, VariableComponent } from './components';
@@ -31,7 +24,7 @@ import { LibItemComponent, VariableComponent } from './components';
 @Component({
   selector: 'sd-form-render',
   templateUrl: './form-render.component.html',
-  styleUrls: ['./form-render.component.scss'],
+  styleUrl: './form-render.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdSection, LibItemComponent, WhenExpressionPipe, VariableComponent],
 })
@@ -40,9 +33,8 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
   @Input() form: FormGroup = new FormGroup({});
   configuration!: SdFormRenderConfiguration;
   @Input({ alias: 'configuration', required: true }) set _configuration(val: SdFormRenderConfiguration) {
-    this.configuration = val;
+    this.configuration = this.#cloneAndFormatConfiguration(val);
     // Luôn format lại component trước khi render
-    this.configuration?.components?.forEach(SdFormatComponent);
     this.#configurationChanges.next(this.configuration);
   }
 
@@ -72,17 +64,16 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
   #configurationChanges = new Subject<SdFormRenderConfiguration>();
   #defaultEntityChanges = new Subject<Record<string, any>>();
   #entityChanges = new Subject<Record<string, any>>();
+  #renderScheduled = false;
+  #destroyed = false;
   loadCompleted = false;
   hashedValues?: string;
   formValue: Record<string, any> = {};
 
   // Các component item của form-render sẽ lắng nghe thay đổi
   setVariables = new Subject<{ key: string; value: any }>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    @Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null
-  ) {
-  }
+  private readonly ref = inject(ChangeDetectorRef);
+  private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 
   ngAfterViewInit(): void {
     this.#subscription.add(
@@ -91,7 +82,7 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
         .subscribe(async () => {
           if (this.entity && this.configuration?.components?.length) {
             this.loadCompleted = true;
-            this.ref.markForCheck(); // Vì loadCompleted ko phải là @Input nên component sẽ ko load lại
+            this.#scheduleRender();
             if (this.configuration?.onLoaded) {
               try {
                 this.configuration.onLoaded();
@@ -107,16 +98,13 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
         for (const key of Object.keys({ ...defaultEntity })) {
           this.entity[key] = this.entity[key] ?? defaultEntity[key];
         }
-        this.form.setValue(this.entity);
+        this.#patchRegisteredControls(this.entity);
+        this.#syncRawControl(this.entity);
       })
     );
     this.#subscription.add(
       this.#entityChanges.pipe(startWith(this.entity)).subscribe(entity => {
-        if (!this.form.controls['sdRaw']) {
-          this.form.addControl('sdRaw', new FormControl({ ...entity }));
-        } else {
-          this.form.controls['sdRaw'].setValue({ ...entity });
-        }
+        this.#syncRawControl(entity);
       })
     );
     this.#subscription.add(
@@ -126,13 +114,14 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
           this.hashedValues = hashedValues;
           // Ở trạng thái view thì không có FormControl nên phải binding entity mới có dữ liệu cho formValue
           this.formValue = { ...this.entity, ...values };
-          this.ref.markForCheck();
+          this.#scheduleRender();
         }
       })
     );
   }
 
   ngOnDestroy(): void {
+    this.#destroyed = true;
     this.#subscription.unsubscribe();
   }
 
@@ -173,4 +162,57 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
     }
     return messages;
   };
+
+  #cloneAndFormatConfiguration(configuration: SdFormRenderConfiguration): SdFormRenderConfiguration {
+    return {
+      ...configuration,
+      components: (configuration?.components || []).map(component => this.#cloneAndFormatComponent(component)),
+    };
+  }
+
+  #patchRegisteredControls(entity: Record<string, any>): void {
+    const registeredValue: Record<string, any> = {};
+    for (const key of Object.keys(entity)) {
+      if (key !== 'sdRaw' && this.form.controls[key]) {
+        registeredValue[key] = entity[key];
+      }
+    }
+
+    if (Object.keys(registeredValue).length) {
+      this.form.patchValue(registeredValue);
+    }
+  }
+
+  #syncRawControl(entity: Record<string, any>): void {
+    if (!this.form.controls['sdRaw']) {
+      this.form.addControl('sdRaw', new FormControl({ ...entity }));
+    } else {
+      this.form.controls['sdRaw'].setValue({ ...entity });
+    }
+  }
+
+  #cloneAndFormatComponent(component: SdFormGenericComponent | SdFormGenericGroup): SdFormGenericComponent | SdFormGenericGroup {
+    const clonedComponent = JSON.parse(JSON.stringify(component)) as SdFormGenericComponent | SdFormGenericGroup;
+    SdFormatComponent(clonedComponent);
+
+    if (clonedComponent.type === 'group') {
+      clonedComponent.components = clonedComponent.components.map(child => this.#cloneAndFormatComponent(child) as SdFormGenericComponent);
+    }
+
+    return clonedComponent;
+  }
+
+  #scheduleRender(): void {
+    if (this.#renderScheduled || this.#destroyed) {
+      return;
+    }
+
+    this.#renderScheduled = true;
+    queueMicrotask(() => {
+      this.#renderScheduled = false;
+      if (!this.#destroyed) {
+        this.ref.detectChanges();
+      }
+    });
+  }
 }

@@ -105,7 +105,6 @@ describe('SdBadge', () => {
 
   describe('click output', () => {
     it('emits click with stopPropagation', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let received: any = null;
       const spyStop = jasmine.createSpy('stopPropagation');
       fixture.componentInstance.click.subscribe((e: Event) => (received = e));

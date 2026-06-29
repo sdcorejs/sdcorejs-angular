@@ -24,7 +24,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/
   selector: 'sd-ckeditor-styles',
   standalone: true,
   template: '',
-  styleUrls: ['../../../assets/scss/ckeditor5.scss'],
+  styleUrl: '../../../assets/scss/ckeditor5.scss',
   encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

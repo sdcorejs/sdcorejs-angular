@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { DateRelative, Filter, Operator } from '@sdcorejs/utils/models';
 import {
   isQbGroup,
@@ -197,7 +196,7 @@ function formatScalar(field: SdQueryBuilderField | undefined, raw: any): string 
   if (qbIsRelativeDate(raw)) return formatRelative(raw);
   if (raw === null || raw === undefined) return '';
   if (field?.type === 'boolean') {
-    return raw ? field.trueLabel ?? 'Có' : field.falseLabel ?? 'Không';
+    return raw ? (field.trueLabel ?? 'Có') : (field.falseLabel ?? 'Không');
   }
   if (field?.type === 'values') {
     const opt = field.values?.find(o => o.value === raw);

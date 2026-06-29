@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, signal, viewChild } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -28,7 +27,7 @@ import { ColumnFilterComponent } from '../column-filter/column-filter.component'
 @Component({
   selector: 'mobile-filter',
   templateUrl: './mobile-filter.component.html',
-  styleUrls: ['./mobile-filter.component.scss'],
+  styleUrl: './mobile-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

@@ -3,7 +3,7 @@ import { booleanAttribute, Component, effect, ElementRef, inject, input } from '
 @Component({
   selector: 'sd-page',
   templateUrl: './page.component.html',
-  styleUrls: ['./page.component.scss'],
+  styleUrl: './page.component.scss',
 })
 export class SdPageComponent {
   private el = inject(ElementRef);

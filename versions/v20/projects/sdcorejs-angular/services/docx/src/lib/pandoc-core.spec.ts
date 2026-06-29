@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createPandocInstance } from './pandoc-core';
 
 /**
@@ -45,10 +44,7 @@ describe('pandoc-core / createPandocInstance', () => {
       },
     };
 
-    (WebAssembly as any).instantiate = (
-      _bytes: ArrayBuffer,
-      _imports: Record<string, any>,
-    ): Promise<any> => {
+    (WebAssembly as any).instantiate = (_bytes: ArrayBuffer, _imports: Record<string, any>): Promise<any> => {
       return Promise.resolve({ instance: { exports: fakeExports } });
     };
 

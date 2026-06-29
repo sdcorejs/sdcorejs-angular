@@ -10,12 +10,12 @@
   [required]="required()"
   [disabled]="disabled()"
   [readonly]="readonly()"
+  [hideInlineError]="hideInlineError()"
   [viewed]="viewed()"
   [pattern]="hexPattern"
   patternErrorMessage="Mã màu HEX không hợp lệ (vd #1565C0)"
   [model]="valueModel()"
   (sdChange)="onInputChange($event)">
-
   <ng-template sdSuffixDef>
     <div class="sd-input-color__suffix">
       <!-- why: nút clear do <sd-input> tự render (built-in, hover-gated). Ở đây
@@ -29,8 +29,7 @@
         [disabled]="disabled() || readonly() || viewed() === true"
         (click)="openPicker()"
         title="Mở bảng chọn màu"
-        aria-label="Mở bảng chọn màu">
-      </button>
+        aria-label="Mở bảng chọn màu"></button>
       <input
         #picker
         type="color"

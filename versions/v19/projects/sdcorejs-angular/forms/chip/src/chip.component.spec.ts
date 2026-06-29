@@ -29,13 +29,13 @@ import { queryAllByCss, queryByCss } from '../../../testing/test-utils';
 class HostComponent {
   label = 'Tags';
   placeholder: string | undefined = 'Add tag and press Enter';
-  disabled: boolean = false;
-  required: boolean = false;
-  addable: boolean = true;
+  disabled = false;
+  required = false;
+  addable = true;
   removable: boolean | ((item: any) => boolean) = true;
-  viewed: boolean = false;
-  min: number = 0;
-  max: number = 0;
+  viewed = false;
+  min = 0;
+  max = 0;
   model: (string | number)[] = [];
   changes: any[][] = [];
   onSdChange(v: any[]) {
@@ -90,8 +90,7 @@ describe('SdChip', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)
-      ?.componentInstance as SdChip;
+    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)?.componentInstance as SdChip;
     if (!chip) throw new Error('SdChip not found in fixture');
   });
 
@@ -490,8 +489,7 @@ describe('SdChip — autoId', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(AutoIdHost);
     fixture.detectChanges();
-    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)
-      ?.componentInstance as SdChip;
+    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)?.componentInstance as SdChip;
     if (!chip) throw new Error('SdChip not found');
   });
 
@@ -530,8 +528,7 @@ describe('SdChip — E2E attributes', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)
-      ?.componentInstance as SdChip;
+    chip = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)?.componentInstance as SdChip;
     if (!chip) throw new Error('SdChip not found in fixture');
   });
 

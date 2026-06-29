@@ -1,5 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -22,7 +20,7 @@ import {
   Signal,
   TemplateRef,
   untracked,
-  viewChild
+  viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import {
@@ -67,12 +65,12 @@ import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';
 import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
-import { SdSelectFooterActionDirective } from './select-footer-action.directive';
+import { SdSelectFooterActionDirective, SdSelectFooterActionWhenFn } from './select-footer-action.directive';
 
 @Component({
   selector: 'sd-select',
   templateUrl: './select.component.html',
-  styleUrls: ['./select.component.scss'],
+  styleUrl: './select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
@@ -272,7 +270,12 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   calculatedPanelWidth = signal<string | number>('auto');
 
   readonly searchText = signal<string>('');
-  readonly footerActionContext = computed(() => ({ searchText: this.searchText() }));
+  readonly footerActionContext = computed(() => ({
+    searchText: this.searchText(),
+    filteredItems: this.filteredItems() as T[],
+    selectedItems: this.selectedItems() as T[],
+  }));
+  readonly #footerFnVisibility = signal<WeakMap<SdSelectFooterActionDirective, boolean>>(new WeakMap());
   readonly visibleFooterActions = computed(() => this.footerActions().filter(action => this.shouldRenderFooterAction(action)));
 
   normalizedValue = computed(() => {
@@ -315,8 +318,15 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
   shouldRenderFooterAction(action: SdSelectFooterActionDirective): boolean {
     const when = action.when();
+
+    if (typeof when === 'function') {
+      return this.#footerFnVisibility().get(action) ?? false;
+    }
+
     if (when === 'always') return true;
-    if (when === 'empty') return this.searchText().length > 0 && this.filteredItems().length === 0;
+    if (when === 'empty') {
+      return this.searchText().trim().length > 0 && this.filteredItems().length === 0;
+    }
     if (when === 'has-result') return this.filteredItems().length > 0;
     return false;
   }
@@ -419,7 +429,31 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       }
     });
 
+    effect(() => {
+      const actions = this.footerActions();
+      const context = this.footerActionContext();
 
+      const fnActions: { action: SdSelectFooterActionDirective; fn: SdSelectFooterActionWhenFn }[] = [];
+      for (const action of actions) {
+        const when = action.when();
+        if (typeof when === 'function') fnActions.push({ action, fn: when });
+      }
+
+      if (!fnActions.length) return;
+
+      // why: Promise.all chạy ngoài reactive context — không tạo circular dependency
+      Promise.all(
+        fnActions.map(async ({ action, fn }) => ({
+          action,
+          result: await Promise.resolve(fn(context)),
+        }))
+      ).then(results => {
+        const map = new WeakMap<SdSelectFooterActionDirective, boolean>();
+        results.forEach(({ action, result }) => map.set(action, result));
+        this.#footerFnVisibility.set(map);
+        this.#ref.markForCheck();
+      });
+    });
   }
 
   ngOnInit() {
@@ -667,7 +701,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       this.formControl.setValue(value || [], { emitEvent: false });
       this.#onChange(value || []);
     } else {
-      this.inputControl.setValue('');
+      this.clearSearch();
       this.formControl.setValue(value, { emitEvent: false });
       this.#onChange(value);
     }
@@ -714,6 +748,15 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     }, 100);
   };
 
+  /** Clears the panel search/filter input and resets `searchText`. */
+  clearSearch = (): void => {
+    const input = this.matInputRef();
+    if (input) {
+      input.value = '';
+    }
+    this.inputControl.setValue('');
+  };
+
   /** Open the select panel programmatically (anchors to the mat-select trigger). */
   open = () => {
     if (this.formControl.disabled) return;
@@ -730,15 +773,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   onOpenedChange = (isOpened: boolean) => {
     if (isOpened) {
       this.focused.set(true);
-      setTimeout(() => {
-        const input = this.matInputRef();
-        if (input) {
-          input.value = '';
-          input.focus();
-        }
-      }, 100);
+      this.clearSearch();
+      setTimeout(() => this.matInputRef()?.focus(), 100);
       this.#hashedValue = Utilities.hash({ value: this.formControl.value });
-      this.inputControl.setValue('');
     } else {
       this.focused.set(false);
       const hashedValue = Utilities.hash({ value: this.formControl.value });

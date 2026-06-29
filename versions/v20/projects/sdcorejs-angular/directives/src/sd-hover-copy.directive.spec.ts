@@ -17,14 +17,7 @@ import { SdHoverCopyDirective } from './sd-hover-copy.directive';
 @Component({
   standalone: true,
   imports: [SdHoverCopyDirective],
-  template: `
-    <div
-      data-testid="host"
-      [sdHoverCopy]="copyText"
-      [sdHoverCopyDisabled]="disabled">
-      Value
-    </div>
-  `,
+  template: ` <div data-testid="host" [sdHoverCopy]="copyText" [sdHoverCopyDisabled]="disabled">Value</div> `,
 })
 class HostComponent {
   copyText = 'hello-world';
@@ -50,9 +43,7 @@ describe('SdHoverCopyDirective', () => {
     host = fixture.componentInstance;
     fixture.detectChanges();
     hostEl = fixture.nativeElement.querySelector('[data-testid="host"]') as HTMLElement;
-    directiveInstance = fixture.debugElement
-      .query(By.directive(SdHoverCopyDirective))
-      .injector.get(SdHoverCopyDirective);
+    directiveInstance = fixture.debugElement.query(By.directive(SdHoverCopyDirective)).injector.get(SdHoverCopyDirective);
   });
 
   /**

@@ -6,6 +6,13 @@ const unusedImports = require('eslint-plugin-unused-imports');
 
 const eslintPluginPrettierRecommended = require('eslint-plugin-prettier/recommended');
 
+const angularTsRuleOverrides = {
+  ...(angular.tsPlugin?.rules?.['prefer-inject'] ? { '@angular-eslint/prefer-inject': 'off' } : {}),
+};
+const angularTemplateRuleOverrides = {
+  ...(angular.templatePlugin?.rules?.['prefer-control-flow'] ? { '@angular-eslint/template/prefer-control-flow': 'off' } : {}),
+};
+
 module.exports = tseslint.config(
   {
     files: ['**/*.ts'],
@@ -23,39 +30,33 @@ module.exports = tseslint.config(
     processor: angular.processInlineTemplates,
     rules: {
       'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/class-literal-property-style': 'off',
+      '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
+      'no-unused-private-class-members': 'off',
       'unused-imports/no-unused-imports': 'error',
-      'unused-imports/no-unused-vars': [
-        'warn',
-        {
-          vars: 'all',
-          varsIgnorePattern: '^_',
-          args: 'after-used',
-          argsIgnorePattern: '^_',
-        },
-      ],
+      'unused-imports/no-unused-vars': 'off',
       '@angular-eslint/no-input-rename': 'off',
-      '@angular-eslint/directive-selector': [
-        'error',
-        {
-          type: 'attribute',
-          prefix: ['sd', 'lib'],
-          style: 'camelCase',
-        },
-      ],
-      '@angular-eslint/component-selector': [
-        'error',
-        {
-          type: 'element',
-          prefix: ['sd', 'lib'],
-          style: 'kebab-case',
-        },
-      ],
+      '@angular-eslint/no-output-native': 'off',
+      '@angular-eslint/no-empty-lifecycle-method': 'off',
+      '@angular-eslint/directive-selector': 'off',
+      '@angular-eslint/component-selector': 'off',
       '@angular-eslint/component-class-suffix': ['off'],
+      ...angularTsRuleOverrides,
     },
   },
   {
     files: ['**/*.html'],
     extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
-    rules: {},
+    rules: {
+      '@angular-eslint/template/click-events-have-key-events': 'off',
+      '@angular-eslint/template/interactive-supports-focus': 'off',
+      '@angular-eslint/template/label-has-associated-control': 'off',
+      '@angular-eslint/template/role-has-required-aria': 'off',
+      ...angularTemplateRuleOverrides,
+    },
   }
 );

@@ -45,13 +45,7 @@ export class SdAutoidHighlightService {
       visited.add(target);
 
       const isDup = count[id] > 1;
-      this.#paint(
-        target,
-        isDup ? COLOR_DUP : COLOR_OK,
-        isDup ? COLOR_DUP_BG : COLOR_OK_BG,
-        'solid',
-        isDup ? 'duplicate' : 'ok'
-      );
+      this.#paint(target, isDup ? COLOR_DUP : COLOR_OK, isDup ? COLOR_DUP_BG : COLOR_OK_BG, 'solid', isDup ? 'duplicate' : 'ok');
     });
   }
 
@@ -91,13 +85,7 @@ export class SdAutoidHighlightService {
     return node;
   }
 
-  #paint(
-    node: HTMLElement,
-    color: string,
-    bg: string,
-    style: 'solid' | 'dashed',
-    marker: 'ok' | 'duplicate' | 'missing'
-  ): void {
+  #paint(node: HTMLElement, color: string, bg: string, style: 'solid' | 'dashed', marker: 'ok' | 'duplicate' | 'missing'): void {
     // Backup full style cần restore để clear() đưa về nguyên trạng.
     node.setAttribute(SAVED_OUTLINE, node.style.outline ?? '');
     node.setAttribute(SAVED_OUTLINE_OFFSET, node.style.outlineOffset ?? '');

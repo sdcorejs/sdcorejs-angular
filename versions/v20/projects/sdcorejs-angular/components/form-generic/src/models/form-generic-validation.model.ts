@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Định nghĩa các Components của Form Render
 import { SdFormGenericExpression } from './form-generic-expression.model';
 

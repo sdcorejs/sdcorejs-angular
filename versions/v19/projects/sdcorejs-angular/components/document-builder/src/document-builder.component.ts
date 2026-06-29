@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
@@ -71,7 +71,7 @@ import { normalize } from './document-builder.utils';
     './plugins/ck-comment/ck-comment.plugin.scss',
   ],
 })
-export class SdDocumentBuilder {
+export class SdDocumentBuilder implements OnInit, OnDestroy {
   readonly #i18n = inject(I18nService);
 
   @Input({ required: true }) option!: SdDocumentBuilderOption;

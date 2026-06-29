@@ -16,7 +16,7 @@ import {
   input,
   output,
   signal,
-  viewChild
+  viewChild,
 } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { SdLoadingService } from '@sdcorejs/angular/services';
@@ -27,16 +27,16 @@ import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators'
 @Component({
   selector: 'sd-side-drawer',
   templateUrl: './side-drawer.component.html',
-  styleUrls: ['./side-drawer.component.scss'],
+  styleUrl: './side-drawer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, PortalModule, MatIconModule],
 })
 export class SdSideDrawer {
   id = `I${Utilities.generateUuid()}`;
-  
+
   portal = viewChild.required(CdkPortal);
-  
+
   title = input<string>('');
   width = input<string>('480px');
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
@@ -46,9 +46,7 @@ export class SdSideDrawer {
   drawerClass = input<any>('');
 
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
-  readonly autoId = computed(() =>
-    this.autoIdInput() ? `components-side-drawer-${this.autoIdInput()}` : undefined
-  );
+  readonly autoId = computed(() => (this.autoIdInput() ? `components-side-drawer-${this.autoIdInput()}` : undefined));
 
   sdClosed = output<void>();
 
@@ -73,26 +71,25 @@ export class SdSideDrawer {
   #destroyRef = inject(DestroyRef);
 
   constructor() {
-
     // Thay thế ngAfterViewInit, tự động chạy nội dung này khi DOM sẵn sàng để render
     afterNextRender(() => {
       // 1. Gắn portal vào body và lưu lại EmbeddedViewRef
       const outlet = new DomPortalOutlet(document.body, this.#viewContainerRef, this.#ar, this.#injector);
       this.#embeddedViewRef = outlet.attachTemplatePortal(this.portal());
-      
+
       // 2. Setup sự kiện hover ngay sau khi DOM thật đã được in ra
       this.#setupHoverSubscription();
     });
 
-    // Thay thế ngOnDestroy bằng logic destroy trực tiếp 
+    // Thay thế ngOnDestroy bằng logic destroy trực tiếp
     this.#destroyRef.onDestroy(() => {
       this.#destroy$.next();
       this.#destroy$.complete();
-      
+
       if (this.#embeddedViewRef) {
         this.#embeddedViewRef.destroy();
       }
-      
+
       if (this.#isOpenedSignal()) {
         if (this.#previousBodyOverflow !== null) {
           document.body.style.overflow = this.#previousBodyOverflow;
@@ -117,7 +114,7 @@ export class SdSideDrawer {
     this.#isOpenedSignal.set(false);
     this.sdClosed.emit();
     this.stopLoading();
-    
+
     // Khôi phục lại scroll ở document body
     if (this.#previousBodyOverflow !== null) {
       document.body.style.overflow = this.#previousBodyOverflow;
@@ -148,7 +145,7 @@ export class SdSideDrawer {
     // 3. Lấy DOM element trực tiếp từ rootNodes của EmbeddedViewRef
     const rootNodes = this.#embeddedViewRef.rootNodes;
     const element = rootNodes.find(
-      (node) => node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).classList?.contains('sd-side-drawer')
+      node => node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).classList?.contains('sd-side-drawer')
     );
 
     if (!element) {
@@ -160,10 +157,6 @@ export class SdSideDrawer {
     const mouseEnter$ = fromEvent(element, 'mouseenter').pipe(map(() => true));
     const mouseLeave$ = fromEvent(element, 'mouseleave').pipe(map(() => false));
 
-    this.isHovered$ = merge(mouseEnter$, mouseLeave$).pipe(
-      startWith(false),
-      distinctUntilChanged(),
-      takeUntil(this.#destroy$)
-    );
+    this.isHovered$ = merge(mouseEnter$, mouseLeave$).pipe(startWith(false), distinctUntilChanged(), takeUntil(this.#destroy$));
   }
 }

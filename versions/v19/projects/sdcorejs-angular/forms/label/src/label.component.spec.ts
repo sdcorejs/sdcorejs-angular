@@ -1,17 +1,15 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatTooltip } from '@angular/material/tooltip';
 import { SdLabel } from './label.component';
 import { queryByCss } from '../../../testing/test-utils';
 
 @Component({
   standalone: true,
   imports: [SdLabel],
-  template: `<sd-label
-    [label]="label"
-    [description]="description"
-    [helperText]="helperText"
-    [required]="required"></sd-label>`,
+  template: `<sd-label [label]="label" [description]="description" [helperText]="helperText" [required]="required"></sd-label>`,
 })
 class HostComponent {
   label?: string | null = undefined;
@@ -107,7 +105,8 @@ describe('SdLabel', () => {
       fixture.detectChanges();
       const icon = queryByCss(fixture, 'mat-icon');
       expect(icon.textContent?.trim()).toBe('info_outline');
-      expect(icon.getAttribute('ng-reflect-message')).toBe('Giải thích');
+      const tooltip = fixture.debugElement.query(By.directive(MatTooltip)).injector.get(MatTooltip);
+      expect(tooltip.message).toBe('Giải thích');
     });
 
     it('does NOT render icon when helperText is undefined', () => {

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { StringUtilities as _Utils, ValidationUtilities } from '@sdcorejs/utils/fns';
 
 export { ValidationUtilities };
@@ -6,7 +5,7 @@ export { ValidationUtilities };
 // Deprecated wrappers — moved to ValidationUtilities
 const isValidEmail = (value: any) => ValidationUtilities.isEmail(value);
 const isValidPhone = (value: any) => ValidationUtilities.isPhone(value);
-const isValidCode  = (value: any) => ValidationUtilities.isCode(value);
+const isValidCode = (value: any) => ValidationUtilities.isCode(value);
 
 export const StringUtilities = {
   ..._Utils,

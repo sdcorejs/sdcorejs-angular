@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Signal } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms/models';
 import { Filter, NestedKeyOf, Operator } from '@sdcorejs/utils/models';
@@ -8,14 +7,7 @@ import { Filter, NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 // vocabulary. Each consumer declares its searchable fields via `SdQueryField`.
 // ---------------------------------------------------------------------------
 
-export type SdQueryFieldType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'date'
-  | 'datetime'
-  | 'values'
-  | 'lazy-values';
+export type SdQueryFieldType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'values' | 'lazy-values';
 
 interface SdQueryFieldBase<T = any> {
   /** Dot-notation field path (matches `Filter.field`). */
@@ -173,34 +165,34 @@ export interface BuildingChip<T = any> {
 
 /** Full operator set per field type — used when `operators: true`. */
 export const SD_QUERY_OPERATORS_BY_TYPE: Record<SdQueryFieldType, Operator[]> = {
-  string:        ['CONTAIN', 'EQUAL', 'NOT_EQUAL', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'],
-  number:        ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'GREATER_OR_EQUAL', 'LESS_THAN', 'LESS_OR_EQUAL', 'BETWEEN'],
-  boolean:       ['EQUAL'],
-  date:          ['EQUAL', 'BETWEEN', 'GREATER_THAN', 'LESS_THAN'],
-  datetime:      ['EQUAL', 'BETWEEN', 'GREATER_THAN', 'LESS_THAN'],
-  values:        ['IN', 'NOT_IN', 'NULL', 'NOT_NULL'],
+  string: ['CONTAIN', 'EQUAL', 'NOT_EQUAL', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'],
+  number: ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'GREATER_OR_EQUAL', 'LESS_THAN', 'LESS_OR_EQUAL', 'BETWEEN'],
+  boolean: ['EQUAL'],
+  date: ['EQUAL', 'BETWEEN', 'GREATER_THAN', 'LESS_THAN'],
+  datetime: ['EQUAL', 'BETWEEN', 'GREATER_THAN', 'LESS_THAN'],
+  values: ['IN', 'NOT_IN', 'NULL', 'NOT_NULL'],
   'lazy-values': ['IN', 'NOT_IN', 'NULL', 'NOT_NULL'],
 };
 
 /** Default operator when a chip is created and `field.defaultOperator` is not set. */
 export const SD_QUERY_DEFAULT_OPERATOR_BY_TYPE: Record<SdQueryFieldType, Operator> = {
-  string:        'CONTAIN',
-  number:        'EQUAL',
-  boolean:       'EQUAL',
-  date:          'BETWEEN',
-  datetime:      'BETWEEN',
-  values:        'IN',
+  string: 'CONTAIN',
+  number: 'EQUAL',
+  boolean: 'EQUAL',
+  date: 'BETWEEN',
+  datetime: 'BETWEEN',
+  values: 'IN',
   'lazy-values': 'IN',
 };
 
 /** Icon fallback per field type when `SdQueryField.icon` is not set. */
 export const SD_QUERY_TYPE_ICON: Record<SdQueryFieldType, string> = {
-  string:        'text_fields',
-  number:        'tag',
-  boolean:       'toggle_on',
-  date:          'event',
-  datetime:      'schedule',
-  values:        'list',
+  string: 'text_fields',
+  number: 'tag',
+  boolean: 'toggle_on',
+  date: 'event',
+  datetime: 'schedule',
+  values: 'list',
   'lazy-values': 'list',
 };
 

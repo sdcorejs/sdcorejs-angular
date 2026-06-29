@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdChipCalendar } from '@sdcorejs/angular/forms';
 import { filter, Subject, Subscription } from 'rxjs';
@@ -11,7 +9,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
 @Component({
   selector: 'lib-chip-calendar',
   templateUrl: './chip-calendar.component.html',
-  styleUrls: ['./chip-calendar.component.scss'],
+  styleUrl: './chip-calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -20,7 +18,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
     ComponentViewedPipe,
   ],
 })
-export class ChipCalendarComponent {
+export class ChipCalendarComponent implements OnInit, OnDestroy {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @Input() form = new FormGroup({});
   value: any;

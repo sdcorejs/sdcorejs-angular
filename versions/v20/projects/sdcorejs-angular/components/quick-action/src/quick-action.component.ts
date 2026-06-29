@@ -3,7 +3,7 @@ import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@an
 @Component({
   selector: 'sd-quick-action',
   templateUrl: './quick-action.component.html',
-  styleUrls: ['./quick-action.component.scss'],
+  styleUrl: './quick-action.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

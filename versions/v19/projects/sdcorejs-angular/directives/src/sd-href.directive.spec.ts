@@ -160,9 +160,7 @@ describe('SdHrefDirective', () => {
 
       // Dispatch via the directive instance to avoid the browser following
       // the fallback href="unsafe:javascript:;" which causes a Karma page reload
-      const directive = fixture.debugElement
-        .query(By.directive(SdHrefDirective))
-        .injector.get(SdHrefDirective);
+      const directive = fixture.debugElement.query(By.directive(SdHrefDirective)).injector.get(SdHrefDirective);
       const fakeEvent = new MouseEvent('click', { bubbles: true, cancelable: true });
       directive.onClick(fakeEvent);
 

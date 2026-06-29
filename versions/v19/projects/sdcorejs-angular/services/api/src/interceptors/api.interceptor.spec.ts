@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HTTP_INTERCEPTORS, HttpClient, HttpResponse, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
@@ -25,7 +24,6 @@ function configure(handlers: ISdApiConfiguration['handlers'] | null) {
 }
 
 describe('SdHttpInterceptor', () => {
-
   it('lets a normal request through unchanged when no handler matches', () => {
     configure(null);
     const http = TestBed.inject(HttpClient);
@@ -39,13 +37,15 @@ describe('SdHttpInterceptor', () => {
   });
 
   it('applies handler.intercept() patch to the outgoing request', () => {
-    configure([{
-      hosts: ['/api'],
-      // why: `intercept` is typed as returning HttpRequest but at runtime the
-      // value is spread into `request.clone({...})` — cast to bypass the
-      // declared (incorrect) type.
-      intercept: ((_request: any) => ({ setHeaders: { 'X-Custom': 'patched' } })) as any,
-    }]);
+    configure([
+      {
+        hosts: ['/api'],
+        // why: `intercept` is typed as returning HttpRequest but at runtime the
+        // value is spread into `request.clone({...})` — cast to bypass the
+        // declared (incorrect) type.
+        intercept: ((_request: any) => ({ setHeaders: { 'X-Custom': 'patched' } })) as any,
+      },
+    ]);
     const http = TestBed.inject(HttpClient);
     const ctrl = TestBed.inject(HttpTestingController);
 
@@ -73,14 +73,16 @@ describe('SdHttpInterceptor', () => {
     ctrl.verify();
   });
 
-  it('invokes beforeRemote (sync) and afterRemote on success', (done) => {
+  it('invokes beforeRemote (sync) and afterRemote on success', done => {
     const beforeSpy = jasmine.createSpy('beforeRemote');
     const afterSpy = jasmine.createSpy('afterRemote');
-    configure([{
-      hosts: ['/api'],
-      beforeRemote: beforeSpy,
-      afterRemote: afterSpy,
-    }]);
+    configure([
+      {
+        hosts: ['/api'],
+        beforeRemote: beforeSpy,
+        afterRemote: afterSpy,
+      },
+    ]);
     const http = TestBed.inject(HttpClient);
     const ctrl = TestBed.inject(HttpTestingController);
 
@@ -98,17 +100,21 @@ describe('SdHttpInterceptor', () => {
     ctrl.verify();
   });
 
-  it('waits for beforeRemote Promise to resolve before dispatching the request', (done) => {
+  it('waits for beforeRemote Promise to resolve before dispatching the request', done => {
     let resolveBefore!: () => void;
-    const beforePromise = new Promise<void>(resolve => { resolveBefore = resolve; });
+    const beforePromise = new Promise<void>(resolve => {
+      resolveBefore = resolve;
+    });
     const beforeSpy = jasmine.createSpy('beforeRemote').and.returnValue(beforePromise);
     const afterSpy = jasmine.createSpy('afterRemote');
 
-    configure([{
-      hosts: ['/api'],
-      beforeRemote: beforeSpy,
-      afterRemote: afterSpy,
-    }]);
+    configure([
+      {
+        hosts: ['/api'],
+        beforeRemote: beforeSpy,
+        afterRemote: afterSpy,
+      },
+    ]);
     const http = TestBed.inject(HttpClient);
     const ctrl = TestBed.inject(HttpTestingController);
 
@@ -129,12 +135,14 @@ describe('SdHttpInterceptor', () => {
     });
   });
 
-  it('calls afterRemote with HttpErrorResponse on error (sync branch)', (done) => {
+  it('calls afterRemote with HttpErrorResponse on error (sync branch)', done => {
     const afterSpy = jasmine.createSpy('afterRemote');
-    configure([{
-      hosts: ['/api'],
-      afterRemote: afterSpy,
-    }]);
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: afterSpy,
+      },
+    ]);
     const http = TestBed.inject(HttpClient);
     const ctrl = TestBed.inject(HttpTestingController);
 
@@ -152,13 +160,15 @@ describe('SdHttpInterceptor', () => {
     ctrl.verify();
   });
 
-  it('calls afterRemote with HttpErrorResponse on error (async beforeRemote branch)', (done) => {
+  it('calls afterRemote with HttpErrorResponse on error (async beforeRemote branch)', done => {
     const afterSpy = jasmine.createSpy('afterRemote');
-    configure([{
-      hosts: ['/api'],
-      beforeRemote: () => Promise.resolve(),
-      afterRemote: afterSpy,
-    }]);
+    configure([
+      {
+        hosts: ['/api'],
+        beforeRemote: () => Promise.resolve(),
+        afterRemote: afterSpy,
+      },
+    ]);
     const http = TestBed.inject(HttpClient);
     const ctrl = TestBed.inject(HttpTestingController);
 
@@ -179,16 +189,18 @@ describe('SdHttpInterceptor', () => {
     });
   });
 
-  it('no handler match → skips intercept/beforeRemote/afterRemote entirely', (done) => {
+  it('no handler match → skips intercept/beforeRemote/afterRemote entirely', done => {
     const interceptSpy = jasmine.createSpy('intercept');
     const beforeSpy = jasmine.createSpy('beforeRemote');
     const afterSpy = jasmine.createSpy('afterRemote');
-    configure([{
-      hosts: ['https://other-host'],
-      intercept: interceptSpy as any,
-      beforeRemote: beforeSpy,
-      afterRemote: afterSpy,
-    }]);
+    configure([
+      {
+        hosts: ['https://other-host'],
+        intercept: interceptSpy as any,
+        beforeRemote: beforeSpy,
+        afterRemote: afterSpy,
+      },
+    ]);
     const http = TestBed.inject(HttpClient);
     const ctrl = TestBed.inject(HttpTestingController);
 

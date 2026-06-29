@@ -12,7 +12,6 @@ import { ViewUpcastWriter, type ViewDocument } from 'ckeditor5';
 import { removeBoldWrapper } from '../filters/removeboldwrapper';
 import { transformBlockBrsToParagraphs } from '../filters/br';
 import { unwrapParagraphInListItem } from '../filters/list';
-import { replaceTabsWithinPreWithSpaces } from '../filters/replacetabswithinprewithspaces';
 import type { PasteFromOfficeNormalizer, PasteFromOfficeNormalizerData } from '../types';
 
 const googleDocsMatch = /id=("|')docs-internal-guid-[-0-9a-f]+("|')/i;

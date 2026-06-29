@@ -38,12 +38,7 @@ function makeNonImageFile(name = 'doc.pdf', type = 'application/pdf'): File {
 @Component({
   standalone: true,
   imports: [SdPreviewImage],
-  template: `
-    <sd-preview-image
-      #previewRef
-      [items]="items"
-      (close)="onClose()"></sd-preview-image>
-  `,
+  template: ` <sd-preview-image #previewRef [items]="items" (close)="onClose()"></sd-preview-image> `,
 })
 class HostComponent {
   @ViewChild('previewRef') previewRef!: SdPreviewImage;
@@ -78,9 +73,7 @@ describe('SdPreviewImage', () => {
 
     await TestBed.configureTestingModule({
       imports: [HostComponent, NoopAnimationsModule],
-      providers: [
-        { provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src },
-      ],
+      providers: [{ provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);
@@ -264,9 +257,7 @@ describe('SdPreviewImage — theme input', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SdPreviewImage, NoopAnimationsModule],
-      providers: [
-        { provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src },
-      ],
+      providers: [{ provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src }],
     }).compileComponents();
     fixture = TestBed.createComponent(SdPreviewImage);
     comp = fixture.componentInstance;
@@ -317,9 +308,7 @@ describe('SdPreviewImage — autoId', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [SdPreviewImage, NoopAnimationsModule],
-      providers: [
-        { provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src },
-      ],
+      providers: [{ provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src }],
     }).compileComponents();
     fixture = TestBed.createComponent(SdPreviewImage);
     comp = fixture.componentInstance;

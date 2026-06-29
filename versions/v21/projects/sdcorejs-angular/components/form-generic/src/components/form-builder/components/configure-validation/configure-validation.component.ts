@@ -1,15 +1,28 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Inject, Optional, Output, ViewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  inject,
+  Output,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { MatIconModule } from "@angular/material/icon";
+import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
-import { SdInput, SdLabel, SdSelect } from '@sdcorejs/angular/forms';
+import { SdInput, SdSelect } from '@sdcorejs/angular/forms';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../../../configurations';
 import { Attribute, GetAttributes } from '../../../../models';
-import { SdFormGenericValidation, SdFormGenericValidationFunction, ValidationAlerts } from '../../../../models/form-generic-validation.model';
+import {
+  SdFormGenericValidation,
+  SdFormGenericValidationFunction,
+  ValidationAlerts,
+} from '../../../../models/form-generic-validation.model';
 import { SdFormGeneric } from '../../../../models/form-generic.model';
 import { ExpressionBuilderComponent } from '../expression-builder/expression-builder.component';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -21,7 +34,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, MatIconModule, TranslatePipe],
 })
-export class ConfigureValidationComponent {
+export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   attributes: Attribute[] = [];
@@ -29,10 +42,10 @@ export class ConfigureValidationComponent {
   functions: SdFormGenericValidationFunction[] = [];
   alerts = ValidationAlerts;
   @Output() accept = new EventEmitter<SdFormGenericValidation[]>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    @Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null
-  ) {
+  private readonly ref = inject(ChangeDetectorRef);
+  private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
+
+  constructor() {
     this.functions = this.formGenericConfiguration?.form?.validation?.functions || [];
   }
 
@@ -45,8 +58,7 @@ export class ConfigureValidationComponent {
     // );
   }
 
-  ngOnDestroy(): void {
-  }
+  ngOnDestroy(): void {}
 
   open = (formGeneric: SdFormGeneric) => {
     // Xử lý gán validations
@@ -55,7 +67,7 @@ export class ConfigureValidationComponent {
     } else {
       this.validations = [];
     }
-    this.attributes = GetAttributes(formGeneric.components)
+    this.attributes = GetAttributes(formGeneric.components);
     if (formGeneric) {
       this.modal?.open();
       this.ref.markForCheck();

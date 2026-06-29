@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { IsImage, PreviewFile } from '../services';
+import { PreviewFile } from '../services';
 @Pipe({
   name: 'filterImage',
   standalone: true,

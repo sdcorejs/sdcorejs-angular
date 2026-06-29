@@ -21,7 +21,7 @@ interface ImageMeta {
 }
 
 class UploadQueue {
-  #queue: Array<() => void> = [];
+  #queue: (() => void)[] = [];
   #running = 0;
   readonly maxConcurrent: number;
 
@@ -46,7 +46,7 @@ class UploadQueue {
 }
 
 class BatchUploadScheduler {
-  #pending: Array<{ file: File; resolve: (d: SdEditorUploadFileDetail) => void; reject: (e: unknown) => void }> = [];
+  #pending: { file: File; resolve: (d: SdEditorUploadFileDetail) => void; reject: (e: unknown) => void }[] = [];
   #timer: ReturnType<typeof setTimeout> | null = null;
   readonly #batchSize: number;
   readonly #uploadFn: SdEditorUploadFileFuncUpload;
@@ -382,7 +382,7 @@ export class EditorImageUploadPlugin extends Plugin {
 
     editor.model.document.on('change', () => {
       const changes = editor.model.document.differ.getChanges();
-      const updates: Array<{ element: any; meta: ImageMeta }> = [];
+      const updates: { element: any; meta: ImageMeta }[] = [];
 
       for (const change of changes) {
         if (change.type !== 'attribute' || change.attributeKey !== 'src') continue;
@@ -440,7 +440,7 @@ export class EditorImageUploadPlugin extends Plugin {
     if (!fileName) return 'Image';
     const nameWithoutExt = fileName.replace(/\.[^.]+$/, '');
     const result = nameWithoutExt
-      .replace(/[_\-\.]+/g, ' ')
+      .replace(/[-_.]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
     return result || 'Image';

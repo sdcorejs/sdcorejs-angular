@@ -28,20 +28,21 @@ function makeFakePage(records?: FakePageRecord): {
         rec.rendered++;
         return {
           promise: Promise.resolve(),
-          cancel: () => { rec.cancelled++; },
+          cancel: () => {
+            rec.cancelled++;
+          },
         };
       },
       getTextContent: () => Promise.resolve({}),
-      cleanup: () => { rec.cleaned++; },
+      cleanup: () => {
+        rec.cleaned++;
+      },
     };
   }
   return { page: getPage(), records: rec };
 }
 
-function makeFakeDoc(
-  numPages: number,
-  opts?: { destroyTracker?: { calls: number }; pageTexts?: Record<number, string> },
-) {
+function makeFakeDoc(numPages: number, opts?: { destroyTracker?: { calls: number }; pageTexts?: Record<number, string> }) {
   const pageRecords = new Map<number, FakePageRecord>();
   const destroyTracker = opts?.destroyTracker ?? { calls: 0 };
   const texts = opts?.pageTexts ?? {};
@@ -56,17 +57,25 @@ function makeFakeDoc(
       const { page } = makeFakePage(rec);
       // Override getTextContent to return predictable items for search tests.
       const pageText = texts[n] ?? '';
-      page.getTextContent = () => Promise.resolve({
-        items: pageText
-          ? pageText.split(/\s+/).filter(Boolean).map(str => ({ str }))
-          : [],
-      });
+      page.getTextContent = () =>
+        Promise.resolve({
+          items: pageText
+            ? pageText
+                .split(/\s+/)
+                .filter(Boolean)
+                .map(str => ({ str }))
+            : [],
+        });
       return Promise.resolve(page);
     },
-    getMetadata: () => Promise.resolve({
-      info: { Title: 'Hello PDF', Author: 'Tester', Subject: 'Subj' },
-    }),
-    destroy: () => { destroyTracker.calls++; return Promise.resolve(); },
+    getMetadata: () =>
+      Promise.resolve({
+        info: { Title: 'Hello PDF', Author: 'Tester', Subject: 'Subj' },
+      }),
+    destroy: () => {
+      destroyTracker.calls++;
+      return Promise.resolve();
+    },
     _pageRecords: pageRecords,
     _destroyTracker: destroyTracker,
   };
@@ -125,10 +134,18 @@ function makeFakePdfLib(): SdPdfJsLib & {
 }
 
 // Custom named exception classes so #classifyError sniffs by `.name`.
-class PasswordException extends Error { override name = 'PasswordException'; }
-class InvalidPDFException extends Error { override name = 'InvalidPDFException'; }
-class MissingPDFException extends Error { override name = 'MissingPDFException'; }
-class UnexpectedResponseException extends Error { override name = 'UnexpectedResponseException'; }
+class PasswordException extends Error {
+  override name = 'PasswordException';
+}
+class InvalidPDFException extends Error {
+  override name = 'InvalidPDFException';
+}
+class MissingPDFException extends Error {
+  override name = 'MissingPDFException';
+}
+class UnexpectedResponseException extends Error {
+  override name = 'UnexpectedResponseException';
+}
 
 // Helper: trigger source effect by setting input + waiting for microtasks.
 // #loadDocument chains many awaits (normalize / getDoc / getMetadata / render).
@@ -774,13 +791,15 @@ describe('SdPreviewPdf', () => {
       comp.searchChange.subscribe(e => searchEvents.push(e));
       fixture.componentRef.setInput('source', 'https://example.com/a.pdf');
       await flush(fixture);
-      lib.resolveNext(makeFakeDoc(3, {
-        pageTexts: {
-          1: 'The quick brown Foo jumps over the lazy foo dog',
-          2: 'A cat sat on the category mat with a dog',
-          3: 'Hợp đồng thanh toán đặt cọc bằng đồng việt nam',
-        },
-      }));
+      lib.resolveNext(
+        makeFakeDoc(3, {
+          pageTexts: {
+            1: 'The quick brown Foo jumps over the lazy foo dog',
+            2: 'A cat sat on the category mat with a dog',
+            3: 'Hợp đồng thanh toán đặt cọc bằng đồng việt nam',
+          },
+        })
+      );
       await flush(fixture);
       searchEvents.length = 0;
     });

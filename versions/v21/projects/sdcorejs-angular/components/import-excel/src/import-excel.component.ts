@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, O
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { Subscription } from 'rxjs';
 import { ColumnHiddenPipe } from './pipes/columm-hidden.pipe';
-import { SdImportExcelItem, SdImportExcelOption, SdImportExcelSheet, SdImportExcelValidation } from './import-excel.model';
+import { SdImportExcelItem, SdImportExcelOption, SdImportExcelValidation } from './import-excel.model';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
@@ -12,20 +12,19 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { SdModal } from '@sdcorejs/angular/components/modal';
-import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdExcelService, SdExcelSheet, SdExcelTemplate, SdExcelTemplateColumn } from '@sdcorejs/angular/services/excel';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
 import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { ColumnTransformPipe } from './pipes/column-transform.pipe';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { SdBadge } from "@sdcorejs/angular/components/badge";
+import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'sd-import-excel',
   templateUrl: './import-excel.component.html',
-  styleUrls: ['./import-excel.component.scss'],
+  styleUrl: './import-excel.component.scss',
   imports: [
     CommonModule,
     FormsModule,
@@ -40,10 +39,10 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
     MatIconModule,
     MatMenuModule,
     MatProgressSpinner,
-    SdBadge, TranslatePipe],
-  providers: [
-    ColumnHiddenPipe
-  ]
+    SdBadge,
+    TranslatePipe,
+  ],
+  providers: [ColumnHiddenPipe],
 })
 export class SdImportExcel implements OnInit, OnDestroy {
   @Input({ required: true }) option!: SdImportExcelOption;
@@ -288,7 +287,10 @@ export class SdImportExcel implements OnInit, OnDestroy {
             continue;
           }
           if (column.checkValueInArray && item[column.field] && !column.values.some(e => e.toString() === item[column.field].toString())) {
-            error[column.field] = this.#i18n.t('core.component.import-excel.value-not-in-list', { value: item[column.field], list: column.values.join() });
+            error[column.field] = this.#i18n.t('core.component.import-excel.value-not-in-list', {
+              value: item[column.field],
+              list: column.values.join(),
+            });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
@@ -301,29 +303,44 @@ export class SdImportExcel implements OnInit, OnDestroy {
           }
           if (format && item[column.field]) {
             if (typeof val !== 'string') {
-              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', {
+                value: val ?? '',
+                format: column.format ?? '',
+              });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             if (type === 'date' && !this.#isValidDate(format, val)) {
-              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', {
+                value: val ?? '',
+                format: column.format ?? '',
+              });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             if (type === 'time' && !this.#isValidTime(format, val)) {
-              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', {
+                value: val ?? '',
+                format: column.format ?? '',
+              });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             if (type === 'datetime' && !this.#isValidDateTime(format, val)) {
-              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
+              error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', {
+                value: val ?? '',
+                format: column.format ?? '',
+              });
               errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
               continue;
             }
             item[column.field] = DateUtilities.parseFrom(val, format);
           }
           if (item[column.field] && !DateUtilities.isDate(item[column.field])) {
-            error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', { value: val ?? '', format: column.format ?? '' });
+            error[column.field] = this.#i18n.t('core.component.import-excel.invalid-date-format', {
+              value: val ?? '',
+              format: column.format ?? '',
+            });
             errorMessages.push(`<strong>[${column.title || column.field}]</strong> ${error[column.field]}`);
             continue;
           }
@@ -451,7 +468,11 @@ export class SdImportExcel implements OnInit, OnDestroy {
           }
           return {
             ...result,
-            sdMessage: (e.meta.errorMessages.join(', ') || e.meta.warningMessages.join(', ') || this.#i18n.t('core.component.import-excel.success'))
+            sdMessage: (
+              e.meta.errorMessages.join(', ') ||
+              e.meta.warningMessages.join(', ') ||
+              this.#i18n.t('core.component.import-excel.success')
+            )
               ?.replace(/<strong>/g, '')
               .replace(/<\/strong>/g, '')
               .replace(/<br>/g, '\n'),
@@ -490,7 +511,7 @@ export class SdImportExcel implements OnInit, OnDestroy {
       return false;
     }
     const time = dates[1];
-    const regex = /^(0[0-9]|1[0-9]|2[0-3])(\:)(0[0-9]|[0-5][0-9])$/;
+    const regex = /^(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[0-5][0-9])$/;
     return regex.test(time);
   };
   onClosed = () => {

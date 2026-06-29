@@ -24,9 +24,7 @@ export interface SdFormControlSnapshot<T> {
  * Must be called inside an Angular injection context (constructor,
  * field initialiser, or `runInInjectionContext`).
  */
-export function sdFormControlState<T = unknown>(
-  control: Signal<AbstractControl<T> | null | undefined>
-): Signal<SdFormControlSnapshot<T>> {
+export function sdFormControlState<T = unknown>(control: Signal<AbstractControl<T> | null | undefined>): Signal<SdFormControlSnapshot<T>> {
   // A tick counter incremented on every control event (value, status,
   // touched, dirty). Written only from the effect below — never inside
   // a computed() — satisfying Angular's no-side-effect-in-reactive rule.
@@ -42,7 +40,7 @@ export function sdFormControlState<T = unknown>(
   // `AbstractControl.events` (Angular 14+) covers value, status, touched,
   // and dirty changes — a superset of valueChanges + statusChanges.
   const effectRef: EffectRef = effect(() => {
-    const c = control();   // tracked — effect re-runs on change
+    const c = control(); // tracked — effect re-runs on change
     // effect() runs asynchronously; the old subscription is torn down on the next
     // scheduled run, not synchronously on signal change. A one-tick window of
     // double-subscription is harmless due to computed() memoization.
@@ -66,7 +64,7 @@ export function sdFormControlState<T = unknown>(
 
   return computed((): SdFormControlSnapshot<T> => {
     const _control = control();
-    tick();  // reactive dependency — recomputes on every control event
+    tick(); // reactive dependency — recomputes on every control event
 
     if (!_control) {
       return { value: undefined, disabled: false, invalid: false, touched: false };

@@ -35,9 +35,8 @@ describe('StringUtilities', () => {
     });
 
     it('returns true for non-string types', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(StringUtilities.isNullOrWhiteSpace(0 as any)).toBeTrue();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(StringUtilities.isNullOrWhiteSpace([] as any)).toBeTrue();
     });
   });
@@ -114,7 +113,7 @@ describe('StringUtilities', () => {
 
     it('handles empty and null input gracefully', () => {
       expect(StringUtilities.changeAliasLowerCase('')).toBe('');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(StringUtilities.changeAliasLowerCase(null as any)).toBe('');
     });
 
@@ -224,9 +223,8 @@ describe('StringUtilities', () => {
     });
 
     it('throws an error for non-string input', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => StringUtilities.convertToSnakeCaseCode(null as any)).toThrow();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       expect(() => StringUtilities.convertToSnakeCaseCode(123 as any)).toThrow();
     });
   });

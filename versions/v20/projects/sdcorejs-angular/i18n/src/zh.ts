@@ -491,7 +491,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.upload-file.confirm-yes': '确认',
   'core.component.upload-file.confirm-no': '取消',
   'core.component.upload-file.no-configuration': '请注入 SD_UPLOAD_FILE_CONFIGURATION 或将 [upload] 直接传入组件',
-  'core.component.upload-file.no-configuration-key': '未找到 key=\'{key}\' 对应的上传配置。请检查 providers 或直接传入 [upload]',
+  'core.component.upload-file.no-configuration-key': "未找到 key='{key}' 对应的上传配置。请检查 providers 或直接传入 [upload]",
   'core.component.upload-file.preview-title': '图片预览',
 
   // ---- Module: layout (sidebar / user menu) ----

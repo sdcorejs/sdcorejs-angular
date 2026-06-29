@@ -26,8 +26,8 @@
   </ng-container>
 } @else {
   @if (hyperlink(); as link) {
-    <a [sdHref]="link">{{ display() }}</a>
+    <a [sdHref]="link">{{ display() | sdView }}</a>
   } @else {
-    <div class="T14M">{{ display() | sdEmpty }}</div>
+    <div class="T14M">{{ display() | sdView }}</div>
   }
 }

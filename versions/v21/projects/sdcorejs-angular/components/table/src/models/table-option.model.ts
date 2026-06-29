@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PagingReq } from '@sdcorejs/utils/models';
 import { SdTableFilterRequest, SdTableOptionFilter } from '../services/table-filter/table-filter.model';
 import { SdTableColumn } from './table-column.model';

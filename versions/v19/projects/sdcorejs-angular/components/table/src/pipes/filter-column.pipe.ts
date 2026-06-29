@@ -11,7 +11,7 @@ export class SdFilterColumnPipe implements PipeTransform {
     }
     for (const column of columns) {
       if (column.type === 'children') {
-        for (const columnChildren of column?.children) {
+        for (const columnChildren of column.children ?? []) {
           if (!columnChildren.filter?.disabled) {
             results.push(columnChildren);
           }

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Inject, Input, ViewChild, ViewContainerRef } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
 import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -7,11 +7,11 @@ import { GenericListOption, SdGenericListService, TList } from '../../services';
 @Component({
   selector: 'sd-generic-list',
   templateUrl: './generic-list.component.html',
-  styleUrls: ['./generic-list.component.scss'],
+  styleUrl: './generic-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdTable],
 })
-export class GenericListComponent<T = any> {
+export class GenericListComponent<T = any> implements OnDestroy, OnInit {
   @ViewChild(SdTable) table?: SdTable<TList>;
   tableOption?: SdTableOption<TList>;
 

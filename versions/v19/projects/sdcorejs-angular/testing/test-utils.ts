@@ -33,10 +33,7 @@ export function createHostFixture<THost>(hostType: Type<THost>): HostFixtureResu
 /**
  * Query 1 element bằng By.css. Throw với message rõ ràng nếu không tìm thấy.
  */
-export function queryByCss<T extends HTMLElement = HTMLElement>(
-  fixture: ComponentFixture<unknown>,
-  selector: string,
-): T {
+export function queryByCss<T extends HTMLElement = HTMLElement>(fixture: ComponentFixture<unknown>, selector: string): T {
   const debugEl = fixture.debugElement.query(By.css(selector));
   if (!debugEl) {
     throw new Error(`queryByCss: no element matches "${selector}"`);
@@ -47,22 +44,14 @@ export function queryByCss<T extends HTMLElement = HTMLElement>(
 /**
  * Query nhiều element bằng By.css.
  */
-export function queryAllByCss<T extends HTMLElement = HTMLElement>(
-  fixture: ComponentFixture<unknown>,
-  selector: string,
-): T[] {
+export function queryAllByCss<T extends HTMLElement = HTMLElement>(fixture: ComponentFixture<unknown>, selector: string): T[] {
   return fixture.debugElement.queryAll(By.css(selector)).map(de => de.nativeElement as T);
 }
 
 /**
  * Bắn DOM event lên element và chạy detectChanges.
  */
-export function dispatch(
-  fixture: ComponentFixture<unknown>,
-  element: HTMLElement,
-  eventName: string,
-  init?: EventInit,
-): void {
+export function dispatch(fixture: ComponentFixture<unknown>, element: HTMLElement, eventName: string, init?: EventInit): void {
   element.dispatchEvent(new Event(eventName, { bubbles: true, ...init }));
   fixture.detectChanges();
 }
@@ -71,11 +60,7 @@ export function dispatch(
  * Set signal input qua componentRef.setInput + detectChanges.
  * Dùng cho component standalone test (không qua host).
  */
-export function setInput<TComponent>(
-  fixture: ComponentFixture<TComponent>,
-  key: string,
-  value: unknown,
-): void {
+export function setInput<TComponent>(fixture: ComponentFixture<TComponent>, key: string, value: unknown): void {
   fixture.componentRef.setInput(key, value);
   fixture.detectChanges();
 }

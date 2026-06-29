@@ -15,13 +15,13 @@ import type { ViewUpcastWriter, ViewDocumentFragment } from 'ckeditor5';
  * @param documentFragment element `data.content` obtained from clipboard
  * @internal
  */
-export function removeGoogleSheetsTag( documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter ): void {
-	for ( const child of documentFragment.getChildren() ) {
-		if ( child.is( 'element', 'google-sheets-html-origin' ) ) {
-			const childIndex = documentFragment.getChildIndex( child );
+export function removeGoogleSheetsTag(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): void {
+  for (const child of documentFragment.getChildren()) {
+    if (child.is('element', 'google-sheets-html-origin')) {
+      const childIndex = documentFragment.getChildIndex(child);
 
-			writer.remove( child );
-			writer.insertChild( childIndex, child.getChildren(), documentFragment );
-		}
-	}
+      writer.remove(child);
+      writer.insertChild(childIndex, child.getChildren(), documentFragment);
+    }
+  }
 }

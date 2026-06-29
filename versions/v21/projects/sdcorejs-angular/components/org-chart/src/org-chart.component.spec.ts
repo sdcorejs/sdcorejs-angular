@@ -242,9 +242,7 @@ describe('SdOrgChart', () => {
 
     expect(fixture.nativeElement.textContent).not.toContain('Anna Fali');
     expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('false');
-    expect(chart.querySelector('[data-autoid="components-org-chart-collapsed-toggle-ceo"]')?.getAttribute('aria-expanded')).toBe(
-      'false',
-    );
+    expect(chart.querySelector('[data-autoid="components-org-chart-collapsed-toggle-ceo"]')?.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('keeps all descendants visible and suppresses toggles when collapsible is false', async () => {
@@ -281,7 +279,7 @@ describe('SdOrgChart', () => {
 
     expect(chart.querySelector('.custom-node')?.textContent?.trim()).toBe('0:root:Amy Elsner:true:true:false');
     expect(Array.from(chart.querySelectorAll('.custom-node')).map(node => node.textContent?.trim())).toContain(
-      '2:cmo:Sales:true:false:true',
+      '2:cmo:Sales:true:false:true'
     );
     expect(chart.querySelector('.sd-org-chart__title')).toBeNull();
   });
@@ -328,7 +326,7 @@ describe('SdOrgChart', () => {
         expanded: true,
         hasChildren: true,
         isLeaf: false,
-      }),
+      })
     );
     expect(salesContext).toEqual(
       jasmine.objectContaining({
@@ -339,7 +337,7 @@ describe('SdOrgChart', () => {
         expanded: true,
         hasChildren: false,
         isLeaf: true,
-      }),
+      })
     );
 
     cmoContext.toggle();

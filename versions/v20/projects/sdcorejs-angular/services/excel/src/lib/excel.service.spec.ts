@@ -22,9 +22,7 @@ import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function makeColumn(
-  overrides: Partial<{ field: string; title: string; description: string; required: boolean }> = {},
-) {
+function makeColumn(overrides: Partial<{ field: string; title: string; description: string; required: boolean }> = {}) {
   return { field: 'code', title: 'Code', ...overrides };
 }
 
@@ -36,9 +34,7 @@ function makeTemplate(overrides: Partial<SdExcelTemplate> = {}): SdExcelTemplate
   };
 }
 
-function makeExportOption(
-  overrides: Partial<SdExcelExportOption> = {},
-): SdExcelExportOption {
+function makeExportOption(overrides: Partial<SdExcelExportOption> = {}): SdExcelExportOption {
   return {
     columns: [makeColumn()],
     items: [{ code: 'A1' }],
@@ -60,8 +56,12 @@ function makeWorkbookFake() {
       const sheet = {
         name,
         getCell: (_r: number, _c: number) => ({
-          get value() { return cells[`${_r}_${_c}`]; },
-          set value(v: any) { cells[`${_r}_${_c}`] = v; },
+          get value() {
+            return cells[`${_r}_${_c}`];
+          },
+          set value(v: any) {
+            cells[`${_r}_${_c}`] = v;
+          },
           style: {},
           numFmt: '',
         }),
@@ -77,7 +77,9 @@ function makeWorkbookFake() {
     xlsx: {
       writeBuffer: jasmine.createSpy('writeBuffer').and.resolveTo(new ArrayBuffer(0)),
     },
-    get worksheets() { return sheets; },
+    get worksheets() {
+      return sheets;
+    },
   };
 }
 
@@ -122,21 +124,19 @@ describe('SdExcelService', () => {
   // ─── 3. generateTemplate — validation ────────────────────────────────────
 
   it('generateTemplate throws when columns is not an array', async () => {
-    await expectAsync(
-      service.generateTemplate({ columns: null as any }),
-    ).toBeRejectedWithError('Excel template columns must be an array');
+    await expectAsync(service.generateTemplate({ columns: null as any })).toBeRejectedWithError('Excel template columns must be an array');
   });
 
   it('generateTemplate throws when a column is missing "field"', async () => {
-    await expectAsync(
-      service.generateTemplate(makeTemplate({ columns: [{ field: '', title: 'Name' }] })),
-    ).toBeRejectedWithError('Column 1: Field is required');
+    await expectAsync(service.generateTemplate(makeTemplate({ columns: [{ field: '', title: 'Name' }] }))).toBeRejectedWithError(
+      'Column 1: Field is required'
+    );
   });
 
   it('generateTemplate throws when a column is missing "title"', async () => {
-    await expectAsync(
-      service.generateTemplate(makeTemplate({ columns: [{ field: 'name', title: '' }] })),
-    ).toBeRejectedWithError('Column 1: Title is required');
+    await expectAsync(service.generateTemplate(makeTemplate({ columns: [{ field: 'name', title: '' }] }))).toBeRejectedWithError(
+      'Column 1: Title is required'
+    );
   });
 
   it('generateTemplate throws at the correct column index (second column)', async () => {
@@ -147,23 +147,23 @@ describe('SdExcelService', () => {
             { field: 'code', title: 'Code' },
             { field: '', title: 'Name' },
           ],
-        }),
-      ),
+        })
+      )
     ).toBeRejectedWithError('Column 2: Field is required');
   });
 
   // ─── 4. export — validation ───────────────────────────────────────────────
 
   it('export throws when a column is missing "field"', async () => {
-    await expectAsync(
-      service.export(makeExportOption({ columns: [{ field: '', title: 'Code' }] })),
-    ).toBeRejectedWithError('Column 1: Field is required');
+    await expectAsync(service.export(makeExportOption({ columns: [{ field: '', title: 'Code' }] }))).toBeRejectedWithError(
+      'Column 1: Field is required'
+    );
   });
 
   it('export throws when a column is missing "title"', async () => {
-    await expectAsync(
-      service.export(makeExportOption({ columns: [{ field: 'code', title: '' }] })),
-    ).toBeRejectedWithError('Column 1: Title is required');
+    await expectAsync(service.export(makeExportOption({ columns: [{ field: 'code', title: '' }] }))).toBeRejectedWithError(
+      'Column 1: Title is required'
+    );
   });
 
   // ─── 5. parse — happy path (mocked FileReader + Workbook) ────────────────
@@ -239,7 +239,7 @@ describe('SdExcelService', () => {
     await service.generateTemplate(
       makeTemplate({
         sheets: [{ name: 'Lookup', items: [{ id: 1 }], headers: [{ value: 'id', display: 'ID' }] }],
-      }),
+      })
     );
 
     expect(wb.addWorksheet).toHaveBeenCalledWith('template');
@@ -287,13 +287,13 @@ describe('SdExcelService', () => {
     // Đọc qua arrayBuffer + decode KHÔNG strip BOM để verify được 3 byte 0xEF 0xBB 0xBF mở đầu.
     // (Blob.text() / TextDecoder mặc định sẽ tự bỏ BOM, làm assertion BOM thất bại.)
     const bytes = new Uint8Array(await blob.arrayBuffer());
-    expect(bytes[0]).toBe(0xef);                                      // BOM byte 1
-    expect(bytes[1]).toBe(0xbb);                                      // BOM byte 2
-    expect(bytes[2]).toBe(0xbf);                                      // BOM byte 3
+    expect(bytes[0]).toBe(0xef); // BOM byte 1
+    expect(bytes[1]).toBe(0xbb); // BOM byte 2
+    expect(bytes[2]).toBe(0xbf); // BOM byte 3
     const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(bytes);
-    expect(text.startsWith('﻿')).toBe(true);                     // BOM char survives when ignoreBOM=true
-    expect(text).toContain('Name,Note\r\n');                          // CRLF header
-    expect(text).toContain('"B,C","has ""quotes"""');                 // comma + quote escape
-    expect(text).toContain('"multi\nline"');                          // newline inside cell
+    expect(text.startsWith('﻿')).toBe(true); // BOM char survives when ignoreBOM=true
+    expect(text).toContain('Name,Note\r\n'); // CRLF header
+    expect(text).toContain('"B,C","has ""quotes"""'); // comma + quote escape
+    expect(text).toContain('"multi\nline"'); // newline inside cell
   });
 });

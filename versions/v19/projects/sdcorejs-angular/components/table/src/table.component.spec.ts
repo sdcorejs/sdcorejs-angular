@@ -63,12 +63,7 @@ describe('E2E attributes', () => {
   @Component({
     standalone: true,
     imports: [SdTable],
-    template: `
-      <sd-table
-        [autoId]="autoId()"
-        [option]="tableOption()">
-      </sd-table>
-    `,
+    template: ` <sd-table [autoId]="autoId()" [option]="tableOption()"> </sd-table> `,
   })
   class HostComponent {
     autoId = signal<string | undefined>('employees');
@@ -325,7 +320,9 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
     tick(800);
     flush();
     expect(table.columnFilter).withContext('ref ổn định').toBe(stableRef);
-    expect('name' in table.columnFilter!).withContext('key đã clear bị xóa in place').toBe(false);
+    expect('name' in table.columnFilter!)
+      .withContext('key đã clear bị xóa in place')
+      .toBe(false);
     expect(table.columnFilter!['id']).toBe(5);
   }));
 
@@ -342,7 +339,7 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
     let firstCall = firstHost.itemsSpy.calls.first().args as [
       { rawColumnFilter: Record<string, unknown> },
-      { filters: Array<{ field: string; operator: string; data: unknown }> },
+      { filters: { field: string; operator: string; data: unknown }[] },
     ];
     let filterReq = firstCall[0];
     let pagingReq = firstCall[1];
@@ -366,7 +363,7 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
     firstCall = secondHost.itemsSpy.calls.first().args as [
       { rawColumnFilter: Record<string, unknown> },
-      { filters: Array<{ field: string; operator: string; data: unknown }> },
+      { filters: { field: string; operator: string; data: unknown }[] },
     ];
     filterReq = firstCall[0];
     pagingReq = firstCall[1];
@@ -394,7 +391,7 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
     const firstCall = lateHost.itemsSpy.calls.first().args as [
       { rawColumnFilter: Record<string, unknown> },
-      { filters: Array<{ field: string; operator: string; data: unknown }> },
+      { filters: { field: string; operator: string; data: unknown }[] },
     ];
     expect(lateTable.filterRegister).not.toBe(firstRegister);
     expect(firstCall[0].rawColumnFilter['name']).toBe('Alice');
@@ -404,7 +401,10 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 });
 
 describe('STT (index) column — renderIndex fix (multiTemplateDataRows)', () => {
-  interface Row { id: number; name: string; }
+  interface Row {
+    id: number;
+    name: string;
+  }
 
   @Component({
     standalone: true,
@@ -412,9 +412,16 @@ describe('STT (index) column — renderIndex fix (multiTemplateDataRows)', () =>
     template: `<sd-table [option]="opt"></sd-table>`,
   })
   class HostComponent {
-    itemsSpy = jasmine
-      .createSpy('items')
-      .and.callFake(() => Promise.resolve({ items: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }], total: 3 }));
+    itemsSpy = jasmine.createSpy('items').and.callFake(() =>
+      Promise.resolve({
+        items: [
+          { id: 1, name: 'A' },
+          { id: 2, name: 'B' },
+          { id: 3, name: 'C' },
+        ],
+        total: 3,
+      })
+    );
     opt: SdTableOption<Row> = {
       type: 'server',
       items: this.itemsSpy,
@@ -445,7 +452,9 @@ describe('STT (index) column — renderIndex fix (multiTemplateDataRows)', () =>
     // Lấy cell của cột sdIndex (CDK matColumnDef → class .cdk-column-sdIndex trên td)
     const cells = fixture.nativeElement.querySelectorAll('td.cdk-column-sdIndex') as NodeListOf<HTMLTableCellElement>;
     expect(cells.length).toBeGreaterThan(0);
-    const values = Array.from(cells).map(c => c.textContent?.trim()).filter(v => v && v.length > 0);
+    const values = Array.from(cells)
+      .map(c => c.textContent?.trim())
+      .filter(v => v && v.length > 0);
     expect(values).toContain('1');
     expect(values).toContain('2');
     expect(values).toContain('3');
@@ -455,7 +464,10 @@ describe('STT (index) column — renderIndex fix (multiTemplateDataRows)', () =>
 });
 
 describe('group helpers — isGroupAllSelected / isGroupIndeterminate / onSelectGroup / sdGroupColspan / groupContext', () => {
-  interface Row { id: number; group: string; }
+  interface Row {
+    id: number;
+    group: string;
+  }
 
   @Component({
     standalone: true,
@@ -463,15 +475,16 @@ describe('group helpers — isGroupAllSelected / isGroupIndeterminate / onSelect
     template: `<sd-table [option]="opt"></sd-table>`,
   })
   class HostComponent {
-    itemsSpy = jasmine
-      .createSpy('items')
-      .and.callFake(() => Promise.resolve({
+    itemsSpy = jasmine.createSpy('items').and.callFake(() =>
+      Promise.resolve({
         items: [
           { id: 1, group: 'A' },
           { id: 2, group: 'A' },
           { id: 3, group: 'B' },
-        ], total: 3,
-      }));
+        ],
+        total: 3,
+      })
+    );
     opt: SdTableOption<Row> = {
       type: 'server',
       items: this.itemsSpy,
@@ -583,14 +596,22 @@ describe('group helpers — isGroupAllSelected / isGroupIndeterminate / onSelect
 });
 
 describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () => {
-  interface OrgNode { id: number; name: string; children?: OrgNode[]; }
+  interface OrgNode {
+    id: number;
+    name: string;
+    children?: OrgNode[];
+  }
 
-  const ORG: OrgNode[] = [{
-    id: 1, name: 'Khối A', children: [
-      { id: 11, name: 'P1', children: [{ id: 111, name: 'T1' }] },
-      { id: 12, name: 'P2' },
-    ],
-  }];
+  const ORG: OrgNode[] = [
+    {
+      id: 1,
+      name: 'Khối A',
+      children: [
+        { id: 11, name: 'P1', children: [{ id: 111, name: 'T1' }] },
+        { id: 12, name: 'P2' },
+      ],
+    },
+  ];
 
   @Component({
     standalone: true,
@@ -604,9 +625,7 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
       items: this.itemsSpy,
       tree: { loadType: 'static', childrenKey: 'children', defaultExpanded: 5 },
       index: { enabled: true },
-      columns: [
-        { field: 'name', type: 'string', title: 'Name' },
-      ],
+      columns: [{ field: 'name', type: 'string', title: 'Name' }],
     } as SdTableOption<OrgNode>;
   }
 
@@ -616,8 +635,12 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
   function waitForLoad() {
     fixture.detectChanges();
     table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<OrgNode>;
-    tick(800); flush(); fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
   }
 
   beforeEach(() => {
@@ -629,7 +652,9 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
     waitForLoad();
     // why: chevron mat-icon nằm cùng cell → query riêng span.sd-tree-stt (chỉ phần số).
     const sttSpans = fixture.nativeElement.querySelectorAll('td.cdk-column-sdIndex span.sd-tree-stt') as NodeListOf<HTMLElement>;
-    const labels = Array.from(sttSpans).map(s => s.textContent?.trim()).filter(s => s && s.length > 0);
+    const labels = Array.from(sttSpans)
+      .map(s => s.textContent?.trim())
+      .filter(s => s && s.length > 0);
     // ORG flatten với defaultExpanded > depth → 4 rows: root, P1, T1, P2
     expect(labels).toContain('1');
     expect(labels).toContain('1.1');
@@ -674,11 +699,19 @@ describe('tree STT — hierarchical numbering 1 / 1.2 / 1.2.1 + root bold', () =
 });
 
 describe('tree toggle nhúng cột data đầu (không có cột Index) + lazy hasChildren', () => {
-  interface Node { id: number; name: string; children?: Node[]; }
+  interface Node {
+    id: number;
+    name: string;
+    children?: Node[];
+  }
 
-  const ORG: Node[] = [{
-    id: 1, name: 'Root', children: [{ id: 11, name: 'Child' }],
-  }];
+  const ORG: Node[] = [
+    {
+      id: 1,
+      name: 'Root',
+      children: [{ id: 11, name: 'Child' }],
+    },
+  ];
 
   @Component({
     standalone: true,
@@ -698,8 +731,12 @@ describe('tree toggle nhúng cột data đầu (không có cột Index) + lazy h
 
   function waitForLoad() {
     fixture.detectChanges();
-    tick(800); flush(); fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
   }
 
   beforeEach(() => {
@@ -712,14 +749,20 @@ describe('tree toggle nhúng cột data đầu (không có cột Index) + lazy h
     expect(fixture.nativeElement.querySelector('td.cdk-column-sdTreeToggle')).toBeNull();
     const toggle = fixture.nativeElement.querySelector('td.cdk-column-name button.sd-tree-toggle-btn') as HTMLElement;
     expect(toggle).not.toBeNull();
-    expect(['chevron_right', 'expand_more']).toContain(toggle.querySelector('mat-icon')?.textContent?.trim()!);
+    expect(['chevron_right', 'expand_more']).toContain(toggle.querySelector('mat-icon')?.textContent?.trim() ?? '');
   }));
 });
 
 describe('lazy tree hasChildren — chỉ hiện chevron khi callback trả true', () => {
-  interface Node { id: number; name: string; }
+  interface Node {
+    id: number;
+    name: string;
+  }
 
-  const DATA: Node[] = [{ id: 1, name: 'HasKids' }, { id: 2, name: 'Leaf' }];
+  const DATA: Node[] = [
+    { id: 1, name: 'HasKids' },
+    { id: 2, name: 'Leaf' },
+  ];
 
   @Component({
     standalone: true,
@@ -748,8 +791,12 @@ describe('lazy tree hasChildren — chỉ hiện chevron khi callback trả true
 
   it('row hasChildren=true có chevron, row trả false thì không', fakeAsync(() => {
     fixture.detectChanges();
-    tick(800); flush(); fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
     const toggles = fixture.nativeElement.querySelectorAll('button.sd-tree-toggle-btn') as NodeListOf<HTMLElement>;
     // Chỉ 1 chevron (cho 'HasKids'); 'Leaf' không có.
     expect(toggles.length).toBe(1);
@@ -757,7 +804,10 @@ describe('lazy tree hasChildren — chỉ hiện chevron khi callback trả true
 });
 
 describe('group DOM render — separate row def + colspan + checkbox slot', () => {
-  interface Row { id: number; group: string; }
+  interface Row {
+    id: number;
+    group: string;
+  }
 
   @Component({
     standalone: true,
@@ -768,9 +818,11 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
     itemsSpy = jasmine.createSpy('items').and.callFake(() =>
       Promise.resolve({
         items: [
-          { id: 1, group: 'A' }, { id: 2, group: 'A' },
+          { id: 1, group: 'A' },
+          { id: 2, group: 'A' },
           { id: 3, group: 'B' },
-        ], total: 3,
+        ],
+        total: 3,
       })
     );
     opt: SdTableOption<Row> = {
@@ -791,8 +843,12 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
   function waitForLoad() {
     fixture.detectChanges();
     table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
-    tick(800); flush(); fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
   }
 
   beforeEach(() => {
@@ -842,11 +898,7 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
 
   /** Helper: lấy group header A qua pipe (table.items() chứa raw items, pipe sinh headers). */
   function getHeaderA(): SdTableItem<Row> {
-    const out = new SdGroupPipe().transform(
-      table.items() as SdTableItem<Row>[],
-      table.tableOption()!,
-      table.groupExpandState,
-    );
+    const out = new SdGroupPipe().transform(table.items() as SdTableItem<Row>[], table.tableOption()!, table.groupExpandState);
     return out.find(i => i.meta.group?.isGroupHeader && i.meta.group?.values?.['group'] === 'A')!;
   }
 
@@ -871,7 +923,9 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
     const headerA = getHeaderA();
     table.toggleGroupExpand(headerA);
     fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
 
     // Sau collapse group A — chỉ còn 1 data row (group B vẫn expand: 1 child)
     dataRows = fixture.nativeElement.querySelectorAll('tr.c-row');
@@ -885,7 +939,9 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
     expect(input).not.toBeNull();
     input.click();
     fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
 
     const headerA = getHeaderA();
     expect(headerA.meta.group!.items!.every(c => c.meta.selector!.isSelected)).toBe(true);
@@ -893,10 +949,12 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
 });
 
 describe('selector.preserveSelection — giữ selection xuyên trang/filter/reload', () => {
-  interface Row { id: number; name: string; }
+  interface Row {
+    id: number;
+    name: string;
+  }
 
-  const PAGE = (start: number, size: number): Row[] =>
-    Array.from({ length: size }, (_, i) => ({ id: start + i, name: `R${start + i}` }));
+  const PAGE = (start: number, size: number): Row[] => Array.from({ length: size }, (_, i) => ({ id: start + i, name: `R${start + i}` }));
 
   @Component({
     standalone: true,
@@ -990,19 +1048,25 @@ describe('selector.preserveSelection — giữ selection xuyên trang/filter/rel
 });
 
 describe('Tree search ở cấp con (static tree + type local)', () => {
-  interface Node { id: number; name: string; children?: Node[]; }
+  interface Node {
+    id: number;
+    name: string;
+    children?: Node[];
+  }
 
   const DATA: Node[] = [
     {
-      id: 1, name: 'Fruits', children: [
+      id: 1,
+      name: 'Fruits',
+      children: [
         { id: 11, name: 'Apple' },
         { id: 12, name: 'Banana', children: [{ id: 121, name: 'Banana Bread' }] },
       ],
     },
     {
-      id: 2, name: 'Vegetables', children: [
-        { id: 21, name: 'Carrot' },
-      ],
+      id: 2,
+      name: 'Vegetables',
+      children: [{ id: 21, name: 'Carrot' }],
     },
   ];
 
@@ -1026,15 +1090,23 @@ describe('Tree search ở cấp con (static tree + type local)', () => {
   function load() {
     fixture.detectChanges();
     table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Node>;
-    tick(800); flush(); fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
   }
 
   function search(term: string) {
     table.columnFilter = { name: term } as Record<string, unknown>;
     table.onFilterChange();
-    tick(800); flush(); fixture.detectChanges();
-    tick(); flush(); fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
   }
 
   beforeEach(() => {
@@ -1091,7 +1163,9 @@ describe('Tree search ở cấp con (static tree + type local)', () => {
 
     // Bung lại → children đầy đủ (Apple + Banana), tập prune cũ đã bị xoá.
     table.onTreeToggle(fruits);
-    tick(); flush(); fixture.detectChanges();
+    tick();
+    flush();
+    fixture.detectChanges();
     expect(fruits.meta.tree!.childItems!.map(c => c.data.id)).toEqual([11, 12]);
   }));
 });

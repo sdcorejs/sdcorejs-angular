@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
@@ -108,7 +107,7 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 4: date chip delegates its edit lifecycle to sd-date [viewed]="'inline'"
-  it("date chip drives sd-date with [viewed]=\"'inline'\"", () => {
+  it('date chip drives sd-date with [viewed]="\'inline\'"', () => {
     // asserts: date branch no longer chip-managed — sd-date's own inline mode owns click-to-edit
     const picker = fixture.debugElement.query(By.css('sd-date')).componentInstance as { viewed: () => unknown };
     expect(picker.viewed()).toBe('inline');
@@ -131,7 +130,14 @@ describe('SdQueryInlineChip', () => {
       key: 'status',
       label: 'Status',
       type: 'values',
-      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+      option: {
+        items: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
     host.field = valuesField;
     host.filter = { field: 'status', operator: 'IN', data: ['a'] };
@@ -149,12 +155,19 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 7a: values chip delegates its edit lifecycle to sd-select [viewed]="'inline'"
-  it("values chip drives sd-select with [viewed]=\"'inline'\"", () => {
+  it('values chip drives sd-select with [viewed]="\'inline\'"', () => {
     const valuesField = {
       key: 'status',
       label: 'Status',
       type: 'values',
-      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+      option: {
+        items: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
     host.field = valuesField;
     host.filter = { field: 'status', operator: 'IN', data: ['a'] };
@@ -162,7 +175,6 @@ describe('SdQueryInlineChip', () => {
     host.valueText = 'A';
     fixture.detectChanges();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sel = fixture.debugElement.query(By.css('sd-select')).componentInstance as any;
     expect(sel.viewed()).toBe('inline');
   });
@@ -176,7 +188,14 @@ describe('SdQueryInlineChip', () => {
       key: 'status',
       label: 'Status',
       type: 'values',
-      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+      option: {
+        items: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
     host.field = valuesField;
     host.filter = { field: 'status', operator: 'IN', data: ['a'] };
@@ -225,7 +244,7 @@ describe('SdQueryInlineChip', () => {
   });
 
   // ---- 9a: BETWEEN delegates its lifecycle to sd-date-range [viewed]="'inline'"
-  it("BETWEEN chip drives sd-date-range with [viewed]=\"'inline'\"", () => {
+  it('BETWEEN chip drives sd-date-range with [viewed]="\'inline\'"', () => {
     // asserts: BETWEEN lifecycle delegated to the range control's inline mode (no chip #editing)
     const dateField = { key: 'd', label: 'D', type: 'date' } as SdQueryField;
     host.field = dateField;
@@ -311,7 +330,12 @@ describe('SdQueryInlineChip', () => {
 
   // ---- 12: isNoData hides the value slot
   it('isNoData=true hides value slot + separator + operator', () => {
-    host.field = { key: 'x', label: 'X', type: 'values', option: { items: [], valueField: 'id', displayField: 'n' } } as unknown as SdQueryField;
+    host.field = {
+      key: 'x',
+      label: 'X',
+      type: 'values',
+      option: { items: [], valueField: 'id', displayField: 'n' },
+    } as unknown as SdQueryField;
     host.filter = { field: 'x', operator: 'NULL', data: null };
     host.isNoData = true;
     fixture.detectChanges();
@@ -329,7 +353,12 @@ describe('SdQueryInlineChip', () => {
 
   // ---- 13: isNoData with showOperator=true still hides operator
   it('isNoData=true with showOperator=true still hides operator', () => {
-    host.field = { key: 'x', label: 'X', type: 'values', option: { items: [], valueField: 'id', displayField: 'n' } } as unknown as SdQueryField;
+    host.field = {
+      key: 'x',
+      label: 'X',
+      type: 'values',
+      option: { items: [], valueField: 'id', displayField: 'n' },
+    } as unknown as SdQueryField;
     host.filter = { field: 'x', operator: 'NULL', data: null };
     host.isNoData = true;
     host.showOperator = true;

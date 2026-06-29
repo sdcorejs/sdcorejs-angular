@@ -78,8 +78,7 @@ describe('SdTextarea', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    textarea = fixture.debugElement.query(el => el.componentInstance instanceof SdTextarea)
-      ?.componentInstance as SdTextarea;
+    textarea = fixture.debugElement.query(el => el.componentInstance instanceof SdTextarea)?.componentInstance as SdTextarea;
     if (!textarea) throw new Error('SdTextarea not found in fixture');
   });
 
@@ -484,8 +483,7 @@ describe('SdTextarea (with SD_FORM_CONFIGURATION fill)', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(StubHost);
     fixture.detectChanges();
-    textarea = fixture.debugElement.query(el => el.componentInstance instanceof SdTextarea)
-      ?.componentInstance as SdTextarea;
+    textarea = fixture.debugElement.query(el => el.componentInstance instanceof SdTextarea)?.componentInstance as SdTextarea;
   });
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {

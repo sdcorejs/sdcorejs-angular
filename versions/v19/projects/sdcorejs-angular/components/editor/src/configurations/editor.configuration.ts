@@ -13,6 +13,4 @@ export interface ISdEditorConfiguration {
   upload: SdEditorUploadFileFuncUpload;
 }
 
-export const SD_EDITOR_CONFIGURATION = new InjectionToken<ISdEditorConfiguration>(
-  'sd.editor.configuration'
-);
+export const SD_EDITOR_CONFIGURATION = new InjectionToken<ISdEditorConfiguration>('sd.editor.configuration');

@@ -40,6 +40,27 @@ describe('ColumnFilterComponent', () => {
 
       expect(spy).not.toHaveBeenCalled();
     });
+
+    it('calls column filter onChange once when committed value changed', () => {
+      const onChange = jasmine.createSpy('onChange');
+      const columnFilter = { name: '' };
+      const column = { field: 'name', type: 'string', title: 'Name', filter: { onChange } } as SdTableColumn;
+      bootstrap(column, columnFilter);
+
+      columnFilter.name = 'abc';
+      component.onFilterChange();
+
+      expect(onChange).toHaveBeenCalledOnceWith('abc', column, columnFilter);
+    });
+
+    it('does not call column filter onChange when value did not change', () => {
+      const onChange = jasmine.createSpy('onChange');
+      bootstrap({ field: 'name', type: 'string', title: 'Name', filter: { onChange } } as SdTableColumn, { name: '' });
+
+      component.onFilterChange();
+
+      expect(onChange).not.toHaveBeenCalled();
+    });
   });
 
   describe('onFilterCommit', () => {
@@ -61,6 +82,19 @@ describe('ColumnFilterComponent', () => {
       component.onFilterCommit();
 
       expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('calls column filter onChange on blur commit when input value changed', () => {
+      const onChange = jasmine.createSpy('onChange');
+      const columnFilter = { name: '' };
+      const column = { field: 'name', type: 'string', title: 'Name', filter: { onChange } } as SdTableColumn;
+      bootstrap(column, columnFilter);
+
+      columnFilter.name = 'blurred';
+      component.onFilterCommit();
+      component.onFilterCommit();
+
+      expect(onChange).toHaveBeenCalledOnceWith('blurred', column, columnFilter);
     });
   });
 
@@ -112,6 +146,26 @@ describe('ColumnFilterComponent', () => {
       debugInputNumber.triggerEventHandler('sdBlur', null);
       expect(filterCommitSpy).toHaveBeenCalledTimes(1);
       expect(filterChangeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls column filter onChange for sd-input-number only on Enter or blur commit', () => {
+      const onChange = jasmine.createSpy('onChange');
+      const columnFilter: Record<string, any> = { age: null };
+      const column = { field: 'age', type: 'number', title: 'Age', filter: { onChange } } as SdTableColumn;
+      bootstrap(column, columnFilter);
+
+      const debugInputNumber = fixture.debugElement.query(By.css('sd-input-number'));
+      columnFilter['age'] = 18;
+      debugInputNumber.triggerEventHandler('keyupEnter', null);
+      debugInputNumber.triggerEventHandler('sdBlur', null);
+
+      expect(onChange).toHaveBeenCalledOnceWith(18, column, columnFilter);
+
+      columnFilter['age'] = 19;
+      debugInputNumber.triggerEventHandler('sdBlur', null);
+
+      expect(onChange).toHaveBeenCalledTimes(2);
+      expect(onChange).toHaveBeenCalledWith(19, column, columnFilter);
     });
   });
 

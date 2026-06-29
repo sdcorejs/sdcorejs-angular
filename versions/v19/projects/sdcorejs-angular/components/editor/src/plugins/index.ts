@@ -1,1 +1,1 @@
-export * from './image-upload/image-upload.plugin'
+export * from './image-upload/image-upload.plugin';

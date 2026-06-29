@@ -15,10 +15,10 @@ import type { ViewUpcastWriter, ViewDocumentFragment } from 'ckeditor5';
  * @param documentFragment element `data.content` obtained from clipboard
  * @internal
  */
-export function removeXmlns( documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter ): void {
-	for ( const child of documentFragment.getChildren() ) {
-		if ( child.is( 'element', 'table' ) && child.hasAttribute( 'xmlns' ) ) {
-			writer.removeAttribute( 'xmlns', child );
-		}
-	}
+export function removeXmlns(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): void {
+  for (const child of documentFragment.getChildren()) {
+    if (child.is('element', 'table') && child.hasAttribute('xmlns')) {
+      writer.removeAttribute('xmlns', child);
+    }
+  }
 }

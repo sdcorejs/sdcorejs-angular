@@ -5,7 +5,6 @@ import { SelectorActionComponent } from './selector-action.component';
 import { SdTableItem } from '../../models/table-item.model';
 import { SdTableOption } from '../../models/table-option.model';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 @Component({
   standalone: true,
   imports: [SelectorActionComponent],
@@ -28,9 +27,7 @@ describe('SelectorActionComponent autoId propagation', () => {
   });
 
   it('renders the clear-selection button autoId derived from the table base', () => {
-    const btn = fixture.nativeElement.querySelector(
-      '[data-autoid="components-button-components-table-employees-clear-selection"]'
-    );
+    const btn = fixture.nativeElement.querySelector('[data-autoid="components-button-components-table-employees-clear-selection"]');
     expect(btn).toBeTruthy();
   });
 

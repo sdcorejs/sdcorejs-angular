@@ -9,7 +9,7 @@ import { SdOrgChartItem, SdOrgChartItemContext, SdOrgChartOption } from './org-c
   standalone: true,
   imports: [CommonModule, MatIconModule],
   templateUrl: './org-chart.component.html',
-  styleUrls: ['./org-chart.component.scss'],
+  styleUrl: './org-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-autoid]': 'autoId()',

@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Type } from '@angular/core';
+import { InjectionToken, Type } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
 import { Subject } from 'rxjs';
 
@@ -22,3 +21,5 @@ export interface SdTab {
   tabInfoChanges: Subject<SdTabInfo>;
   beforeClose?: () => boolean | Promise<boolean>; // Return true thì mới được close
 }
+
+export const SD_TAB = new InjectionToken<SdTab>('SD_TAB');

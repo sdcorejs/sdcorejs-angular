@@ -1,14 +1,9 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { Utilities } from '@sdcorejs/utils/fns';
-import {
-  SdFormGenericComponent,
-  SdFormGenericGroup,
-} from '../../../../models';
+import { SdFormGenericComponent, SdFormGenericGroup } from '../../../../models';
 import { SdInput } from '@sdcorejs/angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
@@ -17,11 +12,11 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   templateUrl: './attribute-parameter.component.html',
   styleUrl: './attribute-parameter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ SdButton, SdModal , SdInput, TranslatePipe],
+  imports: [SdButton, SdModal, SdInput, TranslatePipe],
 })
-export class AttributeParameter {
+export class AttributeParameter implements OnInit {
   @ViewChild(SdModal) modal?: SdModal;
-   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
+  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   form = new FormGroup({});
   @Input() label?: string;
 
@@ -46,9 +41,7 @@ export class AttributeParameter {
 
   constructor(private ref: ChangeDetectorRef) {}
 
-  ngOnInit() {
-
-  }
+  ngOnInit() {}
 
   edit = async () => {
     this.modal?.open?.();

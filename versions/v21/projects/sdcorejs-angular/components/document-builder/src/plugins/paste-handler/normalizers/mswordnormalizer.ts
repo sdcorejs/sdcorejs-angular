@@ -8,7 +8,6 @@
  */
 
 import { transformBookmarks } from '../filters/bookmark';
-import { transformListItemLikeElementsIntoLists } from '../filters/list';
 import { replaceImagesSourceWithBase64 } from '../filters/image';
 import { removeMSAttributes } from '../filters/removemsattributes';
 import { transformTables } from '../filters/table';
@@ -39,9 +38,9 @@ export class PasteFromOfficeMSWordNormalizer implements PasteFromOfficeNormalize
    */
   constructor(
     document: ViewDocument,
-    hasMultiLevelListPlugin: boolean = false,
-    hasTablePropertiesPlugin: boolean = false,
-    hasExtendedTableBlockAlignment: boolean = false
+    hasMultiLevelListPlugin = false,
+    hasTablePropertiesPlugin = false,
+    hasExtendedTableBlockAlignment = false
   ) {
     this.document = document;
     this.hasMultiLevelListPlugin = hasMultiLevelListPlugin;

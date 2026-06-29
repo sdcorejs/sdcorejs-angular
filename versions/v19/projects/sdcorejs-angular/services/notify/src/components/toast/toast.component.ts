@@ -1,116 +1,116 @@
-import { Component, Input, signal, HostListener, OnInit, OnDestroy, SecurityContext } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  HostListener,
+  Input,
+  OnDestroy,
+  OnInit,
+  SecurityContext,
+  computed,
+  signal,
+} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { animate, style, transition, trigger } from '@angular/animations';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
+
 import { ToastData } from '../../notify.model';
 import { SdNotifyService } from '../../notify.service';
+
+const TOAST_EXIT_ANIMATION_MS = 200;
 
 @Component({
   selector: 'toast',
   standalone: true,
   imports: [CommonModule, TranslatePipe],
   templateUrl: './toast.component.html',
-  styleUrls: ['./toast.component.scss'],
-  animations: [
-    trigger('toastAnimation', [
-      transition(':enter', [
-        style({ transform: 'translateX(100%)', opacity: 0 }),
-        animate('300ms ease-out', style({ transform: 'translateX(0)', opacity: 1 }))
-      ]),
-      transition(':leave', [
-        animate('200ms ease-in', style({ transform: 'translateX(100%)', opacity: 0 }))
-      ])
-    ])
-  ],
+  styleUrl: './toast.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    '[@toastAnimation]': 'true',
-    '[class]': '"bg-white sd-toast"',
-    // E2E hooks đọc bởi sd-autoid-inspector: autoid theo loại + state type/title/message.
+    '[class]': 'hostClasses()',
     '[attr.data-autoid]': 'autoId',
     '[attr.data-type]': 'data.type',
     '[attr.data-title]': 'data.title ?? null',
-    '[attr.data-message]': 'dataMessage'
-  }
+    '[attr.data-message]': 'dataMessage',
+  },
 })
 export class ToastComponent implements OnInit, OnDestroy {
   @Input({ required: true }) data!: ToastData;
-  
-  isExpanded = signal(false);
+
+  readonly isExpanded = signal(false);
+  readonly isClosing = signal(false);
+  readonly hostClasses = computed(() => (this.isClosing() ? 'bg-white sd-toast sd-toast--closing' : 'bg-white sd-toast'));
   readonly MAX_SHOW = 2;
 
-  // --- Logic Timer ---
-  private timer: any;
-  private start!: number;
-  private remaining!: number;
+  private timer: ReturnType<typeof setTimeout> | null = null;
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
+  private start = 0;
+  private remaining = 0;
 
   constructor(
     private notifyService: SdNotifyService,
     private sanitizer: DomSanitizer
   ) {}
 
-  /**
-   * Sanitize HTML tường minh trước khi render qua `[innerHTML]` — strip
-   * `<script>`, event handler (`on*`), `javascript:` URL. Chỉ chạy ở nhánh
-   * `data.html === true`; nhánh mặc định render text (auto-escape) nên không
-   * có sink này. // why: phơi rõ việc sanitize cho review/scanner bảo mật.
-   */
+  ngOnInit(): void {
+    this.remaining = this.data.duration;
+    this.resumeTimer();
+  }
+
+  ngOnDestroy(): void {
+    this.clearAutoDismissTimer();
+    this.clearCloseTimer();
+  }
+
+  @HostListener('mouseenter')
+  pauseTimer(): void {
+    if (!this.timer || this.isClosing()) {
+      return;
+    }
+
+    clearTimeout(this.timer);
+    this.timer = null;
+    this.remaining = Math.max(this.remaining - (Date.now() - this.start), 0);
+  }
+
+  @HostListener('mouseleave')
+  resumeTimer(): void {
+    if (this.remaining <= 0 || this.timer || this.isClosing()) {
+      return;
+    }
+
+    this.start = Date.now();
+    this.timer = setTimeout(() => {
+      this.close();
+    }, this.remaining);
+  }
+
+  close(): void {
+    if (this.isClosing()) {
+      return;
+    }
+
+    this.clearAutoDismissTimer();
+    this.isClosing.set(true);
+    this.closeTimer = setTimeout(() => {
+      this.closeTimer = null;
+      this.notifyService.remove(this.data.id);
+    }, TOAST_EXIT_ANIMATION_MS);
+  }
+
+  onActionClick(): void {
+    this.data.onAction?.();
+  }
+
+  toggleExpand(): void {
+    this.isExpanded.update(v => !v);
+  }
+
   sanitizeHtml(value: string): string {
     return this.sanitizer.sanitize(SecurityContext.HTML, value) ?? '';
   }
 
-  /** Message ở dạng chuỗi đơn (chỉ dùng khi !isMultiMessage). */
   get singleMessage(): string {
     return this.data.message as string;
-  }
-
-  ngOnInit() {
-    // Khởi tạo thời gian còn lại bằng duration ban đầu
-    this.remaining = this.data.duration;
-    // Bắt đầu đếm ngược ngay khi hiện ra
-    this.resumeTimer();
-  }
-
-  ngOnDestroy() {
-    clearTimeout(this.timer);
-  }
-
-  // --- Logic Pause/Resume ---
-
-  @HostListener('mouseenter')
-  pauseTimer() {
-    if (this.timer) {
-      // Xóa timer hiện tại
-      clearTimeout(this.timer);
-      this.timer = null;
-      // Tính toán thời gian đã trôi qua để trừ đi
-      this.remaining -= Date.now() - this.start;
-    }
-  }
-
-  @HostListener('mouseleave')
-  resumeTimer() {
-    // Chỉ chạy tiếp nếu còn thời gian và timer chưa chạy
-    if (this.remaining > 0 && !this.timer) {
-      this.start = Date.now();
-      this.timer = setTimeout(() => {
-        this.close();
-      }, this.remaining);
-    }
-  }
-
-  // --- Logic cũ ---
-
-  close() {
-    this.notifyService.remove(this.data.id);
-  }
-
-  onActionClick() {
-    this.data.onAction?.();
-  }
-
-  toggleExpand() {
-    this.isExpanded.update(v => !v);
   }
 
   get isMultiMessage(): boolean {
@@ -135,13 +135,29 @@ export class ToastComponent implements OnInit, OnDestroy {
     return this.isMultiMessage && this.messages.length > this.MAX_SHOW;
   }
 
-  /** autoid theo loại toast để E2E chọn trực tiếp, vd `services-notify-toast-success`. */
   get autoId(): string {
     return `services-notify-toast-${this.data.type}`;
   }
 
-  /** Gộp message (mảng nối ' | ') để phơi ra data-message cho E2E. */
   get dataMessage(): string {
     return Array.isArray(this.data.message) ? this.data.message.join(' | ') : this.data.message;
+  }
+
+  private clearAutoDismissTimer(): void {
+    if (!this.timer) {
+      return;
+    }
+
+    clearTimeout(this.timer);
+    this.timer = null;
+  }
+
+  private clearCloseTimer(): void {
+    if (!this.closeTimer) {
+      return;
+    }
+
+    clearTimeout(this.closeTimer);
+    this.closeTimer = null;
   }
 }

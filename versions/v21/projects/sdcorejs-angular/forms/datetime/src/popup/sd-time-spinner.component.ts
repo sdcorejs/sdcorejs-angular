@@ -15,7 +15,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   standalone: true,
   imports: [CommonModule, TranslatePipe],
   templateUrl: './sd-time-spinner.component.html',
-  styleUrls: ['./sd-time-spinner.component.scss'],
+  styleUrl: './sd-time-spinner.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdTimeSpinner {

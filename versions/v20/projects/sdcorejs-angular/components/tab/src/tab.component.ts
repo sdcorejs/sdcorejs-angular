@@ -1,12 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  input,
-  output,
-  TemplateRef,
-  viewChild,
-} from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, input, output, TemplateRef, viewChild } from '@angular/core';
 
 @Component({
   selector: 'sd-tab',

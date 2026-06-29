@@ -17,7 +17,7 @@ export class SplitterStateService {
     this.#metas = metas;
   }
 
-  getPanelMetas(): ReadonlyArray<Readonly<ResolvedPanelMeta>> {
+  getPanelMetas(): readonly Readonly<ResolvedPanelMeta>[] {
     return this.#metas;
   }
 
@@ -179,13 +179,7 @@ export class SplitterStateService {
     return meta.unit === 'px' ? value : (flexBudgetPx * value) / Math.max(totalFlexWeight, NEAR_ZERO);
   }
 
-  #pxToLiveSize(
-    meta: ResolvedPanelMeta,
-    currentSize: number,
-    nextPx: number,
-    nextFlexBudgetPx: number,
-    totalFlexWeight: number,
-  ): number {
+  #pxToLiveSize(meta: ResolvedPanelMeta, currentSize: number, nextPx: number, nextFlexBudgetPx: number, totalFlexWeight: number): number {
     if (meta.unit === 'px') return nextPx;
     if (nextFlexBudgetPx <= NEAR_ZERO || totalFlexWeight <= NEAR_ZERO) {
       // A flex pane can be visually 0px because sibling px panes consume the whole

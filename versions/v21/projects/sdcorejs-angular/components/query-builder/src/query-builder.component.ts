@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, booleanAttribute, computed, effect, input, model, signal, untracked } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
@@ -61,7 +60,7 @@ const QB_EMPTY_FIELDS: SdQueryBuilderField[] = [];
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet, MatIconModule, SdOperator, SdSelect, SdInput, SdInputNumber, SdDate, SdDatetime, SdItemDefDefDirective],
   templateUrl: './query-builder.component.html',
-  styleUrls: ['./query-builder.component.scss'],
+  styleUrl: './query-builder.component.scss',
 })
 export class SdQueryBuilder {
   // -------------------------------------------------------------------------
@@ -159,13 +158,16 @@ export class SdQueryBuilder {
         continue;
       }
 
-      map.set(left.key, fields.filter(right => {
-        if (right.key === left.key) return false;
-        if (right.allowFieldCompare === false) return false;
-        if (right.type !== left.type) return false;
-        if ((left.compareGroup ?? right.compareGroup) !== undefined && left.compareGroup !== right.compareGroup) return false;
-        return true;
-      }));
+      map.set(
+        left.key,
+        fields.filter(right => {
+          if (right.key === left.key) return false;
+          if (right.allowFieldCompare === false) return false;
+          if (right.type !== left.type) return false;
+          if ((left.compareGroup ?? right.compareGroup) !== undefined && left.compareGroup !== right.compareGroup) return false;
+          return true;
+        })
+      );
     }
 
     return map;
@@ -497,7 +499,7 @@ export class SdQueryBuilder {
   /** Read the offset amount of a relative rule (default 1). */
   relativeAmount(rule: QbRule): number {
     const v = rule.value;
-    return qbIsRelativeDate(v) ? v.amount ?? 1 : 1;
+    return qbIsRelativeDate(v) ? (v.amount ?? 1) : 1;
   }
 
   /** Set the offset amount (clamped to an integer >= 1). */

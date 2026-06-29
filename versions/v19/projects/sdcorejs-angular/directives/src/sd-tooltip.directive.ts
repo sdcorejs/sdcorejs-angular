@@ -1,4 +1,17 @@
-import { Directive, ElementRef, HostListener, TemplateRef, ViewContainerRef, inject, input, DestroyRef, ComponentRef, Component, ChangeDetectorRef, computed } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  HostListener,
+  TemplateRef,
+  ViewContainerRef,
+  inject,
+  input,
+  DestroyRef,
+  ComponentRef,
+  Component,
+  ChangeDetectorRef,
+  computed,
+} from '@angular/core';
 import { Overlay, OverlayRef, ConnectionPositionPair } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { NgTemplateOutlet } from '@angular/common';
@@ -11,9 +24,7 @@ export type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
   standalone: true,
   imports: [NgTemplateOutlet],
   template: `
-    <div
-      class="c-sd-tooltip-container"
-      [style.background-color]="color()">
+    <div class="c-sd-tooltip-container" [style.background-color]="color()">
       @if (isTemplate()) {
         <ng-container [ngTemplateOutlet]="templateContent()"></ng-container>
       } @else {

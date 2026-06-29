@@ -1,18 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdInput } from '@sdcorejs/angular/forms';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
-import { combineLatest, filter, startWith, Subject, Subscription } from 'rxjs';
+import { filter, Subject, Subscription } from 'rxjs';
 import { SdFormGenericTextfield } from '../../../../../../models';
 import { ComponentViewedPipe } from '../../../../../../pipes';
 
 @Component({
   selector: 'lib-textfield',
   templateUrl: './textfield.component.html',
-  styleUrls: ['./textfield.component.scss'],
+  styleUrl: './textfield.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -21,7 +19,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
     ComponentViewedPipe,
   ],
 })
-export class TextfieldComponent {
+export class TextfieldComponent implements OnInit, OnDestroy {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @Input() form = new FormGroup({});
   value: any;

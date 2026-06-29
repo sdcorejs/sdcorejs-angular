@@ -9,7 +9,7 @@ import { SidebarMobileOverlayComponent } from './components/sidebar/sidebar.comp
 @Component({
   selector: 'sidebar-mobile-v1',
   templateUrl: './main.component.html',
-  styleUrls: ['./main.component.scss'],
+  styleUrl: './main.component.scss',
   imports: [MatIconModule, CommonModule, SidebarMobileOverlayComponent],
   standalone: true,
 })

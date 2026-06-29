@@ -1,6 +1,8 @@
 name: Deploy showcase (v19) to GitHub Pages
 
 # Build showcase Angular app trong versions/v19 và deploy lên GitHub Pages.
+# Showcase source of truth is v19; v20/v21 receive the same feature surface via
+# the root `npm run sync` rollout, not via this Pages workflow.
 # Trigger:
 #   - Push lên branch main khi có thay đổi.
 #   - Sau khi workflow publish npm chạy xong thành công.

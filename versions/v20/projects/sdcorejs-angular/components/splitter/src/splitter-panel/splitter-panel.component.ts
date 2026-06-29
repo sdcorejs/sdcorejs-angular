@@ -5,9 +5,9 @@ import { SplitterPanelUnit } from '../splitter.models';
   selector: 'sd-splitter-panel',
   standalone: true,
   templateUrl: './splitter-panel.component.html',
-  styleUrls: ['./splitter-panel.component.scss'],
+  styleUrl: './splitter-panel.component.scss',
   host: {
-    'class': 'sd-splitter__panel',
+    class: 'sd-splitter__panel',
     '[class.sd-splitter__panel--flex]': 'unit() === "flex"',
     '[class.sd-splitter__panel--px]': 'unit() === "px"',
     '[class.sd-splitter__panel--collapsed]': 'collapsed()',
@@ -21,7 +21,7 @@ export class SdSplitterPanelComponent {
   unit = input<SplitterPanelUnit>('flex');
   minSize = input<number, unknown>(0, { transform: numberAttribute });
   maxSize = input<number | undefined, unknown>(undefined, {
-    transform: (v: unknown) => v == null || v === '' ? undefined : Number(v),
+    transform: (v: unknown) => (v == null || v === '' ? undefined : Number(v)),
   });
   collapsible = input(false, { transform: booleanAttribute });
   collapsed = model(false);

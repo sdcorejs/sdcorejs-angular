@@ -1,4 +1,4 @@
-import { SdPatternCommons, SdPatternType } from './pattern.model';
+import { SdPatternCommons } from './pattern.model';
 
 describe('SdPatternCommons', () => {
   describe('pattern definitions', () => {

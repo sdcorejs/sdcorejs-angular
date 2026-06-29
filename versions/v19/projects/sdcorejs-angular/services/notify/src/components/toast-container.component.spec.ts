@@ -1,17 +1,14 @@
-import { ApplicationRef } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdNotifyService } from '../notify.service';
 import { ToastData } from '../notify.model';
 import { ToastContainerComponent } from './toast-container.component';
 
 describe('ToastContainerComponent', () => {
-
   beforeEach(() => {
     // why: SdNotifyService constructor attaches a real toast-container to body —
     // here we test the container directly, so we don't bootstrap the service.
     TestBed.configureTestingModule({
-      imports: [NoopAnimationsModule, ToastContainerComponent],
+      imports: [ToastContainerComponent],
       providers: [
         // why: child <toast> needs the service; minimal stub is enough since we
         // do not exercise close behaviour here.
@@ -44,9 +41,7 @@ describe('ToastContainerComponent', () => {
     fix.detectChanges();
     expect(fix.nativeElement.querySelectorAll('toast').length).toBe(0);
 
-    fix.componentInstance.toasts.set([
-      { id: '1', type: 'success', message: 'hello', duration: 500 } as ToastData,
-    ]);
+    fix.componentInstance.toasts.set([{ id: '1', type: 'success', message: 'hello', duration: 500 } as ToastData]);
     fix.detectChanges();
     expect(fix.nativeElement.querySelectorAll('toast').length).toBe(1);
 

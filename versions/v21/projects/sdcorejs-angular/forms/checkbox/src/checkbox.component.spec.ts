@@ -52,8 +52,7 @@ describe('SdCheckbox', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    checkbox = fixture.debugElement.query(el => el.componentInstance instanceof SdCheckbox)
-      ?.componentInstance as SdCheckbox;
+    checkbox = fixture.debugElement.query(el => el.componentInstance instanceof SdCheckbox)?.componentInstance as SdCheckbox;
     if (!checkbox) throw new Error('SdCheckbox not found in fixture');
   });
 
@@ -201,7 +200,7 @@ describe('SdCheckbox', () => {
       host.model = true;
       fixture.detectChanges();
       expect(fixture.nativeElement.querySelector('mat-checkbox')).toBeNull();
-      const txt = (fixture.nativeElement.textContent as string);
+      const txt = fixture.nativeElement.textContent as string;
       expect(/Có|Yes|はい|是|예|core\.form\.checkbox\.checked/.test(txt)).toBe(true);
     });
 
@@ -209,7 +208,7 @@ describe('SdCheckbox', () => {
       host.viewed = true;
       host.model = false;
       fixture.detectChanges();
-      const txt = (fixture.nativeElement.textContent as string);
+      const txt = fixture.nativeElement.textContent as string;
       expect(/Không|No|いいえ|否|아니오|core\.form\.checkbox\.unchecked/.test(txt)).toBe(true);
     });
   });

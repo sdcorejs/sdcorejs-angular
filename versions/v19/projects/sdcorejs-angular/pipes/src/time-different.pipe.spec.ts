@@ -8,28 +8,28 @@ describe('SdTimeDifferentPipe', () => {
     pipe = new SdTimeDifferentPipe();
   });
 
-  it('emits empty string for a null date', (done) => {
+  it('emits empty string for a null date', done => {
     pipe.transform(null, 'dd/MM/yyyy', 'day').subscribe(result => {
       expect(result).toBe('');
       done();
     });
   });
 
-  it('emits empty string for an undefined date', (done) => {
+  it('emits empty string for an undefined date', done => {
     pipe.transform(undefined, 'dd/MM/yyyy', 'day').subscribe(result => {
       expect(result).toBe('');
       done();
     });
   });
 
-  it('emits empty string for an invalid date string', (done) => {
+  it('emits empty string for an invalid date string', done => {
     pipe.transform('not-a-date', 'dd/MM/yyyy', 'day').subscribe(result => {
       expect(result).toBe('');
       done();
     });
   });
 
-  it('emits formatted date string for a future date', (done) => {
+  it('emits formatted date string for a future date', done => {
     const futureDate = new Date(Date.now() + 1000 * 60 * 60 * 24); // 1 day ahead
     pipe.transform(futureDate, 'dd/MM/yyyy', 'day').subscribe(result => {
       expect(typeof result).toBe('string');

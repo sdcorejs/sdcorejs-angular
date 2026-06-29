@@ -45,7 +45,7 @@ describe('AnchorNav', () => {
 
     it('renders section titles in order', () => {
       const nodes = (fixture.nativeElement as HTMLElement).querySelectorAll('.c-anchor-list-item-text');
-      const texts = Array.from(nodes).map((el) => (el as HTMLElement).textContent?.trim());
+      const texts = Array.from(nodes).map(el => (el as HTMLElement).textContent?.trim());
       expect(texts).toEqual(['Section A', 'Section B', 'Section C']);
     });
 

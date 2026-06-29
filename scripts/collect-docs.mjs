@@ -14,8 +14,9 @@
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/forms/select/sd-select.md
 //   https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json
 //
-// Source of truth is the synced lib at `versions/v<N>/projects/sdcorejs-angular`.
-// Do not hand-edit `versions/**` or `published-docs/<version>/**`; re-run this script.
+// Source of truth is the repo-owned lib at `versions/v<N>/projects/sdcorejs-angular`.
+// Do not hand-edit `published-docs/<version>/**`; edit the workspace source and
+// re-run this script.
 //
 // Usage:
 //   node scripts/collect-docs.mjs --workspace v19 --version 19.0.5
@@ -50,14 +51,22 @@ const WORKSPACES = new Map([
 const EXCLUDE_FILES = new Set(['HANDOFF.md']);
 const EXCLUDE_DIRS = new Set(['node_modules', 'dist', '.angular', 'coverage', '.git']);
 
-// UTF-8-as-CP1252 double-encode mojibake (e.g. "Hiển" saved as "Hiá»ƒn"). Matches
+// UTF-8-as-CP1252 double-encode mojibake. Matches
 // only multi-char digraphs + C1 controls that never occur in valid Vietnamese/English,
 // so legitimate precomposed VN (ể U+1EC3) and uppercase words (ĐÃ, NÂNG) are NOT flagged.
-// eslint-disable-next-line no-control-regex
-const MOJIBAKE = /á»|áº|Æ°|Ä‘|Ã¡|Ã |Ã¢|Ã£|Ã©|Ã¨|Ã­|Ã¬|Ã³|Ã²|Ã´|Ãµ|Ãº|Ã¹|Ã½|Ã«|Ã¶|Ã¼|â€“|â€”|â€œ|â€™|â€¦|ï¿½|[-]/;
+const MOJIBAKE = new RegExp([
+  '\\u00e1\\u00bb', '\\u00e1\\u00ba', '\\u00c6\\u00b0', '\\u00c4\\u2018',
+  '\\u00c3\\u00a1', '\\u00c3\\u00a0', '\\u00c3\\u00a2', '\\u00c3\\u00a3',
+  '\\u00c3\\u00a9', '\\u00c3\\u00a8', '\\u00c3\\u00ad', '\\u00c3\\u00ac',
+  '\\u00c3\\u00b3', '\\u00c3\\u00b2', '\\u00c3\\u00b4', '\\u00c3\\u00b5',
+  '\\u00c3\\u00ba', '\\u00c3\\u00b9', '\\u00c3\\u00bd', '\\u00c3\\u00ab',
+  '\\u00c3\\u00b6', '\\u00c3\\u00bc', '\\u00e2\\u20ac\\u201c',
+  '\\u00e2\\u20ac\\u201d', '\\u00e2\\u20ac\\u0153', '\\u00e2\\u20ac\\u2122',
+  '\\u00e2\\u20ac\\u00a6', '\\u00ef\\u00bf\\u00bd', '[\\u0080-\\u009f]',
+].join('|'));
 
 // Fail-closed gate: scan every doc BEFORE creating output, refuse to publish if any
-// is mojibaked. The fix is upstream — repair the source in vn-angular, re-`npm run sync`.
+// is mojibaked. Repair the repo-owned source workspace before publishing docs.
 function assertNoMojibake(srcRoot) {
   const hits = [];
   for (const file of walk(srcRoot)) {
@@ -72,7 +81,7 @@ function assertNoMojibake(srcRoot) {
     const detail = hits.map(h => `  - ${h.file} (line${h.lines.length > 1 ? 's' : ''} ${h.lines.join(', ')})`).join('\n');
     throw new Error(
       `Refusing to publish: ${hits.length} doc(s) contain UTF-8-as-CP1252 mojibake:\n${detail}\n` +
-        `Fix the source in vn-angular, re-run \`npm run sync\`, then retry \`collect-docs\`.`,
+        `Fix the source under versions/<workspace>/projects/sdcorejs-angular, roll out if needed, then retry \`collect-docs\`.`,
     );
   }
 }
@@ -122,21 +131,12 @@ function assertVersionMatchesWorkspace(version, major, workspace) {
   }
 }
 
-function resolveCommit(workspace) {
+function resolveCommit() {
   const explicit = getArg('commit');
   if (explicit) return explicit;
-
-  // Best-effort: parse the source commit recorded by the sync step.
-  const statusCandidates = [
-    join(REPO_ROOT, 'versions', workspace, 'SYNC-STATUS.md'),
-    join(REPO_ROOT, 'versions', 'v19', 'SYNC-STATUS.md'),
-  ];
-  for (const statusPath of statusCandidates) {
-    if (!existsSync(statusPath)) continue;
-    const text = readFileSync(statusPath, 'utf8');
-    const m = text.match(/[Ss]ource\s*[Cc]ommit[^\n|]*[|:]\s*([0-9a-f]{7,40})/);
-    if (m) return m[1];
-  }
+  // After the final legacy sync, new releases are repo-owned. Do not infer
+  // `syncedFrom` from SYNC-STATUS.md, or future docs would keep pointing at the
+  // final legacy vn-angular commit.
   return '';
 }
 
@@ -284,7 +284,7 @@ function main() {
   const registryPath = join(outRoot, 'versions.json');
 
   if (!existsSync(srcRoot)) {
-    throw new Error(`Synced library not found: ${srcRoot}. Run \`npm run sync\` first.`);
+    throw new Error(`Library workspace not found: ${srcRoot}. Restore or generate the version workspace first.`);
   }
 
   // Fail-closed mojibake gate — runs before any output is created/overwritten.
@@ -293,7 +293,7 @@ function main() {
   const version = resolveVersion(srcRoot);
   assertVersionMatchesWorkspace(version, workspaceMajor, workspace);
   const released = getArg('date') || todayIso();
-  const syncedFrom = resolveCommit(workspace);
+  const syncedFrom = resolveCommit();
 
   const outVersionDir = join(outRoot, version);
   const outVersionLabel = displayPath(outVersionDir);

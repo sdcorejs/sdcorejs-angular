@@ -7,14 +7,7 @@
  * @module paste-from-office/filters/list
  */
 
-import {
-  Matcher,
-  ViewUpcastWriter,
-  type ViewDocumentFragment,
-  type ViewElement,
-  type ViewNode,
-  type ViewText,
-} from 'ckeditor5';
+import { Matcher, ViewUpcastWriter, type ViewDocumentFragment, type ViewElement, type ViewNode, type ViewText } from 'ckeditor5';
 
 import { convertCssLengthToPx, toPx } from './utils';
 
@@ -269,9 +262,9 @@ export function unwrapParagraphInListItem(documentFragment: ViewDocumentFragment
  * @returns Array of found list-like items. Each item is an object containing
  * @internal
  */
-function findAllItemLikeElements(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): Array<ListLikeElement> {
+function findAllItemLikeElements(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter): ListLikeElement[] {
   const range = writer.createRangeIn(documentFragment);
-  const itemLikeElements: Array<ListLikeElement> = [];
+  const itemLikeElements: ListLikeElement[] = [];
   const foundMargins = new Set<string>();
 
   for (const item of range.getItems()) {
@@ -645,15 +638,13 @@ interface ListLikeElement extends ListItemData {
   marginLeft?: string;
 }
 
-type ListStack = Array<
-  ListLikeElement & {
-    listElement: ViewElement;
-    listItemElements: Array<ViewElement>;
-  }
->;
+type ListStack = (ListLikeElement & {
+  listElement: ViewElement;
+  listItemElements: ViewElement[];
+})[];
 
-type TopLevelListInfo = {
+interface TopLevelListInfo {
   marginLeft: string | undefined;
   canApplyMarginOnList: boolean;
-  topLevelListItemElements: Array<ViewElement>;
-};
+  topLevelListItemElements: ViewElement[];
+}

@@ -226,18 +226,13 @@ export class SdExcelService {
     };
 
     const headerLine = columns.map(c => escape(c.title)).join(',');
-    const dataLines = items.map(item =>
-      columns.map(c => escape((item as Record<string, unknown>)[c.field])).join(','),
-    );
+    const dataLines = items.map(item => columns.map(c => escape((item as Record<string, unknown>)[c.field])).join(','));
 
-    // Prepend UTF-8 BOM (﻿) để Excel mở đúng encoding cho tiếng Việt có dấu.
+    // Prepend UTF-8 BOM so Excel opens Vietnamese text with the correct encoding.
     // Dùng CRLF vì Excel trên Windows ưu tiên, macOS Excel cũng chấp nhận.
-    const csv = '﻿' + [headerLine, ...dataLines].join('\r\n');
+    const csv = '\uFEFF' + [headerLine, ...dataLines].join('\r\n');
 
-    BrowserUtilities.downloadBlob(
-      new Blob([csv], { type: 'text/csv;charset=utf-8;' }),
-      filename,
-    );
+    BrowserUtilities.downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), filename);
   };
 
   export = async (option: SdExcelExportOption) => {

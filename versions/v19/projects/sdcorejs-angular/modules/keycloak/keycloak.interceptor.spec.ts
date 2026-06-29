@@ -165,7 +165,7 @@ describe('SdKeycloakInterceptor', () => {
 
   // ─── 7. Token attached to secured requests ───────────────────────────────────
 
-  it('should call updateToken(30) and attach Authorization header for a URL in secureRoutes', (done) => {
+  it('should call updateToken(30) and attach Authorization header for a URL in secureRoutes', done => {
     const keycloakInstance = makeKeycloakInstanceStub('my-access-token');
     configure({
       keycloak: keycloakInstance as any,
@@ -190,7 +190,7 @@ describe('SdKeycloakInterceptor', () => {
 
   // ─── 8. Substring matching — partial URL match ───────────────────────────────
 
-  it('should attach token when secureRoute substring appears anywhere in the URL', (done) => {
+  it('should attach token when secureRoute substring appears anywhere in the URL', done => {
     const keycloakInstance = makeKeycloakInstanceStub('token-xyz');
     configure({
       keycloak: keycloakInstance as any,
@@ -210,7 +210,7 @@ describe('SdKeycloakInterceptor', () => {
 
   // ─── 9. Multiple secureRoutes — first matching route attaches token ───────────
 
-  it('should attach token when URL matches the second entry in secureRoutes', (done) => {
+  it('should attach token when URL matches the second entry in secureRoutes', done => {
     const keycloakInstance = makeKeycloakInstanceStub('multi-token');
     configure({
       keycloak: keycloakInstance as any,

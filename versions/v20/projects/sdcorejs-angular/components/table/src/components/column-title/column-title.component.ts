@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { SdTableTitleDefDirective } from '../../directives/sd-table-title-def.directive';
 import { SdTableColumn } from '../../models/table-column.model';

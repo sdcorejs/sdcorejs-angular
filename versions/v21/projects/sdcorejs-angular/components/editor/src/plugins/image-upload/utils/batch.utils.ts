@@ -23,11 +23,8 @@ export const getActiveBlobUrls = (editor: ClassicEditor): Set<string> => {
   return urls;
 };
 
-export const filterActivePendingFiles = (
-  pendingFiles: Map<string, File>,
-  activeBlobUrls: Set<string>
-): Array<[string, File]> => {
-  const toUpload: Array<[string, File]> = [];
+export const filterActivePendingFiles = (pendingFiles: Map<string, File>, activeBlobUrls: Set<string>): [string, File][] => {
+  const toUpload: [string, File][] = [];
   for (const [blobUrl, file] of pendingFiles) {
     if (activeBlobUrls.has(blobUrl)) {
       toUpload.push([blobUrl, file]);
@@ -40,18 +37,18 @@ export const filterActivePendingFiles = (
 };
 
 export const runBatchUploads = async (
-  toUpload: Array<[string, File]>,
+  toUpload: [string, File][],
   uploadFn: SdEditorUploadFileFuncUpload,
   batchSize: number,
   maxConcurrent: number
-): Promise<{ replacements: Map<string, SdEditorUploadFileDetail>; failedBatches: Array<[string, File][]> }> => {
-  const batches: Array<[string, File][]> = [];
+): Promise<{ replacements: Map<string, SdEditorUploadFileDetail>; failedBatches: [string, File][][] }> => {
+  const batches: [string, File][][] = [];
   for (let i = 0; i < toUpload.length; i += batchSize) {
     batches.push(toUpload.slice(i, i + batchSize));
   }
 
   const replacements = new Map<string, SdEditorUploadFileDetail>();
-  const failedBatches: Array<[string, File][]> = [];
+  const failedBatches: [string, File][][] = [];
 
   let head = 0;
   const runWorker = async () => {

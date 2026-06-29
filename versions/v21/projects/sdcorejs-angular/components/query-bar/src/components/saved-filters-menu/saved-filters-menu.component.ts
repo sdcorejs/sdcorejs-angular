@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
@@ -49,7 +48,10 @@ export class SdQuerySavedFiltersMenu {
   // why: reload whenever the namespace key changes (e.g. host switches user/context).
   readonly #loadFilters = effect(() => {
     const storage = this.#storageKey();
-    if (!storage) { this.savedFilters.set([]); return; }
+    if (!storage) {
+      this.savedFilters.set([]);
+      return;
+    }
     try {
       const raw = localStorage.getItem(storage);
       this.savedFilters.set(raw ? JSON.parse(raw) : []);
@@ -61,7 +63,9 @@ export class SdQuerySavedFiltersMenu {
   #persist(filters: SdSavedFilter[]): void {
     const storage = this.#storageKey();
     if (!storage) return;
-    try { localStorage.setItem(storage, JSON.stringify(filters)); } catch {
+    try {
+      localStorage.setItem(storage, JSON.stringify(filters));
+    } catch {
       /* quota / disabled storage — silent */
     }
   }
@@ -76,7 +80,7 @@ export class SdQuerySavedFiltersMenu {
     const name = window.prompt('Tên bộ lọc:');
     if (!name?.trim()) return;
     const filter: SdSavedFilter = {
-      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       name: name.trim(),
       query: this.query(),
     };

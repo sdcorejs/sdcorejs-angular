@@ -8,117 +8,175 @@
 **Change detection**: `OnPush`
 
 ## One-line purpose
-Read-only label/value display widget — renders a "label on top, value below" pair used to show a single field on a detail/view page (the read-only counterpart to `<sd-input>`/`<sd-select>`/etc.).
+
+Read-only label/value display widget. It renders a label on top and a display value below, using the shared `sdView` pipe internally so missing values show as `--` and primitive arrays show as comma-separated text.
 
 ## When to use
-- Detail / "Xem chi tiết" pages where each field is read-only
-- Inside a sectioned form when one specific field should display as text instead of an input
-- When a form input component (e.g. `<sd-input>`, `<sd-select>`) is in `[viewed]="true"` mode and you want the same look in plain HTML
-- To render a hyperlinked value (label-on-top, click-through value) without using a full form control
-- Inside info cards or summary panels (combine multiple `<sd-view>` in a CSS grid)
+
+- Detail/view pages where fields are read-only.
+- Summary panels, info cards, and sectioned read-only forms.
+- A single hyperlinked value with the same visual language as form detail mode.
+- Places where a form input component is in `[viewed]="true"` mode and you want the same look in plain HTML.
 
 ## When NOT to use
-- For editable fields → use `<sd-input>`/`<sd-select>`/etc. (and toggle `[viewed]` if you need a read-only mode that already styles itself)
-- For long rich text → use `<sd-preview>` instead (HTML-aware viewer)
-- For status badges → use `<sd-badge>`
-- For list-of-rows display → use `<sd-table>`
-- When the value is an object that needs custom rendering AND you also need editing — pick the form component with `[viewed]` flag, don't compose with `<sd-view>`
+
+- Editable fields - use `<sd-input>`, `<sd-select>`, `<sd-date>`, `<sd-datetime>`, etc.
+- Long rich text or HTML - use `<sd-preview>` or a custom `#sdValue` template.
+- Status/state indicators - use `<sd-badge>` or a custom `#sdValue` template containing `<sd-badge>`.
+- Lists of rows - use `<sd-table>`.
+- Heavy object rendering - pass a display string or project `#sdValue`.
 
 ## Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `label` | `string \| null \| undefined` | `undefined` | Label text rendered above the value (class `T14R text-black400`). If empty AND no `labelTemplate`, label row is omitted. |
-| `value` | `any` | `undefined` | Raw value (object, primitive, …) — passed to `valueTemplate` context as `value` if provided. Not rendered directly. |
-| `display` | `string \| null \| undefined` (REQUIRED) | — | Display string. This is what shows when no custom `valueTemplate` is set. Falls back to `—` (em-dash) via `sdEmpty` pipe when null/empty. |
-| `hyperlink` | `string \| null \| undefined` | `undefined` | If set, value is rendered as `<a [sdHref]="hyperlink">{{ display }}</a>` (click navigates / opens in tab). |
-| `labelTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional template ref injected by a parent (used by `<sd-input>` etc. when delegating their label). Wins over `label` and over `#sdLabel` content. |
-| `valueTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional template ref for value, with context `{ $implicit: display, value, selectedItems, selectedItem }` (`selectedItem` = `selectedItems[0] ?? null`). Wins over `display` rendering and over `#sdValue` content. |
-| `selectedItems` | `any[] \| undefined` | `undefined` | Resolved selected item objects passed by the parent (e.g. `<sd-select>`) so the value template can render `head +N` / read fields. Exposed in the `valueTemplate` context. |
 
-> **Required note**: `display` uses `input.required()` — Angular will emit a compile error if you forget to bind it.
+| Name            | Type                            | Default     | Notes                                                                                                                                                     |
+| --------------- | ------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `label`         | `string \| null \| undefined`   | `undefined` | Label text rendered above the value. If empty and no `labelTemplate`/`#sdLabel`, the label row is omitted.                                                |
+| `value`         | `any`                           | `undefined` | Raw value passed to `valueTemplate` context as `value`. Not rendered directly by the default branch.                                                      |
+| `display`       | `unknown` (REQUIRED)            | -           | Display value. The default branch renders `display                                                                                                        | sdView`, so `null`, `undefined`, `''`, `NaN`, and `[]`become`--`; primitive arrays become `A, B`. |
+| `hyperlink`     | `string \| null \| undefined`   | `undefined` | If set, the default value is rendered as `<a [sdHref]="hyperlink">{{ display                                                                              | sdView }}</a>`.                                                                                   |
+| `labelTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional label template injected by a parent. Wins over `label` and over `#sdLabel` content.                                                              |
+| `valueTemplate` | `TemplateRef<any> \| undefined` | `undefined` | Optional value template with context `{ $implicit: display, value, selectedItems, selectedItem }`. Wins over default display and over `#sdValue` content. |
+| `selectedItems` | `any[] \| undefined`            | `undefined` | Resolved selected item objects passed by parent controls such as `<sd-select>`.                                                                           |
+
+> **Required note**: `display` uses `input.required()`. Angular will report an error if a template forgets to bind it.
 
 ## Outputs
+
 None. This is a pure display component.
 
 ## Content projection (slots)
-You may provide either or both templates inside the host:
-- `<ng-template #sdLabel>…</ng-template>` — custom label rendering. Picked up via `contentChild('sdLabel')`. Used only when `[labelTemplate]` is not bound.
-- `<ng-template #sdValue let-display let-value="value" let-selectedItems="selectedItems" let-selectedItem="selectedItem">…</ng-template>` — custom value rendering. Context = `{ $implicit: display, value, selectedItems, selectedItem }`. Used only when `[valueTemplate]` is not bound.
 
-Resolution order (per `computed` signal):
-1. `[labelTemplate]` / `[valueTemplate]` input
-2. `#sdLabel` / `#sdValue` content child
-3. Default (`label` text / `display` text or hyperlink)
+- `<ng-template #sdLabel>...</ng-template>` - custom label rendering. Used only when `[labelTemplate]` is not bound.
+- `<ng-template #sdValue let-display let-value="value" let-selectedItems="selectedItems" let-selectedItem="selectedItem">...</ng-template>` - custom value rendering. Context is `{ $implicit: display, value, selectedItems, selectedItem }`. Used only when `[valueTemplate]` is not bound.
 
-## Visual cues (helps agent map screenshots → component)
-- **Layout**: vertical stack, `gap: 4px` between label and value
-- **Label**: small grey text (`T14R text-black400`) — same styling as form-field labels in viewed mode
-- **Value**: medium-weight body text (`T14M`)
-- **Hyperlink mode**: value rendered as a clickable text link (color follows `<a>` styles in the theme)
-- **Empty value**: shows `—` (em-dash) when `display` is null/empty (via `sdEmpty` pipe)
-- Typically appears in a 1/2/3-column grid alongside other `<sd-view>` instances on a detail page
+Resolution order:
+
+1. `[labelTemplate]` / `[valueTemplate]` inputs
+2. `#sdLabel` / `#sdValue` content children
+3. Default label text / `display | sdView` text or hyperlink
+
+## Standalone import checklist
+
+Every standalone component that uses `<sd-view>` must import `SdView`. If the `display` expression also uses `sdFormatDate`, `sdFormatDatetime`, `sdFormatNumber`, or `sdView` explicitly, import those pipes too.
+
+```ts
+import { Component } from '@angular/core';
+import { SdView } from '@sdcorejs/angular/components/view';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdFormatDatePipe, SdFormatNumberPipe, SdViewPipe } from '@sdcorejs/angular/pipes';
+
+@Component({
+  standalone: true,
+  imports: [SdView, SdBadge, SdFormatDatePipe, SdFormatNumberPipe, SdViewPipe],
+  template: `
+    <sd-view label="Code" [display]="contract.code"></sd-view>
+    <sd-view label="Start date" [display]="contract.startDate | sdFormatDate"></sd-view>
+    <sd-view label="Total" [display]="contract.total | sdFormatNumber: 0"></sd-view>
+    <sd-view label="Tags" [display]="contract.tags"></sd-view>
+  `,
+})
+export class ContractDetailComponent {
+  contract = {
+    code: 'HD-001',
+    startDate: '2026-06-26',
+    total: 1250000,
+    tags: ['VIP', 'Renewal'],
+  };
+}
+```
+
+## Visual cues
+
+- Vertical stack with a small gap between label and value.
+- Label uses the same grey/small visual language as form-field labels in viewed mode.
+- Value uses medium body text.
+- Hyperlink mode renders the value as clickable text.
+- Empty/default branch shows `--` through `sdView`.
+- Primitive arrays display as `A, B, C`.
 
 ## Permission gating
-None — `<sd-view>` does NOT extend `SdBaseSecureComponent` and has no permission-aware behavior. Wrap with `*sdPermission` on the host if a whole row/section is sensitive.
+
+None. `<sd-view>` does not extend `SdBaseSecureComponent`. Wrap the host with `*sdPermission` if a field or section is sensitive.
 
 ## Examples
 
-### 1. Simple label/value pair on a detail page
+### 1. Simple label/value pair
+
 ```html
-<sd-view label="Mã nhân viên" [display]="employee.code"></sd-view>
-<sd-view label="Họ và tên" [display]="employee.fullName"></sd-view>
+<sd-view label="Employee code" [display]="employee.code"></sd-view>
+<sd-view label="Full name" [display]="employee.fullName"></sd-view>
 <sd-view label="Email" [display]="employee.email"></sd-view>
 ```
 
-### 2. Hyperlinked value (click to open profile)
+### 2. Missing values and arrays
+
 ```html
-<sd-view
-  label="Người tạo"
-  [display]="record.createdByName"
-  [hyperlink]="'/users/' + record.createdById">
-</sd-view>
+<sd-view label="Phone" [display]="employee.phone"></sd-view>
+<!-- null/undefined/''/NaN -> -- -->
+
+<sd-view label="Roles" [display]="employee.roleNames"></sd-view>
+<!-- ['Admin', 'Approver'] -> Admin, Approver -->
 ```
 
-### 3. Custom value template (e.g. status badge)
+### 3. Hyperlinked value
+
 ```html
-<sd-view label="Trạng thái" [display]="record.statusName" [value]="record.status">
+<sd-view label="Created by" [display]="record.createdByName" [hyperlink]="'/users/' + record.createdById"> </sd-view>
+```
+
+### 4. Date/number formatting
+
+Use SDCoreJS pipes rather than Angular's built-in `date` pipe or custom pipes.
+
+```html
+<sd-view label="Start date" [display]="contract.startDate | sdFormatDate"></sd-view>
+<sd-view label="Updated at" [display]="contract.updatedAt | sdFormatDatetime : 'dd/MM/yyyy HH:mm'"></sd-view>
+<sd-view label="Contract value" [display]="contract.totalValue | sdFormatNumber : 0"></sd-view>
+```
+
+### 5. Custom value template with badge
+
+```html
+<sd-view label="Status" [display]="record.statusName" [value]="record.status">
   <ng-template #sdValue let-display let-status="value">
-    <sd-badge
-      [title]="display"
-      [color]="status === 'ACTIVE' ? 'success' : 'warn'">
-    </sd-badge>
+    <sd-badge [title]="display" [color]="status === 'ACTIVE' ? 'success' : 'warn'"> </sd-badge>
   </ng-template>
 </sd-view>
 ```
 
-### 4. Inside a 12-column grid section
+### 6. Inside a 12-column grid section
+
 ```html
-<sd-section title="Thông tin chung">
+<sd-section title="General information">
   <div class="row">
     <div class="col-md-6">
-      <sd-view label="Tên hợp đồng" [display]="contract.name"></sd-view>
+      <sd-view label="Contract name" [display]="contract.name"></sd-view>
     </div>
     <div class="col-md-3">
-      <sd-view label="Ngày bắt đầu" [display]="contract.startDate | date:'dd/MM/yyyy'"></sd-view>
+      <sd-view label="Start date" [display]="contract.startDate | sdFormatDate"></sd-view>
     </div>
     <div class="col-md-3">
-      <sd-view label="Ngày kết thúc" [display]="contract.endDate | date:'dd/MM/yyyy'"></sd-view>
+      <sd-view label="End date" [display]="contract.endDate | sdFormatDate"></sd-view>
     </div>
   </div>
 </sd-section>
 ```
 
 ## Anti-patterns
-- ❌ Forgetting `[display]` binding — required input, will fail at compile time. Use `[display]="value ?? ''"` if value can be null.
-- ❌ Building view-mode forms by composing `<sd-view>` instead of toggling `[viewed]` on the form components — the form components already render in read-only mode and keep validation hooks consistent.
-- ❌ Rendering raw HTML in `[display]` — it is plain text. For HTML use `<ng-template #sdValue>` with a sanitizer (or use `<sd-preview>` for rich text).
-- ❌ Using `<sd-view>` for very long text without truncation — wrap value in your own template to add ellipsis/expand UX.
-- ❌ Passing a heavy object to `[value]` and another to `[display]` that contradict each other — keep `display` derived from `value` for clarity.
+
+- Forgetting `[display]`; it is a required input.
+- Passing raw objects to `[display]` and accepting `[object Object]`; map to a string or project `#sdValue`.
+- Using Angular `date` or a custom date pipe when `sdFormatDate` / `sdFormatDatetime` exists.
+- Building view-mode forms by composing many `<sd-view>` instances when the existing form controls can use `[viewed]="true"`.
+- Rendering raw HTML in `[display]`; it is plain text.
+- Using `<sd-view>` for editable fields.
 
 ## Related
-- `<sd-input>`, `<sd-select>`, `<sd-textarea>`, `<sd-input-number>` — pair with `[viewed]="true"` for read-only form fields with the same look
-- `<sd-preview>` — rich/HTML content viewer
-- `<sd-badge>` — status/tag indicator (often projected via `#sdValue`)
-- `<sd-section>` — section wrapper to group multiple `<sd-view>` rows
-- `sdHref` directive — used internally for hyperlink rendering
-- `sdEmpty` pipe — used internally to render em-dash for empty values
+
+- `sdView` pipe - default display fallback used internally.
+- `sdFormatNumber`, `sdFormatDate`, `sdFormatDatetime` - recommended display formatters.
+- `<sd-input>`, `<sd-select>`, `<sd-textarea>`, `<sd-input-number>` - form controls with `[viewed]="true"`.
+- `<sd-preview>` - rich/HTML content viewer.
+- `<sd-badge>` - status/tag indicator.
+- `<sd-section>` - section wrapper for read-only layouts.
+- `sdHref` directive - used internally for hyperlink rendering.

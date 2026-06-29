@@ -1,13 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-  output,
-  viewChild,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';

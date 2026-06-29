@@ -78,7 +78,8 @@ export const EN_MESSAGES = {
 
   // ---- Global error handler ----
   'core.handler.global-error.update-title': 'A NEW SYSTEM UPDATE IS AVAILABLE',
-  'core.handler.global-error.update-body': 'The current version is outdated and could not load resources.\nPlease press OK to reload the page.',
+  'core.handler.global-error.update-body':
+    'The current version is outdated and could not load resources.\nPlease press OK to reload the page.',
 
   // ---- Interceptor: no-internet ----
   'core.interceptor.no-internet.offline': 'No network connection. Waiting for connection...',
@@ -489,7 +490,8 @@ export const EN_MESSAGES = {
   'core.component.upload-file.confirm-yes': 'Confirm',
   'core.component.upload-file.confirm-no': 'Cancel',
   'core.component.upload-file.no-configuration': 'Please inject SD_UPLOAD_FILE_CONFIGURATION or pass [upload] directly into the component',
-  'core.component.upload-file.no-configuration-key': 'No upload configuration found for key=\'{key}\'. Please check providers or pass [upload] directly',
+  'core.component.upload-file.no-configuration-key':
+    "No upload configuration found for key='{key}'. Please check providers or pass [upload] directly",
   'core.component.upload-file.preview-title': 'Preview image',
 
   // ---- Module: layout (sidebar / user menu) ----
@@ -510,12 +512,14 @@ export const EN_MESSAGES = {
 
   // ---- Module: layout (forbidden page) ----
   'core.module.layout.forbidden.title': 'Access denied',
-  'core.module.layout.forbidden.message': "You don't have permission to access this page. Please contact your administrator or go back to the home page",
+  'core.module.layout.forbidden.message':
+    "You don't have permission to access this page. Please contact your administrator or go back to the home page",
   'core.module.layout.forbidden.back-home': 'Back to home',
 
   // ---- Module: layout (not-found page) ----
   'core.module.layout.not-found.title': '404 - Page not found',
-  'core.module.layout.not-found.message': "The page you're looking for doesn't exist or has been removed. Please check the URL or go back to the home page to continue.",
+  'core.module.layout.not-found.message':
+    "The page you're looking for doesn't exist or has been removed. Please check the URL or go back to the home page to continue.",
   'core.module.layout.not-found.back': 'Go back',
 
   // ---- Module: layout (home page) ----

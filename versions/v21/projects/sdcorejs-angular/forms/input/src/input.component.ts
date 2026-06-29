@@ -22,15 +22,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
-import {
-  AsyncValidatorFn,
-  FormGroup,
-  FormsModule,
-  NgForm,
-  ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -40,7 +32,18 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { HandleSdCustomValidator, SD_FORM_CONFIGURATION, SdCustomValidator, SdFormControl, sdFormControlState, SdInlineErrorValidator, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  HandleSdCustomValidator,
+  SD_FORM_CONFIGURATION,
+  SdCustomValidator,
+  SdFormControl,
+  sdFormControlState,
+  SdInlineErrorValidator,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
@@ -59,7 +62,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'sd-input',
   templateUrl: './input.component.html',
-  styleUrls: ['./input.component.scss'],
+  styleUrl: './input.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
@@ -428,4 +431,3 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     }, 100);
   };
 }
-

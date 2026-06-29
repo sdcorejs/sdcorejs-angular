@@ -1,11 +1,4 @@
-import {
-  QB_DATE_MODES,
-  QB_RELATIVE_UNIT_OPTIONS,
-  QB_TODAY,
-  qbDefaultRelative,
-  qbIsRelativeDate,
-  qbIsToday,
-} from './query-builder.model';
+import { QB_DATE_MODES, QB_RELATIVE_UNIT_OPTIONS, QB_TODAY, qbDefaultRelative, qbIsRelativeDate, qbIsToday } from './query-builder.model';
 
 describe('query-builder.model › relative date helpers', () => {
   it('qbIsRelativeDate recognises a utils DateRelative offset spec', () => {
@@ -43,7 +36,12 @@ describe('query-builder.model › relative date helpers', () => {
 
   it('QB_RELATIVE_UNIT_OPTIONS lists the 6 unit×direction tokens with VN labels', () => {
     expect(QB_RELATIVE_UNIT_OPTIONS.map(o => o.value)).toEqual([
-      'day:previous', 'day:next', 'week:previous', 'week:next', 'month:previous', 'month:next',
+      'day:previous',
+      'day:next',
+      'week:previous',
+      'week:next',
+      'month:previous',
+      'month:next',
     ]);
     expect(QB_RELATIVE_UNIT_OPTIONS.find(o => o.value === 'day:previous')!.display).toBe('ngày trước');
     expect(QB_RELATIVE_UNIT_OPTIONS.find(o => o.value === 'month:next')!.display).toBe('tháng tới');

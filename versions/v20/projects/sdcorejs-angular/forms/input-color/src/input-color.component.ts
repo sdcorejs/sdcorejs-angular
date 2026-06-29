@@ -1,14 +1,4 @@
-import {
-  booleanAttribute,
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  ElementRef,
-  input,
-  model,
-  output,
-  viewChild,
-} from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, ElementRef, input, model, output, viewChild } from '@angular/core';
 import { MatFormFieldAppearance } from '@angular/material/form-field';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
@@ -26,7 +16,7 @@ export const SD_INPUT_COLOR_HEX_PATTERN = '^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9
   standalone: true,
   imports: [SdInput, SdSuffixDefDirective],
   templateUrl: './input-color.component.html',
-  styleUrls: ['./input-color.component.scss'],
+  styleUrl: './input-color.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdInputColor {
@@ -42,7 +32,7 @@ export class SdInputColor {
   readonly size = input<Size>('md');
   readonly appearance = input<MatFormFieldAppearance | undefined>(undefined);
   // why: type as `any` — the inner <sd-input> applies the FormGroup|NgForm transform.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   readonly form = input<any>(undefined);
   readonly name = input<string | undefined>();
   readonly autoId = input<string | undefined>();
@@ -50,6 +40,7 @@ export class SdInputColor {
   readonly required = input(false, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly readonly = input(false, { transform: booleanAttribute });
+  readonly hideInlineError = input(false, { transform: booleanAttribute });
   /** Display mode — forwarded to the inner `<sd-input>`. `'inline'` = borderless inline-edit; disabled `'inline'` → static. */
   readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
 

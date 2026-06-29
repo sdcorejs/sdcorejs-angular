@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @angular-eslint/no-input-rename */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -14,7 +12,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'lib-datetime',
   templateUrl: './datetime.component.html',
-  styleUrls: ['./datetime.component.scss'],
+  styleUrl: './datetime.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -25,7 +23,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
     HyperlinkPipe,
   ],
 })
-export class DatetimeComponent {
+export class DatetimeComponent implements OnInit, OnDestroy {
   @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
   @Input() form = new FormGroup({});
   value: any;
@@ -68,7 +66,10 @@ export class DatetimeComponent {
   }
 
   #subscription = new Subscription();
-  constructor(private router: Router, private ref: ChangeDetectorRef) {}
+  constructor(
+    private router: Router,
+    private ref: ChangeDetectorRef
+  ) {}
   ngOnInit() {
     this.#subscription.add(
       this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
@@ -81,10 +82,13 @@ export class DatetimeComponent {
     this.#subscription.unsubscribe();
   }
   onNavigate = (url: string) => {
-    if (url?.startsWith('http')) {
+    if (!url) {
+      return;
+    }
+    if (url.startsWith('http')) {
       window.open(url);
     } else {
-      const [path, queryString] = url?.split('?');
+      const [path, queryString] = url.split('?');
       const queryParams = Utilities.parseQueryParams(queryString);
       this.router.navigate([path], { queryParams });
     }

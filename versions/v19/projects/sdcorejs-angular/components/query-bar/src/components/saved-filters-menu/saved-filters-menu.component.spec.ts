@@ -185,7 +185,10 @@ describe('SdQuerySavedFiltersMenu', () => {
     const name = row.querySelector('.c-sf-name') as HTMLElement;
     const del = row.querySelector('.c-sf-del') as HTMLElement;
 
-    const cy = (el: HTMLElement) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
+    const cy = (el: HTMLElement) => {
+      const r = el.getBoundingClientRect();
+      return r.top + r.height / 2;
+    };
     expect(Math.abs(cy(lead) - cy(name))).toBeLessThanOrEqual(2);
     expect(Math.abs(cy(name) - cy(del))).toBeLessThanOrEqual(2);
   });

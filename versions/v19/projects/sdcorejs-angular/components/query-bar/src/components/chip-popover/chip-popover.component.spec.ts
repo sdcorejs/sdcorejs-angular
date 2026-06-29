@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, viewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-
-import { SdOperator } from '@sdcorejs/angular/components/operator';
 
 import { SdQueryChipPopover } from './chip-popover.component';
 import { Filter } from '@sdcorejs/angular/utilities/models';
@@ -146,7 +143,14 @@ describe('SdQueryChipPopover', () => {
       key: 's',
       label: 'S',
       type: 'values',
-      option: { items: [{ id: 1, name: 'A' }, { id: 2, name: 'B' }], valueField: 'id', displayField: 'name' },
+      option: {
+        items: [
+          { id: 1, name: 'A' },
+          { id: 2, name: 'B' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
     host.filter = { field: 's', operator: 'IN', data: [1] } as any;
     fixture.detectChanges();
@@ -209,15 +213,26 @@ describe('SdQueryChipPopover', () => {
     fixture.detectChanges();
     openPopover();
     // body still renders (header etc) but no value control under .c-pop-body
-    const inputs = document.querySelectorAll('.c-pop-body sd-input, .c-pop-body sd-input-number, .c-pop-body sd-select, .c-pop-body sd-date, .c-pop-body sd-datetime');
+    const inputs = document.querySelectorAll(
+      '.c-pop-body sd-input, .c-pop-body sd-input-number, .c-pop-body sd-select, .c-pop-body sd-date, .c-pop-body sd-datetime'
+    );
     expect(inputs.length).toBe(0);
   });
 
   // ---- 11: toggleEditingMultiValue toggles in/out of array
   it('toggleEditingMultiValue toggles entries in/out of the staged array', () => {
     host.field = {
-      key: 's', label: 'S', type: 'values',
-      option: { items: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], valueField: 'id', displayField: 'name' },
+      key: 's',
+      label: 'S',
+      type: 'values',
+      option: {
+        items: [
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ],
+        valueField: 'id',
+        displayField: 'name',
+      },
     } as unknown as SdQueryField;
     host.filter = { field: 's', operator: 'IN', data: ['a'] } as any;
     fixture.detectChanges();
@@ -232,7 +247,9 @@ describe('SdQueryChipPopover', () => {
   // ---- 12: isEditingMultiSelected reflects array membership
   it('isEditingMultiSelected reflects membership in staged array', () => {
     host.field = {
-      key: 's', label: 'S', type: 'values',
+      key: 's',
+      label: 'S',
+      type: 'values',
       option: { items: [{ id: 'a', name: 'A' }], valueField: 'id', displayField: 'name' },
     } as unknown as SdQueryField;
     host.filter = { field: 's', operator: 'IN', data: ['a'] } as any;
@@ -267,9 +284,7 @@ describe('SdQueryChipPopover', () => {
     fixture.detectChanges();
 
     expect(host.commitCount).toBe(1);
-    expect(host.committed).toEqual(
-      jasmine.objectContaining({ field: 'name', operator: 'EQUAL', data: 'xyz' }),
-    );
+    expect(host.committed).toEqual(jasmine.objectContaining({ field: 'name', operator: 'EQUAL', data: 'xyz' }));
   });
 
   // ---- 15: onEditingRangeFrom mutates only .from

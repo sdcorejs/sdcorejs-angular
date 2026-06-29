@@ -1,14 +1,18 @@
 # Changelog — `@sdcorejs/angular`
 
-Changelog **độc lập** cho npm package `@sdcorejs/angular`. Repo này deploy theo nhịp riêng, KHÔNG khớp 1:1 với `@sd-angular/core` (vn-angular source).
+Changelog **độc lập** cho npm package `@sdcorejs/angular`. Repo này deploy theo nhịp riêng. Các release đến `0.9` truy vết legacy source `vn-angular`; sau mốc final sync ngày 2026-06-24, `@sdcorejs/angular` phát triển độc lập trong repo này.
 
 - **Đơn vị release = patch tag** (`v0.0`, `v0.1`, …). Mỗi tag publish đồng thời 3 major: `19.<patch>` / `20.<patch>` / `21.<patch>` — **cùng nội dung feature**, chỉ khác Angular major shim. Vì vậy mỗi patch = **một entry duy nhất** ở đây.
-- Mỗi entry ghi rõ **synced from `vn-angular@<commit>`** để truy vết source. Một release `@sdcorejs/angular` có thể gộp nhiều commit vn-angular.
+- Entry trước final sync ghi rõ **synced from `vn-angular@<commit>`** để truy vết source. Entry sau final sync ghi rõ thay đổi repo-owned trong `sdcorejs-angular`.
 - Major digit khoá theo Angular line → **không** dùng để báo breaking. Breaking change PHẢI ghi rõ ở mục `Changed (BREAKING for consumers)` + migration. Consumer luôn pin major: `npm i @sdcorejs/angular@^19.0.0`.
 
 Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
+
+### Changed
+
+- **Repo ownership** — confirmed the final legacy sync at `vn-angular@d12478a1` (`release/0.0.1`); future `@sdcorejs/angular` changes are owned directly in this repo and roll out from `versions/v19` to `v20` / `v21`.
 
 ## [0.9] - 2026-06-22
 
@@ -208,4 +212,4 @@ Synced from `vn-angular@50540baf`.
 
 ---
 
-Để tra source chi tiết theo từng version, xem `SYNC-STATUS.md` trong mỗi `versions/v<N>/` (ghi commit vn-angular + thời điểm sync).
+Để tra origin chi tiết theo từng version, xem `SYNC-STATUS.md` trong mỗi `versions/v<N>/`. Các bản sau final sync dùng repo này làm source trực tiếp.

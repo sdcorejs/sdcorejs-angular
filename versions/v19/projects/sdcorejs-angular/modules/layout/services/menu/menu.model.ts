@@ -1,4 +1,3 @@
-import { Observable } from 'rxjs';
 import { Params } from '@angular/router';
 
 export type SdLayoutMenu = SdLayoutRootMenu | SdLayoutChildrenMenu;

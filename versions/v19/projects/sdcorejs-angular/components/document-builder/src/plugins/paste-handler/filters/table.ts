@@ -21,8 +21,8 @@ import { convertCssLengthToPx } from './utils';
 export function transformTables(
   documentFragment: ViewDocumentFragment,
   writer: ViewUpcastWriter,
-  hasTablePropertiesPlugin: boolean = false,
-  hasExtendedTableBlockAlignment: boolean = false
+  hasTablePropertiesPlugin = false,
+  hasExtendedTableBlockAlignment = false
 ): void {
   for (const item of writer.createRangeIn(documentFragment).getItems()) {
     if (!item.is('element', 'table') && !item.is('element', 'td') && !item.is('element', 'th')) {

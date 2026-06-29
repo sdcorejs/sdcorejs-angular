@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   afterNextRender,
   booleanAttribute,
@@ -13,14 +12,7 @@ import {
   createNgModule,
   NgModuleFactory,
 } from '@angular/core';
-import {
-  ActivatedRoute,
-  ActivatedRouteSnapshot,
-  NavigationEnd,
-  Router,
-  RouterOutlet,
-  RoutesRecognized,
-} from '@angular/router';
+import { ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet, RoutesRecognized } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -32,16 +24,15 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTabActivated, SdTabDeactivated } from '../../events/tab-router.event';
 import { SdTabAction } from '../../actions/tab-router.action';
-import { SdTab } from '../../models';
+import { SdTab, SD_TAB } from '../../models';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
 
-// eslint-disable-next-line @angular-eslint/no-unused-standalone-imports
 @Component({
   selector: 'sd-tab-router-outlet',
   templateUrl: './tab-router-outlet.component.html',
-  styleUrls: ['./tab-router-outlet.component.scss'],
+  styleUrl: './tab-router-outlet.component.scss',
   standalone: true,
   imports: [CommonModule, MatIconModule, MatTooltipModule, RouterOutlet, SdTabRouterNavComponent],
 })
@@ -81,8 +72,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
           // Hybrid: cần CẢ HAI event vì mỗi event chứa data khác nhau ở thời điểm khác nhau.
           // - RoutesRecognized: navigation đang in-flight → getCurrentNavigation().extras.state đọc được
           // - NavigationEnd: navigation hoàn tất → routerState.root đã update với route mới (cần cho lazy routes)
-          filter((event): event is RoutesRecognized | NavigationEnd =>
-            event instanceof RoutesRecognized || event instanceof NavigationEnd),
+          filter((event): event is RoutesRecognized | NavigationEnd => event instanceof RoutesRecognized || event instanceof NavigationEnd),
           // Serialize: #handleEvent async (await getBestInjector). 2 nav liên tiếp
           // không await xen kẽ → tránh race đọc this.tabs() = [] khi tab đầu chưa kịp set.
           concatMap(event => from(this.#handleEvent(event)))
@@ -171,8 +161,19 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
   tabTrackBy = (index: number, tab: SdTab) => tab.key;
 
-  #closeTab = (tab: SdTab) => {
+  #closeTab = async (tab: SdTab): Promise<void> => {
     if (this.disabled()) return;
+
+    if (tab.beforeClose) {
+      let canClose: boolean;
+      try {
+        const result = tab.beforeClose();
+        canClose = typeof result === 'boolean' ? result : await result;
+      } catch {
+        canClose = true;
+      }
+      if (!canClose) return;
+    }
 
     const currentTabs = this.tabs();
     const { isActive, key: activeKey } = tab;
@@ -197,11 +198,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
   };
 
-  #activeRoute = async (
-    fullUrl: string,
-    route: ActivatedRouteSnapshot | null,
-    state: Record<string, any> = {}
-  ) => {
+  #activeRoute = async (fullUrl: string, route: ActivatedRouteSnapshot | null, state: Record<string, any> = {}) => {
     if (this.disabled()) return;
     if (!route?.component) return;
 
@@ -286,10 +283,11 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     this.#rootRoute = this.#router.routerState.root;
     const activatedRoute = this.#findActivatedRouteForSnapshot(this.#rootRoute, route);
 
+    const sdInjector = new SdOutletInjector(activatedRoute, finalInjector);
     const newTab: SdTab = {
       key,
       component,
-      injector: new SdOutletInjector(activatedRoute, finalInjector),
+      injector: sdInjector,
       isActive: true,
       url,
       params,
@@ -297,6 +295,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       data,
       tabInfoChanges: new Subject(),
     };
+    sdInjector.setTab(newTab);
 
     // Tạo updatedTabs qua spread thay vì mutate (xem lý do ở for loop phía trên).
     // Với tab có isActive không đổi: giữ nguyên reference (tránh trigger ngComponentOutlet
@@ -320,9 +319,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       // component → tab bị "reload" mỗi khi click lại hoặc navigate cùng URL.
       //
       // splice phía trên có thể đã shift index nếu activatedIndex < existedIndex.
-      const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex
-        ? existedIndex - 1
-        : existedIndex;
+      const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex ? existedIndex - 1 : existedIndex;
       this.#tabRouterService.setCurrentTab(updatedTabs[idx]);
       this.#tabRouterService.pushEvent(updatedTabs[idx], SdTabActivated);
       this.tabs.set(updatedTabs);
@@ -347,10 +344,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   };
 
   // DFS match leaf snapshot → ActivatedRoute instance (ổn định hơn so với so sánh component class).
-  #findActivatedRouteForSnapshot = (
-    activatedRoute: ActivatedRoute,
-    targetSnapshot: ActivatedRouteSnapshot,
-  ): ActivatedRoute | null => {
+  #findActivatedRouteForSnapshot = (activatedRoute: ActivatedRoute, targetSnapshot: ActivatedRouteSnapshot): ActivatedRoute | null => {
     if (activatedRoute.snapshot === targetSnapshot) {
       return activatedRoute;
     }
@@ -368,14 +362,23 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 // (không phải route hiện tại của router). Nếu không override, mọi tab sẽ inject ActivatedRoute
 // của route đang active → component cũ trong tab inactive nhận data sai khi user navigate.
 class SdOutletInjector implements Injector {
+  #tab?: SdTab;
+
   constructor(
     private route: ActivatedRoute | null,
     private parentInjector: Injector
   ) {}
 
+  setTab(tab: SdTab): void {
+    this.#tab = tab;
+  }
+
   get(token: any, notFoundValue?: any): any {
     if (token === ActivatedRoute) {
       return this.route || notFoundValue;
+    }
+    if (token === SD_TAB) {
+      return this.#tab ?? notFoundValue;
     }
     return this.parentInjector.get(token, notFoundValue);
   }

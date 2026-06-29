@@ -8,52 +8,61 @@
 **Change detection**: OnPush
 
 ## One-line purpose
+
 A hex color input with a swatch suffix that opens the browser's native color picker. Users can type a hex value manually or pick visually — both update the same model.
 
 ## When to use
+
 - Theme / brand color settings (logo color, accent color, badge color)
 - Tagging entities with a color (project tags, calendar events, custom labels)
 - Wherever a `#RRGGBB` field would otherwise be a plain text input
 
 ## When NOT to use
+
 - Free-form color names ("red", "navy") — use `<sd-select>` with a curated palette
 - Multi-stop gradient editor — beyond scope; use a dedicated picker library
 - Theme picker with curated brand palette only — `<sd-select>` + a `[color]` input renders previewable swatches cleanly without exposing arbitrary hex
 
 ## Inputs (forwarded to inner `<sd-input>` unless noted)
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `label` | `string \| undefined` | — | Label above / inside the field |
-| `helperText` | `string \| undefined` | — | Tooltip text on the label info icon |
-| `placeholder` | `string` | `'#RRGGBB'` | Input placeholder |
-| `size` | `'sm' \| 'md'` | `'md'` | Forwarded to inner `<sd-input>`. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI. |
-| `appearance` | `MatFormFieldAppearance \| undefined` | inherits | Forwarded |
-| `form` | `FormGroup \| NgForm \| undefined` | — | When set, the inner control registers under `name` |
-| `name` | `string \| undefined` | — | FormGroup control name |
-| `autoId` | `string \| undefined` | — | E2E selector |
-| `required` | `boolean` | `false` | Required validator |
-| `disabled` | `boolean` | `false` | Disable input + swatch |
-| `readonly` | `boolean` | `false` | Read-only input + swatch click disabled |
-| `viewed` | `boolean \| 'inline'` | `false` | Display mode, forwarded verbatim to the inner `<sd-input>`. `false` = edit. `true` = static read-only DETAIL. `'inline'` = borderless click-to-edit (transparent input; the swatch stays interactive). Disabled `'inline'` degrades to the static `true` view inside `<sd-input>` (no editable suffix swatch). Uses the shared `sdViewedTransform`. |
-| `model` | `string \| null \| undefined` (model — two-way) | `undefined` | Hex value `#RGB` / `#RRGGBB` / `#RRGGBBAA` |
+
+| Name              | Type                                            | Default     | Notes                                                                                                                                                                                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`           | `string \| undefined`                           | —           | Label above / inside the field                                                                                                                                                                                                                                                                                                                      |
+| `helperText`      | `string \| undefined`                           | —           | Tooltip text on the label info icon                                                                                                                                                                                                                                                                                                                 |
+| `placeholder`     | `string`                                        | `'#RRGGBB'` | Input placeholder                                                                                                                                                                                                                                                                                                                                   |
+| `size`            | `'sm' \| 'md'`                                  | `'md'`      | Forwarded to inner `<sd-input>`. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI.                                                                                                                                                                                                                                         |
+| `appearance`      | `MatFormFieldAppearance \| undefined`           | inherits    | Forwarded                                                                                                                                                                                                                                                                                                                                           |
+| `form`            | `FormGroup \| NgForm \| undefined`              | —           | When set, the inner control registers under `name`                                                                                                                                                                                                                                                                                                  |
+| `name`            | `string \| undefined`                           | —           | FormGroup control name                                                                                                                                                                                                                                                                                                                              |
+| `autoId`          | `string \| undefined`                           | —           | E2E selector                                                                                                                                                                                                                                                                                                                                        |
+| `required`        | `boolean`                                       | `false`     | Required validator                                                                                                                                                                                                                                                                                                                                  |
+| `disabled`        | `boolean`                                       | `false`     | Disable input + swatch                                                                                                                                                                                                                                                                                                                              |
+| `readonly`        | `boolean`                                       | `false`     | Read-only input + swatch click disabled                                                                                                                                                                                                                                                                                                             |
+| `hideInlineError` | `boolean`                                       | `false`     | Forwarded to inner `<sd-input>`; hides inline error text and uses compact error tooltip UI. Use this inside table cells.                                                                                                                                                                                                                            |
+| `viewed`          | `boolean \| 'inline'`                           | `false`     | Display mode, forwarded verbatim to the inner `<sd-input>`. `false` = edit. `true` = static read-only DETAIL. `'inline'` = borderless click-to-edit (transparent input; the swatch stays interactive). Disabled `'inline'` degrades to the static `true` view inside `<sd-input>` (no editable suffix swatch). Uses the shared `sdViewedTransform`. |
+| `model`           | `string \| null \| undefined` (model — two-way) | `undefined` | Hex value `#RGB` / `#RRGGBB` / `#RRGGBBAA`                                                                                                                                                                                                                                                                                                          |
 
 ## Outputs
-| Name | Type | Notes |
-| --- | --- | --- |
+
+| Name       | Type                          | Notes                                                |
+| ---------- | ----------------------------- | ---------------------------------------------------- |
 | `sdChange` | `string \| null \| undefined` | Emitted on every value change (typed input + picker) |
 
 ## Public constant
-| Name | Type | Notes |
-| --- | --- | --- |
+
+| Name                         | Type     | Notes                                                                                                 |
+| ---------------------------- | -------- | ----------------------------------------------------------------------------------------------------- |
 | `SD_INPUT_COLOR_HEX_PATTERN` | `string` | The regex used for validation. Exported in case consumers want to apply the same hex check elsewhere. |
 
 ## Public methods
-| Name | Signature | Notes |
-| --- | --- | --- |
-| `openPicker()` | `() => void` | Opens the native browser color picker. No-op when disabled / readonly / viewed. |
+
+| Name                | Signature          | Notes                                                                                                                                                                                                                                                           |
+| ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `openPicker()`      | `() => void`       | Opens the native browser color picker. No-op when disabled / readonly / viewed.                                                                                                                                                                                 |
 | `clear(ev?: Event)` | `(Event?) => void` | Programmatic clear — sets the model to `null` and emits `sdChange(null)`. No-op when not clearable (required, disabled, readonly, viewed, or already empty). The **visible** clear button is rendered by the inner `<sd-input>` (built-in), not by this method. |
 
 ## Behaviors / quirks
+
 - **Two-way `[(model)]`** — picker and text input both write to the same `model` signal.
 - **Hex pattern validation** — built in. Accepts `#RGB`, `#RRGGBB`, `#RRGGBBAA`. Invalid input shows the inline error message "Mã màu HEX không hợp lệ (vd #1565C0)".
 - **Picker canonicalization** — `<input type="color">` only accepts `#RRGGBB`. The component expands `#RGB` and strips alpha from `#RRGGBBAA` before feeding the picker, so the picker always opens on a valid 6-char hex.
@@ -64,20 +73,50 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 - **`viewed === 'inline'`** — forwarded to the inner `<sd-input>` (borderless click-to-edit). The swatch stays enabled so you can still recolor in place. But disabled + `'inline'` collapses the inner input to its static `<sd-view>` (no suffix), so the swatch is not rendered at all.
 
 ## Visual cues
+
 - Looks like `<sd-input>` with a square color swatch suffix.
 - The swatch shows the current color when the hex value is valid.
 - Empty or invalid values render a checkerboard fallback so white and empty are visually different.
 - The browser native color picker opens when the user clicks the swatch.
 - The built-in `<sd-input>` clear button appears only when editable, non-empty, and not required.
 
+## Standalone imports and table-cell usage
+
+Every standalone host that uses `<sd-input-color>` must import `SdInputColor`. The component internally owns its suffix template; consumers usually do not need `SdSuffixDefDirective` unless they also use `sdSuffixDef` elsewhere in the same template.
+
+```ts
+import { Component } from '@angular/core';
+import { SdTable, SdTableCellDefDirective, SdTableOption } from '@sdcorejs/angular/components/table';
+import { SdInputColor } from '@sdcorejs/angular/forms';
+
+@Component({
+  standalone: true,
+  imports: [SdTable, SdTableCellDefDirective, SdInputColor],
+  template: `
+    <sd-table [option]="tableOption">
+      <ng-template sdTableCellDef="color" let-row>
+        <sd-input-color size="sm" hideInlineError [(model)]="row.color"> </sd-input-color>
+      </ng-template>
+    </sd-table>
+  `,
+})
+export class ColorTableComponent {
+  tableOption!: SdTableOption<unknown>;
+}
+```
+
+Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"` and `hideInlineError`.
+
+```html
+<ng-template sdTableCellDef="color" let-row>
+  <sd-input-color size="sm" hideInlineError [(model)]="row.color"></sd-input-color>
+</ng-template>
+```
+
 ## Examples
 
 ```html
-<sd-input-color
-  label="Màu thương hiệu"
-  helperText="Định dạng #RRGGBB hoặc #RRGGBBAA"
-  [(model)]="brandColor"
-  [required]="true">
+<sd-input-color label="Màu thương hiệu" helperText="Định dạng #RRGGBB hoặc #RRGGBBAA" [(model)]="brandColor" [required]="true">
 </sd-input-color>
 ```
 
@@ -86,14 +125,17 @@ brandColor = signal<string | undefined>('#1565C0');
 ```
 
 ## Anti-patterns
+
 - ❌ Two-way binding to a non-string (number, object) — the model expects a hex string or null/undefined
 - ❌ Passing names like `'red'` / `'blue'` — pattern validator will reject; use a `<sd-select>` if you need named colors
 - ❌ Skipping `[required]` then trying to enforce non-empty downstream — let the built-in required validator do it
 
 ## E2E test attributes
+
 `autoId` is forwarded to the inner `<sd-input>`, so selectors follow the `<sd-input>` autoId scheme.
 
 ## Related
+
 - `<sd-input>` — inner text field and validation surface.
 - `<sd-select>` — better for curated palettes / named colors.
 - `<sd-badge>` — often consumes selected color tokens visually, but is not a color picker.

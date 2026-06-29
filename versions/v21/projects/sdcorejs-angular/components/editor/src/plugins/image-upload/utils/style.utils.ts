@@ -10,8 +10,7 @@ const parseStyle = (style: string): Map<string, string> => {
   return map;
 };
 
-const serializeStyle = (map: Map<string, string>): string =>
-  [...map.entries()].map(([k, v]) => `${k}:${v}`).join(';');
+const serializeStyle = (map: Map<string, string>): string => [...map.entries()].map(([k, v]) => `${k}:${v}`).join(';');
 
 export const countTextLength = (content: string): number => {
   if (!content) return 0;
@@ -39,8 +38,10 @@ export const imageInlineStylesToClasses = (html: string): string => {
     if (widthVal === 'fit-content') styleMap.delete('width');
 
     figure.classList.remove(
-      'image-style-align-left', 'image-style-align-right',
-      'image-style-block-align-left', 'image-style-block-align-right'
+      'image-style-align-left',
+      'image-style-align-right',
+      'image-style-block-align-left',
+      'image-style-block-align-right'
     );
 
     if (floatVal === 'left') {

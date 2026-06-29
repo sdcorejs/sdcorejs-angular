@@ -13,7 +13,7 @@ import { InjectionToken } from '@angular/core';
  * 2) `details`: lấy metadata để render danh sách file từ id/key.
  * 3) `download` (optional): tải file theo id/key.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export interface ISdUploadFileConfiguration<TArgs = any> {
   /**
    * Định danh cấu hình upload.

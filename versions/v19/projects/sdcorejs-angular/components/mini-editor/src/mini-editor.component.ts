@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostBinding, Input, Output, forwardRef } from '@angular/core';
+import { Component, EventEmitter, HostBinding, Input, Output, forwardRef, OnDestroy } from '@angular/core';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import {
@@ -43,7 +43,7 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
   standalone: true,
   imports: [CommonModule, CKEditorModule, SdCKEditorStyles],
   templateUrl: './mini-editor.component.html',
-  styleUrls: ['./mini-editor.component.scss'],
+  styleUrl: './mini-editor.component.scss',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -52,7 +52,7 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
     },
   ],
 })
-export class SdMiniEditor implements ControlValueAccessor {
+export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
   /** Cấu hình option cho editor */
   @Input({ required: true }) option!: SdMiniEditorOption;
 
@@ -305,10 +305,10 @@ export class SdMiniEditor implements ControlValueAccessor {
   /**
    * Get danh sách mentions trong nội dung
    */
-  getMentions(): Array<{ id: string; name: string; marker: string }> {
+  getMentions(): { id: string; name: string; marker: string }[] {
     if (!this.#editor) return [];
 
-    const mentions: Array<{ id: string; name: string; marker: string }> = [];
+    const mentions: { id: string; name: string; marker: string }[] = [];
     const root = this.#editor.model.document.getRoot();
     if (!root) return mentions;
 

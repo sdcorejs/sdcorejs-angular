@@ -12,10 +12,7 @@ const EMPTY_STR = '--';
 // ---------------------------------------------------------------------------
 function buildService(): TableFormatService {
   TestBed.configureTestingModule({
-    providers: [
-      TableFormatService,
-      SdFormatNumberPipe,
-    ],
+    providers: [TableFormatService, SdFormatNumberPipe],
   });
   return TestBed.inject(TableFormatService);
 }
@@ -39,7 +36,10 @@ describe('TableFormatService.format', () => {
   });
 
   it('returns items preserving original data', async () => {
-    const raw = [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }];
+    const raw = [
+      { id: 1, name: 'Alice' },
+      { id: 2, name: 'Bob' },
+    ];
     const result = await service.format(raw, [], {}, {});
     expect(result.length).toBe(2);
     expect(result[0].data).toBe(raw[0]);
@@ -108,7 +108,9 @@ describe('TableFormatService.format', () => {
   // -----------------------------------------------------------------------
   it('formats true boolean to displayOnTrue value', async () => {
     const raw = [{ active: true }];
-    const cols: SdTableColumn[] = [{ field: 'active', title: 'Active', type: 'boolean', option: { displayOnTrue: 'Yes', displayOnFalse: 'No' } }];
+    const cols: SdTableColumn[] = [
+      { field: 'active', title: 'Active', type: 'boolean', option: { displayOnTrue: 'Yes', displayOnFalse: 'No' } },
+    ];
 
     const result = await service.format(raw, cols, {}, {});
     expect(result[0].meta.display['active'].data).toBe('Yes');
@@ -116,7 +118,9 @@ describe('TableFormatService.format', () => {
 
   it('formats false boolean to displayOnFalse value', async () => {
     const raw = [{ active: false }];
-    const cols: SdTableColumn[] = [{ field: 'active', title: 'Active', type: 'boolean', option: { displayOnTrue: 'Yes', displayOnFalse: 'No' } }];
+    const cols: SdTableColumn[] = [
+      { field: 'active', title: 'Active', type: 'boolean', option: { displayOnTrue: 'Yes', displayOnFalse: 'No' } },
+    ];
 
     const result = await service.format(raw, cols, {}, {});
     expect(result[0].meta.display['active'].data).toBe('No');
@@ -278,9 +282,7 @@ describe('TableFormatService.format', () => {
   // -----------------------------------------------------------------------
   it('applies right-align cellStyle when column align is "right"', async () => {
     const raw = [{ amount: 100 }];
-    const cols: SdTableColumn[] = [
-      { field: 'amount', title: 'Amount', type: 'number', align: 'right' },
-    ];
+    const cols: SdTableColumn[] = [{ field: 'amount', title: 'Amount', type: 'number', align: 'right' }];
 
     const result = await service.format(raw, cols, {}, {});
     expect(result[0].meta.display['amount'].cellStyle).toEqual({ 'text-align': 'right!important' });
@@ -303,7 +305,10 @@ describe('TableFormatService.format', () => {
         title: 'Status',
         type: 'values',
         option: {
-          items: [{ code: 'A', label: 'Active' }, { code: 'B', label: 'Inactive' }],
+          items: [
+            { code: 'A', label: 'Active' },
+            { code: 'B', label: 'Inactive' },
+          ],
           valueField: 'code',
           displayField: 'label',
         },
@@ -493,9 +498,7 @@ describe('TableFormatService.format', () => {
   // -----------------------------------------------------------------------
   it('accesses nested fields via dot notation', async () => {
     const raw = [{ user: { address: { city: 'Hanoi' } } }];
-    const cols: SdTableColumn[] = [
-      { field: 'user.address.city' as any, title: 'City', type: 'string' },
-    ];
+    const cols: SdTableColumn[] = [{ field: 'user.address.city' as any, title: 'City', type: 'string' }];
 
     const result = await service.format(raw, cols, {}, {});
     expect(result[0].meta.display['user.address.city'].data).toBe('Hanoi');
@@ -520,9 +523,7 @@ describe('TableFormatService.format', () => {
   // -----------------------------------------------------------------------
   it('loads and resolves lazy-values column via views function', async () => {
     const raw = [{ categoryId: 'cat1' }];
-    const viewsSpy = jasmine.createSpy('views').and.returnValue(
-      Promise.resolve([{ id: 'cat1', name: 'Category One' }])
-    );
+    const viewsSpy = jasmine.createSpy('views').and.returnValue(Promise.resolve([{ id: 'cat1', name: 'Category One' }]));
     const cacheObjValues: Record<string, Record<string, any>> = {};
     const cols: SdTableColumn[] = [
       {
@@ -572,9 +573,7 @@ describe('TableFormatService.format', () => {
   it('lazy-values: handles views() rejection gracefully', async () => {
     const raw = [{ tagId: 'tag1' }];
     const errorSpy = spyOn(console, 'error');
-    const viewsSpy = jasmine.createSpy('views').and.returnValue(
-      Promise.reject(new Error('API error'))
-    );
+    const viewsSpy = jasmine.createSpy('views').and.returnValue(Promise.reject(new Error('API error')));
     const cols: SdTableColumn[] = [
       {
         field: 'tagId',
@@ -637,9 +636,7 @@ describe('TableFormatService.loadValues', () => {
   it('does nothing for columns with no type=values', async () => {
     const cacheValues: Record<string, any[]> = {};
     const cacheObjValues: Record<string, Record<string, string>> = {};
-    const cols: SdTableColumn[] = [
-      { field: 'name', title: 'Name', type: 'string' },
-    ];
+    const cols: SdTableColumn[] = [{ field: 'name', title: 'Name', type: 'string' }];
 
     await service.loadValues(cols, cacheValues, cacheObjValues);
     expect(Object.keys(cacheValues)).toEqual([]);
@@ -648,7 +645,10 @@ describe('TableFormatService.loadValues', () => {
   it('loads static array items into cacheValues', async () => {
     const cacheValues: Record<string, any[]> = {};
     const cacheObjValues: Record<string, Record<string, string>> = {};
-    const items = [{ code: 'A', label: 'Alpha' }, { code: 'B', label: 'Beta' }];
+    const items = [
+      { code: 'A', label: 'Alpha' },
+      { code: 'B', label: 'Beta' },
+    ];
     const cols: SdTableColumn[] = [
       {
         field: 'status',
@@ -670,7 +670,10 @@ describe('TableFormatService.loadValues', () => {
   it('loads Promise-based items into cacheValues', async () => {
     const cacheValues: Record<string, any[]> = {};
     const cacheObjValues: Record<string, Record<string, string>> = {};
-    const items = [{ id: '1', name: 'One' }, { id: '2', name: 'Two' }];
+    const items = [
+      { id: '1', name: 'One' },
+      { id: '2', name: 'Two' },
+    ];
     const cols: SdTableColumn[] = [
       {
         field: 'type',

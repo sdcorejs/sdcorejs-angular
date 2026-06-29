@@ -27,10 +27,14 @@ export class I18nService {
   // Test có thể pass `{ reload: false }` để tránh reload page trong Karma.
   setLanguage(lang: Language, opts: { reload?: boolean } = { reload: true }): void {
     if (!SUPPORTED_LANGUAGES.includes(lang)) return;
-    if (this.#language() === lang && !this.#customMessages()) return;  // no-op if same and not in custom mode
+    if (this.#language() === lang && !this.#customMessages()) return; // no-op if same and not in custom mode
     // User chọn 'vi'/'en' rõ ràng -> clear custom mode (override custom provider)
     this.#customMessages.set(null);
-    try { localStorage.setItem(I18N_STORAGE_KEY, lang); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(I18N_STORAGE_KEY, lang);
+    } catch {
+      /* ignore */
+    }
     this.#language.set(lang);
     if (opts.reload && typeof window !== 'undefined') {
       window.location.reload();
@@ -69,7 +73,9 @@ export class I18nService {
     try {
       const stored = localStorage.getItem(I18N_STORAGE_KEY) as Language | null;
       if (stored && SUPPORTED_LANGUAGES.includes(stored)) return stored;
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
 
     const configured = this.#config?.language;
 

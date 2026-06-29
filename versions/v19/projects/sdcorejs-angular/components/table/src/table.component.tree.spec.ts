@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Tree-row regression tests cho SdTable.
  *
@@ -32,25 +31,21 @@ const i18nStub = {
   get: (k: string) => k,
 };
 
-const makeItem = (
-  data: Node,
-  tree: Partial<NonNullable<SdTableItem<Node>['meta']['tree']>> = {}
-): SdTableItem<Node> => {
+const makeItem = (data: Node, tree: Partial<NonNullable<SdTableItem<Node>['meta']['tree']>> = {}): SdTableItem<Node> => {
   const it = MapToSdTableItem(data);
   it.meta.tree = { level: 0, hasChildren: false, isExpanded: false, isExpanding: false, ...tree };
   it.meta.selector = { isSelected: false, selectable: true, actions: [] };
   return it;
 };
 
-const baseOption = (over: Partial<SdTableOption<Node>> = {}): SdTableOption<Node> => ({
-  type: 'local',
-  items: () => [],
-  columns: [
-    { field: 'name', title: 'Name', type: 'string' } as any,
-  ],
-  tree: { loadType: 'static', childrenKey: 'children' },
-  ...over,
-} as SdTableOption<Node>);
+const baseOption = (over: Partial<SdTableOption<Node>> = {}): SdTableOption<Node> =>
+  ({
+    type: 'local',
+    items: () => [],
+    columns: [{ field: 'name', title: 'Name', type: 'string' } as any],
+    tree: { loadType: 'static', childrenKey: 'children' },
+    ...over,
+  }) as SdTableOption<Node>;
 
 const createTable = (): SdTable<Node> => {
   TestBed.configureTestingModule({
@@ -113,9 +108,7 @@ describe('SdTable — tree row API', () => {
 
     it('lazy load — gọi onExpandChildren, ghi raw data vào childrenKey rồi expand', async () => {
       const lazyRoot = makeItem({ id: 10, name: 'lazy' }, { level: 0, hasChildren: true, isExpanded: false });
-      const loader = jasmine
-        .createSpy('onExpandChildren')
-        .and.returnValue(Promise.resolve([{ id: 11, name: 'lazy-child' }]));
+      const loader = jasmine.createSpy('onExpandChildren').and.returnValue(Promise.resolve([{ id: 11, name: 'lazy-child' }]));
       cmp.tableOption.set(baseOption({ tree: { loadType: 'lazy', onExpandChildren: loader } } as any));
       cmp.items.set([lazyRoot]);
       // Format service không có format thật → stub trực tiếp childItems sau khi loader chạy.
@@ -230,7 +223,10 @@ describe('SdTable — tree row API', () => {
       const a = makeItem({ id: 1, name: 'a' });
       const b = makeItem({ id: 2, name: 'b' });
       cmp.items.set([a, b]);
-      expect(cmp.dataItems).toEqual([{ id: 1, name: 'a' }, { id: 2, name: 'b' }] as any);
+      expect(cmp.dataItems).toEqual([
+        { id: 1, name: 'a' },
+        { id: 2, name: 'b' },
+      ] as any);
     });
 
     it('selectedItems chỉ trả những item đã isSelected', () => {

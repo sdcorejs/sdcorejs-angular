@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
@@ -48,13 +47,21 @@ export class SdQueryPopoverChip {
 
   readonly iconFor = sdQueryFieldIcon;
 
-  filterField(): string { return (this.filter() as any).field as string; }
-  filterOperator(): Operator { return (this.filter() as any).operator as Operator; }
+  filterField(): string {
+    return (this.filter() as any).field as string;
+  }
+  filterOperator(): Operator {
+    return (this.filter() as any).operator as Operator;
+  }
 
   // why: parent's add/swap flow auto-opens the chip popover after render, and removeFilter
   // closes the open one — expose open/close so the parent doesn't need a ViewChild on the
   // internal MatMenuTrigger directive.
   private readonly trigger = viewChild('chipTrigger', { read: MatMenuTrigger });
-  openMenu(): void { this.trigger()?.openMenu(); }
-  closeMenu(): void { this.trigger()?.closeMenu(); }
+  openMenu(): void {
+    this.trigger()?.openMenu();
+  }
+  closeMenu(): void {
+    this.trigger()?.closeMenu();
+  }
 }

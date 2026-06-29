@@ -1,5 +1,4 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { SdFormatComponent, SdFormGenericTextarea } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
@@ -7,10 +6,10 @@ import { filter, Subscription } from 'rxjs';
 @Component({
   selector: 'textarea-control',
   templateUrl: './textarea-control.component.html',
-  styleUrls: ['./textarea-control.component.scss'],
+  styleUrl: './textarea-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TextareaControl {
+export class TextareaControl implements AfterViewInit, OnDestroy {
   component!: SdFormGenericTextarea;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTextarea) {
     if (this.component !== component) {

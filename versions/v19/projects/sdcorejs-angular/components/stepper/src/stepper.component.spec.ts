@@ -1,5 +1,5 @@
 import { Component, DebugElement, ViewChild, signal } from '@angular/core';
-import { ComponentFixture, TestBed, fakeAsync, flush, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatStepper } from '@angular/material/stepper';
 import { By } from '@angular/platform-browser';
@@ -39,14 +39,14 @@ class HostComponent {
   ctrl2 = new FormControl('', Validators.required);
 
   stepDefs = signal<
-    Array<{
+    {
       id: string;
       label: string;
       icon?: string;
       optional?: boolean;
       editable?: boolean;
       ctrl?: FormControl | null;
-    }>
+    }[]
   >([
     { id: 'a', label: 'Bước 1', ctrl: this.ctrl1 },
     { id: 'b', label: 'Bước 2', ctrl: this.ctrl2 },
@@ -114,9 +114,7 @@ describe('SdStepper', () => {
     });
 
     it('renders labels for each step', () => {
-      const labels = (Array.from(fixture.nativeElement.querySelectorAll('.sd-step__text')) as Element[]).map(
-        (el) => el.textContent?.trim(),
-      );
+      const labels = (Array.from(fixture.nativeElement.querySelectorAll('.sd-step__text')) as Element[]).map(el => el.textContent?.trim());
       expect(labels).toEqual(['Bước 1', 'Bước 2', 'Hoàn tất']);
     });
   });
@@ -154,7 +152,7 @@ describe('SdStepper', () => {
       stepper.goTo(2);
       fixture.detectChanges();
       flush();
-      host.stepDefs.update((arr) => arr.slice(0, 2));
+      host.stepDefs.update(arr => arr.slice(0, 2));
       fixture.detectChanges();
       flush();
       expect(stepper.selectedIndex()).toBe(1);
@@ -262,7 +260,7 @@ describe('SdStepper', () => {
     });
 
     it('supports each Core palette value', () => {
-      const colors: Array<'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error'> = [
+      const colors: ('primary' | 'secondary' | 'info' | 'success' | 'warning' | 'error')[] = [
         'primary',
         'secondary',
         'info',

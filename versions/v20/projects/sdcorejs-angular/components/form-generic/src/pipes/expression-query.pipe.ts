@@ -90,7 +90,7 @@ export class ExpressionQueryPipe implements PipeTransform {
     return undefined;
   };
   transform(condition: SdFormGenericExpression | SdFormGenericExpressionCondition | undefined): string | undefined {
-    if(!condition) {
+    if (!condition) {
       return undefined;
     }
     return this.#generateQuery(condition);

@@ -1,6 +1,11 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
-import { SdFormatComponent, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericRadio, SdFormGenericVariable } from '../../../../../models';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import {
+  SdFormatComponent,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormGenericRadio,
+  SdFormGenericVariable,
+} from '../../../../../models';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
 import { AttributeSelection } from '../../attribute-selection/attribute-selection.component';
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
@@ -18,7 +23,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AttributeTemplate, AttributeSelection, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, TranslatePipe],
 })
-export class RadioAttribute {
+export class RadioAttribute implements AfterViewInit, OnDestroy {
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];
   form = new FormGroup({});

@@ -18,10 +18,7 @@ const GUEST_USER: SdAuthInfo = {
 // ---------------------------------------------------------------------------
 function makeService(config?: ISdAuthConfiguration): SdAuthService {
   TestBed.configureTestingModule({
-    providers: [
-      SdAuthService,
-      ...(config ? [{ provide: SD_AUTH_CONFIGURATION, useValue: config }] : []),
-    ],
+    providers: [SdAuthService, ...(config ? [{ provide: SD_AUTH_CONFIGURATION, useValue: config }] : [])],
   });
   return TestBed.inject(SdAuthService);
 }

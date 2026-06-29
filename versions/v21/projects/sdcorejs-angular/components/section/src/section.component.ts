@@ -1,4 +1,3 @@
-/* eslint-disable @angular-eslint/no-input-rename */
 import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { Color } from '@sdcorejs/utils/models';
@@ -6,7 +5,7 @@ import { Color } from '@sdcorejs/utils/models';
 @Component({
   selector: 'sd-section',
   templateUrl: './section.component.html',
-  styleUrls: ['./section.component.scss'],
+  styleUrl: './section.component.scss',
   imports: [MatIconModule],
 })
 export class SdSection {

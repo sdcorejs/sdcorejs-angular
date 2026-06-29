@@ -1,5 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -85,24 +84,19 @@ describe('SdTabRouterNav', () => {
   });
 
   it('renders one sd-tab-router-item per tab', () => {
-    host.tabs = [
-      makeTab({ key: 'k1', url: '/a' }),
-      makeTab({ key: 'k2', url: '/b' }),
-    ];
+    host.tabs = [makeTab({ key: 'k1', url: '/a' }), makeTab({ key: 'k2', url: '/b' })];
     fixture.detectChanges();
     const items = fixture.nativeElement.querySelectorAll('sd-tab-router-item');
     expect(items.length).toBe(2);
   });
 
   it('defaults mode to "default"', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent))
-      .componentInstance as SdTabRouterNavComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
     expect(cmp.mode).toBe('default');
   });
 
   it('checkUI sets mode to "compact" when tabs are many and container is narrow', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent))
-      .componentInstance as SdTabRouterNavComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
 
     // formula: (width - tabs * 68) / tabs <= 20 → nameWidth <= 20
     // With 5 tabs and width=100: (100 - 5*68)/5 = -48 → compact
@@ -122,8 +116,7 @@ describe('SdTabRouterNav', () => {
   });
 
   it('checkUI sets mode back to "default" when tabs list is empty', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent))
-      .componentInstance as SdTabRouterNavComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
 
     // Force compact first
     cmp.mode = 'compact' as any;
@@ -140,16 +133,11 @@ describe('SdTabRouterNav', () => {
   });
 
   it('onDrop reorders tabs via moveItemInArray', () => {
-    const tabs = [
-      makeTab({ key: 'k1', url: '/a' }),
-      makeTab({ key: 'k2', url: '/b' }),
-      makeTab({ key: 'k3', url: '/c' }),
-    ];
+    const tabs = [makeTab({ key: 'k1', url: '/a' }), makeTab({ key: 'k2', url: '/b' }), makeTab({ key: 'k3', url: '/c' })];
     host.tabs = tabs;
     fixture.detectChanges();
 
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent))
-      .componentInstance as SdTabRouterNavComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterNavComponent)).componentInstance as SdTabRouterNavComponent;
 
     // Simulate drag from index 0 to index 2
     cmp.onDrop({ previousIndex: 0, currentIndex: 2 } as any);
@@ -168,10 +156,7 @@ describe('SdTabRouterNav', () => {
   });
 
   it('applies d-none class when more than 1 tab', () => {
-    host.tabs = [
-      makeTab({ key: 'k1', url: '/a' }),
-      makeTab({ key: 'k2', url: '/b' }),
-    ];
+    host.tabs = [makeTab({ key: 'k1', url: '/a' }), makeTab({ key: 'k2', url: '/b' })];
     fixture.detectChanges();
     const nav = fixture.nativeElement.querySelector('.tab-router__nav') as HTMLElement;
     expect(nav.classList.contains('d-none')).toBe(true);
@@ -245,16 +230,12 @@ describe('SdTabRouterItem', () => {
     anchor.dispatchEvent(ev);
     fixture.detectChanges();
 
-    expect(navigateSpy).toHaveBeenCalledWith(
-      [host.tab.url],
-      jasmine.objectContaining({ state: { switchTab: true } })
-    );
+    expect(navigateSpy).toHaveBeenCalledWith([host.tab.url], jasmine.objectContaining({ state: { switchTab: true } }));
   });
 
   it('close() calls SdTabRouterService.close with the tab', () => {
     const closeSpy = spyOn(tabRouterService, 'close');
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent))
-      .componentInstance as SdTabRouterItemComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;
 
     const ev = new MouseEvent('click', { bubbles: false, cancelable: true });
     cmp.close(ev);
@@ -262,28 +243,26 @@ describe('SdTabRouterItem', () => {
     expect(closeSpy).toHaveBeenCalledWith(host.tab);
   });
 
-  it('close() is skipped when beforeClose returns false', fakeAsync(async () => {
+  it('close() delegates to service even when beforeClose returns false', () => {
     const closeSpy = spyOn(tabRouterService, 'close');
+    const beforeCloseSpy = jasmine.createSpy('beforeClose').and.returnValue(false);
     host.tab = makeTab({
       key: 'k2',
       url: '/b',
-      beforeClose: () => false,
+      beforeClose: beforeCloseSpy,
     });
     fixture.detectChanges();
 
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent))
-      .componentInstance as SdTabRouterItemComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;
 
-    const ev = new MouseEvent('click');
-    await (cmp as any)['_SdTabRouterItemComponent__closeTab']?.call(cmp) || cmp.close(ev);
-    tick();
+    cmp.close(new MouseEvent('click'));
 
-    expect(closeSpy).not.toHaveBeenCalled();
-  }));
+    expect(closeSpy).toHaveBeenCalledWith(host.tab);
+    expect(beforeCloseSpy).not.toHaveBeenCalled();
+  });
 
   it('onMousedown with middle-click (button=1) prevents default', () => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent))
-      .componentInstance as SdTabRouterItemComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;
     const ev = new MouseEvent('mousedown', { button: 1, cancelable: true });
     const preventSpy = spyOn(ev, 'preventDefault');
     cmp.onMousedown(ev);
@@ -291,8 +270,7 @@ describe('SdTabRouterItem', () => {
   });
 
   it('tabInfoChanges updates tabInfo on the component', fakeAsync(() => {
-    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent))
-      .componentInstance as SdTabRouterItemComponent;
+    const cmp = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;
 
     const newInfo: SdTabInfo = { name: 'Updated Name', icon: 'edit', color: 'primary' };
     host.tab.tabInfoChanges.next(newInfo);
@@ -335,8 +313,7 @@ describe('SdTabRouterOutlet', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent))
-      .componentInstance as SdTabRouterOutletComponent;
+    outletCmp = fixture.debugElement.query(By.directive(SdTabRouterOutletComponent)).componentInstance as SdTabRouterOutletComponent;
   });
 
   it('creates the component', () => {
@@ -399,10 +376,7 @@ describe('SdTabRouterOutlet', () => {
     const remaining = (outletCmp as any).tabs() as SdTab[];
     expect(remaining.length).toBe(1);
     expect(remaining[0].key).toBe('k2');
-    expect(navigateSpy).toHaveBeenCalledWith(
-      [tab2.url],
-      jasmine.objectContaining({ state: { switchTab: true } })
-    );
+    expect(navigateSpy).toHaveBeenCalledWith([tab2.url], jasmine.objectContaining({ state: { switchTab: true } }));
   });
 
   it('close action on the only active tab navigates to "/"', () => {

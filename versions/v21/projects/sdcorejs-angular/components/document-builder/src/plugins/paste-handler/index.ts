@@ -51,7 +51,7 @@ export class PasteHandler extends Plugin {
     const editor = this.editor;
     const clipboardPipeline: ClipboardPipeline = editor.plugins.get('ClipboardPipeline');
     const viewDocument = editor.editing.view.document;
-    const normalizers: Array<PasteFromOfficeNormalizer> = [];
+    const normalizers: PasteFromOfficeNormalizer[] = [];
     const hasMultiLevelListPlugin = this.editor.plugins.has('MultiLevelListEditing');
     const hasTablePropertiesPlugin = this.editor.plugins.has('TablePropertiesEditing');
     const hasExtendedTableBlockAlignment = true; // In CKEditor 5 v48, extended table block alignment is stable and enabled by default.

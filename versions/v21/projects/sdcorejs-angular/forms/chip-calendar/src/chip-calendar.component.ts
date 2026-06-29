@@ -16,6 +16,7 @@ import {
   output,
   TemplateRef,
   viewChild,
+  OnDestroy,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
@@ -42,7 +43,14 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdFormControl, sdFormControlState, SdViewed, SdViewedInput, sdViewedInline, sdViewedTransform } from '@sdcorejs/angular/forms/models';
+import {
+  SdFormControl,
+  sdFormControlState,
+  SdViewed,
+  SdViewedInput,
+  sdViewedInline,
+  sdViewedTransform,
+} from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
@@ -61,7 +69,7 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
 @Component({
   selector: 'sd-chip-calendar',
   templateUrl: './chip-calendar.component.html',
-  styleUrls: ['./chip-calendar.component.scss'],
+  styleUrl: './chip-calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },
@@ -84,7 +92,7 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
     SdRemovableChipPipe,
   ],
 })
-export class SdChipCalendar implements AfterViewInit {
+export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
   #subscription = new Subscription();
@@ -384,4 +392,3 @@ export class SdChipCalendar implements AfterViewInit {
   onCloseCalendar = () => this.#closeCalendar();
   dateClass = (cellDate: Date) => this.#dateClass(cellDate);
 }
-

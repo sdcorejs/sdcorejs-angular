@@ -1,8 +1,6 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { MatIcon, MatIconModule } from '@angular/material/icon';
+import { MatIconModule } from '@angular/material/icon';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -41,9 +39,11 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     ExpressionQueryPipe,
     SdDatetime,
     SdSuffixDefDirective,
-    MatIconModule, TranslatePipe],
+    MatIconModule,
+    TranslatePipe,
+  ],
 })
-export class ExpressionBuilderComponent {
+export class ExpressionBuilderComponent implements OnInit {
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   attributeOperators = AttributeOperators;

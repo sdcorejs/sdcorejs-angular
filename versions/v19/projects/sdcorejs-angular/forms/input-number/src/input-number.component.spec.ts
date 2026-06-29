@@ -48,9 +48,15 @@ class HostComponent {
   changes: any[] = [];
   blurValues: any[] = [];
   enterValues: any[] = [];
-  onSdChange(v: any) { this.changes.push(v); }
-  onSdBlur(v: any) { this.blurValues.push(v); }
-  onKeyupEnter(v: any) { this.enterValues.push(v); }
+  onSdChange(v: any) {
+    this.changes.push(v);
+  }
+  onSdBlur(v: any) {
+    this.blurValues.push(v);
+  }
+  onKeyupEnter(v: any) {
+    this.enterValues.push(v);
+  }
 }
 
 @Component({
@@ -96,8 +102,7 @@ describe('SdInputNumber', () => {
     fixture = TestBed.createComponent(HostComponent);
     host = fixture.componentInstance;
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber)
-      ?.componentInstance as SdInputNumber;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber)?.componentInstance as SdInputNumber;
     if (!comp) throw new Error('SdInputNumber not found in fixture');
   });
 
@@ -317,7 +322,7 @@ describe('SdInputNumber', () => {
 
   describe('required validator', () => {
     it('applies required validator and marks control invalid when empty', () => {
-      host.model = 42;  // seed to avoid NG0100 in ngAfterViewInit
+      host.model = 42; // seed to avoid NG0100 in ngAfterViewInit
       host.required = true;
       fixture.detectChanges();
       comp.formControl.setValue(null, { emitEvent: false });
@@ -364,7 +369,9 @@ describe('SdInputNumber', () => {
   describe('output events', () => {
     it('emits sdFocus when onFocus is called', () => {
       let focused = false;
-      const sub = comp.sdFocus.subscribe(() => { focused = true; });
+      const sub = comp.sdFocus.subscribe(() => {
+        focused = true;
+      });
       comp.onFocus();
       expect(focused).toBe(true);
       sub.unsubscribe();
@@ -401,7 +408,7 @@ describe('SdInputNumber', () => {
 
   describe('errorMessage', () => {
     it('returns "Vui lòng nhập thông tin" for required error', () => {
-      host.model = 1;  // seed to avoid NG0100
+      host.model = 1; // seed to avoid NG0100
       host.required = true;
       fixture.detectChanges();
       comp.formControl.setValue(null);
@@ -527,8 +534,7 @@ describe('SdInputNumber', () => {
   });
 
   describe('clear button (slim, hover-gated)', () => {
-    const clearBtn = () =>
-      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+    const clearBtn = () => fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
 
     it('renders the slim clear button when a value is set', () => {
       host.model = 123;
@@ -604,10 +610,8 @@ describe('SdInputNumber', () => {
     // mirror sang formControl bằng setValue({emitEvent:false}) → khi async resolve, setErrors
     // cũng emitEvent:false → #state KHÔNG tick → errorMessage (computed theo #state) không
     // recompute → message không hiển thị (dù form invalid + viền đỏ). Phải sửa để event lan ra.
-    const matError = () =>
-      fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
-    const errorIcon = () =>
-      fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+    const errorIcon = () => fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
 
     it('surfaces the validator message through errorMessage() after async resolves', fakeAsync(() => {
       host.validator = (v: any) => (v === 5 ? 'Không được nhập 5' : '');
@@ -686,10 +690,8 @@ describe('SdInputNumber', () => {
     // (cố ý — tránh nhảy layout khi hover). Nếu render SAU error icon nó giành slot ngoài cùng
     // bên phải → error icon (luôn hiển thị) bị đẩy "tụt vào trong". Clear phải render TRƯỚC error
     // icon để error icon nằm sát mép phải, clear giữ slot vô hình bên trái nó.
-    const errorIconEl = () =>
-      fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
-    const clearBtnEl = () =>
-      fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLElement | null;
+    const errorIconEl = () => fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
+    const clearBtnEl = () => fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLElement | null;
 
     const setupErrorWithValue = () => {
       host.hideInlineError = true;
@@ -712,9 +714,7 @@ describe('SdInputNumber', () => {
       setupErrorWithValue();
       const clearBtn = clearBtnEl()!;
       const errorIcon = errorIconEl()!;
-      const errorFollowsClear = !!(
-        clearBtn.compareDocumentPosition(errorIcon) & Node.DOCUMENT_POSITION_FOLLOWING
-      );
+      const errorFollowsClear = !!(clearBtn.compareDocumentPosition(errorIcon) & Node.DOCUMENT_POSITION_FOLLOWING);
       expect(errorFollowsClear).toBe(true);
     });
   });
@@ -793,8 +793,7 @@ describe('SdInputNumber (SD_FORM_CONFIGURATION appearance)', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(StubHost);
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber)
-      ?.componentInstance as SdInputNumber;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber)?.componentInstance as SdInputNumber;
   });
 
   it('uses appearance from SD_FORM_CONFIGURATION token', () => {

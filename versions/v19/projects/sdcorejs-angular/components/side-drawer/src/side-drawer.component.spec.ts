@@ -3,7 +3,6 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdSideDrawer } from './side-drawer.component';
-import { setInput } from '../../../testing/test-utils';
 
 // ---------------------------------------------------------------------------
 // Host component — standard usage
@@ -20,8 +19,7 @@ import { setInput } from '../../../testing/test-utils';
       [disableBackdropClose]="disableBackdropClose"
       [drawerClass]="drawerClass"
       [autoId]="autoId"
-      (sdClosed)="onClosed()"
-    >
+      (sdClosed)="onClosed()">
       <span id="body-content">drawer body</span>
       <div sdFooter id="footer-content">footer</div>
     </sd-side-drawer>
@@ -35,7 +33,9 @@ class HostComponent {
   drawerClass: any = '';
   autoId: string | undefined = undefined;
   closedCount = 0;
-  onClosed(): void { this.closedCount++; }
+  onClosed(): void {
+    this.closedCount++;
+  }
 }
 
 // ---------------------------------------------------------------------------

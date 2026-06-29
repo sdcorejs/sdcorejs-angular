@@ -61,9 +61,7 @@ describe('SdUnauthorizedInterceptor', () => {
   it('should call authService.signout() once when a 401 error is returned', () => {
     let caughtError: HttpErrorResponse | undefined;
 
-    httpClient
-      .get('/api/protected')
-      .subscribe({ error: (e: HttpErrorResponse) => (caughtError = e) });
+    httpClient.get('/api/protected').subscribe({ error: (e: HttpErrorResponse) => (caughtError = e) });
 
     const req = httpMock.expectOne('/api/protected');
     req.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
@@ -75,9 +73,7 @@ describe('SdUnauthorizedInterceptor', () => {
   it('should rethrow the original 401 error so downstream handlers still receive it', () => {
     let caughtError: HttpErrorResponse | undefined;
 
-    httpClient
-      .get('/api/protected')
-      .subscribe({ error: (e: HttpErrorResponse) => (caughtError = e) });
+    httpClient.get('/api/protected').subscribe({ error: (e: HttpErrorResponse) => (caughtError = e) });
 
     httpMock.expectOne('/api/protected').flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
 
@@ -125,9 +121,7 @@ describe('SdUnauthorizedInterceptor', () => {
   it('should rethrow non-401 errors unchanged', () => {
     let caughtError: HttpErrorResponse | undefined;
 
-    httpClient
-      .get('/api/not-found')
-      .subscribe({ error: (e: HttpErrorResponse) => (caughtError = e) });
+    httpClient.get('/api/not-found').subscribe({ error: (e: HttpErrorResponse) => (caughtError = e) });
 
     httpMock.expectOne('/api/not-found').flush('Not Found', { status: 404, statusText: 'Not Found' });
 

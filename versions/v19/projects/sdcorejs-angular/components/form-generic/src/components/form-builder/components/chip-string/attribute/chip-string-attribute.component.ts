@@ -1,8 +1,13 @@
-/* eslint-disable @angular-eslint/no-input-rename */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subject, Subscription } from 'rxjs';
-import { SdFormatComponent, SdFormGenericChipString, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericVariable } from '../../../../../models';
+import {
+  SdFormatComponent,
+  SdFormGenericChipString,
+  SdFormGenericComponent,
+  SdFormGenericGroup,
+  SdFormGenericVariable,
+} from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
@@ -16,7 +21,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeExpression, TranslatePipe],
 })
-export class ChipStringAttribute {
+export class ChipStringAttribute implements AfterViewInit, OnDestroy {
   @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
   @Input({ required: true }) variables!: SdFormGenericVariable[];
   form = new FormGroup({});

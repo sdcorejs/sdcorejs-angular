@@ -26,7 +26,7 @@ import type { ViewDocumentFragment, ViewUpcastWriter, ViewText, ViewElement } fr
  */
 export function replaceTabsWithinPreWithSpaces(documentFragment: ViewDocumentFragment, writer: ViewUpcastWriter, tabWidth: number): void {
   // Collect all text nodes with tabs that are inside pre-wrap elements.
-  const textNodesToReplace: Set<ViewText> = new Set();
+  const textNodesToReplace = new Set<ViewText>();
 
   for (const child of writer.createRangeIn(documentFragment).getItems()) {
     if (!child.is('view:$textProxy') || !child.data.includes('\t')) {
