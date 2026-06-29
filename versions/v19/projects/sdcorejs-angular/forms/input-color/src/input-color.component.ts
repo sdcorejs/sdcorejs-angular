@@ -16,7 +16,7 @@ export const SD_INPUT_COLOR_HEX_PATTERN = '^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9
   standalone: true,
   imports: [SdInput, SdSuffixDefDirective],
   templateUrl: './input-color.component.html',
-  styleUrls: ['./input-color.component.scss'],
+  styleUrl: './input-color.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdInputColor {

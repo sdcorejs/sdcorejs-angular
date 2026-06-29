@@ -6,7 +6,7 @@ import { filter, Subscription } from 'rxjs';
 @Component({
   selector: 'textarea-control',
   templateUrl: './textarea-control.component.html',
-  styleUrls: ['./textarea-control.component.scss'],
+  styleUrl: './textarea-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TextareaControl implements AfterViewInit, OnDestroy {

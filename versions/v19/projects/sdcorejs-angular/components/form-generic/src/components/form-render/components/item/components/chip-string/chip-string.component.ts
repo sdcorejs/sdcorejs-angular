@@ -9,7 +9,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
 @Component({
   selector: 'lib-chip-string',
   templateUrl: './chip-string.component.html',
-  styleUrls: ['./chip-string.component.scss'],
+  styleUrl: './chip-string.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

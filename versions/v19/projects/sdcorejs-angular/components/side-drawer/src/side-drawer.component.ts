@@ -27,7 +27,7 @@ import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators'
 @Component({
   selector: 'sd-side-drawer',
   templateUrl: './side-drawer.component.html',
-  styleUrls: ['./side-drawer.component.scss'],
+  styleUrl: './side-drawer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, PortalModule, MatIconModule],

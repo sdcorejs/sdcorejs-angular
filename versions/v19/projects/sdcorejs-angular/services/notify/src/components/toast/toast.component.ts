@@ -23,7 +23,7 @@ const TOAST_EXIT_ANIMATION_MS = 200;
   standalone: true,
   imports: [CommonModule, TranslatePipe],
   templateUrl: './toast.component.html',
-  styleUrls: ['./toast.component.scss'],
+  styleUrl: './toast.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class]': 'hostClasses()',

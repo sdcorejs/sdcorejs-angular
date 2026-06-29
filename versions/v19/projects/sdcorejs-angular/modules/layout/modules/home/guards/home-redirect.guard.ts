@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
 
 // Giả sử bạn có một service để đọc config
@@ -8,10 +8,8 @@ import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION } from '../../../config
   providedIn: 'root',
 })
 export class HomeRedirectGuard implements CanActivate {
-  constructor(
-    private router: Router,
-    @Inject(SD_LAYOUT_CONFIGURATION) private layoutConfiguration: ISdLayoutConfiguration
-  ) {}
+  private readonly router = inject(Router);
+  private readonly layoutConfiguration: ISdLayoutConfiguration = inject(SD_LAYOUT_CONFIGURATION);
 
   async canActivate() {
     const homeUrl = this.layoutConfiguration?.homeUrl;

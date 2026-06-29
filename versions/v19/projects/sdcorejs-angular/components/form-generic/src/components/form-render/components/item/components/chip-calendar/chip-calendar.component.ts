@@ -9,7 +9,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
 @Component({
   selector: 'lib-chip-calendar',
   templateUrl: './chip-calendar.component.html',
-  styleUrls: ['./chip-calendar.component.scss'],
+  styleUrl: './chip-calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

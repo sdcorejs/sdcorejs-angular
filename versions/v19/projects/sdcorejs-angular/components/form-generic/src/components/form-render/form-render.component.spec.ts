@@ -1,13 +1,18 @@
-import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { FormGroup } from '@angular/forms';
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
 import { SdFormRender } from './form-render.component';
 
 describe('SdFormRender - configuration data safety', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [SdFormRender],
+      providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => {} } }],
+    });
+  });
+
   it('formats an internal clone instead of mutating the input schema', () => {
-    const ref = { detectChanges: () => {}, markForCheck: () => {} } as ChangeDetectorRef;
-    const component = new SdFormRender(ref, null);
+    const component = TestBed.createComponent(SdFormRender).componentInstance;
     const child: any = {
       type: 'textfield',
       label: 'Child',
@@ -37,8 +42,7 @@ describe('SdFormRender - configuration data safety', () => {
   });
 
   it('does not call full setValue before dynamic controls are registered', () => {
-    const ref = { detectChanges: () => {}, markForCheck: () => {} } as ChangeDetectorRef;
-    const component = new SdFormRender(ref, null);
+    const component = TestBed.createComponent(SdFormRender).componentInstance;
     component.form = new FormGroup({});
     component._configuration = {
       components: [

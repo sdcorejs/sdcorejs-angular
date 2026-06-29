@@ -51,7 +51,7 @@ interface Daterange {
 @Component({
   selector: 'sd-date-range',
   templateUrl: './date-range.component.html',
-  styleUrls: ['./date-range.component.scss'],
+  styleUrl: './date-range.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [

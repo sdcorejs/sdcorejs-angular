@@ -51,7 +51,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'sd-date',
   templateUrl: './date.component.html',
-  styleUrls: ['./date.component.scss'],
+  styleUrl: './date.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [

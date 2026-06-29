@@ -29,7 +29,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 @Component({
   selector: 'lib-table',
   templateUrl: './table.component.html',
-  styleUrls: ['./table.component.scss'],
+  styleUrl: './table.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -133,7 +133,6 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   #initTable = async () => {
     // Xử lý columns
     const columns: SdTableColumn[] = [];
-    //console.log( this.component?.columns)
     for (const column of this.component?.columns || []) {
       // Ghi nhận lại vào object formRenderColumn để có thể xử lý customType hoặc một vài thuộc tính khác khi render UI
       this.formRenderColumn[column.key] = column;
@@ -277,7 +276,6 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
           },
         });
       }
-      //console.log( this.imageKeys ,this.fileKeys )
     }
     // await this.#onLoaded();
     this.tableOption = {

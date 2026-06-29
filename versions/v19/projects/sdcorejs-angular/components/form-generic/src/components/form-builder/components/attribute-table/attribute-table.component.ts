@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Inject, Input, Optional, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -56,7 +56,8 @@ export class AttributeTable {
     }
   }
   @Output() columnsKeyChange = new EventEmitter<string>();
-  tables: SdFormGenericDefinitionTable[] = [];
+  private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
+  tables: SdFormGenericDefinitionTable[] = this.formGenericConfiguration?.form?.tables || [];
 
   // Columns
   types = TableColumnTypes;
@@ -68,9 +69,6 @@ export class AttributeTable {
   }
   @Output() columnsChange = new EventEmitter<SdFormGenericTableColumn[]>();
   column?: SdFormGenericTableColumn;
-  constructor(@Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null) {
-    this.tables = this.formGenericConfiguration?.form?.tables || [];
-  }
 
   onChangeColumnsKey = (value: any) => {
     this.columnsKeyChange.emit(value);

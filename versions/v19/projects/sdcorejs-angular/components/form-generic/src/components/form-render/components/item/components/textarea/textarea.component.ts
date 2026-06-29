@@ -9,7 +9,7 @@ import { filter, Subject, Subscription } from 'rxjs';
 @Component({
   selector: 'lib-textarea',
   templateUrl: './textarea.component.html',
-  styleUrls: ['./textarea.component.scss'],
+  styleUrl: './textarea.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

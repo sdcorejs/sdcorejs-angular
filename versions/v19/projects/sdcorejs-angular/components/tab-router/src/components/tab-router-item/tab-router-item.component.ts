@@ -13,7 +13,7 @@ import { SdTabInfoPipe } from '../../pipes/tab-info.pipe';
 @Component({
   selector: 'sd-tab-router-item',
   templateUrl: './tab-router-item.component.html',
-  styleUrls: ['./tab-router-item.component.scss'],
+  styleUrl: './tab-router-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatIconModule, SdBadge, SdTabInfoPipe],

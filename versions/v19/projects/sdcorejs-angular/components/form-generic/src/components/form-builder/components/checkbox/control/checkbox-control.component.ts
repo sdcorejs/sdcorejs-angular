@@ -6,7 +6,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 @Component({
   selector: 'checkbox-control',
   templateUrl: './checkbox-control.component.html',
-  styleUrls: ['./checkbox-control.component.scss'],
+  styleUrl: './checkbox-control.component.scss',
   imports: [CommonModule, TranslatePipe],
 })
 export class CheckboxControl {

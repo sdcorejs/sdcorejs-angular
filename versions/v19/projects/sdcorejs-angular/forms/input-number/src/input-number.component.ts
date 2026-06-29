@@ -75,7 +75,7 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
 @Component({
   selector: 'sd-input-number',
   templateUrl: './input-number.component.html',
-  styleUrls: ['./input-number.component.scss'],
+  styleUrl: './input-number.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },

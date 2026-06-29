@@ -32,7 +32,7 @@ import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.compon
 @Component({
   selector: 'sd-tab-router-outlet',
   templateUrl: './tab-router-outlet.component.html',
-  styleUrls: ['./tab-router-outlet.component.scss'],
+  styleUrl: './tab-router-outlet.component.scss',
   standalone: true,
   imports: [CommonModule, MatIconModule, MatTooltipModule, RouterOutlet, SdTabRouterNavComponent],
 })

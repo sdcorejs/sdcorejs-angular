@@ -1,3 +1,5 @@
+import { TestBed } from '@angular/core/testing';
+import { SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 import { SdFormatNumberPipe } from './format-number.pipe';
 
 describe('SdFormatNumberPipe', () => {
@@ -5,7 +7,8 @@ describe('SdFormatNumberPipe', () => {
     let pipe: SdFormatNumberPipe;
 
     beforeEach(() => {
-      pipe = new SdFormatNumberPipe(undefined);
+      TestBed.configureTestingModule({});
+      pipe = TestBed.runInInjectionContext(() => new SdFormatNumberPipe());
     });
 
     it('returns null for non-numeric string', () => {
@@ -57,7 +60,10 @@ describe('SdFormatNumberPipe', () => {
     let pipe: SdFormatNumberPipe;
 
     beforeEach(() => {
-      pipe = new SdFormatNumberPipe({ format: { number: '1.234.567,89' } });
+      TestBed.configureTestingModule({
+        providers: [{ provide: SD_CORE_CONFIGURATION, useValue: { format: { number: '1.234.567,89' } } }],
+      });
+      pipe = TestBed.runInInjectionContext(() => new SdFormatNumberPipe());
     });
 
     it('uses the configured VN format for number output', () => {
@@ -76,7 +82,10 @@ describe('SdFormatNumberPipe', () => {
     let pipe: SdFormatNumberPipe;
 
     beforeEach(() => {
-      pipe = new SdFormatNumberPipe({ format: { number: '1,234,567.89' } });
+      TestBed.configureTestingModule({
+        providers: [{ provide: SD_CORE_CONFIGURATION, useValue: { format: { number: '1,234,567.89' } } }],
+      });
+      pipe = TestBed.runInInjectionContext(() => new SdFormatNumberPipe());
     });
 
     it('uses the configured ISO format for number output', () => {

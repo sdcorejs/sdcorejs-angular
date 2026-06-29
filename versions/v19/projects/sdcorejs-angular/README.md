@@ -812,7 +812,7 @@ import { Color } from '@sdcorejs/angular/utilities';
 @Component({
   selector: 'sd-my-component',
   templateUrl: './my-component.component.html',
-  styleUrls: ['./my-component.component.scss'],
+  styleUrl: './my-component.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [],

@@ -15,7 +15,7 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
 @Component({
   selector: 'external-filter',
   templateUrl: './external-filter.component.html',
-  styleUrls: ['./external-filter.component.scss'],
+  styleUrl: './external-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

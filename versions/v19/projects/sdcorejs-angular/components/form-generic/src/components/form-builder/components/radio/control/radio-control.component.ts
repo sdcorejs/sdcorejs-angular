@@ -7,7 +7,7 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'radio-control',
   templateUrl: './radio-control.component.html',
-  styleUrls: ['./radio-control.component.scss'],
+  styleUrl: './radio-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })

@@ -7,7 +7,7 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'chip-calendar-control',
   templateUrl: './chip-calendar-control.component.html',
-  styleUrls: ['./chip-calendar-control.component.scss'],
+  styleUrl: './chip-calendar-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })

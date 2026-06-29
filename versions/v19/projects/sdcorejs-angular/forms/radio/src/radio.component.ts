@@ -45,7 +45,7 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
 @Component({
   selector: 'sd-radio',
   templateUrl: './radio.component.html',
-  styleUrls: ['./radio.component.scss'],
+  styleUrl: './radio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {

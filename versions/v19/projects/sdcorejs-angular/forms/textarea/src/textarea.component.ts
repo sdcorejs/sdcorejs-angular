@@ -56,7 +56,7 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 @Component({
   selector: 'sd-textarea',
   templateUrl: './textarea.component.html',
-  styleUrls: ['./textarea.component.scss'],
+  styleUrl: './textarea.component.scss',
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
   imports: [

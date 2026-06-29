@@ -26,7 +26,7 @@ import { SdStorageService } from '@sdcorejs/angular/services/storage';
   selector: 'sd-splitter',
   standalone: true,
   templateUrl: './splitter.component.html',
-  styleUrls: ['./splitter.component.scss'],
+  styleUrl: './splitter.component.scss',
   providers: [SplitterStateService],
   host: {
     class: 'sd-splitter',

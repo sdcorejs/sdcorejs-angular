@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional, signal, Signal } from '@angular/core';
+import { inject, Injectable, signal, Signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { ISdAuthConfiguration, SD_AUTH_CONFIGURATION } from '../configurations';
 import { normalizeAsync, resolveMaybeAsync } from '@sdcorejs/utils/models';
@@ -19,8 +19,9 @@ export class SdAuthService {
   // Thay đổi mật khẩu
   #changePassword = new Subject<void>();
   changePassword$?: Observable<void>;
+  private readonly authConfiguration: ISdAuthConfiguration | null = inject(SD_AUTH_CONFIGURATION, { optional: true });
 
-  constructor(@Optional() @Inject(SD_AUTH_CONFIGURATION) private authConfiguration: ISdAuthConfiguration) {
+  constructor() {
     // this.#handleSignin();
     this.#handleSignout();
     this.#handleChangePassword();

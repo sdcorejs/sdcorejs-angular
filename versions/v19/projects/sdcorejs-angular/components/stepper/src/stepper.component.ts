@@ -23,7 +23,7 @@ import { SdStep } from './step.component';
   standalone: true,
   imports: [MatStepperModule, MatIconModule, NgTemplateOutlet],
   templateUrl: './stepper.component.html',
-  styleUrls: ['./stepper.component.scss'],
+  styleUrl: './stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdStepper {

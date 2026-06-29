@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SdSearch } from '@sdcorejs/angular/forms';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../configurations';
 import { SdFormGenericArgs, SdFormGenericDefinitionHtml, SdFormGenericDefinitionSelection, SdFormGenericSelectionItem } from '../models';
@@ -9,11 +9,7 @@ import { SdFormGenericArgs, SdFormGenericDefinitionHtml, SdFormGenericDefinition
 export class FormGenericService {
   #selections?: SdFormGenericDefinitionSelection[];
   #definitionHtmls?: SdFormGenericDefinitionHtml[];
-  constructor(
-    @Inject(SD_FORM_GENERIC_CONFIGURATION)
-    @Optional()
-    private readonly configuration: ISdFormGenericConfiguration
-  ) {}
+  private readonly configuration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 
   get selections() {
     return this.configuration?.form?.selections || [];

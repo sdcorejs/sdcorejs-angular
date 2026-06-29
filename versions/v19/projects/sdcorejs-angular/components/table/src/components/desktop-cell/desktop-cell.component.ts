@@ -23,7 +23,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 @Component({
   selector: 'desktop-cell',
   templateUrl: './desktop-cell.component.html',
-  styleUrls: ['./desktop-cell.component.scss'],
+  styleUrl: './desktop-cell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, SdTooltipDirective, ViewComponent, TranslatePipe],

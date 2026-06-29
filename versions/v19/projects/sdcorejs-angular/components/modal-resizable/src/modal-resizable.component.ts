@@ -23,7 +23,7 @@ import { SdLoadingService } from '@sdcorejs/angular/services';
 @Component({
   selector: 'sd-modal-resizable',
   templateUrl: './modal-resizable.component.html',
-  styleUrls: ['./modal-resizable.component.scss'],
+  styleUrl: './modal-resizable.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatIconModule, MatDialogModule, MatButtonModule, PortalModule],
