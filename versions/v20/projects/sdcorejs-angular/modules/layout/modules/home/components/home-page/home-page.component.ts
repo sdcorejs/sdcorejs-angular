@@ -13,7 +13,7 @@ import { SdLayoutService } from '../../../../services';
   selector: 'app-home-page',
   imports: [SdPageComponent, TranslatePipe, MatIconModule],
   templateUrl: './home-page.component.html',
-  styleUrls: ['./home-page.component.scss'],
+  styleUrl: './home-page.component.scss',
   standalone: true,
 })
 @SdTabComponent({

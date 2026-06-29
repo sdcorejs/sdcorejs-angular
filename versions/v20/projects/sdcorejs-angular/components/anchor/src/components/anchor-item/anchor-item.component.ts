@@ -6,7 +6,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'sd-anchor-item',
   templateUrl: './anchor-item.component.html',
-  styleUrls: ['./anchor-item.component.scss'],
+  styleUrl: './anchor-item.component.scss',
   imports: [CommonModule],
   standalone: true,
 })

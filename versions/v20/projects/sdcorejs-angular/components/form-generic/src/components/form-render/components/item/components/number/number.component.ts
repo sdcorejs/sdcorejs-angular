@@ -9,7 +9,7 @@ import { filter, Subject, Subscription } from 'rxjs';
 @Component({
   selector: 'lib-number',
   templateUrl: './number.component.html',
-  styleUrls: ['./number.component.scss'],
+  styleUrl: './number.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

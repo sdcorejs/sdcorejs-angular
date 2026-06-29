@@ -66,7 +66,7 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
 @Component({
   selector: 'sd-chip',
   templateUrl: './chip.component.html',
-  styleUrls: ['./chip.component.scss'],
+  styleUrl: './chip.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },

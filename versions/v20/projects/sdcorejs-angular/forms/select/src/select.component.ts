@@ -70,7 +70,7 @@ import { SdSelectFooterActionDirective, SdSelectFooterActionWhenFn } from './sel
 @Component({
   selector: 'sd-select',
   templateUrl: './select.component.html',
-  styleUrls: ['./select.component.scss'],
+  styleUrl: './select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
@@ -325,7 +325,7 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
 
     if (when === 'always') return true;
     if (when === 'empty') {
-      return this.searchText().length > 0 && this.filteredItems().every(item => this.itemDisplay(item).trim() !== this.searchText().trim());
+      return this.searchText().trim().length > 0 && this.filteredItems().length === 0;
     }
     if (when === 'has-result') return this.filteredItems().length > 0;
     return false;

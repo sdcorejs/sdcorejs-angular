@@ -69,7 +69,7 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
 @Component({
   selector: 'sd-chip-calendar',
   templateUrl: './chip-calendar.component.html',
-  styleUrls: ['./chip-calendar.component.scss'],
+  styleUrl: './chip-calendar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },

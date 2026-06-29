@@ -33,7 +33,7 @@ type RobotContextField = keyof AutoidRobotExportContext;
 @Component({
   selector: 'sd-autoid-inspector',
   templateUrl: './autoid-inspector.component.html',
-  styleUrls: ['./autoid-inspector.component.scss'],
+  styleUrl: './autoid-inspector.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, FormsModule, MatIconModule, MatTooltipModule],

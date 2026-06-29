@@ -15,7 +15,7 @@ interface OperatorItem {
 @Component({
   selector: 'sd-operator',
   templateUrl: './operator.component.html',
-  styleUrls: ['./operator.component.scss'],
+  styleUrl: './operator.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatMenuModule, MatTooltipModule],

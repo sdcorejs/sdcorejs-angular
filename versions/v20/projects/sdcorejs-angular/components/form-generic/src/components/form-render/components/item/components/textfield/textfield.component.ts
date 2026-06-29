@@ -10,7 +10,7 @@ import { ComponentViewedPipe } from '../../../../../../pipes';
 @Component({
   selector: 'lib-textfield',
   templateUrl: './textfield.component.html',
-  styleUrls: ['./textfield.component.scss'],
+  styleUrl: './textfield.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

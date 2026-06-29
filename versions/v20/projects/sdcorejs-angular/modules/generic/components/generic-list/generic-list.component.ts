@@ -7,7 +7,7 @@ import { GenericListOption, SdGenericListService, TList } from '../../services';
 @Component({
   selector: 'sd-generic-list',
   templateUrl: './generic-list.component.html',
-  styleUrls: ['./generic-list.component.scss'],
+  styleUrl: './generic-list.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdTable],
 })

@@ -6,7 +6,7 @@ import { filter, Subscription } from 'rxjs';
 @Component({
   selector: 'upload-control',
   templateUrl: './upload-control.component.html',
-  styleUrls: ['./upload-control.component.scss'],
+  styleUrl: './upload-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UploadControl implements AfterViewInit, OnDestroy {

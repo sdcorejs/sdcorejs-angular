@@ -33,7 +33,7 @@ export type CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss';
   imports: [CommonModule, MatIconModule, MatTooltipModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './code-editor.component.html',
-  styleUrls: ['./code-editor.component.scss'],
+  styleUrl: './code-editor.component.scss',
   encapsulation: ViewEncapsulation.None, // Bắt buộc để nhận màu Prism
 })
 export class SdCodeEditor {

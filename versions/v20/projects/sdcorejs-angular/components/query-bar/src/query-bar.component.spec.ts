@@ -608,8 +608,8 @@ describe('SdQueryBar (extras)', () => {
 
     it('clicking the inline values view reveals the sd-select editor (viewed=inline)', () => {
       // why: lifecycle giờ thuộc sd-select [viewed]="'inline'" — click .sd-inline-view để mở editor.
-      const sel = fixture.nativeElement.querySelector('sd-query-inline-chip sd-select') as HTMLElement;
-      expect(sel.getAttribute('ng-reflect-viewed')).toBe('inline');
+      const selDe = fixture.debugElement.query(By.css('sd-query-inline-chip sd-select'));
+      expect(selDe.componentInstance.viewed()).toBe('inline');
       const inlineView = fixture.nativeElement.querySelector('sd-query-inline-chip .sd-inline-view') as HTMLElement;
       expect(inlineView).not.toBeNull();
       inlineView.click();
@@ -645,23 +645,23 @@ describe('SdQueryBar (extras)', () => {
 
     it('values chip renders sd-select with viewed="inline" by default', () => {
       seed(valuesField, 'a');
-      const sel = fixture.nativeElement.querySelector('.c-token sd-select') as HTMLElement;
-      expect(sel).not.toBeNull();
-      expect(sel.getAttribute('ng-reflect-viewed')).toBe('inline');
+      const selDe = fixture.debugElement.query(By.css('.c-token sd-select'));
+      expect(selDe).not.toBeNull();
+      expect(selDe.componentInstance.viewed()).toBe('inline');
     });
 
     it('date chip renders sd-date with viewed="inline" by default', () => {
       seed(dateField, '2024-01-15');
-      const d = fixture.nativeElement.querySelector('.c-token sd-date') as HTMLElement;
-      expect(d).not.toBeNull();
-      expect(d.getAttribute('ng-reflect-viewed')).toBe('inline');
+      const dDe = fixture.debugElement.query(By.css('.c-token sd-date'));
+      expect(dDe).not.toBeNull();
+      expect(dDe.componentInstance.viewed()).toBe('inline');
     });
 
     it('datetime chip renders sd-datetime with viewed="inline" by default', () => {
       seed(dtField, '2024-01-15T08:00:00Z');
-      const d = fixture.nativeElement.querySelector('.c-token sd-datetime') as HTMLElement;
-      expect(d).not.toBeNull();
-      expect(d.getAttribute('ng-reflect-viewed')).toBe('inline');
+      const dDe = fixture.debugElement.query(By.css('.c-token sd-datetime'));
+      expect(dDe).not.toBeNull();
+      expect(dDe.componentInstance.viewed()).toBe('inline');
     });
 
     it('clicking the inline values view reveals the sd-select editor', () => {

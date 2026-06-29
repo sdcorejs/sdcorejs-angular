@@ -95,7 +95,7 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
     SdQuickAction,
   ],
   templateUrl: './tree.component.html',
-  styleUrls: ['./tree.component.scss'],
+  styleUrl: './tree.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[attr.data-autoid]': 'autoId()',

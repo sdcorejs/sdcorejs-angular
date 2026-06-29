@@ -5,7 +5,7 @@ import { Color } from '@sdcorejs/utils/models';
 @Component({
   selector: 'sd-section',
   templateUrl: './section.component.html',
-  styleUrls: ['./section.component.scss'],
+  styleUrl: './section.component.scss',
   imports: [MatIconModule],
 })
 export class SdSection {

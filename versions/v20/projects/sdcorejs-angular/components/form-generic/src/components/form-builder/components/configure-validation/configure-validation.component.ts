@@ -3,8 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   EventEmitter,
-  Inject,
-  Optional,
+  inject,
   Output,
   ViewChild,
   AfterViewInit,
@@ -43,10 +42,10 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   functions: SdFormGenericValidationFunction[] = [];
   alerts = ValidationAlerts;
   @Output() accept = new EventEmitter<SdFormGenericValidation[]>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    @Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null
-  ) {
+  private readonly ref = inject(ChangeDetectorRef);
+  private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
+
+  constructor() {
     this.functions = this.formGenericConfiguration?.form?.validation?.functions || [];
   }
 

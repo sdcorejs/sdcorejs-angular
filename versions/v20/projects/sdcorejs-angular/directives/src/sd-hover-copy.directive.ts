@@ -109,7 +109,6 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
 
     // Listen click
     this.renderer.listen(this.#copyButton, 'click', () => {
-      console.log('click', this.copyText);
       if (this.copyText && !this.sdHoverCopyDisabled) {
         BrowserUtilities.copyToClipboard(String(this.copyText));
         this.#showTooltip('Copied');

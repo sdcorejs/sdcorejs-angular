@@ -27,7 +27,7 @@ import { ColumnFilterComponent } from '../column-filter/column-filter.component'
 @Component({
   selector: 'mobile-filter',
   templateUrl: './mobile-filter.component.html',
-  styleUrls: ['./mobile-filter.component.scss'],
+  styleUrl: './mobile-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

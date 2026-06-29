@@ -11,7 +11,7 @@ import { BrowserUtilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'sd-layout',
   templateUrl: './layout-main.component.html',
-  styleUrls: ['./layout-main.component.scss'],
+  styleUrl: './layout-main.component.scss',
   imports: [SidebarV1Component, SidebarMobileV1Component, NgTemplateOutlet],
   standalone: true,
 })

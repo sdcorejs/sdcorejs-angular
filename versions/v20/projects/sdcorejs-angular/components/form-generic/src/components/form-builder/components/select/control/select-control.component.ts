@@ -7,7 +7,7 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'select-control',
   templateUrl: './select-control.component.html',
-  styleUrls: ['./select-control.component.scss'],
+  styleUrl: './select-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })

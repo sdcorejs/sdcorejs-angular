@@ -12,7 +12,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'lib-radio',
   templateUrl: './radio.component.html',
-  styleUrls: ['./radio.component.scss'],
+  styleUrl: './radio.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

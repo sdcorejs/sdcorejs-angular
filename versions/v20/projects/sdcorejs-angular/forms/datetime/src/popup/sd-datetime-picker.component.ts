@@ -17,7 +17,7 @@ import { SdTimeSpinner } from './sd-time-spinner.component';
   standalone: true,
   imports: [CommonModule, MatDatepickerModule, MatButtonModule, SdTimeSpinner, TranslatePipe],
   templateUrl: './sd-datetime-picker.component.html',
-  styleUrls: ['./sd-datetime-picker.component.scss'],
+  styleUrl: './sd-datetime-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdDatetimePicker {

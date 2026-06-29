@@ -10,7 +10,7 @@ import { SdLayoutService } from '../../../../services';
 
 @Component({
   templateUrl: './root.component.html',
-  styleUrls: ['./root.component.scss'],
+  styleUrl: './root.component.scss',
   imports: [SdButton, SdPageComponent, TranslatePipe],
 })
 export class RootComponent {

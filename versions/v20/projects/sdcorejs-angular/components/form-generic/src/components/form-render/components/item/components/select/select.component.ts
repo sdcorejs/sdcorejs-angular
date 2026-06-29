@@ -14,7 +14,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'lib-select',
   templateUrl: './select.component.html',
-  styleUrls: ['./select.component.scss'],
+  styleUrl: './select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

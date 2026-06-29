@@ -6,7 +6,7 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'textfield-control',
   templateUrl: './textfield-control.component.html',
-  styleUrls: ['./textfield-control.component.scss'],
+  styleUrl: './textfield-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TextFieldControl implements AfterViewInit, OnDestroy {

@@ -10,7 +10,7 @@ import { FormGenericService } from '../../../../../../services';
 @Component({
   selector: 'lib-html',
   templateUrl: './html.component.html',
-  styleUrls: ['./html.component.scss'],
+  styleUrl: './html.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HtmlPipe],
 })

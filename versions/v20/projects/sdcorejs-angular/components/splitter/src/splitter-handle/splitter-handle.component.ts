@@ -5,7 +5,7 @@ import { SplitterOrientation } from '../splitter.models';
   selector: 'sd-splitter-handle',
   standalone: true,
   templateUrl: './splitter-handle.component.html',
-  styleUrls: ['./splitter-handle.component.scss'],
+  styleUrl: './splitter-handle.component.scss',
   host: {
     class: 'sd-splitter__handle',
     '[class.sd-splitter__handle--horizontal]': 'orientation() === "horizontal"',

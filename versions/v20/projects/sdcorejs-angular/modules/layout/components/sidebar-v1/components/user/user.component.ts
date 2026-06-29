@@ -12,7 +12,7 @@ import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../../configura
 @Component({
   selector: 'lib-layout-user',
   templateUrl: './user.component.html',
-  styleUrls: ['./user.component.scss'],
+  styleUrl: './user.component.scss',
   imports: [MatMenuModule, MatButtonModule, MatIconModule, MatTooltipModule, SdAvatar, TranslatePipe],
   standalone: true,
 })

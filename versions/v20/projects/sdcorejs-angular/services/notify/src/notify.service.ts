@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { ApplicationRef, createComponent, EnvironmentInjector, inject, Inject, Injectable, signal } from '@angular/core';
+import { ApplicationRef, createComponent, EnvironmentInjector, inject, Injectable, signal } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -22,16 +22,14 @@ export class SdNotifyService {
   // State
   #buffer: Record<string, string[]> = {};
   #timers: Record<string, ReturnType<typeof setTimeout> | null> = {};
+  private readonly appRef = inject(ApplicationRef);
+  private readonly injector = inject(EnvironmentInjector);
+  private readonly document = inject(DOCUMENT);
+  readonly #i18n = inject(I18nService);
 
-  constructor(
-    private appRef: ApplicationRef,
-    private injector: EnvironmentInjector,
-    @Inject(DOCUMENT) private document: Document
-  ) {
+  constructor() {
     this.#initContainer();
   }
-
-  readonly #i18n = inject(I18nService);
 
   #initContainer() {
     const componentRef = createComponent(ToastContainerComponent, {

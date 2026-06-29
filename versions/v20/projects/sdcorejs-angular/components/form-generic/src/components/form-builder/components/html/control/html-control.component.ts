@@ -9,7 +9,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'html-control',
   templateUrl: './html-control.component.html',
-  styleUrls: ['./html-control.component.scss'],
+  styleUrl: './html-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [HtmlPipe],
 })

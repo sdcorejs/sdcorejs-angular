@@ -28,7 +28,7 @@ export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
 @Component({
   selector: 'sd-button',
   templateUrl: './button.component.html',
-  styleUrls: ['./button.component.scss'],
+  styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],

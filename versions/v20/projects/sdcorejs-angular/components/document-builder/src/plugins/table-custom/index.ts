@@ -28,7 +28,6 @@ export class TableCustom extends Plugin {
         view: 'data-column-widths',
         model: 'tableColumnWidth',
       });
-      console.log('[TableCustom] Registered data-column-widths upcast converter');
 
       // Xử lý border-style: none cho tableCell - phải explicit set 'none'
       dispatcher.on(

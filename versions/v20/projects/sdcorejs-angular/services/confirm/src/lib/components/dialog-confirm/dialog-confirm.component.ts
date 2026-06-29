@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -45,28 +45,28 @@ export interface DialogData {
 @Component({
   selector: 'sd-dialog-confirm',
   templateUrl: 'dialog-confirm.component.html',
-  styleUrls: ['./dialog-confirm.component.scss'],
+  styleUrl: './dialog-confirm.component.scss',
   imports: [CommonModule, FormsModule, MatDialogModule, MatIconModule, SdButton, SdDate, SdRadio, SdTextarea],
 })
 export class DialogConfirmComponent {
   value: any;
   required = false;
   id = `I${Utilities.generateUuid()}`;
-  constructor(
-    public dialogRef: MatDialogRef<DialogConfirmComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: DialogData
-  ) {
-    if (data?.input) {
-      this.value = data?.input?.defaultValue ?? '';
-      this.required = data?.input?.required || false;
+  public readonly dialogRef = inject(MatDialogRef<DialogConfirmComponent>);
+  public readonly data = inject<DialogData>(MAT_DIALOG_DATA);
+
+  constructor() {
+    if (this.data?.input) {
+      this.value = this.data?.input?.defaultValue ?? '';
+      this.required = this.data?.input?.required || false;
     }
-    if (data?.date) {
-      this.value = data?.date?.defaultValue ?? '';
-      this.required = data?.date?.required || false;
+    if (this.data?.date) {
+      this.value = this.data?.date?.defaultValue ?? '';
+      this.required = this.data?.date?.required || false;
     }
-    if (data?.radio) {
-      this.value = data?.radio?.defaultValue ?? '';
-      this.required = data?.radio?.required || false;
+    if (this.data?.radio) {
+      this.value = this.data?.radio?.defaultValue ?? '';
+      this.required = this.data?.radio?.required || false;
     }
   }
 

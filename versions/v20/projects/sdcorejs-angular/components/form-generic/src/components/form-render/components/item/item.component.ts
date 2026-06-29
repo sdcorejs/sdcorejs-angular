@@ -20,7 +20,7 @@ import { HtmlComponent } from './components/html/html.component';
 @Component({
   selector: 'lib-item',
   templateUrl: './item.component.html',
-  styleUrls: ['./item.component.scss'],
+  styleUrl: './item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TextfieldComponent,

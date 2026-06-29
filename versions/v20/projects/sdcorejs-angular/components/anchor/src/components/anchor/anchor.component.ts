@@ -1,4 +1,4 @@
-﻿import {
+import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
@@ -23,7 +23,7 @@ import { SdAnchorItem } from '../anchor-item/anchor-item.component';
 @Component({
   selector: 'sd-anchor',
   templateUrl: './anchor.component.html',
-  styleUrls: ['./anchor.component.scss'],
+  styleUrl: './anchor.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, AnchorNav],
   standalone: true,
@@ -38,10 +38,10 @@ export class SdAnchor implements OnDestroy {
   sidebarWidth = input<string>('200px');
   ellipsis = input(false, { transform: booleanAttribute });
   overScroll = input(false, { transform: booleanAttribute });
-  // Mobile: default ẩn nav (sidebar TOC chiếm chỗ trên màn hình hẹp).
-  // Consumer truyền `[hideNav]="false"` để force hiện trên mobile.
+  // Mobile: default ?n nav (sidebar TOC chi?m ch? tr�n m�n h�nh h?p).
+  // Consumer truy?n `[hideNav]="false"` d? force hi?n tr�n mobile.
   hideNav = input(BrowserUtilities.isMobile(), { transform: booleanAttribute });
-  // Màu highlight active nav (text + icon + vertical bar). Default 'primary'.
+  // M�u highlight active nav (text + icon + vertical bar). Default 'primary'.
   color = input<Color>('primary');
 
   activeSectionId = signal<string>('');
@@ -63,7 +63,7 @@ export class SdAnchor implements OnDestroy {
       }
     });
 
-    // Lắng nghe thay đổi sections để đăng ký lại observe section
+    // L?ng nghe thay d?i sections d? dang k� l?i observe section
     effect(() => {
       this.sections();
       if (!this.hideNav() && this.#initialized) {
@@ -76,26 +76,26 @@ export class SdAnchor implements OnDestroy {
     this.#cleanIntersectionObserver();
     const wrapperEl = this.wrapper().nativeElement;
 
-    // Brower API IntersectionObserver sẽ hỗ trợ khi nào 1 section được hiện ra trong wrapperEl
+    // Brower API IntersectionObserver s? h? tr? khi n�o 1 section du?c hi?n ra trong wrapperEl
     this.#intersectionObserver = new IntersectionObserver(
       entries => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            // Nếu section mới đi vào vùng nhìn thấy -> add vào set
+            // N?u section m?i di v�o v�ng nh�n th?y -> add v�o set
             this.#visibleSections.add(entry.target);
           } else {
-            // Nếu section đã đi ra khỏi vùng nhìn thấy -> xóa khỏi Set
+            // N?u section d� di ra kh?i v�ng nh�n th?y -> x�a kh?i Set
             this.#visibleSections.delete(entry.target);
           }
         }
 
-        // Nếu đang scroll bởi click section thì return luôn, k phải quét qua tìm vùng section được active
+        // N?u dang scroll b?i click section th� return lu�n, k ph?i qu�t qua t�m v�ng section du?c active
         if (this.#isClickScrolling) {
           return;
         }
 
         for (const section of this.sections()) {
-          // Kiểm tra xem DOM của section nào đang nằm trong danh sách đang nhìn thấy để active chính xác
+          // Ki?m tra xem DOM c?a section n�o dang n?m trong danh s�ch dang nh�n th?y d? active ch�nh x�c
           if (this.#visibleSections.has(section.elementRef.nativeElement)) {
             if (this.activeSectionId() !== section.id) {
               this.activeSectionId.set(section.id);
@@ -107,7 +107,7 @@ export class SdAnchor implements OnDestroy {
       { root: wrapperEl, threshold: 0 }
     );
 
-    // Đăng ký theo dõi từng section có trong anchor
+    // �ang k� theo d�i t?ng section c� trong anchor
     for (const section of this.sections()) {
       this.#intersectionObserver.observe(section.elementRef.nativeElement);
     }
@@ -125,17 +125,17 @@ export class SdAnchor implements OnDestroy {
     const wrapperEl = this.wrapper().nativeElement;
     const targetElement = targetSection.nativeElement;
 
-    const prevScrollTop = wrapperEl.scrollTop; // Lưu lại vị trí cuộn hiện tại của container
-    const scrollTop = prevScrollTop + targetElement.getBoundingClientRect().top - wrapperEl.getBoundingClientRect().top; // Vị trí section cần scroll tới
+    const prevScrollTop = wrapperEl.scrollTop; // Luu l?i v? tr� cu?n hi?n t?i c?a container
+    const scrollTop = prevScrollTop + targetElement.getBoundingClientRect().top - wrapperEl.getBoundingClientRect().top; // V? tr� section c?n scroll t?i
 
-    // Đăng ký sự kiện nếu đã được scroll xong
+    // �ang k� s? ki?n n?u d� du?c scroll xong
     this.#clickScrollSubscription = fromEvent(wrapperEl, 'scrollend')
       .pipe(take(1))
       .subscribe(() => {
         this.#isClickScrolling = false;
       });
 
-    // Nếu sectionTarget đã ở đúng vị trí (click nhưng không scroll) thì sau #timeoutScrollFallback kích hoạt lại IntersectionObserver
+    // N?u sectionTarget d� ? d�ng v? tr� (click nhung kh�ng scroll) th� sau #timeoutScrollFallback k�ch ho?t l?i IntersectionObserver
     this.#timeoutId = setTimeout(() => {
       if (wrapperEl.scrollTop === prevScrollTop) {
         this.#isClickScrolling = false;

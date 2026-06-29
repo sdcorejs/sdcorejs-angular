@@ -62,7 +62,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'sd-input',
   templateUrl: './input.component.html',
-  styleUrls: ['./input.component.scss'],
+  styleUrl: './input.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },

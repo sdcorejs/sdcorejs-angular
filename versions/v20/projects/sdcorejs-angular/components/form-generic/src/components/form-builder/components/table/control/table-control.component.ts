@@ -7,7 +7,7 @@ import { filter, Subscription } from 'rxjs';
 @Component({
   selector: 'table-control',
   templateUrl: './table-control.component.html',
-  styleUrls: ['./table-control.component.scss'],
+  styleUrl: './table-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })

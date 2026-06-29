@@ -9,7 +9,7 @@ import { SdFormGenericUpload } from '../../../../../../models';
 @Component({
   selector: 'lib-upload',
   templateUrl: './upload.component.html',
-  styleUrls: ['./upload.component.scss'],
+  styleUrl: './upload.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, SdUploadFile],
 })

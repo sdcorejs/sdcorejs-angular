@@ -30,7 +30,7 @@ export function createPandocInstance(wasmBinary: ArrayBuffer): Promise<PandocIns
   const fileSystem = new Map();
   const fds = [
     new OpenFile(new File(new Uint8Array(), { readonly: true })),
-    ConsoleStdout.lineBuffered((msg: string) => console.log(`[WASI stdout] ${msg}`)),
+    ConsoleStdout.lineBuffered(() => undefined),
     ConsoleStdout.lineBuffered((msg: string) => console.warn(`[WASI stderr] ${msg}`)),
     new PreopenDirectory('/', fileSystem),
   ];
