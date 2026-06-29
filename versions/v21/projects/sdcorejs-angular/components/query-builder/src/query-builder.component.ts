@@ -60,7 +60,7 @@ const QB_EMPTY_FIELDS: SdQueryBuilderField[] = [];
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet, MatIconModule, SdOperator, SdSelect, SdInput, SdInputNumber, SdDate, SdDatetime, SdItemDefDefDirective],
   templateUrl: './query-builder.component.html',
-  styleUrls: ['./query-builder.component.scss'],
+  styleUrl: './query-builder.component.scss',
 })
 export class SdQueryBuilder {
   // -------------------------------------------------------------------------

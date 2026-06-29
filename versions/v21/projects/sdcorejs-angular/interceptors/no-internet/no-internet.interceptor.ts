@@ -119,7 +119,6 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
     this.#stopPolling(); // Clear cũ nếu có
 
     // @i18n-ignore — dev console log
-    console.log('--- Bắt đầu chế độ theo dõi mạng ---');
 
     this.#pollInterval = setInterval(() => {
       if (!this.#http) {
@@ -131,7 +130,6 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
         next: () => {
           // --> ĐÃ CÓ MẠNG LẠI
           // @i18n-ignore — dev console log
-          console.log('--> Kết nối đã được khôi phục!');
 
           this.#stopPolling();
           this.#isOffline = false;

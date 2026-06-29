@@ -4,16 +4,9 @@ import { SdTableCommand, SdTableCommandChildren, SdTableCommandNormal } from '..
 import { SdTableItem } from '../../../models/table-item.model';
 
 /**
- * Lọc danh sách commands theo `hidden` (sync / async) + pre-resolve `icon`, `title`, `key`
- * cho từng row. Output dùng trực tiếp trong template không cần thêm pipe phụ.
- *
- * Đã rename từ `commandFilter` → `filter` sau khi gom toàn bộ pipe command vào
- * `components/command/pipes/`.
- *
- * @example
- *   @let filteredCommands = item | filter:commands | async;
+ * Filters visible commands and pre-resolves icon, title, and stable key for the current row.
  */
-@Pipe({ name: 'filter' })
+@Pipe({ name: 'filter', standalone: true })
 export class CommandFilterPipe implements PipeTransform {
   async transform(item: SdTableItem, commands: SdTableCommand[]): Promise<Command[]> {
     const results: Command[] = [];
@@ -78,7 +71,7 @@ export class CommandFilterPipe implements PipeTransform {
     return typeof command.title === 'string' ? command.title : command.title(item.data);
   };
 
-  // Key dùng để gán cho autoId — cần stable theo (icon, title).
+  // Stable autoId key generated from resolved icon and title.
   #key = (item: SdTableItem, command: SdTableCommand): string => {
     const icon = this.#icon(item, command);
     const title = this.#title(item, command);

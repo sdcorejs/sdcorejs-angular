@@ -1,4 +1,4 @@
-import { Inject, Injectable, Optional } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 
 @Injectable({
@@ -7,12 +7,9 @@ import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/c
 export class SdLicenseService {
   readonly #SALT = 'angular-core-976e2fa6f8b44dadbc63f87b057a331f';
   #isValid = false;
+  private readonly coreConfiguration: ISdCoreConfiguration | null = inject(SD_CORE_CONFIGURATION, { optional: true });
 
-  constructor(
-    @Inject(SD_CORE_CONFIGURATION)
-    @Optional()
-    private readonly coreConfiguration: ISdCoreConfiguration | undefined
-  ) {
+  constructor() {
     this.#verify();
   }
 
@@ -27,7 +24,6 @@ export class SdLicenseService {
 
     // 1. Bypass Localhost
     if (this.#isLocalhost(hostname)) {
-      console.log('%c [SdAngularCore] Dev Mode ', 'background: #222; color: #bada55');
       this.#isValid = true;
       return;
     }

@@ -13,7 +13,7 @@ import { CommandFilterPipe } from './pipes/filter.pipe';
 @Component({
   selector: 'desktop-command',
   templateUrl: './desktop-command.component.html',
-  styleUrls: ['./desktop-command.component.scss'],
+  styleUrl: './desktop-command.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: {
@@ -22,31 +22,24 @@ import { CommandFilterPipe } from './pipes/filter.pipe';
   imports: [CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule, MatIconModule, CommandPipe, CommandFilterPipe],
 })
 export class DesktopCommand {
-  // ==========================================
-  // 1. SIGNAL INPUTS
-  // ==========================================
   readonly defaultIconFontSet = DefaultMaterialIconFontSet;
 
-  autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
-  item = input.required<SdTableItem>();
-  itemIndex = input.required<number>();
-  commands = input<SdTableCommand[] | null | undefined>([]);
+  readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
+  readonly item = input.required<SdTableItem>();
+  readonly itemIndex = input.required<number>();
+  readonly commands = input<SdTableCommand[] | null | undefined>([]);
 
-  // ==========================================
-  // 2. COMPUTED
-  // ==========================================
   // Row key for autoId: prefer id, then code, then value, then itemIndex.
-  itemKey = computed(() => {
+  readonly itemKey = computed(() => {
     const data = this.item()?.data as Record<string, unknown> | undefined;
     return data?.['id']?.toString() || data?.['code']?.toString() || data?.['value']?.toString() || this.itemIndex().toString();
   });
 
   // Host autoId: `<base>-command-<itemKey>`. Template appends command and child keys.
-  autoId = computed(() => {
+  readonly autoId = computed(() => {
     const base = this.autoIdInput();
     return base ? `${base}-command-${this.itemKey()}` : '';
   });
 
-  // Commands signal with an empty-array fallback.
-  _commands = computed(() => this.commands() || []);
+  readonly _commands = computed(() => this.commands() || []);
 }

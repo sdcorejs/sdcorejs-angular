@@ -21,7 +21,7 @@ import { ConfigService } from '../../services/config.service';
 @Component({
   selector: 'config',
   templateUrl: './config.component.html',
-  styleUrls: ['./config.component.scss'],
+  styleUrl: './config.component.scss',
   standalone: true,
   imports: [
     CommonModule,

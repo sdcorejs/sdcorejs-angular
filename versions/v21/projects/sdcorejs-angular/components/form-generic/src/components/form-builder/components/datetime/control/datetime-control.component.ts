@@ -7,7 +7,7 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'datetime-control',
   templateUrl: './datetime-control.component.html',
-  styleUrls: ['./datetime-control.component.scss'],
+  styleUrl: './datetime-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [],
 })

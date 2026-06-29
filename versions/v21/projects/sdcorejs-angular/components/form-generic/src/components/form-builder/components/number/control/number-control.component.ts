@@ -7,7 +7,7 @@ import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 @Component({
   selector: 'number-control',
   templateUrl: './number-control.component.html',
-  styleUrls: ['./number-control.component.scss'],
+  styleUrl: './number-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NumberControl implements AfterViewInit, OnDestroy {

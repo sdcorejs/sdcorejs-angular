@@ -3,10 +3,9 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  Inject,
+  inject,
   Input,
   OnDestroy,
-  Optional,
   QueryList,
   ViewChildren,
 } from '@angular/core';
@@ -25,7 +24,7 @@ import { LibItemComponent, VariableComponent } from './components';
 @Component({
   selector: 'sd-form-render',
   templateUrl: './form-render.component.html',
-  styleUrls: ['./form-render.component.scss'],
+  styleUrl: './form-render.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdSection, LibItemComponent, WhenExpressionPipe, VariableComponent],
 })
@@ -73,10 +72,8 @@ export class SdFormRender implements OnDestroy, AfterViewInit {
 
   // Các component item của form-render sẽ lắng nghe thay đổi
   setVariables = new Subject<{ key: string; value: any }>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    @Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null
-  ) {}
+  private readonly ref = inject(ChangeDetectorRef);
+  private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 
   ngAfterViewInit(): void {
     this.#subscription.add(

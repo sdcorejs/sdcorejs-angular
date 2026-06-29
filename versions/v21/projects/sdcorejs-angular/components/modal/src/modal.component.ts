@@ -25,7 +25,7 @@ import { Color, Size } from '@sdcorejs/utils/models';
 @Component({
   selector: 'sd-modal',
   templateUrl: './modal.component.html',
-  styleUrls: ['./modal.component.scss'],
+  styleUrl: './modal.component.scss',
   // encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,

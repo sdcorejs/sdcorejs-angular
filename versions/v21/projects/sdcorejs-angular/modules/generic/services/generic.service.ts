@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { SdApiService } from '@sdcorejs/angular/services/api';
 import { ArrayUtilities, StringUtilities } from '@sdcorejs/angular/utilities';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -12,11 +12,11 @@ import { SdRegister, SdRegisterArgs } from '../models';
 export class SdGenericService {
   dataChanges = new Subject<{ module: string; typeCode: string }>();
   #register: Record<string, ISdGenericConfiguration['register']> = {};
-  constructor(
-    protected apiService: SdApiService,
-    @Inject(SD_GENERIC_CONFIGURATION) configurations: ISdGenericConfiguration[]
-  ) {
-    for (const configuration of configurations || []) {
+  protected readonly apiService = inject(SdApiService);
+  private readonly configurations: ISdGenericConfiguration[] = inject(SD_GENERIC_CONFIGURATION);
+
+  constructor() {
+    for (const configuration of this.configurations || []) {
       for (const module of configuration.modules || []) {
         this.#register[module] = configuration.register;
       }

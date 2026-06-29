@@ -23,7 +23,7 @@ import { SdTableColumn } from '../../../models/table-column.model';
 @Component({
   selector: 'column-filter',
   templateUrl: './column-filter.component.html',
-  styleUrls: ['./column-filter.component.scss'],
+  styleUrl: './column-filter.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, SdOperator, SdInput, SdInputNumber, SdSelect, SdDate, SdDateRange, SdBadge],

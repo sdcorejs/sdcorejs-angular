@@ -43,7 +43,7 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
   standalone: true,
   imports: [CommonModule, CKEditorModule, SdCKEditorStyles],
   templateUrl: './mini-editor.component.html',
-  styleUrls: ['./mini-editor.component.scss'],
+  styleUrl: './mini-editor.component.scss',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

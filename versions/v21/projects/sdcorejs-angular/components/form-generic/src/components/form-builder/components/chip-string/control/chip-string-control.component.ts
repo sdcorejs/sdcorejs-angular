@@ -7,7 +7,7 @@ import { BuilderService } from '../../../services';
 @Component({
   selector: 'chip-string-control',
   templateUrl: './chip-string-control.component.html',
-  styleUrls: ['./chip-string-control.component.scss'],
+  styleUrl: './chip-string-control.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
 })

@@ -11,7 +11,7 @@ export type SdBadgeType = 'tag' | 'round' | 'icon';
 @Component({
   selector: 'sd-badge',
   templateUrl: './badge.component.html',
-  styleUrls: ['./badge.component.scss'],
+  styleUrl: './badge.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatIconModule, MatTooltipModule],

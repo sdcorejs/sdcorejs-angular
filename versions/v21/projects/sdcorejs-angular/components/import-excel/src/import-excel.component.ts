@@ -24,7 +24,7 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 @Component({
   selector: 'sd-import-excel',
   templateUrl: './import-excel.component.html',
-  styleUrls: ['./import-excel.component.scss'],
+  styleUrl: './import-excel.component.scss',
   imports: [
     CommonModule,
     FormsModule,

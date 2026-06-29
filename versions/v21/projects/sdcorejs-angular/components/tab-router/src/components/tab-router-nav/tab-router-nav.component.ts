@@ -8,7 +8,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'sd-tab-router-nav',
   templateUrl: './tab-router-nav.component.html',
-  styleUrls: ['./tab-router-nav.component.scss'],
+  styleUrl: './tab-router-nav.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, DragDropModule, SdTabRouterItemComponent],

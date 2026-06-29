@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Inject, Input, Optional, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../../../configurations';
 import { SdFormGenericComponent, SdFormGenericTemplate } from '../../../../models';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -19,7 +19,7 @@ export class AttributeTemplate {
     this.templates = this.formGenericConfiguration?.form?.templates?.filter(e => e.component?.type === this.component?.type) || [];
   }
   @Output() sdChange = new EventEmitter<SdFormGenericComponent>();
-  constructor(@Optional() @Inject(SD_FORM_GENERIC_CONFIGURATION) private formGenericConfiguration: ISdFormGenericConfiguration | null) {}
+  private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 
   onChange = (value: string | number | null) => {
     if (typeof value === 'string') {

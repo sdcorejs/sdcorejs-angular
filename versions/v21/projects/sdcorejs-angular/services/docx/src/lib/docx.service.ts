@@ -79,16 +79,12 @@ export class SdDocxService {
       return this.#pandocInstance;
     }
 
-    console.log('[SdDocxService] Fetching WASM binary from:', this.#PANDOC_WASM_URL);
     const wasmResponse = await fetch(this.#PANDOC_WASM_URL);
     if (!wasmResponse.ok) {
       throw new Error(`Failed to fetch pandoc.wasm: ${wasmResponse.status} ${wasmResponse.statusText}`);
     }
-    console.log('[SdDocxService] WASM fetched, size:', wasmResponse.headers.get('content-length'));
     const wasmBinary = await wasmResponse.arrayBuffer();
-    console.log('[SdDocxService] WASM binary loaded, bytes:', wasmBinary.byteLength);
     this.#pandocInstance = await createPandocInstance(wasmBinary);
-    console.log('[SdDocxService] Pandoc instance created successfully');
     return this.#pandocInstance;
   }
 
@@ -133,9 +129,7 @@ export class SdDocxService {
         }
       }
 
-      console.log('[SdDocxService] Getting pandoc instance...');
       const pandoc = await this.#getPandocInstance();
-      console.log('[SdDocxService] Converting DOCX, blob size:', blob.size);
 
       const pandocOpts: Record<string, any> = {
         from: 'docx',
@@ -146,7 +140,6 @@ export class SdDocxService {
       };
 
       const result = await pandoc.convert(pandocOpts, null, { 'document.docx': blob });
-      console.log('[SdDocxService] Conversion done, stdout length:', result.stdout?.length, 'stderr:', result.stderr);
 
       return {
         html: result.stdout,

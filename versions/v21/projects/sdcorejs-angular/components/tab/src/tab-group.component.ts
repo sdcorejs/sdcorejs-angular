@@ -27,7 +27,7 @@ export interface SdTabClosedEvent {
   standalone: true,
   imports: [MatTabsModule, MatIconModule, NgTemplateOutlet],
   templateUrl: './tab-group.component.html',
-  styleUrls: ['./tab-group.component.scss'],
+  styleUrl: './tab-group.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdTabGroup {

@@ -12,7 +12,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'lib-datetime',
   templateUrl: './datetime.component.html',
-  styleUrls: ['./datetime.component.scss'],
+  styleUrl: './datetime.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

@@ -21,7 +21,7 @@ import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 @Component({
   selector: 'sd-popup-export',
   templateUrl: './popup-export.component.html',
-  styleUrls: ['./popup-export.component.scss'],
+  styleUrl: './popup-export.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [CommonModule, MatTableModule, MatIconModule, MatChipsModule, SdButton, SdInput, SdModal],

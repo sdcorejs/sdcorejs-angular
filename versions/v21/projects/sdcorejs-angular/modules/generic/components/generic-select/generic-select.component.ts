@@ -26,7 +26,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 @Component({
   selector: 'sd-generic-select',
   templateUrl: './generic-select.component.html',
-  styleUrls: ['generic-select.component.scss'],
+  styleUrl: 'generic-select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [SdAutocomplete, SdSelect, TranslatePipe],
 })

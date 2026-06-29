@@ -45,7 +45,7 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 @Component({
   selector: 'sd-upload-file',
   templateUrl: './upload-file.component.html',
-  styleUrls: ['./upload-file.component.scss'],
+  styleUrl: './upload-file.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

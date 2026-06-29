@@ -11,7 +11,7 @@ import { Action, ActionFilterPipe } from './action-filter.pipe';
 @Component({
   selector: 'selector-action',
   templateUrl: './selector-action.component.html',
-  styleUrls: ['./selector-action.component.scss'],
+  styleUrl: './selector-action.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [MatIconModule, MatMenuModule, SdButton, SdQuickAction, ActionFilterPipe],
 })

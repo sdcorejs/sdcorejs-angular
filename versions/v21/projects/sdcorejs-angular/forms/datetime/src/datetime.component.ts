@@ -83,7 +83,7 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
 @Component({
   selector: 'sd-datetime',
   templateUrl: './datetime.component.html',
-  styleUrls: ['./datetime.component.scss'],
+  styleUrl: './datetime.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [

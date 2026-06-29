@@ -313,6 +313,18 @@ const TASKS: Task[] = [
         </div>
       </demo-section>
 
+      <demo-section
+        heading="Lệnh dòng có menu con"
+        [props]="[
+          { name: 'command.commands[].children', value: 'SdTableCommandNormal[]' },
+          { name: 'command.align', value: 'right' }
+        ]"
+        note="Command có children sẽ render thành nút menu; các child command vẫn hỗ trợ icon, title, color, disabled, hidden và click theo từng row.">
+        <div class="table-box">
+          <sd-table [option]="commandChildrenOption"></sd-table>
+        </div>
+      </demo-section>
+
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
@@ -764,6 +776,46 @@ export class TableDemoComponent {
       { field: 'code', type: 'string', title: 'Mã', width: '120px' },
       { field: 'name', type: 'string', title: 'Tên', width: '320px' },
       { field: 'amount', type: 'number', title: 'Giá', width: '160px', align: 'right' },
+    ],
+    style: { shadow: true },
+  };
+
+  readonly commandChildrenOption: SdTableOption<Product> = {
+    type: 'local',
+    items: () => PRODUCTS,
+    filler: { enabled: true },
+    command: {
+      align: 'right',
+      commands: [
+        { icon: 'visibility', title: 'Xem nhanh', click: (p: Product) => alert(`Xem nhanh ${p.code}`) },
+        {
+          icon: 'more_vert',
+          title: 'Thao tác thêm',
+          children: [
+            { icon: 'content_copy', title: 'Nhân bản', click: (p: Product) => alert(`Nhân bản ${p.code}`) },
+            {
+              icon: 'inventory_2',
+              title: 'Kiểm kho',
+              disabled: (p: Product) => p.stock === 0,
+              click: (p: Product) => alert(`Kiểm kho ${p.code}: ${p.stock}`),
+            },
+            {
+              icon: 'block',
+              title: 'Ngừng bán',
+              color: 'warning',
+              hidden: (p: Product) => !p.active,
+              click: (p: Product) => alert(`Ngừng bán ${p.code}`),
+            },
+            { icon: 'delete', title: 'Xóa', color: 'error', click: (p: Product) => alert(`Xóa ${p.code}`) },
+          ],
+        },
+      ],
+    },
+    columns: [
+      { field: 'code', type: 'string', title: 'Mã', width: '120px' },
+      { field: 'name', type: 'string', title: 'Tên', width: '320px' },
+      { field: 'stock', type: 'number', title: 'Tồn', width: '100px', align: 'right' },
+      { field: 'active', type: 'boolean', title: 'Kích hoạt', width: '120px', option: { displayOnTrue: 'Có', displayOnFalse: 'Không' } },
     ],
     style: { shadow: true },
   };
