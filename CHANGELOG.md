@@ -1,101 +1,89 @@
 # Changelog — `@sdcorejs/angular`
 
-Changelog **độc lập** cho npm package `@sdcorejs/angular`. Repo này deploy theo nhịp riêng. Các release đến `0.9` truy vết legacy source `vn-angular`; sau mốc final sync ngày 2026-06-24, `@sdcorejs/angular` phát triển độc lập trong repo này.
+Changelog cho npm package `@sdcorejs/angular`, tập trung vào thay đổi public API, hành vi runtime, tài liệu sử dụng, tooling release, và các migration cần consumer chú ý.
 
-- **Đơn vị release = patch tag** (`v0.0`, `v0.1`, …). Mỗi tag publish đồng thời 3 major: `19.<patch>` / `20.<patch>` / `21.<patch>` — **cùng nội dung feature**, chỉ khác Angular major shim. Vì vậy mỗi patch = **một entry duy nhất** ở đây.
-- Entry trước final sync ghi rõ **synced from `vn-angular@<commit>`** để truy vết source. Entry sau final sync ghi rõ thay đổi repo-owned trong `sdcorejs-angular`.
-- Major digit khoá theo Angular line → **không** dùng để báo breaking. Breaking change PHẢI ghi rõ ở mục `Changed (BREAKING for consumers)` + migration. Consumer luôn pin major: `npm i @sdcorejs/angular@^19.0.0`.
-
-Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Major digit khoá theo Angular line, nên breaking change luôn được ghi rõ trong mục `Changed (BREAKING for consumers)` kèm hướng dẫn migration.
 
 ## [Unreleased]
 
 ## [0.10] - 2026-06-30
 
-Published: `@sdcorejs/angular@19.0.10` / `@20.0.10` / `@21.0.10` (npm dist-tag `latest`).
-Final legacy sync from `vn-angular@d12478a1`; repo-owned changes now start in `versions/v19` and roll out to `versions/v20` / `versions/v21`.
-
 ### Added
 
 - **Shared display pipes** — added `sdFormatDate`, `sdFormatDatetime`, and `sdView` display pipes with tests and npm-facing docs.
 - **`sd-table` column filter callback** — column filters can notify committed value changes through `onChange`, with regression coverage and showcase wiring.
+- **Phased lint workflow** — added release-oriented lint entry points and a phase runner for targeted Angular workspace cleanup.
 
 ### Changed
 
-- **Repo ownership** — confirmed the final legacy sync at `vn-angular@d12478a1` (`release/0.0.1`); future `@sdcorejs/angular` changes are owned directly in this repo and roll out from `versions/v19` to `v20` / `v21`.
-- **Core UI docs and published API docs** — expanded standalone import, table-cell control, shared pipe, and AI-facing usage guidance, then regenerated published docs for the maintained Angular lines.
-- **`form-generic` builder UX** — refined drag/drop, resize, preview, row feedback, and Material-style mode controls while keeping render behavior covered by regression tests.
+- **Core UI docs and API docs** — expanded standalone import, table-cell control, shared pipe, and AI-facing usage guidance, then regenerated docs for the maintained Angular lines.
+- **`form-generic` builder UX** — refined drag/drop, resize, preview, row feedback, palette placement, row-level resize state, and Material-style mode controls while keeping render behavior covered by regression tests.
+- **Table and view display rendering** — reused shared display pipes in table/view flows and aligned command icon rendering for more consistent UI output.
 - **Release hardening across v19/v20/v21** — modernized safe Angular metadata and dependency injection usage, reduced runtime/Sass warnings, and strengthened fragile test assertions.
 
 ### Fixed
 
 - **`tab-router` lifecycle handling** — ported `beforeClose` handling and `SD_TAB` injection fixes across all maintained versions.
-- **`sd-table` selection and filter stability** — synced table filter `onChange` support, selector disabled fixes, preserved selected-row behavior, docs, and showcase updates.
+- **`sd-table` selection and filter stability** — added table filter `onChange` support, selector disabled fixes, preserved selected-row behavior, docs, and showcase updates.
 - **`form-generic` preview render safety** — only registered controls are patched before dynamic form fields finish registering, preventing preview render instability.
-- **`notify` and form preview sync** — carried the latest toast formatting and form preview fixes through v19, v20, and v21.
+- **`form-generic` drop feedback** — made drag previews text-free, centered drop rails, and row enter predicates match the actual form layout placement.
+- **`notify` toast formatting** — applied toast formatting fixes and kept preview regressions covered across maintained Angular lines.
+- **Sass grid utilities** — replaced deprecated Sass percentage calls in grid utilities to reduce build warnings.
 
 ## [0.9] - 2026-06-22
 
-Published: `@sdcorejs/angular@19.0.9` / `@20.0.9` / `@21.0.9` (npm dist-tag `latest`).
-Synced from `vn-angular@26a54976`.
 
 ### Fixed
 
-- **`sd-table` inline column filter defaults** — table option replacement now recreates the table/filter state so default inline filter values are applied on first load and stale state is not carried across option instances. Synced from `vn-angular@81c6e4fe`.
-- **Date-range and operator autoId stability** — cleaned up generated selectors for `sd-date-range` and table column operators so automation targets remain deterministic. Synced from `vn-angular@25a812b6`.
+- **`sd-table` inline column filter defaults** — table option replacement now recreates the table/filter state so default inline filter values are applied on first load and stale state is not carried across option instances.
+- **Date-range and operator autoId stability** — cleaned up generated selectors for `sd-date-range` and table column operators so automation targets remain deterministic.
 
 ### Changed
 
-- **`sd-table` internals** — extracted paging/filter mapping, local filtering, row reorder, tree render state, and selection preservation helpers behind focused unit coverage. Public table APIs remain unchanged. Synced from `vn-angular@81c6e4fe`, `ea23b017`, `4c56a158`, and `df63de49`.
+- **`sd-table` internals** — extracted paging/filter mapping, local filtering, row reorder, tree render state, and selection preservation helpers behind focused unit coverage. Public table APIs remain unchanged.
 
 ## [0.8] - 2026-06-16
 
-Published: `@sdcorejs/angular@19.0.8` / `@20.0.8` / `@21.0.8` (npm dist-tag `latest`).
-Synced from `vn-angular@076d38e2`; includes the prior untagged sync from `vn-angular@31d97772`.
 
 ### Added
 
-- **`components/autoid-inspector` — Forge E2E export** — inspector export tab can call a configured backend host to generate Playwright / Robot Framework E2E ZIPs from the current autoid scan payload, while API keys stay server-side. Synced from `vn-angular@31d97772`.
-- **Core UI source-of-truth docs for AI rendering** — expanded component/form/service/module/pipe markdown so downstream agents can choose existing Core UI primitives before writing local CSS or custom markup. Notable docs cover `sd-operator`, `sd-tree`, `sd-query-bar`, `sd-query-builder`, `sd-inline-text`, `sd-input-color`, module `When NOT to use` guidance, pipe misuse guidance, and concrete copyable examples. Synced from `vn-angular@076d38e2`.
-- **`STYLE-GUIDE.md` AI rendering guardrails** — added rules for 4px-based spacing, Core UI utilities/components first, `sd-view` for label/value display, `sd-badge` for status rendering, and `size="sm"` for dense/table form controls. Synced from `vn-angular@076d38e2`.
+- **`components/autoid-inspector` — Forge E2E export** — inspector export tab can call a configured backend host to generate Playwright / Robot Framework E2E ZIPs from the current autoid scan payload, while API keys stay server-side.
+- **Core UI source-of-truth docs for AI rendering** — expanded component/form/service/module/pipe markdown so downstream agents can choose existing Core UI primitives before writing local CSS or custom markup. Notable docs cover `sd-operator`, `sd-tree`, `sd-query-bar`, `sd-query-builder`, `sd-inline-text`, `sd-input-color`, module `When NOT to use` guidance, pipe misuse guidance, and concrete copyable examples.
+- **`STYLE-GUIDE.md` AI rendering guardrails** — added rules for 4px-based spacing, Core UI utilities/components first, `sd-view` for label/value display, `sd-badge` for status rendering, and `size="sm"` for dense/table form controls.
 
 ### Changed
 
-- **`sd-modal` and `sd-side-drawer` close buttons** — close affordances now render as accessible icon buttons with a stable hit area, neutral hover/active states, focus-visible ring, and theme CSS variables. Synced from `vn-angular@076d38e2`.
-- **`sd-table` and form docs** — table docs now call out `useBadge` / `sd-badge` for status columns and `size="sm"` for filters or inline editors in dense table contexts; form docs mirror the same compact-size convention. Synced from `vn-angular@076d38e2`.
-- **`sd-query-bar` docs** — clarified that `SdQuery.filters` is already the canonical `Filter[]` payload and must not be copied into `sd-table.filter.externalFilters`, which describes built-in toolbar controls. Synced from `vn-angular@076d38e2`.
+- **`sd-modal` and `sd-side-drawer` close buttons** — close affordances now render as accessible icon buttons with a stable hit area, neutral hover/active states, focus-visible ring, and theme CSS variables.
+- **`sd-table` and form docs** — table docs now call out `useBadge` / `sd-badge` for status columns and `size="sm"` for filters or inline editors in dense table contexts; form docs mirror the same compact-size convention.
+- **`sd-query-bar` docs** — clarified that `SdQuery.filters` is already the canonical `Filter[]` payload and must not be copied into `sd-table.filter.externalFilters`, which describes built-in toolbar controls.
 
 ### Fixed
 
-- **Docs copy-paste safety** — replaced placeholder snippets in public examples with concrete column definitions so AI-generated code does not inherit non-compiling skeletons. Synced from `vn-angular@076d38e2`.
+- **Docs copy-paste safety** — replaced placeholder snippets in public examples with concrete column definitions so AI-generated code does not inherit non-compiling skeletons.
 
 ## [0.7] - 2026-06-11
 
-Published: `@sdcorejs/angular@19.0.7` / `@20.0.7` / `@21.0.7` (npm dist-tag `latest`).
-Synced from `vn-angular@56549bd9`.
 
 ### Added
 
-- **`modules/keycloak` — `silentRenewUrl` + `authErrorUrl`** — `SdKeycloakTenantConfig` nhận thêm 2 tùy chọn (mặc định `'silent-renew'` / `'auth-keycloak-error'`), là basename của 2 file tĩnh consumer đặt trong `public/`. Khi `keycloak.init()` ném lỗi, app tự redirect full-page tới trang lỗi tĩnh (`${origin}/<authErrorUrl>.html`) — render được kể cả khi bundle chưa boot — kèm guard chống vòng lặp. Package ship sẵn template tại `modules/keycloak/htmls/` (`silent-renew.html` cố định; `auth-keycloak-error.html` bản tổng quát dùng-được-ngay, không logo/email/phụ-thuộc-ngoài, chỉ placeholder). Log dev đổi sang tiếng Anh (thư viện global). Synced từ `vn-angular@05ef3e0b`.
-- **`components/inform` — export từ barrel** — `<sd-inform>` giờ được re-export từ `@sdcorejs/angular/components` (trước đây thiếu trong index, phải import sâu). Synced từ `vn-angular@b12dd0e2`.
+- **`modules/keycloak` — `silentRenewUrl` + `authErrorUrl`** — `SdKeycloakTenantConfig` nhận thêm 2 tùy chọn (mặc định `'silent-renew'` / `'auth-keycloak-error'`), là basename của 2 file tĩnh consumer đặt trong `public/`. Khi `keycloak.init()` ném lỗi, app tự redirect full-page tới trang lỗi tĩnh (`${origin}/<authErrorUrl>.html`) — render được kể cả khi bundle chưa boot — kèm guard chống vòng lặp. Package ship sẵn template tại `modules/keycloak/htmls/` (`silent-renew.html` cố định; `auth-keycloak-error.html` bản tổng quát dùng-được-ngay, không logo/email/phụ-thuộc-ngoài, chỉ placeholder). Log dev đổi sang tiếng Anh (thư viện global).
+- **`components/inform` — export từ barrel** — `<sd-inform>` giờ được re-export từ `@sdcorejs/angular/components` (trước đây thiếu trong index, phải import sâu).
 
 ### Changed
 
-- **`components/upload-file` — ưu tiên hàm `download`** — khi consumer cấu hình `download` handler (input `[download]` hoặc `SD_UPLOAD_FILE_CONFIGURATION`), click vào file đã lưu (có `idOrKey`) LUÔN gọi handler thay vì mở URL `src` lấy từ `details()` — phục vụ tải file qua endpoint có xác thực/proxy. File local chưa upload (chưa có `idOrKey`) vẫn tải trực tiếp từ blob. Synced từ `vn-angular@dd89ae4b`.
+- **`components/upload-file` — ưu tiên hàm `download`** — khi consumer cấu hình `download` handler (input `[download]` hoặc `SD_UPLOAD_FILE_CONFIGURATION`), click vào file đã lưu (có `idOrKey`) LUÔN gọi handler thay vì mở URL `src` lấy từ `details()` — phục vụ tải file qua endpoint có xác thực/proxy. File local chưa upload (chưa có `idOrKey`) vẫn tải trực tiếp từ blob.
 
 ### Fixed
 
-- **`components/org-chart` — tài liệu** — sửa mojibake (UTF-8 bị double-encode kiểu CP1252) trong `sd-org-chart.md`; toàn bộ chuỗi tiếng Việt bị hỏng nay hiển thị đúng. Synced từ `vn-angular@c8a71d56`.
+- **`components/org-chart` — tài liệu** — sửa mojibake (UTF-8 bị double-encode kiểu CP1252) trong `sd-org-chart.md`; toàn bộ chuỗi tiếng Việt bị hỏng nay hiển thị đúng.
 
 ## [0.6] - 2026-06-10
 
-Published: `@sdcorejs/angular@19.0.6` / `@20.0.6` / `@21.0.6` (npm dist-tag `latest`).
-Synced from `vn-angular@62048fed`.
 
 ### Added
 
-- **`forms/select` — footer actions** — hỗ trợ project custom action vào sticky footer của panel qua `ng-template[sdSelectFooterAction]`. Template nhận context `{ searchText }`, giữ đúng thứ tự khai báo, và event binding của consumer như `(click)="addNew(searchText)"` hoạt động bình thường. Synced từ `vn-angular@62048fed`.
-- **`forms/select` — footer visibility modes** — thêm `when="always" | "empty" | "has-result"`: luôn hiện, chỉ hiện khi có search text nhưng không có option khớp, hoặc chỉ hiện khi filter còn kết quả. Synced từ `vn-angular@62048fed`.
+- **`forms/select` — footer actions** — hỗ trợ project custom action vào sticky footer của panel qua `ng-template[sdSelectFooterAction]`. Template nhận context `{ searchText }`, giữ đúng thứ tự khai báo, và event binding của consumer như `(click)="addNew(searchText)"` hoạt động bình thường.
+- **`forms/select` — footer visibility modes** — thêm `when="always" | "empty" | "has-result"`: luôn hiện, chỉ hiện khi có search text nhưng không có option khớp, hoặc chỉ hiện khi filter còn kết quả.
 - **Showcase `/forms/select`** — bổ sung ví dụ đầy đủ cho footer actions: add button theo search text, nhiều action cùng lúc, consumer tự thêm padding, và ví dụ dùng `div role="button"` + custom CSS để action nhìn như một dropdown item không viền button.
 
 ### Changed
@@ -104,43 +92,37 @@ Synced from `vn-angular@62048fed`.
 
 ## [0.5] - 2026-06-10
 
-Published: `@sdcorejs/angular@19.0.5` / `@20.0.5` / `@21.0.5` (npm dist-tag `latest`).
-Synced from `vn-angular@a5250948`.
 
 ### Added
 
-- **`components/tree`** — component `<sd-tree>` mới (secondary entry point `@sdcorejs/angular/components/tree`, class `SdTree`, standalone): cây phân cấp cho folder / category / đơn vị tổ chức / dữ liệu cha-con. Bind theo style `sd-table` qua `[option]` (`SdTreeComponentOption`); hỗ trợ static/lazy loading + loading state, multi-select, row command, custom item template, reload thủ công, và **lọc không dấu tiếng Việt** (accent-insensitive). Synced từ `vn-angular@a5250948`.
-- **`components/org-chart`** — new `<sd-org-chart>` organization tree component with default item cards, collapse/expand support, projected `sdOrgChartItemDef`, `[itemTemplate]` customization, and stable autoId selectors for node parts. Includes secondary entry points and showcase wiring for Angular 19/20/21. Synced from `vn-angular@c744efa0`.
-- **`forms/select` — template `#sdSelected`** — custom render giá trị đã chọn ngay trong trigger edit-mode (`<mat-select-trigger>`), tách biệt với `#sdValue` / `sdViewDef` (chỉ tác động face read-only `viewed`/`inline`). Context `{ $implicit, item, items, display, multiple }`; fallback về `display` text khi không project nên usage cũ không đổi. Synced từ `vn-angular@b9a3dc54`.
-- **`components/query-builder` — so sánh field-to-field** — operator một toán hạng giờ chọn được **một field khác** làm vế phải thay vì literal (emit operand `dataType: 'field'`). Field ứng viên lọc theo đúng `type`, loại field trái, tôn trọng `allowFieldCompare: false` + guard `compareGroup`. `BETWEEN` / `IN` / `NOT_IN` / `NULL` / `NOT_NULL` vẫn literal/no-value. Synced từ `vn-angular@473d4a61`.
+- **`components/tree`** — component `<sd-tree>` mới (secondary entry point `@sdcorejs/angular/components/tree`, class `SdTree`, standalone): cây phân cấp cho folder / category / đơn vị tổ chức / dữ liệu cha-con. Bind theo style `sd-table` qua `[option]` (`SdTreeComponentOption`); hỗ trợ static/lazy loading + loading state, multi-select, row command, custom item template, reload thủ công, và **lọc không dấu tiếng Việt** (accent-insensitive).
+- **`components/org-chart`** — new `<sd-org-chart>` organization tree component with default item cards, collapse/expand support, projected `sdOrgChartItemDef`, `[itemTemplate]` customization, and stable autoId selectors for node parts. Includes secondary entry points and showcase wiring for Angular 19/20/21.
+- **`forms/select` — template `#sdSelected`** — custom render giá trị đã chọn ngay trong trigger edit-mode (`<mat-select-trigger>`), tách biệt với `#sdValue` / `sdViewDef` (chỉ tác động face read-only `viewed`/`inline`). Context `{ $implicit, item, items, display, multiple }`; fallback về `display` text khi không project nên usage cũ không đổi.
+- **`components/query-builder` — so sánh field-to-field** — operator một toán hạng giờ chọn được **một field khác** làm vế phải thay vì literal (emit operand `dataType: 'field'`). Field ứng viên lọc theo đúng `type`, loại field trái, tôn trọng `allowFieldCompare: false` + guard `compareGroup`. `BETWEEN` / `IN` / `NOT_IN` / `NULL` / `NOT_NULL` vẫn literal/no-value.
 
 ### Changed
 
-- **`components/query-builder` — relative date dùng model chuẩn `@sdcorejs/utils`** — bỏ model local, reuse `DateRelative` từ `@sdcorejs/utils` (≥ 1.1.3); `Filter` emit kèm discriminator `dataType`. Types/helpers re-export từ `@sdcorejs/angular/components/query-builder`. Synced từ `vn-angular@824c6ae3`.
+- **`components/query-builder` — relative date dùng model chuẩn `@sdcorejs/utils`** — bỏ model local, reuse `DateRelative` từ `@sdcorejs/utils` (≥ 1.1.3); `Filter` emit kèm discriminator `dataType`. Types/helpers re-export từ `@sdcorejs/angular/components/query-builder`.
 
 ### Fixed
 
-- **`forms/select` (multiple)** — khi số lượng đã chọn chạm `[limit]`, panel giờ vẫn hiển thị các option mới/đang chọn thay vì cắt mất. Synced từ `vn-angular@33ec23a0`.
+- **`forms/select` (multiple)** — khi số lượng đã chọn chạm `[limit]`, panel giờ vẫn hiển thị các option mới/đang chọn thay vì cắt mất.
 
 ## [0.4] - 2026-06-05
 
-Published: `@sdcorejs/angular@19.0.4` / `@20.0.4` / `@21.0.4` (npm dist-tag `latest`).
-Synced from `vn-angular@69f56d6a`.
 
 ### Security
 
-- **Toast XSS hardening** (`notify`) — toast `message` giờ render dạng **TEXT** (auto-escape) mặc định thay vì `[innerHTML]` (bỏ DOM-XSS sink ở path thường). Thêm opt-in `html?: boolean` trên `SdNotifyOption`; khi `true` mới render HTML qua `DomSanitizer.sanitize(SecurityContext.HTML)` tường minh (strip `<script>`/`on*`/`javascript:`) — chỉ dùng cho markup tin cậy. `onAction` là callback app-authored (không phải input không tin cậy). Synced từ `vn-angular@8a2c68a1`.
+- **Toast XSS hardening** (`notify`) — toast `message` giờ render dạng **TEXT** (auto-escape) mặc định thay vì `[innerHTML]` (bỏ DOM-XSS sink ở path thường). Thêm opt-in `html?: boolean` trên `SdNotifyOption`; khi `true` mới render HTML qua `DomSanitizer.sanitize(SecurityContext.HTML)` tường minh (strip `<script>`/`on*`/`javascript:`) — chỉ dùng cho markup tin cậy. `onAction` là callback app-authored (không phải input không tin cậy).
 
 ### Changed
 
-- **Bỏ license-gate `SdBaseSecureComponent` khỏi mọi component** — 9 component không còn `extends SdBaseSecureComponent` (không enforce license khi khởi tạo). Class base + `SdLicenseService` **vẫn giữ lại** (dormant) để gắn lại license sau khi cần. Cho phép dùng/publish thư viện công khai mà không bị chặn license. Synced từ `vn-angular@d2a58656`.
+- **Bỏ license-gate `SdBaseSecureComponent` khỏi mọi component** — 9 component không còn `extends SdBaseSecureComponent` (không enforce license khi khởi tạo). Class base + `SdLicenseService` **vẫn giữ lại** (dormant) để gắn lại license sau khi cần. Cho phép dùng/publish thư viện công khai mà không bị chặn license.
 
 ## [0.3] - 2026-06-04
 
-Published: `@sdcorejs/angular@19.0.3` / `@20.0.3` / `@21.0.3` (npm dist-tag `latest`).
-Synced from `vn-angular@9f41cc60`.
 
-> **Đổi scheme version:** bỏ hậu tố `-beta`. Từ bản này version đánh **đồng bộ** giữa `@sd-angular/core` (vn-angular) ↔ `@sdcorejs/angular` theo `<angular-major>.0.<release>` — release này = `.3`.
+> **Đổi scheme version:** bỏ hậu tố `-beta`. Từ bản này version dùng dạng `<angular-major>.0.<release>` — release này = `.3`.
 
 ### Added
 
@@ -178,8 +160,6 @@ Synced from `vn-angular@9f41cc60`.
 
 ## [0.1] - 2026-06-01
 
-Published: `@sdcorejs/angular@19.0.1` / `@20.0.1` / `@21.0.1` (npm dist-tag `latest`).
-Synced from `vn-angular@00b9a21f` (chỉ thay đổi doc; lib code KHÔNG đổi so với `0.0`).
 
 Bản metadata/docs — không thay đổi API hay code runtime so với `0.0`.
 
@@ -188,15 +168,8 @@ Bản metadata/docs — không thay đổi API hay code runtime so với `0.0`.
 - **`license`** — thêm field `"license": "MIT"` vào `package.json` (bản `0.0` publish thiếu → npm hiển thị UNLICENSED).
 - **README npm-facing** — giờ là bản public do repo sinh ra (`docs/npm-README.md`): bỏ wording "internal use only", thêm link **Showcase** (`https://sdcorejs.github.io/sdcorejs-angular`) + **Storybook** (`https://sdcorejs.github.io/portal-template`), bỏ import `SdSearch` không tồn tại, sửa ví dụ form `[(ngModel)]` → `[(model)]`, bỏ version badge cũ.
 
-### Internal
-
-- Sync chỉ đồng bộ CODE; README + CHANGELOG do repo tự sở hữu/sinh ra (xem `CLAUDE.md`).
-
 ## [0.0] - 2026-06-01
 
-Published: `@sdcorejs/angular@19.0.0` / `@20.0.0` / `@21.0.0` (npm dist-tag `latest`).
-Pre-release: `0.0-rc.1`, `0.0-rc.2` (dist-tag `beta`).
-Synced from `vn-angular@50540baf`.
 
 ### Added
 
@@ -231,5 +204,3 @@ Synced from `vn-angular@50540baf`.
 - Showcase project tại `projects/showcase/` — catalog trực quan mọi component trong `@sdcorejs/angular`, 47 lazy demo page (Components / Forms / Services). Deploy lên GitHub Pages qua `.github/workflows/deploy-pages.yml`.
 
 ---
-
-Để tra origin chi tiết theo từng version, xem `SYNC-STATUS.md` trong mỗi `versions/v<N>/`. Các bản sau final sync dùng repo này làm source trực tiếp.
