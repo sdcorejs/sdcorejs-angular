@@ -10,9 +10,29 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.10] - 2026-06-30
+
+Published: `@sdcorejs/angular@19.0.10` / `@20.0.10` / `@21.0.10` (npm dist-tag `latest`).
+Final legacy sync from `vn-angular@d12478a1`; repo-owned changes now start in `versions/v19` and roll out to `versions/v20` / `versions/v21`.
+
+### Added
+
+- **Shared display pipes** — added `sdFormatDate`, `sdFormatDatetime`, and `sdView` display pipes with tests and npm-facing docs.
+- **`sd-table` column filter callback** — column filters can notify committed value changes through `onChange`, with regression coverage and showcase wiring.
+
 ### Changed
 
 - **Repo ownership** — confirmed the final legacy sync at `vn-angular@d12478a1` (`release/0.0.1`); future `@sdcorejs/angular` changes are owned directly in this repo and roll out from `versions/v19` to `v20` / `v21`.
+- **Core UI docs and published API docs** — expanded standalone import, table-cell control, shared pipe, and AI-facing usage guidance, then regenerated published docs for the maintained Angular lines.
+- **`form-generic` builder UX** — refined drag/drop, resize, preview, row feedback, and Material-style mode controls while keeping render behavior covered by regression tests.
+- **Release hardening across v19/v20/v21** — modernized safe Angular metadata and dependency injection usage, reduced runtime/Sass warnings, and strengthened fragile test assertions.
+
+### Fixed
+
+- **`tab-router` lifecycle handling** — ported `beforeClose` handling and `SD_TAB` injection fixes across all maintained versions.
+- **`sd-table` selection and filter stability** — synced table filter `onChange` support, selector disabled fixes, preserved selected-row behavior, docs, and showcase updates.
+- **`form-generic` preview render safety** — only registered controls are patched before dynamic form fields finish registering, preventing preview render instability.
+- **`notify` and form preview sync** — carried the latest toast formatting and form preview fixes through v19, v20, and v21.
 
 ## [0.9] - 2026-06-22
 
