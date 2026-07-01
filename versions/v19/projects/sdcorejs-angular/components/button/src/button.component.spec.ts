@@ -1,5 +1,7 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdButton } from './button.component';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 
@@ -41,7 +43,17 @@ describe('SdButton', () => {
     it('renders prefix icon when provided', () => {
       setInput(fixture, 'prefixIcon', 'save');
       setInput(fixture, 'title', 'X');
-      expect(queryByCss(fixture, 'mat-icon.c-icon-prefix').textContent?.trim()).toBe('save');
+      expect(queryByCss(fixture, 'sd-icon.c-icon-prefix mat-icon').textContent?.trim()).toBe('save');
+    });
+
+    it('lets iconSet choose Material filled when fontSet is not provided', () => {
+      setInput(fixture, 'prefixIcon', 'add');
+      setInput(fixture, 'title', 'X');
+      setInput(fixture, 'iconSet', 'material-icons');
+
+      const icon = fixture.debugElement.query(By.directive(SdIcon)).componentInstance as SdIcon;
+      expect(icon.resolvedSet()).toBe('material-icons');
+      expect(icon.resolvedFontSet()).toBe('material-icons');
     });
 
     // why: bug "text dài button bị xuống hàng cắt height" — fix bằng nowrap + ellipsis
@@ -91,7 +103,7 @@ describe('SdButton', () => {
       setInput(fixture, 'prefixIcon', 'save');
       setInput(fixture, 'loading', true);
       expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
-      expect(fixture.nativeElement.querySelector('mat-icon.c-icon-prefix')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-icon-prefix')).toBeNull();
     });
   });
 

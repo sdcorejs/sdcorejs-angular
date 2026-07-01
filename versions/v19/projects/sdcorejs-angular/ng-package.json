@@ -15,7 +15,8 @@
     "keycloak-js",
     "prismjs",
     "chart.js",
-    "pdfjs-dist"
+    "pdfjs-dist",
+    "@lucide/angular"
   ],
   "assets": [
     "assets",

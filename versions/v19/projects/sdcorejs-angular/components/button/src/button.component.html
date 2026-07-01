@@ -4,6 +4,7 @@
 @let _prefixIcon = prefixIcon();
 @let _suffixIcon = suffixIcon();
 @let _fontSet = fontSet();
+@let _iconSet = iconSet();
 @let _htmlType = htmlType();
 @let _disabled = disabled();
 @let _color = color();
@@ -86,7 +87,7 @@
     @if (_loading) {
       <mat-spinner mode="indeterminate" diameter="18" strokeWidth="2" class="c-spinner"></mat-spinner>
     } @else if (_prefixIcon) {
-      <mat-icon [fontSet]="_fontSet" class="c-icon-prefix">{{ _prefixIcon }}</mat-icon>
+      <sd-icon [name]="_prefixIcon" [set]="_iconSet" [fontSet]="_fontSet" [size]="size()" class="c-icon-prefix"></sd-icon>
     }
 
     @if (_title) {
@@ -96,11 +97,11 @@
     }
 
     @if (_suffixIcon && !_loading) {
-      <mat-icon [fontSet]="_fontSet" class="c-icon-suffix">{{ _suffixIcon }}</mat-icon>
+      <sd-icon [name]="_suffixIcon" [set]="_iconSet" [fontSet]="_fontSet" [size]="size()" class="c-icon-suffix"></sd-icon>
     }
 
     @if (!_title && !_prefixIcon && !_loading && _suffixIcon) {
-      <mat-icon [fontSet]="_fontSet">{{ _suffixIcon }}</mat-icon>
+      <sd-icon [name]="_suffixIcon" [set]="_iconSet" [fontSet]="_fontSet" [size]="size()"></sd-icon>
     }
   </div>
 </ng-template>

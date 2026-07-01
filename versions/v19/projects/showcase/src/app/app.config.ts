@@ -1,7 +1,20 @@
 import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter, withInMemoryScrolling } from '@angular/router';
+import {
+  LucideChevronDown,
+  LucideCircleAlert,
+  LucideEllipsisVertical,
+  LucideEye,
+  LucidePencil,
+  LucidePlus,
+  LucideSave,
+  LucideSearch,
+  LucideTrash2,
+  LucideUpload,
+} from '@lucide/angular';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
+import { provideSdIcon } from '@sdcorejs/angular/modules/icon';
 import { routes } from './app.routes';
 
 // why: licenseKey gắn với từng domain. Key dưới đây cấp cho `sdcorejs.github.io`
@@ -16,10 +29,21 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideAnimations(),
-    provideRouter(
-      routes,
-      withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' }),
-    ),
+    provideRouter(routes, withInMemoryScrolling({ anchorScrolling: 'enabled', scrollPositionRestoration: 'enabled' })),
+    provideSdIcon({
+      lucideIcons: [
+        LucideChevronDown,
+        LucideCircleAlert,
+        LucideEllipsisVertical,
+        LucideEye,
+        LucidePencil,
+        LucidePlus,
+        LucideSave,
+        LucideSearch,
+        LucideTrash2,
+        LucideUpload,
+      ],
+    }),
     { provide: SD_CORE_CONFIGURATION, useValue: SHOWCASE_CORE_CONFIG },
   ],
 };

@@ -12,11 +12,11 @@ import {
   output,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Color } from '@sdcorejs/utils/models';
-import { DefaultMaterialIconFontSet, MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
+import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
+import { type MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 
@@ -31,7 +31,7 @@ export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, SdIcon],
   host: {
     '[class.sd-disabled]': 'disabled()',
     '[class.sd-loading]': 'loading()',
@@ -62,8 +62,8 @@ export class SdButton implements OnInit, OnDestroy {
     transform: value => value || 'sm',
   });
 
-  fontSet = input<MaterialIconFontSet, MaterialIconFontSet | undefined | null>(DefaultMaterialIconFontSet, {
-    transform: value => value || DefaultMaterialIconFontSet,
+  fontSet = input<MaterialIconFontSet | undefined, MaterialIconFontSet | undefined | null>(undefined, {
+    transform: value => value ?? undefined,
   });
 
   title = input<string | undefined | null>(undefined);
@@ -71,6 +71,9 @@ export class SdButton implements OnInit, OnDestroy {
   tooltip = input<string | undefined | null>(undefined);
   prefixIcon = input<string | undefined | null>(undefined);
   suffixIcon = input<string | undefined | null>(undefined);
+  iconSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
+    transform: value => value ?? undefined,
+  });
 
   disabled = input(false, { transform: booleanAttribute });
   loading = input(false, { transform: booleanAttribute });

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 @Component({
   selector: 'app-button-demo',
@@ -9,8 +10,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   template: `
     <demo-page
       title="Button"
-      description="Nút thao tác chuẩn — 4 biến thể (fill / light / outline / link), 3 kích thước, hỗ trợ icon và trạng thái loading.">
-
+      description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / link), 3 kích thước, hỗ trợ icon và trạng thái loading.">
       <demo-section heading="Biến thể" [props]="[{ name: 'type', value: 'fill / light / outline / link' }]">
         <sd-button type="fill" color="primary" title="fill"></sd-button>
         <sd-button type="light" color="primary" title="light"></sd-button>
@@ -38,15 +38,29 @@ import { SdButton } from '@sdcorejs/angular/components/button';
         <sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>
       </demo-section>
 
-      <demo-section heading="Trạng thái" [props]="[{ name: 'loading', value: 'true' }, { name: 'disabled', value: 'true' }]">
-        <sd-button
-          type="fill"
-          color="primary"
-          title="loading"
-          prefixIcon="send"
-          [loading]="submitting()"
-          (click)="onSubmit()">
-        </sd-button>
+      <demo-section
+        heading="Toggle icon set bằng alias"
+        [props]="[
+          { name: 'iconSet', value: iconSet() },
+          { name: 'alias', value: 'add -> plus | delete -> trash-2 | visibility -> eye | more_vert -> ellipsis-vertical' },
+        ]"
+        note="Các button bên dưới vẫn truyền icon name theo Material; khi chuyển sang Lucide, SdIcon tự map qua alias tương ứng.">
+        <sd-button type="fill" color="primary" title="Material filled" (click)="useIconSet('material-icons')"></sd-button>
+        <sd-button type="fill" color="secondary" title="Material outlined" (click)="useIconSet('material-icons-outlined')"></sd-button>
+        <sd-button type="fill" color="info" title="Lucide" (click)="useIconSet('lucide')"></sd-button>
+        <sd-button type="light" color="primary" title="Create" prefixIcon="add" [iconSet]="iconSet()"></sd-button>
+        <sd-button type="light" color="primary" title="View" prefixIcon="visibility" [iconSet]="iconSet()"></sd-button>
+        <sd-button type="light" color="error" title="Delete" prefixIcon="delete" [iconSet]="iconSet()"></sd-button>
+        <sd-button type="outline" color="secondary" title="More" suffixIcon="more_vert" [iconSet]="iconSet()"></sd-button>
+      </demo-section>
+
+      <demo-section
+        heading="Trạng thái"
+        [props]="[
+          { name: 'loading', value: 'true' },
+          { name: 'disabled', value: 'true' },
+        ]">
+        <sd-button type="fill" color="primary" title="loading" prefixIcon="send" [loading]="submitting()" (click)="onSubmit()"> </sd-button>
         <sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
         <div style="width: 240px;">
           <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
@@ -58,6 +72,11 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 })
 export class ButtonDemoComponent {
   readonly submitting = signal(false);
+  readonly iconSet = signal<SdIconSet>('material-icons-outlined');
+
+  useIconSet(iconSet: SdIconSet) {
+    this.iconSet.set(iconSet);
+  }
 
   onSubmit() {
     this.submitting.set(true);
