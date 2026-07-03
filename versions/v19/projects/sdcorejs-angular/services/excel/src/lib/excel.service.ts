@@ -5,6 +5,7 @@ import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';
+import { neutralizeSpreadsheetFormula } from './spreadsheet-formula-injection.util';
 
 @Injectable({
   providedIn: 'root',
@@ -177,11 +178,11 @@ export class SdExcelService {
           },
         },
       };
-      cellField.value = column.field;
-      cellTitle.value = column.title;
+      cellField.value = neutralizeSpreadsheetFormula(column.field);
+      cellTitle.value = neutralizeSpreadsheetFormula(column.title);
       if (hasDescription) {
         cellDescription.style = this.#descriptionStyle;
-        cellDescription.value = column.description || '';
+        cellDescription.value = neutralizeSpreadsheetFormula(column.description || '');
       }
     });
     if (sheets?.length) {
@@ -191,13 +192,13 @@ export class SdExcelService {
           sheet.headers.forEach((header, index) => {
             newSheet.getColumn(index + 1).width = 30;
             newSheet.getCell(1, index + 1).style = this.#titleStyle;
-            newSheet.getCell(1, index + 1).value = header.value;
+            newSheet.getCell(1, index + 1).value = neutralizeSpreadsheetFormula(header.value);
             newSheet.getCell(2, index + 1).style = this.#titleStyle;
-            newSheet.getCell(2, index + 1).value = header.display || header.value;
+            newSheet.getCell(2, index + 1).value = neutralizeSpreadsheetFormula(header.display || header.value);
           });
           sheet.items.forEach((item, idx1) => {
             sheet.headers.forEach((header, idx2) => {
-              newSheet.getCell(3 + idx1, 1 + idx2).value = item[header.value];
+              newSheet.getCell(3 + idx1, 1 + idx2).value = neutralizeSpreadsheetFormula(item[header.value]) as CellValue;
               newSheet.getCell(3 + idx1, 1 + idx2).style = this.#cellStyle;
             });
           });
@@ -221,7 +222,7 @@ export class SdExcelService {
     // Dấu " bên trong được nhân đôi theo chuẩn RFC 4180.
     const escape = (v: unknown): string => {
       if (v == null) return '';
-      const s = String(v);
+      const s = typeof v === 'string' ? neutralizeSpreadsheetFormula(v) : String(v);
       return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
 
@@ -264,11 +265,11 @@ export class SdExcelService {
       } else {
         firstSheet.getCell(2, index + 1).style = this.#titleStyle;
       }
-      firstSheet.getCell(1, index + 1).value = column.field;
-      firstSheet.getCell(2, index + 1).value = column.title;
+      firstSheet.getCell(1, index + 1).value = neutralizeSpreadsheetFormula(column.field);
+      firstSheet.getCell(2, index + 1).value = neutralizeSpreadsheetFormula(column.title);
       if (hasDescription) {
         firstSheet.getCell(3, index + 1).style = this.#descriptionStyle;
-        firstSheet.getCell(3, index + 1).value = column.description || '';
+        firstSheet.getCell(3, index + 1).value = neutralizeSpreadsheetFormula(column.description || '');
       }
     });
     if (sheets?.length) {
@@ -278,13 +279,13 @@ export class SdExcelService {
           sheet.headers.forEach((header, index) => {
             newSheet.getColumn(index + 1).width = 30;
             newSheet.getCell(1, index + 1).style = this.#titleStyle;
-            newSheet.getCell(1, index + 1).value = header.value;
+            newSheet.getCell(1, index + 1).value = neutralizeSpreadsheetFormula(header.value);
             newSheet.getCell(2, index + 1).style = this.#titleStyle;
-            newSheet.getCell(2, index + 1).value = header.display || header.value;
+            newSheet.getCell(2, index + 1).value = neutralizeSpreadsheetFormula(header.display || header.value);
           });
           sheet.items.forEach((item, idx1) => {
             sheet.headers.forEach((header, idx2) => {
-              newSheet.getCell(3 + idx1, 1 + idx2).value = item[header.value];
+              newSheet.getCell(3 + idx1, 1 + idx2).value = neutralizeSpreadsheetFormula(item[header.value]) as CellValue;
               newSheet.getCell(3 + idx1, 1 + idx2).style = this.#cellStyle;
             });
           });
@@ -300,7 +301,7 @@ export class SdExcelService {
           firstSheet.getCell(fromRow + idx1, 1 + idx2).value = +e[column.field];
           firstSheet.getCell(fromRow + idx1, 1 + idx2).numFmt = '#';
         } else {
-          firstSheet.getCell(fromRow + idx1, 1 + idx2).value = e[column.field];
+          firstSheet.getCell(fromRow + idx1, 1 + idx2).value = neutralizeSpreadsheetFormula(e[column.field]) as CellValue;
         }
         firstSheet.getCell(fromRow + idx1, 1 + idx2).style = {
           ...this.#cellStyle,
