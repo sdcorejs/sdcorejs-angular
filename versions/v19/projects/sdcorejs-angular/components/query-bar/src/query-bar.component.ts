@@ -18,7 +18,6 @@ import {
   viewChildren,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -31,6 +30,7 @@ import { SdQueryFieldPicker } from './components/field-picker/field-picker.compo
 import { SdQueryInlineChip } from './components/inline-chip/inline-chip.component';
 import { SdQueryInlineValueChip } from './components/inline-value-chip/inline-value-chip.component';
 import { SdQueryPopoverChip } from './components/popover-chip/popover-chip.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
   BuildingChip,
   SD_QUERY_MULTI_OPERATORS,
@@ -60,10 +60,9 @@ const EMPTY_ARRAY: any[] = [];
   styleUrls: ['./query-bar.component.scss', './query-bar.controls.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
-    MatIconModule,
     MatMenuModule,
     MatTooltipModule,
     SdQueryActionsBar,

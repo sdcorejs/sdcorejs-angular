@@ -76,14 +76,14 @@
       <!-- Option trong dropdown: icon thể hiện type + label. -->
       <ng-template sdItemDef let-item="item">
         <span class="qb-opt">
-          <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ fieldIcon(item) }}</mat-icon>
+          <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
           <span class="qb-opt-label">{{ item.label }}</span>
         </span>
       </ng-template>
       <!-- Giá trị đã chọn ở trigger: icon mặc định theo type khi field chưa có icon riêng. -->
       <ng-template #sdSelected let-item="item">
         <span class="qb-opt">
-          <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ fieldIcon(item) }}</mat-icon>
+          <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
           <span class="qb-opt-label">{{ item?.label }}</span>
         </span>
       </ng-template>
@@ -122,13 +122,13 @@
           >
             <ng-template sdItemDef let-item="item">
               <span class="qb-opt">
-                <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item.icon }}</mat-icon>
-                <span class="qb-opt-label">{{ item.display }}</span>
+                <sd-icon class="qb-opt-icon" [name]="$any(item).icon"></sd-icon>
+                <span class="qb-opt-label">{{ $any(item).display }}</span>
               </span>
             </ng-template>
             <ng-template #sdSelected let-item="item">
               <span class="qb-opt">
-                <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item?.icon }}</mat-icon>
+                <sd-icon class="qb-opt-icon" [name]="item?.icon"></sd-icon>
                 <span class="qb-opt-label">{{ item?.display }}</span>
               </span>
             </ng-template>
@@ -153,13 +153,13 @@
           >
             <ng-template sdItemDef let-item="item">
               <span class="qb-opt">
-                <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ fieldIcon(item) }}</mat-icon>
+                <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
                 <span class="qb-opt-label">{{ item.label }}</span>
               </span>
             </ng-template>
             <ng-template #sdSelected let-item="item">
               <span class="qb-opt">
-                <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ fieldIcon(item) }}</mat-icon>
+                <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
                 <span class="qb-opt-label">{{ item?.label }}</span>
               </span>
             </ng-template>
@@ -200,13 +200,13 @@
               <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dateMode" (modelChange)="setDateMode(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
                 <ng-template sdItemDef let-item="item">
                   <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item.icon }}</mat-icon>
-                    <span class="qb-opt-label">{{ item.display }}</span>
+                    <sd-icon class="qb-opt-icon" [name]="$any(item).icon"></sd-icon>
+                    <span class="qb-opt-label">{{ $any(item).display }}</span>
                   </span>
                 </ng-template>
                 <ng-template #sdSelected let-item="item">
                   <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item?.icon }}</mat-icon>
+                    <sd-icon class="qb-opt-icon" [name]="item?.icon"></sd-icon>
                     <span class="qb-opt-label">{{ item?.display }}</span>
                   </span>
                 </ng-template>
@@ -226,13 +226,13 @@
               <sd-select class="qb-date-mode" [items]="dateModes" valueField="value" displayField="display" size="sm" [model]="_dtMode" (modelChange)="setDateMode(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('datemode-' + index)">
                 <ng-template sdItemDef let-item="item">
                   <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item.icon }}</mat-icon>
-                    <span class="qb-opt-label">{{ item.display }}</span>
+                    <sd-icon class="qb-opt-icon" [name]="$any(item).icon"></sd-icon>
+                    <span class="qb-opt-label">{{ $any(item).display }}</span>
                   </span>
                 </ng-template>
                 <ng-template #sdSelected let-item="item">
                   <span class="qb-opt">
-                    <mat-icon class="qb-opt-icon" fontSet="material-icons-outlined">{{ item?.icon }}</mat-icon>
+                    <sd-icon class="qb-opt-icon" [name]="item?.icon"></sd-icon>
                     <span class="qb-opt-label">{{ item?.display }}</span>
                   </span>
                 </ng-template>

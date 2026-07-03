@@ -22,13 +22,14 @@ import { SdSchema, SdRegister } from '../../models';
 import { SdGenericService } from '../../services';
 import { ArrayUtilities } from '@sdcorejs/angular/utilities';
 import { Utilities } from '@sdcorejs/utils/fns';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-generic-select',
   templateUrl: './generic-select.component.html',
   styleUrl: 'generic-select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdAutocomplete, SdSelect, TranslatePipe],
+  imports: [SdIcon, SdAutocomplete, SdSelect, TranslatePipe],
 })
 export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild(SdAutocomplete) autocomplete?: SdAutocomplete;

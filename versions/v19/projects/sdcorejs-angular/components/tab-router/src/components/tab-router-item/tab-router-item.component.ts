@@ -2,13 +2,13 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy
 import { Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 
-import { MatIconModule } from '@angular/material/icon';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdTab, SdTabInfo } from '../../models';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SdTabInfoPipe } from '../../pipes/tab-info.pipe';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-tab-router-item',
@@ -16,7 +16,7 @@ import { SdTabInfoPipe } from '../../pipes/tab-info.pipe';
   styleUrl: './tab-router-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, SdBadge, SdTabInfoPipe],
+  imports: [SdIcon, CommonModule, SdBadge, SdTabInfoPipe],
 })
 export class SdTabRouterItemComponent implements OnInit, OnDestroy {
   @Input({ required: true }) tab!: SdTab;

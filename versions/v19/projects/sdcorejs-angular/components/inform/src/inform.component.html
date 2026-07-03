@@ -1,5 +1,6 @@
 @if (!dismissed()) {
   @let _effectiveIcon = effectiveIcon();
+  @let _fontSet = fontSet();
   <div
     class="c-inform"
     [attr.role]="liveRole()"
@@ -8,7 +9,7 @@
     [attr.data-autoid]="autoId() || null">
 
     @if (_effectiveIcon) {
-      <mat-icon class="c-inform-icon c-material-icon" aria-hidden="true" [ngClass]="fontSetClasses()">{{ _effectiveIcon }}</mat-icon>
+      <sd-icon class="c-inform-icon c-material-icon" aria-hidden="true" [fontSet]="_fontSet" [name]="_effectiveIcon"></sd-icon>
     }
 
     @let _actionLabel = actionLabel();
@@ -48,7 +49,7 @@
         class="c-inform-close"
         [attr.aria-label]="'core.common.close' | translate"
         (click)="onClose($event)">
-        <mat-icon class="material-icons" aria-hidden="true">close</mat-icon>
+        <sd-icon aria-hidden="true" name="close"></sd-icon>
       </button>
     }
   </div>

@@ -23,9 +23,9 @@
             displayField="display"
             required></sd-select>
         }
-        <mat-icon class="c-close-icon" (click)="removaValidation(idx)">delete</mat-icon>
+        <sd-icon class="c-close-icon" (click)="removaValidation(idx)" name="delete"></sd-icon>
         <!-- <sd-button
-          
+
           prefixIcon="delete"
           (click)="removaValidation(idx)"
           color="error"
@@ -36,11 +36,11 @@
   <sd-button [title]="'core.component.form-builder.add-validation' | translate" [matMenuTriggerFor]="menu" prefixIcon="add" color="primary" type="link"></sd-button>
   <mat-menu #menu="matMenu">
     <button (click)="addValidation('expression')" mat-menu-item type="button">
-      <!-- <mat-icon fontIcon="warning"></mat-icon> -->
+      <!-- <sd-icon fontIcon="warning"></sd-icon> -->
       <span>{{ 'core.component.form-builder.expression' | translate }}</span>
     </button>
     <button (click)="addValidation('function')" mat-menu-item type="button">
-      <!-- <mat-icon fontIcon="error"></mat-icon> -->
+      <!-- <sd-icon fontIcon="error"></sd-icon> -->
       <span>{{ 'core.component.form-builder.available-methods' | translate }}</span>
     </button>
   </mat-menu>

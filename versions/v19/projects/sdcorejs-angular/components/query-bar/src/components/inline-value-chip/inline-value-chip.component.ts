@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal, viewChild } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdInlineText } from '@sdcorejs/angular/forms/inline-text';
 import { Operator } from '@sdcorejs/utils/models';
 
 import { SD_QUERY_NO_DATA_OPERATORS, SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 interface Range {
   from?: any;
@@ -27,7 +27,7 @@ type ChipState = 'pending' | 'active' | 'focus' | 'error';
   selector: 'sd-query-inline-value-chip',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, SdOperator, SdInlineText],
+  imports: [SdIcon, SdOperator, SdInlineText],
   templateUrl: './inline-value-chip.component.html',
   styleUrl: './inline-value-chip.component.scss',
 })

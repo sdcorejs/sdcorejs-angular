@@ -1,48 +1,39 @@
 ---
-updated_at: 2026-07-03T10:58:00+07:00
-status: complete
+updated_at: 2026-07-03T18:06:03+07:00
+status: in_progress
 track: angular
-active_skill: sdcorejs-angular
+active_skill: sdcorejs-repair-loop
 branch: release/0.11
 ---
 
 # Current Session Checkpoint
 
 ## User Request
-Kiem tra `SdIconConfig` va `SdIconResolvedConfig` bi trung lap, doi ve `ISdIconConfiguration` neu dung convention interface.
+Fix release review findings: remove hard-coded icon font defaults, replace `MaterialIconFontSet` with `SdIconSet` across the library, keep the demo, delete generated log file, then commit and push.
 
 ## Tasks
-- [x] Doc context va cac type `SdIcon` hien tai.
-- [x] Sua model/provider/usage thanh `ISdIconConfiguration`.
-- [x] Sync v19/v20/v21 neu cung pattern.
-- [x] Chay verification lien quan.
+- [x] Review findings and identify the release scope to commit.
+- [x] Fix icon fontSet usage: remove hard-coded Material defaults, remove `MaterialIconFontSet`, and use `SdIconSet` across the library.
+- [x] Handle demo artifacts: keep the icon-configuration demo and delete the generated showcase log.
+- [x] Run release checks.
+- [ ] Commit and push the current branch.
 
 ## Current State
-- Last completed: Verified focused icon specs, package builds, showcase builds, old type names removal, and scoped diff check.
-- In progress: None.
+- Last completed: Source checks and production builds passed for the icon release fixes.
+- In progress: Commit and push the branch.
 - Blocked/skipped: None.
 
 ## Artifacts Touched
-- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cho request icon config naming.
-- EDIT `versions/v19/projects/sdcorejs-angular/modules/icon/src/icon.model.ts` - rename config interface and derive resolved type.
-- EDIT `versions/v19/projects/sdcorejs-angular/modules/icon/src/icon.provider.ts` - use `ISdIconConfiguration`.
-- EDIT `versions/v20/projects/sdcorejs-angular/modules/icon/src/icon.model.ts` - sync icon config naming.
-- EDIT `versions/v20/projects/sdcorejs-angular/modules/icon/src/icon.provider.ts` - sync icon config naming.
-- EDIT `versions/v21/projects/sdcorejs-angular/modules/icon/src/icon.model.ts` - sync icon config naming.
-- EDIT `versions/v21/projects/sdcorejs-angular/modules/icon/src/icon.provider.ts` - sync icon config naming.
+- EDIT `.sdcorejs/tasks/current-session.md` - current fix/commit checkpoint.
+- EDIT `versions/v19|v20|v21/projects/sdcorejs-angular/**` - align icon font set API and remove hard-coded Material font fallbacks.
+- EDIT `versions/v19|v20|v21/projects/showcase/src/app/pages/components/badge/badge-demo.component.ts` - use `fontSet` demo API consistently.
+- DELETE `versions/v19/showcase-4220.log` - generated showcase log removed from workspace.
 
 ## Verification
-- PASS: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include projects/sdcorejs-angular/modules/icon/src/icon.component.spec.ts` in `versions/v19` - 6 success.
-- PASS: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include projects/sdcorejs-angular/modules/icon/src/icon.component.spec.ts` in `versions/v20` - 6 success.
-- PASS: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include projects/sdcorejs-angular/modules/icon/src/icon.component.spec.ts` in `versions/v21` - 6 success.
+- PASS: Source check found no `MaterialIconFontSet`, `DefaultMaterialIconFontSet`, `materialFontSet`, `defaultSet`, or `iconSet` tokens in current v19/v20/v21 library and showcase files.
 - PASS: `npx ng build sdcorejs-angular --configuration production` in `versions/v19`.
 - PASS: `npx ng build sdcorejs-angular --configuration production` in `versions/v20`.
 - PASS: `npx ng build sdcorejs-angular --configuration production` in `versions/v21`.
-- PASS: `npx ng build showcase` in `versions/v19`.
-- PASS: `npx ng build showcase` in `versions/v20`.
-- PASS: `npx ng build showcase` in `versions/v21`.
-- PASS: `rg -n "\bSdIconConfig\b|\bSdIconResolvedConfig\b" versions/v19/projects/sdcorejs-angular/modules/icon versions/v20/projects/sdcorejs-angular/modules/icon versions/v21/projects/sdcorejs-angular/modules/icon` returned no matches.
-- PASS: `git diff --check -- ...` for scoped tracked files. Note: v20/v21 `modules/icon` files are currently untracked from the existing rollout.
 
 ## Resume From Here
-Review or commit the icon configuration naming changes when ready.
+Run `git diff --check`, then commit and push.

@@ -46,13 +46,12 @@ describe('SdButton', () => {
       expect(queryByCss(fixture, 'sd-icon.c-icon-prefix mat-icon').textContent?.trim()).toBe('save');
     });
 
-    it('lets iconSet choose Material filled when fontSet is not provided', () => {
+    it('lets fontSet choose Material filled', () => {
       setInput(fixture, 'prefixIcon', 'add');
       setInput(fixture, 'title', 'X');
-      setInput(fixture, 'iconSet', 'material-icons');
+      setInput(fixture, 'fontSet', 'material-icons');
 
       const icon = fixture.debugElement.query(By.directive(SdIcon)).componentInstance as SdIcon;
-      expect(icon.resolvedSet()).toBe('material-icons');
       expect(icon.resolvedFontSet()).toBe('material-icons');
     });
 

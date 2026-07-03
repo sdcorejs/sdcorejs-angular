@@ -52,11 +52,11 @@ interface IconDemoItem {
 
       <demo-section
         heading="Button integration"
-        [props]="[{ name: 'iconSet', value: 'material-icons / material-icons-outlined / lucide' }]">
-        <sd-button type="fill" color="primary" title="Material" prefixIcon="add" iconSet="material-icons"></sd-button>
-        <sd-button type="light" color="primary" title="Outlined" prefixIcon="save" iconSet="material-icons-outlined"></sd-button>
-        <sd-button type="outline" color="error" title="Lucide" prefixIcon="delete" iconSet="lucide"></sd-button>
-        <sd-button type="link" color="secondary" title="More" suffixIcon="more_vert" iconSet="lucide"></sd-button>
+        [props]="[{ name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' }]">
+        <sd-button type="fill" color="primary" title="Material" prefixIcon="add" fontSet="material-icons"></sd-button>
+        <sd-button type="light" color="primary" title="Outlined" prefixIcon="save" fontSet="material-icons-outlined"></sd-button>
+        <sd-button type="outline" color="error" title="Lucide" prefixIcon="delete" fontSet="lucide"></sd-button>
+        <sd-button type="link" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
       </demo-section>
     </demo-page>
   `,

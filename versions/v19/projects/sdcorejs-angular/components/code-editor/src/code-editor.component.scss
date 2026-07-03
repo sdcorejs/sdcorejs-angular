@@ -53,7 +53,7 @@
       border-radius: 4px;
       transition: all 0.2s ease;
 
-      mat-icon {
+      sd-icon {
         font-size: 16px;
         width: 16px;
         height: 16px;
@@ -76,7 +76,7 @@
   .sd-code-content {
     overflow-y: auto;
     position: relative; // Cần thiết để chứa lớp overlay
-    
+
     // Custom thanh cuộn (Scrollbar) cho mượt mà
     &::-webkit-scrollbar {
       width: 8px;
@@ -134,7 +134,7 @@
       position: relative;
       z-index: 1;
       pointer-events: none; // Cho phép click xuyên qua lớp này để chạm tới Textarea
-      
+
       code {
         color: #d4d4d4; // Màu chữ trắng xám mặc định cho text thường
         font-family: inherit;
@@ -153,35 +153,35 @@
   .token.cdata {
     color: #999999;
   }
-  
+
   .token.punctuation {
     color: #cccccc;
   }
-  
+
   .token.tag,
   .token.attr-name,
   .token.namespace,
   .token.deleted {
     color: #e2777a; // Đỏ hồng cho thẻ HTML (vd: <div>)
   }
-  
+
   .token.function-name {
     color: #6196cc;
   }
-  
+
   .token.boolean,
   .token.number,
   .token.function {
     color: #f08d49; // Cam cho function, number, boolean (true/false)
   }
-  
+
   .token.property,
   .token.class-name,
   .token.constant,
   .token.symbol {
     color: #f8c555; // Vàng cho tên thuộc tính (keys trong JSON)
   }
-  
+
   .token.selector,
   .token.important,
   .token.atrule,
@@ -189,7 +189,7 @@
   .token.builtin {
     color: #cc99cd; // Tím mộng mơ cho từ khóa (const, let, class, import)
   }
-  
+
   .token.string,
   .token.char,
   .token.attr-value,
@@ -197,26 +197,26 @@
   .token.variable {
     color: #7ec699; // Xanh lá cây cho chuỗi (String)
   }
-  
+
   .token.operator,
   .token.entity,
   .token.url {
     color: #67cdcc; // Xanh ngọc cho các dấu (bằng, cộng trừ, v.v.)
   }
-  
+
   .token.important,
   .token.bold {
     font-weight: bold;
   }
-  
+
   .token.italic {
     font-style: italic;
   }
-  
+
   .token.entity {
     cursor: help;
   }
-  
+
   .token.inserted {
     color: green;
   }

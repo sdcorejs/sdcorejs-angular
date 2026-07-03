@@ -14,8 +14,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { SdFormControl } from '@sdcorejs/angular/forms/models';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /** Visual / `data-state` of the inline input. `'auto'` derives from focus + value. */
 export type SdInlineTextState = 'auto' | 'pending' | 'active' | 'focus' | 'error';
@@ -40,7 +40,7 @@ export type SdInlineTextChrome = 'standalone' | 'seamless';
   selector: 'sd-inline-text',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, MatIconModule],
+  imports: [SdIcon, CommonModule, ReactiveFormsModule],
   templateUrl: './inline-text.component.html',
   styleUrl: './inline-text.component.scss',
   host: {

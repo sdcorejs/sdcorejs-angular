@@ -27,14 +27,11 @@
               [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
               [matTooltipPosition]="'right'"
               style="padding: 0; margin: 0; border: none; background-color: transparent">
-              <mat-icon
-                class="c-menu-group-icon"
+              <sd-icon class="c-menu-group-icon"
                 [ngStyle]="{
                   color: isPinnedMenuGroupActive() ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
                   backgroundColor: isPinnedMenuGroupActive() ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
-                }">
-                push_pin
-              </mat-icon>
+                }" name="push_pin"></sd-icon>
             </button>
           }
           @for (nodeMenuGroup of menus(); track nodeMenuGroup.id) {
@@ -55,14 +52,11 @@
                   <img width="24px" height="24px" [src]="nodeMenuGroup.iconUrl" [alt]="nodeMenuGroup.title" />
                 </span>
               } @else {
-                <mat-icon
-                  class="c-menu-group-icon"
+                <sd-icon class="c-menu-group-icon"
                   [ngStyle]="{
                     color: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
                     backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
-                  }">
-                  {{ nodeMenuGroup.icon || 'widgets' }}
-                </mat-icon>
+                  }" [name]="nodeMenuGroup.icon || 'widgets'"></sd-icon>
               }
             </button>
           }
@@ -73,9 +67,9 @@
               <sd-input size="sm" [placeholder]="'core.module.layout.sidebar.search' | translate" [model]="searchText()" (sdChange)="onFilterSearchText($event)">
                 <ng-template sdSuffixDef>
                   @if (searchText()) {
-                    <mat-icon class="c-search-prefix-icon cancel" (click)="onClearSearchText()">cancel</mat-icon>
+                    <sd-icon class="c-search-prefix-icon cancel" (click)="onClearSearchText()" name="cancel"></sd-icon>
                   } @else {
-                    <mat-icon class="c-search-prefix-icon search">search</mat-icon>
+                    <sd-icon class="c-search-prefix-icon search" name="search"></sd-icon>
                   }
                 </ng-template>
               </sd-input>
@@ -100,14 +94,10 @@
                       [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
 
                     @if (_sidebar?.pin?.enabled) {
-                      <mat-icon
-                        class="c-menu-node-description-icon-pin"
-                        [fontSet]="isPinnedNode(node) ? 'material-icons' : 'material-icons-outlined'"
+                      <sd-icon class="c-menu-node-description-icon-pin"
                         [style.opacity]="isPinnedNode(node) || isHoveredNode(node) ? '1' : null"
                         [style.color]="isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || '#2962FF' : null"
-                        (click)="onTogglePin($event, node)"
-                        >push_pin
-                      </mat-icon>
+                        (click)="onTogglePin($event, node)" name="push_pin"></sd-icon>
                     }
                   </div>
                 </li>
@@ -127,9 +117,7 @@
                         <div
                           class="c-menu-node-description-content"
                           [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
-                        <mat-icon class="c-menu-node-description-icon-expand">
-                          {{ treeControl.isExpanded(node) ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-                        </mat-icon>
+                        <sd-icon class="c-menu-node-description-icon-expand" [name]="treeControl.isExpanded(node) ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
                       </div>
                     </div>
                   </div>

@@ -5,13 +5,11 @@
       mat-menu-item
       [disabled]="isDisabled(field)"
       (click)="pick.emit(field)">
-      <mat-icon fontSet="material-icons-outlined" class="c-field-item-icon">
-        {{ iconFor(field) }}
-      </mat-icon>
+      <sd-icon class="c-field-item-icon" [name]="iconFor(field)"></sd-icon>
       <span class="c-field-item-label">{{ field.label }}</span>
       <span class="c-field-item-type">{{ field.type }}</span>
       @if (isCurrent(field) || isUsed(field)) {
-        <mat-icon class="c-field-item-check" fontSet="material-icons-outlined">check</mat-icon>
+        <sd-icon class="c-field-item-check" name="check"></sd-icon>
       }
     </button>
   } @empty {

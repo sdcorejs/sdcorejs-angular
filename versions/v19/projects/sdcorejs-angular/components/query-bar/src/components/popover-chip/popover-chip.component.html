@@ -17,9 +17,7 @@
   (menuOpened)="open.emit()"
   (keydown.enter)="chipTrigger.openMenu()"
   (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
-  <mat-icon class="c-chip-icon" fontSet="material-icons-outlined">
-    {{ _field ? iconFor(_field) : 'tune' }}
-  </mat-icon>
+  <sd-icon class="c-chip-icon" [name]="_field ? iconFor(_field) : 'tune'"></sd-icon>
   <span class="c-chip-label">{{ _field?.label || _filterField }}</span>
 
   @if (showOperator() && _active) {
@@ -32,7 +30,7 @@
     <span class="c-chip-value">{{ valueText() }}</span>
   }
 
-  <mat-icon class="c-chip-chevron" fontSet="material-icons-outlined">arrow_drop_down</mat-icon>
+  <sd-icon class="c-chip-chevron" name="arrow_drop_down"></sd-icon>
 
   @if (_active) {
     <span
@@ -42,7 +40,7 @@
       aria-label="Remove filter"
       (click)="$event.stopPropagation(); remove.emit()"
       (keydown.enter)="$event.stopPropagation(); remove.emit()">
-      <mat-icon fontSet="material-icons-outlined">close</mat-icon>
+      <sd-icon name="close"></sd-icon>
     </span>
   }
 </div>

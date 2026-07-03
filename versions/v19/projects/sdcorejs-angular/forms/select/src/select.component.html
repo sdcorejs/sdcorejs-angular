@@ -45,7 +45,7 @@
            xoá giá trị mà KHÔNG mở panel; tránh bug cũ (× sát trigger bị bấm nhầm lúc đóng panel). -->
       @if (clearable() && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="clear($event)" title="Xóa" aria-label="Xóa">
-          <mat-icon>close</mat-icon>
+          <sd-icon name="close"></sd-icon>
         </button>
       }
     </span>
@@ -80,7 +80,7 @@
             <div style="display: flex; align-items: center; gap: 4px">
               <span>{{ _label }}</span>
               @if (_helperText) {
-                <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
+                <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
               }
             </div>
           </mat-label>
@@ -127,7 +127,7 @@
           @if (filtered()) {
             <div class="c-filter-input-container">
               <div class="filter-input-wrapper">
-                <mat-icon>search</mat-icon>
+                <sd-icon name="search"></sd-icon>
                 <input
                   [formControl]="inputControl"
                   aria-hidden="true"
@@ -192,7 +192,7 @@
         </mat-select>
 
         @if (_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
 
         @if (!_hideInlineError && _errorMessage && formControl.touched) {
@@ -201,10 +201,10 @@
 
         @if (_normalizedValue?.length && !_required && !formControl.disabled && !_bare) {
           <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
-            <mat-icon>close</mat-icon>
+            <sd-icon name="close"></sd-icon>
           </button>
         } @else {
-          <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>keyboard_arrow_down</mat-icon>
+          <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="keyboard_arrow_down"></sd-icon>
         }
       </mat-form-field>
     } @else {
@@ -219,7 +219,7 @@
             <div style="display: flex; align-items: center; gap: 4px">
               <span>{{ _label }}</span>
               @if (_helperText) {
-                <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
+                <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
               }
             </div>
           </mat-label>
@@ -269,7 +269,7 @@
           @if (filtered()) {
             <div class="c-filter-input-container">
               <div class="filter-input-wrapper">
-                <mat-icon>search</mat-icon>
+                <sd-icon name="search"></sd-icon>
                 <input
                   [formControl]="inputControl"
                   aria-hidden="true"
@@ -335,7 +335,7 @@
         </mat-select>
 
         @if (_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
 
         @if (!_hideInlineError && _errorMessage && formControl.touched) {
@@ -344,10 +344,10 @@
 
         @if (_normalizedValue !== undefined && _normalizedValue !== null && !_required && !formControl.disabled && !_bare) {
           <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
-            <mat-icon>close</mat-icon>
+            <sd-icon name="close"></sd-icon>
           </button>
         } @else {
-          <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>keyboard_arrow_down</mat-icon>
+          <sd-icon class="cursor-pointer sd-suffix-icon" matSuffix name="keyboard_arrow_down"></sd-icon>
         }
       </mat-form-field>
     }

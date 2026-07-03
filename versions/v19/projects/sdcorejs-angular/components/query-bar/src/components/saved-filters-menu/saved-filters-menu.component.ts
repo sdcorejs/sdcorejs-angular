@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { SdQuery, SdSavedFilter } from '../../query-bar.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /**
  * Saved-filters dropdown for `sd-query-bar`.
@@ -26,7 +26,7 @@ import { SdQuery, SdSavedFilter } from '../../query-bar.model';
   styleUrl: './saved-filters-menu.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatMenuModule, MatIconModule, MatTooltipModule],
+  imports: [SdIcon, MatMenuModule, MatTooltipModule],
 })
 export class SdQuerySavedFiltersMenu {
   /** Namespace key used to scope localStorage. `undefined` → menu disabled. */

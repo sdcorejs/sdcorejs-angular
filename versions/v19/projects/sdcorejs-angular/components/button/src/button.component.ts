@@ -16,7 +16,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Color } from '@sdcorejs/utils/models';
 import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
-import { type MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 
@@ -24,6 +23,7 @@ import { filter, throttleTime } from 'rxjs/operators';
 export type SdButtonType = 'fill' | 'light' | 'outline' | 'link';
 export type SdButtonSize = 'sm' | 'md' | 'lg';
 export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
+export type SdButtonColor = Color | 'black';
 
 @Component({
   selector: 'sd-button',
@@ -54,7 +54,7 @@ export class SdButton implements OnInit, OnDestroy {
     transform: value => value || 'light',
   });
 
-  color = input<Color, Color | undefined | null>('secondary', {
+  color = input<SdButtonColor, SdButtonColor | undefined | null>('secondary', {
     transform: value => value || 'secondary',
   });
 
@@ -62,7 +62,7 @@ export class SdButton implements OnInit, OnDestroy {
     transform: value => value || 'sm',
   });
 
-  fontSet = input<MaterialIconFontSet | undefined, MaterialIconFontSet | undefined | null>(undefined, {
+  fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
     transform: value => value ?? undefined,
   });
 
@@ -71,9 +71,6 @@ export class SdButton implements OnInit, OnDestroy {
   tooltip = input<string | undefined | null>(undefined);
   prefixIcon = input<string | undefined | null>(undefined);
   suffixIcon = input<string | undefined | null>(undefined);
-  iconSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
-    transform: value => value ?? undefined,
-  });
 
   disabled = input(false, { transform: booleanAttribute });
   loading = input(false, { transform: booleanAttribute });
@@ -93,6 +90,7 @@ export class SdButton implements OnInit, OnDestroy {
     'c-sm': this.size() === 'sm',
     'c-md': this.size() === 'md',
     'c-lg': this.size() === 'lg',
+    'c-black': this.color() === 'black',
     'c-disabled': this.disabled(),
     'c-block': this.block(),
   }));

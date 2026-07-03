@@ -25,7 +25,7 @@
   <!-- Free-text search (left, optional) -->
   @if (resolvedShowSearch()) {
     <div class="c-search">
-      <mat-icon class="c-search-icon" fontSet="material-icons-outlined">search</mat-icon>
+      <sd-icon class="c-search-icon" name="search"></sd-icon>
       <input
         class="c-search-input"
         type="text"
@@ -112,7 +112,7 @@
       [matMenuTriggerFor]="addPicker.menu()"
       [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
       [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
-      <mat-icon fontSet="material-icons-outlined">add</mat-icon>
+      <sd-icon name="add"></sd-icon>
     </button>
   } @else {
     <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
@@ -142,7 +142,7 @@
       [matMenuTriggerFor]="addPicker.menu()"
       [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
       [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
-      <mat-icon fontSet="material-icons-outlined">add</mat-icon>
+      <sd-icon name="add"></sd-icon>
     </button>
   }
 

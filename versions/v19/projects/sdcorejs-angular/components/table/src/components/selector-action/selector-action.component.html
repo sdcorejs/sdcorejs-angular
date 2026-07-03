@@ -34,7 +34,7 @@
           [prefixIcon]="action.icon || 'more_vert'"
           [color]="action.color || 'secondary'"
           [type]="action.type || 'light'"
-          [fontSet]="action.fontSet || 'material-icons-outlined'"
+          [fontSet]="action.fontSet"
           [title]="action.title"
           [matMenuTriggerFor]="menu">
         </sd-button>
@@ -46,7 +46,7 @@
                 [attr.data-autoid]="_autoId ? _autoId + '-action-' + _actionIndex + '-' + $index : null"
                 (click)="onClickAction(child)">
                 @if (child.icon) {
-                  <mat-icon [fontSet]="child.fontSet || 'material-icons-outlined'" class="c-icon">{{ child.icon }}</mat-icon>
+                  <sd-icon [fontSet]="child.fontSet" class="c-icon" [name]="child.icon"></sd-icon>
                 }
                 <span> {{ child.title }}</span>
               </button>

@@ -14,7 +14,7 @@
 
     @if (_field) {
       <div class="c-pop-header" (click)="$event.stopPropagation()">
-        <mat-icon fontSet="material-icons-outlined">{{ iconFor(_field) }}</mat-icon>
+        <sd-icon [name]="iconFor(_field)"></sd-icon>
         <!-- why: nested mat-menu trigger to swap the chip's field — parent provides
              the field-picker MatMenu via [switchPickerMenu]. -->
         @if (_switchPickerMenu) {
@@ -24,7 +24,7 @@
             [matMenuTriggerFor]="_switchPickerMenu"
             matTooltip="Đổi field">
             <span>{{ _field.label }}</span>
-            <mat-icon fontSet="material-icons-outlined">unfold_more</mat-icon>
+            <sd-icon name="unfold_more"></sd-icon>
           </button>
         } @else {
           <span class="c-pop-header-field">{{ _field.label }}</span>

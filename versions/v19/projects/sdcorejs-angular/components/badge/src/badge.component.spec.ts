@@ -358,20 +358,18 @@ describe('SdBadge', () => {
   });
 
   describe('icon renderer configuration', () => {
-    it('uses SdIcon default set when iconSet and fontSet are not provided', () => {
+    it('uses SdIcon default fontSet when fontSet is not provided', () => {
       setInput(fixture, 'type', 'icon');
       const icon = getIconComponent();
 
-      expect(icon.resolvedSet()).toBe('material-icons-outlined');
       expect(icon.resolvedFontSet()).toBe('material-icons-outlined');
     });
 
-    it('passes iconSet to SdIcon when fontSet is not provided', () => {
+    it('passes fontSet to SdIcon', () => {
       setInput(fixture, 'type', 'icon');
-      setInput(fixture, 'iconSet', 'material-icons');
+      setInput(fixture, 'fontSet', 'material-icons');
       const icon = getIconComponent();
 
-      expect(icon.resolvedSet()).toBe('material-icons');
       expect(icon.resolvedFontSet()).toBe('material-icons');
     });
 
@@ -383,23 +381,21 @@ describe('SdBadge', () => {
       expect(icon.resolvedFontSet()).toBe('material-icons-round');
     });
 
-    it('passes iconSet to tag and round badge icons', () => {
+    it('passes fontSet to tag and round badge icons', () => {
       setInput(fixture, 'type', 'tag');
       setInput(fixture, 'icon', 'label');
-      setInput(fixture, 'iconSet', 'material-icons');
-      expect(getIconComponent().resolvedSet()).toBe('material-icons');
+      setInput(fixture, 'fontSet', 'material-icons');
+      expect(getIconComponent().resolvedFontSet()).toBe('material-icons');
 
       setInput(fixture, 'type', 'round');
       setInput(fixture, 'icon', 'check_circle');
-      expect(getIconComponent().resolvedSet()).toBe('material-icons');
+      expect(getIconComponent().resolvedFontSet()).toBe('material-icons');
     });
 
-    it('coerces falsy fontSet and iconSet to undefined so SdIcon can use its configuration', () => {
+    it('coerces falsy fontSet to undefined so SdIcon can use its configuration', () => {
       setInput(fixture, 'fontSet', null);
-      setInput(fixture, 'iconSet', null);
 
       expect(fixture.componentInstance.fontSet()).toBeUndefined();
-      expect(fixture.componentInstance.iconSet()).toBeUndefined();
     });
   });
 

@@ -1,6 +1,5 @@
 import { Component, inject, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 // Import sd-core
@@ -8,12 +7,13 @@ import { SdAvatar } from '@sdcorejs/angular/components';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../../configurations';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'lib-layout-user',
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
-  imports: [MatMenuModule, MatButtonModule, MatIconModule, MatTooltipModule, SdAvatar, TranslatePipe],
+  imports: [SdIcon, MatMenuModule, MatButtonModule, MatTooltipModule, SdAvatar, TranslatePipe],
   standalone: true,
 })
 export class LayoutUserComponent {

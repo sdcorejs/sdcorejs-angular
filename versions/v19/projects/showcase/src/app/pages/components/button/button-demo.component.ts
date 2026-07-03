@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
+import { type SdIconFontSet } from '@sdcorejs/angular/modules/icon';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 @Component({
@@ -18,13 +18,25 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
         <sd-button type="link" color="primary" title="link"></sd-button>
       </demo-section>
 
-      <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
+      <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / black / success / info / warning / error' }]">
         <sd-button type="fill" color="primary" title="primary"></sd-button>
         <sd-button type="fill" color="secondary" title="secondary"></sd-button>
+        <sd-button type="fill" color="black" title="black"></sd-button>
         <sd-button type="fill" color="success" title="success"></sd-button>
         <sd-button type="fill" color="info" title="info"></sd-button>
         <sd-button type="fill" color="warning" title="warning"></sd-button>
         <sd-button type="fill" color="error" title="error"></sd-button>
+      </demo-section>
+
+      <demo-section heading="Secondary vs black" [props]="[{ name: 'color', value: 'secondary / black' }]">
+        <sd-button type="fill" color="secondary" title="secondary fill"></sd-button>
+        <sd-button type="fill" color="black" title="black fill"></sd-button>
+        <sd-button type="light" color="secondary" title="secondary light"></sd-button>
+        <sd-button type="light" color="black" title="black light"></sd-button>
+        <sd-button type="outline" color="secondary" title="secondary outline"></sd-button>
+        <sd-button type="outline" color="black" title="black outline"></sd-button>
+        <sd-button type="link" color="secondary" title="secondary link"></sd-button>
+        <sd-button type="link" color="black" title="black link"></sd-button>
       </demo-section>
 
       <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm / md / lg' }]">
@@ -41,17 +53,17 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
       <demo-section
         heading="Toggle icon set bằng alias"
         [props]="[
-          { name: 'iconSet', value: iconSet() },
+          { name: 'fontSet', value: fontSet() },
           { name: 'alias', value: 'add -> plus | delete -> trash-2 | visibility -> eye | more_vert -> ellipsis-vertical' },
         ]"
         note="Các button bên dưới vẫn truyền icon name theo Material; khi chuyển sang Lucide, SdIcon tự map qua alias tương ứng.">
-        <sd-button type="fill" color="primary" title="Material filled" (click)="useIconSet('material-icons')"></sd-button>
-        <sd-button type="fill" color="secondary" title="Material outlined" (click)="useIconSet('material-icons-outlined')"></sd-button>
-        <sd-button type="fill" color="info" title="Lucide" (click)="useIconSet('lucide')"></sd-button>
-        <sd-button type="light" color="primary" title="Create" prefixIcon="add" [iconSet]="iconSet()"></sd-button>
-        <sd-button type="light" color="primary" title="View" prefixIcon="visibility" [iconSet]="iconSet()"></sd-button>
-        <sd-button type="light" color="error" title="Delete" prefixIcon="delete" [iconSet]="iconSet()"></sd-button>
-        <sd-button type="outline" color="secondary" title="More" suffixIcon="more_vert" [iconSet]="iconSet()"></sd-button>
+        <sd-button type="fill" color="primary" title="Material filled" (click)="useFontSet('material-icons')"></sd-button>
+        <sd-button type="fill" color="secondary" title="Material outlined" (click)="useFontSet('material-icons-outlined')"></sd-button>
+        <sd-button type="fill" color="info" title="Lucide" (click)="useFontSet('lucide')"></sd-button>
+        <sd-button type="light" color="primary" title="Create" prefixIcon="add" [fontSet]="fontSet()"></sd-button>
+        <sd-button type="light" color="primary" title="View" prefixIcon="visibility" [fontSet]="fontSet()"></sd-button>
+        <sd-button type="light" color="error" title="Delete" prefixIcon="delete" [fontSet]="fontSet()"></sd-button>
+        <sd-button type="outline" color="secondary" title="More" suffixIcon="more_vert" [fontSet]="fontSet()"></sd-button>
       </demo-section>
 
       <demo-section
@@ -72,10 +84,10 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 })
 export class ButtonDemoComponent {
   readonly submitting = signal(false);
-  readonly iconSet = signal<SdIconSet>('material-icons-outlined');
+  readonly fontSet = signal<SdIconFontSet>('material-icons-outlined');
 
-  useIconSet(iconSet: SdIconSet) {
-    this.iconSet.set(iconSet);
+  useFontSet(fontSet: SdIconFontSet) {
+    this.fontSet.set(fontSet);
   }
 
   onSubmit() {

@@ -30,7 +30,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
@@ -52,6 +51,7 @@ import { Subscription } from 'rxjs';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-textarea',
@@ -59,13 +59,12 @@ import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
   styleUrl: './textarea.component.scss',
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule,
     MatTooltipModule,
     SdLabel,
     SdEmptyPipe,

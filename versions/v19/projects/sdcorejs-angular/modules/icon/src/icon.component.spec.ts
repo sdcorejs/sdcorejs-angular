@@ -13,22 +13,22 @@ describe('SdIcon', () => {
     const fixture = TestBed.createComponent(SdIcon);
     setInput(fixture, 'name', 'save');
 
-    expect(fixture.componentInstance.resolvedSet()).toBe('material-icons-outlined');
     expect(fixture.componentInstance.resolvedFontSet()).toBe('material-icons-outlined');
+    expect(fixture.componentInstance.resolvedMaterialFontSet()).toBe('material-icons-outlined');
     expect(queryByCss(fixture, 'mat-icon.sd-icon__material').textContent?.trim()).toBe('save');
   });
 
-  it('renders Material filled icon when set="material-icons"', async () => {
+  it('renders Material filled icon when fontSet="material-icons"', async () => {
     await TestBed.configureTestingModule({
       imports: [SdIcon],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(SdIcon);
     setInput(fixture, 'name', 'save');
-    setInput(fixture, 'set', 'material-icons');
+    setInput(fixture, 'fontSet', 'material-icons');
 
-    expect(fixture.componentInstance.resolvedSet()).toBe('material-icons');
     expect(fixture.componentInstance.resolvedFontSet()).toBe('material-icons');
+    expect(fixture.componentInstance.resolvedMaterialFontSet()).toBe('material-icons');
     expect(queryByCss(fixture, 'mat-icon.sd-icon__material').textContent?.trim()).toBe('save');
   });
 
@@ -52,7 +52,7 @@ describe('SdIcon', () => {
   it('renders Lucide icon from provider and resolves Material-style alias', async () => {
     await TestBed.configureTestingModule({
       imports: [SdIcon],
-      providers: [provideSdIcon({ defaultSet: 'lucide', lucideIcons: [LucidePlus] })],
+      providers: [provideSdIcon({ defaultFontSet: 'lucide', lucideIcons: [LucidePlus] })],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(SdIcon);
@@ -65,15 +65,15 @@ describe('SdIcon', () => {
   it('allows component input to override provider default icon set', async () => {
     await TestBed.configureTestingModule({
       imports: [SdIcon],
-      providers: [provideSdIcon({ defaultSet: 'lucide', lucideIcons: [LucidePlus] })],
+      providers: [provideSdIcon({ defaultFontSet: 'lucide', lucideIcons: [LucidePlus] })],
     }).compileComponents();
 
     const fixture = TestBed.createComponent(SdIcon);
     setInput(fixture, 'name', 'add');
-    setInput(fixture, 'set', 'material-icons');
+    setInput(fixture, 'fontSet', 'material-icons');
 
-    expect(fixture.componentInstance.resolvedSet()).toBe('material-icons');
     expect(fixture.componentInstance.resolvedFontSet()).toBe('material-icons');
+    expect(fixture.componentInstance.resolvedMaterialFontSet()).toBe('material-icons');
     expect(queryByCss(fixture, 'mat-icon.sd-icon__material').textContent?.trim()).toBe('add');
   });
 
