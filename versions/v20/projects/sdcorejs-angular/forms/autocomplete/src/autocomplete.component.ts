@@ -37,7 +37,6 @@ import {
 import { MatAutocompleteModule, MatAutocompleteTrigger } from '@angular/material/autocomplete';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -65,6 +64,7 @@ import { Size } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Observable, Subscription, combineLatest, defer, from, of, timer } from 'rxjs';
 import { catchError, debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   constructor(private formControl: FormControl) {}
@@ -81,7 +81,7 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-bare]': 'isInline()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -89,7 +89,6 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
     MatTooltipModule,
     MatFormFieldModule,
     MatAutocompleteModule,
-    MatIconModule,
     MatProgressSpinnerModule,
     SdLabel,
     SdView,

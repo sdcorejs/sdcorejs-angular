@@ -176,6 +176,6 @@ $qb-radius-chip:    999px;
   :host-context(.c-density-compact) & { width: 26px; }
   :host-context(.c-density-comfortable) & { width: 28px; }
 
-  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+  sd-icon { font-size: 14px; width: 14px; height: 14px; }
   &:hover { background: rgba(0, 0, 0, 0.05); }
 }

@@ -26,7 +26,7 @@
           [attr.title]="'core.component.preview-pdf.toggle-sidebar' | translate"
           [attr.data-autoId]="autoIdSidebarToggle()"
           (click)="toggleSidebar()">
-          <mat-icon fontIcon="menu"></mat-icon>
+          <sd-icon fontIcon="menu"></sd-icon>
         </button>
         <span class="sd-preview-pdf-header__divider"></span>
         <div class="sd-preview-pdf-fileicon" aria-hidden="true">PDF</div>
@@ -49,7 +49,7 @@
           [attr.title]="'core.component.preview-pdf.search' | translate"
           [attr.data-autoId]="autoIdSearchToggle()"
           (click)="searchBarOpen() ? closeSearch() : openSearch()">
-          <mat-icon fontIcon="search"></mat-icon>
+          <sd-icon fontIcon="search"></sd-icon>
         </button>
         @if (downloadable()) {
           <button
@@ -59,7 +59,7 @@
             [attr.title]="'core.component.preview-pdf.download' | translate"
             [attr.data-autoId]="autoIdDownload()"
             (click)="downloadFile()">
-            <mat-icon fontIcon="download"></mat-icon>
+            <sd-icon fontIcon="download"></sd-icon>
           </button>
         }
         <button
@@ -69,7 +69,7 @@
           [attr.title]="'core.component.preview-pdf.fullscreen' | translate"
           [attr.data-autoId]="autoIdFullscreen()"
           (click)="toggleFullscreen()">
-          <mat-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></mat-icon>
+          <sd-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></sd-icon>
         </button>
       </div>
     </div>
@@ -79,7 +79,7 @@
          ============================================ -->
     @if (_searchBarOpen) {
       <div class="sd-preview-pdf-searchbar" role="search">
-        <mat-icon class="sd-preview-pdf-searchbar__icon" fontIcon="search"></mat-icon>
+        <sd-icon class="sd-preview-pdf-searchbar__icon" fontIcon="search"></sd-icon>
         <input
           #searchInput
           type="text"
@@ -88,9 +88,7 @@
           [value]="_searchTerm"
           [attr.data-autoId]="autoIdSearchInput()"
           (input)="onSearchInput($any($event.target).value)" />
-        <span class="sd-preview-pdf-searchbar__counter" aria-live="polite">
-          {{ searchCurrent() }} / {{ _searchTotal }}
-        </span>
+        <span class="sd-preview-pdf-searchbar__counter" aria-live="polite"> {{ searchCurrent() }} / {{ _searchTotal }} </span>
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
@@ -99,7 +97,7 @@
           [attr.title]="'core.component.preview-pdf.search-prev' | translate"
           [attr.data-autoId]="autoIdSearchPrev()"
           (click)="searchPrev()">
-          <mat-icon fontIcon="keyboard_arrow_up"></mat-icon>
+          <sd-icon fontIcon="keyboard_arrow_up"></sd-icon>
         </button>
         <button
           type="button"
@@ -109,7 +107,7 @@
           [attr.title]="'core.component.preview-pdf.search-next' | translate"
           [attr.data-autoId]="autoIdSearchNext()"
           (click)="searchNext()">
-          <mat-icon fontIcon="keyboard_arrow_down"></mat-icon>
+          <sd-icon fontIcon="keyboard_arrow_down"></sd-icon>
         </button>
         <span class="sd-preview-pdf-searchbar__divider"></span>
         <button
@@ -120,7 +118,7 @@
           [attr.title]="'core.component.preview-pdf.search-case' | translate"
           [attr.data-autoId]="autoIdSearchCase()"
           (click)="toggleSearchCaseSensitive()">
-          <mat-icon fontIcon="match_case"></mat-icon>
+          <sd-icon fontIcon="match_case"></sd-icon>
         </button>
         <button
           type="button"
@@ -130,7 +128,7 @@
           [attr.title]="'core.component.preview-pdf.search-whole' | translate"
           [attr.data-autoId]="autoIdSearchWhole()"
           (click)="toggleSearchWholeWord()">
-          <mat-icon fontIcon="text_fields"></mat-icon>
+          <sd-icon fontIcon="text_fields"></sd-icon>
         </button>
         <span class="sd-preview-pdf-searchbar__spacer"></span>
         <button
@@ -140,7 +138,7 @@
           [attr.title]="'core.component.preview-pdf.search-close' | translate"
           [attr.data-autoId]="autoIdSearchClose()"
           (click)="closeSearch()">
-          <mat-icon fontIcon="close"></mat-icon>
+          <sd-icon fontIcon="close"></sd-icon>
         </button>
       </div>
     }
@@ -150,7 +148,6 @@
        BODY — sidebar + stage
        ============================================ -->
   <div class="sd-preview-pdf-body">
-
     <!-- SIDEBAR ............................................................. -->
     @if (_stage === 'ready' && _isSidebarOpen) {
       <aside class="sd-preview-pdf-sidebar" role="complementary">
@@ -163,7 +160,7 @@
             [class.sd-preview-pdf-sidebar__tab--active]="_sidebarMode === 'thumbnails'"
             [attr.data-autoId]="autoIdTabThumbnails()"
             (click)="setSidebarMode('thumbnails')">
-            <mat-icon fontIcon="view_carousel"></mat-icon>
+            <sd-icon fontIcon="view_carousel"></sd-icon>
             <span>{{ 'core.component.preview-pdf.tab.thumbnails' | translate }}</span>
           </button>
           <button
@@ -173,7 +170,7 @@
             [class.sd-preview-pdf-sidebar__tab--active]="_sidebarMode === 'outline'"
             [attr.data-autoId]="autoIdTabOutline()"
             (click)="setSidebarMode('outline')">
-            <mat-icon fontIcon="list"></mat-icon>
+            <sd-icon fontIcon="list"></sd-icon>
             <span>{{ 'core.component.preview-pdf.tab.outline' | translate }}</span>
           </button>
           <button
@@ -183,7 +180,7 @@
             [class.sd-preview-pdf-sidebar__tab--active]="_sidebarMode === 'search'"
             [attr.data-autoId]="autoIdTabSearch()"
             (click)="setSidebarMode('search')">
-            <mat-icon fontIcon="search"></mat-icon>
+            <sd-icon fontIcon="search"></sd-icon>
             <span>{{ 'core.component.preview-pdf.tab.search' | translate }}</span>
           </button>
         </div>
@@ -199,15 +196,11 @@
                       class="sd-preview-pdf-thumb"
                       [class.sd-preview-pdf-thumb--active]="p === _activePage"
                       [attr.aria-current]="p === _activePage ? 'page' : null"
-                      [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: p, total: _numPages })"
+                      [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: p, total: _numPages }"
                       [attr.data-autoId]="autoIdThumb(pi)"
                       (click)="goToPage(p)">
                       <div class="sd-preview-pdf-thumb__page">
-                        <canvas
-                          #thumbCanvas
-                          class="sd-preview-pdf-thumb__canvas"
-                          [attr.data-page]="p"
-                          aria-hidden="true"></canvas>
+                        <canvas #thumbCanvas class="sd-preview-pdf-thumb__canvas" [attr.data-page]="p" aria-hidden="true"></canvas>
                       </div>
                       <span class="sd-preview-pdf-thumb__label">{{ p }}</span>
                     </button>
@@ -218,19 +211,19 @@
             @case ('outline') {
               <!-- TODO(preview-pdf): outline tree (pdfDoc.getOutline()) deferred to follow-up commit. -->
               <div class="sd-preview-pdf-sidebar__deferred">
-                <mat-icon fontIcon="list"></mat-icon>
+                <sd-icon fontIcon="list"></sd-icon>
                 <p>{{ 'core.component.preview-pdf.deferred.outline' | translate }}</p>
               </div>
             }
             @case ('search') {
               @if (!_searchTerm) {
                 <div class="sd-preview-pdf-sidebar__deferred">
-                  <mat-icon fontIcon="search"></mat-icon>
+                  <sd-icon fontIcon="search"></sd-icon>
                   <p>{{ 'core.component.preview-pdf.search-placeholder' | translate }}</p>
                 </div>
               } @else if (_searchTotal === 0) {
                 <div class="sd-preview-pdf-sidebar__deferred">
-                  <mat-icon fontIcon="search_off"></mat-icon>
+                  <sd-icon fontIcon="search_off"></sd-icon>
                   <p>{{ 'core.component.preview-pdf.search-no-results' | translate }}</p>
                 </div>
               } @else {
@@ -244,7 +237,8 @@
                         [attr.data-autoId]="autoIdResult(i)"
                         (click)="goToPage(r.page)">
                         <span class="sd-preview-pdf-search-result__snippet">
-                          {{ r.before }}<mark>{{ r.term }}</mark>{{ r.after }}
+                          {{ r.before }}<mark>{{ r.term }}</mark
+                          >{{ r.after }}
                         </span>
                         <span class="sd-preview-pdf-search-result__page">{{ r.page }}</span>
                       </button>
@@ -267,7 +261,7 @@
         @case ('empty') {
           <div class="sd-preview-pdf-status">
             <div class="sd-preview-pdf-status__tile sd-preview-pdf-status__tile--muted">
-              <mat-icon fontIcon="picture_as_pdf"></mat-icon>
+              <sd-icon fontIcon="picture_as_pdf"></sd-icon>
             </div>
             <div class="sd-preview-pdf-status__title">
               {{ 'core.component.preview-pdf.empty.title' | translate }}
@@ -296,22 +290,22 @@
           @if (loadError$(); as err) {
             <div class="sd-preview-pdf-status">
               <div class="sd-preview-pdf-status__tile sd-preview-pdf-status__tile--danger">
-                <mat-icon fontIcon="error_outline"></mat-icon>
+                <sd-icon fontIcon="error"></sd-icon>
               </div>
               <div class="sd-preview-pdf-status__title">
-                {{ ('core.component.preview-pdf.error.' + err.reason + '.title') | translate }}
+                {{ 'core.component.preview-pdf.error.' + err.reason + '.title' | translate }}
               </div>
               <div class="sd-preview-pdf-status__hint">
-                {{ ('core.component.preview-pdf.error.' + err.reason + '.body') | translate }}
+                {{ 'core.component.preview-pdf.error.' + err.reason + '.body' | translate }}
               </div>
               <div class="sd-preview-pdf-status__actions">
                 <button type="button" class="sd-preview-pdf-btn-primary" (click)="retryLoad()" [attr.data-autoId]="autoIdRetry()">
-                  <mat-icon fontIcon="refresh"></mat-icon>
+                  <sd-icon fontIcon="refresh"></sd-icon>
                   <span>{{ 'core.component.preview-pdf.error.retry' | translate }}</span>
                 </button>
                 @if (downloadable()) {
                   <button type="button" class="sd-preview-pdf-btn-secondary" (click)="downloadFile()">
-                    <mat-icon fontIcon="download"></mat-icon>
+                    <sd-icon fontIcon="download"></sd-icon>
                     <span>{{ 'core.component.preview-pdf.error.download-raw' | translate }}</span>
                   </button>
                 }
@@ -325,7 +319,7 @@
               #pageCanvas
               class="sd-preview-pdf-page"
               role="img"
-              [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages })">
+              [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages }">
             </canvas>
           </div>
         }
@@ -346,7 +340,7 @@
             [attr.title]="'core.component.preview-pdf.first-page' | translate"
             [attr.data-autoId]="autoIdFirst()"
             (click)="firstPage()">
-            <mat-icon fontIcon="first_page"></mat-icon>
+            <sd-icon fontIcon="first_page"></sd-icon>
           </button>
           <button
             type="button"
@@ -356,7 +350,7 @@
             [attr.title]="'core.component.preview-pdf.prev-page' | translate"
             [attr.data-autoId]="autoIdPrev()"
             (click)="prevPage()">
-            <mat-icon fontIcon="chevron_left"></mat-icon>
+            <sd-icon fontIcon="chevron_left"></sd-icon>
           </button>
           <span class="sd-preview-pdf-toolbar__page">
             <input
@@ -379,7 +373,7 @@
             [attr.title]="'core.component.preview-pdf.next-page' | translate"
             [attr.data-autoId]="autoIdNext()"
             (click)="nextPage()">
-            <mat-icon fontIcon="chevron_right"></mat-icon>
+            <sd-icon fontIcon="chevron_right"></sd-icon>
           </button>
           <button
             type="button"
@@ -389,7 +383,7 @@
             [attr.title]="'core.component.preview-pdf.last-page' | translate"
             [attr.data-autoId]="autoIdLast()"
             (click)="lastPage()">
-            <mat-icon fontIcon="last_page"></mat-icon>
+            <sd-icon fontIcon="last_page"></sd-icon>
           </button>
 
           <span class="sd-preview-pdf-toolbar__divider"></span>
@@ -401,7 +395,7 @@
             [attr.title]="'core.component.preview-pdf.zoom-out' | translate"
             [attr.data-autoId]="autoIdZoomOut()"
             (click)="zoomOut()">
-            <mat-icon fontIcon="remove"></mat-icon>
+            <sd-icon fontIcon="remove"></sd-icon>
           </button>
           <span class="sd-preview-pdf-toolbar__zoom" aria-live="polite" [attr.data-autoId]="autoIdZoomReadout()">{{ zoomPercent() }}%</span>
           <button
@@ -411,7 +405,7 @@
             [attr.title]="'core.component.preview-pdf.zoom-in' | translate"
             [attr.data-autoId]="autoIdZoomIn()"
             (click)="zoomIn()">
-            <mat-icon fontIcon="add"></mat-icon>
+            <sd-icon fontIcon="add"></sd-icon>
           </button>
 
           <span class="sd-preview-pdf-toolbar__divider"></span>
@@ -422,7 +416,7 @@
             [class.sd-preview-pdf-toolbar__btn--active]="_zoomMode === 'page-fit'"
             [attr.data-autoId]="autoIdFitPage()"
             (click)="setZoom('page-fit')">
-            <mat-icon fontIcon="fit_screen"></mat-icon>
+            <sd-icon fontIcon="fit_screen"></sd-icon>
             <span>{{ 'core.component.preview-pdf.fit-page' | translate }}</span>
           </button>
           <button
@@ -431,7 +425,7 @@
             [class.sd-preview-pdf-toolbar__btn--active]="_zoomMode === 'page-width'"
             [attr.data-autoId]="autoIdFitWidth()"
             (click)="setZoom('page-width')">
-            <mat-icon fontIcon="swap_horiz"></mat-icon>
+            <sd-icon fontIcon="swap_horiz"></sd-icon>
             <span>{{ 'core.component.preview-pdf.fit-width' | translate }}</span>
           </button>
 
@@ -444,7 +438,7 @@
             [attr.title]="'core.component.preview-pdf.rotate' | translate"
             [attr.data-autoId]="autoIdRotate()"
             (click)="rotate('right')">
-            <mat-icon fontIcon="rotate_right"></mat-icon>
+            <sd-icon fontIcon="rotate_right"></sd-icon>
           </button>
 
           <!-- TODO(preview-pdf): scroll mode toggle is signature-only;
@@ -455,11 +449,12 @@
             class="sd-preview-pdf-toolbar__btn sd-preview-pdf-toolbar__btn--with-label"
             [attr.data-autoId]="autoIdScrollMode()"
             (click)="setScrollMode(_scrollModeCurrent === 'page' ? 'continuous' : 'page')">
-            <mat-icon [fontIcon]="_scrollModeCurrent === 'page' ? 'description' : 'view_day'"></mat-icon>
+            <sd-icon [fontIcon]="_scrollModeCurrent === 'page' ? 'description' : 'view_day'"></sd-icon>
             <span>
-              {{ (_scrollModeCurrent === 'page'
-                  ? 'core.component.preview-pdf.scroll-page'
-                  : 'core.component.preview-pdf.scroll-continuous') | translate }}
+              {{
+                (_scrollModeCurrent === 'page' ? 'core.component.preview-pdf.scroll-page' : 'core.component.preview-pdf.scroll-continuous')
+                  | translate
+              }}
             </span>
           </button>
         </div>

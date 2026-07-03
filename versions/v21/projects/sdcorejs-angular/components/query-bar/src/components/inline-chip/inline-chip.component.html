@@ -13,7 +13,7 @@
 @let _autoId = autoId();
 
 <div class="c-token" [class.c-token-editing]="_editing">
-  <mat-icon class="c-token-icon" fontSet="material-icons-outlined">{{ iconName() }}</mat-icon>
+  <sd-icon class="c-token-icon" [name]="iconName()"></sd-icon>
   <span class="c-token-field">{{ _field.label }}</span>
 
   @if (!_isNoData && showOperator()) {
@@ -111,6 +111,6 @@
   }
 
   <button type="button" class="c-token-remove" aria-label="Remove filter" (click)="remove.emit()">
-    <mat-icon fontSet="material-icons-outlined">close</mat-icon>
+    <sd-icon name="close"></sd-icon>
   </button>
 </div>

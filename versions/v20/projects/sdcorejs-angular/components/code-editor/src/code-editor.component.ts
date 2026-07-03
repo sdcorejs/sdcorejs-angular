@@ -13,7 +13,6 @@ import {
   ViewEncapsulation,
   booleanAttribute,
 } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
@@ -23,6 +22,7 @@ import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-scss';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import 'prismjs/components/prism-markup'; // HTML
 
 export type CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss';
@@ -30,7 +30,7 @@ export type CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss';
 @Component({
   selector: 'sd-code-editor',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, MatTooltipModule, TranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './code-editor.component.html',
   styleUrl: './code-editor.component.scss',

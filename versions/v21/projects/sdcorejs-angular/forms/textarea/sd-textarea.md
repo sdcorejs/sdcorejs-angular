@@ -144,7 +144,7 @@ Applied automatically on `<sd-textarea>` for styling hooks:
 - When `[maxlength]` is set: a small `123/500` counter appears as a suffix at the bottom-right inside the field
 - Required marker shows as a red `*` next to the label
 - When `[hideInlineError]="true"`: red error-icon suffix with hover-tooltip; otherwise inline `<mat-error>` below the field
-- Helper text shows as an info icon (`info_outline`) next to the label, with the helper text in a tooltip
+- Helper text shows as an outlined info icon (`info`) next to the label, with the helper text in a tooltip
 - In `[viewed]="true"` mode: just plain text — the saved value (or via `<ng-template sdViewDef>`); empty values render as em-dash via `sdEmpty`
 
 ## Standalone imports and table-cell usage
@@ -179,6 +179,14 @@ Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"
 <ng-template sdTableCellDef="note" let-row>
   <sd-textarea size="sm" hideInlineError [rows]="2" [(model)]="row.note"> </sd-textarea>
 </ng-template>
+```
+
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-textarea size="sm" hideInlineError [rows]="2" [(model)]="filter.note"></sd-textarea>
 ```
 
 ## Examples

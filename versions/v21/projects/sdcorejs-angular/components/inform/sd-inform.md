@@ -35,7 +35,7 @@ Page-level banner / alert (báo lỗi / cảnh báo / thông tin) neo trên page
 | `description` | `string \| undefined` | `undefined` | Body text. Not number, not null. Subject to `lineClamp`. |
 | `icon` | `string \| undefined` | `undefined` | Material icon name override. When falsy (and not hidden), the icon is auto-mapped per color (see table below). |
 | `hideIcon` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Suppress the icon entirely (no auto-map). |
-| `fontSet` | `MaterialIconFontSet` (`'material-icons' \| 'material-icons-outlined' \| 'material-icons-round' \| 'material-icons-sharp'`) | `'material-icons'` | Material icon variant. Falsy values coerce back to `'material-icons'`. |
+| `fontSet` | `SdIconSet` | `undefined` | Optional icon set override passed to `<sd-icon>`. Leave unset to inherit `provideSdIcon({ defaultFontSet })`. |
 | `closable` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Show the `×` dismiss button. |
 | `actionLabel` | `string \| undefined` | `undefined` | Text-link action rendered at the end of the content. Overridden by the `[sdInformAction]` projected slot when present. |
 | `lineClamp` | `number \| undefined` | `undefined` | Clamp the body to N lines and show a show-more / show-less toggle when it overflows. Values `<= 0` are treated as no clamp. |

@@ -70,6 +70,14 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 - The browser native color picker opens when the user clicks the swatch.
 - The built-in `<sd-input>` clear button appears only when editable, non-empty, and not required.
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-input-color size="sm" hideInlineError [(model)]="filter.color"></sd-input-color>
+```
+
 ## Examples
 
 ```html

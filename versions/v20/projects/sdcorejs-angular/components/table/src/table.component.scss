@@ -168,7 +168,7 @@
       background-color: #fff;
       border: none !important;
 
-      mat-icon {
+      sd-icon {
         font-size: 150px;
         margin-top: 30px;
         margin-bottom: 30px;
@@ -237,7 +237,7 @@
   }
 
   .sd-reorder-cell {
-    mat-icon {
+    sd-icon {
       cursor: grab;
       color: rgba(0, 0, 0, 0.38);
       display: flex;
@@ -400,7 +400,7 @@
     transform: scale(0.85);
     transform-origin: center;
   }
-  
+
 
   // Tree (icon expand đã nhúng vào cột đầu / cột Index) —
   // dòng chứa indent + chevron-slot + nội dung (STT hoặc cell), căn trục dọc.
@@ -441,7 +441,7 @@
     color: var(--sd-text-secondary, #5b6472);
     transition: background-color 0.15s ease;
 
-    mat-icon {
+    sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;

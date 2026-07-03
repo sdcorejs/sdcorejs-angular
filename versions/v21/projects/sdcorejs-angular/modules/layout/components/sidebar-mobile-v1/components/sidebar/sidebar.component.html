@@ -20,7 +20,7 @@
         <span class="m-title">{{ titleMenuGroup() || _sidebar.defaultTitle || 'Back Office' }}</span>
       </div>
       <button class="m-close-btn" (click)="onClose()">
-        <mat-icon>close</mat-icon>
+        <sd-icon name="close"></sd-icon>
       </button>
     </div>
 
@@ -41,13 +41,11 @@
               @if (group.iconUrl) {
                 <img class="m-group-icon" [src]="group.iconUrl" [alt]="group.title" />
               } @else {
-                <mat-icon class="m-group-icon">{{ group.icon || 'widgets' }}</mat-icon>
+                <sd-icon class="m-group-icon" [name]="group.icon || 'widgets'"></sd-icon>
               }
               <span class="m-group-title">{{ group.title }}</span>
             </div>
-            <mat-icon class="m-expand-icon">
-              {{ expandedMobileGroups().has(group.id ?? '') ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-            </mat-icon>
+            <sd-icon class="m-expand-icon" [name]="expandedMobileGroups().has(group.id ?? '') ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
           </button>
 
           @if (expandedMobileGroups().has(group.id ?? '') && hasChildren(group)) {
@@ -60,13 +58,11 @@
                         @if (child.iconUrl) {
                           <img class="m-item-icon-img" [src]="child.iconUrl" alt="icon" />
                         } @else {
-                          <mat-icon class="m-item-icon">{{ child.icon || 'folder' }}</mat-icon>
+                          <sd-icon class="m-item-icon" [name]="child.icon || 'folder'"></sd-icon>
                         }
                         <span class="m-item-title">{{ child.title }}</span>
                       </div>
-                      <mat-icon class="m-expand-icon">
-                        {{ expandedMobileGroups().has(child.id ?? '') ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}
-                      </mat-icon>
+                      <sd-icon class="m-expand-icon" [name]="expandedMobileGroups().has(child.id ?? '') ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"></sd-icon>
                     </button>
                     @if (expandedMobileGroups().has(child.id ?? '')) {
                       @for (subChild of getChildren(child); track subChild.id) {
@@ -76,11 +72,11 @@
                             @if (subChild.iconUrl) {
                               <img class="m-item-icon-img" [src]="subChild.iconUrl" alt="icon" />
                             } @else {
-                              <mat-icon class="m-item-icon">{{ subChild.icon || 'insert_drive_file' }}</mat-icon>
+                              <sd-icon class="m-item-icon" [name]="subChild.icon || 'insert_drive_file'"></sd-icon>
                             }
                             <span class="m-item-title">{{ subChild.title }}</span>
                           </div>
-                          <mat-icon class="m-nav-icon">chevron_right</mat-icon>
+                          <sd-icon class="m-nav-icon" name="chevron_right"></sd-icon>
                         </button>
                       }
                     }
@@ -91,11 +87,11 @@
                       @if (child.iconUrl) {
                         <img class="m-item-icon-img" [src]="child.iconUrl" alt="icon" />
                       } @else {
-                        <mat-icon class="m-item-icon">{{ child.icon || 'insert_drive_file' }}</mat-icon>
+                        <sd-icon class="m-item-icon" [name]="child.icon || 'insert_drive_file'"></sd-icon>
                       }
                       <span class="m-item-title">{{ child.title }}</span>
                     </div>
-                    <mat-icon class="m-nav-icon">chevron_right</mat-icon>
+                    <sd-icon class="m-nav-icon" name="chevron_right"></sd-icon>
                   </button>
                 }
               }

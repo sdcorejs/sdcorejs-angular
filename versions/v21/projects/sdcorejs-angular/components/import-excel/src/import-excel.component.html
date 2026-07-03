@@ -108,7 +108,7 @@
                                     [matMenuTriggerFor]="menu"
                                     class="c-mat-menu"
                                     style="width: 24px; height: 24px; line-height: 24px">
-                                    <mat-icon style="font-size: 18px">open_in_new</mat-icon>
+                                    <sd-icon style="font-size: 18px" name="open_in_new"></sd-icon>
                                   </button>
 
                                   <mat-menu #menu="matMenu">
@@ -139,7 +139,7 @@
                       (click)="downloadTemplate()"
                       [matTooltip]="'core.component.import-excel.download-template-tooltip' | translate"
                       aria-hidden="true">
-                      <mat-icon class="empty-icon">cloud_download</mat-icon>
+                      <sd-icon class="empty-icon" name="cloud_download"></sd-icon>
 
                       <h4>{{ 'core.component.import-excel.no-data-upload' | translate }}</h4>
                       <span class="text-small text-link"> {{ 'core.component.import-excel.click-here-template' | translate }} </span>

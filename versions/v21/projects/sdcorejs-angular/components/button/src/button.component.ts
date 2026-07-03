@@ -12,18 +12,18 @@ import {
   output,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Color } from '@sdcorejs/utils/models';
-import { DefaultMaterialIconFontSet, MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
+import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 
 // Export các Type ra ngoài để tái sử dụng ở file config/interface
 export type SdButtonType = 'fill' | 'light' | 'outline' | 'link';
 export type SdButtonSize = 'sm' | 'md' | 'lg';
 export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
+export type SdButtonColor = Color | 'black';
 
 @Component({
   selector: 'sd-button',
@@ -31,7 +31,7 @@ export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [SdIcon, CommonModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
   host: {
     '[class.sd-disabled]': 'disabled()',
     '[class.sd-loading]': 'loading()',
@@ -54,7 +54,7 @@ export class SdButton implements OnInit, OnDestroy {
     transform: value => value || 'light',
   });
 
-  color = input<Color, Color | undefined | null>('secondary', {
+  color = input<SdButtonColor, SdButtonColor | undefined | null>('secondary', {
     transform: value => value || 'secondary',
   });
 
@@ -62,8 +62,8 @@ export class SdButton implements OnInit, OnDestroy {
     transform: value => value || 'sm',
   });
 
-  fontSet = input<MaterialIconFontSet, MaterialIconFontSet | undefined | null>(DefaultMaterialIconFontSet, {
-    transform: value => value || DefaultMaterialIconFontSet,
+  fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
+    transform: value => value ?? undefined,
   });
 
   title = input<string | undefined | null>(undefined);
@@ -90,6 +90,7 @@ export class SdButton implements OnInit, OnDestroy {
     'c-sm': this.size() === 'sm',
     'c-md': this.size() === 'md',
     'c-lg': this.size() === 'lg',
+    'c-black': this.color() === 'black',
     'c-disabled': this.disabled(),
     'c-block': this.block(),
   }));

@@ -19,7 +19,7 @@
 
   <!-- Label segment: icon + field name (+ optional operator pill) -->
   <span class="c-seamless__label">
-    <mat-icon class="c-seamless__icon" fontSet="material-icons-outlined">{{ icon() }}</mat-icon>
+    <sd-icon class="c-seamless__icon" [name]="icon()"></sd-icon>
     <span class="c-seamless__field">{{ field().label }}</span>
     @if (showOperator() && !_isNoData) {
       <sd-operator class="c-seamless__op" [operators]="[_operator]" [model]="_operator" [disabled]="true" />
@@ -81,6 +81,6 @@
 
   <!-- × segment -->
   <button type="button" class="c-seamless__x" aria-label="Remove filter" (click)="onRemove($event)">
-    <mat-icon fontSet="material-icons-outlined">close</mat-icon>
+    <sd-icon name="close"></sd-icon>
   </button>
 </span>

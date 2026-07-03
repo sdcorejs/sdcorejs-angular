@@ -102,8 +102,8 @@ export const appConfig: ApplicationConfig = {
 | `--sd-primary`         | `#2A66F4` | Màu chính       |
 | `--sd-primary-light`   | `#EAF1FF` | Màu chính nhạt  |
 | `--sd-primary-dark`    | `#1C4AD9` | Màu chính đậm   |
-| `--sd-secondary`       | `#212121` | Màu phụ         |
-| `--sd-secondary-light` | `#E9E9E9` | Màu phụ nhạt    |
+| `--sd-secondary`       | `#757575` | Màu phụ         |
+| `--sd-secondary-light` | `#F2F2F2` | Màu phụ nhạt    |
 | `--sd-success`         | `#4CAF50` | Thành công      |
 | `--sd-success-light`   | `#DBEFDC` | Thành công nhạt |
 | `--sd-warning`         | `#FF9600` | Cảnh báo        |

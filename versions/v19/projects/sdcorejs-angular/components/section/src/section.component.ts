@@ -1,12 +1,12 @@
 import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { Color } from '@sdcorejs/utils/models';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-section',
   templateUrl: './section.component.html',
   styleUrl: './section.component.scss',
-  imports: [MatIconModule],
+  imports: [SdIcon],
 })
 export class SdSection {
   #el = inject(ElementRef);

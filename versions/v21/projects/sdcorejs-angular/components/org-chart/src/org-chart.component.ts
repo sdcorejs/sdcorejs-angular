@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, TemplateRef, booleanAttribute, computed, contentChild, input, signal } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { SdOrgChartItemDefDirective } from './org-chart-item-def.directive';
 import { SdOrgChartItem, SdOrgChartItemContext, SdOrgChartOption } from './org-chart.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-org-chart',
   standalone: true,
-  imports: [CommonModule, MatIconModule],
+  imports: [SdIcon, CommonModule],
   templateUrl: './org-chart.component.html',
   styleUrl: './org-chart.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

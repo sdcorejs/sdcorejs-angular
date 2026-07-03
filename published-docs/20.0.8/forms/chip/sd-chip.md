@@ -118,6 +118,14 @@ Values are primitives — `string` or `number` (the component filters on `typeof
 - Loading/error state mirrors other SDCoreJS inputs (red underline, tooltip)
 - In `[viewed]` mode: chip strip without input or ✕
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-chip size="sm" hideInlineError [(model)]="filter.tags"></sd-chip>
+```
+
 ## Examples
 
 ### 1. Tag/keyword input

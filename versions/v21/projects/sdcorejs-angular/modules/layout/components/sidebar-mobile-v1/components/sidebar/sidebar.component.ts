@@ -1,17 +1,17 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { MatIconModule } from '@angular/material/icon';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
 import { LayoutUserComponent } from '../user/user.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-sidebar-mobile-overlay',
   standalone: true,
-  imports: [CommonModule, RouterModule, MatIconModule, LayoutUserComponent],
+  imports: [SdIcon, CommonModule, RouterModule, LayoutUserComponent],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })

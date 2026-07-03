@@ -1,6 +1,7 @@
 import { Signal, TemplateRef } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { MaterialIconFontSet, SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
+import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
+import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 import { Color } from '@sdcorejs/utils/models';
 
 export type SdTreeDataSource<TItem = any> = TItem[] | Signal<TItem[]> | (() => TItem[] | Promise<TItem[]>);
@@ -72,7 +73,7 @@ export interface SdTreeCommand<T = any> {
   title: string | ((item: T) => string);
   icon?: string | ((item: T) => string | undefined | null);
   color?: Color;
-  fontSet?: MaterialIconFontSet;
+  fontSet?: SdIconSet;
   disabled?: boolean | ((item: T) => boolean);
   hidden?: boolean | ((item: T) => boolean);
   click: (item: T) => void;

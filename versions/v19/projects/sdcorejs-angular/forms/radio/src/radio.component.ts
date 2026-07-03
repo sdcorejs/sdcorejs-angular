@@ -19,7 +19,6 @@ import {
 } from '@angular/core';
 import { FormGroup, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Subscription } from 'rxjs';
@@ -63,7 +62,6 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
     ReactiveFormsModule,
     MatTooltipModule,
     MatFormFieldModule,
-    MatIconModule,
     MatRadioModule,
     SdLabel,
     SdEmptyPipe,

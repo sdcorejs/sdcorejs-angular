@@ -149,6 +149,14 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 - With `[hideInlineError]="true"`: an `error` icon (`.sd-error-icon`) sits **flush at the right edge** carrying the message as a tooltip; when the clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - In `[viewed]="true"` mode: no input chrome — just the formatted number as plain text (or as a hyperlink if `hyperlink` is set)
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-input-number size="sm" hideInlineError type="positive" [(model)]="filter.amount"></sd-input-number>
+```
+
 ## Examples
 
 ### 1. VND amount with currency suffix

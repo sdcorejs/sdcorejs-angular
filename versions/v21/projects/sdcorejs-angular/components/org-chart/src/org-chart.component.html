@@ -52,7 +52,7 @@
           [attr.aria-expanded]="_expanded"
           [attr.data-autoid]="nodeAutoId(item, 'toggle')"
           (click)="toggle(item, $event)">
-          <mat-icon>{{ _expanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+          <sd-icon [name]="_expanded ? 'expand_more' : 'chevron_right'"></sd-icon>
         </button>
       }
     </div>

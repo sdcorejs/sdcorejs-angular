@@ -275,7 +275,7 @@ export interface QbDateModeOption {
 }
 
 /** Stable option list for the date-mode select (module ref — never reallocated). */
-export const QB_DATE_MODES: readonly QbDateModeOption[] = [
+export const QB_DATE_MODES: QbDateModeOption[] = [
   { value: 'absolute', display: 'Ngày cụ thể', icon: 'event' },
   { value: 'now', display: 'Hôm nay', icon: 'today' },
   { value: 'relative', display: 'Tương đối', icon: 'history' },
@@ -290,13 +290,13 @@ export interface QbValueSourceOption {
 }
 
 /** Stable option list for choosing between a literal value and another field. */
-export const QB_VALUE_SOURCE_OPTIONS: readonly QbValueSourceOption[] = [
+export const QB_VALUE_SOURCE_OPTIONS: QbValueSourceOption[] = [
   { value: 'literal', display: 'Nhập giá trị', icon: 'edit_note' },
   { value: 'field', display: 'Chọn trường', icon: 'view_column' },
 ];
 
 /** Stable combined direction×unit option list (token `'unit:direction'`). */
-export const QB_RELATIVE_UNIT_OPTIONS: readonly { value: string; display: string }[] = [
+export const QB_RELATIVE_UNIT_OPTIONS: { value: string; display: string }[] = [
   { value: 'day:previous', display: 'ngày trước' },
   { value: 'day:next', display: 'ngày tới' },
   { value: 'week:previous', display: 'tuần trước' },

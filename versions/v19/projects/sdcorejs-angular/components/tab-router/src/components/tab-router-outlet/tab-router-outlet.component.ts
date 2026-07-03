@@ -14,7 +14,6 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet, RoutesRecognized } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { from, Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
 import { concatMap, filter } from 'rxjs/operators';
@@ -34,7 +33,7 @@ import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.compon
   templateUrl: './tab-router-outlet.component.html',
   styleUrl: './tab-router-outlet.component.scss',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule, RouterOutlet, SdTabRouterNavComponent],
+  imports: [CommonModule, MatTooltipModule, RouterOutlet, SdTabRouterNavComponent],
 })
 export class SdTabRouterOutletComponent implements OnDestroy {
   disabled = input(false, { transform: booleanAttribute });

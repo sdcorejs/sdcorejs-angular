@@ -12,7 +12,7 @@
  * - `exportCSV()` now uses a self-written CSV generator (no third-party library);
  *   the method is verified to exist plus a dedicated test asserts the output
  *   blob includes UTF-8 BOM, CRLF line endings, and RFC 4180-style escaping
- *   for commas, embedded quotes, and newlines inside cells.
+ *   for commas, embedded quotes, newlines, and formula injection payloads inside cells.
  */
 
 import { TestBed } from '@angular/core/testing';
@@ -295,5 +295,32 @@ describe('SdExcelService', () => {
     expect(text).toContain('Name,Note\r\n'); // CRLF header
     expect(text).toContain('"B,C","has ""quotes"""'); // comma + quote escape
     expect(text).toContain('"multi\nline"'); // newline inside cell
+  });
+
+  it('exportCSV neutralizes spreadsheet formula injection payloads in string cells', async () => {
+    const blobSpy = spyOn(BrowserUtilities, 'downloadBlob');
+
+    await service.exportCSV({
+      fileName: 'security',
+      columns: [
+        { field: 'fullName', title: 'Full name' },
+        { field: 'createdBy', title: 'Created by' },
+        { field: 'score', title: 'Score' },
+      ],
+      items: [
+        { fullName: '=cmd|\' /C calc\'!A0', createdBy: '+evil@example.com', score: -42 },
+        { fullName: '@attacker', createdBy: '\t=cmd', score: '-text-value' },
+      ],
+    });
+
+    const blob: Blob = blobSpy.calls.mostRecent().args[0];
+    const text = new TextDecoder('utf-8', { ignoreBOM: true }).decode(new Uint8Array(await blob.arrayBuffer()));
+
+    expect(text).toContain("'=cmd|' /C calc'!A0");
+    expect(text).toContain("'+evil@example.com");
+    expect(text).toContain("'@attacker");
+    expect(text).toContain("'\t=cmd");
+    expect(text).toContain(',-42\r\n');
+    expect(text).toContain("'-text-value");
   });
 });

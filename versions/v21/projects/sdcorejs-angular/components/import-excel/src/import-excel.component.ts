@@ -9,7 +9,6 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdExcelService, SdExcelSheet, SdExcelTemplate, SdExcelTemplateColumn } from '@sdcorejs/angular/services/excel';
@@ -20,12 +19,13 @@ import { ColumnTransformPipe } from './pipes/column-transform.pipe';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-import-excel',
   templateUrl: './import-excel.component.html',
   styleUrl: './import-excel.component.scss',
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     MatSlideToggleModule,
@@ -36,7 +36,6 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
     SdModal,
     ColumnTransformPipe,
     ColumnHiddenPipe,
-    MatIconModule,
     MatMenuModule,
     MatProgressSpinner,
     SdBadge,

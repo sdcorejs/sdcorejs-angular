@@ -1,11 +1,19 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdRadio } from '@sdcorejs/angular/forms/radio';
+import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
+
+interface FontSetOption {
+  value: SdIconSet;
+  display: string;
+}
 
 @Component({
   selector: 'app-badge-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdBadge],
+  imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdBadge, SdRadio],
   template: `
     <demo-page
       title="Badge"
@@ -15,6 +23,39 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
         <sd-badge type="round" primary title="round"></sd-badge>
         <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+      </demo-section>
+
+      <demo-section
+        heading="fontSet switch"
+        [props]="[{ name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' }, { name: 'type', value: 'icon / round / tag' }]"
+        note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+        <div class="d-flex flex-column gap-16 w-full">
+          <sd-radio
+            label="fontSet"
+            [items]="fontSetOptions"
+            valueField="value"
+            displayField="display"
+            [(model)]="selectedFontSet"
+            [form]="fontSetForm"></sd-radio>
+
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
+            <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
+            <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
+            <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
+            <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
+            <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
+            <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
+          </div>
+        </div>
       </demo-section>
 
       <demo-section heading="Màu sắc round" [props]="[{ name: 'type', value: 'round' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
@@ -77,6 +118,14 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeDemoComponent {
+  readonly fontSetForm = new FormGroup({});
+  readonly selectedFontSet = signal<SdIconSet>('lucide');
+  readonly fontSetOptions: FontSetOption[] = [
+    { value: 'material-icons', display: 'Material filled' },
+    { value: 'material-icons-outlined', display: 'Material outlined' },
+    { value: 'lucide', display: 'Lucide' },
+  ];
+
   readonly unreadCount = signal(7);
   readonly errorsCount = signal(3);
 }

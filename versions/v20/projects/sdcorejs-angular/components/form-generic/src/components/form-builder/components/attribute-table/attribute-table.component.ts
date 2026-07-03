@@ -1,7 +1,6 @@
 import { Component, EventEmitter, inject, Input, Output, ViewChild } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -29,7 +28,6 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   selector: 'attribute-table',
   templateUrl: './attribute-table.component.html',
   imports: [
-    MatIconModule,
     MatDividerModule,
     SdLabel,
     SdAutocomplete,

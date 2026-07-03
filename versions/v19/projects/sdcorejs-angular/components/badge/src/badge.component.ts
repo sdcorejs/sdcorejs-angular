@@ -1,9 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttribute, computed, input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { Color, Size } from '@sdcorejs/utils/models';
-import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 
 // Export các Type để dùng chung
 export type SdBadgeType = 'tag' | 'round' | 'icon';
@@ -14,7 +13,7 @@ export type SdBadgeType = 'tag' | 'round' | 'icon';
   styleUrl: './badge.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatTooltipModule],
+  imports: [CommonModule, SdIcon, MatTooltipModule],
 })
 export class SdBadge {
   defaultIcon = 'fiber_manual_record';
@@ -37,8 +36,8 @@ export class SdBadge {
   warning = input(false, { transform: booleanAttribute });
   error = input(false, { transform: booleanAttribute });
 
-  fontSet = input<MaterialIconFontSet, MaterialIconFontSet | undefined | null>('material-icons', {
-    transform: value => value || 'material-icons',
+  fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
+    transform: value => value ?? undefined,
   });
 
   title = input<string | number | undefined | null>();
@@ -100,20 +99,21 @@ export class SdBadge {
 
   iconSizeAndFontClasses = computed(() => {
     const s = this.size();
-    const f = this.fontSet();
     return {
       'c-sm': s === 'sm',
       'c-md': s === 'md',
       'c-lg': s === 'lg',
-      'material-icons': f === 'material-icons',
-      'material-icons-outlined': f === 'material-icons-outlined',
-      'material-icons-round': f === 'material-icons-round',
-      'material-icons-sharp': f === 'material-icons-sharp',
     };
   });
 
-  // why: size modifier cho container .c-badge (round + tag). Tách prefix c-badge--<size>
-  // để không đụng class .c-sm/.c-md/.c-lg đang dùng trên icon span.
+  iconCssSize = computed(() => {
+    const s = this.size();
+    if (s === 'md') return '18px';
+    if (s === 'lg') return '24px';
+    return '16px';
+  });
+
+  // why: keep container size classes separate from icon element size classes.
   containerSizeClasses = computed(() => {
     const s = this.size();
     return {

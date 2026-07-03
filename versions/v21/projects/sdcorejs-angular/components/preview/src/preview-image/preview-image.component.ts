@@ -15,14 +15,14 @@ import {
   signal,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { NormalizedImage, PreviewItem, PreviewStage, PreviewTheme, ThumbnailPosition } from './preview-image.types';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-preview-image',
   standalone: true,
-  imports: [CommonModule, MatIconModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, TranslatePipe],
   templateUrl: './preview-image.component.html',
   styleUrl: './preview-image.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

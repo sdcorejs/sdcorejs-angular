@@ -82,7 +82,7 @@ $qb-radius-chip:   999px;
     border-radius: 50%;
     cursor: pointer;
     color: $qb-text-muted;
-    mat-icon { font-size: 14px; width: 14px; height: 14px; }
+    sd-icon { font-size: 14px; width: 14px; height: 14px; }
     &:hover { background: rgba(0, 0, 0, 0.06); }
   }
 }

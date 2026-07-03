@@ -1,16 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, effect, inject, input, signal, untracked } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 // NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../services';
 import { SidebarMobileOverlayComponent } from './components/sidebar/sidebar.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sidebar-mobile-v1',
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
-  imports: [MatIconModule, CommonModule, SidebarMobileOverlayComponent],
+  imports: [SdIcon, CommonModule, SidebarMobileOverlayComponent],
   standalone: true,
 })
 export class SidebarMobileV1Component {

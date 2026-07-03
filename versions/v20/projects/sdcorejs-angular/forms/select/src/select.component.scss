@@ -133,7 +133,7 @@
       border: 1px solid map.get(color.$color_map, 'black200');
       border-radius: 4px;
       background-color: #fff;
-      .mat-icon {
+      sd-icon {
         color: #dadada;
       }
       .c-search-input {
@@ -197,7 +197,7 @@
   }
 }
 
-/* [NEW]: Ghi đè min-width inline style của Angular Material 
+/* [NEW]: Ghi đè min-width inline style của Angular Material
   để panel có thể tự mở rộng ra theo nội dung chữ hoặc panelWidth được cấu hình
 */
 ::ng-deep .mat-mdc-select-panel.sd-select-panel {

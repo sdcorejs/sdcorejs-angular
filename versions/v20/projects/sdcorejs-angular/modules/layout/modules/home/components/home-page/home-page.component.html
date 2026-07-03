@@ -15,7 +15,7 @@
         <div class="hero-ring ring-2"></div>
         <div class="hero-ring ring-1"></div>
         <div class="hero-core">
-          <mat-icon class="hero-icon">space_dashboard</mat-icon>
+          <sd-icon class="hero-icon" name="space_dashboard"></sd-icon>
         </div>
         <div class="hero-decoration">
           <span class="dot d1"></span>
@@ -35,7 +35,7 @@
           <div class="feature-accent"></div>
           <div class="feature-content">
             <div class="feature-icon-wrap">
-              <mat-icon class="feature-icon">{{ feature.icon }}</mat-icon>
+              <sd-icon class="feature-icon" [name]="feature.icon"></sd-icon>
             </div>
             <span class="feature-label">{{ feature.key | translate }}</span>
           </div>

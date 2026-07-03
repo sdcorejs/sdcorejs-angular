@@ -1,10 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdBadge } from './badge.component';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 
 describe('SdBadge', () => {
   let fixture: ComponentFixture<SdBadge>;
+
+  const getIconComponent = () => fixture.debugElement.query(By.directive(SdIcon)).componentInstance as SdIcon;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -17,7 +21,7 @@ describe('SdBadge', () => {
   describe('default render', () => {
     it('defaults type to "icon" with default icon fiber_manual_record', () => {
       fixture.detectChanges();
-      const icon = queryByCss(fixture, 'span.c-material-icon');
+      const icon = queryByCss(fixture, 'sd-icon.c-material-icon mat-icon');
       expect(icon.textContent?.trim()).toBe('fiber_manual_record');
     });
 
@@ -38,7 +42,7 @@ describe('SdBadge', () => {
       setInput(fixture, 'title', 'Active');
       const el = queryByCss<HTMLDivElement>(fixture, 'div.c-badge');
       expect(el.textContent?.trim()).toBe('Active');
-      expect(fixture.nativeElement.querySelector('span.c-material-icon')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-material-icon')).toBeNull();
     });
 
     it('renders tag wrapper when type="tag"', () => {
@@ -154,7 +158,7 @@ describe('SdBadge', () => {
     it('uses provided icon name', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'icon', 'check_circle');
-      expect(queryByCss(fixture, 'span.c-material-icon').textContent?.trim()).toBe('check_circle');
+      expect(queryByCss(fixture, 'sd-icon.c-material-icon').textContent?.trim()).toBe('check_circle');
     });
   });
 
@@ -204,53 +208,93 @@ describe('SdBadge', () => {
 
     it('iconColorClasses: secondary → c-black400 (icon type, default color)', () => {
       setInput(fixture, 'type', 'icon');
-      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-black400')).toBe(true);
     });
 
     it('iconColorClasses: info → c-info (icon type)', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'info', true);
-      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-info')).toBe(true);
     });
 
     it('iconColorClasses: warning → c-warning (icon type)', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'warning', true);
-      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-warning')).toBe(true);
     });
 
     it('iconColorClasses: error → c-error (icon type)', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'error', true);
-      const icon = queryByCss<HTMLElement>(fixture, 'span.c-material-icon');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
       expect(icon.classList.contains('c-error')).toBe(true);
     });
   });
 
   describe('size variants', () => {
-    it('size="sm" → c-sm on icon span (default)', () => {
+    it('size="sm" → c-sm on icon element (default)', () => {
       setInput(fixture, 'type', 'icon');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-sm')).toBe(true);
+      expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-sm')).toBe(true);
     });
 
-    it('size="md" → c-md on icon span', () => {
+    it('size="md" → c-md on icon element', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'size', 'md');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-md')).toBe(true);
+      expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-md')).toBe(true);
     });
 
-    it('size="lg" → c-lg on icon span', () => {
+    it('size="lg" → c-lg on icon element', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'size', 'lg');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-lg')).toBe(true);
+      expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-lg')).toBe(true);
     });
 
     it('coerces falsy size back to "sm"', () => {
       setInput(fixture, 'size', null);
       expect(fixture.componentInstance.size()).toBe('sm');
+    });
+
+    it('centers icon glyph within the declared icon box', () => {
+      setInput(fixture, 'type', 'icon');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
+      const style = getComputedStyle(icon);
+
+      expect(style.display).toContain('flex');
+      expect(style.alignItems).toBe('center');
+      expect(style.justifyContent).toBe('center');
+      expect(style.paddingLeft).toBe('0px');
+      expect(style.paddingRight).toBe('0px');
+      expect(style.width).toBe('20px');
+      expect(style.height).toBe('20px');
+    });
+
+    it('centers tag icon within the declared badge icon box', () => {
+      setInput(fixture, 'type', 'tag');
+      setInput(fixture, 'icon', 'label');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
+      const style = getComputedStyle(icon);
+
+      expect(style.display).toContain('flex');
+      expect(style.alignItems).toBe('center');
+      expect(style.justifyContent).toBe('center');
+      expect(style.width).toBe('16px');
+      expect(style.height).toBe('16px');
+    });
+
+    it('centers round icon within the declared badge icon box', () => {
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'icon', 'check_circle');
+      const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
+      const style = getComputedStyle(icon);
+
+      expect(style.display).toContain('flex');
+      expect(style.alignItems).toBe('center');
+      expect(style.justifyContent).toBe('center');
+      expect(style.width).toBe('16px');
+      expect(style.height).toBe('16px');
     });
   });
 
@@ -281,81 +325,93 @@ describe('SdBadge', () => {
   });
 
   describe('round type — icon support', () => {
-    it('does NOT render icon span when icon input is not set', () => {
+    it('does NOT render icon element when icon input is not set', () => {
       setInput(fixture, 'type', 'round');
       setInput(fixture, 'title', 'X');
-      expect(fixture.nativeElement.querySelector('span.c-material-icon')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-material-icon')).toBeNull();
       expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--has-icon')).toBe(false);
     });
 
-    it('renders icon span when icon is set on round type', () => {
+    it('renders icon element when icon is set on round type', () => {
       setInput(fixture, 'type', 'round');
       setInput(fixture, 'icon', 'check_circle');
       setInput(fixture, 'title', 'OK');
-      const iconSpan = fixture.nativeElement.querySelector('span.c-material-icon');
+      const iconSpan = fixture.nativeElement.querySelector('sd-icon.c-material-icon');
       expect(iconSpan).not.toBeNull();
       expect(iconSpan.textContent?.trim()).toBe('check_circle');
       expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-badge--has-icon')).toBe(true);
     });
 
-    it('round icon span gets size class (c-md) matching size input', () => {
+    it('round icon element gets size class (c-md) matching size input', () => {
       setInput(fixture, 'type', 'round');
       setInput(fixture, 'icon', 'check_circle');
       setInput(fixture, 'size', 'md');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-md')).toBe(true);
+      expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-md')).toBe(true);
     });
 
-    it('round icon span gets color class (success) from baseColorClasses', () => {
+    it('round icon element gets color class (success) from baseColorClasses', () => {
       setInput(fixture, 'type', 'round');
       setInput(fixture, 'icon', 'check_circle');
       setInput(fixture, 'success', true);
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('c-success')).toBe(true);
+      expect(queryByCss(fixture, 'sd-icon.c-material-icon').classList.contains('c-success')).toBe(true);
     });
   });
 
-  describe('fontSet variants', () => {
-    it('fontSet="material-icons" by default → material-icons class', () => {
+  describe('icon renderer configuration', () => {
+    it('uses SdIcon default fontSet when fontSet is not provided', () => {
       setInput(fixture, 'type', 'icon');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons')).toBe(true);
+      const icon = getIconComponent();
+
+      expect(icon.resolvedFontSet()).toBe('material-icons-outlined');
     });
 
-    it('fontSet="material-icons-outlined" → material-icons-outlined class', () => {
+    it('passes fontSet to SdIcon', () => {
       setInput(fixture, 'type', 'icon');
-      setInput(fixture, 'fontSet', 'material-icons-outlined');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons-outlined')).toBe(true);
+      setInput(fixture, 'fontSet', 'material-icons');
+      const icon = getIconComponent();
+
+      expect(icon.resolvedFontSet()).toBe('material-icons');
     });
 
-    it('fontSet="material-icons-round" → material-icons-round class', () => {
+    it('lets fontSet override the Material icon font set', () => {
       setInput(fixture, 'type', 'icon');
       setInput(fixture, 'fontSet', 'material-icons-round');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons-round')).toBe(true);
+      const icon = getIconComponent();
+
+      expect(icon.resolvedFontSet()).toBe('material-icons-round');
     });
 
-    it('fontSet="material-icons-sharp" → material-icons-sharp class', () => {
-      setInput(fixture, 'type', 'icon');
-      setInput(fixture, 'fontSet', 'material-icons-sharp');
-      expect(queryByCss(fixture, 'span.c-material-icon').classList.contains('material-icons-sharp')).toBe(true);
+    it('passes fontSet to tag and round badge icons', () => {
+      setInput(fixture, 'type', 'tag');
+      setInput(fixture, 'icon', 'label');
+      setInput(fixture, 'fontSet', 'material-icons');
+      expect(getIconComponent().resolvedFontSet()).toBe('material-icons');
+
+      setInput(fixture, 'type', 'round');
+      setInput(fixture, 'icon', 'check_circle');
+      expect(getIconComponent().resolvedFontSet()).toBe('material-icons');
     });
 
-    it('coerces falsy fontSet back to "material-icons"', () => {
+    it('coerces falsy fontSet to undefined so SdIcon can use its configuration', () => {
       setInput(fixture, 'fontSet', null);
-      expect(fixture.componentInstance.fontSet()).toBe('material-icons');
+
+      expect(fixture.componentInstance.fontSet()).toBeUndefined();
     });
   });
 
   describe('tag type — icon visibility branch', () => {
-    it('renders icon span ONLY when icon input is set', () => {
+    it('renders icon element ONLY when icon input is set', () => {
       setInput(fixture, 'type', 'tag');
       setInput(fixture, 'title', 'T');
       // No icon input → @if (icon()) branch false
-      expect(fixture.nativeElement.querySelector('span.c-material-icon')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-material-icon')).toBeNull();
     });
 
-    it('renders icon span in tag type when icon is set', () => {
+    it('renders icon element in tag type when icon is set', () => {
       setInput(fixture, 'type', 'tag');
       setInput(fixture, 'title', 'T');
       setInput(fixture, 'icon', 'label');
-      expect(fixture.nativeElement.querySelector('span.c-material-icon')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-material-icon')).not.toBeNull();
     });
   });
 

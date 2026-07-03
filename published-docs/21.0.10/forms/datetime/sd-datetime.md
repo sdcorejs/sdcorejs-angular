@@ -149,6 +149,14 @@ For read-only datetime display, use `sdFormatDatetime` and `sdView`.
 {{ row.scheduledAt | sdFormatDatetime : 'dd/MM/yyyy HH:mm' | sdView }}
 ```
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-datetime size="sm" hideInlineError [(model)]="filter.scheduledAt"></sd-datetime>
+```
+
 ## Examples
 
 ### 1. Simple required datetime

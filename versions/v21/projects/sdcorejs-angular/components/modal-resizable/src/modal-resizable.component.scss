@@ -76,7 +76,7 @@
   overflow: hidden;
   outline: none;
 
-  .mat-icon {
+  sd-icon {
     float: left;
   }
 }
@@ -156,7 +156,7 @@
       margin: 0;
     }
 
-    .mat-icon {
+    sd-icon {
       color: map.get(color.$color_map, 'white');
     }
   }

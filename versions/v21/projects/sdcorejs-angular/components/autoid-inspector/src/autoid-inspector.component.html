@@ -10,7 +10,7 @@
       [matTooltip]="_open ? 'Đóng AutoId Inspector' : 'Mở AutoId Inspector'"
       matTooltipPosition="left"
       (click)="togglePanel()">
-      <mat-icon>{{ _open ? 'close' : 'tag' }}</mat-icon>
+      <sd-icon [name]="_open ? 'close' : 'tag'"></sd-icon>
     </button>
     <button
       type="button"
@@ -19,7 +19,7 @@
       matTooltipPosition="left"
       aria-label="Ẩn tạm FAB"
       (click)="dismissFab($event)">
-      <mat-icon>close</mat-icon>
+      <sd-icon name="close"></sd-icon>
     </button>
   </div>
 }
@@ -55,10 +55,10 @@
       </div>
       <div class="sd-autoid-inspector__actions">
         <button type="button" class="sd-autoid-inspector__icon-btn" matTooltip="Quét lại" (click)="refresh()">
-          <mat-icon>refresh</mat-icon>
+          <sd-icon name="refresh"></sd-icon>
         </button>
         <button type="button" class="sd-autoid-inspector__close-btn" matTooltip="Đóng" aria-label="Đóng panel" (click)="closePanel()">
-          <mat-icon>close</mat-icon>
+          <sd-icon name="close"></sd-icon>
         </button>
       </div>
     </header>
@@ -87,7 +87,7 @@
       @let _highlightOn = highlightOn();
       <div class="sd-autoid-inspector__audit-toolbar">
         <button type="button" class="sd-autoid-inspector__toggle" [class.is-on]="_highlightOn" (click)="toggleHighlight()">
-          <mat-icon>{{ _highlightOn ? 'visibility' : 'visibility_off' }}</mat-icon>
+          <sd-icon [name]="_highlightOn ? 'visibility' : 'visibility_off'"></sd-icon>
           <span>Highlight DOM</span>
           <span class="sd-autoid-inspector__toggle-state">{{ _highlightOn ? 'ON' : 'OFF' }}</span>
         </button>
@@ -109,7 +109,7 @@
 
       @if (a.duplicateCount > 0) {
         <h4 class="sd-autoid-inspector__section-title">
-          <mat-icon class="is-error">error_outline</mat-icon>
+          <sd-icon class="is-error" name="error"></sd-icon>
           Autoid bị trùng
         </h4>
         <div class="sd-autoid-inspector__table-wrap">
@@ -136,7 +136,7 @@
 
       @if (a.missingCount > 0) {
         <h4 class="sd-autoid-inspector__section-title">
-          <mat-icon class="is-warning">warning_amber</mat-icon>
+          <sd-icon class="is-warning" name="warning_amber"></sd-icon>
           Element thiếu autoid
         </h4>
         <div class="sd-autoid-inspector__table-wrap">
@@ -167,7 +167,7 @@
 
       @if (a.duplicateCount === 0 && a.missingCount === 0) {
         <div class="sd-autoid-inspector__success-card">
-          <mat-icon>check_circle</mat-icon>
+          <sd-icon name="check_circle"></sd-icon>
           <div>
             <strong>Không có element thiếu hoặc trùng autoid.</strong>
             <small>Trang đã đạt chuẩn convention autoid.</small>
@@ -180,11 +180,11 @@
   <ng-template #elementsTpl>
     @let _filter = filter();
     <div class="sd-autoid-inspector__filter">
-      <mat-icon>search</mat-icon>
+      <sd-icon name="search"></sd-icon>
       <input type="text" placeholder="Lọc theo autoid / name / tag" [ngModel]="_filter" (ngModelChange)="filter.set($event)" />
       @if (_filter) {
         <button type="button" class="sd-autoid-inspector__icon-btn" matTooltip="Xoá filter" (click)="filter.set('')">
-          <mat-icon>close</mat-icon>
+          <sd-icon name="close"></sd-icon>
         </button>
       }
     </div>
@@ -219,7 +219,7 @@
                     class="sd-autoid-inspector__icon-btn is-primary"
                     matTooltip="Copy xpath"
                     (click)="copyXpath(el.autoid)">
-                    <mat-icon>content_copy</mat-icon>
+                    <sd-icon name="content_copy"></sd-icon>
                   </button>
                 </div>
               </td>
@@ -289,7 +289,7 @@
     <!-- One section per sd-table group -->
     @for (group of tableGroups(); track group.scope) {
       <h4 class="sd-autoid-inspector__section-title">
-        <mat-icon class="is-info">table_chart</mat-icon>
+        <sd-icon class="is-info" name="table_chart"></sd-icon>
         Inside <code>{{ group.scope }}</code>
         <span class="sd-autoid-inspector__badge">{{ group.items.length }}</span>
       </h4>
@@ -318,7 +318,7 @@
                       class="sd-autoid-inspector__icon-btn is-primary"
                       matTooltip="Copy xpath"
                       (click)="copyXpath(el.autoid)">
-                      <mat-icon>content_copy</mat-icon>
+                      <sd-icon name="content_copy"></sd-icon>
                     </button>
                   </div>
                 </td>
@@ -386,27 +386,27 @@
   <ng-template #exportTpl>
     <div class="sd-autoid-inspector__export-grid">
       <button type="button" matTooltip="Copy JSON vào clipboard" (click)="copyJson()">
-        <mat-icon>content_copy</mat-icon>
+        <sd-icon name="content_copy"></sd-icon>
         <span>Copy JSON</span>
         <small>clipboard</small>
       </button>
       <button type="button" matTooltip="Tải file JSON" (click)="exportJson()">
-        <mat-icon>download</mat-icon>
+        <sd-icon name="download"></sd-icon>
         <span>JSON</span>
         <small>.json</small>
       </button>
       <button type="button" matTooltip="Tải file CSV" (click)="exportCsv()">
-        <mat-icon>table_view</mat-icon>
+        <sd-icon name="table_view"></sd-icon>
         <span>CSV</span>
         <small>.csv</small>
       </button>
       <button type="button" matTooltip="Tải MD POM skeleton — cho AI viết auto-test" (click)="exportMdPom()">
-        <mat-icon>code</mat-icon>
+        <sd-icon name="code"></sd-icon>
         <span>MD POM</span>
         <small>AI test</small>
       </button>
       <button type="button" matTooltip="Tải MD reference table — group theo tag sd-*" (click)="exportMdTable()">
-        <mat-icon>view_list</mat-icon>
+        <sd-icon name="view_list"></sd-icon>
         <span>MD Table</span>
         <small>reference</small>
       </button>
@@ -416,7 +416,7 @@
       @let _e2eExporting = e2eExporting();
       <div class="sd-autoid-inspector__export-section">
         <h4 class="sd-autoid-inspector__section-title">
-          <mat-icon class="is-info">auto_awesome</mat-icon>
+          <sd-icon class="is-info" name="auto_awesome"></sd-icon>
           Tạo E2E test
         </h4>
         <div class="sd-autoid-inspector__export-grid is-e2e">
@@ -425,7 +425,7 @@
             matTooltip="Tạo bộ test Playwright (.zip)"
             [disabled]="_e2eExporting !== null"
             (click)="exportE2eTest('playwright')">
-            <mat-icon>{{ _e2eExporting === 'playwright' ? 'hourglass_empty' : 'play_arrow' }}</mat-icon>
+            <sd-icon [name]="_e2eExporting === 'playwright' ? 'hourglass_empty' : 'play_arrow'"></sd-icon>
             <span>Playwright</span>
             <small>.zip</small>
           </button>
@@ -434,7 +434,7 @@
             matTooltip="Tạo bộ test Robot Framework (.zip)"
             [disabled]="_e2eExporting !== null"
             (click)="openRobotExportContext()">
-            <mat-icon>{{ _e2eExporting === 'robot' ? 'hourglass_empty' : 'smart_toy' }}</mat-icon>
+            <sd-icon [name]="_e2eExporting === 'robot' ? 'hourglass_empty' : 'smart_toy'"></sd-icon>
             <span>Robot Framework</span>
             <small>.zip</small>
           </button>
@@ -453,7 +453,7 @@
                 <small>Requirement, test case, test data</small>
               </div>
               <button type="button" class="sd-autoid-inspector__icon-btn" matTooltip="Đóng" (click)="closeRobotExportContext()">
-                <mat-icon>close</mat-icon>
+                <sd-icon name="close"></sd-icon>
               </button>
             </header>
 
@@ -525,7 +525,7 @@
                 class="is-primary"
                 [disabled]="_e2eExporting !== null || !hasRobotExportContext()"
                 (click)="confirmRobotExport()">
-                <mat-icon>{{ _e2eExporting === 'robot' ? 'hourglass_empty' : 'download' }}</mat-icon>
+                <sd-icon [name]="_e2eExporting === 'robot' ? 'hourglass_empty' : 'download'"></sd-icon>
                 <span>Đồng ý xuất</span>
               </button>
             </footer>

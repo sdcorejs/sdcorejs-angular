@@ -18,9 +18,9 @@ import { MatBottomSheet, MatBottomSheetModule, MatBottomSheetRef } from '@angula
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatIconModule } from '@angular/material/icon';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Color, Size } from '@sdcorejs/utils/models';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-modal',
@@ -29,7 +29,7 @@ import { Color, Size } from '@sdcorejs/utils/models';
   // encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatBottomSheetModule, MatDialogModule, MatDividerModule, MatButtonModule],
+  imports: [SdIcon, CommonModule, MatBottomSheetModule, MatDialogModule, MatDividerModule, MatButtonModule],
 })
 export class SdModal {
   static index = signal(0);

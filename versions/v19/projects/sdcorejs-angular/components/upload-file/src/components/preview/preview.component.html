@@ -43,7 +43,7 @@
         @if(selectedFile) {
           @if(selectedFile.isImgError) {
             <div class="c-image-error">
-              <mat-icon>warning_amber</mat-icon>
+              <sd-icon name="warning_amber"></sd-icon>
               <div class="T14R">{{ 'core.component.upload-file.error-occurred' | translate }}</div>
             </div>
           } @else if (selectedFile.isPreviewImage && (selectedFile.previewSrc || selectedFile.src)) {

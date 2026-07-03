@@ -10,7 +10,6 @@ import {
   OnDestroy,
   signal,
 } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRouteSnapshot, Router } from '@angular/router';
@@ -26,6 +25,7 @@ import { SdAutoidScannerService } from './services/autoid-scanner.service';
 import { SdAutoidAuditService } from './services/autoid-audit.service';
 import { SdAutoidHighlightService } from './services/autoid-highlight.service';
 import { SdAutoidExportService } from './services/autoid-export.service';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type Segment = 'audit' | 'elements' | 'export';
 type RobotContextField = keyof AutoidRobotExportContext;
@@ -36,7 +36,7 @@ type RobotContextField = keyof AutoidRobotExportContext;
   styleUrl: './autoid-inspector.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, MatTooltipModule],
+  imports: [SdIcon, CommonModule, FormsModule, MatTooltipModule],
 })
 export class SdAutoidInspector implements OnDestroy {
   readonly #injectedConfig = inject<SdAutoidInspectorConfiguration | null>(SD_AUTOID_INSPECTOR_CONFIGURATION, { optional: true });

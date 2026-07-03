@@ -29,73 +29,73 @@
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-      <div class="sd-textarea-field-wrap" [class.sd-inline-textarea]="_isInline">
-        <mat-form-field
-          [class.sd-md]="size() === 'md'"
-          [class.sd-sm]="size() === 'sm'"
-          [class.hide-inline-error]="_hideInlineError"
-          [appearance]="_appearance!"
-          [floatLabel]="floatLabel()">
-          @if (_appearance && _label) {
-            <mat-label style="display: inline-block">
-              <div style="display: flex; align-items: center; gap: 4px">
-                <span>{{ _label }}</span>
-                @if (_helperText) {
-                  <mat-icon [matTooltip]="_helperText" matTooltipPosition="above">info_outline</mat-icon>
-                }
-              </div>
-            </mat-label>
-          }
+    <div class="sd-textarea-field-wrap" [class.sd-inline-textarea]="_isInline">
+      <mat-form-field
+        [class.sd-md]="size() === 'md'"
+        [class.sd-sm]="size() === 'sm'"
+        [class.hide-inline-error]="_hideInlineError"
+        [appearance]="_appearance!"
+        [floatLabel]="floatLabel()">
+        @if (_appearance && _label) {
+          <mat-label style="display: inline-block">
+            <div style="display: flex; align-items: center; gap: 4px">
+              <span>{{ _label }}</span>
+              @if (_helperText) {
+                <sd-icon [matTooltip]="_helperText" matTooltipPosition="above" name="info"></sd-icon>
+              }
+            </div>
+          </mat-label>
+        }
 
-          <textarea
-            matInput
-            [placeholder]="placeholder() || _label || ''"
-            [formControl]="formControl"
-            [required]="_required"
-            autocomplete="off"
-            (focus)="onFocus()"
-            (blur)="onBlur()"
-            [rows]="rows()"
-            [attr.data-autoId]="autoId()"
-            [attr.data-disabled]="dataDisabled()"
-            [attr.data-invalid]="dataInvalid()"
-            [attr.data-empty]="dataEmpty()"
-            [attr.data-value]="dataValue()"
-            [attr.data-required]="dataRequired()"
-            [attr.data-maxlength]="dataMaxLength()"
-            [attr.data-pattern]="dataPattern()"
-            [attr.data-error-message]="dataErrorMessage()"
-            spellcheck="false"
-            #textarea>
-          </textarea>
+        <textarea
+          matInput
+          [placeholder]="placeholder() || _label || ''"
+          [formControl]="formControl"
+          [required]="_required"
+          autocomplete="off"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          [rows]="rows()"
+          [attr.data-autoId]="autoId()"
+          [attr.data-disabled]="dataDisabled()"
+          [attr.data-invalid]="dataInvalid()"
+          [attr.data-empty]="dataEmpty()"
+          [attr.data-value]="dataValue()"
+          [attr.data-required]="dataRequired()"
+          [attr.data-maxlength]="dataMaxLength()"
+          [attr.data-pattern]="dataPattern()"
+          [attr.data-error-message]="dataErrorMessage()"
+          spellcheck="false"
+          #textarea>
+        </textarea>
 
-          @if (_hideInlineError && _errorMessage && formControl.touched) {
-            <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
-          }
+        @if (_hideInlineError && _errorMessage && formControl.touched) {
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
 
-          @if (!_hideInlineError && _errorMessage && formControl.touched) {
-            <mat-error>{{ _errorMessage }}</mat-error>
-          }
+        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+          <mat-error>{{ _errorMessage }}</mat-error>
+        }
 
-          @if (sdSuffixDef()?.templateRef; as suffixRef) {
-            <ng-container matSuffix>
-              <ng-container *ngTemplateOutlet="suffixRef"></ng-container>
-            </ng-container>
-          }
-          <!-- <ng-container matSuffix>
+        @if (sdSuffixDef()?.templateRef; as suffixRef) {
+          <ng-container matSuffix>
+            <ng-container *ngTemplateOutlet="suffixRef"></ng-container>
+          </ng-container>
+        }
+        <!-- <ng-container matSuffix>
             <ng-content select="[sdSuffix]"></ng-content>
           </ng-container> -->
-        </mat-form-field>
+      </mat-form-field>
 
-        @if (_maxLength !== null && !_hideInlineError && !formControl.disabled) {
-          <div
-            class="sd-maxlength-counter"
-            [class.sd-maxlength-counter--visible]="isFocused"
-            [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
-            [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | translate) : null">
-            {{ getCurrentLength() }}/{{ _maxLength }}
-          </div>
-        }
-      </div>
+      @if (_maxLength !== null && !_hideInlineError && !formControl.disabled) {
+        <div
+          class="sd-maxlength-counter"
+          [class.sd-maxlength-counter--visible]="isFocused"
+          [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
+          [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | translate) : null">
+          {{ getCurrentLength() }}/{{ _maxLength }}
+        </div>
+      }
+    </div>
   </div>
 }

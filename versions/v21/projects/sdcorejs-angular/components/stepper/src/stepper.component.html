@@ -18,7 +18,7 @@
       <ng-template matStepLabel>
         <span class="sd-step__label">
           @if (step.icon(); as ic) {
-            <mat-icon class="sd-step__icon">{{ ic }}</mat-icon>
+            <sd-icon class="sd-step__icon" [name]="ic"></sd-icon>
           }
           <span class="sd-step__text">{{ step.label() }}</span>
         </span>

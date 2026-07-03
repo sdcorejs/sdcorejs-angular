@@ -13,15 +13,15 @@ import {
   viewChild,
 } from '@angular/core';
 import { StepperSelectionEvent } from '@angular/cdk/stepper';
-import { MatIconModule } from '@angular/material/icon';
 import { MatStepperModule, MatStepper } from '@angular/material/stepper';
 import { Color } from '@sdcorejs/utils/models';
 import { SdStep } from './step.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-stepper',
   standalone: true,
-  imports: [MatStepperModule, MatIconModule, NgTemplateOutlet],
+  imports: [SdIcon, MatStepperModule, NgTemplateOutlet],
   templateUrl: './stepper.component.html',
   styleUrl: './stepper.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

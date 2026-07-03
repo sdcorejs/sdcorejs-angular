@@ -1,12 +1,12 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 @Component({
   selector: 'sd-label',
   templateUrl: './label.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [MatIconModule, MatTooltipModule],
+  imports: [SdIcon, MatTooltipModule],
 })
 export class SdLabel {
   label?: string | null;

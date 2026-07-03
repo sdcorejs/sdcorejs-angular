@@ -93,6 +93,14 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 - When focused, both inputs share a single underline/outline (visually one field, not two)
 - Helper-text shows as an info icon next to the label
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-date-range size="sm" hideInlineError [(model)]="filter.createdAt"></sd-date-range>
+```
+
 ## Examples
 
 ### 1. Filter by transaction date on a list page

@@ -58,13 +58,16 @@ $badges: '';
   // why: icon size áp dụng cho cả tag VÀ round-có-icon (cùng nằm trong .c-badge).
   // Trước đây chỉ scope dưới .c-badge--tag → round không có font-size icon.
   .c-material-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     padding: 0;
+    line-height: 1;
     @each $name, $size in $badgeIconSize {
       &.c-#{$name} {
         font-size: #{$size}px;
         width: #{$size}px;
         height: #{$size}px;
-        line-height: #{$size}px;
       }
     }
   }
@@ -147,8 +150,12 @@ $badges: '';
 .c-badge-icon {
   min-width: 50px;
   .c-material-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    padding: 2px 2px 2px 0;
+    padding: 0;
+    line-height: 1;
     @each $name, $size in $badgeIconSize {
       &.c-#{$name} {
         width: #{$size + 4}px;

@@ -11,11 +11,12 @@
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = !!(control1.value || control2.value);
+@let _labelTemplate = _sdLabelDef?.templateRef ?? undefined;
 
 @if (isViewed()) {
   <sd-view
     [label]="_label"
-    [labelTemplate]="_sdLabelDef?.templateRef ?? null"
+    [labelTemplate]="_labelTemplate"
     [value]="valueModel()"
     [display]="formatted()"
     [valueTemplate]="sdValueTemplate()">
@@ -26,98 +27,103 @@
     <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
       <sd-view
         [label]="_label"
-        [labelTemplate]="_sdLabelDef?.templateRef ?? null"
+        [labelTemplate]="_labelTemplate"
         [value]="valueModel()"
         [display]="formatted()"
         [valueTemplate]="sdValueTemplate()">
       </sd-view>
       @if (clearable() && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="$event.stopPropagation(); clear()" title="Xóa" aria-label="Xóa">
-          <mat-icon>close</mat-icon>
+          <sd-icon name="close"></sd-icon>
         </button>
       }
     </span>
   }
 
   <div [class.sd-inline-editor]="_isInline">
-@if (!_appearance && _sdLabelDef?.templateRef) {
-  <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
-}
-@if (!_appearance && _label && !_sdLabelDef?.templateRef) {
-  <sd-label [label]="_label" [required]="_required"></sd-label>
-}
+    @if (!_appearance && _sdLabelDef?.templateRef) {
+      <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
+    }
+    @if (!_appearance && _label && !_sdLabelDef?.templateRef) {
+      <sd-label [label]="_label" [required]="_required"></sd-label>
+    }
 
-<mat-form-field
-  [class.sd-md]="_size === 'md'"
-  [class.sd-sm]="_size === 'sm'"
-  [class.hide-inline-error]="_hideInlineError"
-  [appearance]="_appearance!"
-  [floatLabel]="floatLabel()">
-  @if (_appearance && _label) {
-    <mat-label style="display: inline-block">
-      <div style="display: flex; align-items: center; gap: 4px">
-        <span>{{ _label }}</span>
-        @if (_helperText) {
-          <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
-        }
-      </div>
-    </mat-label>
-  }
+    <mat-form-field
+      [class.sd-md]="_size === 'md'"
+      [class.sd-sm]="_size === 'sm'"
+      [class.hide-inline-error]="_hideInlineError"
+      [appearance]="_appearance!"
+      [floatLabel]="floatLabel()">
+      @if (_appearance && _label) {
+        <mat-label style="display: inline-block">
+          <div style="display: flex; align-items: center; gap: 4px">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+            }
+          </div>
+        </mat-label>
+      }
 
-  <mat-date-range-input [max]="_resolvedMax" [min]="_resolvedMin" [rangePicker]="picker" [disabled]="formControl.disabled" [required]="_required"
-    [attr.data-autoId]="autoId()"
-    [attr.data-disabled]="dataDisabled()"
-    [attr.data-invalid]="dataInvalid()"
-    [attr.data-empty]="dataEmpty()"
-    [attr.data-value]="dataValue()"
-    [attr.data-required]="dataRequired()"
-    [attr.data-error-message]="dataErrorMessage()">
-    <input
-      aria-hidden="true"
-      [id]="id1"
-      autocomplete="off"
-      autocorrect="off"
-      matStartDate
-      [formControl]="control1"
-      [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | translate)"
-      (dateInput)="onStartChange($event)"
-      (focus)="onFocus()"
-      (blur)="onBlur()"
-      (keyup.enter)="onEnter()"
-      [attr.data-qclabel]="_label"
-      [attr.data-autoId]="fromAutoId()" />
+      <mat-date-range-input
+        [max]="_resolvedMax"
+        [min]="_resolvedMin"
+        [rangePicker]="picker"
+        [disabled]="formControl.disabled"
+        [required]="_required"
+        [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-invalid]="dataInvalid()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-value]="dataValue()"
+        [attr.data-required]="dataRequired()"
+        [attr.data-error-message]="dataErrorMessage()">
+        <input
+          aria-hidden="true"
+          [id]="id1"
+          autocomplete="off"
+          autocorrect="off"
+          matStartDate
+          [formControl]="control1"
+          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | translate)"
+          (dateInput)="onStartChange($event)"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          (keyup.enter)="onEnter()"
+          [attr.data-qclabel]="_label"
+          [attr.data-autoId]="fromAutoId()" />
 
-    <input
-      aria-hidden="true"
-      [id]="id2"
-      [autocomplete]="id2"
-      autocorrect="off"
-      matEndDate
-      [formControl]="control2"
-      [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | translate)"
-      (dateInput)="onEndChange($event)"
-      (focus)="onFocus()"
-      (blur)="onBlur()"
-      (keyup.enter)="onEnter()"
-      [attr.data-qclabel]="_label"
-      [attr.data-autoId]="toAutoId()" />
-  </mat-date-range-input>
+        <input
+          aria-hidden="true"
+          [id]="id2"
+          [autocomplete]="id2"
+          autocorrect="off"
+          matEndDate
+          [formControl]="control2"
+          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | translate)"
+          (dateInput)="onEndChange($event)"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          (keyup.enter)="onEnter()"
+          [attr.data-qclabel]="_label"
+          [attr.data-autoId]="toAutoId()" />
+      </mat-date-range-input>
 
-  @if (_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
-    <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
-  }
+      @if (_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
+        <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+      }
 
-  @if (!_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
-    <mat-error>{{ _errorMessage }}</mat-error>
-  }
+      @if (!_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
+        <mat-error>{{ _errorMessage }}</mat-error>
+      }
 
-  @if ((control1.value || control2.value) && !_bare) {
-    <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix>cancel</mat-icon>
-  }
+      @if ((control1.value || control2.value) && !_bare) {
+        <sd-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix name="cancel"></sd-icon>
+      }
 
-  <mat-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix>today</mat-icon>
+      <sd-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix name="today"></sd-icon>
 
-  <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
-</mat-form-field>
+      <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
+    </mat-form-field>
   </div>
 }

@@ -14,7 +14,6 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -85,7 +84,6 @@ interface ResizeState {
   styleUrl: './form-builder.component.scss',
   imports: [
     CommonModule,
-    MatIconModule,
     MatTooltipModule,
     DragDropModule,
     // Controls

@@ -181,6 +181,14 @@ Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"
 </ng-template>
 ```
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-textarea size="sm" hideInlineError [rows]="2" [(model)]="filter.note"></sd-textarea>
+```
+
 ## Examples
 
 ### 1. Required description with maxlength counter

@@ -30,7 +30,7 @@
         [attr.data-empty]="dataEmpty()"
         [attr.data-count]="dataCount()"
         #dropElement>
-        <mat-icon class="c-upload" fontSet="material-icons-outlined"> file_upload </mat-icon>
+        <sd-icon class="c-upload" name="file_upload"></sd-icon>
       </div>
     }
     @let previewImages = _previewFiles | filterImage;
@@ -40,7 +40,7 @@
           <div class="c-drag-placeholder" [style.width]="_previewWidth" [style.height]="_previewHeight" *cdkDragPlaceholder></div>
           <div *cdkDragPreview [style]="{ width: _previewWidth, height: _previewHeight }" class="c-drag-preview">
             <div class="c-container">
-              <mat-icon>image</mat-icon>
+              <sd-icon name="image"></sd-icon>
             </div>
           </div>
           <div class="c-preview">
@@ -66,11 +66,11 @@
                 </div>
               }
               <div class="c-action">
-                <mat-icon class="c-zoom" fontSet="material-icons-outlined" (click)="preview()">zoom_in</mat-icon>
+                <sd-icon class="c-zoom" (click)="preview()" name="zoom_in"></sd-icon>
               </div>
               @if (!formControl.disabled) {
                 <button class="c-btn-remove" (click)="onRemove(image)" mat-icon-button aria-label="Close" [attr.data-autoId]="removeAutoId(idx)">
-                  <mat-icon>close</mat-icon>
+                  <sd-icon name="close"></sd-icon>
                 </button>
               }
             </div>
@@ -109,7 +109,7 @@
       }
 
       @if (!formControl.disabled) {
-        <mat-icon class="c-close" (click)="onRemove(document)" [attr.data-autoId]="removeAutoId(docIdx)">close</mat-icon>
+        <sd-icon class="c-close" (click)="onRemove(document)" [attr.data-autoId]="removeAutoId(docIdx)" name="close"></sd-icon>
       }
     </div>
   }

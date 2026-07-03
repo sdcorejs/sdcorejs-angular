@@ -34,12 +34,13 @@ Status / label indicator — shows a state (success / warning / error / info / �
 | `info` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Shortcut for `color="info"`. |
 | `warning` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Shortcut for `color="warning"`. |
 | `error` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Shortcut for `color="error"`. |
-| `icon` | `string \| null \| undefined` | `undefined` | Material icon name. If unset, uses default `fiber_manual_record` (filled dot) for icon mode. |
-| `fontSet` | `'material-icons' \| 'material-icons-outlined' \| 'material-icons-round' \| 'material-icons-sharp'` | `'material-icons'` | Material icon variant. Falsy values coerce back to default. |
+| `icon` | `string \| null \| undefined` | `undefined` | Icon name rendered through `<sd-icon>`. If unset, uses default `fiber_manual_record` for icon mode. |
+| `iconSet` | `'material-icons' \| 'material-icons-outlined' \| 'lucide' \| null \| undefined` | `undefined` | Passed to `<sd-icon>` as `set`. Leave unset to use `provideSdIcon` / `SdIcon` default configuration. |
+| `fontSet` | `'material-icons' \| 'material-icons-outlined' \| 'material-icons-round' \| 'material-icons-sharp' \| null \| undefined` | `undefined` | Optional Material icon font override passed to `<sd-icon>`. Use only when a specific Material font family is required. Falsy values become `undefined`. |
 | `title` | `string \| number \| null \| undefined` | `undefined` | Visible label or count. |
 | `description` | `string \| null \| undefined` | `undefined` | Optional secondary line shown under `title` (only `tag` and `icon` types). |
 | `tooltip` | `string \| null \| undefined` | `undefined` | Material tooltip text (position above; multiline supported). |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Size token. Áp dụng cho cả container (`round` + `tag`: padding + font-size title/description) và icon span (`icon`/`tag`/`round`-có-icon: width/height/font-size). `sm` giữ giá trị visual trước đây để không vỡ UI cũ. Falsy coerces back to `'sm'`. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Size token. Áp dụng cho cả container (`round` + `tag`: padding + font-size title/description) và icon element (`icon`/`tag`/`round`-có-icon: width/height/font-size). `sm` giữ giá trị visual trước đây để không vỡ UI cũ. Falsy coerces back to `'sm'`. |
 
 > Boolean color shortcuts take priority over `color` (precedence: primary → secondary → success → info → warning → error → `color` input).
 
@@ -55,7 +56,7 @@ None — content is driven by `title`, `description`, and `icon`.
 - **`type="icon"` (default)**: a horizontal row — icon on the left (colored per `color`), title (and optional description) on the right; no background/border. Compact, used inline in tables and lists.
 - **`type="round"`**: a solid colored pill containing `title` text. Hỗ trợ thêm `icon` (kể từ version có size md/lg) — khi truyền `icon`, render icon-left + title-right giống `tag` nhưng giữ pill border-radius. Không hỗ trợ `description`.
 - **`type="tag"`**: a light-tinted rounded card with icon + title + optional description; the background is a soft tint of `color` and the text is `color`.
-- **`size`**: `sm` (mặc định, padding/font hiện hữu) / `md` / `lg` — áp dụng cho cả `round` và `tag`, scale padding container + font-size title/description; icon span scale theo `$badgeIconSize` (16/18/24px).
+- **`size`**: `sm` (mặc định, padding/font hiện hữu) / `md` / `lg` — áp dụng cho cả `round` và `tag`, scale padding container + font-size title/description; icon element scale theo `$badgeIconSize` (16/18/24px).
 - Default icon (when none specified) is a small filled dot (`fiber_manual_record`).
 - Cursor is `pointer` only when `(click)` is bound; otherwise non-interactive.
 

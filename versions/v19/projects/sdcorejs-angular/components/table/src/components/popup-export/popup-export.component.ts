@@ -4,7 +4,6 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { CommonModule } from '@angular/common';
 import { FormGroup } from '@angular/forms';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatIconModule } from '@angular/material/icon';
 import { MatSelectionList } from '@angular/material/list';
 import { MatTableModule } from '@angular/material/table';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -17,6 +16,7 @@ import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportDefault } from '../../models/table-option-export.model';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-popup-export',
@@ -24,7 +24,7 @@ import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
   styleUrl: './popup-export.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatIconModule, MatChipsModule, SdButton, SdInput, SdModal],
+  imports: [SdIcon, CommonModule, MatTableModule, MatChipsModule, SdButton, SdInput, SdModal],
 })
 export class SdPopupExport {
   tableOption!: SdTableOption;

@@ -1,6 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, booleanAttribute, computed, effect, input, model, signal, untracked } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
@@ -39,6 +38,7 @@ import {
   SdQueryBuilderOption,
 } from './query-builder.model';
 import { filterToTokens, filterToTree, treeToFilter } from './query-builder.serializer';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /** A logical `Filter` (AND / OR group) carries a `data[]` array. */
 function isAndOr(filter: any): boolean {
@@ -58,7 +58,7 @@ const QB_EMPTY_FIELDS: SdQueryBuilderField[] = [];
   selector: 'sd-query-builder',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [NgTemplateOutlet, MatIconModule, SdOperator, SdSelect, SdInput, SdInputNumber, SdDate, SdDatetime, SdItemDefDefDirective],
+  imports: [SdIcon, NgTemplateOutlet, SdOperator, SdSelect, SdInput, SdInputNumber, SdDate, SdDatetime, SdItemDefDefDirective],
   templateUrl: './query-builder.component.html',
   styleUrl: './query-builder.component.scss',
 })

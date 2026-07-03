@@ -41,7 +41,7 @@ $gap-size: 0.5rem;
     .c-image-error {
       text-align: center;
       color: map.get(color.$color_map, 'error');
-      mat-icon {
+      sd-icon {
         height: 36px;
         width: 36px;
         font-size: 36px;

@@ -100,11 +100,11 @@ describe('SdLabel', () => {
       host.label = 'X';
     });
 
-    it('renders mat-icon info_outline with tooltip when helperText provided', () => {
+    it('renders mat-icon outlined info with tooltip when helperText provided', () => {
       host.helperText = 'Giải thích';
       fixture.detectChanges();
       const icon = queryByCss(fixture, 'mat-icon');
-      expect(icon.textContent?.trim()).toBe('info_outline');
+      expect(icon.textContent?.trim()).toBe('info');
       const tooltip = fixture.debugElement.query(By.directive(MatTooltip)).injector.get(MatTooltip);
       expect(tooltip.message).toBe('Giải thích');
     });

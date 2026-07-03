@@ -35,7 +35,6 @@ import {
 } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelect, MatSelectChange, MatSelectModule } from '@angular/material/select';
@@ -66,6 +65,7 @@ import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 import { combineLatest, timer } from 'rxjs';
 import { debounce, map, startWith, switchMap, tap } from 'rxjs/operators';
 import { SdSelectFooterActionDirective, SdSelectFooterActionWhenFn } from './select-footer-action.directive';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-select',
@@ -74,14 +74,13 @@ import { SdSelectFooterActionDirective, SdSelectFooterActionWhenFn } from './sel
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatInputModule,
     MatTooltipModule,
     MatFormFieldModule,
-    MatIconModule,
     MatSelectModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,

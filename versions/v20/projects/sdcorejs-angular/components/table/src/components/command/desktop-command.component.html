@@ -13,16 +13,14 @@
         aria-hidden="true"
         [disabled]="_meta.disabled"
         mat-icon-button>
-        <mat-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet || defaultIconFontSet">
-          {{ _meta.icon }}
-        </mat-icon>
+        <sd-icon class="c-icon" [color]="command.color || 'secondary'" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
       </button>
     } @else {
       <button [attr.data-autoid]="_autoId + '-' + command.key" [matMenuTriggerFor]="menu" aria-hidden="true" mat-icon-button>
         @if (_meta.icon) {
-          <mat-icon class="c-icon" [fontSet]="command.fontSet || defaultIconFontSet">{{ _meta.icon }}</mat-icon>
+          <sd-icon class="c-icon" [fontSet]="command.fontSet" [name]="_meta.icon"></sd-icon>
         } @else {
-          <mat-icon class="c-icon" [fontSet]="command.fontSet || defaultIconFontSet">more_vert</mat-icon>
+          <sd-icon class="c-icon" [fontSet]="command.fontSet" name="more_vert"></sd-icon>
         }
       </button>
       <mat-menu #menu="matMenu" [attr.data-autoid]="_autoId + '-' + command.key + '-menu'">
@@ -38,12 +36,9 @@
                 <div [innerHTML]="_childMeta.htmlTemplate"></div>
               } @else {
                 <span class="sd-command-menu-item__content">
-                  <mat-icon
-                    class="sd-command-menu-item__icon"
+                  <sd-icon class="sd-command-menu-item__icon"
                     [color]="childCommand.color || 'secondary'"
-                    [fontSet]="childCommand.fontSet || defaultIconFontSet">
-                    {{ _childMeta.icon }}
-                  </mat-icon>
+                    [fontSet]="childCommand.fontSet" [name]="_childMeta.icon"></sd-icon>
                   <span class="sd-command-menu-item__title">{{ _childMeta.title }}</span>
                 </span>
               }

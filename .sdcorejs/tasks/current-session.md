@@ -1,43 +1,39 @@
 ---
-updated_at: 2026-06-30T11:51:34+07:00
-status: complete
+updated_at: 2026-07-03T18:06:03+07:00
+status: in_progress
 track: angular
-active_skill: sdcorejs-git
-branch: main
+active_skill: sdcorejs-repair-loop
+branch: release/0.11
 ---
 
 # Current Session Checkpoint
 
 ## User Request
-
-Lam gon CHANGELOG.md: bo thong tin sync/source, chi giu thong tin change day du.
+Fix release review findings: remove hard-coded icon font defaults, replace `MaterialIconFontSet` with `SdIconSet` across the library, keep the demo, delete generated log file, then commit and push.
 
 ## Tasks
-
-- [x] Kiem tra trang thai repo/tag va noi dung changelog hien tai
-- [x] Viet lai changelog theo huong bo thong tin sync, chi giu change day du
-- [x] Chay kiem tra diff/changelog/tag
-- [x] Commit thay doi va cap nhat tag local `v0.10`
-- [x] Bao lai ket qua va phan chua push
+- [x] Review findings and identify the release scope to commit.
+- [x] Fix icon fontSet usage: remove hard-coded Material defaults, remove `MaterialIconFontSet`, and use `SdIconSet` across the library.
+- [x] Handle demo artifacts: keep the icon-configuration demo and delete the generated showcase log.
+- [x] Run release checks.
+- [ ] Commit and push the current branch.
 
 ## Current State
-
-- Last completed: CHANGELOG.md da duoc don thanh changelog thuan change, khong con metadata sync/source trong file.
-- In progress: Khong co.
-- Blocked/skipped: Chua push commit/tag len remote trong phien nay.
+- Last completed: Source checks and production builds passed for the icon release fixes.
+- In progress: Commit and push the branch.
+- Blocked/skipped: None.
 
 ## Artifacts Touched
-
-- EDIT CHANGELOG.md - bo metadata sync/source va viet day du thong tin change.
-- EDIT .sdcorejs/tasks/current-session.md - checkpoint phien changelog cleanup.
+- EDIT `.sdcorejs/tasks/current-session.md` - current fix/commit checkpoint.
+- EDIT `versions/v19|v20|v21/projects/sdcorejs-angular/**` - align icon font set API and remove hard-coded Material font fallbacks.
+- EDIT `versions/v19|v20|v21/projects/showcase/src/app/pages/components/badge/badge-demo.component.ts` - use `fontSet` demo API consistently.
+- DELETE `versions/v19/showcase-4220.log` - generated showcase log removed from workspace.
 
 ## Verification
-
-- PASS `rg -ni "sync|synced|legacy|vn-angular|SYNC-STATUS|repo-owned|final|Published|Pre-release" CHANGELOG.md` khong co ket qua.
-- PASS `Select-String -Path CHANGELOG.md -Pattern '\.\.'` khong co ket qua.
-- PASS `git diff --check`
-  - Note: Chi co warning CRLF tu Git, khong co whitespace error.
+- PASS: Source check found no `MaterialIconFontSet`, `DefaultMaterialIconFontSet`, `materialFontSet`, `defaultSet`, or `iconSet` tokens in current v19/v20/v21 library and showcase files.
+- PASS: `npx ng build sdcorejs-angular --configuration production` in `versions/v19`.
+- PASS: `npx ng build sdcorejs-angular --configuration production` in `versions/v20`.
+- PASS: `npx ng build sdcorejs-angular --configuration production` in `versions/v21`.
 
 ## Resume From Here
-
-Neu can phat hanh remote, push commit changelog moi va tag `v0.10`.
+Run `git diff --check`, then commit and push.

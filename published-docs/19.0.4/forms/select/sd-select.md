@@ -130,6 +130,14 @@ Applied automatically on `<sd-select>` for styling hooks:
 - In `[viewed]="true"` mode: rendered by `<sd-view>` — plain text (or hyperlink) of the selected display value(s)
 - In `[viewed]="'inline'"` mode: the `<sd-view>` text is a click target (`.sd-inline-view`); the real picker is rendered underneath but invisible (`.sd-inline-editor` — `opacity:0`, `pointer-events:none` incl. descendants) purely to host the panel. Click (or Enter) on the text opens the panel anchored under it; the text stays put and only updates when you pick a value. No visible input box at any point — just text + the dropdown panel. The face has a light background that darkens on hover (editable affordance); a hover clear-× appears at the end when `clearable` (default) + value present + not required/disabled.
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-select size="sm" hideInlineError [items]="statusList" valueField="code" displayField="name" [(model)]="filter.status"></sd-select>
+```
+
 ## Examples
 
 ### 1. Static items, single select, required

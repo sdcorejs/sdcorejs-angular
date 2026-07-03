@@ -83,7 +83,7 @@
   color: #1F1F1F;
   -webkit-tap-highlight-color: transparent;
 
-  mat-icon {
+  sd-icon {
     color: #8C8C8C;
     font-size: 20px;
     width: 20px;
@@ -97,7 +97,7 @@
   &--logout {
     color: #E53935;
 
-    mat-icon {
+    sd-icon {
       color: #E53935;
     }
   }
@@ -180,7 +180,7 @@
       align-items: center;
       gap: 8px;
 
-      mat-icon {
+      sd-icon {
         font-size: 21px;
         width: 21px;
         height: 21px;

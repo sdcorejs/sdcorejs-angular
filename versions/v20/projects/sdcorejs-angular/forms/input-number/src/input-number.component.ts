@@ -37,7 +37,6 @@ import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -63,6 +62,7 @@ import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
   constructor(private formControl: FormControl) {}
@@ -79,13 +79,12 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule,
     MatTooltipModule,
     MatButtonModule,
     SdLabel,

@@ -54,7 +54,7 @@
               class="sd-tree-toggle-btn"
               [attr.data-autoid]="_aid ? _aid + '-tree-toggle-' + row.meta.id : null"
               (click)="onTreeToggle(row); $event.stopPropagation()">
-              <mat-icon>{{ _tree.isExpanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+              <sd-icon [name]="_tree.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
             </button>
           }
         }
@@ -92,9 +92,7 @@
             <th mat-header-cell *matHeaderCellDef class="sd-reorder-header" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
             <td mat-cell *matCellDef="let row" class="sd-reorder-cell">
               @if (!row.meta?.group?.items?.length) {
-                <mat-icon cdkDragHandle [class.sd-reorder-disabled]="isReorderDisabled(row)">
-                  {{ _tableOption.rowReorder?.icon || 'drag_indicator' }}
-                </mat-icon>
+                <sd-icon cdkDragHandle [class.sd-reorder-disabled]="isReorderDisabled(row)" [name]="_tableOption.rowReorder?.icon || 'drag_indicator'"></sd-icon>
               }
             </td>
             <td mat-footer-cell *matFooterCellDef></td>
@@ -518,11 +516,11 @@
                   <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" [matMenuTriggerFor]="menu" type="link"> </sd-button>
                   <mat-menu #menu="matMenu">
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null" (click)="exportExcel()" type="button">
-                      <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
+                      <sd-icon name="file_download"></sd-icon>
                       <span> {{ 'core.component.table.export-excel' | translate }}</span>
                     </button>
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null" (click)="exportCSV()" type="button">
-                      <mat-icon fontSet="material-icons-outlined">file_download</mat-icon>
+                      <sd-icon name="file_download"></sd-icon>
                       <span> {{ 'core.component.table.export-csv' | translate }}</span>
                     </button>
                   </mat-menu>
