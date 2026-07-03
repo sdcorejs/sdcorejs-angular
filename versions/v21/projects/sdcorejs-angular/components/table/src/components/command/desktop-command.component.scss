@@ -13,7 +13,7 @@ button[mat-icon-button] {
   padding: 0;
 }
 
-mat-icon {
+sd-icon {
   &.c-icon {
     color: map.get(color.$color_map, 'black400') !important;
     width: 16px;

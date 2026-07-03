@@ -1,13 +1,17 @@
 import { type LucideConfig, type LucideIcon, type LucideIconData } from '@lucide/angular';
 import { type Size } from '@sdcorejs/utils/models';
-import { DefaultMaterialIconFontSet, type MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
+import { DefaultSdIconSet, type SdIconSet, type SdMaterialIconSet } from '@sdcorejs/angular/utilities/models';
 
 /**
  * Chọn renderer icon chính cho `SdIcon`.
  *
  * Material dùng đúng tên font set để tránh thêm mapping nội bộ; `lucide` chuyển sang renderer SVG của `@lucide/angular`.
  */
-export type SdIconSet = 'material-icons' | 'material-icons-outlined' | 'lucide';
+export type { SdIconSet, SdMaterialIconSet };
+
+/** @deprecated Use `SdIconSet` instead. */
+export type SdIconFontSet = SdIconSet;
+
 
 /**
  * Một icon Lucide có thể đăng ký bằng class icon Angular hoặc dữ liệu path thuần.
@@ -25,10 +29,8 @@ export type SdLucideIconRegistrations = SdLucideIconRegistration[] | Record<stri
  * Các alias tách riêng theo renderer để app có thể giữ tên Material trong template trong lúc chuyển dần sang Lucide.
  */
 export interface ISdIconConfiguration {
-  /** Bộ icon mặc định khi component không truyền `set`. */
-  defaultSet?: SdIconSet;
-  /** Font Material fallback khi cần override thủ công hoặc khi đọc cấu hình từ provider. */
-  materialFontSet?: MaterialIconFontSet;
+  /** Default icon font set when component does not pass `fontSet`. */
+  defaultFontSet?: SdIconSet;
   /** Alias áp dụng khi renderer hiện tại là Material. */
   materialAliases?: Record<string, string>;
   /** Alias áp dụng khi renderer hiện tại là Lucide. */
@@ -42,7 +44,8 @@ export interface ISdIconConfiguration {
 /**
  * Cấu hình đã resolve đầy đủ để component không phải tự xử lý fallback nhiều lần.
  */
-export type ISdIconResolvedConfiguration = Required<Omit<ISdIconConfiguration, 'lucideIcons'>>;
+export interface ISdIconResolvedConfiguration
+  extends Required<Omit<ISdIconConfiguration, 'lucideIcons'>> {}
 
 /**
  * Quy đổi token `Size` chung của SDCoreJS sang pixel cho icon.
@@ -70,6 +73,8 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   arrow_upward: 'arrow-up',
   bar_chart: 'chart-column',
   block: 'ban',
+  bookmark_add: 'bookmark-plus',
+  bookmark_border: 'bookmark',
   build: 'wrench',
   calendar_month: 'calendar-days',
   campaign: 'megaphone',
@@ -80,28 +85,39 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   check: 'check',
   check_circle: 'circle-check',
   close: 'x',
+  cloud_download: 'cloud-download',
   contact_page: 'contact',
   content_copy: 'copy',
   dashboard: 'layout-dashboard',
   delete: 'trash-2',
+  delete_sweep: 'trash-2',
   description: 'file-text',
   done: 'check',
   done_all: 'check-check',
+  drag_indicator: 'grip-vertical',
   edit: 'pencil',
   edit_note: 'file-pen-line',
   error: 'circle-alert',
   error_outline: 'circle-alert',
   expand_less: 'chevron-up',
   expand_more: 'chevron-down',
+  filter_alt: 'list-filter',
   file_download: 'download',
   file_upload: 'upload',
+  fiber_manual_record: 'circle',
+  fit_screen: 'scan',
+  folder: 'folder',
   first_page: 'chevrons-left',
   format_indent_decrease: 'list-indent-decrease',
   format_indent_increase: 'list-indent-increase',
   fullscreen: 'maximize',
   fullscreen_exit: 'minimize',
+  get_app: 'download',
   group: 'users',
+  hourglass_empty: 'hourglass',
   hourglass_top: 'hourglass',
+  image: 'image',
+  image_not_supported: 'image-off',
   info: 'info',
   info_outline: 'info',
   insert_drive_file: 'file',
@@ -111,30 +127,50 @@ export const SD_DEFAULT_LUCIDE_ALIASES: Record<string, string> = {
   keyboard_arrow_right: 'chevron-right',
   keyboard_arrow_up: 'chevron-up',
   last_page: 'chevrons-right',
+  list: 'list',
   local_offer: 'tag',
+  lock: 'lock-keyhole',
   lock_outline: 'lock-keyhole',
   login: 'log-in',
   logout: 'log-out',
+  match_case: 'case-sensitive',
+  menu: 'menu',
   menu_open: 'panel-left-close',
   more_horiz: 'ellipsis',
   more_vert: 'ellipsis-vertical',
   notifications: 'bell',
   open_in_new: 'external-link',
+  open_in_full: 'maximize',
   person: 'user',
+  picture_as_pdf: 'file-text',
+  play_arrow: 'play',
   print: 'printer',
   refresh: 'refresh-cw',
   remove: 'minus',
   remove_circle: 'circle-minus',
   restart_alt: 'rotate-ccw',
+  rotate_right: 'rotate-cw',
+  search_off: 'search-x',
+  settings: 'settings',
   share: 'share-2',
+  smart_toy: 'bot',
   space_dashboard: 'layout-dashboard',
   storefront: 'store',
+  swap_horiz: 'arrow-left-right',
+  table_chart: 'table',
+  table_view: 'table-2',
   task_alt: 'circle-check',
+  text_fields: 'text',
   today: 'calendar',
+  unfold_more: 'chevrons-up-down',
   upload_file: 'upload',
+  view_carousel: 'gallery-horizontal',
+  view_day: 'panel-top',
+  view_list: 'list',
   visibility: 'eye',
   visibility_off: 'eye-off',
   warning: 'triangle-alert',
+  warning_amber: 'triangle-alert',
   widgets: 'layout-grid',
   zoom_in: 'zoom-in',
 };
@@ -148,6 +184,7 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
   'arrow-right': 'arrow_forward',
   'arrow-up': 'arrow_upward',
   'calendar-days': 'calendar_month',
+  'case-sensitive': 'match_case',
   'chart-column': 'bar_chart',
   'check-check': 'done_all',
   'chevron-down': 'expand_more',
@@ -162,14 +199,19 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
   'circle-plus': 'add_circle',
   'circle-user-round': 'account_circle',
   'circle-x': 'cancel',
+  'cloud-download': 'cloud_download',
   'file-down': 'file_download',
   'file-pen-line': 'edit_note',
   'file-text': 'description',
   'file-up': 'upload_file',
+  'gallery-horizontal': 'view_carousel',
+  get_app: 'file_download',
+  'grip-vertical': 'drag_indicator',
   'layout-dashboard': 'dashboard',
   'layout-grid': 'widgets',
   'list-indent-decrease': 'format_indent_decrease',
   'list-indent-increase': 'format_indent_increase',
+  'list-filter': 'filter_alt',
   'lock-keyhole': 'lock',
   'log-in': 'login',
   'log-out': 'logout',
@@ -177,6 +219,7 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
   'party-popper': 'celebration',
   'refresh-cw': 'refresh',
   'rotate-ccw': 'restart_alt',
+  'rotate-cw': 'rotate_right',
   'share-2': 'share',
   'square-pen': 'edit',
   'trash-2': 'delete',
@@ -185,6 +228,7 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
   ban: 'block',
   contact: 'contact_page',
   copy: 'content_copy',
+  circle: 'fiber_manual_record',
   download: 'file_download',
   ellipsis: 'more_horiz',
   'ellipsis-vertical': 'more_vert',
@@ -192,22 +236,32 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
   eye: 'visibility',
   'eye-off': 'visibility_off',
   file: 'insert_drive_file',
+  folder: 'folder',
   fullscreen: 'fullscreen',
   hourglass: 'hourglass_top',
+  image: 'image',
+  'image-off': 'image_not_supported',
   info_outline: 'info',
   landmark: 'account_balance',
+  list: 'list',
   lock_outline: 'lock',
   maximize: 'fullscreen',
   megaphone: 'campaign',
+  menu: 'menu',
   minimize: 'fullscreen_exit',
   minus: 'remove',
   package: 'inventory_2',
   pencil: 'edit',
   plus: 'add',
+  play: 'play_arrow',
   printer: 'print',
+  scan: 'fit_screen',
+  'search-x': 'search_off',
+  settings: 'settings',
   'save-all': 'done_all',
   store: 'storefront',
   tag: 'local_offer',
+  text: 'text_fields',
   upload: 'upload_file',
   user: 'person',
   users: 'group',
@@ -222,8 +276,7 @@ export const SD_DEFAULT_MATERIAL_ALIASES: Record<string, string> = {
  * `material-icons-outlined` được giữ làm mặc định để không đổi visual của các component Material hiện có.
  */
 export const SD_ICON_DEFAULT_CONFIG: ISdIconResolvedConfiguration = {
-  defaultSet: 'material-icons-outlined',
-  materialFontSet: DefaultMaterialIconFontSet,
+  defaultFontSet: DefaultSdIconSet,
   materialAliases: SD_DEFAULT_MATERIAL_ALIASES,
   lucideAliases: SD_DEFAULT_LUCIDE_ALIASES,
   lucideConfig: {},

@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
@@ -19,16 +18,16 @@ import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurat
 import { HighlightSearchPipe, MenuFocusPipe } from '../../../../pipes';
 import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
 import { LayoutUserComponent } from '../user/user.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sidebar',
   standalone: true,
-  imports: [
+  imports: [SdIcon,
     SdInput,
     FormsModule,
     CommonModule,
     RouterModule,
-    MatIconModule,
     MatTreeModule,
     SdSafeHtmlPipe,
     MatInputModule,

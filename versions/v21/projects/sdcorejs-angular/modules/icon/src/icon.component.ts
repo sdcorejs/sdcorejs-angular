@@ -2,8 +2,8 @@ import { ChangeDetectionStrategy, Component, booleanAttribute, computed, inject,
 import { MatIconModule } from '@angular/material/icon';
 import { LucideDynamicIcon } from '@lucide/angular';
 import { type Size } from '@sdcorejs/utils/models';
-import { type MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
-import { SD_ICON_SIZE_MAP, type SdIconSet } from './icon.model';
+import { DefaultSdMaterialIconSet } from '@sdcorejs/angular/utilities/models';
+import { SD_ICON_SIZE_MAP, type SdIconSet, type SdMaterialIconSet } from './icon.model';
 import { SD_ICON_CONFIGURATION } from './icon.provider';
 
 /**
@@ -17,7 +17,7 @@ import { SD_ICON_CONFIGURATION } from './icon.provider';
   imports: [MatIconModule, LucideDynamicIcon],
   template: `
     @if (resolvedName(); as _name) {
-      @if (resolvedSet() === 'lucide') {
+      @if (resolvedFontSet() === 'lucide') {
         <svg
           class="sd-icon__svg"
           [lucideIcon]="_name"
@@ -28,7 +28,7 @@ import { SD_ICON_CONFIGURATION } from './icon.provider';
       } @else {
         <mat-icon
           class="sd-icon__material"
-          [fontSet]="resolvedFontSet()"
+          [fontSet]="resolvedMaterialFontSet()"
           [attr.aria-label]="ariaLabel()"
           [attr.aria-hidden]="ariaLabel() ? null : 'true'">
           {{ _name }}
@@ -77,12 +77,13 @@ import { SD_ICON_CONFIGURATION } from './icon.provider';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     class: 'sd-icon',
-    '[class.sd-icon--material]': 'resolvedSet() !== "lucide"',
-    '[class.sd-icon--material-icons-outlined]': 'resolvedSet() === "material-icons-outlined"',
-    '[class.sd-icon--lucide]': 'resolvedSet() === "lucide"',
+    '[class.sd-icon--material]': 'resolvedFontSet() !== "lucide"',
+    '[class.sd-icon--material-icons-outlined]': 'resolvedFontSet() === "material-icons-outlined"',
+    '[class.sd-icon--lucide]': 'resolvedFontSet() === "lucide"',
     '[style.--sd-icon-size]': 'resolvedCssSize()',
     '[attr.aria-label]': 'ariaLabel()',
     '[attr.aria-hidden]': 'ariaLabel() ? null : "true"',
+    '[attr.color]': 'color()',
   },
 })
 export class SdIcon {
@@ -98,10 +99,18 @@ export class SdIcon {
     transform: coerceStringInput,
   });
 
+  fontIcon = input<string | undefined, string | undefined | null>(undefined, {
+    transform: coerceStringInput,
+  });
+
+  color = input<string | undefined, string | undefined | null>(undefined, {
+    transform: coerceStringInput,
+  });
+
   /**
    * Renderer icon của riêng instance này.
    *
-   * Bỏ trống để dùng `defaultSet` từ `provideSdIcon`.
+   * Deprecated alias for `fontSet`.
    */
   set = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
     transform: value => value ?? undefined,
@@ -110,9 +119,9 @@ export class SdIcon {
   /**
    * Escape hatch cho Material icon font set.
    *
-   * Nên ưu tiên `set`; chỉ dùng `fontSet` khi consumer cần font Material ngoài các set chuẩn.
+   * Prefer this input for both Material font families and Lucide SVG icons.
    */
-  fontSet = input<MaterialIconFontSet | undefined, MaterialIconFontSet | undefined | null>(undefined, {
+  fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
     transform: value => value ?? undefined,
   });
 
@@ -157,7 +166,10 @@ export class SdIcon {
    *
    * @returns renderer hiện tại của component.
    */
-  resolvedSet = computed<SdIconSet>(() => this.set() ?? this.config.defaultSet);
+  resolvedFontSet = computed<SdIconSet>(() => this.fontSet() ?? this.set() ?? this.config.defaultFontSet);
+
+  /** @deprecated Use `resolvedFontSet` instead. */
+  resolvedSet = computed<SdIconSet>(() => this.resolvedFontSet());
 
   /**
    * Tên icon cuối cùng theo renderer hiện tại.
@@ -165,12 +177,12 @@ export class SdIcon {
    * @returns tên icon đã áp alias nếu renderer yêu cầu.
    */
   resolvedName = computed(() => {
-    const name = this.name();
+    const name = this.name() ?? this.fontIcon();
     if (!name) {
       return undefined;
     }
 
-    const aliases = this.resolvedSet() === 'lucide' ? this.config.lucideAliases : this.config.materialAliases;
+    const aliases = this.resolvedFontSet() === 'lucide' ? this.config.lucideAliases : this.config.materialAliases;
     return aliases[name] ?? name;
   });
 
@@ -179,14 +191,9 @@ export class SdIcon {
    *
    * @returns font set dùng cho `mat-icon`; với Lucide trả về fallback Material để computed luôn có type ổn định.
    */
-  resolvedFontSet = computed<MaterialIconFontSet>(() => {
-    const fontSet = this.fontSet();
-    if (fontSet) {
-      return fontSet;
-    }
-
-    const set = this.resolvedSet();
-    return set === 'lucide' ? this.config.materialFontSet : set;
+  resolvedMaterialFontSet = computed<SdMaterialIconSet>(() => {
+    const fontSet = this.resolvedFontSet();
+    return fontSet === 'lucide' ? DefaultSdMaterialIconSet : fontSet;
   });
 
   /**

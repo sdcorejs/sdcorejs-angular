@@ -55,7 +55,7 @@
             <div style="display: flex; align-items: center; gap: 4px">
               <span>{{ _label }}</span>
               @if (_helperText) {
-                <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
+                <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
               }
             </div>
           </mat-label>
@@ -97,12 +97,12 @@
                thì error icon nằm sát mép phải, clear giữ slot vô hình bên trái. -->
         @if (showClear()) {
           <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
-            <mat-icon>close</mat-icon>
+            <sd-icon name="close"></sd-icon>
           </button>
         }
 
         @if (_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+          <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
 
         @if (sdSuffixDef()?.templateRef; as suffixRef) {

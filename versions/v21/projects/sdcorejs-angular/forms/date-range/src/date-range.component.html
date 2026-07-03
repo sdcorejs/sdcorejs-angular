@@ -11,11 +11,12 @@
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = !!(control1.value || control2.value);
+@let _labelTemplate = _sdLabelDef?.templateRef ?? undefined;
 
 @if (isViewed()) {
   <sd-view
     [label]="_label"
-    [labelTemplate]="_sdLabelDef?.templateRef ?? null"
+    [labelTemplate]="_labelTemplate"
     [value]="valueModel()"
     [display]="formatted()"
     [valueTemplate]="sdValueTemplate()">
@@ -26,14 +27,14 @@
     <span class="sd-inline-view" role="button" tabindex="0" (click)="enterInlineEdit()" (keydown.enter)="enterInlineEdit()">
       <sd-view
         [label]="_label"
-        [labelTemplate]="_sdLabelDef?.templateRef ?? null"
+        [labelTemplate]="_labelTemplate"
         [value]="valueModel()"
         [display]="formatted()"
         [valueTemplate]="sdValueTemplate()">
       </sd-view>
       @if (clearable() && _hasValue && !_required && !formControl.disabled) {
         <button type="button" class="sd-inline-clear" (click)="$event.stopPropagation(); clear()" title="Xóa" aria-label="Xóa">
-          <mat-icon>close</mat-icon>
+          <sd-icon name="close"></sd-icon>
         </button>
       }
     </span>
@@ -58,7 +59,7 @@
           <div style="display: flex; align-items: center; gap: 4px">
             <span>{{ _label }}</span>
             @if (_helperText) {
-              <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
+              <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
             }
           </div>
         </mat-label>
@@ -109,7 +110,7 @@
       </mat-date-range-input>
 
       @if (_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
-        <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+        <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
       }
 
       @if (!_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
@@ -117,10 +118,10 @@
       }
 
       @if ((control1.value || control2.value) && !_bare) {
-        <mat-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix>cancel</mat-icon>
+        <sd-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix name="cancel"></sd-icon>
       }
 
-      <mat-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix>today</mat-icon>
+      <sd-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix name="today"></sd-icon>
 
       <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
     </mat-form-field>

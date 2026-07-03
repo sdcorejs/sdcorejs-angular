@@ -294,14 +294,14 @@ $node-gap: 12px;
   min-width: 0;
 }
 
-::ng-deep .qb-opt .qb-opt-icon.mat-icon {
+::ng-deep .qb-opt .qb-opt-iconsd-icon {
   flex: 0 0 auto;
   // Flex-center để glyph Material Icons nằm chính giữa ô — tránh lệch do line-height mặc định.
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  // Huỷ margin-right:16px mặc định của `.mat-mdc-option .mat-icon` — đây là nguồn gây hở lớn.
-  // Selector 3 class (.qb-opt .qb-opt-icon.mat-icon) thắng specificity, không cần !important.
+  // Huỷ margin-right:16px mặc định của `.mat-mdc-option sd-icon` — đây là nguồn gây hở lớn.
+  // Selector 3 class (.qb-opt .qb-opt-iconsd-icon) thắng specificity, không cần !important.
   margin: 0;
   font-size: 18px;
   width: 18px;

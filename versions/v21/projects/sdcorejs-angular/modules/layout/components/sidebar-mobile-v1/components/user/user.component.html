@@ -12,19 +12,19 @@
           <span class="m-user-email">{{ _userInfo?.email }}</span>
         }
       </div>
-      <mat-icon class="m-expand-icon" [class.m-expand-icon--open]="isExpanded()"> keyboard_arrow_down </mat-icon>
+      <sd-icon class="m-expand-icon" [class.m-expand-icon--open]="isExpanded()" name="keyboard_arrow_down"></sd-icon>
     </button>
 
     @if (isExpanded()) {
       <div class="m-user-body">
         @if (changePasswordLayoutConfig) {
           <button class="m-user-action" (click)="changePassword()">
-            <mat-icon fontSet="material-icons-outlined">lock</mat-icon>
+            <sd-icon name="lock"></sd-icon>
             <span>{{ 'core.module.layout.user.change-password' | translate }}</span>
           </button>
         }
         <button class="m-user-action m-user-action--logout" (click)="logout()">
-          <mat-icon>logout</mat-icon>
+          <sd-icon name="logout"></sd-icon>
           <span>{{ 'core.module.layout.user.logout' | translate }}</span>
         </button>
       </div>
@@ -38,9 +38,7 @@
     </div>
 
     <div aria-hidden="true" mat-mini-fab class="c-layout-icon-toggle" (click)="onToggleMenuLock($event)">
-      <mat-icon style="color: #8c8c8c">
-        {{ isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left' }}
-      </mat-icon>
+      <sd-icon style="color: #8c8c8c" [name]="isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left'"></sd-icon>
     </div>
   </div>
 }
@@ -58,7 +56,7 @@
     @if (changePasswordLayoutConfig) {
       <div class="c-sign-button-wrapper">
         <button class="c-account-options" (click)="changePassword()">
-          <mat-icon fontSet="material-icons-outlined">lock</mat-icon>
+          <sd-icon name="lock"></sd-icon>
           <span>{{ 'core.module.layout.user.change-password' | translate }}</span>
         </button>
       </div>

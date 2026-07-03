@@ -22,7 +22,6 @@ import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerInputEvent, MatDatepickerModule, MatDateRangePicker } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
 import {
@@ -42,6 +41,7 @@ import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 interface Daterange {
   from?: string | null;
@@ -68,11 +68,10 @@ interface Daterange {
     }),
   ],
   standalone: true,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    MatIconModule,
     MatTooltipModule,
     MatFormFieldModule,
     MatDatepickerModule,

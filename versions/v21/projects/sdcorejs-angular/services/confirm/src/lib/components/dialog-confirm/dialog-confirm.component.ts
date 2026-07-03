@@ -2,13 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { Color } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 export interface DialogData {
   icon?: string;
@@ -46,7 +46,7 @@ export interface DialogData {
   selector: 'sd-dialog-confirm',
   templateUrl: 'dialog-confirm.component.html',
   styleUrl: './dialog-confirm.component.scss',
-  imports: [CommonModule, FormsModule, MatDialogModule, MatIconModule, SdButton, SdDate, SdRadio, SdTextarea],
+  imports: [SdIcon, CommonModule, FormsModule, MatDialogModule, SdButton, SdDate, SdRadio, SdTextarea],
 })
 export class DialogConfirmComponent {
   value: any;

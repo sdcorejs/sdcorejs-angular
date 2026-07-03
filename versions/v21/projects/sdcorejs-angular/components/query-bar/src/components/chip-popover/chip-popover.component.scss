@@ -33,7 +33,7 @@ $qb-radius-input:   6px;
     font-weight: 500;
     color: $qb-text;
 
-    mat-icon { font-size: 16px; width: 16px; height: 16px; color: $qb-primary; }
+    sd-icon { font-size: 16px; width: 16px; height: 16px; color: $qb-primary; }
 
     // why: operator nudged to the far right of the header row.
     .c-pop-header-operator { margin-left: auto; }
@@ -53,7 +53,7 @@ $qb-radius-input:   6px;
     color: $qb-text;
     cursor: pointer;
     transition: background-color 120ms ease, border-color 120ms ease;
-    mat-icon {
+    sd-icon {
       font-size: 14px !important;
       width: 14px !important;
       height: 14px !important;

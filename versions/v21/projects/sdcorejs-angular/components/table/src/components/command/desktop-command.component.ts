@@ -1,14 +1,13 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { DefaultMaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { SdTableCommand } from '../../models/table-command.model';
 import { SdTableItem } from '../../models/table-item.model';
 import { CommandPipe } from './pipes/command.pipe';
 import { CommandFilterPipe } from './pipes/filter.pipe';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'desktop-command',
@@ -19,10 +18,9 @@ import { CommandFilterPipe } from './pipes/filter.pipe';
   host: {
     '[attr.data-autoid]': 'autoId()',
   },
-  imports: [CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule, MatIconModule, CommandPipe, CommandFilterPipe],
+  imports: [SdIcon, CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule, CommandPipe, CommandFilterPipe],
 })
 export class DesktopCommand {
-  readonly defaultIconFontSet = DefaultMaterialIconFontSet;
 
   readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   readonly item = input.required<SdTableItem>();

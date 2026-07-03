@@ -8,9 +8,7 @@
 
   @if (!isMobileOrTablet()) {
     <div aria-hidden="true" mat-mini-fab class="c-layout-icon-toggle" (click)="onToggleMenuLock($event)">
-      <mat-icon style="color: #8c8c8c">
-        {{ isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left' }}
-      </mat-icon>
+      <sd-icon style="color: #8c8c8c" [name]="isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left'"></sd-icon>
     </div>
   }
 </div>
@@ -28,7 +26,7 @@
     @if (changePasswordLayoutConfig) {
       <div class="c-sign-button-wrapper">
         <button class="c-account-options" (click)="changePassword()">
-          <mat-icon fontSet="material-icons-outlined">lock</mat-icon>
+          <sd-icon name="lock"></sd-icon>
           <span>{{ 'core.module.layout.user.change-password' | translate }}</span>
         </button>
       </div>

@@ -34,7 +34,6 @@ import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/ma
 import { MatChipInputEvent, MatChipsModule } from '@angular/material/chips';
 import { ErrorStateMatcher } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -54,6 +53,7 @@ import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/dat
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdRemovableChipPipe } from './pipes';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 class SdChipErrorStateMatcher implements ErrorStateMatcher {
   constructor(private formControl: FormControl) {}
@@ -70,7 +70,7 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -78,7 +78,6 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
     MatTooltipModule,
     MatFormFieldModule,
     MatAutocompleteModule,
-    MatIconModule,
     MatProgressSpinnerModule,
     MatChipsModule,
     SdLabel,

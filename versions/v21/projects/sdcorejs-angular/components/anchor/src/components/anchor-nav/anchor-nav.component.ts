@@ -1,17 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatIconModule } from '@angular/material/icon';
 import { Color } from '@sdcorejs/utils/models';
 import { Subject, Subscription, debounceTime } from 'rxjs';
 
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'anchor-nav',
   templateUrl: './anchor-nav.component.html',
   styleUrl: './anchor-nav.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule],
+  imports: [SdIcon, CommonModule],
   standalone: true,
 })
 export class AnchorNav implements OnDestroy {

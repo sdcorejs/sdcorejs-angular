@@ -26,7 +26,6 @@ import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, V
 import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -51,6 +50,7 @@ import { isValid as isValidDate, parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 import { SdDatetimePicker } from './popup/sd-datetime-picker.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /**
  * Format parse/display dùng cho MatDateAdapter (date-fns).
@@ -92,12 +92,11 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
     provideDateFnsAdapter(SD_DATETIME_FORMATS),
   ],
   standalone: true,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatInputModule,
-    MatIconModule,
     MatTooltipModule,
     MatFormFieldModule,
     SdLabel,

@@ -28,7 +28,7 @@
       class="c-clear-all"
       [matTooltip]="'Xóa tất cả (' + filtersCount() + ')'"
       (click)="clear.emit()">
-      <mat-icon fontSet="material-icons-outlined">delete_sweep</mat-icon>
+      <sd-icon name="delete_sweep"></sd-icon>
     </button>
   }
 
@@ -50,6 +50,6 @@
     [disabled]="!canSearch()"
     matTooltip="Tìm kiếm"
     (click)="search.emit()">
-    <mat-icon fontSet="material-icons-outlined">search</mat-icon>
+    <sd-icon name="search"></sd-icon>
   </button>
 </div>

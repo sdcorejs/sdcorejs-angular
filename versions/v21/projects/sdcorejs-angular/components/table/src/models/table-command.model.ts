@@ -1,4 +1,4 @@
-import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
+import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { Color } from '@sdcorejs/utils/models';
 
 export interface SdTableCommandOption<T = any> {
@@ -11,7 +11,7 @@ export type SdTableCommand<T = any> = SdTableCommandNormal<T> | SdTableCommandCh
 export interface SdTableCommandNormal<T = any> {
   color?: Color;
   icon?: string | ((rowData: T) => string);
-  fontSet?: MaterialIconFontSet;
+  fontSet?: SdIconSet;
   title?: string | ((rowData: T) => string);
   disabled?: boolean | ((rowData: T) => boolean);
   hidden?: boolean | ((rowData: T) => boolean | Promise<boolean>);
@@ -21,7 +21,7 @@ export interface SdTableCommandNormal<T = any> {
 
 export interface SdTableCommandChildren<T = any> {
   icon?: string | ((rowData: T) => string);
-  fontSet?: MaterialIconFontSet;
+  fontSet?: SdIconSet;
   title?: string | ((rowData: T) => string);
   disabled?: boolean | ((rowData: T) => boolean);
   hidden?: boolean | ((rowData: T) => boolean | Promise<boolean>);

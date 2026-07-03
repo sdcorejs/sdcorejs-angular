@@ -56,7 +56,7 @@ $qbc-radius:       6px;
 
     // Trailing chevron / clear icons → neutral, primary on focus
     .mat-mdc-select-arrow,
-    .mat-mdc-form-field-icon-suffix .mat-icon {
+    .mat-mdc-form-field-icon-suffix sd-icon {
       color: #5f6368;
     }
     &.mat-focused .mat-mdc-select-arrow {

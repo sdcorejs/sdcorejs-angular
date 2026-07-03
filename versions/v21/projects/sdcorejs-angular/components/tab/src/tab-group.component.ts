@@ -12,10 +12,10 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { Color } from '@sdcorejs/utils/models';
 import { SdTab } from './tab.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 export interface SdTabClosedEvent {
   index: number;
@@ -25,7 +25,7 @@ export interface SdTabClosedEvent {
 @Component({
   selector: 'sd-tab-group',
   standalone: true,
-  imports: [MatTabsModule, MatIconModule, NgTemplateOutlet],
+  imports: [SdIcon, MatTabsModule, NgTemplateOutlet],
   templateUrl: './tab-group.component.html',
   styleUrl: './tab-group.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

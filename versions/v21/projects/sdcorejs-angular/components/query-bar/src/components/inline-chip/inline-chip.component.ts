@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output, signal } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -10,6 +9,7 @@ import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { Filter, Operator } from '@sdcorejs/utils/models';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type Density = 'compact' | 'comfortable';
 
@@ -35,7 +35,7 @@ type Density = 'compact' | 'comfortable';
   styleUrl: './inline-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, MatIconModule, SdOperator, SdDate, SdDateRange, SdDatetime, SdSelect],
+  imports: [SdIcon, CommonModule, SdOperator, SdDate, SdDateRange, SdDatetime, SdSelect],
 })
 export class SdQueryInlineChip {
   // ---------------------------------------------------------------------------

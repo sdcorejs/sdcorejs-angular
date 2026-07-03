@@ -71,7 +71,7 @@ $black100: var(--sd-black100, #f2f2f2);
       box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
     }
 
-    mat-icon {
+    sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -109,7 +109,7 @@ $black100: var(--sd-black100, #f2f2f2);
       border-color: $error;
     }
 
-    mat-icon {
+    sd-icon {
       font-size: 12px;
       width: 12px;
       height: 12px;
@@ -246,7 +246,7 @@ $black100: var(--sd-black100, #f2f2f2);
       }
     }
 
-    mat-icon {
+    sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -274,7 +274,7 @@ $black100: var(--sd-black100, #f2f2f2);
       color: $error-dark;
     }
 
-    mat-icon {
+    sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -335,7 +335,7 @@ $black100: var(--sd-black100, #f2f2f2);
       background: $primary-light;
     }
 
-    mat-icon {
+    sd-icon {
       font-size: 16px;
       width: 16px;
       height: 16px;
@@ -431,7 +431,7 @@ $black100: var(--sd-black100, #f2f2f2);
     font-weight: 600;
     color: $black500;
 
-    mat-icon {
+    sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -460,7 +460,7 @@ $black100: var(--sd-black100, #f2f2f2);
     border-radius: 10px;
     color: $success-dark;
 
-    mat-icon {
+    sd-icon {
       font-size: 28px;
       width: 28px;
       height: 28px;
@@ -681,7 +681,7 @@ $black100: var(--sd-black100, #f2f2f2);
       }
     }
 
-    > mat-icon {
+    > sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -741,7 +741,7 @@ $black100: var(--sd-black100, #f2f2f2);
         line-height: 1.2;
       }
 
-      mat-icon {
+      sd-icon {
         font-size: 22px;
         width: 22px;
         height: 22px;
@@ -884,7 +884,7 @@ $black100: var(--sd-black100, #f2f2f2);
         opacity: 0.62;
       }
 
-      mat-icon {
+      sd-icon {
         font-size: 17px;
         width: 17px;
         height: 17px;

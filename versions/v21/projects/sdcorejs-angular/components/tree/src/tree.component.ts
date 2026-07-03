@@ -15,13 +15,13 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
   SdTreeCommand,
   SdTreeDataSource,
@@ -83,11 +83,10 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
 @Component({
   selector: 'sd-tree',
   standalone: true,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     MatButtonModule,
     MatCheckboxModule,
-    MatIconModule,
     MatMenuModule,
     MatProgressSpinnerModule,
     MatTooltipModule,

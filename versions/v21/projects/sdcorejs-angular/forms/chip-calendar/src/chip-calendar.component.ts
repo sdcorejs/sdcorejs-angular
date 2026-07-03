@@ -35,7 +35,6 @@ import { MatChipsModule } from '@angular/material/chips';
 import { ErrorStateMatcher, MatNativeDateModule } from '@angular/material/core';
 import { MatCalendar, MatDatepickerModule } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -57,6 +56,7 @@ import { DateUtilities } from '@sdcorejs/angular/utilities';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdRemovableChipPipe } from './pipes';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
   constructor(private formControl: FormControl) {}
@@ -73,7 +73,7 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -81,7 +81,6 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
     MatTooltipModule,
     MatFormFieldModule,
     MatAutocompleteModule,
-    MatIconModule,
     MatProgressSpinnerModule,
     MatChipsModule,
     MatDatepickerModule,

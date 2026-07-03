@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuModule } from '@angular/material/menu';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /**
  * Field picker mat-menu for `sd-query-bar`.
@@ -22,7 +22,7 @@ import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
   styleUrl: './field-picker.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatMenuModule, MatIconModule],
+  imports: [SdIcon, MatMenuModule],
 })
 export class SdQueryFieldPicker {
   /** Field list shown in the menu (caller-supplied; rendered in input order). */

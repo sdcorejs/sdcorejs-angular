@@ -16,7 +16,7 @@
   @if (_stage !== 'empty' && _activeImage; as img) {
     <div class="sd-preview-header">
       <div class="sd-preview-header__left">
-        <mat-icon class="sd-preview-header__icon" fontIcon="image"></mat-icon>
+        <sd-icon class="sd-preview-header__icon" fontIcon="image"></sd-icon>
         <div class="sd-preview-header__meta">
           <div class="sd-preview-header__name T14M" [title]="img.name">{{ img.name }}</div>
           @if (img.size) {
@@ -60,7 +60,7 @@
         @case ('empty') {
           <div class="sd-preview-status">
             <div class="sd-preview-status__tile sd-preview-status__tile--muted">
-              <mat-icon fontIcon="image_not_supported"></mat-icon>
+              <sd-icon fontIcon="image_not_supported"></sd-icon>
             </div>
             <div class="sd-preview-status__title">
               {{ 'core.component.preview-image.no-image' | translate }}
@@ -94,7 +94,7 @@
               <div class="sd-preview-image-broken" role="img"
                    [attr.aria-label]="'core.component.preview-image.load-error' | translate">
                 <div class="sd-preview-status__tile sd-preview-status__tile--danger">
-                  <mat-icon fontIcon="broken_image"></mat-icon>
+                  <sd-icon fontIcon="broken_image"></sd-icon>
                 </div>
                 <div class="sd-preview-status__title">
                   {{ 'core.component.preview-image.load-error' | translate }}
@@ -103,7 +103,7 @@
                   {{ 'core.component.preview-image.load-error-hint' | translate }}
                 </div>
                 <button type="button" class="sd-preview-btn-primary" (click)="retryActive()" [attr.data-autoId]="autoIdRetry()">
-                  <mat-icon fontIcon="refresh"></mat-icon>
+                  <sd-icon fontIcon="refresh"></sd-icon>
                   <span>{{ 'core.component.preview-image.retry' | translate }}</span>
                 </button>
               </div>
@@ -142,7 +142,7 @@
           [attr.aria-label]="'core.component.preview-image.prev' | translate"
           [attr.data-autoId]="autoIdPrev()"
           (click)="updateCurrentImage(-1)">
-          <mat-icon fontIcon="chevron_left"></mat-icon>
+          <sd-icon fontIcon="chevron_left"></sd-icon>
         </button>
         <button
           type="button"
@@ -151,7 +151,7 @@
           [attr.aria-label]="'core.component.preview-image.next' | translate"
           [attr.data-autoId]="autoIdNext()"
           (click)="updateCurrentImage(1)">
-          <mat-icon fontIcon="chevron_right"></mat-icon>
+          <sd-icon fontIcon="chevron_right"></sd-icon>
         </button>
       }
 
@@ -181,7 +181,7 @@
               [attr.title]="'core.component.preview-image.zoom-out' | translate"
               [attr.data-autoId]="autoIdZoomOut()"
               (click)="zoomOut()">
-              <mat-icon fontIcon="zoom_out"></mat-icon>
+              <sd-icon fontIcon="zoom_out"></sd-icon>
             </button>
             <span class="sd-preview-toolbar__readout">{{ zoomPercent() }}%</span>
             <button
@@ -191,7 +191,7 @@
               [attr.title]="'core.component.preview-image.zoom-in' | translate"
               [attr.data-autoId]="autoIdZoomIn()"
               (click)="zoomIn()">
-              <mat-icon fontIcon="zoom_in"></mat-icon>
+              <sd-icon fontIcon="zoom_in"></sd-icon>
             </button>
             <span class="sd-preview-toolbar__divider"></span>
           }
@@ -201,7 +201,7 @@
             [attr.aria-label]="'core.component.preview-image.fit' | translate"
             [attr.data-autoId]="autoIdFit()"
             (click)="fitToScreen()">
-            <mat-icon fontIcon="fit_screen"></mat-icon>
+            <sd-icon fontIcon="fit_screen"></sd-icon>
             <span class="sd-preview-toolbar__btn-label">{{ 'core.component.preview-image.fit' | translate }}</span>
           </button>
           <button
@@ -211,7 +211,7 @@
             [attr.title]="'core.component.preview-image.rotate' | translate"
             [attr.data-autoId]="autoIdRotate()"
             (click)="rotate('right')">
-            <mat-icon fontIcon="rotate_right"></mat-icon>
+            <sd-icon fontIcon="rotate_right"></sd-icon>
           </button>
           <span class="sd-preview-toolbar__divider"></span>
           @if (downloadable()) {
@@ -222,7 +222,7 @@
               [attr.title]="'core.component.preview-image.download' | translate"
               [attr.data-autoId]="autoIdDownload()"
               (click)="downloadCurrent()">
-              <mat-icon fontIcon="download"></mat-icon>
+              <sd-icon fontIcon="download"></sd-icon>
             </button>
           }
           <button
@@ -232,7 +232,7 @@
             [attr.title]="'core.component.preview-image.fullscreen' | translate"
             [attr.data-autoId]="autoIdFullscreen()"
             (click)="toggleFullscreen()">
-            <mat-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></mat-icon>
+            <sd-icon [fontIcon]="isFullscreen() ? 'fullscreen_exit' : 'fullscreen'"></sd-icon>
           </button>
         </div>
       }
@@ -260,7 +260,7 @@
             (click)="onClickThumbnailImage(i)">
             @if (img.error) {
               <div class="sd-preview-thumb__broken">
-                <mat-icon fontIcon="broken_image"></mat-icon>
+                <sd-icon fontIcon="broken_image"></sd-icon>
               </div>
             } @else {
               <img class="sd-preview-thumb__img" [src]="img.blobUrl || img.url" [alt]="img.alt || img.name" />

@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, input, output, viewChild } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
@@ -7,6 +6,7 @@ import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { Filter, Operator } from '@sdcorejs/utils/models';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /**
  * Compact popover-mode chip face. Click → opens the parent-supplied [menu] (mat-menu
@@ -19,7 +19,7 @@ import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
   styleUrl: './popover-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatMenuModule, MatIconModule, MatTooltipModule, SdOperator],
+  imports: [SdIcon, MatMenuModule, MatTooltipModule, SdOperator],
 })
 export class SdQueryPopoverChip {
   /** Resolved field (from the bar's `fieldByKey()` map). `undefined` → render raw key. */

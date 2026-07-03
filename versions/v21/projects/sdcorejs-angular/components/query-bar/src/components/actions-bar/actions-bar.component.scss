@@ -76,7 +76,7 @@ $qb-radius-input:   6px;
   :host-context(.c-density-compact) & { width: 28px; height: 28px; }
   :host-context(.c-density-comfortable) & { width: 32px; height: 32px; }
 
-  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+  sd-icon { font-size: 18px; width: 18px; height: 18px; }
 
   &:hover:not([disabled]) { border-color: $qb-primary; color: $qb-primary; }
   &[disabled] { opacity: 0.5; cursor: not-allowed; }

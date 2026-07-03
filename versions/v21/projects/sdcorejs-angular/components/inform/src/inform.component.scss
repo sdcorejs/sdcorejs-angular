@@ -104,7 +104,7 @@ $informColors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
       color: map.get(color.$color_map, 'error');
     }
 
-    mat-icon {
+    sd-icon {
       width: 18px;
       height: 18px;
       font-size: 18px;

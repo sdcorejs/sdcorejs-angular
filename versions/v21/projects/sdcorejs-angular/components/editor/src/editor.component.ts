@@ -16,7 +16,6 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncValidatorFn, FormGroup, NgForm, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import {
@@ -44,6 +43,7 @@ import { EditorOption, SdEditorOption } from './models';
 import { HandleSdCustomValidator, SdCustomValidator, SdFormControl } from '@sdcorejs/angular/forms/models';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
   applyReplacementsToEditor,
   countTextLength,
@@ -59,7 +59,7 @@ import {
   selector: 'sd-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CKEditorModule, SdLabel, SdCKEditorStyles, MatFormFieldModule, MatIconModule, MatTooltipModule],
+  imports: [SdIcon, CKEditorModule, SdLabel, SdCKEditorStyles, MatFormFieldModule, MatTooltipModule],
   templateUrl: './editor.component.html',
   styleUrls: ['./editor.component.scss', './plugins/image-upload/image-upload.plugin.scss'],
 })

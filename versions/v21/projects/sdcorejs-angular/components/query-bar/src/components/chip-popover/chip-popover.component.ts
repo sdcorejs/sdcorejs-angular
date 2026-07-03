@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, isSignal, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenu, MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { isObservable } from 'rxjs';
@@ -14,6 +13,7 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { Filter, Operator } from '@sdcorejs/utils/models';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 import {
   SD_QUERY_MULTI_OPERATORS,
@@ -49,10 +49,9 @@ interface Range {
   styleUrl: './chip-popover.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
-    MatIconModule,
     MatMenuModule,
     MatTooltipModule,
     SdButton,

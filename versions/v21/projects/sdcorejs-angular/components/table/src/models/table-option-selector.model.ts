@@ -45,13 +45,13 @@ export type SdTableAction<T = any> = SdTableActionNormal<T> | SdTableActionChild
 export interface SdTableActionNormal<T = any> {
   /**
    * Tên icon hiển thị trên action button.
-   * Giá trị này được render qua `mat-icon`, vì vậy nên dùng đúng tên glyph của Material Icons.
+   * Giá trị này được render qua `sd-icon`, vì vậy nên dùng đúng tên glyph của configured icon set.
    * Tra cứu icon tại: https://fonts.google.com/icons
    */
   icon?: string;
   /**
-   * Font set của Material icon.
-   * Kiểu thực tế lấy từ `SdButton['fontSet']` và chỉ hỗ trợ các giá trị thuộc `MaterialIconFontSet`,
+   * Font set của icon.
+   * Kiểu thực tế lấy từ `SdButton['fontSet']` và chỉ hỗ trợ các giá trị thuộc `SdIconSet`,
    * ví dụ: `material-icons`, `material-icons-outlined`, `material-icons-round`,
    * `material-icons-sharp`.
    * Nếu không truyền, `SdButton` sẽ dùng font set mặc định của nó.
@@ -83,11 +83,11 @@ export interface SdTableActionNormal<T = any> {
 interface SdTableActionChildren<T = any> {
   /**
    * Tên icon của action cha (group action).
-   * Giá trị nên là tên glyph Material Icons: https://fonts.google.com/icons
+   * Giá trị nên là tên glyph configured icon set: https://fonts.google.com/icons
    */
   icon?: string;
   /**
-   * Font set của Material icon cho action cha.
+   * Font set của icon cho action cha.
    * Dùng cùng kiểu dữ liệu với `SdButton['fontSet']`.
    */
   fontSet?: SdUnwrapSignal<SdButton['fontSet']>;

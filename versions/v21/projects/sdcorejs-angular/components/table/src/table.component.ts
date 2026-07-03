@@ -43,7 +43,6 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
-import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -97,6 +96,7 @@ import {
   saveTreeExpandState,
 } from './services/tree/tree.util';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Injectable()
 export class MatPaginatorIntlCro extends MatPaginatorIntl {
@@ -147,12 +147,11 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
       useClass: MatPaginatorIntlCro,
     },
   ],
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     MatMenuModule,
     MatPaginatorModule,
-    MatIconModule,
     MatTableModule,
     MatSortModule,
     MatProgressSpinnerModule,
