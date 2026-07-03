@@ -54,74 +54,68 @@
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-      <mat-form-field
-        class="c-form-field-date-input"
-        [class.sd-md]="size() === 'md'"
-        [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="_hideInlineError"
-        [appearance]="_appearance!"
-        [floatLabel]="floatLabel()">
-        @if (_appearance && _label) {
-          <mat-label style="display: inline-block">
-            <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ _label }}</span>
-              @if (_helperText) {
-                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
-              }
-            </div>
-          </mat-label>
-        }
+    <mat-form-field
+      class="c-form-field-date-input"
+      [class.sd-md]="size() === 'md'"
+      [class.sd-sm]="size() === 'sm'"
+      [class.hide-inline-error]="_hideInlineError"
+      [appearance]="_appearance!"
+      [floatLabel]="floatLabel()">
+      @if (_appearance && _label) {
+        <mat-label style="display: inline-block">
+          <div style="display: flex; align-items: center; gap: 4px">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
+            }
+          </div>
+        </mat-label>
+      }
 
-        <input
-          aria-hidden="true"
-          [id]="id"
-          matInput
-          (keyup)="onKeyup($event)"
-          (keydown)="onKeyDown($event)"
-          (dateChange)="onChange($event)"
-          [autocomplete]="id"
-          autocorrect="off"
-          [formControl]="formControl"
-          [required]="_required"
-          [matDatepicker]="picker"
-          [placeholder]="placeholder() || _label || ''"
-          [min]="_resolvedMin"
-          [max]="_resolvedMax"
-          (focus)="onFocus()"
-          (blur)="onBlur()"
-          [attr.data-autoId]="autoId()"
-          [attr.data-disabled]="dataDisabled()"
-          [attr.data-invalid]="dataInvalid()"
-          [attr.data-empty]="dataEmpty()"
-          [attr.data-value]="dataValue()"
-          [attr.data-required]="dataRequired()"
-          [attr.data-error-message]="dataErrorMessage()"
-          #input
-          [maxLength]="10" />
+      <input
+        aria-hidden="true"
+        [id]="id"
+        matInput
+        (keyup)="onKeyup($event)"
+        (keydown)="onKeyDown($event)"
+        (dateChange)="onChange($event)"
+        [autocomplete]="id"
+        autocorrect="off"
+        [formControl]="formControl"
+        [required]="_required"
+        [matDatepicker]="picker"
+        [placeholder]="placeholder() || _label || ''"
+        [min]="_resolvedMin"
+        [max]="_resolvedMax"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-invalid]="dataInvalid()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-value]="dataValue()"
+        [attr.data-required]="dataRequired()"
+        [attr.data-error-message]="dataErrorMessage()"
+        #input
+        [maxLength]="10" />
 
-        <mat-datepicker #picker [touchUi]="isMobileOrTablet"></mat-datepicker>
+      <mat-datepicker #picker [touchUi]="isMobileOrTablet"></mat-datepicker>
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
-        }
+      @if (_hideInlineError && _errorMessage && formControl.touched) {
+        <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+      }
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
-        }
+      @if (!_hideInlineError && _errorMessage && formControl.touched) {
+        <mat-error>{{ _errorMessage }}</mat-error>
+      }
 
-        @if (formControl.value && !_required && !formControl.disabled && !_bare) {
-          <button
-            type="button"
-            class="sd-clear-btn sd-hover"
-            matSuffix
-            (click)="clear($event)"
-            title="Xóa"
-            aria-label="Xóa">
-            <mat-icon>close</mat-icon>
-          </button>
-        }
+      @if (formControl.value && !_required && !formControl.disabled && !_bare) {
+        <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
 
-        <mat-icon class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && picker.open()" #btn matSuffix>today</mat-icon>
-      </mat-form-field>
+      <mat-icon class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && picker.open()" #btn matSuffix>today</mat-icon>
+    </mat-form-field>
   </div>
 }

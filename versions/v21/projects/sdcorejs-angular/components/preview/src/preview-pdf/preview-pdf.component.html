@@ -88,9 +88,7 @@
           [value]="_searchTerm"
           [attr.data-autoId]="autoIdSearchInput()"
           (input)="onSearchInput($any($event.target).value)" />
-        <span class="sd-preview-pdf-searchbar__counter" aria-live="polite">
-          {{ searchCurrent() }} / {{ _searchTotal }}
-        </span>
+        <span class="sd-preview-pdf-searchbar__counter" aria-live="polite"> {{ searchCurrent() }} / {{ _searchTotal }} </span>
         <button
           type="button"
           class="sd-preview-pdf-iconbtn"
@@ -150,7 +148,6 @@
        BODY — sidebar + stage
        ============================================ -->
   <div class="sd-preview-pdf-body">
-
     <!-- SIDEBAR ............................................................. -->
     @if (_stage === 'ready' && _isSidebarOpen) {
       <aside class="sd-preview-pdf-sidebar" role="complementary">
@@ -199,15 +196,11 @@
                       class="sd-preview-pdf-thumb"
                       [class.sd-preview-pdf-thumb--active]="p === _activePage"
                       [attr.aria-current]="p === _activePage ? 'page' : null"
-                      [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: p, total: _numPages })"
+                      [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: p, total: _numPages }"
                       [attr.data-autoId]="autoIdThumb(pi)"
                       (click)="goToPage(p)">
                       <div class="sd-preview-pdf-thumb__page">
-                        <canvas
-                          #thumbCanvas
-                          class="sd-preview-pdf-thumb__canvas"
-                          [attr.data-page]="p"
-                          aria-hidden="true"></canvas>
+                        <canvas #thumbCanvas class="sd-preview-pdf-thumb__canvas" [attr.data-page]="p" aria-hidden="true"></canvas>
                       </div>
                       <span class="sd-preview-pdf-thumb__label">{{ p }}</span>
                     </button>
@@ -244,7 +237,8 @@
                         [attr.data-autoId]="autoIdResult(i)"
                         (click)="goToPage(r.page)">
                         <span class="sd-preview-pdf-search-result__snippet">
-                          {{ r.before }}<mark>{{ r.term }}</mark>{{ r.after }}
+                          {{ r.before }}<mark>{{ r.term }}</mark
+                          >{{ r.after }}
                         </span>
                         <span class="sd-preview-pdf-search-result__page">{{ r.page }}</span>
                       </button>
@@ -296,13 +290,13 @@
           @if (loadError$(); as err) {
             <div class="sd-preview-pdf-status">
               <div class="sd-preview-pdf-status__tile sd-preview-pdf-status__tile--danger">
-                <mat-icon fontIcon="error_outline"></mat-icon>
+                <mat-icon fontSet="material-icons-outlined" fontIcon="error"></mat-icon>
               </div>
               <div class="sd-preview-pdf-status__title">
-                {{ ('core.component.preview-pdf.error.' + err.reason + '.title') | translate }}
+                {{ 'core.component.preview-pdf.error.' + err.reason + '.title' | translate }}
               </div>
               <div class="sd-preview-pdf-status__hint">
-                {{ ('core.component.preview-pdf.error.' + err.reason + '.body') | translate }}
+                {{ 'core.component.preview-pdf.error.' + err.reason + '.body' | translate }}
               </div>
               <div class="sd-preview-pdf-status__actions">
                 <button type="button" class="sd-preview-pdf-btn-primary" (click)="retryLoad()" [attr.data-autoId]="autoIdRetry()">
@@ -325,7 +319,7 @@
               #pageCanvas
               class="sd-preview-pdf-page"
               role="img"
-              [attr.aria-label]="('core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages })">
+              [attr.aria-label]="'core.component.preview-pdf.page-of' | translate: { current: _activePage, total: _numPages }">
             </canvas>
           </div>
         }
@@ -457,9 +451,10 @@
             (click)="setScrollMode(_scrollModeCurrent === 'page' ? 'continuous' : 'page')">
             <mat-icon [fontIcon]="_scrollModeCurrent === 'page' ? 'description' : 'view_day'"></mat-icon>
             <span>
-              {{ (_scrollModeCurrent === 'page'
-                  ? 'core.component.preview-pdf.scroll-page'
-                  : 'core.component.preview-pdf.scroll-continuous') | translate }}
+              {{
+                (_scrollModeCurrent === 'page' ? 'core.component.preview-pdf.scroll-page' : 'core.component.preview-pdf.scroll-continuous')
+                  | translate
+              }}
             </span>
           </button>
         </div>

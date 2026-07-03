@@ -12,7 +12,7 @@
     [label]="_label"
     [labelTemplate]="sdLabelTemplate()"
     [value]="formControl.value"
-    [display]="formControl.value | sdFormatNumber : undefined : _format"
+    [display]="formControl.value | sdFormatNumber: undefined : _format"
     [hyperlink]="hyperlink()"
     [valueTemplate]="viewTemplate()">
   </sd-view>
@@ -47,75 +47,75 @@
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-      <mat-form-field
-        [class.sd-md]="size() === 'md'"
-        [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="_hideInlineError"
-        [appearance]="_appearance!"
-        [floatLabel]="floatLabel()">
-        @if (_appearance && _label) {
-          <mat-label style="display: inline-block">
-            <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ _label }}</span>
-              @if (_helperText) {
-                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
-              }
-            </div>
-          </mat-label>
-        }
+    <mat-form-field
+      [class.sd-md]="size() === 'md'"
+      [class.sd-sm]="size() === 'sm'"
+      [class.hide-inline-error]="_hideInlineError"
+      [appearance]="_appearance!"
+      [floatLabel]="floatLabel()">
+      @if (_appearance && _label) {
+        <mat-label style="display: inline-block">
+          <div style="display: flex; align-items: center; gap: 4px">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
+            }
+          </div>
+        </mat-label>
+      }
 
-        <input
-          aria-hidden="true"
-          [id]="id"
-          [formControl]="inputControl"
-          #control
-          matInput
-          [placeholder]="placeholder() || _label || ''"
-          [errorStateMatcher]="matcher"
-          (keyup.enter)="onKeyupEnter()"
-          (focus)="onFocus()"
-          (blur)="onBlur()"
-          (keydown)="onKeydown($event)"
-          (compositionstart)="onCompositionStart($event)"
-          (compositionend)="onCompositionEnd($event)"
-          [required]="_required"
-          [readonly]="readonly()"
-          [autocomplete]="id"
-          (paste)="onPaste($event)"
-          autocorrect="off"
-          [attr.data-autoId]="autoId()"
-          [attr.data-disabled]="dataDisabled()"
-          [attr.data-invalid]="dataInvalid()"
-          [attr.data-empty]="dataEmpty()"
-          [attr.data-value]="dataValue()"
-          [attr.data-required]="dataRequired()"
-          [attr.data-error-message]="dataErrorMessage()" />
+      <input
+        aria-hidden="true"
+        [id]="id"
+        [formControl]="inputControl"
+        #control
+        matInput
+        [placeholder]="placeholder() || _label || ''"
+        [errorStateMatcher]="matcher"
+        (keyup.enter)="onKeyupEnter()"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        (keydown)="onKeydown($event)"
+        (compositionstart)="onCompositionStart($event)"
+        (compositionend)="onCompositionEnd($event)"
+        [required]="_required"
+        [readonly]="readonly()"
+        [autocomplete]="id"
+        (paste)="onPaste($event)"
+        autocorrect="off"
+        [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-invalid]="dataInvalid()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-value]="dataValue()"
+        [attr.data-required]="dataRequired()"
+        [attr.data-error-message]="dataErrorMessage()" />
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
-        }
+      @if (!_hideInlineError && _errorMessage && formControl.touched) {
+        <mat-error>{{ _errorMessage }}</mat-error>
+      }
 
-        <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
+      <!-- why: nút clear render TRƯỚC error icon. Clear hover-gated (visibility:hidden) vẫn
              chiếm chỗ trong layout -> nếu đứng sau sẽ đẩy error icon "tụt vào trong". Đứng trước
              thì error icon nằm sát mép phải, clear giữ slot vô hình bên trái. -->
-        @if (showClear()) {
-          <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
-            <mat-icon>close</mat-icon>
-          </button>
-        }
+      @if (showClear()) {
+        <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <mat-icon>close</mat-icon>
+        </button>
+      }
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
-        }
+      @if (_hideInlineError && _errorMessage && formControl.touched) {
+        <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+      }
 
-        @if (sdSuffixDef()?.templateRef; as suffixRef) {
-          <ng-container matSuffix>
-            <ng-container [ngTemplateOutlet]="suffixRef"></ng-container>
-          </ng-container>
-        }
-        <!-- <ng-container matSuffix>
+      @if (sdSuffixDef()?.templateRef; as suffixRef) {
+        <ng-container matSuffix>
+          <ng-container [ngTemplateOutlet]="suffixRef"></ng-container>
+        </ng-container>
+      }
+      <!-- <ng-container matSuffix>
           <ng-content select="[sdSuffix]"></ng-content>
         </ng-container> -->
-      </mat-form-field>
+    </mat-form-field>
   </div>
 }

@@ -1,11 +1,19 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdRadio } from '@sdcorejs/angular/forms/radio';
+import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
+
+interface IconSetOption {
+  value: SdIconSet;
+  display: string;
+}
 
 @Component({
   selector: 'app-badge-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdBadge],
+  imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdBadge, SdRadio],
   template: `
     <demo-page
       title="Badge"
@@ -15,6 +23,39 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
         <sd-badge type="icon" primary icon="check_circle" title="icon"></sd-badge>
         <sd-badge type="round" primary title="round"></sd-badge>
         <sd-badge type="tag" primary icon="label" title="tag"></sd-badge>
+      </demo-section>
+
+      <demo-section
+        heading="IconSet switch"
+        [props]="[{ name: 'iconSet', value: 'material-icons / material-icons-outlined / lucide' }, { name: 'type', value: 'icon / round / tag' }]"
+        note="Chon iconSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+        <div class="d-flex flex-column gap-16 w-full">
+          <sd-radio
+            label="iconSet"
+            [items]="iconSetOptions"
+            valueField="value"
+            displayField="display"
+            [(model)]="selectedIconSet"
+            [form]="iconSetForm"></sd-radio>
+
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="icon" success icon="check_circle" [iconSet]="selectedIconSet()" title="Approved"></sd-badge>
+            <sd-badge type="icon" info icon="visibility" [iconSet]="selectedIconSet()" title="Visible"></sd-badge>
+            <sd-badge type="icon" warning icon="warning" [iconSet]="selectedIconSet()" title="Warning"></sd-badge>
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="round" success icon="check_circle" [iconSet]="selectedIconSet()" title="Round success"></sd-badge>
+            <sd-badge type="round" info icon="local_offer" [iconSet]="selectedIconSet()" title="Round offer"></sd-badge>
+            <sd-badge type="round" error icon="delete" [iconSet]="selectedIconSet()" title="Round error"></sd-badge>
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center gap-16">
+            <sd-badge type="tag" primary icon="local_offer" [iconSet]="selectedIconSet()" title="Tag primary"></sd-badge>
+            <sd-badge type="tag" warning icon="warning" [iconSet]="selectedIconSet()" title="Tag warning"></sd-badge>
+            <sd-badge type="tag" secondary icon="visibility" [iconSet]="selectedIconSet()" title="Tag secondary"></sd-badge>
+          </div>
+        </div>
       </demo-section>
 
       <demo-section heading="Màu sắc round" [props]="[{ name: 'type', value: 'round' }, { name: 'color', value: 'primary / secondary / success / info / warning / error' }]">
@@ -77,6 +118,14 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeDemoComponent {
+  readonly iconSetForm = new FormGroup({});
+  readonly selectedIconSet = signal<SdIconSet>('lucide');
+  readonly iconSetOptions: IconSetOption[] = [
+    { value: 'material-icons', display: 'Material filled' },
+    { value: 'material-icons-outlined', display: 'Material outlined' },
+    { value: 'lucide', display: 'Lucide' },
+  ];
+
   readonly unreadCount = signal(7);
   readonly errorsCount = signal(3);
 }

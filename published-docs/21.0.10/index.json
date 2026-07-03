@@ -3,7 +3,7 @@
   "version": "21.0.10",
   "released": "2026-06-30",
   "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.10",
-  "count": 84,
+  "count": 85,
   "docs": [
     {
       "id": "assets/STYLE-GUIDE",
@@ -438,6 +438,13 @@
       "category": "modules",
       "path": "modules/generic/sd-generic.md",
       "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.10/modules/generic/sd-generic.md"
+    },
+    {
+      "id": "modules/icon/sd-icon",
+      "title": "SdIcon",
+      "category": "modules",
+      "path": "modules/icon/sd-icon.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.0.10/modules/icon/sd-icon.md"
     },
     {
       "id": "modules/keycloak/sd-keycloak",

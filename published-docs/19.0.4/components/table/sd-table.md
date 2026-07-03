@@ -197,6 +197,8 @@ tree: {
 ### Filter option (`SdTableOptionFilter`)
 `externalFilters?: { field, type: 'string' \| 'boolean' \| 'date' \| 'datetime' \| 'daterange' \| 'select' \| ...; defaultOperator?: Operator; required? }[]` controls the toolbar filter form.
 
+**Filter placement rule for generated pages:** treat inline column filters and `filter.externalFilters` as mutually exclusive per field. If a field already has an enabled column filter, do not repeat that same field in `externalFilters`. Use `externalFilters` only for global search, fields that are not rendered as columns, or fields whose column filter is disabled/hidden intentionally.
+
 #### Inline column filter — commit semantics
 - **Enter** trên `sd-input` / `sd-input-number` → commit value vào `filterRegister` **và** trigger reload (debounce 500ms + 200ms).
 - **Blur** (focus rời input) → commit value vào `filterRegister` với `notReload: true` — **không** gọi API. Đảm bảo giá trị typed-but-not-entered không bị mất nếu user chuyển sang filter khác hoặc bấm Reload.
@@ -236,6 +238,15 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - `[sdTableFilterDef]="'<field>'"` — custom inline-filter template per column.
 - `[sdTableExpandDef]` — custom row-expansion (sub-information) template.
 
+### Dense filter/cell controls
+
+When rendering SD form controls in `sdTableFilterDef`, editable cells, external-filter custom templates, dashboard filter bars, or compact table toolbars, use `size="sm"` where supported and `hideInlineError`. This prevents Material's inline error/subscript row from increasing header, row, or toolbar height; validation remains available through the compact error icon/tooltip.
+
+```html
+<ng-template sdTableFilterDef="keyword" let-filter let-update="update">
+  <sd-input size="sm" hideInlineError [(model)]="filter.keyword" (keyupEnter)="update()"></sd-input>
+</ng-template>
+```
 ## Visual cues (helps agent map screenshots → component)
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
@@ -319,8 +330,8 @@ tableOption: SdTableOption<Employee> = {
 
   filter: {
     externalFilters: [
+      // Global search only. Do not repeat `status` here because it already has an inline column filter.
       { field: 'q', type: 'string', defaultOperator: 'CONTAIN' },
-      { field: 'status', type: 'select', defaultOperator: 'EQUAL' },
     ],
   },
 
@@ -465,6 +476,8 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Using `column.minWidth: '30%'` (or any non-`px` unit) and expecting the resize clamp to honor it — the directive's parser only accepts `'NNpx'`. Other units render fine for static width but are treated as "no clamp" by the resize logic (falls back to default `min = 40px`).
 - ❌ Writing to `column.width` programmatically while `config.resizable: true` on a table that already has `option.key` — the persisted user width takes precedence over `column.width` in `option`. Reset via the gear dialog → "Đưa về mặc định" if you want option-defined widths back.
 - ❌ Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering — the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
+
+- Avoid duplicating the same field in both `columns[].filter` and `filter.externalFilters`; generated list pages should choose one filter surface per field. Prefer the column filter when the field is already visible as a column; reserve external filters for global search or non-column criteria.
 
 ## E2E test attributes
 

@@ -57,94 +57,94 @@
     [class.c-disabled]="formControl.disabled"
     (click)="onClick()"
     aria-hidden="true">
-      <mat-form-field
-        [class.sd-md]="size() === 'md'"
-        [class.sd-sm]="size() === 'sm'"
-        [class.hide-inline-error]="_hideInlineError"
-        [floatLabel]="nVal ? 'always' : 'auto'"
-        [appearance]="_appearance || 'outline'">
-        @if (_appearance && _label) {
-          <mat-label style="display: inline-block">
-            <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ _label }}</span>
-              @if (_helperText) {
-                <mat-icon [matTooltip]="_helperText" matTooltipPosition="below">info_outline</mat-icon>
-              }
-            </div>
-          </mat-label>
-        }
-
-        <input
-          [id]="id"
-          [formControl]="inputControl"
-          [placeholder]="controlPlaceHolder() || ''"
-          [class.c-selected]="nVal"
-          [matAutocomplete]="auto"
-          (focus)="onFocus()"
-          (blur)="onBlur()"
-          matInput
-          [autocomplete]="id"
-          autocorrect="off"
-          [errorStateMatcher]="matcher"
-          [required]="_required"
-          #input
-          #autocompleteTrigger="matAutocompleteTrigger"
-          [attr.data-autoId]="autoId()"
-          [attr.data-disabled]="dataDisabled()"
-          [attr.data-invalid]="dataInvalid()"
-          [attr.data-empty]="dataEmpty()"
-          [attr.data-value]="dataValue()"
-          [attr.data-loading]="dataLoading()"
-          [attr.data-required]="dataRequired()"
-          [attr.data-error-message]="dataErrorMessage()"
-          aria-hidden="true" />
-
-        @if (!_loading && nVal && !inputControl.disabled && !_bare) {
-          <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
-            <mat-icon>close</mat-icon>
-          </button>
-        } @else if (_loading) {
-          <mat-spinner [diameter]="20" matSuffix></mat-spinner>
-        } @else {
-          <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>search</mat-icon>
-        }
-
-        <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelect($event.option.value)" class="sd-autocomplete-panel">
-          @let _filteredItems = filteredItems();
-
-          @if (_filteredItems?.length) {
-            @for (item of _filteredItems; track $index) {
-              <mat-option
-                [value]="item"
-                matTooltipPosition="above"
-                [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
-                [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false">
-                @if (iDefTpl) {
-                  <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
-                } @else {
-                  {{ _displayField ? getNestedValue(item, _displayField) : item }}
-                }
-              </mat-option>
+    <mat-form-field
+      [class.sd-md]="size() === 'md'"
+      [class.sd-sm]="size() === 'sm'"
+      [class.hide-inline-error]="_hideInlineError"
+      [floatLabel]="nVal ? 'always' : 'auto'"
+      [appearance]="_appearance || 'outline'">
+      @if (_appearance && _label) {
+        <mat-label style="display: inline-block">
+          <div style="display: flex; align-items: center; gap: 4px">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <mat-icon fontSet="material-icons-outlined" [matTooltip]="_helperText" matTooltipPosition="below">info</mat-icon>
             }
-          } @else if (!_filteredItems?.length && inputControl.value && !isTyping() && !_loading) {}
+          </div>
+        </mat-label>
+      }
 
-          @if (addable() && sdAdd.observed) {
-            <mat-option class="sd__option--add" (keyup.Space)="$event.stopPropagation()" disabled="true">
-              <div (click)="onAdd($event)">
-                <mat-icon class="mr-1">add</mat-icon>
-                {{ 'New item' }}
-              </div>
+      <input
+        [id]="id"
+        [formControl]="inputControl"
+        [placeholder]="controlPlaceHolder() || ''"
+        [class.c-selected]="nVal"
+        [matAutocomplete]="auto"
+        (focus)="onFocus()"
+        (blur)="onBlur()"
+        matInput
+        [autocomplete]="id"
+        autocorrect="off"
+        [errorStateMatcher]="matcher"
+        [required]="_required"
+        #input
+        #autocompleteTrigger="matAutocompleteTrigger"
+        [attr.data-autoId]="autoId()"
+        [attr.data-disabled]="dataDisabled()"
+        [attr.data-invalid]="dataInvalid()"
+        [attr.data-empty]="dataEmpty()"
+        [attr.data-value]="dataValue()"
+        [attr.data-loading]="dataLoading()"
+        [attr.data-required]="dataRequired()"
+        [attr.data-error-message]="dataErrorMessage()"
+        aria-hidden="true" />
+
+      @if (!_loading && nVal && !inputControl.disabled && !_bare) {
+        <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else if (_loading) {
+        <mat-spinner [diameter]="20" matSuffix></mat-spinner>
+      } @else {
+        <mat-icon class="cursor-pointer sd-suffix-icon" matSuffix>search</mat-icon>
+      }
+
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSelect($event.option.value)" class="sd-autocomplete-panel">
+        @let _filteredItems = filteredItems();
+
+        @if (_filteredItems?.length) {
+          @for (item of _filteredItems; track $index) {
+            <mat-option
+              [value]="item"
+              matTooltipPosition="above"
+              [matTooltip]="_displayField ? getNestedValue(item, _displayField) : item"
+              [disabled]="_disabledField ? getNestedValue(item, _disabledField) : false">
+              @if (iDefTpl) {
+                <ng-container *ngTemplateOutlet="iDefTpl ?? null; context: { item: item }"> </ng-container>
+              } @else {
+                {{ _displayField ? getNestedValue(item, _displayField) : item }}
+              }
             </mat-option>
           }
-        </mat-autocomplete>
+        } @else if (!_filteredItems?.length && inputControl.value && !isTyping() && !_loading) {}
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+        @if (addable() && sdAdd.observed) {
+          <mat-option class="sd__option--add" (keyup.Space)="$event.stopPropagation()" disabled="true">
+            <div (click)="onAdd($event)">
+              <mat-icon class="mr-1">add</mat-icon>
+              {{ 'New item' }}
+            </div>
+          </mat-option>
         }
+      </mat-autocomplete>
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
-        }
-      </mat-form-field>
+      @if (_hideInlineError && _errorMessage && formControl.touched) {
+        <mat-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above"> error </mat-icon>
+      }
+
+      @if (!_hideInlineError && _errorMessage && formControl.touched) {
+        <mat-error>{{ _errorMessage }}</mat-error>
+      }
+    </mat-form-field>
   </div>
 }

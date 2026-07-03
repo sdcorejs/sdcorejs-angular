@@ -124,6 +124,14 @@ Applied automatically on `<sd-input>` for styling hooks:
 - Helper text shows as light-gray text below the field (or as an info icon next to the label, depending on layout)
 - In `[viewed]="true"` mode: no input chrome — just the value as plain text (or as a hyperlink if `hyperlink` is set)
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-input size="sm" hideInlineError placeholder="Search" [(model)]="filter.keyword"></sd-input>
+```
+
 ## Examples
 
 ### 1. Required text with maxlength

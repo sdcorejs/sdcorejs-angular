@@ -4,13 +4,16 @@ import { provideRouter, withInMemoryScrolling } from '@angular/router';
 import {
   LucideChevronDown,
   LucideCircleAlert,
+  LucideCircleCheck,
   LucideEllipsisVertical,
   LucideEye,
   LucidePencil,
   LucidePlus,
   LucideSave,
   LucideSearch,
+  LucideTag,
   LucideTrash2,
+  LucideTriangleAlert,
   LucideUpload,
 } from '@lucide/angular';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
@@ -34,13 +37,16 @@ export const appConfig: ApplicationConfig = {
       lucideIcons: [
         LucideChevronDown,
         LucideCircleAlert,
+        LucideCircleCheck,
         LucideEllipsisVertical,
         LucideEye,
         LucidePencil,
         LucidePlus,
         LucideSave,
         LucideSearch,
+        LucideTag,
         LucideTrash2,
+        LucideTriangleAlert,
         LucideUpload,
       ],
     }),

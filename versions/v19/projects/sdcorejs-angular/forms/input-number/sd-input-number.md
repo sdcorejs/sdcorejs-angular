@@ -203,6 +203,14 @@ For read-only numeric display, do not create a custom pipe. Use `sdFormatNumber`
 {{ row.amount | sdFormatNumber : 0 | sdView }}
 ```
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-input-number size="sm" hideInlineError type="positive" [(model)]="filter.amount"></sd-input-number>
+```
+
 ## Examples
 
 ### 1. VND amount with currency suffix

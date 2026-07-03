@@ -78,6 +78,14 @@ None — label comes from the `[label]` input.
 - Inline error message appears below the row in red when `formControl.touched && formControl.errors?.required` (i.e. `required` was set but the toggle is `false`); suppressed when `[hideInlineError]="true"`
 - No outlined `mat-form-field` chrome — visually denser and lighter than `<sd-input>` / `<sd-select>`
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-switch hideInlineError [(model)]="filter.active"></sd-switch>
+```
+
 ## Examples
 
 ### 1. Active flag with two-way binding

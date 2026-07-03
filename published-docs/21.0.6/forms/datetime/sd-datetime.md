@@ -100,6 +100,14 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - In `[viewed]="true"` mode: no input chrome — just the formatted datetime as plain text (or as a hyperlink if `hyperlink` is set)
 
+## Dense dashboard/filter usage
+
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+
+```html
+<sd-datetime size="sm" hideInlineError [(model)]="filter.scheduledAt"></sd-datetime>
+```
+
 ## Examples
 
 ### 1. Simple required datetime

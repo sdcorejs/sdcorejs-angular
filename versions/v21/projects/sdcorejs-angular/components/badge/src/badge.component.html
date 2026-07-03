@@ -2,6 +2,9 @@
 @let _tooltip = tooltip();
 @let _title = title();
 @let _description = description();
+@let _fontSet = fontSet();
+@let _iconSet = iconSet();
+@let _iconCssSize = iconCssSize();
 @let iconName = icon() || defaultIcon;
 @let isPointer = click.observed;
 
@@ -17,9 +20,13 @@
     (click)="onClick($event)"
     aria-hidden="true">
     @if (icon()) {
-      <span class="c-material-icon" [ngClass]="tagIconCombinedClasses()">
-        {{ iconName }}
-      </span>
+      <sd-icon
+        class="c-material-icon"
+        [name]="iconName"
+        [set]="_iconSet"
+        [fontSet]="_fontSet"
+        [size]="_iconCssSize"
+        [ngClass]="tagIconCombinedClasses()"></sd-icon>
     }
     <span class="c-badge-title">{{ _title }}</span>
   </div>
@@ -35,9 +42,13 @@
     aria-hidden="true">
     <div class="c-icon d-flex align-items-center">
       @if (icon()) {
-        <span class="c-material-icon mr-4" [ngClass]="tagIconCombinedClasses()">
-          {{ iconName }}
-        </span>
+        <sd-icon
+          class="c-material-icon mr-4"
+          [name]="iconName"
+          [set]="_iconSet"
+          [fontSet]="_fontSet"
+          [size]="_iconCssSize"
+          [ngClass]="tagIconCombinedClasses()"></sd-icon>
       }
       <div class="d-flex flex-column align-items-start">
         <span class="T14R c-badge-title">{{ _title }}</span>
@@ -58,9 +69,13 @@
     (click)="onClick($event)"
     aria-hidden="true">
     <div class="c-icon d-flex align-items-center">
-      <span class="c-material-icon mr-4" [ngClass]="iconCombinedClasses()">
-        {{ iconName }}
-      </span>
+      <sd-icon
+        class="c-material-icon mr-4"
+        [name]="iconName"
+        [set]="_iconSet"
+        [fontSet]="_fontSet"
+        [size]="_iconCssSize"
+        [ngClass]="iconCombinedClasses()"></sd-icon>
       <div class="d-flex flex-column">
         <span class="T14R c-badge-title">{{ _title }}</span>
         @if (_description) {

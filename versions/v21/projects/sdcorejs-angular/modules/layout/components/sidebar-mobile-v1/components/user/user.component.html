@@ -12,16 +12,14 @@
           <span class="m-user-email">{{ _userInfo?.email }}</span>
         }
       </div>
-      <mat-icon class="m-expand-icon" [class.m-expand-icon--open]="isExpanded()">
-        keyboard_arrow_down
-      </mat-icon>
+      <mat-icon class="m-expand-icon" [class.m-expand-icon--open]="isExpanded()"> keyboard_arrow_down </mat-icon>
     </button>
 
     @if (isExpanded()) {
       <div class="m-user-body">
         @if (changePasswordLayoutConfig) {
           <button class="m-user-action" (click)="changePassword()">
-            <mat-icon>lock_outline</mat-icon>
+            <mat-icon fontSet="material-icons-outlined">lock</mat-icon>
             <span>{{ 'core.module.layout.user.change-password' | translate }}</span>
           </button>
         }
