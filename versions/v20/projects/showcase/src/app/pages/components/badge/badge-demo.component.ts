@@ -5,7 +5,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
 import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
 
-interface IconSetOption {
+interface FontSetOption {
   value: SdIconSet;
   display: string;
 }
@@ -26,34 +26,34 @@ interface IconSetOption {
       </demo-section>
 
       <demo-section
-        heading="IconSet switch"
-        [props]="[{ name: 'iconSet', value: 'material-icons / material-icons-outlined / lucide' }, { name: 'type', value: 'icon / round / tag' }]"
-        note="Chon iconSet bang radio de so sanh alignment cua cung mot bo badge icon.">
+        heading="fontSet switch"
+        [props]="[{ name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' }, { name: 'type', value: 'icon / round / tag' }]"
+        note="Chon fontSet bang radio de so sanh alignment cua cung mot bo badge icon.">
         <div class="d-flex flex-column gap-16 w-full">
           <sd-radio
-            label="iconSet"
-            [items]="iconSetOptions"
+            label="fontSet"
+            [items]="fontSetOptions"
             valueField="value"
             displayField="display"
-            [(model)]="selectedIconSet"
-            [form]="iconSetForm"></sd-radio>
+            [(model)]="selectedFontSet"
+            [form]="fontSetForm"></sd-radio>
 
           <div class="d-flex flex-wrap align-items-center gap-16">
-            <sd-badge type="icon" success icon="check_circle" [iconSet]="selectedIconSet()" title="Approved"></sd-badge>
-            <sd-badge type="icon" info icon="visibility" [iconSet]="selectedIconSet()" title="Visible"></sd-badge>
-            <sd-badge type="icon" warning icon="warning" [iconSet]="selectedIconSet()" title="Warning"></sd-badge>
+            <sd-badge type="icon" success icon="check_circle" [fontSet]="selectedFontSet()" title="Approved"></sd-badge>
+            <sd-badge type="icon" info icon="visibility" [fontSet]="selectedFontSet()" title="Visible"></sd-badge>
+            <sd-badge type="icon" warning icon="warning" [fontSet]="selectedFontSet()" title="Warning"></sd-badge>
           </div>
 
           <div class="d-flex flex-wrap align-items-center gap-16">
-            <sd-badge type="round" success icon="check_circle" [iconSet]="selectedIconSet()" title="Round success"></sd-badge>
-            <sd-badge type="round" info icon="local_offer" [iconSet]="selectedIconSet()" title="Round offer"></sd-badge>
-            <sd-badge type="round" error icon="delete" [iconSet]="selectedIconSet()" title="Round error"></sd-badge>
+            <sd-badge type="round" success icon="check_circle" [fontSet]="selectedFontSet()" title="Round success"></sd-badge>
+            <sd-badge type="round" info icon="local_offer" [fontSet]="selectedFontSet()" title="Round offer"></sd-badge>
+            <sd-badge type="round" error icon="delete" [fontSet]="selectedFontSet()" title="Round error"></sd-badge>
           </div>
 
           <div class="d-flex flex-wrap align-items-center gap-16">
-            <sd-badge type="tag" primary icon="local_offer" [iconSet]="selectedIconSet()" title="Tag primary"></sd-badge>
-            <sd-badge type="tag" warning icon="warning" [iconSet]="selectedIconSet()" title="Tag warning"></sd-badge>
-            <sd-badge type="tag" secondary icon="visibility" [iconSet]="selectedIconSet()" title="Tag secondary"></sd-badge>
+            <sd-badge type="tag" primary icon="local_offer" [fontSet]="selectedFontSet()" title="Tag primary"></sd-badge>
+            <sd-badge type="tag" warning icon="warning" [fontSet]="selectedFontSet()" title="Tag warning"></sd-badge>
+            <sd-badge type="tag" secondary icon="visibility" [fontSet]="selectedFontSet()" title="Tag secondary"></sd-badge>
           </div>
         </div>
       </demo-section>
@@ -118,9 +118,9 @@ interface IconSetOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BadgeDemoComponent {
-  readonly iconSetForm = new FormGroup({});
-  readonly selectedIconSet = signal<SdIconSet>('lucide');
-  readonly iconSetOptions: IconSetOption[] = [
+  readonly fontSetForm = new FormGroup({});
+  readonly selectedFontSet = signal<SdIconSet>('lucide');
+  readonly fontSetOptions: FontSetOption[] = [
     { value: 'material-icons', display: 'Material filled' },
     { value: 'material-icons-outlined', display: 'Material outlined' },
     { value: 'lucide', display: 'Lucide' },

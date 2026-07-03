@@ -42,9 +42,7 @@
                 </div>
               </div>
               <div *ngIf="viewable" class="ml-6">
-                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-gray sd-suffix-icon mr-0" matSuffix
-                  >visibility</mat-icon
-                >
+                <sd-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-gray sd-suffix-icon mr-0" matSuffix name="visibility"></sd-icon>
               </div>
             </div>
           </ng-container>
@@ -59,13 +57,10 @@
                 </div>
               </div>
               <div class="ml-6">
-                <mat-icon
-                  *ngIf="allowViewDetail"
+                <sd-icon *ngIf="allowViewDetail"
                   (click)="onViewDetail($event, value)"
                   class="sl-icon-view cursor-pointer sd-suffix-icon text-grey mr-0"
-                  matSuffix
-                  >visibility</mat-icon
-                >
+                  matSuffix name="visibility"></sd-icon>
               </div>
             </div>
           </ng-template>
@@ -106,9 +101,7 @@
                 </div>
               </div>
               <div *ngIf="allowViewDetail && permission.detail" class="ml-6">
-                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-grey sd-suffix-icon mr-0" matSuffix
-                  >visibility</mat-icon
-                >
+                <sd-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-grey sd-suffix-icon mr-0" matSuffix name="visibility"></sd-icon>
               </div>
             </div>
           </ng-container>
@@ -123,15 +116,13 @@
                 </div>
               </div>
               <div *ngIf="allowViewDetail" class="ml-6">
-                <mat-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-grey sd-suffix-icon mr-0 ml-6" matSuffix
-                  >visibility</mat-icon
-                >
+                <sd-icon (click)="onViewDetail($event, value)" class="sl-icon-view cursor-pointer text-grey sd-suffix-icon mr-0 ml-6" matSuffix name="visibility"></sd-icon>
               </div>
             </div>
           </ng-template>
         </div>
       </ng-template>
-      <mat-icon *ngIf="!disabled && allowViewList && permission.list" (click)="onSearch($event)" sdSuffixIcon>search</mat-icon>
+      <sd-icon *ngIf="!disabled && allowViewList && permission.list" (click)="onSearch($event)" sdSuffixIcon name="search"></sd-icon>
     </sd-select>
   }
 

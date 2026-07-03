@@ -304,7 +304,7 @@
   transition: background 120ms;
   z-index: 3;
 
-  mat-icon {
+  sd-icon {
     font-size: 28px;
     width: 28px;
     height: 28px;
@@ -364,7 +364,7 @@
     cursor: pointer;
     transition: background 120ms;
 
-    mat-icon {
+    sd-icon {
       font-size: 20px;
       width: 20px;
       height: 20px;
@@ -482,7 +482,7 @@
     color: var(--sd-preview-danger);
     pointer-events: none;
 
-    mat-icon {
+    sd-icon {
       font-size: 24px;
       width: 24px;
       height: 24px;
@@ -581,7 +581,7 @@
     border: 1px solid var(--sd-preview-divider);
     background: rgba(255, 255, 255, 0.05);
 
-    mat-icon {
+    sd-icon {
       font-size: 48px;
       width: 48px;
       height: 48px;
@@ -597,7 +597,7 @@
       background: var(--sd-preview-danger-soft);
       border-color: var(--sd-preview-danger-border);
 
-      mat-icon {
+      sd-icon {
         color: var(--sd-preview-danger);
       }
     }
@@ -646,7 +646,7 @@
   font-weight: 500;
   transition: filter 120ms;
 
-  mat-icon {
+  sd-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;

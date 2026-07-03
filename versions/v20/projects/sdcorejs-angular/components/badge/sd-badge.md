@@ -35,8 +35,7 @@ Status / label indicator — shows a state (success / warning / error / info / �
 | `warning` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Shortcut for `color="warning"`. |
 | `error` | `boolean` | `false` | `transform: booleanAttribute` — bare attribute = true. Shortcut for `color="error"`. |
 | `icon` | `string \| null \| undefined` | `undefined` | Icon name rendered through `<sd-icon>`. If unset, uses default `fiber_manual_record` for icon mode. |
-| `iconSet` | `'material-icons' \| 'material-icons-outlined' \| 'lucide' \| null \| undefined` | `undefined` | Passed to `<sd-icon>` as `set`. Leave unset to use `provideSdIcon` / `SdIcon` default configuration. |
-| `fontSet` | `'material-icons' \| 'material-icons-outlined' \| 'material-icons-round' \| 'material-icons-sharp' \| null \| undefined` | `undefined` | Optional Material icon font override passed to `<sd-icon>`. Use only when a specific Material font family is required. Falsy values become `undefined`. |
+| `fontSet` | `SdIconSet` | `undefined` | Optional icon set override passed to `<sd-icon>`. Leave unset to inherit `provideSdIcon({ defaultFontSet })`. |
 | `title` | `string \| number \| null \| undefined` | `undefined` | Visible label or count. |
 | `description` | `string \| null \| undefined` | `undefined` | Optional secondary line shown under `title` (only `tag` and `icon` types). |
 | `tooltip` | `string \| null \| undefined` | `undefined` | Material tooltip text (position above; multiline supported). |

@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -13,6 +12,7 @@ import { Operator } from '@sdcorejs/utils/models';
 
 import { SdQueryInlineValueChip } from '../inline-value-chip/inline-value-chip.component';
 import { BuildingChip } from '../../query-bar.model';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type Density = 'compact' | 'comfortable';
 
@@ -36,9 +36,8 @@ type Density = 'compact' | 'comfortable';
   styleUrl: './build-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
-    MatIconModule,
     SdOperator,
     SdDate,
     SdDateRange,

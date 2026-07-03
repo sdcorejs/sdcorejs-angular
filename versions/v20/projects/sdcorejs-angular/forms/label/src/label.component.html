@@ -3,13 +3,10 @@
     <div style="display: flex; align-items: center; gap: 4px">
       <span class="T14M">{{ label }}</span>
       @if (helperText) {
-        <mat-icon
-          fontSet="material-icons-outlined"
+        <sd-icon
           style="height: 1rem; width: 1rem; font-size: 1rem"
           [matTooltip]="helperText"
-          matTooltipPosition="below"
-          >info</mat-icon
-        >
+          matTooltipPosition="below" name="info"></sd-icon>
       }
     </div>
     @if (required) {

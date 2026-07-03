@@ -11,7 +11,7 @@
       [attr.data-autoId]="itemAutoId(section)"
       tabindex="0">
       @if (section.icon()) {
-        <mat-icon class="c-anchor-list-item-icon">{{ section.icon() }}</mat-icon>
+        <sd-icon class="c-anchor-list-item-icon" [name]="section.icon()"></sd-icon>
       }
       <div class="c-anchor-list-item-text" [class.ellipsis]="ellipsis()">
         {{ section.title() }}

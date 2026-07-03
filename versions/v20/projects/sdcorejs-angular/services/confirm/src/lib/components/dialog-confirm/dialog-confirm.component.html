@@ -1,8 +1,6 @@
 <div mat-dialog-title class="">
   @if (data.icon) {
-    <mat-icon>
-      {{ data.icon }}
-    </mat-icon>
+    <sd-icon [name]="data.icon"></sd-icon>
   }
   <span class="T24M" [innerHtml]="data.title || 'Confirm'"></span>
 </div>

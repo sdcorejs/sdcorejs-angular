@@ -19,7 +19,6 @@ import {
 } from '@angular/core';
 import { FormGroup, NgForm, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -40,6 +39,7 @@ import {
 import { FilterDocumentPipe, FilterImagePipe } from './pipes';
 import { IsImage, PreviewFile, UploadFileService } from './services';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 // https://stackoverflow.com/questions/4459379/preview-an-image-before-it-is-uploaded
 @Component({
@@ -47,10 +47,9 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
   templateUrl: './upload-file.component.html',
   styleUrl: './upload-file.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     MatButtonModule,
-    MatIconModule,
     DragDropModule,
     SdLabel,
     PreviewComponent,

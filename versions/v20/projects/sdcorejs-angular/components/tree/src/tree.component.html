@@ -26,7 +26,7 @@
           @if (node.isLoading) {
             <mat-progress-spinner diameter="16" mode="indeterminate" />
           } @else if (node.hasChildren) {
-            <mat-icon>{{ node.isExpanded ? 'expand_more' : 'chevron_right' }}</mat-icon>
+            <sd-icon [name]="node.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
           }
         </button>
 
@@ -41,7 +41,7 @@
         }
 
         @if (node.icon) {
-          <mat-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon">{{ node.icon }}</mat-icon>
+          <sd-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon" [name]="node.icon"></sd-icon>
         }
 
         <div class="sd-tree__content" [class.sd-tree__content--custom]="_resolvedItemTemplate" [attr.data-autoid]="node.autoIds.label">
@@ -61,7 +61,7 @@
           [matMenuTriggerFor]="commandMenu"
           [attr.data-autoid]="node.autoIds.command"
           (click)="$event.stopPropagation()">
-          <mat-icon class="c-icon" fontSet="material-icons-outlined">more_vert</mat-icon>
+          <sd-icon class="c-icon" name="more_vert"></sd-icon>
         </button>
         <mat-menu #commandMenu="matMenu" class="sd-tree__command-menu">
           @for (command of node.commands; track command.key) {
@@ -73,13 +73,10 @@
               [attr.data-autoid]="command.autoId"
               (click)="command.command.click(node.data)">
               <span class="sd-tree__command-menu-content">
-                <mat-icon
-                  class="c-icon sd-tree__command-menu-icon"
+                <sd-icon class="c-icon sd-tree__command-menu-icon"
                   [class.sd-tree__command-menu-icon--default]="command.defaultColor"
                   [color]="command.color"
-                  [fontSet]="command.fontSet">
-                  {{ command.icon }}
-                </mat-icon>
+                  [fontSet]="command.fontSet" [name]="command.icon"></sd-icon>
                 <span class="sd-tree__command-title">{{ command.title }}</span>
               </span>
             </button>

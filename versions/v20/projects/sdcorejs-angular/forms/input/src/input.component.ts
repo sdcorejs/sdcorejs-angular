@@ -25,7 +25,6 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdView } from '@sdcorejs/angular/components/view';
@@ -58,6 +57,7 @@ const LEGACY_PATTERN_ALIAS: Record<string, ValidationPatternType> = {
   IDVN_OR_PASSPORT: 'VN_ID_OR_PASSPORT',
 };
 import { Subscription } from 'rxjs';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-input',
@@ -66,13 +66,12 @@ import { Subscription } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
-  imports: [
+  imports: [SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule,
     MatTooltipModule,
     MatButtonModule,
     SdLabel,

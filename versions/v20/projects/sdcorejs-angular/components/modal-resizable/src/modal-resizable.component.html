@@ -19,26 +19,26 @@
         <div class="modal-resizable__actions">
           @if (!isMinimum()) {
             <button type="button" class="c-action--white c-min" (click)="minimize()" mat-icon-button title="Thu nhỏ">
-              <mat-icon>remove</mat-icon>
+              <sd-icon name="remove"></sd-icon>
             </button>
           }
           @if (isMinimum()) {
             <button type="button" class="c-action--white c-max" (click)="maximize()" mat-icon-button title="Phóng to">
-              <mat-icon>remove</mat-icon>
+              <sd-icon name="remove"></sd-icon>
             </button>
           }
           @if (!isMaximum()) {
             <button type="button" class="c-action--white" (click)="toggleMaximum()" mat-icon-button title="Toàn màn hình">
-              <mat-icon>open_in_full</mat-icon>
+              <sd-icon name="open_in_full"></sd-icon>
             </button>
           }
           @if (isMaximum()) {
             <button type="button" class="c-action--white" (click)="toggleMaximum()" mat-icon-button title="Thoát toàn màn hình">
-              <mat-icon>fullscreen_exit</mat-icon>
+              <sd-icon name="fullscreen_exit"></sd-icon>
             </button>
           }
           <button type="button" class="c-action--white" (click)="close()" mat-icon-button title="Đóng">
-            <mat-icon>close</mat-icon>
+            <sd-icon name="close"></sd-icon>
           </button>
         </div>
       </div>

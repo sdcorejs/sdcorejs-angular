@@ -28,7 +28,7 @@ Standard action button — used everywhere a user triggers an action (save, canc
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Optional. Generates `data-autoId="components-button-<value>"` for E2E selectors. |
 | `type` | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'` | Visual variant. `fill`=primary action, `light`=default, `outline`=secondary, `link`=text-style. |
-| `color` | `Color` | `'secondary'` | Material color tokens (`primary`, `accent`, `warn`, `success`, `info`, `secondary`, …). |
+| `color` | `Color \| 'black'` | `'secondary'` | Material color tokens (`primary`, `accent`, `warn`, `success`, `info`, `secondary`, ...). `black` is a button-only option. |
 | `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Height: sm ≈ 28px, md ≈ 36px, lg ≈ 44px. |
 | `htmlType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Sets the underlying `<button type="...">`. Use `'submit'` only when the button is INSIDE a `<form>`. |
 | `title` | `string` | `undefined` | Visible label. Required unless icon-only. |
@@ -36,7 +36,7 @@ Standard action button — used everywhere a user triggers an action (save, canc
 | `tooltip` | `string` | `undefined` | Hover tooltip (Material tooltip, position above). |
 | `prefixIcon` | `string` | `undefined` | Icon name (Material font set). Renders left of title. |
 | `suffixIcon` | `string` | `undefined` | Icon name. Renders right of title. |
-| `fontSet` | `MaterialIconFontSet` | `DefaultMaterialIconFontSet` | Override Material icon font set (rarely needed). |
+| `fontSet` | `SdIconSet` | `undefined` | Optional icon set override passed to `<sd-icon>`. Leave unset to inherit `provideSdIcon({ defaultFontSet })`. |
 | `disabled` | `boolean` | `false` | Disables clicks AND adds `.sd-disabled` host class. |
 | `loading` | `boolean` | `false` | Shows spinner instead of prefix icon; clicks suppressed. |
 | `block` | `boolean` | `false` | Stretches to 100% width of parent (`.sd-block` host class). |

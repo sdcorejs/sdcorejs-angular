@@ -12,7 +12,7 @@
       <ng-template mat-tab-label>
         <span class="sd-tab__label">
           @if (tab.icon(); as ic) {
-            <mat-icon class="sd-tab__icon">{{ ic }}</mat-icon>
+            <sd-icon class="sd-tab__icon" [name]="ic"></sd-icon>
           }
           <span class="sd-tab__text">{{ tab.label() }}</span>
           @let _badge = tab.badge();
@@ -20,13 +20,10 @@
             <span class="sd-tab__badge">{{ _badge }}</span>
           }
           @if (tab.closable()) {
-            <mat-icon
-              class="sd-tab__close"
+            <sd-icon class="sd-tab__close"
               role="button"
               aria-label="Close tab"
-              (click)="onClose(tab, i, $event)">
-              close
-            </mat-icon>
+              (click)="onClose(tab, i, $event)" name="close"></sd-icon>
           }
         </span>
       </ng-template>

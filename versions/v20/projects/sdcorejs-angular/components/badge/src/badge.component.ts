@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Output, booleanAttrib
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { Color, Size } from '@sdcorejs/utils/models';
-import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 
 // Export các Type để dùng chung
 export type SdBadgeType = 'tag' | 'round' | 'icon';
@@ -37,11 +36,7 @@ export class SdBadge {
   warning = input(false, { transform: booleanAttribute });
   error = input(false, { transform: booleanAttribute });
 
-  fontSet = input<MaterialIconFontSet | undefined, MaterialIconFontSet | undefined | null>(undefined, {
-    transform: value => value ?? undefined,
-  });
-
-  iconSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
+  fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
     transform: value => value ?? undefined,
   });
 

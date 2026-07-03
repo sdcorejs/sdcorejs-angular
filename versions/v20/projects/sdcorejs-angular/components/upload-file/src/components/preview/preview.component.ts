@@ -5,13 +5,14 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { PreviewFile } from '../../services';
 import { MatIcon } from '@angular/material/icon';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'preview',
   templateUrl: './preview.component.html',
   styleUrl: './preview.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdModal, SdButton, CommonModule, MatIcon, TranslatePipe],
+  imports: [SdIcon, SdModal, SdButton, CommonModule, MatIcon, TranslatePipe],
 })
 export class PreviewComponent {
   @ViewChild(SdModal) modal!: SdModal;

@@ -122,8 +122,8 @@ Màu được định nghĩa dưới dạng **CSS custom properties** với pref
 | `error`            | `--sd-error`           | `#F82C13`   | Lỗi, validation fail, trạng thái nguy hiểm |
 | `error-light`      | `--sd-error-light`     | `#FED5D0`   | Background nhẹ của error |
 | `error-dark`       | `--sd-error-dark`      | `#BA200E`   | Hover state của error |
-| `secondary`        | `--sd-secondary`       | `#212121`   | Text phụ, icon secondary |
-| `secondary-light`  | `--sd-secondary-light` | `#E9E9E9`   | Background nhẹ |
+| `secondary`        | `--sd-secondary`       | `#757575`   | Text phụ, icon secondary |
+| `secondary-light`  | `--sd-secondary-light` | `#F2F2F2`   | Background nhẹ |
 | `secondary-dark`   | `--sd-secondary-dark`  | `#000000`   | — |
 | `light`            | `--sd-light`           | `#F8F9FA`   | Background trang, surface nhẹ |
 | `dark`             | `--sd-dark`            | `#343A40`   | Text đậm, dark surface |

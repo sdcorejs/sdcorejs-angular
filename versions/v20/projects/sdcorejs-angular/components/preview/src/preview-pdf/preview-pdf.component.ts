@@ -18,7 +18,6 @@ import {
   viewChildren,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   PdfErrorEvent,
@@ -46,6 +45,7 @@ import {
 // must point pdfjsLib.GlobalWorkerOptions.workerSrc to their own copy.
 
 import * as pdfjsLib from 'pdfjs-dist';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /**
  * Minimal pdfjs surface the component depends on. We wrap pdfjs in a DI token
@@ -113,7 +113,7 @@ interface PdfDocumentProxy {
 @Component({
   selector: 'sd-preview-pdf',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatIconModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, FormsModule, TranslatePipe],
   templateUrl: './preview-pdf.component.html',
   styleUrl: './preview-pdf.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

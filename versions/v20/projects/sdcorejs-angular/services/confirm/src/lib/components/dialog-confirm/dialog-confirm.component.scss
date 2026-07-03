@@ -15,7 +15,7 @@
   justify-content: flex-start;
 }
 
-:host ::ng-deep .mat-dialog-title .mat-icon {
+:host ::ng-deep .mat-dialog-title sd-icon {
   margin-right: 5px;
 }
 
@@ -23,18 +23,18 @@
   display: block;
 }
 
-:host ::ng-deep .mat-dialog-title .mat-icon.info {
+:host ::ng-deep .mat-dialog-title sd-icon.info {
   color: map.get(color.$color_map, 'info');
 }
 
-:host ::ng-deep .mat-dialog-title .mat-icon.warning {
+:host ::ng-deep .mat-dialog-title sd-icon.warning {
   color: map.get(color.$color_map, 'warning');
 }
 
-:host ::ng-deep .mat-dialog-title .mat-icon.success {
+:host ::ng-deep .mat-dialog-title sd-icon.success {
   color: map.get(color.$color_map, 'success');
 }
 
-:host ::ng-deep .mat-dialog-title .mat-icon.error {
+:host ::ng-deep .mat-dialog-title sd-icon.error {
   color: map.get(color.$color_map, 'error');
 }

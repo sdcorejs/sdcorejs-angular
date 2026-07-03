@@ -13,11 +13,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { Color } from '@sdcorejs/utils/models';
-import { MaterialIconFontSet } from '@sdcorejs/angular/utilities/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdInformActionDirective } from './inform-action.directive';
+import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 
 // why: mỗi color có icon trạng thái mặc định khi consumer không truyền [icon].
 const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
@@ -35,7 +34,7 @@ const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
   styleUrl: './inform.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, TranslatePipe],
 })
 export class SdInform {
   // 1. INPUTS
@@ -55,8 +54,8 @@ export class SdInform {
   icon = input<string | undefined>();
   hideIcon = input(false, { transform: booleanAttribute });
 
-  fontSet = input<MaterialIconFontSet, MaterialIconFontSet | undefined | null>('material-icons', {
-    transform: value => value || 'material-icons',
+  fontSet = input<SdIconSet | undefined, SdIconSet | undefined | null>(undefined, {
+    transform: value => value ?? undefined,
   });
 
   closable = input(false, { transform: booleanAttribute });
@@ -102,16 +101,6 @@ export class SdInform {
   effectiveIcon = computed<string | null>(() => {
     if (this.hideIcon()) return null;
     return this.icon() || SD_INFORM_DEFAULT_ICON[this.effectiveColor()];
-  });
-
-  fontSetClasses = computed(() => {
-    const f = this.fontSet();
-    return {
-      'material-icons': f === 'material-icons',
-      'material-icons-outlined': f === 'material-icons-outlined',
-      'material-icons-round': f === 'material-icons-round',
-      'material-icons-sharp': f === 'material-icons-sharp',
-    };
   });
 
   hasActionSlot = computed(() => !!this.actionSlot());

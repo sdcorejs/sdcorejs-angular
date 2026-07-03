@@ -17,8 +17,8 @@ import { CdkPortal, DomPortalOutlet, PortalModule } from '@angular/cdk/portal';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
 import { SdLoadingService } from '@sdcorejs/angular/services';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'sd-modal-resizable',
@@ -26,7 +26,7 @@ import { SdLoadingService } from '@sdcorejs/angular/services';
   styleUrl: './modal-resizable.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatDialogModule, MatButtonModule, PortalModule],
+  imports: [SdIcon, CommonModule, MatDialogModule, MatButtonModule, PortalModule],
 })
 export class SdModalResizable {
   readonly id = `I${Utilities.generateUuid()}`;

@@ -206,7 +206,7 @@
   white-space: nowrap;
   flex-shrink: 0;
 
-  mat-icon {
+  sd-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
@@ -389,7 +389,7 @@
     flex-shrink: 0;
     transition: background 120ms, color 120ms;
 
-    mat-icon {
+    sd-icon {
       font-size: 14px;
       width: 14px;
       height: 14px;
@@ -422,7 +422,7 @@
     text-align: center;
     color: var(--sd-pdf-fg-subtle);
 
-    mat-icon {
+    sd-icon {
       font-size: 28px;
       width: 28px;
       height: 28px;
@@ -601,7 +601,7 @@
     flex-shrink: 0;
     transition: background 120ms, color 120ms;
 
-    mat-icon {
+    sd-icon {
       font-size: 18px;
       width: 18px;
       height: 18px;
@@ -711,7 +711,7 @@
     justify-content: center;
     border: 1px solid var(--sd-pdf-divider);
 
-    mat-icon {
+    sd-icon {
       font-size: 48px;
       width: 48px;
       height: 48px;
@@ -720,7 +720,7 @@
     &--muted {
       background: rgba(255, 255, 255, 0.05);
 
-      mat-icon {
+      sd-icon {
         color: var(--sd-pdf-fg-subtle);
       }
     }
@@ -729,7 +729,7 @@
       background: var(--sd-pdf-danger-soft);
       border-color: var(--sd-pdf-danger-border);
 
-      mat-icon {
+      sd-icon {
         color: var(--sd-pdf-danger);
       }
     }
@@ -867,7 +867,7 @@
   font-weight: 500;
   transition: filter 120ms;
 
-  mat-icon {
+  sd-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;
@@ -896,7 +896,7 @@
   font-weight: 500;
   transition: background 120ms;
 
-  mat-icon {
+  sd-icon {
     font-size: 18px;
     width: 18px;
     height: 18px;

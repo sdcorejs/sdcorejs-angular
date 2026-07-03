@@ -68,7 +68,7 @@
   visibility: hidden;
 }
 
-.sd-tree__toggle mat-icon {
+.sd-tree__toggle sd-icon {
   width: 20px;
   height: 20px;
   font-size: 20px;
@@ -140,7 +140,7 @@
   opacity: 1;
 }
 
-.sd-tree__command-trigger mat-icon.c-icon,
+.sd-tree__command-trigger sd-icon.c-icon,
 .sd-tree__command-menu-icon {
   width: 16px;
   height: 16px;
@@ -148,7 +148,7 @@
   line-height: 16px;
 }
 
-.sd-tree__command-trigger mat-icon.c-icon,
+.sd-tree__command-trigger sd-icon.c-icon,
 .sd-tree__command-menu-icon--default {
   color: map.get(color.$color_map, 'black400') !important;
 }

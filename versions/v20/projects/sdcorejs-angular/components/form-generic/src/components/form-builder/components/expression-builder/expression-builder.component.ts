@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { MatIconModule } from '@angular/material/icon';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -39,7 +38,6 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     ExpressionQueryPipe,
     SdDatetime,
     SdSuffixDefDirective,
-    MatIconModule,
     TranslatePipe,
   ],
 })

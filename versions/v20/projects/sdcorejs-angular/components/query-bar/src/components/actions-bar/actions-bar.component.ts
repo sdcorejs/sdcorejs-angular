@@ -1,9 +1,9 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, input, model, output } from '@angular/core';
-import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { SdQuery, SdQueryLogic, SdSavedFilter } from '../../query-bar.model';
 import { SdQuerySavedFiltersMenu } from '../saved-filters-menu/saved-filters-menu.component';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 /**
  * Right-pinned toolbar for `sd-query-bar`: AND/OR connector toggle, clear-all,
@@ -21,7 +21,7 @@ import { SdQuerySavedFiltersMenu } from '../saved-filters-menu/saved-filters-men
   styleUrl: './actions-bar.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MatIconModule, MatTooltipModule, SdQuerySavedFiltersMenu],
+  imports: [SdIcon, MatTooltipModule, SdQuerySavedFiltersMenu],
 })
 export class SdQueryActionsBar {
   // AND/OR toggle —
