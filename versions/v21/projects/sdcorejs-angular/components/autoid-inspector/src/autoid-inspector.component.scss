@@ -1,24 +1,24 @@
 // Sử dụng CSS custom properties từ @sdcorejs/angular theme (--sd-*).
 // Fallback hex chỉ áp dụng khi consumer chưa import sd-core.scss.
-$primary: var(--sd-primary, #2a66f4);
-$primary-light: var(--sd-primary-light, #eaf1ff);
-$primary-dark: var(--sd-primary-dark, #1c4ad9);
-$info: var(--sd-info, #2962ff);
-$info-light: var(--sd-info-light, #e7e9ff);
-$success: var(--sd-success, #4caf50);
-$success-light: var(--sd-success-light, #dbefdc);
-$success-dark: var(--sd-success-dark, #39833c);
-$warning: var(--sd-warning, #ff9600);
-$warning-light: var(--sd-warning-light, #ffeacc);
-$warning-dark: var(--sd-warning-dark, #bf7000);
-$error: var(--sd-error, #f82c13);
-$error-light: var(--sd-error-light, #fed5d0);
-$error-dark: var(--sd-error-dark, #ba200e);
-$black500: var(--sd-black500, #212121);
-$black400: var(--sd-black400, #757575);
-$black300: var(--sd-black300, #bfbfbf);
-$black200: var(--sd-black200, #e6e6e6);
-$black100: var(--sd-black100, #f2f2f2);
+$primary: var(--sd-primary, #005cbb);
+$primary-light: var(--sd-primary-light, #d7e3ff);
+$primary-dark: var(--sd-primary-dark, #00458f);
+$info: var(--sd-info, #006a6a);
+$info-light: var(--sd-info-light, #d4f7f6);
+$success: var(--sd-success, #2e7d32);
+$success-light: var(--sd-success-light, #d8f0d3);
+$success-dark: var(--sd-success-dark, #1b5e20);
+$warning: var(--sd-warning, #a66300);
+$warning-light: var(--sd-warning-light, #ffddb0);
+$warning-dark: var(--sd-warning-dark, #7a4d00);
+$error: var(--sd-error, #ba1a1a);
+$error-light: var(--sd-error-light, #ffdad6);
+$error-dark: var(--sd-error-dark, #93000a);
+$black500: var(--sd-black500, #1a1b1f);
+$black400: var(--sd-black400, #44474f);
+$black300: var(--sd-black300, #74777f);
+$black200: var(--sd-black200, #c4c6d0);
+$black100: var(--sd-black100, #e7e8ed);
 
 :host {
   position: fixed;
@@ -846,7 +846,7 @@ $black100: var(--sd-black100, #f2f2f2);
 
       &:focus {
         border-color: $primary;
-        box-shadow: 0 0 0 2px rgba(42, 102, 244, 0.14);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--sd-primary, #005cbb) 18%, transparent);
       }
     }
   }

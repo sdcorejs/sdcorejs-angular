@@ -5,7 +5,7 @@
   --sd-tree-row-height: 44px;
   --sd-tree-control-size: 28px;
   --sd-tree-indent-size: 20px;
-  --sd-tree-selected-bg: color-mix(in srgb, var(--sd-primary, #2a66f4) 12%, #ffffff);
+  --sd-tree-selected-bg: color-mix(in srgb, var(--sd-primary, #005cbb) 12%, #ffffff);
   --sd-tree-hover-bg: rgba(15, 23, 42, 0.04);
   --sd-tree-text: #102047;
   --sd-tree-muted: #5f6f89;
@@ -82,10 +82,10 @@
   transform: scale(0.85);
   transform-origin: center;
   --mdc-checkbox-selected-checkmark-color: #ffffff;
-  --mdc-checkbox-selected-focus-icon-color: var(--sd-primary, #2a66f4);
-  --mdc-checkbox-selected-hover-icon-color: var(--sd-primary, #2a66f4);
-  --mdc-checkbox-selected-icon-color: var(--sd-primary, #2a66f4);
-  --mdc-checkbox-selected-pressed-icon-color: var(--sd-primary, #2a66f4);
+  --mdc-checkbox-selected-focus-icon-color: var(--sd-primary, #005cbb);
+  --mdc-checkbox-selected-hover-icon-color: var(--sd-primary, #005cbb);
+  --mdc-checkbox-selected-icon-color: var(--sd-primary, #005cbb);
+  --mdc-checkbox-selected-pressed-icon-color: var(--sd-primary, #005cbb);
 }
 
 .sd-tree__item-icon {

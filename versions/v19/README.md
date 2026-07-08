@@ -224,13 +224,18 @@ Same source, same API surface — peer dependency major chỉ khác Angular majo
 
 ## 🎨 Theming
 
-Sử dụng SCSS tokens + Material theme. Override qua CSS variables:
+Sử dụng SCSS tokens + Angular Material M3 theme/token system (`mat.theme`). Override semantic tokens qua CSS variables và ưu tiên đọc `--mat-sys-*` cho style liên quan Angular Material:
 
 ```scss
 :root {
-  --sd-color-primary: #1f6feb;
-  --sd-color-success: #1f7a3e;
-  --sd-color-error: #b32626;
+  --sd-primary: #1f6feb;
+  --sd-success: #1f7a3e;
+  --sd-error: #b32626;
+}
+
+.app-link {
+  color: var(--mat-sys-primary);
+  outline-color: var(--mat-sys-outline);
 }
 ```
 

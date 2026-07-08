@@ -1,11 +1,10 @@
-@use '@angular/material' as mat;
-
-html, body {
+html,
+body {
   height: 100%;
   margin: 0;
   font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background: #f5f7fa;
-  color: #1a1a1a;
+  background: var(--mat-sys-surface, #f5f7fa);
+  color: var(--mat-sys-on-surface, #1a1a1a);
 }
 
 * {
@@ -13,23 +12,16 @@ html, body {
 }
 
 a {
-  color: #1565c0;
+  color: var(--mat-sys-primary, #005cbb);
   text-decoration: none;
-  &:hover { text-decoration: underline; }
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
-h1, h2, h3 { margin: 0; }
-
-@include mat.core();
-
-$showcase-primary: mat.m2-define-palette(mat.$m2-blue-palette, 700);
-$showcase-accent: mat.m2-define-palette(mat.$m2-pink-palette, A200);
-$showcase-warn: mat.m2-define-palette(mat.$m2-red-palette);
-
-$showcase-theme: mat.m2-define-light-theme((
-  color: (primary: $showcase-primary, accent: $showcase-accent, warn: $showcase-warn),
-  typography: mat.m2-define-typography-config(),
-  density: 0,
-));
-
-@include mat.all-component-themes($showcase-theme);
+h1,
+h2,
+h3 {
+  margin: 0;
+}

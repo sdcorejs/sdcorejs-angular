@@ -45,7 +45,7 @@ import type { Operator } from '@sdcorejs/angular/utilities/models';
     .row-value {
       font-size: 13px;
       font-weight: 500;
-      color: #1565c0;
+      color: var(--sd-primary, #005cbb);
       font-family: monospace;
     }
   `],

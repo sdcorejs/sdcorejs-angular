@@ -27,9 +27,9 @@
 
   // Xử lý icon
   .sd-suffix-icon {
-    color: #757575;
+    color: map.get(color.$color_map, 'text-secondary');
     &:hover {
-      color: #616161;
+      color: map.get(color.$color_map, 'text-primary');
     }
   }
 
@@ -47,11 +47,11 @@
     padding: 0;
     background: transparent;
     cursor: pointer;
-    color: #757575;
+    color: map.get(color.$color_map, 'text-secondary');
     transition: background-color 80ms ease, color 80ms ease;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.06);
+      background: color-mix(in srgb, map.get(color.$color_map, 'on-surface') 8%, transparent);
       color: map.get(color.$color_map, 'error');
     }
 

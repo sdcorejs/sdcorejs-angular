@@ -42,7 +42,7 @@
     width: 320px;
 
     &:focus {
-      border-color: #1565c0;
+      border-color: var(--sd-primary, #005cbb);
       outline: none;
     }
   }

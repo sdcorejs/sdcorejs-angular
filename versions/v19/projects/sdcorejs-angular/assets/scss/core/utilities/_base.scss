@@ -37,8 +37,8 @@ body {
   font-size: 14px;
   font-weight: 400;
   line-height: 1.5;
-  color: #212529;
-  background-color: #fff;
+  color: var(--sd-on-surface, var(--mat-sys-on-surface, #1a1b1f));
+  background-color: var(--sd-surface, var(--mat-sys-surface, #fdfbff));
   text-align: left;
 }
 
@@ -128,7 +128,7 @@ sup { top: -0.5em; }
 // 7. Links
 // --------------------------------------------------------------------------
 a {
-  color: #007bff;
+  color: var(--sd-primary, var(--mat-sys-primary, #005cbb));
   text-decoration: none;
   background-color: transparent; // Xóa nền xám trên link active trong IE 10
 }

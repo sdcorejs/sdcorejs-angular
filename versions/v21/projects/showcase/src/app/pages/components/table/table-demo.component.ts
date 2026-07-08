@@ -399,7 +399,7 @@ const TASKS: Task[] = [
     .expand-box {
       padding: 12px 16px;
       background: #fafafa;
-      border-left: 3px solid #1976d2;
+      border-left: 3px solid var(--sd-primary, #005cbb);
     }
     .expand-title {
       font-weight: 600;
@@ -419,7 +419,7 @@ const TASKS: Task[] = [
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #1976d2;
+      background: var(--sd-primary, #005cbb);
       color: #fff;
       display: inline-flex;
       align-items: center;

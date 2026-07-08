@@ -661,7 +661,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
 
             /* Style Biến (Giữ nguyên giao diện đẹp của bạn) */
             .variable-widget {
-              color: #1565c0; font-weight: bold;
+              color: var(--sd-primary, #005cbb); font-weight: bold;
               background: #e3f2fd; padding: 0 4px; border-radius: 4px;
               border: 1px solid #90caf9;
             }

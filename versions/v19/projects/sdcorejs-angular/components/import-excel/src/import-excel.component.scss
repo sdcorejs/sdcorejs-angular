@@ -88,13 +88,13 @@
   color: #6c757d;
 
   &:hover {
-    background-color: #e3f2fd; // Xanh nhạt khi hover
-    border-color: #2196f3;
-    color: #1976d2;
+    background-color: var(--sd-primary-light, #d7e3ff);
+    border-color: var(--sd-primary, #005cbb);
+    color: var(--sd-primary, #005cbb);
 
     .empty-icon {
       transform: scale(1.1);
-      color: #1976d2;
+      color: var(--sd-primary, #005cbb);
     }
 
     .text-link {

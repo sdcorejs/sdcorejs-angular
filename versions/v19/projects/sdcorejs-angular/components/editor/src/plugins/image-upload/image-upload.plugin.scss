@@ -52,7 +52,7 @@
         left: 0;
         width: 30% !important;
         height: 3px;
-        background: var(--sd-color-primary, #1565c0);
+        background: var(--sd-color-primary, var(--sd-primary, #005cbb));
         border-radius: 2px;
         z-index: 10;
         pointer-events: none;
@@ -87,7 +87,7 @@
           height: 28px;
           margin: -14px 0 0 -14px;
           border: 3px solid rgba(255, 255, 255, 0.5);
-          border-top-color: var(--sd-color-primary, #1565c0);
+          border-top-color: var(--sd-color-primary, var(--sd-primary, #005cbb));
           border-radius: 50%;
           animation: sd-spinner 0.75s linear infinite;
           z-index: 11;

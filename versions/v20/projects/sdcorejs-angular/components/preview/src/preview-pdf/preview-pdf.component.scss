@@ -20,19 +20,19 @@
   --sd-pdf-fg-muted: rgba(255, 255, 255, 0.6);
   --sd-pdf-fg-subtle: rgba(255, 255, 255, 0.4);
 
-  // Accent + status. WHY var() with fallback: consumer apps define
+  // Primary + status. WHY var() with fallback: consumer apps define
   // --sd-primary / --sd-error / --sd-success at :root via the design system.
   // Fallbacks keep the viewer usable when those tokens aren't defined.
-  --sd-pdf-accent: var(--sd-primary, #3b82f6);
-  --sd-pdf-accent-soft: rgba(59, 130, 246, 0.2);
-  --sd-pdf-danger: var(--sd-error, #ef4444);
-  --sd-pdf-success: var(--sd-success, #22c55e);
+  --sd-pdf-primary: var(--sd-pdf-accent, var(--sd-primary, #005cbb));
+  --sd-pdf-primary-soft: var(--sd-pdf-accent-soft, rgba(0, 92, 187, 0.18));
+  --sd-pdf-danger: var(--sd-error, #ba1a1a);
+  --sd-pdf-success: var(--sd-success, #2e7d32);
 
   // Derived danger surfaces — rgba() transparency lives separately from the
   // consumer-overridable hex (CSS can't compose rgba on top of a var()).
-  --sd-pdf-danger-soft: rgba(239, 68, 68, 0.1);
-  --sd-pdf-danger-border: rgba(239, 68, 68, 0.3);
-  --sd-pdf-danger-tint: rgba(239, 68, 68, 0.15);
+  --sd-pdf-danger-soft: rgba(186, 26, 26, 0.1);
+  --sd-pdf-danger-border: rgba(186, 26, 26, 0.3);
+  --sd-pdf-danger-tint: rgba(186, 26, 26, 0.15);
 
   // Hover surface — flipped to a black overlay in light theme below.
   --sd-pdf-hover-bg: rgba(255, 255, 255, 0.1);
@@ -65,14 +65,14 @@
   --sd-pdf-fg-muted: rgba(0, 0, 0, 0.62);
   --sd-pdf-fg-subtle: rgba(0, 0, 0, 0.42);
 
-  --sd-pdf-accent: var(--sd-primary, #1f49bf);
-  --sd-pdf-accent-soft: rgba(31, 73, 191, 0.18);
-  --sd-pdf-danger: var(--sd-error, #ef4444);
-  --sd-pdf-success: var(--sd-success, #22c55e);
+  --sd-pdf-primary: var(--sd-pdf-accent, var(--sd-primary, #005cbb));
+  --sd-pdf-primary-soft: var(--sd-pdf-accent-soft, rgba(0, 92, 187, 0.16));
+  --sd-pdf-danger: var(--sd-error, #ba1a1a);
+  --sd-pdf-success: var(--sd-success, #2e7d32);
 
-  --sd-pdf-danger-soft: rgba(239, 68, 68, 0.08);
-  --sd-pdf-danger-border: rgba(239, 68, 68, 0.25);
-  --sd-pdf-danger-tint: rgba(239, 68, 68, 0.12);
+  --sd-pdf-danger-soft: rgba(186, 26, 26, 0.08);
+  --sd-pdf-danger-border: rgba(186, 26, 26, 0.25);
+  --sd-pdf-danger-tint: rgba(186, 26, 26, 0.12);
 
   --sd-pdf-hover-bg: rgba(0, 0, 0, 0.06);
 
@@ -222,7 +222,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-pdf-accent);
+    outline: 2px solid var(--sd-pdf-primary);
     outline-offset: 2px;
   }
 
@@ -233,8 +233,8 @@
 
   // Active-tab style (e.g. hamburger when sidebar is open).
   &--active {
-    background: var(--sd-pdf-accent-soft);
-    color: var(--sd-pdf-accent);
+    background: var(--sd-pdf-primary-soft);
+    color: var(--sd-pdf-primary);
   }
 }
 
@@ -279,7 +279,7 @@
     }
 
     &:focus {
-      border-color: var(--sd-pdf-accent);
+      border-color: var(--sd-pdf-primary);
       background: rgba(255, 255, 255, 0.09);
     }
   }
@@ -401,8 +401,8 @@
     }
 
     &--active {
-      background: var(--sd-pdf-accent-soft);
-      color: var(--sd-pdf-accent);
+      background: var(--sd-pdf-primary-soft);
+      color: var(--sd-pdf-primary);
     }
   }
 
@@ -499,17 +499,17 @@
   }
 
   &--active &__page {
-    outline: 2px solid var(--sd-pdf-accent);
+    outline: 2px solid var(--sd-pdf-primary);
     outline-offset: -2px;
   }
 
   &--active &__label {
-    color: var(--sd-pdf-accent);
+    color: var(--sd-pdf-primary);
     font-weight: 600;
   }
 
   &:focus-visible &__page {
-    outline: 2px solid var(--sd-pdf-accent);
+    outline: 2px solid var(--sd-pdf-primary);
     outline-offset: 2px;
   }
 }
@@ -617,8 +617,8 @@
     }
 
     &--active {
-      background: var(--sd-pdf-accent-soft);
-      color: var(--sd-pdf-accent);
+      background: var(--sd-pdf-primary-soft);
+      color: var(--sd-pdf-primary);
     }
 
     &:hover:not(:disabled):not(.sd-preview-pdf-toolbar__btn--active) {
@@ -626,7 +626,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-pdf-accent);
+      outline: 2px solid var(--sd-pdf-primary);
       outline-offset: 2px;
     }
 
@@ -657,7 +657,7 @@
     outline: none;
 
     &:focus {
-      border-color: var(--sd-pdf-accent);
+      border-color: var(--sd-pdf-primary);
     }
   }
 
@@ -768,7 +768,7 @@
 
   &__fill {
     height: 100%;
-    background: var(--sd-pdf-accent);
+    background: var(--sd-pdf-primary);
     transition: width 120ms linear;
   }
 }
@@ -778,7 +778,7 @@
   height: 56px;
   border-radius: 999px;
   border: 3px solid rgba(255, 255, 255, 0.08);
-  border-top-color: var(--sd-pdf-accent);
+  border-top-color: var(--sd-pdf-primary);
   animation: sd-preview-pdf-spin 0.9s linear infinite;
 }
 
@@ -822,8 +822,8 @@
   }
 
   &--active {
-    background: var(--sd-pdf-accent-soft);
-    border-color: rgba(59, 130, 246, 0.45);
+    background: var(--sd-pdf-primary-soft);
+    border-color: rgba(0, 92, 187, 0.45);
   }
 
   &__snippet {
@@ -858,7 +858,7 @@
   gap: 6px;
   height: 36px;
   padding: 0 16px;
-  background: var(--sd-pdf-accent);
+  background: var(--sd-pdf-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -905,7 +905,7 @@
   &:hover { background: rgba(255, 255, 255, 0.06); }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-pdf-accent);
+    outline: 2px solid var(--sd-pdf-primary);
     outline-offset: 2px;
   }
 }

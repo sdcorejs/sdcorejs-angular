@@ -18,19 +18,19 @@
   --sd-preview-fg-muted: rgba(255, 255, 255, 0.6);
   --sd-preview-fg-subtle: rgba(255, 255, 255, 0.4);
 
-  // Accent + status. WHY var() with fallback: consumer apps define
+  // Primary + status. WHY var() with fallback: consumer apps define
   // --sd-primary / --sd-error / --sd-success at :root via the design system.
   // If undefined, we fall back to library defaults so the viewer always has
   // sane colours.
-  --sd-preview-accent: var(--sd-primary, #3b82f6);
-  --sd-preview-accent-soft: rgba(59, 130, 246, 0.2);
-  --sd-preview-danger: var(--sd-error, #ef4444);
-  --sd-preview-success: var(--sd-success, #22c55e);
+  --sd-preview-primary: var(--sd-preview-accent, var(--sd-primary, #005cbb));
+  --sd-preview-primary-soft: var(--sd-preview-accent-soft, rgba(0, 92, 187, 0.18));
+  --sd-preview-danger: var(--sd-error, #ba1a1a);
+  --sd-preview-success: var(--sd-success, #2e7d32);
 
   // Derived danger surfaces — rgba() carries the transparency separately from
   // the consumer-overridable hex (which we can't read inside a CSS rgba()).
-  --sd-preview-danger-soft: rgba(239, 68, 68, 0.1);
-  --sd-preview-danger-border: rgba(239, 68, 68, 0.3);
+  --sd-preview-danger-soft: rgba(186, 26, 26, 0.1);
+  --sd-preview-danger-border: rgba(186, 26, 26, 0.3);
 
   // Hover surface — flipped to a black overlay in light theme below.
   --sd-preview-hover-bg: rgba(255, 255, 255, 0.1);
@@ -63,13 +63,13 @@
   --sd-preview-fg-muted: rgba(0, 0, 0, 0.62);
   --sd-preview-fg-subtle: rgba(0, 0, 0, 0.42);
 
-  --sd-preview-accent: var(--sd-primary, #1f49bf);
-  --sd-preview-accent-soft: rgba(31, 73, 191, 0.18);
-  --sd-preview-danger: var(--sd-error, #ef4444);
-  --sd-preview-success: var(--sd-success, #22c55e);
+  --sd-preview-primary: var(--sd-preview-accent, var(--sd-primary, #005cbb));
+  --sd-preview-primary-soft: var(--sd-preview-accent-soft, rgba(0, 92, 187, 0.16));
+  --sd-preview-danger: var(--sd-error, #ba1a1a);
+  --sd-preview-success: var(--sd-success, #2e7d32);
 
-  --sd-preview-danger-soft: rgba(239, 68, 68, 0.08);
-  --sd-preview-danger-border: rgba(239, 68, 68, 0.25);
+  --sd-preview-danger-soft: rgba(186, 26, 26, 0.08);
+  --sd-preview-danger-border: rgba(186, 26, 26, 0.25);
 
   --sd-preview-hover-bg: rgba(0, 0, 0, 0.06);
 }
@@ -315,7 +315,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-preview-accent);
+    outline: 2px solid var(--sd-preview-primary);
     outline-offset: 2px;
   }
 
@@ -379,7 +379,7 @@
     }
 
     &:focus-visible {
-      outline: 2px solid var(--sd-preview-accent);
+      outline: 2px solid var(--sd-preview-primary);
       outline-offset: 2px;
     }
   }
@@ -452,13 +452,13 @@
   &--active {
     opacity: 1;
     // outline (not border) for active so the thumb dimensions don't change.
-    outline: 2px solid var(--sd-preview-accent);
+    outline: 2px solid var(--sd-preview-primary);
     outline-offset: -2px;
-    box-shadow: inset 0 0 0 2px var(--sd-preview-accent);
+    box-shadow: inset 0 0 0 2px var(--sd-preview-primary);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-preview-accent);
+    outline: 2px solid var(--sd-preview-primary);
     outline-offset: 2px;
   }
 
@@ -554,7 +554,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--sd-preview-accent);
+    outline: 2px solid var(--sd-preview-primary);
     outline-offset: 2px;
   }
 }
@@ -622,7 +622,7 @@
   height: 56px;
   border-radius: 999px;
   border: 3px solid rgba(255, 255, 255, 0.08);
-  border-top-color: var(--sd-preview-accent);
+  border-top-color: var(--sd-preview-primary);
   animation: sd-preview-spin 0.9s linear infinite;
 }
 
@@ -637,7 +637,7 @@
   gap: 6px;
   height: 36px;
   padding: 0 16px;
-  background: var(--sd-preview-accent);
+  background: var(--sd-preview-primary);
   color: #fff;
   border: none;
   border-radius: 8px;

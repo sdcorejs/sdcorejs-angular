@@ -112,7 +112,7 @@ The component has **8 distinct visual states** (Artboards A–H from the design 
 - **Header counter pill**: rounded, `tabular-nums`, absolutely centered between left meta and right close
 - **Nav arrows**: 48×48 round, `rgba(20,20,22,0.6)` + `backdrop-filter: blur(10px)`, disabled state at 35% opacity
 - **Floating toolbar**: pill-shaped container, 6×8 padding, divider lines between zoom group / fit / rotate / download+fullscreen group
-- **Active thumbnail**: `outline: 2px solid #3b82f6` + inset shadow (uses outline so the thumb doesn't resize on activate)
+- **Active thumbnail**: `outline: 2px solid var(--sd-preview-primary)` + inset shadow (uses outline so the thumb doesn't resize on activate)
 - **Keyboard hint**: top-left of stage, `<kbd>`-style chips for ← →
 - **Caption**: when `PreviewItem.caption` is set, a rounded pill `rgba(15,17,20,0.7)` above the bottom toolbar
 

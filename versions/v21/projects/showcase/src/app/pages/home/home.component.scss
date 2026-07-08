@@ -22,7 +22,7 @@
     margin-bottom: 12px;
 
     mat-icon {
-      color: #1565c0;
+      color: var(--sd-primary, #005cbb);
     }
     h2 {
       font-size: 18px;
@@ -58,8 +58,8 @@
     transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
 
     &:hover {
-      border-color: #1565c0;
-      box-shadow: 0 4px 14px rgba(21, 101, 192, 0.12);
+      border-color: var(--sd-primary, #005cbb);
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--sd-primary, #005cbb) 18%, transparent);
       transform: translateY(-1px);
       text-decoration: none;
     }
@@ -68,7 +68,7 @@
       font-size: 18px;
       width: 18px;
       height: 18px;
-      color: #1565c0;
+      color: var(--sd-primary, #005cbb);
     }
   }
 }

@@ -118,7 +118,7 @@ export interface DemoProp {
       }
       .demo-prop__name { color: #6b6b6b; }
       .demo-prop__sep { color: #6b6b6b; margin: 0 1px; }
-      .demo-prop__value { color: #1565c0; font-weight: 600; }
+      .demo-prop__value { color: var(--sd-primary, #005cbb); font-weight: 600; }
       .demo-section__note {
         font-size: 12px;
         color: #6b6b6b;

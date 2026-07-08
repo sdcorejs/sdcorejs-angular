@@ -74,8 +74,8 @@ export class ChartDemoComponent {
       {
         label: 'Doanh thu (tỷ VND)',
         data: [12.5, 14.2, 13.8, 16.4, 18.1, 19.5],
-        borderColor: '#1565c0',
-        backgroundColor: 'rgba(21, 101, 192, 0.15)',
+        borderColor: '#005cbb',
+        backgroundColor: 'rgba(0, 92, 187, 0.14)',
         fill: true,
         tension: 0.35,
       },
@@ -102,7 +102,7 @@ export class ChartDemoComponent {
       {
         label: 'KPI đạt được (%)',
         data: [92, 110, 85, 96, 102],
-        backgroundColor: ['#1565c0', '#2e7d32', '#f9a825', '#6a1b9a', '#0277bd'],
+        backgroundColor: ['#005cbb', '#2e7d32', '#f9a825', '#6a1b9a', '#0277bd'],
       },
     ],
   };
@@ -118,7 +118,7 @@ export class ChartDemoComponent {
     datasets: [
       {
         data: [42, 23, 25, 10],
-        backgroundColor: ['#1565c0', '#e64a19', '#2e7d32', '#9e9e9e'],
+        backgroundColor: ['#005cbb', '#e64a19', '#2e7d32', '#9e9e9e'],
       },
     ],
   };
@@ -128,7 +128,7 @@ export class ChartDemoComponent {
     datasets: [
       {
         data: [42, 23, 25, 10],
-        backgroundColor: ['#1565c0', '#e64a19', '#2e7d32', '#9e9e9e'],
+        backgroundColor: ['#005cbb', '#e64a19', '#2e7d32', '#9e9e9e'],
       },
     ],
   };

@@ -91,32 +91,48 @@ export const appConfig: ApplicationConfig = {
 
 ## Theming / SCSS Customization
 
+`sd-core.scss` emits the Angular Material M3 theme with `mat.theme(...)`.
+Prefer Material system variables such as `--mat-sys-primary`,
+`--mat-sys-on-primary`, `--mat-sys-surface`, `--mat-sys-on-surface`,
+`--mat-sys-error`, `--mat-sys-outline`, and `--mat-sys-outline-variant`
+for Material-facing styles.
+
 ### CSS Variables
 
 `@sdcorejs/angular` sử dụng CSS custom properties (variables) để quản lý màu sắc. Mỗi màu được expose dưới dạng `--sd-<color>`.
 
 **Available color tokens / Các biến màu sắc:**
 
-| Variable               | Default   | Description     |
-| ---------------------- | --------- | --------------- |
-| `--sd-primary`         | `#2A66F4` | Màu chính       |
-| `--sd-primary-light`   | `#EAF1FF` | Màu chính nhạt  |
-| `--sd-primary-dark`    | `#1C4AD9` | Màu chính đậm   |
-| `--sd-secondary`       | `#757575` | Màu phụ         |
-| `--sd-secondary-light` | `#F2F2F2` | Màu phụ nhạt    |
-| `--sd-success`         | `#4CAF50` | Thành công      |
-| `--sd-success-light`   | `#DBEFDC` | Thành công nhạt |
-| `--sd-warning`         | `#FF9600` | Cảnh báo        |
-| `--sd-warning-light`   | `#FFEACC` | Cảnh báo nhạt   |
-| `--sd-error`           | `#F82C13` | Lỗi             |
-| `--sd-error-light`     | `#FED5D0` | Lỗi nhạt        |
-| `--sd-info`            | `#2962FF` | Thông tin       |
-| `--sd-info-light`      | `#E7E9FF` | Thông tin nhạt  |
-| `--sd-black500`        | `#212121` | Xám đậm nhất    |
-| `--sd-black400`        | `#757575` | Xám đậm         |
-| `--sd-black300`        | `#BFBFBF` | Xám trung       |
-| `--sd-black200`        | `#E6E6E6` | Xám nhạt        |
-| `--sd-black100`        | `#F2F2F2` | Xám nhạt nhất   |
+Core UI keeps the `--sd-*` compatibility surface while default values now bridge
+to Angular Material M3 system variables where possible.
+
+| Variable                    | Default bridge / fallback                         | Description |
+| --------------------------- | ------------------------------------------------- | ----------- |
+| `--sd-primary`              | `var(--mat-sys-primary, #005cbb)`                 | Main action color aligned with the Material azure palette |
+| `--sd-on-primary`           | `var(--mat-sys-on-primary, #ffffff)`              | Text/icon color on primary surfaces |
+| `--sd-primary-light`        | `var(--mat-sys-primary-container, #d7e3ff)`       | Light primary container background |
+| `--sd-primary-container`    | `var(--mat-sys-primary-container, #d7e3ff)`       | M3 primary container alias |
+| `--sd-on-primary-container` | `var(--mat-sys-on-primary-container, #001b3f)`    | Text/icon color on primary containers |
+| `--sd-primary-dark`         | `color-mix(... --mat-sys-primary ..., black)`     | Hover/active primary shade |
+| `--sd-info`                 | `#006a6a`                                         | Balanced informational teal |
+| `--sd-info-light`           | `#d4f7f6`                                         | Light informational background |
+| `--sd-success`              | `#2e7d32`                                         | Success and positive validation state |
+| `--sd-success-light`        | `#d8f0d3`                                         | Light success background |
+| `--sd-warning`              | `#a66300`                                         | Warning state with reduced saturation |
+| `--sd-warning-light`        | `#ffddb0`                                         | Light warning background |
+| `--sd-error`                | `var(--mat-sys-error, #ba1a1a)`                   | Error and destructive state |
+| `--sd-error-light`          | `var(--mat-sys-error-container, #ffdad6)`         | Light error container |
+| `--sd-surface`              | `var(--mat-sys-surface, #fdfbff)`                 | App/page surface |
+| `--sd-on-surface`           | `var(--mat-sys-on-surface, #1a1b1f)`              | Primary text on surfaces |
+| `--sd-outline`              | `var(--mat-sys-outline, #74777f)`                 | Strong border/focus outline |
+| `--sd-outline-variant`      | `var(--mat-sys-outline-variant, #c4c6d0)`         | Subtle border/divider |
+| `--sd-disabled-bg`          | `color-mix(... --mat-sys-on-surface ..., transparent)` | Neutral disabled background |
+| `--sd-disabled-text`        | `color-mix(... --mat-sys-on-surface ..., transparent)` | Neutral disabled text/icon |
+| `--sd-black500`             | `var(--mat-sys-on-surface, #1a1b1f)`              | Legacy neutral text alias |
+| `--sd-black400`             | `var(--mat-sys-on-surface-variant, #44474f)`      | Legacy secondary text alias |
+| `--sd-black300`             | `var(--mat-sys-outline, #74777f)`                 | Legacy outline alias |
+| `--sd-black200`             | `var(--mat-sys-outline-variant, #c4c6d0)`         | Legacy divider alias |
+| `--sd-black100`             | `var(--mat-sys-surface-variant, #e7e8f0)`         | Legacy subtle background alias |
 
 ### Custom Theme / Tuỳ chỉnh theme
 

@@ -2,7 +2,10 @@
 
 $system-colors: 
 'primary',
+'on-primary',
 'primary-light',
+'primary-container',
+'on-primary-container',
 'primary-dark',
 'info',
 'info-light',
@@ -14,11 +17,27 @@ $system-colors:
 'warning-light',
 'warning-dark', 
 'error',
+'on-error',
 'error-light',
+'error-container',
+'on-error-container',
 'error-dark',
 'secondary',
 'secondary-light',
 'secondary-dark', 
+'surface',
+'on-surface',
+'surface-variant',
+'outline',
+'outline-variant',
+'background',
+'text',
+'text-primary',
+'text-secondary',
+'text-muted',
+'border',
+'disabled-bg',
+'disabled-text',
 'light',
 'dark',
 'black500',
@@ -44,8 +63,8 @@ $basic_color_map: (
   'black': #000,
 );
 
-$disabled-bg: map.get($color-map, 'black100');
-$disabled-text: map.get($color-map, 'black400');
+$disabled-bg: map.get($color-map, 'disabled-bg');
+$disabled-text: map.get($color-map, 'disabled-text');
 
 @each $color, $value in map.merge($color_map, $basic_color_map) {
   // Text

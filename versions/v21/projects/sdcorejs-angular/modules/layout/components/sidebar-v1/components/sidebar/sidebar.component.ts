@@ -23,7 +23,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 @Component({
   selector: 'sidebar',
   standalone: true,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     SdInput,
     FormsModule,
     CommonModule,
@@ -271,9 +272,10 @@ export class SidebarComponent {
 
       if (menuGroupIcon) {
         menuGroupIcon.style.transition = 'all 0.15s';
-        menuGroupIcon.style.backgroundColor = brandLightColorOpacity || 'rgba(248, 249, 250, 0.6)';
+        menuGroupIcon.style.backgroundColor =
+          brandLightColorOpacity || 'color-mix(in srgb, var(--sd-primary-light, #d7e3ff) 60%, transparent)';
         if (!(menuGroupIcon instanceof HTMLImageElement)) {
-          menuGroupIcon.style.color = this.sidebar()?.brandColor || '#2962FF';
+          menuGroupIcon.style.color = this.sidebar()?.brandColor || 'var(--sd-primary, #005cbb)';
         }
       }
     }
@@ -290,7 +292,7 @@ export class SidebarComponent {
         if (menuGroupIcon instanceof HTMLImageElement) {
           menuGroupIcon.style.opacity = '0.55';
         } else {
-          menuGroupIcon.style.color = '#8C8C8C';
+          menuGroupIcon.style.color = 'var(--sd-text-secondary, #44474f)';
         }
       }
     }
@@ -298,7 +300,7 @@ export class SidebarComponent {
 
   onMouseOverMenuNode = (event: MouseEvent, menuItem: SdLayoutMenu): void => {
     const menuNode = event.currentTarget as HTMLElement;
-    const brandColor = this.sidebar()?.brandColor || '#2962FF';
+    const brandColor = this.sidebar()?.brandColor || 'var(--sd-primary, #005cbb)';
 
     // Nếu có bật config pin menu
     if (this.sidebar()?.pin?.enabled) {

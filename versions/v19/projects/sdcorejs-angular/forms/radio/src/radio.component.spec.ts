@@ -402,10 +402,9 @@ describe('SdRadio (viewed + color)', () => {
     expect(hostEl.classList.contains('sd-c-primary')).toBe(false);
   });
 
-  // why: bug "luôn ăn màu accent" do theme set `--mat-radio-selected-icon-color: #4caf50`
-  // qua `.mat-mdc-radio-button.mat-accent` (user pasted inspect). Override CẢ `--mat-radio-*`
-  // LẪN `--mdc-radio-*` với `!important`. Spec assert mọi token icon-color đã propagate.
-  it('overrides --mat-radio-selected-*-icon-color (theme.mat-accent) via --sd-c chain', () => {
+  // why: Material radio can apply wrapper tokens at higher specificity than MDC
+  // defaults. Assert both wrapper and MDC icon tokens follow the Core UI color.
+  it('overrides --mat-radio-selected-*-icon-color via --sd-c chain', () => {
     const root = document.documentElement;
     const prev = root.style.getPropertyValue('--sd-error');
     root.style.setProperty('--sd-error', 'rgb(220, 38, 38)');
@@ -415,7 +414,7 @@ describe('SdRadio (viewed + color)', () => {
       const inner = f.nativeElement.querySelector('.mat-mdc-radio-button') as HTMLElement;
       expect(inner).not.toBeNull();
       const cs = getComputedStyle(inner);
-      // M2 wrapper tokens — đây mới là tier theme `.mat-accent` set màu.
+      // Material wrapper tokens.
       expect(cs.getPropertyValue('--mat-radio-selected-icon-color').trim()).toBe('rgb(220, 38, 38)');
       expect(cs.getPropertyValue('--mat-radio-selected-focus-icon-color').trim()).toBe('rgb(220, 38, 38)');
       expect(cs.getPropertyValue('--mat-radio-selected-hover-icon-color').trim()).toBe('rgb(220, 38, 38)');
