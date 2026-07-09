@@ -17,7 +17,7 @@
   .variable-widget:not([data-binding='true']):not([data-binding='html']) {
     background-color: var(--sd-primary-light, #d7e3ff);
     color: var(--sd-primary, #005cbb);
-    border: 1px solid color-mix(in srgb, var(--sd-primary, #005cbb) 34%, var(--sd-outline-variant, #c4c6d0)) !important;
+    border: 1px solid color-mix(in srgb, var(--sd-primary, #005cbb) 34%, var(--sd-border, #c4c6d0)) !important;
     border-radius: 4px;
     padding: 2px 6px;
     font-size: 0; // ẩn innerText ({{display}})

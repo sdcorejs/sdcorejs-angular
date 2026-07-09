@@ -10,13 +10,12 @@ $badgeIconSize:
 $badgeIconColor:
   'primary' map.get(color.$color_map, 'primary'),
   'secondary' map.get(color.$color_map, 'secondary'),
-  'black400' map.get(color.$color_map, 'black400'),
   'info' map.get(color.$color_map, 'info'),
   'success' map.get(color.$color_map, 'success'),
   'error' map.get(color.$color_map, 'error'),
   'warning' map.get(color.$color_map, 'warning');
 
-$badgeDescriptionColor: map.get(color.$color_map, 'black400');
+$badgeDescriptionColor: map.get(color.$color_map, 'text-secondary');
 
 // why: size map cho container .c-badge — round (pill) và tag dùng chung biến này
 // (sm = giữ giá trị hiện tại để không vỡ UI hiện hữu; md/lg là mới).

@@ -27,7 +27,7 @@ describe('SdButton', () => {
         ['fill', 'c-fill'],
         ['light', 'c-light'],
         ['outline', 'c-outline'],
-        ['link', 'c-link'],
+        ['text', 'c-text'],
       ];
       for (const [type, cls] of variants) {
         setInput(fixture, 'type', type);

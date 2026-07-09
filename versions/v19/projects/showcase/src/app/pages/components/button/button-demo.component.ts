@@ -10,12 +10,12 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
   template: `
     <demo-page
       title="Button"
-      description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / link), 3 kích thước, hỗ trợ icon và trạng thái loading.">
-      <demo-section heading="Biến thể" [props]="[{ name: 'type', value: 'fill / light / outline / link' }]">
+      description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / text), 3 kích thước, hỗ trợ icon và trạng thái loading.">
+      <demo-section heading="Biến thể" [props]="[{ name: 'type', value: 'fill / light / outline / text' }]">
         <sd-button type="fill" color="primary" title="fill"></sd-button>
         <sd-button type="light" color="primary" title="light"></sd-button>
         <sd-button type="outline" color="primary" title="outline"></sd-button>
-        <sd-button type="link" color="primary" title="link"></sd-button>
+        <sd-button type="text" color="primary" title="text"></sd-button>
       </demo-section>
 
       <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / black / success / info / warning / error' }]">
@@ -35,8 +35,8 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
         <sd-button type="light" color="black" title="black light"></sd-button>
         <sd-button type="outline" color="secondary" title="secondary outline"></sd-button>
         <sd-button type="outline" color="black" title="black outline"></sd-button>
-        <sd-button type="link" color="secondary" title="secondary link"></sd-button>
-        <sd-button type="link" color="black" title="black link"></sd-button>
+        <sd-button type="text" color="secondary" title="secondary text"></sd-button>
+        <sd-button type="text" color="black" title="black text"></sd-button>
       </demo-section>
 
       <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm / md / lg' }]">

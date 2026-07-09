@@ -20,7 +20,7 @@ import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
 
 // Export các Type ra ngoài để tái sử dụng ở file config/interface
-export type SdButtonType = 'fill' | 'light' | 'outline' | 'link';
+export type SdButtonType = 'fill' | 'light' | 'outline' | 'text';
 export type SdButtonSize = 'sm' | 'md' | 'lg';
 export type SdButtonHtmlType = 'button' | 'submit' | 'reset';
 export type SdButtonColor = Color | 'black';

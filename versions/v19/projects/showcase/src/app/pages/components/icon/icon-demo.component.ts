@@ -56,7 +56,7 @@ interface IconDemoItem {
         <sd-button type="fill" color="primary" title="Material" prefixIcon="add" fontSet="material-icons"></sd-button>
         <sd-button type="light" color="primary" title="Outlined" prefixIcon="save" fontSet="material-icons-outlined"></sd-button>
         <sd-button type="outline" color="error" title="Lucide" prefixIcon="delete" fontSet="lucide"></sd-button>
-        <sd-button type="link" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
+        <sd-button type="text" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
       </demo-section>
     </demo-page>
   `,

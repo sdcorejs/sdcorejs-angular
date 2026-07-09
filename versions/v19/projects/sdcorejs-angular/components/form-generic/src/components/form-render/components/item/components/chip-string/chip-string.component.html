@@ -1,6 +1,6 @@
 @if (component && entity) {
   @if (viewed || component.properties?.viewed) {
-    <div class="text-black400">{{ component.label || component.key }}</div>
+    <div class="text-secondary">{{ component.label || component.key }}</div>
     <div class="T14M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
   } @else {
     <sd-chip

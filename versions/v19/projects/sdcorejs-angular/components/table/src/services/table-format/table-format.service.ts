@@ -213,7 +213,7 @@ export class TableFormatService {
     const date = this.#formatDatePipe.transform(value);
     const time = this.#formatDatetimePipe.transform(value, 'HH:mm:ss');
     if (type === 'datetime') {
-      return time && date ? `<div class="T14R">${date}<span class="T14R text-black400 ml-4">${time}</span></div>` : '';
+      return time && date ? `<div class="T14R">${date}<span class="T14R text-secondary ml-4">${time}</span></div>` : '';
     }
     if (type === 'date') return date ?? '';
     if (type === 'time') return time ?? '';

@@ -206,10 +206,10 @@ describe('SdBadge', () => {
       expect(queryByCss<HTMLDivElement>(fixture, 'div.c-badge').classList.contains('c-error')).toBe(true);
     });
 
-    it('iconColorClasses: secondary → c-black400 (icon type, default color)', () => {
+    it('iconColorClasses: secondary → c-secondary (icon type, default color)', () => {
       setInput(fixture, 'type', 'icon');
       const icon = queryByCss<HTMLElement>(fixture, 'sd-icon.c-material-icon');
-      expect(icon.classList.contains('c-black400')).toBe(true);
+      expect(icon.classList.contains('c-secondary')).toBe(true);
     });
 
     it('iconColorClasses: info → c-info (icon type)', () => {

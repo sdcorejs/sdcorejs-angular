@@ -63,4 +63,8 @@ export class GroupAttribute {
   symbolForChild = (c: SdFormGenericComponent): string => {
     return this.componentIcons[c.type]?.symbol ?? 'help';
   };
+
+  labelForChild = (c: SdFormGenericComponent): string => {
+    return 'label' in c ? c.label : c.key || c.id;
+  };
 }

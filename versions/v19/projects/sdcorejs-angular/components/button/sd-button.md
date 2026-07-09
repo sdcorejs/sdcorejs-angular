@@ -27,9 +27,9 @@ Standard action button — used everywhere a user triggers an action (save, canc
 | Name | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `autoId` | `string \| null \| undefined` | `undefined` | Optional. Generates `data-autoId="components-button-<value>"` for E2E selectors. |
-| `type` | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'` | Visual variant. `fill`=primary action, `light`=default, `outline`=secondary, `link`=text-style. |
+| `type` | `'fill' \| 'light' \| 'outline' \| 'text'` | `'light'` | Visual variant. `fill`=primary action, `light`=default, `outline`=secondary, `text`=Material text button style. |
 | `color` | `Color \| 'black'` | `'secondary'` | Material color tokens (`primary`, `accent`, `warn`, `success`, `info`, `secondary`, ...). `black` is a button-only option. |
-| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Height: sm ≈ 28px, md ≈ 36px, lg ≈ 44px. |
+| `size` | `'sm' \| 'md' \| 'lg'` | `'sm'` | Height: sm = 32px, md = 40px, lg = 48px. Typography follows the underlying Angular Material button. |
 | `htmlType` | `'button' \| 'submit' \| 'reset'` | `'button'` | Sets the underlying `<button type="...">`. Use `'submit'` only when the button is INSIDE a `<form>`. |
 | `title` | `string` | `undefined` | Visible label. Required unless icon-only. |
 | `width` | `string` | `undefined` | Optional CSS width override (e.g. `'160px'`, `'100%'`). |
@@ -56,7 +56,7 @@ None — text comes from `title` input. The button is intentionally not slot-bas
 - `fill` variant: solid background in `color`, white text
 - `light` variant: tinted background (10% alpha of `color`), `color` text — DEFAULT, what most buttons look like
 - `outline` variant: transparent background, 1px border in `color`, `color` text
-- `link` variant: no background, no border, just text in `color`
+- `text` variant: no background, no border, just text in `color`
 - When `prefixIcon` only and no `title` → square icon-only button (`.c-square` class)
 - Spinner mode (loading): replaces prefix icon with a small Material spinner
 
@@ -93,7 +93,7 @@ The button itself does NOT enforce permission — wrap with the `*sdPermission` 
 ### 2. Icon-only quick action in a list row
 ```html
 <sd-button
-  type="link" color="primary" size="sm"
+  type="text" color="primary" size="sm"
   prefixIcon="edit"
   tooltip="Chỉnh sửa"
   (click)="onEdit(row)">
@@ -103,7 +103,7 @@ The button itself does NOT enforce permission — wrap with the `*sdPermission` 
 ### 3. Block-level cancel button at the bottom of a side-drawer
 ```html
 <sd-button
-  type="outline" color="secondary"
+  type="text" color="secondary"
   title="Hủy" [block]="true"
   (click)="onCancel()">
 </sd-button>
@@ -141,7 +141,7 @@ await expect(btn).toHaveAttribute('data-loading', 'false');
 - ❌ Adding `[routerLink]` directly on `<sd-button>` host — better is wrapping the button in an `<a [routerLink]>` OR using `<sd-anchor>`
 - ❌ Manually toggling visibility based on permission inside the parent component — use `*sdPermission` directive instead
 - ❌ Using `disabled` to hide a button — use `*sdPermission` for permission gating, `*ngIf` for conditional rendering, `disabled` ONLY for transient states (form invalid, loading)
-- ❌ Stacking multiple `<sd-button type="fill">` next to each other — only ONE primary action per region; the rest should be `light` or `outline`
+- ❌ Stacking multiple `<sd-button type="fill">` next to each other — only ONE primary action per region; the rest should be `text`, `light`, or `outline`
 - ❌ `htmlType="submit"` outside of a `<form>` — clicks won't behave specially, but it confuses readers
 
 ## Related

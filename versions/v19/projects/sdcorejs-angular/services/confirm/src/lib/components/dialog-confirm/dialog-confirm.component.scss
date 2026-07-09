@@ -1,8 +1,13 @@
 @use '../../../../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
-:host .mat-dialog-content {
-  margin: 0 -16px 16px -16px !important;
+:host .sd-dialog-confirm__content--radio {
+  max-height: none;
+  overflow: visible;
+}
+
+:host .sd-dialog-confirm__content--radio sd-radio {
+  height: auto;
 }
 
 :host .mat-button {
