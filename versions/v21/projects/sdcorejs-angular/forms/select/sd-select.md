@@ -263,7 +263,7 @@ When this control is rendered in dashboard cards, filter bars, external filter p
   <ng-template sdItemDef let-item>
     <div class="d-flex align-items-center gap-8">
       <img [src]="item.avatar" class="avatar-24" />
-      <div>{{ item.name }} <small class="text-black400">{{ item.email }}</small></div>
+      <div>{{ item.name }} <small class="text-secondary">{{ item.email }}</small></div>
     </div>
   </ng-template>
 </sd-select>

@@ -80,7 +80,7 @@ The empty `[sdAction]` slot is handled by `:has()` + `:empty` CSS rules — the 
 ```html
 <sd-quick-action [opened]="lastDeleted() !== null">
   <span sdMessage>Đã xoá {{ lastDeleted()?.name }}.</span>
-  <sd-button sdAction type="link" color="primary" title="Hoàn tác" (click)="undo()"></sd-button>
+  <sd-button sdAction type="text" color="primary" title="Hoàn tác" (click)="undo()"></sd-button>
 </sd-quick-action>
 ```
 

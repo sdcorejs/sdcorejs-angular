@@ -105,48 +105,38 @@ Màu được định nghĩa dưới dạng **CSS custom properties** với pref
 
 ### 3.1 Color tokens
 
-| Token | CSS variable | Default bridge / fallback | Dùng cho |
+| Token | CSS variable | Default bridge / fallback | Use for |
 |---|---|---|---|
-| `primary` | `--sd-primary` | `var(--mat-sys-primary, #005cbb)` | Màu chủ đạo, button, checkbox, focus chính |
-| `on-primary` | `--sd-on-primary` | `var(--mat-sys-on-primary, #ffffff)` | Text/icon trên nền primary |
-| `primary-light` | `--sd-primary-light` | `var(--mat-sys-primary-container, #d7e3ff)` | Background nhẹ của primary |
-| `primary-container` | `--sd-primary-container` | `var(--mat-sys-primary-container, #d7e3ff)` | Alias M3 container |
-| `on-primary-container` | `--sd-on-primary-container` | `var(--mat-sys-on-primary-container, #001b3f)` | Text/icon trên primary container |
-| `primary-dark` | `--sd-primary-dark` | `color-mix(... --mat-sys-primary ..., black)` | Hover/active state của primary |
-| `info` | `--sd-info` | `#006a6a` | Link phụ, thông tin, badge info |
-| `info-light` | `--sd-info-light` | `#d4f7f6` | Background nhẹ của info |
-| `info-dark` | `--sd-info-dark` | `#004f4f` | Hover state của info |
-| `success` | `--sd-success` | `#2e7d32` | Trạng thái thành công, validation OK |
-| `success-light` | `--sd-success-light` | `#d8f0d3` | Background nhẹ của success |
-| `success-dark` | `--sd-success-dark` | `#1b5e20` | Hover state của success |
-| `warning` | `--sd-warning` | `#a66300` | Cảnh báo, trạng thái cần chú ý |
-| `warning-light` | `--sd-warning-light` | `#ffddb0` | Background nhẹ của warning |
-| `warning-dark` | `--sd-warning-dark` | `#7a4d00` | Hover state của warning |
-| `error` | `--sd-error` | `var(--mat-sys-error, #ba1a1a)` | Lỗi, validation fail, destructive |
-| `error-light` | `--sd-error-light` | `var(--mat-sys-error-container, #ffdad6)` | Background nhẹ của error |
-| `error-dark` | `--sd-error-dark` | `color-mix(... --mat-sys-error ..., black)` | Hover state của error |
-| `surface` | `--sd-surface` | `var(--mat-sys-surface, #fdfbff)` | Nền page/component |
-| `on-surface` | `--sd-on-surface` | `var(--mat-sys-on-surface, #1a1b1f)` | Text chính trên surface |
-| `surface-variant` | `--sd-surface-variant` | `var(--mat-sys-surface-variant, #e7e8f0)` | Nền trung tính nhẹ |
-| `outline` | `--sd-outline` | `var(--mat-sys-outline, #74777f)` | Border/focus outline mạnh |
-| `outline-variant` | `--sd-outline-variant` | `var(--mat-sys-outline-variant, #c4c6d0)` | Divider/border nhẹ |
-| `disabled-bg` | `--sd-disabled-bg` | `color-mix(... --mat-sys-on-surface ..., transparent)` | Disabled background trung tính |
-| `disabled-text` | `--sd-disabled-text` | `color-mix(... --mat-sys-on-surface ..., transparent)` | Disabled text/icon trung tính |
-| `black500` | `--sd-black500` | `var(--mat-sys-on-surface, #1a1b1f)` | Legacy text chính alias |
-| `black400` | `--sd-black400` | `var(--mat-sys-on-surface-variant, #44474f)` | Legacy text phụ alias |
-| `black300` | `--sd-black300` | `var(--mat-sys-outline, #74777f)` | Legacy outline alias |
-| `black200` | `--sd-black200` | `var(--mat-sys-outline-variant, #c4c6d0)` | Legacy divider alias |
-| `black100` | `--sd-black100` | `var(--mat-sys-surface-variant, #e7e8f0)` | Legacy subtle background alias |
-
+| `primary` | `--sd-primary` | `var(--mat-sys-primary, #005cbb)` | Main action color |
+| `primary-light` | `--sd-primary-light` | `color-mix(in srgb, var(--sd-primary) 14%, white)` | Soft primary background |
+| `primary-dark` | `--sd-primary-dark` | `color-mix(in srgb, var(--sd-primary) 84%, black)` | Primary hover/active shade |
+| `primary-contrast` | `--sd-primary-contrast` | `#ffffff` | Text/icon on primary |
+| `secondary` | `--sd-secondary` | `var(--mat-sys-secondary, #5c6270)` | Secondary action/accent |
+| `secondary-light` | `--sd-secondary-light` | `color-mix(in srgb, var(--sd-secondary) 12%, white)` | Soft secondary background |
+| `secondary-dark` | `--sd-secondary-dark` | `color-mix(in srgb, var(--sd-secondary) 84%, black)` | Secondary hover/active shade |
+| `secondary-contrast` | `--sd-secondary-contrast` | `#ffffff` | Text/icon on secondary |
+| `info`, `success`, `warning`, `error` | `--sd-info`, ... | Semantic base colors | Info, success, warning, and error states |
+| `*-light` | `--sd-info-light`, ... | `color-mix(in srgb, var(--sd-*) 14%, white)` | Soft semantic background |
+| `*-dark` | `--sd-info-dark`, ... | `color-mix(in srgb, var(--sd-*) 84%, black)` | Semantic hover/active shade |
+| `*-contrast` | `--sd-info-contrast`, ... | `#ffffff` | Text/icon on semantic color |
+| `surface` | `--sd-surface` | `var(--mat-sys-surface, #fdfbff)` | Page/component surface |
+| `surface-muted` | `--sd-surface-muted` | `var(--mat-sys-surface-container-highest, #e7e8ed)` | Muted neutral background |
+| `text` | `--sd-text` | `var(--mat-sys-on-surface, #1a1b1f)` | Primary text |
+| `text-secondary` | `--sd-text-secondary` | `var(--mat-sys-on-surface-variant, #44474f)` | Secondary text |
+| `text-muted` | `--sd-text-muted` | `color-mix(in srgb, var(--sd-text) 62%, transparent)` | Muted text |
+| `border` | `--sd-border` | `var(--mat-sys-outline-variant, #c4c6d0)` | Divider/subtle border |
+| `border-strong` | `--sd-border-strong` | `var(--mat-sys-outline, #74777f)` | Strong border/focus outline |
+| `disabled-bg` | `--sd-disabled-bg` | `color-mix(in srgb, var(--sd-text) 8%, transparent)` | Disabled background |
+| `disabled-text` | `--sd-disabled-text` | `color-mix(in srgb, var(--sd-text) 60%, transparent)` | Disabled text/icon |
 ### 3.2 Color utility classes
 
 Mọi token ở §3.1 đều sinh 3 class:
 
 | Pattern         | Ví dụ                     |
 |---|---|
-| `.text-{token}` | `text-primary`, `text-error`, `text-black400` |
+| `.text-{token}` | `text-primary`, `text-error`, `text-secondary` |
 | `.bg-{token}`   | `bg-primary-light`, `bg-error-light`, `bg-white` |
-| `.border-{token}` | `border-primary`, `border-black200` |
+| `.border-{token}` | `border-primary`, `border-error` |
 
 `white` / `black` luôn có sẵn ngoài bảng trên: `.text-white` / `.text-black` / `.bg-white` / `.bg-black`.
 
@@ -159,7 +149,7 @@ Mọi token ở §3.1 đều sinh 3 class:
 .my-element {
   color: map.get(color.$color_map, 'primary');
   background: map.get(color.$color_map, 'primary-light');
-  border-color: map.get(color.$color_map, 'black200');
+  border-color: map.get(color.$color_map, 'border');
 }
 ```
 
@@ -381,16 +371,16 @@ rounded-full       // border-radius: 9999px (pill / circle)
 
 ### 9.2 Border utilities
 
-Border color default = `var(--sd-black200)`.
+Border color default = `var(--sd-border)`.
 
 | Class            | CSS |
 |---|---|
-| `border`         | `border: 1px solid var(--sd-black200)` |
+| `border`         | `border: 1px solid var(--sd-border)` |
 | `border-0`       | `border: 0` |
-| `border-top`     | `border-top: 1px solid var(--sd-black200)` |
-| `border-bottom`  | `border-bottom: 1px solid var(--sd-black200)` |
-| `border-left`    | `border-left: 1px solid var(--sd-black200)` |
-| `border-right`   | `border-right: 1px solid var(--sd-black200)` |
+| `border-top`     | `border-top: 1px solid var(--sd-border)` |
+| `border-bottom`  | `border-bottom: 1px solid var(--sd-border)` |
+| `border-left`    | `border-left: 1px solid var(--sd-border)` |
+| `border-right`   | `border-right: 1px solid var(--sd-border)` |
 
 Đổi màu border: kết hợp `.border` với `.border-{token}` (xem §3.2).
 

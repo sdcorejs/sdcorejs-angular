@@ -143,6 +143,58 @@ export class SdConfirmService {
     });
   };
 
+  withSelect = (
+    message?: string,
+    option?: {
+      title?: string;
+      yesTitle?: string;
+      noTitle?: string;
+      required?: boolean;
+      yesButtonColor?: Color;
+      noButtonColor?: Color;
+      defaultValue?: string | number | (string | number)[];
+      items: any[];
+      valueField: string;
+      displayField: string;
+      placeholder?: string;
+      multiple?: boolean;
+      disableBackdropClose?: boolean;
+    }
+  ): Promise<string | number | (string | number)[]> => {
+    const dialogRef = this.dialog.open(DialogConfirmComponent, {
+      width: '400px',
+      disableClose: option?.disableBackdropClose ?? true,
+      data: {
+        title: option?.title || this.#i18n.t('core.confirm.title'),
+        message,
+        yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
+        noTitle: option?.noTitle || this.#i18n.t('core.confirm.no-short'),
+        noButtonColor: option?.noButtonColor || 'secondary',
+        yesButtonColor: option?.yesButtonColor || 'primary',
+        select: {
+          items: option?.items || [],
+          valueField: option?.valueField || 'value',
+          displayField: option?.displayField || 'label',
+          placeholder: option?.placeholder,
+          multiple: option?.multiple,
+          required: option?.required,
+          defaultValue: option?.defaultValue,
+        },
+      },
+    });
+    return new Promise((resolve, reject) => {
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          if (result.action === 'CANCEL') {
+            reject(result.action);
+          } else if (result.action === 'ACCEPT') {
+            resolve(result.value);
+          }
+        }
+      });
+    });
+  };
+
   withDate = (
     message?: string,
     option?: {
@@ -155,9 +207,11 @@ export class SdConfirmService {
       noButtonColor?: Color;
       defaultValue?: string | Date;
       placeholder?: string;
+      min?: string | Date;
+      max?: string | Date;
       disableBackdropClose?: boolean;
     }
-  ): Promise<string> => {
+  ): Promise<string | Date> => {
     const dialogRef = this.dialog.open(DialogConfirmComponent, {
       width: '400px',
       disableClose: option?.disableBackdropClose ?? true,
@@ -172,6 +226,59 @@ export class SdConfirmService {
           placeholder: option?.placeholder,
           required: option?.required,
           defaultValue: option?.defaultValue || '',
+          min: option?.min,
+          max: option?.max,
+        },
+      },
+    });
+    return new Promise((resolve, reject) => {
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          if (result.action === 'CANCEL') {
+            reject(result.action);
+          } else if (result.action === 'ACCEPT') {
+            resolve(result.value);
+          }
+        }
+      });
+    });
+  };
+
+  withDatetime = (
+    message?: string,
+    option?: {
+      title?: string;
+
+      yesTitle?: string;
+      noTitle?: string;
+      required?: boolean;
+      yesButtonColor?: Color;
+      noButtonColor?: Color;
+      defaultValue?: string | Date;
+      placeholder?: string;
+      min?: string | Date;
+      max?: string | Date;
+      showSeconds?: boolean;
+      disableBackdropClose?: boolean;
+    }
+  ): Promise<string | Date> => {
+    const dialogRef = this.dialog.open(DialogConfirmComponent, {
+      width: '400px',
+      disableClose: option?.disableBackdropClose ?? true,
+      data: {
+        title: option?.title || this.#i18n.t('core.confirm.title'),
+        message,
+        yesTitle: option?.yesTitle || this.#i18n.t('core.confirm.yes-short'),
+        noTitle: option?.noTitle || this.#i18n.t('core.confirm.no-short'),
+        noButtonColor: option?.noButtonColor || 'secondary',
+        yesButtonColor: option?.yesButtonColor || 'primary',
+        datetime: {
+          placeholder: option?.placeholder,
+          required: option?.required,
+          defaultValue: option?.defaultValue || '',
+          min: option?.min,
+          max: option?.max,
+          showSeconds: option?.showSeconds,
         },
       },
     });

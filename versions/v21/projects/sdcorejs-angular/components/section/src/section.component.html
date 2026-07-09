@@ -1,18 +1,17 @@
 @let _hideHeader = hideHeader();
-@let _isCollapsible = isCollapsible();
+@let _collapsible = collapsible();
 @let _collapsed = collapsed();
 @let _title = title();
 @let _subTitle = subTitle();
 @let _icon = icon();
 @let _iconColor = iconColor();
-@let _noPaddingBody = noPaddingBody();
-<div class="rounded-8 bg-white" [class.c-shadow-section]="!_collapsed">
+<div class="sd-section c-shadow-section">
   @if (!_hideHeader) {
     <div
-      class="d-flex align-items-center justify-content-between w-full px-16 py-8 cursor-pointer"
+      class="sd-section-header cursor-pointer"
       (click)="toggleCollapse()"
       aria-hidden="true">
-      <div class="d-flex align-items-center">
+      <div class="sd-section-header-left">
         <ng-content select="[sdHeaderLeft]">
           @if (_icon) {
             <span
@@ -25,19 +24,19 @@
               {{ _icon }}
             </span>
           }
-          <div>
+          <div class="sd-section-title-block">
             @if (_title) {
-              <div class="T16M">{{ _title }}</div>
+              <div class="sd-section-title T16M">{{ _title }}</div>
             }
             @if (_subTitle) {
-              <div class="T12R text-secondary">{{ _subTitle }}</div>
+              <div class="sd-section-subtitle T12R text-secondary">{{ _subTitle }}</div>
             }
           </div>
         </ng-content>
       </div>
-      <div class="d-flex">
+      <div class="sd-section-header-right">
         <ng-content select="[sdHeaderRight]"></ng-content>
-        @if (_isCollapsible) {
+        @if (_collapsible) {
           <div class="d-flex align-items-center">
             @if (_collapsed) {
               <sd-icon name="expand_more"></sd-icon>
@@ -50,9 +49,12 @@
     </div>
   }
   @if (!_collapsed || _hideHeader) {
-    <!-- Nếu header bị ẩn thì không cần border top -->
-    <div [class.p-16]="!_noPaddingBody" [class.c-no-padding-body]="_noPaddingBody" [style.border-top]="_hideHeader ? 'none' : '1px solid #e6e6e6'">
+    <div class="sd-section-body" [class.sd-section-body--with-header]="!_hideHeader">
       <ng-content></ng-content>
     </div>
   }
+  <div class="sd-section-footer">
+    <div class="sd-section-footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+    <div class="sd-section-footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
+  </div>
 </div>

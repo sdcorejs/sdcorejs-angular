@@ -4,7 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdDate } from '@sdcorejs/angular/forms/date';
+import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdRadio } from '@sdcorejs/angular/forms/radio';
+import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 import { Color } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -32,6 +34,14 @@ export interface DialogData {
     min?: string | Date;
     max?: string | Date;
   };
+  datetime?: {
+    required?: boolean;
+    placeholder?: string;
+    defaultValue?: string | Date;
+    min?: string | Date;
+    max?: string | Date;
+    showSeconds?: boolean;
+  };
   radio?: {
     required?: boolean;
     defaultValue?: string | number;
@@ -40,13 +50,22 @@ export interface DialogData {
     displayField: string;
     display?: 'row' | 'column';
   };
+  select?: {
+    required?: boolean;
+    defaultValue?: string | number | (string | number)[];
+    items: any[];
+    valueField: string;
+    displayField: string;
+    placeholder?: string;
+    multiple?: boolean;
+  };
 }
 
 @Component({
   selector: 'sd-dialog-confirm',
   templateUrl: 'dialog-confirm.component.html',
   styleUrl: './dialog-confirm.component.scss',
-  imports: [SdIcon, CommonModule, FormsModule, MatDialogModule, SdButton, SdDate, SdRadio, SdTextarea],
+  imports: [SdIcon, CommonModule, FormsModule, MatDialogModule, SdButton, SdDate, SdDatetime, SdRadio, SdSelect, SdTextarea],
 })
 export class DialogConfirmComponent {
   value: any;
@@ -64,9 +83,17 @@ export class DialogConfirmComponent {
       this.value = this.data?.date?.defaultValue ?? '';
       this.required = this.data?.date?.required || false;
     }
+    if (this.data?.datetime) {
+      this.value = this.data?.datetime?.defaultValue ?? '';
+      this.required = this.data?.datetime?.required || false;
+    }
     if (this.data?.radio) {
       this.value = this.data?.radio?.defaultValue ?? '';
       this.required = this.data?.radio?.required || false;
+    }
+    if (this.data?.select) {
+      this.value = this.data?.select?.defaultValue ?? (this.data?.select?.multiple ? [] : null);
+      this.required = this.data?.select?.required || false;
     }
   }
 
@@ -76,7 +103,7 @@ export class DialogConfirmComponent {
 
   onAccept = () => {
     // Always return an object with action and value for consistency
-    if (this.data?.radio || this.data?.input || this.data?.date) {
+    if (this.data?.radio || this.data?.input || this.data?.date || this.data?.datetime || this.data?.select) {
       this.dialogRef.close({ action: 'ACCEPT', value: this.value });
     } else {
       this.dialogRef.close({ action: 'ACCEPT', value: null });

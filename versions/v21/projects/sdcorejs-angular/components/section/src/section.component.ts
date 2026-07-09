@@ -1,4 +1,4 @@
-import { booleanAttribute, Component, computed, effect, ElementRef, inject, input, model } from '@angular/core';
+import { booleanAttribute, Component, effect, ElementRef, inject, input, model } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -19,13 +19,7 @@ export class SdSection {
   collapsed = model<boolean>(false, { alias: 'collapsed' });
   collapsible = input(false, { transform: booleanAttribute });
 
-  /** @deprecated Use `collapsible` instead. */
-  collapsable = input(false, { transform: booleanAttribute });
-
-  readonly isCollapsible = computed(() => this.collapsible() || this.collapsable());
-
   hideHeader = input(false, { transform: booleanAttribute });
-  noPaddingBody = input(false, { transform: booleanAttribute });
 
   constructor() {
     effect(() => {
@@ -36,7 +30,7 @@ export class SdSection {
   }
 
   toggleCollapse = () => {
-    if (this.isCollapsible()) {
+    if (this.collapsible()) {
       this.collapsed.set(!this.collapsed());
     } else {
       if (this.collapsed()) {

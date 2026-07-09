@@ -9,13 +9,13 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   template: `
     <demo-page
       title="Button"
-      description="Nút thao tác chuẩn — 4 biến thể (fill / light / outline / link), 3 kích thước, hỗ trợ icon và trạng thái loading.">
+      description="Nút thao tác chuẩn — 4 biến thể (fill / light / outline / text), 3 kích thước, hỗ trợ icon và trạng thái loading.">
 
-      <demo-section heading="Biến thể" [props]="[{ name: 'type', value: 'fill / light / outline / link' }]">
+      <demo-section heading="Biến thể" [props]="[{ name: 'type', value: 'fill / light / outline / text' }]">
         <sd-button type="fill" color="primary" title="fill"></sd-button>
         <sd-button type="light" color="primary" title="light"></sd-button>
         <sd-button type="outline" color="primary" title="outline"></sd-button>
-        <sd-button type="link" color="primary" title="link"></sd-button>
+        <sd-button type="text" color="primary" title="text"></sd-button>
       </demo-section>
 
       <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / success / info / warning / error' }]">

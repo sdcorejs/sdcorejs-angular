@@ -1,7 +1,6 @@
-// TODO: rebrand — swap 4 primary tokens to sd-angular core primary
-// (--md-sys-color-primary / -on-primary / -primary-container / -on-primary-container)
-//
-// Material 3 expressive, compact density. Brand = primary.
+// Builder canvas keeps its internal M3-shaped variables, but sources them from
+// the public Core UI tokens (--sd-primary, --sd-primary-light, --sd-border, ...).
+// Brand = primary.
 // All canvas-side classes are defined here under :host so children components
 // (attribute panels) inherit the CSS custom properties via DOM; class definitions
 // that need to reach child component templates live under :host::ng-deep.
@@ -9,9 +8,9 @@
 :host {
   // ── M3 baseline · brand = primary ────────────────────────────────────
   --md-sys-color-primary: var(--sd-primary, #005cbb);
-  --md-sys-color-on-primary: var(--sd-on-primary, #ffffff);
-  --md-sys-color-primary-container: var(--sd-primary-container, #d7e3ff);
-  --md-sys-color-on-primary-container: var(--sd-on-primary-container, #001b3f);
+  --md-sys-color-on-primary: var(--sd-primary-contrast, #ffffff);
+  --md-sys-color-primary-container: var(--sd-primary-light, #d7e3ff);
+  --md-sys-color-on-primary-container: var(--sd-primary-dark, #001b3f);
   --md-sys-color-info: var(--sd-info, #006a6a);
   --md-sys-color-info-container: var(--sd-info-light, #d4f7f6);
 
@@ -22,17 +21,17 @@
   --md-sys-color-surface: var(--sd-surface, #fdfbff);
   --md-sys-color-surface-container-lowest: var(--mat-sys-surface-container-lowest, #ffffff);
   --md-sys-color-surface-container-low: var(--mat-sys-surface-container-low, #f7f8fc);
-  --md-sys-color-surface-container: var(--sd-surface-variant, #f0f0f4);
+  --md-sys-color-surface-container: var(--sd-surface-muted, #f0f0f4);
   --md-sys-color-surface-container-high: var(--mat-sys-surface-container-high, #e9e9ee);
-  --md-sys-color-surface-container-highest: var(--sd-black100, #e7e8ed);
+  --md-sys-color-surface-container-highest: var(--sd-surface-muted, #e7e8ed);
 
-  --md-sys-color-on-surface: var(--sd-on-surface, #1a1b1f);
+  --md-sys-color-on-surface: var(--sd-text, #1a1b1f);
   --md-sys-color-on-surface-variant: var(--sd-secondary, #44474f);
-  --md-sys-color-outline: var(--sd-outline, #74777f);
-  --md-sys-color-outline-variant: var(--sd-outline-variant, #c4c6d0);
+  --md-sys-color-outline: var(--sd-border-strong, #74777f);
+  --md-sys-color-outline-variant: var(--sd-border, #c4c6d0);
 
   --md-sys-color-error: var(--sd-error, #ba1a1a);
-  --md-sys-color-error-container: var(--sd-error-container, #ffdad6);
+  --md-sys-color-error-container: var(--sd-error-light, #ffdad6);
   --md-sys-color-warning: #8a5400;
   --md-sys-color-warning-container: #ffddb1;
   --md-sys-color-success: #1f6f43;

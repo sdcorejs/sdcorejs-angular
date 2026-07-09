@@ -25,7 +25,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
           <div sdAction style="display: flex; gap: 8px;">
             <sd-button type="fill" color="primary" prefixIcon="check" title="Phê duyệt" (click)="bulkApprove()"></sd-button>
             <sd-button type="outline" color="error" prefixIcon="delete" title="Xóa" (click)="bulkDelete()"></sd-button>
-            <sd-button type="outline" color="secondary" prefixIcon="close" tooltip="Bỏ chọn" (click)="clearSelection()"></sd-button>
+            <sd-button type="text" color="secondary" prefixIcon="close" tooltip="Bỏ chọn" (click)="clearSelection()"></sd-button>
           </div>
         </sd-quick-action>
       </demo-section>
@@ -43,7 +43,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 
         <sd-quick-action [opened]="lastDeleted() !== null">
           <span sdMessage>Đã xóa <strong>{{ lastDeleted() }}</strong>.</span>
-          <sd-button sdAction type="link" color="primary" prefixIcon="undo" title="Hoàn tác" (click)="undo()"></sd-button>
+          <sd-button sdAction type="text" color="primary" prefixIcon="undo" title="Hoàn tác" (click)="undo()"></sd-button>
         </sd-quick-action>
       </demo-section>
     </demo-page>

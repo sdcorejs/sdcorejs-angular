@@ -13,6 +13,6 @@
   right: 4px;
   position: absolute;
   &:hover {
-    background-color: map.get(color.$color_map, 'black200'); // nền xám nhạt
+    background-color: map.get(color.$color_map, 'border'); // nền xám nhạt
   }
 }

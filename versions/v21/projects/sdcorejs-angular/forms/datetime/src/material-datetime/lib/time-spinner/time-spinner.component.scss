@@ -1,0 +1,89 @@
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sd-time-spinner__columns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sd-time-spinner__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+
+  // Shrink mat-icon-button to 32×20 (Material default is 40×40)
+  button.mat-mdc-icon-button {
+    width: 32px;
+    height: 20px;
+    padding: 0;
+    min-width: 0;
+    line-height: 1;
+
+    // Material wraps the button content in .mat-mdc-button-touch-target sized 48×48 — shrink it too
+    .mat-mdc-button-touch-target {
+      width: 32px;
+      height: 20px;
+    }
+
+    .mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+    }
+  }
+}
+
+.sd-time-spinner__digits {
+  -moz-appearance: textfield;
+  width: 44px;
+  height: 36px;
+  border: 1.5px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  cursor: text;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  &:hover:not(:focus) {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &:focus {
+    border-color: var(--mat-sys-primary, #1976d2);
+    background: #fff;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.sd-time-spinner__sep {
+  font-size: 20px;
+  font-weight: 600;
+  user-select: none;
+  padding-bottom: 2px; // align with digit baseline
+  color: var(--mat-sys-on-surface-variant, rgba(0, 0, 0, 0.6));
+}

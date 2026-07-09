@@ -150,7 +150,7 @@
 
 .sd-tree__command-trigger sd-icon.c-icon,
 .sd-tree__command-menu-icon--default {
-  color: map.get(color.$color_map, 'black400') !important;
+  color: map.get(color.$color_map, 'text-secondary') !important;
 }
 
 ::ng-deep .mat-mdc-menu-panel.sd-tree__command-menu .mat-mdc-menu-item.sd-tree__command-menu-item,

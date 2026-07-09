@@ -62,10 +62,10 @@
     (click)="onInternalClick($event)">
     <ng-container *ngTemplateOutlet="contentTpl"></ng-container>
   </button>
-} @else if (_type === 'link') {
+} @else if (_type === 'text') {
   <button
     mat-button
-    class="c-button c-link"
+    class="c-button c-text"
     [type]="_htmlType"
     [ngClass]="buttonClasses()"
     [disabled]="_disabled"

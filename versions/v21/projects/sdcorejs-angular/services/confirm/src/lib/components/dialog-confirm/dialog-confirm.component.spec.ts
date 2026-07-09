@@ -76,6 +76,37 @@ describe('DialogConfirmComponent', () => {
     expect(fix.componentInstance.required).toBeTrue();
   });
 
+  it('seeds value/required from data.select when present', () => {
+    const { fix } = setup({
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
+      select: {
+        defaultValue: 'A',
+        required: true,
+        items: [{ value: 'A', label: 'A' }],
+        valueField: 'value',
+        displayField: 'label',
+      },
+    });
+    expect(fix.componentInstance.value).toBe('A');
+    expect(fix.componentInstance.required).toBeTrue();
+  });
+
+  it('seeds value/required from data.datetime when present', () => {
+    const date = new Date('2024-01-15T08:30:00');
+    const { fix } = setup({
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
+      datetime: { defaultValue: date, required: true },
+    });
+    expect(fix.componentInstance.value).toBe(date);
+    expect(fix.componentInstance.required).toBeTrue();
+  });
+
   it('falls back to empty string when input.defaultValue is missing', () => {
     const { fix } = setup({
       title: 'T',
@@ -109,6 +140,24 @@ describe('DialogConfirmComponent', () => {
   it('renders icon element when data.icon is set', () => {
     const { fix } = setup({ icon: 'warning', title: 'T', message: 'M', yesTitle: 'Y', noTitle: 'N' });
     expect(fix.nativeElement.querySelector('mat-icon')).not.toBeNull();
+  });
+
+  it('marks dialog content as radio content when data.radio is set', () => {
+    const { fix } = setup({
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
+      radio: {
+        defaultValue: 'A',
+        items: [{ value: 'A', label: 'A' }],
+        valueField: 'value',
+        displayField: 'label',
+      },
+    });
+    const content = fix.nativeElement.querySelector('.sd-dialog-confirm__content');
+    expect(content).not.toBeNull();
+    expect(content.classList).toContain('sd-dialog-confirm__content--radio');
   });
 
   it('omits icon element when data.icon is absent', () => {
@@ -180,6 +229,32 @@ describe('DialogConfirmComponent', () => {
     fix.componentInstance.value = 'B';
     fix.componentInstance.onAccept();
     expect(ref.close).toHaveBeenCalledWith({ action: 'ACCEPT', value: 'B' });
+  });
+
+  it('onAccept closes with current value when select is configured', () => {
+    const { fix, ref } = setup({
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
+      select: { items: [], valueField: 'v', displayField: 'd' },
+    });
+    fix.componentInstance.value = 'A';
+    fix.componentInstance.onAccept();
+    expect(ref.close).toHaveBeenCalledWith({ action: 'ACCEPT', value: 'A' });
+  });
+
+  it('onAccept closes with current value when datetime is configured', () => {
+    const { fix, ref } = setup({
+      title: 'T',
+      message: 'M',
+      yesTitle: 'Y',
+      noTitle: 'N',
+      datetime: {},
+    });
+    fix.componentInstance.value = '2024-01-15T08:30:00';
+    fix.componentInstance.onAccept();
+    expect(ref.close).toHaveBeenCalledWith({ action: 'ACCEPT', value: '2024-01-15T08:30:00' });
   });
 
   // ─── null/undefined data ──────────────────────────────────────────────────
