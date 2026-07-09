@@ -29,11 +29,11 @@
           prefixIcon="delete"
           (click)="removaValidation(idx)"
           color="error"
-          type="link"></sd-button> -->
+          type="text"></sd-button> -->
       </div>
     </div>
   }
-  <sd-button [title]="'core.component.form-builder.add-validation' | translate" [matMenuTriggerFor]="menu" prefixIcon="add" color="primary" type="link"></sd-button>
+  <sd-button [title]="'core.component.form-builder.add-validation' | translate" [matMenuTriggerFor]="menu" prefixIcon="add" color="primary" type="text"></sd-button>
   <mat-menu #menu="matMenu">
     <button (click)="addValidation('expression')" mat-menu-item type="button">
       <!-- <sd-icon fontIcon="warning"></sd-icon> -->

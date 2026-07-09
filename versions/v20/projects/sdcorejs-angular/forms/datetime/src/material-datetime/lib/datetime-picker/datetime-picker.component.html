@@ -1,0 +1,31 @@
+<ng-template #panel>
+  <div class="sd-datetime-picker__panel" role="dialog" aria-label="Datetime picker">
+    <mat-calendar
+      [selected]="$any(selected())"
+      [minDate]="$any(minDate())"
+      [maxDate]="$any(maxDate())"
+      [startAt]="$any(startAt())"
+      (selectedChange)="select($any($event))">
+    </mat-calendar>
+
+    <sd-time-spinner
+      [value]="$any(selected())"
+      [showSeconds]="showSeconds()"
+      [stepMinute]="stepMinute()"
+      [disabled]="disabled()"
+      (valueChange)="select($any($event))">
+    </sd-time-spinner>
+
+    <ng-content select="sd-datetime-picker-actions">
+      <!-- Fallback: default actions when consumer does not project custom content -->
+      <div class="sd-datetime-picker__default-actions">
+        <button mat-button type="button" class="sd-datetime-picker__default-now" (click)="now()">
+          <mat-icon>schedule</mat-icon>
+          Now
+        </button>
+        <button mat-button type="button" (click)="close()">Cancel</button>
+        <button mat-flat-button type="button" (click)="apply()">Apply</button>
+      </div>
+    </ng-content>
+  </div>
+</ng-template>

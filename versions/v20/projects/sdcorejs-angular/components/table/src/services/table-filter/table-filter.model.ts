@@ -71,9 +71,6 @@ export interface SdTableOptionFilter<T = any> {
   /** Có thể thu gọn bộ lọc hay không */
   collapsible?: boolean;
 
-  /** @deprecated Use `collapsible` instead. */
-  collapsable?: boolean;
-
   /** Ẩn toolbar (xóa bộ lọc, thiết lập) của external filter, khi có ít external filter user không cần chức năng này */
   hideExternalFilterToolbar?: boolean;
 

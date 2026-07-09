@@ -207,7 +207,7 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ```html
 <sd-input label="Tìm kiếm" placeholder="Nhập từ khóa…" [(model)]="search" blurOnEnter (keyupEnter)="onSearch($event)">
   <ng-template sdSuffixDef>
-    <sd-button type="link" prefixIcon="search" (click)="onSearch(search)"></sd-button>
+    <sd-button type="text" prefixIcon="search" (click)="onSearch(search)"></sd-button>
   </ng-template>
 </sd-input>
 ```

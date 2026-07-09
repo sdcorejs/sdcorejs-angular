@@ -13,12 +13,12 @@
     @if (_isOpened) {
       <ng-container>
         <div class="sd-side-drawer-header">
-          <div class="sd-side-drawer-title">
+          <div class="sd-side-drawer-header-left">
             <ng-content select="[sdHeaderLeft]">
-              {{ title() }}
+              <div class="sd-side-drawer-title">{{ title() }}</div>
             </ng-content>
           </div>
-          <div class="sd-side-drawer-header-actions">
+          <div class="sd-side-drawer-header-right">
             <ng-content select="[sdHeaderRight]"></ng-content>
             @if (!hideClose()) {
               <button type="button" class="sd-side-drawer-close-btn" (click)="close()" aria-label="Close">
@@ -35,7 +35,8 @@
           </div>
         }
         <div class="sd-side-drawer-footer">
-          <ng-content select="[sdFooter]"></ng-content>
+          <div class="sd-side-drawer-footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+          <div class="sd-side-drawer-footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
         </div>
       </ng-container>
     }

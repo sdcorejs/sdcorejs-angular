@@ -89,7 +89,7 @@
                     <div
                       class="c-menu-node-description-content"
                       [ngStyle]="{
-                        color: (currentPath() | menuFocus: node) ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)' : 'var(--sd-on-surface, #1a1b1f)',
+                        color: (currentPath() | menuFocus: node) ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)' : 'var(--sd-text, #1a1b1f)',
                       }"
                       [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
 

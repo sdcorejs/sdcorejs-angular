@@ -151,7 +151,7 @@ option: SdMiniEditorOption = {
 ```html
 <sd-mini-editor #editor [option]="option" [(value)]="text"></sd-mini-editor>
 
-<sd-button title="Chèn @username" type="link"
+<sd-button title="Chèn @username" type="text"
   (click)="editor.insertMention({ id: '123', name: 'nghiatt15' })"></sd-button>
 ```
 

@@ -303,7 +303,7 @@ export class CustomerCreatePage {
 
 ## Styling
 
-- Dùng **CSS custom properties** từ `@sdcorejs/angular` theme (`--sd-primary`, `--sd-primary-light/dark`, `--sd-info`, `--sd-success`, `--sd-warning`, `--sd-error` + `--sd-black100..500`).
+- Dùng **CSS custom properties** từ `@sdcorejs/angular` theme (`--sd-primary`, `--sd-primary-light/dark`, `--sd-info`, `--sd-success`, `--sd-warning`, `--sd-error` + neutral tokens như `--sd-surface-muted`, `--sd-text`, `--sd-border`).
 - Override màu sắc bằng cách override CSS variable ở `:root` hoặc theme parent — không cần đụng SCSS.
 - Fallback hex chỉ áp dụng khi consumer chưa import `sd-core.scss`.
 

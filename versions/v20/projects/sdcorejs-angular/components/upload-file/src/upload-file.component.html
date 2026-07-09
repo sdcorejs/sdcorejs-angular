@@ -104,8 +104,8 @@
         alt="Preview" />
       <a href="javascript:;" class="c-file-name T14M" (click)="onDownload(document)">{{ document.fileName || 'file' }}</a>
       @if (document.fileSize) {
-        <span class="T12R text-black400"> - </span>
-        <span class="T12R text-black400 flex-shrink-0">{{ document.fileSize / 1024 | sdFormatNumber }}KB</span>
+        <span class="T12R text-secondary"> - </span>
+        <span class="T12R text-secondary flex-shrink-0">{{ document.fileSize / 1024 | sdFormatNumber }}KB</span>
       }
 
       @if (!formControl.disabled) {

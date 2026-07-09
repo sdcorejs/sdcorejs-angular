@@ -6,13 +6,15 @@
 **Import path**: `@sdcorejs/angular/services/confirm`
 
 ## One-line purpose
-Opens a Material dialog (`DialogConfirmComponent`) for confirm/input/radio/date prompts and returns a `Promise` that resolves on Accept and rejects on Cancel.
+Opens a Material dialog (`DialogConfirmComponent`) for confirm/input/radio/select/date/datetime prompts and returns a `Promise` that resolves on Accept and rejects on Cancel.
 
 ## When to use
 - Confirming destructive actions ("Are you sure you want to delete?").
 - Asking the user for a short reason/comment before submitting (use `withInput`).
 - Picking one of a small number of options inline (use `withRadio`).
+- Picking one or more values from a longer list (use `withSelect`).
 - Asking for a date alongside a confirmation (use `withDate`).
+- Asking for date and time alongside a confirmation (use `withDatetime`).
 
 ## When NOT to use
 - For richer forms — use a dedicated dialog component with `MatDialog.open(...)`.
@@ -97,9 +99,58 @@ withDate(
     noButtonColor?: Color;
     defaultValue?: string | Date;
     placeholder?: string;
+    min?: string | Date;
+    max?: string | Date;
     disableBackdropClose?: boolean;  // default: true
   }
-): Promise<string>;
+): Promise<string | Date>;
+```
+
+### `withSelect(message?, option?): Promise<string | number | (string | number)[]>`
+Confirm dialog with an `sd-select`.
+
+```typescript
+withSelect(
+  message?: string,
+  option?: {
+    title?: string;
+    yesTitle?: string;               // default: 'CÃ³'
+    noTitle?: string;                // default: 'KhÃ´ng'
+    required?: boolean;
+    yesButtonColor?: Color;
+    noButtonColor?: Color;
+    defaultValue?: string | number | (string | number)[];
+    items: any[];
+    valueField: string;              // default: 'value'
+    displayField: string;            // default: 'label'
+    placeholder?: string;
+    multiple?: boolean;
+    disableBackdropClose?: boolean;  // default: true
+  }
+): Promise<string | number | (string | number)[]>;
+```
+
+### `withDatetime(message?, option?): Promise<string | Date>`
+Confirm dialog with an `sd-datetime` picker.
+
+```typescript
+withDatetime(
+  message?: string,
+  option?: {
+    title?: string;
+    yesTitle?: string;               // default: 'CÃ³'
+    noTitle?: string;                // default: 'KhÃ´ng'
+    required?: boolean;
+    yesButtonColor?: Color;
+    noButtonColor?: Color;
+    defaultValue?: string | Date;
+    placeholder?: string;
+    min?: string | Date;
+    max?: string | Date;
+    showSeconds?: boolean;
+    disableBackdropClose?: boolean;  // default: true
+  }
+): Promise<string | Date>;
 ```
 
 ## Configuration / DI tokens
@@ -160,12 +211,34 @@ const choice = await confirmSvc.withRadio('Select a reason', {
 });
 ```
 
-### 4. Pick a target date
+### 4. Pick a department
+```typescript
+const department = await confirmSvc.withSelect('Select department', {
+  items: [
+    { value: 'sales', label: 'Sales' },
+    { value: 'hr', label: 'Human Resources' },
+  ],
+  valueField: 'value',
+  displayField: 'label',
+  required: true,
+});
+```
+
+### 5. Pick a target date
 ```typescript
 const dateIso = await confirmSvc.withDate('Schedule for', {
   title: 'Schedule',
   required: true,
   placeholder: 'dd/MM/yyyy',
+});
+```
+
+### 6. Pick a target date and time
+```typescript
+const scheduledAt = await confirmSvc.withDatetime('Schedule at', {
+  title: 'Schedule',
+  required: true,
+  placeholder: 'dd/MM/yyyy HH:mm',
 });
 ```
 
@@ -213,16 +286,18 @@ Key points:
 ### Spec file
 `projects/sdcorejs-angular/services/confirm/src/lib/confirm.service.spec.ts`
 
-Covers (13 specs total):
+Covers (15 specs total):
 - Instantiation: service created
 - `confirm()`: opens `MatDialog`; default title "Xác nhận"; custom title/yesTitle/noTitle; resolves on ACCEPT; rejects with `'CANCEL'` on CANCEL; custom width; `disableClose` defaults to `true`
 - `withInput()`: opens dialog with `input` data + default `maxlength: 255`; resolves with entered value; rejects with `'CANCEL'`
 - `withRadio()`: opens dialog with `radio` data + default `display: 'row'`; resolves with selected value
-- `withDate()`: opens dialog with `date` data; resolves with selected date string
+- `withSelect()`: opens dialog with `select` data; resolves with selected value
+- `withDate()`: opens dialog with `date` data; resolves with selected date
+- `withDatetime()`: opens dialog with `datetime` data; resolves with selected date/time
 
 ## Anti-patterns
 - Do NOT use `await confirmSvc.confirm(...)` without a `try/catch` — Cancel is a rejection, not a resolved `false`.
-- Do NOT pass UI-bound objects in `items` for `withRadio` — only primitive value/display fields are read.
+- Do NOT pass UI-bound objects in `items` for `withRadio`/`withSelect` — only primitive value/display fields are read.
 - Do NOT inject `MatDialog` separately to open `DialogConfirmComponent` directly — that component is internal; use the service.
 - Do NOT use this for long-running async work inside the dialog — the dialog closes synchronously on user action.
 

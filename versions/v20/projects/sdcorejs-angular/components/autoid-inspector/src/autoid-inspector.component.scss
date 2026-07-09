@@ -14,11 +14,11 @@ $warning-dark: var(--sd-warning-dark, #7a4d00);
 $error: var(--sd-error, #ba1a1a);
 $error-light: var(--sd-error-light, #ffdad6);
 $error-dark: var(--sd-error-dark, #93000a);
-$black500: var(--sd-black500, #1a1b1f);
-$black400: var(--sd-black400, #44474f);
-$black300: var(--sd-black300, #74777f);
-$black200: var(--sd-black200, #c4c6d0);
-$black100: var(--sd-black100, #e7e8ed);
+$text: var(--sd-text, #1a1b1f);
+$text-secondary: var(--sd-text-secondary, #44474f);
+$border-strong: var(--sd-border-strong, #74777f);
+$border: var(--sd-border, #c4c6d0);
+$surface-muted: var(--sd-surface-muted, #e7e8ed);
 
 :host {
   position: fixed;
@@ -31,7 +31,7 @@ $black100: var(--sd-black100, #e7e8ed);
     Roboto,
     sans-serif;
   font-size: 13px;
-  color: $black500;
+  color: $text;
 }
 
 .sd-autoid-inspector {
@@ -85,9 +85,9 @@ $black100: var(--sd-black100, #e7e8ed);
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    border: 1px solid $black200;
+    border: 1px solid $border;
     background: #fff;
-    color: $black400;
+    color: $text-secondary;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -140,7 +140,7 @@ $black100: var(--sd-black100, #e7e8ed);
     flex-direction: column;
     z-index: 100002;
     overflow: hidden;
-    border: 1px solid $black200;
+    border: 1px solid $border;
   }
 
   &__header {
@@ -148,14 +148,14 @@ $black100: var(--sd-black100, #e7e8ed);
     align-items: center;
     gap: 8px;
     padding: 8px 10px;
-    border-bottom: 1px solid $black200;
-    background: $black100;
+    border-bottom: 1px solid $border;
+    background: $surface-muted;
     flex-shrink: 0;
   }
 
   &__segments {
     display: inline-flex;
-    border: 1px solid $black200;
+    border: 1px solid $border;
     border-radius: 8px;
     background: #fff;
     overflow: hidden;
@@ -167,11 +167,11 @@ $black100: var(--sd-black100, #e7e8ed);
       cursor: pointer;
       font-size: 12px;
       font-weight: 500;
-      color: $black400;
+      color: $text-secondary;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      border-right: 1px solid $black200;
+      border-right: 1px solid $border;
       transition:
         background 0.12s ease,
         color 0.12s ease;
@@ -181,8 +181,8 @@ $black100: var(--sd-black100, #e7e8ed);
       }
 
       &:hover:not(.is-active) {
-        background: $black100;
-        color: $black500;
+        background: $surface-muted;
+        color: $text;
       }
 
       &.is-active {
@@ -193,8 +193,8 @@ $black100: var(--sd-black100, #e7e8ed);
   }
 
   &__badge {
-    background: $black200;
-    color: $black500;
+    background: $border;
+    color: $text;
     border-radius: 10px;
     padding: 0 7px;
     font-size: 11px;
@@ -224,7 +224,7 @@ $black100: var(--sd-black100, #e7e8ed);
     cursor: pointer;
     padding: 4px;
     border-radius: 6px;
-    color: $black400;
+    color: $text-secondary;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -233,8 +233,8 @@ $black100: var(--sd-black100, #e7e8ed);
       color 0.12s ease;
 
     &:hover {
-      background: $black100;
-      color: $black500;
+      background: $surface-muted;
+      color: $text;
     }
 
     &.is-primary {
@@ -261,7 +261,7 @@ $black100: var(--sd-black100, #e7e8ed);
     width: 28px;
     height: 28px;
     background: transparent;
-    color: $black400;
+    color: $text-secondary;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -314,14 +314,14 @@ $black100: var(--sd-black100, #e7e8ed);
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    border: 1px solid $black200;
+    border: 1px solid $border;
     background: #fff;
     border-radius: 999px;
     padding: 5px 12px 5px 10px;
     cursor: pointer;
     font-size: 12px;
     font-weight: 500;
-    color: $black400;
+    color: $text-secondary;
     transition: all 0.15s ease;
 
     &:hover {
@@ -347,8 +347,8 @@ $black100: var(--sd-black100, #e7e8ed);
     font-weight: 700;
     padding: 1px 7px;
     border-radius: 999px;
-    background: $black200;
-    color: $black400;
+    background: $border;
+    color: $text-secondary;
 
     .is-on & {
       background: $primary;
@@ -364,7 +364,7 @@ $black100: var(--sd-black100, #e7e8ed);
   }
 
   &__stat {
-    background: $black100;
+    background: $surface-muted;
     border-radius: 10px;
     padding: 12px;
     text-align: center;
@@ -416,7 +416,7 @@ $black100: var(--sd-black100, #e7e8ed);
 
   &__stat-label {
     font-size: 11px;
-    color: $black400;
+    color: $text-secondary;
     text-transform: uppercase;
     letter-spacing: 0.4px;
     font-weight: 600;
@@ -429,7 +429,7 @@ $black100: var(--sd-black100, #e7e8ed);
     margin: 14px 0 8px;
     font-size: 13px;
     font-weight: 600;
-    color: $black500;
+    color: $text;
 
     sd-icon {
       font-size: 18px;
@@ -483,7 +483,7 @@ $black100: var(--sd-black100, #e7e8ed);
   // TABLE — sticky header fix
   // ==========================================
   &__table-wrap {
-    border: 1px solid $black200;
+    border: 1px solid $border;
     border-radius: 8px;
     overflow: auto;
     max-height: 60vh;
@@ -501,7 +501,7 @@ $black100: var(--sd-black100, #e7e8ed);
       padding: 8px 10px;
       text-align: left;
       vertical-align: middle;
-      border-bottom: 1px solid $black200;
+      border-bottom: 1px solid $border;
     }
 
     // Sticky header: phải có background SOLID + box-shadow + z-index để
@@ -511,15 +511,15 @@ $black100: var(--sd-black100, #e7e8ed);
       position: sticky;
       top: 0;
       z-index: 1;
-      background: $black100;
+      background: $surface-muted;
       font-weight: 600;
-      color: $black500;
+      color: $text;
       text-transform: none;
       font-size: 11px;
       letter-spacing: 0.3px;
       border-bottom: none;
       box-shadow:
-        inset 0 -1px 0 $black200,
+        inset 0 -1px 0 $border,
         0 2px 4px rgba(0, 0, 0, 0.04);
       white-space: nowrap;
 
@@ -561,18 +561,18 @@ $black100: var(--sd-black100, #e7e8ed);
 
     td.is-num {
       text-align: right;
-      color: $black400;
+      color: $text-secondary;
       font-variant-numeric: tabular-nums;
     }
 
     code {
       font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
       font-size: 11px;
-      background: $black100;
+      background: $surface-muted;
       padding: 2px 6px;
       border-radius: 4px;
       color: $primary-dark;
-      border: 1px solid $black200;
+      border: 1px solid $border;
     }
   }
 
@@ -599,7 +599,7 @@ $black100: var(--sd-black100, #e7e8ed);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: $black400;
+    color: $text-secondary;
     font-style: italic;
   }
 
@@ -615,9 +615,9 @@ $black100: var(--sd-black100, #e7e8ed);
     display: inline-block;
     font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
     font-size: 10px;
-    background: $black100;
-    color: $black400;
-    border: 1px solid $black200;
+    background: $surface-muted;
+    color: $text-secondary;
+    border: 1px solid $border;
     padding: 1px 6px;
     border-radius: 999px;
     font-weight: 500;
@@ -644,7 +644,7 @@ $black100: var(--sd-black100, #e7e8ed);
 
   &__empty {
     text-align: center;
-    color: $black400;
+    color: $text-secondary;
     padding: 24px;
     font-style: italic;
   }
@@ -656,8 +656,8 @@ $black100: var(--sd-black100, #e7e8ed);
     display: flex;
     align-items: center;
     gap: 6px;
-    background: $black100;
-    border: 1px solid $black200;
+    background: $surface-muted;
+    border: 1px solid $border;
     border-radius: 8px;
     padding: 6px 10px;
     margin-bottom: 12px;
@@ -674,10 +674,10 @@ $black100: var(--sd-black100, #e7e8ed);
       background: transparent;
       outline: none;
       font-size: 13px;
-      color: $black500;
+      color: $text;
 
       &::placeholder {
-        color: $black300;
+        color: $border-strong;
       }
     }
 
@@ -685,7 +685,7 @@ $black100: var(--sd-black100, #e7e8ed);
       font-size: 18px;
       width: 18px;
       height: 18px;
-      color: $black400;
+      color: $text-secondary;
     }
   }
 
@@ -699,7 +699,7 @@ $black100: var(--sd-black100, #e7e8ed);
     }
 
     button {
-      border: 1px solid $black200;
+      border: 1px solid $border;
       background: #fff;
       border-radius: 10px;
       padding: 12px 10px;
@@ -731,13 +731,13 @@ $black100: var(--sd-black100, #e7e8ed);
       span {
         font-size: 12px;
         font-weight: 600;
-        color: $black500;
+        color: $text;
         line-height: 1.25;
       }
 
       small {
         font-size: 10px;
-        color: $black400;
+        color: $text-secondary;
         line-height: 1.2;
       }
 
@@ -753,7 +753,7 @@ $black100: var(--sd-black100, #e7e8ed);
   &__export-section {
     margin-top: 14px;
     padding-top: 12px;
-    border-top: 1px solid $black200;
+    border-top: 1px solid $border;
   }
 
   &__context-backdrop {
@@ -773,7 +773,7 @@ $black100: var(--sd-black100, #e7e8ed);
     transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
-    border: 1px solid $black200;
+    border: 1px solid $border;
     border-radius: 8px;
     background: #fff;
     box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
@@ -786,21 +786,21 @@ $black100: var(--sd-black100, #e7e8ed);
     justify-content: space-between;
     gap: 12px;
     padding: 14px 16px;
-    border-bottom: 1px solid $black200;
+    border-bottom: 1px solid $border;
 
     h4 {
       margin: 0;
       font-size: 15px;
       font-weight: 700;
       line-height: 1.3;
-      color: $black500;
+      color: $text;
     }
 
     small {
       display: block;
       margin-top: 2px;
       font-size: 11px;
-      color: $black400;
+      color: $text-secondary;
       line-height: 1.3;
     }
   }
@@ -826,7 +826,7 @@ $black100: var(--sd-black100, #e7e8ed);
     span {
       font-size: 12px;
       font-weight: 600;
-      color: $black500;
+      color: $text;
       line-height: 1.25;
     }
 
@@ -834,10 +834,10 @@ $black100: var(--sd-black100, #e7e8ed);
     textarea {
       width: 100%;
       min-width: 0;
-      border: 1px solid $black200;
+      border: 1px solid $border;
       border-radius: 6px;
       padding: 8px 10px;
-      color: $black500;
+      color: $text;
       font: inherit;
       font-size: 12px;
       line-height: 1.4;
@@ -856,15 +856,15 @@ $black100: var(--sd-black100, #e7e8ed);
     justify-content: flex-end;
     gap: 8px;
     padding: 12px 16px;
-    border-top: 1px solid $black200;
+    border-top: 1px solid $border;
 
     button {
       min-height: 34px;
       border-radius: 6px;
       padding: 0 12px;
-      border: 1px solid $black200;
+      border: 1px solid $border;
       background: #fff;
-      color: $black500;
+      color: $text;
       cursor: pointer;
       display: inline-flex;
       align-items: center;

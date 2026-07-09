@@ -1,9 +1,9 @@
 @use '../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
-$mat-stroked-button-border-color: #d3d3d3;
-$mat-button-disabled-border-color: #a6a6a6;
-$mat-button-disabled-background-color: #e9e9e9;
+$button-outline-border-color: #d3d3d3;
+$button-disabled-border-color: #a6a6a6;
+$button-disabled-background-color: #e9e9e9;
 $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 
 :host {
@@ -47,7 +47,6 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     white-space: nowrap;
 
     // Layout content
-    .mat-button-wrapper,
     .mdc-button__label {
       display: flex;
       align-items: center;
@@ -58,11 +57,10 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 
     // --- TRẠNG THÁI DISABLED (Attribute disabled thật) ---
     // Chặn click và đổi màu xám
-    &[disabled],
-    &.mat-button-disabled {
+    &[disabled] {
       pointer-events: none;
-      color: $mat-button-disabled-border-color !important;
-      background-color: $mat-button-disabled-background-color !important;
+      color: $button-disabled-border-color !important;
+      background-color: $button-disabled-background-color !important;
     }
 
     // --- STYLE SIZES ---
@@ -74,9 +72,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     &.c-sm {
       font-size: 14px !important;
       height: 32px;
-      line-height: 20px !important;
       padding: 2px 12px !important;
-      font-weight: normal;
 
       sd-icon {
         height: 16px !important;
@@ -85,17 +81,13 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       }
       &.c-square {
         width: 32px !important;
-        min-width: auto !important;
-        padding: 0 !important;
       }
     }
 
     &.c-md {
       font-size: 16px;
       height: 40px;
-      line-height: 20px;
       padding: 2px 16px !important;
-      font-weight: normal;
 
       sd-icon {
         height: 20px !important;
@@ -104,21 +96,22 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       }
       &.c-square {
         width: 40px !important;
-        min-width: auto !important;
-        padding: 0 !important;
       }
     }
 
     &.c-lg {
       font-size: 16px !important;
-      line-height: 20px !important;
       padding: 2px 16px !important;
       height: 48px;
 
       &.c-square {
         width: 48px !important;
-        min-width: auto !important;
-        padding: 0 !important;
+      }
+
+      sd-icon {
+        height: 24px !important;
+        width: 24px !important;
+        font-size: 24px !important;
       }
     }
 
@@ -221,7 +214,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
           }
         }
         &.c-black {
-          background-color: map.get(color.$color_map, 'black100');
+          background-color: map.get(color.$color_map, 'surface-muted');
           color: $sd-button-black-color !important;
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
             stroke: $sd-button-black-color !important;
@@ -233,7 +226,7 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
     // 3. OUTLINE
     &.c-outline {
       &.mat-mdc-outlined-button {
-        border-color: $mat-stroked-button-border-color;
+        border-color: $button-outline-border-color;
         &.mat-primary {
           color: map.get(color.$color_map, 'primary');
           .mat-mdc-progress-spinner .mdc-circular-progress__indeterminate-circle-graphic circle {
@@ -276,14 +269,14 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
             stroke: $sd-button-black-color !important;
           }
         }
-        &.mat-button-disabled {
+        &[disabled] {
           background: transparent !important;
         }
       }
     }
 
-    // 4. LINK
-    &.c-link {
+    // 4. TEXT
+    &.c-text {
       &.mat-mdc-button {
         &.mat-primary {
           color: map.get(color.$color_map, 'primary');
@@ -353,6 +346,10 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
 
   .c-spinner {
     display: inline-block;
+  }
+
+  sd-icon {
+    display: inline-flex;
   }
 }
 
