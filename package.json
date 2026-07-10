@@ -12,6 +12,7 @@
     "lint:release": "npm run lint:v19 && npm run lint:v20 && npm run lint:v21",
     "lint:phase": "node scripts/lint-phase.mjs",
     "lint:phase:release": "node scripts/lint-phase.mjs --workspace v19 --phase release-touched",
+    "check:sync": "node scripts/check-version-sync.mjs",
     "collect-docs": "node scripts/collect-docs.mjs",
     "collect-release-docs": "node scripts/collect-release-docs.mjs",
     "changeset": "changeset"

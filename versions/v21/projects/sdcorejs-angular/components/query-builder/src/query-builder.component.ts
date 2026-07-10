@@ -361,7 +361,7 @@ export class SdQueryBuilder {
     this.#apply();
   }
 
-  setValueSource(rule: QbRule, source: QbValueSource): void {
+  setValueSource(rule: QbRule, source: unknown): void {
     if (this.resolvedDisabled()) return;
     if (source === 'field' && this.resolvedComparisonMode() === 'value-or-field' && this.canCompareWithField(rule)) {
       rule.valueSource = 'field';
@@ -487,7 +487,7 @@ export class SdQueryBuilder {
   }
 
   /** Switch a date/datetime rule's value mode, reseeding the value for the new mode. */
-  setDateMode(rule: QbRule, mode: QbDateMode): void {
+  setDateMode(rule: QbRule, mode: unknown): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
     if (mode === 'now') rule.value = QB_TODAY;
@@ -521,10 +521,11 @@ export class SdQueryBuilder {
   }
 
   /** Set the offset unit + direction from a `'unit:direction'` token. */
-  setRelativeUnitDir(rule: QbRule, token: string): void {
+  setRelativeUnitDir(rule: QbRule, token: unknown): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
-    const [unit, direction] = (token ?? 'day:previous').split(':') as [DateRelative['unit'], DateRelative['direction']];
+    const normalizedToken = typeof token === 'string' ? token : 'day:previous';
+    const [unit, direction] = normalizedToken.split(':') as [DateRelative['unit'], DateRelative['direction']];
     const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
     rule.value = { amount: cur.amount, direction, unit } satisfies DateRelative;
     this.#apply();

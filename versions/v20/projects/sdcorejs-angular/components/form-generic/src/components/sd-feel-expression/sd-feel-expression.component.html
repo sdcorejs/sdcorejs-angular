@@ -1,6 +1,6 @@
 <a class="T12R" href="javascript:;" (click)="edit()">{{model || '--'}}</a>
 @if (expression) {
-<sd-modal [title]="'core.component.form-builder.set-expression' | translate">
+<sd-modal [title]="'core.component.form-builder.set-expression' | translate" modalClass="sd-form-builder-dialog">
   <div class="c-builder">
     <div class="d-flex justify-content-end">
       <sd-button prefixIcon="calculate" class="mr-4" [title]="'core.component.form-builder.condition-group' | translate" color="primary" (click)="addCombinator(expression.conditions)"></sd-button>
@@ -116,8 +116,6 @@
       </div>
     }
   </div>
-  <ng-container sdFooter>
-    <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
-  </ng-container>
+  <sd-button sdFooterRight prefixIcon="check" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
 </sd-modal>
 }

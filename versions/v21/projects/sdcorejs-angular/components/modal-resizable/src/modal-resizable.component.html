@@ -48,7 +48,8 @@
         </div>
       </div>
       <div class="modal-resizable__footer">
-        <ng-content select="[sdFooter]"></ng-content>
+        <div class="modal-resizable__footer-left"><ng-content select="[sdFooterLeft]"></ng-content></div>
+        <div class="modal-resizable__footer-right"><ng-content select="[sdFooterRight]"></ng-content></div>
       </div>
     }
   </div>

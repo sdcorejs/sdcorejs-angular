@@ -71,7 +71,7 @@
             [density]="_resolvedDensity"
             [showOperator]="_resolvedShowOperatorOnChip"
             [autoId]="inlineAutoId(i, 'value')"
-            (valueChange)="updateFilter(i, { data: $event })"
+            (valueChange)="updateFilterData(i, $event)"
             (remove)="removeFilter(i)" />
         } @else {
           <sd-query-inline-chip
@@ -83,9 +83,9 @@
             [autoId]="inlineAutoId(i, 'value')"
             [valueText]="chipValueText(filter)"
             [isNoData]="isNoDataOperator(_op)"
-            (commit)="updateFilter(i, { data: $event })"
+            (commit)="updateFilterData(i, $event)"
             (commitRange)="setFilterRange(i, $event)"
-            (liveChange)="updateFilter(i, { data: $event })"
+            (liveChange)="updateFilterData(i, $event)"
             (remove)="removeFilter(i)" />
         }
       }

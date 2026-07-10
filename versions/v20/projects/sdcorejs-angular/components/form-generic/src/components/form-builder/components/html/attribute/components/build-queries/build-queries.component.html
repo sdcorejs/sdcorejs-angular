@@ -7,7 +7,7 @@
       <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
     </div>
   </div>
-  <sd-modal [title]="'core.component.form-builder.set-query-value' | translate" width="400px">
+  <sd-modal [title]="'core.component.form-builder.set-query-value' | translate" width="400px" modalClass="sd-form-builder-dialog">
     <div class="c-builder">
       @for (property of leftProperties; track property.value) {
         <div class="d-flex align-items-center py-8" style="gap: 8px">
@@ -25,7 +25,7 @@
         </div>
       }
     </div>
-    <ng-container sdFooter>
+    <ng-container sdFooterRight>
       <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
     </ng-container>
   </sd-modal>

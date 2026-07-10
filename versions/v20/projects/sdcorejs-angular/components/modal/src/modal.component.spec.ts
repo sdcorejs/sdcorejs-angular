@@ -440,6 +440,7 @@ describe('SdModal', () => {
         <sd-modal view="dialog" [autoId]="autoId" [title]="'E2E Test'" [lazyLoadContent]="false">
           <span sdHeaderRight id="header-action">Header action</span>
           <span id="body-slot">Body content</span>
+          <span id="body-extra">Additional body content</span>
           <span sdFooterLeft id="footer-left">Secondary</span>
           <span sdFooterRight id="footer-right">Primary</span>
         </sd-modal>
@@ -522,6 +523,19 @@ describe('SdModal', () => {
       expect(root.querySelector('.sd-modal-header-right #header-action')?.textContent?.trim()).toBe('Header action');
       expect(root.querySelector('.sd-modal-footer-left #footer-left')?.textContent?.trim()).toBe('Secondary');
       expect(root.querySelector('.sd-modal-footer-right #footer-right')?.textContent?.trim()).toBe('Primary');
+      expect(root.querySelector('.sd-modal-body #body-extra')?.textContent?.trim()).toBe('Additional body content');
+    });
+
+    it('limits the dialog surface to viewport height so body scroll does not hide footer actions', () => {
+      const styles = ((SdModal as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('max-height: calc(100vh - 32px)');
+    });
+
+    it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {
+      const styles = ((SdModal as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('margin-left: auto');
     });
 
     it('renders a compact close button with the derived autoId', () => {

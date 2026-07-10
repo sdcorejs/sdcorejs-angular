@@ -25,6 +25,7 @@
     padding: 0 !important; // Loi touchUi date picker
     border-radius: var(--sd-modal-radius) !important;
     background: var(--sd-modal-surface);
+    max-height: calc(100vh - 32px);
     overflow: hidden;
     box-shadow: var(--sd-modal-shadow);
   }
@@ -179,6 +180,7 @@
 
 .sd-modal-footer-right {
   flex: 0 0 auto;
+  margin-left: auto;
   justify-content: flex-end;
 }
 

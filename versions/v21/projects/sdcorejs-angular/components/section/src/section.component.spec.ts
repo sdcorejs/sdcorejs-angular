@@ -333,6 +333,12 @@ describe('SdSection', () => {
       expect(el.querySelector('.sd-section-footer-right button')?.textContent?.trim()).toBe('Save');
     });
 
+    it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {
+      const styles = ((SdSection as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('margin-left: auto');
+    });
+
     it('projects default slot (body) content', () => {
       const el = slotsFixture.debugElement.query(By.directive(SdSection)).nativeElement as HTMLElement;
       expect(el.querySelector('p.body-content')).not.toBeNull();

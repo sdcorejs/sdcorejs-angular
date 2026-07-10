@@ -6,7 +6,7 @@
     <a class="T12R" href="javascript:;" (click)="edit()">{{ queryString }}</a>
   </div>
 </div>
-<sd-modal [title]="'core.component.form-builder.assign-parameter-value' | translate" width="500px">
+<sd-modal [title]="'core.component.form-builder.assign-parameter-value' | translate" width="500px" modalClass="sd-form-builder-dialog">
   <div class="c-builder">
     <div class="d-flex justify-content-end">
       <sd-button prefixIcon="add" [title]="'core.component.form-builder.add-field' | translate" color="primary" (click)="addField()"></sd-button>
@@ -28,7 +28,7 @@
       </div>
     }
   </div>
-  <ng-container sdFooter>
+  <ng-container sdFooterRight>
     <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
   </ng-container>
 </sd-modal>

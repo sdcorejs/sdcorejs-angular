@@ -15,9 +15,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Color } from '@sdcorejs/utils/models';
+import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { Subject, Subscription } from 'rxjs';
 import { filter, throttleTime } from 'rxjs/operators';
-import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 
 // Export các Type ra ngoài để tái sử dụng ở file config/interface
 export type SdButtonType = 'fill' | 'light' | 'outline' | 'text';
@@ -31,7 +31,7 @@ export type SdButtonColor = Color | 'black';
   styleUrl: './button.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [CommonModule, MatButtonModule, MatProgressSpinnerModule, MatTooltipModule, SdIcon],
   host: {
     '[class.sd-disabled]': 'disabled()',
     '[class.sd-loading]': 'loading()',

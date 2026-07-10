@@ -76,15 +76,15 @@
       <!-- Option trong dropdown: icon thể hiện type + label. -->
       <ng-template sdItemDef let-item="item">
         <span class="qb-opt">
-          <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
-          <span class="qb-opt-label">{{ item.label }}</span>
+          <sd-icon class="qb-opt-icon" [name]="fieldIcon($any(item))"></sd-icon>
+          <span class="qb-opt-label">{{ $any(item).label }}</span>
         </span>
       </ng-template>
       <!-- Giá trị đã chọn ở trigger: icon mặc định theo type khi field chưa có icon riêng. -->
       <ng-template #sdSelected let-item="item">
         <span class="qb-opt">
-          <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
-          <span class="qb-opt-label">{{ item?.label }}</span>
+          <sd-icon class="qb-opt-icon" [name]="fieldIcon($any(item))"></sd-icon>
+          <span class="qb-opt-label">{{ $any(item)?.label }}</span>
         </span>
       </ng-template>
     </sd-select>
@@ -128,8 +128,8 @@
             </ng-template>
             <ng-template #sdSelected let-item="item">
               <span class="qb-opt">
-                <sd-icon class="qb-opt-icon" [name]="item?.icon"></sd-icon>
-                <span class="qb-opt-label">{{ item?.display }}</span>
+                <sd-icon class="qb-opt-icon" [name]="$any(item)?.icon"></sd-icon>
+                <span class="qb-opt-label">{{ $any(item)?.display }}</span>
               </span>
             </ng-template>
           </sd-select>
@@ -153,14 +153,14 @@
           >
             <ng-template sdItemDef let-item="item">
               <span class="qb-opt">
-                <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
-                <span class="qb-opt-label">{{ item.label }}</span>
+                <sd-icon class="qb-opt-icon" [name]="fieldIcon($any(item))"></sd-icon>
+                <span class="qb-opt-label">{{ $any(item).label }}</span>
               </span>
             </ng-template>
             <ng-template #sdSelected let-item="item">
               <span class="qb-opt">
-                <sd-icon class="qb-opt-icon" [name]="fieldIcon(item)"></sd-icon>
-                <span class="qb-opt-label">{{ item?.label }}</span>
+                <sd-icon class="qb-opt-icon" [name]="fieldIcon($any(item))"></sd-icon>
+                <span class="qb-opt-label">{{ $any(item)?.label }}</span>
               </span>
             </ng-template>
           </sd-select>
@@ -206,8 +206,8 @@
                 </ng-template>
                 <ng-template #sdSelected let-item="item">
                   <span class="qb-opt">
-                    <sd-icon class="qb-opt-icon" [name]="item?.icon"></sd-icon>
-                    <span class="qb-opt-label">{{ item?.display }}</span>
+                    <sd-icon class="qb-opt-icon" [name]="$any(item)?.icon"></sd-icon>
+                    <span class="qb-opt-label">{{ $any(item)?.display }}</span>
                   </span>
                 </ng-template>
               </sd-select>
@@ -232,8 +232,8 @@
                 </ng-template>
                 <ng-template #sdSelected let-item="item">
                   <span class="qb-opt">
-                    <sd-icon class="qb-opt-icon" [name]="item?.icon"></sd-icon>
-                    <span class="qb-opt-label">{{ item?.display }}</span>
+                    <sd-icon class="qb-opt-icon" [name]="$any(item)?.icon"></sd-icon>
+                    <span class="qb-opt-label">{{ $any(item)?.display }}</span>
                   </span>
                 </ng-template>
               </sd-select>

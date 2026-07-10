@@ -184,7 +184,7 @@ foreach ($v in $versions) {
     # Mirror copy from versions/v19 to the target version folder
     # why: package-lock.json stays major-specific after each workspace install.
     # CHANGELOG.md is independent at the root repo and is not rolled into versions/.
-    robocopy $v19Path $dest /MIR /XD .git node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md package-lock.json /R:1 /W:1 /NFL /NDL /NP | Out-Null
+    robocopy $v19Path $dest /MIR /XD .git .sdcorejs node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md package-lock.json /R:1 /W:1 /NFL /NDL /NP | Out-Null
   }
 
   # Explicitly delete projects/demo folder in target if present
