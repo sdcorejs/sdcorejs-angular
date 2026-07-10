@@ -20,7 +20,7 @@
   </div>
 </div>
 @if (expression) {
-  <sd-modal [title]="'core.component.form-builder.set-expression' | translate">
+  <sd-modal [title]="'core.component.form-builder.set-expression' | translate" modalClass="sd-form-builder-dialog">
     <div class="c-builder">
       <div class="d-flex justify-content-end">
         <sd-button
@@ -376,7 +376,7 @@
         </div>
       }
     </div>
-    <ng-container sdFooter>
+    <ng-container sdFooterRight>
       <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
     </ng-container>
   </sd-modal>

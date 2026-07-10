@@ -25,6 +25,10 @@ import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
         <button mat-stroked-button color="primary" (click)="onRadio()">Chọn mức độ</button>
       </demo-section>
 
+      <demo-section heading="Chọn radio dạng dọc" [props]="[{ name: 'display', value: 'column' }]" note="withRadio(..., { display: 'column' }) – hiển thị danh sách radio theo chiều dọc.">
+        <button mat-stroked-button color="primary" (click)="onRadioColumn()">Chọn phòng ban dạng dọc</button>
+      </demo-section>
+
       <demo-section heading="Chọn phòng ban" [props]="[{ name: 'withSelect()', value: 'method' }]" note="withSelect() – chọn một giá trị bằng sd-select.">
         <button mat-stroked-button color="primary" (click)="onSelect()">Chọn phòng ban</button>
       </demo-section>
@@ -96,6 +100,27 @@ export class ConfirmDemoComponent {
       .then(
         (v) => this.log.set('Radio: ' + v),
         () => this.log.set('Radio: HỦY'),
+      );
+  }
+
+  onRadioColumn() {
+    this.#confirm
+      .withRadio('Chọn phòng ban xử lý:', {
+        title: 'Phòng ban xử lý',
+        items: [
+          { value: 'sales', label: 'Kinh doanh' },
+          { value: 'operation', label: 'Vận hành' },
+          { value: 'finance', label: 'Tài chính' },
+        ],
+        valueField: 'value',
+        displayField: 'label',
+        display: 'column',
+        defaultValue: 'operation',
+        required: true,
+      })
+      .then(
+        (v) => this.log.set('Radio dọc: ' + v),
+        () => this.log.set('Radio dọc: HỦY'),
       );
   }
 

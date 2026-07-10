@@ -16,16 +16,15 @@
   </div>
 </div>
 
-<sd-modal [title]="'core.component.form-builder.set-expression' | translate" width="920px">
+<sd-modal [title]="'core.component.form-builder.set-expression' | translate" width="920px" modalClass="sd-form-builder-dialog">
   <div class="fb-expression-query">
     <sd-query-builder [fields]="queryFields" [(value)]="draftFilter"></sd-query-builder>
   </div>
-  <ng-container sdFooter>
-    <sd-button
-      prefixIcon="check"
-      [title]="'core.component.form-builder.confirm' | translate"
-      (click)="onAccept()"
-      color="primary"
-      type="fill"></sd-button>
-  </ng-container>
+  <sd-button
+    sdFooterRight
+    prefixIcon="check"
+    [title]="'core.component.form-builder.confirm' | translate"
+    (click)="onAccept()"
+    color="primary"
+    type="fill"></sd-button>
 </sd-modal>

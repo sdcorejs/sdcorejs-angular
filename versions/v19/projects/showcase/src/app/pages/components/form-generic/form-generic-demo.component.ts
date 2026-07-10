@@ -181,6 +181,132 @@ const SEED: SdFormGeneric = {
   validations: [],
 };
 
+const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
+  variables: Array.from({ length: 12 }, (_, index) => ({
+    id: `stress-v${index + 1}`,
+    key: `approvalValue${index + 1}`,
+    label: `Approval value ${index + 1}`,
+  })),
+  components: [
+    {
+      id: 'stress-a',
+      key: 'ownerName',
+      type: 'textfield',
+      label: 'Owner name',
+      layout: { columns: '6' },
+      validate: { required: true },
+      properties: {},
+    },
+    {
+      id: 'stress-b',
+      key: 'ownerEmail',
+      type: 'textfield',
+      label: 'Owner email',
+      layout: { columns: '6' },
+      validate: { required: true },
+      properties: {},
+    },
+    {
+      id: 'stress-c',
+      key: 'contractCode',
+      type: 'textfield',
+      label: 'Contract code',
+      layout: { columns: '4' },
+      validate: { required: true },
+      properties: {},
+    },
+    {
+      id: 'stress-d',
+      key: 'contractValue',
+      type: 'number',
+      label: 'Contract value',
+      layout: { columns: '4' },
+      validate: { min: 1 },
+      properties: {},
+    } as any,
+    {
+      id: 'stress-e',
+      key: 'goLiveDate',
+      type: 'datetime',
+      subtype: 'date',
+      label: 'Go-live date',
+      layout: { columns: '4' },
+      validate: {},
+      properties: {},
+    } as any,
+    {
+      id: 'stress-f',
+      key: 'approvalStatus',
+      type: 'select',
+      label: 'Approval status',
+      layout: { columns: '12' },
+      validate: { required: true },
+      values: [
+        { value: 'draft', label: 'Draft' },
+        { value: 'reviewing', label: 'Reviewing' },
+        { value: 'approved', label: 'Approved' },
+      ],
+      properties: {},
+    } as any,
+    {
+      id: 'stress-g',
+      key: 'riskNote',
+      type: 'textarea',
+      label: 'Risk note',
+      layout: { columns: '6' },
+      validate: { maxlength: 300 },
+      properties: {},
+    },
+    {
+      id: 'stress-h',
+      key: 'internalNote',
+      type: 'textarea',
+      label: 'Internal note',
+      layout: { columns: '6' },
+      validate: { maxlength: 300 },
+      properties: {},
+    },
+    {
+      id: 'stress-i',
+      type: 'group',
+      label: 'Nested review block',
+      layout: { columns: '12' },
+      properties: { icon: 'fact_check', color: 'primary' },
+      components: [
+        {
+          id: 'stress-i1',
+          key: 'reviewer',
+          type: 'textfield',
+          label: 'Reviewer',
+          layout: { columns: '6' },
+          validate: {},
+          properties: {},
+        } as any,
+        {
+          id: 'stress-i2',
+          key: 'reviewLevel',
+          type: 'select',
+          label: 'Review level',
+          layout: { columns: '6' },
+          validate: {},
+          values: [
+            { value: 'l1', label: 'Level 1' },
+            { value: 'l2', label: 'Level 2' },
+          ],
+          properties: {},
+        } as any,
+      ],
+    } as any,
+  ],
+  validations: [
+    {
+      alert: 'warning',
+      type: 'function',
+      code: 'reviewBeforeSubmit',
+    } as any,
+  ],
+};
+
 @Component({
   selector: 'app-form-generic-demo',
   standalone: true,
@@ -193,6 +319,12 @@ const SEED: SdFormGeneric = {
         <div class="row-actions">
           <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
           <sd-button type="outline" color="secondary" title="Tải form rỗng" prefixIcon="layers_clear" (click)="loadEmpty()"></sd-button>
+          <sd-button
+            type="outline"
+            color="primary"
+            title="Demo drag/drop + popup"
+            prefixIcon="open_with"
+            (click)="loadDragDropPopupDemo()"></sd-button>
           <sd-button type="fill" color="primary" title="Cập nhật preview" prefixIcon="visibility" (click)="refreshPreview()"></sd-button>
           <sd-button type="outline" color="primary" title="Xuất JSON" prefixIcon="code" (click)="dumpJson()"></sd-button>
         </div>
@@ -294,6 +426,13 @@ export class FormGenericDemoComponent {
     const empty = { components: [], variables: [], validations: [] };
     this.seed.set(empty);
     this.preview.set(structuredClone(empty));
+    this.output.set('');
+  }
+
+  loadDragDropPopupDemo(): void {
+    const demo = structuredClone(DRAG_DROP_POPUP_SEED);
+    this.seed.set(demo);
+    this.preview.set(structuredClone(demo));
     this.output.set('');
   }
 
