@@ -1169,3 +1169,134 @@ describe('Tree search ở cấp con (static tree + type local)', () => {
     expect(fruits.meta.tree!.childItems!.map(c => c.data.id)).toEqual([11, 12]);
   }));
 });
+
+describe('hidden paginator footer height', () => {
+  interface Row {
+    id: number;
+    name: string;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `
+      <div class="table-shell action-table">
+        <sd-table [option]="actionOption"></sd-table>
+      </div>
+      <div class="table-shell summary-table">
+        <sd-table [option]="summaryOption"></sd-table>
+      </div>
+      <div class="table-shell visible-paginator-table">
+        <sd-table [option]="visiblePaginatorOption"></sd-table>
+      </div>
+    `,
+    styles: [`
+      .table-shell {
+        width: 600px;
+        height: 240px;
+      }
+
+      :host ::ng-deep .d-none {
+        display: none !important;
+      }
+    `],
+  })
+  class HiddenPaginatorHeightHostComponent {
+    actionOption: SdTableOption<Row> = {
+      type: 'local',
+      items: () => [{ id: 1, name: 'Only row' }],
+      reload: { visible: true },
+      paginate: { pageSize: 20 },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    };
+
+    summaryOption: SdTableOption<Row> = {
+      type: 'local',
+      items: () => [{ id: 1, name: 'Only row' }],
+      paginate: { pageSize: 20 },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    };
+
+    visiblePaginatorOption: SdTableOption<Row> = {
+      type: 'local',
+      items: () => Array.from({ length: 21 }, (_, index) => ({ id: index + 1, name: `Row ${index + 1}` })),
+      paginate: { pageSize: 20 },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    };
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HiddenPaginatorHeightHostComponent] });
+  });
+
+  function createLoadedFixture(): ComponentFixture<HiddenPaginatorHeightHostComponent> {
+    const fixture = TestBed.createComponent(HiddenPaginatorHeightHostComponent);
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('contains the 48px action touch target without creating an outer table scrollbar', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const table = fixture.nativeElement.querySelector('.action-table sd-table') as HTMLElement;
+    const container = table.querySelector('.c-container') as HTMLElement;
+    const paginatorFooter = table.querySelector('.c-paginator') as HTMLElement;
+    const paginator = table.querySelector('mat-paginator') as HTMLElement;
+
+    expect(getComputedStyle(paginator).display)
+      .withContext('short data set should hide mat-paginator')
+      .toBe('none');
+    expect(paginatorFooter.querySelector('sd-button'))
+      .withContext('fixture must render a footer action button')
+      .not.toBeNull();
+    expect(paginatorFooter.getBoundingClientRect().height)
+      .withContext("footer must contain Material's 48px touch target")
+      .toBeGreaterThanOrEqual(48);
+    expect(table.scrollHeight)
+      .withContext('sd-table host must not gain a redundant vertical scrollbar')
+      .toBeLessThanOrEqual(table.clientHeight);
+    expect(container.scrollHeight)
+      .withContext('c-container must contain the footer without overflow propagation')
+      .toBeLessThanOrEqual(container.clientHeight);
+
+    fixture.destroy();
+  }));
+
+  it('keeps the hidden-paginator summary compact when there are no footer actions', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const table = fixture.nativeElement.querySelector('.summary-table sd-table') as HTMLElement;
+    const paginatorFooter = table.querySelector('.c-paginator') as HTMLElement;
+    const paginator = table.querySelector('mat-paginator') as HTMLElement;
+
+    expect(getComputedStyle(paginator).display).toBe('none');
+    expect(paginatorFooter.querySelector('sd-button')).toBeNull();
+    expect(paginatorFooter.getBoundingClientRect().height)
+      .withContext('conditional action rule must not reserve an empty 48px footer')
+      .toBeLessThan(48);
+
+    fixture.destroy();
+  }));
+
+  it('preserves the normal visible paginator height', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const table = fixture.nativeElement.querySelector('.visible-paginator-table sd-table') as HTMLElement;
+    const paginatorFooter = table.querySelector('.c-paginator') as HTMLElement;
+    const paginator = table.querySelector('mat-paginator') as HTMLElement;
+
+    expect(getComputedStyle(paginator).display).not.toBe('none');
+    expect(paginatorFooter.getBoundingClientRect().height).toBeGreaterThanOrEqual(56);
+
+    fixture.destroy();
+  }));
+});
