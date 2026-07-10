@@ -1,0 +1,604 @@
+{
+  "package": "@sdcorejs/angular",
+  "version": "19.1.0",
+  "released": "2026-07-10",
+  "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0",
+  "count": 85,
+  "docs": [
+    {
+      "id": "assets/STYLE-GUIDE",
+      "title": "@sdcorejs/angular — Assets & SCSS Reference",
+      "category": "assets",
+      "path": "assets/STYLE-GUIDE.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/assets/STYLE-GUIDE.md"
+    },
+    {
+      "id": "components/anchor/sd-anchor",
+      "title": "<sd-anchor>",
+      "category": "components",
+      "path": "components/anchor/sd-anchor.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/anchor/sd-anchor.md"
+    },
+    {
+      "id": "components/autoid-inspector/sd-autoid-inspector",
+      "title": "<sd-autoid-inspector>",
+      "category": "components",
+      "path": "components/autoid-inspector/sd-autoid-inspector.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/autoid-inspector/sd-autoid-inspector.md"
+    },
+    {
+      "id": "components/avatar/sd-avatar",
+      "title": "<sd-avatar>",
+      "category": "components",
+      "path": "components/avatar/sd-avatar.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/avatar/sd-avatar.md"
+    },
+    {
+      "id": "components/badge/sd-badge",
+      "title": "<sd-badge>",
+      "category": "components",
+      "path": "components/badge/sd-badge.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/badge/sd-badge.md"
+    },
+    {
+      "id": "components/button/sd-button",
+      "title": "<sd-button>",
+      "category": "components",
+      "path": "components/button/sd-button.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/button/sd-button.md"
+    },
+    {
+      "id": "components/chart/sd-chart",
+      "title": "<sd-bar-chart> / <sd-line-chart> / <sd-pie-chart> / <sd-doughnut-chart>",
+      "category": "components",
+      "path": "components/chart/sd-chart.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/chart/sd-chart.md"
+    },
+    {
+      "id": "components/code-editor/sd-code-editor",
+      "title": "<sd-code-editor>",
+      "category": "components",
+      "path": "components/code-editor/sd-code-editor.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/code-editor/sd-code-editor.md"
+    },
+    {
+      "id": "components/document-builder/sd-document-builder",
+      "title": "<sd-document-builder>",
+      "category": "components",
+      "path": "components/document-builder/sd-document-builder.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/document-builder/sd-document-builder.md"
+    },
+    {
+      "id": "components/editor/sd-editor",
+      "title": "<sd-editor>",
+      "category": "components",
+      "path": "components/editor/sd-editor.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/editor/sd-editor.md"
+    },
+    {
+      "id": "components/history/sd-history",
+      "title": "<sd-history>",
+      "category": "components",
+      "path": "components/history/sd-history.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/history/sd-history.md"
+    },
+    {
+      "id": "components/import-excel/sd-import-excel",
+      "title": "<sd-import-excel>",
+      "category": "components",
+      "path": "components/import-excel/sd-import-excel.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/import-excel/sd-import-excel.md"
+    },
+    {
+      "id": "components/inform/sd-inform",
+      "title": "<sd-inform>",
+      "category": "components",
+      "path": "components/inform/sd-inform.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/inform/sd-inform.md"
+    },
+    {
+      "id": "components/mini-editor/sd-mini-editor",
+      "title": "<sd-mini-editor>",
+      "category": "components",
+      "path": "components/mini-editor/sd-mini-editor.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/mini-editor/sd-mini-editor.md"
+    },
+    {
+      "id": "components/modal/sd-modal",
+      "title": "<sd-modal>",
+      "category": "components",
+      "path": "components/modal/sd-modal.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/modal/sd-modal.md"
+    },
+    {
+      "id": "components/operator/sd-operator",
+      "title": "<sd-operator>",
+      "category": "components",
+      "path": "components/operator/sd-operator.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/operator/sd-operator.md"
+    },
+    {
+      "id": "components/org-chart/sd-org-chart",
+      "title": "<sd-org-chart>",
+      "category": "components",
+      "path": "components/org-chart/sd-org-chart.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/org-chart/sd-org-chart.md"
+    },
+    {
+      "id": "components/preview/sd-preview",
+      "title": "<sd-preview-image>",
+      "category": "components",
+      "path": "components/preview/sd-preview.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/preview/sd-preview.md"
+    },
+    {
+      "id": "components/query-bar/sd-query-bar",
+      "title": "<sd-query-bar>",
+      "category": "components",
+      "path": "components/query-bar/sd-query-bar.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/query-bar/sd-query-bar.md"
+    },
+    {
+      "id": "components/query-builder/sd-query-builder",
+      "title": "<sd-query-builder>",
+      "category": "components",
+      "path": "components/query-builder/sd-query-builder.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/query-builder/sd-query-builder.md"
+    },
+    {
+      "id": "components/quick-action/sd-quick-action",
+      "title": "<sd-quick-action>",
+      "category": "components",
+      "path": "components/quick-action/sd-quick-action.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/quick-action/sd-quick-action.md"
+    },
+    {
+      "id": "components/section/sd-section",
+      "title": "<sd-section> and <sd-section-item>",
+      "category": "components",
+      "path": "components/section/sd-section.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/section/sd-section.md"
+    },
+    {
+      "id": "components/side-drawer/sd-side-drawer",
+      "title": "<sd-side-drawer>",
+      "category": "components",
+      "path": "components/side-drawer/sd-side-drawer.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/side-drawer/sd-side-drawer.md"
+    },
+    {
+      "id": "components/splitter/sd-splitter",
+      "title": "<sd-splitter> & <sd-splitter-panel>",
+      "category": "components",
+      "path": "components/splitter/sd-splitter.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/splitter/sd-splitter.md"
+    },
+    {
+      "id": "components/stepper/sd-stepper",
+      "title": "<sd-stepper> & <sd-step>",
+      "category": "components",
+      "path": "components/stepper/sd-stepper.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/stepper/sd-stepper.md"
+    },
+    {
+      "id": "components/tab-router/sd-tab-router",
+      "title": "<sd-tab-router-outlet> & friends",
+      "category": "components",
+      "path": "components/tab-router/sd-tab-router.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/tab-router/sd-tab-router.md"
+    },
+    {
+      "id": "components/tab/sd-tab",
+      "title": "<sd-tab-group> & <sd-tab>",
+      "category": "components",
+      "path": "components/tab/sd-tab.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/tab/sd-tab.md"
+    },
+    {
+      "id": "components/table/sd-table",
+      "title": "<sd-table>",
+      "category": "components",
+      "path": "components/table/sd-table.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/table/sd-table.md"
+    },
+    {
+      "id": "components/tree/sd-tree",
+      "title": "<sd-tree>",
+      "category": "components",
+      "path": "components/tree/sd-tree.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/tree/sd-tree.md"
+    },
+    {
+      "id": "components/upload-file/sd-upload-file",
+      "title": "<sd-upload-file>",
+      "category": "components",
+      "path": "components/upload-file/sd-upload-file.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/upload-file/sd-upload-file.md"
+    },
+    {
+      "id": "components/view/sd-view",
+      "title": "<sd-view>",
+      "category": "components",
+      "path": "components/view/sd-view.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/components/view/sd-view.md"
+    },
+    {
+      "id": "configurations/src/sd-core.configuration",
+      "title": "SD_CORE_CONFIGURATION",
+      "category": "configurations",
+      "path": "configurations/src/sd-core.configuration.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/configurations/src/sd-core.configuration.md"
+    },
+    {
+      "id": "directives/src/sd-desktop",
+      "title": "*sdDesktop Directive",
+      "category": "directives",
+      "path": "directives/src/sd-desktop.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/directives/src/sd-desktop.md"
+    },
+    {
+      "id": "directives/src/sd-hover-copy",
+      "title": "[sdHoverCopy] Directive",
+      "category": "directives",
+      "path": "directives/src/sd-hover-copy.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/directives/src/sd-hover-copy.md"
+    },
+    {
+      "id": "directives/src/sd-href",
+      "title": "[sdHref] Directive",
+      "category": "directives",
+      "path": "directives/src/sd-href.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/directives/src/sd-href.md"
+    },
+    {
+      "id": "directives/src/sd-mobile",
+      "title": "*sdMobile Directive",
+      "category": "directives",
+      "path": "directives/src/sd-mobile.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/directives/src/sd-mobile.md"
+    },
+    {
+      "id": "directives/src/sd-scroll",
+      "title": "[sdScroll] Directive",
+      "category": "directives",
+      "path": "directives/src/sd-scroll.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/directives/src/sd-scroll.md"
+    },
+    {
+      "id": "directives/src/sd-tooltip",
+      "title": "[sdTooltip] Directive",
+      "category": "directives",
+      "path": "directives/src/sd-tooltip.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/directives/src/sd-tooltip.md"
+    },
+    {
+      "id": "docs/E2E-ATTRIBUTES",
+      "title": "Core UI — E2E test attributes reference",
+      "category": "docs",
+      "path": "docs/E2E-ATTRIBUTES.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/docs/E2E-ATTRIBUTES.md"
+    },
+    {
+      "id": "forms/autocomplete/sd-autocomplete",
+      "title": "<sd-autocomplete>",
+      "category": "forms",
+      "path": "forms/autocomplete/sd-autocomplete.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/autocomplete/sd-autocomplete.md"
+    },
+    {
+      "id": "forms/checkbox/sd-checkbox",
+      "title": "<sd-checkbox>",
+      "category": "forms",
+      "path": "forms/checkbox/sd-checkbox.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/checkbox/sd-checkbox.md"
+    },
+    {
+      "id": "forms/chip-calendar/sd-chip-calendar",
+      "title": "<sd-chip-calendar>",
+      "category": "forms",
+      "path": "forms/chip-calendar/sd-chip-calendar.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/chip-calendar/sd-chip-calendar.md"
+    },
+    {
+      "id": "forms/chip/sd-chip",
+      "title": "<sd-chip>",
+      "category": "forms",
+      "path": "forms/chip/sd-chip.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/chip/sd-chip.md"
+    },
+    {
+      "id": "forms/date-range/sd-date-range",
+      "title": "<sd-date-range>",
+      "category": "forms",
+      "path": "forms/date-range/sd-date-range.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/date-range/sd-date-range.md"
+    },
+    {
+      "id": "forms/date/sd-date",
+      "title": "<sd-date>",
+      "category": "forms",
+      "path": "forms/date/sd-date.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/date/sd-date.md"
+    },
+    {
+      "id": "forms/datetime/sd-datetime",
+      "title": "<sd-datetime>",
+      "category": "forms",
+      "path": "forms/datetime/sd-datetime.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/datetime/sd-datetime.md"
+    },
+    {
+      "id": "forms/inline-text/sd-inline-text",
+      "title": "<sd-inline-text>",
+      "category": "forms",
+      "path": "forms/inline-text/sd-inline-text.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/inline-text/sd-inline-text.md"
+    },
+    {
+      "id": "forms/input-color/sd-input-color",
+      "title": "<sd-input-color>",
+      "category": "forms",
+      "path": "forms/input-color/sd-input-color.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/input-color/sd-input-color.md"
+    },
+    {
+      "id": "forms/input-number/sd-input-number",
+      "title": "<sd-input-number>",
+      "category": "forms",
+      "path": "forms/input-number/sd-input-number.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/input-number/sd-input-number.md"
+    },
+    {
+      "id": "forms/input/sd-input",
+      "title": "<sd-input>",
+      "category": "forms",
+      "path": "forms/input/sd-input.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/input/sd-input.md"
+    },
+    {
+      "id": "forms/label/sd-label",
+      "title": "<sd-label>",
+      "category": "forms",
+      "path": "forms/label/sd-label.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/label/sd-label.md"
+    },
+    {
+      "id": "forms/radio/sd-radio",
+      "title": "<sd-radio>",
+      "category": "forms",
+      "path": "forms/radio/sd-radio.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/radio/sd-radio.md"
+    },
+    {
+      "id": "forms/select/sd-select",
+      "title": "<sd-select>",
+      "category": "forms",
+      "path": "forms/select/sd-select.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/select/sd-select.md"
+    },
+    {
+      "id": "forms/switch/sd-switch",
+      "title": "<sd-switch>",
+      "category": "forms",
+      "path": "forms/switch/sd-switch.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/switch/sd-switch.md"
+    },
+    {
+      "id": "forms/textarea/sd-textarea",
+      "title": "<sd-textarea>",
+      "category": "forms",
+      "path": "forms/textarea/sd-textarea.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/forms/textarea/sd-textarea.md"
+    },
+    {
+      "id": "handlers/global-error.handler",
+      "title": "SdGlobalErrorHandler",
+      "category": "handlers",
+      "path": "handlers/global-error.handler.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/handlers/global-error.handler.md"
+    },
+    {
+      "id": "i18n/i18n",
+      "title": "i18n (@sdcorejs/angular/i18n)",
+      "category": "i18n",
+      "path": "i18n/i18n.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/i18n/i18n.md"
+    },
+    {
+      "id": "interceptors/no-internet/no-internet.interceptor",
+      "title": "SdNoInternetInterceptor",
+      "category": "interceptors",
+      "path": "interceptors/no-internet/no-internet.interceptor.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/interceptors/no-internet/no-internet.interceptor.md"
+    },
+    {
+      "id": "interceptors/unauthorized/unauthorized.interceptor",
+      "title": "SdUnauthorizedInterceptor",
+      "category": "interceptors",
+      "path": "interceptors/unauthorized/unauthorized.interceptor.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/interceptors/unauthorized/unauthorized.interceptor.md"
+    },
+    {
+      "id": "modules/auth/sd-auth",
+      "title": "Auth Module",
+      "category": "modules",
+      "path": "modules/auth/sd-auth.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/auth/sd-auth.md"
+    },
+    {
+      "id": "modules/authom/sd-authom",
+      "title": "AuthOM Module",
+      "category": "modules",
+      "path": "modules/authom/sd-authom.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/authom/sd-authom.md"
+    },
+    {
+      "id": "modules/generic/sd-generic",
+      "title": "Generic Module",
+      "category": "modules",
+      "path": "modules/generic/sd-generic.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/generic/sd-generic.md"
+    },
+    {
+      "id": "modules/icon/sd-icon",
+      "title": "SdIcon",
+      "category": "modules",
+      "path": "modules/icon/sd-icon.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/icon/sd-icon.md"
+    },
+    {
+      "id": "modules/keycloak/sd-keycloak",
+      "title": "Keycloak Module",
+      "category": "modules",
+      "path": "modules/keycloak/sd-keycloak.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/keycloak/sd-keycloak.md"
+    },
+    {
+      "id": "modules/layout/sd-layout",
+      "title": "Layout Module",
+      "category": "modules",
+      "path": "modules/layout/sd-layout.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/layout/sd-layout.md"
+    },
+    {
+      "id": "modules/permission/sd-permission",
+      "title": "Permission Module",
+      "category": "modules",
+      "path": "modules/permission/sd-permission.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/modules/permission/sd-permission.md"
+    },
+    {
+      "id": "pipes/src/empty",
+      "title": "sdEmpty pipe (| sdEmpty)",
+      "category": "pipes",
+      "path": "pipes/src/empty.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/empty.md"
+    },
+    {
+      "id": "pipes/src/format-date",
+      "title": "sdFormatDate pipe (| sdFormatDate)",
+      "category": "pipes",
+      "path": "pipes/src/format-date.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/format-date.md"
+    },
+    {
+      "id": "pipes/src/format-datetime",
+      "title": "sdFormatDatetime pipe (| sdFormatDatetime)",
+      "category": "pipes",
+      "path": "pipes/src/format-datetime.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/format-datetime.md"
+    },
+    {
+      "id": "pipes/src/format-number",
+      "title": "sdFormatNumber pipe (| sdFormatNumber)",
+      "category": "pipes",
+      "path": "pipes/src/format-number.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/format-number.md"
+    },
+    {
+      "id": "pipes/src/safe-html",
+      "title": "sdSafeHtml pipe (| sdSafeHtml)",
+      "category": "pipes",
+      "path": "pipes/src/safe-html.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/safe-html.md"
+    },
+    {
+      "id": "pipes/src/time-different",
+      "title": "sdTimeDifferent pipe (| sdTimeDifferent)",
+      "category": "pipes",
+      "path": "pipes/src/time-different.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/time-different.md"
+    },
+    {
+      "id": "pipes/src/view",
+      "title": "sdView pipe (| sdView)",
+      "category": "pipes",
+      "path": "pipes/src/view.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/pipes/src/view.md"
+    },
+    {
+      "id": "README",
+      "title": "@sdcorejs/angular",
+      "category": "README.md",
+      "path": "README.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/README.md"
+    },
+    {
+      "id": "services/api/sd-api",
+      "title": "SdApiService",
+      "category": "services",
+      "path": "services/api/sd-api.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/api/sd-api.md"
+    },
+    {
+      "id": "services/cache/sd-cache",
+      "title": "SdCacheService",
+      "category": "services",
+      "path": "services/cache/sd-cache.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/cache/sd-cache.md"
+    },
+    {
+      "id": "services/confirm/sd-confirm",
+      "title": "SdConfirmService",
+      "category": "services",
+      "path": "services/confirm/sd-confirm.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/confirm/sd-confirm.md"
+    },
+    {
+      "id": "services/docx/sd-docx",
+      "title": "SdDocxService",
+      "category": "services",
+      "path": "services/docx/sd-docx.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/docx/sd-docx.md"
+    },
+    {
+      "id": "services/excel/sd-excel",
+      "title": "SdExcelService",
+      "category": "services",
+      "path": "services/excel/sd-excel.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/excel/sd-excel.md"
+    },
+    {
+      "id": "services/license/sd-license",
+      "title": "SdLicenseService",
+      "category": "services",
+      "path": "services/license/sd-license.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/license/sd-license.md"
+    },
+    {
+      "id": "services/loading/sd-loading",
+      "title": "SdLoadingService",
+      "category": "services",
+      "path": "services/loading/sd-loading.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/loading/sd-loading.md"
+    },
+    {
+      "id": "services/notify/sd-notify",
+      "title": "SdNotifyService",
+      "category": "services",
+      "path": "services/notify/sd-notify.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/notify/sd-notify.md"
+    },
+    {
+      "id": "services/storage/sd-storage",
+      "title": "SdStorageService",
+      "category": "services",
+      "path": "services/storage/sd-storage.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/services/storage/sd-storage.md"
+    },
+    {
+      "id": "utilities/extensions/extensions",
+      "title": "Utilities — Extensions",
+      "category": "utilities",
+      "path": "utilities/extensions/extensions.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/utilities/extensions/extensions.md"
+    },
+    {
+      "id": "utilities/models/models",
+      "title": "Utilities — Models",
+      "category": "utilities",
+      "path": "utilities/models/models.md",
+      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/19.1.0/utilities/models/models.md"
+    }
+  ]
+}
