@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Collect AI-readable API docs for one release patch across all supported
-// Angular workspaces. A tag like `v0.5` produces:
-//   19.0.5, 20.0.5, 21.0.5
+// Collect AI-readable API docs for one release suffix across all supported
+// Angular workspaces. A tag like `v1.0` produces:
+//   19.1.0, 20.1.0, 21.1.0
 //
 // This script is meant to run from the tag publish workflow after npm publish
 // succeeds, then commit the generated `published-docs/**` archive back to main.
@@ -30,10 +30,10 @@ function resolvePatch() {
   if (patch?.startsWith('v')) patch = patch.slice(1);
 
   if (!patch) {
-    throw new Error('Cannot resolve release patch: pass --patch 0.5 or --tag v0.5.');
+    throw new Error('Cannot resolve release suffix: pass --patch 1.0 or --tag v1.0.');
   }
   if (!/^\d+\.\d+(?:-(?:alpha|beta|rc)(?:\.\d+)?)?$/.test(patch)) {
-    throw new Error(`Invalid release patch "${patch}". Expected 0.5 or 0.5-beta.1.`);
+    throw new Error(`Invalid release suffix "${patch}". Expected 1.0 or 1.0-beta.1.`);
   }
   return patch;
 }
@@ -49,7 +49,7 @@ function appendFlag(args, name) {
 
 function main() {
   const patch = resolvePatch();
-  console.log(`[collect-release-docs] release patch ${patch}`);
+  console.log(`[collect-release-docs] release suffix ${patch}`);
 
   for (const major of MAJORS) {
     const args = [

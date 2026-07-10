@@ -13,17 +13,17 @@ if ([string]::IsNullOrWhiteSpace($PatchVersion)) {
   Write-Host "  @sdcorejs/angular - Multi-Version Deploy" -ForegroundColor Cyan
   Write-Host "==============================================" -ForegroundColor Cyan
   Write-Host ""
-  Write-Host "Enter patch version suffix (e.g. '0.5' -> publishes 19.0.5 / 20.0.5 / 21.0.5)" -ForegroundColor Yellow
-  $PatchVersion = Read-Host "Patch version"
+  Write-Host "Enter release suffix (e.g. '1.0' -> publishes 19.1.0 / 20.1.0 / 21.1.0)" -ForegroundColor Yellow
+  $PatchVersion = Read-Host "Release suffix"
 }
 
 if ([string]::IsNullOrWhiteSpace($PatchVersion)) {
-  throw "Patch version is required. Example: 0.5"
+  throw "Release suffix is required. Example: 1.0"
 }
 
 # Validate: must be in x.y format
 if ($PatchVersion -notmatch '^\d+\.\d+$') {
-  throw "Invalid patch version '$PatchVersion'. Expected format: 'x.y' (e.g. '0.5', '1.0', '2.3')"
+  throw "Invalid release suffix '$PatchVersion'. Expected format: 'x.y' (e.g. '1.0', '1.1', '2.0')"
 }
 
 $rootPath = Resolve-Path (Join-Path $PSScriptRoot "..")

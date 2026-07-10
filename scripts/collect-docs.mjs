@@ -19,9 +19,9 @@
 // re-run this script.
 //
 // Usage:
-//   node scripts/collect-docs.mjs --workspace v19 --version 19.0.5
-//   node scripts/collect-docs.mjs --workspace v20 --version 20.0.5 --date 2026-06-10
-//   node scripts/collect-docs.mjs --workspace v21 --version 21.0.5 --skip-existing
+//   node scripts/collect-docs.mjs --workspace v19 --version 19.1.0
+//   node scripts/collect-docs.mjs --workspace v20 --version 20.1.0 --date 2026-07-10
+//   node scripts/collect-docs.mjs --workspace v21 --version 21.1.0 --skip-existing
 
 import {
   copyFileSync,
@@ -123,7 +123,7 @@ function resolveVersion(srcRoot) {
 function assertVersionMatchesWorkspace(version, major, workspace) {
   const m = version.match(/^(\d+)\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
   if (!m) {
-    throw new Error(`Invalid package version "${version}". Expected format like 19.0.5 or 19.0.5-beta.1.`);
+    throw new Error(`Invalid package version "${version}". Expected format like 19.1.0 or 19.1.0-beta.1.`);
   }
   const versionMajor = Number(m[1]);
   if (versionMajor !== major) {

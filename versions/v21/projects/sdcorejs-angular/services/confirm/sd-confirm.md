@@ -114,8 +114,8 @@ withSelect(
   message?: string,
   option?: {
     title?: string;
-    yesTitle?: string;               // default: 'CÃ³'
-    noTitle?: string;                // default: 'KhÃ´ng'
+    yesTitle?: string;               // default: 'Có'
+    noTitle?: string;                // default: 'Không'
     required?: boolean;
     yesButtonColor?: Color;
     noButtonColor?: Color;
@@ -138,8 +138,8 @@ withDatetime(
   message?: string,
   option?: {
     title?: string;
-    yesTitle?: string;               // default: 'CÃ³'
-    noTitle?: string;                // default: 'KhÃ´ng'
+    yesTitle?: string;               // default: 'Có'
+    noTitle?: string;                // default: 'Không'
     required?: boolean;
     yesButtonColor?: Color;
     noButtonColor?: Color;

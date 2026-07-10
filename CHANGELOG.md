@@ -6,6 +6,24 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [1.0] - 2026-07-10
+
+Release suffix `1.0` publishes `19.1.0`, `20.1.0`, and `21.1.0` with the same Core UI surface across the maintained Angular lines.
+
+### Added
+
+- **Core UI confirm/section controls** - expanded dialog and confirmation flows with section-level controls, then rolled the same surface through v20 and v21.
+
+### Changed
+
+- **Material M3 theme alignment** - aligned Core UI theme tokens with Angular Material M3 system variables across v19/v20/v21.
+- **Release docs** - documented the shared `v1.0` release suffix flow for publishing `19.1.0`, `20.1.0`, and `21.1.0`.
+
+### Fixed
+
+- **`form-generic` builder stability** - stabilized builder drop handling and modal footer behavior.
+- **`sd-confirm` docs encoding** - repaired mojibake in the confirm service default button label examples before release docs collection.
+
 ## [0.10] - 2026-06-30
 
 ### Added
