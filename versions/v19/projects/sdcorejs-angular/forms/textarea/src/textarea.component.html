@@ -12,7 +12,7 @@
   @if (_sdLabelDef?.templateRef) {
     <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
   } @else if (_label) {
-    <div class="T14R text-black400">{{ _label }}</div>
+    <div class="T14R text-secondary">{{ _label }}</div>
   }
   <div class="T14M">{{ formControl.value | sdEmpty }}</div>
 } @else {
@@ -37,13 +37,11 @@
         [appearance]="_appearance!"
         [floatLabel]="floatLabel()">
         @if (_appearance && _label) {
-          <mat-label style="display: inline-block">
-            <div style="display: flex; align-items: center; gap: 4px">
-              <span>{{ _label }}</span>
-              @if (_helperText) {
-                <sd-icon [matTooltip]="_helperText" matTooltipPosition="above" name="info"></sd-icon>
-              }
-            </div>
+          <mat-label class="sd-form-field-label">
+            <span>{{ _label }}</span>
+            @if (_helperText) {
+              <sd-icon [matTooltip]="_helperText" matTooltipPosition="above" name="info"></sd-icon>
+            }
           </mat-label>
         }
 

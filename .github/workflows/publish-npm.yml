@@ -1,9 +1,9 @@
 name: Publish @sdcorejs/angular to npm
 
-# Convention: tag = `v<patch>` (example `v0.5`, `v0.5-beta.1`) with no Angular major.
+# Convention: tag = `v<release-suffix>` (example `v1.0`, `v1.0-beta.1`) with no Angular major.
 # The workflow expands one release tag into 3 package versions:
-#   v0.5        -> 19.0.5 / 20.0.5 / 21.0.5 (npm dist-tag latest)
-#   v0.5-beta.1 -> 19.0.5-beta.1 / 20.0.5-beta.1 / 21.0.5-beta.1 (npm dist-tag beta)
+#   v1.0        -> 19.1.0 / 20.1.0 / 21.1.0 (npm dist-tag latest)
+#   v1.0-beta.1 -> 19.1.0-beta.1 / 20.1.0-beta.1 / 21.1.0-beta.1 (npm dist-tag beta)
 #
 # After all 3 npm publishes succeed, the tag workflow snapshots published-docs
 # for the same 3 versions and commits the archive back to `main`.
@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       patch:
-        description: 'Patch suffix, for example "0.5" or "0.5-beta.1". Publishes 19.<patch> / 20.<patch> / 21.<patch>.'
+        description: 'Release suffix, for example "1.0" or "1.0-beta.1". Publishes 19.<suffix> / 20.<suffix> / 21.<suffix>.'
         required: true
         type: string
       tag:
@@ -76,7 +76,7 @@ jobs:
           cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Resolve patch + npm dist-tag
+      - name: Resolve release suffix + npm dist-tag
         id: resolve
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -87,7 +87,7 @@ jobs:
             if echo "$PATCH" | grep -qE '(beta|alpha|rc)'; then TAG="beta"; else TAG="latest"; fi
           fi
           if ! echo "$PATCH" | grep -qE '^[0-9]+\.[0-9]+(-(alpha|beta|rc)(\.[0-9]+)?)?$'; then
-            echo "::error::Invalid patch '$PATCH'. Expected 0.5 or 0.5-beta.1."
+            echo "::error::Invalid release suffix '$PATCH'. Expected 1.0 or 1.0-beta.1."
             exit 1
           fi
           echo "patch=$PATCH" >> "$GITHUB_OUTPUT"
@@ -145,7 +145,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Resolve release patch
+      - name: Resolve release suffix
         id: resolve
         run: echo "patch=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 

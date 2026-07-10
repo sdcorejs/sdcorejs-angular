@@ -94,54 +94,49 @@ projects/sdcorejs-angular/assets/
     │       └── _typography.scss       # T{n}{M|R} tokens + fs-* + font-weight-* + text-*
     └── themes/
         ├── default.scss               # sd.theme() mixin — override `--sd-*` color tokens
-        └── material-theme.scss        # Angular Material M2 theme baseline
+        └── material-theme.scss        # Angular Material M3 theme/token baseline
 ```
 
 ---
 
 ## 3. Hệ thống màu sắc
 
-Màu được định nghĩa dưới dạng **CSS custom properties** với prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS).
+Màu được định nghĩa dưới dạng **CSS custom properties** với prefix `--sd-*`, cho phép override runtime (không cần recompile SCSS). Default theme bridge các token nền tảng sang Angular Material M3 `--mat-sys-*` khi có thể.
 
 ### 3.1 Color tokens
 
-| Token              | CSS variable           | Default     | Dùng cho |
+| Token | CSS variable | Default bridge / fallback | Use for |
 |---|---|---|---|
-| `primary`          | `--sd-primary`         | `#2A66F4`   | Màu chủ đạo — button, checkbox, accent |
-| `primary-light`    | `--sd-primary-light`   | `#EAF1FF`   | Background nhẹ của primary |
-| `primary-dark`     | `--sd-primary-dark`    | `#1C4AD9`   | Hover/active state của primary |
-| `info`             | `--sd-info`            | `#2962FF`   | Link, thông tin, badge info |
-| `info-light`       | `--sd-info-light`      | `#E7E9FF`   | Background nhẹ của info |
-| `info-dark`        | `--sd-info-dark`       | `#2240CC`   | Hover state của info |
-| `success`          | `--sd-success`         | `#4CAF50`   | Trạng thái thành công, validation OK |
-| `success-light`    | `--sd-success-light`   | `#DBEFDC`   | Background nhẹ của success |
-| `success-dark`     | `--sd-success-dark`    | `#39833C`   | Hover state của success |
-| `warning`          | `--sd-warning`         | `#FF9600`   | Cảnh báo, trạng thái cần chú ý |
-| `warning-light`    | `--sd-warning-light`   | `#FFEACC`   | Background nhẹ của warning |
-| `warning-dark`     | `--sd-warning-dark`    | `#BF7000`   | Hover state của warning |
-| `error`            | `--sd-error`           | `#F82C13`   | Lỗi, validation fail, trạng thái nguy hiểm |
-| `error-light`      | `--sd-error-light`     | `#FED5D0`   | Background nhẹ của error |
-| `error-dark`       | `--sd-error-dark`      | `#BA200E`   | Hover state của error |
-| `secondary`        | `--sd-secondary`       | `#757575`   | Text phụ, icon secondary |
-| `secondary-light`  | `--sd-secondary-light` | `#F2F2F2`   | Background nhẹ |
-| `secondary-dark`   | `--sd-secondary-dark`  | `#000000`   | — |
-| `light`            | `--sd-light`           | `#F8F9FA`   | Background trang, surface nhẹ |
-| `dark`             | `--sd-dark`            | `#343A40`   | Text đậm, dark surface |
-| `black500`         | `--sd-black500`        | `#212121`   | Text chính |
-| `black400`         | `--sd-black400`        | `#757575`   | Text phụ, placeholder |
-| `black300`         | `--sd-black300`        | `#BFBFBF`   | Divider, border nhẹ |
-| `black200`         | `--sd-black200`        | `#E6E6E6`   | Border mặc định, separator |
-| `black100`         | `--sd-black100`        | `#F2F2F2`   | Background disabled, row hover |
-
+| `primary` | `--sd-primary` | `var(--mat-sys-primary, #005cbb)` | Main action color |
+| `primary-light` | `--sd-primary-light` | `color-mix(in srgb, var(--sd-primary) 14%, white)` | Soft primary background |
+| `primary-dark` | `--sd-primary-dark` | `color-mix(in srgb, var(--sd-primary) 84%, black)` | Primary hover/active shade |
+| `primary-contrast` | `--sd-primary-contrast` | `#ffffff` | Text/icon on primary |
+| `secondary` | `--sd-secondary` | `var(--mat-sys-secondary, #5c6270)` | Secondary action/accent |
+| `secondary-light` | `--sd-secondary-light` | `color-mix(in srgb, var(--sd-secondary) 12%, white)` | Soft secondary background |
+| `secondary-dark` | `--sd-secondary-dark` | `color-mix(in srgb, var(--sd-secondary) 84%, black)` | Secondary hover/active shade |
+| `secondary-contrast` | `--sd-secondary-contrast` | `#ffffff` | Text/icon on secondary |
+| `info`, `success`, `warning`, `error` | `--sd-info`, ... | Semantic base colors | Info, success, warning, and error states |
+| `*-light` | `--sd-info-light`, ... | `color-mix(in srgb, var(--sd-*) 14%, white)` | Soft semantic background |
+| `*-dark` | `--sd-info-dark`, ... | `color-mix(in srgb, var(--sd-*) 84%, black)` | Semantic hover/active shade |
+| `*-contrast` | `--sd-info-contrast`, ... | `#ffffff` | Text/icon on semantic color |
+| `surface` | `--sd-surface` | `var(--mat-sys-surface, #fdfbff)` | Page/component surface |
+| `surface-muted` | `--sd-surface-muted` | `var(--mat-sys-surface-container-highest, #e7e8ed)` | Muted neutral background |
+| `text` | `--sd-text` | `var(--mat-sys-on-surface, #1a1b1f)` | Primary text |
+| `text-secondary` | `--sd-text-secondary` | `var(--mat-sys-on-surface-variant, #44474f)` | Secondary text |
+| `text-muted` | `--sd-text-muted` | `color-mix(in srgb, var(--sd-text) 62%, transparent)` | Muted text |
+| `border` | `--sd-border` | `var(--mat-sys-outline-variant, #c4c6d0)` | Divider/subtle border |
+| `border-strong` | `--sd-border-strong` | `var(--mat-sys-outline, #74777f)` | Strong border/focus outline |
+| `disabled-bg` | `--sd-disabled-bg` | `color-mix(in srgb, var(--sd-text) 8%, transparent)` | Disabled background |
+| `disabled-text` | `--sd-disabled-text` | `color-mix(in srgb, var(--sd-text) 60%, transparent)` | Disabled text/icon |
 ### 3.2 Color utility classes
 
 Mọi token ở §3.1 đều sinh 3 class:
 
 | Pattern         | Ví dụ                     |
 |---|---|
-| `.text-{token}` | `text-primary`, `text-error`, `text-black400` |
+| `.text-{token}` | `text-primary`, `text-error`, `text-secondary` |
 | `.bg-{token}`   | `bg-primary-light`, `bg-error-light`, `bg-white` |
-| `.border-{token}` | `border-primary`, `border-black200` |
+| `.border-{token}` | `border-primary`, `border-error` |
 
 `white` / `black` luôn có sẵn ngoài bảng trên: `.text-white` / `.text-black` / `.bg-white` / `.bg-black`.
 
@@ -154,7 +149,7 @@ Mọi token ở §3.1 đều sinh 3 class:
 .my-element {
   color: map.get(color.$color_map, 'primary');
   background: map.get(color.$color_map, 'primary-light');
-  border-color: map.get(color.$color_map, 'black200');
+  border-color: map.get(color.$color_map, 'border');
 }
 ```
 
@@ -376,16 +371,16 @@ rounded-full       // border-radius: 9999px (pill / circle)
 
 ### 9.2 Border utilities
 
-Border color default = `var(--sd-black200)`.
+Border color default = `var(--sd-border)`.
 
 | Class            | CSS |
 |---|---|
-| `border`         | `border: 1px solid var(--sd-black200)` |
+| `border`         | `border: 1px solid var(--sd-border)` |
 | `border-0`       | `border: 0` |
-| `border-top`     | `border-top: 1px solid var(--sd-black200)` |
-| `border-bottom`  | `border-bottom: 1px solid var(--sd-black200)` |
-| `border-left`    | `border-left: 1px solid var(--sd-black200)` |
-| `border-right`   | `border-right: 1px solid var(--sd-black200)` |
+| `border-top`     | `border-top: 1px solid var(--sd-border)` |
+| `border-bottom`  | `border-bottom: 1px solid var(--sd-border)` |
+| `border-left`    | `border-left: 1px solid var(--sd-border)` |
+| `border-right`   | `border-right: 1px solid var(--sd-border)` |
 
 Đổi màu border: kết hợp `.border` với `.border-{token}` (xem §3.2).
 
@@ -490,53 +485,44 @@ CSS shadow tĩnh, tương đương Angular Material `mat.elevation()` mixin như
 
 ## 14. Custom theme
 
-Trong `styles.scss` của host app, gọi `sd.theme()` để override màu, sau đó cấu hình Angular Material M2 palette tương ứng:
+Host apps can override SDCoreJS semantic tokens with `sd.theme()`. When an app owns the global Angular Material theme, use the Material M3 token API with `mat.theme()`.
 
 ```scss
 @use '@sdcorejs/angular/assets/scss/themes/default' as sd;
 @use '@angular/material' as mat;
-@include mat.core();
 
 html {
+  color-scheme: light;
+
   @include sd.theme(
     (
-      primary:         #AE7129,
-      primary-light:   #F4F2F1,
-      primary-dark:    #6B4414,
+      primary: #AE7129,
+      primary-light: #F4F2F1,
+      primary-dark: #6B4414,
+    )
+  );
+
+  @include mat.theme(
+    (
+      color: (
+        theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$green-palette,
+      ),
+      typography: Roboto,
+      density: 0,
     )
   );
 }
-
-// --- Angular Material M2 palette ---
-
-$custom-primary-palette: mat.m2-define-palette((
-  50: #F4F2F1, 100: #E7E1DA, 200: #DAC8B4, 300: #D1AC80, 400: #CD9450,
-  500: #AE7129, 600: #8D5A1E, 700: #6B4414, 800: #4B2F0E, 900: #34210A,
-  contrast: ( 600: white, 700: white, 800: white, 900: white )
-));
-
-$custom-accent-palette: mat.m2-define-palette((
-  50: #F1F3F1, 100: #DCE5DD, 200: #BBD3BC, 300: #8FC291, 400: #67B76A,
-  500: #4CAF50, 600: #3A8C3D, 700: #29692C, 800: #1C471E, 900: #132F14,
-  contrast: ( 700: white, 800: white, 900: white )
-));
-
-$custom-warn-palette: mat.m2-define-palette((
-  50: #F5F0F0, 100: #EAD9D6, 200: #E4B0AA, 300: #E6786B, 400: #EE4430,
-  500: #F82C13, 600: #D11801, 700: #9A1100, 800: #680B00, 900: #440700,
-  contrast: ( 600: white, 700: white, 800: white, 900: white )
-));
-
-$custom-theme: mat.m2-define-light-theme((
-  color:   ( primary: $custom-primary-palette, accent: $custom-accent-palette, warn: $custom-warn-palette ),
-  density: -3,
-));
-
-@include mat.all-component-themes($custom-theme);
 ```
 
-> `sd.theme()` chỉ cần khai báo những token muốn override — token không khai báo giữ default.
-> Cả `sd.theme()` và `mat.all-component-themes()` **phải** gọi trong `styles.scss`, không phải component SCSS.
+Prefer Material M3 system variables for Material-facing styles:
+`--mat-sys-primary`, `--mat-sys-on-primary`, `--mat-sys-surface`,
+`--mat-sys-on-surface`, `--mat-sys-error`, `--mat-sys-outline`, and
+`--mat-sys-outline-variant`.
+
+> `sd.theme()` only needs the tokens you want to override; omitted tokens keep their defaults.
+> Keep Material theme configuration in a global stylesheet, not component SCSS.
 
 ---
 

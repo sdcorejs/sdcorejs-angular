@@ -177,7 +177,7 @@ import { SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/form
       <ng-template sdTableCellDef="amount" let-row>
         <sd-input-number size="sm" hideInlineError type="positive" [precision]="0" [(model)]="row.amount">
           <ng-template sdSuffixDef>
-            <span class="text-black400">VND</span>
+            <span class="text-secondary">VND</span>
           </ng-template>
         </sd-input-number>
       </ng-template>

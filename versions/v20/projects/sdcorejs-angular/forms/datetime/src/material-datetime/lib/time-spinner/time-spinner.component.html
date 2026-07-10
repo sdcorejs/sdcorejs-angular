@@ -1,0 +1,72 @@
+<div class="sd-time-spinner__columns">
+  <!-- hour -->
+  <div class="sd-time-spinner__col">
+    <button mat-icon-button [disabled]="disabled()" (click)="stepHourUp()" aria-label="Increment hour">
+      <mat-icon>keyboard_arrow_up</mat-icon>
+    </button>
+    <input
+      type="text"
+      inputmode="numeric"
+      maxlength="2"
+      class="sd-time-spinner__digits"
+      [value]="displayHour()"
+      [disabled]="disabled()"
+      (focus)="setFocus('hour')"
+      (blur)="clearFocus()"
+      (keydown)="onDigitKeyDown($event)"
+      (input)="onHourInput($any($event.target).value)"
+      aria-label="Hour (0-23)">
+    <button mat-icon-button [disabled]="disabled()" (click)="stepHourDown()" aria-label="Decrement hour">
+      <mat-icon>keyboard_arrow_down</mat-icon>
+    </button>
+  </div>
+
+  <span class="sd-time-spinner__sep">:</span>
+
+  <!-- minute -->
+  <div class="sd-time-spinner__col">
+    <button mat-icon-button [disabled]="disabled()" (click)="stepMinuteUp()" aria-label="Increment minute">
+      <mat-icon>keyboard_arrow_up</mat-icon>
+    </button>
+    <input
+      type="text"
+      inputmode="numeric"
+      maxlength="2"
+      class="sd-time-spinner__digits"
+      [value]="displayMinute()"
+      [disabled]="disabled()"
+      (focus)="setFocus('minute')"
+      (blur)="clearFocus()"
+      (keydown)="onDigitKeyDown($event)"
+      (input)="onMinuteInput($any($event.target).value)"
+      aria-label="Minute (0-59)">
+    <button mat-icon-button [disabled]="disabled()" (click)="stepMinuteDown()" aria-label="Decrement minute">
+      <mat-icon>keyboard_arrow_down</mat-icon>
+    </button>
+  </div>
+
+  @if (showSeconds()) {
+    <span class="sd-time-spinner__sep">:</span>
+    <!-- second -->
+    <div class="sd-time-spinner__col">
+      <button mat-icon-button [disabled]="disabled()" (click)="stepSecondUp()" aria-label="Increment second">
+        <mat-icon>keyboard_arrow_up</mat-icon>
+      </button>
+      <input
+        type="text"
+        inputmode="numeric"
+        maxlength="2"
+        class="sd-time-spinner__digits"
+        [value]="displaySecond()"
+        [disabled]="disabled()"
+        (focus)="setFocus('second')"
+        (blur)="clearFocus()"
+        (keydown)="onDigitKeyDown($event)"
+        (input)="onSecondInput($any($event.target).value)"
+        aria-label="Second (0-59)">
+      <button mat-icon-button [disabled]="disabled()" (click)="stepSecondDown()" aria-label="Decrement second">
+        <mat-icon>keyboard_arrow_down</mat-icon>
+      </button>
+    </div>
+  }
+</div>

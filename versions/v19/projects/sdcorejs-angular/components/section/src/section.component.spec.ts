@@ -19,8 +19,7 @@ import { SdSectionItem } from './section-item/section-item.component';
       [icon]="icon"
       [collapsible]="collapsible"
       [(collapsed)]="collapsed"
-      [hideHeader]="hideHeader"
-      [noPaddingBody]="noPaddingBody">
+      [hideHeader]="hideHeader">
       <sd-section-item label="Name">John Doe</sd-section-item>
       <span class="extra-content">extra</span>
     </sd-section>
@@ -33,7 +32,6 @@ class HostComponent {
   collapsible = false;
   collapsed = false;
   hideHeader = false;
-  noPaddingBody = false;
 }
 
 @Component({
@@ -41,25 +39,15 @@ class HostComponent {
   imports: [SdSection],
   template: `
     <sd-section [collapsible]="true" [(collapsed)]="collapsed">
+      <span sdHeaderLeft class="custom-header-left">Custom heading</span>
       <button sdHeaderRight>Action</button>
       <p class="body-content">Body text</p>
+      <button sdFooterLeft>Back</button>
+      <button sdFooterRight>Save</button>
     </sd-section>
   `,
 })
 class HostWithSlotsComponent {
-  collapsed = false;
-}
-
-@Component({
-  standalone: true,
-  imports: [SdSection],
-  template: `
-    <sd-section [collapsable]="true" [(collapsed)]="collapsed">
-      <p class="body-content">Body text</p>
-    </sd-section>
-  `,
-})
-class HostWithDeprecatedCollapsableComponent {
   collapsed = false;
 }
 
@@ -246,6 +234,14 @@ describe('SdSection', () => {
       expect(el.querySelector('.extra-content')).toBeNull();
     });
 
+    it('keeps the section frame when collapsed is true', () => {
+      host.collapsible = true;
+      host.collapsed = true;
+      fixture.detectChanges();
+      const frame = getSectionEl(fixture).querySelector('.sd-section') as HTMLElement;
+      expect(frame.classList).toContain('c-shadow-section');
+    });
+
     it('toggleCollapse() forces collapsed to false when collapsible is false but collapsed is true', () => {
       host.collapsed = true;
       fixture.detectChanges();
@@ -254,20 +250,6 @@ describe('SdSection', () => {
       expect(component.collapsed()).toBeFalse();
     });
 
-    it('still accepts deprecated collapsable input', async () => {
-      await TestBed.resetTestingModule();
-      await TestBed.configureTestingModule({
-        imports: [HostWithDeprecatedCollapsableComponent, NoopAnimationsModule],
-      }).compileComponents();
-
-      const deprecatedFixture = TestBed.createComponent(HostWithDeprecatedCollapsableComponent);
-      deprecatedFixture.detectChanges();
-      const deprecatedComponent = getSdSection(deprecatedFixture);
-
-      expect(deprecatedComponent.collapsable()).toBeTrue();
-      expect(deprecatedComponent.isCollapsible()).toBeTrue();
-      expect(getSectionEl(deprecatedFixture).querySelector('mat-icon')).not.toBeNull();
-    });
   });
 
   // -------------------------------------------------------------------------
@@ -300,36 +282,29 @@ describe('SdSection', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Input: noPaddingBody
+  // Body/content padding
   // -------------------------------------------------------------------------
 
-  describe('input: noPaddingBody', () => {
-    it('applies p-16 class to body by default', () => {
+  describe('body/content padding', () => {
+    it('renders the normalized body container', () => {
       const el = getSectionEl(fixture);
-      const body = el.querySelector('.p-16') as HTMLElement;
+      const body = el.querySelector('.sd-section-body') as HTMLElement;
       expect(body).not.toBeNull();
     });
 
-    it('applies c-no-padding-body class when noPaddingBody is true', () => {
-      host.noPaddingBody = true;
-      fixture.detectChanges();
+    it('does not apply legacy body padding classes', () => {
       const el = getSectionEl(fixture);
-      expect(el.querySelector('.c-no-padding-body')).not.toBeNull();
-    });
-
-    it('removes p-16 class when noPaddingBody is true', () => {
-      host.noPaddingBody = true;
-      fixture.detectChanges();
-      const el = getSectionEl(fixture);
-      expect(el.querySelector('.p-16')).toBeNull();
+      const body = el.querySelector('.sd-section-body') as HTMLElement;
+      expect(body.classList.contains('p-16')).toBeFalse();
+      expect(body.classList.contains('c-no-padding-body')).toBeFalse();
     });
   });
 
   // -------------------------------------------------------------------------
-  // Content projection: sdHeaderRight slot
+  // Content projection: named slots
   // -------------------------------------------------------------------------
 
-  describe('content projection: [sdHeaderRight]', () => {
+  describe('content projection: named slots', () => {
     let slotsFixture: ComponentFixture<HostWithSlotsComponent>;
 
     beforeEach(async () => {
@@ -342,9 +317,26 @@ describe('SdSection', () => {
       slotsFixture.detectChanges();
     });
 
+    it('projects [sdHeaderLeft] slot content into the header left area', () => {
+      const el = slotsFixture.debugElement.query(By.directive(SdSection)).nativeElement as HTMLElement;
+      expect(el.querySelector('.sd-section-header-left .custom-header-left')?.textContent?.trim()).toBe('Custom heading');
+    });
+
     it('projects [sdHeaderRight] slot content into the header right area', () => {
       const el = slotsFixture.debugElement.query(By.directive(SdSection)).nativeElement as HTMLElement;
-      expect(el.textContent).toContain('Action');
+      expect(el.querySelector('.sd-section-header-right button')?.textContent?.trim()).toBe('Action');
+    });
+
+    it('projects [sdFooterLeft] and [sdFooterRight] slots into the footer areas', () => {
+      const el = slotsFixture.debugElement.query(By.directive(SdSection)).nativeElement as HTMLElement;
+      expect(el.querySelector('.sd-section-footer-left button')?.textContent?.trim()).toBe('Back');
+      expect(el.querySelector('.sd-section-footer-right button')?.textContent?.trim()).toBe('Save');
+    });
+
+    it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {
+      const styles = ((SdSection as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('margin-left: auto');
     });
 
     it('projects default slot (body) content', () => {

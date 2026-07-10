@@ -3,8 +3,64 @@
   display: block;
 }
 
-.c-no-padding-body {
-  padding: 0 !important;
+.sd-section {
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.sd-section-header,
+.sd-section-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 8px 16px;
+}
+
+.sd-section-header-left,
+.sd-section-header-right,
+.sd-section-footer-left,
+.sd-section-footer-right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.sd-section-header-left,
+.sd-section-footer-left {
+  flex: 1 1 auto;
+}
+
+.sd-section-header-right,
+.sd-section-footer-right {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.sd-section-title-block,
+.sd-section-title,
+.sd-section-subtitle {
+  min-width: 0;
+}
+
+.sd-section-body {
+  padding: 0;
+}
+
+.sd-section-body--with-header,
+.sd-section-footer {
+  border-top: 1px solid #e6e6e6;
+}
+
+.sd-section-footer-left:empty,
+.sd-section-footer-right:empty {
+  display: none;
+}
+
+.sd-section-footer:has(.sd-section-footer-left:empty):has(.sd-section-footer-right:empty) {
+  display: none;
 }
 
 .c-shadow-section {

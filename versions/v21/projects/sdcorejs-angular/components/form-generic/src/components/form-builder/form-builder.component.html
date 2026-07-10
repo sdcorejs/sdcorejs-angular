@@ -96,7 +96,7 @@
           <span class="fb-groupedit__hint">{{ 'core.component.form-builder.edit-group' | translate }}</span>
         </div>
         <div class="fb-canvas__actions">
-          <sd-button type="outline" [title]="'core.component.form-builder.cancel' | translate" (click)="cancelGroupEdit()"></sd-button>
+          <sd-button type="text" [title]="'core.component.form-builder.cancel' | translate" (click)="cancelGroupEdit()"></sd-button>
           <sd-button
             type="fill"
             color="primary"
@@ -157,7 +157,7 @@
           </div>
           <sd-form-render [configuration]="{ components: this.components, validations: this.validations }"></sd-form-render>
           <div class="fb-preview-card__footer">
-            <sd-button type="outline" [title]="'core.component.form-builder.cancel' | translate" (click)="setMode(false)"></sd-button>
+            <sd-button type="text" [title]="'core.component.form-builder.cancel' | translate" (click)="setMode(false)"></sd-button>
             <sd-button
               type="fill"
               color="primary"

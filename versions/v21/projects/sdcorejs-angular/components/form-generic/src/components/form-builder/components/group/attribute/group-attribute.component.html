@@ -51,7 +51,7 @@
         @for (child of _group.components; track child.id) {
           <div class="fb-child-row">
             <span class="fb-child-row__icon"><span class="msi">{{ symbolForChild(child) }}</span></span>
-            <span class="fb-child-row__label">{{ child.label }}</span>
+            <span class="fb-child-row__label">{{ labelForChild(child) }}</span>
             <span class="fb-child-row__key">{{ child.key }}</span>
           </div>
         }

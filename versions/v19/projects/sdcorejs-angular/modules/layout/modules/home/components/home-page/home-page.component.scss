@@ -1,5 +1,5 @@
 // WHY: dùng Material 3 system token --mat-sys-primary để theme đồng bộ với portal,
-// fallback #1f49bf khi token chưa được provide (vd. test env hoặc theme cũ).
+// fallback #005cbb khi token chưa được provide (vd. test env hoặc theme cũ).
 :host {
   display: contents;
 }
@@ -12,8 +12,8 @@
   height: 100%;
   width: 100%;
   background:
-    radial-gradient(circle at 15% 25%, color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 14%, transparent), transparent 55%),
-    radial-gradient(circle at 85% 75%, color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 10%, transparent), transparent 55%),
+    radial-gradient(circle at 15% 25%, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 14%, transparent), transparent 55%),
+    radial-gradient(circle at 85% 75%, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 10%, transparent), transparent 55%),
     linear-gradient(135deg, #fafbfc 0%, #f4f6fa 100%);
   overflow: auto;
 }
@@ -45,7 +45,7 @@
   &:hover {
     transform: translateY(-4px);
     box-shadow:
-      0 16px 40px color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 18%, transparent),
+      0 16px 40px color-mix(in srgb, var(--mat-sys-primary, #005cbb) 18%, transparent),
       0 4px 12px rgba(0, 0, 0, 0.06);
   }
 }
@@ -57,14 +57,14 @@
   align-items: center;
   justify-content: center;
   background:
-    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 18%, white), white 60%),
+    radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 18%, white), white 60%),
     #fff;
-  border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #005cbb) 15%, transparent);
 
   .hero-ring {
     position: absolute;
     border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 25%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mat-sys-primary, #005cbb) 25%, transparent);
     animation: hero-pulse 3s ease-in-out infinite;
     pointer-events: none;
 
@@ -83,17 +83,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle, color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 22%, white), white);
+    background: radial-gradient(circle, color-mix(in srgb, var(--mat-sys-primary, #005cbb) 22%, white), white);
     box-shadow:
-      0 0 60px color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 30%, transparent),
-      0 10px 30px color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 20%, transparent);
+      0 0 60px color-mix(in srgb, var(--mat-sys-primary, #005cbb) 30%, transparent),
+      0 10px 30px color-mix(in srgb, var(--mat-sys-primary, #005cbb) 20%, transparent);
   }
 
   .hero-icon {
     font-size: 72px;
     width: 72px;
     height: 72px;
-    color: var(--mat-sys-primary, #1f49bf);
+    color: var(--mat-sys-primary, #005cbb);
   }
 
   // Chấm trang trí ở các góc — thêm sinh động nhưng không rối
@@ -107,7 +107,7 @@
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background: color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 50%, transparent);
+      background: color-mix(in srgb, var(--mat-sys-primary, #005cbb) 50%, transparent);
       animation: dot-float 4s ease-in-out infinite;
     }
     .d1 { top: 16%; left: 12%; animation-delay: 0s; }
@@ -129,9 +129,9 @@
     right: 0;
     height: 3px;
     background: linear-gradient(90deg,
-      color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 60%, transparent),
-      var(--mat-sys-primary, #1f49bf),
-      color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 60%, transparent));
+      color-mix(in srgb, var(--mat-sys-primary, #005cbb) 60%, transparent),
+      var(--mat-sys-primary, #005cbb),
+      color-mix(in srgb, var(--mat-sys-primary, #005cbb) 60%, transparent));
   }
 
   .feature-content {
@@ -148,7 +148,7 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: color-mix(in srgb, var(--mat-sys-primary, #1f49bf) 12%, white);
+    background: color-mix(in srgb, var(--mat-sys-primary, #005cbb) 12%, white);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -158,7 +158,7 @@
     font-size: 28px;
     width: 28px;
     height: 28px;
-    color: var(--mat-sys-primary, #1f49bf);
+    color: var(--mat-sys-primary, #005cbb);
   }
 
   .feature-label {

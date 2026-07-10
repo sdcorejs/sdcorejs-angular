@@ -13,17 +13,17 @@
   max-width: 100%;
   min-width: 0;
   overflow: hidden;
-  color: var(--sd-black500, #212121);
+  color: var(--sd-text, #212121);
 }
 
 .fb-table-control__label {
   font-size: 14px;
   line-height: 20px;
   font-weight: 600;
-  color: var(--sd-black400, #757575);
+  color: var(--sd-text-secondary, #757575);
 
   span {
-    color: var(--sd-error, #F82C13);
+    color: var(--sd-error, #ba1a1a);
   }
 }
 
@@ -33,7 +33,7 @@
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  border: 1px solid var(--sd-black200, #E6E6E6);
+  border: 1px solid var(--sd-border, #E6E6E6);
   border-radius: 10px;
   background: #fff;
   overscroll-behavior-x: contain;
@@ -48,13 +48,13 @@
 
 .fb-table-control__header {
   min-height: 44px;
-  background: color-mix(in srgb, var(--sd-black100, #F2F2F2) 70%, #fff);
-  border-bottom: 1px solid var(--sd-black200, #E6E6E6);
+  background: color-mix(in srgb, var(--sd-surface-muted, #F2F2F2) 70%, #fff);
+  border-bottom: 1px solid var(--sd-border, #E6E6E6);
 }
 
 .fb-table-control__row {
   min-height: 42px;
-  border-bottom: 1px solid var(--sd-black200, #E6E6E6);
+  border-bottom: 1px solid var(--sd-border, #E6E6E6);
 
   &:last-child {
     border-bottom: 0;
@@ -69,7 +69,7 @@
   align-items: center;
   gap: 7px;
   padding: 10px 14px;
-  color: var(--sd-black400, #757575);
+  color: var(--sd-text-secondary, #757575);
   font-size: 13px;
   line-height: 18px;
   font-weight: 500;
@@ -84,7 +84,7 @@
 }
 
 .fb-table-control__header .fb-table-control__cell {
-  color: var(--sd-black400, #757575);
+  color: var(--sd-text-secondary, #757575);
   font-weight: 700;
 }
 
@@ -95,7 +95,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--sd-black400, #757575);
+  color: var(--sd-text-secondary, #757575);
   font-family: 'Material Icons Outlined';
   font-size: 16px;
   line-height: 1;
@@ -108,7 +108,7 @@
 }
 
 .fb-table-control__required {
-  color: var(--sd-error, #F82C13);
+  color: var(--sd-error, #ba1a1a);
 }
 
 .fb-table-control__add {
@@ -116,7 +116,7 @@
   height: 28px;
   border: 0;
   background: transparent;
-  color: var(--sd-primary, #2A66F4);
+  color: var(--sd-primary, #005cbb);
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -133,7 +133,7 @@
 
 .fb-table-control.is-viewed {
   .fb-table-control__header {
-    background: var(--sd-black100, #F2F2F2);
+    background: var(--sd-surface-muted, #F2F2F2);
   }
 
   .fb-table-control__add {

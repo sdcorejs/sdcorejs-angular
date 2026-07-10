@@ -26,7 +26,7 @@
     border-bottom: 1px solid #eef0f3;
 
     .brand-icon {
-      color: #1565c0;
+      color: var(--sd-primary, #005cbb);
       font-size: 22px;
       width: 22px;
       height: 22px;
@@ -90,7 +90,7 @@
         font-size: 18px;
         width: 18px;
         height: 18px;
-        color: #1565c0;
+        color: var(--sd-primary, #005cbb);
       }
       .group-title {
         flex: 1;
@@ -128,7 +128,7 @@
         &:hover { background: #eef4fb; }
 
         &.active {
-          background: #1565c0;
+          background: var(--sd-primary, #005cbb);
           color: #ffffff;
           font-weight: 500;
         }

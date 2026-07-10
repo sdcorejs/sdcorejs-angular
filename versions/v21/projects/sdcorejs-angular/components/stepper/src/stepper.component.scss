@@ -1,14 +1,14 @@
 :host {
   display: block;
 
-  --sd-stepper-active-color: var(--sd-primary, #1565c0);
-  --sd-stepper-active-bg: var(--sd-primary, #1565c0);
-  --sd-stepper-completed-color: var(--sd-primary, #1565c0);
-  --sd-stepper-line-active-color: var(--sd-primary, #1565c0);
-  --sd-stepper-error-color: var(--sd-error, #f44336);
-  --sd-stepper-pending-bg: #e0e0e0;
-  --sd-stepper-pending-color: rgba(0, 0, 0, 0.54);
-  --sd-stepper-text-color: var(--sd-text-primary, #1a1a1a);
+  --sd-stepper-active-color: var(--sd-primary, #005cbb);
+  --sd-stepper-active-bg: var(--sd-primary, #005cbb);
+  --sd-stepper-completed-color: var(--sd-primary, #005cbb);
+  --sd-stepper-line-active-color: var(--sd-primary, #005cbb);
+  --sd-stepper-error-color: var(--sd-error, #ba1a1a);
+  --sd-stepper-pending-bg: var(--sd-disabled-bg, rgba(26, 27, 31, 0.08));
+  --sd-stepper-pending-color: var(--sd-disabled-text, rgba(26, 27, 31, 0.6));
+  --sd-stepper-text-color: var(--sd-text, #1a1b1f);
 }
 
 .sd-step__label {

@@ -122,7 +122,7 @@
             @if (!element.isExpanding && !_tableOption.expand?.always) {
               <sd-button
                 [autoId]="_autoId ? _autoId + '-expand-' + element.meta.id : null"
-                type="link"
+                type="text"
                 [prefixIcon]="element.isExpanded ? 'expand_less' : 'expand_more'"
                 (click)="onExpand(element)"
                 width="35px">
@@ -267,7 +267,7 @@
               @if (_tableOption.group?.collapsible) {
                 <sd-button
                   [autoId]="_autoId ? _autoId + '-group-toggle-' + (item.meta.group?.key || item.meta.id) : null"
-                  type="link"
+                  type="text"
                   [prefixIcon]="item.meta.group.isExpanded ? 'expand_more' : 'chevron_right'"
                   width="32px"
                   (click)="toggleGroupExpand(item)">
@@ -500,20 +500,20 @@
               prefixIcon="refresh"
               (click)="reload()"
               [disabled]="!_items.length"
-              type="link">
+              type="text">
             </sd-button>
           }
         </ng-container>
         @if (_export && _items.length) {
           @if (_export.type === 'custom') {
-            <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" (click)="exportCustom()" type="link"> </sd-button>
+            <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" (click)="exportCustom()" type="text"> </sd-button>
           } @else {
             @if (_export.visible) {
               @if (_exporting) {
-                <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [loading]="_exporting" [title]="_exportTitle" prefixIcon="get_app" type="link"> </sd-button>
+                <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [loading]="_exporting" [title]="_exportTitle" prefixIcon="get_app" type="text"> </sd-button>
               } @else {
                 @if (_export.visible === 'ALL' || !_export.visible) {
-                  <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" [matMenuTriggerFor]="menu" type="link"> </sd-button>
+                  <sd-button [autoId]="_autoId ? _autoId + '-export' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" [matMenuTriggerFor]="menu" type="text"> </sd-button>
                   <mat-menu #menu="matMenu">
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null" (click)="exportExcel()" type="button">
                       <sd-icon name="file_download"></sd-icon>
@@ -525,9 +525,9 @@
                     </button>
                   </mat-menu>
                 } @else if (_export.visible === 'EXCEL') {
-                  <sd-button [autoId]="_autoId ? _autoId + '-export-excel' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" (click)="exportExcel()" type="link"> </sd-button>
+                  <sd-button [autoId]="_autoId ? _autoId + '-export-excel' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" (click)="exportExcel()" type="text"> </sd-button>
                 } @else if (_export.visible === 'CSV') {
-                  <sd-button [autoId]="_autoId ? _autoId + '-export-csv' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" (click)="exportCSV()" type="link"> </sd-button>
+                  <sd-button [autoId]="_autoId ? _autoId + '-export-csv' : null" class="mr-8" [title]="_exportTitle" prefixIcon="get_app" (click)="exportCSV()" type="text"> </sd-button>
                 }
               }
             }
@@ -542,7 +542,7 @@
               [title]="'core.component.table.setup-short' | translate"
               prefixIcon="settings"
               (click)="_configComponent.open()"
-              type="link">
+              type="text">
             </sd-button>
           }
         </ng-container>
@@ -554,7 +554,7 @@
               class="mr-8"
               prefixIcon="filter_alt"
               (click)="_mobileFilter.open()"
-              type="link">
+              type="text">
             </sd-button>
           }
         </ng-container>

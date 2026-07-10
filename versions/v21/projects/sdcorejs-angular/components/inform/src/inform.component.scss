@@ -50,7 +50,7 @@ $informColors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
   .c-inform-body {
     font-size: 14px;
     line-height: 20px;
-    color: map.get(color.$color_map, 'black500');
+    color: map.get(color.$color_map, 'text');
     overflow-wrap: break-word;
 
     &.is-clamped {
@@ -96,7 +96,7 @@ $informColors: 'primary', 'secondary', 'info', 'success', 'warning', 'error';
     border: none;
     background: transparent;
     cursor: pointer;
-    color: map.get(color.$color_map, 'black400');
+    color: map.get(color.$color_map, 'text-secondary');
     transition: background-color 80ms ease, color 80ms ease;
 
     &:hover {

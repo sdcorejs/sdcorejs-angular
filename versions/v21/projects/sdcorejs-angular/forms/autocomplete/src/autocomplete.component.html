@@ -64,13 +64,11 @@
       [floatLabel]="nVal ? 'always' : 'auto'"
       [appearance]="_appearance || 'outline'">
       @if (_appearance && _label) {
-        <mat-label style="display: inline-block">
-          <div style="display: flex; align-items: center; gap: 4px">
-            <span>{{ _label }}</span>
-            @if (_helperText) {
-              <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
-            }
-          </div>
+        <mat-label class="sd-form-field-label">
+          <span>{{ _label }}</span>
+          @if (_helperText) {
+            <sd-icon [matTooltip]="_helperText" matTooltipPosition="below" name="info"></sd-icon>
+          }
         </mat-label>
       }
 

@@ -129,26 +129,31 @@ describe('SdSwitch', () => {
       expect(hostEl.classList.contains('sd-c-primary')).toBe(false);
     });
 
-    // why: bug "luôn ăn màu success" do theme set `.mat-mdc-slide-toggle.mat-accent {
-    // --mat-slide-toggle-selected-handle-color: green }` ở specificity (0,2,1) > host
-    // attr cũ. Fix bằng cách override CẢ `--mat-slide-toggle-*` LẪN `--mdc-switch-*`
-    // với `!important`. Spec gán --sd-primary giả lập trên html root, sau đó kiểm tra
-    // token đã propagate qua chain `--sd-c → --sd-primary → red` xuống mat-mdc-slide-toggle.
-    it('overrides --mat-slide-toggle-* and --mdc-switch-* tokens via --sd-c chain', () => {
+    // why: Angular Material exposes both mat and mdc switch token tiers. Keep selected
+    // track/icon tied to the accent color while the handle stays on surface for M3 contrast.
+    it('maps selected switch tokens to accent track/icon and surface handle', () => {
       const root = document.documentElement;
-      const prev = root.style.getPropertyValue('--sd-primary');
+      const prevPrimary = root.style.getPropertyValue('--sd-primary');
+      const prevSurface = root.style.getPropertyValue('--sd-surface');
       root.style.setProperty('--sd-primary', 'rgb(0, 92, 187)');
+      root.style.setProperty('--sd-surface', 'rgb(255, 255, 255)');
       try {
         host.color = 'primary';
         fixture.detectChanges();
         const inner = fixture.nativeElement.querySelector('.mat-mdc-slide-toggle') as HTMLElement;
         expect(inner).not.toBeNull();
         const cs = getComputedStyle(inner);
-        expect(cs.getPropertyValue('--mat-slide-toggle-selected-handle-color').trim()).toBe('rgb(0, 92, 187)');
-        expect(cs.getPropertyValue('--mdc-switch-selected-handle-color').trim()).toBe('rgb(0, 92, 187)');
+        expect(cs.getPropertyValue('--mat-slide-toggle-selected-track-color').trim()).toBe('rgb(0, 92, 187)');
+        expect(cs.getPropertyValue('--mdc-switch-selected-track-color').trim()).toBe('rgb(0, 92, 187)');
+        expect(cs.getPropertyValue('--mat-slide-toggle-selected-icon-color').trim()).toBe('rgb(0, 92, 187)');
+        expect(cs.getPropertyValue('--mdc-switch-selected-icon-color').trim()).toBe('rgb(0, 92, 187)');
+        expect(cs.getPropertyValue('--mat-slide-toggle-selected-handle-color').trim()).toBe('rgb(255, 255, 255)');
+        expect(cs.getPropertyValue('--mdc-switch-selected-handle-color').trim()).toBe('rgb(255, 255, 255)');
       } finally {
-        if (prev) root.style.setProperty('--sd-primary', prev);
+        if (prevPrimary) root.style.setProperty('--sd-primary', prevPrimary);
         else root.style.removeProperty('--sd-primary');
+        if (prevSurface) root.style.setProperty('--sd-surface', prevSurface);
+        else root.style.removeProperty('--sd-surface');
       }
     });
   });

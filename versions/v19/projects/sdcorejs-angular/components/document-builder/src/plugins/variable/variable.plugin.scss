@@ -15,9 +15,9 @@
   // ── Trạng thái CHƯA binding (unbound / cleared) ───────────────────────
   // Không áp dụng cho plain-text bound (true) hay HTML bound (html)
   .variable-widget:not([data-binding='true']):not([data-binding='html']) {
-    background-color: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #90caf9 !important;
+    background-color: var(--sd-primary-light, #d7e3ff);
+    color: var(--sd-primary, #005cbb);
+    border: 1px solid color-mix(in srgb, var(--sd-primary, #005cbb) 34%, var(--sd-border, #c4c6d0)) !important;
     border-radius: 4px;
     padding: 2px 6px;
     font-size: 0; // ẩn innerText ({{display}})
@@ -34,22 +34,22 @@
     }
 
     &:hover {
-      background-color: #bbdefb;
+      background-color: color-mix(in srgb, var(--sd-primary-light, #d7e3ff) 78%, var(--sd-primary, #005cbb));
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     &.ck-widget_selected {
-      outline: 2px solid #2196f3;
-      background-color: #bbdefb;
+      outline: 2px solid var(--sd-primary, #005cbb);
+      background-color: color-mix(in srgb, var(--sd-primary-light, #d7e3ff) 78%, var(--sd-primary, #005cbb));
     }
   }
 
   // ── Trạng thái ĐÃ binding ─────────────────────────────────────────────
   // data-binding="true" → hiển thị innerText (bound value) + highlight xanh lá
   .variable-widget[data-binding='true'] {
-    background-color: rgba(76, 175, 80, 0.12);
-    color: #2e7d32;
-    border-bottom: 2px solid #4caf50 !important;
+    background-color: color-mix(in srgb, var(--sd-success-light, #d8f0d3) 62%, transparent);
+    color: var(--sd-success, #2e7d32);
+    border-bottom: 2px solid var(--sd-success, #2e7d32) !important;
     border-radius: 0;
     padding: 0 1px;
     font-size: inherit; // hiển thị innerText = bound value với font của văn bản xung quanh
@@ -60,12 +60,12 @@
     }
 
     &:hover {
-      background-color: rgba(76, 175, 80, 0.22);
+      background-color: color-mix(in srgb, var(--sd-success-light, #d8f0d3) 82%, transparent);
     }
 
     &.ck-widget_selected {
-      outline: 2px solid #4caf50;
-      background-color: rgba(76, 175, 80, 0.28);
+      outline: 2px solid var(--sd-success, #2e7d32);
+      background-color: color-mix(in srgb, var(--sd-success-light, #d8f0d3) 90%, transparent);
     }
   }
 
@@ -73,7 +73,7 @@
   .variable-widget[data-binding='html'] {
     display: block;
     background-color: transparent;
-    border: 1px dashed #4caf50 !important;
+    border: 1px dashed var(--sd-success, #2e7d32) !important;
     border-radius: 4px;
     padding: 4px;
     user-select: text;
@@ -84,12 +84,12 @@
     }
 
     &:hover {
-      background-color: rgba(76, 175, 80, 0.06);
+      background-color: color-mix(in srgb, var(--sd-success-light, #d8f0d3) 42%, transparent);
     }
 
     &.ck-widget_selected {
-      outline: 2px solid #4caf50;
-      background-color: rgba(76, 175, 80, 0.08);
+      outline: 2px solid var(--sd-success, #2e7d32);
+      background-color: color-mix(in srgb, var(--sd-success-light, #d8f0d3) 52%, transparent);
     }
 
     .variable-html-content {

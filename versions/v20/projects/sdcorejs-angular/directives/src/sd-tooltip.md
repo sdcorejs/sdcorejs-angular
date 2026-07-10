@@ -45,7 +45,7 @@ None.
 ### 1. Simple text tooltip
 ```html
 <sd-button
-  type="link" prefixIcon="info"
+  type="text" prefixIcon="info"
   [sdTooltip]="'Mã định danh nội bộ'">
 </sd-button>
 ```

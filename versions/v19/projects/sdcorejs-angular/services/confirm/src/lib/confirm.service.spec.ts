@@ -125,18 +125,83 @@ describe('SdConfirmService', () => {
     await expectAsync(promise).toBeResolvedTo('A');
   });
 
+  it('withRadio() should pass column display to the dialog when requested', async () => {
+    const promise = service.withRadio('Pick one', {
+      items: [
+        { value: 'A', label: 'Option A' },
+        { value: 'B', label: 'Option B' },
+      ],
+      valueField: 'value',
+      displayField: 'label',
+      display: 'column',
+    });
+    const [, config] = dialogOpenSpy.calls.mostRecent().args;
+    expect(config.data.radio.display).toBe('column');
+    afterClosed$.next({ action: 'ACCEPT', value: 'B' });
+    afterClosed$.complete();
+    await expectAsync(promise).toBeResolvedTo('B');
+  });
+
+  it('withSelect() should open dialog with select data and resolve selected value on ACCEPT', async () => {
+    const items = [
+      { value: 'sales', label: 'Sales' },
+      { value: 'hr', label: 'HR' },
+    ];
+    const promise = service.withSelect('Pick department', {
+      items,
+      valueField: 'value',
+      displayField: 'label',
+      defaultValue: 'sales',
+      required: true,
+      placeholder: 'Department',
+    });
+    const [, config] = dialogOpenSpy.calls.mostRecent().args;
+    expect(config.data.select.items).toEqual(items);
+    expect(config.data.select.valueField).toBe('value');
+    expect(config.data.select.displayField).toBe('label');
+    expect(config.data.select.defaultValue).toBe('sales');
+    expect(config.data.select.required).toBeTrue();
+    expect(config.data.select.placeholder).toBe('Department');
+    afterClosed$.next({ action: 'ACCEPT', value: 'hr' });
+    afterClosed$.complete();
+    await expectAsync(promise).toBeResolvedTo('hr');
+  });
+
   // ─── withDate() ────────────────────────────────────────────────────────────
 
   it('withDate() should open dialog with date data and resolve selected date on ACCEPT', async () => {
+    const min = new Date('2024-01-01');
+    const max = new Date('2024-12-31');
     const promise = service.withDate('Schedule for', {
       title: 'Schedule',
       placeholder: 'dd/MM/yyyy',
+      min,
+      max,
     });
     const [, config] = dialogOpenSpy.calls.mostRecent().args;
     expect(config.data.date).toBeDefined();
     expect(config.data.date.placeholder).toBe('dd/MM/yyyy');
+    expect(config.data.date.min).toBe(min);
+    expect(config.data.date.max).toBe(max);
     afterClosed$.next({ action: 'ACCEPT', value: '2024-01-15' });
     afterClosed$.complete();
     await expectAsync(promise).toBeResolvedTo('2024-01-15');
+  });
+
+  it('withDatetime() should open dialog with datetime data and resolve selected value on ACCEPT', async () => {
+    const promise = service.withDatetime('Schedule at', {
+      title: 'Schedule',
+      placeholder: 'dd/MM/yyyy HH:mm',
+      showSeconds: true,
+      required: true,
+    });
+    const [, config] = dialogOpenSpy.calls.mostRecent().args;
+    expect(config.data.datetime).toBeDefined();
+    expect(config.data.datetime.placeholder).toBe('dd/MM/yyyy HH:mm');
+    expect(config.data.datetime.showSeconds).toBeTrue();
+    expect(config.data.datetime.required).toBeTrue();
+    afterClosed$.next({ action: 'ACCEPT', value: '2024-01-15T08:30:00' });
+    afterClosed$.complete();
+    await expectAsync(promise).toBeResolvedTo('2024-01-15T08:30:00');
   });
 });

@@ -28,9 +28,9 @@ import { SdInputColor } from '@sdcorejs/angular/forms/input-color';
       </demo-section>
 
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }, { name: 'viewed', value: 'true' }]">
-        <sd-input-color label="disabled" [model]="'#1565C0'" [disabled]="true" />
-        <sd-input-color label="readonly" [model]="'#4CAF50'" [readonly]="true" />
-        <sd-input-color label="viewed" [model]="'#F82C13'" [viewed]="true" />
+        <sd-input-color label="disabled" [model]="'#005CBB'" [disabled]="true" />
+        <sd-input-color label="readonly" [model]="'#2E7D32'" [readonly]="true" />
+        <sd-input-color label="viewed" [model]="'#BA1A1A'" [viewed]="true" />
       </demo-section>
 
       <demo-section heading="Hex ngắn / alpha" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Picker tự normalize #RGB → #RRGGBB và bỏ alpha; swatch giữ giá trị thật.">

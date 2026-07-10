@@ -20,7 +20,7 @@ $qbc-radius:       6px;
 
 @mixin qb-control-skin {
   .mat-mdc-form-field {
-    // Soft, unified outline border (overrides the global black200 notch color)
+    // Soft, unified outline border (overrides the global border token color)
     .mdc-notched-outline__leading,
     .mdc-notched-outline__notch,
     .mdc-notched-outline__trailing {

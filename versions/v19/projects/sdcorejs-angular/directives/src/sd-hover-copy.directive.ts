@@ -64,7 +64,7 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     this.renderer.setStyle(this.#copyButton, 'border-radius', '3px');
     this.renderer.setStyle(this.#copyButton, 'padding', '5px');
     this.renderer.setStyle(this.#copyButton, 'line-height', '1');
-    this.renderer.setStyle(this.#copyButton, 'background-color', 'var(--sd-black100)');
+    this.renderer.setStyle(this.#copyButton, 'background-color', 'var(--sd-surface-muted)');
 
     // Add inline SVG icon
     const svg = this.renderer.createElement('svg', 'svg');

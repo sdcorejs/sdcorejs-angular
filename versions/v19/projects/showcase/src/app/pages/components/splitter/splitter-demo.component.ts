@@ -77,9 +77,9 @@ import { SdButton } from '@sdcorejs/angular/components/button';
       align-items: center;
       justify-content: center;
       font-weight: 500;
-      color: #1565c0;
+      color: var(--sd-primary, #005cbb);
     }
-    .bg-blue { background: #e3f2fd; }
+    .bg-blue { background: var(--sd-primary-light, #d7e3ff); }
     .bg-grey { background: #f5f5f5; color: #424242; }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,

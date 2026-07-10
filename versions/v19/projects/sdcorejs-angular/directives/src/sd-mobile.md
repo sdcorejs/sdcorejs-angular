@@ -55,7 +55,7 @@ None — the directive adds no host element, no CSS class, and no attribute.
 ```html
 <sd-button
   *sdMobile
-  type="link"
+type="text"
   prefixIcon="menu"
   (click)="onOpenDrawer()">
 </sd-button>

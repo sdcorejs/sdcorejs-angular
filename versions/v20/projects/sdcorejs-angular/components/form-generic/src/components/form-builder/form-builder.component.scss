@@ -1,38 +1,37 @@
-// TODO: rebrand — swap 4 primary tokens to sd-angular core primary
-// (--md-sys-color-primary / -on-primary / -primary-container / -on-primary-container)
-//
-// Material 3 expressive, compact density. Brand = primary.
+// Builder canvas keeps its internal M3-shaped variables, but sources them from
+// the public Core UI tokens (--sd-primary, --sd-primary-light, --sd-border, ...).
+// Brand = primary.
 // All canvas-side classes are defined here under :host so children components
 // (attribute panels) inherit the CSS custom properties via DOM; class definitions
 // that need to reach child component templates live under :host::ng-deep.
 
 :host {
   // ── M3 baseline · brand = primary ────────────────────────────────────
-  --md-sys-color-primary: var(--sd-primary, #2a66f4);
-  --md-sys-color-on-primary: #ffffff;
-  --md-sys-color-primary-container: var(--sd-primary-light, #eaf1ff);
-  --md-sys-color-on-primary-container: var(--sd-primary, #2a66f4);
-  --md-sys-color-info: var(--sd-info, #2962ff);
-  --md-sys-color-info-container: var(--sd-info-light, #e7e9ff);
+  --md-sys-color-primary: var(--sd-primary, #005cbb);
+  --md-sys-color-on-primary: var(--sd-primary-contrast, #ffffff);
+  --md-sys-color-primary-container: var(--sd-primary-light, #d7e3ff);
+  --md-sys-color-on-primary-container: var(--sd-primary-dark, #001b3f);
+  --md-sys-color-info: var(--sd-info, #006a6a);
+  --md-sys-color-info-container: var(--sd-info-light, #d4f7f6);
 
   --md-sys-color-secondary: #625b71;
   --md-sys-color-secondary-container: #e8def8;
   --md-sys-color-on-secondary-container: #1d192b;
 
-  --md-sys-color-surface: #fbfafc;
-  --md-sys-color-surface-container-lowest: #ffffff;
-  --md-sys-color-surface-container-low: #f6f4f8;
-  --md-sys-color-surface-container: #f1eef3;
-  --md-sys-color-surface-container-high: #ebe8ee;
-  --md-sys-color-surface-container-highest: #e6e2ea;
+  --md-sys-color-surface: var(--sd-surface, #fdfbff);
+  --md-sys-color-surface-container-lowest: var(--mat-sys-surface-container-lowest, #ffffff);
+  --md-sys-color-surface-container-low: var(--mat-sys-surface-container-low, #f7f8fc);
+  --md-sys-color-surface-container: var(--sd-surface-muted, #f0f0f4);
+  --md-sys-color-surface-container-high: var(--mat-sys-surface-container-high, #e9e9ee);
+  --md-sys-color-surface-container-highest: var(--sd-surface-muted, #e7e8ed);
 
-  --md-sys-color-on-surface: #1c1b1f;
-  --md-sys-color-on-surface-variant: #49454e;
-  --md-sys-color-outline: #79747e;
-  --md-sys-color-outline-variant: #d6d2da;
+  --md-sys-color-on-surface: var(--sd-text, #1a1b1f);
+  --md-sys-color-on-surface-variant: var(--sd-secondary, #44474f);
+  --md-sys-color-outline: var(--sd-border-strong, #74777f);
+  --md-sys-color-outline-variant: var(--sd-border, #c4c6d0);
 
-  --md-sys-color-error: #b3261e;
-  --md-sys-color-error-container: #f9dedc;
+  --md-sys-color-error: var(--sd-error, #ba1a1a);
+  --md-sys-color-error-container: var(--sd-error-light, #ffdad6);
   --md-sys-color-warning: #8a5400;
   --md-sys-color-warning-container: #ffddb1;
   --md-sys-color-success: #1f6f43;
@@ -701,7 +700,7 @@
   box-shadow:
     0 14px 32px rgba(0, 0, 0, 0.24),
     0 5px 14px rgba(0, 0, 0, 0.16);
-  border: 1.5px solid color-mix(in srgb, var(--sd-primary, #2a66f4) 46%, #d6d2da);
+  border: 1.5px solid color-mix(in srgb, var(--sd-primary, #005cbb) 46%, #d6d2da);
   cursor: grabbing;
   pointer-events: none;
   user-select: none;
@@ -713,7 +712,7 @@
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    background: var(--sd-primary, #2a66f4);
+    background: var(--sd-primary, #005cbb);
     flex-shrink: 0;
     box-shadow: inset 0 0 0 5px rgba(255, 255, 255, 0.18);
   }
@@ -733,7 +732,7 @@
 
   .fb-drag-preview__line.is-strong {
     width: 74%;
-    background: color-mix(in srgb, var(--sd-primary, #2a66f4) 26%, #d6d2da);
+    background: color-mix(in srgb, var(--sd-primary, #005cbb) 26%, #d6d2da);
   }
 }
 

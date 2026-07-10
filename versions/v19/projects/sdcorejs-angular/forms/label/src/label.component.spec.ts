@@ -124,14 +124,14 @@ describe('SdLabel', () => {
     it('renders description below label when provided', () => {
       host.description = 'Mô tả chi tiết';
       fixture.detectChanges();
-      const desc = queryByCss<HTMLDivElement>(fixture, 'div.text-black400');
+      const desc = queryByCss<HTMLDivElement>(fixture, 'div.text-secondary');
       expect(desc.textContent?.trim()).toBe('Mô tả chi tiết');
     });
 
     it('skips description when null', () => {
       host.description = null;
       fixture.detectChanges();
-      expect(fixture.nativeElement.querySelector('div.text-black400')).toBeNull();
+      expect(fixture.nativeElement.querySelector('div.text-secondary')).toBeNull();
     });
   });
 });

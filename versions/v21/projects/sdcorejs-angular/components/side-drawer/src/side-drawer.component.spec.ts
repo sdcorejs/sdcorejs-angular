@@ -21,7 +21,7 @@ import { SdSideDrawer } from './side-drawer.component';
       [autoId]="autoId"
       (sdClosed)="onClosed()">
       <span id="body-content">drawer body</span>
-      <div sdFooter id="footer-content">footer</div>
+      <div sdFooterRight id="footer-content">footer</div>
     </sd-side-drawer>
   `,
 })

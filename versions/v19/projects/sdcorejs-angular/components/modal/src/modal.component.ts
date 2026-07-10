@@ -11,6 +11,7 @@ import {
   input,
   output,
   signal,
+  ViewEncapsulation,
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -26,7 +27,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   selector: 'sd-modal',
   templateUrl: './modal.component.html',
   styleUrl: './modal.component.scss',
-  // encapsulation: ViewEncapsulation.None,
+  encapsulation: ViewEncapsulation.None,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [SdIcon, CommonModule, MatBottomSheetModule, MatDialogModule, MatDividerModule, MatButtonModule],
@@ -103,7 +104,7 @@ export class SdModal {
 
     if ((!this.view() && this.#isMobile) || this.view() === 'bottom-sheet') {
       this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), {
-        panelClass: this.modalClass() as string | string[],
+        panelClass: this.#resolvePanelClass('sd-modal-bottom-sheet-panel'),
         disableClose: this.disableBackdropClose(),
       });
       this.#bottomSheetRef
@@ -117,7 +118,7 @@ export class SdModal {
       this.#dialogRef = this.#dialog.open(this.templateRef(), {
         width: this.#resolvedWidth,
         maxWidth: this.#resolvedWidth,
-        panelClass: this.modalClass() as string | string[],
+        panelClass: this.#resolvePanelClass('sd-modal-panel'),
         disableClose: this.disableBackdropClose(),
       });
       this.#dialogRef
@@ -134,4 +135,27 @@ export class SdModal {
     this.#bottomSheetRef?.dismiss();
     this.#dialogRef?.close();
   };
+
+  #resolvePanelClass(baseClass: string): string[] {
+    const customClass = this.modalClass();
+    const classes = [baseClass];
+
+    if (typeof customClass === 'string') {
+      classes.push(...customClass.split(/\s+/).filter(Boolean));
+      return classes;
+    }
+
+    if (Array.isArray(customClass)) {
+      classes.push(...customClass.filter(Boolean));
+      return classes;
+    }
+
+    if (customClass && typeof customClass === 'object') {
+      Object.entries(customClass).forEach(([className, enabled]) => {
+        if (enabled) classes.push(className);
+      });
+    }
+
+    return classes;
+  }
 }

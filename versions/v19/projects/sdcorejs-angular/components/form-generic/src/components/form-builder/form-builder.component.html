@@ -53,7 +53,7 @@
               [matTooltip]="formBuilderComponent.name"
               matTooltipPosition="right"
               (click)="addComponent(formBuilderComponent)"
-              (cdkDragStarted)="onPaletteDragStarted()"
+              (cdkDragStarted)="onPaletteDragStarted(formBuilderComponent)"
               (cdkDragMoved)="onAnyDragMoved($event)"
               (cdkDragEnded)="onAnyDragEnded()"
               aria-hidden="true">
@@ -65,7 +65,11 @@
               <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                 <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
               </div>
-              <div *cdkDragPlaceholder class="fb-drop-placeholder" aria-hidden="true">
+              <div
+                *cdkDragPlaceholder
+                class="fb-drop-placeholder"
+                [style.--fb-placeholder-columns]="placeholderColumnsFor(formBuilderComponent)"
+                aria-hidden="true">
                 <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: formBuilderComponent }"></ng-container>
               </div>
             </div>
@@ -96,7 +100,7 @@
           <span class="fb-groupedit__hint">{{ 'core.component.form-builder.edit-group' | translate }}</span>
         </div>
         <div class="fb-canvas__actions">
-          <sd-button type="outline" [title]="'core.component.form-builder.cancel' | translate" (click)="cancelGroupEdit()"></sd-button>
+          <sd-button type="text" [title]="'core.component.form-builder.cancel' | translate" (click)="cancelGroupEdit()"></sd-button>
           <sd-button
             type="fill"
             color="primary"
@@ -157,7 +161,7 @@
           </div>
           <sd-form-render [configuration]="{ components: this.components, validations: this.validations }"></sd-form-render>
           <div class="fb-preview-card__footer">
-            <sd-button type="outline" [title]="'core.component.form-builder.cancel' | translate" (click)="setMode(false)"></sd-button>
+            <sd-button type="text" [title]="'core.component.form-builder.cancel' | translate" (click)="setMode(false)"></sd-button>
             <sd-button
               type="fill"
               color="primary"
@@ -186,6 +190,14 @@
           (click)="clickFormContentEmpty()"
           aria-hidden="true">
           @for (row of dragDropRows; track row.id) {
+            @if (shouldShowRowInsertionPlaceholder(row, 'before')) {
+              <div
+                class="fb-row-insert-placeholder"
+                [style.--fb-placeholder-columns]="12"
+                aria-hidden="true">
+                <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() || row }"></ng-container>
+              </div>
+            }
             <div
               cdkDrag
               [cdkDragData]="row"
@@ -207,7 +219,11 @@
               <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                 <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
               </div>
-              <div *cdkDragPlaceholder class="fb-drop-placeholder fb-drop-placeholder--row" aria-hidden="true">
+              <div
+                *cdkDragPlaceholder
+                class="fb-drop-placeholder fb-drop-placeholder--row"
+                [style.--fb-placeholder-columns]="12"
+                aria-hidden="true">
                 <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: row }"></ng-container>
               </div>
               <!-- Quick-add break button — show on row hover, insert break after this row -->
@@ -227,6 +243,8 @@
                 cdkDropListOrientation="horizontal"
                 [cdkDropListData]="row.items"
                 [cdkDropListEnterPredicate]="canEnterRowDropList"
+                (cdkDropListEntered)="onRowItemsDropEntered(row)"
+                (cdkDropListExited)="onRowItemsDropExited(row)"
                 (cdkDropListDropped)="drop($event)">
                 @for (item of row.items; track item.id; let i = $index) {
                   <!-- Group component renders as outlined card with colored header bar -->
@@ -251,7 +269,11 @@
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
-                      <div *cdkDragPlaceholder class="fb-drop-placeholder" aria-hidden="true">
+                      <div
+                        *cdkDragPlaceholder
+                        class="fb-drop-placeholder"
+                        [style.--fb-placeholder-columns]="placeholderColumnsFor(item)"
+                        aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: item }"></ng-container>
                       </div>
                       <!-- cdkDragHandle: chỉ cho phép kéo group qua header — body free cho click vào child. -->
@@ -342,7 +364,11 @@
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
-                      <div *cdkDragPlaceholder class="fb-drop-placeholder" aria-hidden="true">
+                      <div
+                        *cdkDragPlaceholder
+                        class="fb-drop-placeholder"
+                        [style.--fb-placeholder-columns]="12"
+                        aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: item }"></ng-container>
                       </div>
                       <div class="fb-break-line">
@@ -391,7 +417,11 @@
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
-                      <div *cdkDragPlaceholder class="fb-drop-placeholder" aria-hidden="true">
+                      <div
+                        *cdkDragPlaceholder
+                        class="fb-drop-placeholder"
+                        [style.--fb-placeholder-columns]="placeholderColumnsFor(item)"
+                        aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: item }"></ng-container>
                       </div>
 
@@ -481,6 +511,14 @@
                 }
               </div>
             </div>
+            @if (shouldShowRowInsertionPlaceholder(row, 'after')) {
+              <div
+                class="fb-row-insert-placeholder"
+                [style.--fb-placeholder-columns]="12"
+                aria-hidden="true">
+                <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() || row }"></ng-container>
+              </div>
+            }
           }
         </div>
       }
@@ -584,9 +622,9 @@
 </ng-template>
 
 <!-- ══════════════════════ JSON / variables modals ═══════════════════════ -->
-<sd-modal title="JSON" view="dialog" width="80%" #popupViewJSON>
+<sd-modal title="JSON" view="dialog" width="80%" modalClass="sd-form-builder-dialog" #popupViewJSON>
   <sd-textarea [(model)]="jsonString"></sd-textarea>
-  <ng-container sdFooter>
+  <ng-container sdFooterRight>
     <sd-button
       type="fill"
       [title]="'core.component.form-builder.save' | translate"
@@ -595,7 +633,12 @@
       color="primary"></sd-button>
   </ng-container>
 </sd-modal>
-<sd-modal [title]="'core.component.form-builder.config-variable' | translate" view="dialog" width="800px" #popupConfigureVariables>
+<sd-modal
+  [title]="'core.component.form-builder.config-variable' | translate"
+  view="dialog"
+  width="800px"
+  modalClass="sd-form-builder-dialog"
+  #popupConfigureVariables>
   @for (variable of clonedVariables; track variable.id) {
     <div class="d-flex align-items-center" style="gap: 8px">
       <sd-input [form]="form" [label]="'core.component.form-builder.field-key' | translate" [(model)]="variable.key" required></sd-input>
@@ -608,7 +651,7 @@
     </div>
   }
   <a href="javascript:;" (click)="addVariables()">{{ 'core.component.form-builder.add-variable' | translate }}</a>
-  <ng-container sdFooter>
+  <ng-container sdFooterRight>
     <sd-button
       type="fill"
       [title]="'core.component.form-builder.save' | translate"

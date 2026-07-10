@@ -89,7 +89,7 @@ export class SdBadge {
     const c = this.effectiveColor();
     return {
       'c-primary': c === 'primary',
-      'c-black400': c === 'secondary',
+      'c-secondary': c === 'secondary',
       'c-info': c === 'info',
       'c-success': c === 'success',
       'c-warning': c === 'warning',

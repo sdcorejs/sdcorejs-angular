@@ -91,32 +91,41 @@ export const appConfig: ApplicationConfig = {
 
 ## Theming / SCSS Customization
 
+`sd-core.scss` emits the Angular Material M3 theme with `mat.theme(...)`.
+Prefer Core UI variables such as `--sd-primary`, `--sd-surface`, `--sd-text`,
+and `--sd-border` in application code. Material system variables remain an
+implementation detail for Angular Material overrides.
+
 ### CSS Variables
 
 `@sdcorejs/angular` sử dụng CSS custom properties (variables) để quản lý màu sắc. Mỗi màu được expose dưới dạng `--sd-<color>`.
 
 **Available color tokens / Các biến màu sắc:**
 
-| Variable               | Default   | Description     |
-| ---------------------- | --------- | --------------- |
-| `--sd-primary`         | `#2A66F4` | Màu chính       |
-| `--sd-primary-light`   | `#EAF1FF` | Màu chính nhạt  |
-| `--sd-primary-dark`    | `#1C4AD9` | Màu chính đậm   |
-| `--sd-secondary`       | `#757575` | Màu phụ         |
-| `--sd-secondary-light` | `#F2F2F2` | Màu phụ nhạt    |
-| `--sd-success`         | `#4CAF50` | Thành công      |
-| `--sd-success-light`   | `#DBEFDC` | Thành công nhạt |
-| `--sd-warning`         | `#FF9600` | Cảnh báo        |
-| `--sd-warning-light`   | `#FFEACC` | Cảnh báo nhạt   |
-| `--sd-error`           | `#F82C13` | Lỗi             |
-| `--sd-error-light`     | `#FED5D0` | Lỗi nhạt        |
-| `--sd-info`            | `#2962FF` | Thông tin       |
-| `--sd-info-light`      | `#E7E9FF` | Thông tin nhạt  |
-| `--sd-black500`        | `#212121` | Xám đậm nhất    |
-| `--sd-black400`        | `#757575` | Xám đậm         |
-| `--sd-black300`        | `#BFBFBF` | Xám trung       |
-| `--sd-black200`        | `#E6E6E6` | Xám nhạt        |
-| `--sd-black100`        | `#F2F2F2` | Xám nhạt nhất   |
+Core UI exposes a small public token surface: semantic palettes for component
+states, plus neutral tokens for surface, text, border, and disabled states.
+
+| Variable | Default bridge / fallback | Description |
+| -------- | ------------------------- | ----------- |
+| `--sd-primary` | `var(--mat-sys-primary, #005cbb)` | Main action color |
+| `--sd-primary-light` | `color-mix(in srgb, var(--sd-primary) 14%, white)` | Soft primary background |
+| `--sd-primary-dark` | `color-mix(in srgb, var(--sd-primary) 84%, black)` | Hover/active primary shade |
+| `--sd-primary-contrast` | `#ffffff` | Text/icon on primary |
+| `--sd-secondary` | `var(--mat-sys-secondary, #5c6270)` | Secondary action/accent |
+| `--sd-secondary-light` | `color-mix(in srgb, var(--sd-secondary) 12%, white)` | Soft secondary background |
+| `--sd-secondary-dark` | `color-mix(in srgb, var(--sd-secondary) 84%, black)` | Hover/active secondary shade |
+| `--sd-secondary-contrast` | `#ffffff` | Text/icon on secondary |
+| `--sd-info`, `--sd-success`, `--sd-warning`, `--sd-error` | Semantic base colors | Info, success, warning, and error states |
+| `--sd-*-light` / `--sd-*-dark` / `--sd-*-contrast` | Generated from each semantic base | Soft background, active shade, and readable foreground |
+| `--sd-surface` | `var(--mat-sys-surface, #fdfbff)` | App/page surface |
+| `--sd-surface-muted` | `var(--mat-sys-surface-container-highest, #e7e8ed)` | Muted neutral background |
+| `--sd-text` | `var(--mat-sys-on-surface, #1a1b1f)` | Primary text |
+| `--sd-text-secondary` | `var(--mat-sys-on-surface-variant, #44474f)` | Secondary text |
+| `--sd-text-muted` | `color-mix(in srgb, var(--sd-text) 62%, transparent)` | Muted text |
+| `--sd-border` | `var(--mat-sys-outline-variant, #c4c6d0)` | Divider/subtle border |
+| `--sd-border-strong` | `var(--mat-sys-outline, #74777f)` | Strong border/focus outline |
+| `--sd-disabled-bg` | `color-mix(in srgb, var(--sd-text) 8%, transparent)` | Disabled background |
+| `--sd-disabled-text` | `color-mix(in srgb, var(--sd-text) 60%, transparent)` | Disabled text/icon |
 
 ### Custom Theme / Tuỳ chỉnh theme
 
@@ -314,7 +323,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 
 | Input        | Type                                       | Default       | Description                        |
 | ------------ | ------------------------------------------ | ------------- | ---------------------------------- |
-| `type`       | `'fill' \| 'light' \| 'outline' \| 'link'` | `'light'`     | Kiểu nút                           |
+| `type`       | `'fill' \| 'light' \| 'outline' \| 'text'` | `'light'`     | Kiểu nút                           |
 | `color`      | `Color`                                    | `'secondary'` | Màu sắc                            |
 | `size`       | `'sm' \| 'md' \| 'lg'`                     | `'sm'`        | Kích thước                         |
 | `title`      | `string`                                   | —             | Nhãn nút                           |
@@ -377,7 +386,7 @@ import { SdSection } from '@sdcorejs/angular/components/section';
 | `subTitle`    | `string`  | —           | Tiêu đề phụ                |
 | `icon`        | `string`  | —           | Icon Material              |
 | `iconColor`   | `Color`   | `'primary'` | Màu icon                   |
-| `collapsable` | `boolean` | `false`     | Cho phép thu gọn           |
+| `collapsible` | `boolean` | `false`     | Cho phép thu gọn           |
 | `collapsed`   | `boolean` | `false`     | Trạng thái ban đầu thu gọn |
 | `hideHeader`  | `boolean` | `false`     | Ẩn phần header             |
 
@@ -386,7 +395,7 @@ import { SdSection } from '@sdcorejs/angular/components/section';
   <!-- nội dung -->
 </sd-section>
 
-<sd-section title="Cài đặt nâng cao" icon="settings" collapsable [collapsed]="true">
+<sd-section title="Cài đặt nâng cao" icon="settings" collapsible [collapsed]="true">
   <!-- nội dung ẩn mặc định -->
 </sd-section>
 ```

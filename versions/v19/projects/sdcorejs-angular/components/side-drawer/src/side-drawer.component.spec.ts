@@ -21,7 +21,7 @@ import { SdSideDrawer } from './side-drawer.component';
       [autoId]="autoId"
       (sdClosed)="onClosed()">
       <span id="body-content">drawer body</span>
-      <div sdFooter id="footer-content">footer</div>
+      <div sdFooterRight id="footer-content">footer</div>
     </sd-side-drawer>
   `,
 })
@@ -418,5 +418,11 @@ describe('SdSideDrawer', () => {
       expect(closeButton).not.toBeNull();
       expect(closeButton?.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
     }));
+
+    it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {
+      const styles = ((SdSideDrawer as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('margin-left: auto');
+    });
   });
 });

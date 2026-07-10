@@ -9,12 +9,12 @@ const SAVED_BORDER_RADIUS = 'data-sd-autoid-prev-radius';
 // Token màu lấy từ @sdcorejs/angular theme (--sd-*). Fallback hex áp dụng khi
 // consumer chưa import sd-core.scss. Dùng cùng bộ var với scss component để
 // nhất quán visual giữa highlight ok / duplicate / missing.
-const COLOR_OK = 'var(--sd-success, #4CAF50)';
-const COLOR_OK_BG = 'var(--sd-success-light, rgba(76, 175, 80, 0.12))';
-const COLOR_DUP = 'var(--sd-error, #F82C13)';
-const COLOR_DUP_BG = 'var(--sd-error-light, rgba(248, 44, 19, 0.12))';
-const COLOR_MISSING = 'var(--sd-warning, #FF9600)';
-const COLOR_MISSING_BG = 'var(--sd-warning-light, rgba(255, 150, 0, 0.12))';
+const COLOR_OK = 'var(--sd-success, #2e7d32)';
+const COLOR_OK_BG = 'var(--sd-success-light, #d8f0d3)';
+const COLOR_DUP = 'var(--sd-error, #ba1a1a)';
+const COLOR_DUP_BG = 'var(--sd-error-light, #ffdad6)';
+const COLOR_MISSING = 'var(--sd-warning, #a66300)';
+const COLOR_MISSING_BG = 'var(--sd-warning-light, #ffddb0)';
 
 @Injectable({ providedIn: 'root' })
 export class SdAutoidHighlightService {

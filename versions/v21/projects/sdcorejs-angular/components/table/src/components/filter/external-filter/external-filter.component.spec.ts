@@ -108,16 +108,15 @@ describe('ExternalFilterComponent — OOM regression (effect + startWith)', () =
 
     const section = fixture.debugElement.query(By.directive(SdSection)).componentInstance as SdSection;
     expect(section.collapsible()).toBeFalse();
-    expect(section.isCollapsible()).toBeFalse();
   });
 
-  it('still maps deprecated filter.collapsable to the inner sd-section', () => {
-    fixture.componentRef.setInput('filter', { collapsable: false });
+  it('keeps explicit non-collapsible external filter sections', () => {
+    fixture.componentRef.setInput('filter', { collapsible: false });
+
     fixture.componentRef.setInput('externalFilters', [{ field: 'name', title: 'Tên', type: 'string' }]);
     fixture.detectChanges();
 
     const section = fixture.debugElement.query(By.directive(SdSection)).componentInstance as SdSection;
     expect(section.collapsible()).toBeFalse();
-    expect(section.isCollapsible()).toBeFalse();
   });
 });

@@ -63,7 +63,7 @@
     pointer-events: none;
     -webkit-user-select: none;
     user-select: none;
-    color: #2962ff;
+    color: var(--sd-primary, #005cbb);
 
     &::before {
       content: attr(data-marker);

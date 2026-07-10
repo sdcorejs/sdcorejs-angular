@@ -1,31 +1,39 @@
 @use 'sass:map';
 
-$system-colors: 
-'primary',
-'primary-light',
-'primary-dark',
-'info',
-'info-light',
-'info-dark',
-'success',
-'success-light',
-'success-dark',
-'warning',
-'warning-light',
-'warning-dark', 
-'error',
-'error-light',
-'error-dark',
-'secondary',
-'secondary-light',
-'secondary-dark', 
-'light',
-'dark',
-'black500',
-'black400',
-'black300',
-'black200',
-'black100';
+$public-colors:
+  'primary',
+  'primary-light',
+  'primary-dark',
+  'primary-contrast',
+  'secondary',
+  'secondary-light',
+  'secondary-dark',
+  'secondary-contrast',
+  'info',
+  'info-light',
+  'info-dark',
+  'info-contrast',
+  'success',
+  'success-light',
+  'success-dark',
+  'success-contrast',
+  'warning',
+  'warning-light',
+  'warning-dark',
+  'warning-contrast',
+  'error',
+  'error-light',
+  'error-dark',
+  'error-contrast',
+  'surface',
+  'surface-muted',
+  'text',
+  'text-secondary',
+  'text-muted',
+  'border',
+  'border-strong',
+  'disabled-bg',
+  'disabled-text';
 
 @function create_var_map($colors) {
   $var-map: ();
@@ -37,38 +45,41 @@ $system-colors:
   @return $var-map;
 }
 
-
-$color_map: create_var_map($system-colors);
+$color_map: create_var_map($public-colors);
 $basic_color_map: (
-  'white': #FFF,
+  'white': #fff,
   'black': #000,
 );
 
-$disabled-bg: map.get($color-map, 'black100');
-$disabled-text: map.get($color-map, 'black400');
+$disabled-bg: map.get($color-map, 'disabled-bg');
+$disabled-text: map.get($color-map, 'disabled-text');
 
 @each $color, $value in map.merge($color_map, $basic_color_map) {
-  // Text
   .text-#{$color} {
     color: $value !important;
   }
-  // Background
+
   .bg-#{$color} {
     background: $value !important;
   }
-  // Border
+
   .border-#{$color} {
     border-color: $value !important;
   }
 }
-// $colorLights: $primary-light, $secondary-light, $info-light, $success-light, $warning-light, $error-light;
-// @each $color in $colorLights {
-//   // Text
-//   .text-#{$color} {
-//     color: $color;
-//   }
-//   // Background
-//   .bg-#{$color} {
-//     background: $color;
-//   }
-// }
+
+.text-secondary {
+  color: map.get($color_map, 'text-secondary') !important;
+}
+
+.text-muted {
+  color: map.get($color_map, 'text-muted') !important;
+}
+
+.text-body {
+  color: map.get($color_map, 'text') !important;
+}
+
+.bg-muted {
+  background: map.get($color_map, 'surface-muted') !important;
+}

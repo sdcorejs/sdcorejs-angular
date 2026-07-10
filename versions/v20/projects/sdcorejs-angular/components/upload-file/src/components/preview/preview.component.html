@@ -9,7 +9,7 @@
             [class.c-image-error]="file.isImgError"
             (click)="onClickThumbnailImage(i)"
             [ngStyle]="{
-              border: activeIndex === i ? '2px solid #2962ff' : 'none'
+              border: activeIndex === i ? '2px solid var(--sd-primary, #005cbb)' : 'none'
             }">
             @if(file.isImgError) {
               <img fill alt="thumbnail" class="thumbnail-img sd-image-image-error" style="width: 24px; height: 24px; justify-self: center;" />

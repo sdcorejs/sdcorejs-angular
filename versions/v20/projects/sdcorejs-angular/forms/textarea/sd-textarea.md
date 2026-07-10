@@ -223,7 +223,7 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ```html
 <sd-textarea label="Lý do từ chối" [model]="model.rejectReason" [viewed]="true">
   <ng-template sdViewDef let-value>
-    <pre class="text-black700 T14R">{{ value }}</pre>
+    <pre class="text-body T14R">{{ value }}</pre>
   </ng-template>
 </sd-textarea>
 ```
@@ -233,7 +233,7 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ```html
 <sd-textarea label="Ghi chú" [(model)]="note">
   <ng-template sdSuffixDef>
-    <sd-button type="link" prefixIcon="close" (click)="note = ''"></sd-button>
+    <sd-button type="text" prefixIcon="close" (click)="note = ''"></sd-button>
   </ng-template>
 </sd-textarea>
 ```

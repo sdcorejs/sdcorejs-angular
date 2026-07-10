@@ -1,17 +1,17 @@
 :host {
   display: block;
 
-  --sd-tab-label-color: var(--sd-text-primary, #1a1a1a);
-  --sd-tab-label-active-color: var(--sd-color-primary, #1565c0);
-  --sd-tab-indicator-color: var(--sd-color-primary, #1565c0);
+  --sd-tab-label-color: var(--sd-text, #1a1b1f);
+  --sd-tab-label-active-color: var(--sd-primary, #005cbb);
+  --sd-tab-indicator-color: var(--sd-primary, #005cbb);
   --sd-tab-disabled-opacity: 0.5;
-  --sd-tab-badge-bg: var(--sd-color-primary-light, #e8f0ff);
-  --sd-tab-badge-color: var(--sd-color-primary, #1565c0);
+  --sd-tab-badge-bg: var(--sd-primary-light, #d7e3ff);
+  --sd-tab-badge-color: var(--sd-primary, #005cbb);
   --sd-tab-badge-radius: 10px;
   --sd-tab-badge-padding: 0 6px;
   --sd-tab-badge-min-width: 18px;
   --sd-tab-close-color: var(--sd-text-secondary, #6b6b6b);
-  --sd-tab-close-hover-color: var(--sd-color-error, #d32f2f);
+  --sd-tab-close-hover-color: var(--sd-error, #ba1a1a);
 }
 
 .sd-tab__label {

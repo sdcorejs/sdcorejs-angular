@@ -124,7 +124,7 @@ None — content is driven by `title`, `description`, and `icon`.
 - Using a badge to convey error STATE that the user must act on — pair with a tooltip or follow-up `<sd-button>` so the user has a path forward
 
 ## Related
-- `<sd-button type="link">` — for clickable text-style actions
+- `<sd-button type="text">` — for clickable text-style actions
 - `<sd-tag>` — for tag/chip inputs in forms
 - `<sd-avatar>` — for user identity (often paired beside a status badge)
 - `<sd-quick-action>` — icon-only action with popover (when you need actual interaction)

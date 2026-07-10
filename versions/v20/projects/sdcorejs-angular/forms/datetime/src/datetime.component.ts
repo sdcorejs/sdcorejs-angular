@@ -1,5 +1,4 @@
-import { Overlay, OverlayConfig, OverlayRef } from '@angular/cdk/overlay';
-import { ComponentPortal } from '@angular/cdk/portal';
+import { Platform } from '@angular/cdk/platform';
 import { CommonModule } from '@angular/common';
 import {
   booleanAttribute,
@@ -19,12 +18,10 @@ import {
   TemplateRef,
   viewChild,
   contentChild,
-  signal,
-  Injector,
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
-import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
-import { MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatButtonModule } from '@angular/material/button';
+import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -42,31 +39,24 @@ import {
   sdViewedTransform,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
-import { I18nService } from '@sdcorejs/angular/i18n';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { isValid as isValidDate, parse as parseDate } from 'date-fns';
-import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
-import { SdDatetimePicker } from './popup/sd-datetime-picker.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-
-/**
- * Format parse/display dùng cho MatDateAdapter (date-fns).
- * Note: format input là `dd/MM/yyyy HH:mm` (không có giây mặc định) —
- *       giây chỉ được render khi `showSeconds` = true.
- * Token date-fns dùng chữ thường: `yyyy` (năm), `dd` (ngày), `HH` (giờ 24h).
- */
-const SD_DATETIME_FORMATS = {
-  parse: { dateInput: 'dd/MM/yyyy HH:mm' },
-  display: {
-    dateInput: 'dd/MM/yyyy HH:mm',
-    monthYearLabel: 'MMM yyyy',
-    dateA11yLabel: 'PP',
-    monthYearA11yLabel: 'MMMM yyyy',
-  },
-};
+import {
+  SD_DATE_FORMATS,
+  SD_NATIVE_DATE_FORMATS,
+  SdDateAdapter,
+  SdDatetimePicker as SdMaterialDatetimePicker,
+  SdDatetimePickerActions,
+  SdDatetimePickerApply,
+  SdDatetimePickerCancel,
+  SdDatetimePickerNow,
+  SdNativeDateAdapter,
+} from './material-datetime';
 
 /**
  * Thử parse `value` theo lần lượt nhiều format; trả về Date đầu tiên hợp lệ.
@@ -87,20 +77,32 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
   providers: [
-    // DateFnsAdapter inject MAT_DATE_LOCALE; cấp default en-US để parse/format hoạt động.
-    { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
-    provideDateFnsAdapter(SD_DATETIME_FORMATS),
+    Platform,
+    SdNativeDateAdapter,
+    { provide: MAT_DATE_LOCALE, useValue: 'en-US' },
+    { provide: DateAdapter, useExisting: SdNativeDateAdapter },
+    { provide: SdDateAdapter, useExisting: SdNativeDateAdapter },
+    { provide: MAT_DATE_FORMATS, useValue: SD_NATIVE_DATE_FORMATS },
+    { provide: SD_DATE_FORMATS, useValue: SD_NATIVE_DATE_FORMATS },
   ],
   standalone: true,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    MatButtonModule,
     MatInputModule,
     MatTooltipModule,
     MatFormFieldModule,
     SdLabel,
     SdView,
+    TranslatePipe,
+    SdMaterialDatetimePicker,
+    SdDatetimePickerActions,
+    SdDatetimePickerApply,
+    SdDatetimePickerCancel,
+    SdDatetimePickerNow,
   ],
 })
 export class SdDatetime implements OnDestroy, OnInit {
@@ -110,6 +112,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   // 1. SIGNAL QUERIES
   // ==========================================
   inputRef = viewChild<ElementRef<HTMLInputElement>>('input');
+  private readonly dateTimePicker = viewChild<SdMaterialDatetimePicker<Date>>(SdMaterialDatetimePicker);
 
   sdLabelTemplate = contentChild<TemplateRef<any>>('sdLabel');
   sdValueTemplate = contentChild<TemplateRef<any>>('sdValue');
@@ -119,9 +122,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   // 2. INJECTS
   // ==========================================
   private ref = inject(ChangeDetectorRef);
-  private overlay = inject(Overlay);
   private elementRef = inject(ElementRef);
-  private injector = inject(Injector);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
 
@@ -255,12 +256,11 @@ export class SdDatetime implements OnDestroy, OnInit {
   isFocused = false;
   isValid?: boolean;
 
-  /** State popup — true khi đang mở. */
-  pickerOpened = signal(false);
+  /** State popup — true khi picker package đang mở. */
+  pickerOpened = computed(() => this.dateTimePicker()?.opened() ?? false);
 
   #date: string | undefined | null;
   #subscription = new Subscription();
-  #overlayRef: OverlayRef | null = null;
 
   constructor() {
     // EFFECT 1: Sync model thay đổi từ bên ngoài → cập nhật hiển thị
@@ -317,88 +317,36 @@ export class SdDatetime implements OnDestroy, OnInit {
     const formGroup = this.form();
     formGroup?.removeControl(this.name());
     this.#subscription.unsubscribe();
-    this.#closeOverlay();
   }
 
   // ==========================================
-  // 6. POPUP MANAGEMENT — CDK Overlay
+  // 6. POPUP MANAGEMENT — internal M3 material datetime picker
   // ==========================================
 
   /** Mở popup chọn datetime, neo vào input. */
   open() {
     if (this.formControl.disabled || this.pickerOpened()) return;
-
-    const origin = this.elementRef.nativeElement as HTMLElement;
-    const positionStrategy = this.overlay
-      .position()
-      .flexibleConnectedTo(origin)
-      .withPositions([
-        { originX: 'start', originY: 'bottom', overlayX: 'start', overlayY: 'top', offsetY: 4 },
-        { originX: 'start', originY: 'top', overlayX: 'start', overlayY: 'bottom', offsetY: -4 },
-        { originX: 'end', originY: 'bottom', overlayX: 'end', overlayY: 'top', offsetY: 4 },
-        { originX: 'end', originY: 'top', overlayX: 'end', overlayY: 'bottom', offsetY: -4 },
-      ])
-      .withFlexibleDimensions(false)
-      .withPush(true);
-
-    const overlayConfig = new OverlayConfig({
-      positionStrategy,
-      scrollStrategy: this.overlay.scrollStrategies.reposition(),
-      hasBackdrop: true,
-      backdropClass: 'sd-datetime-backdrop',
-      panelClass: 'sd-datetime-overlay-panel',
-    });
-
-    this.#overlayRef = this.overlay.create(overlayConfig);
-    const portal = new ComponentPortal(SdDatetimePicker, null, this.injector);
-    const ref = this.#overlayRef.attach(portal);
-
-    // Đẩy state hiện tại vào popup
-    ref.setInput('initialValue', this.#currentValueAsDate());
-    ref.setInput('minDate', this.resolvedMin());
-    ref.setInput('maxDate', this.resolvedMax());
-    ref.setInput('showSeconds', this.showSeconds());
-
-    // Subscribe events từ popup
-    ref.instance.confirmed.subscribe((value: Date) => this.#onPickerConfirm(value));
-    ref.instance.cancelled.subscribe(() => this.#onPickerCancel());
-
-    // Đóng khi click backdrop
-    this.#overlayRef.backdropClick().subscribe(() => this.#onPickerCancel());
-
-    this.pickerOpened.set(true);
+    const picker = this.dateTimePicker();
+    if (!picker) return;
+    picker.setAnchor(this.inputRef()?.nativeElement ?? (this.elementRef.nativeElement as HTMLElement));
+    picker.select(this.#currentValueAsDate() ?? new Date());
+    picker.open();
     this.ref.markForCheck();
   }
 
   /** Đóng popup (public — gọi từ template nếu cần). */
   close() {
-    this.#closeOverlay();
+    this.dateTimePicker()?.close();
   }
 
-  #closeOverlay() {
-    if (this.#overlayRef) {
-      this.#overlayRef.dispose();
-      this.#overlayRef = null;
-    }
-    if (this.pickerOpened()) {
-      this.pickerOpened.set(false);
-      this.ref.markForCheck();
-    }
-  }
-
-  #onPickerConfirm(value: Date) {
+  onPickerConfirm(value: Date) {
     const fmt = this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00';
-    // value giờ là native Date (date-fns), không cần .toDate() như Moment.
+    // value giờ là native Date từ package M3, không cần .toDate() như Moment.
     const stored = DateUtilities.toFormat(value, fmt);
     if (this.#date !== stored) {
       this.valueModel.set(stored);
       this.sdChange.emit(stored);
     }
-    this.#closeOverlay();
-  }
-
-  #onPickerCancel() {
-    this.#closeOverlay();
   }
 
   /** Lấy giá trị hiện tại dưới dạng native Date để truyền vào popup. */

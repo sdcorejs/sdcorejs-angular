@@ -1,4 +1,4 @@
-﻿@use '../../../../../assets/scss/core/color.scss' as color;
+@use '../../../../../assets/scss/core/color.scss' as color;
 @use 'sass:map';
 
 .c-anchor-list {
@@ -8,7 +8,7 @@
 
   .c-anchor-list-item {
     border-left: 2px solid map.get(color.$color_map, 'secondary-light');
-    color: map.get(color.$color_map, 'black500');
+    color: map.get(color.$color_map, 'text');
     padding: 0.5rem 1.5rem;
     cursor: pointer;
     display: flex;

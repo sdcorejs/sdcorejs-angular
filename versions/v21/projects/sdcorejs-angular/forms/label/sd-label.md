@@ -29,7 +29,7 @@ Tiny presentational label primitive — renders the standard SDCoreJS field labe
 | Name          | Type                          | Default     | Notes                                                                                                 |
 | ------------- | ----------------------------- | ----------- | ----------------------------------------------------------------------------------------------------- |
 | `label`       | `string \| null \| undefined` | `undefined` | The label text. If empty/null, the entire component renders nothing.                                  |
-| `description` | `string \| null \| undefined` | `undefined` | Optional description line shown below the label in muted (`text-black400 T12R`) style.                |
+| `description` | `string \| null \| undefined` | `undefined` | Optional description line shown below the label in muted (`text-secondary T12R`) style.                |
 | `helperText`  | `string \| undefined`         | `undefined` | When set, renders an outlined `info` icon next to the label; tooltip on hover shows this text.        |
 | `required`    | `boolean \| ''`               | `false`     | Renders a red `*` after the label. Bare attribute (`required`) and string `''` both coerce to `true`. |
 

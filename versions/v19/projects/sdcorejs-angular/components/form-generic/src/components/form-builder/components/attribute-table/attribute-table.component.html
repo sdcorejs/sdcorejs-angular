@@ -47,7 +47,7 @@
   </div>
 </details>
 
-<sd-modal [title]="'core.component.form-builder.column-config' | translate" width="600px">
+<sd-modal [title]="'core.component.form-builder.column-config' | translate" width="600px" modalClass="sd-form-builder-dialog">
   @if (column) {
     <details class="fb-section" open>
       <summary class="fb-section__head">
@@ -95,7 +95,7 @@
       </details>
     }
   }
-  <ng-container sdFooter>
+  <ng-container sdFooterRight>
     <sd-button prefixIcon="save" [title]="'core.component.form-builder.save' | translate" (click)="onConfirm()" color="primary"></sd-button>
   </ng-container>
 </sd-modal>

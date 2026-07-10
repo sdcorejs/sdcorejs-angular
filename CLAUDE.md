@@ -67,40 +67,41 @@ git push
 Workflow: `.github/workflows/publish-npm.yml`. Auth qua secret `NPM_TOKEN` (repo Settings > Secrets and variables > Actions). KHÔNG cần `npm login` local.
 
 **Trigger**:
-- Push tag `v<patch>` → publish 19.<patch> / 20.<patch> / 21.<patch>.
-  - `v0.5` → 19.0.5 / 20.0.5 / 21.0.5 (npm tag=latest).
-  - `v0.5-beta.1` → 19.0.5-beta.1 / 20.0.5-beta.1 / 21.0.5-beta.1 (npm tag=beta).
-- Manual dispatch trên Actions tab → nhập patch + tag (beta/latest). Nhánh này chỉ dùng cho publish/debug thủ công; `published-docs` public được buộc vào tag flow.
+- Push tag `v<release-suffix>` → publish 19.<release-suffix> / 20.<release-suffix> / 21.<release-suffix>.
+  - `v1.0` → 19.1.0 / 20.1.0 / 21.1.0 (npm tag=latest).
+  - `v1.0-beta.1` → 19.1.0-beta.1 / 20.1.0-beta.1 / 21.1.0-beta.1 (npm tag=beta).
+- Manual dispatch trên Actions tab → nhập release suffix vào field `patch`. Nhánh này chỉ dùng cho publish/debug thủ công; `published-docs` public được buộc vào tag flow.
 
 Workflow matrix [v19/v20/v21] chạy song song, mỗi job:
-1. Resolve patch + dist-tag từ tag/dispatch input.
-2. Ghi `${major}.${patch}` vào `versions/v<N>/projects/sdcorejs-angular/package.json`.
+1. Resolve release suffix + dist-tag từ tag/dispatch input.
+2. Ghi `${major}.${releaseSuffix}` vào `versions/v<N>/projects/sdcorejs-angular/package.json`.
 3. `npm install --legacy-peer-deps` trong workspace.
 4. `ng build sdcorejs-angular`.
 5. `npm publish --tag <beta|latest>` từ `dist/sdcorejs-angular`.
 
 Sau khi cả 3 matrix job publish thành công, job `publish-docs` chạy một lần trên tag:
 1. Verify tag đang trỏ đúng `origin/main` để docs snapshot khớp source release.
-2. Chạy `npm run collect-release-docs -- --patch <patch> --date <UTC-date> --skip-existing`.
-3. Sinh đủ `published-docs/19.<patch>/`, `published-docs/20.<patch>/`, `published-docs/21.<patch>/`.
+2. Chạy `npm run collect-release-docs -- --patch <release-suffix> --date <UTC-date> --skip-existing`.
+3. Sinh đủ `published-docs/19.<release-suffix>/`, `published-docs/20.<release-suffix>/`, `published-docs/21.<release-suffix>/`.
 4. Commit archive về `main`; push này kích hoạt `deploy-pages.yml` copy docs lên Pages.
 
-**Tag stable 19.0.0/20.0.0/21.0.0**:
+**Tag stable 19.1.0/20.1.0/21.1.0**:
 ```bash
-git tag v0.0
-git push origin v0.0
+git tag v1.0
+git push origin v1.0
 ```
 
 ### Quy trình deploy npm — local fallback (deploy.ps1)
 
 Khi không thể đẩy qua Actions (vd debug):
 ```powershell
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "0.5"
+powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "1.0"
 
 # -DryRun: chạy full flow (write version + install + build) nhưng SKIP `npm publish`.
 # Để verify build pass + version đúng trước khi push thật. Log có dòng "[DRY RUN] No changes will be made."
-powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "0.5" -DryRun
+powershell -ExecutionPolicy Bypass -File ./scripts/deploy.ps1 -PatchVersion "1.0" -DryRun
 ```
+`PatchVersion` là tên tham số legacy; giá trị truyền vào là release suffix chung cho cả ba Angular line.
 Yêu cầu auth local: `npm login --scope=@sdcorejs`.
 
 ### Showcase deploy lên GitHub Pages
@@ -127,8 +128,8 @@ Workflow:
 Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trên Pages, namespaced theo version, để AI agent fetch qua URL mà KHÔNG cần clone local.
 
 - **Nguồn**: `versions/v19|v20|v21/projects/sdcorejs-angular/**/*.md`. Loại `HANDOFF.md` (nội bộ).
-- **Generator release**: `scripts/collect-release-docs.mjs` (`npm run collect-release-docs -- --patch 0.5`) → gọi collector cho đủ 3 workspace và ghi **`published-docs/19.0.5/`**, **`published-docs/20.0.5/`**, **`published-docs/21.0.5/`** + refresh **`published-docs/versions.json`** registry.
-- **Generator đơn lẻ/debug**: `scripts/collect-docs.mjs --workspace v19 --version 19.0.5`. Mặc định KHÔNG overwrite archive đã tồn tại; dùng `--force` chỉ khi cố ý rebuild, `--skip-existing` cho CI idempotent.
+- **Generator release**: `scripts/collect-release-docs.mjs` (`npm run collect-release-docs -- --patch 1.0`) → gọi collector cho đủ 3 workspace và ghi **`published-docs/19.1.0/`**, **`published-docs/20.1.0/`**, **`published-docs/21.1.0/`** + refresh **`published-docs/versions.json`** registry.
+- **Generator đơn lẻ/debug**: `scripts/collect-docs.mjs --workspace v19 --version 19.1.0`. Mặc định KHÔNG overwrite archive đã tồn tại; dùng `--force` chỉ khi cố ý rebuild, `--skip-existing` cho CI idempotent.
 - **URL** (sau deploy):
   - `…/docs/versions.json` — registry mọi version + `latest`
   - `…/docs/<version>/index.json` — manifest (`{ id, title, category, path, url }` × ~79 doc)
@@ -149,8 +150,8 @@ Toàn bộ API docs (`*.md`) của lib được publish dạng raw Markdown trê
 
 **CHANGELOG độc lập.** `@sdcorejs/angular` deploy theo nhịp riêng → có **CHANGELOG.md riêng ở root repo này**. Sau final sync, không dùng changelog của `vn-angular`.
 
-- **Canonical**: `sdcorejs-angular/CHANGELOG.md` (root). Keyed theo **patch tag** (`0.0`, `0.1`, …) — đơn vị release thực. Entry trước 2026-06-24 ghi `Synced from vn-angular@<commit>` để truy vết; entry mới ghi source là repo-owned.
-- **Một entry cho cả 3 major.** Tag `v<patch>` publish 19.x.y / 20.x.y / 21.x.y **cùng nội dung feature** — chỉ khác Angular shim. Không tách entry theo major.
+- **Canonical**: `sdcorejs-angular/CHANGELOG.md` (root). Keyed theo **release suffix tag** (`0.11`, `1.0`, …) — đơn vị release thực. Entry trước 2026-06-24 ghi `Synced from vn-angular@<commit>` để truy vết; entry mới ghi source là repo-owned.
+- **Một entry cho cả 3 major.** Tag `v<release-suffix>` publish 19.x.y / 20.x.y / 21.x.y **cùng nội dung feature** — chỉ khác Angular shim. Không tách entry theo major.
 - **Legacy sync KHÔNG đụng changelog.** Không còn `versions/v<N>/CHANGELOG.md`. Per-version tra `SYNC-STATUS.md` / workspace status.
 - **Đừng đưa shim per-major vào changelog** (vd `DomPortalOutlet` 4-arg vs 3-arg) — plumbing của sync, không phải API consumer.
 
@@ -162,11 +163,11 @@ Changelog viết TRỰC TIẾP ở repo này:
 1. sdcorejs-angular: sửa code/docs/test trong versions/v19
                      → rollout v19 sang v20/v21 bằng sync-multi-version-workspaces.ps1
 2. sdcorejs-angular: sửa root CHANGELOG.md
-                     ## [Unreleased]  →  ## [<patch>] - YYYY-MM-DD
-                     thêm: Published 19.<patch>/20.<patch>/21.<patch> + repo-owned summary
+                     ## [Unreleased]  →  ## [<release-suffix>] - YYYY-MM-DD
+                     thêm: Published 19.<release-suffix>/20.<release-suffix>/21.<release-suffix> + repo-owned summary
                      thêm ## [Unreleased] rỗng mới ở trên
 3. sdcorejs-angular: git add -A && commit && push
-                     git tag v<patch> && git push origin v<patch>
+                     git tag v<release-suffix> && git push origin v<release-suffix>
                      → CI publish npm 19/20/21
                      → nếu publish thành công: CI sinh published-docs 19/20/21 và commit về main
 ```
@@ -175,9 +176,9 @@ Không tag hoặc sync `vn-angular` cho release mới.
 
 ### Semver với scheme này
 
-Tag format `^\d+\.\d+$` (vd `0.0`) — major digit **bị khoá theo Angular line**, không phải theo semver. Hệ quả: breaking change KHÔNG thể tăng major. Quy ước:
+Tag format `^\d+\.\d+$` (vd `1.0`) — major digit **bị khoá theo Angular line**, không phải theo semver. Hệ quả: breaking change KHÔNG thể tăng major. Quy ước:
 
-| Loại thay đổi | Bump patch suffix |
+| Loại thay đổi | Bump release suffix |
 | --- | --- |
 | Thêm component / input (backward-compat) | `0.0 → 0.1` |
 | Bugfix | `0.0 → 0.1` (chỉ có 2 segment) |

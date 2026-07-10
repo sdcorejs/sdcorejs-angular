@@ -6,6 +6,18 @@
   font-size: 16px;
   width: 100%;
 
+  .sd-form-field-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 100%;
+    vertical-align: middle;
+
+    sd-icon {
+      flex: 0 0 auto;
+    }
+  }
+
   // Xử lý tô màu required
   .mat-mdc-form-field-required-marker {
     color: map.get(color.$color_map, 'error');
@@ -14,22 +26,22 @@
   // Xử lý màu border nhạt bớt
   .mat-mdc-notch-piece {
     &.mdc-notched-outline__leading {
-      border-color: map.get(color.$color_map, 'black200') !important;
+      border-color: map.get(color.$color_map, 'border') !important;
     }
     &.mdc-notched-outline__notch {
-      border-top-color: map.get(color.$color_map, 'black200') !important;
-      border-bottom-color: map.get(color.$color_map, 'black200') !important;
+      border-top-color: map.get(color.$color_map, 'border') !important;
+      border-bottom-color: map.get(color.$color_map, 'border') !important;
     }
     &.mdc-notched-outline__trailing {
-      border-color: map.get(color.$color_map, 'black200') !important;
+      border-color: map.get(color.$color_map, 'border') !important;
     }
   }
 
   // Xử lý icon
   .sd-suffix-icon {
-    color: #757575;
+    color: map.get(color.$color_map, 'text-secondary');
     &:hover {
-      color: #616161;
+      color: map.get(color.$color_map, 'text');
     }
   }
 
@@ -47,11 +59,11 @@
     padding: 0;
     background: transparent;
     cursor: pointer;
-    color: #757575;
+    color: map.get(color.$color_map, 'text-secondary');
     transition: background-color 80ms ease, color 80ms ease;
 
     &:hover {
-      background: rgba(0, 0, 0, 0.06);
+      background: color-mix(in srgb, map.get(color.$color_map, 'text') 8%, transparent);
       color: map.get(color.$color_map, 'error');
     }
 

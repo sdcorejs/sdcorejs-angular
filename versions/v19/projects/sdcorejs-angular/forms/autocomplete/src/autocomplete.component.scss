@@ -24,7 +24,7 @@
     &.mat-form-field-appearance-outline {
       &.mat-form-field-disabled {
         .mat-mdc-text-field-wrapper {
-          background: map.get(color.$color_map, 'black100');
+          background: map.get(color.$color_map, 'surface-muted');
         }
       }
     }

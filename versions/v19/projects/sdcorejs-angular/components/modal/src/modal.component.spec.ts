@@ -21,6 +21,7 @@ import { SdModal } from './modal.component';
       [title]="title"
       [width]="width"
       [hideClose]="hideClose"
+      [modalClass]="modalClass"
       [disableBackdropClose]="disableBackdropClose"
       (sdClosed)="onClosed()">
       <span id="body-content">modal body</span>
@@ -32,6 +33,7 @@ class HostComponent {
   title = 'Test Modal';
   width = 'md';
   hideClose = false;
+  modalClass: string | string[] | Record<string, boolean> = '';
   disableBackdropClose = true;
   closedCount = 0;
   onClosed(): void {
@@ -248,6 +250,16 @@ describe('SdModal', () => {
       const opts = dialogOpenSpy.calls.mostRecent().args[1] as any;
       expect(opts.disableClose).toBeFalse();
     });
+
+    it('adds the default dialog panel class and preserves custom classes', () => {
+      host.modalClass = 'custom-a custom-b';
+      fixture.detectChanges();
+
+      component.open();
+      const opts = dialogOpenSpy.calls.mostRecent().args[1] as any;
+
+      expect(opts.panelClass).toEqual(['sd-modal-panel', 'custom-a', 'custom-b']);
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -343,6 +355,8 @@ describe('SdModal', () => {
     it('calls MatBottomSheet.open() when view="bottom-sheet"', () => {
       bsComponent.open();
       expect(bsBottomSheetSpy).toHaveBeenCalledTimes(1);
+      const opts = bsBottomSheetSpy.calls.mostRecent().args[1] as any;
+      expect(opts.panelClass).toEqual(['sd-modal-bottom-sheet-panel']);
     });
 
     it('sets isOpened to true after bottom-sheet open()', () => {
@@ -422,7 +436,15 @@ describe('SdModal', () => {
     @Component({
       standalone: true,
       imports: [SdModal],
-      template: ` <sd-modal view="dialog" [autoId]="autoId" [title]="'E2E Test'" [lazyLoadContent]="false"></sd-modal> `,
+      template: `
+        <sd-modal view="dialog" [autoId]="autoId" [title]="'E2E Test'" [lazyLoadContent]="false">
+          <span sdHeaderRight id="header-action">Header action</span>
+          <span id="body-slot">Body content</span>
+          <span id="body-extra">Additional body content</span>
+          <span sdFooterLeft id="footer-left">Secondary</span>
+          <span sdFooterRight id="footer-right">Primary</span>
+        </sd-modal>
+      `,
     })
     class E2EHost {
       autoId = 'confirm';
@@ -473,6 +495,47 @@ describe('SdModal', () => {
       const root = view.rootNodes[0] as HTMLElement;
       expect(root).toBeTruthy();
       expect(root.classList.contains('sd-modal-root')).toBeTrue();
+    });
+
+    it('renders default body content without legacy horizontal padding class', () => {
+      const vcr = eFixture.debugElement.query(By.directive(SdModal)).injector.get(ViewContainerRef);
+      const view = eModal.templateRef().createEmbeddedView({});
+      vcr.insert(view);
+      eFixture.detectChanges();
+
+      const root = view.rootNodes[0] as HTMLElement;
+      const body = root.querySelector('.sd-modal-body') as HTMLElement | null;
+
+      expect(body).not.toBeNull();
+      expect(body?.querySelector('#body-slot')?.textContent?.trim()).toBe('Body content');
+      expect(body?.classList.contains('px-16')).toBeFalse();
+      expect(body?.classList.contains('p-16')).toBeFalse();
+    });
+
+    it('projects header and footer slots into the normalized left/right containers', () => {
+      const vcr = eFixture.debugElement.query(By.directive(SdModal)).injector.get(ViewContainerRef);
+      const view = eModal.templateRef().createEmbeddedView({});
+      vcr.insert(view);
+      eFixture.detectChanges();
+
+      const root = view.rootNodes[0] as HTMLElement;
+
+      expect(root.querySelector('.sd-modal-header-right #header-action')?.textContent?.trim()).toBe('Header action');
+      expect(root.querySelector('.sd-modal-footer-left #footer-left')?.textContent?.trim()).toBe('Secondary');
+      expect(root.querySelector('.sd-modal-footer-right #footer-right')?.textContent?.trim()).toBe('Primary');
+      expect(root.querySelector('.sd-modal-body #body-extra')?.textContent?.trim()).toBe('Additional body content');
+    });
+
+    it('limits the dialog surface to viewport height so body scroll does not hide footer actions', () => {
+      const styles = ((SdModal as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('max-height: calc(100vh - 32px)');
+    });
+
+    it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {
+      const styles = ((SdModal as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('margin-left: auto');
     });
 
     it('renders a compact close button with the derived autoId', () => {

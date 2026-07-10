@@ -57,7 +57,7 @@ export class SdLoadingService {
       width: '5rem',
       height: '5rem',
       border: '0.5rem solid var(--sd-primary)',
-      'border-top': '0.5rem solid var(--sd-black200)',
+      'border-top': '0.5rem solid var(--sd-border)',
       'border-radius': '50%',
       animation: 'spin 1s linear infinite',
     };

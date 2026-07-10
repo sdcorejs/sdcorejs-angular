@@ -62,7 +62,7 @@
     opacity: 0.6;
 
     &.c-view {
-      border: 1px solid map.get(color.$color_map, 'black200');
+      border: 1px solid map.get(color.$color_map, 'border');
       opacity: 0.9;
     }
 
@@ -184,7 +184,7 @@
     width: 18px;
     font-size: 18px;
     cursor: pointer;
-    color: map.get(color.$color_map, 'black400');
+    color: map.get(color.$color_map, 'text-secondary');
   }
 
   .c-upload {
@@ -214,7 +214,7 @@
 
 .c-drag-placeholder {
   border-radius: 4px;
-  background: map.get(color.$color_map, 'primary')-light;
+  background: map.get(color.$color_map, 'primary-light');
   border: 2px dashed map.get(color.$color_map, 'primary');
   display: table-cell;
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
@@ -294,7 +294,7 @@
   justify-content: left;
   align-items: center;
   padding: 4px;
-  border: 1px map.get(color.$color_map, 'black200') dashed;
+  border: 1px map.get(color.$color_map, 'border') dashed;
   border-radius: 4px;
   height: 32px;
   background-color: #f9f9f9;
@@ -374,9 +374,9 @@
     cursor: pointer;
     border-radius: 50%;
     flex-shrink: 0;
-    color: map.get(color.$color_map, 'black400');
+    color: map.get(color.$color_map, 'text-secondary');
     &:hover {
-      background-color: map.get(color.$color_map, 'black200'); // nền xám nhạt
+      background-color: map.get(color.$color_map, 'border'); // nền xám nhạt
     }
   }
 }

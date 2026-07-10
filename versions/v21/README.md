@@ -224,13 +224,18 @@ Same source, same API surface — peer dependency major chỉ khác Angular majo
 
 ## 🎨 Theming
 
-Sử dụng SCSS tokens + Material theme. Override qua CSS variables:
+Sử dụng SCSS tokens + Angular Material M3 theme/token system (`mat.theme`). Override semantic tokens qua CSS variables và ưu tiên đọc `--mat-sys-*` cho style liên quan Angular Material:
 
 ```scss
 :root {
-  --sd-color-primary: #1f6feb;
-  --sd-color-success: #1f7a3e;
-  --sd-color-error: #b32626;
+  --sd-primary: #1f6feb;
+  --sd-success: #1f7a3e;
+  --sd-error: #b32626;
+}
+
+.app-link {
+  color: var(--mat-sys-primary);
+  outline-color: var(--mat-sys-outline);
 }
 ```
 
@@ -264,7 +269,7 @@ npm run build            # build the sd-angular library
 
 ## 🚀 Publishing
 
-Source workflow: changes in `vn-angular` → sync to `sdcorejs-angular` repo → push tag `v<patch>` triggers GitHub Actions matrix publishing 3 phiên bản `19.<patch>` / `20.<patch>` / `21.<patch>` parallel.
+Source workflow: changes land in `versions/v19`, then roll out to `v20` / `v21`; push tag `v<release-suffix>` to trigger GitHub Actions matrix publishing 3 versions `19.<release-suffix>` / `20.<release-suffix>` / `21.<release-suffix>` in parallel. For release `v1.0`, this publishes `19.1.0`, `20.1.0`, and `21.1.0`.
 
 Required secret in `sdcorejs/sdcorejs-angular`: `NPM_TOKEN`.
 

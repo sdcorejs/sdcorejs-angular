@@ -25,7 +25,7 @@ describe('SdButton', () => {
         ['fill', 'c-fill'],
         ['light', 'c-light'],
         ['outline', 'c-outline'],
-        ['link', 'c-link'],
+        ['text', 'c-text'],
       ];
       for (const [type, cls] of variants) {
         setInput(fixture, 'type', type);
@@ -41,7 +41,7 @@ describe('SdButton', () => {
     it('renders prefix icon when provided', () => {
       setInput(fixture, 'prefixIcon', 'save');
       setInput(fixture, 'title', 'X');
-      expect(queryByCss(fixture, 'mat-icon.c-icon-prefix').textContent?.trim()).toBe('save');
+      expect(queryByCss(fixture, 'sd-icon.c-icon-prefix mat-icon').textContent?.trim()).toBe('save');
     });
 
     // why: bug "text dài button bị xuống hàng cắt height" — fix bằng nowrap + ellipsis
@@ -91,7 +91,7 @@ describe('SdButton', () => {
       setInput(fixture, 'prefixIcon', 'save');
       setInput(fixture, 'loading', true);
       expect(fixture.nativeElement.querySelector('mat-spinner')).not.toBeNull();
-      expect(fixture.nativeElement.querySelector('mat-icon.c-icon-prefix')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-icon-prefix')).toBeNull();
     });
   });
 

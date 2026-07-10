@@ -29,8 +29,8 @@
               style="padding: 0; margin: 0; border: none; background-color: transparent">
               <sd-icon class="c-menu-group-icon"
                 [ngStyle]="{
-                  color: isPinnedMenuGroupActive() ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
-                  backgroundColor: isPinnedMenuGroupActive() ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                  color: isPinnedMenuGroupActive() ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)' : 'var(--sd-text-secondary, #44474f)',
+                  backgroundColor: isPinnedMenuGroupActive() ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                 }" name="push_pin"></sd-icon>
             </button>
           }
@@ -47,15 +47,15 @@
                 <span
                   class="c-menu-group-icon"
                   [ngStyle]="{
-                    backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                    backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
                   <img width="24px" height="24px" [src]="nodeMenuGroup.iconUrl" [alt]="nodeMenuGroup.title" />
                 </span>
               } @else {
                 <sd-icon class="c-menu-group-icon"
                   [ngStyle]="{
-                    color: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandColor || '#2962FF' : '#8C8C8C',
-                    backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                    color: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)' : 'var(--sd-text-secondary, #44474f)',
+                    backgroundColor: idMenuGroupActive() === nodeMenuGroup?.id ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }" [name]="nodeMenuGroup.icon || 'widgets'"></sd-icon>
               }
             </button>
@@ -83,20 +83,20 @@
                   (mouseenter)="onMouseOverMenuNode($event, node)"
                   (mouseleave)="onMouseLeaveMenuNode($event, node)"
                   [ngStyle]="{
-                    backgroundColor: (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || '#F8F9FA' : 'transparent',
+                    backgroundColor: (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
                   <div aria-hidden="true" class="c-menu-node-description" (click)="navigate(node)" [class.d-none]="!isShowSidebar()">
                     <div
                       class="c-menu-node-description-content"
                       [ngStyle]="{
-                        color: (currentPath() | menuFocus: node) ? _sidebar.brandColor || '#2962FF' : '#1F1F1F',
+                        color: (currentPath() | menuFocus: node) ? _sidebar.brandColor || 'var(--sd-primary, #005cbb)' : 'var(--sd-text, #1a1b1f)',
                       }"
                       [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
 
                     @if (_sidebar?.pin?.enabled) {
                       <sd-icon class="c-menu-node-description-icon-pin"
                         [style.opacity]="isPinnedNode(node) || isHoveredNode(node) ? '1' : null"
-                        [style.color]="isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || '#2962FF' : null"
+                        [style.color]="isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || 'var(--sd-primary, #005cbb)' : null"
                         (click)="onTogglePin($event, node)" name="push_pin"></sd-icon>
                     }
                   </div>
