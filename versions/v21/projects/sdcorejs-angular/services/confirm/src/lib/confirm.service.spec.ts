@@ -125,6 +125,23 @@ describe('SdConfirmService', () => {
     await expectAsync(promise).toBeResolvedTo('A');
   });
 
+  it('withRadio() should pass column display to the dialog when requested', async () => {
+    const promise = service.withRadio('Pick one', {
+      items: [
+        { value: 'A', label: 'Option A' },
+        { value: 'B', label: 'Option B' },
+      ],
+      valueField: 'value',
+      displayField: 'label',
+      display: 'column',
+    });
+    const [, config] = dialogOpenSpy.calls.mostRecent().args;
+    expect(config.data.radio.display).toBe('column');
+    afterClosed$.next({ action: 'ACCEPT', value: 'B' });
+    afterClosed$.complete();
+    await expectAsync(promise).toBeResolvedTo('B');
+  });
+
   it('withSelect() should open dialog with select data and resolve selected value on ACCEPT', async () => {
     const items = [
       { value: 'sales', label: 'Sales' },

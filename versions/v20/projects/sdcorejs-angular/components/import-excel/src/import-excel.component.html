@@ -166,7 +166,7 @@
     </div>
     <sd-button sdFooterLeft (click)="upload()" prefixIcon="file_upload" [title]="'core.component.import-excel.upload' | translate" size="sm" color="info" [loading]="uploading">
     </sd-button>
-    <div class="d-flex align-items-center" sdFooter>
+    <div class="d-flex align-items-center" sdFooterRight>
       @if (filteredItems.length) {
         <sd-button class="mr-4" (click)="export()" prefixIcon="get_app" [title]="'core.component.import-excel.download' | translate" size="sm" color="success" type="outline">
         </sd-button>

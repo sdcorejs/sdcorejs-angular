@@ -274,6 +274,10 @@ feature surface to `v20` and `v21`, then publish the three Angular-major package
 lines together. The old `vn-angular` sync script is kept only as a guarded
 legacy recovery tool via `npm run legacy:sync-from-vn-angular`.
 
+Before tagging a release, run `npm run check:sync`. The publish workflow runs
+the same guard and fails before npm publish if `v20` or `v21` has drifted from
+the `v19` source workspace.
+
 Push tag `v<release-suffix>` and GitHub Actions publishes `19.<release-suffix>` + `20.<release-suffix>` + `21.<release-suffix>` in parallel. For release `v1.0`, this means `19.1.0`, `20.1.0`, and `21.1.0`. After all 3 npm publishes succeed, the same tag workflow snapshots `published-docs` for those 3 versions and commits the archive to `main`. See `.github/workflows/publish-npm.yml`.
 
 Push to default branch → showcase auto-deploys to GitHub Pages via `.github/workflows/deploy-pages.yml`.

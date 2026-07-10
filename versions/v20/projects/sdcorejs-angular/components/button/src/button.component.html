@@ -86,7 +86,7 @@
     @if (_loading) {
       <mat-spinner mode="indeterminate" diameter="18" strokeWidth="2" class="c-spinner"></mat-spinner>
     } @else if (_prefixIcon) {
-      <sd-icon [fontSet]="_fontSet" class="c-icon-prefix" [name]="_prefixIcon"></sd-icon>
+      <sd-icon [name]="_prefixIcon" [fontSet]="_fontSet" [size]="size()" class="c-icon-prefix"></sd-icon>
     }
 
     @if (_title) {
@@ -96,11 +96,11 @@
     }
 
     @if (_suffixIcon && !_loading) {
-      <sd-icon [fontSet]="_fontSet" class="c-icon-suffix" [name]="_suffixIcon"></sd-icon>
+      <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()" class="c-icon-suffix"></sd-icon>
     }
 
     @if (!_title && !_prefixIcon && !_loading && _suffixIcon) {
-      <sd-icon [fontSet]="_fontSet" [name]="_suffixIcon"></sd-icon>
+      <sd-icon [name]="_suffixIcon" [fontSet]="_fontSet" [size]="size()"></sd-icon>
     }
   </div>
 </ng-template>

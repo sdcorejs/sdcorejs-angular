@@ -110,7 +110,22 @@
 
 .modal-resizable__footer {
   border-top: 1px solid #dde0e5;
-  padding: 5px 0;
+  padding: 5px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.modal-resizable__footer-left,
+.modal-resizable__footer-right {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-resizable__footer-right {
+  margin-left: auto;
 }
 
 .modal-resizable--active {

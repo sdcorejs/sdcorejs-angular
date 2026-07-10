@@ -21,7 +21,6 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, CommonModule, MatTooltipModule, MatMenuModule, MatButtonModule, CommandPipe, CommandFilterPipe],
 })
 export class DesktopCommand {
-
   readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   readonly item = input.required<SdTableItem>();
   readonly itemIndex = input.required<number>();

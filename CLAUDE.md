@@ -41,9 +41,10 @@ Multi-version source + publish pipeline cho npm package `@sdcorejs/angular`.
 | --- | --- | --- |
 | `scripts/sync-from-vn-angular.ps1` | Legacy recovery only: copy code từ `vn-angular` → `versions/v19` | Không chạy mặc định; cần `-AllowLegacySync` trên clean branch |
 | `scripts/sync-multi-version-workspaces.ps1` | Dẫn xuất `v19` → `v20` + `v21` (đổi peerDeps Angular major, ghi workspace status) | Sau khi thay đổi repo-owned trong `v19` cần rollout |
+| `scripts/check-version-sync.mjs` | Verify `v20` + `v21` vẫn khớp source `v19` cho library/showcase surface | Trước release; CI publish chạy guard này trước npm publish |
 | `scripts/deploy.ps1` | Build + publish 3 phiên bản npm | Khi release stable hoặc beta |
 
-`npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20` và `versions/v21`. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
+`npm run sync` là entry point rollout bình thường: lấy `versions/v19` làm nguồn rồi đồng bộ sang `versions/v20` và `versions/v21`. `npm run check:sync` là release guard read-only; nếu fail thì chạy lại `npm run sync`, review diff, rồi commit đầy đủ trước khi tag. Nếu cần tái hiện mirror cũ để điều tra lịch sử, dùng `npm run legacy:sync-from-vn-angular` trên một branch sạch.
 
 ### Quy trình phát triển độc lập
 
@@ -55,6 +56,7 @@ npm test -- --watch=false
 # 2. Lan toả v19 → v20 + v21
 cd ../..
 npm run sync
+npm run check:sync
 
 # 3. Verify/build rồi commit
 git add -A
@@ -71,6 +73,8 @@ Workflow: `.github/workflows/publish-npm.yml`. Auth qua secret `NPM_TOKEN` (repo
   - `v1.0` → 19.1.0 / 20.1.0 / 21.1.0 (npm tag=latest).
   - `v1.0-beta.1` → 19.1.0-beta.1 / 20.1.0-beta.1 / 21.1.0-beta.1 (npm tag=beta).
 - Manual dispatch trên Actions tab → nhập release suffix vào field `patch`. Nhánh này chỉ dùng cho publish/debug thủ công; `published-docs` public được buộc vào tag flow.
+
+Trước publish matrix, job `verify-version-sync` chạy `npm run check:sync` để chặn tag release nếu `v20`/`v21` lệch khỏi `v19`.
 
 Workflow matrix [v19/v20/v21] chạy song song, mỗi job:
 1. Resolve release suffix + dist-tag từ tag/dispatch input.

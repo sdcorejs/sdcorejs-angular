@@ -418,5 +418,11 @@ describe('SdSideDrawer', () => {
       expect(closeButton).not.toBeNull();
       expect(closeButton?.querySelector('mat-icon')?.textContent?.trim()).toBe('close');
     }));
+
+    it('keeps right-only footer actions aligned to the end when the left slot is empty', () => {
+      const styles = ((SdSideDrawer as any).ɵcmp.styles as string[]).join('\n');
+
+      expect(styles).toContain('margin-left: auto');
+    });
   });
 });

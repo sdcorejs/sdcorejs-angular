@@ -35,6 +35,19 @@ $targets = @(
   @{ Folder = "v21"; Major = "21" }
 )
 
+$syncCheckScript = Join-Path $rootPath "scripts\check-version-sync.mjs"
+if (Test-Path -LiteralPath $syncCheckScript) {
+  Write-Host "Checking v19 -> v20/v21 workspace sync..." -ForegroundColor Gray
+  Push-Location $rootPath
+  node $syncCheckScript
+  $syncCheckExitCode = $LASTEXITCODE
+  Pop-Location
+
+  if ($syncCheckExitCode -ne 0) {
+    throw "Workspace sync check failed. Run `npm run sync`, review the generated diff, and retry deploy."
+  }
+}
+
 # Preview
 Write-Host ""
 Write-Host "Will publish the following packages:" -ForegroundColor White

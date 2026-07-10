@@ -96,5 +96,7 @@
 
 .fb-expression-query {
   width: 100%;
-  min-height: 180px;
+  min-height: 112px;
+  max-height: min(52vh, 560px);
+  overflow: auto;
 }

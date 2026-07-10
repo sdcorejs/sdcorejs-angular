@@ -219,6 +219,120 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(component.dragDropRows[1].items.length).toBe(1);
   });
 
+  it('uses the hovered row as the insertion anchor when the vertical row list receives a palette drop', () => {
+    const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '12' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.targetItem = component.dragDropRows[0];
+
+    component.drop({
+      previousContainer: { data: [paletteTextfield] },
+      container: { data: component.dragDropRows },
+      previousIndex: 0,
+      currentIndex: 0,
+      isPointerOverContainer: true,
+      item: {
+        data: paletteTextfield,
+        element: { nativeElement: { id: '' } },
+      },
+    } as any);
+
+    expect(component.components.slice(0, 2).map((item: any) => item.id)).toEqual(['a', 'b']);
+    expect((component.components[2] as any).type).toBe('textfield');
+    expect((component.components[2] as any).layout.columns).toBe('12');
+    expect((component.components[3] as any).id).toBe('c');
+  });
+
+  it('shows a row-level insertion placeholder for the hovered vertical row only', () => {
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+
+    component.dragSource.set('palette');
+    component.targetItem = component.dragDropRows[0];
+    component.rowInsertionEdge.set('after');
+
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[0], 'after')).toBeTrue();
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeFalse();
+
+    component.targetItem = component.dragDropRows[1];
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeTrue();
+  });
+
+  it('moves the row-level insertion placeholder before or after the hovered row during vertical palette drags', () => {
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.dragSource.set('palette');
+
+    component.targetItem = component.dragDropRows[1];
+    component.rowInsertionEdge.set('before');
+
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[0], 'before')).toBeFalse();
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'before')).toBeTrue();
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeFalse();
+
+    component.rowInsertionEdge.set('after');
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'before')).toBeFalse();
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeTrue();
+  });
+
+  it('hides the row-level insertion placeholder when the drag has entered an inline row list', () => {
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.dragSource.set('palette');
+    component.targetItem = component.dragDropRows[1];
+    component.rowInsertionEdge.set('after');
+
+    component.onRowItemsDropEntered(component.dragDropRows[1]);
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeFalse();
+
+    component.onRowItemsDropExited(component.dragDropRows[1]);
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeTrue();
+  });
+
+  it('uses the hovered row edge as the insertion anchor when the vertical row list receives a palette drop', () => {
+    const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.targetItem = component.dragDropRows[1];
+    component.rowInsertionEdge.set('before');
+
+    component.drop({
+      previousContainer: { data: [paletteTextfield] },
+      container: { data: component.dragDropRows },
+      previousIndex: 0,
+      currentIndex: 0,
+      isPointerOverContainer: true,
+      item: {
+        data: paletteTextfield,
+        element: { nativeElement: { id: '' } },
+      },
+    } as any);
+
+    expect(component.components.slice(0, 2).map((item: any) => item.id)).toEqual(['a', 'b']);
+    expect((component.components[2] as any).type).toBe('textfield');
+    expect((component.components[3] as any).id).toBe('c');
+  });
+
   it('does not draw a second row-level drop rail on top of the CDK placeholder', () => {
     const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
 
@@ -239,6 +353,23 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(styles).toContain('.fb-drop-placeholder');
     expect(styles).toContain('border: 1.5px dashed');
     expect(styles).not.toContain('.cdk-drag-placeholder::before');
+  });
+
+  it('reserves stable in-flow slots for row and item drop placeholders', () => {
+    const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
+
+    expect(styles).toContain('.fb-row-insert-placeholder');
+    expect(styles).toContain('--fb-placeholder-columns');
+    expect(styles).toContain('z-index: 6');
+    expect(styles).toContain('isolation: isolate');
+  });
+
+  it('keeps floating item chrome from painting over drop placeholders while dragging', () => {
+    const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');
+
+    expect(styles).toContain('.fb-status-chip');
+    expect(styles).toContain('.fb-resize-chip');
+    expect(styles).toContain('opacity: 0 !important');
   });
 
   it('blocks existing items from entering rows where their columns cannot fit', () => {

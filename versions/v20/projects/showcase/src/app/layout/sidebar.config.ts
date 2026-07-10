@@ -24,6 +24,8 @@ export const SIDEBAR_GROUPS: SidebarGroup[] = [
       { label: 'Editor', path: 'components/editor' },
       { label: 'Form Generic', path: 'components/form-generic' },
       { label: 'History', path: 'components/history' },
+      { label: 'Icon', path: 'components/icon' },
+      { label: 'Icon Configuration', path: 'components/icon-configuration' },
       { label: 'Import Excel', path: 'components/import-excel' },
       { label: 'Inform', path: 'components/inform' },
       { label: 'Mini Editor', path: 'components/mini-editor' },

@@ -451,6 +451,10 @@ export class SdQueryBar {
     this.filters.set(list);
   }
 
+  updateFilterData(index: number, data: unknown): void {
+    this.updateFilter(index, { data } as Partial<Filter>);
+  }
+
   removeFilter(index: number): void {
     const list = [...this.filters()];
     if (index < 0 || index >= list.length) return;

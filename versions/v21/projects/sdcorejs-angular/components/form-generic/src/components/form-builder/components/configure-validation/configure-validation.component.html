@@ -1,4 +1,9 @@
-<sd-modal [title]="'core.component.form-builder.config-validation-error-warning' | translate" view="dialog" width="800px" #popupConfigureVariables>
+<sd-modal
+  [title]="'core.component.form-builder.config-validation-error-warning' | translate"
+  view="dialog"
+  width="800px"
+  modalClass="sd-form-builder-dialog"
+  #popupConfigureVariables>
   @for (validation of validations; track $index; let idx = $index) {
     <div class="mat-elevation-z2 position-relative p-8 mb-16" style="border-radius: 8px;">
       <div class="row mx-0">
@@ -34,7 +39,7 @@
     </div>
   }
   <sd-button [title]="'core.component.form-builder.add-validation' | translate" [matMenuTriggerFor]="menu" prefixIcon="add" color="primary" type="text"></sd-button>
-  <mat-menu #menu="matMenu">
+  <mat-menu #menu="matMenu" yPosition="above" panelClass="fb-validation-menu">
     <button (click)="addValidation('expression')" mat-menu-item type="button">
       <!-- <sd-icon fontIcon="warning"></sd-icon> -->
       <span>{{ 'core.component.form-builder.expression' | translate }}</span>
@@ -44,7 +49,7 @@
       <span>{{ 'core.component.form-builder.available-methods' | translate }}</span>
     </button>
   </mat-menu>
-  <ng-container sdFooter>
+  <ng-container sdFooterRight>
     <sd-button type="fill" [title]="'core.component.form-builder.save' | translate" (click)="updateValidations()" prefixIcon="save" color="primary"></sd-button>
   </ng-container>
 </sd-modal>

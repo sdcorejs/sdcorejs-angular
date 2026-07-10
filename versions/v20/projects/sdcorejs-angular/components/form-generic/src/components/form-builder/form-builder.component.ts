@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   computed,
+  ElementRef,
   effect,
   inject,
   input,
@@ -77,6 +78,8 @@ interface ResizeState {
   rowId: string;
   columns: string;
 }
+
+type RowInsertionEdge = 'before' | 'after';
 
 @Component({
   selector: 'sd-form-builder',
@@ -201,6 +204,9 @@ export class SdFormBuilder implements OnInit, OnDestroy {
    *  Trigger class `.fb-shell--dragging` để ẩn hover/actions/resize toàn diện, không phụ thuộc :has(). */
   readonly isAnyDragging = signal(false);
   readonly dragSource = signal<'palette' | 'row' | 'canvas' | 'resize' | undefined>(undefined);
+  readonly draggedPaletteItem = signal<FormBuilderComponent | undefined>(undefined);
+  readonly rowInsertionEdge = signal<RowInsertionEdge>('after');
+  readonly inlineDropTargetRow = signal<DragDropRowItem | undefined>(undefined);
   readonly resizeState = signal<ResizeState | undefined>(undefined);
   readonly isResizing = computed(() => !!this.resizeState());
 
@@ -209,13 +215,15 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   isDragging = false;
   targetItem?: DragDropRowItem = undefined;
   private lastDragPointer?: { x: number; y: number };
+  readonly #host: ElementRef<HTMLElement> = inject(ElementRef);
 
   /** Handler chung cho mọi cdkDragStarted — set signal global true. */
   onAnyDragStarted = () => {
     this.isAnyDragging.set(true);
   };
 
-  onPaletteDragStarted = () => {
+  onPaletteDragStarted = (item?: FormBuilderComponent) => {
+    this.draggedPaletteItem.set(item);
     this.dragSource.set('palette');
     this.onAnyDragStarted();
   };
@@ -227,10 +235,13 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   onAnyDragMoved = (event: CdkDragMove<any>) => {
     this.lastDragPointer = event.pointerPosition;
-    const rowEl = document.elementFromPoint(event.pointerPosition.x, event.pointerPosition.y)?.closest('.fb-row') as HTMLElement | null;
-    const row = rowEl?.id ? this.dragDropRows.find(t => t.id === rowEl.id) : undefined;
-    if (row && this.targetItem !== row) {
-      this.targetItem = row;
+    const hit = this.#rowHitFromPointer(event.pointerPosition);
+    if (hit?.row && (this.targetItem !== hit.row || this.rowInsertionEdge() !== hit.edge)) {
+      if (this.targetItem !== hit.row) {
+        this.inlineDropTargetRow.set(undefined);
+      }
+      this.targetItem = hit.row;
+      this.rowInsertionEdge.set(hit.edge);
       this.#ref.markForCheck();
     }
   };
@@ -241,6 +252,9 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     setTimeout(() => {
       this.isAnyDragging.set(false);
       this.dragSource.set(undefined);
+      this.draggedPaletteItem.set(undefined);
+      this.inlineDropTargetRow.set(undefined);
+      this.rowInsertionEdge.set('after');
       this.lastDragPointer = undefined;
       this.targetItem = undefined;
       this.#ref.markForCheck();
@@ -398,6 +412,17 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     if (this.#isPaletteComponent(item)) return 'New field';
     if ('items' in item) return `${item.items.length} field${item.items.length === 1 ? '' : 's'}`;
     return this.typeLabelFor(item);
+  };
+
+  placeholderColumnsFor = (item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined): number => {
+    if (!item) return 12;
+    if ('items' in item) return 12;
+    if (this.#isPaletteComponent(item)) {
+      const row = this.targetItem;
+      if (row && !this.isRowInlineDropLocked(row)) return Math.max(2, this.#availableColumns(row));
+      return item.type === 'break' ? 12 : 6;
+    }
+    return +(item.layout?.columns || 12);
   };
 
   /** True nếu component có expression điều kiện — drives the "conditional" status chip. */
@@ -566,6 +591,25 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   isRowFull = (row: DragDropRowItem): boolean => this.#usedColumns(row) >= 12;
 
   isRowInlineDropLocked = (row: DragDropRowItem): boolean => this.#availableColumns(row) < 2;
+
+  shouldShowRowInsertionPlaceholder = (row: DragDropRowItem, edge: RowInsertionEdge = this.rowInsertionEdge()): boolean => {
+    if (this.dragSource() !== 'palette' || this.targetItem !== row || this.rowInsertionEdge() !== edge) return false;
+    return this.inlineDropTargetRow() !== row || this.isRowInlineDropLocked(row);
+  };
+
+  onRowItemsDropEntered = (row: DragDropRowItem) => {
+    if (this.dragSource() === 'palette' && !this.isRowInlineDropLocked(row)) {
+      this.inlineDropTargetRow.set(row);
+      this.#ref.markForCheck();
+    }
+  };
+
+  onRowItemsDropExited = (row: DragDropRowItem) => {
+    if (this.inlineDropTargetRow() === row) {
+      this.inlineDropTargetRow.set(undefined);
+      this.#ref.markForCheck();
+    }
+  };
 
   canEnterRowDropList = (
     drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup>,
@@ -856,11 +900,48 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     return lastIndex >= 0 ? lastIndex + 1 : scope.length;
   };
 
+  #scopeIndexBeforeRow = (row: DragDropRowItem): number => {
+    const scope = this.#scope();
+    const firstItem = row.items[0];
+    const firstIndex = firstItem ? scope.findIndex(component => component.id === firstItem.id) : -1;
+    return firstIndex >= 0 ? firstIndex : scope.length;
+  };
+
+  #rowHitFromPointer = (pointer: { x: number; y: number }): { row: DragDropRowItem; edge: RowInsertionEdge } | undefined => {
+    const directRowEl = document.elementFromPoint(pointer.x, pointer.y)?.closest('.fb-row') as HTMLElement | null;
+    const rowElements = directRowEl ? [directRowEl] : Array.from(this.#host.nativeElement.querySelectorAll<HTMLElement>('.fb-row[id]'));
+
+    let best: { rowEl: HTMLElement; edge: RowInsertionEdge; distance: number } | undefined;
+    for (const rowEl of rowElements) {
+      const rect = rowEl.getBoundingClientRect();
+      const edge: RowInsertionEdge = pointer.y < rect.top + rect.height / 2 ? 'before' : 'after';
+      const distance = pointer.y < rect.top ? rect.top - pointer.y : pointer.y > rect.bottom ? pointer.y - rect.bottom : 0;
+      if (!best || distance < best.distance) {
+        best = { rowEl, edge, distance };
+      }
+    }
+
+    if (!best?.rowEl.id) return undefined;
+    const row = this.dragDropRows.find(item => item.id === best.rowEl.id);
+    return row ? { row, edge: best.edge } : undefined;
+  };
+
   #paletteDropPlacement = (
     containerData: any[],
     currentIndex: number,
     item: FormBuilderComponent
   ): { index?: number; columns?: string } => {
+    if (containerData === this.dragDropRows) {
+      const targetRow = this.targetItem;
+      if (targetRow) {
+        return {
+          index: this.rowInsertionEdge() === 'before' ? this.#scopeIndexBeforeRow(targetRow) : this.#scopeIndexAfterRow(targetRow),
+          columns: item.type === 'break' ? undefined : '12',
+        };
+      }
+      return { index: this.#scopeIndexFromDrop(containerData, currentIndex), columns: item.type === 'break' ? undefined : '12' };
+    }
+
     const row = this.#rowForItems(containerData);
     if (!row || item.type === 'break') {
       return { index: this.#scopeIndexFromDrop(containerData, currentIndex) };

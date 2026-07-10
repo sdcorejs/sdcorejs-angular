@@ -18,6 +18,8 @@ export const routes: Routes = [
   { path: 'components/editor',           loadComponent: () => import('./pages/components/editor/editor-demo.component').then(m => m.EditorDemoComponent) },
   { path: 'components/form-generic',     loadComponent: () => import('./pages/components/form-generic/form-generic-demo.component').then(m => m.FormGenericDemoComponent) },
   { path: 'components/history',          loadComponent: () => import('./pages/components/history/history-demo.component').then(m => m.HistoryDemoComponent) },
+  { path: 'components/icon',             loadComponent: () => import('./pages/components/icon/icon-demo.component').then(m => m.IconDemoComponent) },
+  { path: 'components/icon-configuration', loadComponent: () => import('./pages/components/icon-configuration/icon-configuration-demo.component').then(m => m.IconConfigurationDemoComponent) },
   { path: 'components/import-excel',     loadComponent: () => import('./pages/components/import-excel/import-excel-demo.component').then(m => m.ImportExcelDemoComponent) },
   { path: 'components/inform',           loadComponent: () => import('./pages/components/inform/inform-demo.component').then(m => m.InformDemoComponent) },
   { path: 'components/mini-editor',      loadComponent: () => import('./pages/components/mini-editor/mini-editor-demo.component').then(m => m.MiniEditorDemoComponent) },

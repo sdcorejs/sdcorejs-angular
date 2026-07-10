@@ -1,5 +1,7 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdButton } from './button.component';
 import { queryByCss, setInput } from '../../../testing/test-utils';
 
@@ -42,6 +44,15 @@ describe('SdButton', () => {
       setInput(fixture, 'prefixIcon', 'save');
       setInput(fixture, 'title', 'X');
       expect(queryByCss(fixture, 'sd-icon.c-icon-prefix mat-icon').textContent?.trim()).toBe('save');
+    });
+
+    it('lets fontSet choose Material filled', () => {
+      setInput(fixture, 'prefixIcon', 'add');
+      setInput(fixture, 'title', 'X');
+      setInput(fixture, 'fontSet', 'material-icons');
+
+      const icon = fixture.debugElement.query(By.directive(SdIcon)).componentInstance as SdIcon;
+      expect(icon.resolvedFontSet()).toBe('material-icons');
     });
 
     // why: bug "text dài button bị xuống hàng cắt height" — fix bằng nowrap + ellipsis

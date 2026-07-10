@@ -37,7 +37,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-version-sync:
+    name: Verify v19 rollout to v20/v21
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check generated version workspaces
+        run: npm run check:sync
+
   build-and-publish:
+    needs: verify-version-sync
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
