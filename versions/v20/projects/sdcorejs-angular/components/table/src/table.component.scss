@@ -158,6 +158,12 @@
       align-items: center;
       background-color: #fff;
 
+      // Keep Material's 48px button touch target inside the footer so it cannot
+      // propagate a few pixels of vertical overflow to the sd-table host.
+      &:has(.c-action sd-button) {
+        min-height: 48px;
+      }
+
       .c-action {
         padding: 5px;
       }
