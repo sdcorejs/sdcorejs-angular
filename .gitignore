@@ -46,6 +46,7 @@ Thumbs.db
 
 # AI
 /.claude
+.worktrees/
 .agents/
 /plans
 GEMINI.md
