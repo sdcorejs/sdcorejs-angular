@@ -1189,16 +1189,18 @@ describe('hidden paginator footer height', () => {
         <sd-table [option]="visiblePaginatorOption"></sd-table>
       </div>
     `,
-    styles: [`
-      .table-shell {
-        width: 600px;
-        height: 240px;
-      }
+    styles: [
+      `
+        .table-shell {
+          width: 600px;
+          height: 240px;
+        }
 
-      :host ::ng-deep .d-none {
-        display: none !important;
-      }
-    `],
+        :host ::ng-deep .d-none {
+          display: none !important;
+        }
+      `,
+    ],
   })
   class HiddenPaginatorHeightHostComponent {
     actionOption: SdTableOption<Row> = {
@@ -1253,12 +1255,8 @@ describe('hidden paginator footer height', () => {
     const paginatorFooter = table.querySelector('.c-paginator') as HTMLElement;
     const paginator = table.querySelector('mat-paginator') as HTMLElement;
 
-    expect(getComputedStyle(paginator).display)
-      .withContext('short data set should hide mat-paginator')
-      .toBe('none');
-    expect(paginatorFooter.querySelector('sd-button'))
-      .withContext('fixture must render a footer action button')
-      .not.toBeNull();
+    expect(getComputedStyle(paginator).display).withContext('short data set should hide mat-paginator').toBe('none');
+    expect(paginatorFooter.querySelector('sd-button')).withContext('fixture must render a footer action button').not.toBeNull();
     expect(paginatorFooter.getBoundingClientRect().height)
       .withContext("footer must contain Material's 48px touch target")
       .toBeGreaterThanOrEqual(48);
