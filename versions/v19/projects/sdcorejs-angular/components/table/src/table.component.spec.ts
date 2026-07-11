@@ -205,6 +205,15 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
     host = fixture.componentInstance;
     fixture.detectChanges();
     table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
+
+    // Angular 20+ may schedule another effect/change-detection turn before the
+    // configuration promise can enqueue the initial 200ms debounced reload.
+    tick();
+    flush();
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
   }
 
   beforeEach(() => {
@@ -213,8 +222,6 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
   it('onFilterCommit ghi columnFilter vào filterRegister với notReload:true — không trigger reload', fakeAsync(() => {
     setupTable();
-    tick();
-    flush();
     expect(table.filterRegister).withContext('filterRegister đã init sau detectChanges + flush').toBeTruthy();
 
     const callsAfterInit = host.itemsSpy.calls.count();
@@ -235,8 +242,6 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
   it('onFilterChange ghi columnFilter và trigger reload sau debounce 500ms', fakeAsync(() => {
     setupTable();
-    tick();
-    flush();
     const callsAfterInit = host.itemsSpy.calls.count();
 
     table.columnFilter = { name: 'xyz', id: null } as Record<string, unknown>;
@@ -252,8 +257,6 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
   it('reload() commit columnFilter pending trước khi build filter request — typed value reach API', fakeAsync(() => {
     setupTable();
-    tick();
-    flush();
     host.itemsSpy.calls.reset();
 
     // Mô phỏng user gõ "pending" vào sd-input nhưng chưa enter, chưa blur:
@@ -278,8 +281,6 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
   // Fix: #syncColumnFilterInPlace giữ reference ổn định.
   it('observer sync GIỮ reference this.columnFilter ổn định qua nhiều filter cycle', fakeAsync(() => {
     setupTable();
-    tick();
-    flush();
     const stableRef = table.columnFilter;
 
     // type field1 = 'a' → enter
@@ -302,8 +303,6 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
 
   it('clear field XÓA hẳn key khỏi columnFilter khi observer sync (không stale)', fakeAsync(() => {
     setupTable();
-    tick();
-    flush();
     const stableRef = table.columnFilter!;
 
     // Set 2 field rồi commit
