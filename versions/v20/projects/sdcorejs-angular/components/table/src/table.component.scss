@@ -160,6 +160,14 @@
 
       .c-action {
         padding: 5px;
+
+        // Text buttons are 32px high but Material keeps a 48px touch target.
+        // The 3px vertical margin plus the existing 5px action padding contains it
+        // without reserving footer height when no action button is rendered.
+        sd-button {
+          margin-top: 3px;
+          margin-bottom: 3px;
+        }
       }
     }
 
