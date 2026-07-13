@@ -115,6 +115,18 @@ describe('ShellComponent', () => {
     expect(count?.getAttribute('aria-label')).toMatch(/^\d+ examples$/);
   });
 
+  it('lists Form Generic under Components with its canonical route', () => {
+    const groups = [...fixture.nativeElement.querySelectorAll('.nav-group')] as HTMLElement[];
+    const components = groups.find(group => group.querySelector('.nav-group__header span')?.textContent?.trim() === 'Components');
+    const modules = groups.find(group => group.querySelector('.nav-group__header span')?.textContent?.trim() === 'Modules & Integrations');
+    const formGeneric = ([...(components?.querySelectorAll('li a') ?? [])] as HTMLAnchorElement[]).find(link =>
+      link.textContent?.includes('Form Generic')
+    );
+
+    expect(formGeneric?.getAttribute('href')).toContain('/v/21.1.2/components/generic/');
+    expect(modules?.textContent).not.toContain('Form Generic');
+  });
+
   it('routes a live-demo-only catalog entry to Examples and labels its availability', () => {
     fixture.componentInstance.publishedDocIds.set(new Set());
     fixture.detectChanges();

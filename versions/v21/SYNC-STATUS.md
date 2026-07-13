@@ -4,7 +4,7 @@
 |-----|-------|
 | Angular Major | 21 |
 | Legacy Source Commit | d12478a1 |
-| Updated At | 2026-07-13 20:20:10 |
+| Updated At | 2026-07-14 02:19:50 |
 | Origin | repo-owned versions/v19 (final legacy sync vn-angular@d12478a1) |
 | Workspace Flow | versions/v19 → v21 |
 | Development Mode | repo-owned independent pack |

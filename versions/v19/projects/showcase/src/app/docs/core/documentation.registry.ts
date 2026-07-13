@@ -20,6 +20,7 @@ export const DOC_TABS: readonly DocTab[] = [
 ];
 
 interface DocPageSeed {
+  readonly id?: string;
   readonly category: DocCategory;
   readonly slug: string;
   readonly title: string;
@@ -32,12 +33,14 @@ interface DocPageSeed {
   readonly demoSectionCount: number;
   readonly loadComponent: DocComponentLoader;
   readonly demoPath?: string;
+  readonly legacyPaths?: readonly string[];
 }
 
 function defineDocPage(seed: DocPageSeed): DocPageDefinition {
-  const id = `${seed.category}-${seed.slug}`;
+  const id = seed.id ?? `${seed.category}-${seed.slug}`;
   const canonicalPath = `${seed.category}/${seed.slug}`;
   const demoPath = seed.demoPath ?? canonicalPath;
+  const legacyPaths = [...new Set([canonicalPath, demoPath, ...(seed.legacyPaths ?? [])])];
   const exampleManifest = SHOWCASE_EXAMPLE_MANIFEST.filter(example => example.pageKey === demoPath);
   if (exampleManifest.length !== seed.demoSectionCount) {
     throw new Error(
@@ -59,7 +62,7 @@ function defineDocPage(seed: DocPageSeed): DocPageDefinition {
     status: seed.status,
     sourcePath: `versions/v19/projects/showcase/src/app/pages/${demoPath}/${demoPath.split('/').at(-1)}-demo.component.ts`,
     legacyPath: demoPath,
-    legacyPaths: canonicalPath === demoPath ? [canonicalPath] : [canonicalPath, demoPath],
+    legacyPaths,
     demoSectionCount: seed.demoSectionCount,
     examples: exampleManifest.map(example => ({
       id: `${id}-${example.sectionId ?? 'showcase'}`,
@@ -214,7 +217,8 @@ const COMPONENT_PAGES = [
     loadComponent: () => import('../../pages/components/editor/editor-demo.component').then(m => m.EditorDemoComponent),
   }),
   defineDocPage({
-    category: 'modules-integrations',
+    id: 'modules-integrations-generic',
+    category: 'components',
     slug: 'generic',
     title: 'Form Generic',
     description: 'Dynamic form builder và renderer với drag/drop, conditions và runtime preview.',
@@ -225,6 +229,7 @@ const COMPONENT_PAGES = [
     status: 'stable',
     demoSectionCount: 1,
     demoPath: 'components/form-generic',
+    legacyPaths: ['modules-integrations/generic'],
     loadComponent: () => import('../../pages/components/form-generic/form-generic-demo.component').then(m => m.FormGenericDemoComponent),
   }),
   defineDocPage({

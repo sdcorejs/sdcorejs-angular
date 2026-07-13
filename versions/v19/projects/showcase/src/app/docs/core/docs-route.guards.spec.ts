@@ -17,7 +17,13 @@ const LEGACY_ALIAS_CASES = [
   {
     category: 'components',
     slug: 'form-generic',
-    canonicalCategory: 'modules-integrations',
+    canonicalCategory: 'components',
+    canonicalSlug: 'generic',
+  },
+  {
+    category: 'modules-integrations',
+    slug: 'generic',
+    canonicalCategory: 'components',
     canonicalSlug: 'generic',
   },
   {
