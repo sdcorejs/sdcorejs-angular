@@ -414,9 +414,17 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-colors.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonColorsExampleComponent {}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}`,
   },
   "components/button/example-bien-the": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -427,9 +435,17 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-variants.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonVariantsExampleComponent {}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}`,
   },
   "components/button/example-chi-icon": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -440,9 +456,17 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-icon-only.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonIconOnlyExampleComponent {}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}`,
   },
   "components/button/example-kich-thuoc": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -453,9 +477,17 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-sizes.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonSizesExampleComponent {}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}`,
   },
   "components/button/example-secondary-vs-black": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -466,9 +498,17 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-secondary-black.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonSecondaryBlackExampleComponent {}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}`,
   },
   "components/button/example-toggle-icon-set-bang-alias": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
@@ -480,6 +520,7 @@ import { type SdIconFontSet } from '@sdcorejs/angular/modules/icon';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-icon-set.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonIconSetExampleComponent {
@@ -488,6 +529,13 @@ export class ButtonIconSetExampleComponent {
   useFontSet(fontSet: SdIconFontSet): void {
     this.fontSet.set(fontSet);
   }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }`,
   },
   "components/button/example-trang-thai": {
@@ -499,6 +547,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-states.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonStatesExampleComponent {
@@ -515,6 +564,13 @@ export class ButtonStatesExampleComponent {
     this.submitting.set(true);
     this.#submitTimer = setTimeout(() => this.submitting.set(false), 1500);
   }
+}`,
+    scss: `:host {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
 }`,
   },
   "components/chart": {

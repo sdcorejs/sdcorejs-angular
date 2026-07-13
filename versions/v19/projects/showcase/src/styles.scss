@@ -12,10 +12,27 @@
   --docs-text-muted: var(--sd-text-muted, #686b73);
   --docs-code-surface: #111827;
   --docs-code-text: #e5edf8;
-  --docs-shadow: 0 12px 36px rgb(15 23 42 / 10%);
+  --docs-space-1: 4px;
+  --docs-space-2: 8px;
+  --docs-space-3: 12px;
+  --docs-space-4: 16px;
+  --docs-space-6: 24px;
+  --docs-space-8: 32px;
+  --docs-space-12: 48px;
+  --docs-space-16: 64px;
+  --docs-control-height-sm: 32px;
+  --docs-control-height-md: 40px;
+  --docs-control-height-lg: 44px;
+  --docs-shadow-sm: 0 1px 2px rgb(15 23 42 / 6%);
+  --docs-shadow-overlay: 0 12px 36px rgb(15 23 42 / 12%);
+  --docs-shadow: var(--docs-shadow-overlay);
+  --docs-radius-xs: 4px;
   --docs-radius-sm: 8px;
+  --docs-radius-control: 10px;
   --docs-radius-md: 14px;
   --docs-radius-lg: 22px;
+  --docs-radius-pill: 999px;
+  --docs-focus-ring: color-mix(in srgb, var(--sd-primary, #005cbb) 88%, #001b3d);
 }
 
 html,
@@ -58,8 +75,19 @@ h3 {
 }
 
 :focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--sd-primary, #005cbb) 48%, transparent);
+  outline: 3px solid var(--docs-focus-ring);
   outline-offset: 3px;
+}
+
+// Programmatically focused route landmarks keep a visible location cue without boxing large content areas.
+.content:focus-visible {
+  outline: 0;
+  box-shadow: inset 3px 0 0 var(--docs-focus-ring);
+}
+
+.content h1[tabindex='-1']:focus-visible {
+  outline: 0;
+  box-shadow: -4px 0 0 var(--docs-focus-ring);
 }
 
 .docs-visually-hidden {

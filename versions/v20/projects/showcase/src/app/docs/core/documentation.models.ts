@@ -1,7 +1,32 @@
 import type { Type } from '@angular/core';
 import type { ShowcaseExampleSourceKey } from '../generated/example-manifest.generated';
 
-export type DocCategory = 'components' | 'forms' | 'services';
+/** Stable URL slugs for the public documentation taxonomy. */
+export const DOC_CATEGORIES = [
+  'guides',
+  'components',
+  'forms',
+  'directives',
+  'services',
+  'modules-integrations',
+  'pipes-utilities',
+] as const;
+
+export type DocCategory = (typeof DOC_CATEGORIES)[number];
+
+export const DOC_CATEGORY_LABELS: Readonly<Record<DocCategory, string>> = {
+  guides: 'Guides',
+  components: 'Components',
+  forms: 'Forms',
+  directives: 'Directives',
+  services: 'Services',
+  'modules-integrations': 'Modules & Integrations',
+  'pipes-utilities': 'Pipes & Utilities',
+};
+
+export function isDocCategory(value: string | null | undefined): value is DocCategory {
+  return !!value && (DOC_CATEGORIES as readonly string[]).includes(value);
+}
 
 export type DocPageStatus = 'stable' | 'experimental' | 'deprecated';
 
@@ -38,8 +63,9 @@ export interface DocPageDefinition {
   readonly keywords: readonly string[];
   readonly tabs: readonly DocTab[];
   readonly status: DocPageStatus;
-  readonly sourcePath: string;
+  readonly sourcePath: string | null;
   readonly legacyPath: string;
+  readonly legacyPaths?: readonly string[];
   readonly demoSectionCount: number;
   readonly examples: readonly DocExample[];
 }
@@ -47,6 +73,7 @@ export interface DocPageDefinition {
 export interface DocNavigationGroup {
   readonly category: DocCategory;
   readonly title: string;
+  readonly description: string;
   readonly icon: string;
   readonly pages: readonly DocPageDefinition[];
 }

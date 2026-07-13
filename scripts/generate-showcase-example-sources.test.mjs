@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test from 'node:test';
@@ -126,10 +126,10 @@ export class ButtonDemoComponent {}
     const sourceFile = fixture.write('pages/components/button/button-demo.component.ts', source);
     const records = extractExampleSources(sourceFile, fixture.pagesRoot);
 
-    assert.deepEqual(records.map(record => record.key), [
-      'components/button/example-basic-usage',
-      'components/button/example-loading',
-    ]);
+    assert.deepEqual(
+      records.map(record => record.key),
+      ['components/button/example-basic-usage', 'components/button/example-loading']
+    );
     assert.equal(records[0].html, '<demo-section heading="Basic usage"><button>Save</button></demo-section>');
     assert.equal(records[1].description, 'Async submit state.');
   } finally {
@@ -189,12 +189,20 @@ test('renders records in deterministic key order regardless of input order', () 
 
 test('preserves authored section order in the manifest instead of alphabetizing a page gallery', () => {
   const variants = {
-    key: 'components/button/example-variants', pageKey: 'components/button', sectionOrder: 0,
-    sectionId: 'example-variants', title: 'Variants', description: 'Variants',
+    key: 'components/button/example-variants',
+    pageKey: 'components/button',
+    sectionOrder: 0,
+    sectionId: 'example-variants',
+    title: 'Variants',
+    description: 'Variants',
   };
   const colors = {
-    key: 'components/button/example-colors', pageKey: 'components/button', sectionOrder: 1,
-    sectionId: 'example-colors', title: 'Colors', description: 'Colors',
+    key: 'components/button/example-colors',
+    pageKey: 'components/button',
+    sectionOrder: 1,
+    sectionId: 'example-colors',
+    title: 'Colors',
+    description: 'Colors',
   };
 
   const manifest = renderGeneratedManifest([colors, variants]);
@@ -312,17 +320,59 @@ export class ButtonDemoComponent {}
   }
 });
 
-test('every registry published-doc mapping exists in the latest checked-in index', () => {
+test('checked-in published-doc manifests, indexes, registry mappings, and document files are consistent', () => {
+  const publishedDocsRoot = join(REPO_ROOT, 'published-docs');
+  const manifest = JSON.parse(readFileSync(join(publishedDocsRoot, 'versions.json'), 'utf8'));
+  const manifestVersions = manifest.versions.map(entry => entry.version);
+
+  assert.ok(manifest.latest, 'Published-doc versions manifest must declare a latest version');
+  assert.equal(new Set(manifestVersions).size, manifestVersions.length, 'Published-doc manifest contains duplicate versions');
+  assert.ok(manifestVersions.includes(manifest.latest), `Latest published-doc version is not in the manifest: ${manifest.latest}`);
+
+  let latestPublishedIds;
+  for (const entry of manifest.versions) {
+    const versionRoot = join(publishedDocsRoot, entry.version);
+    const indexPath = join(versionRoot, 'index.json');
+    const expectedIndexUrl = new URL(`${entry.version}/index.json`, `${manifest.baseUrl}/`).toString();
+
+    assert.equal(entry.index, expectedIndexUrl, `[${entry.version}] Manifest index URL is inconsistent`);
+    assert.ok(existsSync(indexPath), `[${entry.version}] Missing referenced index: ${entry.index}`);
+
+    const index = JSON.parse(readFileSync(indexPath, 'utf8'));
+    const publishedIds = index.docs.map(document => document.id);
+
+    assert.equal(index.version, entry.version, `[${entry.version}] Index declares a different version`);
+    assert.equal(entry.count, index.count, `[${entry.version}] Manifest and index counts differ`);
+    assert.equal(index.count, index.docs.length, `[${entry.version}] Index count and document array length differ`);
+    assert.equal(new Set(publishedIds).size, publishedIds.length, `[${entry.version}] Index contains duplicate document IDs`);
+
+    for (const document of index.docs) {
+      assert.ok(document.path, `[${entry.version}] Document ${document.id} has no path`);
+      assert.ok(existsSync(join(versionRoot, document.path)), `[${entry.version}] Missing referenced document file: ${document.path}`);
+    }
+
+    if (entry.version === manifest.latest) latestPublishedIds = new Set(publishedIds);
+  }
+
+  assert.ok(latestPublishedIds, `Latest published-doc index was not loaded: ${manifest.latest}`);
   const registry = readFileSync(
     join(REPO_ROOT, 'versions', 'v19', 'projects', 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
-    'utf8',
+    'utf8'
   );
-  const index = JSON.parse(readFileSync(join(REPO_ROOT, 'published-docs', '21.1.2', 'index.json'), 'utf8'));
-  const publishedIds = new Set(index.docs.map(document => document.id));
-  const mappings = [...registry.matchAll(/publishedDocId:\s*'([^']+)'/g)].map(match => match[1]);
+  const mappedIds = new Set([...registry.matchAll(/publishedDocId:\s*'([^']+)'/g)].map(match => match[1]));
 
-  assert.equal(mappings.length, 53);
-  for (const mapping of mappings) assert.ok(publishedIds.has(mapping), `Missing published doc mapping: ${mapping}`);
+  assert.ok(mappedIds.size > 0, 'Documentation registry must contain published-doc mappings');
+  assert.equal(
+    mappedIds.size,
+    latestPublishedIds.size,
+    'Latest published-doc index and registry contain different numbers of document IDs'
+  );
+  for (const mappedId of mappedIds) {
+    assert.ok(latestPublishedIds.has(mappedId), `Latest index is missing registry published-doc mapping: ${mappedId}`);
+  }
+  for (const publishedId of latestPublishedIds) {
+    assert.ok(mappedIds.has(publishedId), `Documentation registry is missing latest published document: ${publishedId}`);
+  }
 });
 
 test('checked-in generated example artifacts are fresh', () => {

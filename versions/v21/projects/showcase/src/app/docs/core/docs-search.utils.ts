@@ -1,4 +1,4 @@
-import { DocCategory, DocPageDefinition } from './documentation.models';
+import { DOC_CATEGORIES, DOC_CATEGORY_LABELS, DocCategory, DocPageDefinition } from './documentation.models';
 
 export interface DocsSearchResult {
   readonly page: DocPageDefinition;
@@ -12,12 +12,6 @@ export interface DocsSearchGroup {
   readonly results: readonly DocsSearchResult[];
 }
 
-const CATEGORY_TITLES: Record<DocCategory, string> = {
-  components: 'Components',
-  forms: 'Forms',
-  services: 'Services',
-};
-
 export function foldSearchText(value: string): string {
   return value
     .toLowerCase()
@@ -29,7 +23,7 @@ export function foldSearchText(value: string): string {
 export function searchDocumentation(
   query: string,
   pages: readonly DocPageDefinition[],
-  publishedTitles: ReadonlyMap<string, string> = new Map(),
+  publishedTitles: ReadonlyMap<string, string> = new Map()
 ): DocsSearchResult[] {
   const term = foldSearchText(query.trim());
   if (!term) return [];
@@ -44,8 +38,8 @@ export function searchDocumentation(
         ['category', page.category, 5],
         ['description', page.description, 4],
         ['keywords', page.keywords.join(' '), 6],
-        ['examples', page.examples.map((example) => example.title).join(' '), 5],
-        ['publishedTitle', page.publishedDocId ? publishedTitles.get(page.publishedDocId) ?? '' : '', 5],
+        ['examples', page.examples.map(example => example.title).join(' '), 5],
+        ['publishedTitle', page.publishedDocId ? (publishedTitles.get(page.publishedDocId) ?? '') : '', 5],
       ];
       const matches = fields.filter(([, value]) => foldSearchText(value).includes(term));
       if (!matches.length) return null;
@@ -60,12 +54,9 @@ export function searchDocumentation(
 }
 
 export function groupSearchResults(results: readonly DocsSearchResult[]): DocsSearchGroup[] {
-  const categories: readonly DocCategory[] = ['components', 'forms', 'services'];
-  return categories
-    .map((category) => ({
-      category,
-      title: CATEGORY_TITLES[category],
-      results: results.filter((result) => result.page.category === category),
-    }))
-    .filter((group) => group.results.length > 0);
+  return DOC_CATEGORIES.map(category => ({
+    category,
+    title: DOC_CATEGORY_LABELS[category],
+    results: results.filter(result => result.page.category === category),
+  })).filter(group => group.results.length > 0);
 }

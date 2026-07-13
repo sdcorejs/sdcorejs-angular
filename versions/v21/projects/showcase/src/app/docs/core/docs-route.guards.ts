@@ -1,26 +1,42 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { DocsVersionService } from './docs-version.service';
-import { DocCategory } from './documentation.models';
+import { buildVersionRoute } from './docs-version.utils';
+import { isDocCategory } from './documentation.models';
 import { findDocPage } from './documentation.registry';
 
-const DOC_CATEGORIES: readonly DocCategory[] = ['components', 'forms', 'services'];
+/** Canonicalizes every versioned route before its page component starts loading data. */
+export const docsVersionGuard: CanActivateFn = async (route, state) => {
+  const requested = route.paramMap.get('version');
+  if (!requested) return true;
 
-export const legacyDocsRedirectGuard: CanActivateFn = async (route) => {
   const router = inject(Router);
   const versions = inject(DocsVersionService);
-  const category = route.paramMap.get('category') as DocCategory | null;
-  const slug = route.paramMap.get('slug') ?? '';
+  try {
+    const resolved = await versions.resolve(requested);
+    return resolved === requested ? true : router.parseUrl(buildVersionRoute(state.url, resolved));
+  } catch {
+    // Static pages and the locally compiled catalog remain usable while version metadata is offline.
+    return true;
+  }
+};
 
-  if (!category || !DOC_CATEGORIES.includes(category) || !findDocPage(category, slug)) {
+export const legacyDocsRedirectGuard: CanActivateFn = async route => {
+  const router = inject(Router);
+  const versions = inject(DocsVersionService);
+  const category = route.paramMap.get('category');
+  const slug = route.paramMap.get('slug') ?? '';
+  const page = isDocCategory(category) ? findDocPage(category, slug) : undefined;
+
+  if (!page) {
     return router.createUrlTree(['/not-found'], { queryParams: { path: `${category ?? ''}/${slug}` } });
   }
 
   try {
     const manifest = await versions.load();
     const version = versions.selectedVersion() ?? manifest.latest;
-    return router.createUrlTree(['/v', version, category, slug, 'overview']);
+    return router.createUrlTree(['/v', version, page.category, page.slug, 'overview']);
   } catch {
-    return router.createUrlTree(['/v', 'latest', category, slug, 'overview']);
+    return router.createUrlTree(['/v', 'latest', page.category, page.slug, 'overview']);
   }
 };

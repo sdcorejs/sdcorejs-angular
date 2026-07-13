@@ -7,13 +7,10 @@ import type {
   DocsRegistry,
   DocTab,
 } from './documentation.models';
+import { DOC_CATEGORIES, DOC_CATEGORY_LABELS } from './documentation.models';
 import { SHOWCASE_EXAMPLE_MANIFEST } from '../generated/example-manifest.generated';
 
-const INTERACTION_GATED_PREVIEWS = new Set([
-  'components/editor',
-  'components/form-generic',
-  'components/upload-file',
-]);
+const INTERACTION_GATED_PREVIEWS = new Set(['components/editor', 'components/form-generic', 'components/upload-file']);
 
 export const DOC_TABS: readonly DocTab[] = [
   { id: 'overview', label: 'Overview' },
@@ -34,15 +31,17 @@ interface DocPageSeed {
   readonly status: DocPageStatus;
   readonly demoSectionCount: number;
   readonly loadComponent: DocComponentLoader;
+  readonly demoPath?: string;
 }
 
 function defineDocPage(seed: DocPageSeed): DocPageDefinition {
   const id = `${seed.category}-${seed.slug}`;
-  const legacyPath = `${seed.category}/${seed.slug}`;
-  const exampleManifest = SHOWCASE_EXAMPLE_MANIFEST.filter((example) => example.pageKey === legacyPath);
+  const canonicalPath = `${seed.category}/${seed.slug}`;
+  const demoPath = seed.demoPath ?? canonicalPath;
+  const exampleManifest = SHOWCASE_EXAMPLE_MANIFEST.filter(example => example.pageKey === demoPath);
   if (exampleManifest.length !== seed.demoSectionCount) {
     throw new Error(
-      `Example manifest for ${legacyPath} has ${exampleManifest.length} entries; expected ${seed.demoSectionCount}. Run npm run generate:showcase-examples.`,
+      `Example manifest for ${demoPath} has ${exampleManifest.length} entries; expected ${seed.demoSectionCount}. Run npm run generate:showcase-examples.`
     );
   }
 
@@ -58,18 +57,53 @@ function defineDocPage(seed: DocPageSeed): DocPageDefinition {
     keywords: [seed.title, seed.slug, seed.category, seed.importPath, ...(seed.selector ? [seed.selector] : []), ...seed.keywords],
     tabs: DOC_TABS,
     status: seed.status,
-    sourcePath: `versions/v19/projects/showcase/src/app/pages/${legacyPath}/${seed.slug}-demo.component.ts`,
-    legacyPath,
+    sourcePath: `versions/v19/projects/showcase/src/app/pages/${demoPath}/${demoPath.split('/').at(-1)}-demo.component.ts`,
+    legacyPath: demoPath,
+    legacyPaths: canonicalPath === demoPath ? [canonicalPath] : [canonicalPath, demoPath],
     demoSectionCount: seed.demoSectionCount,
-    examples: exampleManifest.map((example) => ({
+    examples: exampleManifest.map(example => ({
       id: `${id}-${example.sectionId ?? 'showcase'}`,
       sourceKey: example.sourceKey,
       sectionId: example.sectionId,
       title: example.title,
       description: example.description,
-      activation: INTERACTION_GATED_PREVIEWS.has(legacyPath) ? 'interaction' : 'viewport',
+      activation: INTERACTION_GATED_PREVIEWS.has(demoPath) ? 'interaction' : 'viewport',
       loadComponent: seed.loadComponent,
     })),
+  };
+}
+
+interface PublishedDocPageSeed {
+  readonly category: DocCategory;
+  readonly slug: string;
+  readonly title: string;
+  readonly description: string;
+  readonly selector?: string | null;
+  readonly importPath: string;
+  readonly publishedDocId: string;
+  readonly keywords?: readonly string[];
+}
+
+/** Creates a catalog entry for published reference content that has no local live demo. */
+function definePublishedDocPage(seed: PublishedDocPageSeed): DocPageDefinition {
+  const canonicalPath = `${seed.category}/${seed.slug}`;
+  return {
+    id: `${seed.category}-${seed.slug}`,
+    category: seed.category,
+    slug: seed.slug,
+    title: seed.title,
+    description: seed.description,
+    selector: seed.selector ?? null,
+    importPath: seed.importPath,
+    publishedDocId: seed.publishedDocId,
+    keywords: [seed.title, seed.slug, seed.category, seed.importPath, ...(seed.selector ? [seed.selector] : []), ...(seed.keywords ?? [])],
+    tabs: DOC_TABS,
+    status: 'stable',
+    sourcePath: null,
+    legacyPath: canonicalPath,
+    legacyPaths: [canonicalPath],
+    demoSectionCount: 0,
+    examples: [],
   };
 }
 
@@ -180,8 +214,8 @@ const COMPONENT_PAGES = [
     loadComponent: () => import('../../pages/components/editor/editor-demo.component').then(m => m.EditorDemoComponent),
   }),
   defineDocPage({
-    category: 'components',
-    slug: 'form-generic',
+    category: 'modules-integrations',
+    slug: 'generic',
     title: 'Form Generic',
     description: 'Dynamic form builder và renderer với drag/drop, conditions và runtime preview.',
     selector: 'sd-form-builder, sd-form-render',
@@ -190,6 +224,7 @@ const COMPONENT_PAGES = [
     keywords: ['dynamic form', 'schema', 'builder', 'renderer'],
     status: 'stable',
     demoSectionCount: 1,
+    demoPath: 'components/form-generic',
     loadComponent: () => import('../../pages/components/form-generic/form-generic-demo.component').then(m => m.FormGenericDemoComponent),
   }),
   defineDocPage({
@@ -206,7 +241,7 @@ const COMPONENT_PAGES = [
     loadComponent: () => import('../../pages/components/history/history-demo.component').then(m => m.HistoryDemoComponent),
   }),
   defineDocPage({
-    category: 'components',
+    category: 'modules-integrations',
     slug: 'icon',
     title: 'Icon',
     description: 'Facade icon dùng chung cho Material filled, Material outlined và Lucide SVG.',
@@ -216,10 +251,11 @@ const COMPONENT_PAGES = [
     keywords: ['material icons', 'lucide', 'svg', 'font set'],
     status: 'stable',
     demoSectionCount: 5,
+    demoPath: 'components/icon',
     loadComponent: () => import('../../pages/components/icon/icon-demo.component').then(m => m.IconDemoComponent),
   }),
   defineDocPage({
-    category: 'components',
+    category: 'modules-integrations',
     slug: 'icon-configuration',
     title: 'Icon Configuration',
     description: 'Cấu hình default font set và alias icon dùng xuyên suốt Core UI.',
@@ -229,6 +265,7 @@ const COMPONENT_PAGES = [
     keywords: ['icon provider', 'configuration', 'defaultFontSet', 'alias'],
     status: 'stable',
     demoSectionCount: 2,
+    demoPath: 'components/icon-configuration',
     loadComponent: () =>
       import('../../pages/components/icon-configuration/icon-configuration-demo.component').then(m => m.IconConfigurationDemoComponent),
   }),
@@ -773,12 +810,394 @@ const SERVICE_PAGES = [
   }),
 ] as const;
 
-export const DOC_PAGES: readonly DocPageDefinition[] = [...COMPONENT_PAGES, ...FORM_PAGES, ...SERVICE_PAGES];
+const PUBLISHED_ONLY_PAGES = [
+  definePublishedDocPage({
+    category: 'guides',
+    slug: 'introduction',
+    title: 'Introduction',
+    description: 'Install the package, configure global styles and providers, and learn the recommended Core UI conventions.',
+    importPath: '@sdcorejs/angular',
+    publishedDocId: 'README',
+    keywords: ['getting started', 'installation', 'setup', 'theming'],
+  }),
+  definePublishedDocPage({
+    category: 'guides',
+    slug: 'style-guide',
+    title: 'Assets & SCSS Reference',
+    description: 'Public design tokens, utility classes, grid helpers and theming entry points shipped with the package.',
+    importPath: '@sdcorejs/angular/assets/scss/sd-core',
+    publishedDocId: 'assets/STYLE-GUIDE',
+    keywords: ['styles', 'scss', 'tokens', 'utilities', 'theme'],
+  }),
+  definePublishedDocPage({
+    category: 'guides',
+    slug: 'e2e-attributes',
+    title: 'E2E Test Attributes',
+    description: 'Stable runtime data attributes and selector patterns for reliable end-to-end tests.',
+    importPath: '@sdcorejs/angular',
+    publishedDocId: 'docs/E2E-ATTRIBUTES',
+    keywords: ['testing', 'selectors', 'playwright', 'cypress', 'automation'],
+  }),
+  definePublishedDocPage({
+    category: 'components',
+    slug: 'autoid-inspector',
+    title: 'Auto ID Inspector',
+    description: 'Inspects generated element identifiers to support stable automation and debugging workflows.',
+    selector: 'sd-autoid-inspector',
+    importPath: '@sdcorejs/angular/components/autoid-inspector',
+    publishedDocId: 'components/autoid-inspector/sd-autoid-inspector',
+    keywords: ['auto id', 'e2e', 'inspector', 'testing'],
+  }),
+  definePublishedDocPage({
+    category: 'forms',
+    slug: 'label',
+    title: 'Label',
+    description: 'Consistent form labels with required, optional and supporting presentation states.',
+    selector: 'sd-label',
+    importPath: '@sdcorejs/angular/forms/label',
+    publishedDocId: 'forms/label/sd-label',
+    keywords: ['form label', 'required', 'caption'],
+  }),
+  definePublishedDocPage({
+    category: 'directives',
+    slug: 'desktop',
+    title: 'Desktop Directive',
+    description: 'Conditionally renders content for desktop layouts using the shared responsive breakpoint contract.',
+    selector: '*sdDesktop',
+    importPath: '@sdcorejs/angular/directives',
+    publishedDocId: 'directives/src/sd-desktop',
+    keywords: ['responsive', 'desktop', 'breakpoint'],
+  }),
+  definePublishedDocPage({
+    category: 'directives',
+    slug: 'hover-copy',
+    title: 'Hover Copy Directive',
+    description: 'Adds an accessible copy affordance to values that users frequently move to the clipboard.',
+    selector: '[sdHoverCopy]',
+    importPath: '@sdcorejs/angular/directives',
+    publishedDocId: 'directives/src/sd-hover-copy',
+    keywords: ['clipboard', 'copy', 'hover'],
+  }),
+  definePublishedDocPage({
+    category: 'directives',
+    slug: 'href',
+    title: 'Href Directive',
+    description: 'Applies consistent link behavior to SDCoreJS navigation targets.',
+    selector: '[sdHref]',
+    importPath: '@sdcorejs/angular/directives',
+    publishedDocId: 'directives/src/sd-href',
+    keywords: ['link', 'navigation', 'anchor'],
+  }),
+  definePublishedDocPage({
+    category: 'directives',
+    slug: 'mobile',
+    title: 'Mobile Directive',
+    description: 'Conditionally renders content for mobile layouts using the shared responsive breakpoint contract.',
+    selector: '*sdMobile',
+    importPath: '@sdcorejs/angular/directives',
+    publishedDocId: 'directives/src/sd-mobile',
+    keywords: ['responsive', 'mobile', 'breakpoint'],
+  }),
+  definePublishedDocPage({
+    category: 'directives',
+    slug: 'scroll',
+    title: 'Scroll Directive',
+    description: 'Observes scroll position and exposes reusable scrolling behavior to host components.',
+    selector: '[sdScroll]',
+    importPath: '@sdcorejs/angular/directives',
+    publishedDocId: 'directives/src/sd-scroll',
+    keywords: ['scroll', 'position', 'event'],
+  }),
+  definePublishedDocPage({
+    category: 'directives',
+    slug: 'tooltip',
+    title: 'Tooltip Directive',
+    description: 'Provides concise contextual help for controls and truncated values.',
+    selector: '[sdTooltip]',
+    importPath: '@sdcorejs/angular/directives',
+    publishedDocId: 'directives/src/sd-tooltip',
+    keywords: ['tooltip', 'hint', 'help'],
+  }),
+  definePublishedDocPage({
+    category: 'services',
+    slug: 'api',
+    title: 'API Service',
+    description: 'Shared HTTP request conventions for SDCoreJS Angular applications.',
+    importPath: '@sdcorejs/angular/services/api',
+    publishedDocId: 'services/api/sd-api',
+    keywords: ['http', 'request', 'backend', 'rest'],
+  }),
+  definePublishedDocPage({
+    category: 'services',
+    slug: 'cache',
+    title: 'Cache Service',
+    description: 'Caches asynchronous application data with a reusable typed service contract.',
+    importPath: '@sdcorejs/angular/services/cache',
+    publishedDocId: 'services/cache/sd-cache',
+    keywords: ['cache', 'data', 'performance'],
+  }),
+  definePublishedDocPage({
+    category: 'services',
+    slug: 'license',
+    title: 'License Service',
+    description: 'Loads and validates application license information for protected features.',
+    importPath: '@sdcorejs/angular/services/license',
+    publishedDocId: 'services/license/sd-license',
+    keywords: ['license', 'validation', 'feature access'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'core-configuration',
+    title: 'Core Configuration',
+    description: 'Global injection token and options used to configure SDCoreJS Angular behavior.',
+    importPath: '@sdcorejs/angular/configurations',
+    publishedDocId: 'configurations/src/sd-core.configuration',
+    keywords: ['configuration', 'provider', 'token'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'global-error-handler',
+    title: 'Global Error Handler',
+    description: 'Centralizes unhandled Angular errors and user-facing failure reporting.',
+    importPath: '@sdcorejs/angular/handlers',
+    publishedDocId: 'handlers/global-error.handler',
+    keywords: ['error handler', 'exceptions', 'logging'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'i18n',
+    title: 'Internationalization',
+    description: 'Locale configuration and translation primitives for multilingual applications.',
+    importPath: '@sdcorejs/angular/i18n',
+    publishedDocId: 'i18n/i18n',
+    keywords: ['i18n', 'locale', 'translation', 'language'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'no-internet-interceptor',
+    title: 'No Internet Interceptor',
+    description: 'Handles offline HTTP failures consistently across application requests.',
+    importPath: '@sdcorejs/angular/interceptors',
+    publishedDocId: 'interceptors/no-internet/no-internet.interceptor',
+    keywords: ['http interceptor', 'offline', 'network'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'unauthorized-interceptor',
+    title: 'Unauthorized Interceptor',
+    description: 'Coordinates application behavior when an HTTP request is unauthorized.',
+    importPath: '@sdcorejs/angular/interceptors',
+    publishedDocId: 'interceptors/unauthorized/unauthorized.interceptor',
+    keywords: ['http interceptor', '401', 'authorization'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'auth',
+    title: 'Auth Module',
+    description: 'Authentication primitives and providers for SDCoreJS Angular applications.',
+    importPath: '@sdcorejs/angular/modules/auth',
+    publishedDocId: 'modules/auth/sd-auth',
+    keywords: ['authentication', 'login', 'session'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'authom',
+    title: 'AuthOM Module',
+    description: 'AuthOM integration helpers for applications using the corresponding identity platform.',
+    importPath: '@sdcorejs/angular/modules/authom',
+    publishedDocId: 'modules/authom/sd-authom',
+    keywords: ['authentication', 'authom', 'identity'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'keycloak',
+    title: 'Keycloak Module',
+    description: 'Keycloak authentication, session renewal and authorization integration.',
+    importPath: '@sdcorejs/angular/modules/keycloak',
+    publishedDocId: 'modules/keycloak/sd-keycloak',
+    keywords: ['keycloak', 'oidc', 'authentication', 'authorization'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'layout',
+    title: 'Layout Module',
+    description: 'Application shell and responsive layout building blocks for Core UI portals.',
+    importPath: '@sdcorejs/angular/modules/layout',
+    publishedDocId: 'modules/layout/sd-layout',
+    keywords: ['layout', 'shell', 'responsive', 'portal'],
+  }),
+  definePublishedDocPage({
+    category: 'modules-integrations',
+    slug: 'permission',
+    title: 'Permission Module',
+    description: 'Permission providers and UI gates for role-aware application features.',
+    importPath: '@sdcorejs/angular/modules/permission',
+    publishedDocId: 'modules/permission/sd-permission',
+    keywords: ['permission', 'role', 'authorization', 'access'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'empty',
+    title: 'Empty Pipe',
+    description: 'Displays a consistent fallback for empty values.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/empty',
+    keywords: ['sdEmpty', 'fallback', 'empty value'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'format-date',
+    title: 'Format Date Pipe',
+    description: 'Formats date-only values with the configured application locale.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/format-date',
+    keywords: ['sdFormatDate', 'date', 'format'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'format-datetime',
+    title: 'Format Datetime Pipe',
+    description: 'Formats date-time values with the configured application locale.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/format-datetime',
+    keywords: ['sdFormatDatetime', 'datetime', 'format'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'format-number',
+    title: 'Format Number Pipe',
+    description: 'Formats numeric values with locale-aware separators and precision.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/format-number',
+    keywords: ['sdFormatNumber', 'number', 'format'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'safe-html',
+    title: 'Safe HTML Pipe',
+    description: 'Marks trusted HTML for controlled rendering in Angular templates.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/safe-html',
+    keywords: ['sdSafeHtml', 'html', 'sanitization'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'time-different',
+    title: 'Time Difference Pipe',
+    description: 'Presents elapsed time between date-time values in a reusable display format.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/time-different',
+    keywords: ['sdTimeDifferent', 'duration', 'elapsed time'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'view',
+    title: 'View Pipe',
+    description: 'Normalizes values for compact read-only presentation.',
+    importPath: '@sdcorejs/angular/pipes',
+    publishedDocId: 'pipes/src/view',
+    keywords: ['sdView', 'display', 'read only'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'extensions',
+    title: 'Utility Extensions',
+    description: 'Shared extension utilities used across SDCoreJS Angular applications.',
+    importPath: '@sdcorejs/angular/utilities/extensions',
+    publishedDocId: 'utilities/extensions/extensions',
+    keywords: ['utilities', 'extensions', 'helpers'],
+  }),
+  definePublishedDocPage({
+    category: 'pipes-utilities',
+    slug: 'models',
+    title: 'Utility Models',
+    description: 'Common public models and type contracts shared by Core UI features.',
+    importPath: '@sdcorejs/angular/utilities/models',
+    publishedDocId: 'utilities/models/models',
+    keywords: ['utilities', 'models', 'types', 'interfaces'],
+  }),
+] as const;
 
-const CATEGORY_METADATA: readonly Pick<DocNavigationGroup, 'category' | 'title' | 'icon'>[] = [
-  { category: 'components', title: 'Components', icon: 'widgets' },
-  { category: 'forms', title: 'Forms', icon: 'edit_note' },
-  { category: 'services', title: 'Services', icon: 'build' },
+function mergePublishedPages(pages: readonly DocPageDefinition[]): DocPageDefinition[] {
+  const byPublishedId = new Map<string, DocPageDefinition>();
+  for (const page of pages) {
+    const publishedId = page.publishedDocId ?? page.id;
+    const existing = byPublishedId.get(publishedId);
+    if (!existing) {
+      byPublishedId.set(publishedId, page);
+      continue;
+    }
+
+    const mergedExamples = page.examples.map(example => ({
+      ...example,
+      id: `${existing.id}-example-${page.slug}-${(example.sectionId ?? 'showcase').replace(/^example-/, '')}`,
+    }));
+    byPublishedId.set(publishedId, {
+      ...existing,
+      keywords: [...new Set([...existing.keywords, ...page.keywords])],
+      legacyPaths: [...new Set([...(existing.legacyPaths ?? [existing.legacyPath]), ...(page.legacyPaths ?? [page.legacyPath])])],
+      demoSectionCount: existing.demoSectionCount + page.demoSectionCount,
+      examples: [...existing.examples, ...mergedExamples],
+    });
+  }
+  return [...byPublishedId.values()];
+}
+
+const CATEGORY_INDEX = new Map(DOC_CATEGORIES.map((category, index) => [category, index]));
+
+export const DOC_PAGES: readonly DocPageDefinition[] = mergePublishedPages([
+  ...COMPONENT_PAGES,
+  ...FORM_PAGES,
+  ...SERVICE_PAGES,
+  ...PUBLISHED_ONLY_PAGES,
+]).sort(
+  (left, right) =>
+    (CATEGORY_INDEX.get(left.category) ?? 0) - (CATEGORY_INDEX.get(right.category) ?? 0) || left.title.localeCompare(right.title)
+);
+
+const CATEGORY_METADATA: readonly Omit<DocNavigationGroup, 'pages'>[] = [
+  {
+    category: 'guides',
+    title: DOC_CATEGORY_LABELS.guides,
+    description: 'Installation, styling and testing guidance for a reliable first implementation.',
+    icon: 'menu_book',
+  },
+  {
+    category: 'components',
+    title: DOC_CATEGORY_LABELS.components,
+    description: 'Composable UI building blocks for application screens and workflows.',
+    icon: 'widgets',
+  },
+  {
+    category: 'forms',
+    title: DOC_CATEGORY_LABELS.forms,
+    description: 'Inputs, pickers and controls with consistent validation behavior.',
+    icon: 'edit_note',
+  },
+  {
+    category: 'directives',
+    title: DOC_CATEGORY_LABELS.directives,
+    description: 'Template behavior for responsive layouts, navigation and interaction details.',
+    icon: 'code',
+  },
+  {
+    category: 'services',
+    title: DOC_CATEGORY_LABELS.services,
+    description: 'Application services for feedback, files, data access and client state.',
+    icon: 'build',
+  },
+  {
+    category: 'modules-integrations',
+    title: DOC_CATEGORY_LABELS['modules-integrations'],
+    description: 'Configuration, authentication, permissions and platform integrations.',
+    icon: 'extension',
+  },
+  {
+    category: 'pipes-utilities',
+    title: DOC_CATEGORY_LABELS['pipes-utilities'],
+    description: 'Formatting pipes and shared public utility contracts.',
+    icon: 'functions',
+  },
 ];
 
 /** Navigation groups derived from the canonical page registry. */
@@ -792,12 +1211,22 @@ export const DOCS_REGISTRY: DocsRegistry = {
   groups: DOC_NAV_GROUPS,
 };
 
+const DOC_PAGES_BY_PATH = new Map<string, DocPageDefinition>();
+for (const page of DOC_PAGES) {
+  DOC_PAGES_BY_PATH.set(`${page.category}/${page.slug}`, page);
+  for (const legacyPath of page.legacyPaths ?? [page.legacyPath]) DOC_PAGES_BY_PATH.set(legacyPath, page);
+}
+
 export function getDocPagesByCategory(category: DocCategory): readonly DocPageDefinition[] {
   return DOC_PAGES.filter(page => page.category === category);
 }
 
+export function findDocNavigationGroup(category: string | null | undefined): DocNavigationGroup | undefined {
+  return DOC_NAV_GROUPS.find(group => group.category === category);
+}
+
 export function findDocPage(category: DocCategory, slug: string): DocPageDefinition | undefined {
-  return DOC_PAGES.find(page => page.category === category && page.slug === slug);
+  return DOC_PAGES_BY_PATH.get(`${category}/${slug}`);
 }
 
 export function findDocPageById(id: string): DocPageDefinition | undefined {

@@ -5,13 +5,17 @@ import { DemoPageComponent, DemoSectionComponent, SHOWCASE_DEMO_SECTION_ID } fro
 @Component({ selector: 'test-first-example', standalone: true, template: 'First' })
 class FirstExampleComponent {
   static instances = 0;
-  constructor() { FirstExampleComponent.instances += 1; }
+  constructor() {
+    FirstExampleComponent.instances += 1;
+  }
 }
 
 @Component({ selector: 'test-second-example', standalone: true, template: 'Second' })
 class SecondExampleComponent {
   static instances = 0;
-  constructor() { SecondExampleComponent.instances += 1; }
+  constructor() {
+    SecondExampleComponent.instances += 1;
+  }
 }
 
 @Component({
@@ -45,5 +49,7 @@ describe('focused demo rendering', () => {
     expect(FirstExampleComponent.instances).toBe(1);
     expect(SecondExampleComponent.instances).toBe(0);
     expect(fixture.nativeElement.querySelectorAll('demo-section')).toHaveSize(1);
+    expect(fixture.nativeElement.querySelector('demo-section')?.classList).toContain('demo-section--focused');
+    expect(fixture.nativeElement.querySelector('demo-section h3')).toBeNull();
   });
 });

@@ -44,13 +44,22 @@ describe('ChangelogComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/v/21.1.2/changelog?major=21#release', { replaceUrl: true });
   });
 
-  it('renders every standard changelog category with explicit empty states', () => {
-    const headings = [...fixture.nativeElement.querySelectorAll('.release__section h3')]
-      .map((heading: HTMLElement) => heading.textContent?.trim());
+  it('shows only populated release sections and keeps an empty unreleased entry compact', () => {
+    const headings = [...fixture.nativeElement.querySelectorAll('.release__section h3')].map((heading: HTMLElement) =>
+      heading.textContent?.trim()
+    );
 
-    for (const expected of ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security', 'Migration notes']) {
-      expect(headings).toContain(expected);
-    }
-    expect(fixture.nativeElement.querySelectorAll('.release__empty').length).toBeGreaterThan(0);
+    expect(headings).toEqual(['Fixed']);
+    expect(fixture.nativeElement.querySelectorAll('.release__empty')).toHaveSize(1);
+    expect(fixture.nativeElement.querySelector('.release__empty')?.textContent).toContain('No unreleased changes');
+  });
+
+  it('provides release jump links and links each package version to its documentation', () => {
+    const jumpLinks = fixture.nativeElement.querySelectorAll('.changelog__release-nav a');
+    const packageLinks = fixture.nativeElement.querySelectorAll('.release__versions a');
+
+    expect(jumpLinks).toHaveSize(2);
+    expect(packageLinks).toHaveSize(3);
+    expect(packageLinks[0].getAttribute('href')).toContain('/v/19.1.2');
   });
 });

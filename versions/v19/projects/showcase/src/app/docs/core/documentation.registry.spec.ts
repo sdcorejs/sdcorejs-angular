@@ -1,69 +1,28 @@
+import { DOC_CATEGORIES } from './documentation.models';
 import { DOC_NAV_GROUPS, DOC_PAGES, findDocPage, getDocPagesByCategory } from './documentation.registry';
 import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated';
 
-const EXPECTED_PAGE_KEYS = [
-  'components/anchor',
-  'components/avatar',
-  'components/badge',
-  'components/button',
-  'components/chart',
-  'components/code-editor',
-  'components/document-builder',
-  'components/editor',
-  'components/form-generic',
-  'components/history',
-  'components/icon',
-  'components/icon-configuration',
-  'components/import-excel',
-  'components/inform',
-  'components/mini-editor',
-  'components/modal',
-  'components/operator',
-  'components/org-chart',
-  'components/preview',
-  'components/query-bar',
-  'components/query-builder',
-  'components/quick-action',
-  'components/section',
-  'components/side-drawer',
-  'components/splitter',
-  'components/stepper',
-  'components/tab',
-  'components/tab-router',
-  'components/table',
-  'components/tree',
-  'components/upload-file',
-  'components/view',
-  'forms/autocomplete',
-  'forms/checkbox',
-  'forms/chip',
-  'forms/chip-calendar',
-  'forms/date',
-  'forms/date-range',
-  'forms/datetime',
-  'forms/inline-text',
-  'forms/input',
-  'forms/input-color',
-  'forms/input-number',
-  'forms/radio',
-  'forms/select',
-  'forms/switch',
-  'forms/textarea',
-  'services/confirm',
-  'services/docx',
-  'services/excel',
-  'services/loading',
-  'services/notify',
-  'services/storage',
-] as const;
+const EXPECTED_CATEGORY_COUNTS = {
+  guides: 3,
+  components: 30,
+  forms: 16,
+  directives: 6,
+  services: 9,
+  'modules-integrations': 12,
+  'pipes-utilities': 9,
+} as const;
 
 describe('documentation registry', () => {
-  it('contains every existing showcase page exactly once', () => {
-    expect(DOC_PAGES.map(page => `${page.category}/${page.slug}`)).toEqual(EXPECTED_PAGE_KEYS);
-    expect(DOC_PAGES).toHaveSize(53);
-    expect(getDocPagesByCategory('components')).toHaveSize(32);
-    expect(getDocPagesByCategory('forms')).toHaveSize(15);
-    expect(getDocPagesByCategory('services')).toHaveSize(6);
+  it('exposes every latest published document exactly once in the seven-category taxonomy', () => {
+    const publishedIds = DOC_PAGES.map(page => page.publishedDocId);
+
+    expect(DOC_PAGES).toHaveSize(85);
+    expect(publishedIds.every(id => id !== null)).toBeTrue();
+    expect(new Set(publishedIds).size).toBe(85);
+    expect(DOC_CATEGORIES).toHaveSize(7);
+    for (const category of DOC_CATEGORIES) {
+      expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
+    }
     expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(253);
   });
 
@@ -82,7 +41,7 @@ describe('documentation registry', () => {
     }
   });
 
-  it('registers every existing demo section as a stable lazy example with generated source', () => {
+  it('retains every existing demo section as optional live metadata on its published page', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
@@ -98,22 +57,27 @@ describe('documentation registry', () => {
     }
   });
 
-  it('derives navigation groups and lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([32, 15, 6]);
+  it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 30, 16, 6, 9, 12, 9]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
+    expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
+    expect(findDocPage('modules-integrations', 'generic')?.demoSectionCount).toBe(1);
+    expect(findDocPage('modules-integrations', 'icon')?.demoSectionCount).toBe(7);
+    expect(findDocPage('components', 'form-generic')?.slug).toBe('generic');
+    expect(findDocPage('components', 'icon-configuration')?.slug).toBe('icon');
     expect(findDocPage('services', 'missing')).toBeUndefined();
   });
 
   it('preserves authored example order and interaction-gates resource-intensive previews', () => {
-    expect(findDocPage('components', 'button')?.examples.slice(0, 4).map((example) => example.title)).toEqual([
-      'Biến thể',
-      'Bảng màu',
-      'Secondary vs black',
-      'Kích thước',
-    ]);
-    for (const slug of ['editor', 'form-generic', 'upload-file']) {
-      expect(findDocPage('components', slug)?.examples.every((example) => example.activation === 'interaction')).toBeTrue();
+    expect(
+      findDocPage('components', 'button')
+        ?.examples.slice(0, 4)
+        .map(example => example.title)
+    ).toEqual(['Biến thể', 'Bảng màu', 'Secondary vs black', 'Kích thước']);
+    for (const slug of ['editor', 'upload-file']) {
+      expect(findDocPage('components', slug)?.examples.every(example => example.activation === 'interaction')).toBeTrue();
     }
-    expect(findDocPage('components', 'button')?.examples.every((example) => example.activation === 'viewport')).toBeTrue();
+    expect(findDocPage('modules-integrations', 'generic')?.examples.every(example => example.activation === 'interaction')).toBeTrue();
+    expect(findDocPage('components', 'button')?.examples.every(example => example.activation === 'viewport')).toBeTrue();
   });
 });

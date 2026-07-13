@@ -1,10 +1,33 @@
+:host {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.example-backdrop {
+  position: fixed;
+  z-index: 109;
+  inset: 0;
+  background: rgb(15 23 42 / 48%);
+}
+
 // why: Each existing demo gallery needs a stable card boundary inside the new documentation page.
 .example {
+  min-width: 0;
+  max-width: 100%;
   scroll-margin-top: calc(var(--docs-header-height) + 20px);
   overflow: hidden;
   border: 1px solid var(--docs-border-color);
   border-radius: var(--docs-radius-md);
   background: var(--docs-surface-raised);
+
+  &--expanded {
+    position: fixed;
+    z-index: 110;
+    inset: calc(var(--docs-header-height) + 12px) 12px 12px;
+    overflow: auto;
+    box-shadow: var(--docs-shadow-overlay);
+  }
 
   &__header {
     display: flex;
@@ -36,12 +59,32 @@
     gap: 8px;
 
     button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
       border: 1px solid var(--docs-border-color);
       border-radius: 7px;
       background: var(--docs-surface);
-      padding: 7px 10px;
+      padding: 9px 12px;
       color: var(--docs-text);
       cursor: pointer;
+    }
+  }
+
+  &__preview-shell {
+    position: relative;
+    min-width: 0;
+
+    &--scrollable::after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 28px;
+      background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--docs-surface-raised) 88%, transparent));
+      pointer-events: none;
+      content: '';
     }
   }
 
@@ -49,6 +92,22 @@
     min-height: 120px;
     overflow: auto;
     padding: 24px;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+
+  &__scroll-hint {
+    position: absolute;
+    z-index: 1;
+    right: 12px;
+    bottom: 8px;
+    border: 1px solid var(--docs-border-color);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--docs-surface-raised) 94%, transparent);
+    padding: 4px 9px;
+    color: var(--docs-text-secondary);
+    font-size: 11px;
+    pointer-events: none;
   }
 
   &__load {
@@ -83,10 +142,11 @@
     padding: 8px 12px;
 
     button {
+      min-height: 44px;
       border: 0;
       border-radius: 5px;
       background: transparent;
-      padding: 6px 9px;
+      padding: 8px 10px;
       color: #b8c4d6;
       cursor: pointer;
 
@@ -120,14 +180,40 @@
     }
 
     button {
-      min-height: 36px;
+      min-height: 44px;
     }
   }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {
   // why: Example controls must wrap without shrinking the live preview on phones.
   .example__header {
     flex-direction: column;
+  }
+
+  .example__actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .example--expanded {
+    inset: var(--docs-header-height) 0 0;
+    border-radius: 0;
+  }
+
+  .example__header,
+  .example__preview {
+    padding-inline: 16px;
   }
 }

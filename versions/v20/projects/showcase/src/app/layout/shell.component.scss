@@ -57,6 +57,7 @@
   align-items: center;
   gap: 10px;
   min-width: 236px;
+  min-height: var(--docs-control-height-lg, 44px);
   color: var(--docs-text);
 
   &:hover {
@@ -72,7 +73,7 @@
     background: linear-gradient(135deg, var(--sd-primary, #005cbb), var(--sd-info, #0288d1));
     color: white;
     font-size: 12px;
-    font-weight: 800;
+    font-weight: 600;
   }
 
   > span:last-child {
@@ -82,6 +83,7 @@
 
   strong {
     font-size: 13px;
+    font-weight: 600;
   }
 
   small {
@@ -98,6 +100,9 @@
   gap: 4px;
 
   a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--docs-control-height-lg, 44px);
     border-radius: 7px;
     padding: 8px 10px;
     color: var(--docs-text-secondary);
@@ -114,27 +119,41 @@
 }
 
 .github-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 var(--docs-control-height-lg, 44px);
+  width: var(--docs-control-height-lg, 44px);
+  height: var(--docs-control-height-lg, 44px);
+  box-sizing: border-box;
+  border: 1px solid var(--docs-border-color);
+  border-radius: 10px;
+  background: var(--docs-surface-raised);
   color: var(--docs-text-secondary);
-  font-size: 12px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
 
-  mat-icon {
-    width: 16px;
-    height: 16px;
-    font-size: 16px;
+  &:hover {
+    border-color: color-mix(in srgb, var(--sd-primary, #005cbb) 42%, var(--docs-border-color));
+    color: var(--docs-text);
+    text-decoration: none;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
   }
 }
 
 .mobile-menu {
   display: none;
+  width: var(--docs-control-height-lg, 44px);
+  height: var(--docs-control-height-lg, 44px);
+  padding: 0;
   border: 0;
   background: transparent;
   color: var(--docs-text);
 }
 
-// why: Desktop navigation remains independently scrollable for the full 53-page catalog.
+// why: Desktop navigation remains independently scrollable for the full documentation catalog.
 .sidebar {
   position: sticky;
   top: var(--docs-header-height);
@@ -164,6 +183,32 @@
     padding: 12px 10px;
     color: var(--docs-text-muted);
     font-size: 11px;
+  }
+}
+
+.sidebar__primary {
+  display: none;
+  gap: var(--docs-space-1);
+  margin-bottom: var(--docs-space-3);
+  border-bottom: 1px solid var(--docs-border-color);
+  padding: 0 var(--docs-space-2) var(--docs-space-3);
+
+  a {
+    display: flex;
+    align-items: center;
+    min-height: var(--docs-control-height-lg, 44px);
+    border-radius: var(--docs-radius-sm);
+    padding-inline: var(--docs-space-3);
+    color: var(--docs-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+
+    &:hover,
+    &.active {
+      background: var(--sd-primary-light, #e8f1ff);
+      color: var(--sd-primary, #005cbb);
+      text-decoration: none;
+    }
   }
 }
 
@@ -197,7 +242,7 @@
 
     span {
       font-size: 13px;
-      font-weight: 700;
+      font-weight: 600;
     }
 
     small {
@@ -233,13 +278,17 @@
 
     &.active {
       border-left-color: var(--sd-primary, #005cbb);
-      font-weight: 700;
+      font-weight: 600;
     }
 
     small {
       color: var(--docs-text-muted);
     }
   }
+}
+
+.availability-label {
+  white-space: nowrap;
 }
 
 .content {
@@ -251,13 +300,10 @@
 }
 
 @media (max-width: 1160px) {
-  .topnav,
-  .github-link span {
+  .topnav {
     display: none;
   }
-}
 
-@media (max-width: 960px) {
   // why: The catalog becomes an accessible off-canvas drawer below desktop width.
   .shell__body {
     grid-template-columns: 1fr;
@@ -279,6 +325,10 @@
   .mobile-menu {
     display: inline-grid;
     place-items: center;
+  }
+
+  .sidebar__primary {
+    display: grid;
   }
 
   .sidebar {
@@ -305,6 +355,11 @@
     border: 0;
     background: rgb(15 23 42 / 45%);
   }
+
+  .nav-group__header,
+  .nav-group li a {
+    min-height: var(--docs-control-height-lg, 44px);
+  }
 }
 
 @media (max-width: 620px) {
@@ -313,7 +368,8 @@
   }
 
   .brand {
-    flex: 0 0 36px;
+    flex: 0 0 var(--docs-control-height-lg, 44px);
+    justify-content: center;
   }
 
   .topbar__tools {

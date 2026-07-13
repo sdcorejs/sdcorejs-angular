@@ -3,11 +3,8 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DocsVersionService } from '../../core/docs-version.service';
 import { buildVersionRoute } from '../../core/docs-version.utils';
-import {
-  SHOWCASE_CHANGELOG_RELEASES,
-  ShowcaseChangelogAngularMajor,
-  ShowcaseChangelogRelease,
-} from '../../generated/changelog.generated';
+import { SHOWCASE_CHANGELOG_RELEASES, ShowcaseChangelogAngularMajor, ShowcaseChangelogRelease } from '../../generated/changelog.generated';
+import { DocsFragmentLinkDirective } from '../../shared/docs-fragment-link.directive';
 import { MarkdownRendererComponent } from '../../shared/markdown-renderer.component';
 
 type MajorFilter = 'all' | ShowcaseChangelogAngularMajor;
@@ -24,26 +21,30 @@ const STANDARD_RELEASE_SECTIONS = [
 
 function addDisplaySections(release: ShowcaseChangelogRelease) {
   const matched = new Set<string>();
-  const standard = STANDARD_RELEASE_SECTIONS.map((slot) => {
-    const section = release.sections.find((candidate) =>
-      candidate.key === slot.key || (slot.key === 'migration' && candidate.key.startsWith('migration')),
+  const standard = STANDARD_RELEASE_SECTIONS.flatMap(slot => {
+    const section = release.sections.find(
+      candidate => candidate.key === slot.key || (slot.key === 'migration' && candidate.key.startsWith('migration'))
     );
-    if (section) matched.add(section.key);
-    return {
-      key: slot.key,
-      title: slot.title,
-      anchor: section?.anchor ?? `${release.anchor}-${slot.key}`,
-      markdown: section?.markdown ?? '',
-    };
+    if (!section || !section.markdown.trim()) return [];
+    matched.add(section.key);
+    return [
+      {
+        key: slot.key,
+        title: slot.title,
+        anchor: section.anchor,
+        markdown: section.markdown,
+      },
+    ];
   });
-  const custom = release.sections.filter((section) => !matched.has(section.key));
-  return { ...release, displaySections: [...standard, ...custom] };
+  const custom = release.sections.filter(section => !matched.has(section.key) && section.markdown.trim());
+  const displaySections = [...standard, ...custom];
+  return { ...release, displaySections, hasContent: !!release.summaryMarkdown.trim() || displaySections.length > 0 };
 }
 
 @Component({
   selector: 'docs-changelog',
   standalone: true,
-  imports: [RouterLink, MarkdownRendererComponent],
+  imports: [RouterLink, DocsFragmentLinkDirective, MarkdownRendererComponent],
   template: `
     <main class="changelog">
       <nav class="changelog__breadcrumb" aria-label="Breadcrumb"><a routerLink="/">Docs</a><span>/</span><span>Changelog</span></nav>
@@ -56,9 +57,11 @@ function addDisplaySections(release: ShowcaseChangelogRelease) {
         <div>
           <span>Release history</span>
           <h1>Changelog</h1>
-          <p>Generated from the repository root <code>CHANGELOG.md</code>. Releases before suffix 1.2 are intentionally omitted.</p>
+          <p>Track fixes, improvements, and migration notes across the maintained Angular release lines.</p>
         </div>
-        <a href="https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">View source</a>
+        <a href="https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer"
+          >View full changelog</a
+        >
       </header>
 
       <div class="changelog__filters" role="group" aria-label="Filter releases by Angular major">
@@ -73,39 +76,53 @@ function addDisplaySections(release: ShowcaseChangelogRelease) {
         }
       </div>
 
+      <nav class="changelog__release-nav" aria-label="Jump to a release">
+        <strong>Jump to</strong>
+        <div>
+          @for (release of filteredReleases(); track release.id) {
+            <a [docsFragmentLink]="release.anchor">{{ release.title }}</a>
+          }
+        </div>
+      </nav>
+
       <div class="changelog__timeline">
         @for (release of filteredReleases(); track release.id) {
-          <article class="release" [id]="release.anchor">
+          <article class="release" [class.release--unreleased]="release.unreleased" [id]="release.anchor">
             <header>
               <div>
-                <a [href]="'#' + release.anchor" [attr.aria-label]="'Link to ' + release.title">#</a>
+                <a [docsFragmentLink]="release.anchor" [attr.aria-label]="'Link to ' + release.title">#</a>
                 <h2>{{ release.title }}</h2>
-                @if (release.date) { <time [attr.datetime]="release.date">{{ release.date }}</time> }
+                @if (release.date) {
+                  <time [attr.datetime]="release.date">{{ release.date }}</time>
+                }
               </div>
               <div class="release__versions">
                 @for (packageVersion of release.packageVersions; track packageVersion.angularMajor) {
-                  <span
+                  <a
+                    [routerLink]="['/v', packageVersion.version]"
                     [class.current]="packageVersion.version === versions.selectedVersion()"
-                    [attr.aria-current]="packageVersion.version === versions.selectedVersion() ? 'true' : null">
+                    [attr.aria-current]="packageVersion.version === versions.selectedVersion() ? 'page' : null">
                     Angular {{ packageVersion.angularMajor }} · {{ packageVersion.version }}
                     @if (packageVersion.version === versions.selectedVersion()) {
                       <span class="docs-visually-hidden"> Current documentation version</span>
                     }
-                  </span>
+                  </a>
                 }
               </div>
             </header>
 
-            @if (release.summaryMarkdown) { <docs-markdown-renderer [markdown]="release.summaryMarkdown"></docs-markdown-renderer> }
-            @for (section of release.displaySections; track section.anchor) {
-              <section class="release__section" [id]="section.anchor">
-                <h3>{{ section.title }}</h3>
-                @if (section.markdown) {
-                  <docs-markdown-renderer [markdown]="section.markdown"></docs-markdown-renderer>
-                } @else {
-                  <p class="release__empty">No entries in this category for this release.</p>
-                }
-              </section>
+            @if (release.summaryMarkdown) {
+              <docs-markdown-renderer [markdown]="release.summaryMarkdown" language="en"></docs-markdown-renderer>
+            }
+            @if (release.hasContent) {
+              @for (section of release.displaySections; track section.anchor) {
+                <section class="release__section" [id]="section.anchor">
+                  <h3>{{ section.title }}</h3>
+                  <docs-markdown-renderer [markdown]="section.markdown" language="en"></docs-markdown-renderer>
+                </section>
+              }
+            } @else if (release.unreleased) {
+              <p class="release__empty">No unreleased changes have been recorded.</p>
             }
           </article>
         }
@@ -129,9 +146,12 @@ export class ChangelogComponent {
   ];
   readonly filteredReleases = computed(() => {
     const filter = this.majorFilter();
-    const releases = filter === 'all' ? SHOWCASE_CHANGELOG_RELEASES : SHOWCASE_CHANGELOG_RELEASES.filter(
-      (release) => release.unreleased || release.packageVersions.some((version) => version.angularMajor === filter),
-    );
+    const releases =
+      filter === 'all'
+        ? SHOWCASE_CHANGELOG_RELEASES
+        : SHOWCASE_CHANGELOG_RELEASES.filter(
+            release => release.unreleased || release.packageVersions.some(version => version.angularMajor === filter)
+          );
     return releases.map(addDisplaySections);
   });
 

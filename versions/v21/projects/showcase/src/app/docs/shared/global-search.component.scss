@@ -1,22 +1,43 @@
 // why: Search is a compact top-bar control until the keyboard-accessible dialog opens.
+:host {
+  display: flex;
+  min-width: 0;
+}
+
 .search-trigger {
   display: flex;
   align-items: center;
   gap: 9px;
-  min-width: min(320px, 30vw);
-  height: 38px;
+  width: clamp(220px, 24vw, 300px);
+  min-width: 0;
+  height: var(--docs-control-height-lg, 44px);
+  box-sizing: border-box;
   border: 1px solid var(--docs-border-color);
   border-radius: 10px;
-  background: var(--docs-surface-muted);
-  padding: 0 10px;
+  background: var(--docs-surface-raised);
+  padding: 0 8px 0 12px;
   color: var(--docs-text-secondary);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
   cursor: pointer;
+
+  mat-icon {
+    flex: 0 0 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--docs-text-muted);
+    font-size: 18px;
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--sd-primary, #005cbb) 42%, var(--docs-border-color));
+    color: var(--docs-text);
+  }
 
   kbd {
     margin-left: auto;
     border: 1px solid var(--docs-border-color);
     border-radius: 5px;
-    background: var(--docs-surface-raised);
+    background: var(--docs-surface-muted);
     padding: 2px 5px;
     font-size: 11px;
   }
@@ -38,11 +59,13 @@
   width: min(680px, calc(100vw - 32px));
   max-height: min(720px, calc(100vh - 96px));
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   transform: translateX(-50%);
   border: 1px solid var(--docs-border-color);
   border-radius: var(--docs-radius-md);
   background: var(--docs-surface-raised);
-  box-shadow: var(--docs-shadow);
+  box-shadow: var(--docs-shadow-overlay);
 
   &__field {
     display: flex;
@@ -50,6 +73,14 @@
     gap: 10px;
     border-bottom: 1px solid var(--docs-border-color);
     padding: 12px 16px;
+
+    > mat-icon {
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      color: var(--docs-text-muted);
+      font-size: 20px;
+    }
 
     input {
       flex: 1;
@@ -67,6 +98,8 @@
     }
 
     button {
+      min-width: var(--docs-control-height-lg, 44px);
+      min-height: var(--docs-control-height-lg, 44px);
       border: 1px solid var(--docs-border-color);
       border-radius: 6px;
       background: var(--docs-surface-muted);
@@ -76,8 +109,11 @@
   }
 
   &__results {
+    flex: 1;
+    min-height: 0;
     max-height: calc(min(720px, 100vh - 96px) - 120px);
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 10px;
   }
 
@@ -103,6 +139,7 @@
   button {
     display: grid;
     width: 100%;
+    min-height: var(--docs-control-height-lg, 44px);
     gap: 3px;
     border: 0;
     border-radius: 8px;
@@ -144,6 +181,16 @@
   font-weight: 600;
 }
 
+// why: Result changes are announced without duplicating visual empty-state content.
+.search-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .search-empty {
   padding: 24px;
   text-align: center;
@@ -152,10 +199,37 @@
 @media (max-width: 760px) {
   // why: Mobile header has room for an icon trigger but not the full search affordance.
   .search-trigger {
-    min-width: 38px;
+    justify-content: center;
+    width: var(--docs-control-height-lg, 44px);
+    min-width: var(--docs-control-height-lg, 44px);
+    padding: 0;
 
-    span:not(:first-child),
+    &__label,
     kbd {
+      display: none;
+    }
+  }
+
+  .search-dialog {
+    top: 12px;
+    width: calc(100vw - 24px);
+    max-height: calc(100dvh - 24px);
+
+    &__field {
+      gap: 8px;
+      padding: 10px 12px;
+
+      input {
+        font-size: 16px;
+      }
+    }
+
+    &__results {
+      max-height: calc(100dvh - 92px);
+      padding: 8px;
+    }
+
+    footer {
       display: none;
     }
   }

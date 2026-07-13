@@ -80,7 +80,7 @@ export function resolveRequestedVersion(requested: string | null | undefined, ma
     return { version: manifest.latest, fallback: false };
   }
 
-  const found = manifest.versions.some((entry) => entry.version === normalized);
+  const found = manifest.versions.some(entry => entry.version === normalized);
   return found ? { version: normalized, fallback: false } : { version: manifest.latest, fallback: true };
 }
 
@@ -90,6 +90,8 @@ export function buildVersionRoute(currentUrl: string, targetVersion: string): st
   const query = match?.groups?.['query'] ?? '';
   const fragment = match?.groups?.['fragment'] ?? '';
   const segments = path.split('/').filter(Boolean);
+
+  if (segments[0] === 'about') return `${path || '/about'}${query}${fragment}`;
 
   if (segments[0] === 'v') {
     segments[1] = targetVersion;

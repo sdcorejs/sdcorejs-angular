@@ -13,7 +13,8 @@
         [page]="currentPage"
         [version]="version()"
         [invalidVersion]="versions.invalidVersion()"
-        [sourceUrl]="sourceUrl()">
+        [sourceUrl]="sourceUrl()"
+        [showIdentity]="tab() === 'overview'">
       </docs-page-header>
 
       <docs-page-tabs [links]="tabLinks()" [activeTab]="tab()"></docs-page-tabs>
@@ -25,23 +26,32 @@
       <section class="docs-page__content">
         @let errorMessage = error();
         @if (loading() && tab() !== 'examples') {
-          <div class="content-state" role="status"><span class="spinner" aria-hidden="true"></span><p>Loading v{{ version() || '…' }} documentation…</p></div>
+          <div class="content-state" role="status">
+            <span class="spinner" aria-hidden="true"></span>
+            <p>Loading v{{ version() || '…' }} documentation…</p>
+          </div>
         } @else if (errorMessage && tab() !== 'examples') {
           <div class="content-state content-state--error" role="alert">
-            <h2>Published documentation could not be loaded</h2><p>{{ errorMessage }}</p><button type="button" (click)="retry()">Retry</button>
+            <h2>Published documentation could not be loaded</h2>
+            <p>{{ errorMessage }}</p>
+            <button type="button" (click)="retry()">Retry</button>
           </div>
         } @else {
           @if (tab() === 'examples') {
-            <div class="historical-notice" role="note">{{ liveExamplesNotice() }}</div>
-            <div class="examples-summary">
-              <strong>{{ currentPage.demoSectionCount }}</strong>
-              <span>existing live scenarios preserved in this gallery</span>
-            </div>
-            <div class="examples-list">
-              @for (example of currentPage.examples; track example.id) {
-                <docs-example-viewer [example]="example"></docs-example-viewer>
-              }
-            </div>
+            @if (isHistoricalVersion()) {
+              <div class="historical-notice" role="note">{{ liveExamplesNotice() }}</div>
+            }
+            <section class="live-examples" aria-labelledby="live-examples-title">
+              <h2 id="live-examples-title" class="examples-summary">
+                <strong>{{ currentPage.demoSectionCount }}</strong>
+                <span>interactive examples</span>
+              </h2>
+              <div class="examples-list">
+                @for (example of currentPage.examples; track example.id) {
+                  <docs-example-viewer [example]="example"></docs-example-viewer>
+                }
+              </div>
+            </section>
             @if (loading()) {
               <div class="content-state" role="status">
                 <span class="spinner" aria-hidden="true"></span>
@@ -59,12 +69,18 @@
                 <p>The compiled live gallery above remains available.</p>
               </div>
             } @else if (sections().length) {
-              <section class="published-examples">
+              <section id="published-examples" class="published-examples">
                 <h2>Published examples for v{{ version() }}</h2>
                 @for (section of sections(); track section.id) {
                   <section class="doc-section" [id]="section.id">
                     <h3>{{ section.heading }}</h3>
-                    <docs-markdown-renderer [markdown]="section.markdown" [linkBaseUrl]="documentUrl()"></docs-markdown-renderer>
+                    <docs-markdown-renderer
+                      [markdown]="section.markdown"
+                      [linkBaseUrl]="documentUrl()"
+                      language="vi"
+                      [version]="version()"
+                      [sourcePublishedDocId]="currentPage.publishedDocId">
+                    </docs-markdown-renderer>
                   </section>
                 }
               </section>
@@ -78,29 +94,49 @@
               <div class="content-state">
                 <h2>Not available in this version</h2>
                 <p>The live gallery remains available, but this published API document is missing from v{{ version() }}.</p>
-                <a [routerLink]="['/v', versions.latestVersion(), currentPage.category, currentPage.slug, tab()]">Try latest documentation</a>
+                <a [routerLink]="['/v', versions.latestVersion(), currentPage.category, currentPage.slug, tab()]"
+                  >Try latest documentation</a
+                >
               </div>
             } @else if (!sections().length && tab() === 'styling') {
               <div class="content-state">
                 <h2>No component-specific styling API</h2>
-                <p>Compose this API with the supported theme tokens and utility classes below; private implementation selectors are not public customization contracts.</p>
+                <p>
+                  Compose this API with the supported theme tokens and utility classes below; private implementation selectors are not
+                  public customization contracts.
+                </p>
               </div>
             }
 
             @for (section of sections(); track section.id) {
               <section class="doc-section" [id]="section.id">
                 <h2>{{ section.heading }}</h2>
-                <docs-markdown-renderer [markdown]="section.markdown" [linkBaseUrl]="documentUrl()"></docs-markdown-renderer>
+                <docs-markdown-renderer
+                  [markdown]="section.markdown"
+                  [linkBaseUrl]="documentUrl()"
+                  language="vi"
+                  [version]="version()"
+                  [sourcePublishedDocId]="currentPage.publishedDocId">
+                </docs-markdown-renderer>
               </section>
             }
 
             @if (tab() === 'styling' && styleGuideSections().length) {
-              <section class="style-guide">
-                <header><span>Version-aware shared reference</span><h2>Public STYLE-GUIDE.md</h2></header>
+              <section id="shared-style-guide" class="style-guide">
+                <header>
+                  <span>Version-aware shared reference</span>
+                  <h2>Public STYLE-GUIDE.md</h2>
+                </header>
                 @for (section of styleGuideSections(); track section.id) {
-                  <details [id]="section.id">
+                  <details [id]="'style-guide-' + section.id">
                     <summary>{{ section.heading }}</summary>
-                    <docs-markdown-renderer [markdown]="section.markdown" [linkBaseUrl]="styleGuideUrl()"></docs-markdown-renderer>
+                    <docs-markdown-renderer
+                      [markdown]="section.markdown"
+                      [linkBaseUrl]="styleGuideUrl()"
+                      language="vi"
+                      [version]="version()"
+                      sourcePublishedDocId="assets/STYLE-GUIDE">
+                    </docs-markdown-renderer>
                   </details>
                 }
               </section>
@@ -110,8 +146,18 @@
       </section>
 
       <nav class="page-pagination" aria-label="Previous and next documentation pages">
-        @if (previousPage(); as previous) { <a [routerLink]="previousLink()"><span>Previous</span><strong>← {{ previous.title }}</strong></a> } @else { <span></span> }
-        @if (nextPage(); as next) { <a [routerLink]="nextLink()"><span>Next</span><strong>{{ next.title }} →</strong></a> }
+        @if (previousPage(); as previous) {
+          <a [routerLink]="previousLink()"
+            ><span>Previous</span><strong>← {{ previous.title }}</strong></a
+          >
+        } @else {
+          <span></span>
+        }
+        @if (nextPage(); as next) {
+          <a [routerLink]="nextLink()"
+            ><span>Next</span><strong>{{ next.title }} →</strong></a
+          >
+        }
       </nav>
     </div>
 

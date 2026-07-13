@@ -21,22 +21,18 @@ const manifest: DocsVersionsManifest = {
 
 describe('documentation version utilities', () => {
   it('sorts semantic versions instead of comparing strings', () => {
-    expect(sortVersionsDescending(['21.0.9', '21.0.11', '19.1.2', '21.1.2'])).toEqual([
+    expect(sortVersionsDescending(['21.0.9', '21.0.11', '19.1.2', '21.1.2'])).toEqual(['21.1.2', '21.0.11', '21.0.9', '19.1.2']);
+    expect(sortVersionsDescending(['21.1.2-beta.2', '21.1.2-beta.10', '21.1.2', '21.1.2-alpha'])).toEqual([
       '21.1.2',
-      '21.0.11',
-      '21.0.9',
-      '19.1.2',
+      '21.1.2-beta.10',
+      '21.1.2-beta.2',
+      '21.1.2-alpha',
     ]);
-    expect(sortVersionsDescending(['21.1.2-beta.2', '21.1.2-beta.10', '21.1.2', '21.1.2-alpha']))
-      .toEqual(['21.1.2', '21.1.2-beta.10', '21.1.2-beta.2', '21.1.2-alpha']);
   });
 
   it('groups published versions by descending Angular major', () => {
-    expect(groupVersionsByMajor(manifest.versions).map((group) => group.major)).toEqual([21, 20, 19]);
-    expect(groupVersionsByMajor(manifest.versions)[0]?.versions.map((item) => item.version)).toEqual([
-      '21.1.2',
-      '21.0.11',
-    ]);
+    expect(groupVersionsByMajor(manifest.versions).map(group => group.major)).toEqual([21, 20, 19]);
+    expect(groupVersionsByMajor(manifest.versions)[0]?.versions.map(item => item.version)).toEqual(['21.1.2', '21.0.11']);
   });
 
   it('resolves latest and falls back for an invalid requested version', () => {
@@ -46,13 +42,22 @@ describe('documentation version utilities', () => {
 
   it('preserves category, slug, tab, query and fragment while switching versions', () => {
     expect(buildVersionRoute('/v/21.1.2/components/button/api?mode=full#inputs', '20.1.2')).toBe(
-      '/v/20.1.2/components/button/api?mode=full#inputs',
+      '/v/20.1.2/components/button/api?mode=full#inputs'
     );
+  });
+
+  it('switches versioned Docs and Changelog routes without changing their destination', () => {
+    expect(buildVersionRoute('/v/21.1.2', '20.1.2')).toBe('/v/20.1.2');
+    expect(buildVersionRoute('/v/21.1.2/changelog', '20.1.2')).toBe('/v/20.1.2/changelog');
+  });
+
+  it('keeps the unversioned About route in place when the selected documentation version changes', () => {
+    expect(buildVersionRoute('/about?source=header#team', '20.1.2')).toBe('/about?source=header#team');
   });
 
   it('builds docs URLs under the application base href', () => {
     expect(resolveDocsAssetUrl('https://example.test/sdcorejs-angular/', 'docs/versions.json')).toBe(
-      'https://example.test/sdcorejs-angular/docs/versions.json',
+      'https://example.test/sdcorejs-angular/docs/versions.json'
     );
   });
 });

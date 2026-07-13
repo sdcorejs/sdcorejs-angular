@@ -17,6 +17,7 @@
 ## Blocked
 
 ## Done
+- [x] (2026-07-13) Refactor the showcase documentation site across v19/v20/v21 with versioned navigation, full catalog/search, responsive examples, accessibility, and regression coverage.
 - [x] (2026-07-03) Fix pre-bump review blockers for icon configuration inheritance and v20/v21 `fontSet/defaultFontSet` API drift.
 - [x] (2026-07-03) Track the v19 icon-configuration showcase component and remove generated showcase logs before bump.
 - [x] (2026-07-03) Fix Excel/CSV formula injection neutralization in v19/v20/v21 export service.

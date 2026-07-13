@@ -6,6 +6,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-variants.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonVariantsExampleComponent {}

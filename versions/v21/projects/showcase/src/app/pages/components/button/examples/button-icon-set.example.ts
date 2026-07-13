@@ -7,6 +7,7 @@ import { type SdIconFontSet } from '@sdcorejs/angular/modules/icon';
   standalone: true,
   imports: [SdButton],
   templateUrl: './button-icon-set.example.html',
+  styleUrl: './button-example.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ButtonIconSetExampleComponent {

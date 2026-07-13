@@ -42,6 +42,9 @@
     }
 
     > a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
       white-space: nowrap;
     }
   }
@@ -53,6 +56,7 @@
     margin: 24px 0;
 
     button {
+      min-height: 44px;
       border: 1px solid var(--docs-border-color);
       border-radius: 999px;
       background: var(--docs-surface-raised);
@@ -67,6 +71,44 @@
       }
     }
   }
+
+  &__release-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    margin-bottom: 24px;
+
+    > strong {
+      flex: 0 0 auto;
+      color: var(--docs-text-secondary);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    > div {
+      display: flex;
+      gap: 6px;
+      min-width: 0;
+      overflow-x: auto;
+      scroll-padding-inline: 4px;
+    }
+
+    a {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      min-height: 44px;
+      border-radius: 8px;
+      background: var(--docs-surface-muted);
+      padding: 8px 10px;
+      color: var(--docs-text-secondary);
+
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
 }
 
 .release {
@@ -76,6 +118,11 @@
   border-radius: var(--docs-radius-md);
   background: var(--docs-surface-raised);
   padding: 24px;
+
+  &--unreleased {
+    border-style: dashed;
+    padding-block: 18px;
+  }
 
   > header {
     display: flex;
@@ -101,16 +148,23 @@
     justify-content: flex-end;
     gap: 6px;
 
-    span {
+    > a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
       border-radius: 999px;
       background: var(--docs-surface-muted);
-      padding: 5px 8px;
+      padding: 7px 10px;
       color: var(--docs-text-secondary);
       font-size: 11px;
 
       &.current {
         background: var(--sd-primary, #005cbb);
         color: var(--sd-primary-contrast, white);
+      }
+
+      &:hover {
+        text-decoration: none;
       }
     }
   }
@@ -122,9 +176,7 @@
   }
 
   &__empty {
-    border-radius: 8px;
-    background: var(--docs-surface-muted);
-    padding: 14px;
+    margin: 0;
     color: var(--docs-text-muted);
   }
 }
