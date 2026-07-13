@@ -9,10 +9,11 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdSection, SdSectionItem],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Section"
       description="Card nhom thong tin. Header/footer dung padding 8px 16px; body mac dinh padding 0 nen row item hoac wrapper con tu quan ly spacing.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-basic-info-rows') {
       <demo-section heading="Basic info rows" [props]="[{ name: 'header padding', value: '8px 16px' }, { name: 'body padding', value: 0 }]">
         <sd-section
           icon="info"
@@ -28,7 +29,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </sd-section-item>
         </sd-section>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-header-left-right') {
       <demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
         <sd-section class="demo-section-card">
           <div sdHeaderLeft class="section-title-block">
@@ -42,7 +45,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-section-item label="Members">Le Minh Hoang, Pham Quynh Anh, Do Van Dat</sd-section-item>
         </sd-section>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-footer-left-right') {
       <demo-section heading="Footer left/right" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
         <sd-section icon="rule" title="Approval summary" class="demo-section-card">
           <sd-section-item label="Risk level">
@@ -55,7 +60,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="fill" color="primary" title="Approve"></sd-button>
         </sd-section>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-full-width-content-with-body-padding-0') {
       <demo-section heading="Full-width content with body padding 0" [props]="[{ name: 'body', value: 'padding 0' }, { name: 'legacy padding option', value: 'removed' }]">
         <sd-section icon="table_chart" title="Recent transactions" class="demo-section-card">
           <div class="mini-table">
@@ -74,7 +81,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </div>
         </sd-section>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-headerless-card-with-manual-body-padding') {
       <demo-section heading="Headerless card with manual body padding" [props]="[{ name: 'hideHeader', value: true }, { name: 'body wrapper', value: 'custom padding' }]">
         <sd-section [hideHeader]="true" class="demo-section-card">
           <div class="section-padded-body">
@@ -83,7 +92,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </div>
         </sd-section>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-collapsible-section') {
       <demo-section heading="Collapsible section" [props]="[{ name: 'collapsible', value: true }, { name: '[(collapsed)]', value: 'two-way' }]">
         <sd-section
           icon="filter_list"
@@ -98,7 +109,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
         </sd-section>
         <p class="section-state">State: <strong>{{ filterCollapsed() ? 'Collapsed' : 'Expanded' }}</strong></p>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-section-item-rich-values') {
       <demo-section heading="Section item rich values" [props]="[{ name: 'labelWidth', value: '180px' }, { name: 'value', value: 'rich content' }]">
         <sd-section icon="badge" title="Role assignment" class="demo-section-card">
           <sd-section-item label="Primary role" labelWidth="180px">
@@ -116,6 +129,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </sd-section-item>
         </sd-section>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

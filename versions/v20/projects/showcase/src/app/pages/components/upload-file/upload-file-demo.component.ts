@@ -8,10 +8,11 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdUploadFile],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Upload File"
       description="Tải lên tệp tin / hình ảnh — kéo thả, đa file, validate đuôi và dung lượng, có preview thumbnail. Hỗ trợ FormGroup và two-way [(model)].">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-nhieu-anh-co-gioi-han') {
       <demo-section heading="Tải nhiều ảnh có giới hạn" [props]="[{ name: 'type', value: 'image' }, { name: 'max', value: '5' }, { name: 'maxSize', value: '2' }, { name: 'model', value: 'two-way' }]">
         <div class="control-box">
           <sd-upload-file
@@ -25,7 +26,9 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
           </sd-upload-file>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-tai-lieu-bao-loi-required') {
       <demo-section
         heading="Tải tài liệu + báo lỗi required"
         [props]="[{ name: 'type', value: 'document' }, { name: 'required', value: 'true' }, { name: '[form]', value: 'FormGroup' }]"
@@ -48,7 +51,9 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-vo-hieu-hoa-chi-doc') {
       <demo-section heading="Vô hiệu hóa (chỉ đọc)" [props]="[{ name: 'disabled', value: 'true' }]">
         <div class="control-box">
           <sd-upload-file
@@ -59,6 +64,7 @@ import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
           </sd-upload-file>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

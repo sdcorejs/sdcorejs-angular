@@ -7,9 +7,10 @@ import { SdOrgChart, SdOrgChartItem, SdOrgChartItemDefDirective } from '@sdcorej
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdOrgChart, SdOrgChartItemDefDirective],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Org Chart"
       description="Sơ đồ tổ chức dạng tree: card mặc định có ảnh, tiêu đề, mô tả, màu nền; node có children có thể thu gọn/mở rộng.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-card-mac-dinh') {
       <demo-section
         heading="Card mặc định"
         [props]="[
@@ -20,7 +21,9 @@ import { SdOrgChart, SdOrgChartItem, SdOrgChartItemDefDirective } from '@sdcorej
           <sd-org-chart [items]="basicItems" autoId="basic"></sd-org-chart>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-node-co-mau') {
       <demo-section
         heading="Node có màu"
         note="Mỗi item truyền color riêng; node không có image và description tự chuyển sang compact card."
@@ -32,7 +35,9 @@ import { SdOrgChart, SdOrgChartItem, SdOrgChartItemDefDirective } from '@sdcorej
           <sd-org-chart [items]="coloredItems" autoId="colored"></sd-org-chart>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-bang-directive') {
       <demo-section
         heading="Custom bằng directive"
         [props]="[
@@ -58,7 +63,9 @@ import { SdOrgChart, SdOrgChartItem, SdOrgChartItemDefDirective } from '@sdcorej
           </sd-org-chart>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-bang-templateref-input') {
       <demo-section
         heading="Custom bằng TemplateRef input"
         [props]="[
@@ -81,6 +88,7 @@ import { SdOrgChart, SdOrgChartItem, SdOrgChartItemDefDirective } from '@sdcorej
           <sd-org-chart [items]="compactItems" [itemTemplate]="teamNode" [collapsible]="false" autoId="input-template"></sd-org-chart>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [

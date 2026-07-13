@@ -1,0 +1,133 @@
+// why: Each existing demo gallery needs a stable card boundary inside the new documentation page.
+.example {
+  scroll-margin-top: calc(var(--docs-header-height) + 20px);
+  overflow: hidden;
+  border: 1px solid var(--docs-border-color);
+  border-radius: var(--docs-radius-md);
+  background: var(--docs-surface-raised);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--docs-border-color);
+
+    h2 {
+      display: inline;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: var(--docs-text-secondary);
+    }
+  }
+
+  &__anchor {
+    margin-right: 8px;
+    color: var(--docs-text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button {
+      border: 1px solid var(--docs-border-color);
+      border-radius: 7px;
+      background: var(--docs-surface);
+      padding: 7px 10px;
+      color: var(--docs-text);
+      cursor: pointer;
+    }
+  }
+
+  &__preview {
+    min-height: 120px;
+    overflow: auto;
+    padding: 24px;
+  }
+
+  &__load {
+    min-height: 44px;
+    border: 1px solid var(--docs-border-color);
+    border-radius: 8px;
+    background: var(--docs-surface-raised);
+    padding: 10px 14px;
+    color: var(--sd-primary, #005cbb);
+    cursor: pointer;
+  }
+
+  &__source {
+    border-top: 1px solid var(--docs-border-color);
+    background: var(--docs-code-surface);
+    color: var(--docs-code-text);
+
+    pre {
+      max-height: 560px;
+      overflow: auto;
+      margin: 0;
+      padding: 20px;
+      white-space: pre;
+    }
+  }
+
+  &__source-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+    padding: 8px 12px;
+
+    button {
+      border: 0;
+      border-radius: 5px;
+      background: transparent;
+      padding: 6px 9px;
+      color: #b8c4d6;
+      cursor: pointer;
+
+      &.active,
+      &:hover {
+        background: rgb(255 255 255 / 12%);
+        color: white;
+      }
+    }
+  }
+
+  &__state {
+    margin: 0;
+    color: var(--docs-text-secondary);
+
+    &--error {
+      color: var(--sd-error, #ba1a1a);
+    }
+  }
+
+  &__source-error {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+
+    p {
+      margin: 0;
+      color: var(--sd-error, #ba1a1a);
+    }
+
+    button {
+      min-height: 36px;
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  // why: Example controls must wrap without shrinking the live preview on phones.
+  .example__header {
+    flex-direction: column;
+  }
+}
