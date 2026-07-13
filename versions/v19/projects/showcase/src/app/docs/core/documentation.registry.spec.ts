@@ -4,11 +4,11 @@ import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated
 
 const EXPECTED_CATEGORY_COUNTS = {
   guides: 3,
-  components: 30,
+  components: 31,
   forms: 16,
   directives: 6,
   services: 9,
-  'modules-integrations': 12,
+  'modules-integrations': 11,
   'pipes-utilities': 9,
 } as const;
 
@@ -58,10 +58,13 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 30, 16, 6, 9, 12, 9]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 31, 16, 6, 9, 11, 9]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
-    expect(findDocPage('modules-integrations', 'generic')?.demoSectionCount).toBe(1);
+    expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');
+    expect(findDocPage('components', 'generic')?.id).toBe('modules-integrations-generic');
+    expect(findDocPage('components', 'generic')?.examples[0]?.id).toBe('modules-integrations-generic-example-builder-render');
+    expect(findDocPage('modules-integrations', 'generic')?.category).toBe('components');
     expect(findDocPage('modules-integrations', 'icon')?.demoSectionCount).toBe(7);
     expect(findDocPage('components', 'form-generic')?.slug).toBe('generic');
     expect(findDocPage('components', 'icon-configuration')?.slug).toBe('icon');
@@ -77,7 +80,7 @@ describe('documentation registry', () => {
     for (const slug of ['editor', 'upload-file']) {
       expect(findDocPage('components', slug)?.examples.every(example => example.activation === 'interaction')).toBeTrue();
     }
-    expect(findDocPage('modules-integrations', 'generic')?.examples.every(example => example.activation === 'interaction')).toBeTrue();
+    expect(findDocPage('components', 'generic')?.examples.every(example => example.activation === 'interaction')).toBeTrue();
     expect(findDocPage('components', 'button')?.examples.every(example => example.activation === 'viewport')).toBeTrue();
   });
 });

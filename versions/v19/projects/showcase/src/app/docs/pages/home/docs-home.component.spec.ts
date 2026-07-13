@@ -80,6 +80,17 @@ describe('DocsHomeComponent', () => {
     expect(copy).toContain('interactive examples');
   });
 
+  it('presents the configured maintainer profile and public contact links', () => {
+    const profile = fixture.nativeElement.querySelector('.maintainer-card') as HTMLElement | null;
+    const links = [...(profile?.querySelectorAll('a') ?? [])] as HTMLAnchorElement[];
+
+    expect(profile?.textContent).toContain('Trần Thuận Nghĩa');
+    expect(profile?.textContent).toContain('Full Stack Developer');
+    expect(profile?.textContent).toContain('strongly typed web applications');
+    expect(links.some(link => link.href === 'https://www.linkedin.com/in/tran-thuan-nghia/')).toBeTrue();
+    expect(links.some(link => link.href === 'mailto:tran.thuan.nghia@gmail.com')).toBeTrue();
+  });
+
   it('pins the install command to the selected Angular major', () => {
     expect(fixture.nativeElement.querySelector('.install code')?.textContent?.trim()).toBe('npm install @sdcorejs/angular@^21');
   });

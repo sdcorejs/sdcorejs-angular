@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, injec
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { AUTHOR_PROFILE } from '../../core/author-profile.config';
 import { DocsVersionService } from '../../core/docs-version.service';
 import { buildVersionRoute } from '../../core/docs-version.utils';
 import { buildCoreUiInstallCommand } from '../../core/docs-installation.utils';
@@ -60,6 +61,20 @@ import { MarkdownRendererComponent } from '../../shared/markdown-renderer.compon
           Version “{{ invalid }}” is unavailable. Showing v{{ currentVersion() }} instead.
         </section>
       }
+
+      <section class="maintainer-card" aria-labelledby="maintainer-name">
+        <div class="maintainer-card__mark" aria-hidden="true">TN</div>
+        <div>
+          <span class="maintainer-card__eyebrow">Maintained by</span>
+          <h2 id="maintainer-name">{{ author.authorName }}</h2>
+          <p class="maintainer-card__title">{{ author.authorTitle }}</p>
+          <p class="maintainer-card__bio">{{ author.authorBio }}</p>
+          <nav class="maintainer-card__links" aria-label="Maintainer contact links">
+            <a [href]="author.linkedinUrl" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a [href]="'mailto:' + author.email">{{ author.email }}</a>
+          </nav>
+        </div>
+      </section>
 
       <section class="quick-links" aria-labelledby="quick-links-title">
         <header>
@@ -122,6 +137,7 @@ export class DocsHomeComponent {
   readonly #destroyRef = inject(DestroyRef);
   readonly routeParams = toSignal(this.#route.paramMap, { initialValue: this.#route.snapshot.paramMap });
   readonly versions = inject(DocsVersionService);
+  readonly author = AUTHOR_PROFILE;
   readonly entryCount = DOC_PAGES.length;
   readonly demoCount = DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0);
   readonly latestRelease = SHOWCASE_CHANGELOG_RELEASES.find(release => !release.unreleased);

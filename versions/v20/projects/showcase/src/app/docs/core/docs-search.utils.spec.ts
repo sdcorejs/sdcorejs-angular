@@ -18,6 +18,13 @@ describe('documentation search', () => {
     expect(groups.every(group => group.results.every(result => result.page.category === group.category))).toBeTrue();
   });
 
+  it('groups Form Generic with Components', () => {
+    const [result] = searchDocumentation('Form Generic', DOC_PAGES);
+
+    expect(result?.page.category).toBe('components');
+    expect(result?.page.slug).toBe('generic');
+  });
+
   it('uses the documentation navigation order when grouping cross-category results', () => {
     const groups = groupSearchResults(searchDocumentation('sd', DOC_PAGES));
 

@@ -1,344 +1,323 @@
 # @sdcorejs/angular
 
 <p align="center">
-  <b>Enterprise-grade Angular UI library — components, forms, services, and modules built for real business apps.</b>
+  <strong>Reusable Angular UI for data-heavy business applications.</strong>
 </p>
 
 <p align="center">
-  Angular 19 / 20 / 21 • Standalone • Signal-first • OnPush by default • i18n-ready
+  Built on Angular Material, with standalone controls, consistent form patterns, workflow components, application services, theming, and localization for Angular 19, 20, and 21.
 </p>
 
 <p align="center">
-
-  <a href="https://www.npmjs.com/package/@sdcorejs/angular">
-    <img src="https://img.shields.io/npm/v/@sdcorejs/angular.svg" alt="npm version" />
-  </a>
-
-  <a href="https://www.npmjs.com/package/@sdcorejs/angular">
-    <img src="https://img.shields.io/npm/dm/@sdcorejs/angular.svg" alt="npm downloads" />
-  </a>
-
-  <a href="https://github.com/sdcorejs/sdcorejs-angular/actions">
-    <img src="https://img.shields.io/github/actions/workflow/status/sdcorejs/sdcorejs-angular/publish-npm.yml" alt="build status" />
-  </a>
-
-  <a href="https://github.com/sdcorejs/sdcorejs-angular/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/sdcorejs/sdcorejs-angular" alt="license" />
-  </a>
-
-  <a href="https://bundlephobia.com/package/@sdcorejs/angular">
-    <img src="https://img.shields.io/bundlephobia/minzip/@sdcorejs/angular" alt="bundle size" />
-  </a>
-
-  <a href="https://www.npmjs.com/package/@sdcorejs/angular">
-    <img src="https://img.shields.io/npm/types/@sdcorejs/angular" alt="types included" />
-  </a>
-
+  <a href="https://www.npmjs.com/package/@sdcorejs/angular"><img src="https://img.shields.io/npm/v/@sdcorejs/angular.svg" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/@sdcorejs/angular"><img src="https://img.shields.io/npm/dm/@sdcorejs/angular.svg" alt="monthly npm downloads" /></a>
+  <a href="#compatibility"><img src="https://img.shields.io/badge/Angular-19%20%7C%2020%20%7C%2021-DD0031?logo=angular&logoColor=white" alt="Angular 19, 20, and 21" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/sdcorejs/sdcorejs-angular.svg" alt="MIT license" /></a>
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@sdcorejs/angular">npm</a>
-  ·
-  <a href="https://github.com/sdcorejs/sdcorejs-angular">GitHub</a>
-  ·
   <a href="https://sdcorejs.github.io/sdcorejs-angular/">Showcase</a>
-  ·
-  <a href="https://sdcorejs.github.io/portal-template">Storybook</a>
+  · <a href="#quick-start">Quick start</a>
+  · <a href="#examples-and-documentation">Examples and docs</a>
+  · <a href="https://www.npmjs.com/package/@sdcorejs/angular">npm</a>
+  · <a href="CHANGELOG.md">Changelog</a>
+  · <a href="https://github.com/sdcorejs/sdcorejs-angular/issues">Issues</a>
 </p>
 
----
+## Why SDCoreJS
 
-## ✨ Features
+- **Business UI above the Material primitives.** Use tables, query builders, document tooling, import/export flows, drawers, modals, and application layout modules without rebuilding those patterns for every portal.
+- **One form contract.** Controls share `[(model)]`, validation, disabled, read-only, and viewed-state conventions, with optional `FormGroup` registration for larger forms.
+- **Focused application bundles.** Components, forms, services, and modules are published as secondary entry points, and the package declares `sideEffects: false`; import the leaf entry points your application uses.
+- **Angular-aligned releases.** The repository maintains matching package lines for Angular 19, 20, and 21 from the same v19 source workspace.
+- **Documentation for people and tools.** The live showcase is paired with version-pinned Markdown and JSON manifests that can be consumed by developers, automation, and AI coding agents.
 
-* ✅ 30+ standalone components (table, modal, query-builder, document-builder, …)
-* ✅ 14 form controls with `[(model)]` + FormGroup support, async validators, custom templates
-* ✅ 9 services (notify, confirm, excel, docx, api interceptor, storage, …)
-* ✅ Auth + Keycloak + permission modules ready out-of-the-box
-* ✅ Signal-first reactivity, OnPush default
-* ✅ i18n — built-in Vietnamese / English; `Language` type also declares `ja` / `ko` / `zh`; extensible to any locale
-* ✅ Material 19/20/21 compatible — single package, multi-major peer range
-* ✅ Tree-shakable subpath exports (per-component, per-form-control)
-* ✅ Type-safe end-to-end (`NestedKeyOf<T>`, `Filter<T>`, `Color`, `Size`, …)
-* ✅ AI-friendly semantic naming + per-component md docs
+## Highlights
 
----
+| Area                 | What the library provides                                                                                                                 |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| UI components        | Buttons, badges, avatars, sections, tabs, steppers, modals, drawers, splitters, charts, editors, previews, and navigation primitives      |
+| Data and workflow    | Local or server-backed tables, tree data, query bars, query builders, generic forms, document building, file upload, and Excel import     |
+| Form controls        | Text, numeric, date, date-range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, inline-text, and textarea controls |
+| Application services | Notifications, confirmation dialogs, loading state, API access, storage, cache, Excel, and DOCX helpers                                   |
+| Portal modules       | Auth, AuthOM, Keycloak, permission, layout, and icon modules                                                                              |
+| Developer experience | Standalone imports, typed APIs, signal-oriented state, `OnPush` components, shared SCSS utilities, and E2E-friendly `data-*` attributes   |
+| Localization         | Built-in Vietnamese, English, Japanese, Korean, and Chinese catalogs, plus a synchronous custom-catalog hook                              |
 
-## 📦 Installation
+## Compatibility
+
+Use the package major that matches the Angular major in your application.
+
+| Angular | `@sdcorejs/angular` | Recommended install                                                                              |
+| ------- | ------------------- | ------------------------------------------------------------------------------------------------ |
+| 19.x    | `^19`               | `npm install @sdcorejs/angular@^19 @angular/material@^19 @angular/material-date-fns-adapter@^19` |
+| 20.x    | `^20`               | `npm install @sdcorejs/angular@^20 @angular/material@^20 @angular/material-date-fns-adapter@^20` |
+| 21.x    | `^21`               | `npm install @sdcorejs/angular@^21 @angular/material@^21 @angular/material-date-fns-adapter@^21` |
+
+The package manifests accept Angular 19–21 peers, while the release workflow publishes an Angular-aligned package line for each major. The first version number is therefore reserved for Angular compatibility. Read the [changelog](CHANGELOG.md) before upgrading because consumer-breaking changes are called out there explicitly rather than relying on a conventional semver-major bump.
+
+## Installation
+
+Start with an existing Angular 19, 20, or 21 application. This repository and its CI use npm.
 
 ```bash
-npm install @sdcorejs/angular @angular/material @angular/material-date-fns-adapter
+# Example for an Angular 19 application
+npm install @sdcorejs/angular@^19 @angular/material@^19 @angular/material-date-fns-adapter@^19
 ```
 
-`@sdcorejs/utils` ships as a regular dependency — it installs automatically, no need to add it yourself.
+`@sdcorejs/utils`, `date-fns`, and the other implementation dependencies declared by the package install transitively.
 
-**Peer ranges**: `@angular/{common,core,material}` + `@angular/material-date-fns-adapter` `^19.0.0 || ^20.0.0 || ^21.0.0`. Choose the matching `@sdcorejs/angular` version: `19.x.y` for Angular 19, `20.x.y` for Angular 20, `21.x.y` for Angular 21.
+Load the library stylesheet once, before application-owned overrides:
 
-```bash
-# Angular 19
-npm install @sdcorejs/angular@^19
-
-# Angular 20
-npm install @sdcorejs/angular@^20
-
-# Angular 21
-npm install @sdcorejs/angular@^21
-```
-
-Import the global stylesheet once in `styles.scss`:
 ```scss
-@use '@sdcorejs/angular/assets/scss/sd-core.scss';
+/* styles.scss */
+@use '@sdcorejs/angular/assets/scss/sd-core';
 ```
 
----
+The stylesheet ships the Roboto, Material Icons, and Material Symbols font files used by the library. No Google Fonts link is required. The basic component quick start below also needs no SDCoreJS-specific application provider.
 
-## 🚀 Quick Examples
+## Quick start
 
-### Button
+This standalone component renders a primary action, displays a spinner while work is in progress, suppresses repeated clicks through the button's `loading` state, and announces the final status.
 
-```html
-<sd-button type="fill" color="primary" title="Lưu" (click)="save()"></sd-button>
-<sd-button type="light" color="success" prefixIcon="check" title="Duyệt"></sd-button>
+```bash
+# Match the major to your Angular application
+npm install @sdcorejs/angular@^19 @angular/material@^19 @angular/material-date-fns-adapter@^19
 ```
 
-### Badge
-
-```html
-<sd-badge type="round" success title="Đang hoạt động"></sd-badge>
-<sd-badge type="tag" info icon="label" title="Hợp đồng dài hạn" size="md"></sd-badge>
+```scss
+/* styles.scss */
+@use '@sdcorejs/angular/assets/scss/sd-core';
 ```
-
-### Form Input + Validator
-
-```html
-<sd-input
-  label="Email"
-  type="email"
-  [(model)]="email"
-  [form]="form"
-  required
-  pattern="EMAIL">
-</sd-input>
-```
-
-### Data Table
 
 ```ts
-opt: SdTableOption<Employee> = {
-  type: 'local',
-  items: () => EMPLOYEES,
-  selector: { visible: true, preserveSelection: true },
-  paginate: { pageSize: 10, pages: [10, 25, 50] },
-  sort: { enable: true },
-  index: { enabled: true },
-  filler: { enabled: true },
-  group: { fields: ['department'], collapsible: true },
-  columns: [
-    { field: 'name', type: 'string', title: 'Họ tên', width: '200px', sortable: true },
-    { field: 'salary', type: 'number', title: 'Lương', width: '140px', align: 'right' },
-    { field: 'status', type: 'values', title: 'Trạng thái',
-      option: { items: STATUS_OPTIONS, valueField: 'value', displayField: 'display' },
-      useBadge: v => v === 'ACTIVE' ? { title: 'Hoạt động', color: 'success' } : { title: 'Đã nghỉ', color: 'error' } },
-  ],
-};
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdButton } from '@sdcorejs/angular/components/button';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [SdButton],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  template: `
+    <sd-button type="fill" color="primary" title="Save changes" [loading]="saving()" (click)="save()" />
+
+    <p aria-live="polite">{{ status() }}</p>
+  `,
+})
+export class AppComponent {
+  readonly saving = signal(false);
+  readonly status = signal('Ready');
+
+  async save(): Promise<void> {
+    this.saving.set(true);
+    this.status.set('Saving…');
+
+    await new Promise<void>(resolve => setTimeout(resolve, 700));
+
+    this.status.set('Saved');
+    this.saving.set(false);
+  }
+}
 ```
 
-```html
-<sd-table [option]="opt">
-  <ng-template sdTableGroupDef let-values let-data>
-    <b>Phòng {{ values['department'] }}</b> · {{ data.length }} người
-  </ng-template>
-</sd-table>
-```
+For production work, replace the timer with your typed service call and reset `saving` in a `finally` block.
 
-> **Tree rows** — `tree: { loadType: 'static', childrenKey: 'children' }` (children embedded) hoặc `tree: { loadType: 'lazy', onExpandChildren: row => api.getChildren(row.id), hasChildren: row => … }` (nạp khi bung, có loading spinner). Local + static tree hỗ trợ search inline tới tận cấp con.
+## Explore the library
 
----
+The published documentation manifest is the canonical catalog. These groups summarize the main surfaces without duplicating their complete APIs.
 
-## 📚 Subpath Exports
+| Area                 | Representative APIs                                                                                              | Starting point                                                                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Components           | `SdTable`, `SdTree`, `SdModal`, `SdQueryBuilder`, `SdDocumentBuilder`, `SdStepper`, and chart components         | [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/) and [component catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                  |
+| Form controls        | `SdInput`, `SdInputNumber`, `SdSelect`, `SdAutocomplete`, `SdDate`, `SdChip`, `SdInlineText`                     | [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts) and [forms manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)          |
+| Services             | `SdNotifyService`, `SdConfirmService`, `SdLoadingService`, `SdStorageService`, `SdExcelService`, `SdDocxService` | [Notify example source](versions/v19/projects/showcase/src/app/pages/services/notify/notify-demo.component.ts) and [services manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) |
+| Modules              | Auth, AuthOM, Keycloak, permission, layout, and icon modules                                                     | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
+| Directives and pipes | Responsive, tooltip, href, scroll, copy, date, datetime, number, safe-HTML, and view helpers                     | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
+
+### Representative workflows
+
+- `SdTable` covers local and server data, paging, sorting, filters, selection, grouping, tree rows, custom cell templates, and export-oriented workflows.
+- `SdQueryBuilder` and `SdQueryBar` build typed filtering experiences without coupling the UI to a specific backend.
+- `SdDocumentBuilder`, the editor components, Excel import, and upload controls support document-heavy application flows.
+- Auth, Keycloak, permission, and layout modules provide optional portal-level building blocks; adopt only the modules your application needs.
+
+## Core concepts
+
+### Standalone and subpath imports
+
+Prefer leaf entry points. They are public secondary entry points and keep feature dependencies explicit.
 
 ```ts
 import { SdButton } from '@sdcorejs/angular/components/button';
-import { SdBadge } from '@sdcorejs/angular/components/badge';
-import { SdTable, SdTableOption, SdTableGroupDefDirective } from '@sdcorejs/angular/components/table';
+import { SdTable, type SdTableOption } from '@sdcorejs/angular/components/table';
 import { SdInput } from '@sdcorejs/angular/forms/input';
-import { SdNotifyService } from '@sdcorejs/angular/services';
-import { SdAuthService } from '@sdcorejs/angular/modules/auth';
+import { SdNotifyService } from '@sdcorejs/angular/services/notify';
+import { I18nService } from '@sdcorejs/angular/i18n';
 ```
 
-Mỗi component / form control / service / module là 1 entry point độc lập — tree-shaking optimal, không kéo theo cả lib.
+Import standalone components in the host component's `imports` array. Services use Angular dependency injection. Avoid importing a broad barrel when a supported leaf entry point is available.
 
----
+### Forms and validation
 
-## 🧩 Catalog
-
-### Components (30+)
-
-| Group | Items |
-| --- | --- |
-| Display | `badge` · `avatar` · `chart` · `section` · `view` · `inform` |
-| Action | `button` · `quick-action` · `operator` |
-| Layout | `splitter` · `side-drawer` · `tab` · `tab-router` · `stepper` · `modal` · `anchor` |
-| Data | `table` · `query-bar` · `query-builder` · `preview` · `history` |
-| Editor | `editor` · `mini-editor` · `code-editor` · `document-builder` |
-| Workflow | `form-generic` · `upload-file` · `import-excel` |
-
-**Table highlights**: server/local mode · paginate · sort · column filter · external filter · row selection (single/multi/preserve cross-page) · row reorder · row group (collapsible, select-all-in-group, sdTableGroupDef template) · tree rows (hierarchical STT 1/1.1/1.2.1) · expandable sub-info · custom cell template · footer aggregation · export Excel/CSV.
-
-### Forms (14)
-
-`autocomplete` · `checkbox` · `chip` · `chip-calendar` · `date` · `date-range` · `datetime` · `input` · `input-color` · `input-number` · `label` · `radio` · `select` · `switch` · `textarea`
-
-Tất cả hỗ trợ `[(model)]` + `[form]` (FormGroup) + `required`/`pattern`/custom validators + `disabled`/`readonly`/`viewed` + size `sm`/`md`/`lg` + inline clear (X).
-
-### Services (9)
-
-| Service | Purpose |
-| --- | --- |
-| `notify` | Toast notifications (success/info/warning/error, i18n) |
-| `confirm` | Confirm/prompt dialogs (with input / radio variants) |
-| `loading` | Full-page / target / manual loading overlay |
-| `excel` | Export, import, parse, generate-template (no exceljs in consumer bundle) |
-| `docx` | DOCX render + convert to HTML |
-| `storage` | Typed local/session storage with prefix + default + observer |
-| `cache` | Reactive in-memory cache with TTL |
-| `api` | HTTP client wrapper + interceptors |
-| `license` | License/feature flag gate |
-
-### Modules
-
-`auth` · `authom` · `keycloak` · `permission` · `layout` (sidebar/header/main) · `generic` (list + form scaffold)
-
----
-
-## 🏗 Multi-version (Angular 19 / 20 / 21)
-
-| Angular | Install | Status |
-| --- | --- | --- |
-| 19.x | `npm install @sdcorejs/angular@^19` | Stable |
-| 20.x | `npm install @sdcorejs/angular@^20` | Stable |
-| 21.x | `npm install @sdcorejs/angular@^21` | Stable |
-
-Same source, same API surface — peer dependency major chỉ khác Angular major. CI matrix `publish-npm.yml` đảm bảo 3 phiên bản luôn ngang nhau về tính năng.
-
----
-
-## 🎨 Theming
-
-Sử dụng SCSS tokens + Angular Material M3 theme/token system (`mat.theme`). Override semantic tokens qua CSS variables và ưu tiên đọc `--mat-sys-*` cho style liên quan Angular Material:
-
-```scss
-:root {
-  --sd-primary: #1f6feb;
-  --sd-success: #1f7a3e;
-  --sd-error: #b32626;
-}
-
-.app-link {
-  color: var(--mat-sys-primary);
-  outline-color: var(--mat-sys-outline);
-}
-```
-
-Bundled palette: `primary` · `secondary` · `success` · `info` · `warning` · `error` + `*-light` tint variants.
-
----
-
-## 🌍 i18n
+Form controls use SDCoreJS's `[(model)]` binding. For group validation, pass a `FormGroup` through `[form]` and provide a stable `name`; the control registers and removes its internal control automatically.
 
 ```ts
-inject(I18nService).setLanguage('en');
-// Supported: 'vi', 'en', 'ja', 'ko', 'zh'
+import { Component } from '@angular/core';
+import { FormGroup } from '@angular/forms';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+
+@Component({
+  selector: 'app-customer-form',
+  standalone: true,
+  imports: [SdInput],
+  template: `
+    <sd-input [form]="customerForm" name="customerName" label="Customer name" required maxlength="100" [(model)]="customer.name" />
+  `,
+})
+export class CustomerFormComponent {
+  readonly customerForm = new FormGroup({});
+  readonly customer = { name: '' };
+}
 ```
 
-Custom keys: dùng `TranslatePipe` (`{{ 'my.key' | translate }}`) hoặc service trực tiếp.
+Controls support combinations of required, length, range, pattern, and custom async validation where applicable. They also distinguish editable, disabled, read-only, and viewed states, and expose projected templates on controls that support custom labels, suffixes, or viewed values. `formControlName` and `[(ngModel)]` are not the SDCoreJS form-control contract.
 
----
+### Signals and change detection
 
-## 🏗 Repository Layout
+The component source favors signal inputs, models, computed state, and `ChangeDetectionStrategy.OnPush`. Public outputs and service APIs remain conventional Angular contracts where that is the clearer fit; consumers do not need to convert every application interaction to a signal.
 
-This repo is the **canonical source and multi-version publish workspace** for `@sdcorejs/angular`.
-It was last synced from the legacy `vn-angular` workspace at `vn-angular@d12478a1`
-on 2026-06-24; future development happens here independently.
+### Theming
 
+`sd-core.scss` loads the reset, utilities, bundled fonts, semantic colors, form styling, and Angular Material theme baseline. Override the public semantic tokens through the `sd.theme()` mixin:
+
+```scss
+@use '@sdcorejs/angular/assets/scss/sd-core';
+@use '@sdcorejs/angular/assets/scss/themes/default' as sd;
+
+html {
+  @include sd.theme(
+    (
+      primary: #2563eb,
+      primary-light: #dbeafe,
+      primary-dark: #1d4ed8,
+    )
+  );
+}
 ```
-sdcorejs-angular/
-├── versions/v19/   ← primary source workspace (Angular 19)
-├── versions/v20/   ← derived workspace (Angular 20)
-├── versions/v21/   ← derived workspace (Angular 21)
-└── scripts/        ← rollout, docs, and deploy scripts
+
+The public token surface includes semantic values such as `--sd-primary`, `--sd-success`, `--sd-error`, `--sd-surface`, `--sd-text`, and `--sd-border`. Applications that own their Angular Material theme can also configure Material M3 with `mat.theme()` in the global stylesheet. See the [assets and SCSS reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/STYLE-GUIDE.md) for the complete supported token and utility list.
+
+### Internationalization
+
+Core UI messages include `vi`, `en`, `ja`, `ko`, and `zh` catalogs. Configure a default language at bootstrap:
+
+```ts
+import { ApplicationConfig } from '@angular/core';
+import { type ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
+
+const sdCoreConfig = {
+  language: 'en',
+} satisfies ISdCoreConfiguration;
+
+export const appConfig: ApplicationConfig = {
+  providers: [{ provide: SD_CORE_CONFIGURATION, useValue: sdCoreConfig }],
+};
 ```
 
-Develop features, docs, tests, and showcase screens in `versions/v19` first.
-After v19 verification, run `npm run sync` from the repo root to roll the same
-feature surface to `v20` and `v21`, then publish the three Angular-major package
-lines together. The old `vn-angular` sync script is kept only as a guarded
-legacy recovery tool via `npm run legacy:sync-from-vn-angular`.
+`I18nService.setLanguage()` persists a built-in language and reloads by default so the pure `TranslatePipe` sees the new catalog. Applications can provide a complete custom catalog through the synchronous `language: () => catalog` configuration hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing, interpolation, fallbacks, and custom-language constraints.
 
-Before tagging a release, run `npm run check:sync`. The publish workflow runs
-the same guard and fails before npm publish if `v20` or `v21` has drifted from
-the `v19` source workspace.
+## Examples and documentation
 
-Push tag `v<release-suffix>` and GitHub Actions publishes `19.<release-suffix>` + `20.<release-suffix>` + `21.<release-suffix>` in parallel. For release `v1.0`, this means `19.1.0`, `20.1.0`, and `21.1.0`. After all 3 npm publishes succeed, the same tag workflow snapshots `published-docs` for those 3 versions and commits the archive to `main`. See `.github/workflows/publish-npm.yml`.
+| Resource                                                                                                         | Use it for                                                              |
+| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/)                                                    | Browse interactive component, form, and service demos                   |
+| [Button example source](versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts) | Basic actions, variants, icons, disabled state, and loading state       |
+| [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)         | Model binding, validation, viewed states, and input variants            |
+| [Table example source](versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)    | Data, filters, selection, grouping, paging, and tree workflows          |
+| [Modal example source](versions/v19/projects/showcase/src/app/pages/components/modal/modal-demo.component.ts)    | Dialog structure, projected content, and open/close flows               |
+| [Notify example source](versions/v19/projects/showcase/src/app/pages/services/notify/notify-demo.component.ts)   | Notification service usage and message variants                         |
+| [Latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                        | Discover every published Markdown document for the newest package line  |
+| [Styling reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/STYLE-GUIDE.md)               | Supported SCSS entry points, tokens, fonts, images, and utility classes |
+| [E2E attributes](versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                  | Stable runtime selectors and state attributes for automated tests       |
+| [Changelog](CHANGELOG.md)                                                                                        | Consumer-visible changes, breaking notes, and migration guidance        |
 
-Push to default branch → showcase auto-deploys to GitHub Pages via `.github/workflows/deploy-pages.yml`.
+The showcase is the visual entry point. Use the version registry and manifest when you need a package-matched API reference; each manifest links to raw Markdown for the selected release.
 
----
+## AI-readable documentation
 
-## 🚀 Publishing
+The documentation site exposes a small, stable discovery flow:
+
+```text
+https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json
+https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json
+https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json
+https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/index.json
+```
+
+Read `versions.json` to select a release that matches the installed package, then follow the document URLs in that release's `index.json`. `catalog.json` provides a cross-version inventory when a tool needs to discover all maintained lines.
+
+## Versioning and releases
+
+- Package major `19`, `20`, or `21` identifies the matching Angular line.
+- A release suffix is published across the maintained lines from the same v19 source surface, with only required Angular-major adaptations.
+- Pin the package major in applications, for example `@sdcorejs/angular@^20` for Angular 20.
+- Review [CHANGELOG.md](CHANGELOG.md) before every upgrade. Because the package major is reserved for Angular compatibility, breaking changes are labeled explicitly in the changelog.
+- Version-pinned API docs remain available under `/docs/<package-version>/` after release.
+
+## Development
+
+The repository uses `versions/v19` as the source workspace. Work on shared library code, tests, npm documentation, and showcase pages there; the root sync process derives the v20 and v21 workspaces.
+
+Prerequisites: Node.js 20, npm, and a Chromium installation for the headless Karma suite.
 
 ```bash
-# tag stable 19.1.0 / 20.1.0 / 21.1.0
-git tag v1.0
-git push origin v1.0
+git clone https://github.com/sdcorejs/sdcorejs-angular.git
+cd sdcorejs-angular/versions/v19
+npm install
 
-# tag beta
-git tag v1.0-beta.1
-git push origin v1.0-beta.1
+# Build the library
+npm run build
+
+# Run the showcase at http://localhost:4200
+npm run showcase
+
+# Test and lint the v19 library
+npm run test:ci
+npm run lint
 ```
 
-Required secret: `NPM_TOKEN` (repo Settings > Secrets > Actions).
+After a shared v19 change, return to the repository root:
 
-For local debug: `scripts/deploy.ps1 -PatchVersion "1.0" -DryRun` (see `CLAUDE.md`). The script argument is still named `PatchVersion`, but its value is the shared release suffix.
-
----
-
-## 🤖 Machine-readable docs (for AI agents)
-
-Every tagged release's API docs are served as raw Markdown on GitHub Pages, so an AI
-agent can fetch them by URL — no local clone needed. Start from the registry, pick a
-version that matches the installed package, then read the per-doc Markdown:
-
-```
-https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json        # all versions + latest
-https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json         # all versions + every doc URL
-https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json    # newest version manifest
-https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/index.json # pinned version manifest
-https://sdcorejs.github.io/sdcorejs-angular/docs/<version>/forms/select/sd-select.md
+```bash
+npm run sync
+npm run check:sync
 ```
 
-`catalog.json` is the best single entry point for AI agents: it groups available releases by
-Angular major and includes every `{ id, title, category, path, url }` entry per version, so an
-agent can choose a target version first and then fetch the exact Markdown file it needs.
+`npm run sync` updates the derived Angular 20 and 21 workspaces. Always review that generated diff before committing it.
 
-Each `index.json` lists `{ id, title, category, path, url }` for ~79 docs (components, forms,
-directives, services, pipes, modules, utilities + SCSS/asset reference). Pin the version that
-matches your installed package (`@sdcorejs/angular@20.1.0` → `/docs/20.1.0/`).
+## Contributing
 
-The archive is generated by `scripts/collect-release-docs.mjs` from the tag publish workflow.
-It creates `published-docs/19.<release-suffix>/`, `published-docs/20.<release-suffix>/`, and
-`published-docs/21.<release-suffix>/` only after npm publish succeeds; `deploy-pages.yml` then copies
-the committed archive into the Pages site. See `CLAUDE.md`.
+1. Create a focused branch from `main`.
+2. Make shared changes in `versions/v19`; update tests, showcase examples, and documentation together when the public contract changes.
+3. Run the relevant v19 build, tests, and lint commands.
+4. Run `npm run sync` and `npm run check:sync` from the repository root.
+5. Open a pull request that explains the consumer impact and any migration steps.
 
----
+Keep public imports backward compatible where possible. Record consumer-breaking behavior under `Changed (BREAKING for consumers)` in the changelog.
 
-## 🌐 Ecosystem
+## Support and issue reporting
 
-* [`@sdcorejs/utils`](https://www.npmjs.com/package/@sdcorejs/utils) — framework-agnostic TypeScript utilities (models, constants, fns)
-* `@sdcorejs/angular` — Angular UI library (this package)
-* `@sdcorejs/nestjs` — NestJS backend toolkit (coming soon)
+Use [GitHub Issues](https://github.com/sdcorejs/sdcorejs-angular/issues) for reproducible bugs and focused feature proposals. Include the Angular major, `@sdcorejs/angular` version, a minimal reproduction, and the observed and expected behavior.
 
----
+## Maintainer
 
-## 📄 License
+### Trần Thuận Nghĩa
 
-MIT
+**Full Stack Developer** and maintainer of `@sdcorejs/angular`. He builds practical, strongly typed web applications and reusable tools that make complex business workflows easier to deliver and maintain.
+
+[SDCoreJS on GitHub](https://github.com/sdcorejs) · [LinkedIn](https://www.linkedin.com/in/tran-thuan-nghia/) · [Email](mailto:tran.thuan.nghia@gmail.com)
+
+## License
+
+`@sdcorejs/angular` is released under the [MIT License](LICENSE).
