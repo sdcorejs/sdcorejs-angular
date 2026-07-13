@@ -8,7 +8,8 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdSwitch],
   template: `
-    <demo-page title="Switch" description="sd-switch – công tắc bật/tắt boolean. Hỗ trợ màu chủ đề, disabled / viewed.">
+    <demo-page #demoPage title="Switch" description="sd-switch – công tắc bật/tắt boolean. Hỗ trợ màu chủ đề, disabled / viewed.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều, hiển thị trạng thái ngay bên cạnh.">
         <div style="display:flex; flex-direction:column; gap:8px; width:100%">
           <sd-switch label="Nhận thông báo qua email" [(model)]="notify" [form]="form"></sd-switch>
@@ -17,7 +18,9 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-danh-sach-cau-hinh') {
       <demo-section heading="Danh sách cấu hình" note="Mỗi switch điều khiển một option độc lập.">
         <div style="display:flex; flex-direction:column; gap:6px">
           <sd-switch label="Tự động lưu" [(model)]="autoSave" [form]="form"></sd-switch>
@@ -28,7 +31,9 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mau-sac') {
       <demo-section heading="Màu sắc" [props]="[{ name: 'color', value: 'primary / success / warning / error' }]" note="Thuộc tính color thay đổi accent track.">
         <div style="display:flex; gap:20px; flex-wrap:wrap">
           <sd-switch label="primary" color="primary" [(model)]="s1" [form]="form"></sd-switch>
@@ -37,14 +42,18 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
           <sd-switch label="error" color="error" [(model)]="s4" [form]="form"></sd-switch>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái khoá.">
         <div style="display:flex; gap:20px; flex-wrap:wrap">
           <sd-switch label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-switch>
           <sd-switch label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-switch>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-che-do-xem') {
       <demo-section heading="Chế độ xem" [props]="[{ name: 'viewed', value: 'true' }, { name: 'viewed', value: 'inline' }]" note="viewed=true hiện chữ Bật/Tắt; 'inline' vẫn gạt được, disabled+inline thì xem tĩnh.">
         <div style="display:flex; gap:20px; flex-wrap:wrap">
           <sd-switch label="viewed=true (tĩnh)" [(model)]="viewedFlag" [form]="form" viewed></sd-switch>
@@ -52,6 +61,7 @@ import { SdSwitch } from '@sdcorejs/angular/forms/switch';
           <sd-switch label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="viewedFlag" [form]="form" disabled></sd-switch>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

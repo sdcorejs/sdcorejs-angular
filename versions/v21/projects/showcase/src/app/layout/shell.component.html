@@ -1,48 +1,85 @@
 <div class="shell">
-  <aside class="sidebar">
-    <a class="brand" routerLink="/">
-      <mat-icon class="brand-icon">dashboard</mat-icon>
-      <span class="brand-text">&#64;sd-angular/core</span>
+  <a class="skip-link" href="#docs-content">Skip to documentation content</a>
+  <header class="topbar">
+    <button
+      #mobileMenu
+      class="mobile-menu"
+      type="button"
+      aria-label="Toggle documentation navigation"
+      aria-controls="docs-sidebar"
+      [attr.aria-expanded]="mobileNavOpen()"
+      (click)="toggleMobileNav()">
+      <mat-icon>{{ mobileNavOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
+
+    <a class="brand" routerLink="/" aria-label="SDCoreJS Angular documentation home" [attr.inert]="mobileNavOpen() ? '' : null">
+      <span class="brand__mark" aria-hidden="true">SD</span>
+      <span><strong>&#64;sdcorejs/angular</strong><small>Documentation</small></span>
     </a>
 
-    <div class="search">
-      <mat-icon class="search-icon">search</mat-icon>
-      <input
-        type="text"
-        placeholder="Tìm component / form / service..."
-        [value]="query()"
-        (input)="query.set($any($event.target).value)" />
-    </div>
-
-    <nav class="nav">
-      @for (group of filteredGroups(); track group.title) {
-        <div class="group">
-          <button class="group-header" type="button" (click)="toggleGroup(group.title)">
-            <mat-icon class="group-icon">{{ group.icon }}</mat-icon>
-            <span class="group-title">{{ group.title }}</span>
-            <span class="group-count">{{ group.items.length }}</span>
-            <mat-icon class="group-chevron">{{ isCollapsed(group.title) ? 'expand_more' : 'expand_less' }}</mat-icon>
-          </button>
-          @if (!isCollapsed(group.title)) {
-            <ul class="items">
-              @for (item of group.items; track trackItem($index, item)) {
-                <li>
-                  <a
-                    [routerLink]="'/' + item.path"
-                    routerLinkActive="active"
-                    [routerLinkActiveOptions]="{ exact: false }">
-                    {{ item.label }}
-                  </a>
-                </li>
-              }
-            </ul>
-          }
-        </div>
-      }
+    <nav class="topnav" aria-label="Primary navigation" [attr.inert]="mobileNavOpen() ? '' : null">
+      <a routerLink="/" routerLinkActive="active" ariaCurrentWhenActive="page" [routerLinkActiveOptions]="{ exact: true }">Docs</a>
+      <a [routerLink]="changelogLink()" routerLinkActive="active" ariaCurrentWhenActive="page">Changelog</a>
+      <a routerLink="/about" routerLinkActive="active" ariaCurrentWhenActive="page">About</a>
     </nav>
-  </aside>
 
-  <main class="content">
-    <router-outlet></router-outlet>
-  </main>
+    <div class="topbar__tools" [attr.inert]="mobileNavOpen() ? '' : null">
+      <docs-global-search></docs-global-search>
+      <docs-version-selector></docs-version-selector>
+      <a class="github-link" href="https://github.com/sdcorejs/sdcorejs-angular" target="_blank" rel="noreferrer" aria-label="Open GitHub repository">
+        <span>GitHub</span><mat-icon>open_in_new</mat-icon>
+      </a>
+    </div>
+  </header>
+
+  @if (mobileNavOpen()) { <button class="nav-backdrop" type="button" aria-label="Close navigation" (click)="closeMobileNav(true)"></button> }
+
+  <div class="shell__body">
+    <aside
+      #sidebar
+      id="docs-sidebar"
+      class="sidebar"
+      [class.open]="mobileNavOpen()"
+      [attr.aria-hidden]="sidebarHidden()"
+      [attr.inert]="sidebarHidden() ? '' : null"
+      aria-label="Documentation catalog">
+      <div class="sidebar__heading">
+        <span>Catalog</span><strong>{{ navGroups().length }} categories</strong>
+      </div>
+      <nav>
+        @for (group of navGroups(); track group.category) {
+          <section class="nav-group">
+            <button
+              class="nav-group__header"
+              type="button"
+              [attr.aria-expanded]="!group.collapsed"
+              (click)="toggleGroup(group.category)">
+              <mat-icon>{{ group.icon }}</mat-icon>
+              <span>{{ group.title }}</span>
+              <small>{{ group.pages.length }}</small>
+              <mat-icon>{{ group.collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+            </button>
+            @if (!group.collapsed) {
+              <ul>
+                @for (page of group.pages; track page.id) {
+                  <li>
+                    <a [routerLink]="page.commands" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeMobileNav()">
+                      <span>{{ page.title }}</span><small>{{ page.demoSectionCount }}</small>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      </nav>
+      <footer>
+        <span>Published docs</span><strong>v{{ currentVersion() }}</strong>
+      </footer>
+    </aside>
+
+    <section #content id="docs-content" class="content" tabindex="-1" aria-label="Documentation content" [attr.inert]="mobileNavOpen() ? '' : null">
+      <router-outlet></router-outlet>
+    </section>
+  </div>
 </div>

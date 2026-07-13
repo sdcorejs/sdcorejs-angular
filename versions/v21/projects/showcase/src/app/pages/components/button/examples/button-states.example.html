@@ -1,0 +1,12 @@
+<sd-button
+  type="fill"
+  color="primary"
+  title="loading"
+  prefixIcon="send"
+  [loading]="submitting()"
+  (click)="onSubmit()">
+</sd-button>
+<sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
+<div style="width: 240px;">
+  <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
+</div>

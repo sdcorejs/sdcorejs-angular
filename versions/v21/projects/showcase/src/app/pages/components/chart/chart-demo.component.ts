@@ -20,22 +20,27 @@ import {
     SdDoughnutChartComponent,
   ],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Chart"
       description="Bộ biểu đồ dựa trên Chart.js — line / bar / pie / doughnut. Thường dùng trên dashboard và báo cáo.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-do-line') {
       <demo-section heading="Biểu đồ Line" [props]="[{ name: 'type', value: 'line' }]">
         <div class="chart-box">
           <sd-line-chart [data]="lineData" [options]="lineOptions"></sd-line-chart>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-do-bar') {
       <demo-section heading="Biểu đồ Bar" [props]="[{ name: 'type', value: 'bar' }]">
         <div class="chart-box">
           <sd-bar-chart [data]="barData" [options]="barOptions"></sd-bar-chart>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bieu-do-pie-doughnut') {
       <demo-section heading="Biểu đồ Pie & Doughnut" [props]="[{ name: 'type', value: 'pie / doughnut' }]">
         <div class="row">
           <div class="chart-box small">
@@ -46,6 +51,7 @@ import {
           </div>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

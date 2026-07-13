@@ -233,9 +233,10 @@ export class IconConfigurationPreviewLucideComponent {}
     IconConfigurationPreviewLucideComponent,
   ],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Icon Configuration"
       description="Switch defaultFontSet in SdIcon configuration and compare how Core UI icons render in table, input, and dropdown controls.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-configuration') {
       <demo-section
         heading="Configuration"
         [props]="[{ name: 'provideSdIcon', value: 'defaultFontSet: ' + selectedFontSet() }]"
@@ -253,7 +254,9 @@ export class IconConfigurationPreviewLucideComponent {}
           <code class="icon-config-snippet">provideSdIcon(&#123; defaultFontSet: '{{ selectedFontSet() }}' &#125;)</code>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-core-ui-preview') {
       <demo-section
         heading="Core UI preview"
         [props]="[{ name: 'defaultFontSet', value: selectedFontSet() }]"
@@ -270,6 +273,7 @@ export class IconConfigurationPreviewLucideComponent {}
           }
         }
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

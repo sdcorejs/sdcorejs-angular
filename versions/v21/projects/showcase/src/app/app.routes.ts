@@ -1,70 +1,66 @@
 import { Routes } from '@angular/router';
+import { legacyDocsRedirectGuard } from './docs/core/docs-route.guards';
+import { DocCategory } from './docs/core/documentation.models';
+import { findDocPage } from './docs/core/documentation.registry';
+
+const PACKAGE_TITLE = '@sdcorejs/angular documentation';
 
 export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent),
+    title: PACKAGE_TITLE,
+    loadComponent: () => import('./docs/pages/home/docs-home.component').then((module) => module.DocsHomeComponent),
   },
-
-  // ---- Components ----
-  { path: 'components/anchor',           loadComponent: () => import('./pages/components/anchor/anchor-demo.component').then(m => m.AnchorDemoComponent) },
-  { path: 'components/avatar',           loadComponent: () => import('./pages/components/avatar/avatar-demo.component').then(m => m.AvatarDemoComponent) },
-  { path: 'components/badge',            loadComponent: () => import('./pages/components/badge/badge-demo.component').then(m => m.BadgeDemoComponent) },
-  { path: 'components/button',           loadComponent: () => import('./pages/components/button/button-demo.component').then(m => m.ButtonDemoComponent) },
-  { path: 'components/chart',            loadComponent: () => import('./pages/components/chart/chart-demo.component').then(m => m.ChartDemoComponent) },
-  { path: 'components/code-editor',      loadComponent: () => import('./pages/components/code-editor/code-editor-demo.component').then(m => m.CodeEditorDemoComponent) },
-  { path: 'components/document-builder', loadComponent: () => import('./pages/components/document-builder/document-builder-demo.component').then(m => m.DocumentBuilderDemoComponent) },
-  { path: 'components/editor',           loadComponent: () => import('./pages/components/editor/editor-demo.component').then(m => m.EditorDemoComponent) },
-  { path: 'components/form-generic',     loadComponent: () => import('./pages/components/form-generic/form-generic-demo.component').then(m => m.FormGenericDemoComponent) },
-  { path: 'components/history',          loadComponent: () => import('./pages/components/history/history-demo.component').then(m => m.HistoryDemoComponent) },
-  { path: 'components/icon',             loadComponent: () => import('./pages/components/icon/icon-demo.component').then(m => m.IconDemoComponent) },
-  { path: 'components/icon-configuration', loadComponent: () => import('./pages/components/icon-configuration/icon-configuration-demo.component').then(m => m.IconConfigurationDemoComponent) },
-  { path: 'components/import-excel',     loadComponent: () => import('./pages/components/import-excel/import-excel-demo.component').then(m => m.ImportExcelDemoComponent) },
-  { path: 'components/inform',           loadComponent: () => import('./pages/components/inform/inform-demo.component').then(m => m.InformDemoComponent) },
-  { path: 'components/mini-editor',      loadComponent: () => import('./pages/components/mini-editor/mini-editor-demo.component').then(m => m.MiniEditorDemoComponent) },
-  { path: 'components/modal',            loadComponent: () => import('./pages/components/modal/modal-demo.component').then(m => m.ModalDemoComponent) },
-  { path: 'components/operator',         loadComponent: () => import('./pages/components/operator/operator-demo.component').then(m => m.OperatorDemoComponent) },
-  { path: 'components/org-chart',        loadComponent: () => import('./pages/components/org-chart/org-chart-demo.component').then(m => m.OrgChartDemoComponent) },
-  { path: 'components/preview',          loadComponent: () => import('./pages/components/preview/preview-demo.component').then(m => m.PreviewDemoComponent) },
-  { path: 'components/query-bar',        loadComponent: () => import('./pages/components/query-bar/query-bar-demo.component').then(m => m.QueryBarDemoComponent) },
-  { path: 'components/query-builder',    loadComponent: () => import('./pages/components/query-builder/query-builder-demo.component').then(m => m.QueryBuilderDemoComponent) },
-  { path: 'components/quick-action',     loadComponent: () => import('./pages/components/quick-action/quick-action-demo.component').then(m => m.QuickActionDemoComponent) },
-  { path: 'components/section',          loadComponent: () => import('./pages/components/section/section-demo.component').then(m => m.SectionDemoComponent) },
-  { path: 'components/side-drawer',      loadComponent: () => import('./pages/components/side-drawer/side-drawer-demo.component').then(m => m.SideDrawerDemoComponent) },
-  { path: 'components/splitter',         loadComponent: () => import('./pages/components/splitter/splitter-demo.component').then(m => m.SplitterDemoComponent) },
-  { path: 'components/stepper',          loadComponent: () => import('./pages/components/stepper/stepper-demo.component').then(m => m.StepperDemoComponent) },
-  { path: 'components/tab',              loadComponent: () => import('./pages/components/tab/tab-demo.component').then(m => m.TabDemoComponent) },
-  { path: 'components/tab-router',       loadComponent: () => import('./pages/components/tab-router/tab-router-demo.component').then(m => m.TabRouterDemoComponent) },
-  { path: 'components/table',            loadComponent: () => import('./pages/components/table/table-demo.component').then(m => m.TableDemoComponent) },
-  { path: 'components/tree',             loadComponent: () => import('./pages/components/tree/tree-demo.component').then(m => m.TreeDemoComponent) },
-  { path: 'components/upload-file',      loadComponent: () => import('./pages/components/upload-file/upload-file-demo.component').then(m => m.UploadFileDemoComponent) },
-  { path: 'components/view',             loadComponent: () => import('./pages/components/view/view-demo.component').then(m => m.ViewDemoComponent) },
-
-  // ---- Forms ----
-  { path: 'forms/autocomplete',          loadComponent: () => import('./pages/forms/autocomplete/autocomplete-demo.component').then(m => m.AutocompleteDemoComponent) },
-  { path: 'forms/checkbox',              loadComponent: () => import('./pages/forms/checkbox/checkbox-demo.component').then(m => m.CheckboxDemoComponent) },
-  { path: 'forms/chip',                  loadComponent: () => import('./pages/forms/chip/chip-demo.component').then(m => m.ChipDemoComponent) },
-  { path: 'forms/chip-calendar',         loadComponent: () => import('./pages/forms/chip-calendar/chip-calendar-demo.component').then(m => m.ChipCalendarDemoComponent) },
-  { path: 'forms/date',                  loadComponent: () => import('./pages/forms/date/date-demo.component').then(m => m.DateDemoComponent) },
-  { path: 'forms/date-range',            loadComponent: () => import('./pages/forms/date-range/date-range-demo.component').then(m => m.DateRangeDemoComponent) },
-  { path: 'forms/datetime',              loadComponent: () => import('./pages/forms/datetime/datetime-demo.component').then(m => m.DatetimeDemoComponent) },
-  { path: 'forms/inline-text',           loadComponent: () => import('./pages/forms/inline-text/inline-text-demo.component').then(m => m.InlineTextDemoComponent) },
-  { path: 'forms/input',                 loadComponent: () => import('./pages/forms/input/input-demo.component').then(m => m.InputDemoComponent) },
-  { path: 'forms/input-color',           loadComponent: () => import('./pages/forms/input-color/input-color-demo.component').then(m => m.InputColorDemoComponent) },
-  { path: 'forms/input-number',          loadComponent: () => import('./pages/forms/input-number/input-number-demo.component').then(m => m.InputNumberDemoComponent) },
-  { path: 'forms/radio',                 loadComponent: () => import('./pages/forms/radio/radio-demo.component').then(m => m.RadioDemoComponent) },
-  { path: 'forms/select',                loadComponent: () => import('./pages/forms/select/select-demo.component').then(m => m.SelectDemoComponent) },
-  { path: 'forms/switch',                loadComponent: () => import('./pages/forms/switch/switch-demo.component').then(m => m.SwitchDemoComponent) },
-  { path: 'forms/textarea',              loadComponent: () => import('./pages/forms/textarea/textarea-demo.component').then(m => m.TextareaDemoComponent) },
-
-  // ---- Services ----
-  { path: 'services/confirm',            loadComponent: () => import('./pages/services/confirm/confirm-demo.component').then(m => m.ConfirmDemoComponent) },
-  { path: 'services/docx',               loadComponent: () => import('./pages/services/docx/docx-demo.component').then(m => m.DocxDemoComponent) },
-  { path: 'services/excel',              loadComponent: () => import('./pages/services/excel/excel-demo.component').then(m => m.ExcelDemoComponent) },
-  { path: 'services/loading',            loadComponent: () => import('./pages/services/loading/loading-demo.component').then(m => m.LoadingDemoComponent) },
-  { path: 'services/notify',             loadComponent: () => import('./pages/services/notify/notify-demo.component').then(m => m.NotifyDemoComponent) },
-  { path: 'services/storage',            loadComponent: () => import('./pages/services/storage/storage-demo.component').then(m => m.StorageDemoComponent) },
-
-  { path: '**', redirectTo: '' },
+  {
+    path: 'about',
+    title: `About | ${PACKAGE_TITLE}`,
+    loadComponent: () => import('./docs/pages/about/about.component').then((module) => module.AboutComponent),
+  },
+  {
+    path: 'not-found',
+    title: `Not found | ${PACKAGE_TITLE}`,
+    loadComponent: () => import('./docs/pages/not-found/docs-not-found.component').then((module) => module.DocsNotFoundComponent),
+  },
+  {
+    path: 'v/:version',
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        title: PACKAGE_TITLE,
+        loadComponent: () => import('./docs/pages/home/docs-home.component').then((module) => module.DocsHomeComponent),
+      },
+      {
+        path: 'changelog',
+        title: `Changelog | ${PACKAGE_TITLE}`,
+        loadComponent: () => import('./docs/pages/changelog/changelog.component').then((module) => module.ChangelogComponent),
+      },
+      {
+        path: ':category/:slug',
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          {
+            path: ':tab',
+            title: (route) => {
+              const page = findDocPage(route.paramMap.get('category') as DocCategory, route.paramMap.get('slug') ?? '');
+              const tab = route.paramMap.get('tab');
+              return page ? `${page.title}${tab ? ` · ${tab}` : ''} | ${PACKAGE_TITLE}` : `Not found | ${PACKAGE_TITLE}`;
+            },
+            loadComponent: () => import('./docs/pages/page/docs-page.component').then((module) => module.DocsPageComponent),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: ':category/:slug',
+    canActivate: [legacyDocsRedirectGuard],
+    loadComponent: () => import('./docs/pages/not-found/docs-not-found.component').then((module) => module.DocsNotFoundComponent),
+  },
+  {
+    path: '**',
+    title: `Not found | ${PACKAGE_TITLE}`,
+    loadComponent: () => import('./docs/pages/not-found/docs-not-found.component').then((module) => module.DocsNotFoundComponent),
+  },
 ];

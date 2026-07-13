@@ -10,7 +10,8 @@ interface Option { value: string; display: string; }
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdRadio],
   template: `
-    <demo-page title="Radio" description="sd-radio – chọn 1 giá trị trong nhóm. Hỗ trợ hiển thị hàng ngang/dọc và các trạng thái khoá.">
+    <demo-page #demoPage title="Radio" description="sd-radio – chọn 1 giá trị trong nhóm. Hỗ trợ hiển thị hàng ngang/dọc và các trạng thái khoá.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-hien-thi') {
       <demo-section heading="Hiển thị" [props]="[{ name: 'display', value: 'row / column' }]" note="display='row' (mặc định) và display='column' khi danh sách dài.">
         <div style="display:flex; flex-direction:column; gap:16px; width:100%">
           <sd-radio label="row" [items]="genders" valueField="value" displayField="display"
@@ -20,7 +21,9 @@ interface Option { value: string; display: string; }
             [(model)]="priority" [form]="form"></sd-radio>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Không chọn và bấm Kiểm tra để hiện lỗi.">
         <div style="display:flex; flex-direction:column; gap:12px; width:100%">
           <sd-radio label="required"
@@ -32,7 +35,9 @@ interface Option { value: string; display: string; }
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Đã có giá trị mặc định.">
         <div style="display:flex; gap:24px; flex-wrap:wrap; width:100%">
           <sd-radio style="flex:1" label="disabled" [items]="genders" valueField="value" displayField="display"
@@ -41,7 +46,9 @@ interface Option { value: string; display: string; }
             [(model)]="lockedB" [form]="form" viewed></sd-radio>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Radio vẫn chọn được; khi disabled thì hiện text tĩnh (viewed=true).">
         <div style="display:flex; gap:24px; flex-wrap:wrap; width:100%">
           <sd-radio style="flex:1" label="inline" [items]="genders" valueField="value" displayField="display"
@@ -50,6 +57,7 @@ interface Option { value: string; display: string; }
             [viewed]="'inline'" [(model)]="inlineChoice" [form]="form" disabled></sd-radio>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

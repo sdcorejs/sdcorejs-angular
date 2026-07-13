@@ -1,38 +1,117 @@
-import { ChangeDetectionStrategy, Component, computed, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { SIDEBAR_GROUPS, SidebarItem } from './sidebar.config';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { DocsVersionService } from '../docs/core/docs-version.service';
+import { DOC_NAV_GROUPS } from '../docs/core/documentation.registry';
+import { GlobalSearchComponent } from '../docs/shared/global-search.component';
+import { VersionSelectorComponent } from '../docs/shared/version-selector.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [MatIconModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [MatIconModule, RouterOutlet, RouterLink, RouterLinkActive, GlobalSearchComponent, VersionSelectorComponent],
   templateUrl: './shell.component.html',
-  styleUrls: ['./shell.component.scss'],
+  styleUrl: './shell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ShellComponent {
-  groups = SIDEBAR_GROUPS;
+  readonly #router = inject(Router);
+  readonly versions = inject(DocsVersionService);
+  readonly mobileNavOpen = signal(false);
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= 960);
+  readonly sidebarHidden = computed(() => this.isMobile() && !this.mobileNavOpen());
+  readonly collapsed = signal<ReadonlySet<string>>(new Set());
+  private readonly mobileMenu = viewChild<ElementRef<HTMLButtonElement>>('mobileMenu');
+  private readonly sidebar = viewChild<ElementRef<HTMLElement>>('sidebar');
+  private readonly content = viewChild<ElementRef<HTMLElement>>('content');
+  readonly currentVersion = computed(() => (this.versions.selectedVersion() ?? this.versions.latestVersion()) || 'latest');
+  readonly navGroups = computed(() =>
+    DOC_NAV_GROUPS.map((group) => ({
+      ...group,
+      collapsed: this.collapsed().has(group.category),
+      pages: group.pages.map((page) => ({
+        ...page,
+        commands: ['/v', this.currentVersion(), page.category, page.slug],
+      })),
+    })),
+  );
+  readonly changelogLink = computed(() => ['/v', this.currentVersion(), 'changelog']);
 
-  query = signal('');
-
-  collapsed = signal<Record<string, boolean>>({});
-
-  toggleGroup(title: string) {
-    this.collapsed.update((m) => ({ ...m, [title]: !m[title] }));
+  constructor() {
+    void this.versions.load().catch(() => undefined);
+    this.#router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe(() => {
+        this.mobileNavOpen.set(false);
+        queueMicrotask(() => {
+          const content = this.content()?.nativeElement;
+          const heading = content?.querySelector<HTMLElement>('h1');
+          if (heading) {
+            heading.tabIndex = -1;
+            heading.focus();
+          } else {
+            content?.focus();
+          }
+        });
+      });
   }
 
-  isCollapsed(title: string): boolean {
-    return !!this.collapsed()[title];
+  @HostListener('window:resize')
+  onResize(): void {
+    const mobile = window.innerWidth <= 960;
+    this.isMobile.set(mobile);
+    if (!mobile) this.mobileNavOpen.set(false);
   }
 
-  filteredGroups = computed(() => {
-    const q = this.query().trim().toLowerCase();
-    if (!q) return this.groups;
-    return this.groups
-      .map((g) => ({ ...g, items: g.items.filter((it) => it.label.toLowerCase().includes(q)) }))
-      .filter((g) => g.items.length > 0);
-  });
+  @HostListener('document:keydown', ['$event'])
+  onDocumentKeydown(event: KeyboardEvent): void {
+    if (!this.mobileNavOpen()) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      this.closeMobileNav(true);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const sidebar = this.sidebar()?.nativeElement;
+    const focusable = [...(sidebar?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? [])];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!sidebar?.contains(document.activeElement)) {
+      event.preventDefault();
+      (event.shiftKey ? last : first)?.focus();
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first?.focus();
+    }
+  }
 
-  trackItem = (_: number, it: SidebarItem) => it.path;
+  toggleGroup(category: string): void {
+    this.collapsed.update((current) => {
+      const next = new Set(current);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
+  }
+
+  toggleMobileNav(): void {
+    if (this.mobileNavOpen()) {
+      this.closeMobileNav(true);
+      return;
+    }
+    this.mobileNavOpen.set(true);
+    queueMicrotask(() => this.sidebar()?.nativeElement
+      .querySelector<HTMLElement>('a[href], button:not([disabled])')?.focus());
+  }
+
+  closeMobileNav(restoreFocus = false): void {
+    this.mobileNavOpen.set(false);
+    if (restoreFocus) queueMicrotask(() => this.mobileMenu()?.nativeElement.focus());
+  }
 }

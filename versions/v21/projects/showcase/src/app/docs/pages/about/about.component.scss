@@ -1,0 +1,115 @@
+// why: About content is editorial and needs a narrower readable column than live demos.
+.about {
+  max-width: var(--docs-content-max-width);
+  margin: 0 auto;
+  padding: 34px 28px 72px;
+
+  &__breadcrumb {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    color: var(--docs-text-muted);
+    font-size: 13px;
+  }
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    border: 1px solid var(--docs-border-color);
+    border-radius: var(--docs-radius-lg);
+    background: linear-gradient(135deg, var(--sd-primary-light, #e8f1ff), var(--docs-surface-raised));
+    padding: clamp(24px, 5vw, 48px);
+
+    img,
+    .about__avatar-placeholder {
+      width: 112px;
+      height: 112px;
+      flex: 0 0 112px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .about__avatar-placeholder {
+      display: grid;
+      place-items: center;
+      background: var(--sd-primary, #005cbb);
+      color: var(--sd-primary-contrast, white);
+      font-size: 34px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 4px 0;
+      font-size: clamp(32px, 6vw, 52px);
+    }
+  }
+
+  &__eyebrow,
+  &__handle,
+  &__location {
+    color: var(--docs-text-secondary);
+  }
+
+  &__handle,
+  &__title,
+  &__location {
+    margin: 4px 0;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 260px;
+    gap: 28px;
+    margin-top: 32px;
+
+    section,
+    aside {
+      border: 1px solid var(--docs-border-color);
+      border-radius: var(--docs-radius-md);
+      background: var(--docs-surface-raised);
+      padding: 24px;
+    }
+
+    p,
+    li {
+      color: var(--docs-text-secondary);
+      line-height: 1.7;
+    }
+
+    aside {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-self: start;
+    }
+  }
+
+  &__contribute {
+    margin-top: 28px;
+    border-radius: var(--docs-radius-md);
+    background: var(--docs-surface-muted);
+    padding: 24px;
+
+    p {
+      color: var(--docs-text-secondary);
+      line-height: 1.7;
+    }
+  }
+}
+
+@media (max-width: 760px) {
+  // why: Author details stack into one reading flow on narrow screens.
+  .about {
+    padding-inline: 18px;
+  }
+
+  .about__hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .about__grid {
+    grid-template-columns: 1fr;
+  }
+}

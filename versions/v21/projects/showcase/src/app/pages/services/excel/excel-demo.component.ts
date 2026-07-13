@@ -15,18 +15,24 @@ interface Employee {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
   template: `
-    <demo-page title="Excel" description="SdExcelService – export() / exportCSV() / generateTemplate() / upload() / parse(). Sử dụng exceljs nội bộ, tự kèm header có style.">
+    <demo-page #demoPage title="Excel" description="SdExcelService – export() / exportCSV() / generateTemplate() / upload() / parse(). Sử dụng exceljs nội bộ, tự kèm header có style.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xuat-file-xlsx') {
       <demo-section heading="Xuất file .xlsx" [props]="[{ name: 'export()', value: 'method' }]" note="export({ columns, items, fileName }) – sheet 'data' có header + dữ liệu.">
         <button mat-flat-button color="primary" (click)="onExport()">Tải nhanvien.xlsx</button>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xuat-file-csv') {
       <demo-section heading="Xuất file .csv" [props]="[{ name: 'exportCSV()', value: 'method' }]" note="exportCSV() – kèm BOM UTF-8 để Excel mở đúng dấu tiếng Việt.">
         <button mat-flat-button color="primary" (click)="onExportCsv()">Tải nhanvien.csv</button>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tai-template-trong') {
       <demo-section heading="Tải template trống" [props]="[{ name: 'generateTemplate()', value: 'method' }]" note="generateTemplate() – tạo file mẫu để người dùng nhập liệu (cột có required, mô tả).">
         <button mat-stroked-button (click)="onTemplate()">Tải template-nhanvien.xlsx</button>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -1,0 +1,97 @@
+// why: Published Markdown needs stable document rhythm independent of individual library demos.
+.docs-markdown {
+  color: var(--docs-text);
+  line-height: 1.7;
+
+  p,
+  ul,
+  ol,
+  blockquote {
+    margin: 0 0 16px;
+  }
+
+  h3,
+  h4 {
+    scroll-margin-top: calc(var(--docs-header-height) + 24px);
+    margin: 28px 0 12px;
+    line-height: 1.3;
+  }
+
+  :is(p, li, td, th) code {
+    border: 1px solid var(--docs-border-color);
+    border-radius: 5px;
+    background: var(--docs-surface-muted);
+    padding: 1px 5px;
+    font-size: 0.9em;
+  }
+
+  blockquote {
+    border-left: 4px solid var(--sd-primary, #005cbb);
+    background: var(--docs-surface-muted);
+    padding: 12px 16px;
+    color: var(--docs-text-secondary);
+  }
+}
+
+// why: Code copied from published docs needs a readable, responsive presentation.
+.docs-code {
+  overflow: hidden;
+  margin: 16px 0 24px;
+  border-radius: var(--docs-radius-sm);
+  background: var(--docs-code-surface);
+  color: var(--docs-code-text);
+
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgb(255 255 255 / 14%);
+    padding: 8px 12px;
+    color: #a7b4c7;
+    font-size: 12px;
+
+    button {
+      border: 0;
+      border-radius: 5px;
+      background: rgb(255 255 255 / 10%);
+      padding: 5px 9px;
+      color: inherit;
+      cursor: pointer;
+    }
+  }
+
+  pre {
+    max-width: 100%;
+    overflow: auto;
+    margin: 0;
+    padding: 18px;
+  }
+}
+
+// why: Wide API tables must remain usable without forcing horizontal page overflow.
+.docs-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  margin: 16px 0 24px;
+  border: 1px solid var(--docs-border-color);
+  border-radius: var(--docs-radius-sm);
+
+  table {
+    width: 100%;
+    min-width: 560px;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    border-bottom: 1px solid var(--docs-border-color);
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background: var(--docs-surface-muted);
+    font-weight: 600;
+  }
+}
