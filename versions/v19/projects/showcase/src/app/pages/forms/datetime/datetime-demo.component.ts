@@ -8,7 +8,8 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdDatetime],
   template: `
-    <demo-page title="Datetime" description="sd-datetime – chọn ngày + giờ trong cùng một control. Bind hai chiều với chuỗi 'YYYY-MM-DD HH:mm'.">
+    <demo-page #demoPage title="Datetime" description="sd-datetime – chọn ngày + giờ trong cùng một control. Bind hai chiều với chuỗi 'YYYY-MM-DD HH:mm'.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở popup picker để chọn ngày và giờ.">
         <div style="width: 340px; display:flex; flex-direction:column; gap:8px">
           <sd-datetime label="Thời điểm cuộc họp" helperText="Bao gồm ngày và giờ"
@@ -16,7 +17,9 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
           <div style="font-size:12px; color:#555">Giá trị: <b>{{ meeting() || '(trống)' }}</b></div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi.">
         <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
           <sd-datetime label="required"
@@ -27,19 +30,24 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Hai trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-datetime style="width: 260px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-datetime>
           <sd-datetime style="width: 260px" label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-datetime>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
         <div style="width: 300px; font-size:13px; color:#555">
           Hẹn lúc: <sd-datetime [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-datetime>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

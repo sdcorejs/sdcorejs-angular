@@ -1,97 +1,110 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { SdButton } from '@sdcorejs/angular/components/button';
-import { type SdIconFontSet } from '@sdcorejs/angular/modules/icon';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+import { ButtonColorsExampleComponent } from './examples/button-colors.example';
+import { ButtonIconOnlyExampleComponent } from './examples/button-icon-only.example';
+import { ButtonIconSetExampleComponent } from './examples/button-icon-set.example';
+import { ButtonSecondaryBlackExampleComponent } from './examples/button-secondary-black.example';
+import { ButtonSizesExampleComponent } from './examples/button-sizes.example';
+import { ButtonStatesExampleComponent } from './examples/button-states.example';
+import { ButtonVariantsExampleComponent } from './examples/button-variants.example';
 
 @Component({
   selector: 'app-button-demo',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdButton],
-  template: `
-    <demo-page
-      title="Button"
-      description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / text), 3 kích thước, hỗ trợ icon và trạng thái loading.">
-      <demo-section heading="Biến thể" [props]="[{ name: 'type', value: 'fill / light / outline / text' }]">
-        <sd-button type="fill" color="primary" title="fill"></sd-button>
-        <sd-button type="light" color="primary" title="light"></sd-button>
-        <sd-button type="outline" color="primary" title="outline"></sd-button>
-        <sd-button type="text" color="primary" title="text"></sd-button>
+  imports: [
+    DemoPageComponent,
+    DemoSectionComponent,
+    ButtonVariantsExampleComponent,
+    ButtonColorsExampleComponent,
+    ButtonSecondaryBlackExampleComponent,
+    ButtonSizesExampleComponent,
+    ButtonIconOnlyExampleComponent,
+    ButtonIconSetExampleComponent,
+    ButtonStatesExampleComponent,
+  ],
+  template: `<demo-page
+    #demoPage
+    title="Button"
+    description="Nút thao tác chuẩn: 4 biến thể (fill / light / outline / text), 3 kích thước, hỗ trợ icon và trạng thái loading.">
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bien-the') {
+      <demo-section
+        heading="Biến thể"
+        data-example-typescript="./examples/button-variants.example.ts"
+        data-example-template="./examples/button-variants.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[{ name: 'type', value: 'fill / light / outline / text' }]">
+        <app-button-variants-example></app-button-variants-example>
       </demo-section>
-
-      <demo-section heading="Bảng màu" [props]="[{ name: 'color', value: 'primary / secondary / black / success / info / warning / error' }]">
-        <sd-button type="fill" color="primary" title="primary"></sd-button>
-        <sd-button type="fill" color="secondary" title="secondary"></sd-button>
-        <sd-button type="fill" color="black" title="black"></sd-button>
-        <sd-button type="fill" color="success" title="success"></sd-button>
-        <sd-button type="fill" color="info" title="info"></sd-button>
-        <sd-button type="fill" color="warning" title="warning"></sd-button>
-        <sd-button type="fill" color="error" title="error"></sd-button>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bang-mau') {
+      <demo-section
+        heading="Bảng màu"
+        data-example-typescript="./examples/button-colors.example.ts"
+        data-example-template="./examples/button-colors.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[{ name: 'color', value: 'primary / secondary / black / success / info / warning / error' }]">
+        <app-button-colors-example></app-button-colors-example>
       </demo-section>
-
-      <demo-section heading="Secondary vs black" [props]="[{ name: 'color', value: 'secondary / black' }]">
-        <sd-button type="fill" color="secondary" title="secondary fill"></sd-button>
-        <sd-button type="fill" color="black" title="black fill"></sd-button>
-        <sd-button type="light" color="secondary" title="secondary light"></sd-button>
-        <sd-button type="light" color="black" title="black light"></sd-button>
-        <sd-button type="outline" color="secondary" title="secondary outline"></sd-button>
-        <sd-button type="outline" color="black" title="black outline"></sd-button>
-        <sd-button type="text" color="secondary" title="secondary text"></sd-button>
-        <sd-button type="text" color="black" title="black text"></sd-button>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-secondary-vs-black') {
+      <demo-section
+        heading="Secondary vs black"
+        data-example-typescript="./examples/button-secondary-black.example.ts"
+        data-example-template="./examples/button-secondary-black.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[{ name: 'color', value: 'secondary / black' }]">
+        <app-button-secondary-black-example></app-button-secondary-black-example>
       </demo-section>
-
-      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm / md / lg' }]">
-        <sd-button type="fill" color="primary" size="sm" title="sm" prefixIcon="add"></sd-button>
-        <sd-button type="fill" color="primary" size="md" title="md" prefixIcon="add"></sd-button>
-        <sd-button type="fill" color="primary" size="lg" title="lg" prefixIcon="add"></sd-button>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
+      <demo-section
+        heading="Kích thước"
+        data-example-typescript="./examples/button-sizes.example.ts"
+        data-example-template="./examples/button-sizes.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[{ name: 'size', value: 'sm / md / lg' }]">
+        <app-button-sizes-example></app-button-sizes-example>
       </demo-section>
-
-      <demo-section heading="Chỉ icon" [props]="[{ name: 'prefixIcon', value: 'name' }]">
-        <sd-button type="light" color="primary" prefixIcon="edit" tooltip="edit"></sd-button>
-        <sd-button type="light" color="error" prefixIcon="delete" tooltip="delete"></sd-button>
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-icon') {
+      <demo-section
+        heading="Chỉ icon"
+        data-example-typescript="./examples/button-icon-only.example.ts"
+        data-example-template="./examples/button-icon-only.example.html"
+        data-example-style="./examples/button-example.scss"
+        [props]="[{ name: 'prefixIcon', value: 'name' }]">
+        <app-button-icon-only-example></app-button-icon-only-example>
       </demo-section>
-
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-toggle-icon-set-bang-alias') {
       <demo-section
         heading="Toggle icon set bằng alias"
+        data-example-typescript="./examples/button-icon-set.example.ts"
+        data-example-template="./examples/button-icon-set.example.html"
+        data-example-style="./examples/button-example.scss"
         [props]="[
-          { name: 'fontSet', value: fontSet() },
+          { name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' },
           { name: 'alias', value: 'add -> plus | delete -> trash-2 | visibility -> eye | more_vert -> ellipsis-vertical' },
         ]"
         note="Các button bên dưới vẫn truyền icon name theo Material; khi chuyển sang Lucide, SdIcon tự map qua alias tương ứng.">
-        <sd-button type="fill" color="primary" title="Material filled" (click)="useFontSet('material-icons')"></sd-button>
-        <sd-button type="fill" color="secondary" title="Material outlined" (click)="useFontSet('material-icons-outlined')"></sd-button>
-        <sd-button type="fill" color="info" title="Lucide" (click)="useFontSet('lucide')"></sd-button>
-        <sd-button type="light" color="primary" title="Create" prefixIcon="add" [fontSet]="fontSet()"></sd-button>
-        <sd-button type="light" color="primary" title="View" prefixIcon="visibility" [fontSet]="fontSet()"></sd-button>
-        <sd-button type="light" color="error" title="Delete" prefixIcon="delete" [fontSet]="fontSet()"></sd-button>
-        <sd-button type="outline" color="secondary" title="More" suffixIcon="more_vert" [fontSet]="fontSet()"></sd-button>
+        <app-button-icon-set-example></app-button-icon-set-example>
       </demo-section>
-
+    }
+    @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section
         heading="Trạng thái"
+        data-example-typescript="./examples/button-states.example.ts"
+        data-example-template="./examples/button-states.example.html"
+        data-example-style="./examples/button-example.scss"
         [props]="[
           { name: 'loading', value: 'true' },
           { name: 'disabled', value: 'true' },
+          { name: 'block', value: 'true' },
         ]">
-        <sd-button type="fill" color="primary" title="loading" prefixIcon="send" [loading]="submitting()" (click)="onSubmit()"> </sd-button>
-        <sd-button type="fill" color="primary" title="disabled" [disabled]="true"></sd-button>
-        <div style="width: 240px;">
-          <sd-button type="fill" color="primary" title="block" [block]="true"></sd-button>
-        </div>
+        <app-button-states-example></app-button-states-example>
       </demo-section>
-    </demo-page>
-  `,
+    }
+  </demo-page>`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ButtonDemoComponent {
-  readonly submitting = signal(false);
-  readonly fontSet = signal<SdIconFontSet>('material-icons-outlined');
-
-  useFontSet(fontSet: SdIconFontSet) {
-    this.fontSet.set(fontSet);
-  }
-
-  onSubmit() {
-    this.submitting.set(true);
-    setTimeout(() => this.submitting.set(false), 1500);
-  }
-}
+export class ButtonDemoComponent {}

@@ -13,7 +13,8 @@ interface IconDemoItem {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdButton, SdIcon],
   template: `
-    <demo-page title="Icon" description="SdIcon is the Core UI icon facade for Material filled, Material outlined, and Lucide SVG icons.">
+    <demo-page #demoPage title="Icon" description="SdIcon is the Core UI icon facade for Material filled, Material outlined, and Lucide SVG icons.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-material-filled') {
       <demo-section heading="Material filled" [props]="[{ name: 'set', value: 'material-icons' }]">
         @for (icon of materialIcons; track icon.name) {
           <span class="icon-demo-item">
@@ -22,7 +23,9 @@ interface IconDemoItem {
           </span>
         }
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-material-outlined') {
       <demo-section heading="Material outlined" [props]="[{ name: 'set', value: 'material-icons-outlined' }]">
         @for (icon of materialIcons; track icon.name) {
           <span class="icon-demo-item">
@@ -31,7 +34,9 @@ interface IconDemoItem {
           </span>
         }
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lucide-explicit') {
       <demo-section heading="Lucide explicit" [props]="[{ name: 'set', value: 'lucide' }]">
         @for (icon of lucideIcons; track icon.name) {
           <span class="icon-demo-item">
@@ -40,7 +45,9 @@ interface IconDemoItem {
           </span>
         }
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sizes') {
       <demo-section heading="Sizes" [props]="[{ name: 'size', value: 'sm / md / lg / CSS string' }]">
         @for (size of sizes; track size) {
           <span class="icon-demo-size">
@@ -49,7 +56,9 @@ interface IconDemoItem {
           </span>
         }
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-button-integration') {
       <demo-section
         heading="Button integration"
         [props]="[{ name: 'fontSet', value: 'material-icons / material-icons-outlined / lucide' }]">
@@ -58,6 +67,7 @@ interface IconDemoItem {
         <sd-button type="outline" color="error" title="Lucide" prefixIcon="delete" fontSet="lucide"></sd-button>
         <sd-button type="text" color="secondary" title="More" suffixIcon="more_vert" fontSet="lucide"></sd-button>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [

@@ -152,22 +152,27 @@ const TASKS: Task[] = [
     SdButton,
   ],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Table"
       description="Bảng dữ liệu mặc định của SDCoreJS — phân trang, sắp xếp, lọc, chọn nhiều, lệnh dòng, export Excel/CSV. Hỗ trợ chế độ local và server.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-full-demo-local') {
       <demo-section heading="Full demo (local)" [props]="[{ name: 'selector', value: 'true' }, { name: 'command', value: 'true' }, { name: 'export', value: 'true' }, { name: 'index', value: 'true' }, { name: 'filler', value: 'true' }, { name: 'paginate', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="employeeOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-toi-gian') {
       <demo-section heading="Tối giản" [props]="[{ name: 'paginate', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="productOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-filter-onchange') {
       <demo-section
         heading="Filter onChange"
         [props]="[
@@ -183,13 +188,17 @@ const TASKS: Task[] = [
           <sd-table [option]="filterOnChangeOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-mot-dong') {
       <demo-section heading="Chọn một dòng" [props]="[{ name: 'selector.single', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="singleSelectOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tree-rows-search-o-cap-con-go-ten-don-vi-con-de-loc') {
       <demo-section
         heading="Tree rows + search ở cấp con (gõ tên đơn vị con để lọc)"
         [props]="[
@@ -203,7 +212,9 @@ const TASKS: Task[] = [
           <sd-table [option]="treeOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tree-lazy-nap-con-khi-bung-co-loading') {
       <demo-section
         heading="Tree lazy — nạp con khi bung (có loading)"
         [props]="[
@@ -216,7 +227,9 @@ const TASKS: Task[] = [
           <sd-table [option]="treeLazyOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tree-khong-cot-stt-chevron-nam-trong-cot-dau-don-vi') {
       <demo-section
         heading="Tree KHÔNG cột STT — chevron nằm trong cột đầu (Đơn vị)"
         [props]="[
@@ -228,7 +241,9 @@ const TASKS: Task[] = [
           <sd-table [option]="treeNoIndexOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tree-selector-command-chinh-indent') {
       <demo-section
         heading="Tree + selector + command + chỉnh indent"
         [props]="[
@@ -260,7 +275,9 @@ const TASKS: Task[] = [
           <sd-table [option]="treeCommandOption()"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhom-dong') {
       <demo-section heading="Nhóm dòng" [props]="[{ name: 'group', value: 'true' }, { name: 'sdTableGroupDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="groupOption">
@@ -273,7 +290,9 @@ const TASKS: Task[] = [
           </sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhom-don-hang-theo-khach') {
       <demo-section heading="Nhóm đơn hàng theo khách" [props]="[{ name: 'group', value: 'true' }, { name: 'sdTableGroupDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="customerOrderOption">
@@ -290,7 +309,9 @@ const TASKS: Task[] = [
           </sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dong-mo-rong') {
       <demo-section heading="Dòng mở rộng" [props]="[{ name: 'expand', value: 'true' }, { name: 'sdTableExpandDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="expandOption">
@@ -306,13 +327,17 @@ const TASKS: Task[] = [
           </sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lenh-dong-phai') {
       <demo-section heading="Lệnh dòng phải" [props]="[{ name: 'command.align', value: 'right' }]">
         <div class="table-box">
           <sd-table [option]="commandRightOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lenh-dong-co-menu-con') {
       <demo-section
         heading="Lệnh dòng có menu con"
         [props]="[
@@ -324,13 +349,17 @@ const TASKS: Task[] = [
           <sd-table [option]="commandChildrenOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-keo-tha-doi-thu-tu') {
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cell-template-tuy-chinh') {
       <demo-section heading="Cell template tùy chỉnh" [props]="[{ name: 'sdTableCellDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="customCellOption">
@@ -349,7 +378,9 @@ const TASKS: Task[] = [
           </sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-footer-tong-hop') {
       <demo-section heading="Footer tổng hợp" [props]="[{ name: 'sdTableFooterDef', value: 'template' }]">
         <div class="table-box">
           <sd-table [option]="footerOption">
@@ -362,24 +393,31 @@ const TASKS: Task[] = [
           </sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-khong-co-filler') {
       <demo-section heading="Không có filler" [props]="[{ name: 'filler', value: 'false' }]">
         <div class="table-box">
           <sd-table [option]="noFillerOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-server-side') {
       <demo-section heading="Server-side" [props]="[{ name: 'type', value: 'server' }]">
         <div class="table-box">
           <sd-table [option]="serverOption"></sd-table>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-giu-selection-xuyen-trang') {
       <demo-section heading="Giữ selection xuyên trang" [props]="[{ name: 'selector.preserveSelection', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="preserveSelectionOption"></sd-table>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

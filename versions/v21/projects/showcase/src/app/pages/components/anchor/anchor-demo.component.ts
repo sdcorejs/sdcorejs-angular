@@ -7,10 +7,11 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdAnchor, SdAnchorItem],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Anchor"
       description="Điều hướng scroll-spy dạng cột bên — TOC tự highlight khi cuộn qua từng section.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-anchor-mac-dinh') {
       <demo-section heading="Anchor mặc định" [props]="[{ name: 'sidebarWidth', value: 'px' }]">
         <div class="anchor-wrap">
           <sd-anchor sidebarWidth="200px">
@@ -41,7 +42,9 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
           </sd-anchor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mau-va-cat-ngan-chu') {
       <demo-section heading="Màu và cắt ngắn chữ" [props]="[{ name: 'color', value: 'success' }, { name: 'ellipsis', value: 'true' }]">
         <div class="anchor-wrap">
           <sd-anchor color="success" ellipsis sidebarWidth="180px">
@@ -60,6 +63,7 @@ import { SdAnchor, SdAnchorItem } from '@sdcorejs/angular/components/anchor';
           </sd-anchor>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

@@ -9,10 +9,11 @@ import { Filter } from '@sdcorejs/utils/models';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdQueryBuilder, SdCodeEditor],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Query Builder"
       description="Bộ dựng truy vấn dạng cây — gom các điều kiện 'trường - toán tử - giá trị' theo nhóm AND/OR lồng nhau. Toán tử suy ra theo type của trường; output là Filter của @sdcorejs/utils (cây FilterAndOr lồng), giống query-bar. Các panel JSON bên dưới dùng <sd-code-editor language='json' viewed> để xem Filter realtime.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-edit-view') {
       <demo-section heading="Edit / View" [props]="[{ name: 'fields', value: 'SdQueryBuilderField[]' }, { name: 'value', value: 'Filter | null' }, { name: 'mode', value: 'edit | view' }]">
         <div class="qb-demo-toolbar">
           <button type="button" class="qb-demo-btn" [class.active]="mode() === 'edit'" (click)="mode.set('edit')">Edit</button>
@@ -28,7 +29,9 @@ import { Filter } from '@sdcorejs/utils/models';
           <sd-code-editor language="json" [model]="value()" viewed maxHeight="280px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-moi-loai-truong-value-editor-theo-type') {
       <demo-section
         heading="Mọi loại trường (value editor theo type)"
         note="Mỗi type render một value editor riêng: string → ô text, number → ô số (+ BETWEEN hai đầu), boolean → select Có/Không, values → multi-select, date → date picker, datetime → datetime picker."
@@ -41,7 +44,9 @@ import { Filter } from '@sdcorejs/utils/models';
           <sd-code-editor language="json" [model]="allTypesValue()" viewed maxHeight="320px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ngay-tuong-doi') {
       <demo-section
         heading="Ngày tương đối"
         note="Với date/datetime + toán tử đơn (=, !=, >, <), chọn 'Hôm nay' hoặc 'Tương đối' (N ngày/tuần/tháng trước·tới). Emit ra Filter.data dạng { rel, unit, amount, direction }. BETWEEN không có chế độ tương đối."
@@ -54,7 +59,9 @@ import { Filter } from '@sdcorejs/utils/models';
           <sd-code-editor language="json" [model]="relativeValue()" viewed maxHeight="280px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-so-sanh-giua-cac-truong') {
       <demo-section
         heading="So sánh giữa các trường"
         note="Bật comparisonMode='value-or-field' để mỗi rule có thể chọn nhập giá trị hoặc so sánh với một field khác cùng type. Field bên phải emit ra Filter dạng { dataType: 'field', data: '<fieldKey>' }."
@@ -71,7 +78,9 @@ import { Filter } from '@sdcorejs/utils/models';
           <sd-code-editor language="json" [model]="fieldComparisonValue()" viewed maxHeight="280px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhom-and-or-long-nhau') {
       <demo-section
         heading="Nhóm AND/OR lồng nhau"
         note="Bấm + → Nhóm để tạo nhóm con. Nhóm con nhiều điều kiện được bọc ngoặc ( … ) khi xem ở chế độ View."
@@ -88,7 +97,9 @@ import { Filter } from '@sdcorejs/utils/models';
           <sd-code-editor language="json" [model]="nestedValue()" viewed maxHeight="320px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bat-dau-trong-dung-tu-dau') {
       <demo-section
         heading="Bắt đầu trống (dựng từ đầu)"
         note="value khởi tạo null. Bấm + → Điều kiện để thêm rule đầu tiên; chọn trường để hiện toán tử + value editor. Panel JSON cập nhật realtime."
@@ -101,12 +112,15 @@ import { Filter } from '@sdcorejs/utils/models';
           <sd-code-editor language="json" [model]="emptyValue()" viewed maxHeight="240px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-disabled') {
       <demo-section heading="Disabled" [props]="[{ name: 'disabled', value: 'true' }]">
         <div class="builder-box">
           <sd-query-builder [fields]="fields" [value]="seeded" disabled></sd-query-builder>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

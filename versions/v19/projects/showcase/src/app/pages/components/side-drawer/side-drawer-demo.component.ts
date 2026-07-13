@@ -10,10 +10,11 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdSection, SdSectionItem, SdSideDrawer],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Side Drawer"
       description="Right-side panel cho form/detail/filter. Header va footer dung slot sdHeaderLeft/sdHeaderRight/sdFooterLeft/sdFooterRight; content padding mac dinh bang 0.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-create-drawer-split-footer') {
       <demo-section heading="Create drawer + split footer" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
         <sd-button type="fill" color="primary" prefixIcon="add" title="Create employee" (click)="createDrawer.open()"></sd-button>
 
@@ -31,7 +32,9 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           <sd-button sdFooterRight type="fill" color="primary" title="Save" prefixIcon="save" (click)="createDrawer.close()"></sd-button>
         </sd-side-drawer>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-header-left-right') {
       <demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
         <sd-button type="outline" color="primary" prefixIcon="visibility" title="Open profile" (click)="profileDrawer.open()"></sd-button>
 
@@ -59,7 +62,9 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="profileDrawer.close()"></sd-button>
         </sd-side-drawer>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-filter-drawer') {
       <demo-section heading="Filter drawer" [props]="[{ name: 'disableBackdropClose', value: false }, { name: 'footer', value: 'left/right' }]">
         <sd-button type="outline" color="primary" prefixIcon="filter_list" title="Open filters" (click)="filterDrawer.open()"></sd-button>
 
@@ -78,7 +83,9 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           <sd-button sdFooterRight type="fill" color="primary" title="Apply" (click)="filterDrawer.close()"></sd-button>
         </sd-side-drawer>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-long-scroll-content') {
       <demo-section heading="Long scroll content" [props]="[{ name: 'content', value: 'overflow auto' }, { name: 'width', value: '520px' }]">
         <sd-button type="light" color="primary" prefixIcon="list" title="Open checklist" (click)="checklistDrawer.open()"></sd-button>
 
@@ -98,7 +105,9 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           <sd-button sdFooterRight type="fill" color="primary" title="Submit" (click)="checklistDrawer.close()"></sd-button>
         </sd-side-drawer>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-read-only-drawer-without-footer') {
       <demo-section heading="Read-only drawer without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
         <sd-button type="outline" color="primary" prefixIcon="description" title="Open detail" (click)="readonlyDrawer.open()"></sd-button>
 
@@ -113,7 +122,9 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           </div>
         </sd-side-drawer>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-locked-drawer-with-explicit-actions') {
       <demo-section heading="Locked drawer with explicit actions" [props]="[{ name: 'disableBackdropClose', value: true }, { name: 'hideClose', value: true }]">
         <sd-button type="fill" color="primary" prefixIcon="lock" title="Open locked drawer" (click)="lockedDrawer.open()"></sd-button>
 
@@ -126,6 +137,7 @@ import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
           <sd-button sdFooterRight type="fill" color="primary" title="Approve" (click)="lockedDrawer.close()"></sd-button>
         </sd-side-drawer>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

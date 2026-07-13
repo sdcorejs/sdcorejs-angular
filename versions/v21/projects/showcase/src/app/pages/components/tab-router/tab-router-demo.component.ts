@@ -12,10 +12,11 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdBadge],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Tab Router"
       description="Shell router dạng tab kiểu trình duyệt — mỗi URL được mở thành một tab, giữ nguyên state khi chuyển qua lại.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-preview-dai-tab') {
       <demo-section heading="Preview dải tab" [props]="[{ name: 'routes', value: '[…]' }]">
         <div class="strip">
           <sd-badge type="tag" primary icon="dashboard" title="Trang chủ"></sd-badge>
@@ -29,7 +30,9 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
           tab giữ state (form, scroll, request) khi user chuyển sang tab khác và quay lại.
         </p>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tich-hop-app-shell') {
       <demo-section heading="Tích hợp app shell" [props]="[{ name: '@SdTabComponent', value: 'template' }]">
         <div class="code">
           <pre>{{ snippet1 }}</pre>
@@ -39,7 +42,9 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
           (name, icon, color) cho pill. Outlet sẽ tự dựng tab khi route được activate.
         </p>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-replacetab-beforeclose') {
       <demo-section heading="replaceTab + beforeClose" [props]="[{ name: 'replaceTab', value: 'fn' }, { name: 'beforeClose', value: 'fn' }]">
         <div class="code">
           <pre>{{ snippet2 }}</pre>
@@ -49,6 +54,7 @@ import { SdBadge } from '@sdcorejs/angular/components/badge';
           <code>tab.beforeClose</code> để xác nhận trước khi đóng (vd: cảnh báo unsaved changes).
         </p>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

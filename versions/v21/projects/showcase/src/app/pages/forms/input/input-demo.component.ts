@@ -8,13 +8,16 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdInput],
   template: `
-    <demo-page title="Input" description="sd-input – ô nhập liệu một dòng. Hỗ trợ helper text, kiểu (text/number/password/email), trạng thái disabled / readonly / viewed và validator chuẩn.">
+    <demo-page #demoPage title="Input" description="sd-input – ô nhập liệu một dòng. Hỗ trợ helper text, kiểu (text/number/password/email), trạng thái disabled / readonly / viewed và validator chuẩn.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
         <div style="width: 320px">
           <sd-input label="Họ và tên" placeholder="Nhập họ tên..." helperText="Tên đầy đủ theo CMND" [(model)]="basic" [form]="form"></sd-input>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }, { name: 'type', value: 'email' }, { name: 'minlength', value: '6' }]" note="Bấm Kiểm tra để hiện lỗi inline.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-input label="required + type=email" placeholder="vd: a@b.com" type="email" [(model)]="email" [form]="formValid" required></sd-input>
@@ -25,7 +28,9 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cac-trang-thai-bao-loi-inline') {
       <demo-section
         heading="Các trạng thái báo lỗi (inline)"
         [props]="[{ name: 'required', value: 'true' }, { name: 'minlength', value: '6' }, { name: 'pattern', value: 'regex' }, { name: '[validator]', value: 'fn' }, { name: 'inlineError', value: 'text' }]"
@@ -42,7 +47,9 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bao-loi-dang-icon-hideinlineerror') {
       <demo-section
         heading="Báo lỗi dạng icon (hideInlineError)"
         [props]="[{ name: 'hideInlineError', value: 'true' }, { name: '[validator]', value: 'fn' }]"
@@ -57,7 +64,9 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Ba trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-input style="width: 220px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input>
@@ -65,18 +74,23 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
           <sd-input style="width: 220px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
       <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
         <div style="width: 320px">
           <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
         <div style="width: 260px; font-size:13px; color:#555">
           Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

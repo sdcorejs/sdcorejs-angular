@@ -1,0 +1,83 @@
+import { DOC_CATEGORIES } from './documentation.models';
+import { DOC_NAV_GROUPS, DOC_PAGES, findDocPage, getDocPagesByCategory } from './documentation.registry';
+import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated';
+
+const EXPECTED_CATEGORY_COUNTS = {
+  guides: 3,
+  components: 30,
+  forms: 16,
+  directives: 6,
+  services: 9,
+  'modules-integrations': 12,
+  'pipes-utilities': 9,
+} as const;
+
+describe('documentation registry', () => {
+  it('exposes every latest published document exactly once in the seven-category taxonomy', () => {
+    const publishedIds = DOC_PAGES.map(page => page.publishedDocId);
+
+    expect(DOC_PAGES).toHaveSize(85);
+    expect(publishedIds.every(id => id !== null)).toBeTrue();
+    expect(new Set(publishedIds).size).toBe(85);
+    expect(DOC_CATEGORIES).toHaveSize(7);
+    for (const category of DOC_CATEGORIES) {
+      expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
+    }
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(253);
+  });
+
+  it('uses unique stable page ids and category/slug pairs', () => {
+    const ids = DOC_PAGES.map(page => page.id);
+    const categorySlugs = DOC_PAGES.map(page => `${page.category}/${page.slug}`);
+
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(categorySlugs).size).toBe(categorySlugs.length);
+  });
+
+  it('keeps the visible tab order consistent', () => {
+    for (const page of DOC_PAGES) {
+      expect(page.tabs.map(tab => tab.label)).toEqual(['Overview', 'Styling', 'API', 'Examples']);
+      expect(page.tabs.map(tab => tab.id)).toEqual(['overview', 'styling', 'api', 'examples']);
+    }
+  });
+
+  it('retains every existing demo section as optional live metadata on its published page', () => {
+    const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
+
+    expect(new Set(exampleIds).size).toBe(exampleIds.length);
+    expect(exampleIds).toHaveSize(253);
+    for (const page of DOC_PAGES) {
+      expect(page.examples).toHaveSize(page.demoSectionCount);
+      for (const example of page.examples) {
+        expect(example.id.startsWith(`${page.id}-example-`)).toBeTrue();
+        expect(example.sectionId?.startsWith('example-')).toBeTrue();
+        expect(SHOWCASE_EXAMPLE_SOURCES[example.sourceKey]).toBeDefined();
+        expect(typeof example.loadComponent).toBe('function');
+      }
+    }
+  });
+
+  it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 30, 16, 6, 9, 12, 9]);
+    expect(findDocPage('components', 'button')?.title).toBe('Button');
+    expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
+    expect(findDocPage('modules-integrations', 'generic')?.demoSectionCount).toBe(1);
+    expect(findDocPage('modules-integrations', 'icon')?.demoSectionCount).toBe(7);
+    expect(findDocPage('components', 'form-generic')?.slug).toBe('generic');
+    expect(findDocPage('components', 'icon-configuration')?.slug).toBe('icon');
+    expect(findDocPage('services', 'missing')).toBeUndefined();
+  });
+
+  it('preserves authored example order and interaction-gates resource-intensive previews', () => {
+    expect(
+      findDocPage('components', 'button')
+        ?.examples.slice(0, 4)
+        .map(example => example.title)
+    ).toEqual(['Biến thể', 'Bảng màu', 'Secondary vs black', 'Kích thước']);
+    for (const slug of ['editor', 'upload-file']) {
+      expect(findDocPage('components', slug)?.examples.every(example => example.activation === 'interaction')).toBeTrue();
+    }
+    expect(findDocPage('modules-integrations', 'generic')?.examples.every(example => example.activation === 'interaction')).toBeTrue();
+    expect(findDocPage('components', 'button')?.examples.every(example => example.activation === 'viewport')).toBeTrue();
+  });
+});

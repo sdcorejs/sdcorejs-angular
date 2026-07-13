@@ -312,9 +312,10 @@ const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdFormBuilder, SdFormRender, SdButton],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Form Generic"
       description="Dynamic form builder and renderer with schema-safe drag/drop, group detail editing, query-builder conditions, and runtime preview.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-builder-render') {
       <demo-section heading="Builder + Render" [props]="[{ name: 'formGeneric', value: 'SdFormGeneric' }]">
         <div class="row-actions">
           <sd-button type="outline" color="primary" title="Đặt lại" prefixIcon="restart_alt" (click)="reset()"></sd-button>
@@ -342,6 +343,7 @@ const DRAG_DROP_POPUP_SEED: SdFormGeneric = {
           <pre class="json">{{ output() }}</pre>
         }
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [

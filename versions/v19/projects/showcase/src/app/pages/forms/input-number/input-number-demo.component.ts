@@ -8,14 +8,17 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdInputNumber],
   template: `
-    <demo-page title="Input Number" description="sd-input-number – nhập số có format ngăn cách hàng nghìn, hỗ trợ min/max, prefix/suffix và các trạng thái khoá.">
+    <demo-page #demoPage title="Input Number" description="sd-input-number – nhập số có format ngăn cách hàng nghìn, hỗ trợ min/max, prefix/suffix và các trạng thái khoá.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Tự động format khi gõ.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-input-number label="Số lượng" placeholder="Nhập số..." [(model)]="qty" [form]="form"></sd-input-number>
           <div style="font-size:12px; color:#555">Giá trị hiện tại: <b>{{ qty() ?? '(trống)' }}</b></div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '10' }, { name: 'max', value: '100' }]" note="min=10, max=100. Bấm Kiểm tra để hiện lỗi.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-input-number label="required + min=10 + max=100" [(model)]="age" [form]="formValid" required [min]="10" [max]="100"></sd-input-number>
@@ -25,7 +28,9 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cac-trang-thai-bao-loi-inline') {
       <demo-section
         heading="Các trạng thái báo lỗi (inline)"
         [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '10' }, { name: 'max', value: '100' }, { name: '[validator]', value: 'fn' }, { name: 'inlineError', value: 'text' }]"
@@ -42,7 +47,9 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bao-loi-dang-icon-hideinlineerror') {
       <demo-section
         heading="Báo lỗi dạng icon (hideInlineError)"
         [props]="[{ name: 'hideInlineError', value: 'true' }, { name: '[validator]', value: 'fn' }]"
@@ -57,7 +64,9 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Ba trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-input-number style="width: 200px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input-number>
@@ -65,12 +74,15 @@ import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
           <sd-input-number style="width: 200px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input-number>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Input số trong suốt nhìn như text; focus để sửa, blur format lại (vd 12.345). Hover đậm nền.">
         <div style="width: 240px; font-size:13px; color:#555">
           Số lượng: <sd-input-number [viewed]="'inline'" [(model)]="lockedC" [form]="form"></sd-input-number>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

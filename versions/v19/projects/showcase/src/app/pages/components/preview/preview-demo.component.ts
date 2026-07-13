@@ -7,27 +7,33 @@ import { SdPreviewImage, SdPreviewPdf } from '@sdcorejs/angular/components/previ
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdPreviewImage, SdPreviewPdf],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Preview"
       description="Bộ xem ảnh và PDF dạng lightbox — tự co theo container, hỗ trợ zoom / rotate / fullscreen / tải xuống. Có thể nhúng inline, trong sd-modal hoặc trong sd-side-drawer.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thu-vien-anh') {
       <demo-section heading="Thư viện ảnh" [props]="[{ name: 'items', value: '[…]' }]">
         <div class="preview-box">
           <sd-preview-image [items]="images" [startIndex]="0"></sd-preview-image>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-anh-don') {
       <demo-section heading="Ảnh đơn" [props]="[{ name: 'thumbnailPosition', value: 'none' }]">
         <div class="preview-box">
           <sd-preview-image [items]="[singleImage]" thumbnailPosition="none"></sd-preview-image>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xem-pdf') {
       <demo-section heading="Xem PDF" [props]="[{ name: 'source', value: 'url' }, { name: 'sidebar', value: 'thumbnails' }]">
         <div class="preview-box">
           <sd-preview-pdf [source]="pdfUrl()" sidebar="thumbnails"></sd-preview-pdf>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

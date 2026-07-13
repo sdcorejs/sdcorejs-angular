@@ -8,7 +8,8 @@ import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdChipCalendar],
   template: `
-    <demo-page title="Chip Calendar" description="sd-chip-calendar – chọn nhiều ngày dưới dạng chip. Mở lịch để pick, bấm X để xoá ngày.">
+    <demo-page #demoPage title="Chip Calendar" description="sd-chip-calendar – chọn nhiều ngày dưới dạng chip. Mở lịch để pick, bấm X để xoá ngày.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lien-ket-hai-chieu') {
       <demo-section heading="Liên kết hai chiều" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mở lịch và chọn nhiều ngày.">
         <div style="width: 460px; display:flex; flex-direction:column; gap:8px">
           <sd-chip-calendar label="Ngày nghỉ phép" helperText="Chọn các ngày dự kiến nghỉ"
@@ -18,7 +19,9 @@ import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bat-buoc-so-toi-thieu') {
       <demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }]" note="Cần tối thiểu 3 ngày. Bấm Kiểm tra để xem lỗi.">
         <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
           <sd-chip-calendar label="required + min=3"
@@ -29,19 +32,24 @@ import { SdChipCalendar } from '@sdcorejs/angular/forms/chip-calendar';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-vo-hieu-hoa') {
       <demo-section heading="Vô hiệu hoá" [props]="[{ name: 'disabled', value: 'true' }]" note="Khoá thao tác – chỉ hiển thị các chip đã chọn.">
         <div style="width: 460px">
           <sd-chip-calendar label="disabled" [(model)]="lockedDates" [form]="form" disabled></sd-chip-calendar>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Chip lịch vẫn sửa được, nhưng khi disabled thì rơi về xem tĩnh (viewed=true).">
         <div style="width: 460px; display:flex; flex-direction:column; gap:12px">
           <sd-chip-calendar label="Ngày nghỉ (inline)" [viewed]="'inline'" [(model)]="inlineDates" [form]="form"></sd-chip-calendar>
           <sd-chip-calendar label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineDates" [form]="form" disabled></sd-chip-calendar>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

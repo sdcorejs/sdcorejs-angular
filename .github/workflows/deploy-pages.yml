@@ -23,7 +23,11 @@ on:
       - 'versions/v19/package.json'
       - 'versions/v19/package-lock.json'
       - 'published-docs/**'
+      - 'CHANGELOG.md'
+      - 'package.json'
       - 'scripts/collect-*.mjs'
+      - 'scripts/generate-showcase-changelog*.mjs'
+      - 'scripts/generate-showcase-example-sources*.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_run:
     workflows:
@@ -55,6 +59,18 @@ jobs:
           node-version: 20
           cache: npm
           cache-dependency-path: versions/v19/package-lock.json
+
+      - name: Test showcase changelog generator
+        run: npm run test:showcase-changelog
+
+      - name: Generate showcase changelog data
+        run: npm run generate:showcase-changelog
+
+      - name: Test showcase example source generator
+        run: npm run test:showcase-examples
+
+      - name: Generate showcase example source data
+        run: npm run generate:showcase-examples
 
       - name: Install dependencies (v19)
         run: npm ci --legacy-peer-deps

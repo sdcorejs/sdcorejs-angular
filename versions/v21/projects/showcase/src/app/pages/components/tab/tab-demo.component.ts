@@ -13,10 +13,11 @@ interface FileTab {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdTabGroup, SdTab, SdButton],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Tab Group"
       description="Container tab khai báo — hỗ trợ icon, badge, disabled, closable. Nội dung tab được lazy mount.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-co-ban') {
       <demo-section heading="Tab cơ bản" [props]="[{ name: 'label', value: 'text' }]">
         <div class="full">
           <sd-tab-group>
@@ -32,7 +33,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-co-icon-badge-disabled') {
       <demo-section heading="Tab có icon / badge / disabled" [props]="[{ name: 'icon', value: 'name' }, { name: 'badge', value: '7 / 99+' }, { name: 'disabled', value: 'true' }]">
         <div class="full">
           <sd-tab-group>
@@ -51,7 +54,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-dong-duoc') {
       <demo-section heading="Tab đóng được" [props]="[{ name: 'closable', value: 'true' }, { name: '(tabClosed)', value: 'event' }]">
         <div class="full">
           <sd-tab-group (tabClosed)="onTabClosed($event)">
@@ -66,7 +71,9 @@ interface FileTab {
           }
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-can-tab-sang-phai') {
       <demo-section heading="Căn tab sang phải" [props]="[{ name: 'stretchTabs', value: 'false' }, { name: 'alignTabs', value: 'end' }]" note="Default stretchTabs=true (Material default) làm tabs giãn full width. Tắt stretch + đặt alignTabs để dồn về 1 phía.">
         <div class="full">
           <sd-tab-group [stretchTabs]="false" alignTabs="end">
@@ -76,7 +83,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-variant-pills') {
       <demo-section heading="Variant pills" [props]="[{ name: 'variant', value: 'pills' }]" note="Pill rounded, active filled — nhẹ nhàng, không underline, lý tưởng cho nested tab.">
         <div class="full">
           <sd-tab-group variant="pills" [stretchTabs]="false">
@@ -87,7 +96,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-variant-segmented') {
       <demo-section heading="Variant segmented" [props]="[{ name: 'variant', value: 'segmented' }]" note="Container bo tròn với 1 viền — iOS-style. Phù hợp cho toggle nhỏ trong toolbar.">
         <div class="full">
           <sd-tab-group variant="segmented" [stretchTabs]="false">
@@ -97,7 +108,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bang-mau-color') {
       <demo-section heading="Bảng màu color" [props]="[{ name: 'color', value: 'primary / secondary / info / success / warning / error' }]" note="Đổi màu indicator + badge theo bộ Core: primary / secondary / info / success / warning / error.">
         <div class="full color-stack">
           <sd-tab-group [stretchTabs]="false" color="primary">
@@ -126,7 +139,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-long-tab') {
       <demo-section heading="Tab lồng tab" [props]="[{ name: 'variant', value: 'pills / segmented' }]" note="Khi tab lồng tab, đặt variant khác nhau để mắt phân biệt rõ outer vs inner. Outer giữ default line; inner đổi sang pills hoặc segmented.">
         <div class="full">
           <sd-tab-group>
@@ -151,7 +166,9 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dieu-khien-tu-ngoai') {
       <demo-section heading="Điều khiển từ ngoài" [props]="[{ name: '[(selectedIndex)]', value: 'two-way' }]">
         <div style="display: flex; gap: 8px; margin-bottom: 12px;">
           <sd-button type="light" color="secondary" prefixIcon="chevron_left" title="Tab trước" (click)="prev()"></sd-button>
@@ -166,6 +183,7 @@ interface FileTab {
           </sd-tab-group>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

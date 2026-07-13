@@ -7,27 +7,33 @@ import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdCodeEditor],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Code Editor"
       description="Trình soạn thảo mã nguồn với highlight cú pháp (Prism) — hỗ trợ TypeScript / JSON / HTML / CSS / SCSS, có nút sao chép sẵn.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ngon-ngu-typescript') {
       <demo-section heading="Ngôn ngữ TypeScript" [props]="[{ name: 'language', value: 'typescript' }]">
         <div class="code-box">
           <sd-code-editor language="typescript" [(model)]="tsCode" maxHeight="280px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-che-do-xem-json') {
       <demo-section heading="Chế độ xem JSON" [props]="[{ name: 'language', value: 'json' }, { name: 'viewed', value: 'true' }]">
         <div class="code-box">
           <sd-code-editor language="json" [model]="jsonValue" [viewed]="true" maxHeight="240px"></sd-code-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ngon-ngu-html') {
       <demo-section heading="Ngôn ngữ HTML" [props]="[{ name: 'language', value: 'html' }]">
         <div class="code-box">
           <sd-code-editor language="html" [(model)]="htmlCode" maxHeight="220px"></sd-code-editor>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

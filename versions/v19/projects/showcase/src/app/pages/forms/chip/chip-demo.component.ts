@@ -8,7 +8,8 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdChip],
   template: `
-    <demo-page title="Chip" description="sd-chip – nhập danh sách tag dưới dạng chuỗi. Gõ rồi Enter để thêm, bấm X để xoá.">
+    <demo-page #demoPage title="Chip" description="sd-chip – nhập danh sách tag dưới dạng chuỗi. Gõ rồi Enter để thêm, bấm X để xoá.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lien-ket-hai-chieu') {
       <demo-section heading="Liên kết hai chiều" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Mỗi chip là một string trong mảng.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
           <sd-chip label="Kỹ năng" placeholder="Nhập rồi Enter..." helperText="Có thể thêm nhiều giá trị"
@@ -18,7 +19,9 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bat-buoc-so-toi-thieu') {
       <demo-section heading="Bắt buộc & số tối thiểu" [props]="[{ name: 'required', value: 'true' }, { name: 'min', value: '3' }]" note="Cần ít nhất 3 chip. Bấm Kiểm tra để hiện lỗi.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <sd-chip label="required + min=3" placeholder="Nhập rồi Enter..."
@@ -29,25 +32,32 @@ import { SdChip } from '@sdcorejs/angular/forms/chip';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-vo-hieu-hoa') {
       <demo-section heading="Vô hiệu hoá" [props]="[{ name: 'disabled', value: 'true' }]" note="Không cho thêm / xoá chip.">
         <div style="width: 420px">
           <sd-chip label="disabled" [(model)]="lockedTags" [form]="form" disabled></sd-chip>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
       <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="Chip thu gọn cho bảng / toolbar.">
         <div style="width: 420px">
           <sd-chip label="sm" size="sm" placeholder="Nhập nhãn..." [(model)]="filters" [form]="form"></sd-chip>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Chip strip vẫn sửa được, nhưng khi disabled thì rơi về xem tĩnh (viewed=true).">
         <div style="width: 420px; display:flex; flex-direction:column; gap:8px">
           <sd-chip label="Tags (inline)" [viewed]="'inline'" [(model)]="inlineTags" [form]="form"></sd-chip>
           <sd-chip label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="inlineTags" [form]="form" disabled></sd-chip>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -8,13 +8,16 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdTextarea],
   template: `
-    <demo-page title="Textarea" description="sd-textarea – ô nhập nhiều dòng. Hỗ trợ helper text, validator chiều dài, các trạng thái disabled / readonly.">
+    <demo-page #demoPage title="Textarea" description="sd-textarea – ô nhập nhiều dòng. Hỗ trợ helper text, validator chiều dài, các trạng thái disabled / readonly.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều với [(model)].">
         <div style="width: 420px">
           <sd-textarea label="Mô tả" placeholder="Nhập mô tả..." helperText="Tối đa 500 ký tự" [(model)]="basic" [form]="form"></sd-textarea>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }, { name: 'maxlength', value: '50' }]" note="Bấm Kiểm tra để hiện inline error.">
         <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <sd-textarea label="required + maxlength=50" [(model)]="reason" [form]="formValid" required [maxlength]="50"></sd-textarea>
@@ -24,14 +27,18 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }]" note="Hai trạng thái không cho chỉnh sửa.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-textarea style="width: 280px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-textarea>
           <sd-textarea style="width: 280px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-textarea>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Hiển thị như text không viền — bấm/focus để sửa tại chỗ. Khi disabled thì rơi về xem tĩnh (viewed=true).">
         <div style="width: 420px; display:flex; flex-direction:column; gap:12px">
           <div style="font-size:12px; color:#555">
@@ -42,6 +49,7 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
           <sd-textarea label="disabled + inline → tĩnh" [viewed]="'inline'" [(model)]="lockedA" [form]="form" disabled></sd-textarea>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -7,10 +7,11 @@ import { SdEditor } from '@sdcorejs/angular/components/editor';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdEditor],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Editor"
       description="Rich text editor dựa trên CKEditor 5 — đầy đủ thanh công cụ, hỗ trợ chèn ảnh, validation và FormGroup binding.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-soan-noi-dung') {
       <demo-section heading="Soạn nội dung" [props]="[{ name: '[(model)]', value: 'two-way' }]">
         <div class="editor-box">
           <sd-editor
@@ -23,7 +24,9 @@ import { SdEditor } from '@sdcorejs/angular/components/editor';
           </sd-editor>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chi-doc') {
       <demo-section heading="Chỉ đọc" [props]="[{ name: 'readonly', value: 'true' }]">
         <div class="editor-box">
           <sd-editor
@@ -34,6 +37,7 @@ import { SdEditor } from '@sdcorejs/angular/components/editor';
           </sd-editor>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

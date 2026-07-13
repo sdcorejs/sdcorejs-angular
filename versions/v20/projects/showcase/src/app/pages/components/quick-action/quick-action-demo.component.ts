@@ -8,10 +8,11 @@ import { SdButton } from '@sdcorejs/angular/components/button';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdQuickAction, SdButton],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Quick Action"
       description="Thanh toolbar nổi ở đáy màn hình — thường dùng cho bulk action khi user chọn nhiều dòng trong sd-table.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bulk-action-nhieu-dong') {
       <demo-section heading="Bulk action — nhiều dòng" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdMessage', value: 'template' }, { name: 'sdAction', value: 'template' }]">
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
           <sd-button type="light" color="primary" prefixIcon="add_circle" title="Thêm chọn (+1 dòng)" (click)="addSelection()"></sd-button>
@@ -29,7 +30,9 @@ import { SdButton } from '@sdcorejs/angular/components/button';
           </div>
         </sd-quick-action>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thong-bao-trang-thai') {
       <demo-section heading="Thông báo trạng thái" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdMessage', value: 'template' }]">
         <sd-button type="light" color="primary" prefixIcon="sync" title="Bật / tắt đồng bộ" (click)="toggleSync()"></sd-button>
 
@@ -37,7 +40,9 @@ import { SdButton } from '@sdcorejs/angular/components/button';
           <span sdMessage>Đang đồng bộ dữ liệu...</span>
         </sd-quick-action>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-undo-toast') {
       <demo-section heading="Undo toast" [props]="[{ name: 'opened', value: 'true' }, { name: 'sdAction', value: 'template' }]">
         <sd-button type="light" color="error" prefixIcon="delete" title="Xóa bản ghi" (click)="simulateDelete()"></sd-button>
 
@@ -46,6 +51,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
           <sd-button sdAction type="text" color="primary" prefixIcon="undo" title="Hoàn tác" (click)="undo()"></sd-button>
         </sd-quick-action>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

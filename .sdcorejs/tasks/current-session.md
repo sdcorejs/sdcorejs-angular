@@ -1,44 +1,43 @@
 ---
-updated_at: 2026-07-10T11:22:23+07:00
-status: complete
+updated_at: 2026-07-13T14:12:00+07:00
+status: completed
 track: angular
-active_skill: sdcorejs-documentation
-branch: docs/release-1.0-prep
+active_skill: sdcorejs-angular
+branch: refactor/showcase-documentation-site
 ---
 
 # Current Session Checkpoint
 
 ## User Request
-Cap nhat docs/release text de chuan bi release suffix `1.0` publish `19.1.0`, `20.1.0`, `21.1.0`, roi kiem tra duong merge vao `main`.
+Refactor toàn bộ Angular showcase thành một documentation site chuyên nghiệp, giữ đủ demo, hỗ trợ published docs/version/changelog/about và đồng bộ từ v19 sang v20/v21.
 
 ## Tasks
-- [x] Xac dinh pham vi docs/version prep va trang thai git hien tai
-- [x] Cap nhat docs/release text can thiet cho cac version `19.1.0`, `20.1.0`, `21.1.0`
-- [x] Chay kiem tra phu hop cho thay doi docs
-- [x] Kiem tra readiness truoc khi merge/PR vao `main`
-- [x] Tong ket thay doi, verification, va phan con lai neu bi chan
+- [x] Audit showcase, published docs, routes, demos và khả năng tái sử dụng
+- [x] Xây foundation registry, services, shell, routing và shared docs UI
+- [x] Migrate toàn bộ trang/demo và hoàn thiện Button làm mẫu
+- [x] Thêm landing, search, changelog, about, generators và authoring guide
+- [x] Đồng bộ v19 sang v20/v21 và chạy validation
+- [x] Review, repair loop, runtime audit và handoff
 
 ## Current State
-- Last completed: Docs/release verification passed; moved the dirty release-prep diff onto safe branch `docs/release-1.0-prep`.
-- In progress: None.
-- Blocked/skipped: Direct merge into `main` is not performed locally; use PR/merge after commit and push.
+- Last completed: v19 showcase production build, 390px/desktop CDP audit, `npm run sync` và `npm run check:sync` đều pass.
+- In progress: Không có; sẵn sàng bàn giao diff trên branch refactor.
+- Blocked/skipped: Không có blocker. NVDA/VoiceOver, Lighthouse/axe và memory profile dài hạn chưa chạy vì cần môi trường/manual tooling riêng.
 
 ## Artifacts Touched
-- EDIT `.sdcorejs/tasks/current-session.md` - current task checkpoint.
-- EDIT `README.md`, `versions/v19/README.md`, `versions/v20/README.md`, `versions/v21/README.md` - document `v1.0` publish mapping.
-- EDIT `CHANGELOG.md` - add release `1.0` entry.
-- EDIT `CLAUDE.md` - update release ritual wording from patch to release suffix.
-- EDIT `.github/workflows/publish-npm.yml` - update release-facing comments and dispatch help text.
-- EDIT `scripts/collect-docs.mjs`, `scripts/collect-release-docs.mjs`, `scripts/deploy.ps1` - update release suffix examples/help text only.
-- EDIT `versions/v19|v20|v21/projects/sdcorejs-angular/services/confirm/sd-confirm.md` - repair default button label mojibake before docs collection.
+- ADD/EDIT `versions/v19/projects/showcase/src/app/docs/**` - documentation registry, services, pages, shared UI và tests.
+- EDIT `versions/v19/projects/showcase/src/app/pages/**` - 253 focused structural guards; Button tách 7 example components.
+- ADD/EDIT `scripts/generate-showcase-*.mjs` - changelog/example source generators cùng 18 Node tests.
+- EDIT `.github/workflows/deploy-pages.yml`, root/v19 package scripts và showcase test/build config.
+- ADD `docs/showcase-authoring.md`; sync cùng feature surface sang v20/v21.
 
 ## Verification
-- PASS: `git diff --check`
-- PASS: stale wording grep for `v<patch>`, `19.<patch>`, old `0.5` examples, and `CÃ³`/`KhÃ´ng`
-- PASS: `node --check scripts/collect-docs.mjs`
-- PASS: `node --check scripts/collect-release-docs.mjs`
-- PASS: PowerShell parser check for `scripts/deploy.ps1`
-- PASS: `node scripts/collect-release-docs.mjs --patch 1.0 --out-root <temp> --skip-existing` generated `19.1.0`, `20.1.0`, `21.1.0`
+- `npm run test:showcase-generators` - 19/19 pass.
+- `npm run test:showcase` (v19) - 63/63 pass.
+- v19 library production build - pass.
+- v19 showcase production build - pass; initial estimated transfer 189.86 kB.
+- CDP production audit - 390px không overflow, zero console/network errors, route title/published docs/focused sections đúng.
+- `npm run sync` + `npm run check:sync` - pass.
 
 ## Resume From Here
-Ready to create a safe commit/PR path for these docs, or move the diff to a non-protected branch before merge into `main`.
+Review final diff hoặc commit/push branch khi người dùng yêu cầu. Không hand-edit v20/v21; tiếp tục sửa v19 rồi sync lại.

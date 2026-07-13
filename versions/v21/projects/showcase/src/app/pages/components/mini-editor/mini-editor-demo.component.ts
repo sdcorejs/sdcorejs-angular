@@ -8,10 +8,11 @@ import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/m
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdMiniEditor, FormsModule],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Mini Editor"
       description="Editor đơn giản (bold / italic / link / list) dành cho ô comment, ghi chú ngắn. Hỗ trợ mention và xuất HTML hoặc Markdown.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-dau-ra-html') {
       <demo-section heading="Định dạng đầu ra HTML" [props]="[{ name: 'outputFormat', value: 'html' }]">
         <div class="editor-box">
           <sd-mini-editor
@@ -21,7 +22,9 @@ import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/m
           <p class="hint">Định dạng đầu ra: HTML</p>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-dinh-dang-dau-ra-markdown') {
       <demo-section heading="Định dạng đầu ra Markdown" [props]="[{ name: 'outputFormat', value: 'markdown' }]">
         <div class="editor-box">
           <sd-mini-editor
@@ -31,6 +34,7 @@ import { SdMiniEditor, SdMiniEditorOption } from '@sdcorejs/angular/components/m
           <p class="hint">Định dạng đầu ra: Markdown</p>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

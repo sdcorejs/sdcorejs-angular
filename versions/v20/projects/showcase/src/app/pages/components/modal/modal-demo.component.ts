@@ -10,10 +10,11 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdBadge, SdButton, SdModal, SdSection, SdSectionItem],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Modal"
       description="Dialog va bottom-sheet dung chung slot sdHeaderLeft/sdHeaderRight/sdFooterLeft/sdFooterRight. Body mac dinh padding 0 de consumer tu quyet dinh layout.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-basic-modal-footer-right') {
       <demo-section heading="Basic modal + footer right" [props]="[{ name: 'sdFooterRight', value: 'template' }, { name: 'body padding', value: 0 }]">
         <sd-button type="fill" color="primary" prefixIcon="info" title="Open detail" (click)="basic.open()"></sd-button>
 
@@ -31,7 +32,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="fill" color="primary" title="Close" (click)="basic.close()"></sd-button>
         </sd-modal>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-confirm-modal-split-footer') {
       <demo-section heading="Confirm modal + split footer" [props]="[{ name: 'sdFooterLeft', value: 'template' }, { name: 'sdFooterRight', value: 'template' }]">
         <sd-button type="fill" color="error" prefixIcon="delete" title="Delete record" (click)="confirm.open()"></sd-button>
 
@@ -44,7 +47,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="fill" color="error" title="Delete" prefixIcon="delete" (click)="confirm.close()"></sd-button>
         </sd-modal>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-header-left-right') {
       <demo-section heading="Custom header left/right" [props]="[{ name: 'sdHeaderLeft', value: 'template' }, { name: 'sdHeaderRight', value: 'template' }]">
         <sd-button type="light" color="primary" prefixIcon="history" title="Open activity" (click)="activity.open()"></sd-button>
 
@@ -70,7 +75,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="text" color="secondary" title="Close" (click)="activity.close()"></sd-button>
         </sd-modal>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-long-scroll-body') {
       <demo-section heading="Long scroll body" [props]="[{ name: 'max-height', value: '80vh' }, { name: 'body', value: 'scrollable' }]">
         <sd-button type="outline" color="primary" prefixIcon="list" title="Open long content" (click)="longContent.open()"></sd-button>
 
@@ -90,7 +97,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="fill" color="primary" title="Done" (click)="longContent.close()"></sd-button>
         </sd-modal>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-read-only-modal-without-footer') {
       <demo-section heading="Read-only modal without footer" [props]="[{ name: 'footer', value: 'empty hidden' }]">
         <sd-button type="outline" color="primary" prefixIcon="visibility" title="Preview note" (click)="preview.open()"></sd-button>
 
@@ -100,7 +109,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           </div>
         </sd-modal>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bottom-sheet-actions') {
       <demo-section heading="Bottom-sheet actions" [props]="[{ name: 'view', value: 'bottom-sheet' }, { name: 'sdFooterRight', value: 'template' }]">
         <sd-button type="outline" color="primary" prefixIcon="more_vert" title="Open actions" (click)="sheetActions.open()"></sd-button>
 
@@ -114,7 +125,9 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="text" color="secondary" title="Cancel" (click)="sheetActions.close()"></sd-button>
         </sd-modal>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bottom-sheet-form') {
       <demo-section heading="Bottom-sheet form" [props]="[{ name: 'view', value: 'bottom-sheet' }, { name: 'sdFooterLeft/right', value: 'template' }]">
         <sd-button type="light" color="primary" prefixIcon="schedule" title="Pick time" (click)="sheetForm.open()"></sd-button>
 
@@ -132,6 +145,7 @@ import { SdSection, SdSectionItem } from '@sdcorejs/angular/components/section';
           <sd-button sdFooterRight type="fill" color="primary" title="Confirm" (click)="sheetForm.close()"></sd-button>
         </sd-modal>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

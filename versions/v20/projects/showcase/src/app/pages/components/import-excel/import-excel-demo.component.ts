@@ -22,10 +22,11 @@ interface EmployeeRow {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdButton, SdImportExcel],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Import Excel"
       description="Quy trình import Excel đầy đủ — tải mẫu, upload file, validate theo dòng & chéo dòng, preview các dòng OK / cảnh báo / lỗi, xuất file lỗi và trả về dữ liệu hợp lệ.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-import-nhan-vien') {
       <demo-section heading="Import nhân viên" [props]="[{ name: 'option', value: 'config' }, { name: 'columns', value: 'def' }]">
         <p class="hint">Bấm nút bên dưới để mở modal import. Có thể bấm "Tải file mẫu" trong modal để tải template Excel.</p>
         <sd-button
@@ -37,6 +38,7 @@ interface EmployeeRow {
         </sd-button>
         <sd-import-excel [option]="employeeImport" #excelModalRef></sd-import-excel>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

@@ -1,0 +1,196 @@
+:host {
+  display: block;
+  container: docs-page / inline-size;
+}
+
+// why: Documentation pages need a reading column plus optional sticky local table of contents.
+.docs-page {
+  display: grid;
+  grid-template-columns: minmax(0, var(--docs-content-max-width)) var(--docs-toc-width);
+  justify-content: center;
+  gap: 34px;
+  padding: 28px 32px 80px;
+
+  &__main {
+    min-width: 0;
+  }
+}
+
+.historical-notice {
+  margin-bottom: 18px;
+  border: 1px solid var(--sd-info, #0288d1);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--sd-info, #0288d1) 9%, var(--docs-surface));
+  padding: 11px 14px;
+  color: var(--docs-text-secondary);
+  font-size: 13px;
+}
+
+.docs-page__content {
+  min-width: 0;
+  min-height: 360px;
+  padding-top: 24px;
+}
+
+.doc-section {
+  scroll-margin-top: calc(var(--docs-header-height) + 24px);
+  padding: 20px 0;
+  border-bottom: 1px solid var(--docs-border-color);
+
+  > h2 {
+    margin-bottom: 14px;
+    font-size: 25px;
+  }
+}
+
+.content-state {
+  border: 1px dashed var(--docs-border-color);
+  border-radius: var(--docs-radius-md);
+  background: var(--docs-surface-muted);
+  padding: 28px;
+  color: var(--docs-text-secondary);
+  text-align: center;
+
+  &--error {
+    border-color: var(--sd-error, #ba1a1a);
+  }
+
+  button {
+    border: 0;
+    border-radius: 8px;
+    background: var(--sd-primary, #005cbb);
+    padding: 8px 12px;
+    color: var(--sd-primary-contrast, white);
+    cursor: pointer;
+  }
+}
+
+.spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--docs-border-color);
+  border-top-color: var(--sd-primary, #005cbb);
+  border-radius: 50%;
+  animation: docs-spin 0.8s linear infinite;
+}
+
+@keyframes docs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.examples-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-size: 16px;
+
+  strong {
+    color: var(--sd-primary, #005cbb);
+    font-size: 30px;
+  }
+
+  span {
+    color: var(--docs-text-secondary);
+  }
+}
+
+.examples-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: 20px;
+}
+
+.published-examples,
+.style-guide {
+  margin-top: 30px;
+  border-top: 1px solid var(--docs-border-color);
+  padding-top: 24px;
+}
+
+.style-guide {
+  > header span {
+    color: var(--sd-primary, #005cbb);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  details {
+    border-bottom: 1px solid var(--docs-border-color);
+    padding: 12px 0;
+  }
+
+  summary {
+    cursor: pointer;
+    font-weight: 600;
+  }
+}
+
+.page-pagination {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 36px;
+
+  a {
+    display: grid;
+    gap: 4px;
+    border: 1px solid var(--docs-border-color);
+    border-radius: 10px;
+    background: var(--docs-surface-raised);
+    padding: 14px;
+    color: var(--docs-text);
+
+    &:last-child {
+      text-align: right;
+    }
+  }
+
+  span {
+    color: var(--docs-text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+}
+
+.docs-state {
+  max-width: 680px;
+  margin: 10vh auto;
+  padding: 32px;
+  text-align: center;
+
+  > span {
+    color: var(--sd-primary, #005cbb);
+    font-size: 64px;
+    font-weight: 700;
+  }
+
+  p {
+    color: var(--docs-text-secondary);
+  }
+}
+
+@container docs-page (max-width: 1080px) {
+  // why: Right TOC disappears before it competes with primary documentation content.
+  .docs-page {
+    grid-template-columns: minmax(0, var(--docs-content-max-width));
+  }
+}
+
+@media (max-width: 1368px) {
+  // why: Viewport fallback preserves the container-query layout in older browsers.
+  .docs-page {
+    grid-template-columns: minmax(0, var(--docs-content-max-width));
+  }
+}
+
+@media (max-width: 680px) {
+  .docs-page {
+    padding-inline: 18px;
+  }
+}

@@ -7,10 +7,11 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdAvatar],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Avatar"
       description="Ảnh đại diện tròn — tự sinh chữ cái đầu với màu cố định theo tên khi không có URL ảnh.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chu-cai-dau-tu-ten') {
       <demo-section heading="Chữ cái đầu từ tên" [props]="[{ name: 'src', value: 'initials' }]">
         <div class="row">
           <div class="card">
@@ -31,7 +32,9 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-anh-url') {
       <demo-section heading="Ảnh URL" [props]="[{ name: 'src', value: 'url' }]">
         <div class="row">
           <sd-avatar src="https://i.pravatar.cc/80?img=11" [size]="48"></sd-avatar>
@@ -40,7 +43,9 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
           <sd-avatar src="https://i.pravatar.cc/80?img=44" [size]="48"></sd-avatar>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cac-kich-thuoc') {
       <demo-section heading="Các kích thước" [props]="[{ name: 'size', value: '24 / 32 / 48 / 72 / 96' }]">
         <div class="row size-row">
           <div class="card">
@@ -65,7 +70,9 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-fallback-khi-thieu-du-lieu') {
       <demo-section heading="Fallback khi thiếu dữ liệu" [props]="[{ name: 'src', value: 'null / empty' }]">
         <div class="row">
           <sd-avatar [src]="null" [size]="48"></sd-avatar>
@@ -73,6 +80,7 @@ import { SdAvatar } from '@sdcorejs/angular/components/avatar';
           <sd-avatar src="?" [size]="48"></sd-avatar>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

@@ -10,7 +10,8 @@ interface Option { value: string; display: string; }
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdSelect, SdSelectFooterActionDirective],
   template: `
-    <demo-page title="Select" description="sd-select – dropdown chọn 1 giá trị. Truyền items với valueField + displayField.">
+    <demo-page #demoPage title="Select" description="sd-select – dropdown chọn 1 giá trị. Truyền items với valueField + displayField.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều, hiển thị giá trị đã chọn.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-select [items]="items" valueField="value" displayField="display"
@@ -18,7 +19,9 @@ interface Option { value: string; display: string; }
           <div style="font-size:12px; color:#555">Giá trị: <b>{{ dept() ?? '(trống)' }}</b></div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bấm Kiểm tra để hiện lỗi.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-select [items]="items" valueField="value" displayField="display"
@@ -30,7 +33,9 @@ interface Option { value: string; display: string; }
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Giá trị đã có sẵn.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-select style="width: 240px" [items]="items" valueField="value" displayField="display"
@@ -39,7 +44,9 @@ interface Option { value: string; display: string; }
             label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-select>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Hiển thị như text — bấm vào để mở panel chọn (không hiện ô input). Text giữ nguyên trong lúc panel mở, chỉ đổi khi chọn giá trị mới.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <div style="font-size:12px; color:#555">
@@ -50,14 +57,18 @@ interface Option { value: string; display: string; }
           <div style="font-size:12px; color:#555">Giá trị: <b>{{ inlineDept() ?? '(trống)' }}</b></div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
       <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="UI gọn cho bảng / toolbar.">
         <div style="width: 280px">
           <sd-select [items]="items" valueField="value" displayField="display"
             label="sm" size="sm" [(model)]="quick" [form]="form"></sd-select>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-footer-action-khi-khong-co-ket-qua') {
       <demo-section
         heading="Footer action khi không có kết quả"
         [props]="[{ name: 'sdSelectFooterAction', value: 'template' }, { name: 'when', value: 'empty' }, { name: 'searchText', value: 'context' }]"
@@ -89,7 +100,9 @@ interface Option { value: string; display: string; }
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhieu-footer-action-va-thu-tu-khai-bao') {
       <demo-section
         heading="Nhiều footer action và thứ tự khai báo"
         [props]="[{ name: 'when', value: 'always / has-result / empty' }, { name: 'contentChildren', value: 'order' }]"
@@ -132,7 +145,9 @@ interface Option { value: string; display: string; }
           <pre class="select-demo-log">{{ lastFooterAction() }}</pre>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-footer-action-giong-dropdown-item') {
       <demo-section
         heading="Footer action giống dropdown item"
         [props]="[{ name: 'custom CSS', value: 'padding + item row' }, { name: 'tag', value: 'div' }]"
@@ -167,7 +182,9 @@ interface Option { value: string; display: string; }
           <pre class="select-demo-log">{{ lastFooterAction() }}</pre>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-api-footer-action') {
       <demo-section
         heading="API footer action"
         [props]="[{ name: 'selector', value: 'ng-template[sdSelectFooterAction]' }, { name: 'standalone', value: 'true' }]"
@@ -182,13 +199,16 @@ interface Option { value: string; display: string; }
           <div><b>Event</b><span><code>(click)="addNew(searchText)"</code> chạy bình thường trong component cha.</span></div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-snippet-mau') {
       <demo-section
         heading="Snippet mẫu"
         [props]="[{ name: 'copy pattern', value: 'HTML' }]"
         note="Mẫu tối thiểu cho case thêm nhanh item khi không tìm thấy kết quả.">
         <pre class="select-demo-code">{{ footerActionSnippet }}</pre>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

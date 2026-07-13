@@ -7,10 +7,11 @@ import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/co
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdDocumentBuilder],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Document Builder"
       description="Trình soạn thảo tài liệu đầy đủ — định dạng nâng cao, chèn bảng, ảnh, heading, biến (variable), comment. Dùng để dựng mẫu hợp đồng, văn bản nội bộ.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-soan-mau-hop-dong') {
       <demo-section heading="Soạn mẫu hợp đồng" [props]="[{ name: 'option', value: 'config' }, { name: 'contentChange', value: 'event' }]">
         <div class="doc-box">
           <sd-document-builder
@@ -20,6 +21,7 @@ import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/co
           </sd-document-builder>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`
