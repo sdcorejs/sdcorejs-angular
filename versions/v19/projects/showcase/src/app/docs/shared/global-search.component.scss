@@ -1,0 +1,162 @@
+// why: Search is a compact top-bar control until the keyboard-accessible dialog opens.
+.search-trigger {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: min(320px, 30vw);
+  height: 38px;
+  border: 1px solid var(--docs-border-color);
+  border-radius: 10px;
+  background: var(--docs-surface-muted);
+  padding: 0 10px;
+  color: var(--docs-text-secondary);
+  cursor: pointer;
+
+  kbd {
+    margin-left: auto;
+    border: 1px solid var(--docs-border-color);
+    border-radius: 5px;
+    background: var(--docs-surface-raised);
+    padding: 2px 5px;
+    font-size: 11px;
+  }
+}
+
+// why: The overlay keeps global results visible above any complex live demo.
+.search-backdrop {
+  position: fixed;
+  z-index: 90;
+  inset: 0;
+  background: rgb(15 23 42 / 45%);
+}
+
+.search-dialog {
+  position: fixed;
+  z-index: 91;
+  top: max(8vh, 72px);
+  left: 50%;
+  width: min(680px, calc(100vw - 32px));
+  max-height: min(720px, calc(100vh - 96px));
+  overflow: hidden;
+  transform: translateX(-50%);
+  border: 1px solid var(--docs-border-color);
+  border-radius: var(--docs-radius-md);
+  background: var(--docs-surface-raised);
+  box-shadow: var(--docs-shadow);
+
+  &__field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--docs-border-color);
+    padding: 12px 16px;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--docs-text);
+      font-size: 17px;
+
+      &:focus-visible {
+        outline: 2px solid var(--sd-primary, #005cbb);
+        outline-offset: 4px;
+      }
+    }
+
+    button {
+      border: 1px solid var(--docs-border-color);
+      border-radius: 6px;
+      background: var(--docs-surface-muted);
+      color: var(--docs-text-secondary);
+      cursor: pointer;
+    }
+  }
+
+  &__results {
+    max-height: calc(min(720px, 100vh - 96px) - 120px);
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  footer {
+    display: flex;
+    gap: 16px;
+    border-top: 1px solid var(--docs-border-color);
+    padding: 8px 14px;
+    color: var(--docs-text-muted);
+    font-size: 11px;
+  }
+}
+
+.search-group {
+  h2 {
+    padding: 8px 10px 5px;
+    color: var(--docs-text-muted);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  button {
+    display: grid;
+    width: 100%;
+    gap: 3px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    padding: 10px;
+    color: var(--docs-text);
+    text-align: left;
+    cursor: pointer;
+
+    &.active,
+    &:hover {
+      background: var(--sd-primary-light, #e8f1ff);
+    }
+  }
+}
+
+.search-result__title {
+  font-weight: 600;
+}
+
+.search-result__title mark,
+.search-result__meta mark {
+  border-radius: 2px;
+  background: #fff1a8;
+  color: inherit;
+}
+
+.search-result__meta,
+.search-empty {
+  overflow: hidden;
+  color: var(--docs-text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
+.search-result__meta-label {
+  margin-right: 4px;
+  color: var(--docs-text-secondary);
+  font-weight: 600;
+}
+
+.search-empty {
+  padding: 24px;
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  // why: Mobile header has room for an icon trigger but not the full search affordance.
+  .search-trigger {
+    min-width: 38px;
+
+    span:not(:first-child),
+    kbd {
+      display: none;
+    }
+  }
+}

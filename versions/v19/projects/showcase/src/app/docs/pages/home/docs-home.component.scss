@@ -1,0 +1,333 @@
+// why: The landing page needs a broad marketing surface while documentation pages stay editorial.
+.home {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 28px 80px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 360px);
+  gap: clamp(28px, 6vw, 72px);
+  overflow: hidden;
+  border: 1px solid var(--docs-border-color);
+  border-radius: var(--docs-radius-lg);
+  background:
+    radial-gradient(circle at 85% 10%, color-mix(in srgb, var(--sd-primary) 24%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--docs-surface-raised), var(--sd-primary-light, #e8f1ff));
+  padding: clamp(32px, 7vw, 72px);
+
+  &__content,
+  &__stats {
+    min-width: 0;
+  }
+
+  &__eyebrow,
+  .quick-links header > span,
+  .catalog header span,
+  .home-footer-grid article > span {
+    color: var(--sd-primary, #005cbb);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    max-width: 820px;
+    margin: 10px 0 18px;
+    font-size: clamp(38px, 6vw, 68px);
+    line-height: 1.06;
+
+    span {
+      color: var(--sd-primary, #005cbb);
+    }
+  }
+
+  p {
+    max-width: 720px;
+    color: var(--docs-text-secondary);
+    font-size: 18px;
+    line-height: 1.65;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 28px 0;
+
+    a {
+      border: 1px solid var(--docs-border-color);
+      border-radius: 10px;
+      background: var(--docs-surface-raised);
+      padding: 11px 16px;
+      color: var(--docs-text);
+      font-weight: 600;
+
+      &.primary {
+        border-color: var(--sd-primary, #005cbb);
+        background: var(--sd-primary, #005cbb);
+        color: var(--sd-primary-contrast, white);
+      }
+    }
+  }
+
+  &__stats {
+    display: grid;
+    align-content: center;
+    gap: 12px;
+
+    div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid var(--docs-border-color);
+      padding: 16px 0;
+    }
+
+    strong {
+      color: var(--sd-primary, #005cbb);
+      font-size: clamp(26px, 4vw, 38px);
+    }
+
+    span {
+      color: var(--docs-text-secondary);
+      text-align: right;
+    }
+  }
+}
+
+.install {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 100%;
+  border: 1px solid var(--docs-border-color);
+  border-radius: 10px;
+  background: var(--docs-code-surface);
+  padding: 10px 12px;
+  color: var(--docs-code-text);
+
+  code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  button {
+    border: 0;
+    border-radius: 6px;
+    background: rgb(255 255 255 / 12%);
+    padding: 5px 8px;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+.home-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  border: 1px solid var(--sd-warning, #ed6c02);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--sd-warning, #ed6c02) 10%, var(--docs-surface));
+  padding: 12px 14px;
+}
+
+.quick-links,
+.catalog,
+.home-footer-grid {
+  margin-top: 56px;
+}
+
+.quick-links header,
+.catalog > header {
+  margin-bottom: 20px;
+
+  h2 {
+    margin-top: 5px;
+    font-size: clamp(28px, 4vw, 40px);
+  }
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+
+  article {
+    border: 1px solid var(--docs-border-color);
+    border-radius: var(--docs-radius-md);
+    background: var(--docs-surface-raised);
+    padding: 24px;
+  }
+
+  &__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--sd-primary-light, #e8f1ff);
+    color: var(--sd-primary, #005cbb);
+  }
+
+  h3 {
+    margin: 16px 0 8px;
+  }
+
+  p {
+    min-height: 48px;
+    color: var(--docs-text-secondary);
+    line-height: 1.6;
+  }
+}
+
+.catalog > header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+
+  p {
+    max-width: 520px;
+    color: var(--docs-text-secondary);
+    text-align: right;
+  }
+}
+
+.catalog__group {
+  margin-top: 30px;
+
+  > h3 {
+    margin-bottom: 12px;
+  }
+}
+
+.catalog__items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+
+  a {
+    display: grid;
+    gap: 7px;
+    border: 1px solid var(--docs-border-color);
+    border-radius: 11px;
+    background: var(--docs-surface-raised);
+    padding: 16px;
+    color: var(--docs-text);
+
+    &:hover {
+      border-color: var(--sd-primary, #005cbb);
+      text-decoration: none;
+    }
+  }
+
+  span {
+    color: var(--docs-text-secondary);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  small {
+    color: var(--docs-text-muted);
+  }
+}
+
+.home-footer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+
+  article {
+    border-radius: var(--docs-radius-md);
+    background: var(--docs-surface-muted);
+    padding: 24px;
+  }
+
+  h2 {
+    margin: 9px 0;
+  }
+
+  p {
+    color: var(--docs-text-secondary);
+    line-height: 1.6;
+  }
+}
+
+@media (max-width: 900px) {
+  // why: Marketing stats and catalog cards stack before content becomes cramped.
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .category-grid,
+  .catalog__items,
+  .home-footer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .home {
+    padding-inline: 16px;
+  }
+
+  .category-grid,
+  .catalog__items,
+  .home-footer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    padding: 28px 22px;
+
+    h1 {
+      overflow-wrap: anywhere;
+      font-size: clamp(34px, 10vw, 42px);
+
+      span {
+        display: block;
+        white-space: nowrap;
+        font-size: clamp(24px, 8vw, 32px);
+      }
+    }
+
+    &__actions a {
+      flex: 1 1 130px;
+      text-align: center;
+    }
+
+    &__stats div {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    &__stats span {
+      text-align: left;
+    }
+  }
+
+  .install {
+    display: flex;
+    width: 100%;
+
+    code {
+      min-width: 0;
+    }
+  }
+
+  .catalog > header {
+    align-items: flex-start;
+    flex-direction: column;
+
+    p {
+      text-align: left;
+    }
+  }
+}

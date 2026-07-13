@@ -21,10 +21,11 @@ interface Contract {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdView, SdBadge, DatePipe],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="View"
       description="Hiển thị cặp nhãn / giá trị chỉ đọc trên trang chi tiết. Là phiên bản read-only của sd-input / sd-select.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhan-va-gia-tri-co-ban') {
       <demo-section heading="Nhãn và giá trị cơ bản" [props]="[{ name: 'display', value: 'text' }]">
         <div class="grid-3">
           <sd-view label="Mã hợp đồng" [display]="contract.code"></sd-view>
@@ -35,7 +36,9 @@ interface Contract {
           <sd-view label="Ghi chú" [display]="null"></sd-view>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gia-tri-co-sieu-lien-ket') {
       <demo-section heading="Giá trị có siêu liên kết" [props]="[{ name: 'hyperlink', value: 'url' }]">
         <div class="grid-3">
           <sd-view
@@ -50,7 +53,9 @@ interface Contract {
           </sd-view>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-template-tuy-chinh-gia-tri') {
       <demo-section heading="Template tùy chỉnh giá trị" [props]="[{ name: '#sdValue', value: 'template' }]">
         <div class="grid-3">
           <sd-view label="Trạng thái" [display]="contract.statusName" [value]="contract.status">
@@ -64,6 +69,7 @@ interface Contract {
           <sd-view label="Loại hợp đồng" display="Dịch vụ thường xuyên"></sd-view>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

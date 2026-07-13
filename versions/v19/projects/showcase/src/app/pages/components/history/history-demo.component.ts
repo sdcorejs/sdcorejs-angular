@@ -18,28 +18,34 @@ interface SdHistoryItemType {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdHistoryItem],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="History"
       description="Dòng thời gian dọc hiển thị lịch sử thay đổi / phê duyệt của một bản ghi — kèm trạng thái, thời gian, người thao tác.">
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-luong-phe-duyet') {
       <demo-section heading="Luồng phê duyệt" [props]="[{ name: 'items', value: '[…]' }]">
         <div class="timeline-box">
           <sd-history [items]="approvalFlow"></sd-history>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lich-su-cap-nhat') {
       <demo-section heading="Lịch sử cập nhật" [props]="[{ name: 'items', value: '[…]' }]" note="Lịch sử cập nhật ngắn">
         <div class="timeline-box">
           <sd-history [items]="updateLog"></sd-history>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-timeline-rong') {
       <demo-section heading="Timeline rỗng" [props]="[{ name: 'items', value: '[]' }]">
         <div class="timeline-box">
           <sd-history [items]="[]"></sd-history>
           <p class="empty-note">Bản ghi chưa có lịch sử thay đổi.</p>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [`

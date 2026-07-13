@@ -24,9 +24,10 @@ interface TreeDemoItem {
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdTree, SdTreeItemDefDirective],
   template: `
-    <demo-page
+    <demo-page #demoPage
       title="Tree"
       description="Cây độc lập cho danh mục, thư mục, đơn vị tổ chức: hỗ trợ static/lazy, selection, command, custom template và filter tiếng Việt không dấu.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-static-tree') {
       <demo-section
         heading="Static tree"
         note="Static tree nhận SdTreeItemStatic đã bọc sẵn id, label, data và children. Branch dùng folder icon mặc định; leaf không hiện icon nếu không khai báo icon."
@@ -39,7 +40,9 @@ interface TreeDemoItem {
           <sd-tree [option]="staticDemoOption"></sd-tree>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-selection-va-command') {
       <demo-section
         heading="Selection và command"
         note="Checkbox chọn nhiều dòng. Command ở cuối dòng, hover vào row mới thấy nút ba chấm."
@@ -71,7 +74,9 @@ interface TreeDemoItem {
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lazy-tree') {
       <demo-section
         heading="Lazy tree"
         note="Bấm mở node để giả lập tải children. Sau lần đầu, children được cache nội bộ trong component."
@@ -87,7 +92,9 @@ interface TreeDemoItem {
           ></sd-tree>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-filter-tieng-viet-khong-dau') {
       <demo-section
         heading="Filter tiếng Việt không dấu"
         note="Filter chỉ tìm trên item đã load. Ví dụ gõ 'ke toan', 'cong no', 'nhan su'."
@@ -104,7 +111,9 @@ interface TreeDemoItem {
           <sd-tree #filterTree [option]="filterDemoOption"></sd-tree>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-item-template') {
       <demo-section
         heading="Custom item template"
         note="sdTreeItemDef nhận context item, treeItem, level, selected, isLeaf, toggle, select."
@@ -126,6 +135,7 @@ interface TreeDemoItem {
           </sd-tree>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   styles: [

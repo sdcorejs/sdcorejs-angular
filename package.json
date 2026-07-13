@@ -15,6 +15,12 @@
     "check:sync": "node scripts/check-version-sync.mjs",
     "collect-docs": "node scripts/collect-docs.mjs",
     "collect-release-docs": "node scripts/collect-release-docs.mjs",
+    "generate:showcase-changelog": "node scripts/generate-showcase-changelog.mjs",
+    "generate:showcase-examples": "node scripts/generate-showcase-example-sources.mjs",
+    "generate:showcase": "npm run generate:showcase-changelog && npm run generate:showcase-examples",
+    "test:showcase-changelog": "node --test scripts/generate-showcase-changelog.test.mjs",
+    "test:showcase-examples": "node --test scripts/generate-showcase-example-sources.test.mjs",
+    "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples",
     "changeset": "changeset"
   },
   "devDependencies": {

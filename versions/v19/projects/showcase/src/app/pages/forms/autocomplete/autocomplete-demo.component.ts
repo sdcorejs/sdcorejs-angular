@@ -10,7 +10,8 @@ interface Country { code: string; name: string; }
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdAutocomplete],
   template: `
-    <demo-page title="Autocomplete" description="sd-autocomplete – gõ để lọc, chọn 1 giá trị. Hỗ trợ cache, addable (thêm mới giá trị), required, disabled.">
+    <demo-page #demoPage title="Autocomplete" description="sd-autocomplete – gõ để lọc, chọn 1 giá trị. Hỗ trợ cache, addable (thêm mới giá trị), required, disabled.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
       <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Gõ vài ký tự để lọc danh sách.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"
@@ -19,7 +20,9 @@ interface Country { code: string; name: string; }
           <div style="font-size:12px; color:#555">Mã đã chọn: <b>{{ country() ?? '(trống)' }}</b></div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
       <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }]" note="Bỏ trống và bấm Kiểm tra để xem lỗi inline.">
         <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"
@@ -31,7 +34,9 @@ interface Country { code: string; name: string; }
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-them-moi') {
       <demo-section heading="Thêm mới" [props]="[{ name: 'addable', value: 'true' }]" note="Cho phép thêm giá trị không có trong danh sách.">
         <div style="width: 320px">
           <sd-autocomplete [items]="countries" valueField="code" displayField="name"
@@ -39,7 +44,9 @@ interface Country { code: string; name: string; }
             [(model)]="tag" [form]="form" addable></sd-autocomplete>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cac-trang-thai-bao-loi') {
       <demo-section
         heading="Các trạng thái báo lỗi"
         [props]="[{ name: 'required', value: 'true' }, { name: '[validator]', value: 'fn' }, { name: 'inlineError', value: 'text' }]"
@@ -57,7 +64,9 @@ interface Country { code: string; name: string; }
           </div>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
       <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Khoá tương tác.">
         <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
           <sd-autocomplete style="width: 240px" [items]="countries" valueField="code" displayField="name"
@@ -66,7 +75,9 @@ interface Country { code: string; name: string; }
             label="viewed" [(model)]="lockedB" [form]="form" viewed></sd-autocomplete>
         </div>
       </demo-section>
+      }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
       <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Bấm vào để mở panel gõ/lọc; text giữ nguyên tới khi chọn. Hover hiện × để xoá.">
         <div style="width: 280px; font-size:13px; color:#555">
           Quốc tịch:
@@ -74,6 +85,7 @@ interface Country { code: string; name: string; }
             [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-autocomplete>
         </div>
       </demo-section>
+      }
     </demo-page>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
