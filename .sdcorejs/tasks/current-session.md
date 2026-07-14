@@ -1,6 +1,6 @@
 ---
-updated_at: 2026-07-15T01:36:00+07:00
-status: in_progress
+updated_at: 2026-07-15T01:35:58+07:00
+status: complete
 track: angular
 active_skill: sdcorejs-ship
 branch: release/1.3
@@ -29,15 +29,15 @@ Tích hợp `@sdcorejs/angular-material-datetime@1.0.3` vào `sd-datetime` của
 - [x] Repair lint line-ending cho datetime source/spec và sync lại v20/v21; scoped lint pass cả ba workspace
 - [x] Chạy fresh acceptance verification cho ship-with-known-gaps
 - [x] Stage 74 path đúng phạm vi và chạy branch hygiene read-only; không có secret/conflict/debug/focused-test/binary blocker
-- [ ] Stage đúng phạm vi, commit và push không force lên `release/1.3`
+- [x] Commit và push không force lên `origin/release/1.3`; remote feature SHA khớp `f66de9c288e696cda26947bff0984b6f4185215a`
 
 ## Current State
 
-- Last completed: implementation, repair, focused tests, production builds, full-suite evidence, independent review, technical/user docs và verify-before-done.
+- Last completed: feature commit `f66de9c` đã push lên `origin/release/1.3`; local/remote SHA khớp và working tree sạch.
 - Passing evidence: focused datetime `66/66` và production build đạt trên v19-v21; sync, exact `1.0.3`, dist metadata, vendored-source removal, diff và protected-path assertions đều đạt.
 - Blocked: AC-7 chưa đạt hoàn toàn vì deep `npm ls` v20 exit 1 do Angular peer-minor mismatch đã tồn tại trong HEAD; AC-8 chưa chạy visual/click smoke vì không có browser khả dụng.
 - Baseline gate: full library suite của cả ba workspace cùng có `3156 pass, 18 fail, 9 skip`; 18 lỗi thuộc Chip/ChipCalendar/Input/InputNumber/Inform/AnchorNav/QuerySavedFiltersMenu, không thuộc datetime diff. v19-v21 cũng không đạt coverage thresholds toàn cục.
-- Ship status: fresh acceptance vẫn `6 PASS / 3 PARTIAL`; branch hygiene content pass sau khi repair whitespace EOF/hash links và thay `console.log` trong screenshot helper. Sẵn sàng commit/push với known gaps đã công bố.
+- Ship status: delivered as ship-with-known-gaps theo yêu cầu người dùng; không tag, publish npm, tạo GitHub Release hoặc force-push.
 - Scope note: screenshot capture script và root memory index là finish-tail artifacts do documentation/memory workflow yêu cầu nhưng nằm ngoài literal allow-list của approved plan; approved snapshots giữ nguyên và production migration scope không mở rộng.
 
 ## Artifacts Touched
@@ -83,10 +83,12 @@ Tích hợp `@sdcorejs/angular-material-datetime@1.0.3` vào `sd-datetime` của
 - Fresh deep dependency tree - v19/v21 exit 0; v20 exit 1 do peer-minor mismatch đã công bố.
 - Fresh browser discovery - `No browser is available`; AC-8 giữ deferred.
 - Fresh `check:sync`, `git diff --check`, exact metadata 15/15, dist FESM, vendored scan và protected-path assertions - pass.
+- `git commit` - feature commit `f66de9c288e696cda26947bff0984b6f4185215a` tạo thành công, 74 files.
+- `git push -u origin release/1.3` - pass; remote feature SHA khớp local và upstream là `origin/release/1.3`.
 - Finish Gate tests - user chọn `full`.
 - Documentation Gate - user chọn tạo cả `user-guide` và `technical-doc`.
 - Finish Gate review - user chọn chạy review + repair loop.
 
 ## Resume From Here
 
-Restage checkpoint, chạy final hygiene không-write, commit Conventional Commit và push không force lên `origin/release/1.3`; xác minh remote SHA khớp local.
+Không còn bước active. Các known gaps vẫn nằm trong `.sdcorejs/tasks/angular.md`; xử lý ở task riêng trước khi merge/release production nếu cần.
