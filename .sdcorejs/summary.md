@@ -1,77 +1,83 @@
 ---
-generated_at: 2026-07-13T17:48:00+07:00
+generated_at: 2026-07-15T00:52:00+07:00
+git_head: 9b5f3f7ec6d8da66d06f614ea6cd4ecadb511bef
+branch: feat/showcase-release-branding
+tracks: [angular, documentation, node]
 generator: sdcorejs-explore
-target_root: C:/Users/nghiatt15_onemount/Documents/sdcorejs/sdcorejs-angular
+target_root: C:/Users/Admin/Documents/sdcorejs/sdcorejs-angular
 target_root_kind: target-project
-git_head: 4efaca0448b241f4108aaf7611db3d8826f1fca4
 dirty: true
 relevant_dirty_paths:
-  - versions/v19/projects/showcase
-  - versions/v20/projects/showcase
-  - versions/v21/projects/showcase
-tracks:
-  - angular
-  - documentation
-  - node
-stack_profiles:
-  - core-ui-angular
-  - node-general
-profile_confidence: high
-source_roots:
-  - versions/v19/projects/showcase
-  - versions/v19/projects/sdcorejs-angular
-  - scripts
-  - published-docs
-summary_scope: showcase documentation refactor and versioned Angular workspaces
-package_manager: npm
-package_manifest_hash: 658F3F9E8FDB1FDA0EABC75B24CA09FBFB2DD83D0BAD9F955062390256A5EDAD
-package_lock_hash: 0C427072AC0691FD98F2E52BE6AFB88C837DCC7BC1F04BE659AE2121AFB28C2A
-source_roots_hash: 306CE83E83ADA3D94AE33FE1104AC682D00EBC4B7F9CA80682ADC81DB42302ED
-generated_from:
-  - package.json
+  - versions/v19/projects/sdcorejs-angular/forms/datetime
+  - versions/v20/projects/sdcorejs-angular/forms/datetime
+  - versions/v21/projects/sdcorejs-angular/forms/datetime
   - versions/v19/package.json
-  - versions/v19/angular.json
-  - versions/v19/projects/showcase/src/app/app.routes.ts
-  - versions/v19/projects/showcase/src/app/layout/sidebar.config.ts
-  - versions/v19/projects/showcase/src/app/shared/demo-page.component.ts
-  - published-docs/versions.json
-commands_run:
-  - git rev-parse --show-toplevel
-  - git rev-parse HEAD
-  - git status --short
-  - git ls-files versions/v19/projects/showcase versions/v19/projects/sdcorejs-angular
-commands_skipped: []
-redaction_applied: true
+  - versions/v20/package.json
+  - versions/v21/package.json
+  - .sdcorejs/docs/angular
+  - .sdcorejs/documentation
+  - .sdcorejs/tasks
+  - .sdcorejs/memories
+stack_profiles: [core-ui-angular, node-general]
+profile_confidence: high
+package_manager: npm
+summary_scope: sd-datetime shared picker migration and multi-version rollout
 ---
 
 # Project Summary - sdcorejs-angular
 
-## Repository Shape
+## What this project is
 
-- The repository maintains Angular 19, 20, and 21 workspaces under `versions/`.
-- `versions/v19` is the source of truth for library and showcase work; root `npm run sync` rolls compatible changes into v20/v21 and `npm run check:sync` verifies parity.
-- Root Node/PowerShell tooling owns workspace synchronization and published-document collection.
-- `published-docs/versions.json` and per-version `index.json`/Markdown trees are the versioned documentation archive used by GitHub Pages.
+- Repository nguồn của package npm `@sdcorejs/angular`, duy trì đồng thời các line Angular 19, 20 và 21.
+- `versions/v19` là source of truth; root `npm run sync` rollout thay đổi tương thích sang v20/v21 và `npm run check:sync` kiểm tra parity.
+- Showcase v19 cũng là documentation site dùng để smoke-test các secondary entrypoint của library.
 
-## Angular 19 Showcase
+## Stack & track
 
-- The standalone showcase lives at `versions/v19/projects/showcase` and imports the local `@sdcorejs/angular` secondary entrypoints, so it is classified as `core-ui-angular`.
-- `docs/core/documentation.registry.ts` is the single typed catalog for 85 pages across seven groups; routes, sidebar, category pages, home, search, breadcrumbs, pagination, published-document availability, and 253 examples derive from it.
-- Version-aware routes expose Overview, Styling, API and Examples under `/v/:version/...`, plus home, changelog, about, legacy redirects and a real not-found page.
-- `layout/shell.component.*` provides responsive navigation, global search, version switching, route-title/focus behavior and an accessible mobile drawer.
-- Every existing `demo-section` has a generated stable id and focused structural guard, so one example card constructs only its selected scenario. Button is the reference physical split with seven standalone example components.
-- Published Markdown is fetched base-href-safely, classified hierarchically, and rendered with semantic tables/code/safe fragment, relative and external links.
+- Track chính: Angular library/component; track phụ: documentation và Node/PowerShell tooling.
+- Angular Material/CDK, standalone components, signals và ng-packagr.
+- Mỗi workspace có `package.json`, `package-lock.json`, Angular config và build/test scripts riêng.
 
-## Library And Tooling
+## Architecture map
 
-- Library sources live at `versions/v19/projects/sdcorejs-angular`; do not change public APIs for showcase-only work.
-- Angular Material and PrismJS are already direct v19 dependencies; no new documentation framework is needed.
-- Showcase Karma currently covers 167 routing, registry, version, search, Markdown, accessibility/focus, focused-rendering and failure-path cases per workspace. Root generator tests cover 19 changelog/source/manifest/freshness cases.
-- Root generators produce typed changelog, example manifest and lazy source artifacts; generated freshness and authored example order are test-gated.
-- GitHub Pages builds the v19 showcase with a non-root base href and deploys published docs beneath `docs/`; runtime asset/document URLs must resolve from the configured base URI.
+- Library source: `versions/v19/projects/sdcorejs-angular`.
+- Datetime wrapper: `versions/v19/projects/sdcorejs-angular/forms/datetime`.
+- Showcase route kiểm tra datetime: `/forms/datetime` từ `versions/v19/projects/showcase`.
+- Rollout scripts: root `scripts/sync-multi-version-workspaces.ps1` và `scripts/check-version-sync.mjs`.
+- v20/v21 là derived workspaces; không hand-edit shared logic trước khi v19 đã đúng.
 
-## Current Work Context
+## Reusable building blocks
 
-- Active branch: `refactor/showcase-documentation-site` at `4efaca0448b241f4108aaf7611db3d8826f1fca4`.
-- The branch contains the committed documentation-site refactor plus uncommitted synchronized showcase fixes in v19/v20/v21.
-- Current verified state: generators 19/19, Karma 167/167 and production builds pass on v19/v20/v21, independent review findings are resolved, and version sync parity passes.
+- `SdDatetime` tiếp tục sở hữu SDCoreJS form integration, model format, validation, i18n và viewed/inline behavior.
+- `@sdcorejs/angular-material-datetime` cung cấp picker overlay, time spinner, adapter, DI tokens và action directives.
+- Focused Karma suite nằm cạnh `datetime.component.ts`; production build qua ng-packagr kiểm tra package metadata và external dependency resolution.
+
+## Conventions detected
+
+- Thay đổi shared logic ở v19 trước, sau đó chạy sync và review diff v20/v21.
+- Runtime dependency không phải peer phải xuất hiện trong workspace manifest, published-library manifest, lockfile và `allowedNonPeerDependencies`.
+- Không trộn class/token từ source vendored với public package entrypoint vì Angular DI dựa trên identity.
+- Không hand-edit `published-docs/**`; release docs do workflow tạo sau publish.
+
+## Reuse cheatsheet
+
+- Test focused: `npm --prefix versions/v19 run test:ci -- --include=projects/sdcorejs-angular/forms/datetime/src/datetime.component.spec.ts`.
+- Build library: `npm --prefix versions/v19 run build`.
+- Rollout/check: `npm run sync`, rồi `npm run check:sync`.
+- Dependency proof: `npm --prefix versions/v19 ls @sdcorejs/angular-material-datetime --depth=0`.
+
+## Open context
+
+- Migration `@sdcorejs/angular-material-datetime@1.0.3` đã được triển khai ở v19 và rollout bằng root sync sang v20/v21; source vendored đã được loại bỏ ở cả ba workspace.
+- `SdDatetime.open()` dùng `setValue()` trước `open()` để package 1.0.3 khởi tạo draft từ model hiện tại; regression tests bao phủ initial model và external model update.
+- Focused datetime suites đạt `66/66` và production builds đạt trên v19/v20/v21; exact manifests/locks/dist metadata, sync và diff checks đều đạt.
+- Full library suites hiện cùng có `3156 pass, 18 fail, 9 skip`; 18 failure thuộc các component ngoài datetime diff và coverage threshold toàn cục chưa đạt.
+- Deep dependency tree v20 exit 1 do Angular peer-minor mismatch có sẵn ở HEAD; v19/v21 đạt và cả ba resolve exact datetime package `1.0.3`.
+- Visual/click showcase smoke chưa chạy vì browser runtime trả `No browser is available`; HTTP route đã trả 200 ở lần serve trước.
+- Independent review/repair không còn finding mở. Technical doc, user guide, screenshot script, task tracker và durable memory đã được tạo/cập nhật.
+- Verify-before-done chưa xanh. Sau khi nhận đầy đủ báo cáo gap, người dùng đã yêu cầu commit/push `release/1.3`; đây là ship-with-known-gaps, không phải reclassify các criterion thành pass.
+
+## Freshness
+
+- Summary phản ánh branch `feat/showcase-release-branding` tại HEAD `9b5f3f7ec6d8da66d06f614ea6cd4ecadb511bef`.
+- Summary phản ánh working tree sau implementation, repair, documentation và fresh final verification ngày 2026-07-15.

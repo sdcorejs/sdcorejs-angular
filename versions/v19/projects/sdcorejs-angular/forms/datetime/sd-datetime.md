@@ -9,7 +9,7 @@
 
 ## One-line purpose
 
-Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Reuses the native-Date adapter and picker primitives from `@sdcorejs/angular-material-datetime@1.0.2` with SDCoreJS label, validators, and `[viewed]` read-only support.
+Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Reuses the native-Date adapter and picker primitives from `@sdcorejs/angular-material-datetime@1.0.3` with SDCoreJS label, validators, and `[viewed]` read-only support.
 
 ## When to use
 

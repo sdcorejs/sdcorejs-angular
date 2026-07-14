@@ -478,6 +478,19 @@ describe('SdDatetime', () => {
       expect(packagePicker()).toBeTruthy();
     });
 
+    it('renders the package calendar, time spinner, and localized projected actions', () => {
+      comp.open();
+      fixture.detectChanges();
+
+      const panel = document.querySelector<HTMLElement>('.sd-datetime-picker__panel');
+      expect(panel).not.toBeNull();
+      expect(panel!.querySelector('mat-calendar')).not.toBeNull();
+      expect(panel!.querySelector('sd-time-spinner')).not.toBeNull();
+      expect(panel!.querySelector('button[sdDatetimePickerNow]')?.textContent).toContain('Bây giờ');
+      expect(panel!.querySelector('button[sdDatetimePickerCancel]')?.textContent).toContain('Hủy');
+      expect(panel!.querySelector('button[sdDatetimePickerApply]')?.textContent).toContain('Xác nhận');
+    });
+
     it('forwards showSeconds and min/max bounds to the package picker', () => {
       const min = new Date(2026, 0, 1, 8, 0, 0);
       const max = new Date(2026, 11, 31, 18, 0, 0);
@@ -490,6 +503,33 @@ describe('SdDatetime', () => {
       expect(picker.showSeconds()).toBe(true);
       expect(picker.minDate()).toEqual(min);
       expect(picker.maxDate()).toEqual(max);
+    });
+
+    it('opens with the current model as the package selection', () => {
+      host.model = '2026/05/15 09:30:45';
+      fixture.detectChanges();
+
+      comp.open();
+      fixture.detectChanges();
+
+      expect(packagePicker().selected()).toEqual(new Date(2026, 4, 15, 9, 30, 45));
+    });
+
+    it('refreshes the package selection after an external model update', () => {
+      const picker = packagePicker();
+      const firstValue = new Date(2026, 4, 15, 9, 30, 0);
+
+      comp.open();
+      picker.select(firstValue);
+      fixture.detectChanges();
+      clickPickerAction('button[sdDatetimePickerApply]');
+
+      host.model = '2026/06/20 16:45:00';
+      fixture.detectChanges();
+      comp.open();
+      fixture.detectChanges();
+
+      expect(picker.selected()).toEqual(new Date(2026, 5, 20, 16, 45, 0));
     });
 
     it('Cancel closes the overlay without committing the pending selection', () => {

@@ -9,7 +9,7 @@
 
 ## One-line purpose
 
-Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Uses `provideDateFnsAdapter` with SDCoreJS label, validators, and `[viewed]` read-only support.
+Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Reuses the native-Date adapter and picker primitives from `@sdcorejs/angular-material-datetime@1.0.3` with SDCoreJS label, validators, and `[viewed]` read-only support.
 
 ## When to use
 
@@ -81,7 +81,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: the input is hidden and the value (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
 - **Validators**: `[required]` adds `Validators.required`. `[inlineError]="msg"` injects a synthetic error and shows `msg`. The picker emits its own `matDatepickerMin` / `matDatepickerMax` errors (via the min/max bounds on `<input>`). Direct text entry validates against `dd/MM/yyyy HH:mm` (and `dd/MM/yyyy HH:mm:ss`) regex — bad format sets a synthetic `date: 'Sai định dạng'` error. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày nhỏ nhất: <localized>"; max → "Ngày lớn nhất: <localized>"; bad format → "Sai định dạng"; `inlineError` → the provided message.
-- **Date adapter**: `provideDateFnsAdapter` configured with `dd/MM/yyyy HH:mm` parse/display. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
+- **Date adapter**: `SdNativeDateAdapter` and the date-format tokens from `@sdcorejs/angular-material-datetime` are provided locally by `SdDatetime`, so consumers do not need app-level adapter configuration. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
 
 ## Public methods & getters
 

@@ -329,7 +329,8 @@ export class SdDatetime implements OnDestroy, OnInit {
     const picker = this.dateTimePicker();
     if (!picker) return;
     picker.setAnchor(this.inputRef()?.nativeElement ?? (this.elementRef.nativeElement as HTMLElement));
-    picker.select(this.#currentValueAsDate() ?? new Date());
+    // why: open() rebuilds the draft from committed state, so seed that state before opening.
+    picker.setValue(this.#currentValueAsDate() ?? new Date());
     picker.open();
     this.ref.markForCheck();
   }
