@@ -28,6 +28,7 @@ on:
       - 'scripts/collect-*.mjs'
       - 'scripts/generate-showcase-changelog*.mjs'
       - 'scripts/generate-showcase-example-sources*.mjs'
+      - 'scripts/generate-showcase-route-shells*.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_run:
     workflows:
@@ -69,6 +70,12 @@ jobs:
       - name: Test showcase example source generator
         run: npm run test:showcase-examples
 
+      - name: Test showcase branding metadata
+        run: npm run test:showcase-branding
+
+      - name: Test showcase route shell generator
+        run: npm run test:showcase-route-shells
+
       - name: Generate showcase example source data
         run: npm run generate:showcase-examples
 
@@ -105,10 +112,9 @@ jobs:
           fi
           echo "Published docs: latest=$LATEST · versions: $(ls published-docs | grep -v '\.json$' | tr '\n' ' ')"
 
-      - name: SPA fallback — copy index.html → 404.html
-        # Angular SPA: deep links phải fallback về index. GitHub Pages serve 404.html khi route không tồn tại.
-        run: cp dist/showcase/browser/index.html dist/showcase/browser/404.html
-        working-directory: versions/v19
+      - name: Generate route-specific static HTML shells
+        # Emit indexable 200 shells for every public docs route plus a noindex SPA fallback.
+        run: npm run generate:showcase-route-shells
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

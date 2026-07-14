@@ -3,7 +3,7 @@ import { docsVersionGuard, legacyDocsRedirectGuard } from './docs/core/docs-rout
 import { isDocCategory } from './docs/core/documentation.models';
 import { findDocNavigationGroup, findDocPage } from './docs/core/documentation.registry';
 
-const PACKAGE_TITLE = '@sdcorejs/angular documentation';
+const PACKAGE_TITLE = '@sdcorejs/angular — Documentation & Live Examples';
 
 export const routes: Routes = [
   {

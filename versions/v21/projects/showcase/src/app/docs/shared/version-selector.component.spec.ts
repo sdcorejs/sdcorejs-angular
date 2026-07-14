@@ -42,13 +42,22 @@ describe('VersionSelectorComponent', () => {
       baseUrl: 'ignored',
       versions: [
         { version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '21.1.1', index: 'ignored', released: '2026-07-10', count: 85 },
         { version: '20.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '20.1.1', index: 'ignored', released: '2026-07-10', count: 85 },
+        { version: '19.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '19.1.1', index: 'ignored', released: '2026-07-10', count: 85 },
       ],
     });
     await pending;
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.querySelectorAll('optgroup').length).toBe(2);
+    expect(fixture.nativeElement.querySelectorAll('optgroup').length).toBe(3);
+    expect([...fixture.nativeElement.querySelectorAll('option')].map((option: HTMLOptionElement) => option.value)).toEqual([
+      '21.1.2',
+      '20.1.2',
+      '19.1.2',
+    ]);
   });
 
   it('keeps the selector aligned and renders a non-interactive dropdown chevron', async () => {
@@ -57,7 +66,11 @@ describe('VersionSelectorComponent', () => {
       package: '@sdcorejs/angular',
       latest: '21.1.2',
       baseUrl: 'ignored',
-      versions: [{ version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 }],
+      versions: [
+        { version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '20.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '19.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+      ],
     });
     await pending;
     fixture.detectChanges();
@@ -81,6 +94,7 @@ describe('VersionSelectorComponent', () => {
       versions: [
         { version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
         { version: '20.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '19.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
       ],
     });
     await pending;
@@ -114,7 +128,11 @@ describe('VersionSelectorComponent', () => {
       package: '@sdcorejs/angular',
       latest: '21.1.2',
       baseUrl: 'ignored',
-      versions: [{ version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 }],
+      versions: [
+        { version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '20.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+        { version: '19.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+      ],
     });
     await retry;
     fixture.detectChanges();
