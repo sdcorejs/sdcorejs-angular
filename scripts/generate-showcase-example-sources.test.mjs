@@ -18,6 +18,10 @@ import {
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
+function normalizeLineEndings(content) {
+  return content.replace(/\r\n?/g, '\n');
+}
+
 function createFixture() {
   const root = mkdtempSync(join(tmpdir(), 'sdcorejs-showcase-sources-'));
   const pagesRoot = join(root, 'pages');
@@ -377,6 +381,6 @@ test('checked-in published-doc manifests, indexes, registry mappings, and docume
 
 test('checked-in generated example artifacts are fresh', () => {
   const records = collectDemoSourceFiles().flatMap(sourceFile => extractExampleSources(sourceFile));
-  assert.equal(readFileSync(DEFAULT_OUTPUT_FILE, 'utf8'), renderGeneratedModule(records));
-  assert.equal(readFileSync(DEFAULT_MANIFEST_OUTPUT_FILE, 'utf8'), renderGeneratedManifest(records));
+  assert.equal(normalizeLineEndings(readFileSync(DEFAULT_OUTPUT_FILE, 'utf8')), renderGeneratedModule(records));
+  assert.equal(normalizeLineEndings(readFileSync(DEFAULT_MANIFEST_OUTPUT_FILE, 'utf8')), renderGeneratedManifest(records));
 });

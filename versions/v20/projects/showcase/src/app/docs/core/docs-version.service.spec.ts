@@ -12,7 +12,11 @@ const manifest: DocsVersionsManifest = {
   baseUrl: 'ignored',
   versions: [
     { version: '21.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+    { version: '21.1.1', index: 'ignored', released: '2026-07-10', count: 85 },
     { version: '20.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+    { version: '20.1.1', index: 'ignored', released: '2026-07-10', count: 85 },
+    { version: '19.1.2', index: 'ignored', released: '2026-07-11', count: 85 },
+    { version: '19.1.1', index: 'ignored', released: '2026-07-10', count: 85 },
   ],
 };
 
@@ -48,7 +52,18 @@ describe('DocsVersionService', () => {
     await pending;
 
     expect(service.latestVersion()).toBe('21.1.2');
-    expect(service.versionGroups().map((group) => group.label)).toEqual(['21.x', '20.x']);
+    expect(service.versionGroups().map(group => group.label)).toEqual(['21.x', '20.x', '19.x']);
+    expect(service.versionGroups().flatMap(group => group.versions.map(entry => entry.version))).toEqual(['21.1.2', '20.1.2', '19.1.2']);
+  });
+
+  it('upgrades a stored pre-showcase version to the first showcase release of the same Angular major', async () => {
+    storage.getItem.and.returnValue('20.1.1');
+    const pending = service.load();
+    http.expectOne('https://example.test/app/docs/versions.json').flush(manifest);
+
+    await pending;
+
+    expect(service.selectedVersion()).toBe('20.1.2');
   });
 
   it('falls back to latest for an invalid route version and exposes a notice', async () => {

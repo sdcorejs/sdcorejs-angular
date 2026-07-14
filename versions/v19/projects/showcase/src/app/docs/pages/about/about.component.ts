@@ -10,7 +10,9 @@ import { RouterLink } from '@angular/router';
       <nav class="about__breadcrumb" aria-label="Breadcrumb"><a routerLink="/">Docs</a><span>/</span><span>About</span></nav>
 
       <section class="about__hero" aria-labelledby="about-title">
-        <div class="about__mark" aria-hidden="true">SD</div>
+        <div class="about__brand" aria-hidden="true">
+          <img class="about__mark" src="assets/brand/sdcorejs-logo.png" alt="" />
+        </div>
         <div class="about__intro">
           <span class="about__eyebrow">Open-source Angular UI library</span>
           <h1 id="about-title">&#64;sdcorejs/angular</h1>

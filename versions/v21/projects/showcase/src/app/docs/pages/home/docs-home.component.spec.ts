@@ -87,6 +87,9 @@ describe('DocsHomeComponent', () => {
     expect(profile?.textContent).toContain('Trần Thuận Nghĩa');
     expect(profile?.textContent).toContain('Full Stack Developer');
     expect(profile?.textContent).toContain('strongly typed web applications');
+    const avatar = profile?.querySelector<HTMLImageElement>('.maintainer-card__avatar');
+    expect(avatar?.getAttribute('src')).toBe('assets/brand/sdcorejs-logo.png');
+    expect(avatar?.alt).toBe('');
     expect(links.some(link => link.href === 'https://www.linkedin.com/in/tran-thuan-nghia/')).toBeTrue();
     expect(links.some(link => link.href === 'mailto:tran.thuan.nghia@gmail.com')).toBeTrue();
   });

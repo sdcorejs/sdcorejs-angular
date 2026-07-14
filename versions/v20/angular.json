@@ -70,7 +70,7 @@
                                                                                       "tsConfig":  "projects/showcase/tsconfig.app.json",
                                                                                       "inlineStyleLanguage":  "scss",
                                                                                       "assets":  [
-
+                                                                                                     "projects/showcase/src/assets"
                                                                                                  ],
                                                                                       "styles":  [
                                                                                                      "projects/showcase/src/styles.scss",
@@ -121,6 +121,9 @@
                                                                      "options":  {
                                                                                      "karmaConfig":  "projects/showcase/karma.conf.js",
                                                                                      "tsConfig":  "projects/showcase/tsconfig.spec.json",
+                                                                                     "assets":  [
+                                                                                                    "projects/showcase/src/assets"
+                                                                                                ],
                                                                                      "polyfills":  [
                                                                                                        "zone.js",
                                                                                                        "zone.js/testing"

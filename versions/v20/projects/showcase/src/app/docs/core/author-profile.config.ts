@@ -21,7 +21,7 @@ export const AUTHOR_PROFILE: AuthorProfile = {
   authorTitle: 'Full Stack Developer',
   authorBio:
     'Focused on building practical, strongly typed web applications and reusable tools that make complex business workflows easier to deliver and maintain.',
-  avatar: '',
+  avatar: 'assets/brand/sdcorejs-logo.png',
   githubUrl: 'https://github.com/sdcorejs',
   linkedinUrl: 'https://www.linkedin.com/in/tran-thuan-nghia/',
   websiteUrl: '',

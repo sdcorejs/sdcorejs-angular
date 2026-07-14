@@ -1,5 +1,7 @@
 import { DocsVersionEntry, DocsVersionGroup, DocsVersionsManifest } from './published-docs.models';
 
+export const SHOWCASE_RELEASE_VERSIONS = ['21.1.2', '20.1.2', '19.1.2'] as const;
+
 interface SemanticVersion {
   major: number;
   minor: number;
@@ -74,6 +76,25 @@ export function groupVersionsByMajor(entries: readonly DocsVersionEntry[]): Docs
     }));
 }
 
+/** Restricts the interactive Showcase to the first release published for each supported Angular major. */
+export function selectShowcaseReleaseManifest(manifest: DocsVersionsManifest): DocsVersionsManifest {
+  const entriesByVersion = new Map(manifest.versions.map(entry => [entry.version, entry]));
+  const versions = SHOWCASE_RELEASE_VERSIONS.map(version => entriesByVersion.get(version)).filter(
+    (entry): entry is DocsVersionEntry => entry !== undefined
+  );
+  const missing = SHOWCASE_RELEASE_VERSIONS.filter(version => !entriesByVersion.has(version));
+
+  if (missing.length) {
+    throw new Error(`Showcase release metadata is missing for: ${missing.join(', ')}`);
+  }
+
+  return {
+    ...manifest,
+    latest: versions.some(entry => entry.version === manifest.latest) ? manifest.latest : versions[0].version,
+    versions,
+  };
+}
+
 export function resolveRequestedVersion(requested: string | null | undefined, manifest: DocsVersionsManifest): ResolvedDocsVersion {
   const normalized = requested?.trim();
   if (!normalized || normalized === 'latest') {
@@ -81,7 +102,13 @@ export function resolveRequestedVersion(requested: string | null | undefined, ma
   }
 
   const found = manifest.versions.some(entry => entry.version === normalized);
-  return found ? { version: normalized, fallback: false } : { version: manifest.latest, fallback: true };
+  if (found) return { version: normalized, fallback: false };
+
+  const requestedMajor = parseSemanticVersion(normalized).major;
+  const sameMajorFallback = sortVersionsDescending(
+    manifest.versions.filter(entry => parseSemanticVersion(entry.version).major === requestedMajor).map(entry => entry.version)
+  )[0];
+  return { version: sameMajorFallback ?? manifest.latest, fallback: true };
 }
 
 export function buildVersionRoute(currentUrl: string, targetVersion: string): string {

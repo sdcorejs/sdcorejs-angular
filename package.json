@@ -17,10 +17,13 @@
     "collect-release-docs": "node scripts/collect-release-docs.mjs",
     "generate:showcase-changelog": "node scripts/generate-showcase-changelog.mjs",
     "generate:showcase-examples": "node scripts/generate-showcase-example-sources.mjs",
+    "generate:showcase-route-shells": "node scripts/generate-showcase-route-shells.mjs",
     "generate:showcase": "npm run generate:showcase-changelog && npm run generate:showcase-examples",
     "test:showcase-changelog": "node --test scripts/generate-showcase-changelog.test.mjs",
     "test:showcase-examples": "node --test scripts/generate-showcase-example-sources.test.mjs",
-    "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples",
+    "test:showcase-branding": "node --test scripts/showcase-branding.test.mjs",
+    "test:showcase-route-shells": "node --test scripts/generate-showcase-route-shells.test.mjs",
+    "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
     "changeset": "changeset"
   },
   "devDependencies": {

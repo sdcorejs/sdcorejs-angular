@@ -93,6 +93,13 @@ describe('ShellComponent', () => {
     expect(link.textContent?.trim()).toBe('');
   });
 
+  it('uses the SDCoreJS logo as the documentation brand mark', () => {
+    const logo = fixture.nativeElement.querySelector('.brand__logo') as HTMLImageElement | null;
+
+    expect(logo?.getAttribute('src')).toBe('assets/brand/sdcorejs-logo.png');
+    expect(logo?.getAttribute('alt')).toBe('');
+  });
+
   it('renders the shared primary navigation in both the header and mobile drawer', () => {
     const headerLabels = [...fixture.nativeElement.querySelectorAll('.topnav a')].map((link: Element) => link.textContent?.trim());
     const drawerLabels = [...fixture.nativeElement.querySelectorAll('.sidebar__primary a')].map((link: Element) =>

@@ -63,7 +63,9 @@ import { MarkdownRendererComponent } from '../../shared/markdown-renderer.compon
       }
 
       <section class="maintainer-card" aria-labelledby="maintainer-name">
-        <div class="maintainer-card__mark" aria-hidden="true">TN</div>
+        <div class="maintainer-card__mark">
+          <img class="maintainer-card__avatar" [src]="author.avatar" alt="" />
+        </div>
         <div>
           <span class="maintainer-card__eyebrow">Maintained by</span>
           <h2 id="maintainer-name">{{ author.authorName }}</h2>

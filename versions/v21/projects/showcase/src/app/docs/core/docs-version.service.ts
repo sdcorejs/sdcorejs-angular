@@ -3,7 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { DOCS_BASE_URL, DOCS_STORAGE } from './docs.tokens';
-import { buildVersionRoute, groupVersionsByMajor, resolveRequestedVersion } from './docs-version.utils';
+import { buildVersionRoute, groupVersionsByMajor, resolveRequestedVersion, selectShowcaseReleaseManifest } from './docs-version.utils';
 import { DocsVersionsManifest } from './published-docs.models';
 
 const SELECTED_VERSION_KEY = 'sdcorejs.docs.version';
@@ -36,7 +36,8 @@ export class DocsVersionService {
     this.error.set(null);
     const url = new URL('versions.json', this.#baseUrl).toString();
     const request = firstValueFrom(this.#http.get<DocsVersionsManifest>(url))
-      .then((manifest) => {
+      .then(publishedManifest => {
+        const manifest = selectShowcaseReleaseManifest(publishedManifest);
         this.#manifest.set(manifest);
         let stored: string | null = null;
         try {
