@@ -56,7 +56,7 @@ import {
   SdDatetimePickerCancel,
   SdDatetimePickerNow,
   SdNativeDateAdapter,
-} from './material-datetime';
+} from '@sdcorejs/angular-material-datetime';
 
 /**
  * Thử parse `value` theo lần lượt nhiều format; trả về Date đầu tiên hợp lệ.
@@ -320,7 +320,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   }
 
   // ==========================================
-  // 6. POPUP MANAGEMENT — internal M3 material datetime picker
+  // 6. POPUP MANAGEMENT — package-backed Material datetime picker
   // ==========================================
 
   /** Mở popup chọn datetime, neo vào input. */
@@ -341,7 +341,7 @@ export class SdDatetime implements OnDestroy, OnInit {
 
   onPickerConfirm(value: Date) {
     const fmt = this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00';
-    // value giờ là native Date từ package M3, không cần .toDate() như Moment.
+    // value là native Date từ package, không cần .toDate() như Moment.
     const stored = DateUtilities.toFormat(value, fmt);
     if (this.#date !== stored) {
       this.valueModel.set(stored);

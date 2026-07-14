@@ -1,7 +1,9 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdDatetimePicker } from '@sdcorejs/angular-material-datetime';
 import { SdDatetime } from './datetime.component';
 
 // ---------------------------------------------------------------------------
@@ -83,6 +85,21 @@ describe('SdDatetime', () => {
     comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDatetime)?.componentInstance as SdDatetime;
     if (!comp) throw new Error('SdDatetime not found in fixture');
   });
+
+  afterEach(() => comp.close());
+
+  const packagePicker = (): SdDatetimePicker<Date> => {
+    const pickerDebugElement = fixture.debugElement.query(By.directive(SdDatetimePicker));
+    if (!pickerDebugElement) throw new Error('Package-backed SdDatetimePicker not found');
+    return pickerDebugElement.componentInstance as SdDatetimePicker<Date>;
+  };
+
+  const clickPickerAction = (selector: string): void => {
+    const button = document.querySelector<HTMLButtonElement>(selector);
+    expect(button).withContext(`Picker action ${selector} was not rendered`).not.toBeNull();
+    button!.click();
+    fixture.detectChanges();
+  };
 
   // -------------------------------------------------------------------------
   describe('creation & rendering', () => {
@@ -456,6 +473,86 @@ describe('SdDatetime', () => {
   });
 
   // -------------------------------------------------------------------------
+  describe('package-backed picker integration', () => {
+    it('resolves the picker from @sdcorejs/angular-material-datetime', () => {
+      expect(packagePicker()).toBeTruthy();
+    });
+
+    it('forwards showSeconds and min/max bounds to the package picker', () => {
+      const min = new Date(2026, 0, 1, 8, 0, 0);
+      const max = new Date(2026, 11, 31, 18, 0, 0);
+      host.showSeconds = true;
+      host.min = min;
+      host.max = max;
+      fixture.detectChanges();
+
+      const picker = packagePicker();
+      expect(picker.showSeconds()).toBe(true);
+      expect(picker.minDate()).toEqual(min);
+      expect(picker.maxDate()).toEqual(max);
+    });
+
+    it('Cancel closes the overlay without committing the pending selection', () => {
+      host.model = '2026/05/15 09:00:00';
+      fixture.detectChanges();
+      const picker = packagePicker();
+
+      comp.open();
+      picker.select(new Date(2026, 4, 16, 10, 30, 0));
+      fixture.detectChanges();
+      clickPickerAction('button[sdDatetimePickerCancel]');
+
+      expect(comp.pickerOpened()).toBe(false);
+      expect(host.model).toBe('2026/05/15 09:00:00');
+      expect(host.changes).toEqual([]);
+    });
+
+    it('Now updates only the pending package selection', () => {
+      const picker = packagePicker();
+      comp.open();
+      fixture.detectChanges();
+      const beforeClick = Date.now();
+
+      clickPickerAction('button[sdDatetimePickerNow]');
+
+      const selected = picker.selected();
+      const afterClick = Date.now();
+      expect(selected instanceof Date).toBe(true);
+      expect((selected as Date).getTime()).toBeGreaterThanOrEqual(beforeClick);
+      expect((selected as Date).getTime()).toBeLessThanOrEqual(afterClick);
+      expect(comp.pickerOpened()).toBe(true);
+      expect(host.changes).toEqual([]);
+    });
+
+    it('Apply commits seconds when showSeconds is enabled', () => {
+      host.showSeconds = true;
+      fixture.detectChanges();
+      const picker = packagePicker();
+
+      comp.open();
+      picker.select(new Date(2026, 4, 15, 14, 30, 45));
+      fixture.detectChanges();
+      clickPickerAction('button[sdDatetimePickerApply]');
+
+      expect(comp.pickerOpened()).toBe(false);
+      expect(host.model).toBe('2026/05/15 14:30:45');
+      expect(host.changes).toEqual(['2026/05/15 14:30:45']);
+    });
+
+    it('Apply normalizes seconds to zero when showSeconds is disabled', () => {
+      const picker = packagePicker();
+
+      comp.open();
+      picker.select(new Date(2026, 4, 15, 14, 30, 45));
+      fixture.detectChanges();
+      clickPickerAction('button[sdDatetimePickerApply]');
+
+      expect(host.model).toBe('2026/05/15 14:30:00');
+      expect(host.changes).toEqual(['2026/05/15 14:30:00']);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   describe('E2E attributes', () => {
     it('renders data-disabled reflecting FormControl state', () => {
       fixture.detectChanges();
@@ -562,6 +659,8 @@ describe('SdDatetime (bare input + open)', () => {
     bareComp = bareFixture.componentInstance;
   });
 
+  afterEach(() => bareComp.close());
+
   it('no label → no .sd-has-label; label set → .sd-has-label added', () => {
     bareFixture.detectChanges();
     expect((bareFixture.nativeElement as HTMLElement).classList.contains('sd-has-label')).toBe(false);
@@ -582,6 +681,24 @@ describe('SdDatetime (bare input + open)', () => {
     bareFixture.detectChanges();
     bareComp.open();
     expect(bareComp.pickerOpened()).toBe(true);
+  });
+
+  it('open() is a no-op when disabled', () => {
+    bareFixture.componentRef.setInput('disabled', true);
+    bareFixture.detectChanges();
+    bareComp.open();
+    expect(bareComp.pickerOpened()).toBe(false);
+  });
+
+  it('destroying the component disposes its open package overlay', () => {
+    const cleanupFixture = TestBed.createComponent(SdDatetime);
+    cleanupFixture.detectChanges();
+    cleanupFixture.componentInstance.open();
+    expect(document.querySelector('.sd-datetime-picker__overlay')).not.toBeNull();
+
+    cleanupFixture.destroy();
+
+    expect(document.querySelector('.sd-datetime-picker__overlay')).toBeNull();
   });
 });
 
