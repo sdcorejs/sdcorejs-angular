@@ -327,11 +327,25 @@ export class ButtonDemoComponent {}
 test('checked-in published-doc manifests, indexes, registry mappings, and document files are consistent', () => {
   const publishedDocsRoot = join(REPO_ROOT, 'published-docs');
   const manifest = JSON.parse(readFileSync(join(publishedDocsRoot, 'versions.json'), 'utf8'));
+  const catalog = JSON.parse(readFileSync(join(publishedDocsRoot, 'catalog.json'), 'utf8'));
   const manifestVersions = manifest.versions.map(entry => entry.version);
 
   assert.ok(manifest.latest, 'Published-doc versions manifest must declare a latest version');
   assert.equal(new Set(manifestVersions).size, manifestVersions.length, 'Published-doc manifest contains duplicate versions');
   assert.ok(manifestVersions.includes(manifest.latest), `Latest published-doc version is not in the manifest: ${manifest.latest}`);
+  assert.equal(catalog.package, manifest.package, 'Published-doc catalog and manifest packages differ');
+  assert.equal(catalog.baseUrl, manifest.baseUrl, 'Published-doc catalog and manifest base URLs differ');
+  assert.equal(catalog.latest, manifest.latest, 'Published-doc catalog and manifest latest versions differ');
+  assert.equal(
+    catalog.registry,
+    new URL('versions.json', `${manifest.baseUrl}/`).toString(),
+    'Published-doc catalog registry URL is inconsistent'
+  );
+  assert.deepEqual(
+    catalog.versions.map(entry => entry.version),
+    manifestVersions,
+    'Published-doc catalog and manifest version order differs'
+  );
 
   let latestPublishedIds;
   for (const entry of manifest.versions) {
@@ -350,12 +364,44 @@ test('checked-in published-doc manifests, indexes, registry mappings, and docume
     assert.equal(index.count, index.docs.length, `[${entry.version}] Index count and document array length differ`);
     assert.equal(new Set(publishedIds).size, publishedIds.length, `[${entry.version}] Index contains duplicate document IDs`);
 
+    const catalogEntry = catalog.versions.find(candidate => candidate.version === entry.version);
+    assert.ok(catalogEntry, `[${entry.version}] Catalog is missing the manifest version`);
+    assert.equal(catalogEntry.major, Number(entry.version.split('.')[0]), `[${entry.version}] Catalog major is inconsistent`);
+    assert.equal(catalogEntry.released, entry.released, `[${entry.version}] Catalog release date differs from manifest`);
+    assert.equal(catalogEntry.count, entry.count, `[${entry.version}] Catalog count differs from manifest`);
+    assert.equal(catalogEntry.baseUrl, index.baseUrl, `[${entry.version}] Catalog base URL differs from index`);
+    assert.equal(catalogEntry.index, entry.index, `[${entry.version}] Catalog index URL differs from manifest`);
+    assert.deepEqual(catalogEntry.docs, index.docs, `[${entry.version}] Catalog documents differ from index`);
+
     for (const document of index.docs) {
       assert.ok(document.path, `[${entry.version}] Document ${document.id} has no path`);
       assert.ok(existsSync(join(versionRoot, document.path)), `[${entry.version}] Missing referenced document file: ${document.path}`);
     }
 
     if (entry.version === manifest.latest) latestPublishedIds = new Set(publishedIds);
+  }
+
+  const expectedMajors = [...new Set(manifest.versions.map(entry => Number(entry.version.split('.')[0])))];
+  assert.deepEqual(
+    catalog.majors.map(entry => entry.major),
+    expectedMajors,
+    'Published-doc catalog major order differs from manifest'
+  );
+  for (const major of expectedMajors) {
+    const manifestEntries = manifest.versions.filter(entry => Number(entry.version.split('.')[0]) === major);
+    const catalogMajor = catalog.majors.find(entry => entry.major === major);
+    assert.ok(catalogMajor, `[v${major}] Catalog is missing the major group`);
+    assert.equal(catalogMajor.latest, manifestEntries[0].version, `[v${major}] Catalog latest version is inconsistent`);
+    assert.deepEqual(
+      catalogMajor.versions,
+      manifestEntries.map(entry => ({
+        version: entry.version,
+        released: entry.released,
+        count: entry.count,
+        index: entry.index,
+      })),
+      `[v${major}] Catalog major versions differ from manifest`
+    );
   }
 
   assert.ok(latestPublishedIds, `Latest published-doc index was not loaded: ${manifest.latest}`);

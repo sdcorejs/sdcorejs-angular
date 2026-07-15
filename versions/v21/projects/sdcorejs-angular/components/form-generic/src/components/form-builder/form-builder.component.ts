@@ -414,7 +414,9 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     return this.typeLabelFor(item);
   };
 
-  placeholderColumnsFor = (item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined): number => {
+  placeholderColumnsFor = (
+    item: FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem | undefined
+  ): number => {
     if (!item) return 12;
     if ('items' in item) return 12;
     if (this.#isPaletteComponent(item)) {

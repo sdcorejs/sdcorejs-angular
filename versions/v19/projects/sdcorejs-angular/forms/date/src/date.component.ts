@@ -69,7 +69,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     }),
   ],
   standalone: true,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

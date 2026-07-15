@@ -147,7 +147,8 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
       useClass: MatPaginatorIntlCro,
     },
   ],
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     MatMenuModule,

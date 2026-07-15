@@ -308,7 +308,7 @@ describe('SdExcelService', () => {
         { field: 'score', title: 'Score' },
       ],
       items: [
-        { fullName: '=cmd|\' /C calc\'!A0', createdBy: '+evil@example.com', score: -42 },
+        { fullName: "=cmd|' /C calc'!A0", createdBy: '+evil@example.com', score: -42 },
         { fullName: '@attacker', createdBy: '\t=cmd', score: '-text-value' },
       ],
     });

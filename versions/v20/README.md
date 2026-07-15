@@ -206,7 +206,7 @@ Tất cả hỗ trợ `[(model)]` + `[form]` (FormGroup) + `required`/`pattern`/
 
 ### Modules
 
-`auth` · `authom` · `keycloak` · `permission` · `layout` (sidebar/header/main) · `generic` (list + form scaffold)
+`auth` · `keycloak` · `permission` · `layout` (sidebar/header/main) · `generic` (list + form scaffold)
 
 ---
 

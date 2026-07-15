@@ -7,6 +7,7 @@
 - [ ] Verify the first real tag workflow, e.g. `v0.5`, creates `published-docs` for `19/20/21` and pushes the docs commit to `main`.
 
 ## Next
+- [ ] When commit is authorized, selectively stage the verified removal and lint-cleanup paths while excluding unrelated `.superpowers/**` and status-only generated files.
 - [ ] Repair the 18 repo-level baseline test failures shared by v19/v20/v21 in Chip, ChipCalendar, Input, InputNumber, Inform, AnchorNav, and QuerySavedFiltersMenu.
 - [ ] Align the existing Angular 20 package minors so deep `npm ls` no longer reports peer-minor mismatches.
 - [ ] Update v19/v20/v21 published README font setup so it no longer instructs consumers to load Google Fonts when Core local fonts are expected.
@@ -17,6 +18,7 @@
 - [ ] If branch protection blocks the docs commit, update repository rules to allow GitHub Actions bot pushes for `published-docs/**`.
 
 ## Blocked
+- [!] Run the deferred not-found UI and console/network smoke for the removed legacy documentation route - waiting for an available browser backend.
 - [!] Run visual/click smoke for `/forms/datetime` - waiting for an available browser backend and Playwright runtime.
 
 ## Done

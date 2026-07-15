@@ -249,7 +249,6 @@ describe('SdSection', () => {
       fixture.detectChanges();
       expect(component.collapsed()).toBeFalse();
     });
-
   });
 
   // -------------------------------------------------------------------------

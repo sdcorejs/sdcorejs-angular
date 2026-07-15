@@ -18,7 +18,7 @@ RBAC permission layer: `*sdPermission` directive conditionally renders templates
 ## When NOT to use
 
 - Do not use it as the only security layer. It hides UI and blocks client routes; APIs must enforce permissions again.
-- Do not use it for authentication or token refresh. Pair it with `auth`, `keycloak`, or `authom`.
+- Do not use it for authentication or token refresh. Pair it with `auth`, `keycloak`, or an app-owned provider.
 - Do not use `SdPermissionGuard.canActivate` on each leaf route. Use it once at the portal layer to preload; enforce children with `canActivateChild`.
 - Do not use permission codes as labels or feature names in the UI. Keep them as stable backend-facing identifiers.
 
@@ -185,6 +185,6 @@ export class Toolbar {
 ## Related
 
 - [auth module](./sd-auth.md) — usually paired so `getToken` resolves to the auth provider's current access token.
-- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) — typical sources for `loadPermissions` (decode JWT roles or call a backend).
+- [keycloak module](./sd-keycloak.md) — a typical source for `loadPermissions` (decode JWT roles or call a backend).
 - [layout module](./sd-layout.md) — sidebar `SdLayoutMenu` items carry `permission` / `permissionKey` and are filtered using the same service.
 - [sd-cache](../services/sd-cache.md) — backing store for permission lists (`type: 'session'`).

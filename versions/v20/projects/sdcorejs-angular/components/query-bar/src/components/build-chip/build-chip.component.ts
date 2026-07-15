@@ -36,17 +36,7 @@ type Density = 'compact' | 'comfortable';
   styleUrl: './build-chip.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon,
-    CommonModule,
-    SdOperator,
-    SdDate,
-    SdDateRange,
-    SdDatetime,
-    SdInput,
-    SdInputNumber,
-    SdSelect,
-    SdQueryInlineValueChip,
-  ],
+  imports: [SdIcon, CommonModule, SdOperator, SdDate, SdDateRange, SdDatetime, SdInput, SdInputNumber, SdSelect, SdQueryInlineValueChip],
 })
 export class SdQueryBuildChip {
   /** Current build state — drives every visual branch. */

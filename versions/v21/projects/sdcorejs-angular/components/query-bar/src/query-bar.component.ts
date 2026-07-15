@@ -60,7 +60,8 @@ const EMPTY_ARRAY: any[] = [];
   styleUrls: ['./query-bar.component.scss', './query-bar.controls.scss'],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     MatMenuModule,
