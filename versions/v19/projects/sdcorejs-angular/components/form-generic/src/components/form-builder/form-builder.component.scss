@@ -452,7 +452,6 @@
     pointer-events: none;
     user-select: none;
     opacity: 1 !important;
-    transform: none !important;
     animation: none !important;
     position: relative;
     z-index: 6;
@@ -1012,6 +1011,12 @@
     background: var(--md-sys-color-surface-container-low);
     padding: 32px;
   }
+}
+
+// why: the outer CDK canvas list must cover an empty canvas before its first child is rendered.
+.fb-canvas__body > .cdk-drop-list {
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 // ── M3 segmented Design/Preview toggle ──────────────────────────────────

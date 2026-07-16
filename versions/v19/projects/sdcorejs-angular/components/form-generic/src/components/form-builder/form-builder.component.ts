@@ -21,6 +21,7 @@ import {
   signal,
   untracked,
   viewChild,
+  viewChildren,
   OnInit,
   OnDestroy,
 } from '@angular/core';
@@ -146,6 +147,8 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   readonly configureValidation = viewChild(ConfigureValidationComponent);
   readonly formRender = viewChild(SdFormRender);
   private readonly canvasDropZone = viewChild<ElementRef<HTMLElement>>('canvasDropZone');
+  readonly rowDropLists = viewChildren<unknown, CdkDropList>('rowDropList', { read: CdkDropList });
+  readonly connectedRowDropLists = computed<CdkDropList[]>(() => [...this.rowDropLists()]);
 
   // ── injected services ──────────────────────────────────────────────────
   readonly #ref = inject(ChangeDetectorRef);
@@ -715,15 +718,24 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     }
   };
 
+  canEnterCanvasDropList = (
+    drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup | DragDropRowItem>
+  ): boolean => {
+    const data = drag.data;
+    if (!data) return false;
+    if (this.#isPaletteComponent(data)) return true;
+    return typeof data === 'object' && 'items' in data;
+  };
+
   canEnterRowDropList = (
     drag: CdkDrag<FormBuilderComponent | SdFormGenericComponent | SdFormGenericGroup>,
     drop: CdkDropList<(SdFormGenericComponent | SdFormGenericGroup)[]>
   ): boolean => {
     const row = this.#rowForItems(drop.data);
-    if (!row) return true;
+    if (!row) return false;
 
     const data = drag.data;
-    if (!data) return true;
+    if (!data) return false;
     if (this.#isPaletteComponent(data)) {
       return data.type !== 'break' && this.#availableColumns(row) >= 2;
     }
@@ -731,7 +743,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
       return canPlaceInRow(row, data, data.id);
     }
 
-    return true;
+    return false;
   };
 
   onFocus = (event: FocusEvent) => {

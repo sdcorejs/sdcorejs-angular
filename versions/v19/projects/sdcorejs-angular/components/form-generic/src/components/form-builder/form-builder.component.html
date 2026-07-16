@@ -44,7 +44,12 @@
     <div class="fb-palette__scroll">
       @for (group of paletteGroups(); track group.key) {
         <div class="fb-palette__group-label">{{ group.label }}</div>
-        <div class="fb-palette__list" cdkDropList [cdkDropListData]="group.items" [cdkDropListEnterPredicate]="noReturnPredicate">
+        <div
+          class="fb-palette__list"
+          cdkDropList
+          [cdkDropListData]="group.items"
+          [cdkDropListConnectedTo]="connectedRowDropLists()"
+          [cdkDropListEnterPredicate]="noReturnPredicate">
           @for (formBuilderComponent of group.items; track formBuilderComponent.type) {
             <div
               cdkDrag
@@ -180,6 +185,7 @@
           cdkDropList
           cdkDropListOrientation="vertical"
           [cdkDropListData]="dragDropRows"
+          [cdkDropListEnterPredicate]="canEnterCanvasDropList"
           (cdkDropListDropped)="drop($event)"
           (click)="clickFormContentEmpty()"
           aria-hidden="true">
@@ -234,11 +240,13 @@
               </button>
 
               <div
+                #rowDropList="cdkDropList"
                 class="fb-row__items"
                 style="display: flex; flex: 1; gap: var(--gap-2)"
                 cdkDropList
                 cdkDropListOrientation="horizontal"
                 [cdkDropListData]="row.items"
+                [cdkDropListConnectedTo]="connectedRowDropLists()"
                 [cdkDropListEnterPredicate]="canEnterRowDropList"
                 (cdkDropListEntered)="onRowItemsDropEntered(row, $event)"
                 (cdkDropListSorted)="onRowItemsDropSorted(row, $event)"
