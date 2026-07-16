@@ -20,7 +20,7 @@
   <sd-inline-text
     [control]="inputControl"
     [placeholder]="placeholder() || _label || ''"
-    [clearable]="!_required"
+    [clearable]="clearable() && !_required"
     [autoId]="autoId()"
     [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
     (sdFocus)="onFocus()"

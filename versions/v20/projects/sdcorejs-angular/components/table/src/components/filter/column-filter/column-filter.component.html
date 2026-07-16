@@ -41,6 +41,7 @@
           (sdBlur)="onFilterCommit()"
           (cleared)="onFilterChange()"
           [disabled]="_column.filter?.disabled"
+          clearable
           hideInlineError>
         </sd-input>
       } @else if (_column.type === 'number') {
@@ -55,6 +56,7 @@
             (sdBlur)="onFilterCommit()"
             (cleared)="onFilterChange()"
             [disabled]="_column.filter?.disabled"
+            clearable
             hideInlineError>
           </sd-input-number>
         } @else if (_column.filter?.type === 'split-number') {
@@ -142,6 +144,7 @@
             [(model)]="_columnFilter[_column.field]"
             (sdChange)="onFilterChange()"
             [disabled]="_column.filter?.disabled"
+            clearable
             hideInlineError>
           </sd-date>
         } @else if (_column.filter?.type === 'split-date') {
@@ -170,6 +173,7 @@
       (sdBlur)="onFilterCommit()"
       (cleared)="onFilterChange()"
       [disabled]="disabled"
+      clearable
       hideInlineError>
     </sd-input-number>
     <div class="mx-4">-</div>
@@ -182,6 +186,7 @@
       (sdBlur)="onFilterCommit()"
       (cleared)="onFilterChange()"
       [disabled]="disabled"
+      clearable
       hideInlineError>
     </sd-input-number>
   </div>
@@ -198,6 +203,7 @@
       [(model)]="_columnFilter[field].from"
       (sdChange)="onFilterChange()"
       [disabled]="disabled"
+      clearable
       hideInlineError>
     </sd-date>
     <div class="mx-4">-</div>
@@ -209,6 +215,7 @@
       [(model)]="_columnFilter[field].to"
       (sdChange)="onFilterChange()"
       [disabled]="disabled"
+      clearable
       hideInlineError>
     </sd-date>
   </div>

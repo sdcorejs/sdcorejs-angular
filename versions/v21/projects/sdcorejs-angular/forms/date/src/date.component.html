@@ -107,7 +107,7 @@
         <mat-error>{{ _errorMessage }}</mat-error>
       }
 
-      @if (formControl.value && !_required && !formControl.disabled && !_bare) {
+      @if (clearable() && formControl.value && !_required && !formControl.disabled && !_bare) {
         <button type="button" class="sd-clear-btn sd-hover" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
           <sd-icon name="close"></sd-icon>
         </button>

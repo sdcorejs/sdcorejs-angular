@@ -173,8 +173,8 @@ export class SdDatetime implements OnDestroy, OnInit {
   /** Hiển thị thêm cột giây trong picker. Mặc định: chỉ HH:MM. */
   showSeconds = input(false, { transform: booleanAttribute });
 
-  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
-  clearable = input(true, { transform: booleanAttribute });
+  /** Whether to show the value-gated clear button in edit and inline modes. */
+  clearable = input(false, { transform: booleanAttribute });
 
   // Tri-state `viewed` — shared primitive. In `'inline'` the datetime editor is always mounted
   // (chrome hidden via CSS); the sd-view text face opens the overlay on click.

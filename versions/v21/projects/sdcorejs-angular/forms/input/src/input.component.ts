@@ -164,6 +164,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   hideInlineError = input(false, { transform: booleanAttribute });
   blurOnEnter = input(false, { transform: booleanAttribute });
+  /** Whether to show the value-gated clear button in edit and inline modes. */
+  clearable = input(false, { transform: booleanAttribute });
   required = input(false, { transform: booleanAttribute });
   readonly = input(false, { transform: booleanAttribute });
   disabled = input(false, { transform: booleanAttribute });
@@ -361,9 +363,10 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   // why: dựa trên valueModel() (signal model-input) thay vì formControl.value —
   // khi bị wrap (vd <sd-input-color>) effect set formControl chạy SAU lúc template
   // eval nên formControl.value chưa kịp có; valueModel() thì có ngay. Method (không
-  // computed) để re-eval mỗi CD. Required không được clear; disabled/readonly ẩn nút.
+  // computed) để re-eval mỗi CD. clearable là opt-in; required không được clear;
+  // disabled/readonly ẩn nút.
   showClear = (): boolean => {
-    if (this.required() || this.disabled() || this.readonly()) return false;
+    if (!this.clearable() || this.required() || this.disabled() || this.readonly()) return false;
     return !sdIsEmpty(this.valueModel());
   };
 

@@ -157,6 +157,8 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
 
   hideInlineError = input(false, { transform: booleanAttribute });
   blurOnEnter = input(false, { transform: booleanAttribute });
+  /** Whether to show the value-gated clear button in edit and inline modes. */
+  clearable = input(false, { transform: booleanAttribute });
 
   required = input(false, { transform: booleanAttribute });
   readonly = input(false, { transform: booleanAttribute });
@@ -415,9 +417,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   };
 
   // why: method (không phải computed) để template re-eval mỗi change-detection.
-  // Required không được clear; disabled/readonly ẩn nút.
+  // clearable là opt-in; required không được clear; disabled/readonly ẩn nút.
   showClear = (): boolean => {
-    if (this.required() || this.disabled() || this.readonly()) return false;
+    if (!this.clearable() || this.required() || this.disabled() || this.readonly()) return false;
     return !sdIsEmpty(this.valueModel());
   };
 
