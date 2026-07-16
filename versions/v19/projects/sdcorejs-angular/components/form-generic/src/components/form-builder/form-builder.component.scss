@@ -507,6 +507,23 @@
     display: none !important;
   }
 
+  // why: CDK still needs measurable placeholder geometry while the custom canvas preview is the only visible authority.
+  .fb-palette-native-placeholder {
+    display: block !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 1px !important;
+    min-width: 1px !important;
+    height: 1px !important;
+    min-height: 1px !important;
+    flex: 0 0 1px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
   .fb-row__items > .fb-drop-placeholder,
   .fb-group__body > .fb-drop-placeholder {
     flex: 0 0 calc(var(--fb-placeholder-columns, 6) / 12 * 100% - var(--gap-2));

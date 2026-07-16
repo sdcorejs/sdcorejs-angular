@@ -65,13 +65,7 @@
               <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                 <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
               </div>
-              <div
-                *cdkDragPlaceholder
-                class="fb-drop-placeholder"
-                [style.--fb-placeholder-columns]="placeholderColumnsFor(formBuilderComponent)"
-                aria-hidden="true">
-                <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: formBuilderComponent }"></ng-container>
-              </div>
+              <div *cdkDragPlaceholder class="fb-palette-native-placeholder" aria-hidden="true"></div>
             </div>
           }
         </div>
@@ -151,7 +145,7 @@
       </header>
     }
 
-    <div class="fb-canvas__body" [class.is-preview]="isPreview()" id="frmComponent">
+    <div #canvasDropZone class="fb-canvas__body" [class.is-preview]="isPreview()" id="frmComponent">
       @if (isPreview()) {
         <!-- ── Preview mode ───────────────────────────────────────────── -->
         <div class="fb-preview-card">
@@ -171,7 +165,7 @@
         </div>
       } @else {
         <!-- ── Design mode ────────────────────────────────────────────── -->
-        @if (!dragDropRows.length) {
+        @if (!dragDropRows.length && !isPaletteEmptyDropTarget()) {
           <div class="fb-empty">
             <div class="fb-empty__art"><span class="msi">dashboard_customize</span></div>
             <div class="fb-empty__title">{{ 'core.component.form-builder.empty-title' | translate }}</div>
@@ -189,13 +183,16 @@
           (cdkDropListDropped)="drop($event)"
           (click)="clickFormContentEmpty()"
           aria-hidden="true">
+          @if (isPaletteEmptyDropTarget()) {
+            <div class="fb-row-insert-placeholder fb-palette-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
+              <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() }"></ng-container>
+            </div>
+          }
           @for (row of dragDropRows; track row.id) {
             @if (shouldShowRowInsertionPlaceholder(row, 'before')) {
-              <div
-                class="fb-row-insert-placeholder"
-                [style.--fb-placeholder-columns]="12"
-                aria-hidden="true">
-                <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() || row }"></ng-container>
+              <div class="fb-row-insert-placeholder fb-palette-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
+                <ng-container
+                  *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() || row }"></ng-container>
               </div>
             }
             <div
@@ -248,6 +245,15 @@
                 (cdkDropListExited)="onRowItemsDropExited(row)"
                 (cdkDropListDropped)="drop($event)">
                 @for (item of row.items; track item.id; let i = $index) {
+                  @if (shouldShowInlinePalettePlaceholder(row, i)) {
+                    <div
+                      class="fb-drop-placeholder fb-palette-drop-placeholder"
+                      [style.--fb-placeholder-columns]="palettePlaceholderColumnsFor(row)"
+                      aria-hidden="true">
+                      <ng-container
+                        *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() }"></ng-container>
+                    </div>
+                  }
                   <!-- Group component renders as outlined card with colored header bar -->
                   @if (item.type === 'group') {
                     @let g = $any(item);
@@ -365,11 +371,7 @@
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
-                      <div
-                        *cdkDragPlaceholder
-                        class="fb-drop-placeholder"
-                        [style.--fb-placeholder-columns]="12"
-                        aria-hidden="true">
+                      <div *cdkDragPlaceholder class="fb-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: item }"></ng-container>
                       </div>
                       <div class="fb-break-line">
@@ -510,14 +512,20 @@
                     </div>
                   }
                 }
+                @if (shouldShowInlinePalettePlaceholder(row, row.items.length)) {
+                  <div
+                    class="fb-drop-placeholder fb-palette-drop-placeholder"
+                    [style.--fb-placeholder-columns]="palettePlaceholderColumnsFor(row)"
+                    aria-hidden="true">
+                    <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() }"></ng-container>
+                  </div>
+                }
               </div>
             </div>
             @if (shouldShowRowInsertionPlaceholder(row, 'after')) {
-              <div
-                class="fb-row-insert-placeholder"
-                [style.--fb-placeholder-columns]="12"
-                aria-hidden="true">
-                <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() || row }"></ng-container>
+              <div class="fb-row-insert-placeholder fb-palette-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
+                <ng-container
+                  *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() || row }"></ng-container>
               </div>
             }
           }

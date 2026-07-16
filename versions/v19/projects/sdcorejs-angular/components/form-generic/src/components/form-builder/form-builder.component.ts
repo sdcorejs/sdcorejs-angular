@@ -145,6 +145,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   readonly popupConfigureVariables = viewChild<SdModal>('popupConfigureVariables');
   readonly configureValidation = viewChild(ConfigureValidationComponent);
   readonly formRender = viewChild(SdFormRender);
+  private readonly canvasDropZone = viewChild<ElementRef<HTMLElement>>('canvasDropZone');
 
   // ── injected services ──────────────────────────────────────────────────
   readonly #ref = inject(ChangeDetectorRef);
@@ -238,9 +239,7 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   #setPaletteDropTarget = (target: PaletteDropTarget | undefined) => {
     this.paletteDropTarget.set(target);
     this.rowInsertionEdge.set(target?.kind === 'edge' ? target.edge : 'after');
-    this.inlineDropTargetRow.set(
-      target?.kind === 'inline' ? this.dragDropRows.find(row => row.id === target.rowId) : undefined
-    );
+    this.inlineDropTargetRow.set(target?.kind === 'inline' ? this.dragDropRows.find(row => row.id === target.rowId) : undefined);
   };
 
   /** Handler chung cho mọi cdkDragStarted — set signal global true. */
@@ -264,12 +263,63 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   onAnyDragMoved = (event: CdkDragMove<any>) => {
     this.lastDragPointer = event.pointerPosition;
-    if (this.dragSource() === 'palette') return;
+    if (this.dragSource() === 'palette') {
+      this.#updatePaletteDropTargetFromPointer(event.pointerPosition);
+      return;
+    }
+    if (!this.#isPointerInsideCanvas(event.pointerPosition)) {
+      if (this.targetItem) {
+        this.targetItem = undefined;
+        this.#ref.markForCheck();
+      }
+      return;
+    }
     const hit = this.#rowHitFromPointer(event.pointerPosition);
     if (hit?.row && this.targetItem !== hit.row) {
       this.targetItem = hit.row;
       this.#ref.markForCheck();
     }
+  };
+
+  #isPointerInsideCanvas = (pointer: { x: number; y: number }): boolean => {
+    const rect = this.canvasDropZone()?.nativeElement.getBoundingClientRect();
+    return !!rect && pointer.x >= rect.left && pointer.x <= rect.right && pointer.y >= rect.top && pointer.y <= rect.bottom;
+  };
+
+  #updatePaletteDropTargetFromPointer = (pointer: { x: number; y: number }) => {
+    if (!this.#isPointerInsideCanvas(pointer)) {
+      this.#setPaletteDropTarget(undefined);
+      this.#ref.markForCheck();
+      return;
+    }
+    if (!this.dragDropRows.length) {
+      this.#setPaletteDropTarget({ kind: 'empty' });
+      this.#ref.markForCheck();
+      return;
+    }
+    const hit = this.#rowHitFromPointer(pointer);
+    if (!hit) {
+      this.#setPaletteDropTarget(undefined);
+      this.#ref.markForCheck();
+      return;
+    }
+    const element = document.elementFromPoint(pointer.x, pointer.y);
+    const rowItems = element?.closest('.fb-row__items');
+    const rowElement = rowItems?.closest('.fb-row') as HTMLElement | null;
+    const paletteItem = this.draggedPaletteItem();
+    if (rowElement?.id === hit.row.id && paletteItem?.type !== 'break' && !this.isRowInlineDropLocked(hit.row)) {
+      const current = this.paletteDropTarget();
+      if (current?.kind === 'inline' && current.rowId === hit.row.id) return;
+      this.#setPaletteDropTarget({
+        kind: 'inline',
+        rowId: hit.row.id,
+        index: hit.row.items.length,
+        columns: `${this.#availableColumns(hit.row)}`,
+      });
+    } else {
+      this.#setPaletteDropTarget({ kind: 'edge', rowId: hit.row.id, edge: hit.edge });
+    }
+    this.#ref.markForCheck();
   };
 
   /** Handler chung cho mọi cdkDragEnded — set signal global false (dùng setTimeout 0
