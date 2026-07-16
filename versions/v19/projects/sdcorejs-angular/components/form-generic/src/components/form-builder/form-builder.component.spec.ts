@@ -194,9 +194,7 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     for (const [index, draggedItem] of [chipCalendar, upload].entries()) {
       component.onPaletteDragStarted(draggedItem);
       component.paletteDropTarget.set(
-        index === 0
-          ? { kind: 'inline', rowId: 'row-a', index: 1, columns: '6' }
-          : { kind: 'edge', rowId: 'row-a', edge: 'after' }
+        index === 0 ? { kind: 'inline', rowId: 'row-a', index: 1, columns: '6' } : { kind: 'edge', rowId: 'row-a', edge: 'after' }
       );
       component.drop({
         previousContainer: { data: advancedPaletteItems },
