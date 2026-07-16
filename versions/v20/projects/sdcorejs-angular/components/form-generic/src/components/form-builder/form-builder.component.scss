@@ -452,7 +452,6 @@
     pointer-events: none;
     user-select: none;
     opacity: 1 !important;
-    transform: none !important;
     animation: none !important;
     position: relative;
     z-index: 6;
@@ -505,6 +504,23 @@
 
   .fb-palette__list > .fb-drop-placeholder {
     display: none !important;
+  }
+
+  // why: CDK still needs measurable placeholder geometry while the custom canvas preview is the only visible authority.
+  .fb-palette-native-placeholder {
+    display: block !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 1px !important;
+    min-width: 1px !important;
+    height: 1px !important;
+    min-height: 1px !important;
+    flex: 0 0 1px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
   }
 
   .fb-row__items > .fb-drop-placeholder,
@@ -995,6 +1011,12 @@
     background: var(--md-sys-color-surface-container-low);
     padding: 32px;
   }
+}
+
+// why: the outer CDK canvas list must cover an empty canvas before its first child is rendered.
+.fb-canvas__body > .cdk-drop-list {
+  min-height: 100%;
+  box-sizing: border-box;
 }
 
 // ── M3 segmented Design/Preview toggle ──────────────────────────────────
