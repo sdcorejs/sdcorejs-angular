@@ -243,7 +243,8 @@
                 cdkDropListOrientation="horizontal"
                 [cdkDropListData]="row.items"
                 [cdkDropListEnterPredicate]="canEnterRowDropList"
-                (cdkDropListEntered)="onRowItemsDropEntered(row)"
+                (cdkDropListEntered)="onRowItemsDropEntered(row, $event)"
+                (cdkDropListSorted)="onRowItemsDropSorted(row, $event)"
                 (cdkDropListExited)="onRowItemsDropExited(row)"
                 (cdkDropListDropped)="drop($event)">
                 @for (item of row.items; track item.id; let i = $index) {

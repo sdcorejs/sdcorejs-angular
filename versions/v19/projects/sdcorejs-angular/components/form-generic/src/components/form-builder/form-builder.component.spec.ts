@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
 
@@ -47,6 +47,16 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
   }
   function paletteHasGroup(): boolean {
     return component.paletteGroups().some(g => g.items.some(i => i.type === 'group'));
+  }
+  function seedPaletteRows() {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.onPaletteDragStarted(paletteTextfield);
   }
 
   it('enterGroupEdit() focuses the group: editingGroupId + rows scoped to its children', () => {
@@ -156,6 +166,8 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
       { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
     ] as any;
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.onPaletteDragStarted(paletteTextfield);
+    component.paletteDropTarget.set({ kind: 'inline', rowId: 'row-a', index: 1, columns: '6' });
 
     component.drop({
       previousContainer: { data: [paletteTextfield] },
@@ -179,12 +191,18 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     ] as any;
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
 
-    for (const draggedItem of [chipCalendar, upload]) {
+    for (const [index, draggedItem] of [chipCalendar, upload].entries()) {
+      component.onPaletteDragStarted(draggedItem);
+      component.paletteDropTarget.set(
+        index === 0
+          ? { kind: 'inline', rowId: 'row-a', index: 1, columns: '6' }
+          : { kind: 'edge', rowId: 'row-a', edge: 'after' }
+      );
       component.drop({
         previousContainer: { data: advancedPaletteItems },
-        container: { data: component.dragDropRows[0].items },
+        container: { data: index === 0 ? component.dragDropRows[0].items : component.dragDropRows },
         previousIndex: 0,
-        currentIndex: 1,
+        currentIndex: index === 0 ? 1 : 0,
         isPointerOverContainer: true,
         item: {
           data: draggedItem,
@@ -203,6 +221,8 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
       { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
     ] as any;
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.onPaletteDragStarted(paletteTextfield);
+    component.paletteDropTarget.set({ kind: 'edge', rowId: 'row-a', edge: 'after' });
 
     component.drop({
       previousContainer: { data: [paletteTextfield] },
@@ -227,7 +247,8 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
       { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '12' }, validate: {}, properties: {} },
     ] as any;
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
-    component.targetItem = component.dragDropRows[0];
+    component.onPaletteDragStarted(paletteTextfield);
+    component.paletteDropTarget.set({ kind: 'edge', rowId: component.dragDropRows[0].id, edge: 'after' });
 
     component.drop({
       previousContainer: { data: [paletteTextfield] },
@@ -247,63 +268,100 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect((component.components[3] as any).id).toBe('c');
   });
 
-  it('shows a row-level insertion placeholder for the hovered vertical row only', () => {
-    component.components = [
-      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
-      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
-      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
-    ] as any;
-    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
-
-    component.dragSource.set('palette');
-    component.targetItem = component.dragDropRows[0];
-    component.rowInsertionEdge.set('after');
+  it('shows an edge placeholder only for the row in the atomic palette target', () => {
+    seedPaletteRows();
+    component.paletteDropTarget.set({ kind: 'edge', rowId: component.dragDropRows[0].id, edge: 'after' });
 
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[0], 'after')).toBeTrue();
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeFalse();
 
-    component.targetItem = component.dragDropRows[1];
+    component.paletteDropTarget.set({ kind: 'edge', rowId: component.dragDropRows[1].id, edge: 'after' });
+    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[0], 'after')).toBeFalse();
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeTrue();
   });
 
-  it('moves the row-level insertion placeholder before or after the hovered row during vertical palette drags', () => {
-    component.components = [
-      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
-      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
-      { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
-    ] as any;
-    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
-    component.dragSource.set('palette');
-
-    component.targetItem = component.dragDropRows[1];
-    component.rowInsertionEdge.set('before');
+  it('moves the atomic edge target before or after the selected row', () => {
+    seedPaletteRows();
+    component.paletteDropTarget.set({ kind: 'edge', rowId: component.dragDropRows[1].id, edge: 'before' });
 
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[0], 'before')).toBeFalse();
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'before')).toBeTrue();
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeFalse();
 
-    component.rowInsertionEdge.set('after');
+    component.paletteDropTarget.set({ kind: 'edge', rowId: component.dragDropRows[1].id, edge: 'after' });
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'before')).toBeFalse();
     expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeTrue();
   });
 
-  it('hides the row-level insertion placeholder when the drag has entered an inline row list', () => {
+  it('replaces an edge target with an inline target and clears it when the row exits', () => {
+    seedPaletteRows();
+    const row = component.dragDropRows[1];
+    component.paletteDropTarget.set({ kind: 'edge', rowId: row.id, edge: 'after' });
+
+    component.onRowItemsDropEntered(row, { currentIndex: 0 } as any);
+    expect(component.shouldShowRowInsertionPlaceholder(row, 'after')).toBeFalse();
+    expect(component.shouldShowInlinePalettePlaceholder(row, 0)).toBeTrue();
+
+    component.onRowItemsDropExited(row);
+    expect(component.paletteDropTarget()).toBeUndefined();
+  });
+
+  it('replaces the previous palette inline target atomically when another row is entered', () => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
     component.components = [
       { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
-      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '6' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '8' }, validate: {}, properties: {} },
       { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
     ] as any;
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
-    component.dragSource.set('palette');
-    component.targetItem = component.dragDropRows[1];
-    component.rowInsertionEdge.set('after');
+    component.onPaletteDragStarted(paletteTextfield);
 
-    component.onRowItemsDropEntered(component.dragDropRows[1]);
-    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeFalse();
+    component.onRowItemsDropEntered(component.dragDropRows[0], { currentIndex: 1 } as any);
+    expect(component.paletteDropTarget()).toEqual({ kind: 'inline', rowId: 'row-a', index: 1, columns: '6' });
 
-    component.onRowItemsDropExited(component.dragDropRows[1]);
-    expect(component.shouldShowRowInsertionPlaceholder(component.dragDropRows[1], 'after')).toBeTrue();
+    component.onRowItemsDropEntered(component.dragDropRows[1], { currentIndex: 0 } as any);
+    expect(component.paletteDropTarget()).toEqual({ kind: 'inline', rowId: 'row-b', index: 0, columns: '4' });
+    expect(component.shouldShowInlinePalettePlaceholder(component.dragDropRows[0], 1)).toBeFalse();
+    expect(component.shouldShowInlinePalettePlaceholder(component.dragDropRows[1], 0)).toBeTrue();
   });
+
+  it('updates the atomic inline index from CDK sorting and clears it on row exit', () => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '4' }, validate: {}, properties: {} },
+      { id: 'b', key: 'k_b', type: 'textfield', label: 'B', layout: { columns: '4' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    const row = component.dragDropRows[0];
+    component.onPaletteDragStarted(paletteTextfield);
+
+    component.onRowItemsDropEntered(row, { currentIndex: 2 } as any);
+    component.onRowItemsDropSorted(row, { currentIndex: 1 } as any);
+    expect(component.paletteDropTarget()).toEqual({ kind: 'inline', rowId: 'row-a', index: 1, columns: '4' });
+
+    component.onRowItemsDropExited(row);
+    expect(component.paletteDropTarget()).toBeUndefined();
+  });
+
+  it('clears the palette target and item after the deferred drag-end cleanup', fakeAsync(() => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    component.components = [
+      { id: 'a', key: 'k_a', type: 'textfield', label: 'A', layout: { columns: '6' }, validate: {}, properties: {} },
+    ] as any;
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    component.onPaletteDragStarted(paletteTextfield);
+    component.onRowItemsDropEntered(component.dragDropRows[0], { currentIndex: 1 } as any);
+
+    component.onAnyDragEnded();
+    expect(component.paletteDropTarget()).toEqual({ kind: 'inline', rowId: 'row-a', index: 1, columns: '6' });
+    expect(component.draggedPaletteItem()).toBe(paletteTextfield);
+    expect(component.dragSource()).toBe('palette');
+    tick(0);
+
+    expect(component.paletteDropTarget()).toBeUndefined();
+    expect(component.draggedPaletteItem()).toBeUndefined();
+    expect(component.dragSource()).toBeUndefined();
+  }));
 
   it('uses the hovered row edge as the insertion anchor when the vertical row list receives a palette drop', () => {
     const paletteTextfield = component.formBuilderComponents.find(c => c.type === 'textfield')!;
@@ -313,8 +371,8 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
       { id: 'c', key: 'k_c', type: 'textfield', label: 'C', layout: { columns: '6' }, validate: {}, properties: {} },
     ] as any;
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
-    component.targetItem = component.dragDropRows[1];
-    component.rowInsertionEdge.set('before');
+    component.onPaletteDragStarted(paletteTextfield);
+    component.paletteDropTarget.set({ kind: 'edge', rowId: component.dragDropRows[1].id, edge: 'before' });
 
     component.drop({
       previousContainer: { data: [paletteTextfield] },
