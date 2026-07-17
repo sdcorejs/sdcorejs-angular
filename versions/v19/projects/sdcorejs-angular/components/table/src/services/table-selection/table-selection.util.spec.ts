@@ -55,6 +55,22 @@ describe('table-selection.util', () => {
     expect(resolveSelectAllState([])).toBeFalse();
   });
 
+  it('resolves select-all from selectable rows only', () => {
+    const selected = item({ id: 1, name: 'selected' });
+    const disabled = item({ id: 2, name: 'disabled' });
+    selected.meta.selector!.isSelected = true;
+    disabled.meta.selector!.selectable = false;
+
+    expect(resolveSelectAllState([selected, disabled])).toBeTrue();
+  });
+
+  it('keeps select-all false when no row is selectable', () => {
+    const disabled = item({ id: 1, name: 'disabled' });
+    disabled.meta.selector!.selectable = false;
+
+    expect(resolveSelectAllState([disabled])).toBeFalse();
+  });
+
   it('applies default selection to collected tree rows', () => {
     const child = item({ id: 2, name: 'child' }, { level: 1 });
     const root = item({ id: 1, name: 'root' }, { hasChildren: true, childItems: [child] });

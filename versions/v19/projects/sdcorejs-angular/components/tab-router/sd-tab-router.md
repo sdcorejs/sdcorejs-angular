@@ -8,7 +8,7 @@
 **Change detection**: `OnPush` for all three
 
 ## One-line purpose
-Browser-style multi-tab router shell — every navigated route becomes a tab; tabs persist their component instances (no reload on switch), can be closed, reordered (drag), and replaced. Drives the "open many records side-by-side" UX seen in admin / CRM apps.
+Browser-style multi-tab router shell — every navigated route becomes a tab; tabs persist their component instances on ordinary switches, can be explicitly reloaded, closed, reordered (drag), and replaced. Drives the "open many records side-by-side" UX seen in admin / CRM apps.
 
 ## When to use
 - App shell where users open many detail pages and want to switch back and forth without losing state
@@ -26,7 +26,7 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 
 | Layer | Selector | Role |
 | --- | --- | --- |
-| Outlet | `sd-tab-router-outlet` | Replaces `<router-outlet>`. Listens to router events, builds the tab list, hosts component instances via `*ngComponentOutlet`, manages activate / deactivate / close, supports `replaceTab` & `switchTab` navigation states. |
+| Outlet | `sd-tab-router-outlet` | Replaces `<router-outlet>`. Listens to raw router events, builds the tab list, hosts component instances via `*ngComponentOutlet`, manages activate / deactivate / close / explicit reload, and supports `replaceTab`, `switchTab`, and `forceReload` navigation states. |
 | Nav | `sd-tab-router-nav` | Renders the horizontal tab strip on top. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis). Auto-switches between `default` and `compact` modes based on available width / number of tabs. |
 | Item | `sd-tab-router-item` | One tab pill — contains an `<sd-badge>` showing icon + name + tooltip, plus a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set). |
 
@@ -43,11 +43,19 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 None.
 
 ### Behaviors
-- Listens to `RoutesRecognized` (captures `extras.state` like `replaceTab`, `switchTab`) and `NavigationEnd` (does the actual tab logic — needs latest routerState for lazy routes)
-- Tab identity = hash of `url + queryParams` — same key = same tab (no recreation, no reload)
+- Listens to raw router events only (it never unwraps `Scroll`): `RoutesRecognized` captures `extras.state`, `NavigationEnd` applies the route after redirects, `NavigationSkipped` handles an explicitly forced same-URL reload, and `NavigationCancel` / `NavigationError` discard pending state
+- Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another
+- `NavigationSkipped` continues only for `NavigationSkippedCode.IgnoredSameUrlNavigation` with a directly snapshotted `state.forceReload === true`; this is why reloading the currently active identical URL works even though Angular does not emit `NavigationEnd`
+- Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTab` descriptor may be immutably copied when `isActive` changes
 - `state.replaceTab = true` → new tab replaces the current active tab (instead of stacking)
 - `state.switchTab = true` → user clicked an existing tab pill (used by item click handler to avoid creating duplicates)
+- `state.forceReload = true` affects an existing target key only: the outlet replaces that tab at the same list index with a fresh `SdTab`, per-tab injector, `tabInfoChanges`, body component, and nav item. Tab count and order stay unchanged
+- If the forced target does not exist, it is added normally. `forceReload` does not change missing-target behavior
+- `forceReload` is an explicit replacement operation and therefore bypasses the old tab's `beforeClose` guard
+- `forceReload` and `replaceTab` are independent. When both are `true`, normal replace semantics remove the other active tab and the existing target is recreated at its correctly shifted index
+- Omitting `forceReload` (or passing anything other than literal `true`) preserves the per-tab injector, `tabInfoChanges` stream, component instance/state, and ordinary revisit behavior; the descriptor may still be immutably copied to update `isActive`
 - Component instances are kept alive: switching tabs only toggles `[class.active]` on `.tab-router__pane` divs; `*ngComponentOutlet` reference is preserved when only `isActive` changes (uses spread instead of mutation)
+- Outlet panes and nav items track `tab.injector ?? tab.key`: ordinary activation keeps the same tracked identity, while an explicit reload's fresh injector recreates both views
 - Per-tab `Injector` overrides `ActivatedRoute` so each tab's component injects its OWN route, not the router's current one — avoids state-leak between tabs
 - Soft cap warning: if the user opens more than 30 tabs, `SdNotifyService.warning('Bạn đã mở quá nhiều tab.')` fires
 - Closing the active tab navigates to the neighbor (next, then previous, else `/`)
@@ -188,7 +196,27 @@ this.router.navigate(['/employees', id, 'edit'], {
 });
 ```
 
-### 4. `beforeClose` hook — cảnh báo unsaved changes
+### 4. Force-reload an existing tab
+
+```ts
+this.router.navigate(['/employees', id], {
+  state: { forceReload: true }
+});
+```
+
+If this is already the active identical URL, Angular emits `NavigationSkipped`; the outlet still recreates the existing tab. If the target is not open, it is added normally.
+
+### 5. Force-reload an existing target and replace the other active tab
+
+```ts
+this.router.navigate(['/employees', id, 'edit'], {
+  state: { forceReload: true, replaceTab: true }
+});
+```
+
+`replaceTab` removes the other active tab according to its normal rules; `forceReload` independently recreates the target when that target already exists.
+
+### 6. `beforeClose` hook — cảnh báo unsaved changes
 
 ```ts
 import { SD_TAB } from '@sdcorejs/angular/components/tab-router';
@@ -210,7 +238,9 @@ export class EmployeeDetailComponent {
 
 Component dùng cả trong lẫn ngoài tab-router: dùng `inject(SD_TAB, { optional: true })` (trả về `null` ngoài tab-router context).
 
-### 5. Updating tab info at runtime
+An explicit `forceReload` does not call this hook; use it only when the caller intentionally wants to discard and recreate the existing tab.
+
+### 7. Updating tab info at runtime
 ```ts
 this.tab.tabInfoChanges.next({
   name: this.employee.name,         // tab name now matches the loaded record

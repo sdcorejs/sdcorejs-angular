@@ -147,6 +147,8 @@ The table adds these special columns conditionally — **do not** define a data 
 | `disabled`        | `(rowData, selectedItems) => boolean` | Per-row disable predicate.                                                                                                                                                                   |
 | `defaultSelected` | `(rowData) => boolean`                | Pre-select after each load.                                                                                                                                                                  |
 
+Header select-all operates only on visible rows that are selectable. Rows disabled by `disabled` or incompatible with the currently available `actions` are skipped. The header is checked only when every selectable visible row is selected; when no visible row is selectable, it stays unchecked. A row that is already selected remains enabled so the user can deselect it.
+
 ### Expand option (`SdTableOptionExpand<T>`)
 
 `{ disabled?(row), onExpand?(row) => any \| Promise<any>, multiple?, always? }` — `always: true` keeps every row expanded; `multiple` allows multiple expanded simultaneously.

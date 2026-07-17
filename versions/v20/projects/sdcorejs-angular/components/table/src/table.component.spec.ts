@@ -947,6 +947,174 @@ describe('group DOM render — separate row def + colspan + checkbox slot', () =
   }));
 });
 
+describe('selector disabled select-all', () => {
+  interface Row {
+    id: number;
+    name: string;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="opt"></sd-table>`,
+  })
+  class HostComponent {
+    rows: Row[] = [
+      { id: 1, name: 'Enabled' },
+      { id: 2, name: 'Disabled' },
+    ];
+    action = { title: 'Process', click: () => undefined };
+    onSelectAllSpy = jasmine.createSpy('onSelectAll');
+    opt: SdTableOption<Row> = {
+      type: 'local',
+      items: () => this.rows,
+      selector: {
+        visible: true,
+        actions: [this.action],
+        disabled: current => current?.id === 2,
+        onSelectAll: this.onSelectAllSpy,
+      },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    } as SdTableOption<Row>;
+  }
+
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let table: SdTable<Row>;
+
+  function settleTable() {
+    fixture.detectChanges();
+    table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
+    tick();
+    flush();
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+  });
+
+  it('select-all skips a row disabled by the selector predicate', fakeAsync(() => {
+    settleTable();
+
+    expect(table.items()[0].meta.selector!.selectable).toBeTrue();
+    expect(table.items()[1].meta.selector!.selectable).toBeFalse();
+
+    table.isSelectAll.set(true);
+    table.onSelectAll();
+
+    expect(table.items()[0].meta.selector!.isSelected).toBeTrue();
+    expect(table.items()[1].meta.selector!.isSelected).toBeFalse();
+    expect(host.onSelectAllSpy).toHaveBeenCalledOnceWith([host.rows[0]]);
+  }));
+
+  it('resets the header when no row is selectable', fakeAsync(() => {
+    host.opt.selector!.disabled = () => true;
+    settleTable();
+
+    expect(table.items().every(item => item.meta.selector!.selectable === false)).toBeTrue();
+
+    table.isSelectAll.set(true);
+    table.onSelectAll();
+
+    expect(table.items().every(item => item.meta.selector!.isSelected === false)).toBeTrue();
+    expect(host.onSelectAllSpy).toHaveBeenCalledOnceWith([]);
+    expect(table.isSelectAll()).toBeFalse();
+  }));
+
+  it('checks the header after initial eligibility resolves when every selectable row is default-selected', fakeAsync(() => {
+    host.opt.selector!.defaultSelected = current => current.id === 1;
+
+    settleTable();
+
+    expect(table.items()[0].meta.selector!.isSelected).toBeTrue();
+    expect(table.items()[1].meta.selector!.selectable).toBeFalse();
+    expect(table.isSelectAll()).toBeTrue();
+  }));
+});
+
+describe('selector action-dependent header state', () => {
+  interface Row {
+    id: number;
+    name: string;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="opt"></sd-table>`,
+  })
+  class HostComponent {
+    rows: Row[] = [
+      { id: 1, name: 'Action A' },
+      { id: 2, name: 'Action B' },
+    ];
+    actionA = {
+      title: 'Action A',
+      hidden: (current?: Row) => current?.id !== 1,
+      click: () => undefined,
+    };
+    actionB = {
+      title: 'Action B',
+      hidden: (current?: Row) => current?.id !== 2,
+      click: () => undefined,
+    };
+    opt: SdTableOption<Row> = {
+      type: 'local',
+      items: () => this.rows,
+      selector: {
+        visible: true,
+        actions: [this.actionA, this.actionB],
+      },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    } as SdTableOption<Row>;
+  }
+
+  let fixture: ComponentFixture<HostComponent>;
+  let table: SdTable<Row>;
+
+  function settleTable() {
+    fixture.detectChanges();
+    table = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<Row>;
+    tick();
+    flush();
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HostComponent] });
+    fixture = TestBed.createComponent(HostComponent);
+  });
+
+  it('recomputes the header after row selection changes action compatibility', fakeAsync(() => {
+    settleTable();
+    const [rowA, rowB] = table.items();
+    expect(rowA.meta.selector!.selectable).toBeTrue();
+    expect(rowB.meta.selector!.selectable).toBeTrue();
+
+    rowA.meta.selector!.isSelected = true;
+    table.onSelect(rowA);
+    fixture.detectChanges();
+
+    expect(rowB.meta.selector!.selectable).toBeFalse();
+    expect(table.isSelectAll()).toBeTrue();
+  }));
+});
+
 describe('selector.preserveSelection — giữ selection xuyên trang/filter/reload', () => {
   interface Row {
     id: number;
