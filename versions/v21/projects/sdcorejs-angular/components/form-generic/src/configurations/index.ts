@@ -1,2 +1,2 @@
 export * from './form-generic.configuration';
-export * from './form.configuration';
+export type * from './form.configuration';

@@ -1,54 +1,54 @@
 ---
-updated_at: 2026-07-17T15:32:00+07:00
+updated_at: 2026-07-17T17:08:00+07:00
 status: complete
 track: angular
-active_skill: sdcorejs-debug
-branch: fix/loading-multi-tab
+active_skill: sdcorejs-angular
+branch: refactor/type-only-barrel-exports
 ---
 
 # Current Session Checkpoint
 
 ## User Request
 
-Port commit fix `SdLoadingService` khi nhiều router tab cùng tồn tại từ `lib-core-angular` sang `sdcorejs-angular`.
+Audit and improve type-only re-exports in the `@sdcorejs/angular` barrel files.
 
 ## Tasks
 
-- [x] Xác định commit nguồn và root cause của lỗi nhiều tab
-- [x] Kiểm tra working tree, phạm vi file an toàn và context dự án
-- [x] Port bản fix tối thiểu cùng regression test phù hợp
-- [x] Chạy focused test và các kiểm tra rộng hơn cần thiết
-- [x] Hoàn tất verify-before-done và báo cáo kết quả/rủi ro còn lại
+- [x] Confirm workspace context and version-sync conventions
+- [x] Audit all barrel files with the TypeScript checker
+- [x] Normalize type-only re-exports in v19 and sync v20/v21
+- [x] Run builds, lint, version sync, and public API checks
+- [x] Review the final diff, repair findings, and complete delivery gates
 
 ## Current State
 
-- Last completed: Chuyển sang feature branch và verify đầy đủ v19/v20/v21 trước Git artifact.
+- Last completed: verify-before-done passed with no remaining review findings.
 - In progress: none.
-- Blocked/skipped: Không còn blocker; giữ nguyên changelog dirty có sẵn, không có content diff.
+- Blocked/skipped: none.
 
 ## Artifacts Touched
 
-- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cục bộ của phiên hiện tại.
-- EDIT `versions/v19/projects/sdcorejs-angular/services/loading/src/loading.service.ts` - cập nhật mọi host khớp selector.
-- EDIT `versions/v19/projects/sdcorejs-angular/services/loading/src/loading.service.spec.ts` - thêm 3 regression tests multi-host.
-- EDIT `versions/v19/projects/sdcorejs-angular/services/loading/sd-loading.md` - cập nhật contract multi-match.
-- EDIT `versions/v19/projects/showcase/src/app/pages/services/loading/loading-demo.component.ts` - thêm demo nhiều tab/host.
-- EDIT matching loading service/spec/docs/demo under `versions/v20` and `versions/v21` - rollout từ v19.
-- EDIT `versions/v19/SYNC-STATUS.md`, `versions/v20/SYNC-STATUS.md`, `versions/v21/SYNC-STATUS.md` - metadata do rollout script cập nhật.
+- EDIT `.sdcorejs/tasks/current-session.md` - local session checkpoint.
+- ADD `.sdcorejs/docs/angular/2026-07-17-16-42-normalize-type-only-barrel-exports.md` - automatic implementation note.
+- EDIT `versions/v19/projects/sdcorejs-angular/**/index.ts` and `services/excel/src/public-api.ts` - convert 46 type-only wildcard re-exports.
+- EDIT matching barrel files under `versions/v20` and `versions/v21` - rollout from v19.
+- EDIT `versions/v19/SYNC-STATUS.md`, `versions/v20/SYNC-STATUS.md`, and `versions/v21/SYNC-STATUS.md` - rollout metadata.
 
 ## Verification
 
+- TypeScript AST audit - 0 candidates remaining; 46 explicit type-star exports per version.
+- `npm run sync` - pass.
+- `npm run check:sync` - pass.
 - `npm --prefix versions/v19 run build` - pass.
-- `npm --prefix versions/v19 run lint` - pass sau normalize CRLF.
-- Angular CLI trực tiếp, focused loading spec v19 - pass `15/15` (chạy lại trên final source).
-- `npm run sync` / `npm run check:sync` - pass.
-- `npm run lint:release` - pass trên v19/v20/v21.
+- `npm --prefix versions/v20 run build` - pass.
+- `npm --prefix versions/v21 run build` - pass.
+- `npm run lint:release` - pass after CRLF formatting repair.
+- Public type-consumer compile - pass for 25 representative symbols on v19/v20/v21.
+- Public surface comparison - 0 changes across 82 entry points; 0 invalid type-star targets.
+- Runtime FESM audit - representative interfaces/types are absent from runtime exports.
+- Final code/performance review - no findings.
 - `git diff --check` - pass.
-- Focused loading spec v20/v21 - pass `15/15` mỗi workspace sau khi hydrate local dependency theo repo policy.
-- Build v20/v21 - pass.
-- Hai lệnh focused qua `npm run ng` - timeout do flags không truyền tới process con; không phải test result.
-- Branch-ready scans - không có secret, debug/focused-test marker, conflict marker hay binary ngoài dự kiến.
 
 ## Resume From Here
 
-Không còn bước code nào; nếu cần Git artifact, refresh dependency install v20/v21, chạy lại focused tests và làm việc trên feature branch.
+No implementation work remains. Delivery status is recorded in Git history and the remote branch.

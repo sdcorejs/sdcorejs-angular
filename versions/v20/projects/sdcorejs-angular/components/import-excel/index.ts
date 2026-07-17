@@ -1,2 +1,2 @@
-export * from './src/import-excel.model';
+export type * from './src/import-excel.model';
 export * from './src/import-excel.component';

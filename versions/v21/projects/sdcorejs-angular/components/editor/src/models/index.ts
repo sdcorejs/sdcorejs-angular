@@ -1,2 +1,2 @@
-export * from './editor.model';
-export * from './image-upload.plugin.model';
+export type * from './editor.model';
+export type * from './image-upload.plugin.model';
