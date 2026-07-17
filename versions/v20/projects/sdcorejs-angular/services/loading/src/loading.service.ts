@@ -14,26 +14,33 @@ export class SdLoadingService {
   }
 
   start = (element = 'body') => {
-    const ele = document.querySelector(element);
-    if (ele && !this.loadingMap.has(ele)) {
-      const loadingElement = this.#createLoading();
-      ele.appendChild(loadingElement);
-      this.loadingMap.set(ele, loadingElement);
-    }
+    // why: router tabs can leave multiple hosts with the same selector in the DOM;
+    // querySelector would only overlay the first match.
+    document.querySelectorAll(element).forEach(ele => {
+      if (!this.loadingMap.has(ele)) {
+        const loadingElement = this.#createLoading();
+        ele.appendChild(loadingElement);
+        this.loadingMap.set(ele, loadingElement);
+      }
+    });
   };
 
   isLoading = (element = 'body') => {
-    const ele = document.querySelector(element);
-    return ele && this.loadingMap.has(ele);
+    const nodes = document.querySelectorAll(element);
+    if (!nodes.length) return null;
+    for (const ele of Array.from(nodes)) {
+      if (this.loadingMap.has(ele)) return ele;
+    }
+    return false;
   };
 
   stop = (element = 'body') => {
-    const ele = document.querySelector(element);
-    if (ele && this.loadingMap.has(ele)) {
-      const loadingElement = this.loadingMap.get(ele);
-      loadingElement?.remove();
-      this.loadingMap.delete(ele);
-    }
+    document.querySelectorAll(element).forEach(ele => {
+      if (this.loadingMap.has(ele)) {
+        this.loadingMap.get(ele)?.remove();
+        this.loadingMap.delete(ele);
+      }
+    });
   };
 
   #createLoading = (): HTMLElement => {
