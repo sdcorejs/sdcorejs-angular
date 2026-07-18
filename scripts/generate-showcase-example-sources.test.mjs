@@ -79,6 +79,31 @@ export class ButtonDemoComponent {}
   }
 });
 
+test('extracts inline styles declared as a single string literal', () => {
+  const fixture = createFixture();
+  const source = `import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-loading-demo',
+  template: \`<demo-page>Loading</demo-page>\`,
+  styles: \`
+    :host { display: block; }
+    .demo-host { min-height: 120px; }
+  \`,
+})
+export class LoadingDemoComponent {}
+`;
+
+  try {
+    const sourceFile = fixture.write('pages/services/loading/loading-demo.component.ts', source);
+    const result = extractExampleSource(sourceFile, fixture.pagesRoot);
+
+    assert.equal(result.scss, ':host { display: block; }\n.demo-host { min-height: 120px; }');
+  } finally {
+    fixture.cleanup();
+  }
+});
+
 test('reads external templateUrl and styleUrls relative to the demo component', () => {
   const fixture = createFixture();
   const source = `import { Component } from '@angular/core';
