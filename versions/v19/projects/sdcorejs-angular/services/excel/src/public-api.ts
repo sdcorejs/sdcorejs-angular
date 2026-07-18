@@ -1,2 +1,2 @@
-export * from './lib/excel.model';
+export type * from './lib/excel.model';
 export * from './lib/excel.service';

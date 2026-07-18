@@ -1,54 +1,49 @@
 ---
-updated_at: 2026-07-17T15:32:00+07:00
+updated_at: 2026-07-18T23:00:24+07:00
 status: complete
 track: angular
-active_skill: sdcorejs-debug
-branch: fix/loading-multi-tab
+active_skill: sdcorejs-ship
+branch: refactor/type-only-barrel-exports
 ---
 
 # Current Session Checkpoint
 
 ## User Request
 
-Port commit fix `SdLoadingService` khi nhiều router tab cùng tồn tại từ `lib-core-angular` sang `sdcorejs-angular`.
+Commit toàn bộ thay đổi hợp lệ, push branch và tạo pull request.
 
 ## Tasks
 
-- [x] Xác định commit nguồn và root cause của lỗi nhiều tab
-- [x] Kiểm tra working tree, phạm vi file an toàn và context dự án
-- [x] Port bản fix tối thiểu cùng regression test phù hợp
-- [x] Chạy focused test và các kiểm tra rộng hơn cần thiết
-- [x] Hoàn tất verify-before-done và báo cáo kết quả/rủi ro còn lại
+- [x] Rà branch, remote, thay đổi hiện có và bối cảnh dự án
+- [x] Chạy build/lint/test cùng các kiểm tra an toàn trước khi ship
+- [x] Xác nhận toàn bộ code hợp lệ đã nằm trong Conventional Commit
+- [x] Push branch và tạo PR
+- [x] Xác minh commit/PR cuối cùng và bàn giao link
 
 ## Current State
 
-- Last completed: Chuyển sang feature branch và verify đầy đủ v19/v20/v21 trước Git artifact.
+- Last completed: tạo PR #12 từ `refactor/type-only-barrel-exports` vào `release/1.3`.
 - In progress: none.
-- Blocked/skipped: Không còn blocker; giữ nguyên changelog dirty có sẵn, không có content diff.
+- Blocked/skipped: full v19 unit baseline vẫn có 15-16 failure đã biết; đã công khai trong PR. Loại `.superpowers/**`, summary cũ và generated file chỉ lệch trạng thái khỏi phạm vi commit theo TODO dự án.
 
 ## Artifacts Touched
 
-- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cục bộ của phiên hiện tại.
-- EDIT `versions/v19/projects/sdcorejs-angular/services/loading/src/loading.service.ts` - cập nhật mọi host khớp selector.
-- EDIT `versions/v19/projects/sdcorejs-angular/services/loading/src/loading.service.spec.ts` - thêm 3 regression tests multi-host.
-- EDIT `versions/v19/projects/sdcorejs-angular/services/loading/sd-loading.md` - cập nhật contract multi-match.
-- EDIT `versions/v19/projects/showcase/src/app/pages/services/loading/loading-demo.component.ts` - thêm demo nhiều tab/host.
-- EDIT matching loading service/spec/docs/demo under `versions/v20` and `versions/v21` - rollout từ v19.
-- EDIT `versions/v19/SYNC-STATUS.md`, `versions/v20/SYNC-STATUS.md`, `versions/v21/SYNC-STATUS.md` - metadata do rollout script cập nhật.
+- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cho phiên commit/push/PR.
 
 ## Verification
 
+- `gh auth status` - pass.
+- `npm run check:sync` - pass.
+- `npm run lint:release` - pass.
 - `npm --prefix versions/v19 run build` - pass.
-- `npm --prefix versions/v19 run lint` - pass sau normalize CRLF.
-- Angular CLI trực tiếp, focused loading spec v19 - pass `15/15` (chạy lại trên final source).
-- `npm run sync` / `npm run check:sync` - pass.
-- `npm run lint:release` - pass trên v19/v20/v21.
-- `git diff --check` - pass.
-- Focused loading spec v20/v21 - pass `15/15` mỗi workspace sau khi hydrate local dependency theo repo policy.
-- Build v20/v21 - pass.
-- Hai lệnh focused qua `npm run ng` - timeout do flags không truyền tới process con; không phải test result.
-- Branch-ready scans - không có secret, debug/focused-test marker, conflict marker hay binary ngoài dự kiến.
+- `npm --prefix versions/v20 run build` - pass.
+- `npm --prefix versions/v21 run build` - pass.
+- `npm --prefix versions/v19 run test:ci` - fail on existing baseline: 15 failed / 3198 passed plus line/function coverage below 69%.
+- `npm --prefix versions/v19 run test -- sdcorejs-angular --watch=false --browsers=ChromeHeadless` - fail on existing/flaky baseline: 16 failed / 3197 passed.
+- Independent review of `a64085b..78c52b9` - no findings.
+- `git diff --check origin/release/1.3...HEAD` - pass.
+- PR: `https://github.com/sdcorejs/sdcorejs-angular/pull/12`.
 
 ## Resume From Here
 
-Không còn bước code nào; nếu cần Git artifact, refresh dependency install v20/v21, chạy lại focused tests và làm việc trên feature branch.
+Review and merge PR #12 when repository CI/review policy permits.

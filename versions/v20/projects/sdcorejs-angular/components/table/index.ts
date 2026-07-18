@@ -8,4 +8,4 @@ export * from './src/table.component';
 export * from './src/services/table-filter/table-filter.model';
 export type { ISdTableConfiguration } from './src/configurations';
 export { SD_TABLE_CONFIGURATION } from './src/configurations';
-export * from './src/models';
+export type * from './src/models';

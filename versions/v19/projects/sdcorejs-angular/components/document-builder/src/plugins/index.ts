@@ -8,4 +8,4 @@ export * from './paste-handler';
 export * from './highlight-range/highlight-range.plugin';
 export * from './block-space/block-space.plugin';
 export * from './ck-comment/ck-comment.plugin';
-export * from './ck-comment/ck-comment.plugin.model';
+export type * from './ck-comment/ck-comment.plugin.model';

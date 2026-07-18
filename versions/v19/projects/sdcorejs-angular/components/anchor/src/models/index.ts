@@ -1,1 +1,1 @@
-﻿export * from './sd-anchor.model';
+﻿export type * from './sd-anchor.model';
