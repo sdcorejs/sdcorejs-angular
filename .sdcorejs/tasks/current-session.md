@@ -1,6 +1,6 @@
 ---
-updated_at: 2026-07-19T00:30:03+07:00
-status: in_progress
+updated_at: 2026-07-19T00:30:54+07:00
+status: complete
 track: angular
 active_skill: sdcorejs-ship
 branch: merge/release-1.3-into-main
@@ -17,13 +17,13 @@ Giải quyết conflict khi merge `release/1.3` vào `main`, rồi push và tạ
 - [x] Tái hiện conflict giữa `origin/release/1.3` và `origin/main`
 - [x] Xác định từng file conflict và chọn nội dung đúng theo lịch sử hai nhánh
 - [x] Tạo nhánh hòa giải sạch, resolve conflict và chạy verification
-- [ ] Commit, push và tạo/cập nhật PR vào `main`
-- [ ] Xác minh trạng thái mergeable và bàn giao link
+- [x] Commit, push và tạo/cập nhật PR vào `main`
+- [x] Xác minh trạng thái mergeable và bàn giao link
 
 ## Current State
 
-- Last completed: generator/branding tests, sync parity, lint, ba library builds và production Showcase build đều pass.
-- In progress: branch-ready hygiene trước khi commit merge.
+- Last completed: merge commit hai parent đã push và PR #14 đang `MERGEABLE` / `CLEAN`.
+- In progress: none.
 - Blocked/skipped: none.
 
 ## Artifacts Touched
@@ -50,4 +50,4 @@ Giải quyết conflict khi merge `release/1.3` vào `main`, rồi push và tạ
 
 ## Resume From Here
 
-Chạy branch-ready hygiene, stage checkpoint cuối và commit merge.
+Hoàn tất. Merge PR #14 bằng merge commit; không squash/rebase.
