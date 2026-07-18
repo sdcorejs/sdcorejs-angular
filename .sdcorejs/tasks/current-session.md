@@ -1,8 +1,8 @@
 ---
-updated_at: 2026-07-17T17:08:00+07:00
+updated_at: 2026-07-18T23:00:24+07:00
 status: complete
 track: angular
-active_skill: sdcorejs-angular
+active_skill: sdcorejs-ship
 branch: refactor/type-only-barrel-exports
 ---
 
@@ -10,45 +10,40 @@ branch: refactor/type-only-barrel-exports
 
 ## User Request
 
-Audit and improve type-only re-exports in the `@sdcorejs/angular` barrel files.
+Commit toàn bộ thay đổi hợp lệ, push branch và tạo pull request.
 
 ## Tasks
 
-- [x] Confirm workspace context and version-sync conventions
-- [x] Audit all barrel files with the TypeScript checker
-- [x] Normalize type-only re-exports in v19 and sync v20/v21
-- [x] Run builds, lint, version sync, and public API checks
-- [x] Review the final diff, repair findings, and complete delivery gates
+- [x] Rà branch, remote, thay đổi hiện có và bối cảnh dự án
+- [x] Chạy build/lint/test cùng các kiểm tra an toàn trước khi ship
+- [x] Xác nhận toàn bộ code hợp lệ đã nằm trong Conventional Commit
+- [x] Push branch và tạo PR
+- [x] Xác minh commit/PR cuối cùng và bàn giao link
 
 ## Current State
 
-- Last completed: verify-before-done passed with no remaining review findings.
+- Last completed: tạo PR #12 từ `refactor/type-only-barrel-exports` vào `release/1.3`.
 - In progress: none.
-- Blocked/skipped: none.
+- Blocked/skipped: full v19 unit baseline vẫn có 15-16 failure đã biết; đã công khai trong PR. Loại `.superpowers/**`, summary cũ và generated file chỉ lệch trạng thái khỏi phạm vi commit theo TODO dự án.
 
 ## Artifacts Touched
 
-- EDIT `.sdcorejs/tasks/current-session.md` - local session checkpoint.
-- ADD `.sdcorejs/docs/angular/2026-07-17-16-42-normalize-type-only-barrel-exports.md` - automatic implementation note.
-- EDIT `versions/v19/projects/sdcorejs-angular/**/index.ts` and `services/excel/src/public-api.ts` - convert 46 type-only wildcard re-exports.
-- EDIT matching barrel files under `versions/v20` and `versions/v21` - rollout from v19.
-- EDIT `versions/v19/SYNC-STATUS.md`, `versions/v20/SYNC-STATUS.md`, and `versions/v21/SYNC-STATUS.md` - rollout metadata.
+- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cho phiên commit/push/PR.
 
 ## Verification
 
-- TypeScript AST audit - 0 candidates remaining; 46 explicit type-star exports per version.
-- `npm run sync` - pass.
+- `gh auth status` - pass.
 - `npm run check:sync` - pass.
+- `npm run lint:release` - pass.
 - `npm --prefix versions/v19 run build` - pass.
 - `npm --prefix versions/v20 run build` - pass.
 - `npm --prefix versions/v21 run build` - pass.
-- `npm run lint:release` - pass after CRLF formatting repair.
-- Public type-consumer compile - pass for 25 representative symbols on v19/v20/v21.
-- Public surface comparison - 0 changes across 82 entry points; 0 invalid type-star targets.
-- Runtime FESM audit - representative interfaces/types are absent from runtime exports.
-- Final code/performance review - no findings.
-- `git diff --check` - pass.
+- `npm --prefix versions/v19 run test:ci` - fail on existing baseline: 15 failed / 3198 passed plus line/function coverage below 69%.
+- `npm --prefix versions/v19 run test -- sdcorejs-angular --watch=false --browsers=ChromeHeadless` - fail on existing/flaky baseline: 16 failed / 3197 passed.
+- Independent review of `a64085b..78c52b9` - no findings.
+- `git diff --check origin/release/1.3...HEAD` - pass.
+- PR: `https://github.com/sdcorejs/sdcorejs-angular/pull/12`.
 
 ## Resume From Here
 
-No implementation work remains. Delivery status is recorded in Git history and the remote branch.
+Review and merge PR #12 when repository CI/review policy permits.
