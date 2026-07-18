@@ -455,3 +455,42 @@ test('checked-in generated example artifacts are fresh', () => {
   assert.equal(normalizeLineEndings(readFileSync(DEFAULT_OUTPUT_FILE, 'utf8')), renderGeneratedModule(records));
   assert.equal(normalizeLineEndings(readFileSync(DEFAULT_MANIFEST_OUTPUT_FILE, 'utf8')), renderGeneratedManifest(records));
 });
+
+test('documentation registry demo counts match extracted example records', () => {
+  const records = collectDemoSourceFiles().flatMap(sourceFile => extractExampleSources(sourceFile));
+  const countsByPage = new Map();
+  for (const record of records) {
+    countsByPage.set(record.pageKey, (countsByPage.get(record.pageKey) ?? 0) + 1);
+  }
+
+  const registry = readFileSync(
+    join(REPO_ROOT, 'versions', 'v19', 'projects', 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
+    'utf8'
+  );
+  const seedBlocks = [...registry.matchAll(/defineDocPage\(\{([\s\S]*?)\n  \}\),/g)].map(match => match[1]);
+  const rawSeedCount = [...registry.matchAll(/defineDocPage\(\{/g)].length;
+  const registeredDemoPaths = new Set();
+
+  assert.equal(seedBlocks.length, rawSeedCount, 'Every local demo page definition must be parsed');
+  for (const seedBlock of seedBlocks) {
+    const category = seedBlock.match(/category:\s*'([^']+)'/)?.[1];
+    const slug = seedBlock.match(/slug:\s*'([^']+)'/)?.[1];
+    const demoPath = seedBlock.match(/demoPath:\s*'([^']+)'/)?.[1] ?? `${category}/${slug}`;
+    const expectedCount = Number(seedBlock.match(/demoSectionCount:\s*(\d+)/)?.[1]);
+    const actualCount = countsByPage.get(demoPath) ?? 0;
+
+    assert.ok(category && slug && Number.isInteger(expectedCount), `Invalid local demo page seed for ${demoPath}`);
+    registeredDemoPaths.add(demoPath);
+    assert.equal(
+      actualCount,
+      expectedCount,
+      `Example manifest for ${demoPath} has ${actualCount} entries; expected ${expectedCount}`
+    );
+  }
+  assert.equal(registeredDemoPaths.size, seedBlocks.length, 'Local demo page definitions must use unique demo paths');
+  assert.deepEqual(
+    [...countsByPage.keys()].sort(),
+    [...registeredDemoPaths].sort(),
+    'Extracted example records and local registry definitions must contain the same demo paths'
+  );
+});
