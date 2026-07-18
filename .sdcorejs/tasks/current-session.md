@@ -1,8 +1,8 @@
 ---
-updated_at: 2026-07-19T00:06:00+07:00
-status: in_progress
+updated_at: 2026-07-19T00:12:46+07:00
+status: complete
 track: angular
-active_skill: sdcorejs-ship
+active_skill: sdcorejs-git
 branch: fix/release-1.3-deploy
 ---
 
@@ -17,13 +17,13 @@ Sửa hai blocker của deploy release 1.3, commit, push và tạo MR vào `rele
 - [x] Tái hiện và xác định root cause của hai lỗi deploy
 - [x] Viết kiểm thử hồi quy rồi sửa parser/config theo TDD
 - [x] Đồng bộ v19 sang v20/v21 và chạy toàn bộ kiểm tra release/deploy
-- [ ] Kiểm tra vệ sinh nhánh, commit và push
-- [ ] Tạo MR vào `release/1.3` và bàn giao link
+- [x] Kiểm tra vệ sinh nhánh, commit và push
+- [x] Tạo MR vào `release/1.3` và bàn giao link
 
 ## Current State
 
-- Last completed: generator tests, branding, route shells, sync parity, lint release và build v19/v20/v21 đều pass.
-- In progress: branch-ready hygiene trước commit/push.
+- Last completed: push commit `ba55b06` và tạo PR #13 vào `release/1.3`.
+- In progress: none.
 - Blocked/skipped: none.
 
 ## Artifacts Touched
@@ -49,7 +49,11 @@ Sửa hai blocker của deploy release 1.3, commit, push và tạo MR vào `rele
 - `npm run lint:release` - pass.
 - `npm --prefix versions/v20 run build` - pass.
 - `npm --prefix versions/v21 run build` - pass.
+- Branch hygiene / secret / conflict / focused-test scan - pass.
+- Independent code review - pass, no findings.
+- Commit: `ba55b06 fix(showcase): unblock release deploy`.
+- PR: `https://github.com/sdcorejs/sdcorejs-angular/pull/13`.
 
 ## Resume From Here
 
-Chạy branch-ready hygiene, rà diff cuối rồi commit bằng explicit paths.
+Review và merge PR #13 vào `release/1.3`; sau đó merge release vào main rồi mới đánh tag `v1.3`.
