@@ -1,6 +1,6 @@
 ---
-updated_at: 2026-07-19T01:36:20+07:00
-status: in_progress
+updated_at: 2026-07-19T01:40:47+07:00
+status: complete
 track: angular
 active_skill: sdcorejs-debug
 branch: fix/showcase-loading-manifest-count
@@ -18,12 +18,13 @@ Khắc phục lỗi production `Example manifest for services/loading has 4 entr
 - [x] Truy ngược registry, generator, generated manifest và runtime assertion
 - [x] Xác nhận root cause bằng repro 3/3 và test freshness
 - [x] Thêm regression test, sửa count và verify runtime/build
-- [ ] Commit, push và tạo PR hotfix
+- [x] Commit, push và tạo PR hotfix
 
 ## Current State
 
-- Last completed: full generator/branding tests, sync, lint và production Showcase build đều pass.
-- In progress: independent review và branch-ready gate.
+- Last completed: commit `86620b5` đã push và PR #15 đã mở vào `main`.
+- Review: independent review không còn Critical, Important hoặc Minor finding.
+- PR: https://github.com/sdcorejs/sdcorejs-angular/pull/15 (`MERGEABLE`, `CLEAN`).
 - Blocked/skipped: browser smoke skipped vì phiên không có browser backend.
 
 ## Artifacts Touched
@@ -48,4 +49,4 @@ Khắc phục lỗi production `Example manifest for services/loading has 4 entr
 
 ## Resume From Here
 
-Hoàn tất review, commit, push và tạo PR hotfix.
+Merge PR #15 vào `main`, sau đó xác nhận GitHub Pages deploy thành công.
