@@ -59,6 +59,7 @@
                   appearance="outline"
                   [form]="form"
                   [required]="item.required"
+                  clearable
                   hideInlineError>
                 </sd-input>
               } @else if (item.type === 'number') {
@@ -70,6 +71,7 @@
                   appearance="outline"
                   [form]="form"
                   [required]="item.required"
+                  clearable
                   hideInlineError>
                 </sd-input-number>
               } @else if (item.type === 'boolean') {
@@ -100,6 +102,7 @@
                   [required]="item.required"
                   [min]="item.minDate"
                   [max]="item.maxDate"
+                  clearable
                   hideInlineError>
                 </sd-date>
               } @else if (item.type === 'datetime') {
@@ -113,6 +116,7 @@
                   [required]="item.required"
                   [min]="item.minDate"
                   [max]="item.maxDate"
+                  clearable
                   hideInlineError>
                 </sd-datetime>
               } @else if (item.type === 'daterange') {

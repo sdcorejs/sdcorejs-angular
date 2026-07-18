@@ -56,7 +56,7 @@ import {
   SdDatetimePickerCancel,
   SdDatetimePickerNow,
   SdNativeDateAdapter,
-} from './material-datetime';
+} from '@sdcorejs/angular-material-datetime';
 
 /**
  * Thử parse `value` theo lần lượt nhiều format; trả về Date đầu tiên hợp lệ.
@@ -173,8 +173,8 @@ export class SdDatetime implements OnDestroy, OnInit {
   /** Hiển thị thêm cột giây trong picker. Mặc định: chỉ HH:MM. */
   showSeconds = input(false, { transform: booleanAttribute });
 
-  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
-  clearable = input(true, { transform: booleanAttribute });
+  /** Whether to show the value-gated clear button in edit and inline modes. */
+  clearable = input(false, { transform: booleanAttribute });
 
   // Tri-state `viewed` — shared primitive. In `'inline'` the datetime editor is always mounted
   // (chrome hidden via CSS); the sd-view text face opens the overlay on click.
@@ -320,7 +320,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   }
 
   // ==========================================
-  // 6. POPUP MANAGEMENT — internal M3 material datetime picker
+  // 6. POPUP MANAGEMENT — package-backed Material datetime picker
   // ==========================================
 
   /** Mở popup chọn datetime, neo vào input. */
@@ -329,7 +329,8 @@ export class SdDatetime implements OnDestroy, OnInit {
     const picker = this.dateTimePicker();
     if (!picker) return;
     picker.setAnchor(this.inputRef()?.nativeElement ?? (this.elementRef.nativeElement as HTMLElement));
-    picker.select(this.#currentValueAsDate() ?? new Date());
+    // why: open() rebuilds the draft from committed state, so seed that state before opening.
+    picker.setValue(this.#currentValueAsDate() ?? new Date());
     picker.open();
     this.ref.markForCheck();
   }
@@ -341,7 +342,7 @@ export class SdDatetime implements OnDestroy, OnInit {
 
   onPickerConfirm(value: Date) {
     const fmt = this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00';
-    // value giờ là native Date từ package M3, không cần .toDate() như Moment.
+    // value là native Date từ package, không cần .toDate() như Moment.
     const stored = DateUtilities.toFormat(value, fmt);
     if (this.#date !== stored) {
       this.valueModel.set(stored);

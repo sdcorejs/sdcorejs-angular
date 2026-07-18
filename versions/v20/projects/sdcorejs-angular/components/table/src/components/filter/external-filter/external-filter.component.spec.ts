@@ -119,4 +119,24 @@ describe('ExternalFilterComponent — OOM regression (effect + startWith)', () =
     const section = fixture.debugElement.query(By.directive(SdSection)).componentInstance as SdSection;
     expect(section.collapsible()).toBeFalse();
   });
+
+  it('opts string, number, date and datetime controls into clearable behavior', () => {
+    component.isMobileOrTablet = false;
+    const filters = [
+      { field: 'name', title: 'Name', type: 'string' as const },
+      { field: 'age', title: 'Age', type: 'number' as const },
+      { field: 'birthday', title: 'Birthday', type: 'date' as const },
+      { field: 'createdAt', title: 'Created at', type: 'datetime' as const },
+    ];
+    fixture.componentRef.setInput('filter', {});
+    fixture.componentRef.setInput('externalFilters', filters);
+    component.inlineExternal.set(Object.fromEntries(filters.map(item => [item.field, true])));
+    fixture.detectChanges();
+
+    for (const selector of ['sd-input', 'sd-input-number', 'sd-date', 'sd-datetime']) {
+      const control = fixture.debugElement.query(By.css(selector));
+      expect(control).withContext(`${selector} rendered`).toBeTruthy();
+      expect(control.componentInstance.clearable()).withContext(`${selector} opts into clear`).toBeTrue();
+    }
+  });
 });

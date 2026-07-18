@@ -9,33 +9,21 @@ import { Utilities } from '@sdcorejs/utils/fns';
 export class SdSelectionDisabledPipe implements PipeTransform {
   transform = <T>(selectedItems: SdTableItem<T>[], rowData: SdTableItem<T>, selection: SdTableOptionSelector<T>): boolean => {
     const { disabled, actions } = selection;
+    const selectedData = selectedItems.map(e => e.data);
+    const setDisabled = (isDisabled: boolean): boolean => {
+      rowData.meta.selector!.selectable = !isDisabled;
+      return isDisabled;
+    };
     if (rowData.meta.selector!.isSelected) {
-      rowData.meta.selector!.selectable = true;
-      return false;
-    }
-    if (!actions?.length) {
-      if (!disabled) {
-        rowData.meta.selector!.selectable = true;
-        return false;
-      }
-      rowData.meta.selector!.selectable = !disabled(
-        rowData.data,
-        selectedItems.map(e => e.data)
-      );
-      return !rowData.meta.selector!.selectable;
+      return setDisabled(false);
     }
     // Kiểm tra có bị disabled theo function không
     // Dữ liệu chưa được check thì kiểm tra hàm disable nếu có
-    if (disabled) {
-      // Nếu disabled và dữ liệu chưa được check
-      if (
-        disabled(
-          rowData.data,
-          selectedItems.map(e => e.data)
-        )
-      ) {
-        return true;
-      }
+    if (disabled?.(rowData.data, selectedData)) {
+      return setDisabled(true);
+    }
+    if (!actions?.length) {
+      return setDisabled(false);
     }
     // Lọc các action theo selectedItems hiện tại
     const availableActions = actions.filter(action => {
@@ -57,15 +45,15 @@ export class SdSelectionDisabledPipe implements PipeTransform {
       if ('children' in action) {
         for (const childAction of action.children) {
           if (rowData.meta.selector?.actions?.includes(Utilities.hash(childAction))) {
-            return false;
+            return setDisabled(false);
           }
         }
       } else {
         if (rowData.meta.selector?.actions?.includes(Utilities.hash(action))) {
-          return false;
+          return setDisabled(false);
         }
       }
     }
-    return true;
+    return setDisabled(true);
   };
 }

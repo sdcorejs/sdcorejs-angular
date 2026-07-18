@@ -49,7 +49,8 @@ interface Range {
   styleUrl: './chip-popover.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     MatMenuModule,

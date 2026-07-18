@@ -147,6 +147,8 @@ The table adds these special columns conditionally — **do not** define a data 
 | `disabled`        | `(rowData, selectedItems) => boolean` | Per-row disable predicate.                                                                                                                                                                   |
 | `defaultSelected` | `(rowData) => boolean`                | Pre-select after each load.                                                                                                                                                                  |
 
+Header select-all operates only on visible rows that are selectable. Rows disabled by `disabled` or incompatible with the currently available `actions` are skipped. The header is checked only when every selectable visible row is selected; when no visible row is selectable, it stays unchecked. A row that is already selected remains enabled so the user can deselect it.
+
 ### Expand option (`SdTableOptionExpand<T>`)
 
 `{ disabled?(row), onExpand?(row) => any \| Promise<any>, multiple?, always? }` — `always: true` keeps every row expanded; `multiple` allows multiple expanded simultaneously.
@@ -386,6 +388,7 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
   <sd-input size="sm" hideInlineError [(model)]="filter.keyword" (keyupEnter)="update()"></sd-input>
 </ng-template>
 ```
+
 ## Visual cues (helps agent map screenshots → component)
 
 - **Toolbar** (top): external-filter form (collapsible), reload button, column-config gear, export menu, selection-action bar (when rows selected).
@@ -629,6 +632,7 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Mutating `columnWidth` object inside `onResize` callback expecting it to affect rendering — the snapshot is read-only intent; to push new widths back into the table, set them via `option.columns[i].width` AND clear the user storage (or write your own keyed storage).
 - ❌ Rendering statuses with custom pill CSS inside cells — use `useBadge` or a projected `<sd-badge>`.
 - ❌ Placing default `md`/`lg` form controls inside table filters or editable cells — use `size="sm"` for dense table UI.
+- Built-in inline column filters and external filters opt their input/number/date/datetime controls into `clearable`, so users can clear an active filter even though those controls default `clearable` to `false` elsewhere.
 
 - ❌ Forgetting to import projected-template directives (`SdTableCellDefDirective`, `SdTableFilterDefDirective`, `SdTableTitleDefDirective`, `SdTableFooterDefDirective`, `SdTableExpandDefDirective`) in a standalone host component.
 - ❌ Rendering SD form controls inside table cells without `hideInlineError`; inline `<mat-error>` text expands rows and makes table density unstable.

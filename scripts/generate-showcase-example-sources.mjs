@@ -488,7 +488,11 @@ function extractTemplate(properties, sourceFile, key) {
 
 function extractStyles(properties, sourceFile, key) {
   if (properties.has('styles')) {
-    const styles = parseStringArrayProperty(properties.get('styles'), 'styles').map(normalizeBlock).filter(Boolean);
+    const rawStyles = properties.get('styles');
+    const inlineStyles = rawStyles.trim().startsWith('[')
+      ? parseStringArrayProperty(rawStyles, 'styles')
+      : [parseStringProperty(rawStyles, 'styles')];
+    const styles = inlineStyles.map(normalizeBlock).filter(Boolean);
     return styles.length > 0 ? styles.join('\n\n') : undefined;
   }
 

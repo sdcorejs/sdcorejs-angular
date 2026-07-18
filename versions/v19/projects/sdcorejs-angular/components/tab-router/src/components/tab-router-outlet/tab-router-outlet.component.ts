@@ -12,11 +12,22 @@ import {
   createNgModule,
   NgModuleFactory,
 } from '@angular/core';
-import { ActivatedRoute, ActivatedRouteSnapshot, NavigationEnd, Router, RouterOutlet, RoutesRecognized } from '@angular/router';
+import {
+  ActivatedRoute,
+  ActivatedRouteSnapshot,
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  NavigationSkipped,
+  NavigationSkippedCode,
+  Router,
+  RouterOutlet,
+  RoutesRecognized,
+} from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { from, Subject, Subscription, isObservable, lastValueFrom } from 'rxjs';
-import { concatMap, filter } from 'rxjs/operators';
+import { concatMap, filter, map } from 'rxjs/operators';
 
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -27,6 +38,13 @@ import { SdTab, SD_TAB } from '../../models';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterNavComponent } from '../tab-router-nav/tab-router-nav.component';
+
+type TabRouterNavigationEvent = RoutesRecognized | NavigationEnd | NavigationSkipped | NavigationCancel | NavigationError;
+
+interface TabRouterNavigationContext {
+  event: TabRouterNavigationEvent;
+  navigationState: Record<string, any>;
+}
 
 @Component({
   selector: 'sd-tab-router-outlet',
@@ -54,10 +72,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   #rootRoute?: ActivatedRoute;
   #subscription = new Subscription();
 
-  // State của navigation hiện tại (replaceTab, switchTab, ...) được capture ở RoutesRecognized
-  // và dùng lại ở NavigationEnd. Lý do: tại NavigationEnd, getCurrentNavigation() đã trả về null,
-  // còn lastSuccessfulNavigation và window.history.state không đáng tin cậy với mọi case.
-  #pendingNavigationState: Record<string, any> = {};
+  // Lưu state theo navigation id để các navigation chồng lấn không ghi đè lẫn nhau.
+  #pendingNavigationStates = new Map<number, Record<string, any>>();
   // Serialize mọi #activeRoute (router events + initial sync) để tránh race tạo duplicate tab.
   #activationQueue: Promise<void> = Promise.resolve();
 
@@ -68,13 +84,28 @@ export class SdTabRouterOutletComponent implements OnDestroy {
           // KHÔNG unwrap event.routerEvent (vd Scroll wrap NavigationEnd):
           // Angular emit NavigationEnd RAW trước, RouterScroller emit Scroll(NavigationEnd) sau.
           // Nếu unwrap thêm Scroll → handler fire 2 lần cho 1 nav → race condition tạo duplicate tabs.
-          // Hybrid: cần CẢ HAI event vì mỗi event chứa data khác nhau ở thời điểm khác nhau.
+          // Navigation thành công cần CẢ HAI event vì mỗi event chứa data ở thời điểm khác nhau.
           // - RoutesRecognized: navigation đang in-flight → getCurrentNavigation().extras.state đọc được
           // - NavigationEnd: navigation hoàn tất → routerState.root đã update với route mới (cần cho lazy routes)
-          filter((event): event is RoutesRecognized | NavigationEnd => event instanceof RoutesRecognized || event instanceof NavigationEnd),
+          // Các terminal event khác chỉ xử lý same-URL forceReload hoặc dọn state theo navigation id.
+          filter(
+            (event): event is TabRouterNavigationEvent =>
+              event instanceof RoutesRecognized ||
+              event instanceof NavigationEnd ||
+              event instanceof NavigationSkipped ||
+              event instanceof NavigationCancel ||
+              event instanceof NavigationError
+          ),
+          // Chụp getCurrentNavigation đồng bộ vì concatMap có thể chạy sau khi Angular đã xoá navigation hiện tại.
+          map(
+            (event): TabRouterNavigationContext => ({
+              event,
+              navigationState: this.#router.getCurrentNavigation()?.extras?.state ?? {},
+            })
+          ),
           // Serialize: #handleEvent async (await getBestInjector). 2 nav liên tiếp
           // không await xen kẽ → tránh race đọc this.tabs() = [] khi tab đầu chưa kịp set.
-          concatMap(event => from(this.#handleEvent(event)))
+          concatMap(context => from(this.#handleEvent(context)))
         )
         .subscribe()
     );
@@ -98,6 +129,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.#subscription.unsubscribe();
+    this.#pendingNavigationStates.clear();
   }
 
   #scheduleActivation = (task: () => Promise<void>): Promise<void> => {
@@ -106,25 +138,40 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     return run;
   };
 
-  #handleEvent = async (event: RoutesRecognized | NavigationEnd): Promise<void> => {
+  #handleEvent = async ({ event, navigationState }: TabRouterNavigationContext): Promise<void> => {
     if (this.disabled()) {
-      this.#pendingNavigationState = {};
+      this.#pendingNavigationStates.clear();
       return;
     }
     if (event instanceof RoutesRecognized) {
-      // Capture state ngay lúc nav còn in-flight. Đây là điểm duy nhất chắc chắn
-      // getCurrentNavigation() trả về Navigation object với extras.state nguyên vẹn.
-      this.#pendingNavigationState = this.#router.getCurrentNavigation()?.extras?.state ?? {};
+      this.#pendingNavigationStates.set(event.id, navigationState);
       return;
     }
-    // NavigationEnd: dùng routerState.snapshot.root (canonical state tại NavigationEnd),
-    // KHÔNG dùng injected ActivatedRoute.snapshot — có thể chưa sync trên initial load.
-    const navigationState = this.#pendingNavigationState;
-    this.#pendingNavigationState = {};
+
+    if (event instanceof NavigationCancel || event instanceof NavigationError) {
+      this.#pendingNavigationStates.delete(event.id);
+      return;
+    }
+
+    let state: Record<string, any>;
+    let fullUrl: string;
+    if (event instanceof NavigationSkipped) {
+      this.#pendingNavigationStates.delete(event.id);
+      if (event.code !== NavigationSkippedCode.IgnoredSameUrlNavigation || navigationState['forceReload'] !== true) {
+        return;
+      }
+      state = navigationState;
+      fullUrl = event.url;
+    } else {
+      state = this.#pendingNavigationStates.get(event.id) ?? navigationState;
+      this.#pendingNavigationStates.delete(event.id);
+      fullUrl = event.urlAfterRedirects || event.url;
+    }
+
     await this.#scheduleActivation(async () => {
       const route = this.#getActivatedRouteSnapshot(this.#router.routerState.snapshot.root);
       this.#rootRoute = this.#router.routerState.root;
-      await this.#activeRoute(event.urlAfterRedirects || event.url, route, navigationState);
+      await this.#activeRoute(fullUrl, route, state);
     });
   };
 
@@ -206,7 +253,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     const params = { ...(route.params || {}) };
     const data = { ...(route.data || {}) };
     const [url] = fullUrl.split('?');
-    // Tab identity = hash(url + queryParams). Cùng key = cùng tab, không tạo lại.
+    // Tab identity = hash(url + queryParams). Cùng key mặc định giữ tab cũ; forceReload mới tạo lại.
     const key = Utilities.hash({ url, queryParams });
 
     let existedIndex = -1;
@@ -236,6 +283,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
 
     const replaceTab = state['replaceTab'];
+    const forceReload = state['forceReload'] === true;
 
     // Resolve injector phù hợp với route. Cần xử lý 3 trường hợp:
     // - Standalone route (Angular đã set _injector trên routeConfig sau khi activate)
@@ -313,15 +361,21 @@ export class SdTabRouterOutletComponent implements OnDestroy {
     }
 
     if (existedIndex >= 0) {
-      // Tab đã tồn tại (cùng url + queryParams) → CHỈ activate, KHÔNG thay tab object.
-      // Lý do: thay tab object = đổi reference của tab.injector → ngComponentOutlet recreate
-      // component → tab bị "reload" mỗi khi click lại hoặc navigate cùng URL.
+      // Mặc định tab đã tồn tại chỉ được activate, không thay tab object. forceReload là nhánh
+      // explicit duy nhất thay SdTab + injector để body và nav item được tạo lại.
       //
       // splice phía trên có thể đã shift index nếu activatedIndex < existedIndex.
       const idx = replaceTab && activatedIndex >= 0 && activatedIndex < existedIndex ? existedIndex - 1 : existedIndex;
-      this.#tabRouterService.setCurrentTab(updatedTabs[idx]);
-      this.#tabRouterService.pushEvent(updatedTabs[idx], SdTabActivated);
-      this.tabs.set(updatedTabs);
+      if (forceReload) {
+        updatedTabs = updatedTabs.map((tab, index) => (index === idx ? newTab : tab));
+        this.#tabRouterService.setCurrentTab(newTab);
+        this.#tabRouterService.pushEvent(newTab, SdTabActivated);
+        this.tabs.set(updatedTabs);
+      } else {
+        this.#tabRouterService.setCurrentTab(updatedTabs[idx]);
+        this.#tabRouterService.pushEvent(updatedTabs[idx], SdTabActivated);
+        this.tabs.set(updatedTabs);
+      }
     } else {
       // Tab chưa tồn tại → thêm mới ở cuối.
       this.#tabRouterService.setCurrentTab(newTab);

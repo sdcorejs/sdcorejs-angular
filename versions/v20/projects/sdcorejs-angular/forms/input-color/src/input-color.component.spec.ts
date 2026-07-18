@@ -16,6 +16,7 @@ import { SdInputColor } from './input-color.component';
       [required]="required"
       [disabled]="disabled"
       [readonly]="readOnly"
+      [clearable]="clearable"
       [hideInlineError]="hideInlineError"
       [viewed]="viewed"
       [(model)]="value"
@@ -31,6 +32,7 @@ class HostComponent {
   required = false;
   disabled = false;
   readOnly = false;
+  clearable = false;
   hideInlineError = false;
   viewed = false;
   value: string | null | undefined = undefined;
@@ -63,10 +65,14 @@ function getTextInput(fixture: ComponentFixture<HostComponent>): HTMLInputElemen
   return el;
 }
 
-function getInnerSdInput<TFixture>(fixture: ComponentFixture<TFixture>): { hideInlineError: () => boolean; viewed: () => unknown } {
+function getInnerSdInput<TFixture>(fixture: ComponentFixture<TFixture>): {
+  hideInlineError: () => boolean;
+  viewed: () => unknown;
+  clearable: () => boolean;
+} {
   const debugElement = fixture.debugElement.query(By.css('sd-input'));
   if (!debugElement?.componentInstance) throw new Error('inner sd-input not found');
-  return debugElement.componentInstance as { hideInlineError: () => boolean; viewed: () => unknown };
+  return debugElement.componentInstance as { hideInlineError: () => boolean; viewed: () => unknown; clearable: () => boolean };
 }
 
 describe('SdInputColor', () => {
@@ -113,6 +119,11 @@ describe('SdInputColor', () => {
       host.hideInlineError = true;
       fixture.detectChanges();
       expect(getInnerSdInput(fixture).hideInlineError()).toBeTrue();
+    });
+
+    it('defaults clearable to false and forwards the value to the inner sd-input', () => {
+      expect(component.clearable()).toBeFalse();
+      expect(getInnerSdInput(fixture).clearable()).toBeFalse();
     });
   });
 
@@ -244,6 +255,11 @@ describe('SdInputColor', () => {
     function getClearBtn(f: ComponentFixture<HostComponent>): HTMLButtonElement | null {
       return f.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
     }
+
+    beforeEach(() => {
+      host.clearable = true;
+      fixture.detectChanges();
+    });
 
     it('does NOT render clear button when value is empty', () => {
       expect(getClearBtn(fixture)).toBeNull();

@@ -1,43 +1,53 @@
 ---
-updated_at: 2026-07-13T14:12:00+07:00
-status: completed
+updated_at: 2026-07-19T00:30:03+07:00
+status: in_progress
 track: angular
-active_skill: sdcorejs-angular
-branch: refactor/showcase-documentation-site
+active_skill: sdcorejs-ship
+branch: merge/release-1.3-into-main
 ---
 
 # Current Session Checkpoint
 
 ## User Request
-Refactor toàn bộ Angular showcase thành một documentation site chuyên nghiệp, giữ đủ demo, hỗ trợ published docs/version/changelog/about và đồng bộ từ v19 sang v20/v21.
+
+Giải quyết conflict khi merge `release/1.3` vào `main`, rồi push và tạo PR mergeable.
 
 ## Tasks
-- [x] Audit showcase, published docs, routes, demos và khả năng tái sử dụng
-- [x] Xây foundation registry, services, shell, routing và shared docs UI
-- [x] Migrate toàn bộ trang/demo và hoàn thiện Button làm mẫu
-- [x] Thêm landing, search, changelog, about, generators và authoring guide
-- [x] Đồng bộ v19 sang v20/v21 và chạy validation
-- [x] Review, repair loop, runtime audit và handoff
+
+- [x] Tái hiện conflict giữa `origin/release/1.3` và `origin/main`
+- [x] Xác định từng file conflict và chọn nội dung đúng theo lịch sử hai nhánh
+- [x] Tạo nhánh hòa giải sạch, resolve conflict và chạy verification
+- [ ] Commit, push và tạo/cập nhật PR vào `main`
+- [ ] Xác minh trạng thái mergeable và bàn giao link
 
 ## Current State
-- Last completed: v19 showcase production build, 390px/desktop CDP audit, `npm run sync` và `npm run check:sync` đều pass.
-- In progress: Không có; sẵn sàng bàn giao diff trên branch refactor.
-- Blocked/skipped: Không có blocker. NVDA/VoiceOver, Lighthouse/axe và memory profile dài hạn chưa chạy vì cần môi trường/manual tooling riêng.
+
+- Last completed: generator/branding tests, sync parity, lint, ba library builds và production Showcase build đều pass.
+- In progress: branch-ready hygiene trước khi commit merge.
+- Blocked/skipped: none.
 
 ## Artifacts Touched
-- ADD/EDIT `versions/v19/projects/showcase/src/app/docs/**` - documentation registry, services, pages, shared UI và tests.
-- EDIT `versions/v19/projects/showcase/src/app/pages/**` - 253 focused structural guards; Button tách 7 example components.
-- ADD/EDIT `scripts/generate-showcase-*.mjs` - changelog/example source generators cùng 18 Node tests.
-- EDIT `.github/workflows/deploy-pages.yml`, root/v19 package scripts và showcase test/build config.
-- ADD `docs/showcase-authoring.md`; sync cùng feature surface sang v20/v21.
+
+- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cho phiên hòa giải release/main.
+- RESOLVE `scripts/generate-showcase-route-shells.test.mjs` - giữ assertions sau khi xóa AuthOM.
+- RESOLVE `versions/v19|v20|v21/SYNC-STATUS.md` - giữ metadata release mới nhất.
+- EDIT hai spec/plan datetime - bỏ blank line thừa ở EOF để `git diff --check` pass.
 
 ## Verification
-- `npm run test:showcase-generators` - 19/19 pass.
-- `npm run test:showcase` (v19) - 63/63 pass.
-- v19 library production build - pass.
-- v19 showcase production build - pass; initial estimated transfer 189.86 kB.
-- CDP production audit - 390px không overflow, zero console/network errors, route title/published docs/focused sections đúng.
-- `npm run sync` + `npm run check:sync` - pass.
+
+- `git merge-tree --write-tree origin/main origin/release/1.3` - fail 3/3 với cùng 4 conflict paths.
+- `git diff --name-only --diff-filter=U` - pass, 0 unmerged paths sau resolution.
+- `npm run test:showcase-generators` - pass, 26/26.
+- `npm run test:showcase-branding` - pass, 3/3.
+- `npm run generate:showcase` - pass, 254 example entries.
+- `npm run check:sync` - pass.
+- `npm run lint:release` - pass.
+- `npm --prefix versions/v19 run build` - pass.
+- `npm --prefix versions/v20 run build` - pass.
+- `npm --prefix versions/v21 run build` - pass.
+- Production Showcase build - pass với `--configuration production --base-href=/sdcorejs-angular/`.
+- Independent merge-resolution review - pass, no Critical/Important/Minor findings.
 
 ## Resume From Here
-Review final diff hoặc commit/push branch khi người dùng yêu cầu. Không hand-edit v20/v21; tiếp tục sửa v19 rồi sync lại.
+
+Chạy branch-ready hygiene, stage checkpoint cuối và commit merge.

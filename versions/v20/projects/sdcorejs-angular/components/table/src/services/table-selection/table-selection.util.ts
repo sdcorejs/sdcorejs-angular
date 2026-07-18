@@ -20,8 +20,10 @@ export const applyDefaultSelected = <T>(
   });
 };
 
-export const resolveSelectAllState = <T>(visibleRows: SdTableItem<T>[]): boolean =>
-  visibleRows.length > 0 && visibleRows.every(row => row.meta.selector?.isSelected);
+export const resolveSelectAllState = <T>(visibleRows: SdTableItem<T>[]): boolean => {
+  const selectableRows = visibleRows.filter(row => row.meta.selector?.selectable);
+  return selectableRows.length > 0 && selectableRows.every(row => row.meta.selector?.isSelected);
+};
 
 export const restorePreservedSelection = <T>(visibleRows: SdTableItem<T>[], preservedSelectedMap: Map<string, SdTableItem<T>>): void => {
   visibleRows.forEach(item => {

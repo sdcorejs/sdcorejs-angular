@@ -49,12 +49,13 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | `required`        | `boolean`                               | `false`                                     | Adds `Validators.required`.                                                                                                                                                                                                                                                                           |
 | `readonly`        | `boolean`                               | `false`                                     | HTML `readonly` — input still focusable.                                                                                                                                                                                                                                                              |
 | `disabled`        | `boolean`                               | `false`                                     | Disables the control.                                                                                                                                                                                                                                                                                 |
+| `clearable`       | `boolean`                               | `false`                                     | Shows the value-gated clear button in edit and `'inline'` modes. The button is still hidden when the field is empty, required, disabled, or readonly.                                                                                                                                                 |
 | `viewed`          | `boolean \| 'inline'`                   | `false`                                     | Display mode. `false` edit · `true` static DETAIL (formatted number / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), focus to edit, blur reformats (e.g. `12.345`); NO panel/overlay. Disabled `'inline'` → static view. |
 | `blurOnEnter`     | `boolean`                               | `false`                                     | If `true`, Enter blurs the field after emitting `keyupEnter`.                                                                                                                                                                                                                                         |
 | `hideInlineError` | `boolean`                               | `false`                                     | Hide inline message; surfaces error via `errorMessage`.                                                                                                                                                                                                                                               |
 | `model`           | `any` (`number \| null`)                | `undefined`                                 | Two-way bound numeric value (use `[(model)]`). Stored as a JS number; emitted as number on change.                                                                                                                                                                                                    |
 
-> **Coerce**: `required`, `readonly`, `disabled`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+> **Coerce**: `required`, `readonly`, `disabled`, `clearable`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
 
 ## Outputs
 
@@ -71,7 +72,7 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | Name             | Signature          | Notes                                                                                                           |
 | ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- |
 | `clear($event?)` | `(Event?) => void` | Resets display + value to `null` and emits `sdChange(null)`. No-op when empty. Backs the built-in clear button. |
-| `showClear()`    | `() => boolean`    | Whether the built-in clear button renders: has a value AND not `required`/`disabled`/`readonly`.                |
+| `showClear()`    | `() => boolean`    | Whether the built-in clear button renders: `clearable`, has a value, and not `required`/`disabled`/`readonly`.  |
 
 ## E2E test attributes
 
@@ -155,7 +156,7 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 - An outlined input field that visually looks like `<sd-input>` BUT typed digits are auto-grouped — typing `1234567` shows `1.234.567` (VN) or `1,234,567` (ISO)
 - Text often right-aligned (matches accountant convention) — actual alignment is set in the component CSS
 - Optional currency symbol or unit shows in the suffix slot via `sdSuffixDef` (e.g. `đ`, `VND`, `%`)
-- Built-in **slim clear button** (`.sd-clear-btn`, thin `close` icon) when there's a value AND the field is not `required`/`disabled`/`readonly`. **Hover-gated** (`sd-hover`) — only visible on hover/focus. Click resets to `null` and emits `sdChange(null)`. Renders to the left of any `sdSuffixDef` unit symbol. Shared style with `sd-input`/`sd-input-color`/`sd-date`/`sd-datetime`.
+- Optional built-in **slim clear button** (`clearable`, default `false`; `.sd-clear-btn`, thin `close` icon) when there's a value AND the field is not `required`/`disabled`/`readonly`. **Hover-gated** (`sd-hover`) — only visible on hover/focus. Click resets to `null` and emits `sdChange(null)`. Renders to the left of any `sdSuffixDef` unit symbol. Shared style with `sd-input`/`sd-input-color`/`sd-date`/`sd-datetime`.
 - With `[hideInlineError]="true"`: an `error` icon (`.sd-error-icon`) sits **flush at the right edge** carrying the message as a tooltip; when the clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - In `[viewed]="true"` mode: no input chrome — just the formatted number as plain text (or as a hyperlink if `hyperlink` is set)
 

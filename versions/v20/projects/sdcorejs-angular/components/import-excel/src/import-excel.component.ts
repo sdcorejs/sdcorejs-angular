@@ -25,7 +25,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   selector: 'sd-import-excel',
   templateUrl: './import-excel.component.html',
   styleUrl: './import-excel.component.scss',
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     MatSlideToggleModule,

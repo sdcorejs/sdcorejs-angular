@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Table settings compact density - desktop</title>
+    <style>
+      :root {
+        --surface: #ffffff;
+        --canvas: #eef2f6;
+        --surface-muted: #f7f8fa;
+        --border: #d8dde5;
+        --row-border: #e5e8ed;
+        --text: #25282e;
+        --text-secondary: #606773;
+        --primary: #0874c9;
+        --primary-soft: #e5f1fb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--text);
+        font-family: Roboto, 'Helvetica Neue', Arial, sans-serif;
+      }
+
+      main {
+        width: 100%;
+        padding: 28px 0 32px;
+      }
+      .frame {
+        width: 40vw;
+        margin: 0 auto;
+      }
+      .eyebrow {
+        margin-bottom: 5px;
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin: 0;
+        font-size: 22px;
+        line-height: 30px;
+      }
+      .description {
+        margin: 5px 0 14px;
+        color: var(--text-secondary);
+        font-size: 13px;
+      }
+      .tokens {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-bottom: 16px;
+      }
+      .token {
+        padding: 4px 8px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: #525a66;
+        font-size: 11px;
+      }
+      .token strong {
+        color: var(--primary);
+      }
+
+      .modal {
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--surface);
+        box-shadow: 0 20px 52px rgba(28, 37, 51, 0.16);
+      }
+
+      .modal-header {
+        display: flex;
+        min-height: 64px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+      }
+      .modal-title {
+        margin: 0;
+        font-size: 18px;
+        line-height: 24px;
+        font-weight: 600;
+      }
+      .close {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--text-secondary);
+        font-size: 23px;
+      }
+      .table-scroll {
+        max-height: 70vh;
+        overflow: auto;
+      }
+      .config-table {
+        min-width: 850px;
+      }
+      .config-head,
+      .config-row {
+        display: grid;
+        grid-template-columns: 84px minmax(290px, 1fr) 92px 96px 126px;
+        align-items: center;
+        padding: 0 12px;
+      }
+      .config-head {
+        position: sticky;
+        z-index: 2;
+        top: 0;
+        min-height: 40px;
+        border-bottom: 1px solid #cfd5de;
+        background: var(--surface-muted);
+        color: #343840;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .config-row {
+        min-height: 40px;
+        border-bottom: 1px solid var(--row-border);
+        background: var(--surface);
+        font-size: 13px;
+      }
+      .config-row:last-child {
+        border-bottom: 0;
+      }
+      .config-row:hover {
+        background: #f8fbfe;
+      }
+      .visible-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .drag {
+        display: grid;
+        width: 24px;
+        height: 32px;
+        place-items: center;
+        color: #747b86;
+        font-size: 18px;
+        cursor: grab;
+      }
+      .field {
+        display: flex;
+        height: 32px;
+        align-items: center;
+        padding: 0 10px;
+        border: 1px solid #c8ced8;
+        border-radius: 4px;
+        background: #fbfbfd;
+        color: #3b4047;
+      }
+      .width-field {
+        width: 66px;
+      }
+      .center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .switch-button {
+        display: flex;
+        width: 32px;
+        min-width: 32px;
+        height: 40px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      .switch-track {
+        position: relative;
+        display: block;
+        width: 32px;
+        height: 18px;
+        border-radius: 999px;
+        background: #d8dbe1;
+        box-shadow: inset 0 0 0 1px #8b919b;
+      }
+      .switch-thumb {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        display: grid;
+        width: 14px;
+        height: 14px;
+        place-items: center;
+        border-radius: 50%;
+        background: #555b65;
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .switch-button.on .switch-track {
+        background: var(--primary);
+        box-shadow: none;
+      }
+      .switch-button.on .switch-thumb {
+        left: 16px;
+        background: #fff;
+        color: var(--primary);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+      }
+      .switch-button.focus-demo {
+        border-radius: 8px;
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+
+      .modal-footer {
+        display: flex;
+        min-height: 56px;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 0 16px;
+        border-top: 1px solid var(--border);
+      }
+      .action {
+        height: 32px;
+        padding: 0 13px;
+        border: 0;
+        border-radius: 18px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .action.neutral {
+        background: #eff1f4;
+        color: #656b75;
+      }
+      .action.secondary {
+        background: var(--primary-soft);
+        color: #0870c2;
+      }
+      .action.primary {
+        background: #0870c2;
+        color: #fff;
+      }
+      .legend {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        color: var(--text-secondary);
+        font-size: 11px;
+      }
+    </style>
+  </head>
+  <body>
+    <main data-story="UR-1 UR-2 UR-3 UR-4" data-ac="AC-D1 AC-D2 AC-D3 AC-D4 AC-D5 AC-D6">
+      <div class="frame">
+        <div class="eyebrow">Editable design handoff · Desktop · SdModal sm = 40vw</div>
+        <h1>Table settings — compact density</h1>
+        <p class="description">Giữ nguyên cấu trúc và hành vi; thu gọn control, row và footer spacing.</p>
+        <div class="tokens">
+          <span class="token">Switch <strong>32×18px</strong></span>
+          <span class="token">Hit box <strong>32×40px</strong></span>
+          <span class="token">Input/Button <strong>32px</strong></span>
+          <span class="token">Row <strong>40px</strong></span>
+          <span class="token">Footer gap <strong>8px</strong></span>
+        </div>
+
+        <section class="modal" aria-label="Thiết lập bảng" data-story="UR-2 UR-3" data-ac="AC-D2 AC-D3 AC-D4 AC-D5 AC-D6">
+          <header class="modal-header">
+            <h2 class="modal-title">Thiết lập bảng</h2>
+            <button class="close" aria-label="Đóng">×</button>
+          </header>
+          <div class="table-scroll">
+            <div class="config-table" role="table" aria-label="Cấu hình cột">
+              <div class="config-head" role="row">
+                <span>Hiển thị</span><span>Tiêu đề cột</span><span>Rộng</span><span class="center">Cố định</span
+                ><span class="center">Giới hạn ký tự</span>
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag" aria-label="Kéo để sắp xếp">⠿</span
+                  ><button class="switch-button on" aria-label="Hiển thị Họ và tên">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Họ và tên</span><span class="field width-field">180</span>
+                <span class="center"
+                  ><button class="switch-button focus-demo" aria-label="Cố định Họ và tên">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button" aria-label="Giới hạn ký tự Họ và tên">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag">⠿</span
+                  ><button class="switch-button on">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Email</span><span class="field width-field">220</span>
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag">⠿</span
+                  ><button class="switch-button on">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Phòng ban</span><span class="field width-field">140</span>
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag">⠿</span
+                  ><button class="switch-button on">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Chức vụ</span><span class="field width-field">160</span>
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag">⠿</span
+                  ><button class="switch-button on">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Lương</span><span class="field width-field">140</span>
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag">⠿</span
+                  ><button class="switch-button on">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Trạng thái</span><span class="field width-field">130</span>
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+              <div class="config-row" role="row">
+                <div class="visible-cell">
+                  <span class="drag">⠿</span
+                  ><button class="switch-button on">
+                    <span class="switch-track"><span class="switch-thumb">✓</span></span>
+                  </button>
+                </div>
+                <span class="field">Ngày vào</span><span class="field width-field">150</span>
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+                <span class="center"
+                  ><button class="switch-button">
+                    <span class="switch-track"><span class="switch-thumb">−</span></span>
+                  </button></span
+                >
+              </div>
+            </div>
+          </div>
+          <footer class="modal-footer" data-story="UR-1" data-ac="AC-D1 AC-D6">
+            <button class="action neutral">Bỏ qua</button><button class="action secondary">Mặc định</button
+            ><button class="action primary">Áp dụng</button>
+          </footer>
+        </section>
+        <div class="legend">
+          <span>Focus example: “Cố định” ở hàng đầu tiên.</span><span>Source of truth: design/specs/table-settings-compact-density.md</span>
+        </div>
+      </div>
+    </main>
+    <script>
+      // Wireframe semantics mirror the production MatTable/SdSwitch contract without adding visual noise.
+      const table = document.querySelector('.config-table');
+      table.setAttribute('role', 'table');
+      const headerRow = table.querySelector('.config-head');
+      headerRow.setAttribute('role', 'row');
+      [...headerRow.children].forEach(cell => cell.setAttribute('role', 'columnheader'));
+      table.querySelectorAll('.config-row').forEach(row => {
+        row.setAttribute('role', 'row');
+        [...row.children].forEach(cell => cell.setAttribute('role', 'cell'));
+        const rowLabel = row.querySelector('.field').textContent.trim();
+        const labels = [`Hiển thị ${rowLabel}`, `Cố định ${rowLabel}`, `Giới hạn ký tự ${rowLabel}`];
+        row.querySelectorAll('.switch-button').forEach((control, index) => {
+          control.setAttribute('role', 'switch');
+          control.setAttribute('aria-checked', control.classList.contains('on') ? 'true' : 'false');
+          control.setAttribute('aria-label', labels[index]);
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -68,7 +68,8 @@ interface Daterange {
     }),
   ],
   standalone: true,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

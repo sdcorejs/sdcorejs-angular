@@ -221,5 +221,5 @@ constructor(auth: SdAuthService, storage: SdLayoutStorageService) {
 
 - [auth module](./sd-auth.md) — typical source for `userInfo` / `signout` config.
 - [permission module](./sd-permission.md) — backs `SdLayoutMenu.permission` filtering.
-- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) — provide the auth flow that feeds the layout.
+- [keycloak module](./sd-keycloak.md) — provides an auth flow that can feed the layout.
 - `<sd-page>` is unique to layout (no other doc); other components like `[sd-table]` (`../components/sd-table.md`) are commonly placed inside `<sd-page>`.

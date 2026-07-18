@@ -19,6 +19,7 @@ import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { SD_TAB, SdTab } from '../../models/tab-router.model';
+import { SdTabRouterItemComponent } from '../tab-router-item/tab-router-item.component';
 
 // Shared counters across instances per class — we don't share state across tests though
 // (re-initialised in beforeEach via reset()).
@@ -138,6 +139,78 @@ describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
     expect(counters.pageB.ctor).toBe(1);
     expect(counters.pageB.init).toBe(1);
     expect(counters.pageB.destroy).toBe(0);
+  });
+
+  it('recreates an inactive existing tab in place when forceReload is true', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    const originalTab = outletCmp.tabs()[0];
+    const originalInjector = originalTab.injector;
+    const originalTabInfoChanges = originalTab.tabInfoChanges;
+    const beforeClose = jasmine.createSpy('beforeClose').and.returnValue(false);
+    originalTab.beforeClose = beforeClose;
+
+    await router.navigateByUrl('/b');
+    await settle(fixture);
+    const inactiveTabBeforeReload = outletCmp.tabs().find(tab => tab.url === '/a')!;
+
+    await router.navigateByUrl('/a', { state: { forceReload: true } });
+    await settle(fixture);
+
+    const tabs = outletCmp.tabs();
+    const reloadedTab = tabs[0];
+    expect(tabs.map(tab => tab.url)).toEqual(['/a', '/b']);
+    expect(reloadedTab).not.toBe(originalTab);
+    expect(reloadedTab).not.toBe(inactiveTabBeforeReload);
+    expect(reloadedTab.injector).not.toBe(originalInjector);
+    expect(reloadedTab.tabInfoChanges).not.toBe(originalTabInfoChanges);
+    expect(reloadedTab.isActive).toBeTrue();
+    expect(beforeClose).not.toHaveBeenCalled();
+    expect(counters.pageA).toEqual({ ctor: 2, init: 2, destroy: 1 });
+    expect(counters.pageB).toEqual({ ctor: 1, init: 1, destroy: 0 });
+  });
+
+  it('recreates the current tab for a same-url forceReload navigation', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    const originalTab = outletCmp.tabs()[0];
+    const originalInjector = originalTab.injector;
+    const originalTabInfoChanges = originalTab.tabInfoChanges;
+
+    await router.navigateByUrl('/a', { state: { forceReload: true } });
+    await settle(fixture);
+
+    const tabs = outletCmp.tabs();
+    expect(tabs.length).toBe(1);
+    expect(tabs[0]).not.toBe(originalTab);
+    expect(tabs[0].injector).not.toBe(originalInjector);
+    expect(tabs[0].tabInfoChanges).not.toBe(originalTabInfoChanges);
+    expect(counters.pageA).toEqual({ ctor: 2, init: 2, destroy: 1 });
+  });
+
+  it('recreates the nav item and subscribes it to replacement tabInfoChanges on same-url forceReload', async () => {
+    await router.navigateByUrl('/a');
+    await settle(fixture);
+
+    const originalTab = outletCmp.tabs()[0];
+    const originalItem = fixture.debugElement.query(By.directive(SdTabRouterItemComponent)).componentInstance as SdTabRouterItemComponent;
+
+    await router.navigateByUrl('/a', { state: { forceReload: true } });
+    await settle(fixture);
+
+    const replacementTab = outletCmp.tabs()[0];
+    const replacementItem = fixture.debugElement.query(By.directive(SdTabRouterItemComponent))
+      .componentInstance as SdTabRouterItemComponent;
+    expect(replacementItem).not.toBe(originalItem);
+    expect(replacementItem.tab).toBe(replacementTab);
+    expect(replacementTab.tabInfoChanges).not.toBe(originalTab.tabInfoChanges);
+
+    replacementTab.tabInfoChanges.next({ name: 'Reloaded A' });
+    fixture.detectChanges();
+
+    expect(replacementItem.tabInfo).toEqual({ name: 'Reloaded A' });
   });
 
   it('destroys the tab component when its tab is closed (no leak)', async () => {

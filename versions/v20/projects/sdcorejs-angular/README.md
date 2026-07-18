@@ -83,7 +83,7 @@ Replace the timer with your typed service call and reset `saving` in a `finally`
 | Data and workflow | Local or server tables, tree data, query bars, query builders, generic forms, document building, file upload, and Excel import  |
 | Form controls     | Text, number, date, date range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, inline text, and textarea |
 | Services          | Notifications, confirmation dialogs, loading state, API access, storage, cache, Excel, and DOCX helpers                         |
-| Portal modules    | Auth, AuthOM, Keycloak, permission, layout, and icon modules                                                                    |
+| Portal modules    | Auth, Keycloak, permission, layout, and icon modules                                                                            |
 | Localization      | Built-in `vi`, `en`, `ja`, `ko`, and `zh` catalogs, plus a synchronous custom-catalog provider                                  |
 
 The [live showcase](https://sdcorejs.github.io/sdcorejs-angular/) demonstrates components, forms, and services. The [latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) lists every published reference document without duplicating the full API here.

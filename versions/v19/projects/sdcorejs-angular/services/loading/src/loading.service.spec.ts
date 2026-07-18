@@ -102,6 +102,65 @@ describe('SdLoadingService', () => {
     expect(service.isLoading('#does-not-exist')).toBeFalsy();
   });
 
+  // ─── multi-host selector (e.g. router tabs with duplicate hosts) ───────────
+
+  it('start(selector) attaches an overlay to every matching host', () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    a.className = 'tab-panel';
+    b.className = 'tab-panel';
+    document.body.appendChild(a);
+    document.body.appendChild(b);
+
+    service.start('.tab-panel');
+
+    expect(a.querySelectorAll('.sd-loading').length).toBe(1);
+    expect(b.querySelectorAll('.sd-loading').length).toBe(1);
+    expect(service.isLoading('.tab-panel')).toBeTruthy();
+
+    service.stop('.tab-panel');
+    a.remove();
+    b.remove();
+  });
+
+  it('stop(selector) removes overlays from every matching host', () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    a.className = 'tab-panel';
+    b.className = 'tab-panel';
+    document.body.appendChild(a);
+    document.body.appendChild(b);
+
+    service.start('.tab-panel');
+    service.stop('.tab-panel');
+
+    expect(a.querySelector('.sd-loading')).toBeNull();
+    expect(b.querySelector('.sd-loading')).toBeNull();
+    expect(service.isLoading('.tab-panel')).toBeFalsy();
+
+    a.remove();
+    b.remove();
+  });
+
+  it('start(selector) twice does not double-append on any matching host', () => {
+    const a = document.createElement('div');
+    const b = document.createElement('div');
+    a.className = 'tab-panel';
+    b.className = 'tab-panel';
+    document.body.appendChild(a);
+    document.body.appendChild(b);
+
+    service.start('.tab-panel');
+    service.start('.tab-panel');
+
+    expect(a.querySelectorAll('.sd-loading').length).toBe(1);
+    expect(b.querySelectorAll('.sd-loading').length).toBe(1);
+
+    service.stop('.tab-panel');
+    a.remove();
+    b.remove();
+  });
+
   // ─── overlay DOM structure ─────────────────────────────────────────────────
 
   it('overlay contains a child .sd-loading-spinner element', () => {

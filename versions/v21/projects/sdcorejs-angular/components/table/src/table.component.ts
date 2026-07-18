@@ -147,7 +147,8 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
       useClass: MatPaginatorIntlCro,
     },
   ],
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     MatMenuModule,
@@ -761,8 +762,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     this.#applyDefaultSelected();
 
     await this.tableOption()?.reload?.onReload?.(this.items(), additionArgs);
-    this.#syncSelectAllState();
     this.#updateSelectedItems();
+    this.#syncSelectAllState();
 
     setTimeout(() => {
       this.table()?.updateStickyColumnStyles();
@@ -983,8 +984,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (rowData.meta.group?.items?.length) {
       rowData.meta.group.items.forEach(e => (e.meta.selector!.isSelected = rowData.meta.selector!.isSelected));
       opt.selector?.onSelect?.(rowData.data, selectedData());
-      this.#syncSelectAllState();
       this.#updateSelectedItems();
+      this.#syncSelectAllState();
     } else {
       if (opt.selector?.single) {
         this.#getSelectionRows()
@@ -1002,8 +1003,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         return;
       }
       opt.selector?.onSelect?.(rowData.data, selectedData());
-      this.#syncSelectAllState();
       this.#updateSelectedItems();
+      this.#syncSelectAllState();
     }
   };
 
@@ -1017,6 +1018,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     });
     opt?.selector?.onSelectAll?.(this.#getSelectedRowData());
     this.#updateSelectedItems();
+    this.#syncSelectAllState();
   };
 
   onClearSelection = (items?: SdTableItem<T>[]) => {
@@ -1075,8 +1077,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     sel.forEach(c => (c.meta.selector!.isSelected = checked));
     const opt = this.tableOption();
     opt?.selector?.onSelectAll?.(this.#getSelectedRowData());
-    this.#syncSelectAllState();
     this.#updateSelectedItems();
+    this.#syncSelectAllState();
   };
 
   // Map<groupKey, isExpanded> — table own state, pass vào SdGroupPipe arg 3.

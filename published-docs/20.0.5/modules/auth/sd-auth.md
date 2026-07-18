@@ -10,9 +10,9 @@ Provider-agnostic auth abstraction: app supplies sign-out / change-password acti
 
 ## When to use
 
-- App already owns its auth flow (Keycloak, AuthOM, custom backend) and just wants a uniform `SdAuthService` for the layout/header to call `signout()` / `changePassword()` and read `getAuthInfo()`.
+- App already owns its auth flow (Keycloak or a custom backend) and just wants a uniform `SdAuthService` for the layout/header to call `signout()` / `changePassword()` and read `getAuthInfo()`.
 - Need `SdAuthGuard` / `SdPortalGuard` route guards that an app can wire into `canActivate` / `canActivateChild` without coupling to a specific auth library.
-- Pair with `@sdcorejs/angular/modules/keycloak` or `@sdcorejs/angular/modules/authom` — those modules implement the actual sign-in / token logic, while this module gives the app shell a stable surface to consume.
+- Pair with `@sdcorejs/angular/modules/keycloak` or an app-owned provider — those implementations provide the actual sign-in / token logic, while this module gives the app shell a stable surface to consume.
 
 ## What it provides
 
@@ -104,7 +104,7 @@ NgModule fallback — provide the same value in `AppModule.providers`.
 
 ## Behavior notes
 
-- **No built-in token storage / refresh.** This module is intentionally a thin façade — the actual sign-in / token lifecycle lives in `keycloak` or `authom` (or an app-owned service).
+- **No built-in token storage / refresh.** This module is intentionally a thin façade — the actual sign-in / token lifecycle lives in `keycloak` or an app-owned service.
 - `getAuthInfo` is always defined: it is `toSignal(authInfo())` if a callback is configured, otherwise `signal(defaultGuestUser)`.
 - `signout()` only fires `signout$` after the configured `action.signout` Promise resolves — subscribers get a clean "post-signout" hook.
 - Guards default to `true` when not configured — they NEVER block by default. You must wire `guard.auth` / `guard.portal` for them to gate anything.
@@ -168,13 +168,12 @@ export const routes: Routes = [
 ## Anti-patterns
 
 - Do NOT call `keycloak.logout()` directly from a header component — go through `SdAuthService.signout()` so `signout$` subscribers also fire.
-- Do NOT implement token-refresh inside `action.signout` — that belongs in the underlying provider (keycloak / authom interceptor).
+- Do NOT implement token-refresh inside `action.signout` — that belongs in the underlying provider (for example, the keycloak interceptor).
 - Do NOT inject `SdAuthService` inside `SD_AUTH_CONFIGURATION`'s factory — circular DI. Inject the underlying provider service instead (e.g. `SdKeycloakService`).
 - Do NOT skip providing `SD_AUTH_CONFIGURATION` if you rely on guards — they will silently pass everything through.
 
 ## Related
 
 - [keycloak module](./sd-keycloak.md) — typical `action.signout` / `guard.authInfo` source for Keycloak SSO.
-- [authom module](./sd-authom.md) — alternative source backed by AuthOM (Auth0).
 - [permission module](./sd-permission.md) — runs on top of auth; uses `getToken` to call your permission API.
 - [layout module](./sd-layout.md) — `SdLayoutService` consumes `SdAuthService` indirectly via its own `signout` / `userInfo` config (not auto-wired).

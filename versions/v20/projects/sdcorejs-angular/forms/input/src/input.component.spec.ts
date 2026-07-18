@@ -17,6 +17,7 @@ import { queryByCss } from '../../../testing/test-utils';
     [required]="required"
     [disabled]="disabled"
     [readonly]="readonly"
+    [clearable]="clearable"
     [maxlength]="maxlength"
     [minlength]="minlength"
     [hideInlineError]="hideInlineError"
@@ -38,6 +39,7 @@ class HostComponent {
   required = false;
   disabled = false;
   readonly = false;
+  clearable = false;
   maxlength?: number;
   minlength?: number;
   hideInlineError = false;
@@ -580,8 +582,21 @@ describe('SdInput', () => {
     });
   });
 
+  it('defaults clearable to false and hides the clear button', () => {
+    host.model = 'hello';
+    fixture.detectChanges();
+
+    expect(input.clearable()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('button.sd-clear-btn')).toBeNull();
+  });
+
   describe('clear button (slim, hover-gated)', () => {
     const clearBtn = () => fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLButtonElement | null;
+
+    beforeEach(() => {
+      host.clearable = true;
+      fixture.detectChanges();
+    });
 
     it('renders the slim clear button when a value is set', () => {
       host.model = 'hello';
@@ -720,10 +735,11 @@ describe('SdInput', () => {
     // (cố ý — tránh nhảy layout khi hover). Nếu render SAU error icon nó giành slot ngoài cùng
     // bên phải → error icon (luôn hiển thị) bị đẩy "tụt vào trong". Clear phải render TRƯỚC error
     // icon để error icon nằm sát mép phải, clear giữ slot vô hình bên trái nó.
-    const errorIconEl = () => fixture.nativeElement.querySelector('mat-icon.sd-error-icon') as HTMLElement | null;
+    const errorIconEl = () => fixture.nativeElement.querySelector('sd-icon.sd-error-icon') as HTMLElement | null;
     const clearBtnEl = () => fixture.nativeElement.querySelector('button.sd-clear-btn') as HTMLElement | null;
 
     const setupErrorWithValue = () => {
+      host.clearable = true;
       host.hideInlineError = true;
       host.pattern = '^\\d+$'; // chỉ cho phép chữ số
       host.model = 'abc'; // sai pattern → lỗi
@@ -874,6 +890,17 @@ describe('SdInput (viewed inline mode)', () => {
     expect(fixture.nativeElement.querySelector('sd-inline-text input')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
     expect(fixture.nativeElement.querySelector('sd-view')).toBeNull();
+  });
+
+  it('forwards clearable=false by default and clearable=true on opt-in', () => {
+    fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('model', 'hello');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-text__clear')).toBeNull();
+
+    fixture.componentRef.setInput('clearable', true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.sd-inline-text__clear')).not.toBeNull();
   });
 
   it('viewed=true stays static (sd-view, no input)', () => {

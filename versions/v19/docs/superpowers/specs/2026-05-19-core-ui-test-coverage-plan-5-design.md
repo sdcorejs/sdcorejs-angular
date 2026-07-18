@@ -20,7 +20,6 @@ Per File Map in `plans/2026-05-18-core-ui-test-coverage-plan-5.md`.
 
 ### 2.2. Out of scope
 
-- **Skipped per user direction**: `modules/authom/` (authom.service + authom.interceptor) — features not finalized.
 - **Layout module** — UI-heavy components, Plan 6 candidate.
 - **Skipped indefinitely per user direction (carried from prior plans)**: chart, document-builder, editor, workflow, form-generic, history, query-builder.
 - **Deferred (carried)**: import-excel.
