@@ -1006,15 +1006,6 @@ const PUBLISHED_ONLY_PAGES = [
   }),
   definePublishedDocPage({
     category: 'modules-integrations',
-    slug: 'authom',
-    title: 'AuthOM Module',
-    description: 'AuthOM integration helpers for applications using the corresponding identity platform.',
-    importPath: '@sdcorejs/angular/modules/authom',
-    publishedDocId: 'modules/authom/sd-authom',
-    keywords: ['authentication', 'authom', 'identity'],
-  }),
-  definePublishedDocPage({
-    category: 'modules-integrations',
     slug: 'keycloak',
     title: 'Keycloak Module',
     description: 'Keycloak authentication, session renewal and authorization integration.',

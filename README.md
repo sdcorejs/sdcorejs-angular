@@ -40,7 +40,7 @@
 | Data and workflow    | Local or server-backed tables, tree data, query bars, query builders, generic forms, document building, file upload, and Excel import     |
 | Form controls        | Text, numeric, date, date-range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, inline-text, and textarea controls |
 | Application services | Notifications, confirmation dialogs, loading state, API access, storage, cache, Excel, and DOCX helpers                                   |
-| Portal modules       | Auth, AuthOM, Keycloak, permission, layout, and icon modules                                                                              |
+| Portal modules       | Auth, Keycloak, permission, layout, and icon modules                                                                                      |
 | Developer experience | Standalone imports, typed APIs, signal-oriented state, `OnPush` components, shared SCSS utilities, and E2E-friendly `data-*` attributes   |
 | Localization         | Built-in Vietnamese, English, Japanese, Korean, and Chinese catalogs, plus a synchronous custom-catalog hook                              |
 
@@ -132,7 +132,7 @@ The published documentation manifest is the canonical catalog. These groups summ
 | Components           | `SdTable`, `SdTree`, `SdModal`, `SdQueryBuilder`, `SdDocumentBuilder`, `SdStepper`, and chart components         | [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/) and [component catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                  |
 | Form controls        | `SdInput`, `SdInputNumber`, `SdSelect`, `SdAutocomplete`, `SdDate`, `SdChip`, `SdInlineText`                     | [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts) and [forms manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)          |
 | Services             | `SdNotifyService`, `SdConfirmService`, `SdLoadingService`, `SdStorageService`, `SdExcelService`, `SdDocxService` | [Notify example source](versions/v19/projects/showcase/src/app/pages/services/notify/notify-demo.component.ts) and [services manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) |
-| Modules              | Auth, AuthOM, Keycloak, permission, layout, and icon modules                                                     | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
+| Modules              | Auth, Keycloak, permission, layout, and icon modules                                                             | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
 | Directives and pipes | Responsive, tooltip, href, scroll, copy, date, datetime, number, safe-HTML, and view helpers                     | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
 
 ### Representative workflows

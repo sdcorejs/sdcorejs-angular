@@ -1,2 +1,2 @@
-export * from './form-render-entity.model';
-export * from './form-render-args.model';
+export type * from './form-render-entity.model';
+export type * from './form-render-args.model';

@@ -21,45 +21,46 @@ Imperatively attaches/detaches a full-cover spinner overlay to any DOM element (
 ## Public API
 
 ### `start(element?: string): void`
-Creates and appends a full-cover spinner overlay to the first DOM element matching `element` (CSS selector). No-op if the element already has an overlay or no element matches.
+Creates and appends a full-cover spinner overlay to **every** DOM element matching `element` (CSS selector via `querySelectorAll`). No-op for hosts that already have an overlay, or when no element matches.
 
 ```typescript
 start(element?: string): void
 ```
 
 **Parameters**:
-- `element` (`string`, optional, default `'body'`): CSS selector passed to `document.querySelector`.
+- `element` (`string`, optional, default `'body'`): CSS selector passed to `document.querySelectorAll`.
 
 **Returns**: `void`
 
 ### `stop(element?: string): void`
-Removes the overlay previously attached to the matched element. No-op if there is no overlay or no element matches the selector.
+Removes the overlay previously attached to **every** matched element. No-op for hosts without an overlay, or when no element matches the selector.
 
 ```typescript
 stop(element?: string): void
 ```
 
 **Parameters**:
-- `element` (`string`, optional, default `'body'`): CSS selector of the target element whose overlay should be removed.
+- `element` (`string`, optional, default `'body'`): CSS selector of the target elements whose overlays should be removed.
 
 **Returns**: `void`
 
 ### `isLoading(element?: string): Element | null | false`
-Returns truthy when the matched element currently has an active overlay; falsy otherwise. Specifically returns the `Element` if found and loading, `false` if found but not loading, and `null` if no element matches the selector.
+Returns truthy when **any** matched element currently has an active overlay; falsy otherwise. Specifically returns the first loading `Element` if found, `false` if matches exist but none are loading, and `null` if no element matches the selector.
 
 ```typescript
 isLoading(element?: string): Element | null | false
 ```
 
 **Parameters**:
-- `element` (`string`, optional, default `'body'`): CSS selector of the element to check.
+- `element` (`string`, optional, default `'body'`): CSS selector of the elements to check.
 
-**Returns**: Truthy (`Element`) when the element exists and has an overlay; falsy (`null` or `false`) otherwise.
+**Returns**: Truthy (`Element`) when at least one match has an overlay; falsy (`null` or `false`) otherwise.
 
 ## Configuration / DI tokens
 None. The service has no external configuration.
 
 ## Behavior notes
+- **Multi-match selectors**: `start` / `stop` / `isLoading` use `document.querySelectorAll`. When several hosts share a selector (e.g. router tabs that keep duplicate panel roots in the DOM), every match gets or clears an overlay together. Loading for a given selector is still one shared busy flag (`providedIn: 'root'`); the service mirrors that flag onto all current matches.
 - **Tracking**: an internal `WeakMap<Element, HTMLElement>` maps target element → overlay node. Garbage-collected automatically when the target leaves the DOM.
 - **No ref counting**: `start()` twice + `stop()` once = overlay gone. If you need balanced calls, wrap with a counter:
   ```typescript
@@ -95,7 +96,16 @@ try { await this.api.post('/api/save', dto); }
 finally { this.loading.stop('#editor-panel'); }
 ```
 
-### 3. Ref-counted wrapper
+### 3. Multi-host selector (e.g. router tabs)
+When several panels share a class (or other selector) and stay in the DOM at once, one `start` / `stop` updates **all** matches:
+
+```typescript
+this.loading.start('.tab-panel');
+try { await this.loadActiveTab(); }
+finally { this.loading.stop('.tab-panel'); }
+```
+
+### 4. Ref-counted wrapper
 ```typescript
 class LoadingCounter {
   private count = 0;
@@ -105,7 +115,7 @@ class LoadingCounter {
 }
 ```
 
-### 4. Use in an HTTP interceptor
+### 5. Use in an HTTP interceptor
 ```typescript
 @Injectable()
 class LoadingInterceptor implements HttpInterceptor {

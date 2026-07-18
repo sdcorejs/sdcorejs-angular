@@ -13,7 +13,7 @@ Thin wrapper around the official `keycloak-js` SDK: bootstraps Keycloak at app-i
 - Your app authenticates against a Keycloak realm (self-hosted or RH SSO).
 - You want `keycloak-js` initialized as part of `APP_INITIALIZER` so routes never activate before SSO check completes.
 - You need automatic 30-second-ahead silent token refresh, with auto-redirect to login on refresh failure.
-- Differs from `authom`: this module uses the canonical `keycloak-js` SDK (full Keycloak feature set: `loginRequired`, account console, role mappings) — not a hand-rolled OAuth/PKCE implementation.
+- Uses the canonical `keycloak-js` SDK (full Keycloak feature set: `loginRequired`, account console, role mappings) rather than a hand-rolled OAuth/PKCE implementation.
 
 ## What it provides
 
@@ -169,7 +169,6 @@ export class HeaderUser {
 
 ## Related
 
-- [authom module](./sd-authom.md) — alternative SSO provider (Auth0/AuthOM via PKCE).
 - [auth module](./sd-auth.md) — generic façade you can layer on top to expose `SdAuthService`.
 - [permission module](./sd-permission.md) — `getToken` callback can return `kc.getToken()` so permission decoding works.
 - [layout module](./sd-layout.md) — `SdLayoutService` consumes user info / signout that you wire from this service.

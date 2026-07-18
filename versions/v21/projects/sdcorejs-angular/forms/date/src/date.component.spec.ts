@@ -17,6 +17,7 @@ import { SdDate } from './date.component';
     [required]="required"
     [disabled]="disabled"
     [viewed]="viewed"
+    [clearable]="clearable"
     [min]="min"
     [max]="max"
     [model]="model"
@@ -30,6 +31,7 @@ class HostComponent {
   required = false;
   disabled = false;
   viewed = false;
+  clearable = false;
   min: any = undefined;
   max: any = undefined;
   model: any = undefined;
@@ -213,6 +215,14 @@ describe('SdDate', () => {
   });
 
   // -------------------------------------------------------------------------
+  it('defaults clearable to false and hides the edit-mode clear button', () => {
+    host.model = '2026/05/15';
+    fixture.detectChanges();
+
+    expect(comp.clearable()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.sd-clear-btn')).toBeNull();
+  });
+
   describe('clear behavior', () => {
     it('clears formControl and emits null via clear()', () => {
       host.model = '2026/05/15';
@@ -461,6 +471,7 @@ describe('SdDate (bare + open)', () => {
   });
 
   it('non-bare: still renders .sd-clear-btn when a value is set', () => {
+    fixture.componentRef.setInput('clearable', true);
     fixture.detectChanges();
     component.formControl.setValue(new Date(2024, 0, 15));
     fixture.detectChanges();
@@ -513,6 +524,7 @@ describe('SdDate (viewed inline mode)', () => {
   it('inline + value renders a hover clear-× (gated by clearable)', () => {
     // asserts: clearable inline date exposes the clear affordance; [clearable]=false suppresses it
     fixture.componentRef.setInput('viewed', 'inline');
+    fixture.componentRef.setInput('clearable', true);
     fixture.detectChanges();
     component.formControl.setValue(new Date(2024, 0, 15));
     fixture.detectChanges();

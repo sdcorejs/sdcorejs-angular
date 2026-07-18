@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Test coverage cho 1 global error handler + 2 HTTP interceptors + 10 module service/guard/directive files (permission, auth, authom, keycloak) của `@sdcorejs/angular`.
+**Goal:** Test coverage cho 1 global error handler + 2 HTTP interceptors + 8 module service/guard/directive files (permission, auth, keycloak) của `@sdcorejs/angular`.
 
 **Architecture:** Reuse Plan 1-4 pattern. Services/handlers/interceptors test bằng `TestBed.inject()`. HTTP interceptors test bằng `HttpClientTestingModule` + provider interceptor. Guards test bằng `TestBed.runInInjectionContext()` + mocked Router.
 
@@ -113,11 +113,9 @@ describe('unauthorizedInterceptor', () => {
 | 7 | `modules/permission/src/directives/permission.directive.spec.ts` | 35 | Simple |
 | 8 | `modules/permission/src/guards/permission.guard.spec.ts` | 43 | Simple |
 | 9 | `modules/permission/src/services/permission.service.spec.ts` | 166 | Medium |
-| 10 | `modules/authom/authom.interceptor.spec.ts` | 26 | Trivial |
-| 11 | `modules/authom/authom.service.spec.ts` | 274 | Complex |
-| 12 | `modules/keycloak/keycloak.interceptor.spec.ts` | 29 | Trivial |
-| 13 | `modules/keycloak/keycloak.service.spec.ts` | 41 | Simple |
-| 14 | Plan 5 design doc + gap report aggregate | — | — |
+| 10 | `modules/keycloak/keycloak.interceptor.spec.ts` | 29 | Trivial |
+| 11 | `modules/keycloak/keycloak.service.spec.ts` | 41 | Simple |
+| 12 | Plan 5 design doc + gap report aggregate | — | — |
 
 ---
 
@@ -136,7 +134,7 @@ Expected: on `feature/plan-5-modules-handlers-interceptors-tests`, 1332 tests pa
 
 ---
 
-## Tasks 1-13 (per-file)
+## Tasks 1-11 (per-file)
 
 For each file, the implementer follows the same flow:
 1. Read source `.ts` + corresponding `.md` (if exists)
@@ -153,7 +151,7 @@ Each task should target ~5-20 specs depending on tier:
 
 ---
 
-## Task 14: Plan 5 design doc + gap report
+## Task 12: Plan 5 design doc + gap report
 
 **Files:**
 - Create: `docs/superpowers/specs/2026-05-18-core-ui-test-coverage-plan-5-design.md`
@@ -165,7 +163,7 @@ Same finalize pattern as Plan 1-4.
 
 ## Done criteria
 
-- [ ] 13 new spec files.
+- [ ] 11 new spec files.
 - [ ] `npm run test:ci` pass with coverage threshold met.
 - [ ] MD files audited (if exist; some interceptor/guard files may have no MD — note in gap report).
 - [ ] No source `.ts` changes (preserve ng-packagr alias).
@@ -190,6 +188,6 @@ Same finalize pattern as Plan 1-4.
 
 **Auth service depends on token storage**: stub localStorage / SdStorageService as needed.
 
-**Authom/Keycloak service** may depend on external SDKs (keycloak-js): mock or stub the SDK before TestBed.inject.
+**Keycloak service** may depend on the external keycloak-js SDK: mock or stub the SDK before TestBed.inject.
 
 **i18n strings**: add `localStorage.setItem('sd-core.language', 'vi')` in beforeEach if test asserts translated strings.

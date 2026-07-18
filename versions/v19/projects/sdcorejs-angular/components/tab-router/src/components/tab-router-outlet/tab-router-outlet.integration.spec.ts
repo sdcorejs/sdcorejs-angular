@@ -210,6 +210,57 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       const firstLen = outletCmp.tabs().length;
       expect(firstLen).toBe(1);
     });
+
+    it('replaces the active tab and recreates an existing earlier target when replaceTab and forceReload are true', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      const targetBeforeReload = outletCmp.tabs().find(tab => tab.url === '/a')!;
+      const targetInjector = targetBeforeReload.injector;
+
+      await navigateAndStabilize(router, fixture, '/a', {
+        state: { replaceTab: true, forceReload: true },
+      });
+
+      const tabs = outletCmp.tabs();
+      expect(tabs.map(tab => tab.url)).toEqual(['/a']);
+      expect(tabs[0]).not.toBe(targetBeforeReload);
+      expect(tabs[0].injector).not.toBe(targetInjector);
+      expect(tabs[0].isActive).toBeTrue();
+    });
+
+    it('uses the shifted target index when replaceTab and forceReload remove an earlier active tab', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      await navigateAndStabilize(router, fixture, '/b');
+      await navigateAndStabilize(router, fixture, '/a');
+      const targetBeforeReload = outletCmp.tabs().find(tab => tab.url === '/b')!;
+      const targetInjector = targetBeforeReload.injector;
+
+      await navigateAndStabilize(router, fixture, '/b', {
+        state: { replaceTab: true, forceReload: true },
+      });
+
+      const tabs = outletCmp.tabs();
+      expect(tabs.map(tab => tab.url)).toEqual(['/b']);
+      expect(tabs[0]).not.toBe(targetBeforeReload);
+      expect(tabs[0].injector).not.toBe(targetInjector);
+      expect(tabs[0].isActive).toBeTrue();
+    });
+  });
+
+  describe('forceReload navigation state', () => {
+    it('adds a missing target normally and preserves existing tab injectors', async () => {
+      await navigateAndStabilize(router, fixture, '/a');
+      const originalAInjector = outletCmp.tabs()[0].injector;
+
+      await navigateAndStabilize(router, fixture, '/c', {
+        state: { forceReload: true },
+      });
+
+      const tabs = outletCmp.tabs();
+      expect(tabs.map(tab => tab.url)).toEqual(['/a', '/c']);
+      expect(tabs.find(tab => tab.url === '/a')!.injector).toBe(originalAInjector);
+      expect(tabs.find(tab => tab.url === '/c')!.isActive).toBeTrue();
+    });
   });
 
   describe('too-many-tabs warning', () => {

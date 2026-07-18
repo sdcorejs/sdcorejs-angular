@@ -9,6 +9,7 @@
     "@angular/material-date-fns-adapter": "^19.0.0 || ^20.0.0 || ^21.0.0"
   },
   "dependencies": {
+    "@sdcorejs/angular-material-datetime": "1.0.3",
     "@sdcorejs/utils": "1.1.4",
     "@lucide/angular": "^1.22.0",
     "@ckeditor/ckeditor5-angular": "11.1.2",

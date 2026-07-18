@@ -8,7 +8,7 @@ const EXPECTED_CATEGORY_COUNTS = {
   forms: 16,
   directives: 6,
   services: 9,
-  'modules-integrations': 11,
+  'modules-integrations': 10,
   'pipes-utilities': 9,
 } as const;
 
@@ -16,9 +16,9 @@ describe('documentation registry', () => {
   it('exposes every latest published document exactly once in the seven-category taxonomy', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId);
 
-    expect(DOC_PAGES).toHaveSize(85);
+    expect(DOC_PAGES).toHaveSize(84);
     expect(publishedIds.every(id => id !== null)).toBeTrue();
-    expect(new Set(publishedIds).size).toBe(85);
+    expect(new Set(publishedIds).size).toBe(84);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
@@ -58,7 +58,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 31, 16, 6, 9, 11, 9]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 31, 16, 6, 9, 10, 9]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');

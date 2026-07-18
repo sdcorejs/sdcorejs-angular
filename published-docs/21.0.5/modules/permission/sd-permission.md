@@ -178,6 +178,6 @@ export class Toolbar {
 ## Related
 
 - [auth module](./sd-auth.md) — usually paired so `getToken` resolves to the auth provider's current access token.
-- [keycloak module](./sd-keycloak.md) / [authom module](./sd-authom.md) — typical sources for `loadPermissions` (decode JWT roles or call a backend).
+- [keycloak module](./sd-keycloak.md) — a typical source for `loadPermissions` (decode JWT roles or call a backend).
 - [layout module](./sd-layout.md) — sidebar `SdLayoutMenu` items carry `permission` / `permissionKey` and are filtered using the same service.
 - [sd-cache](../services/sd-cache.md) — backing store for permission lists (`type: 'session'`).

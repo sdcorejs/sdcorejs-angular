@@ -13,11 +13,11 @@ Thin wrapper around the official `keycloak-js` SDK: bootstraps Keycloak at app-i
 - Your app authenticates against a Keycloak realm (self-hosted or RH SSO).
 - You want `keycloak-js` initialized as part of `APP_INITIALIZER` so routes never activate before SSO check completes.
 - You need automatic 30-second-ahead silent token refresh, with auto-redirect to login on refresh failure.
-- Differs from `authom`: this module uses the canonical `keycloak-js` SDK (full Keycloak feature set: `loginRequired`, account console, role mappings) — not a hand-rolled OAuth/PKCE implementation.
+- Uses the canonical `keycloak-js` SDK, including `loginRequired`, account console, and role mappings.
 
 ## When NOT to use
 
-- Do not use it for Auth0/AuthOM tenants. Use the `authom` module for Auth0-style PKCE endpoints.
+- Do not use it for non-Keycloak identity providers. Use an app-owned integration suited to that provider.
 - Do not use it in SSR-only contexts. The service assumes browser globals from `keycloak-js`.
 - Do not use it as a UI permission layer by itself. Decode roles or call your backend, then wire the `permission` module for UI/route checks.
 - Do not import it if the app only needs a generic sign-out facade and another provider already handles tokens. Wire the `auth` module instead.
@@ -222,7 +222,6 @@ export class HeaderUser {
 
 ## Related
 
-- [authom module](./sd-authom.md) — alternative SSO provider (Auth0/AuthOM via PKCE).
 - [auth module](./sd-auth.md) — generic façade you can layer on top to expose `SdAuthService`.
 - [permission module](./sd-permission.md) — `getToken` callback can return `kc.getToken()` so permission decoding works.
 - [layout module](./sd-layout.md) — `SdLayoutService` consumes user info / signout that you wire from this service.

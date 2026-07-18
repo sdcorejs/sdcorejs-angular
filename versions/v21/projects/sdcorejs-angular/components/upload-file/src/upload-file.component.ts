@@ -47,7 +47,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './upload-file.component.html',
   styleUrl: './upload-file.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     MatButtonModule,
     DragDropModule,

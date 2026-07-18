@@ -5,6 +5,7 @@
     "entryFile": "src/public-api.ts"
   },
   "allowedNonPeerDependencies": [
+    "@sdcorejs/angular-material-datetime",
     "@sdcorejs/utils",
     "@ckeditor/ckeditor5-angular",
     "ckeditor5",

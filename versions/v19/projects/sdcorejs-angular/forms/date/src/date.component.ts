@@ -69,7 +69,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     }),
   ],
   standalone: true,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -146,8 +147,8 @@ export class SdDate implements OnDestroy, OnInit {
   disabled = input(false, { transform: booleanAttribute });
   /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (calendar). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
-  /** In `viewed='inline'`, show a hover clear-× on the text face. Set `false` when the host owns removal (chips). */
-  clearable = input(true, { transform: booleanAttribute });
+  /** Whether to show the value-gated clear button in edit and inline modes. */
+  clearable = input(false, { transform: booleanAttribute });
 
   // Tri-state `viewed` — shared primitive. In `'inline'` the calendar editor is always mounted
   // (chrome hidden via CSS); the sd-view text face opens the calendar on click.

@@ -1,3 +1,4 @@
+import { Utilities } from '@sdcorejs/utils/fns';
 import { MapToSdTableItem, SdTableItem } from '../models/table-item.model';
 import { SdTableOptionSelector } from '../models/table-option-selector.model';
 import { SdSelectionDisabledPipe } from './selection-disabled.pipe';
@@ -45,6 +46,37 @@ describe('SdSelectionDisabledPipe', () => {
 
     expect(result).toBeTrue();
     expect(unselected.meta.selector!.selectable).toBeFalse();
+  });
+
+  it('marks an action-compatible unselected row unselectable when the disabled predicate matches', () => {
+    const action = { title: 'Process', click: () => undefined };
+    const unselected = row(2);
+    unselected.meta.selector!.actions = [Utilities.hash(action)];
+    const selector: SdTableOptionSelector<Row> = {
+      actions: [action],
+      disabled: current => current?.id === 2,
+    };
+
+    const result = pipe.transform([], unselected, selector);
+
+    expect(result).toBeTrue();
+    expect(unselected.meta.selector!.selectable).toBeFalse();
+  });
+
+  it('marks a candidate unselectable when it has no action compatible with the selected rows', () => {
+    const actionA = { title: 'Action A', click: () => undefined };
+    const actionB = { title: 'Action B', click: () => undefined };
+    const selected = row(1);
+    const candidate = row(2);
+    selected.meta.selector!.isSelected = true;
+    selected.meta.selector!.actions = [Utilities.hash(actionA)];
+    candidate.meta.selector!.actions = [Utilities.hash(actionB)];
+    const selector: SdTableOptionSelector<Row> = { actions: [actionA, actionB] };
+
+    const result = pipe.transform([selected], candidate, selector);
+
+    expect(result).toBeTrue();
+    expect(candidate.meta.selector!.selectable).toBeFalse();
   });
 
   it('passes row data and selected row data to the disabled predicate', () => {

@@ -74,7 +74,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-bare]': 'isInline()', '[class.sd-viewed]': 'isViewed() || isInline()', '[class.sd-has-label]': '!!label()' },
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

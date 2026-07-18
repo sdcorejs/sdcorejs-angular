@@ -99,6 +99,39 @@ describe('ColumnFilterComponent', () => {
   });
 
   describe('template binding', () => {
+    const expectClearable = (selector: string) => {
+      const controls = fixture.debugElement.queryAll(By.css(selector));
+      expect(controls.length).withContext(`${selector} rendered`).toBeGreaterThan(0);
+      for (const control of controls) {
+        expect(control.componentInstance.clearable()).withContext(`${selector} opts into clear`).toBeTrue();
+      }
+    };
+
+    it('opts string, number and date controls into clearable behavior', () => {
+      bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: 'A' });
+      expectClearable('sd-input');
+
+      bootstrap({ field: 'age', type: 'number' } as SdTableColumn, { age: 18 });
+      expectClearable('sd-input-number');
+
+      bootstrap({ field: 'createdAt', type: 'date', filter: { type: 'date' } } as SdTableColumn, {
+        createdAt: new Date(2026, 0, 1),
+      });
+      expectClearable('sd-date');
+    });
+
+    it('opts every split number and split date control into clearable behavior', () => {
+      bootstrap({ field: 'price', type: 'number', filter: { type: 'split-number' } } as SdTableColumn, {
+        price: { from: 1, to: 2 },
+      });
+      expectClearable('sd-input-number');
+
+      bootstrap({ field: 'createdAt', type: 'date', filter: { type: 'split-date' } } as SdTableColumn, {
+        createdAt: { from: new Date(2026, 0, 1), to: new Date(2026, 0, 2) },
+      });
+      expectClearable('sd-date');
+    });
+
     it('binds (keyupEnter) sd-input → onFilterChange', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const filterChangeSpy = jasmine.createSpy('filterChange');

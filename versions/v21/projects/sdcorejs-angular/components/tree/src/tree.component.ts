@@ -83,7 +83,8 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
 @Component({
   selector: 'sd-tree',
   standalone: true,
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     MatButtonModule,
     MatCheckboxModule,

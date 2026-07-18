@@ -92,7 +92,6 @@ describe('MarkdownRendererComponent', () => {
       [
         '[Auth](./sd-auth.md)',
         '[Keycloak](./sd-keycloak.md)',
-        '[AuthOM](./sd-authom.md)',
         '[Layout](./sd-layout.md)',
         '[Cache](../services/sd-cache.md)',
         '[Table](../components/sd-table.md)',
@@ -105,7 +104,6 @@ describe('MarkdownRendererComponent', () => {
     expect(links.map(link => link.getAttribute('href'))).toEqual([
       '/sdcorejs-angular/v/21.1.2/modules-integrations/auth/overview',
       '/sdcorejs-angular/v/21.1.2/modules-integrations/keycloak/overview',
-      '/sdcorejs-angular/v/21.1.2/modules-integrations/authom/overview',
       '/sdcorejs-angular/v/21.1.2/modules-integrations/layout/overview',
       '/sdcorejs-angular/v/21.1.2/services/cache/overview',
       '/sdcorejs-angular/v/21.1.2/components/table/overview',

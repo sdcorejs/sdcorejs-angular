@@ -59,7 +59,8 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   styleUrl: './textarea.component.scss',
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
-  imports: [SdIcon,
+  imports: [
+    SdIcon,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

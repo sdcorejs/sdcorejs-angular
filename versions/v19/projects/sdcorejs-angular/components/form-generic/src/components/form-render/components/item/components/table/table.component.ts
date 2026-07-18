@@ -299,14 +299,14 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
       commands: [
         {
           icon: 'edit',
-                    click: rowData => {
+          click: rowData => {
             this.onDetail(rowData);
           },
           hidden: !!this.viewed || !!this.component?.properties?.viewed,
         },
         {
           icon: 'delete',
-                    click: rowData => {
+          click: rowData => {
             const idx = this.model?.indexOf(rowData);
             this.model?.splice(idx, 1);
             this.table?.reload().then(() => this.ref.markForCheck());

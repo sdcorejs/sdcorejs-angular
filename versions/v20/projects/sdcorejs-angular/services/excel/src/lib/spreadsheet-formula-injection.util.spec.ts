@@ -2,7 +2,7 @@ import { neutralizeSpreadsheetFormula } from './spreadsheet-formula-injection.ut
 
 describe('neutralizeSpreadsheetFormula', () => {
   it('prefixes spreadsheet formula injection strings with a single quote', () => {
-    ['=cmd|\' /C calc\'!A0', '+SUM(A1:A2)', '-HYPERLINK("http://evil")', '@SUM(A1:A2)', '\t=cmd', '\r=cmd', '\n=cmd'].forEach(value => {
+    ["=cmd|' /C calc'!A0", '+SUM(A1:A2)', '-HYPERLINK("http://evil")', '@SUM(A1:A2)', '\t=cmd', '\r=cmd', '\n=cmd'].forEach(value => {
       expect(neutralizeSpreadsheetFormula(value)).toBe(`'${value}`);
     });
   });

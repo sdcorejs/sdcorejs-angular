@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { SdNotifyService } from '../../notify.service';
 import { ToastData } from '../../notify.model';

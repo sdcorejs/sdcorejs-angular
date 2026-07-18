@@ -248,6 +248,7 @@ export type ShowcaseExampleSourceKey =
   | "services/loading/example-bat-tat-thu-cong"
   | "services/loading/example-loading-o-dich"
   | "services/loading/example-loading-toan-trang"
+  | "services/loading/example-nhieu-host-cung-selector-multi-tab"
   | "services/notify/example-4-loai-toast"
   | "services/notify/example-don-dep"
   | "services/notify/example-thoi-luong-tuy-chinh"
@@ -1971,7 +1972,7 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "services/loading",
     sectionId: "example-loading-toan-trang",
     title: "Loading toàn trang",
-    description: "start('body') -> setTimeout 2000ms -> stop('body').",
+    description: "start('body') → setTimeout 2000ms → stop('body').",
   },
   {
     sourceKey: "services/loading/example-loading-o-dich",
@@ -1979,6 +1980,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-loading-o-dich",
     title: "Loading ô đích",
     description: "start('#demo-target') chỉ phủ phần tử có id='demo-target'.",
+  },
+  {
+    sourceKey: "services/loading/example-nhieu-host-cung-selector-multi-tab",
+    pageKey: "services/loading",
+    sectionId: "example-nhieu-host-cung-selector-multi-tab",
+    title: "Nhiều host cùng selector (multi-tab)",
+    description: "Giả lập router tabs: nhiều panel cùng class. Một lần start('.demo-tab-panel') gắn overlay lên cả hai — không chỉ panel đầu tiên.",
   },
   {
     sourceKey: "services/loading/example-bat-tat-thu-cong",

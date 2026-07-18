@@ -12,7 +12,6 @@ export type { SdIconSet, SdMaterialIconSet };
 /** @deprecated Use `SdIconSet` instead. */
 export type SdIconFontSet = SdIconSet;
 
-
 /**
  * Một icon Lucide có thể đăng ký bằng class icon Angular hoặc dữ liệu path thuần.
  */
@@ -44,8 +43,7 @@ export interface ISdIconConfiguration {
 /**
  * Cấu hình đã resolve đầy đủ để component không phải tự xử lý fallback nhiều lần.
  */
-export interface ISdIconResolvedConfiguration
-  extends Required<Omit<ISdIconConfiguration, 'lucideIcons'>> {}
+export type ISdIconResolvedConfiguration = Required<Omit<ISdIconConfiguration, 'lucideIcons'>>;
 
 /**
  * Quy đổi token `Size` chung của SDCoreJS sang pixel cho icon.

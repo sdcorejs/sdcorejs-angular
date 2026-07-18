@@ -578,7 +578,7 @@ Plan 2 form files (estimated, individually well above global thresholds — all 
 
 **Plan 5 candidates**:
 - import-excel (if user signals readiness)
-- modules/permission, modules/keycloak, modules/auth, modules/authom, modules/layout — auth-related modules (separate Plan focus)
+- modules/permission, modules/keycloak, modules/auth, modules/layout — auth-related modules (separate Plan focus)
 - handlers/global-error.handler — error handler tests
 - interceptors/no-internet, interceptors/unauthorized — HTTP interceptors
 - table sub-components beyond what Plan 1 covered
@@ -618,7 +618,6 @@ Plan 2 form files (estimated, individually well above global thresholds — all 
 
 ### Observations
 
-- **Authom skipped** per user direction (features not finalized).
 - **Guards are class-based `CanActivate`** in this library (not modern functional `canActivateFn`). Test pattern: `TestBed.inject(GuardClass)` + direct `.canActivate()` call (not `runInInjectionContext`).
 - **keycloak-js ESM-only**: cannot mock at constructor level due to no `require()` available. Service tests assign fake Keycloak instance to public `service.keycloak` property post-construction. The `init()` SDK-network portion is intentionally not tested (would timeout in headless Karma).
 - **Permission directive microsyntax limitation**: `*sdPermission="value; sdPermissionKey: key"` expansion produces `[sdPermissionSdPermissionKey]` (wrong binding name). Tests use explicit `<ng-template [sdPermission] [sdPermissionKey]>` for the secondary input. Worth filing as source-side issue.
@@ -628,7 +627,6 @@ Plan 2 form files (estimated, individually well above global thresholds — all 
 ### Plan 6+ deferred / skipped
 
 **Deferred (revisit later)**:
-- `modules/authom/` — features not finalized per user direction
 - `import-excel` — heavy XLSX wrapper, Plan 6 candidate
 - `modules/layout/` — UI-heavy components, Plan 6 candidate
 
@@ -637,4 +635,3 @@ Plan 2 form files (estimated, individually well above global thresholds — all 
 **Plan 6 candidates**:
 - modules/layout (page, sidebar-mobile-v1, sidebar-v1, layout-main)
 - import-excel
-- modules/authom (if user signals readiness)

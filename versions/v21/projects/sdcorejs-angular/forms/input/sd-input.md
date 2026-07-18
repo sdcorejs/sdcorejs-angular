@@ -51,12 +51,13 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 | `required`            | `boolean`                                              | `false`                                     | Adds `Validators.required`.                                                                                                                                                                                                                                                                                         |
 | `readonly`            | `boolean`                                              | `false`                                     | HTML `readonly` — input still focusable, value cannot be edited.                                                                                                                                                                                                                                                    |
 | `disabled`            | `boolean`                                              | `false`                                     | Disables the control.                                                                                                                                                                                                                                                                                               |
+| `clearable`           | `boolean`                                              | `false`                                     | Shows the value-gated clear button in edit and `'inline'` modes. The button is still hidden when the field is empty, required, disabled, or readonly.                                                                                                                                                               |
 | `viewed`              | `boolean \| 'inline'`                                  | `false`                                     | Display mode. `false` edit · `true` static DETAIL (`<sd-view>` / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), click/focus to edit directly (NO panel, NO overlay); blur reverts to the text look. Disabled `'inline'` → static view. |
 | `blurOnEnter`         | `boolean`                                              | `false`                                     | If `true`, pressing Enter blurs the field after emitting `keyupEnter`.                                                                                                                                                                                                                                              |
 | `hideInlineError`     | `boolean`                                              | `false`                                     | Hide inline message; surfaces error via `errorMessage`.                                                                                                                                                                                                                                                             |
 | `model`               | `any`                                                  | `undefined`                                 | Two-way bound value (use `[(model)]`).                                                                                                                                                                                                                                                                              |
 
-> **Coerce**: `required`, `readonly`, `disabled`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
+> **Coerce**: `required`, `readonly`, `disabled`, `clearable`, `viewed`, `blurOnEnter`, `hideInlineError` use `booleanAttribute` — bare attribute = `true`.
 
 ## Outputs
 
@@ -70,12 +71,12 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 
 ## Public methods
 
-| Name                 | Signature          | Notes                                                                                                             |
-| -------------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------- |
-| `clear($event?)`     | `(Event?) => void` | Resets the value to `null` and emits `sdChange(null)`. No-op when already empty. Backs the built-in clear button. |
-| `showClear()`        | `() => boolean`    | Whether the built-in clear button should render: there is a value AND not `required`/`disabled`/`readonly`.       |
-| `focus()` / `blur()` | `() => void`       | Programmatic focus / blur of the native input.                                                                    |
-| `reValidate()`       | `() => void`       | Re-runs validators on the underlying control.                                                                     |
+| Name                 | Signature          | Notes                                                                                                                |
+| -------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| `clear($event?)`     | `(Event?) => void` | Resets the value to `null` and emits `sdChange(null)`. No-op when already empty. Backs the built-in clear button.    |
+| `showClear()`        | `() => boolean`    | Whether the built-in clear button should render: `clearable`, has a value, and not `required`/`disabled`/`readonly`. |
+| `focus()` / `blur()` | `() => void`       | Programmatic focus / blur of the native input.                                                                       |
+| `reValidate()`       | `() => void`       | Re-runs validators on the underlying control.                                                                        |
 
 ## Host classes
 
@@ -128,7 +129,7 @@ Applied automatically on `<sd-input>` for styling hooks:
 
 - A standard outlined Material input field with optional label (floats above on focus or when filled)
 - Required marker shows as a red `*` next to the label
-- Built-in **slim clear button** (`.sd-clear-btn`, thin `close` icon) at the trailing edge when the field has a value AND is not `required`/`disabled`/`readonly`. It is **hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Click resets the value to `null` and emits `sdChange(null)` (clear is an explicit action → `null`, never `''`/`undefined`; `undefined` is reserved for the pristine never-touched state). Shared style/behavior with `sd-input-number`/`sd-input-color`/`sd-date`/`sd-datetime`.
+- Optional built-in **slim clear button** (`clearable`, default `false`; `.sd-clear-btn`, thin `close` icon) at the trailing edge when the field has a value AND is not `required`/`disabled`/`readonly`. It is **hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Click resets the value to `null` and emits `sdChange(null)` (clear is an explicit action → `null`, never `''`/`undefined`; `undefined` is reserved for the pristine never-touched state). Shared style/behavior with `sd-input-number`/`sd-input-color`/`sd-date`/`sd-datetime`.
 - Optional suffix slot (`sdSuffixDef`) for an extra icon button at the trailing edge — common patterns: search icon, eye-toggle for password. Renders to the right of the built-in clear button.
 - Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + a trailing-edge `error` icon (`.sd-error-icon`) carrying the message as a tooltip. The error icon sits **flush at the right edge**; when the built-in clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - Helper text shows as light-gray text below the field (or as an info icon next to the label, depending on layout)
@@ -272,7 +273,7 @@ await expect(el).toHaveAttribute('data-error-message', 'Vui lòng nhập thông 
 - ❌ Using `type="number"` for VND amounts — use `<sd-input-number>` for proper thousand-separator formatting.
 - ❌ Wiring up trim logic in the parent — the component already trims on blur/Enter.
 - ❌ Hard-coding regex for common patterns — check `VALIDATION_PATTERNS` first (`EMAIL`, `PHONE`, `TAX_CODE`, …) so error messages stay consistent.
-- ❌ Hand-rolling a "clear" suffix via `sdSuffixDef` — a hover-gated clear button is now **built in** (auto-shows when there's a value and the field is editable). Use `sdSuffixDef` only for additional affordances (search, password toggle, swatch …).
+- ❌ Hand-rolling a "clear" suffix via `sdSuffixDef` — opt into the built-in hover-gated button with `clearable`. Use `sdSuffixDef` only for additional affordances (search, password toggle, swatch …).
 
 ## Related
 

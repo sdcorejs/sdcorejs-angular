@@ -102,9 +102,12 @@ test('builds only the supported release routes, including page redirects and all
   assert.ok(routes.some(route => route.routePath === 'v/21.1.2/components/alert'));
   assert.equal(
     routes.find(route => route.routePath === 'v/21.1.2/components/alert')?.canonicalUrl,
-    `${PUBLIC_BASE_URL}v/21.1.2/components/alert/overview/`,
+    `${PUBLIC_BASE_URL}v/21.1.2/components/alert/overview/`
   );
-  assert.equal(routes.some(route => route.routePath.includes('alert-configuration')), false);
+  assert.equal(
+    routes.some(route => route.routePath.includes('alert-configuration')),
+    false
+  );
 
   for (const tab of ['overview', 'styling', 'api', 'examples']) {
     const route = routes.find(candidate => candidate.routePath === `v/21.1.2/components/alert/${tab}`);
@@ -113,35 +116,40 @@ test('builds only the supported release routes, including page redirects and all
     assert.equal(route.description, 'Status feedback for warnings & confirmations.');
   }
 
-  assert.equal(routes.some(route => route.routePath.includes('21.1.1')), false);
+  assert.equal(
+    routes.some(route => route.routePath.includes('21.1.1')),
+    false
+  );
 });
 
 test('matches the canonical v19 runtime registry and expected deployment route count', () => {
   const registrySource = readFileSync(
     new URL('../versions/v19/projects/showcase/src/app/docs/core/documentation.registry.ts', import.meta.url),
-    'utf8',
+    'utf8'
   );
   const pages = parseDocumentationRegistry(registrySource);
   const routes = createRouteShellDefinitions(pages);
   const categoryCounts = Object.fromEntries(
-    [...new Set(pages.map(page => page.category))].sort().map(category => [
-      category,
-      pages.filter(page => page.category === category).length,
-    ]),
+    [...new Set(pages.map(page => page.category))]
+      .sort()
+      .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 85);
-  assert.equal(routes.length, 1306);
+  assert.equal(pages.length, 84);
+  assert.equal(routes.length, 1291);
   assert.deepEqual(categoryCounts, {
     components: 31,
     directives: 6,
     forms: 16,
     guides: 3,
-    'modules-integrations': 11,
+    'modules-integrations': 10,
     'pipes-utilities': 9,
     services: 9,
   });
-  assert.equal(pages.some(page => page.slug === 'icon-configuration'), false);
+  assert.equal(
+    pages.some(page => page.slug === 'icon-configuration'),
+    false
+  );
 });
 
 test('renders route-specific SEO and social metadata with HTML escaping', () => {
@@ -158,7 +166,10 @@ test('renders route-specific SEO and social metadata with HTML escaping', () => 
   assert.equal(metaContent(html, 'property', 'og:url'), `${PUBLIC_BASE_URL}v/21.1.2/components/alert/overview/`);
   assert.equal(metaContent(html, 'name', 'twitter:title'), 'Alert &amp; &quot;Notice&quot;');
   assert.equal(metaContent(html, 'name', 'twitter:description'), 'Use &lt;sd-alert&gt; &amp; stay safe.');
-  assert.match(html, /<link\s+rel="canonical"\s+href="https:\/\/sdcorejs\.github\.io\/sdcorejs-angular\/v\/21\.1\.2\/components\/alert\/overview\/"\s*\/>/u);
+  assert.match(
+    html,
+    /<link\s+rel="canonical"\s+href="https:\/\/sdcorejs\.github\.io\/sdcorejs-angular\/v\/21\.1\.2\/components\/alert\/overview\/"\s*\/>/u
+  );
 });
 
 test('renders a non-indexable 404 shell without canonical or Open Graph URL', () => {
@@ -190,7 +201,7 @@ test('writes every route as route/index.html and emits the special 404 shell', (
     assert.match(readFileSync(join(outputDir, 'about', 'index.html'), 'utf8'), /\/about\//u);
     assert.match(
       readFileSync(join(outputDir, 'v', '21.1.2', 'components', 'alert', 'api', 'index.html'), 'utf8'),
-      /Alert &amp; Notice · API/u,
+      /Alert &amp; Notice · API/u
     );
     assert.match(readFileSync(join(outputDir, '404.html'), 'utf8'), /noindex,nofollow/u);
   } finally {

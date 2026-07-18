@@ -9,7 +9,7 @@
 
 ## One-line purpose
 
-Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Uses `provideDateFnsAdapter` with SDCoreJS label, validators, and `[viewed]` read-only support.
+Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (optionally `HH:mm:ss`) time in a CDK Overlay popup. Reuses the native-Date adapter and picker primitives from `@sdcorejs/angular-material-datetime@1.0.3` with SDCoreJS label, validators, and `[viewed]` read-only support.
 
 ## When to use
 
@@ -44,13 +44,13 @@ Single date + time-of-day picker — user picks a calendar date AND an `HH:mm` (
 | `required`        | `boolean`                                       | `false`                                     | Adds `Validators.required`.                                                                                                                                                                                                                                        |
 | `disabled`        | `boolean`                                       | `false`                                     | Disables input + picker trigger.                                                                                                                                                                                                                                   |
 | `viewed`          | `boolean \| 'inline'`                           | `false`                                     | Display mode. `false` edit · `true` static DETAIL (formatted datetime / `sdViewDef`) · `'inline'` click-to-edit (text face → click opens the datetime overlay; text retained until commit; hover clear-× gated by `clearable`). Disabled `'inline'` → static view. |
-| `clearable`       | `boolean`                                       | `true`                                      | In `'inline'`, show a hover clear-× on the text face. `false` where the host owns removal (chips).                                                                                                                                                                 |
+| `clearable`       | `boolean`                                       | `false`                                     | Shows the value-gated clear button in edit and `'inline'` modes. Set the bare `clearable` attribute to opt in.                                                                                                                                                     |
 | `hideInlineError` | `boolean`                                       | `false`                                     | Hide inline message; surfaces error as a tooltip via `errorMessage`.                                                                                                                                                                                               |
 | `inlineError`     | `string \| undefined`                           | `undefined`                                 | Forces an inline error message (synthetic `inlineError` validator).                                                                                                                                                                                                |
 | `model`           | `string \| number \| Date \| null \| undefined` | `undefined`                                 | Two-way bound value (use `[(model)]`). Stored / emitted as `yyyy/MM/dd HH:mm:ss` string (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).                                                                                                                     |
 | `showSeconds`     | `boolean`                                       | `false`                                     | When `true`, displays and stores seconds in the popup spinner and the stored/emitted format.                                                                                                                                                                       |
 
-> **Coerce**: `required`, `disabled`, `viewed`, `hideInlineError`, `showSeconds` use `booleanAttribute` — bare attribute = `true`.
+> **Coerce**: `required`, `disabled`, `viewed`, `clearable`, `hideInlineError`, `showSeconds` use `booleanAttribute` — bare attribute = `true`.
 
 ## Outputs
 
@@ -81,7 +81,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode: the input is hidden and the value (or `<ng-template sdViewDef>`) is rendered. If `hyperlink` is set, the value renders as a link.
 - **Validators**: `[required]` adds `Validators.required`. `[inlineError]="msg"` injects a synthetic error and shows `msg`. The picker emits its own `matDatepickerMin` / `matDatepickerMax` errors (via the min/max bounds on `<input>`). Direct text entry validates against `dd/MM/yyyy HH:mm` (and `dd/MM/yyyy HH:mm:ss`) regex — bad format sets a synthetic `date: 'Sai định dạng'` error. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày nhỏ nhất: <localized>"; max → "Ngày lớn nhất: <localized>"; bad format → "Sai định dạng"; `inlineError` → the provided message.
-- **Date adapter**: `provideDateFnsAdapter` configured with `dd/MM/yyyy HH:mm` parse/display. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
+- **Date adapter**: `SdNativeDateAdapter` and the date-format tokens from `@sdcorejs/angular-material-datetime` are provided locally by `SdDatetime`, so consumers do not need app-level adapter configuration. Internally native `Date` objects are used; emitted/stored values are `yyyy/MM/dd HH:mm:ss` strings (or `yyyy/MM/dd HH:mm:00` when `showSeconds = false`).
 
 ## Public methods & getters
 
@@ -106,7 +106,7 @@ Applied automatically on `<sd-datetime>` for styling hooks:
 - An outlined input field with a single calendar+clock icon on the trailing side
 - The text inside reads as `dd/MM/yyyy HH:mm` (e.g. `09/05/2026 14:30`)
 - Clicking the icon opens a popup: a month-grid calendar on top, a time picker (hours + minutes spinner/slider) below
-- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
+- An optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears next to the calendar icon when a value is set and the field is not `required`/`disabled`; clears via `clear()` (emits `sdChange(null)`). **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-date` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - In `[viewed]="true"` mode: no input chrome — just the formatted datetime as plain text (or as a hyperlink if `hyperlink` is set)
 
 ## Standalone imports and table-cell usage

@@ -894,7 +894,6 @@ git commit -m "SM-00: i18n migration batch 2 - interceptors"
 **Files (verify each):**
 - `projects/sdcorejs-angular/services/excel/src/lib/excel.service.ts`
 - `projects/sdcorejs-angular/modules/auth/services/auth.service.ts`
-- `projects/sdcorejs-angular/modules/authom/authom.service.ts`
 - `projects/sdcorejs-angular/directives/src/sd-tooltip.directive.ts`
 - `projects/sdcorejs-angular/directives/src/sd-scroll.directive.ts`
 
@@ -910,7 +909,7 @@ Known strings:
 
 ```bash
 npm run check:i18n-parity && npx ng test sdcorejs-angular --watch=false && npm run check:i18n || true
-git add projects/sdcorejs-angular/services projects/sdcorejs-angular/directives projects/sdcorejs-angular/modules/auth projects/sdcorejs-angular/modules/authom projects/sdcorejs-angular/i18n/src/vi.ts projects/sdcorejs-angular/i18n/src/en.ts
+git add projects/sdcorejs-angular/services projects/sdcorejs-angular/directives projects/sdcorejs-angular/modules/auth projects/sdcorejs-angular/i18n/src/vi.ts projects/sdcorejs-angular/i18n/src/en.ts
 git commit -m "SM-00: i18n migration batch 3 - services + directives"
 ```
 
@@ -998,10 +997,10 @@ git commit -m "SM-00: i18n migration batch 4c - components HTML"
 
 ### Task 17: Batch 5 — modules TS + HTML (16 files)
 
-**Files:** All `.ts` and `.html` under `projects/sdcorejs-angular/modules/` (excluding `auth/`, `authom/` already done in Task 13) containing VI:
+**Files:** All `.ts` and `.html` under `projects/sdcorejs-angular/modules/` (excluding `auth/` already done in Task 13) containing VI:
 
 ```bash
-grep -lE "'[^']*[À-ỹ][^']*'|\"[^\"]*[À-ỹ][^\"]*\"" projects/sdcorejs-angular/modules --include="*.ts" -r | grep -v ".spec.ts" | grep -vE "/(auth|authom)/"
+grep -lE "'[^']*[À-ỹ][^']*'|\"[^\"]*[À-ỹ][^\"]*\"" projects/sdcorejs-angular/modules --include="*.ts" -r | grep -v ".spec.ts" | grep -vE "/auth/"
 grep -lE "[À-ỹ]" projects/sdcorejs-angular/modules --include="*.html" -r
 ```
 

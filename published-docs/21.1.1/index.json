@@ -3,7 +3,7 @@
   "version": "21.1.1",
   "released": "2026-07-10",
   "baseUrl": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.1.1",
-  "count": 85,
+  "count": 84,
   "docs": [
     {
       "id": "assets/STYLE-GUIDE",
@@ -424,13 +424,6 @@
       "category": "modules",
       "path": "modules/auth/sd-auth.md",
       "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.1.1/modules/auth/sd-auth.md"
-    },
-    {
-      "id": "modules/authom/sd-authom",
-      "title": "AuthOM Module",
-      "category": "modules",
-      "path": "modules/authom/sd-authom.md",
-      "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/21.1.1/modules/authom/sd-authom.md"
     },
     {
       "id": "modules/generic/sd-generic",
