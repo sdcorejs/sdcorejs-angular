@@ -784,7 +784,7 @@ const SERVICE_PAGES = [
     publishedDocId: 'services/loading/sd-loading',
     keywords: ['spinner', 'overlay', 'busy', 'async'],
     status: 'stable',
-    demoSectionCount: 3,
+    demoSectionCount: 4,
     loadComponent: () => import('../../pages/services/loading/loading-demo.component').then(m => m.LoadingDemoComponent),
   }),
   defineDocPage({

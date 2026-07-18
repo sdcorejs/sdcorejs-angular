@@ -7,6 +7,7 @@
 - [ ] Verify the first real tag workflow, e.g. `v0.5`, creates `published-docs` for `19/20/21` and pushes the docs commit to `main`.
 
 ## Next
+- [ ] Merge the Showcase Loading manifest hotfix PR and confirm `deploy-pages.yml` completes without the runtime exception.
 - [ ] When commit is authorized, selectively stage the verified removal and lint-cleanup paths while excluding unrelated `.superpowers/**` and status-only generated files.
 - [ ] Repair the 18 repo-level baseline test failures shared by v19/v20/v21 in Chip, ChipCalendar, Input, InputNumber, Inform, AnchorNav, and QuerySavedFiltersMenu.
 - [ ] Align the existing Angular 20 package minors so deep `npm ls` no longer reports peer-minor mismatches.
