@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild, OnInit, inject, input, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -29,12 +29,16 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [SdInput, SdInputNumber, SdSelect, SdAutocomplete, SdButton, SdSelect, SdModal, TranslatePipe],
 })
 export class SdFeelExpression implements OnInit {
+  private ref = inject(ChangeDetectorRef);
+  private expressionFeelPipe = inject(ExpressionFeelPipe);
+  private formGenericService = inject(FormGenericService);
+
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   attributeOperators = AttributeOperators;
   attributes: Attribute[] = [];
   attribute: Record<string, Attribute> = {};
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
   // ValuesKey
   expression?: SdFormGenericExpression;
   @Input({ alias: 'expression', required: true }) set _expression(expression: SdFormGenericExpression | undefined) {
@@ -48,7 +52,7 @@ export class SdFeelExpression implements OnInit {
       conditions: [],
     };
   }
-  @Output() expressionChange = new EventEmitter<SdFormGenericExpression>();
+  readonly expressionChange = output<SdFormGenericExpression>();
 
   //
   model?: string;
@@ -57,20 +61,22 @@ export class SdFeelExpression implements OnInit {
       this.model = model;
     }
   }
-  @Output() modelChange = new EventEmitter<string>();
+  readonly modelChange = output<string | undefined>();
 
-  @Output() sdChange = new EventEmitter<{ model?: string; expression?: SdFormGenericExpression }>();
+  readonly sdChange = output<{
+    model?: string;
+    expression?: SdFormGenericExpression;
+  }>();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private expressionFeelPipe: ExpressionFeelPipe,
-    private formGenericService: FormGenericService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngOnInit(): void {}
 
   edit = async () => {
-    this.attributes = await this.#getAttributes(this.components);
+    this.attributes = await this.#getAttributes(this.components());
     this.attribute = ArrayUtilities.toObject('value', this.attributes);
     this.modal?.open?.();
     this.ref.markForCheck();

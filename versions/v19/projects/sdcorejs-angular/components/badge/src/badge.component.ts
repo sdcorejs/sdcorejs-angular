@@ -52,7 +52,8 @@ export class SdBadge {
   // ==========================================
   // 2. OUTPUT
   // ==========================================
-  @Output() click = new EventEmitter<Event>();
+  // why: the template reads EventEmitter.observed to expose pointer styling only when a click listener exists.
+  @Output() readonly click = new EventEmitter<Event>();
 
   onClick = (event: Event) => {
     event.stopPropagation();

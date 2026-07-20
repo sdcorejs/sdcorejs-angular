@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 import { filter, Subscription } from 'rxjs';
 import { SdFormGenericDatetime } from '../../../../../models';
@@ -12,6 +12,9 @@ import { BuilderService } from '../../../services';
   imports: [],
 })
 export class DatetimeControl implements AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
   component!: SdFormGenericDatetime;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericDatetime) {
     this.component = component;
@@ -21,10 +24,10 @@ export class DatetimeControl implements AfterViewInit, OnDestroy {
   datetime = DateUtilities.toFormat(new Date(), 'dd/MM/yyyy HH:mm');
 
   #subscription = new Subscription();
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngAfterViewInit(): void {
     this.#subscription.add(

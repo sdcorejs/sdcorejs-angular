@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild, OnInit, inject, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -42,6 +42,8 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   ],
 })
 export class ExpressionBuilderComponent implements OnInit {
+  private ref = inject(ChangeDetectorRef);
+
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   attributeOperators = AttributeOperators;
@@ -94,11 +96,14 @@ export class ExpressionBuilderComponent implements OnInit {
       conditions: [],
     };
   }
-  @Output() modelChange = new EventEmitter<SdFormGenericExpression>();
-  @Output() sdChange = new EventEmitter<SdFormGenericExpression>();
-  @Output() edit = new EventEmitter<void>();
+  readonly modelChange = output<SdFormGenericExpression | undefined>();
+  readonly sdChange = output<SdFormGenericExpression | undefined>();
+  readonly edit = output<void>();
 
-  constructor(private ref: ChangeDetectorRef) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngOnInit(): void {}
 
@@ -106,7 +111,7 @@ export class ExpressionBuilderComponent implements OnInit {
     // Khi cập nhật expression thì clone ra
     this.expression = JSON.parse(JSON.stringify(this.model));
     // Thông báo cho component cha có sự kiện edit trong trường hợp attributes có thay đổi
-    this.edit.next();
+    this.edit.emit();
     this.modal?.open?.();
     this.ref.markForCheck();
   };

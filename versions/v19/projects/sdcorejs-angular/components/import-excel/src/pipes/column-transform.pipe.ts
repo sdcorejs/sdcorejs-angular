@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
 import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
@@ -8,7 +8,12 @@ import { SdImportExcelItem, SdUploadExcelColumn } from '../import-excel.model';
   standalone: true,
 })
 export class ColumnTransformPipe implements PipeTransform {
-  constructor(private sanitizer: DomSanitizer) {}
+  private sanitizer = inject(DomSanitizer);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   // Chuyển thành async để hỗ trợ Promise từ bên ngoài
   async transform(item: SdImportExcelItem, column: SdUploadExcelColumn): Promise<string | SafeHtml> {

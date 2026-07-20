@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, OnDestroy, inject, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -24,8 +24,16 @@ import { Utilities } from '@sdcorejs/utils/fns';
   ],
 })
 export class DatetimeComponent implements OnInit, OnDestroy {
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
-  @Input() form = new FormGroup({});
+  private router = inject(Router);
+  private ref = inject(ChangeDetectorRef);
+
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
+  readonly form = input(new FormGroup({}));
   value: any;
   entity: Record<string, any> = {};
   @Input({
@@ -66,16 +74,18 @@ export class DatetimeComponent implements OnInit, OnDestroy {
   }
 
   #subscription = new Subscription();
-  constructor(
-    private router: Router,
-    private ref: ChangeDetectorRef
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
   ngOnInit() {
     this.#subscription.add(
-      this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
-        this.entity[variable.key] = variable.value;
-        this.ref.markForCheck();
-      })
+      this.setVariables()
+        .pipe(filter(variable => variable.key === this.component?.key))
+        .subscribe(variable => {
+          this.entity[variable.key] = variable.value;
+          this.ref.markForCheck();
+        })
     );
   }
   ngOnDestroy() {

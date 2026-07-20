@@ -1,4 +1,4 @@
-import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
+import { Injectable, Renderer2, RendererFactory2, inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +9,12 @@ export class SdLoadingService {
   private renderer: Renderer2;
 
   private loadingMap = new WeakMap<Element, HTMLElement>();
-  constructor(rendererFactory: RendererFactory2) {
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {
+    const rendererFactory = inject(RendererFactory2);
+
     this.renderer = rendererFactory.createRenderer(null, null);
   }
 

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { SdTable, SdTableOption } from '@sdcorejs/angular/components/table';
 import { Subject, Subscription } from 'rxjs';
 import { startWith } from 'rxjs/operators';
@@ -12,6 +12,9 @@ import { GenericListOption, SdGenericListService, TList } from '../../services';
   imports: [SdTable],
 })
 export class GenericListComponent<T = any> implements OnDestroy, OnInit {
+  private ref = inject(ChangeDetectorRef);
+  private listService = inject(SdGenericListService);
+
   @ViewChild(SdTable) table?: SdTable<TList>;
   tableOption?: SdTableOption<TList>;
 
@@ -24,10 +27,10 @@ export class GenericListComponent<T = any> implements OnDestroy, OnInit {
 
   #subscription = new Subscription();
   #optionChanges = new Subject<GenericListOption<T>>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    private listService: SdGenericListService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit(): void {
     this.#subscription.add(

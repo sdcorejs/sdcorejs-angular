@@ -3,7 +3,7 @@
     <div class="text-secondary">{{ component.label || component.key }}</div>
     <sd-upload-file
       [type]="component.properties?.type"
-      [form]="form"
+      [form]="form()"
       [model]="entity[component.key!]"
       align="left"
       [args]="component.properties?.args"
@@ -13,7 +13,7 @@
   } @else {
     <sd-upload-file
       [type]="component.properties?.type"
-      [form]="form"
+      [form]="form()"
       [label]="component.label || component.key"
       [(model)]="entity[component.key!]"
       [max]="component.properties?.max"
