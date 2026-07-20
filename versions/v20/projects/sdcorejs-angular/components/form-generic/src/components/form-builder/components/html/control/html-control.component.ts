@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { SdFormatComponent, SdFormGenericHtml } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { filter, Subscription } from 'rxjs';
@@ -14,6 +14,10 @@ import { Utilities } from '@sdcorejs/utils/fns';
   imports: [HtmlPipe],
 })
 export class HtmlControl implements AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+  private formGenericService = inject(FormGenericService);
+
   component!: SdFormGenericHtml;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericHtml) {
     this.component = component;
@@ -23,11 +27,10 @@ export class HtmlControl implements AfterViewInit, OnDestroy {
   content?: string;
   hashed?: string; // Dùng để ép Angular nhận diện sự thay đổi của HTML khi content/variables
   #subscription = new Subscription();
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService,
-    private formGenericService: FormGenericService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngAfterViewInit(): void {
     this.#subscription.add(

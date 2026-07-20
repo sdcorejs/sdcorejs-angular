@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild, inject, input, output } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { CommonModule } from '@angular/common';
@@ -27,6 +27,12 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, CommonModule, MatTableModule, MatChipsModule, SdButton, SdInput, SdModal],
 })
 export class SdPopupExport {
+  private ref = inject(ChangeDetectorRef);
+  private loadingService = inject(SdLoadingService);
+  private excelService = inject(SdExcelService);
+  private notifyService = inject(SdNotifyService);
+  private confirmService = inject(SdConfirmService);
+
   tableOption!: SdTableOption;
   columns: SdExcelColumn[] = [];
   templateName?: string | null;
@@ -37,7 +43,7 @@ export class SdPopupExport {
   selected: Record<string, boolean> = {};
   files: any[] = [];
 
-  @Output() export = new EventEmitter<{
+  readonly export = output<{
     file: any | null;
     columns: SdExcelColumn[];
     isCSV?: boolean;
@@ -52,7 +58,7 @@ export class SdPopupExport {
     }
     this.columns = this.#getExportableColumns();
   }
-  @Input() configuration?: ConfiguredTableResult;
+  readonly configuration = input<ConfiguredTableResult>();
   private get key(): string | null {
     const prefix = '93889e78-f971-4a1d-8c73-fe2321af9233';
     if (!this.exportOption?.key) {
@@ -108,13 +114,10 @@ export class SdPopupExport {
   };
 
   readonly #i18n = inject(I18nService);
-  constructor(
-    private ref: ChangeDetectorRef,
-    private loadingService: SdLoadingService,
-    private excelService: SdExcelService,
-    private notifyService: SdNotifyService,
-    private confirmService: SdConfirmService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   open = async () => {
     if (!this.key) {
@@ -128,9 +131,10 @@ export class SdPopupExport {
   };
 
   #getExportColumns = (): SdExcelColumn[] => {
-    if (this.configuration) {
+    const configuration = this.configuration();
+    if (configuration) {
       const columns = [...this.tableColumns];
-      const { firstColumns, secondColumns } = this.configuration;
+      const { firstColumns, secondColumns } = configuration;
       const displayColumns: SdTableColumn[] = [...firstColumns, ...secondColumns].reduce<SdTableColumn[]>((first, next) => {
         const column = this.tableOption.columns.find(e => e.field === next.field);
         if (!column) {

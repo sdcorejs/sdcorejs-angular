@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 // import hash from 'object-hash';
 import { SdStorageService } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -16,10 +16,15 @@ import {
 
 @Injectable()
 export class SdTableFilterService {
+  private storageService = inject(SdStorageService);
+
   #filterConfiguration = 'GRID-FILTER-CONFIGURATION';
   #filterValue = 'GRID-FILTER-VALUE';
   #cache: Record<string, TableFilterRegister> = {};
-  constructor(private storageService: SdStorageService) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   #hasOwnValue = (values: Record<string, unknown> | undefined, field: string): boolean => {
     return !!values && Object.prototype.hasOwnProperty.call(values, field);

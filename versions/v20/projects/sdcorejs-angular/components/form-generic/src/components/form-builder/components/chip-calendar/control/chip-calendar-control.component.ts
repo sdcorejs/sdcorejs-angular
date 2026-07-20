@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
 import { SdFormatComponent, SdFormGenericChipCalendar } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
@@ -12,6 +12,9 @@ import { BuilderService } from '../../../services';
   imports: [CommonModule],
 })
 export class ChipCalendarControl implements AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
   component!: SdFormGenericChipCalendar;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericChipCalendar) {
     if (this.component !== component) {
@@ -21,10 +24,10 @@ export class ChipCalendarControl implements AfterViewInit, OnDestroy {
   }
 
   #subscription = new Subscription();
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngAfterViewInit(): void {
     this.#subscription.add(

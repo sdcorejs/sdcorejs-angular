@@ -1,4 +1,4 @@
-import { Injectable, Pipe, PipeTransform } from '@angular/core';
+import { Injectable, Pipe, PipeTransform, inject } from '@angular/core';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { SdFormGenericComponent, SdFormGenericHtml } from '../models';
@@ -14,10 +14,13 @@ import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 })
 // Pipe xử lý hiển thị detail cho component
 export class ComponentViewedPipe implements PipeTransform {
-  constructor(
-    private readonly formatNumberPipe: SdFormatNumberPipe,
-    private readonly formGenericService: FormGenericService
-  ) {}
+  private readonly formatNumberPipe = inject(SdFormatNumberPipe);
+  private readonly formGenericService = inject(FormGenericService);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
   transform = async (
     value: any,
     entity: Record<string, any>,

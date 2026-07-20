@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
+import { Pipe, PipeTransform, SecurityContext, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { SdFormGenericHtml } from '../models';
@@ -9,7 +9,12 @@ import { SdFormGenericHtml } from '../models';
 })
 // Pipe xử lý hiển thị detail cho component
 export class HtmlPipe implements PipeTransform {
-  constructor(private readonly sanitizer: DomSanitizer) {}
+  private readonly sanitizer = inject(DomSanitizer);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
   // Hash component để pipe nhận biết được content hay variables có thay đổi render lại
   transform = (hashed: string | undefined | null, content: string, component: SdFormGenericHtml) => {
     if (!content) {

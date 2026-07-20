@@ -214,7 +214,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   // ==========================================
   sdChange = output<string | number | null>();
   sdSelection = output<SdSelectionData>();
-  @Output() sdAdd = new EventEmitter<void>();
+  // why: the template reads EventEmitter.observed to render the add action only when a consumer handles it.
+  @Output() readonly sdAdd = new EventEmitter<void>();
 
   // ==========================================
   // 5. INTERNAL STATE & STREAMS

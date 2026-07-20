@@ -1,4 +1,4 @@
-import { Directive, ElementRef, inject, Input, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, inject, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges, input } from '@angular/core';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
@@ -6,8 +6,11 @@ import { I18nService } from '@sdcorejs/angular/i18n';
   selector: '[sdHoverCopy]',
 })
 export class SdHoverCopyDirective implements OnInit, OnChanges {
-  @Input({ alias: 'sdHoverCopy', required: true }) copyText!: string;
-  @Input() sdHoverCopyDisabled = false;
+  private el = inject(ElementRef);
+  private renderer = inject(Renderer2);
+
+  readonly copyText = input.required<string>({ alias: 'sdHoverCopy' });
+  readonly sdHoverCopyDisabled = input(false);
 
   readonly #i18n = inject(I18nService);
 
@@ -17,23 +20,23 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
     return this.#i18n.t('core.directive.hover-copy.tooltip');
   }
 
-  constructor(
-    private el: ElementRef,
-    private renderer: Renderer2
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   // https://onemount.atlassian.net/browse/SM-2287
   // Hiện tại khi sdHoverCopyDisabled = true, directive chỉ dùng opacity: 0 và pointerEvents: 'none' để ẩn nút, nhưng điều này không hoàn toàn ngăn chặn được việc click trong một số trường hợp.
   // Giải pháp: Remove khỏi DOM nếu column không được enable
   ngOnInit(): void {
-    if (!this.sdHoverCopyDisabled) {
+    if (!this.sdHoverCopyDisabled()) {
       this.#createAndAppendCopyButton();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['sdHoverCopyDisabled']) {
-      if (!this.sdHoverCopyDisabled) {
+      if (!this.sdHoverCopyDisabled()) {
         // Enable - create and show button if not exists
         if (!this.#copyButton) {
           this.#createAndAppendCopyButton();
@@ -109,8 +112,9 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
 
     // Listen click
     this.renderer.listen(this.#copyButton, 'click', () => {
-      if (this.copyText && !this.sdHoverCopyDisabled) {
-        BrowserUtilities.copyToClipboard(String(this.copyText));
+      const copyText = this.copyText();
+      if (copyText && !this.sdHoverCopyDisabled()) {
+        BrowserUtilities.copyToClipboard(String(copyText));
         this.#showTooltip('Copied');
         setTimeout(() => this.#hideTooltip(), 1000);
       }
@@ -136,7 +140,7 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
 
   @HostListener('mouseenter')
   onMouseEnter() {
-    if (!this.sdHoverCopyDisabled && this.#copyButton) {
+    if (!this.sdHoverCopyDisabled() && this.#copyButton) {
       this.renderer.setStyle(this.#copyButton, 'display', 'block');
     }
   }

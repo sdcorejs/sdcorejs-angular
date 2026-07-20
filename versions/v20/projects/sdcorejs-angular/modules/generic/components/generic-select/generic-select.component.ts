@@ -9,6 +9,7 @@ import {
   OnInit,
   Output,
   ViewChild,
+  inject,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
@@ -32,6 +33,10 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, SdAutocomplete, SdSelect, TranslatePipe],
 })
 export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private router = inject(Router);
+  private genericService = inject(SdGenericService);
+
   @ViewChild(SdAutocomplete) autocomplete?: SdAutocomplete;
   @ViewChild(SdSelect) select?: SdSelect;
   @Input() label?: string;
@@ -162,11 +167,10 @@ export class SelectItemComponent<T> implements OnInit, AfterViewInit, OnDestroy 
   #queryChanges = new Subject<string>();
   #subscription = new Subscription();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private router: Router,
-    private genericService: SdGenericService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngOnInit(): void {
     this.#subscription.add(

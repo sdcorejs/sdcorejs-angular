@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, Output, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, inject, OnInit, OnDestroy, input, output } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
@@ -74,7 +74,7 @@ import { normalize } from './document-builder.utils';
 export class SdDocumentBuilder implements OnInit, OnDestroy {
   readonly #i18n = inject(I18nService);
 
-  @Input({ required: true }) option!: SdDocumentBuilderOption;
+  readonly option = input.required<SdDocumentBuilderOption>();
 
   disabled = false;
   @Input('disabled') set _disabled(val: boolean | '' | undefined | null) {
@@ -82,7 +82,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
     this.#updateState();
   }
 
-  @Output() contentChange = new EventEmitter<string>(); // Emit HTML content
+  readonly contentChange = output<string>(); // Emit HTML content
 
   Editor = ClassicEditor;
   #editor!: ClassicEditor;
@@ -104,7 +104,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
 
   // Config
   config: DocumentBuilderOption = {
-    getOption: () => this.option,
+    getOption: () => this.option(),
     _i18n: this.#editorI18n,
     licenseKey: 'GPL', // Hoặc key thương mại nếu có
     plugins: [
@@ -285,12 +285,13 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
       const orientationPlugin = editor.plugins.get('PageOrientation') as PageOrientation;
       if (orientationPlugin && typeof orientationPlugin.onOrientationChange === 'function') {
         orientationPlugin.onOrientationChange(orientation => {
-          this.option.onOrientation?.(orientation);
+          this.option().onOrientation?.(orientation);
         });
 
         // Set initial orientation if provided
-        if (this.option.orientation) {
-          orientationPlugin.setOrientation(this.option.orientation);
+        const option = this.option();
+        if (option.orientation) {
+          orientationPlugin.setOrientation(option.orientation);
         }
       }
     } catch (error) {
@@ -299,7 +300,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
 
     // Lắng nghe selection
     editor.model.document.selection.on('change', $event => {
-      this.option.onSelection?.(this.#editor.model.document.selection, $event);
+      this.option().onSelection?.(this.#editor.model.document.selection, $event);
     });
 
     // Lắng nghe sự kiện thay đổi nội dung
@@ -341,8 +342,9 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
 
     try {
       const ckCommentPlugin = this.#editor.plugins.get('CkComment') as CkCommentPlugin;
-      if (ckCommentPlugin && this.option.comment) {
-        ckCommentPlugin.setConfig(this.option.comment);
+      const option = this.option();
+      if (ckCommentPlugin && option.comment) {
+        ckCommentPlugin.setConfig(option.comment);
       }
     } catch (error) {
       console.warn('CkCommentPlugin not available:', error);

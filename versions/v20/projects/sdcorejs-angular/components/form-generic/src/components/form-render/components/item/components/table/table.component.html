@@ -47,7 +47,7 @@
                 <div class="col-12 px-0 mt-16">
                   @if(column.type === 'string') {
                     <sd-input
-                    [form]="form"
+                    [form]="form()"
                     [label]="column.label"
                     [(model)]="row[column.key]"
                     [required]="validate?.required"
@@ -55,14 +55,14 @@
                     [patternErrorMessage]="column.validate?.patternErrorMessage"></sd-input>
                   }@else if(column.type === 'number') {
                     <sd-input-number
-                    [form]="form"
+                    [form]="form()"
                     [label]="column.label"
                     [(model)]="row[column.key]"
                     [required]="validate?.required"
                     [min]="column.validate?.min"></sd-input-number>
                   }@else if(column.type === 'radio') {
                     <sd-radio
-                    [form]="form"
+                    [form]="form()"
                     [label]="column.label"
                     [name]="column.key"
                     [items]="column.values"
@@ -71,7 +71,7 @@
                     [required]="validate?.required"></sd-radio>
                   }@else if(column.type === 'values') {
                     <sd-autocomplete
-                      [form]="form"
+                      [form]="form()"
                       [label]="column.label"
                       [(model)]="row[column.key]"
                       [items]="columnValues[column.key]"
@@ -80,13 +80,13 @@
                       [required]="validate?.required"></sd-autocomplete>
                   }@else if(column.type === 'date') {
                     <sd-date
-                    [form]="form"
+                    [form]="form()"
                     [label]="column.label"
                     [(model)]="row[column.key]"
                     [required]="validate?.required"></sd-date>
                   }@else if(column.type === 'datetime') {
                     <sd-datetime
-                    [form]="form"
+                    [form]="form()"
                     [label]="column.label"
                     [(model)]="row[column.key]"
                     [required]="validate?.required"></sd-datetime>

@@ -1,4 +1,14 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnDestroy,
+  OnInit,
+  inject,
+  input,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Utilities, StringUtilities } from '@sdcorejs/utils/fns';
 // import { sha1 } from 'object-hash';
@@ -15,7 +25,15 @@ import { FormGenericService } from '../../../../../../services';
   imports: [HtmlPipe],
 })
 export class HtmlComponent implements AfterViewInit, OnDestroy, OnInit {
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
+  private ref = inject(ChangeDetectorRef);
+  private readonly formRenderService = inject(FormGenericService);
+
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
 
   form = new FormGroup({});
   @Input({ alias: 'form', required: true }) set _form(form: FormGroup) {
@@ -52,10 +70,10 @@ export class HtmlComponent implements AfterViewInit, OnDestroy, OnInit {
 
   #subscription = new Subscription();
   #inputChanges = new Subject<void>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    private readonly formRenderService: FormGenericService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   #hashedQuery?: string;
   hashedValues?: string;
@@ -94,10 +112,12 @@ export class HtmlComponent implements AfterViewInit, OnDestroy, OnInit {
 
   async ngOnInit() {
     this.#subscription.add(
-      this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
-        this.entity[variable.key] = variable.value;
-        this.ref.markForCheck();
-      })
+      this.setVariables()
+        .pipe(filter(variable => variable.key === this.component?.key))
+        .subscribe(variable => {
+          this.entity[variable.key] = variable.value;
+          this.ref.markForCheck();
+        })
     );
     if (!this.component.template) {
       // Nếu HTML không phải từ template thì giá trị = content

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
   SdFormatComponent,
   SdFormGenericComponent,
@@ -23,8 +23,11 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeTable, AttributeExpression, TranslatePipe],
 })
 export class TableAttribute implements AfterViewInit, OnDestroy {
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   form = new FormGroup({});
   component!: SdFormGenericTable;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTable) {
@@ -35,10 +38,10 @@ export class TableAttribute implements AfterViewInit, OnDestroy {
   #changes = new Subject<void>();
   #subscription = new Subscription();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngAfterViewInit(): void {
     this.#subscription.add(
