@@ -185,7 +185,19 @@ Controls support combinations of required, length, range, pattern, and custom as
 
 ### Signals and change detection
 
-The component source favors signal inputs, models, computed state, and `ChangeDetectionStrategy.OnPush`. Public outputs and service APIs remain conventional Angular contracts where that is the clearer fit; consumers do not need to convert every application interaction to a signal.
+The component source favors signal inputs, models, computed state, signal outputs, field-level `inject()`, and `ChangeDetectionStrategy.OnPush`. Template binding names remain stable, so normal `[input]` and `(output)` usage does not change when an implementation moves to the signal APIs.
+
+Direct class consumers and tests must use the Angular signal contract after a public member is migrated:
+
+```ts
+fixture.componentRef.setInput('value', nextValue);
+const currentValue = fixture.componentInstance.value();
+
+const subscription = fixture.componentInstance.sdChange.subscribe(value => handle(value));
+subscription.unsubscribe();
+```
+
+Signal outputs support `emit()` and Angular-managed subscriptions; do not assume RxJS-only `EventEmitter` methods such as `pipe()`, `complete()`, or `error()`. A small number of outputs intentionally remain `EventEmitter` instances where listener presence through `.observed` is part of the component behavior.
 
 ### Theming
 
@@ -305,6 +317,8 @@ npm run check:sync
 5. Open a pull request that explains the consumer impact and any migration steps.
 
 Keep public imports backward compatible where possible. Record consumer-breaking behavior under `Changed (BREAKING for consumers)` in the changelog.
+
+Release-preparation branches keep package versions unchanged while review is in progress. Apply the shared release suffix only after the reviewed changes are merged into `main`, then publish the matching Angular 19, 20, and 21 package lines through the release workflow.
 
 ## Support and issue reporting
 

@@ -6,6 +6,7 @@ const guideDir = dirname(fileURLToPath(import.meta.url));
 const imageDir = join(guideDir, 'images');
 const baseUrl = process.env.SDCOREJS_DOCS_BASE_URL || readArg('--base-url') || 'http://localhost:4200';
 
+// API-only guides (for example angular-modern-api-migration) intentionally have no screenshot entry.
 const screenshots = [
   {
     module: 'datetime',
@@ -49,9 +50,12 @@ try {
       await target.screenshot({ path: join(guideDir, item.file) });
       process.stdout.write(`captured ${item.file}\n`);
     } catch (error) {
-      throw new Error(`Không capture được "${item.title}" tại ${url} bằng selector ${item.selector}. Kiểm tra showcase đang chạy và route hợp lệ.`, {
-        cause: error,
-      });
+      throw new Error(
+        `Không capture được "${item.title}" tại ${url} bằng selector ${item.selector}. Kiểm tra showcase đang chạy và route hợp lệ.`,
+        {
+          cause: error,
+        }
+      );
     }
   }
 } finally {
