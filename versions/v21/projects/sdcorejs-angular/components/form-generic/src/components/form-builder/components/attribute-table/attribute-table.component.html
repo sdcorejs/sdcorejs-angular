@@ -77,8 +77,8 @@
       </details>
     } @else if (column.type === 'values') {
       <attribute-selection
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [component]="column"
         [(valuesKey)]="column.valuesKey"
         [(values)]="column.values"></attribute-selection>
@@ -90,7 +90,7 @@
           <span class="msi chev">chevron_right</span>
         </summary>
         <div class="fb-section__body">
-          <attribute-parameter [label]="'core.component.form-builder.assign-parameter' | translate" [components]="components" [(model)]="column!.args"></attribute-parameter>
+          <attribute-parameter [label]="'core.component.form-builder.assign-parameter' | translate" [components]="components()" [(model)]="column!.args"></attribute-parameter>
         </div>
       </details>
     }

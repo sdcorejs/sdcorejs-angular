@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, inject } from '@angular/core';
 import { SdTab, SdTabInfo } from '../models/tab-router.model';
 import { SdTabRouterService } from '../services/tab-router.service';
 @Pipe({
@@ -6,7 +6,12 @@ import { SdTabRouterService } from '../services/tab-router.service';
   standalone: true,
 })
 export class SdTabInfoPipe implements PipeTransform {
-  constructor(private tabRouterService: SdTabRouterService) {}
+  private tabRouterService = inject(SdTabRouterService);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
   transform(tabInfo: SdTabInfo | undefined | null, tab: SdTab): SdTabInfo {
     if (tabInfo) {
       return tabInfo;

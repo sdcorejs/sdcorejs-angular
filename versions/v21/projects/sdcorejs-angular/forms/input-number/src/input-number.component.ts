@@ -14,11 +14,11 @@ import {
   untracked,
   OnDestroy,
   OnInit,
+  Output,
   output,
   TemplateRef,
   viewChild,
   contentChild,
-  Output,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
@@ -229,7 +229,8 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   // intent dedicated cho X (clear button), consumer dùng để trigger reload ngay.
   cleared = output<void>();
 
-  @Output() sdFocusForceBlur = new EventEmitter<void>();
+  // why: focus handling reads EventEmitter.observed before emitting a forced blur event.
+  @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
 
   // ==========================================
   // 5. INTERNAL STATE & COMPUTED

@@ -4,7 +4,7 @@
     <div class="T16M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
   } @else {
     <sd-input-number
-      [form]="form"
+      [form]="form()"
       [label]="component.label || component.key"
       [helperText]="component.helperText"
       [name]="component.key"

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
   SdFormatComponent,
   SdFormGenericComponent,
@@ -32,8 +32,11 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   ],
 })
 export class NumberAttribute implements AfterViewInit, OnDestroy {
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   form = new FormGroup({});
   component!: SdFormGenericNumber;
   isTemplate = false;
@@ -45,10 +48,10 @@ export class NumberAttribute implements AfterViewInit, OnDestroy {
   }
   #subscription = new Subscription();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngAfterViewInit(): void {
     // Khi thay đổi, debound 0.5s rồi mới emit output

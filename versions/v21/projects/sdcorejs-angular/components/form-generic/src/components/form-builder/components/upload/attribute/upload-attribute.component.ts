@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject, AfterViewInit, OnDestroy, input } from '@angular/core';
 import {
   SdFormatComponent,
   SdFormGenericComponent,
@@ -34,9 +34,12 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
   ],
 })
 export class UploadAttribute implements AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
   form = new FormGroup({});
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   component!: SdFormGenericUpload;
   extension?: string;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericUpload) {
@@ -65,10 +68,10 @@ export class UploadAttribute implements AfterViewInit, OnDestroy {
       display: this.#i18n.t('core.component.form-builder.upload-source.capture'),
     },
   ];
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngAfterViewInit(): void {
     // Khi thay đổi, debound 0.5s rồi mới emit output

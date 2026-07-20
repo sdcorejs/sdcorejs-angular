@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnDestroy,
+  OnInit,
+  inject,
+  input,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdRadio } from '@sdcorejs/angular/forms';
 import { filter, startWith, Subject, Subscription } from 'rxjs';
@@ -23,7 +33,16 @@ import { Utilities } from '@sdcorejs/utils/fns';
   ],
 })
 export class RadioComponent implements AfterViewInit, OnDestroy, OnInit {
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
+  private router = inject(Router);
+  private ref = inject(ChangeDetectorRef);
+  private readonly formGenericService = inject(FormGenericService);
+
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
   form = new FormGroup({});
   @Input({ alias: 'form', required: true }) set _form(form: FormGroup) {
     if (this.form !== form) {
@@ -75,18 +94,19 @@ export class RadioComponent implements AfterViewInit, OnDestroy, OnInit {
 
   #subscription = new Subscription();
   #changes = new Subject<void>();
-  constructor(
-    private router: Router,
-    private ref: ChangeDetectorRef,
-    private readonly formGenericService: FormGenericService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit() {
     this.#subscription.add(
-      this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
-        this.entity[variable.key] = variable.value;
-        this.ref.markForCheck();
-      })
+      this.setVariables()
+        .pipe(filter(variable => variable.key === this.component?.key))
+        .subscribe(variable => {
+          this.entity[variable.key] = variable.value;
+          this.ref.markForCheck();
+        })
     );
   }
 

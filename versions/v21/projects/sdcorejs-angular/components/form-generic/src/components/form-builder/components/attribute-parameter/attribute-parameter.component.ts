@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, ViewChild, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, ViewChild, OnInit, inject, input, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
@@ -15,8 +15,10 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [SdButton, SdModal, SdInput, TranslatePipe],
 })
 export class AttributeParameter implements OnInit {
+  private ref = inject(ChangeDetectorRef);
+
   @ViewChild(SdModal) modal?: SdModal;
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
   form = new FormGroup({});
   @Input() label?: string;
 
@@ -37,9 +39,12 @@ export class AttributeParameter implements OnInit {
       value: this.#model?.[key],
     }));
   }
-  @Output() modelChange = new EventEmitter<Record<string, string>>();
+  readonly modelChange = output<Record<string, string>>();
 
-  constructor(private ref: ChangeDetectorRef) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngOnInit() {}
 

@@ -3,11 +3,12 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  EventEmitter,
   Input,
   OnDestroy,
   OnInit,
-  Output,
+  inject,
+  input,
+  output,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
@@ -36,8 +37,12 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [AttributeInput, AttributeSelect, AttributeExpression, AttributeTextarea, BuildQueries, TranslatePipe],
 })
 export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  private ref = inject(ChangeDetectorRef);
+  private formGenericService = inject(FormGenericService);
+  private builderService = inject(BuilderService);
+
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
 
   component!: SdFormGenericHtml;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericHtml) {
@@ -49,15 +54,14 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
   form = new FormGroup({});
   definitionHtmls: SdFormGenericDefinitionHtml[] = [];
   // Mong muốn là khi attribute changes thông báo cho control biết để control render content tương ứng
-  @Output() attributeChanges = new EventEmitter();
+  readonly attributeChanges = output();
 
   #subscription = new Subscription();
   rightProperties: { value: string; display: string }[] = [];
-  constructor(
-    private ref: ChangeDetectorRef,
-    private formGenericService: FormGenericService,
-    private builderService: BuilderService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit(): void {
     this.formGenericService.html.definitions().then(htmls => {
@@ -65,7 +69,7 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
       this.ref.markForCheck();
     });
     this.rightProperties =
-      GetComponentAttributes(this.components).map(e => ({
+      GetComponentAttributes(this.components()).map(e => ({
         value: '${' + e.value + '}',
         display: e.display,
       })) || [];

@@ -1,6 +1,6 @@
 @if (component && entity) {
   <sd-textarea
-    [form]="form"
+    [form]="form()"
     [label]="component.label || component.key"
     [helperText]="component.helperText"
     [name]="component.key"

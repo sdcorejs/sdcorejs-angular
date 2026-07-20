@@ -10,6 +10,9 @@ import { createPandocInstance, PandocInstance } from './pandoc-core';
   providedIn: 'root',
 })
 export class SdDocxService {
+  private notifyService = inject(SdNotifyService);
+  private loadingService = inject(SdLoadingService);
+
   readonly #i18n = inject(I18nService);
 
   readonly #DEFAULT_MAX_SIZE_MB = 50;
@@ -20,10 +23,10 @@ export class SdDocxService {
   #fileInput: HTMLInputElement | null = null;
   #pandocInstance: PandocInstance | null = null;
 
-  constructor(
-    private notifyService: SdNotifyService,
-    private loadingService: SdLoadingService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   async open(options?: SdDocxConvertOptions): Promise<SdDocxConvertResult | null> {
     return new Promise(resolve => {

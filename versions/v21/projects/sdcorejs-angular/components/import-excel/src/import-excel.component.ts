@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, OnDestroy, OnInit, ViewChild, inject, output } from '@angular/core';
 
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { Subscription } from 'rxjs';
@@ -45,6 +45,12 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   providers: [ColumnHiddenPipe],
 })
 export class SdImportExcel implements OnInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private excelService = inject(SdExcelService);
+  private notifyService = inject(SdNotifyService);
+  private columnHiddenPipe = inject(ColumnHiddenPipe);
+  private loadingService = inject(SdLoadingService);
+
   @Input({ required: true }) option!: SdImportExcelOption;
   @ViewChild(SdModal) modal!: SdModal;
   excelItems: SdImportExcelItem[] = [];
@@ -72,15 +78,12 @@ export class SdImportExcel implements OnInit, OnDestroy {
   uploading = false;
   isUploaded = false;
   isDownloadTemplate = false;
-  @Output() sdClosed = new EventEmitter();
+  readonly sdClosed = output();
   readonly #i18n = inject(I18nService);
-  constructor(
-    private ref: ChangeDetectorRef,
-    private excelService: SdExcelService,
-    private notifyService: SdNotifyService,
-    private columnHiddenPipe: ColumnHiddenPipe,
-    private loadingService: SdLoadingService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit() {
     this.isUploaded = false;

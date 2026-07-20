@@ -15,8 +15,8 @@ import {
   model,
   OnDestroy,
   OnInit,
-  output,
   Output,
+  output,
   TemplateRef,
   untracked,
   viewChild,
@@ -255,8 +255,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   // X (clear button) — consumer như column-filter dùng để fire reload ngay.
   cleared = output<void>();
 
-  // 🚨 GIỮ LẠI EVENT_EMITTER DUY NHẤT VÌ CẦN CHECK OBSERVERED
-  @Output() sdFocusForceBlur = new EventEmitter<void>();
+  // why: focus handling reads EventEmitter.observed before emitting a forced blur event.
+  @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
 
   formControl = new SdFormControl();
   #subscription = new Subscription();

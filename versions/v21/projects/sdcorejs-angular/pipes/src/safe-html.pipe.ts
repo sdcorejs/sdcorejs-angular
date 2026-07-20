@@ -1,4 +1,4 @@
-import { Injectable, Pipe, PipeTransform } from '@angular/core';
+import { Injectable, Pipe, PipeTransform, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
 @Pipe({
@@ -9,7 +9,12 @@ import { DomSanitizer } from '@angular/platform-browser';
   providedIn: 'root',
 })
 export class SdSafeHtmlPipe implements PipeTransform {
-  constructor(private sanitizer: DomSanitizer) {}
+  private sanitizer = inject(DomSanitizer);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
   transform(html: string | number | undefined | null) {
     if (typeof html === 'number') {
       return html;
