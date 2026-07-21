@@ -1,0 +1,95 @@
+<div class="sd-sidebar-v3" [class.sd-sidebar-v3--collapsed]="isCollapsed()">
+  <aside
+    class="sd-sidebar-v3__drawer d-flex flex-column bg-white border-right border-black200"
+    data-v3-sidebar
+    [attr.data-collapsed]="isCollapsed()">
+    <header class="d-flex align-items-center justify-content-between gap-8 p-12 border-bottom border-black200">
+      <div class="d-flex align-items-center gap-8 overflow-hidden">
+        @if (sidebar().logoUrl) {
+          <img class="sd-sidebar-v3__logo" [src]="sidebar().logoUrl" alt="" />
+        } @else {
+          <sd-icon name="apps"></sd-icon>
+        }
+        @if (!isCollapsed()) {
+          <span class="T16M text-ellipsis">{{ sidebar().defaultTitle || 'Back Office' }}</span>
+        }
+      </div>
+      <button
+        type="button"
+        class="sd-sidebar-v3__icon-action d-flex align-items-center justify-content-center"
+        [attr.aria-label]="isCollapsed() ? 'Mở rộng sidebar' : 'Thu gọn sidebar'"
+        [attr.aria-expanded]="!isCollapsed()"
+        (click)="toggleCollapsed()">
+        <sd-icon [name]="isCollapsed() ? 'chevron_right' : 'chevron_left'"></sd-icon>
+      </button>
+    </header>
+
+    @if (isCollapsed()) {
+      <nav class="d-flex flex-column align-items-center gap-4 p-8 flex-1" aria-label="Menu thu gọn">
+        @for (item of collapsedItems(); track item.key) {
+          <button
+            type="button"
+            class="sd-sidebar-v3__collapsed-action d-flex align-items-center justify-content-center"
+            [attr.aria-label]="item.title"
+            (click)="activateCollapsedMenu(item.menu)">
+            @if (item.menu.iconUrl) {
+              <img class="sd-sidebar-v3__logo" [src]="item.menu.iconUrl" alt="" />
+            } @else {
+              <sd-icon [name]="item.menu.icon || 'widgets'"></sd-icon>
+            }
+          </button>
+        }
+      </nav>
+    } @else {
+      <div class="p-12">
+        <sd-input
+          size="sm"
+          placeholder="Tìm trong tất cả menu"
+          [autoId]="'layout-v3-global-search'"
+          [model]="searchText()"
+          (sdChange)="searchText.set($event)">
+        </sd-input>
+      </div>
+      <div class="sd-sidebar-v3__navigation d-flex flex-column gap-16 flex-1 overflow-auto px-8 pb-12">
+        @if (pinnedMenus().length) {
+          <section data-v3-pinned class="d-flex flex-column gap-4">
+            <h2 class="T12M text-black400 px-12 m-0">Đã ghim</h2>
+            <sd-layout-menu-tree
+              [menus]="pinnedMenus()"
+              [activePath]="activePath()"
+              [pinnedKeys]="pinnedKeys()"
+              (navigate)="navigateMenu($event)"
+              (togglePinned)="onTogglePinned($event)">
+            </sd-layout-menu-tree>
+          </section>
+        }
+        @if (recentConfiguration().enabled && recentMenus().length) {
+          <section data-v3-recent class="d-flex flex-column gap-4">
+            <h2 class="T12M text-black400 px-12 m-0">Gần đây</h2>
+            <sd-layout-menu-tree [menus]="recentMenus()" [activePath]="activePath()" [showPin]="false" (navigate)="navigateMenu($event)">
+            </sd-layout-menu-tree>
+          </section>
+        }
+        <section class="d-flex flex-column gap-4">
+          <h2 class="T12M text-black400 px-12 m-0">Tất cả menu</h2>
+          <sd-layout-menu-tree
+            [menus]="menus()"
+            [query]="searchText()"
+            [activePath]="activePath()"
+            [pinnedKeys]="pinnedKeys()"
+            (navigate)="navigateMenu($event)"
+            (togglePinned)="onTogglePinned($event)">
+          </sd-layout-menu-tree>
+        </section>
+      </div>
+    }
+
+    <div class="p-8 border-top border-black200">
+      <sd-layout-user-menu [userInfo]="userInfo()" [compact]="isCollapsed()"></sd-layout-user-menu>
+    </div>
+  </aside>
+
+  <main class="sd-sidebar-v3__content">
+    <ng-content></ng-content>
+  </main>
+</div>

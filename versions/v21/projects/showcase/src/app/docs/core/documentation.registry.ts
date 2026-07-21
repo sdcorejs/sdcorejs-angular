@@ -1013,14 +1013,19 @@ const PUBLISHED_ONLY_PAGES = [
     publishedDocId: 'modules/keycloak/sd-keycloak',
     keywords: ['keycloak', 'oidc', 'authentication', 'authorization'],
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'modules-integrations',
     slug: 'layout',
     title: 'Layout Module',
     description: 'Application shell and responsive layout building blocks for Core UI portals.',
+    selector: 'sd-layout, sd-page',
     importPath: '@sdcorejs/angular/modules/layout',
     publishedDocId: 'modules/layout/sd-layout',
     keywords: ['layout', 'shell', 'responsive', 'portal'],
+    status: 'stable',
+    demoSectionCount: 1,
+    demoPath: 'modules/layout',
+    loadComponent: () => import('../../pages/modules/layout/layout-demo.component').then(m => m.LayoutDemoComponent),
   }),
   definePublishedDocPage({
     category: 'modules-integrations',

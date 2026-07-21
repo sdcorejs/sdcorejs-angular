@@ -1,0 +1,60 @@
+<div class="sd-layout-user-menu position-relative">
+  <button
+    #trigger
+    type="button"
+    data-user-trigger
+    class="sd-layout-user-menu__trigger d-flex align-items-center gap-8 w-full text-left"
+    aria-haspopup="menu"
+    [attr.aria-expanded]="isOpen()"
+    (click)="toggle()">
+    <sd-avatar [src]="avatar()" [size]="compact() ? 32 : 40"></sd-avatar>
+    @if (!compact()) {
+      <span class="d-flex flex-column flex-1 overflow-hidden">
+        <span class="T14M text-ellipsis">{{ displayName() }}</span>
+        @if (userInfo().email) {
+          <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
+        }
+      </span>
+    }
+    <sd-icon [name]="isOpen() ? 'expand_less' : 'expand_more'"></sd-icon>
+  </button>
+
+  @if (isOpen()) {
+    <div
+      #menu
+      data-user-menu
+      class="sd-layout-user-menu__popup d-flex flex-column gap-4 p-8 bg-white border border-black200 rounded-8 mat-elevation-z4"
+      role="menu"
+      tabindex="-1"
+      (keydown)="onMenuKeydown($event)">
+      <div class="d-flex flex-column gap-4 px-8 py-4">
+        <span class="T14M text-ellipsis">{{ displayName() }}</span>
+        @if (userInfo().email) {
+          <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
+        }
+      </div>
+      @if (changePasswordAction()) {
+        <button
+          type="button"
+          role="menuitem"
+          data-user-action="change-password"
+          class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+          (click)="runChangePassword()">
+          <sd-icon name="lock"></sd-icon>
+          Đổi mật khẩu
+        </button>
+      }
+      @if (signoutAction()) {
+        <button
+          type="button"
+          role="menuitem"
+          data-user-action="signout"
+          class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left text-error"
+          (click)="runSignout()">
+          <sd-icon name="logout"></sd-icon>
+          Đăng xuất
+        </button>
+      }
+    </div>
+  }
+</div>

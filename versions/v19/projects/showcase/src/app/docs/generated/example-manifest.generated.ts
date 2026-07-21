@@ -230,6 +230,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/textarea/example-co-ban"
   | "forms/textarea/example-trang-thai"
   | "forms/textarea/example-validator"
+  | "modules/layout/example-sidebar-v1-v2-v3"
   | "services/confirm/example-chon-muc-do"
   | "services/confirm/example-chon-ngay"
   | "services/confirm/example-chon-ngay-gio"
@@ -1861,6 +1862,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-chinh-sua-noi-tuyen",
     title: "Chỉnh sửa nội tuyến",
     description: "Hiển thị như text không viền — bấm/focus để sửa tại chỗ. Khi disabled thì rơi về xem tĩnh (viewed=true).",
+  },
+  {
+    sourceKey: "modules/layout/example-sidebar-v1-v2-v3",
+    pageKey: "modules/layout",
+    sectionId: "example-sidebar-v1-v2-v3",
+    title: "Sidebar V1, V2 & V3",
+    description: "Switch versions and viewport widths without reloading the Showcase page.",
   },
   {
     sourceKey: "services/confirm/example-xac-nhan-co-ban",

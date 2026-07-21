@@ -2,6 +2,7 @@ import { InjectionToken } from '@angular/core';
 import { MaybeAsync } from '@sdcorejs/utils/models';
 export interface ISdLayoutConfiguration {
   homeUrl?: string;
+  mobileBreakpoint?: number;
   sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration>);
   userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
   signout: () => void | Promise<void>;
@@ -35,9 +36,21 @@ export interface SdLayoutUserInfo {
   avatar?: string;
 }
 
-export type ISdSidebarConfiguration = SidebarConfigurationV1;
+export const DEFAULT_LAYOUT_MOBILE_BREAKPOINT = 1024;
 
-export interface SidebarConfigurationV1 {
+export interface SidebarConfigurationBase {
+  brandColor?: string;
+  brandLightColor?: string;
+  logoUrl?: string;
+  defaultTitle?: string;
+  pin?: {
+    enabled?: boolean;
+  };
+}
+
+export type ISdSidebarConfiguration = SidebarConfigurationV1 | SidebarConfigurationV2 | SidebarConfigurationV3;
+
+export interface SidebarConfigurationV1 extends SidebarConfigurationBase {
   version: 1;
 
   /**
@@ -74,6 +87,67 @@ export interface SidebarConfigurationV1 {
   pin?: {
     enabled?: boolean;
   };
+}
+
+export interface SidebarConfigurationV2 extends SidebarConfigurationBase {
+  version: 2;
+  interaction?: 'click' | 'hover-lock';
+  primaryMenuIds?: string[];
+}
+
+export interface SidebarConfigurationV3 extends SidebarConfigurationBase {
+  version: 3;
+  defaultCollapsed?: boolean;
+  recent?: {
+    enabled?: boolean;
+    maxItems?: number;
+  };
+}
+
+export interface ResolvedSidebarRecentConfiguration {
+  enabled: boolean;
+  maxItems: number;
+}
+
+export function normalizeLayoutMobileBreakpoint(value: number | undefined): number {
+  if (!Number.isFinite(value) || Number(value) <= 0) {
+    return DEFAULT_LAYOUT_MOBILE_BREAKPOINT;
+  }
+  return Math.floor(Number(value));
+}
+
+export function resolveSidebarV2Interaction(sidebar: SidebarConfigurationV2): 'click' | 'hover-lock' {
+  return sidebar.interaction === 'hover-lock' ? 'hover-lock' : 'click';
+}
+
+export function resolveSidebarV3Recent(sidebar: SidebarConfigurationV3): ResolvedSidebarRecentConfiguration {
+  const configuredLimit = sidebar.recent?.maxItems;
+  const maxItems = Number.isFinite(configuredLimit) && Number(configuredLimit) > 0 ? Math.floor(Number(configuredLimit)) : 5;
+  return {
+    enabled: sidebar.recent?.enabled ?? true,
+    maxItems,
+  };
+}
+
+export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV1): SidebarConfigurationV1;
+export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV2): SidebarConfigurationV2;
+export function normalizeSidebarConfiguration(_sidebar: SidebarConfigurationV3): SidebarConfigurationV3;
+export function normalizeSidebarConfiguration(sidebar: ISdSidebarConfiguration): ISdSidebarConfiguration {
+  if (sidebar.version === 2) {
+    return {
+      ...sidebar,
+      interaction: resolveSidebarV2Interaction(sidebar),
+      primaryMenuIds: [...new Set((sidebar.primaryMenuIds ?? []).filter(id => typeof id === 'string' && id.trim()))].slice(0, 3),
+    };
+  }
+  if (sidebar.version === 3) {
+    return {
+      ...sidebar,
+      defaultCollapsed: sidebar.defaultCollapsed ?? false,
+      recent: resolveSidebarV3Recent(sidebar),
+    };
+  }
+  return sidebar;
 }
 
 export const SD_LAYOUT_CONFIGURATION = new InjectionToken<ISdLayoutConfiguration>('sd.layout.configuration');

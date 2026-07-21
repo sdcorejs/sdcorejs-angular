@@ -6,12 +6,13 @@
     class="c-layout-sidebar"
     (click)="openSidebar()"
     (mouseleave)="onMouseleaveSideBar()"
-    [mode]="isMobileOrTablet() ? 'over' : 'side'"
-    [fixedInViewport]="isMobileOrTablet()">
+    [mode]="isMobile() ? 'over' : 'side'"
+    [fixedInViewport]="isMobile()">
     <sidebar
       [menus]="menus()"
       [userInfo]="userInfo()"
       [sidebar]="sidebar()"
+      [isMobile]="isMobile()"
       [isShowSidebar]="isShowSidebar()"
       (showSideBar)="onToggle($event)"
       (expandSideBar)="onExpandSideBar()"

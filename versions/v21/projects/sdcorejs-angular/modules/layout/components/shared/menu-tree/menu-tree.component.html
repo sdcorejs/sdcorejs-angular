@@ -1,0 +1,44 @@
+<nav class="d-flex flex-column gap-4" aria-label="Navigation menu">
+  @for (node of nodes(); track node.key) {
+    @if (node.isGroup) {
+      <div class="sd-layout-menu-tree__group d-flex align-items-center gap-8 T12M text-black400" [style.padding-left.px]="node.paddingLeft">
+        <sd-icon [name]="node.menu.icon || 'folder'"></sd-icon>
+        <span class="text-ellipsis">{{ node.title }}</span>
+      </div>
+    } @else {
+      <div class="sd-layout-menu-tree__route d-flex align-items-center gap-4">
+        <button
+          type="button"
+          class="sd-layout-menu-tree__route-button d-flex align-items-center gap-8 flex-1 text-left T14R"
+          data-menu-route
+          [attr.data-menu-key]="node.key"
+          [attr.aria-current]="node.isActive ? 'page' : null"
+          [class.sd-layout-menu-tree__route-button--active]="node.isActive"
+          [style.padding-left.px]="node.paddingLeft"
+          (click)="onNavigate(node.menu)">
+          @if (node.menu.iconUrl) {
+            <img class="sd-layout-menu-tree__icon-image" [src]="node.menu.iconUrl" alt="" />
+          } @else {
+            <sd-icon [name]="node.menu.icon || 'chevron_right'"></sd-icon>
+          }
+          <span class="text-ellipsis">{{ node.title }}</span>
+        </button>
+        @if (showPin()) {
+          <button
+            type="button"
+            class="sd-layout-menu-tree__pin d-flex align-items-center justify-content-center"
+            [attr.data-pin-key]="node.key"
+            [attr.aria-label]="node.isPinned ? 'Unpin ' + node.title : 'Pin ' + node.title"
+            [attr.aria-pressed]="node.isPinned"
+            (click)="onTogglePinned($event, node.menu)">
+            <sd-icon [name]="node.isPinned ? 'push_pin' : 'keep'"></sd-icon>
+          </button>
+        }
+      </div>
+    }
+  } @empty {
+    <div class="d-flex flex-column align-items-center justify-content-center gap-12 p-24 text-black400 T14R">
+      Không tìm thấy menu phù hợp
+    </div>
+  }
+</nav>

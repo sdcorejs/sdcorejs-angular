@@ -93,6 +93,9 @@ export class MenuPipe implements PipeTransform {
   }
 
   #getHashIdMenu = (menu: SdLayoutMenu): string => {
+    const explicitId = typeof menu.id === 'string' ? menu.id.trim() : '';
+    if (explicitId) return explicitId;
+
     const extendedMenu = menu as SdLayoutMenu & {
       path?: string;
       permission?: string;

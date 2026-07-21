@@ -23,7 +23,7 @@ describe('documentation registry', () => {
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(254);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(255);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -45,7 +45,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(254);
+    expect(exampleIds).toHaveSize(255);
     for (const page of DOC_PAGES) {
       expect(page.examples).toHaveSize(page.demoSectionCount);
       for (const example of page.examples) {
@@ -82,5 +82,13 @@ describe('documentation registry', () => {
     }
     expect(findDocPage('components', 'generic')?.examples.every(example => example.activation === 'interaction')).toBeTrue();
     expect(findDocPage('components', 'button')?.examples.every(example => example.activation === 'viewport')).toBeTrue();
+  });
+
+  it('exposes the Layout live-demo loader from the modules registry entry', async () => {
+    const layoutPage = findDocPage('modules-integrations', 'layout');
+
+    expect(layoutPage?.sourcePath).toContain('/pages/modules/layout/layout-demo.component.ts');
+    expect(layoutPage?.demoSectionCount).toBe(1);
+    expect((await layoutPage?.examples[0]?.loadComponent())?.name).toBe('LayoutDemoComponent');
   });
 });
