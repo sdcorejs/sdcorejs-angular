@@ -10,6 +10,7 @@
     [class.w-56]="compact()"
     [class.gap-0]="compact()"
     aria-haspopup="menu"
+    [attr.aria-label]="compact() ? displayName() : null"
     [attr.aria-expanded]="isOpen()"
     (click)="toggle()">
     <sd-avatar [src]="avatar()" [size]="compact() ? 32 : 40"></sd-avatar>

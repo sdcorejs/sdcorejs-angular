@@ -20,7 +20,10 @@ describe('SdLayoutUserMenuComponent', () => {
   afterEach(() => utilityStyles.remove());
 
   it('renders the shared user identity and avatar trigger', () => {
-    expect(fixture.nativeElement.querySelector('[data-user-trigger]')).not.toBeNull();
+    const trigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
+    expect(trigger).not.toBeNull();
+    expect(trigger.getAttribute('aria-label')).toBeNull();
+    expect(trigger.textContent).toContain('Demo User');
     expect(fixture.nativeElement.textContent).toContain('Demo User');
     expect(fixture.nativeElement.textContent).toContain('demo@example.com');
   });
@@ -104,6 +107,7 @@ describe('SdLayoutUserMenuComponent', () => {
     expect(trigger.querySelector('sd-avatar')).not.toBeNull();
     expect(trigger.querySelector('sd-icon')).toBeNull();
     expect(trigger.textContent).not.toContain('Demo User');
+    expect(trigger.getAttribute('aria-label')).toBe('Demo User');
     expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
     expect(getComputedStyle(trigger).width).toBe('56px');
     expect(getComputedStyle(trigger).gap).toBe('0px');
