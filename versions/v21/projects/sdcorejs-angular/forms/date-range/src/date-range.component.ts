@@ -10,8 +10,6 @@ import {
   computed,
   effect,
   untracked,
-  OnDestroy,
-  OnInit,
   output,
   TemplateRef,
   viewChild,
@@ -31,6 +29,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -43,7 +42,7 @@ import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
-interface Daterange {
+export interface SdDateRangeValue {
   from?: string | null;
   to?: string | null;
 }
@@ -82,7 +81,7 @@ interface Daterange {
     TranslatePipe,
   ],
 })
-export class SdDateRange implements OnDestroy, OnInit {
+export class SdDateRange {
   id1 = `I${Utilities.generateUuid()}`;
   id2 = `I${Utilities.generateUuid()}`;
   #c1 = Utilities.generateUuid();
@@ -234,12 +233,12 @@ export class SdDateRange implements OnDestroy, OnInit {
   maxInput = input<any>(undefined, { alias: 'max' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput()));
 
-  valueModel = model<Daterange | undefined | null>(undefined, { alias: 'model' });
+  valueModel = model<SdDateRangeValue | undefined | null>(undefined, { alias: 'model' });
 
   // ==========================================
   // 4. SIGNAL OUTPUTS
   // ==========================================
-  sdChange = output<Daterange | undefined | null>();
+  sdChange = output<SdDateRangeValue | undefined | null>();
 
   // ==========================================
   // 5. INTERNAL STATE & STREAMS
@@ -248,6 +247,21 @@ export class SdDateRange implements OnDestroy, OnInit {
   formControl = new FormControl();
   control1 = new FormControl();
   control2 = new FormControl();
+  readonly #fromConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: computed(() => this.#c1),
+    control: computed(() => this.control1),
+  });
+  readonly #toConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: computed(() => this.#c2),
+    control: computed(() => this.control2),
+  });
+  readonly #rangeConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+  });
 
   #isFocus = false;
   #isModelChange = false;
@@ -313,20 +327,6 @@ export class SdDateRange implements OnDestroy, OnInit {
         this.control2.updateValueAndValidity({ emitEvent: false });
       });
     });
-  }
-
-  ngOnInit() {
-    const formGroup = this.form();
-    formGroup?.addControl(this.#c1, this.control1);
-    formGroup?.addControl(this.#c2, this.control2);
-    formGroup?.addControl(this.name(), this.formControl);
-  }
-
-  ngOnDestroy() {
-    const formGroup = this.form();
-    formGroup?.removeControl(this.#c1);
-    formGroup?.removeControl(this.#c2);
-    formGroup?.removeControl(this.name());
   }
 
   #parseDateBoundary(val: any): Date | null {

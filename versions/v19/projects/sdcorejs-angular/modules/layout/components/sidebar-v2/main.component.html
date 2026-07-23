@@ -1,0 +1,79 @@
+<div class="sd-sidebar-v2" (keydown.escape)="closeFromEscape()">
+  <aside class="sd-sidebar-v2__rail d-flex flex-column align-items-center gap-8 py-12 bg-white border-right border-black200">
+    <button type="button" class="sd-sidebar-v2__brand d-flex align-items-center justify-content-center" aria-label="Trang chủ">
+      @if (sidebar().logoUrl) {
+        <img class="sd-sidebar-v2__logo" [src]="sidebar().logoUrl" alt="" />
+      } @else {
+        <sd-icon name="apps"></sd-icon>
+      }
+    </button>
+
+    <nav class="d-flex flex-column align-items-center gap-4 flex-1" aria-label="Nhóm menu">
+      @for (item of railItems(); track item.key) {
+        <button
+          type="button"
+          class="sd-sidebar-v2__rail-action d-flex flex-column align-items-center justify-content-center gap-4"
+          [attr.data-v2-group-key]="item.key"
+          [attr.aria-label]="item.title"
+          [attr.aria-expanded]="activeGroupKey() === item.key && isFlyoutOpen()"
+          [class.sd-sidebar-v2__rail-action--active]="activeGroupKey() === item.key"
+          (click)="selectGroup(item.menu)"
+          (mouseenter)="previewGroup(item.menu)"
+          (focus)="previewGroup(item.menu)">
+          @if (item.menu.iconUrl) {
+            <img class="sd-sidebar-v2__rail-icon" [src]="item.menu.iconUrl" alt="" />
+          } @else {
+            <sd-icon [name]="item.menu.icon || 'widgets'"></sd-icon>
+          }
+          <span class="sd-sidebar-v2__rail-label text-ellipsis">{{ item.title }}</span>
+        </button>
+      }
+    </nav>
+
+    <sd-layout-user-menu [userInfo]="userInfo()" [compact]="true"></sd-layout-user-menu>
+  </aside>
+
+  @if (isFlyoutOpen()) {
+    <button
+      type="button"
+      class="sd-sidebar-v2__backdrop"
+      aria-label="Đóng menu"
+      (click)="closeFromBackdrop()"
+      (keydown.escape)="closeFromEscape()"></button>
+    <section
+      class="sd-sidebar-v2__flyout d-flex flex-column bg-white border-right border-black200 mat-elevation-z4"
+      [attr.aria-label]="activeGroup()?.title || 'Menu'"
+      (mouseleave)="leaveFlyout()"
+      (keydown.escape)="closeFromEscape()">
+      <header class="d-flex align-items-center justify-content-between gap-8 px-16 py-12 border-bottom border-black200">
+        <span class="T16M text-ellipsis">{{ activeGroup()?.title || sidebar().defaultTitle || 'Menu' }}</span>
+        @if (isFlyoutLocked()) {
+          <sd-icon name="lock"></sd-icon>
+        }
+      </header>
+      <div class="p-12">
+        <sd-input
+          size="sm"
+          placeholder="Tìm trong nhóm"
+          [autoId]="'layout-v2-context-search'"
+          [model]="searchText()"
+          (sdChange)="searchText.set($event)">
+        </sd-input>
+      </div>
+      <div class="flex-1 overflow-auto px-8 pb-12">
+        <sd-layout-menu-tree
+          [menus]="contextMenus()"
+          [query]="searchText()"
+          [activePath]="activePath()"
+          [pinnedKeys]="pinnedKeys()"
+          (navigate)="onNavigate($event)"
+          (togglePinned)="onTogglePinned($event)">
+        </sd-layout-menu-tree>
+      </div>
+    </section>
+  }
+
+  <main class="sd-sidebar-v2__content" data-v2-content data-content-offset="rail">
+    <ng-content></ng-content>
+  </main>
+</div>

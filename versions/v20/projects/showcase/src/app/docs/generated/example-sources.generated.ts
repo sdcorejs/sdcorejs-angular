@@ -128,6 +128,141 @@ export class AnchorDemoComponent {}
   margin: 0;
 }`,
   },
+  "components/audit-diff": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdAuditDiff, SdAuditDiffOptions, SdAuditDiffValueTemplateDirective } from '@sdcorejs/angular/components/audit-diff';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-audit-diff-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdAuditDiff, SdAuditDiffValueTemplateDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Audit Diff"
+      description="SdAuditDiff – pure diff engine cho nested object/stable-key array và presentation table/detail-list có semantic before/after.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nested-table') {
+        <demo-section
+          heading="Nested table"
+          [props]="[
+            { name: 'mode', value: 'table' },
+            { name: 'nested objects', value: 'leaf rows' },
+          ]">
+          <sd-audit-diff [before]="nestedBefore" [after]="nestedAfter" [options]="nestedOptions"></sd-audit-diff>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-stable-key-array') {
+        <demo-section
+          heading="Stable-key array"
+          [props]="[
+            { name: 'arrayKey', value: 'id' },
+            { name: 'mode', value: 'detail-list' },
+          ]"
+          note="Reorder không sinh diff giả; item thêm/xóa vẫn đi qua rule của field con.">
+          <sd-audit-diff [before]="linesBefore" [after]="linesAfter" [options]="linesOptions" mode="detail-list"></sd-audit-diff>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-format-redact-va-order') {
+        <demo-section
+          heading="Format, redact và order"
+          [props]="[
+            { name: 'enumMap', value: 'status' },
+            { name: 'redacted', value: 'token' },
+            { name: 'hidden', value: 'password' },
+          ]">
+          <sd-audit-diff [before]="securedBefore" [after]="securedAfter" [options]="securedOptions"></sd-audit-diff>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-custom-value-template') {
+        <demo-section heading="Custom value template" [props]="[{ name: 'sdAuditDiffValue', value: 'TemplateRef context' }]">
+          <sd-audit-diff [before]="customBefore" [after]="customAfter" [options]="customOptions">
+            <ng-template sdAuditDiffValue let-value let-row="row" let-side="side">
+              <span class="custom-value" [attr.data-custom-side]="side">{{ row.label }}: {{ value }}</span>
+            </ng-template>
+          </sd-audit-diff>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .custom-value {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #1849a9;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AuditDiffDemoComponent {
+  readonly nestedBefore = {
+    profile: { name: 'Nguyễn An', department: 'Sales' },
+    active: true,
+  };
+  readonly nestedAfter = {
+    profile: { name: 'Nguyễn An', department: 'Finance', title: 'Manager' },
+    active: false,
+  };
+  readonly nestedOptions: SdAuditDiffOptions = {
+    fields: [
+      { path: 'profile.department', label: 'Phòng ban', order: 1 },
+      { path: 'profile.title', label: 'Chức danh', order: 2 },
+      { path: 'active', label: 'Đang hoạt động', order: 3 },
+    ],
+  };
+
+  readonly linesBefore = {
+    lines: [
+      { id: 'B', product: 'Bút', quantity: 2 },
+      { id: 'A', product: 'Sổ', quantity: 1 },
+    ],
+  };
+  readonly linesAfter = {
+    lines: [
+      { id: 'A', product: 'Sổ', quantity: 3 },
+      { id: 'C', product: 'Kẹp hồ sơ', quantity: 4 },
+    ],
+  };
+  readonly linesOptions: SdAuditDiffOptions = {
+    fields: [
+      { path: 'lines', arrayKey: 'id' },
+      { path: 'lines[].product', label: 'Sản phẩm' },
+      { path: 'lines[].quantity', label: 'Số lượng' },
+    ],
+  };
+
+  readonly securedBefore = { status: 'draft', amount: 1250000, token: 'raw-old-token', password: 'old-secret' };
+  readonly securedAfter = { status: 'approved', amount: 1500000, token: 'raw-new-token', password: 'new-secret' };
+  readonly securedOptions: SdAuditDiffOptions = {
+    redactedValue: '••••••',
+    fields: [
+      { path: 'status', label: 'Trạng thái', order: 1, enumMap: { draft: 'Bản nháp', approved: 'Đã duyệt' } },
+      { path: 'amount', label: 'Ngân sách', order: 2, format: value => \`\${Number(value).toLocaleString('vi-VN')} ₫\` },
+      { path: 'token', label: 'API token', order: 3, redacted: true },
+      { path: 'password', hidden: true },
+    ],
+  };
+
+  readonly customBefore = { priority: 'normal' };
+  readonly customAfter = { priority: 'urgent' };
+  readonly customOptions: SdAuditDiffOptions = {
+    fields: [{ path: 'priority', label: 'Độ ưu tiên', enumMap: { normal: 'Bình thường', urgent: 'Khẩn cấp' } }],
+  };
+}
+`,
+    scss: `.custom-value {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1849a9;
+}`,
+  },
   "components/avatar": {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -402,6 +537,75 @@ export class BadgeDemoComponent {
 
   readonly unreadCount = signal(7);
   readonly errorsCount = signal(3);
+}
+`,
+  },
+  "components/breadcrumb": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { SdBreadcrumb, SdBreadcrumbItem } from '@sdcorejs/angular/components/breadcrumb';
+import { BehaviorSubject } from 'rxjs';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-breadcrumb-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdBreadcrumb],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Breadcrumb"
+      description="SdBreadcrumb – semantic navigation cho static items hoặc route.data.breadcrumb, hỗ trợ label async và overflow.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-danh-sach-tinh') {
+        <demo-section
+          heading="Danh sách tĩnh"
+          [props]="[
+            { name: 'items', value: '6 items' },
+            { name: 'maxItems', value: '4' },
+          ]"
+          note="Root, dấu rút gọn và context cuối được giữ; item disabled không trở thành control tương tác.">
+          <sd-breadcrumb [items]="staticItems" [maxItems]="4"></sd-breadcrumb>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-router-generated') {
+        <demo-section
+          heading="Router-generated"
+          [props]="[{ name: 'route.data.breadcrumb', value: 'resolver' }]"
+          note="Không truyền items: component đọc primary route chain của chính trang tài liệu này và cập nhật sau NavigationEnd.">
+          <sd-breadcrumb></sd-breadcrumb>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-nhan-async') {
+        <demo-section
+          heading="Nhãn async"
+          [props]="[{ name: 'label', value: 'Observable<string>' }]"
+          note="Observable label được cập nhật trực tiếp và tự unsubscribe khi source/component bị thay thế.">
+          <sd-breadcrumb [items]="asyncItems"></sd-breadcrumb>
+          <button type="button" data-resolve-label (click)="resolveAsyncLabel()">Resolve label</button>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class BreadcrumbDemoComponent {
+  readonly #asyncLabel = new BehaviorSubject('Đang tải nhãn');
+
+  readonly staticItems: SdBreadcrumbItem[] = [
+    { label: 'Trang chủ', icon: 'home', url: '/' },
+    { label: 'Vận hành', url: '/operations' },
+    { label: 'Đơn hàng', url: '/operations/orders' },
+    { label: 'Đã lưu trữ', disabled: true },
+    { label: 'Tháng 7', url: '/operations/orders/july' },
+    { label: 'ORD-0042' },
+  ];
+
+  readonly asyncItems: SdBreadcrumbItem[] = [{ label: 'Đơn hàng', url: '/orders' }, { label: this.#asyncLabel }];
+
+  resolveAsyncLabel(): void {
+    this.#asyncLabel.next('Đơn hàng #42');
+  }
 }
 `,
   },
@@ -811,6 +1015,109 @@ function isActive(emp: Employee): boolean {
     scss: `.code-box {
   width: 100%;
   max-width: 720px;
+}`,
+  },
+  "components/data-state": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdDataState, SdDataStateTemplateDirective } from '@sdcorejs/angular/components/data-state';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-data-state-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdDataState, SdDataStateTemplateDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Data State"
+      description="SdDataState – presentation nhất quán cho loading, empty, error, forbidden và success mà không trộn với utilities/data-state.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loading') {
+        <demo-section heading="Loading" [props]="[{ name: 'compact', value: 'true' }]">
+          <sd-data-state state="loading" compact></sd-data-state>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-empty') {
+        <demo-section heading="Empty" note="Custom template nhận state/retry/action context thay cho default presentation.">
+          <sd-data-state state="empty" compact>
+            <ng-template sdDataStateTemplate let-state>
+              <div class="custom-empty">Custom {{ state }}: chưa có đơn hàng phù hợp.</div>
+            </ng-template>
+          </sd-data-state>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-error') {
+        <demo-section
+          heading="Error"
+          [props]="[
+            { name: 'retryable', value: 'true' },
+            { name: 'actionLabel', value: 'Mở nhật ký' },
+          ]">
+          <sd-data-state state="error" retryable actionLabel="Mở nhật ký" (sdRetry)="onRetry()" (sdAction)="onAction()"> </sd-data-state>
+          <div>Retry: {{ retryCount() }} · Action: {{ actionCount() }}</div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-forbidden') {
+        <demo-section heading="Forbidden" [props]="[{ name: 'fullPage', value: 'true' }]">
+          <div class="full-page-preview">
+            <sd-data-state state="forbidden" fullPage></sd-data-state>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-success') {
+        <demo-section heading="Success" note="Không có presentation wrapper dư thừa; content được project trực tiếp.">
+          <sd-data-state state="success">
+            <article data-success>Dữ liệu đã sẵn sàng</article>
+          </sd-data-state>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .custom-empty,
+    [data-success] {
+      padding: 16px;
+      border: 1px dashed #98a2b3;
+      border-radius: 8px;
+    }
+
+    .full-page-preview {
+      max-height: 360px;
+      overflow: auto;
+      border: 1px solid #e4e7ec;
+      border-radius: 8px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class DataStateDemoComponent {
+  readonly retryCount = signal(0);
+  readonly actionCount = signal(0);
+
+  onRetry(): void {
+    this.retryCount.update(value => value + 1);
+  }
+
+  onAction(): void {
+    this.actionCount.update(value => value + 1);
+  }
+}
+`,
+    scss: `.custom-empty,
+[data-success] {
+  padding: 16px;
+  border: 1px dashed #98a2b3;
+  border-radius: 8px;
+}
+
+.full-page-preview {
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
 }`,
   },
   "components/document-builder": {
@@ -2211,6 +2518,121 @@ export class InformDemoComponent {
     scss: `:host ::ng-deep demo-section > * { display: block; margin-bottom: 12px; }
 .demo-action-btn { border: none; background: none; color: inherit; cursor: pointer; padding: 0; text-decoration: underline; }`,
   },
+  "components/job-progress": {
+    typescript: `import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { SdJobProgress } from '@sdcorejs/angular/components/job-progress';
+import { SdTaskService, SdTaskState } from '@sdcorejs/angular/services/task';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-job-progress-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdJobProgress],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Job Progress"
+      description="SdJobProgress – progress presentation có ARIA đầy đủ, nhận direct state hoặc task ID mà không phụ thuộc backend.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-determinate-bar') {
+        <demo-section
+          heading="Determinate bar"
+          [props]="[
+            { name: 'mode', value: 'bar' },
+            { name: 'progress', value: determinateState().progress },
+          ]">
+          <sd-job-progress [state]="determinateState()" (sdCancel)="cancelDirect()"></sd-job-progress>
+          <button type="button" (click)="advanceDirect()">Tiến thêm 10%</button>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-indeterminate-compact') {
+        <demo-section
+          heading="Indeterminate compact"
+          [props]="[
+            { name: 'mode', value: 'compact' },
+            { name: 'aria-valuenow', value: 'omitted' },
+          ]">
+          <sd-job-progress [state]="{ id: 'queued', status: 'queued', title: 'Đang chờ tài nguyên' }" mode="compact"></sd-job-progress>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-details-va-error') {
+        <demo-section heading="Details và error" [props]="[{ name: 'mode', value: 'details' }]">
+          <sd-job-progress
+            [state]="{
+              id: 'failed',
+              status: 'failed',
+              title: 'Đồng bộ dữ liệu',
+              message: 'Tác vụ giữ lại context để thử lại',
+              error: 'Máy chủ tạm thời không phản hồi',
+            }"
+            mode="details"
+            (sdRetry)="retryCount.update(increment)"></sd-job-progress>
+          <p data-retry-count>Retry events: {{ retryCount() }}</p>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-registry-binding') {
+        <demo-section
+          heading="Registry binding"
+          [props]="[
+            { name: 'taskId', value: 'showcase-component-task' },
+            { name: 'automatic actions', value: 'cancel/retry' },
+          ]">
+          <sd-job-progress taskId="showcase-component-task" mode="details"></sd-job-progress>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    button {
+      margin-top: 8px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class JobProgressDemoComponent {
+  readonly #tasks = inject(SdTaskService);
+  readonly increment = (value: number): number => value + 1;
+  readonly retryCount = signal(0);
+  readonly determinateState = signal<SdTaskState>({
+    id: 'direct-export',
+    status: 'running',
+    progress: 45,
+    title: 'Tạo tệp xuất',
+  });
+  readonly registryTask = this.#tasks.watch({
+    id: 'showcase-component-task',
+    initialState: {
+      id: 'showcase-component-task',
+      status: 'running',
+      progress: 72,
+      title: 'Xử lý nền',
+      message: 'State được đọc trực tiếp từ registry',
+    },
+    source: { mode: 'manual', cancel: () => undefined },
+  });
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.registryTask.destroy());
+  }
+
+  advanceDirect(): void {
+    this.determinateState.update(state => {
+      const progress = Math.min(100, (state.progress ?? 0) + 10);
+      return { ...state, progress, status: progress === 100 ? 'succeeded' : 'running' };
+    });
+  }
+
+  cancelDirect(): void {
+    this.determinateState.update(state => ({ ...state, status: 'cancelled' }));
+  }
+}
+`,
+    scss: `button {
+  margin-top: 8px;
+}`,
+  },
   "components/mini-editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -3060,50 +3482,77 @@ export class OrgChartDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdPreviewImage, SdPreviewPdf } from '@sdcorejs/angular/components/preview';
+import { createPreviewPdfFixture } from './preview-pdf.fixture';
 
 @Component({
   selector: 'app-preview-demo',
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, SdPreviewImage, SdPreviewPdf],
   template: \`
-    <demo-page #demoPage
+    <demo-page
+      #demoPage
       title="Preview"
       description="Bộ xem ảnh và PDF dạng lightbox — tự co theo container, hỗ trợ zoom / rotate / fullscreen / tải xuống. Có thể nhúng inline, trong sd-modal hoặc trong sd-side-drawer.">
-
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-thu-vien-anh') {
-      <demo-section heading="Thư viện ảnh" [props]="[{ name: 'items', value: '[…]' }]">
-        <div class="preview-box">
-          <sd-preview-image [items]="images" [startIndex]="0"></sd-preview-image>
-        </div>
-      </demo-section>
+        <demo-section heading="Thư viện ảnh" [props]="[{ name: 'items', value: '[…]' }]">
+          <div class="preview-box">
+            <sd-preview-image [items]="images" [startIndex]="0"></sd-preview-image>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-anh-don') {
-      <demo-section heading="Ảnh đơn" [props]="[{ name: 'thumbnailPosition', value: 'none' }]">
-        <div class="preview-box">
-          <sd-preview-image [items]="[singleImage]" thumbnailPosition="none"></sd-preview-image>
-        </div>
-      </demo-section>
+        <demo-section heading="Ảnh đơn" [props]="[{ name: 'thumbnailPosition', value: 'none' }]">
+          <div class="preview-box">
+            <sd-preview-image [items]="[singleImage]" thumbnailPosition="none"></sd-preview-image>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-xem-pdf') {
-      <demo-section heading="Xem PDF" [props]="[{ name: 'source', value: 'url' }, { name: 'sidebar', value: 'thumbnails' }]">
-        <div class="preview-box">
-          <sd-preview-pdf [source]="pdfUrl()" sidebar="thumbnails"></sd-preview-pdf>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Xem PDF"
+          [props]="[
+            { name: 'source', value: 'local 3-page fixture' },
+            { name: 'sidebar', value: 'thumbnails' },
+          ]">
+          <div class="preview-box">
+            <sd-preview-pdf [source]="pdfSource()" sidebar="thumbnails"></sd-preview-pdf>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-pdf-nang-cao') {
+        <demo-section
+          heading="PDF nâng cao"
+          [props]="[
+            { name: 'sidebar', value: 'outline' },
+            { name: 'scrollMode', value: 'continuous' },
+            { name: 'fixture', value: '3 pages + PDF Outlines' },
+            { name: 'print', value: 'header action / Ctrl+P' },
+          ]">
+          <div class="preview-box preview-box--advanced-pdf">
+            <sd-preview-pdf [source]="pdfSource()" sidebar="outline" scrollMode="continuous"></sd-preview-pdf>
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
-  styles: [\`
-    .preview-box {
-      width: 100%;
-      height: 480px;
-      border: 1px solid #e6e6e6;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-  \`],
+  styles: [
+    \`
+      .preview-box {
+        width: 100%;
+        height: 480px;
+        border: 1px solid #e6e6e6;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      .preview-box--advanced-pdf {
+        height: 640px;
+      }
+    \`,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PreviewDemoComponent {
@@ -3117,7 +3566,7 @@ export class PreviewDemoComponent {
 
   readonly singleImage = 'https://picsum.photos/seed/single/1920/1080';
 
-  readonly pdfUrl = signal<string>('https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf');
+  readonly pdfSource = signal<Uint8Array>(createPreviewPdfFixture());
 }
 `,
     scss: `.preview-box {
@@ -3126,6 +3575,10 @@ export class PreviewDemoComponent {
   border: 1px solid #e6e6e6;
   border-radius: 6px;
   overflow: hidden;
+}
+
+.preview-box--advanced-pdf {
+  height: 640px;
 }`,
   },
   "components/query-bar": {
@@ -7301,6 +7754,173 @@ export class DatetimeDemoComponent {
 }
 `,
   },
+  "forms/entity-picker": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdQueryField } from '@sdcorejs/angular/components/query-bar';
+import { SdTableColumn } from '@sdcorejs/angular/components/table';
+import {
+  SdEntityPicker,
+  SdEntityPickerDataProvider,
+  SdEntityPickerDetailTemplateDirective,
+  SdEntityPickerRowTemplateDirective,
+  SdEntityPickerSelectedTemplateDirective,
+} from '@sdcorejs/angular/forms/entity-picker';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+interface Employee {
+  id: number;
+  code: string;
+  name: string;
+  department: string;
+  disabled?: boolean;
+}
+
+const EMPLOYEES: Employee[] = Array.from({ length: 48 }, (_, index) => ({
+  id: index + 1,
+  code: \`EMP-\${String(index + 1).padStart(3, '0')}\`,
+  name: ['Nguyễn An', 'Trần Bình', 'Lê Chi', 'Phạm Dũng'][index % 4] + \` \${index + 1}\`,
+  department: ['Kế toán', 'Nhân sự', 'Vận hành'][index % 3],
+  disabled: index === 4,
+}));
+
+@Component({
+  selector: 'app-entity-picker-demo',
+  standalone: true,
+  imports: [
+    DemoPageComponent,
+    DemoSectionComponent,
+    SdEntityPicker,
+    SdEntityPickerRowTemplateDirective,
+    SdEntityPickerSelectedTemplateDirective,
+    SdEntityPickerDetailTemplateDirective,
+  ],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Entity Picker"
+      description="SdEntityPicker compose QueryBar, Table và Modal cho key model type-safe, server paging, hydration và cancellation.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-server-single-select') {
+        <demo-section
+          heading="Server single-select"
+          [props]="[
+            { name: 'model', value: single() ?? 'null' },
+            { name: 'pageSize', value: 10 },
+          ]"
+          note="Tìm kiếm, filter, sort và paging đi qua provider; request cũ nhận AbortSignal khi query mới bắt đầu.">
+          <sd-entity-picker
+            style="max-width: 520px"
+            [provider]="provider"
+            [columns]="columns"
+            [queryFields]="queryFields"
+            valueField="id"
+            displayField="name"
+            [pageSize]="10"
+            [(model)]="single" />
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-multi-select-va-hydration') {
+        <demo-section
+          heading="Multi-select và hydration"
+          [props]="[{ name: 'model', value: multi().join(', ') }]"
+          note="EMP-042 không thuộc page đầu nhưng vẫn được hydrate và hiển thị theo stable key.">
+          <sd-entity-picker
+            style="max-width: 520px"
+            [provider]="provider"
+            [columns]="columns"
+            valueField="id"
+            displayField="name"
+            multiple
+            [(model)]="multi">
+            <ng-template sdEntityPickerSelected let-entities="entities" let-keys="keys">
+              {{ entities.length }} nhân viên · keys {{ keys.join(', ') }}
+            </ng-template>
+          </sd-entity-picker>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-row-va-detail-template') {
+        <demo-section
+          heading="Row và detail template"
+          note="Template nhận entity đã hydrate; table engine và selection engine vẫn do SdTable sở hữu.">
+          <sd-entity-picker style="max-width: 520px" [provider]="provider" valueField="id" displayField="name" [model]="3">
+            <ng-template sdEntityPickerRow let-employee="item">
+              <strong>{{ employee.name }}</strong> · {{ employee.department }}
+            </ng-template>
+            <ng-template sdEntityPickerDetail let-entities="entities"> Selected detail: {{ entities[0]?.code }} </ng-template>
+          </sd-entity-picker>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-error-retry-va-create-action') {
+        <demo-section
+          heading="Error, retry và create action"
+          [props]="[{ name: 'addable', value: true }]"
+          note="Provider lỗi hiển thị DataState retry; create chỉ phát event, không hard-code workflow nghiệp vụ.">
+          <sd-entity-picker
+            style="max-width: 520px"
+            [provider]="errorProvider"
+            valueField="id"
+            displayField="name"
+            addable
+            (sdAdd)="onAdd()" />
+          <div data-add-count>Create actions: {{ addCount() }}</div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class EntityPickerDemoComponent {
+  readonly single = signal<number | null>(2);
+  readonly multi = signal<number[]>([1, 42]);
+  readonly addCount = signal(0);
+  readonly columns: SdTableColumn<Employee>[] = [
+    { field: 'code', title: 'Mã', type: 'string', sortable: true },
+    { field: 'name', title: 'Tên', type: 'string', sortable: true },
+    { field: 'department', title: 'Phòng ban', type: 'string' },
+  ];
+  readonly queryFields: SdQueryField<Employee>[] = [
+    { key: 'name', label: 'Tên', type: 'string' },
+    { key: 'department', label: 'Phòng ban', type: 'string' },
+  ];
+  readonly provider: SdEntityPickerDataProvider<Employee, number> = {
+    load: async request => {
+      await abortableDelay(120, request.signal);
+      const search = (request.query.search ?? '').toLocaleLowerCase();
+      const filtered = EMPLOYEES.filter(
+        item => !search || \`\${item.code} \${item.name} \${item.department}\`.toLocaleLowerCase().includes(search)
+      );
+      const start = request.pageIndex * request.pageSize;
+      return { items: filtered.slice(start, start + request.pageSize), total: filtered.length };
+    },
+    hydrate: keys => EMPLOYEES.filter(item => keys.includes(item.id)),
+  };
+  readonly errorProvider: SdEntityPickerDataProvider<Employee, number> = {
+    load: () => Promise.reject(new Error('Không thể tải danh sách nhân viên')),
+    hydrate: keys => EMPLOYEES.filter(item => keys.includes(item.id)),
+  };
+
+  onAdd(): void {
+    this.addCount.update(value => value + 1);
+  }
+}
+
+function abortableDelay(duration: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, duration);
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        reject(new DOMException('Aborted', 'AbortError'));
+      },
+      { once: true }
+    );
+  });
+}
+`,
+  },
   "forms/inline-text": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -7451,88 +8071,172 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, ReactiveFormsModule, SdInput],
   template: \`
-    <demo-page #demoPage title="Input" description="sd-input – ô nhập liệu một dòng. Hỗ trợ helper text, kiểu (text/number/password/email), trạng thái disabled / readonly / viewed và validator chuẩn.">
+    <demo-page
+      #demoPage
+      title="Input"
+      description="sd-input – ô nhập liệu một dòng. Hỗ trợ helper text, kiểu (text/number/password/email), trạng thái disabled / readonly / viewed và validator chuẩn.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
-      <demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
-        <div style="width: 320px">
-          <sd-input label="Họ và tên" placeholder="Nhập họ tên..." helperText="Tên đầy đủ theo CMND" [(model)]="basic" [form]="form"></sd-input>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Cơ bản"
+          [props]="[{ name: '[(model)]', value: 'two-way' }]"
+          note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
+          <div style="width: 320px">
+            <sd-input
+              label="Họ và tên"
+              placeholder="Nhập họ tên..."
+              helperText="Tên đầy đủ theo CMND"
+              [(model)]="basic"
+              [form]="form"></sd-input>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validator') {
-      <demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }, { name: 'type', value: 'email' }, { name: 'minlength', value: '6' }]" note="Bấm Kiểm tra để hiện lỗi inline.">
-        <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
-          <sd-input label="required + type=email" placeholder="vd: a@b.com" type="email" [(model)]="email" [form]="formValid" required></sd-input>
-          <sd-input label="required + minlength=6" type="password" [(model)]="password" [form]="formValid" required [minlength]="6"></sd-input>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="check()">Kiểm tra</button>
-            <button type="button" (click)="reset()">Đặt lại</button>
+        <demo-section
+          heading="Validator"
+          [props]="[
+            { name: 'required', value: 'true' },
+            { name: 'type', value: 'email' },
+            { name: 'minlength', value: '6' },
+          ]"
+          note="Bấm Kiểm tra để hiện lỗi inline.">
+          <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
+            <sd-input
+              label="required + type=email"
+              placeholder="vd: a@b.com"
+              type="email"
+              [(model)]="email"
+              [form]="formValid"
+              required></sd-input>
+            <sd-input
+              label="required + minlength=6"
+              type="password"
+              [(model)]="password"
+              [form]="formValid"
+              required
+              [minlength]="6"></sd-input>
+            <div style="display:flex; gap:8px">
+              <button type="button" (click)="check()">Kiểm tra</button>
+              <button type="button" (click)="reset()">Đặt lại</button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cac-trang-thai-bao-loi-inline') {
-      <demo-section
-        heading="Các trạng thái báo lỗi (inline)"
-        [props]="[{ name: 'required', value: 'true' }, { name: 'minlength', value: '6' }, { name: 'pattern', value: 'regex' }, { name: '[validator]', value: 'fn' }, { name: 'inlineError', value: 'text' }]"
-        note="Mỗi ô minh hoạ một loại lỗi. Bấm Hiện lỗi để mark touched — lỗi xuất hiện dưới ô (đỏ). Ô [validator] cấm chữ 'admin'; gõ admin để thấy lỗi.">
-        <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
-          <sd-input label="required (để trống)" [(model)]="errRequired" [form]="formErr" required></sd-input>
-          <sd-input label="minlength = 6" [(model)]="errMinLen" [form]="formErr" [minlength]="6"></sd-input>
-          <sd-input label="pattern = 10 chữ số" placeholder="vd: 0987654321" [(model)]="errPattern" [form]="formErr" pattern="^\\\\d{10}$" patternErrorMessage="Phải gồm đúng 10 chữ số"></sd-input>
-          <sd-input label="[validator] (cấm 'admin')" [(model)]="errValidator" [form]="formErr" [validator]="forbidAdmin"></sd-input>
-          <sd-input label="inlineError (lỗi do cha truyền)" [(model)]="errInline" [form]="formErr" [inlineError]="serverError()"></sd-input>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="showErr()">Hiện lỗi</button>
-            <button type="button" (click)="resetErr()">Đặt lại</button>
+        <demo-section
+          heading="Các trạng thái báo lỗi (inline)"
+          [props]="[
+            { name: 'required', value: 'true' },
+            { name: 'minlength', value: '6' },
+            { name: 'pattern', value: 'regex' },
+            { name: '[validator]', value: 'fn' },
+            { name: 'inlineError', value: 'text' },
+          ]"
+          note="Mỗi ô minh hoạ một loại lỗi. Bấm Hiện lỗi để mark touched — lỗi xuất hiện dưới ô (đỏ). Ô [validator] cấm chữ 'admin'; gõ admin để thấy lỗi.">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+            <sd-input label="required (để trống)" [(model)]="errRequired" [form]="formErr" required></sd-input>
+            <sd-input label="minlength = 6" [(model)]="errMinLen" [form]="formErr" [minlength]="6"></sd-input>
+            <sd-input
+              label="pattern = 10 chữ số"
+              placeholder="vd: 0987654321"
+              [(model)]="errPattern"
+              [form]="formErr"
+              pattern="^\\\\d{10}$"
+              patternErrorMessage="Phải gồm đúng 10 chữ số"></sd-input>
+            <sd-input label="[validator] (cấm 'admin')" [(model)]="errValidator" [form]="formErr" [validator]="forbidAdmin"></sd-input>
+            <sd-input
+              label="inlineError (lỗi do cha truyền)"
+              [(model)]="errInline"
+              [form]="formErr"
+              [inlineError]="serverError()"></sd-input>
+            <div style="display:flex; gap:8px">
+              <button type="button" (click)="showErr()">Hiện lỗi</button>
+              <button type="button" (click)="resetErr()">Đặt lại</button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-bao-loi-dang-icon-hideinlineerror') {
-      <demo-section
-        heading="Báo lỗi dạng icon (hideInlineError)"
-        [props]="[{ name: 'hideInlineError', value: 'true' }, { name: '[validator]', value: 'fn' }]"
-        note="Khi hideInlineError=true: không có dòng lỗi dưới ô — thay vào đó icon ⚠ đỏ nằm sát mép phải, message hiện qua tooltip khi hover. Các ô đã có giá trị nên nút xoá (×) cũng hiện cạnh icon lỗi (xoá nằm bên trái, icon lỗi sát mép phải).">
-        <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
-          <sd-input label="minlength = 6" [(model)]="iconMinLen" [form]="formIcon" [minlength]="6" hideInlineError></sd-input>
-          <sd-input label="pattern = 10 chữ số" [(model)]="iconPattern" [form]="formIcon" pattern="^\\\\d{10}$" patternErrorMessage="Phải gồm đúng 10 chữ số" hideInlineError></sd-input>
-          <sd-input label="[validator] (cấm 'admin')" [(model)]="iconValidator" [form]="formIcon" [validator]="forbidAdmin" hideInlineError></sd-input>
-          <div style="display:flex; gap:8px">
-            <button type="button" (click)="showIcon()">Hiện lỗi</button>
-            <button type="button" (click)="resetIcon()">Đặt lại</button>
+        <demo-section
+          heading="Báo lỗi dạng icon (hideInlineError)"
+          [props]="[
+            { name: 'hideInlineError', value: 'true' },
+            { name: '[validator]', value: 'fn' },
+          ]"
+          note="Khi hideInlineError=true: không có dòng lỗi dưới ô — thay vào đó icon ⚠ đỏ nằm sát mép phải, message hiện qua tooltip khi hover. Các ô đã có giá trị nên nút xoá (×) cũng hiện cạnh icon lỗi (xoá nằm bên trái, icon lỗi sát mép phải).">
+          <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+            <sd-input label="minlength = 6" [(model)]="iconMinLen" [form]="formIcon" [minlength]="6" hideInlineError></sd-input>
+            <sd-input
+              label="pattern = 10 chữ số"
+              [(model)]="iconPattern"
+              [form]="formIcon"
+              pattern="^\\\\d{10}$"
+              patternErrorMessage="Phải gồm đúng 10 chữ số"
+              hideInlineError></sd-input>
+            <sd-input
+              label="[validator] (cấm 'admin')"
+              [(model)]="iconValidator"
+              [form]="formIcon"
+              [validator]="forbidAdmin"
+              hideInlineError></sd-input>
+            <div style="display:flex; gap:8px">
+              <button type="button" (click)="showIcon()">Hiện lỗi</button>
+              <button type="button" (click)="resetIcon()">Đặt lại</button>
+            </div>
           </div>
-        </div>
-      </demo-section>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
-      <demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Ba trạng thái không cho chỉnh sửa.">
-        <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-          <sd-input style="width: 220px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input>
-          <sd-input style="width: 220px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-input>
-          <sd-input style="width: 220px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Trạng thái"
+          [props]="[
+            { name: 'disabled', value: 'true' },
+            { name: 'readonly', value: 'true' },
+            { name: 'viewed', value: 'true' },
+          ]"
+          note="Ba trạng thái không cho chỉnh sửa.">
+          <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+            <sd-input style="width: 220px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input>
+            <sd-input style="width: 220px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-input>
+            <sd-input style="width: 220px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-kich-thuoc') {
-      <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
-        <div style="width: 320px">
-          <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
-        </div>
-      </demo-section>
+        <demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
+          <div style="width: 320px">
+            <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
+          </div>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chinh-sua-noi-tuyen') {
-      <demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
-        <div style="width: 260px; font-size:13px; color:#555">
-          Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
-        </div>
-      </demo-section>
+        <demo-section
+          heading="Chỉnh sửa nội tuyến"
+          [props]="[{ name: 'viewed', value: 'inline' }]"
+          note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
+          <div style="width: 260px; font-size:13px; color:#555">
+            Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-input-mask-raw-model-display-value') {
+        <demo-section
+          heading="Input mask: raw model / display value"
+          [props]="[
+            { name: 'mask', value: 'VN_PHONE' },
+            { name: 'model', value: maskedPhone() ?? 'null' },
+          ]"
+          note="Màn hình hiển thị khoảng cách, nhưng model, sdChange và FormGroup chỉ nhận chuỗi số raw.">
+          <div style="width: 320px">
+            <sd-input label="Điện thoại" mask="VN_PHONE" [(model)]="maskedPhone" [form]="form"></sd-input>
+          </div>
+        </demo-section>
       }
     </demo-page>
   \`,
@@ -7551,6 +8255,7 @@ export class InputDemoComponent {
   lockedB = signal<string | null>('Chỉ đọc');
   lockedC = signal<string | null>('Chế độ xem');
   codeSm = signal<string | null>(null);
+  maskedPhone = signal<string | null>('0901234567');
 
   // Error-state demo (inline)
   errRequired = signal<string | null>(null);
@@ -7571,13 +8276,20 @@ export class InputDemoComponent {
   forbidAdmin = async (value: any): Promise<string> =>
     (value ?? '').toString().trim().toLowerCase() === 'admin' ? 'Không được dùng "admin"' : '';
 
-  check() { this.formValid.markAllAsTouched(); }
-  reset() { this.formValid.reset(); this.formValid.markAsUntouched(); }
+  check() {
+    this.formValid.markAllAsTouched();
+  }
+  reset() {
+    this.formValid.reset();
+    this.formValid.markAsUntouched();
+  }
 
   // why: "Đặt lại" KHÔNG dùng fg.reset() — reset() set control về null (rỗng) → minlength/pattern/
   // validator không bắt lỗi trên giá trị rỗng → bấm "Hiện lỗi" lần nữa không thấy lỗi. Thay vào đó
   // gieo lại đúng các giá trị sai mẫu (qua [(model)] signal) rồi markAsUntouched → demo lặp lại được.
-  showErr() { this.formErr.markAllAsTouched(); }
+  showErr() {
+    this.formErr.markAllAsTouched();
+  }
   resetErr() {
     this.errRequired.set(null);
     this.errMinLen.set('abc');
@@ -7586,7 +8298,9 @@ export class InputDemoComponent {
     this.errInline.set('user@corp.vn');
     this.formErr.markAsUntouched();
   }
-  showIcon() { this.formIcon.markAllAsTouched(); }
+  showIcon() {
+    this.formIcon.markAllAsTouched();
+  }
   resetIcon() {
     this.iconMinLen.set('abc');
     this.iconPattern.set('12ab');
@@ -8727,6 +9441,770 @@ export class TextareaDemoComponent {
 }
 `,
   },
+  "forms/time": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { SdTime } from '@sdcorejs/angular/forms/time';
+
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-time-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, ReactiveFormsModule, SdTime],
+  template: \`
+    <demo-page #demoPage title="Time" description="sd-time – nhập hoặc chọn giờ thuần theo mô hình HH:mm, không mang ngày hay múi giờ.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
+        <demo-section
+          heading="Cơ bản"
+          [props]="[{ name: '[(model)]', value: basic() ?? 'null' }]"
+          note="Có thể gõ 9:05 để nhận model chuẩn hóa 09:05, hoặc mở bộ chọn giờ.">
+          <div style="width: 320px">
+            <sd-time [form]="form" name="basic" label="Giờ bắt đầu" clearable [(model)]="basic"></sd-time>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gioi-han-va-buoc-phut') {
+        <demo-section
+          heading="Giới hạn và bước phút"
+          [props]="[
+            { name: 'min', value: '08:00' },
+            { name: 'max', value: '18:00' },
+            { name: 'step', value: '15' },
+          ]"
+          note="Min/max bao gồm biên; phím mũi tên và bộ chọn cùng dùng bước 15 phút.">
+          <div style="width: 320px">
+            <sd-time [form]="form" name="bounded" label="Ca làm việc" min="08:00" max="18:00" [step]="15" [(model)]="bounded"> </sd-time>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-validation') {
+        <demo-section
+          heading="Validation"
+          [props]="[{ name: 'required', value: 'true' }]"
+          note="Text sai như 25:10 được giữ lại để sửa, control invalid và model hợp lệ trước đó không bị ghi đè.">
+          <div style="width: 320px">
+            <sd-time [form]="validationForm" name="requiredTime" label="Giờ bắt buộc" required [(model)]="requiredTime"></sd-time>
+          </div>
+          <button type="button" (click)="validationForm.markAllAsTouched()">Hiện lỗi</button>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
+        <demo-section
+          heading="Trạng thái"
+          [props]="[{ name: 'disabled / readonly / viewed', value: 'true' }]"
+          note="Cùng một model time-only trong các trạng thái không chỉnh sửa.">
+          <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+            <sd-time style="width:220px" label="Disabled" [model]="'08:30'" disabled></sd-time>
+            <sd-time style="width:220px" label="Readonly" [model]="'12:00'" readonly></sd-time>
+            <sd-time style="width:220px" label="Viewed" [model]="'17:30'" viewed></sd-time>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimeDemoComponent {
+  readonly form = new FormGroup({});
+  readonly validationForm = new FormGroup({});
+  readonly basic = signal<string | null>('09:05');
+  readonly bounded = signal<string | null>('08:30');
+  readonly requiredTime = signal<string | null>(null);
+}
+`,
+  },
+  "forms/time-range": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { SdTimeRange, SdTimeRangeValue } from '@sdcorejs/angular/forms/time-range';
+
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-time-range-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, ReactiveFormsModule, SdTimeRange],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Time Range"
+      description="sd-time-range – khoảng giờ thuần { from, to } với validation tổng hợp và endpoint độc lập.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-co-ban') {
+        <demo-section
+          heading="Cơ bản"
+          [props]="[{ name: '[(model)]', value: 'SdTimeRangeValue' }]"
+          note="Hai ô cùng phát một model { from, to } đã chuẩn hóa HH:mm.">
+          <div style="width: 520px; max-width:100%">
+            <sd-time-range [form]="form" name="workingHours" label="Giờ làm việc" clearable [(model)]="workingHours"></sd-time-range>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gioi-han-va-thu-tu') {
+        <demo-section
+          heading="Giới hạn và thứ tự"
+          [props]="[
+            { name: 'min', value: '08:00' },
+            { name: 'max', value: '18:00' },
+            { name: 'step', value: '15' },
+          ]"
+          note="Mỗi đầu kiểm tra min/max/step; giờ bắt đầu sau giờ kết thúc tạo lỗi range.">
+          <div style="width: 520px; max-width:100%">
+            <sd-time-range
+              [form]="form"
+              name="boundedHours"
+              label="Khung phục vụ"
+              min="08:00"
+              max="18:00"
+              [step]="15"
+              [(model)]="boundedHours">
+            </sd-time-range>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-khoang-mo') {
+        <demo-section
+          heading="Khoảng mở"
+          [props]="[{ name: 'allowOpenEnded', value: 'true' }]"
+          note="Cho phép chỉ có mốc bắt đầu hoặc kết thúc khi field không required.">
+          <div style="width: 520px; max-width:100%">
+            <sd-time-range [form]="form" name="openHours" label="Áp dụng từ" allowOpenEnded [(model)]="openHours"> </sd-time-range>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai') {
+        <demo-section
+          heading="Trạng thái"
+          [props]="[{ name: 'disabled / readonly / viewed', value: 'true' }]"
+          note="Viewed hiển thị model time-only mà không khởi tạo Date ở API công khai.">
+          <div style="display:flex; gap:16px; flex-direction:column; max-width:520px">
+            <sd-time-range label="Disabled" [model]="workingHours()" disabled></sd-time-range>
+            <sd-time-range label="Readonly" [model]="workingHours()" readonly></sd-time-range>
+            <sd-time-range label="Viewed" [model]="workingHours()" viewed></sd-time-range>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TimeRangeDemoComponent {
+  readonly form = new FormGroup({});
+  readonly workingHours = signal<SdTimeRangeValue | null>({ from: '08:30', to: '17:30' });
+  readonly boundedHours = signal<SdTimeRangeValue | null>({ from: '08:15', to: '17:45' });
+  readonly openHours = signal<SdTimeRangeValue | null>({ from: '09:00', to: null });
+}
+`,
+  },
+  "forms/tree-select": {
+    typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { SdTreeItemLazy, SdTreeItemStatic } from '@sdcorejs/angular/components/tree';
+import { SdTreeSelect, SdTreeSelectNodeTemplateDirective } from '@sdcorejs/angular/forms/tree-select';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+interface Department {
+  id: number;
+  name: string;
+  locked?: boolean;
+}
+
+const FINANCE: Department = { id: 1, name: 'Tài chính' };
+const PAYABLE: Department = { id: 2, name: 'Công nợ phải trả' };
+const RECEIVABLE: Department = { id: 3, name: 'Công nợ phải thu' };
+const HR: Department = { id: 4, name: 'Nhân sự', locked: true };
+
+const STATIC_ITEMS: SdTreeItemStatic<Department>[] = [
+  {
+    id: 'finance',
+    label: FINANCE.name,
+    data: FINANCE,
+    children: [
+      { id: 'payable', label: PAYABLE.name, data: PAYABLE },
+      { id: 'receivable', label: RECEIVABLE.name, data: RECEIVABLE },
+    ],
+  },
+  { id: 'hr', label: HR.name, data: HR },
+];
+
+@Component({
+  selector: 'app-tree-select-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdTreeSelect, SdTreeSelectNodeTemplateDirective],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Tree Select"
+      description="SdTreeSelect giữ model theo stable key và compose SdTree static/lazy với keyboard, cascade và indeterminate semantics.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-static-single-select') {
+        <demo-section heading="Static single-select" [props]="[{ name: 'model', value: single() ?? 'null' }]">
+          <sd-tree-select style="max-width: 520px" [items]="staticItems" valueField="id" displayField="name" [(model)]="single" />
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-multiple-cascade') {
+        <demo-section
+          heading="Multiple cascade"
+          [props]="[
+            { name: 'cascade', value: 'descendants' },
+            { name: 'model', value: multiple().join(', ') },
+          ]"
+          note="Chọn parent áp dụng cho descendants đã load; partial selection hiển thị indeterminate, node locked không tương tác.">
+          <sd-tree-select
+            style="max-width: 520px"
+            [items]="staticItems"
+            valueField="id"
+            displayField="name"
+            multiple
+            cascade="descendants"
+            [disabledNode]="disabledDepartment"
+            [(model)]="multiple" />
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-lazy-tree') {
+        <demo-section heading="Lazy tree" note="Children chỉ tải khi mở branch; lỗi được giữ ở node và có retry riêng.">
+          <sd-tree-select
+            style="max-width: 520px"
+            [items]="lazyItems"
+            [tree]="lazyTree"
+            valueField="id"
+            displayField="name"
+            multiple
+            [model]="[3]">
+            <ng-template sdTreeSelectNode let-item let-loading="loading">
+              {{ item.name }}
+              @if (loading) {
+                · loading
+              }
+            </ng-template>
+          </sd-tree-select>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-unloaded-key-va-viewed') {
+        <demo-section
+          heading="Unloaded key và viewed"
+          [props]="[{ name: 'model', value: '[99]' }]"
+          note="Key chưa load không bị xóa bởi filter/page/lazy state; viewed mode hiển thị fallback key ổn định.">
+          <sd-tree-select
+            style="max-width: 520px"
+            [items]="lazyItems"
+            [tree]="lazyTree"
+            valueField="id"
+            displayField="name"
+            multiple
+            viewed
+            [model]="[99]" />
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TreeSelectDemoComponent {
+  readonly staticItems = STATIC_ITEMS;
+  readonly single = signal<number | null>(2);
+  readonly multiple = signal<number[]>([2]);
+  readonly lazyItems: SdTreeItemLazy<Department>[] = [{ id: 'finance', label: FINANCE.name, data: FINANCE, hasChildren: true }];
+  readonly lazyTree = {
+    loadType: 'lazy' as const,
+    onExpandChildren: async (): Promise<SdTreeItemLazy<Department>[]> => {
+      await Promise.resolve();
+      return [
+        { id: 'payable', label: PAYABLE.name, data: PAYABLE, hasChildren: false },
+        { id: 'receivable', label: RECEIVABLE.name, data: RECEIVABLE, hasChildren: false },
+      ];
+    },
+  };
+  readonly disabledDepartment = (item: Department): boolean => !!item.locked;
+}
+`,
+  },
+  "modules/layout": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
+import {
+  ISdLayoutConfiguration,
+  ISdSidebarConfiguration,
+  MenuPipe,
+  SD_LAYOUT_CONFIGURATION,
+  SD_LAYOUT_VIEWPORT,
+  SdLayoutComponent,
+  SdLayoutMenu,
+  SdLayoutNavigationStateService,
+  SdLayoutResponsiveService,
+  SdLayoutService,
+  SdLayoutStorageService,
+  SdLayoutViewport,
+} from '@sdcorejs/angular/modules/layout';
+import { SD_PERMISSION_CONFIGURATION, SdPermissionService } from '@sdcorejs/angular/modules/permission';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+type LayoutDemoVersion = 1 | 2 | 3;
+type LayoutDemoViewportMode = 'desktop' | 'mobile';
+
+const SIDEBAR_CONFIGURATIONS: Readonly<Record<LayoutDemoVersion, ISdSidebarConfiguration>> = {
+  1: {
+    version: 1,
+    defaultTitle: 'Operations Portal',
+    pin: { enabled: true },
+  },
+  2: {
+    version: 2,
+    interaction: 'click',
+    primaryMenuIds: ['workspace', 'insights', 'settings'],
+    pin: { enabled: true },
+  },
+  3: {
+    version: 3,
+    defaultCollapsed: false,
+    recent: { enabled: true, maxItems: 5 },
+    pin: { enabled: true },
+  },
+};
+
+const DEMO_CONFIGURATION: ISdLayoutConfiguration = {
+  mobileBreakpoint: 900,
+  sidebar: SIDEBAR_CONFIGURATIONS[1],
+  userInfo: {
+    fullName: 'Nguyen Minh Anh',
+    username: 'minhanh',
+    email: 'minhanh@example.com',
+  },
+  signout: () => undefined,
+};
+
+class LayoutDemoViewport implements SdLayoutViewport {
+  innerWidth = 1280;
+  readonly #resizeListeners = new Set<EventListenerOrEventListenerObject>();
+
+  addEventListener(type: 'resize', listener: EventListenerOrEventListenerObject): void {
+    if (type === 'resize') this.#resizeListeners.add(listener);
+  }
+
+  removeEventListener(type: 'resize', listener: EventListenerOrEventListenerObject): void {
+    if (type === 'resize') this.#resizeListeners.delete(listener);
+  }
+
+  resizeTo(width: number): void {
+    this.innerWidth = width;
+    const event = new Event('resize');
+    for (const listener of this.#resizeListeners) {
+      if (typeof listener === 'function') listener(event);
+      else listener.handleEvent(event);
+    }
+  }
+}
+
+@Component({
+  selector: 'app-layout-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdLayoutComponent],
+  providers: [
+    LayoutDemoViewport,
+    SdViewportService,
+    MenuPipe,
+    SdPermissionService,
+    SdLayoutService,
+    SdLayoutResponsiveService,
+    SdLayoutStorageService,
+    SdLayoutNavigationStateService,
+    { provide: I18nService, useValue: { t: (key: string) => key } },
+    { provide: SD_PERMISSION_CONFIGURATION, useValue: { loadPermissions: () => [] } },
+    { provide: SD_LAYOUT_CONFIGURATION, useValue: DEMO_CONFIGURATION },
+    { provide: SD_LAYOUT_VIEWPORT, useExisting: LayoutDemoViewport },
+  ],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Layout"
+      description="Compare the existing sidebar with two responsive navigation variants using the same menu fixture.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sidebar-v1-v2-v3') {
+        <demo-section
+          heading="Sidebar V1, V2 & V3"
+          note="Switch versions and viewport widths without reloading the Showcase page."
+          [props]="[
+            { name: 'version', value: '1 / 2 / 3' },
+            { name: 'mobileBreakpoint', value: '900' },
+            { name: 'viewport', value: 'desktop / mobile' },
+          ]">
+          <div class="layout-demo__controls" aria-label="Layout preview controls">
+            <fieldset>
+              <legend>Sidebar version</legend>
+              @for (option of versionOptions; track option.value) {
+                <button
+                  type="button"
+                  [attr.data-layout-version]="option.value"
+                  [attr.aria-pressed]="selectedVersion() === option.value"
+                  (click)="selectVersion(option.value)">
+                  {{ option.label }}
+                </button>
+              }
+            </fieldset>
+            <fieldset>
+              <legend>Preview viewport</legend>
+              @for (option of viewportOptions; track option.value) {
+                <button
+                  type="button"
+                  [attr.data-layout-viewport]="option.value"
+                  [attr.aria-pressed]="selectedViewport() === option.value"
+                  (click)="selectViewport(option.value)">
+                  {{ option.label }}
+                </button>
+              }
+            </fieldset>
+          </div>
+
+          <div
+            class="layout-demo__preview"
+            [class.layout-demo__preview--mobile]="selectedViewport() === 'mobile'"
+            [attr.data-active-layout-version]="selectedVersion()"
+            [attr.data-active-layout-viewport]="selectedViewport()">
+            <sd-layout [menus]="menus">
+              <main class="layout-demo__content">
+                <span class="layout-demo__eyebrow">Live fixture</span>
+                <h4>Operations overview</h4>
+                <p>The page content stays mounted while the responsive sidebar implementation changes.</p>
+                <div class="layout-demo__metrics" aria-label="Example summary">
+                  <span><strong>24</strong> open tasks</span>
+                  <span><strong>8</strong> approvals</span>
+                  <span><strong>5</strong> reports</span>
+                </div>
+              </main>
+            </sd-layout>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: [
+    \`
+      :host {
+        display: block;
+        width: 100%;
+      }
+
+      .layout-demo__controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        width: 100%;
+      }
+
+      fieldset {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        min-width: 0;
+        margin: 0;
+        padding: 8px;
+        border: 1px solid var(--docs-border-color, #e6e6e6);
+        border-radius: 8px;
+      }
+
+      legend {
+        padding: 0 4px;
+        color: var(--docs-text-secondary, #4a4a4a);
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      button {
+        min-height: 36px;
+        padding: 6px 12px;
+        border: 1px solid var(--docs-border-color, #d1d5db);
+        border-radius: 6px;
+        background: var(--docs-surface-raised, #ffffff);
+        color: var(--docs-text, #1f2937);
+        cursor: pointer;
+      }
+
+      button[aria-pressed='true'] {
+        border-color: var(--sd-primary, #005cbb);
+        background: var(--sd-primary, #005cbb);
+        color: #ffffff;
+      }
+
+      button:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--sd-primary, #005cbb) 35%, transparent);
+        outline-offset: 2px;
+      }
+
+      /* why: transform establishes a containing block so fixed production sidebars remain inside the live documentation fixture. */
+      .layout-demo__preview {
+        position: relative;
+        width: min(100%, 1120px);
+        height: 620px;
+        margin-top: 16px;
+        overflow: hidden;
+        border: 1px solid var(--docs-border-color, #d1d5db);
+        border-radius: 12px;
+        background: var(--docs-surface-muted, #f3f5f8);
+        box-shadow: 0 16px 40px rgb(15 23 42 / 12%);
+        transform: translateZ(0);
+        transition: width 180ms ease;
+      }
+
+      .layout-demo__preview--mobile {
+        width: min(100%, 390px);
+      }
+
+      .layout-demo__content {
+        min-height: 100%;
+        padding: 48px;
+        background: linear-gradient(135deg, rgb(255 255 255 / 96%), rgb(238 245 255 / 96%)), var(--docs-surface-raised, #ffffff);
+      }
+
+      .layout-demo__eyebrow {
+        color: var(--sd-primary, #005cbb);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      h4 {
+        margin: 8px 0;
+        color: var(--docs-text, #1f2937);
+        font-size: 24px;
+      }
+
+      p {
+        max-width: 520px;
+        margin: 0;
+        color: var(--docs-text-secondary, #4a4a4a);
+        line-height: 1.6;
+      }
+
+      .layout-demo__metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .layout-demo__metrics span {
+        display: grid;
+        gap: 4px;
+        min-width: 112px;
+        padding: 14px;
+        border: 1px solid rgb(148 163 184 / 35%);
+        border-radius: 10px;
+        background: rgb(255 255 255 / 78%);
+        color: var(--docs-text-secondary, #4a4a4a);
+        font-size: 12px;
+      }
+
+      .layout-demo__metrics strong {
+        color: var(--docs-text, #1f2937);
+        font-size: 22px;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .layout-demo__preview {
+          transition: none;
+        }
+      }
+    \`,
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class LayoutDemoComponent {
+  readonly #layoutService = inject(SdLayoutService);
+  readonly #viewport = inject(LayoutDemoViewport);
+
+  readonly selectedVersion = signal<LayoutDemoVersion>(1);
+  readonly selectedViewport = signal<LayoutDemoViewportMode>('desktop');
+  readonly versionOptions = [
+    { value: 1, label: 'V1 - Classic' },
+    { value: 2, label: 'V2 - Rail' },
+    { value: 3, label: 'V3 - Collapsible' },
+  ] as const;
+  readonly viewportOptions = [
+    { value: 'desktop', label: 'Desktop' },
+    { value: 'mobile', label: 'Mobile' },
+  ] as const;
+  readonly menus: SdLayoutMenu[] = [
+    {
+      id: 'workspace',
+      title: 'Workspace',
+      icon: 'space_dashboard',
+      children: [
+        { id: 'overview', title: 'Overview', path: '/layout-demo/overview', icon: 'dashboard', permission: true },
+        { id: 'tasks', title: 'Tasks', path: '/layout-demo/tasks', icon: 'task_alt', permission: true },
+      ],
+    },
+    {
+      id: 'insights',
+      title: 'Insights',
+      icon: 'monitoring',
+      children: [
+        { id: 'reports', title: 'Reports', path: '/layout-demo/reports', icon: 'bar_chart', permission: true },
+        { id: 'activity', title: 'Activity', path: '/layout-demo/activity', icon: 'timeline', permission: true },
+      ],
+    },
+    {
+      id: 'settings',
+      title: 'Settings',
+      icon: 'settings',
+      children: [
+        { id: 'profile', title: 'Profile', path: '/layout-demo/profile', icon: 'person', permission: true },
+        { id: 'access', title: 'Access control', path: '/layout-demo/access', icon: 'admin_panel_settings', permission: true },
+      ],
+    },
+    {
+      id: 'support',
+      title: 'Support',
+      icon: 'help',
+      children: [{ id: 'help-center', title: 'Help center', path: '/layout-demo/help', icon: 'support', permission: true }],
+    },
+  ];
+
+  selectVersion(version: LayoutDemoVersion): void {
+    this.selectedVersion.set(version);
+    this.#layoutService.sidebar.set(SIDEBAR_CONFIGURATIONS[version]);
+  }
+
+  selectViewport(viewport: LayoutDemoViewportMode): void {
+    this.selectedViewport.set(viewport);
+    this.#viewport.resizeTo(viewport === 'mobile' ? 390 : 1280);
+  }
+}
+`,
+    scss: `:host {
+  display: block;
+  width: 100%;
+}
+
+.layout-demo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+}
+
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid var(--docs-border-color, #e6e6e6);
+  border-radius: 8px;
+}
+
+legend {
+  padding: 0 4px;
+  color: var(--docs-text-secondary, #4a4a4a);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid var(--docs-border-color, #d1d5db);
+  border-radius: 6px;
+  background: var(--docs-surface-raised, #ffffff);
+  color: var(--docs-text, #1f2937);
+  cursor: pointer;
+}
+
+button[aria-pressed='true'] {
+  border-color: var(--sd-primary, #005cbb);
+  background: var(--sd-primary, #005cbb);
+  color: #ffffff;
+}
+
+button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--sd-primary, #005cbb) 35%, transparent);
+  outline-offset: 2px;
+}
+
+/* why: transform establishes a containing block so fixed production sidebars remain inside the live documentation fixture. */
+.layout-demo__preview {
+  position: relative;
+  width: min(100%, 1120px);
+  height: 620px;
+  margin-top: 16px;
+  overflow: hidden;
+  border: 1px solid var(--docs-border-color, #d1d5db);
+  border-radius: 12px;
+  background: var(--docs-surface-muted, #f3f5f8);
+  box-shadow: 0 16px 40px rgb(15 23 42 / 12%);
+  transform: translateZ(0);
+  transition: width 180ms ease;
+}
+
+.layout-demo__preview--mobile {
+  width: min(100%, 390px);
+}
+
+.layout-demo__content {
+  min-height: 100%;
+  padding: 48px;
+  background: linear-gradient(135deg, rgb(255 255 255 / 96%), rgb(238 245 255 / 96%)), var(--docs-surface-raised, #ffffff);
+}
+
+.layout-demo__eyebrow {
+  color: var(--sd-primary, #005cbb);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h4 {
+  margin: 8px 0;
+  color: var(--docs-text, #1f2937);
+  font-size: 24px;
+}
+
+p {
+  max-width: 520px;
+  margin: 0;
+  color: var(--docs-text-secondary, #4a4a4a);
+  line-height: 1.6;
+}
+
+.layout-demo__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.layout-demo__metrics span {
+  display: grid;
+  gap: 4px;
+  min-width: 112px;
+  padding: 14px;
+  border: 1px solid rgb(148 163 184 / 35%);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 78%);
+  color: var(--docs-text-secondary, #4a4a4a);
+  font-size: 12px;
+}
+
+.layout-demo__metrics strong {
+  color: var(--docs-text, #1f2937);
+  font-size: 22px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-demo__preview {
+    transition: none;
+  }
+}`,
+  },
   "services/confirm": {
     typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -9096,10 +10574,10 @@ export class ExcelDemoComponent {
 `,
   },
   "services/loading": {
-    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+    typescript: `import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdLoadingService } from '@sdcorejs/angular/services/loading';
+import { SdLoadingRef, SdLoadingService } from '@sdcorejs/angular/services/loading';
 
 @Component({
   selector: 'app-loading-demo',
@@ -9109,12 +10587,12 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
     <demo-page
       #demoPage
       title="Loading"
-      description="SdLoadingService – phủ spinner lên phần tử khớp CSS selector. start/stop/isLoading dùng querySelectorAll nên mọi host trùng selector (ví dụ nhiều tab router) đều nhận overlay.">
+      description="SdLoadingService – handle/ref-counted overlay cho mọi phần tử khớp selector, có run() scope, ARIA busy, SSR no-op và teardown xác định.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-loading-toan-trang') {
         <demo-section
           heading="Loading toàn trang"
           [props]="[{ name: 'start()', value: 'body' }]"
-          note="start('body') → setTimeout 2000ms → stop('body').">
+          note="run() luôn đóng loading ref trong finally và giữ nguyên result/error của task.">
           <button mat-flat-button color="primary" [disabled]="busy()" (click)="onFullPage()">Hiển thị loading toàn trang</button>
         </demo-section>
       }
@@ -9123,7 +10601,7 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
         <demo-section
           heading="Loading ô đích"
           [props]="[{ name: 'start()', value: '#demo-target' }]"
-          note="start('#demo-target') chỉ phủ phần tử có id='demo-target'.">
+          note="start('#demo-target') trả về handle idempotent sở hữu đúng host đã match.">
           <button mat-flat-button color="primary" (click)="onTarget()">Loading vùng bên dưới</button>
           <div id="demo-target" class="demo-host">Nội dung mẫu — loading sẽ phủ chính khung này.</div>
         </demo-section>
@@ -9136,8 +10614,8 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
             { name: 'start()', value: '.demo-tab-panel' },
             { name: 'querySelectorAll', value: 'all matches' },
           ]"
-          note="Giả lập router tabs: nhiều panel cùng class. Một lần start('.demo-tab-panel') gắn overlay lên cả hai — không chỉ panel đầu tiên.">
-          <button mat-flat-button color="primary" (click)="onMultiHost()">Loading cả hai tab</button>
+          note="Hai owner overlap trên cùng hai host; đóng owner đầu không gỡ overlay của owner thứ hai.">
+          <button mat-flat-button color="primary" (click)="onMultiHost()">Chạy hai owner overlap</button>
           <div class="demo-tabs">
             <div class="demo-tab-panel demo-host">
               <strong>Tab 1</strong>
@@ -9155,11 +10633,12 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
         <demo-section
           heading="Bật / tắt thủ công"
           [props]="[
-            { name: 'start()', value: 'method' },
-            { name: 'stop()', value: 'method' },
+            { name: 'start()', value: 'SdLoadingRef' },
+            { name: 'close()', value: 'idempotent' },
+            { name: 'stop()', value: 'compatibility FIFO' },
             { name: 'isLoading()', value: 'method' },
           ]"
-          note="Kiểm tra trạng thái bằng isLoading('body').">
+          note="Code mới giữ ref; stop(selector) vẫn hoạt động cho call site cũ theo thứ tự start cũ nhất.">
           <button mat-stroked-button (click)="onStart()">Bật loading</button>
           <button mat-stroked-button color="warn" (click)="onStop()">Tắt loading</button>
           <button mat-stroked-button (click)="onCheck()">Kiểm tra trạng thái</button>
@@ -9197,36 +10676,87 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 })
 export class LoadingDemoComponent {
   readonly #loading = inject(SdLoadingService);
+  readonly #destroyRef = inject(DestroyRef);
+  readonly #timers = new Set<ReturnType<typeof setTimeout>>();
+  readonly #refs = new Set<SdLoadingRef>();
   readonly busy = signal(false);
   readonly status = signal('chưa kiểm tra');
+  #manualRef: SdLoadingRef | undefined;
 
-  onFullPage() {
+  constructor() {
+    this.#destroyRef.onDestroy(() => {
+      for (const timer of this.#timers) clearTimeout(timer);
+      for (const ref of this.#refs) ref.close();
+      this.#timers.clear();
+      this.#refs.clear();
+    });
+  }
+
+  async onFullPage(): Promise<void> {
     this.busy.set(true);
-    this.#loading.start();
-    setTimeout(() => {
-      this.#loading.stop();
+    try {
+      await this.#loading.run(this.#delay(1200));
+    } finally {
       this.busy.set(false);
-    }, 2000);
+    }
   }
 
-  onTarget() {
-    this.#loading.start('#demo-target');
-    setTimeout(() => this.#loading.stop('#demo-target'), 2000);
+  onTarget(): void {
+    const ref = this.#trackRef(this.#loading.start('#demo-target'));
+    this.#schedule(() => this.#closeRef(ref), 1200);
   }
 
-  onMultiHost() {
-    this.#loading.start('.demo-tab-panel');
-    setTimeout(() => this.#loading.stop('.demo-tab-panel'), 2000);
+  onMultiHost(): void {
+    const first = this.#trackRef(this.#loading.start('.demo-tab-panel'));
+    const second = this.#trackRef(this.#loading.start('.demo-tab-panel'));
+    this.status.set('2 owner đang giữ overlay');
+    this.#schedule(() => {
+      this.#closeRef(first);
+      this.status.set('owner 1 đã đóng, owner 2 vẫn giữ overlay');
+    }, 800);
+    this.#schedule(() => {
+      this.#closeRef(second);
+      this.status.set('cả 2 owner đã đóng');
+    }, 1600);
   }
 
-  onStart() {
-    this.#loading.start();
+  onStart(): void {
+    if (this.#manualRef && !this.#manualRef.closed) return;
+    this.#manualRef = this.#trackRef(this.#loading.start());
+    this.status.set('manual ref đang mở');
   }
-  onStop() {
-    this.#loading.stop();
+
+  onStop(): void {
+    if (this.#manualRef) this.#closeRef(this.#manualRef);
+    else this.#loading.stop();
+    this.#manualRef = undefined;
+    this.status.set('manual ref đã đóng');
   }
-  onCheck() {
+
+  onCheck(): void {
     this.status.set(this.#loading.isLoading() ? 'đang loading' : 'không loading');
+  }
+
+  #delay(milliseconds: number): Promise<void> {
+    return new Promise(resolve => this.#schedule(resolve, milliseconds));
+  }
+
+  #schedule(callback: () => void, milliseconds: number): void {
+    const timer = setTimeout(() => {
+      this.#timers.delete(timer);
+      callback();
+    }, milliseconds);
+    this.#timers.add(timer);
+  }
+
+  #trackRef(ref: SdLoadingRef): SdLoadingRef {
+    if (!ref.closed) this.#refs.add(ref);
+    return ref;
+  }
+
+  #closeRef(ref: SdLoadingRef): void {
+    ref.close();
+    this.#refs.delete(ref);
   }
 }
 `,
@@ -9326,6 +10856,149 @@ export class NotifyDemoComponent {
 }
 `,
   },
+  "services/persistence": {
+    typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
+import {
+  SdGraphIdentityCanonicalizer,
+  SdGraphSerializer,
+  parseSdPersistenceEnvelope,
+  stringifySdPersistenceValueEnvelope,
+} from '@sdcorejs/angular/services/persistence';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+interface DemoSharedValue {
+  readonly label: string;
+}
+
+interface DemoGraph {
+  readonly createdAt: Date;
+  readonly labels: Map<string, string>;
+  readonly permissions: Set<string>;
+  readonly primary: DemoSharedValue;
+  readonly secondary: DemoSharedValue;
+  self?: DemoGraph;
+}
+
+@Component({
+  selector: 'app-persistence-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Persistence"
+      description="Versioned graph serialization, deterministic identity and bounded envelopes used by SdCacheService and SdStorageService.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-graph-round-trip') {
+        <demo-section
+          heading="Graph round-trip"
+          [props]="[
+            { name: 'serializer', value: 'SdGraphSerializer' },
+            { name: 'references', value: 'shared + circular' },
+          ]">
+          <pre>{{ graphSummary }}</pre>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-deterministic-identity') {
+        <demo-section
+          heading="Deterministic identity"
+          [props]="[{ name: 'canonicalizer', value: 'SdGraphIdentityCanonicalizer' }]"
+          note="Property insertion order does not change the canonical persistence identity.">
+          <p>Stable identity: {{ stableIdentity }}</p>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-versioned-envelope') {
+        <demo-section
+          heading="Versioned envelope"
+          [props]="[
+            { name: 'identity', value: 'tenant:42' },
+            { name: 'serializer', value: serializer.format },
+          ]">
+          <p>Envelope payload: {{ envelopeTeam }}</p>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-invalid-input-containment') {
+        <demo-section
+          heading="Invalid input containment"
+          [props]="[{ name: 'error', value: 'SdPersistenceError' }]"
+          note="Consumers can reject malformed documents without mutating the previous cache/storage value.">
+          <p>Invalid document rejected: {{ invalidDocumentRejected }}</p>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    pre {
+      margin: 0;
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--docs-code-bg, #f4f6f8);
+      white-space: pre-wrap;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PersistenceDemoComponent {
+  protected readonly serializer = new SdGraphSerializer();
+  readonly graphSummary: string;
+  readonly stableIdentity: boolean;
+  readonly envelopeTeam: string;
+  readonly invalidDocumentRejected: boolean;
+
+  constructor() {
+    const shared: DemoSharedValue = { label: 'shared' };
+    const source: DemoGraph = {
+      createdAt: new Date('2026-07-23T00:00:00.000Z'),
+      labels: new Map([['vi', 'Xin chào']]),
+      permissions: new Set(['read', 'write']),
+      primary: shared,
+      secondary: shared,
+    };
+    source.self = source;
+    const restored = this.serializer.parse<DemoGraph>(this.serializer.stringify(source));
+    this.graphSummary = [
+      \`Date: \${restored.createdAt instanceof Date}\`,
+      \`Map: \${restored.labels instanceof Map}\`,
+      \`Set: \${restored.permissions instanceof Set}\`,
+      \`Shared reference: \${restored.primary === restored.secondary}\`,
+      \`Circular reference: \${restored.self === restored}\`,
+    ].join('\\n');
+
+    const canonicalizer = new SdGraphIdentityCanonicalizer();
+    this.stableIdentity =
+      canonicalizer.canonicalize({ tenant: 42, filters: { status: 'active', page: 1 } }) ===
+      canonicalizer.canonicalize({ filters: { page: 1, status: 'active' }, tenant: 42 });
+
+    const identity = 'tenant:42';
+    const payload = this.serializer.stringify({ team: 'Finance' });
+    const serializedEnvelope = stringifySdPersistenceValueEnvelope(identity, this.serializer.format, payload);
+    const envelope = parseSdPersistenceEnvelope(serializedEnvelope, identity, this.serializer.format);
+    const envelopeValue = envelope?.kind === 'value' ? this.serializer.parse<{ team: string }>(envelope.payload) : undefined;
+    this.envelopeTeam = envelopeValue?.team ?? 'unavailable';
+
+    this.invalidDocumentRejected = rejectsInvalidDocument(this.serializer);
+  }
+}
+
+function rejectsInvalidDocument(serializer: SdGraphSerializer): boolean {
+  try {
+    serializer.parse('{"format":"unknown","version":1}');
+    return false;
+  } catch {
+    return true;
+  }
+}
+`,
+    scss: `pre {
+  margin: 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--docs-code-bg, #f4f6f8);
+  white-space: pre-wrap;
+}`,
+  },
   "services/storage": {
     typescript: `import { ChangeDetectionStrategy, Component, inject, OnDestroy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -9340,35 +11013,46 @@ import { SdStorage, SdStorageService } from '@sdcorejs/angular/services/storage'
   standalone: true,
   imports: [DemoPageComponent, DemoSectionComponent, FormsModule, MatButtonModule, MatFormFieldModule, MatInputModule],
   template: \`
-    <demo-page #demoPage title="Storage" description="SdStorageService.create(key) trả về handle với get/set/has/remove + subject Observable. Dữ liệu được cache trên Map + persist xuống localStorage hoặc sessionStorage.">
+    <demo-page
+      #demoPage
+      title="Storage"
+      description="SdStorageService.create(key) trả về typed handle reactive. Dữ liệu dùng versioned graph serializer, legacy migration và local/session adapter SSR-safe.">
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-localstorage') {
-      <demo-section heading="localStorage" [props]="[{ name: 'type', value: 'local' }]" note="Key 'demo:user-name'. Đóng trình duyệt rồi mở lại vẫn còn.">
-        <mat-form-field appearance="outline" style="width:240px">
-          <mat-label>Tên người dùng</mat-label>
-          <input matInput [(ngModel)]="draftLocal" placeholder="Nhập tên...">
-        </mat-form-field>
-        <button mat-flat-button color="primary" (click)="saveLocal()">Lưu</button>
-        <button mat-stroked-button (click)="readLocal()">Đọc lại</button>
-        <button mat-stroked-button color="warn" (click)="removeLocal()">Xóa</button>
-      </demo-section>
+        <demo-section
+          heading="localStorage"
+          [props]="[{ name: 'type', value: 'local' }]"
+          note="Key 'demo:user-name'. Đóng trình duyệt rồi mở lại vẫn còn.">
+          <mat-form-field appearance="outline" style="width:240px">
+            <mat-label>Tên người dùng</mat-label>
+            <input matInput [(ngModel)]="draftLocal" placeholder="Nhập tên..." />
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="saveLocal()">Lưu</button>
+          <button mat-stroked-button (click)="readLocal()">Đọc lại</button>
+          <button mat-stroked-button color="warn" (click)="removeLocal()">Xóa</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sessionstorage') {
-      <demo-section heading="sessionStorage" [props]="[{ name: 'type', value: 'session' }]" note="Key 'demo:session-note'. Mất khi đóng tab.">
-        <mat-form-field appearance="outline" style="width:240px">
-          <mat-label>Ghi chú phiên</mat-label>
-          <input matInput [(ngModel)]="draftSession" placeholder="Nhập ghi chú...">
-        </mat-form-field>
-        <button mat-flat-button color="primary" (click)="saveSession()">Lưu (session)</button>
-        <button mat-stroked-button color="warn" (click)="removeSession()">Xóa</button>
-      </demo-section>
+        <demo-section
+          heading="sessionStorage"
+          [props]="[{ name: 'type', value: 'session' }]"
+          note="Key 'demo:session-note'. Mất khi đóng tab.">
+          <mat-form-field appearance="outline" style="width:240px">
+            <mat-label>Ghi chú phiên</mat-label>
+            <input matInput [(ngModel)]="draftSession" placeholder="Nhập ghi chú..." />
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="saveSession()">Lưu (session)</button>
+          <button mat-stroked-button color="warn" (click)="removeSession()">Xóa</button>
+        </demo-section>
       }
 
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-gia-tri-dang-luu-cap-nhat-truc-tiep-qua-subject') {
-      <demo-section heading="Giá trị đang lưu (cập nhật trực tiếp qua subject)">
-        <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">demo:user-name    = {{ liveLocal() ?? '(trống)' }}
-demo:session-note = {{ liveSession() ?? '(trống)' }}</pre>
-      </demo-section>
+        <demo-section heading="Giá trị đang lưu (cập nhật trực tiếp qua subject)">
+          <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">
+demo:user-name    = {{ liveLocal() ?? '(trống)' }}
+demo:session-note = {{ liveSession() ?? '(trống)' }}</pre
+          >
+        </demo-section>
       }
     </demo-page>
   \`,
@@ -9384,15 +11068,27 @@ export class StorageDemoComponent implements OnDestroy {
   readonly liveLocal = signal<string | undefined>(this.#local.get());
   readonly liveSession = signal<string | undefined>(this.#session.get());
 
-  readonly #subLocal = this.#local.observer.subscribe((v) => this.liveLocal.set(v));
-  readonly #subSession = this.#session.observer.subscribe((v) => this.liveSession.set(v));
+  readonly #subLocal = this.#local.observer.subscribe(v => this.liveLocal.set(v));
+  readonly #subSession = this.#session.observer.subscribe(v => this.liveSession.set(v));
 
-  saveLocal() { this.#local.set(this.draftLocal); }
-  readLocal() { this.draftLocal = this.#local.get() ?? ''; }
-  removeLocal() { this.#local.remove(); this.draftLocal = ''; }
+  saveLocal() {
+    this.#local.set(this.draftLocal);
+  }
+  readLocal() {
+    this.draftLocal = this.#local.get() ?? '';
+  }
+  removeLocal() {
+    this.#local.remove();
+    this.draftLocal = '';
+  }
 
-  saveSession() { this.#session.set(this.draftSession); }
-  removeSession() { this.#session.remove(); this.draftSession = ''; }
+  saveSession() {
+    this.#session.set(this.draftSession);
+  }
+  removeSession() {
+    this.#session.remove();
+    this.draftSession = '';
+  }
 
   ngOnDestroy() {
     this.#subLocal.unsubscribe();
@@ -9400,6 +11096,529 @@ export class StorageDemoComponent implements OnDestroy {
   }
 }
 `,
+  },
+  "services/task": {
+    typescript: `import { ChangeDetectionStrategy, Component, DestroyRef, inject } from '@angular/core';
+import { SdJobProgress } from '@sdcorejs/angular/components/job-progress';
+import { SdTaskService, SdTaskSubscription } from '@sdcorejs/angular/services/task';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-task-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, SdJobProgress],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Task Service"
+      description="SdTaskService – registry theo stable ID, dùng chung polling/SSE connection, retry có giới hạn và cleanup xác định.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-manual-lifecycle') {
+        <demo-section
+          heading="Manual lifecycle"
+          [props]="[
+            { name: 'status', value: manualTask.state().status },
+            { name: 'progress', value: manualTask.state().progress ?? 'indeterminate' },
+          ]">
+          <sd-job-progress taskId="showcase-manual-task" mode="details"></sd-job-progress>
+          <div class="task-actions">
+            <button type="button" (click)="advanceManualTask()">Tiến thêm 25%</button>
+            <button type="button" (click)="completeManualTask()">Hoàn tất</button>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-shared-stable-id') {
+        <demo-section
+          heading="Shared stable ID"
+          [props]="[
+            { name: 'subscriberCount', value: sharedTask.subscriberCount() },
+            { name: 'same state signal', value: sharedTask.state === sharedTaskDuplicate.state },
+          ]"
+          note="Hai watcher trùng ID dùng chung state/transport; entry chỉ bị xóa sau lease cuối.">
+          <p data-shared-task-count>Active leases: {{ sharedTask.subscriberCount() }}</p>
+          <button type="button" [disabled]="sharedDuplicateDestroyed" (click)="releaseDuplicateLease()">Hủy lease thứ hai</button>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-polling-va-terminal-teardown') {
+        <demo-section
+          heading="Polling và terminal teardown"
+          [props]="[
+            { name: 'load calls', value: pollLoadCount },
+            { name: 'connection', value: pollingTask.connection() },
+          ]"
+          note="Demo trả terminal state ngay lượt đầu; service không schedule thêm poll sau succeeded.">
+          <sd-job-progress taskId="showcase-poll-task"></sd-job-progress>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-cancel-va-retry') {
+        <demo-section
+          heading="Cancel và retry"
+          [props]="[
+            { name: 'cancel coalescing', value: 'Promise<boolean>' },
+            { name: 'retry guard', value: 'failed/cancelled/transport error' },
+          ]"
+          note="Cancel lỗi giữ nguyên business state; retry không restart một connection đang khỏe.">
+          <sd-job-progress taskId="showcase-action-task" mode="details"></sd-job-progress>
+          <button type="button" (click)="failActionTask()">Giả lập task thất bại</button>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .task-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      margin-top: 8px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class TaskDemoComponent {
+  readonly #tasks = inject(SdTaskService);
+  pollLoadCount = 0;
+  sharedDuplicateDestroyed = false;
+
+  readonly manualTask = this.#tasks.watch({
+    id: 'showcase-manual-task',
+    initialState: {
+      id: 'showcase-manual-task',
+      status: 'running',
+      progress: 25,
+      title: 'Import danh mục',
+      message: 'Đang xử lý dữ liệu cục bộ',
+    },
+    source: { mode: 'manual' },
+  });
+  readonly sharedTask = this.#tasks.watch({
+    id: 'showcase-shared-task',
+    initialState: { id: 'showcase-shared-task', status: 'running', progress: 10 },
+    source: { mode: 'manual' },
+  });
+  readonly sharedTaskDuplicate = this.#tasks.watch({
+    id: 'showcase-shared-task',
+    source: { mode: 'manual' },
+  });
+  readonly pollingTask = this.#tasks.watch({
+    id: 'showcase-poll-task',
+    source: {
+      mode: 'poll',
+      intervalMs: 5_000,
+      load: () => {
+        this.pollLoadCount += 1;
+        return {
+          id: 'showcase-poll-task',
+          status: 'succeeded' as const,
+          progress: 100,
+          title: 'Đối soát hoàn tất',
+        };
+      },
+    },
+  });
+  readonly actionTask = this.#tasks.watch({
+    id: 'showcase-action-task',
+    initialState: {
+      id: 'showcase-action-task',
+      status: 'running',
+      progress: 60,
+      title: 'Xuất báo cáo',
+      message: 'Có thể hủy khi tác vụ đang chạy',
+    },
+    source: { mode: 'manual', cancel: () => undefined },
+  });
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    const leases: SdTaskSubscription[] = [this.manualTask, this.sharedTask, this.sharedTaskDuplicate, this.pollingTask, this.actionTask];
+    destroyRef.onDestroy(() => leases.forEach(lease => lease.destroy()));
+  }
+
+  advanceManualTask(): void {
+    const progress = Math.min(100, (this.manualTask.state().progress ?? 0) + 25);
+    this.#tasks.update('showcase-manual-task', { status: progress === 100 ? 'succeeded' : 'running', progress });
+  }
+
+  completeManualTask(): void {
+    this.#tasks.update('showcase-manual-task', { status: 'succeeded', progress: 100, message: 'Đã nhập xong dữ liệu' });
+  }
+
+  releaseDuplicateLease(): void {
+    this.sharedTaskDuplicate.destroy();
+    this.sharedDuplicateDestroyed = true;
+  }
+
+  failActionTask(): void {
+    this.#tasks.update('showcase-action-task', {
+      status: 'failed',
+      error: new Error('Không thể tạo tệp báo cáo'),
+    });
+  }
+}
+`,
+    scss: `.task-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+button {
+  margin-top: 8px;
+}`,
+  },
+  "services/unsaved-changes": {
+    typescript: `import { ChangeDetectionStrategy, Component, DestroyRef, Injectable, inject, signal, viewChild } from '@angular/core';
+import { ReactiveFormsModule, FormControl, FormGroup } from '@angular/forms';
+import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
+import {
+  SD_UNSAVED_CHANGES_CONFIRMATION_ADAPTER,
+  SD_UNSAVED_CHANGES_WINDOW,
+  SdUnsavedChangesConfirmationAdapter,
+  SdUnsavedChangesDecision,
+  SdUnsavedChangesPromptContext,
+  SdUnsavedChangesRegistration,
+  SdUnsavedChangesService,
+  createSdUnsavedChangesCloseGuard,
+  registerSdUnsavedChangesForm,
+} from '@sdcorejs/angular/services/unsaved-changes';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Injectable()
+class ShowcaseUnsavedChangesAdapter implements SdUnsavedChangesConfirmationAdapter {
+  readonly decision = signal<SdUnsavedChangesDecision>('cancel');
+  readonly confirmCount = signal(0);
+
+  async confirm(_context: SdUnsavedChangesPromptContext): Promise<SdUnsavedChangesDecision> {
+    this.confirmCount.update(value => value + 1);
+    await Promise.resolve();
+    return this.decision();
+  }
+}
+
+@Component({
+  selector: 'app-unsaved-changes-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, ReactiveFormsModule, SdSideDrawer],
+  providers: [
+    SdUnsavedChangesService,
+    ShowcaseUnsavedChangesAdapter,
+    { provide: SD_UNSAVED_CHANGES_CONFIRMATION_ADAPTER, useExisting: ShowcaseUnsavedChangesAdapter },
+    { provide: SD_UNSAVED_CHANGES_WINDOW, useValue: null },
+  ],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Unsaved Changes"
+      description="Registry SSR-safe cho nhiều nguồn dirty, FormGroup, route guard và hook đóng modal/drawer/tab với xác nhận async fail-closed.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-multiple-scoped-watchers') {
+        <demo-section
+          heading="Multiple scoped watchers"
+          [props]="[
+            { name: 'registrations', value: unsaved.registrations().length },
+            { name: 'dirty', value: unsaved.dirty() },
+          ]"
+          note="Cùng id có thể tồn tại ở scope khác nhau; register lặp trong cùng scope trả lại đúng registration ref.">
+          <div class="demo-actions">
+            <button type="button" (click)="profileRef.markDirty()">Sửa hồ sơ</button>
+            <button type="button" (click)="filterRef.markDirty()">Sửa bộ lọc</button>
+            <button type="button" (click)="profileRef.markPristine(); filterRef.markPristine()">Đánh dấu đã lưu</button>
+          </div>
+          <output data-registry-state>
+            profile={{ profileRef.dirty() }} · filters={{ filterRef.dirty() }} · any={{ unsaved.dirty() }}
+          </output>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-formgroup-adapter') {
+        <demo-section
+          heading="FormGroup adapter"
+          [props]="[{ name: 'form.dirty', value: profileForm.dirty }]"
+          note="Adapter giữ snapshot, cập nhật baseline sau save thành công và tự unsubscribe khi registration bị destroy.">
+          <label class="demo-field">
+            Tên hiển thị
+            <input [formControl]="profileForm.controls.name" />
+          </label>
+          <div class="demo-actions">
+            <button type="button" (click)="saveForm()">Save</button>
+            <button type="button" (click)="formRef.discard()">Discard về snapshot</button>
+          </div>
+          <output data-form-state>{{ profileForm.controls.name.value }} · dirty={{ formRef.dirty() }}</output>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-async-confirmation-decisions') {
+        <demo-section
+          heading="Async confirmation decisions"
+          [props]="[
+            { name: 'decision', value: confirmation.decision() },
+            { name: 'confirmCount', value: confirmation.confirmCount() },
+          ]"
+          note="Adapter tùy biến trả save/discard/cancel hoặc boolean. Exception/rejection luôn giữ người dùng ở màn hình hiện tại.">
+          <div class="demo-actions">
+            <button type="button" (click)="setDecision('save')">Save</button>
+            <button type="button" (click)="setDecision('discard')">Discard</button>
+            <button type="button" (click)="setDecision('cancel')">Cancel</button>
+            <button type="button" (click)="confirmAll()">Confirm leave</button>
+          </div>
+          <output data-confirm-state>{{ confirmResult() }}</output>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-additive-close-hook') {
+        <demo-section
+          heading="Additive close hook"
+          note="Gắn cùng closeGuard vào [beforeClose] của SdModal, SdSideDrawer hoặc SdTab; không cần component phụ thuộc trực tiếp vào service.">
+          <button type="button" (click)="openDrawer()">Mở drawer đã chỉnh sửa</button>
+          <output data-drawer-state>drawer dirty={{ drawerRef.dirty() }}</output>
+          <sd-side-drawer #drawer title="Biên tập hồ sơ" [beforeClose]="drawerCloseGuard">
+            <div class="drawer-body">Dữ liệu trong drawer đang chờ lưu.</div>
+            <button sdFooterRight type="button" (click)="drawer.close()">Đóng có guard</button>
+          </sd-side-drawer>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .demo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-block: 8px;
+    }
+
+    .demo-field {
+      display: grid;
+      gap: 6px;
+      max-width: 360px;
+    }
+
+    .demo-field input {
+      padding: 8px 10px;
+    }
+
+    output {
+      display: block;
+      margin-top: 8px;
+    }
+
+    .drawer-body {
+      padding: 16px;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class UnsavedChangesDemoComponent {
+  readonly unsaved = inject(SdUnsavedChangesService);
+  readonly confirmation = inject(ShowcaseUnsavedChangesAdapter);
+  readonly #destroyRef = inject(DestroyRef);
+  readonly drawerComponent = viewChild.required<SdSideDrawer>('drawer');
+  readonly #profileDirty = signal(false);
+  readonly #filterDirty = signal(false);
+  readonly #drawerDirty = signal(false);
+  readonly profileForm = new FormGroup({ name: new FormControl('Nguyễn An', { nonNullable: true }) });
+  readonly confirmResult = signal('Chưa xác nhận');
+  readonly profileRef: SdUnsavedChangesRegistration;
+  readonly filterRef: SdUnsavedChangesRegistration;
+  readonly formRef: SdUnsavedChangesRegistration;
+  readonly drawerRef: SdUnsavedChangesRegistration;
+  readonly drawerCloseGuard: () => Promise<boolean>;
+
+  constructor() {
+    this.profileRef = this.unsaved.register({
+      id: 'editor',
+      scope: 'profile',
+      isDirty: this.#profileDirty,
+      message: 'Hồ sơ có thay đổi chưa lưu.',
+      save: () => this.#profileDirty.set(false),
+      discard: () => this.#profileDirty.set(false),
+    });
+    this.filterRef = this.unsaved.register({
+      id: 'editor',
+      scope: 'filters',
+      isDirty: this.#filterDirty,
+      message: 'Bộ lọc có thay đổi chưa lưu.',
+      save: () => this.#filterDirty.set(false),
+      discard: () => this.#filterDirty.set(false),
+    });
+    this.formRef = registerSdUnsavedChangesForm(this.unsaved, this.profileForm, {
+      id: 'profile-form',
+      scope: 'form',
+      message: 'Biểu mẫu có thay đổi chưa lưu.',
+      save: () => undefined,
+    });
+    this.drawerRef = this.unsaved.register({
+      id: 'drawer-editor',
+      scope: 'drawer',
+      isDirty: this.#drawerDirty,
+      message: 'Drawer có thay đổi chưa lưu.',
+      discard: () => this.#drawerDirty.set(false),
+      save: () => this.#drawerDirty.set(false),
+    });
+    this.drawerCloseGuard = createSdUnsavedChangesCloseGuard(this.unsaved, { scope: 'drawer' });
+
+    this.#destroyRef.onDestroy(() => {
+      this.profileRef.destroy();
+      this.filterRef.destroy();
+      this.formRef.destroy();
+      this.drawerRef.destroy();
+    });
+  }
+
+  async saveForm(): Promise<void> {
+    await this.formRef.save();
+  }
+
+  setDecision(decision: SdUnsavedChangesDecision): void {
+    this.confirmation.decision.set(decision);
+  }
+
+  async confirmAll(): Promise<void> {
+    const canLeave = await this.unsaved.confirmLeave({ reason: 'manual' });
+    this.confirmResult.set(canLeave ? 'Có thể rời màn hình' : 'Giữ nguyên màn hình');
+  }
+
+  openDrawer(): void {
+    this.#drawerDirty.set(true);
+    this.drawerComponent().open();
+  }
+}
+`,
+    scss: `.demo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block: 8px;
+}
+
+.demo-field {
+  display: grid;
+  gap: 6px;
+  max-width: 360px;
+}
+
+.demo-field input {
+  padding: 8px 10px;
+}
+
+output {
+  display: block;
+  margin-top: 8px;
+}
+
+.drawer-body {
+  padding: 16px;
+}`,
+  },
+  "services/viewport": {
+    typescript: `import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
+import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
+
+@Component({
+  selector: 'app-viewport-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent],
+  template: \`
+    <demo-page
+      #demoPage
+      title="Viewport"
+      description="SdViewportService – một nguồn signal SSR-safe cho kích thước viewport và breakpoint mobile/tablet/desktop.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-trang-thai-truc-tiep') {
+        <demo-section
+          heading="Trạng thái trực tiếp"
+          [props]="[
+            { name: 'width / height', value: 'Signal<number>' },
+            { name: 'currentBreakpoint', value: viewport.currentBreakpoint() },
+          ]"
+          note="Thay đổi kích thước cửa sổ để quan sát các signal cập nhật từ cùng một resize listener.">
+          <div class="viewport-state">
+            <strong data-viewport-size>{{ viewport.width() }} × {{ viewport.height() }}</strong>
+            <span data-current-breakpoint>{{ viewport.currentBreakpoint() }}</span>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-breakpoint-mac-dinh') {
+        <demo-section
+          heading="Breakpoint mặc định"
+          [props]="[
+            { name: 'mobile', value: viewport.breakpoints.mobile },
+            { name: 'tablet', value: viewport.breakpoints.tablet },
+            { name: 'desktop', value: viewport.breakpoints.desktop },
+          ]"
+          note="Các mốc dùng min-width semantics; có thể override toàn bộ qua SD_VIEWPORT_BREAKPOINTS.">
+          <div class="breakpoint-list">
+            <code>mobile: {{ viewport.breakpoints.mobile }}</code>
+            <code>tablet: {{ viewport.breakpoints.tablet }}</code>
+            <code>desktop: {{ viewport.breakpoints.desktop }}</code>
+          </div>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-signal-theo-breakpoint') {
+        <demo-section
+          heading="Signal theo breakpoint"
+          [props]="[
+            { name: 'isMobile()', value: viewport.isMobile() },
+            { name: 'isTablet()', value: viewport.isTablet() },
+            { name: 'isDesktop()', value: viewport.isDesktop() },
+          ]"
+          note="Consumer chỉ đọc signal, không tự đăng ký hoặc cleanup listener.">
+          <div class="breakpoint-list">
+            <code>isMobile: {{ viewport.isMobile() }}</code>
+            <code>isTablet: {{ viewport.isTablet() }}</code>
+            <code>isDesktop: {{ viewport.isDesktop() }}</code>
+          </div>
+        </demo-section>
+      }
+    </demo-page>
+  \`,
+  styles: \`
+    .viewport-state,
+    .breakpoint-list {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .viewport-state strong,
+    .viewport-state span,
+    .breakpoint-list code {
+      padding: 8px 12px;
+      border: 1px solid #dfe3e8;
+      border-radius: 8px;
+      background: #f7f9fb;
+    }
+  \`,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ViewportDemoComponent {
+  readonly viewport = inject(SdViewportService);
+}
+`,
+    scss: `.viewport-state,
+.breakpoint-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.viewport-state strong,
+.viewport-state span,
+.breakpoint-list code {
+  padding: 8px 12px;
+  border: 1px solid #dfe3e8;
+  border-radius: 8px;
+  background: #f7f9fb;
+}`,
   },
 } as const;
 
@@ -9457,6 +11676,51 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       </sd-anchor>
     </div>
   </demo-section>`,
+  },
+  "components/audit-diff/example-custom-value-template": {
+    ...SHOWCASE_PAGE_SOURCES["components/audit-diff"],
+    html: `<demo-section heading="Custom value template" [props]="[{ name: 'sdAuditDiffValue', value: 'TemplateRef context' }]">
+      <sd-audit-diff [before]="customBefore" [after]="customAfter" [options]="customOptions">
+        <ng-template sdAuditDiffValue let-value let-row="row" let-side="side">
+          <span class="custom-value" [attr.data-custom-side]="side">{{ row.label }}: {{ value }}</span>
+        </ng-template>
+      </sd-audit-diff>
+    </demo-section>`,
+  },
+  "components/audit-diff/example-format-redact-va-order": {
+    ...SHOWCASE_PAGE_SOURCES["components/audit-diff"],
+    html: `<demo-section
+      heading="Format, redact và order"
+      [props]="[
+        { name: 'enumMap', value: 'status' },
+        { name: 'redacted', value: 'token' },
+        { name: 'hidden', value: 'password' },
+      ]">
+      <sd-audit-diff [before]="securedBefore" [after]="securedAfter" [options]="securedOptions"></sd-audit-diff>
+    </demo-section>`,
+  },
+  "components/audit-diff/example-nested-table": {
+    ...SHOWCASE_PAGE_SOURCES["components/audit-diff"],
+    html: `<demo-section
+      heading="Nested table"
+      [props]="[
+        { name: 'mode', value: 'table' },
+        { name: 'nested objects', value: 'leaf rows' },
+      ]">
+      <sd-audit-diff [before]="nestedBefore" [after]="nestedAfter" [options]="nestedOptions"></sd-audit-diff>
+    </demo-section>`,
+  },
+  "components/audit-diff/example-stable-key-array": {
+    ...SHOWCASE_PAGE_SOURCES["components/audit-diff"],
+    html: `<demo-section
+      heading="Stable-key array"
+      [props]="[
+        { name: 'arrayKey', value: 'id' },
+        { name: 'mode', value: 'detail-list' },
+      ]"
+      note="Reorder không sinh diff giả; item thêm/xóa vẫn đi qua rule của field con.">
+      <sd-audit-diff [before]="linesBefore" [after]="linesAfter" [options]="linesOptions" mode="detail-list"></sd-audit-diff>
+    </demo-section>`,
   },
   "components/avatar/example-anh-url": {
     ...SHOWCASE_PAGE_SOURCES["components/avatar"],
@@ -9644,6 +11908,37 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <sd-badge type="round" warning title="99+"></sd-badge>
   </demo-section>`,
   },
+  "components/breadcrumb/example-danh-sach-tinh": {
+    ...SHOWCASE_PAGE_SOURCES["components/breadcrumb"],
+    html: `<demo-section
+      heading="Danh sách tĩnh"
+      [props]="[
+        { name: 'items', value: '6 items' },
+        { name: 'maxItems', value: '4' },
+      ]"
+      note="Root, dấu rút gọn và context cuối được giữ; item disabled không trở thành control tương tác.">
+      <sd-breadcrumb [items]="staticItems" [maxItems]="4"></sd-breadcrumb>
+    </demo-section>`,
+  },
+  "components/breadcrumb/example-nhan-async": {
+    ...SHOWCASE_PAGE_SOURCES["components/breadcrumb"],
+    html: `<demo-section
+      heading="Nhãn async"
+      [props]="[{ name: 'label', value: 'Observable<string>' }]"
+      note="Observable label được cập nhật trực tiếp và tự unsubscribe khi source/component bị thay thế.">
+      <sd-breadcrumb [items]="asyncItems"></sd-breadcrumb>
+      <button type="button" data-resolve-label (click)="resolveAsyncLabel()">Resolve label</button>
+    </demo-section>`,
+  },
+  "components/breadcrumb/example-router-generated": {
+    ...SHOWCASE_PAGE_SOURCES["components/breadcrumb"],
+    html: `<demo-section
+      heading="Router-generated"
+      [props]="[{ name: 'route.data.breadcrumb', value: 'resolver' }]"
+      note="Không truyền items: component đọc primary route chain của chính trang tài liệu này và cập nhật sau NavigationEnd.">
+      <sd-breadcrumb></sd-breadcrumb>
+    </demo-section>`,
+  },
   "components/button/example-bang-mau": {
     ...SHOWCASE_PAGE_SOURCES["components/button/example-bang-mau"],
     html: `<sd-button type="fill" color="primary" title="primary"></sd-button>
@@ -9760,6 +12055,50 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-code-editor language="typescript" [(model)]="tsCode" maxHeight="280px"></sd-code-editor>
     </div>
   </demo-section>`,
+  },
+  "components/data-state/example-empty": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section heading="Empty" note="Custom template nhận state/retry/action context thay cho default presentation.">
+      <sd-data-state state="empty" compact>
+        <ng-template sdDataStateTemplate let-state>
+          <div class="custom-empty">Custom {{ state }}: chưa có đơn hàng phù hợp.</div>
+        </ng-template>
+      </sd-data-state>
+    </demo-section>`,
+  },
+  "components/data-state/example-error": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section
+      heading="Error"
+      [props]="[
+        { name: 'retryable', value: 'true' },
+        { name: 'actionLabel', value: 'Mở nhật ký' },
+      ]">
+      <sd-data-state state="error" retryable actionLabel="Mở nhật ký" (sdRetry)="onRetry()" (sdAction)="onAction()"> </sd-data-state>
+      <div>Retry: {{ retryCount() }} · Action: {{ actionCount() }}</div>
+    </demo-section>`,
+  },
+  "components/data-state/example-forbidden": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section heading="Forbidden" [props]="[{ name: 'fullPage', value: 'true' }]">
+      <div class="full-page-preview">
+        <sd-data-state state="forbidden" fullPage></sd-data-state>
+      </div>
+    </demo-section>`,
+  },
+  "components/data-state/example-loading": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section heading="Loading" [props]="[{ name: 'compact', value: 'true' }]">
+      <sd-data-state state="loading" compact></sd-data-state>
+    </demo-section>`,
+  },
+  "components/data-state/example-success": {
+    ...SHOWCASE_PAGE_SOURCES["components/data-state"],
+    html: `<demo-section heading="Success" note="Không có presentation wrapper dư thừa; content được project trực tiếp.">
+      <sd-data-state state="success">
+        <article data-success>Dữ liệu đã sẵn sàng</article>
+      </sd-data-state>
+    </demo-section>`,
   },
   "components/document-builder/example-soan-mau-hop-dong": {
     ...SHOWCASE_PAGE_SOURCES["components/document-builder"],
@@ -10002,6 +12341,56 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <sd-inform info title="Điều khoản" [description]="long" [lineClamp]="3"></sd-inform>
     <sd-inform success [description]="long" [lineClamp]="2"></sd-inform>
   </demo-section>`,
+  },
+  "components/job-progress/example-details-va-error": {
+    ...SHOWCASE_PAGE_SOURCES["components/job-progress"],
+    html: `<demo-section heading="Details và error" [props]="[{ name: 'mode', value: 'details' }]">
+      <sd-job-progress
+        [state]="{
+          id: 'failed',
+          status: 'failed',
+          title: 'Đồng bộ dữ liệu',
+          message: 'Tác vụ giữ lại context để thử lại',
+          error: 'Máy chủ tạm thời không phản hồi',
+        }"
+        mode="details"
+        (sdRetry)="retryCount.update(increment)"></sd-job-progress>
+      <p data-retry-count>Retry events: {{ retryCount() }}</p>
+    </demo-section>`,
+  },
+  "components/job-progress/example-determinate-bar": {
+    ...SHOWCASE_PAGE_SOURCES["components/job-progress"],
+    html: `<demo-section
+      heading="Determinate bar"
+      [props]="[
+        { name: 'mode', value: 'bar' },
+        { name: 'progress', value: determinateState().progress },
+      ]">
+      <sd-job-progress [state]="determinateState()" (sdCancel)="cancelDirect()"></sd-job-progress>
+      <button type="button" (click)="advanceDirect()">Tiến thêm 10%</button>
+    </demo-section>`,
+  },
+  "components/job-progress/example-indeterminate-compact": {
+    ...SHOWCASE_PAGE_SOURCES["components/job-progress"],
+    html: `<demo-section
+      heading="Indeterminate compact"
+      [props]="[
+        { name: 'mode', value: 'compact' },
+        { name: 'aria-valuenow', value: 'omitted' },
+      ]">
+      <sd-job-progress [state]="{ id: 'queued', status: 'queued', title: 'Đang chờ tài nguyên' }" mode="compact"></sd-job-progress>
+    </demo-section>`,
+  },
+  "components/job-progress/example-registry-binding": {
+    ...SHOWCASE_PAGE_SOURCES["components/job-progress"],
+    html: `<demo-section
+      heading="Registry binding"
+      [props]="[
+        { name: 'taskId', value: 'showcase-component-task' },
+        { name: 'automatic actions', value: 'cancel/retry' },
+      ]">
+      <sd-job-progress taskId="showcase-component-task" mode="details"></sd-job-progress>
+    </demo-section>`,
   },
   "components/mini-editor/example-dinh-dang-dau-ra-html": {
     ...SHOWCASE_PAGE_SOURCES["components/mini-editor"],
@@ -10274,26 +12663,46 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "components/preview/example-anh-don": {
     ...SHOWCASE_PAGE_SOURCES["components/preview"],
     html: `<demo-section heading="Ảnh đơn" [props]="[{ name: 'thumbnailPosition', value: 'none' }]">
-    <div class="preview-box">
-      <sd-preview-image [items]="[singleImage]" thumbnailPosition="none"></sd-preview-image>
-    </div>
-  </demo-section>`,
+      <div class="preview-box">
+        <sd-preview-image [items]="[singleImage]" thumbnailPosition="none"></sd-preview-image>
+      </div>
+    </demo-section>`,
+  },
+  "components/preview/example-pdf-nang-cao": {
+    ...SHOWCASE_PAGE_SOURCES["components/preview"],
+    html: `<demo-section
+      heading="PDF nâng cao"
+      [props]="[
+        { name: 'sidebar', value: 'outline' },
+        { name: 'scrollMode', value: 'continuous' },
+        { name: 'fixture', value: '3 pages + PDF Outlines' },
+        { name: 'print', value: 'header action / Ctrl+P' },
+      ]">
+      <div class="preview-box preview-box--advanced-pdf">
+        <sd-preview-pdf [source]="pdfSource()" sidebar="outline" scrollMode="continuous"></sd-preview-pdf>
+      </div>
+    </demo-section>`,
   },
   "components/preview/example-thu-vien-anh": {
     ...SHOWCASE_PAGE_SOURCES["components/preview"],
     html: `<demo-section heading="Thư viện ảnh" [props]="[{ name: 'items', value: '[…]' }]">
-    <div class="preview-box">
-      <sd-preview-image [items]="images" [startIndex]="0"></sd-preview-image>
-    </div>
-  </demo-section>`,
+      <div class="preview-box">
+        <sd-preview-image [items]="images" [startIndex]="0"></sd-preview-image>
+      </div>
+    </demo-section>`,
   },
   "components/preview/example-xem-pdf": {
     ...SHOWCASE_PAGE_SOURCES["components/preview"],
-    html: `<demo-section heading="Xem PDF" [props]="[{ name: 'source', value: 'url' }, { name: 'sidebar', value: 'thumbnails' }]">
-    <div class="preview-box">
-      <sd-preview-pdf [source]="pdfUrl()" sidebar="thumbnails"></sd-preview-pdf>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Xem PDF"
+      [props]="[
+        { name: 'source', value: 'local 3-page fixture' },
+        { name: 'sidebar', value: 'thumbnails' },
+      ]">
+      <div class="preview-box">
+        <sd-preview-pdf [source]="pdfSource()" sidebar="thumbnails"></sd-preview-pdf>
+      </div>
+    </demo-section>`,
   },
   "components/query-bar/example-che-do-inline": {
     ...SHOWCASE_PAGE_SOURCES["components/query-bar"],
@@ -12080,6 +14489,75 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "forms/entity-picker/example-error-retry-va-create-action": {
+    ...SHOWCASE_PAGE_SOURCES["forms/entity-picker"],
+    html: `<demo-section
+      heading="Error, retry và create action"
+      [props]="[{ name: 'addable', value: true }]"
+      note="Provider lỗi hiển thị DataState retry; create chỉ phát event, không hard-code workflow nghiệp vụ.">
+      <sd-entity-picker
+        style="max-width: 520px"
+        [provider]="errorProvider"
+        valueField="id"
+        displayField="name"
+        addable
+        (sdAdd)="onAdd()" />
+      <div data-add-count>Create actions: {{ addCount() }}</div>
+    </demo-section>`,
+  },
+  "forms/entity-picker/example-multi-select-va-hydration": {
+    ...SHOWCASE_PAGE_SOURCES["forms/entity-picker"],
+    html: `<demo-section
+      heading="Multi-select và hydration"
+      [props]="[{ name: 'model', value: multi().join(', ') }]"
+      note="EMP-042 không thuộc page đầu nhưng vẫn được hydrate và hiển thị theo stable key.">
+      <sd-entity-picker
+        style="max-width: 520px"
+        [provider]="provider"
+        [columns]="columns"
+        valueField="id"
+        displayField="name"
+        multiple
+        [(model)]="multi">
+        <ng-template sdEntityPickerSelected let-entities="entities" let-keys="keys">
+          {{ entities.length }} nhân viên · keys {{ keys.join(', ') }}
+        </ng-template>
+      </sd-entity-picker>
+    </demo-section>`,
+  },
+  "forms/entity-picker/example-row-va-detail-template": {
+    ...SHOWCASE_PAGE_SOURCES["forms/entity-picker"],
+    html: `<demo-section
+      heading="Row và detail template"
+      note="Template nhận entity đã hydrate; table engine và selection engine vẫn do SdTable sở hữu.">
+      <sd-entity-picker style="max-width: 520px" [provider]="provider" valueField="id" displayField="name" [model]="3">
+        <ng-template sdEntityPickerRow let-employee="item">
+          <strong>{{ employee.name }}</strong> · {{ employee.department }}
+        </ng-template>
+        <ng-template sdEntityPickerDetail let-entities="entities"> Selected detail: {{ entities[0]?.code }} </ng-template>
+      </sd-entity-picker>
+    </demo-section>`,
+  },
+  "forms/entity-picker/example-server-single-select": {
+    ...SHOWCASE_PAGE_SOURCES["forms/entity-picker"],
+    html: `<demo-section
+      heading="Server single-select"
+      [props]="[
+        { name: 'model', value: single() ?? 'null' },
+        { name: 'pageSize', value: 10 },
+      ]"
+      note="Tìm kiếm, filter, sort và paging đi qua provider; request cũ nhận AbortSignal khi query mới bắt đầu.">
+      <sd-entity-picker
+        style="max-width: 520px"
+        [provider]="provider"
+        [columns]="columns"
+        [queryFields]="queryFields"
+        valueField="id"
+        displayField="name"
+        [pageSize]="10"
+        [(model)]="single" />
+    </demo-section>`,
+  },
   "forms/inline-text/example-chinh-sua-noi-tuyen": {
     ...SHOWCASE_PAGE_SOURCES["forms/inline-text"],
     html: `<demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Cùng primitive — inline edit ôm sát nội dung, không còn full-width.">
@@ -12258,85 +14736,166 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
   "forms/input/example-bao-loi-dang-icon-hideinlineerror": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
     html: `<demo-section
-    heading="Báo lỗi dạng icon (hideInlineError)"
-    [props]="[{ name: 'hideInlineError', value: 'true' }, { name: '[validator]', value: 'fn' }]"
-    note="Khi hideInlineError=true: không có dòng lỗi dưới ô — thay vào đó icon ⚠ đỏ nằm sát mép phải, message hiện qua tooltip khi hover. Các ô đã có giá trị nên nút xoá (×) cũng hiện cạnh icon lỗi (xoá nằm bên trái, icon lỗi sát mép phải).">
-    <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
-      <sd-input label="minlength = 6" [(model)]="iconMinLen" [form]="formIcon" [minlength]="6" hideInlineError></sd-input>
-      <sd-input label="pattern = 10 chữ số" [(model)]="iconPattern" [form]="formIcon" pattern="^\\d{10}$" patternErrorMessage="Phải gồm đúng 10 chữ số" hideInlineError></sd-input>
-      <sd-input label="[validator] (cấm 'admin')" [(model)]="iconValidator" [form]="formIcon" [validator]="forbidAdmin" hideInlineError></sd-input>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="showIcon()">Hiện lỗi</button>
-        <button type="button" (click)="resetIcon()">Đặt lại</button>
+      heading="Báo lỗi dạng icon (hideInlineError)"
+      [props]="[
+        { name: 'hideInlineError', value: 'true' },
+        { name: '[validator]', value: 'fn' },
+      ]"
+      note="Khi hideInlineError=true: không có dòng lỗi dưới ô — thay vào đó icon ⚠ đỏ nằm sát mép phải, message hiện qua tooltip khi hover. Các ô đã có giá trị nên nút xoá (×) cũng hiện cạnh icon lỗi (xoá nằm bên trái, icon lỗi sát mép phải).">
+      <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+        <sd-input label="minlength = 6" [(model)]="iconMinLen" [form]="formIcon" [minlength]="6" hideInlineError></sd-input>
+        <sd-input
+          label="pattern = 10 chữ số"
+          [(model)]="iconPattern"
+          [form]="formIcon"
+          pattern="^\\d{10}$"
+          patternErrorMessage="Phải gồm đúng 10 chữ số"
+          hideInlineError></sd-input>
+        <sd-input
+          label="[validator] (cấm 'admin')"
+          [(model)]="iconValidator"
+          [form]="formIcon"
+          [validator]="forbidAdmin"
+          hideInlineError></sd-input>
+        <div style="display:flex; gap:8px">
+          <button type="button" (click)="showIcon()">Hiện lỗi</button>
+          <button type="button" (click)="resetIcon()">Đặt lại</button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/input/example-cac-trang-thai-bao-loi-inline": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
     html: `<demo-section
-    heading="Các trạng thái báo lỗi (inline)"
-    [props]="[{ name: 'required', value: 'true' }, { name: 'minlength', value: '6' }, { name: 'pattern', value: 'regex' }, { name: '[validator]', value: 'fn' }, { name: 'inlineError', value: 'text' }]"
-    note="Mỗi ô minh hoạ một loại lỗi. Bấm Hiện lỗi để mark touched — lỗi xuất hiện dưới ô (đỏ). Ô [validator] cấm chữ 'admin'; gõ admin để thấy lỗi.">
-    <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
-      <sd-input label="required (để trống)" [(model)]="errRequired" [form]="formErr" required></sd-input>
-      <sd-input label="minlength = 6" [(model)]="errMinLen" [form]="formErr" [minlength]="6"></sd-input>
-      <sd-input label="pattern = 10 chữ số" placeholder="vd: 0987654321" [(model)]="errPattern" [form]="formErr" pattern="^\\d{10}$" patternErrorMessage="Phải gồm đúng 10 chữ số"></sd-input>
-      <sd-input label="[validator] (cấm 'admin')" [(model)]="errValidator" [form]="formErr" [validator]="forbidAdmin"></sd-input>
-      <sd-input label="inlineError (lỗi do cha truyền)" [(model)]="errInline" [form]="formErr" [inlineError]="serverError()"></sd-input>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="showErr()">Hiện lỗi</button>
-        <button type="button" (click)="resetErr()">Đặt lại</button>
+      heading="Các trạng thái báo lỗi (inline)"
+      [props]="[
+        { name: 'required', value: 'true' },
+        { name: 'minlength', value: '6' },
+        { name: 'pattern', value: 'regex' },
+        { name: '[validator]', value: 'fn' },
+        { name: 'inlineError', value: 'text' },
+      ]"
+      note="Mỗi ô minh hoạ một loại lỗi. Bấm Hiện lỗi để mark touched — lỗi xuất hiện dưới ô (đỏ). Ô [validator] cấm chữ 'admin'; gõ admin để thấy lỗi.">
+      <div style="width: 340px; display:flex; flex-direction:column; gap:12px">
+        <sd-input label="required (để trống)" [(model)]="errRequired" [form]="formErr" required></sd-input>
+        <sd-input label="minlength = 6" [(model)]="errMinLen" [form]="formErr" [minlength]="6"></sd-input>
+        <sd-input
+          label="pattern = 10 chữ số"
+          placeholder="vd: 0987654321"
+          [(model)]="errPattern"
+          [form]="formErr"
+          pattern="^\\d{10}$"
+          patternErrorMessage="Phải gồm đúng 10 chữ số"></sd-input>
+        <sd-input label="[validator] (cấm 'admin')" [(model)]="errValidator" [form]="formErr" [validator]="forbidAdmin"></sd-input>
+        <sd-input
+          label="inlineError (lỗi do cha truyền)"
+          [(model)]="errInline"
+          [form]="formErr"
+          [inlineError]="serverError()"></sd-input>
+        <div style="display:flex; gap:8px">
+          <button type="button" (click)="showErr()">Hiện lỗi</button>
+          <button type="button" (click)="resetErr()">Đặt lại</button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/input/example-chinh-sua-noi-tuyen": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
-    html: `<demo-section heading="Chỉnh sửa nội tuyến" [props]="[{ name: 'viewed', value: 'inline' }]" note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
-    <div style="width: 260px; font-size:13px; color:#555">
-      Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Chỉnh sửa nội tuyến"
+      [props]="[{ name: 'viewed', value: 'inline' }]"
+      note="Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.">
+      <div style="width: 260px; font-size:13px; color:#555">
+        Họ tên: <sd-input [viewed]="'inline'" [(model)]="lockedB" [form]="form"></sd-input>
+      </div>
+    </demo-section>`,
   },
   "forms/input/example-co-ban": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
-    html: `<demo-section heading="Cơ bản" [props]="[{ name: '[(model)]', value: 'two-way' }]" note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
-    <div style="width: 320px">
-      <sd-input label="Họ và tên" placeholder="Nhập họ tên..." helperText="Tên đầy đủ theo CMND" [(model)]="basic" [form]="form"></sd-input>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Cơ bản"
+      [props]="[{ name: '[(model)]', value: 'two-way' }]"
+      note="Bind hai chiều với [(model)] và FormGroup chia sẻ.">
+      <div style="width: 320px">
+        <sd-input
+          label="Họ và tên"
+          placeholder="Nhập họ tên..."
+          helperText="Tên đầy đủ theo CMND"
+          [(model)]="basic"
+          [form]="form"></sd-input>
+      </div>
+    </demo-section>`,
+  },
+  "forms/input/example-input-mask-raw-model-display-value": {
+    ...SHOWCASE_PAGE_SOURCES["forms/input"],
+    html: `<demo-section
+      heading="Input mask: raw model / display value"
+      [props]="[
+        { name: 'mask', value: 'VN_PHONE' },
+        { name: 'model', value: maskedPhone() ?? 'null' },
+      ]"
+      note="Màn hình hiển thị khoảng cách, nhưng model, sdChange và FormGroup chỉ nhận chuỗi số raw.">
+      <div style="width: 320px">
+        <sd-input label="Điện thoại" mask="VN_PHONE" [(model)]="maskedPhone" [form]="form"></sd-input>
+      </div>
+    </demo-section>`,
   },
   "forms/input/example-kich-thuoc": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
     html: `<demo-section heading="Kích thước" [props]="[{ name: 'size', value: 'sm' }]" note="size='sm' cho UI gọn hơn.">
-    <div style="width: 320px">
-      <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
-    </div>
-  </demo-section>`,
+      <div style="width: 320px">
+        <sd-input label="sm" size="sm" placeholder="VD: NV001" [(model)]="codeSm" [form]="form"></sd-input>
+      </div>
+    </demo-section>`,
   },
   "forms/input/example-trang-thai": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
-    html: `<demo-section heading="Trạng thái" [props]="[{ name: 'disabled', value: 'true' }, { name: 'readonly', value: 'true' }, { name: 'viewed', value: 'true' }]" note="Ba trạng thái không cho chỉnh sửa.">
-    <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
-      <sd-input style="width: 220px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input>
-      <sd-input style="width: 220px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-input>
-      <sd-input style="width: 220px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input>
-    </div>
-  </demo-section>`,
+    html: `<demo-section
+      heading="Trạng thái"
+      [props]="[
+        { name: 'disabled', value: 'true' },
+        { name: 'readonly', value: 'true' },
+        { name: 'viewed', value: 'true' },
+      ]"
+      note="Ba trạng thái không cho chỉnh sửa.">
+      <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+        <sd-input style="width: 220px" label="disabled" [(model)]="lockedA" [form]="form" disabled></sd-input>
+        <sd-input style="width: 220px" label="readonly" [(model)]="lockedB" [form]="form" readonly></sd-input>
+        <sd-input style="width: 220px" label="viewed" [(model)]="lockedC" [form]="form" viewed></sd-input>
+      </div>
+    </demo-section>`,
   },
   "forms/input/example-validator": {
     ...SHOWCASE_PAGE_SOURCES["forms/input"],
-    html: `<demo-section heading="Validator" [props]="[{ name: 'required', value: 'true' }, { name: 'type', value: 'email' }, { name: 'minlength', value: '6' }]" note="Bấm Kiểm tra để hiện lỗi inline.">
-    <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
-      <sd-input label="required + type=email" placeholder="vd: a@b.com" type="email" [(model)]="email" [form]="formValid" required></sd-input>
-      <sd-input label="required + minlength=6" type="password" [(model)]="password" [form]="formValid" required [minlength]="6"></sd-input>
-      <div style="display:flex; gap:8px">
-        <button type="button" (click)="check()">Kiểm tra</button>
-        <button type="button" (click)="reset()">Đặt lại</button>
+    html: `<demo-section
+      heading="Validator"
+      [props]="[
+        { name: 'required', value: 'true' },
+        { name: 'type', value: 'email' },
+        { name: 'minlength', value: '6' },
+      ]"
+      note="Bấm Kiểm tra để hiện lỗi inline.">
+      <div style="width: 320px; display:flex; flex-direction:column; gap:12px">
+        <sd-input
+          label="required + type=email"
+          placeholder="vd: a@b.com"
+          type="email"
+          [(model)]="email"
+          [form]="formValid"
+          required></sd-input>
+        <sd-input
+          label="required + minlength=6"
+          type="password"
+          [(model)]="password"
+          [form]="formValid"
+          required
+          [minlength]="6"></sd-input>
+        <div style="display:flex; gap:8px">
+          <button type="button" (click)="check()">Kiểm tra</button>
+          <button type="button" (click)="reset()">Đặt lại</button>
+        </div>
       </div>
-    </div>
-  </demo-section>`,
+    </demo-section>`,
   },
   "forms/radio/example-chinh-sua-noi-tuyen": {
     ...SHOWCASE_PAGE_SOURCES["forms/radio"],
@@ -12681,6 +15240,235 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "forms/time-range/example-co-ban": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time-range"],
+    html: `<demo-section
+      heading="Cơ bản"
+      [props]="[{ name: '[(model)]', value: 'SdTimeRangeValue' }]"
+      note="Hai ô cùng phát một model { from, to } đã chuẩn hóa HH:mm.">
+      <div style="width: 520px; max-width:100%">
+        <sd-time-range [form]="form" name="workingHours" label="Giờ làm việc" clearable [(model)]="workingHours"></sd-time-range>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time-range/example-gioi-han-va-thu-tu": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time-range"],
+    html: `<demo-section
+      heading="Giới hạn và thứ tự"
+      [props]="[
+        { name: 'min', value: '08:00' },
+        { name: 'max', value: '18:00' },
+        { name: 'step', value: '15' },
+      ]"
+      note="Mỗi đầu kiểm tra min/max/step; giờ bắt đầu sau giờ kết thúc tạo lỗi range.">
+      <div style="width: 520px; max-width:100%">
+        <sd-time-range
+          [form]="form"
+          name="boundedHours"
+          label="Khung phục vụ"
+          min="08:00"
+          max="18:00"
+          [step]="15"
+          [(model)]="boundedHours">
+        </sd-time-range>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time-range/example-khoang-mo": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time-range"],
+    html: `<demo-section
+      heading="Khoảng mở"
+      [props]="[{ name: 'allowOpenEnded', value: 'true' }]"
+      note="Cho phép chỉ có mốc bắt đầu hoặc kết thúc khi field không required.">
+      <div style="width: 520px; max-width:100%">
+        <sd-time-range [form]="form" name="openHours" label="Áp dụng từ" allowOpenEnded [(model)]="openHours"> </sd-time-range>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time-range/example-trang-thai": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time-range"],
+    html: `<demo-section
+      heading="Trạng thái"
+      [props]="[{ name: 'disabled / readonly / viewed', value: 'true' }]"
+      note="Viewed hiển thị model time-only mà không khởi tạo Date ở API công khai.">
+      <div style="display:flex; gap:16px; flex-direction:column; max-width:520px">
+        <sd-time-range label="Disabled" [model]="workingHours()" disabled></sd-time-range>
+        <sd-time-range label="Readonly" [model]="workingHours()" readonly></sd-time-range>
+        <sd-time-range label="Viewed" [model]="workingHours()" viewed></sd-time-range>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time/example-co-ban": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time"],
+    html: `<demo-section
+      heading="Cơ bản"
+      [props]="[{ name: '[(model)]', value: basic() ?? 'null' }]"
+      note="Có thể gõ 9:05 để nhận model chuẩn hóa 09:05, hoặc mở bộ chọn giờ.">
+      <div style="width: 320px">
+        <sd-time [form]="form" name="basic" label="Giờ bắt đầu" clearable [(model)]="basic"></sd-time>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time/example-gioi-han-va-buoc-phut": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time"],
+    html: `<demo-section
+      heading="Giới hạn và bước phút"
+      [props]="[
+        { name: 'min', value: '08:00' },
+        { name: 'max', value: '18:00' },
+        { name: 'step', value: '15' },
+      ]"
+      note="Min/max bao gồm biên; phím mũi tên và bộ chọn cùng dùng bước 15 phút.">
+      <div style="width: 320px">
+        <sd-time [form]="form" name="bounded" label="Ca làm việc" min="08:00" max="18:00" [step]="15" [(model)]="bounded"> </sd-time>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time/example-trang-thai": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time"],
+    html: `<demo-section
+      heading="Trạng thái"
+      [props]="[{ name: 'disabled / readonly / viewed', value: 'true' }]"
+      note="Cùng một model time-only trong các trạng thái không chỉnh sửa.">
+      <div style="display:flex; gap:16px; flex-wrap:wrap; width:100%">
+        <sd-time style="width:220px" label="Disabled" [model]="'08:30'" disabled></sd-time>
+        <sd-time style="width:220px" label="Readonly" [model]="'12:00'" readonly></sd-time>
+        <sd-time style="width:220px" label="Viewed" [model]="'17:30'" viewed></sd-time>
+      </div>
+    </demo-section>`,
+  },
+  "forms/time/example-validation": {
+    ...SHOWCASE_PAGE_SOURCES["forms/time"],
+    html: `<demo-section
+      heading="Validation"
+      [props]="[{ name: 'required', value: 'true' }]"
+      note="Text sai như 25:10 được giữ lại để sửa, control invalid và model hợp lệ trước đó không bị ghi đè.">
+      <div style="width: 320px">
+        <sd-time [form]="validationForm" name="requiredTime" label="Giờ bắt buộc" required [(model)]="requiredTime"></sd-time>
+      </div>
+      <button type="button" (click)="validationForm.markAllAsTouched()">Hiện lỗi</button>
+    </demo-section>`,
+  },
+  "forms/tree-select/example-lazy-tree": {
+    ...SHOWCASE_PAGE_SOURCES["forms/tree-select"],
+    html: `<demo-section heading="Lazy tree" note="Children chỉ tải khi mở branch; lỗi được giữ ở node và có retry riêng.">
+      <sd-tree-select
+        style="max-width: 520px"
+        [items]="lazyItems"
+        [tree]="lazyTree"
+        valueField="id"
+        displayField="name"
+        multiple
+        [model]="[3]">
+        <ng-template sdTreeSelectNode let-item let-loading="loading">
+          {{ item.name }}
+          @if (loading) {
+            · loading
+          }
+        </ng-template>
+      </sd-tree-select>
+    </demo-section>`,
+  },
+  "forms/tree-select/example-multiple-cascade": {
+    ...SHOWCASE_PAGE_SOURCES["forms/tree-select"],
+    html: `<demo-section
+      heading="Multiple cascade"
+      [props]="[
+        { name: 'cascade', value: 'descendants' },
+        { name: 'model', value: multiple().join(', ') },
+      ]"
+      note="Chọn parent áp dụng cho descendants đã load; partial selection hiển thị indeterminate, node locked không tương tác.">
+      <sd-tree-select
+        style="max-width: 520px"
+        [items]="staticItems"
+        valueField="id"
+        displayField="name"
+        multiple
+        cascade="descendants"
+        [disabledNode]="disabledDepartment"
+        [(model)]="multiple" />
+    </demo-section>`,
+  },
+  "forms/tree-select/example-static-single-select": {
+    ...SHOWCASE_PAGE_SOURCES["forms/tree-select"],
+    html: `<demo-section heading="Static single-select" [props]="[{ name: 'model', value: single() ?? 'null' }]">
+      <sd-tree-select style="max-width: 520px" [items]="staticItems" valueField="id" displayField="name" [(model)]="single" />
+    </demo-section>`,
+  },
+  "forms/tree-select/example-unloaded-key-va-viewed": {
+    ...SHOWCASE_PAGE_SOURCES["forms/tree-select"],
+    html: `<demo-section
+      heading="Unloaded key và viewed"
+      [props]="[{ name: 'model', value: '[99]' }]"
+      note="Key chưa load không bị xóa bởi filter/page/lazy state; viewed mode hiển thị fallback key ổn định.">
+      <sd-tree-select
+        style="max-width: 520px"
+        [items]="lazyItems"
+        [tree]="lazyTree"
+        valueField="id"
+        displayField="name"
+        multiple
+        viewed
+        [model]="[99]" />
+    </demo-section>`,
+  },
+  "modules/layout/example-sidebar-v1-v2-v3": {
+    ...SHOWCASE_PAGE_SOURCES["modules/layout"],
+    html: `<demo-section
+      heading="Sidebar V1, V2 & V3"
+      note="Switch versions and viewport widths without reloading the Showcase page."
+      [props]="[
+        { name: 'version', value: '1 / 2 / 3' },
+        { name: 'mobileBreakpoint', value: '900' },
+        { name: 'viewport', value: 'desktop / mobile' },
+      ]">
+      <div class="layout-demo__controls" aria-label="Layout preview controls">
+        <fieldset>
+          <legend>Sidebar version</legend>
+          @for (option of versionOptions; track option.value) {
+            <button
+              type="button"
+              [attr.data-layout-version]="option.value"
+              [attr.aria-pressed]="selectedVersion() === option.value"
+              (click)="selectVersion(option.value)">
+              {{ option.label }}
+            </button>
+          }
+        </fieldset>
+        <fieldset>
+          <legend>Preview viewport</legend>
+          @for (option of viewportOptions; track option.value) {
+            <button
+              type="button"
+              [attr.data-layout-viewport]="option.value"
+              [attr.aria-pressed]="selectedViewport() === option.value"
+              (click)="selectViewport(option.value)">
+              {{ option.label }}
+            </button>
+          }
+        </fieldset>
+      </div>
+
+      <div
+        class="layout-demo__preview"
+        [class.layout-demo__preview--mobile]="selectedViewport() === 'mobile'"
+        [attr.data-active-layout-version]="selectedVersion()"
+        [attr.data-active-layout-viewport]="selectedViewport()">
+        <sd-layout [menus]="menus">
+          <main class="layout-demo__content">
+            <span class="layout-demo__eyebrow">Live fixture</span>
+            <h4>Operations overview</h4>
+            <p>The page content stays mounted while the responsive sidebar implementation changes.</p>
+            <div class="layout-demo__metrics" aria-label="Example summary">
+              <span><strong>24</strong> open tasks</span>
+              <span><strong>8</strong> approvals</span>
+              <span><strong>5</strong> reports</span>
+            </div>
+          </main>
+        </sd-layout>
+      </div>
+    </demo-section>`,
+  },
   "services/confirm/example-chon-muc-do": {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
     html: `<demo-section heading="Chọn mức độ" [props]="[{ name: 'withRadio()', value: 'method' }]" note="withRadio() – chọn từ danh sách radio.">
@@ -12781,11 +15569,12 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
       heading="Bật / tắt thủ công"
       [props]="[
-        { name: 'start()', value: 'method' },
-        { name: 'stop()', value: 'method' },
+        { name: 'start()', value: 'SdLoadingRef' },
+        { name: 'close()', value: 'idempotent' },
+        { name: 'stop()', value: 'compatibility FIFO' },
         { name: 'isLoading()', value: 'method' },
       ]"
-      note="Kiểm tra trạng thái bằng isLoading('body').">
+      note="Code mới giữ ref; stop(selector) vẫn hoạt động cho call site cũ theo thứ tự start cũ nhất.">
       <button mat-stroked-button (click)="onStart()">Bật loading</button>
       <button mat-stroked-button color="warn" (click)="onStop()">Tắt loading</button>
       <button mat-stroked-button (click)="onCheck()">Kiểm tra trạng thái</button>
@@ -12797,7 +15586,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
       heading="Loading ô đích"
       [props]="[{ name: 'start()', value: '#demo-target' }]"
-      note="start('#demo-target') chỉ phủ phần tử có id='demo-target'.">
+      note="start('#demo-target') trả về handle idempotent sở hữu đúng host đã match.">
       <button mat-flat-button color="primary" (click)="onTarget()">Loading vùng bên dưới</button>
       <div id="demo-target" class="demo-host">Nội dung mẫu — loading sẽ phủ chính khung này.</div>
     </demo-section>`,
@@ -12807,7 +15596,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     html: `<demo-section
       heading="Loading toàn trang"
       [props]="[{ name: 'start()', value: 'body' }]"
-      note="start('body') → setTimeout 2000ms → stop('body').">
+      note="run() luôn đóng loading ref trong finally và giữ nguyên result/error của task.">
       <button mat-flat-button color="primary" [disabled]="busy()" (click)="onFullPage()">Hiển thị loading toàn trang</button>
     </demo-section>`,
   },
@@ -12819,8 +15608,8 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         { name: 'start()', value: '.demo-tab-panel' },
         { name: 'querySelectorAll', value: 'all matches' },
       ]"
-      note="Giả lập router tabs: nhiều panel cùng class. Một lần start('.demo-tab-panel') gắn overlay lên cả hai — không chỉ panel đầu tiên.">
-      <button mat-flat-button color="primary" (click)="onMultiHost()">Loading cả hai tab</button>
+      note="Hai owner overlap trên cùng hai host; đóng owner đầu không gỡ overlay của owner thứ hai.">
+      <button mat-flat-button color="primary" (click)="onMultiHost()">Chạy hai owner overlap</button>
       <div class="demo-tabs">
         <div class="demo-tab-panel demo-host">
           <strong>Tab 1</strong>
@@ -12862,35 +15651,252 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <button mat-stroked-button color="primary" (click)="onAction()">Toast có nút "Hoàn tác"</button>
   </demo-section>`,
   },
+  "services/persistence/example-deterministic-identity": {
+    ...SHOWCASE_PAGE_SOURCES["services/persistence"],
+    html: `<demo-section
+      heading="Deterministic identity"
+      [props]="[{ name: 'canonicalizer', value: 'SdGraphIdentityCanonicalizer' }]"
+      note="Property insertion order does not change the canonical persistence identity.">
+      <p>Stable identity: {{ stableIdentity }}</p>
+    </demo-section>`,
+  },
+  "services/persistence/example-graph-round-trip": {
+    ...SHOWCASE_PAGE_SOURCES["services/persistence"],
+    html: `<demo-section
+      heading="Graph round-trip"
+      [props]="[
+        { name: 'serializer', value: 'SdGraphSerializer' },
+        { name: 'references', value: 'shared + circular' },
+      ]">
+      <pre>{{ graphSummary }}</pre>
+    </demo-section>`,
+  },
+  "services/persistence/example-invalid-input-containment": {
+    ...SHOWCASE_PAGE_SOURCES["services/persistence"],
+    html: `<demo-section
+      heading="Invalid input containment"
+      [props]="[{ name: 'error', value: 'SdPersistenceError' }]"
+      note="Consumers can reject malformed documents without mutating the previous cache/storage value.">
+      <p>Invalid document rejected: {{ invalidDocumentRejected }}</p>
+    </demo-section>`,
+  },
+  "services/persistence/example-versioned-envelope": {
+    ...SHOWCASE_PAGE_SOURCES["services/persistence"],
+    html: `<demo-section
+      heading="Versioned envelope"
+      [props]="[
+        { name: 'identity', value: 'tenant:42' },
+        { name: 'serializer', value: serializer.format },
+      ]">
+      <p>Envelope payload: {{ envelopeTeam }}</p>
+    </demo-section>`,
+  },
   "services/storage/example-gia-tri-dang-luu-cap-nhat-truc-tiep-qua-subject": {
     ...SHOWCASE_PAGE_SOURCES["services/storage"],
     html: `<demo-section heading="Giá trị đang lưu (cập nhật trực tiếp qua subject)">
-        <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">demo:user-name    = {{ liveLocal() ?? '(trống)' }}
-demo:session-note = {{ liveSession() ?? '(trống)' }}</pre>
-      </demo-section>`,
+          <pre style="margin:0;font-size:12px;background:#f5f5f5;padding:8px 12px;border-radius:6px;width:100%">
+demo:user-name    = {{ liveLocal() ?? '(trống)' }}
+demo:session-note = {{ liveSession() ?? '(trống)' }}</pre
+          >
+        </demo-section>`,
   },
   "services/storage/example-localstorage": {
     ...SHOWCASE_PAGE_SOURCES["services/storage"],
-    html: `<demo-section heading="localStorage" [props]="[{ name: 'type', value: 'local' }]" note="Key 'demo:user-name'. Đóng trình duyệt rồi mở lại vẫn còn.">
-        <mat-form-field appearance="outline" style="width:240px">
-          <mat-label>Tên người dùng</mat-label>
-          <input matInput [(ngModel)]="draftLocal" placeholder="Nhập tên...">
-        </mat-form-field>
-        <button mat-flat-button color="primary" (click)="saveLocal()">Lưu</button>
-        <button mat-stroked-button (click)="readLocal()">Đọc lại</button>
-        <button mat-stroked-button color="warn" (click)="removeLocal()">Xóa</button>
-      </demo-section>`,
+    html: `<demo-section
+          heading="localStorage"
+          [props]="[{ name: 'type', value: 'local' }]"
+          note="Key 'demo:user-name'. Đóng trình duyệt rồi mở lại vẫn còn.">
+          <mat-form-field appearance="outline" style="width:240px">
+            <mat-label>Tên người dùng</mat-label>
+            <input matInput [(ngModel)]="draftLocal" placeholder="Nhập tên..." />
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="saveLocal()">Lưu</button>
+          <button mat-stroked-button (click)="readLocal()">Đọc lại</button>
+          <button mat-stroked-button color="warn" (click)="removeLocal()">Xóa</button>
+        </demo-section>`,
   },
   "services/storage/example-sessionstorage": {
     ...SHOWCASE_PAGE_SOURCES["services/storage"],
-    html: `<demo-section heading="sessionStorage" [props]="[{ name: 'type', value: 'session' }]" note="Key 'demo:session-note'. Mất khi đóng tab.">
-        <mat-form-field appearance="outline" style="width:240px">
-          <mat-label>Ghi chú phiên</mat-label>
-          <input matInput [(ngModel)]="draftSession" placeholder="Nhập ghi chú...">
-        </mat-form-field>
-        <button mat-flat-button color="primary" (click)="saveSession()">Lưu (session)</button>
-        <button mat-stroked-button color="warn" (click)="removeSession()">Xóa</button>
-      </demo-section>`,
+    html: `<demo-section
+          heading="sessionStorage"
+          [props]="[{ name: 'type', value: 'session' }]"
+          note="Key 'demo:session-note'. Mất khi đóng tab.">
+          <mat-form-field appearance="outline" style="width:240px">
+            <mat-label>Ghi chú phiên</mat-label>
+            <input matInput [(ngModel)]="draftSession" placeholder="Nhập ghi chú..." />
+          </mat-form-field>
+          <button mat-flat-button color="primary" (click)="saveSession()">Lưu (session)</button>
+          <button mat-stroked-button color="warn" (click)="removeSession()">Xóa</button>
+        </demo-section>`,
+  },
+  "services/task/example-cancel-va-retry": {
+    ...SHOWCASE_PAGE_SOURCES["services/task"],
+    html: `<demo-section
+      heading="Cancel và retry"
+      [props]="[
+        { name: 'cancel coalescing', value: 'Promise<boolean>' },
+        { name: 'retry guard', value: 'failed/cancelled/transport error' },
+      ]"
+      note="Cancel lỗi giữ nguyên business state; retry không restart một connection đang khỏe.">
+      <sd-job-progress taskId="showcase-action-task" mode="details"></sd-job-progress>
+      <button type="button" (click)="failActionTask()">Giả lập task thất bại</button>
+    </demo-section>`,
+  },
+  "services/task/example-manual-lifecycle": {
+    ...SHOWCASE_PAGE_SOURCES["services/task"],
+    html: `<demo-section
+      heading="Manual lifecycle"
+      [props]="[
+        { name: 'status', value: manualTask.state().status },
+        { name: 'progress', value: manualTask.state().progress ?? 'indeterminate' },
+      ]">
+      <sd-job-progress taskId="showcase-manual-task" mode="details"></sd-job-progress>
+      <div class="task-actions">
+        <button type="button" (click)="advanceManualTask()">Tiến thêm 25%</button>
+        <button type="button" (click)="completeManualTask()">Hoàn tất</button>
+      </div>
+    </demo-section>`,
+  },
+  "services/task/example-polling-va-terminal-teardown": {
+    ...SHOWCASE_PAGE_SOURCES["services/task"],
+    html: `<demo-section
+      heading="Polling và terminal teardown"
+      [props]="[
+        { name: 'load calls', value: pollLoadCount },
+        { name: 'connection', value: pollingTask.connection() },
+      ]"
+      note="Demo trả terminal state ngay lượt đầu; service không schedule thêm poll sau succeeded.">
+      <sd-job-progress taskId="showcase-poll-task"></sd-job-progress>
+    </demo-section>`,
+  },
+  "services/task/example-shared-stable-id": {
+    ...SHOWCASE_PAGE_SOURCES["services/task"],
+    html: `<demo-section
+      heading="Shared stable ID"
+      [props]="[
+        { name: 'subscriberCount', value: sharedTask.subscriberCount() },
+        { name: 'same state signal', value: sharedTask.state === sharedTaskDuplicate.state },
+      ]"
+      note="Hai watcher trùng ID dùng chung state/transport; entry chỉ bị xóa sau lease cuối.">
+      <p data-shared-task-count>Active leases: {{ sharedTask.subscriberCount() }}</p>
+      <button type="button" [disabled]="sharedDuplicateDestroyed" (click)="releaseDuplicateLease()">Hủy lease thứ hai</button>
+    </demo-section>`,
+  },
+  "services/unsaved-changes/example-additive-close-hook": {
+    ...SHOWCASE_PAGE_SOURCES["services/unsaved-changes"],
+    html: `<demo-section
+      heading="Additive close hook"
+      note="Gắn cùng closeGuard vào [beforeClose] của SdModal, SdSideDrawer hoặc SdTab; không cần component phụ thuộc trực tiếp vào service.">
+      <button type="button" (click)="openDrawer()">Mở drawer đã chỉnh sửa</button>
+      <output data-drawer-state>drawer dirty={{ drawerRef.dirty() }}</output>
+      <sd-side-drawer #drawer title="Biên tập hồ sơ" [beforeClose]="drawerCloseGuard">
+        <div class="drawer-body">Dữ liệu trong drawer đang chờ lưu.</div>
+        <button sdFooterRight type="button" (click)="drawer.close()">Đóng có guard</button>
+      </sd-side-drawer>
+    </demo-section>`,
+  },
+  "services/unsaved-changes/example-async-confirmation-decisions": {
+    ...SHOWCASE_PAGE_SOURCES["services/unsaved-changes"],
+    html: `<demo-section
+      heading="Async confirmation decisions"
+      [props]="[
+        { name: 'decision', value: confirmation.decision() },
+        { name: 'confirmCount', value: confirmation.confirmCount() },
+      ]"
+      note="Adapter tùy biến trả save/discard/cancel hoặc boolean. Exception/rejection luôn giữ người dùng ở màn hình hiện tại.">
+      <div class="demo-actions">
+        <button type="button" (click)="setDecision('save')">Save</button>
+        <button type="button" (click)="setDecision('discard')">Discard</button>
+        <button type="button" (click)="setDecision('cancel')">Cancel</button>
+        <button type="button" (click)="confirmAll()">Confirm leave</button>
+      </div>
+      <output data-confirm-state>{{ confirmResult() }}</output>
+    </demo-section>`,
+  },
+  "services/unsaved-changes/example-formgroup-adapter": {
+    ...SHOWCASE_PAGE_SOURCES["services/unsaved-changes"],
+    html: `<demo-section
+      heading="FormGroup adapter"
+      [props]="[{ name: 'form.dirty', value: profileForm.dirty }]"
+      note="Adapter giữ snapshot, cập nhật baseline sau save thành công và tự unsubscribe khi registration bị destroy.">
+      <label class="demo-field">
+        Tên hiển thị
+        <input [formControl]="profileForm.controls.name" />
+      </label>
+      <div class="demo-actions">
+        <button type="button" (click)="saveForm()">Save</button>
+        <button type="button" (click)="formRef.discard()">Discard về snapshot</button>
+      </div>
+      <output data-form-state>{{ profileForm.controls.name.value }} · dirty={{ formRef.dirty() }}</output>
+    </demo-section>`,
+  },
+  "services/unsaved-changes/example-multiple-scoped-watchers": {
+    ...SHOWCASE_PAGE_SOURCES["services/unsaved-changes"],
+    html: `<demo-section
+      heading="Multiple scoped watchers"
+      [props]="[
+        { name: 'registrations', value: unsaved.registrations().length },
+        { name: 'dirty', value: unsaved.dirty() },
+      ]"
+      note="Cùng id có thể tồn tại ở scope khác nhau; register lặp trong cùng scope trả lại đúng registration ref.">
+      <div class="demo-actions">
+        <button type="button" (click)="profileRef.markDirty()">Sửa hồ sơ</button>
+        <button type="button" (click)="filterRef.markDirty()">Sửa bộ lọc</button>
+        <button type="button" (click)="profileRef.markPristine(); filterRef.markPristine()">Đánh dấu đã lưu</button>
+      </div>
+      <output data-registry-state>
+        profile={{ profileRef.dirty() }} · filters={{ filterRef.dirty() }} · any={{ unsaved.dirty() }}
+      </output>
+    </demo-section>`,
+  },
+  "services/viewport/example-breakpoint-mac-dinh": {
+    ...SHOWCASE_PAGE_SOURCES["services/viewport"],
+    html: `<demo-section
+      heading="Breakpoint mặc định"
+      [props]="[
+        { name: 'mobile', value: viewport.breakpoints.mobile },
+        { name: 'tablet', value: viewport.breakpoints.tablet },
+        { name: 'desktop', value: viewport.breakpoints.desktop },
+      ]"
+      note="Các mốc dùng min-width semantics; có thể override toàn bộ qua SD_VIEWPORT_BREAKPOINTS.">
+      <div class="breakpoint-list">
+        <code>mobile: {{ viewport.breakpoints.mobile }}</code>
+        <code>tablet: {{ viewport.breakpoints.tablet }}</code>
+        <code>desktop: {{ viewport.breakpoints.desktop }}</code>
+      </div>
+    </demo-section>`,
+  },
+  "services/viewport/example-signal-theo-breakpoint": {
+    ...SHOWCASE_PAGE_SOURCES["services/viewport"],
+    html: `<demo-section
+      heading="Signal theo breakpoint"
+      [props]="[
+        { name: 'isMobile()', value: viewport.isMobile() },
+        { name: 'isTablet()', value: viewport.isTablet() },
+        { name: 'isDesktop()', value: viewport.isDesktop() },
+      ]"
+      note="Consumer chỉ đọc signal, không tự đăng ký hoặc cleanup listener.">
+      <div class="breakpoint-list">
+        <code>isMobile: {{ viewport.isMobile() }}</code>
+        <code>isTablet: {{ viewport.isTablet() }}</code>
+        <code>isDesktop: {{ viewport.isDesktop() }}</code>
+      </div>
+    </demo-section>`,
+  },
+  "services/viewport/example-trang-thai-truc-tiep": {
+    ...SHOWCASE_PAGE_SOURCES["services/viewport"],
+    html: `<demo-section
+      heading="Trạng thái trực tiếp"
+      [props]="[
+        { name: 'width / height', value: 'Signal<number>' },
+        { name: 'currentBreakpoint', value: viewport.currentBreakpoint() },
+      ]"
+      note="Thay đổi kích thước cửa sổ để quan sát các signal cập nhật từ cùng một resize listener.">
+      <div class="viewport-state">
+        <strong data-viewport-size>{{ viewport.width() }} × {{ viewport.height() }}</strong>
+        <span data-current-breakpoint>{{ viewport.currentBreakpoint() }}</span>
+      </div>
+    </demo-section>`,
   },
 } as const satisfies Readonly<Record<string, ShowcaseExampleSource>>;
 

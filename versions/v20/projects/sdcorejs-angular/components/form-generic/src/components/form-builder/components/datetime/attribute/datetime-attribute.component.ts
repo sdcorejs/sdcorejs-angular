@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
   SdFormatComponent,
   SdFormGenericComponent,
@@ -24,9 +24,12 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, AttributeTextarea, TranslatePipe],
 })
 export class DatetimeAttribute implements AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
   form = new FormGroup({});
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   component!: SdFormGenericDatetime;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericDatetime) {
     this.component = component;
@@ -35,10 +38,10 @@ export class DatetimeAttribute implements AfterViewInit, OnDestroy {
 
   #subscription = new Subscription();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngAfterViewInit(): void {
     // Khi thay đổi, debound 0.5s rồi mới emit output

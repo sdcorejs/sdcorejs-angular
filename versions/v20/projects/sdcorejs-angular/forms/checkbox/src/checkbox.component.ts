@@ -1,19 +1,7 @@
 import { CommonModule } from '@angular/common';
-import {
-  AfterViewInit,
-  booleanAttribute,
-  ChangeDetectorRef,
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  model,
-  OnDestroy,
-  output,
-} from '@angular/core';
+import { booleanAttribute, Component, computed, input, model, output } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -24,10 +12,11 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
+  ɵSdFormControlParent,
 } from '@sdcorejs/angular/forms/models';
 import { Color } from '@sdcorejs/utils/models';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'sd-checkbox',
@@ -46,14 +35,10 @@ import { Subscription } from 'rxjs';
   },
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatCheckboxModule, TranslatePipe],
 })
-export class SdCheckbox implements OnDestroy, AfterViewInit {
-  readonly #ref = inject(ChangeDetectorRef);
-
+export class SdCheckbox {
   id = `I${Utilities.generateUuid()}`;
-  #name = Utilities.generateUuid();
+  readonly #defaultName = Utilities.generateUuid();
   formControl = new FormControl();
-  #subscription = new Subscription();
-  #model: unknown;
 
   // Inputs — all accept null|undefined at the boundary, transform to canonical shape
   readonly autoIdInput = input<string | undefined, string | null | undefined>(undefined, {
@@ -63,17 +48,7 @@ export class SdCheckbox implements OnDestroy, AfterViewInit {
   readonly name = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
-  // why: parent may bind NgForm (template-driven), FormGroup (reactive), or a wrapper with `.form`.
-  // Transform once at the input boundary so the rest of the component only deals with FormGroup.
-  readonly form = input<FormGroup | undefined, any>(undefined, {
-    transform: (val: any): FormGroup | undefined => {
-      if (!val) return undefined;
-      if (val instanceof NgForm) return val.form;
-      if (val instanceof FormGroup) return val;
-      if (val?.form instanceof FormGroup) return val.form;
-      return undefined;
-    },
-  });
+  readonly form = input<ɵSdFormControlParent>(undefined);
   readonly label = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
@@ -106,58 +81,19 @@ export class SdCheckbox implements OnDestroy, AfterViewInit {
   readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
 
-  constructor() {
-    // why: external [name] override falls back to generated uuid only when truthy
-    effect(() => {
-      const val = this.name();
-      if (val) this.#name = val;
-    });
-
-    effect(() => {
-      if (this.disabled()) this.formControl.disable();
-      else this.formControl.enable();
-    });
-
-    effect(() => {
-      const value = this.model();
-      if (this.#model !== value) {
-        this.#model = value;
-        this.formControl.setValue(value, { emitEvent: false });
-      }
-    });
-
-    effect(() => {
-      // touch dependency so validator re-attaches when inlineError changes
-      this.inlineError();
-      this.#updateValidator();
-    });
-  }
-
-  ngAfterViewInit() {
-    this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-    this.form()?.addControl(this.#name, this.formControl);
-    this.#ref.detectChanges();
-  }
-
-  ngOnDestroy() {
-    this.form()?.removeControl(this.#name);
-    this.#subscription.unsubscribe();
-  }
-
-  #onChange = (value: unknown) => {
-    this.#model = value;
-    this.model.set(value);
-    this.sdChange.emit(value);
-  };
-
-  #updateValidator = () => {
-    this.formControl.clearValidators();
-    const validators: ValidatorFn[] = [];
-
-    if (this.inlineError()) {
-      validators.push(SdInlineErrorValidator);
-    }
-    this.formControl.setValidators(validators);
-    this.formControl.updateValueAndValidity();
-  };
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: computed(() => this.name() || this.#defaultName),
+    control: computed(() => this.formControl),
+    model: this.model,
+    writeModel: value => {
+      this.model.set(value);
+      this.sdChange.emit(value);
+    },
+    validators: computed(() => (this.inlineError() ? SdInlineErrorValidator : null)),
+    disabled: this.disabled,
+    controlEquals: (controlValue, modelValue) =>
+      ((controlValue === null || controlValue === undefined) && (modelValue === null || modelValue === undefined)) ||
+      Object.is(controlValue, modelValue),
+  });
 }

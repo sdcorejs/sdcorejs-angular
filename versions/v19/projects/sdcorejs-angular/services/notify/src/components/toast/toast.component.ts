@@ -9,6 +9,7 @@ import {
   SecurityContext,
   computed,
   signal,
+  inject,
 } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -34,6 +35,9 @@ const TOAST_EXIT_ANIMATION_MS = 200;
   },
 })
 export class ToastComponent implements OnInit, OnDestroy {
+  private notifyService = inject(SdNotifyService);
+  private sanitizer = inject(DomSanitizer);
+
   @Input({ required: true }) data!: ToastData;
 
   readonly isExpanded = signal(false);
@@ -46,10 +50,10 @@ export class ToastComponent implements OnInit, OnDestroy {
   private start = 0;
   private remaining = 0;
 
-  constructor(
-    private notifyService: SdNotifyService,
-    private sanitizer: DomSanitizer
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngOnInit(): void {
     this.remaining = this.data.duration;

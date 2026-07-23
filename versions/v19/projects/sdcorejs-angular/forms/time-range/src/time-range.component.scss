@@ -1,0 +1,56 @@
+:host {
+  display: block;
+}
+
+:host(.sd-has-label) {
+  padding-top: 4px;
+}
+
+:host(.sd-viewed) {
+  padding-top: 0;
+}
+
+.sd-time-range-fields {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.sd-time-range-endpoint {
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.sd-time-range-separator {
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+}
+
+.sd-time-range-clear {
+  display: inline-flex;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sd-time-range-error {
+  padding: 0 16px;
+  color: var(--mat-form-field-error-text-color, #ba1a1a);
+  font-size: 12px;
+}
+
+@media (max-width: 599px) {
+  .sd-time-range-fields {
+    flex-wrap: wrap;
+  }
+
+  .sd-time-range-endpoint {
+    flex-basis: calc(50% - 20px);
+  }
+}

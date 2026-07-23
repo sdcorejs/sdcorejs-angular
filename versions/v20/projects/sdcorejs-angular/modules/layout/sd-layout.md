@@ -1,109 +1,65 @@
 # Layout Module
 
-- **Type:** `@NgModule` (`SdLayoutModule`) + standalone components / pipes / services
+- **Type:** `@NgModule` (`SdLayoutModule`) plus standalone components, pipes, and services
 - **Import path:** `@sdcorejs/angular/modules/layout`
 - **Library version:** `@sdcorejs/angular@19.0.0-beta.86`
 
-## One-line purpose
+## Purpose
 
-App shell for back-office portals: provides `<sd-layout>` (sidebar + content host), `<sd-page>` (titled content frame), responsive desktop / mobile sidebar variants, menu pipes, and built-in `home` / `not-found` / `forbidden` route modules.
+`<sd-layout>` is the top-level application shell for Core UI portals. It filters a typed menu tree, renders the current user, and switches between a desktop and mobile sidebar at a configurable runtime breakpoint. Version 1 remains supported; versions 2 and 3 provide alternative navigation models without changing the content host.
 
-## When to use
+Use it for back-office portals that need permission-aware navigation, responsive desktop/mobile composition, pinned or recent destinations, and persistent sidebar preferences. Do not mount it inside a modal, drawer, widget, or another layout shell, and do not use it as an authentication mechanism.
 
-- Building a back-office portal with a left sidebar, lockable / collapsible behaviour, and a user info popup.
-- Need ready-made `/home`, `/not-found`, `/forbidden` routes for landing / error / access-denied pages.
-- Want menus driven from a typed `SdLayoutMenu[]` model with permission-aware filtering and search highlight.
+## Public surface
 
-## When NOT to use
+| API                                                | Purpose                                                                                        |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `SdLayoutComponent` / `sd-layout`                  | Selects the configured V1, V2, or V3 desktop/mobile pair and projects page content             |
+| `SdPageComponent` / `sd-page`                      | Renders a titled content frame inside the shell                                                |
+| `SidebarV1Component`, `SidebarMobileV1Component`   | Existing classic sidebar and mobile drawer                                                     |
+| `SidebarV2Component`, `SidebarMobileV2Component`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
+| `SidebarV3Component`, `SidebarMobileV3Component`   | Collapsible navigation with search, Pinned, and Recent sections                                |
+| `SdLayoutService`                                  | Exposes resolved `userInfo` and `sidebar` signals                                              |
+| `SdViewportService`                                | Shared signal source for viewport dimensions and responsive state                              |
+| `SdLayoutResponsiveService`                        | Deprecated compatibility adapter that evaluates the layout breakpoint over `SdViewportService` |
+| `SdLayoutNavigationStateService`                   | Shares pinned/recent stable keys and version-scoped UI state                                   |
+| `SdLayoutStorageService`                           | Persists layout state through `SdStorageService` and migrates legacy pinned objects lazily     |
+| `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` | Permission filtering, route focus, and search highlighting                                     |
+| `SD_LAYOUT_CONFIGURATION`                          | Consumer layout configuration                                                                  |
+| `SD_LAYOUT_VIEWPORT`                               | Compatibility alias of the shared `SD_VIEWPORT` test/host abstraction                          |
 
-- Do not use it inside a modal, side drawer, widget, or nested feature region. It is the top-level portal shell.
-- Do not use `<sd-page>` as a generic card replacement outside `<sd-layout>`. It expects the layout CSS context.
-- Do not use it for public marketing / content sites. Build a purpose-made page layout instead.
-- Do not rely on it to authenticate users. Feed it user info and actions from `auth`, `keycloak`, or an app-owned provider.
-
-## What it provides
-
-**Components (standalone):**
-
-| Component | Selector | Purpose |
-|---|---|---|
-| `SdLayoutComponent` | `sd-layout` | Top-level shell — picks desktop or mobile sidebar based on viewport |
-| `SdPageComponent` | `sd-page` | Page frame with `title`, `description`, `noHeader` inputs |
-| `SidebarV1Component` | `sidebar-v1` | Desktop sidebar (lockable, hover-to-expand) — used internally by `<sd-layout>` |
-| `SidebarMobileV1Component` | `sidebar-mobile-v1` | Mobile sidebar (drawer overlay) — used internally |
-
-**Services:**
-
-| Service | Purpose |
-|---|---|
-| `SdLayoutService` (`providedIn: 'root'`) | Reads `SD_LAYOUT_CONFIGURATION`; exposes `userInfo` / `sidebar` signals to the shell |
-| `SdLayoutStorageService` (`providedIn: 'root'`) | Persists sidebar state (`isShowSidebar`, `menuLockStatus`, `lastActiveMenuGroupId`) via `SdStorageService` |
-
-**Pipes:** `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` (transform / focus / highlight menu items by search input).
-
-**Sub-modules (lazy):**
-- `HomeModule` — `/home` landing page with redirect guard.
-- `NotFoundModule` — `/not-found` 404 illustration.
-- `ForbiddenModule` — `/forbidden` access-denied illustration.
-
-**Routing:** `SdLayoutModule` declares `RouterModule.forChild(Routes)` mapping `home` / `not-found` / `forbidden`; root path redirects to `not-found`.
-
-**DI tokens / interfaces:** `SD_LAYOUT_CONFIGURATION`, `ISdLayoutConfiguration`, `SdLayoutUserInfo`, `ISdSidebarConfiguration`, `SidebarConfigurationV1`, `SdLayoutMenu` (+ `SdLayoutRootMenu`, `SdLayoutChildrenMenu`).
+`SdLayoutModule` also registers the built-in `home`, `not-found`, and `forbidden` child routes.
 
 ## Configuration
 
 ```ts
 interface ISdLayoutConfiguration {
-  /** Optional URL the home page redirect-guard should send authenticated users to */
   homeUrl?: string;
-
-  /** Sidebar branding — sync object or factory */
+  mobileBreakpoint?: number; // default: 1024; widths below this value use mobile
   sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration>);
-
-  /** Current user — sync object or factory (typically reads SdAuthService) */
   userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
-
   signout: () => void | Promise<void>;
   changePassword?: () => void | Promise<void>;
 }
 
-interface SdLayoutUserInfo {
-  username?: string;
-  email?: string;
-  fullName?: string;
-  avatar?: string;  // URL, base64, or initials fallback
-}
-
-interface SidebarConfigurationV1 {
-  version: 1;
-  brandColor?: string;        // primary brand (e.g. '#1890ff')
-  brandLightColor?: string;   // hover / background tint
-  logoUrl?: string;           // sidebar logo
-  defaultTitle?: string;      // default 'Back Office'
-}
-
-interface SdLayoutMenu {
-  // SdLayoutRootMenu - leaf with route
-  id?: string;
-  path: string;
-  queryParams?: Params;
-  icon?: string;
-  iconUrl?: string;
-  title: string;
-  permission: string | string[] | boolean | (() => boolean);
-  permissionKey?: string;
-  level?: number;
-  tooltipTitle?: string;
-
-  // SdLayoutChildrenMenu - group node
-  // (same fields, plus children?: SdLayoutMenu[])
-}
+type ISdSidebarConfiguration = SidebarConfigurationV1 | SidebarConfigurationV2 | SidebarConfigurationV3;
 ```
+
+Shared sidebar fields are `brandColor`, `brandLightColor`, `logoUrl`, `defaultTitle`, and `pin.enabled`.
+
+| Version | Configuration                                   | Defaults and behavior                                                                                                 |
+| ------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| V1      | `{ version: 1 }`                                | Existing classic layout; runtime desktop/mobile switching now uses `mobileBreakpoint`                                 |
+| V2      | `{ version: 2, interaction?, primaryMenuIds? }` | `interaction` defaults to `click`; at most three valid primary groups are used and remaining groups fall back to More |
+| V3      | `{ version: 3, defaultCollapsed?, recent? }`    | `defaultCollapsed` defaults to `false`; Recent defaults to enabled with `maxItems: 5`                                 |
 
 ## Setup
 
 ```ts
-// app.config.ts (standalone)
+import { ApplicationConfig, importProvidersFrom, inject } from '@angular/core';
+import { SdAuthService } from '@sdcorejs/angular/modules/auth';
+import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION, SdLayoutModule } from '@sdcorejs/angular/modules/layout';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     importProvidersFrom(SdLayoutModule),
@@ -113,15 +69,20 @@ export const appConfig: ApplicationConfig = {
         const auth = inject(SdAuthService);
         return {
           homeUrl: '/dashboard',
+          mobileBreakpoint: 1024,
           sidebar: {
-            version: 1,
-            brandColor: '#1890ff',
-            logoUrl: '/assets/logo.svg',
-            defaultTitle: 'Admin Portal',
+            version: 2,
+            interaction: 'click',
+            primaryMenuIds: ['workspace', 'reports', 'settings'],
+            pin: { enabled: true },
           },
           userInfo: () => {
-            const u = auth.getAuthInfo!() ?? {};
-            return { fullName: `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(), email: u.email, username: u.username };
+            const user = auth.getAuthInfo!() ?? {};
+            return {
+              fullName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+              email: user.email,
+              username: user.username,
+            };
           },
           signout: () => auth.signout(),
           changePassword: () => auth.changePassword(),
@@ -132,101 +93,120 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-```ts
-// routes.ts
-export const routes: Routes = [
-  {
-    path: 'layout',
-    loadChildren: () => import('@sdcorejs/angular/modules/layout').then(m => m.SdLayoutModule),
-  },
-  {
-    path: '',
-    component: ShellComponent, // hosts <sd-layout>
-    children: [/* ... feature routes ... */],
-  },
-];
-```
-
 ```html
-<!-- shell.component.html -->
 <sd-layout [menus]="menus()">
-  <router-outlet/>
+  <router-outlet />
 </sd-layout>
 ```
 
-## Public API
+Provide the permission module configuration used by `MenuPipe` whenever menu permissions are strings. Boolean permissions such as `permission: true` are useful for public destinations and isolated demos.
 
-- **`<sd-layout [menus]>`** — host the app shell. `menus` is `SdLayoutMenu[]`. Internally selects `sidebar-v1` (desktop) or `sidebar-mobile-v1` (mobile/tablet) via `BrowserUtilities.isMobile()`.
-- **`<sd-page title description noHeader>`** — wrap each routed view; renders header bar with title/description.
-- **`SdLayoutService`** — read `userInfo` / `sidebar` signals (auto-resolved from `SD_LAYOUT_CONFIGURATION`).
-- **`SdLayoutStorageService`** — read/write sidebar state across reloads:
-  - `isShowSidebar: SdStorage<boolean>`
-  - `menuLockStatus: SdStorage<boolean>`
-  - `lastActiveMenuGroupId: SdStorage<string>`
-- **Pipes** — `menus | menu`, `menus | menuFocus:searchText`, `text | highLightSearch:term`. Used internally by sidebars; available for custom shells.
+## Version examples
 
-## Behavior notes
+All three objects below are compile-ready values for `ISdLayoutConfiguration['sidebar']`.
 
-- **Mobile detection:** `BrowserUtilities.isMobile()` decides desktop vs mobile sidebar at component init. The signal does NOT live-update on viewport change — a navigation/refresh re-evaluates.
-- **Sidebar lock state:** `menuLockStatus` is read at construction (`?? true`) — locked-open by default. On mobile, `isShowSidebar` is forced false at init regardless.
-- **Hover-to-expand:** when unlocked, `sidebar-v1` opens on `mouseenter` (`onhover=true`) and closes after a 400ms transition delay on `mouseleave` (`#handleMouseLeaveTransition`).
-- **`onPopupOfSideBarOpened/Closed`:** mat-menu / popup interactions inside the sidebar pin it open while the popup is showing.
-- **Routing:** `SdLayoutModule` registers `home` / `not-found` / `forbidden` as child routes — the typical wiring is `{ path: 'layout', loadChildren: () => SdLayoutModule }`.
-- **`<sd-page>` title attribute cleanup:** the component's `effect` removes the host's native `title` attribute when the input `title` is set, preventing the browser tooltip from doubling up.
-- **Permission-aware menus:** `SdLayoutMenu.permission` accepts a code string, an array (OR), a boolean, or a getter. The `MenuPipe` filters menus accordingly — pair with the `permission` module for code resolution.
-
-## Examples
-
-**Define a typed menu:**
 ```ts
+import { SidebarConfigurationV1, SidebarConfigurationV2, SidebarConfigurationV3 } from '@sdcorejs/angular/modules/layout';
+
+const sidebarV1: SidebarConfigurationV1 = {
+  version: 1,
+  defaultTitle: 'Admin Portal',
+  brandColor: '#1565c0',
+  pin: { enabled: true },
+};
+
+const sidebarV2: SidebarConfigurationV2 = {
+  version: 2,
+  interaction: 'hover-lock',
+  primaryMenuIds: ['workspace', 'reports', 'settings'],
+  pin: { enabled: true },
+};
+
+const sidebarV3: SidebarConfigurationV3 = {
+  version: 3,
+  defaultCollapsed: false,
+  recent: { enabled: true, maxItems: 5 },
+  pin: { enabled: true },
+};
+```
+
+The active version can also change at runtime. The shell keeps projected content mounted and recomposes only the sidebar pair.
+
+```ts
+import { inject } from '@angular/core';
+import { SdLayoutService, SidebarConfigurationV3 } from '@sdcorejs/angular/modules/layout';
+
+export class ShellPreferences {
+  readonly #layout = inject(SdLayoutService);
+
+  useCompactSidebar(): void {
+    const sidebar: SidebarConfigurationV3 = {
+      version: 3,
+      defaultCollapsed: true,
+      recent: { enabled: true, maxItems: 5 },
+    };
+    this.#layout.sidebar.set(sidebar);
+  }
+}
+```
+
+## Menu model
+
+Use a stable `id` for every group and leaf. A route `path` is used as the stable fallback for leaves when an id is unavailable.
+
+```ts
+import { SdLayoutMenu } from '@sdcorejs/angular/modules/layout';
+
 const menus: SdLayoutMenu[] = [
   {
-    title: 'Dashboard',
-    path: '/dashboard',
-    icon: 'home',
-    permission: true,
+    id: 'workspace',
+    title: 'Workspace',
+    icon: 'space_dashboard',
+    children: [
+      { id: 'overview', title: 'Overview', path: '/overview', permission: true },
+      { id: 'tasks', title: 'Tasks', path: '/tasks', permission: 'TASK_R_LIST' },
+    ],
   },
   {
-    title: 'Catalog',
-    icon: 'inventory',
-    children: [
-      { title: 'Products', path: '/products', permission: 'PCM_C_PRODUCT_LIST', permissionKey: 'pcm' },
-      { title: 'Categories', path: '/categories', permission: 'PCM_C_CATEGORY_LIST', permissionKey: 'pcm' },
-    ],
+    id: 'reports',
+    title: 'Reports',
+    icon: 'bar_chart',
+    children: [{ id: 'sales', title: 'Sales', path: '/reports/sales', permission: 'REPORT_R_SALES' }],
   },
 ];
 ```
 
-**Wrap a routed view:**
-```html
-<sd-page title="Products" description="Manage product catalog">
-  <button *sdPermission="'PCM_C_PRODUCT_CREATE'">New</button>
-  <sd-table [option]="tableOption"></sd-table>
-</sd-page>
-```
+V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missing slots from the remaining visible roots, and exposes overflow through More. V3 search is accent-insensitive and searches the filtered menu tree.
 
-**Reset sidebar state on signout:**
-```ts
-constructor(auth: SdAuthService, storage: SdLayoutStorageService) {
-  auth.signout$?.subscribe(() => {
-    storage.isShowSidebar.set(true);
-    storage.menuLockStatus.set(true);
-    storage.lastActiveMenuGroupId.set(undefined as any);
-  });
-}
-```
+## Responsive, storage, and migration behavior
 
-## Anti-patterns
+- `mobileBreakpoint` defaults to `1024`. A width strictly below the normalized value is mobile; invalid or non-positive values fall back to the default.
+- `SdLayout` keeps consuming the compatibility `SdLayoutResponsiveService`, which reads `SdViewportService.width`; existing service overrides remain valid and V1/V2/V3 switch from the same application-wide resize listener.
+- `SdLayoutResponsiveService` delegates to `SdViewportService`; `SD_LAYOUT_VIEWPORT` aliases `SD_VIEWPORT`, so existing consumers and test providers continue to work without registering a second listener.
+- Pinned and Recent entries are persisted as stable menu keys. Missing or no-longer-permitted keys are discarded when the current menu tree is hydrated.
+- Existing V1 pinned menu objects are migrated lazily to stable keys the first time the shared navigation state is read. No eager storage rewrite is required during application startup.
+- Pinned and Recent data are shared between sidebar versions. Version-specific UI state such as V2 active/locked group and V3 collapsed state remains scoped by version.
+- For V3, a persisted collapsed value takes precedence over `defaultCollapsed`. Recent items are deduplicated, newest first, and capped by `recent.maxItems`.
+- Do not read the UUID-backed local-storage entries directly. Use `SdLayoutStorageService` or `SdLayoutNavigationStateService` so validation and migration continue to run.
 
-- Do NOT mount `<sd-layout>` inside a route that's lazy-loaded under `/layout` — the sub-module owns `home/not-found/forbidden`, and you'd nest layouts.
-- Do NOT pass an Observable to `userInfo` — it expects a sync value or a function returning `MaybeAsync<SdLayoutUserInfo>` (sync / Promise).
-- Do NOT bypass `SdLayoutStorageService` to read sidebar state — its keys are UUID-based; reading raw localStorage breaks if the keys change.
-- Do NOT use `<sd-page>` outside an `<sd-layout>` — it expects the shell's CSS context.
-- Do NOT depend on `SdLayoutComponent` for SSR — sidebar layout uses browser-only `BrowserUtilities.isMobile()` (window check).
+## Accessibility
+
+- Version controls and sidebar actions are native buttons with visible keyboard focus.
+- Desktop flyouts and mobile sheets close with Escape. Mobile overlays trap focus, restore focus to their trigger, and release body scroll when closed or destroyed.
+- Active, expanded, pressed, dialog, and navigation states are exposed with the corresponding ARIA attributes.
+- Motion used for preview/sidebar transitions is removed when `prefers-reduced-motion: reduce` is active.
+- Keep menu titles meaningful and unique; icons are supplementary and must not be the only accessible label.
+
+## Notes and anti-patterns
+
+- Do not pass an Observable directly to `userInfo` or `sidebar`; pass a value or a function returning a supported `MaybeAsync` value.
+- Do not use viewport user-agent detection or cache a one-time mobile boolean. Let `<sd-layout>` react to `mobileBreakpoint` changes in the viewport.
+- Do not mutate raw pinned/recent arrays or store full new menu objects. Stable ids keep state valid across labels, permissions, and versions.
+- Do not mount `<sd-layout>` under another layout route; it owns fixed navigation and the page content boundary.
+- Use `inject()` in new consumers instead of constructor injection, and derive display state with signals/computed values.
 
 ## Related
 
-- [auth module](./sd-auth.md) — typical source for `userInfo` / `signout` config.
-- [permission module](./sd-permission.md) — backs `SdLayoutMenu.permission` filtering.
-- [keycloak module](./sd-keycloak.md) or an app-owned provider — provides the auth flow that feeds the layout.
-- `<sd-page>` is unique to layout (no other doc); other components like `[sd-table]` (`../components/sd-table.md`) are commonly placed inside `<sd-page>`.
+- [Auth module](../auth/sd-auth.md) supplies the user and sign-out actions.
+- [Permission module](../permission/sd-permission.md) resolves string permission codes used by menus.
+- [Keycloak module](../keycloak/sd-keycloak.md) can feed authenticated identity and roles into both configurations.

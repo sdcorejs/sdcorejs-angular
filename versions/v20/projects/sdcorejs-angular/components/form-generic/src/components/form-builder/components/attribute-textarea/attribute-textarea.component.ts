@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input, input, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
 
@@ -8,7 +8,7 @@ import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
   imports: [SdTextarea],
 })
 export class AttributeTextarea {
-  @Input() form?: FormGroup;
+  readonly form = input<FormGroup>();
 
   label?: string | null;
   @Input('label') set _label(label: string | undefined | null) {
@@ -26,8 +26,8 @@ export class AttributeTextarea {
       this.model = model;
     }
   }
-  @Output() modelChange = new EventEmitter<string>();
-  @Output() sdChange = new EventEmitter<string>();
+  readonly modelChange = output<string>();
+  readonly sdChange = output<string>();
 
   onChange = (value: any) => {
     this.modelChange.emit(value);

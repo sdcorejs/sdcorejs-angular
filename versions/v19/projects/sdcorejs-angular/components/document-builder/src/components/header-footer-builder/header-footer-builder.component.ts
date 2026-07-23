@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, inject, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { I18nService } from '@sdcorejs/angular/i18n';
@@ -63,7 +63,7 @@ export class SdHeaderFooterBuilder {
     }
   }
 
-  @Output() modelChange = new EventEmitter<string>();
+  readonly modelChange = output<string>();
   readonly #editorI18n: DocumentBuilderI18n = {
     t: (key, params) => this.#i18n.t(key, params),
   };
@@ -115,7 +115,7 @@ export class SdHeaderFooterBuilder {
     this.#editor.setData(this.#model || '');
     this.#editor.model.document.on('change:data', () => {
       this.#model = this.#editor.getData();
-      this.modelChange.next(this.#model);
+      this.modelChange.emit(this.#model);
     });
   }
 }

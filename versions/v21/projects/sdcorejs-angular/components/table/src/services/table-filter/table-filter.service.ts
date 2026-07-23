@@ -1,6 +1,6 @@
-import { Injectable } from '@angular/core';
+import { DestroyRef, Injectable, inject } from '@angular/core';
 // import hash from 'object-hash';
-import { SdStorageService } from '@sdcorejs/angular/services';
+import { SdStorageService, SdStorageWithDefault } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Operator } from '@sdcorejs/utils/models';
 import { map, startWith } from 'rxjs/operators';
@@ -16,10 +16,27 @@ import {
 
 @Injectable()
 export class SdTableFilterService {
+  private storageService = inject(SdStorageService);
+  readonly #destroyRef = inject(DestroyRef);
+
   #filterConfiguration = 'GRID-FILTER-CONFIGURATION';
   #filterValue = 'GRID-FILTER-VALUE';
   #cache: Record<string, TableFilterRegister> = {};
-  constructor(private storageService: SdStorageService) {}
+  readonly #storageHandles = new Map<
+    string,
+    {
+      configuration: SdStorageWithDefault<TableFilterConfiguration>;
+      value: SdStorageWithDefault<TableFilterValue>;
+    }
+  >();
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {
+    this.#destroyRef.onDestroy(() => {
+      for (const key of [...this.#storageHandles.keys()]) this.#destroyStorageHandles(key);
+    });
+  }
 
   #hasOwnValue = (values: Record<string, unknown> | undefined, field: string): boolean => {
     return !!values && Object.prototype.hasOwnProperty.call(values, field);
@@ -59,6 +76,7 @@ export class SdTableFilterService {
   ) => {
     const { key, tempKey, cacheSession } = this.#resolveKey(filter, args);
     if (args.force) {
+      this.#destroyStorageHandles(key);
       delete this.#cache[key];
     }
     if (!this.#cache[key]) {
@@ -73,21 +91,30 @@ export class SdTableFilterService {
           type: cacheSession ? 'session' : undefined,
         }
       );
-      // Lấy giá trị configuration merge với giá trị defaultShowing của args nếu như args có thay đổi
-      filterConfiguration.set(this.#initConfiguration(args, filterConfiguration.get()));
-      // Setting của filter value
-      const filterValue = this.storageService.create<TableFilterValue>(
-        {
-          prefix: this.#filterValue,
-          key: !filter?.cacheable ? tempKey : key,
-        },
-        {
-          default: this.#defaultValue(args),
-          type: cacheSession || !filter?.cacheable ? 'session' : undefined,
-        }
-      );
-      // Lấy giá trị value merge với giá trị default của args nếu như args có thay đổi
-      filterValue.set(this.#initValue(args, filterValue.get()));
+      let filterValue: SdStorageWithDefault<TableFilterValue> | undefined;
+      try {
+        // Lấy giá trị configuration merge với giá trị defaultShowing của args nếu như args có thay đổi
+        filterConfiguration.set(this.#initConfiguration(args, filterConfiguration.get()));
+        // Setting của filter value
+        filterValue = this.storageService.create<TableFilterValue>(
+          {
+            prefix: this.#filterValue,
+            key: !filter?.cacheable ? tempKey : key,
+          },
+          {
+            default: this.#defaultValue(args),
+            type: cacheSession || !filter?.cacheable ? 'session' : undefined,
+          }
+        );
+        // Lấy giá trị value merge với giá trị default của args nếu như args có thay đổi
+        filterValue.set(this.#initValue(args, filterValue.get()));
+      } catch (error: unknown) {
+        filterValue?.destroy();
+        filterConfiguration.destroy();
+        throw error;
+      }
+      const activeFilterValue = filterValue;
+      this.#storageHandles.set(key, { configuration: filterConfiguration, value: activeFilterValue });
       this.#cache[key] = {
         configuration: {
           get: (): TableFilterConfiguration => {
@@ -113,11 +140,11 @@ export class SdTableFilterService {
         },
         value: {
           get: (): TableFilterValue => {
-            return filterValue.get();
+            return activeFilterValue.get();
           },
           set: (value: Partial<TableFilterValue>): TableFilterValue => {
             const keys = Object.keys(value || {});
-            const current = filterValue.get();
+            const current = activeFilterValue.get();
             const { columnOperator, columnFilter, externalFilter } = current;
             const updatedFilter = {
               // Filter column
@@ -128,7 +155,7 @@ export class SdTableFilterService {
               // Force
               notReload: !!value?.notReload,
             };
-            filterValue.set({
+            activeFilterValue.set({
               ...updatedFilter,
               // Kiểm tra có đang lọc hay không
               filtered: this.#filtered(value),
@@ -136,10 +163,10 @@ export class SdTableFilterService {
             return updatedFilter;
           },
           remove: () => {
-            filterValue.set(this.#defaultValue(args));
+            activeFilterValue.set(this.#defaultValue(args));
           },
-          observer: filterValue.observer.pipe(
-            startWith(filterValue.get()),
+          observer: activeFilterValue.observer.pipe(
+            startWith(activeFilterValue.get()),
             // Sử dụng mặc định nếu bị reset
             map(value => value || this.#defaultValue(args))
           ),
@@ -147,6 +174,14 @@ export class SdTableFilterService {
       };
     }
     return this.#cache[key];
+  };
+
+  #destroyStorageHandles = (key: string): void => {
+    const handles = this.#storageHandles.get(key);
+    if (!handles) return;
+    this.#storageHandles.delete(key);
+    handles.configuration.destroy();
+    handles.value.destroy();
   };
 
   #filtered = (filterReq: Partial<TableFilterValue>): boolean => {

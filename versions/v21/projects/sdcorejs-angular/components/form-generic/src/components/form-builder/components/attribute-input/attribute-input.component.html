@@ -4,4 +4,4 @@
   }
   <sd-input style="width: 200px" size="sm" [form]="form" [(model)]="model" [disabled]="disabled" (sdChange)="onChange($event)" hideInlineError></sd-input>
 </div> -->
-<sd-input class="py-8" size="sm" [label]="label!" [form]="form" [(model)]="model" [disabled]="disabled" (sdChange)="onChange($event)" hideInlineError></sd-input>
+<sd-input class="py-8" size="sm" [label]="label!" [form]="form()" [(model)]="model" [disabled]="disabled" (sdChange)="onChange($event)" hideInlineError></sd-input>

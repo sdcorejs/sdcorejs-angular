@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input, input, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -9,7 +9,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [SdSelect, TranslatePipe],
 })
 export class AttributeSwitch {
-  @Input() form?: FormGroup;
+  readonly form = input<FormGroup>();
 
   label?: string | null;
   @Input('label') set _label(label: string | undefined | null) {
@@ -22,7 +22,7 @@ export class AttributeSwitch {
       this.model = !!val;
     }
   }
-  @Output() modelChange = new EventEmitter<boolean>();
+  readonly modelChange = output<boolean>();
 
   onChange = (value: any) => {
     this.modelChange.emit(!!value);

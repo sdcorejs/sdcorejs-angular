@@ -1,6 +1,6 @@
 import { NestedTreeControl } from '@angular/cdk/tree';
-import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { CommonModule, DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
@@ -11,12 +11,12 @@ import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
-import { BrowserUtilities, StringUtilities } from '@sdcorejs/utils/fns';
+import { StringUtilities } from '@sdcorejs/utils/fns';
 
 // NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { HighlightSearchPipe, MenuFocusPipe } from '../../../../pipes';
-import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
+import { SdLayoutChildrenMenu, SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../../../services';
 import { LayoutUserComponent } from '../user/user.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -41,6 +41,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarComponent {
   // ==========================================
@@ -48,7 +49,9 @@ export class SidebarComponent {
   // ==========================================
   #router = inject(Router);
   #layoutStorageService = inject(SdLayoutStorageService);
+  #navigationState = inject(SdLayoutNavigationStateService);
   #menuFocusPipe = inject(MenuFocusPipe);
+  #window = inject(DOCUMENT).defaultView;
   #destroyRef = inject(DestroyRef); // Dùng để unsubscribe RxJS tự động
 
   // ==========================================
@@ -58,6 +61,7 @@ export class SidebarComponent {
   menus = input.required<SdLayoutMenu[]>();
   userInfo = input.required<SdLayoutUserInfo>();
   sidebar = input.required<SidebarConfigurationV1>();
+  isMobile = input(false);
   expandSideBar = output<void>();
   popupUserMenuClosed = output<void>();
   popupUserMenuOpened = output<void>();
@@ -66,23 +70,19 @@ export class SidebarComponent {
   // ==========================================
   // STATE SIGNALS
   // ==========================================
-  screenHeight = window.innerHeight;
-  isMobileOrTablet = BrowserUtilities.isMobile();
   isMenuLock = signal<boolean>(this.#layoutStorageService.menuLockStatus?.get() ?? true);
-  currentPath = signal<string>(window.location.pathname);
+  currentPath = signal<string>(this.#window?.location.pathname ?? this.#router.url.split(/[?#]/, 1)[0] ?? '');
   searchText = signal<string>('');
   titleMenuGroup = signal<string | undefined>('');
   idMenuGroupActive = signal<string | undefined>('');
   menusByGroup = signal<SdLayoutMenu[]>([]);
   #hoveredMenuNodeKey = signal<string | null>(null);
   #pinIconHoverTimerId = signal<ReturnType<typeof setTimeout> | null>(null);
-  pinnedMenuGroup = signal<SdLayoutChildrenMenu>(
-    this.#layoutStorageService.pinnedMenuGroup.get() ?? {
-      id: 'pinned-menu-group',
-      title: 'Đã ghim',
-      children: [],
-    }
-  );
+  pinnedMenuGroup = computed<SdLayoutChildrenMenu>(() => ({
+    id: 'pinned-menu-group',
+    title: 'Đã ghim',
+    children: this.#navigationState.pinnedMenus(),
+  }));
 
   // ==========================================
   // COMPUTED STATE
@@ -108,6 +108,7 @@ export class SidebarComponent {
     effect(() => {
       const currentMenus = this.menus();
       untracked(() => {
+        this.#navigationState.hydrate(currentMenus);
         const lastActiveMenuGroupId = this.#layoutStorageService.lastActiveMenuGroupId.get();
         const pinnedGroup = this.pinnedMenuGroup();
         const isPinEnabled = this.sidebar()?.pin?.enabled;
@@ -127,8 +128,9 @@ export class SidebarComponent {
   #setupSubscriptions(): void {
     this.#router.events.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(event => {
       if (event instanceof NavigationEnd) {
-        if (this.currentPath() !== window.location.pathname) {
-          this.currentPath.set(window.location.pathname);
+        const currentPath = event.urlAfterRedirects.split(/[?#]/, 1)[0] ?? '';
+        if (this.currentPath() !== currentPath) {
+          this.currentPath.set(currentPath);
           this.#bindingMenuGroupByCurrentPath(this.menus());
         }
       }
@@ -159,15 +161,7 @@ export class SidebarComponent {
 
   onTogglePin = (event: MouseEvent, node: SdLayoutMenu): void => {
     event.stopPropagation();
-    const key = this.#getMenuNodeKey(node);
-    this.pinnedMenuGroup.update(group => {
-      const children = group.children ?? [];
-      const exists = children.some(m => this.#getMenuNodeKey(m) === key);
-      const updatedChildren = exists ? children.filter(m => this.#getMenuNodeKey(m) !== key) : [...children, node];
-      const updatedGroup = { id: 'pinned-menu-group', title: 'Đã ghim', children: updatedChildren };
-      this.#layoutStorageService.pinnedMenuGroup.set(updatedGroup);
-      return updatedGroup;
-    });
+    this.#navigationState.togglePinned(node);
   };
 
   #onExpandAllMenuNodes = (menus: SdLayoutMenu[]): void => {
@@ -196,11 +190,7 @@ export class SidebarComponent {
   }
 
   openHomePage = (): void => {
-    if (!this.isMobileOrTablet) {
-      this.#router.navigateByUrl('/layout/home');
-    } else {
-      window.location.href = '/layout/home';
-    }
+    this.#router.navigateByUrl('/layout/home');
     this.searchText.set('');
     this.#layoutStorageService.lastActiveMenuGroupId.set('');
   };
@@ -212,7 +202,7 @@ export class SidebarComponent {
   navigate = (args: { path: string; queryParams: Params }): void => {
     const { path, queryParams } = args;
     if (path.includes('http')) {
-      window.open(path);
+      this.#window?.open(path, '_blank', 'noopener');
       return;
     }
     this.#router.navigate([path.split('?')[0]], {
@@ -220,7 +210,7 @@ export class SidebarComponent {
       state: { switchTab: true },
     });
 
-    if (this.isMobileOrTablet) {
+    if (this.isMobile()) {
       this.#closeMenu();
     }
   };
@@ -257,7 +247,7 @@ export class SidebarComponent {
     this.idMenuGroupActive.set(menuGroupNode?.id);
     this.#layoutStorageService.lastActiveMenuGroupId.set(menuGroupNode?.id || '');
     if (!this.currentPath()) {
-      this.currentPath.set(window.location.pathname);
+      this.currentPath.set(this.#window?.location.pathname ?? this.#router.url.split(/[?#]/, 1)[0] ?? '');
     }
   };
 

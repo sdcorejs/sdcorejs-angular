@@ -21,14 +21,14 @@
     <attribute-switch [label]="'core.component.form-builder.disabled' | translate" [(model)]="component.disabled"></attribute-switch>
     <attribute-expression
       [label]="'core.component.form-builder.visible-when' | translate"
-      [components]="components"
-      [variables]="variables"
+      [components]="components()"
+      [variables]="variables()"
       [(model)]="component.properties!.visibleWhenExpression"></attribute-expression>
     @if (!component.disabled) {
       <attribute-expression
         [label]="'core.component.form-builder.disabled-when' | translate"
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [(model)]="component.properties!.disabledWhenExpression"></attribute-expression>
     }
     </div>

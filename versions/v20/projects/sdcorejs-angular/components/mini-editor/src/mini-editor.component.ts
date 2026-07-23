@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, HostBinding, Input, Output, forwardRef, OnDestroy } from '@angular/core';
+import { Component, HostBinding, Input, forwardRef, OnDestroy, input, output } from '@angular/core';
 import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import {
@@ -63,19 +63,19 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
 
   /** NgModel binding - nội dung HTML/Markdown */
   @Input() value = '';
-  @Output() valueChange = new EventEmitter<string>();
+  readonly valueChange = output<string>();
 
   /** Event emitter khi content thay đổi */
-  @Output() contentChange = new EventEmitter<string>();
+  readonly contentChange = output<string>();
 
   /** Event emitter khi blur */
-  @Output() blur = new EventEmitter<FocusEvent>();
+  readonly blur = output<FocusEvent>();
 
   /** Event emitter khi focus */
-  @Output() focus = new EventEmitter<FocusEvent>();
+  readonly focus = output<FocusEvent>();
 
   /** Disabled state */
-  @Input() disabled = false;
+  readonly disabled = input(false);
 
   Editor = ClassicEditor;
   #editor!: ClassicEditor;

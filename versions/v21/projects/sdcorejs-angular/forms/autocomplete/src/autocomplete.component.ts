@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -56,6 +55,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
@@ -95,7 +95,7 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
     SdView,
   ],
 })
-export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit {
+export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
   id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
@@ -214,7 +214,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
   // ==========================================
   sdChange = output<string | number | null>();
   sdSelection = output<SdSelectionData>();
-  @Output() sdAdd = new EventEmitter<void>();
+  // why: the template reads EventEmitter.observed to render the add action only when a consumer handles it.
+  @Output() readonly sdAdd = new EventEmitter<void>();
 
   // ==========================================
   // 5. INTERNAL STATE & STREAMS
@@ -225,6 +226,11 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
 
   inputControl = new SdFormControl();
   formControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+  });
   matcher = new SdAutocompleteErrotStateMatcher(this.formControl);
 
   #cache: Record<string, T[]> = {};
@@ -461,16 +467,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy, AfterViewInit
     );
   }
 
-  ngAfterViewInit() {
-    const formGroup = this.form();
-    formGroup?.addControl(this.name(), this.formControl);
-  }
-
   ngOnDestroy() {
     this.#subscription.unsubscribe();
-    const formGroup = this.form();
-    formGroup?.removeControl(this.name());
-
     this.#cache = {};
     this.#item = {};
   }

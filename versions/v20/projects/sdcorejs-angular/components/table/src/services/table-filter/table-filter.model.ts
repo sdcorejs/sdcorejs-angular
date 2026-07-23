@@ -1,5 +1,5 @@
 import { TemplateRef } from '@angular/core';
-import { SdSearch } from '@sdcorejs/angular/forms';
+import type { SdSearch } from '@sdcorejs/angular/forms/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities';
 import { Filter, NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';

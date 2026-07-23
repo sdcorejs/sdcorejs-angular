@@ -10,8 +10,6 @@ import {
   input,
   model,
   computed,
-  effect,
-  untracked,
   OnDestroy,
   OnInit,
   output,
@@ -19,7 +17,7 @@ import {
   viewChild,
   contentChild,
 } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
@@ -37,6 +35,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -58,6 +57,8 @@ import {
   SdNativeDateAdapter,
 } from '@sdcorejs/angular-material-datetime';
 
+type SdDatetimeModelValue = string | number | Date | undefined | null;
+
 /**
  * Thử parse `value` theo lần lượt nhiều format; trả về Date đầu tiên hợp lệ.
  * date-fns không hỗ trợ multi-format parse như moment(value, [fmt1, fmt2], true).
@@ -68,6 +69,25 @@ function parseFirstValid(value: string, formats: string[]): Date | null {
     if (isValidDate(d)) return d;
   }
   return null;
+}
+
+function datetimeModelToControl(value: SdDatetimeModelValue, showSeconds: boolean): string | null {
+  if (!DateUtilities.isDate(value)) return null;
+  const normalized = DateUtilities.toFormat(value, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm');
+  if (!normalized) return null;
+  return DateUtilities.toFormat(normalized, showSeconds ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
+}
+
+function datetimeControlToStored(value: string | null, showSeconds: boolean): string | null {
+  if (!value) return null;
+  const parsed = parseFirstValid(value, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
+  if (!parsed) return null;
+  return DateUtilities.toFormat(parsed, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
+}
+
+function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolean): string | null {
+  if (!DateUtilities.isDate(value)) return null;
+  return DateUtilities.toFormat(value, showSeconds ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00') || null;
 }
 
 @Component({
@@ -229,7 +249,7 @@ export class SdDatetime implements OnDestroy, OnInit {
   maxDateInput = input<any>(undefined, { alias: 'maxDate' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput() ?? this.maxDateInput()));
 
-  valueModel = model<string | number | Date | undefined | null>(undefined, { alias: 'model' });
+  valueModel = model<SdDatetimeModelValue>(undefined, { alias: 'model' });
 
   // viewed-mode: formControl.value là chuỗi display (dd/MM/yyyy HH:mm) nên DatePipe không parse được.
   // Lấy thẳng từ valueModel (nguồn dữ liệu thật) rồi convert sang Date cho DatePipe.
@@ -253,55 +273,31 @@ export class SdDatetime implements OnDestroy, OnInit {
   // ==========================================
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<SdDatetimeModelValue, string | null>({
+    form: this.form,
+    name: this.name,
+    control: computed<AbstractControl<string | null>>(() => this.formControl),
+    model: this.valueModel,
+    writeModel: value => {
+      this.valueModel.set(value);
+      this.sdChange.emit(value);
+    },
+    modelToControl: value => datetimeModelToControl(value, this.showSeconds()),
+    controlToModel: value => (value ? (datetimeControlToStored(value, this.showSeconds()) ?? this.valueModel()) : null),
+    modelEquals: (left, right) => normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds()),
+    validators: computed(() => (this.inlineError() ? SdInlineErrorValidator : null)),
+    required: this.required,
+    disabled: this.disabled,
+    viewed: this.viewed,
+    validationError: computed(() => this.errorMessage()),
+  });
   isFocused = false;
   isValid?: boolean;
 
   /** State popup — true khi picker package đang mở. */
   pickerOpened = computed(() => this.dateTimePicker()?.opened() ?? false);
 
-  #date: string | undefined | null;
   #subscription = new Subscription();
-
-  constructor() {
-    // EFFECT 1: Sync model thay đổi từ bên ngoài → cập nhật hiển thị
-    effect(() => {
-      let val = this.valueModel();
-      untracked(() => {
-        if (!DateUtilities.isDate(val)) {
-          val = null;
-        }
-        val = DateUtilities.toFormat(val, 'yyyy/MM/dd HH:mm');
-        if (this.#date !== val) {
-          this.#date = val;
-          // Cập nhật formControl với chuỗi hiển thị dd/MM/yyyy HH:mm
-          const fmt = this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm';
-          const displayStr = DateUtilities.isDate(this.#date) ? DateUtilities.toFormat(this.#date, fmt) : null;
-          this.formControl.setValue(displayStr, { emitEvent: false });
-        }
-      });
-    });
-
-    // EFFECT 2: Sync Disable
-    effect(() => {
-      if (this.disabled()) this.formControl.disable({ emitEvent: false });
-      else this.formControl.enable({ emitEvent: false });
-    });
-
-    // EFFECT 3: Update Validators
-    effect(() => {
-      const req = this.required();
-      const inl = this.inlineError();
-
-      untracked(() => {
-        const validators: ValidatorFn[] = [];
-        if (req) validators.push(Validators.required);
-        if (inl) validators.push(SdInlineErrorValidator);
-
-        this.formControl.setValidators(validators.length ? validators : null);
-        this.formControl.updateValueAndValidity({ emitEvent: false });
-      });
-    });
-  }
 
   ngOnInit() {
     this.#subscription.add(
@@ -309,13 +305,9 @@ export class SdDatetime implements OnDestroy, OnInit {
         this.ref.markForCheck();
       })
     );
-    const formGroup = this.form();
-    formGroup?.addControl(this.name(), this.formControl);
   }
 
   ngOnDestroy() {
-    const formGroup = this.form();
-    formGroup?.removeControl(this.name());
     this.#subscription.unsubscribe();
   }
 
@@ -341,12 +333,9 @@ export class SdDatetime implements OnDestroy, OnInit {
   }
 
   onPickerConfirm(value: Date) {
-    const fmt = this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00';
-    // value là native Date từ package, không cần .toDate() như Moment.
-    const stored = DateUtilities.toFormat(value, fmt);
-    if (this.#date !== stored) {
-      this.valueModel.set(stored);
-      this.sdChange.emit(stored);
+    const display = DateUtilities.toFormat(value, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
+    if (this.formControl.value !== display) {
+      this.formControl.setValue(display);
     }
   }
 
@@ -451,21 +440,17 @@ export class SdDatetime implements OnDestroy, OnInit {
       this.formControl.updateValueAndValidity();
     }, 0);
 
-    // Đồng bộ ngược về model nếu hợp lệ.
-    // date-fns không có multi-format strict parse như moment, dùng helper parseFirstValid.
+    // Đồng bộ qua canonical control; connector sở hữu conversion và model/output timing.
     if (currentVal) {
       const parsed = parseFirstValid(currentVal, ['dd/MM/yyyy HH:mm:ss', 'dd/MM/yyyy HH:mm']);
       if (parsed) {
-        const fmt = this.showSeconds() ? 'yyyy/MM/dd HH:mm:ss' : 'yyyy/MM/dd HH:mm:00';
-        const stored = DateUtilities.toFormat(parsed, fmt);
-        if (this.#date !== stored) {
-          this.valueModel.set(stored);
-          this.sdChange.emit(stored);
+        const display = DateUtilities.toFormat(parsed, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm');
+        if (this.formControl.value !== display) {
+          this.formControl.setValue(display);
         }
       }
     } else if (this.valueModel()) {
-      this.valueModel.set(null);
-      this.sdChange.emit(null);
+      this.formControl.setValue(null);
     }
   };
 
@@ -473,8 +458,6 @@ export class SdDatetime implements OnDestroy, OnInit {
     $event?.stopPropagation();
     if (this.formControl.value) {
       this.formControl.setValue(null);
-      this.valueModel.set(null);
-      this.sdChange.emit(null);
     }
   };
 }

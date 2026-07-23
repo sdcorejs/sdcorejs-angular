@@ -4,14 +4,15 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  EventEmitter,
   Input,
   OnDestroy,
-  Output,
   QueryList,
   ViewChild,
   ViewChildren,
   OnInit,
+  inject,
+  input,
+  output,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -50,11 +51,19 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   ],
 })
 export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
+  private ref = inject(ChangeDetectorRef);
+  private readonly formGenericService = inject(FormGenericService);
+
   @ViewChildren(SdUploadFile) uploadFiles?: QueryList<SdUploadFile>;
   @ViewChild(SdTable) table?: SdTable;
   @ViewChild(SdSideDrawer) sideDrawer?: SdSideDrawer;
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
-  @Input() form = new FormGroup({});
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
+  readonly form = input(new FormGroup({}));
   component?: SdFormGenericTable;
   col = 'col-6 px-8';
   @Input({
@@ -85,7 +94,7 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
       this.#modelChanges.next(val);
     }
   }
-  @Output() modelChange = new EventEmitter<any[]>();
+  readonly modelChange = output<any[]>();
 
   #tableChanges = new Subject<void>();
   #modelChanges = new Subject<string[]>();
@@ -99,18 +108,20 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   imageKeys: string[] = [];
 
   #selectedIndex = -1;
-  constructor(
-    private ref: ChangeDetectorRef,
-    private readonly formGenericService: FormGenericService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit() {
     this.#subscription.add(
-      this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
-        this.model = variable.value;
-        this.#modelChanges.next(this.model);
-        this.ref.markForCheck();
-      })
+      this.setVariables()
+        .pipe(filter(variable => variable.key === this.component?.key))
+        .subscribe(variable => {
+          this.model = variable.value;
+          this.#modelChanges.next(this.model);
+          this.ref.markForCheck();
+        })
     );
   }
 
@@ -212,7 +223,7 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
         this.columnValues[key] = await this.formGenericService.selection.items(valuesKey, {
           component: this.component,
           column,
-          entity: this.form.value,
+          entity: this.form().value,
         });
         if (this.columnValues[key]) {
           if (Array.isArray(this.columnValues[key])) {
@@ -346,8 +357,8 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
       this.#selectedIndex = -1;
       this.row = {};
     }
-    this.form.markAsUntouched();
-    this.form.markAsPristine();
+    this.form().markAsUntouched();
+    this.form().markAsPristine();
     this.sideDrawer?.open();
   };
 
@@ -356,8 +367,9 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   };
 
   onAccept = (addable?: boolean) => {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    const form = this.form();
+    if (form.invalid) {
+      form.markAllAsTouched();
       return;
     }
     // Nếu là cập nhật thì cập nhật vào trường tương ứng

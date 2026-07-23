@@ -29,19 +29,19 @@
     <attribute-switch [label]="'core.component.form-builder.disabled' | translate" [(model)]="component.disabled"></attribute-switch>
     <attribute-expression
       [label]="'core.component.form-builder.visible-when' | translate"
-      [components]="components"
-      [variables]="variables"
+      [components]="components()"
+      [variables]="variables()"
       [(model)]="component.properties!.visibleWhenExpression"></attribute-expression>
     <attribute-expression
       [label]="'core.component.form-builder.hidden-when' | translate"
-      [components]="components"
-      [variables]="variables"
+      [components]="components()"
+      [variables]="variables()"
       [(model)]="component.properties!.hiddenWhenExpression"></attribute-expression>
     @if (!component.disabled) {
       <attribute-expression
         [label]="'core.component.form-builder.disabled-when' | translate"
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [(model)]="component.properties!.disabledWhenExpression"></attribute-expression>
     }
     </div>
@@ -57,8 +57,8 @@
     @if (!component.validate!.required) {
       <attribute-expression
         [label]="'core.component.form-builder.required-when' | translate"
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [(model)]="component.properties!.requiredWhenExpression"></attribute-expression>
     }
     <attribute-input-number [label]="'core.component.form-builder.max-files' | translate" [(model)]="component.properties!.max"></attribute-input-number>
@@ -78,7 +78,7 @@
       <span class="msi chev">chevron_right</span>
     </summary>
     <div class="fb-section__body">
-    <attribute-parameter [label]="'core.component.form-builder.assign-parameter' | translate" [components]="components" [(model)]="component.properties!.args"></attribute-parameter>
+    <attribute-parameter [label]="'core.component.form-builder.assign-parameter' | translate" [components]="components()" [(model)]="component.properties!.args"></attribute-parameter>
     </div>
   </details>
 }

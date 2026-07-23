@@ -1,156 +1,85 @@
-# SdCacheService
+# `SdCacheService`
 
-**Type**: Service (Angular `@Injectable`)
-**Class**: `SdCacheService`
-**Provided in**: `'root'`
-**Import path**: `@sdcorejs/angular/services/cache`
+**Type:** root injectable typed cache
+**Import path:** `@sdcorejs/angular/services/cache`
 
-## One-line purpose
-Key-based cache factory that returns per-key handles (`get`/`set`/`has`/`remove`/`destroy`/`load`/`observer`) backed by an in-memory `Map` plus optional `localStorage` / `sessionStorage` persistence with hour-based TTL.
+`SdCacheService` creates typed cache handles with shared state, exact absence semantics, TTL, request coalescing and optional memory/session/local persistence.
 
-## When to use
-- Caching API responses across components/pages with a TTL (`hours`).
-- Get-or-set ("memoize") pattern for async data via `load(callback)`.
-- Reactive consumption of cached values via the `observer` (`Observable<T | undefined>`).
-- Sharing data between components without coupling them through a state library.
+## Create a handle
 
-## When NOT to use
-- For very large/binary blobs in `localStorage` — quota errors are caught but the entry won't persist.
-- For secrets — `localStorage`/`sessionStorage` are accessible to any script in the origin.
-- When you need cross-tab eviction signals — there is no `storage` event handler; reads happen on access.
-
-## Public API
-
-### `create<T>(key, option?): SdCache<T>`
-Returns a stable handle for the given (key, option) pair. Handles for the same hashed key share the same `BehaviorSubject`, so `observer` emits to all consumers.
-
-```typescript
-create<T = any>(key: string | object, option?: SdCacheOption<T>): SdCache<T>;
-
-interface SdCacheOption<T = any> {
-  type?: 'memory' | 'session' | 'local';   // default: 'memory'
-  hours?: number;                            // TTL; if expired, entry is evicted on next read
-  default?: T;                               // returned by get() when no entry
-  args?: Record<string, any>;               // reserved — not read by current implementation
-}
-
-interface SdCache<T = any> {
-  get: () => T;
-  set: (data: T) => void;
-  has: () => boolean;
-  remove: () => void;
-  destroy: () => void;
-  observer: Observable<T | undefined>;
-  load: (callback: () => Promise<T>) => Promise<T>;
-}
-```
-
-**Parameters**:
-- `key` (`string | object`): identifier; hashed via `Utilities.hash({ key })`. Object keys are serialized with sorted keys before hashing — two objects with the same shape/values map to the same cache slot.
-- `option` (`SdCacheOption<T>`, optional): storage type, TTL, default value.
-
-**Returns**: `SdCache<T>` handle.
-
-**Throws**: `'Key is required'` if `key` is falsy.
-
-### Handle methods (returned by `create`)
-- `get()`: returns the cached value (or `option.default`). Reads memory first, falls back to storage and lifts the entry into memory. TTL-expired entries are evicted and `undefined` is returned.
-- `set(data)`: deep-clones via `JSON.parse(JSON.stringify(data))`, stamps `createdOn = new Date()`, writes memory + storage, emits to subscribers.
-- `has()`: `true` if a non-expired entry exists.
-- `remove()`: clears memory + storage entry; emits `undefined`.
-- `destroy()`: completes the subject and removes both the subject and the memory entry (does NOT clear storage by itself — call `remove()` first if needed).
-- `load(callback)`: get-or-set — returns cache hit if present; otherwise awaits `callback()`, sets it (only if result is non-null/non-undefined), returns it.
-- `observer`: `Observable<T | undefined>` — current value piped through `get()` on every emission, so subscribers always see the live, TTL-checked value.
-
-## Configuration / DI tokens
-
-### `SD_CACHE_CONFIG` — `InjectionToken<ISdCacheConfiguration>` (declared but not consumed by current service)
-Reserved for plugging custom storage adapters. The current implementation does NOT inject this token; treat as an extension point only.
-
-```typescript
-interface ISdCacheConfiguration {
-  convertKey?: (key: string) => string;
-  set?: (key: string, value: { data: any; createdOn: Date }, option?: SdCacheOption) => Promise<void>;
-  get?: (key: string, option?: SdCacheOption) => Promise<{ data: any; createdOn: Date }>;
-  remove?: (key: string, option?: SdCacheOption) => Promise<void>;
-}
-```
-
-## Behavior notes
-- **Storage layering**: memory (`Map`) is authoritative for the current session. `localStorage`/`sessionStorage` is read once on first access and lifted into memory.
-- **Deep clone**: both `get` and `set` deep-clone the payload (`JSON.parse(JSON.stringify(...))`). Functions, Dates, Maps/Sets, undefined values, and circular refs are NOT preserved.
-- **TTL**: `hours` is checked against `entry.createdOn` using `DateUtilities.addHours`. Expiry triggers eviction on the next read.
-- **Quota**: storage write failures are caught and `console.error('Storage quota exceeded', e)` is emitted; in-memory entry still works.
-- **Subject sharing**: if you call `create(key, option)` twice in the same session, both handles share the same `BehaviorSubject`, so `observer` is broadcast.
-
-## Examples
-
-### 1. Get-or-set across navigation
-```typescript
-const cache = inject(SdCacheService).create<User[]>('users', {
+```ts
+const users = cache.create<User[]>('users', {
   type: 'session',
-  hours: 1,
+  ttlMs: 60_000,
+  namespace: 'portal',
+  version: 2,
 });
 
-const users = await cache.load(() => firstValueFrom(http.get<User[]>('/api/users')));
+const value = await users.load(() => api.get<User[]>('/api/users'));
+users.release();
 ```
 
-### 2. Reactive consumption with default
-```typescript
-const cache = this.cacheSvc.create<Settings>('settings', { default: { theme: 'light' } });
-cache.observer.subscribe(s => this.theme = s!.theme);
-cache.set({ theme: 'dark' });
-```
+`hours` remains supported for compatibility; `ttlMs` takes precedence. A `default` option returns `SdCacheWithDefault<T>`, whose `get()`/`observer` do not include `undefined`.
 
-### 3. Manual invalidation (e.g., after mutation)
-```typescript
-async deleteUser(id: string) {
-  await this.api.delete(`/api/users/${id}`);
-  this.cacheSvc.create<User[]>('users').remove();
+## Handle contract
+
+```ts
+interface SdCache<T> {
+  get(): T | undefined;
+  snapshot(): { present: false } | { present: true; value: T };
+  set(value: T): void;
+  has(): boolean;
+  remove(): void;
+  release(): void;
+  destroy(): void;
+  load(loader: () => Promise<T>): Promise<T>;
+  observer: Observable<T | undefined>;
 }
 ```
 
-### 4. Long-lived persistent cache (browser-restart-safe)
-```typescript
-const cache = this.cacheSvc.create('app:bootstrap', { type: 'local', hours: 24 });
+- `snapshot()` distinguishes a stored `undefined` from absence.
+- Concurrent `load()` calls for the same effective identity share one loader promise.
+- Late loader completion cannot repopulate a removed/destroyed generation.
+- `release()` detaches one facade without deleting the persistent value.
+- `destroy()` is idempotent and releases the handle; for memory caches it also drops the owner entry when appropriate.
+
+## Persistence and serialization
+
+The default `SdGraphSerializer` preserves `Date`, `Map`, `Set`, `BigInt`, `undefined`, special numbers, shared references and cycles. Values are cloned at the handle boundary. Functions, symbols, DOM nodes and unsupported class instances are rejected rather than silently changed.
+
+Persistent entries use a versioned envelope containing a deterministic identity and serializer format. Keys include cache area, namespace, version, args/default presence, TTL and serializer/canonicalizer identity. Legacy JSON `{ data, createdOn }` entries are read, validated and migrated to the new envelope.
+
+Storage corruption, quota/security failures and unavailable browser storage do not crash the application or overwrite the current in-memory value. Tombstones prevent removed legacy entries from reappearing.
+
+## Global configuration
+
+`SD_CACHE_CONFIG` is active and supports global namespace/version, serializer, identity canonicalizer, key conversion and remote callbacks.
+
+```ts
+providers: [
+  {
+    provide: SD_CACHE_CONFIG,
+    useValue: {
+      namespace: 'portal',
+      version: 2,
+      convertKey: key => `tenant-42:${key}`,
+    } satisfies ISdCacheConfiguration,
+  },
+];
 ```
 
-### 5. Session-scoped persistence (tab-only, cleared on close)
-```typescript
-const cache = this.cacheSvc.create<string[]>('recent-searches', { type: 'session' });
-cache.set(['Angular', 'TypeScript']);
-```
+Callbacks use `unknown` payloads so one global provider is safe for heterogeneous keys. `adaptLegacySdCacheCallbacks()` is the explicit deprecated adapter for older generic callbacks; it requires a key matcher and runtime type guard.
 
-### 6. Full teardown (clear storage + destroy subject)
-```typescript
-// Call remove() before destroy() to also wipe the storage entry.
-cache.remove();
-cache.destroy();
-```
+## SSR and cleanup
 
-## Anti-patterns
-- Do NOT mutate objects returned by `get()` and expect the cache to update — they are deep clones; you must `set()` again.
-- Do NOT store class instances expecting methods to survive — `JSON.stringify` strips them.
-- Do NOT cache `Promise`s or `Observable`s — only the resolved value should go in.
-- Do NOT call `destroy()` while other components still hold the handle — they will keep their stale subject reference but new `create(...)` calls will get a fresh subject.
+The injected persistence adapter reports storage as unavailable outside the browser. Memory caching still works. Injector teardown invalidates pending loads, completes every observer and clears maps/queues. Consumer-created long-lived handles should call `release()` on teardown.
 
-## Testing
+## Migration from pre-1.4 behavior
 
-Unit spec: `projects/sdcorejs-angular/services/cache/src/cache.service.spec.ts` (22 specs).
+- `SD_CACHE_CONFIG` now affects runtime behavior; verify namespace/key conversion before upgrading persisted data.
+- Prefer `ttlMs`; `hours` remains compatible.
+- Values no longer pass through lossy JSON cloning. Unsupported values throw a typed persistence error.
+- Use `snapshot()` when `undefined` is a legitimate cached value.
+- Release dynamic handles to avoid retaining observers.
 
-Coverage areas:
-- Instantiation and API shape
-- `create()` throws on falsy key
-- `set()` / `get()` round-trip and deep-clone isolation
-- `has()` before and after `set()`
-- `remove()` clears value and emits `undefined`
-- `destroy()` completes the observable stream
-- TTL expiry via `jasmine.clock().mockDate()`
-- `observer` emissions and shared-subject across handles
-- `load()` — cache miss, cache hit, null/undefined skip, error propagation
-- `localStorage` persistence and removal
-- Object key namespace independence
-
-## Related
-- `SdApiService` (`@sdcorejs/angular/services/api`) — uses `SdCacheService` for its persistent cache layer (`option.cacheOption`).
-- `Utilities.hash`, `DateUtilities.addHours` (`@sdcorejs/utils/fns`) — used internally for key hashing and TTL math.
+Focused coverage lives in `cache.service.spec.ts`, `cache.types.spec.ts` and the shared persistence specs.

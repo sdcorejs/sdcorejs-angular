@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { SdFormGeneric } from '../models/form-generic.model';
 import { ComponentViewedPipe } from '../pipes';
 
@@ -6,7 +6,12 @@ import { ComponentViewedPipe } from '../pipes';
   providedIn: 'root',
 })
 export class SdFormRenderService {
-  constructor(private readonly componentViewedPipe: ComponentViewedPipe) {}
+  private readonly componentViewedPipe = inject(ComponentViewedPipe);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   viewEntities = async (form: SdFormGeneric, entities: Record<string, any>[]): Promise<Record<string, any>[]> => {
     const reuslts: Record<string, any>[] = [];

@@ -2,12 +2,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  EventEmitter,
   Input,
-  Output,
   ViewChild,
   OnInit,
   OnDestroy,
+  inject,
+  input,
+  output,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -30,6 +31,8 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
 })
 export class BuildQueries implements OnInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
   @Input() label?: string;
@@ -41,8 +44,8 @@ export class BuildQueries implements OnInit, OnDestroy {
         display: e.label,
       })) || [];
   }
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   rightProperties?: Property[];
   queryString?: string;
   model?: Record<string, any>;
@@ -51,9 +54,12 @@ export class BuildQueries implements OnInit, OnDestroy {
     // Parse JSON -> STRING để hiển thị trên UI
     this.queryString = JSON.stringify(this.model);
   }
-  @Output() modelChange = new EventEmitter<Record<string, string>>();
+  readonly modelChange = output<Record<string, string>>();
 
-  constructor(private ref: ChangeDetectorRef) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngOnInit() {}
 
@@ -61,7 +67,7 @@ export class BuildQueries implements OnInit, OnDestroy {
 
   edit = () => {
     this.rightProperties =
-      [...GetComponentAttributes(this.components), ...GetVariableAttributes(this.variables)].map(e => ({
+      [...GetComponentAttributes(this.components()), ...GetVariableAttributes(this.variables())].map(e => ({
         value: '${' + e.value + '}',
         display: e.display,
       })) || [];

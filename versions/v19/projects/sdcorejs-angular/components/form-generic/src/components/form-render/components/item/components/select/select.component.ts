@@ -1,5 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  OnDestroy,
+  OnInit,
+  inject,
+  input,
+} from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdAutocomplete, SdSearch, SdSelect } from '@sdcorejs/angular/forms';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
@@ -26,7 +36,16 @@ import { Router } from '@angular/router';
   ],
 })
 export class SelectComponent implements AfterViewInit, OnDestroy, OnInit {
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
+  private router = inject(Router);
+  private ref = inject(ChangeDetectorRef);
+  private readonly formRenderService = inject(FormGenericService);
+
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
   form = new FormGroup({});
   @Input({ alias: 'form', required: true }) set _form(form: FormGroup) {
     if (this.form !== form) {
@@ -77,11 +96,10 @@ export class SelectComponent implements AfterViewInit, OnDestroy, OnInit {
 
   #subscription = new Subscription();
   #inputChanges = new Subject<void>();
-  constructor(
-    private router: Router,
-    private ref: ChangeDetectorRef,
-    private readonly formRenderService: FormGenericService
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   #hashedQuery?: string;
   hashedValues?: string;
@@ -120,10 +138,12 @@ export class SelectComponent implements AfterViewInit, OnDestroy, OnInit {
 
   ngOnInit() {
     this.#subscription.add(
-      this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
-        this.entity[variable.key] = variable.value;
-        this.ref.markForCheck();
-      })
+      this.setVariables()
+        .pipe(filter(variable => variable.key === this.component?.key))
+        .subscribe(variable => {
+          this.entity[variable.key] = variable.value;
+          this.ref.markForCheck();
+        })
     );
   }
 
@@ -184,7 +204,7 @@ export class SelectComponent implements AfterViewInit, OnDestroy, OnInit {
             // Thực hiện gán giá trị
             this.entity[key] = value;
             // Thông báo setVariables để component (nếu đang hiển thị) biết và thực hiện re-render hay markForCheck()
-            this.setVariables.next({ key, value });
+            this.setVariables().next({ key, value });
           } catch (err) {
             console.error(err);
           }

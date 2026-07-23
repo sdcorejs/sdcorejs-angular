@@ -21,18 +21,20 @@ export type PdfSource =
  */
 export type PdfZoomMode = number | 'page-fit' | 'page-width' | 'page-actual';
 
-/**
- * Which tab the sidebar shows. `'none'` collapses the sidebar entirely.
- * NOTE: outline + search tabs are deferred — selecting them shows a placeholder.
- */
+/** Which tab the sidebar shows. `'none'` collapses the sidebar entirely. */
 export type PdfSidebarMode = 'thumbnails' | 'outline' | 'search' | 'none';
 
-/**
- * Page layout mode. `'continuous'` is deferred — the input is kept on the
- * public API so consumer code compiles, but the component falls back to
- * single-page behavior with a warning.
- */
+/** Page layout mode. */
 export type PdfScrollMode = 'page' | 'continuous';
+
+/** Consumer-facing, recursively resolved PDF document-outline item. */
+export interface PdfOutlineItem {
+  readonly id: string;
+  readonly title: string;
+  readonly page: number | null;
+  readonly url?: string;
+  readonly children: readonly PdfOutlineItem[];
+}
 
 /**
  * Document-level metadata extracted from `pdfDoc.getMetadata()`.
@@ -96,4 +98,5 @@ export interface PdfSearchState {
   wholeWord: boolean;
   results: PdfSearchResult[];
   activeIndex: number;
+  truncated: boolean;
 }

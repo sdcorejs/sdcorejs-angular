@@ -1,0 +1,31 @@
+// why: The user disclosure is a shell control and needs a full-width custom trigger surface.
+.sd-layout-user-menu__trigger,
+.sd-layout-user-menu__action {
+  border: 0;
+  background: transparent;
+  color: var(--sd-black500);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+// why: Account actions need a token-based hover state inside the compact popup.
+.sd-layout-user-menu__trigger:hover,
+.sd-layout-user-menu__action:hover {
+  background: var(--sd-black100);
+}
+
+// why: Custom disclosure controls need an explicit keyboard focus ring.
+.sd-layout-user-menu__trigger:focus-visible,
+.sd-layout-user-menu__action:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
+}
+
+// why: The account menu must overlay navigation content without changing sidebar geometry.
+.sd-layout-user-menu__popup {
+  position: absolute;
+  z-index: 40;
+  left: 0;
+  bottom: calc(100% + 8px);
+  width: 240px;
+}

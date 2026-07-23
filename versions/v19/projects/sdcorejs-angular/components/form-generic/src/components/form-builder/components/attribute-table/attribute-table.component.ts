@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, Output, ViewChild } from '@angular/core';
+import { Component, inject, Input, ViewChild, input, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -44,8 +44,8 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 export class AttributeTable {
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   // ColumnsKey
   columnsKey?: string;
   @Input({ alias: 'columnsKey', required: true }) set _columnsKey(columnsKey: string | undefined | null) {
@@ -53,7 +53,7 @@ export class AttributeTable {
       this.columnsKey = columnsKey?.toString();
     }
   }
-  @Output() columnsKeyChange = new EventEmitter<string>();
+  readonly columnsKeyChange = output<string>();
   private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
   tables: SdFormGenericDefinitionTable[] = this.formGenericConfiguration?.form?.tables || [];
 
@@ -65,7 +65,7 @@ export class AttributeTable {
       this.columns = columns || [];
     }
   }
-  @Output() columnsChange = new EventEmitter<SdFormGenericTableColumn[]>();
+  readonly columnsChange = output<SdFormGenericTableColumn[]>();
   column?: SdFormGenericTableColumn;
 
   onChangeColumnsKey = (value: any) => {

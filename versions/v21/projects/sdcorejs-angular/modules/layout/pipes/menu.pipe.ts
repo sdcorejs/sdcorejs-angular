@@ -1,5 +1,5 @@
 import { Utilities } from '@sdcorejs/utils/fns';
-import { Injectable, Pipe, PipeTransform } from '@angular/core';
+import { Injectable, Pipe, PipeTransform, inject } from '@angular/core';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdLayoutMenu, Menus } from '../services/menu/menu.model';
@@ -13,7 +13,12 @@ import { SdPermissionService } from '@sdcorejs/angular/modules/permission';
   providedIn: 'root',
 })
 export class MenuPipe implements PipeTransform {
-  constructor(private permissionService: SdPermissionService) {}
+  private permissionService = inject(SdPermissionService);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
   transform(menus: SdLayoutMenu[]): SdLayoutMenu[] {
     const results: Menus = [];
     const check = (menu: SdLayoutMenu): SdLayoutMenu | null => {
@@ -88,6 +93,9 @@ export class MenuPipe implements PipeTransform {
   }
 
   #getHashIdMenu = (menu: SdLayoutMenu): string => {
+    const explicitId = typeof menu.id === 'string' ? menu.id.trim() : '';
+    if (explicitId) return explicitId;
+
     const extendedMenu = menu as SdLayoutMenu & {
       path?: string;
       permission?: string;

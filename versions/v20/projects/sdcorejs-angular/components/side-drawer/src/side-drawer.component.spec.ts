@@ -19,6 +19,8 @@ import { SdSideDrawer } from './side-drawer.component';
       [disableBackdropClose]="disableBackdropClose"
       [drawerClass]="drawerClass"
       [autoId]="autoId"
+      [beforeClose]="beforeClose"
+      (sdCloseError)="onCloseError($event)"
       (sdClosed)="onClosed()">
       <span id="body-content">drawer body</span>
       <div sdFooterRight id="footer-content">footer</div>
@@ -32,7 +34,12 @@ class HostComponent {
   disableBackdropClose = false;
   drawerClass: any = '';
   autoId: string | undefined = undefined;
+  beforeClose: (() => boolean | Promise<boolean>) | undefined;
   closedCount = 0;
+  closeErrors: unknown[] = [];
+  onCloseError(error: unknown): void {
+    this.closeErrors.push(error);
+  }
   onClosed(): void {
     this.closedCount++;
   }
@@ -301,6 +308,60 @@ describe('SdSideDrawer', () => {
       component.open();
       component.close();
       expect(host.closedCount).toBe(2);
+    });
+
+    it('keeps the drawer open when beforeClose returns false', async () => {
+      host.beforeClose = () => false;
+      fixture.detectChanges();
+      component.open();
+
+      const closed = await component.requestClose();
+
+      expect(closed).toBeFalse();
+      expect(component.isOpened()).toBeTrue();
+      expect(host.closedCount).toBe(0);
+    });
+
+    it('closes the drawer when async beforeClose resolves true', async () => {
+      host.beforeClose = () => Promise.resolve(true);
+      fixture.detectChanges();
+      component.open();
+
+      const closed = await component.requestClose();
+
+      expect(closed).toBeTrue();
+      expect(component.isOpened()).toBeFalse();
+      expect(host.closedCount).toBe(1);
+    });
+
+    it('fails closed and emits sdCloseError when beforeClose throws', async () => {
+      const error = new Error('confirmation failed');
+      host.beforeClose = () => {
+        throw error;
+      };
+      fixture.detectChanges();
+      component.open();
+
+      const closed = await component.requestClose();
+
+      expect(closed).toBeFalse();
+      expect(component.isOpened()).toBeTrue();
+      expect(host.closeErrors).toEqual([error]);
+    });
+
+    it('coalesces concurrent guarded close requests', async () => {
+      let resolveGuard!: (value: boolean) => void;
+      host.beforeClose = () => new Promise<boolean>(resolve => (resolveGuard = resolve));
+      fixture.detectChanges();
+      component.open();
+
+      const first = component.requestClose();
+      const second = component.requestClose();
+
+      expect(second).toBe(first);
+      await Promise.resolve();
+      resolveGuard(false);
+      await first;
     });
   });
 

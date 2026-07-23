@@ -19,15 +19,15 @@
         [label]="'core.component.form-builder.query-condition' | translate"
         [selections]="selections"
         [valuesKey]="valuesKey"
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [(model)]="component.properties!.query"></build-queries>
       <build-variables
         [label]="'core.component.form-builder.assign-value' | translate"
         [selections]="selections"
         [valuesKey]="valuesKey"
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [(model)]="component.properties!.setVariables"></build-variables>
       <!-- <div class="d-flex align-items-center py-4">
         <div class="T14M" style="flex: 1">Điều kiện truy vấn</div>

@@ -52,10 +52,17 @@ class HostComponent {
 @Component({
   standalone: true,
   imports: [SdDatetime],
-  template: `<sd-datetime name="startAt" [form]="fg"></sd-datetime>`,
+  template: `<sd-datetime
+    name="startAt"
+    [form]="fg"
+    [model]="model"
+    (modelChange)="model = $event"
+    (sdChange)="changes.push($event)"></sd-datetime>`,
 })
 class FgHost {
   fg!: FormGroup;
+  model: string | number | Date | null | undefined;
+  changes: (string | number | Date | null | undefined)[] = [];
 }
 
 @Component({
@@ -129,6 +136,47 @@ describe('SdDatetime', () => {
       host.model = null;
       fixture.detectChanges();
       expect(comp.formControl.value).toBeNull();
+    });
+
+    it('preserves seconds from an external string model when showSeconds is enabled without feedback', () => {
+      host.showSeconds = true;
+      host.model = '2026/05/15 14:30:45';
+      fixture.detectChanges();
+
+      expect(comp.formControl.value).toBe('15/05/2026 14:30:45');
+      expect(host.model).toBe('2026/05/15 14:30:45');
+      expect(host.changes).toEqual([]);
+    });
+
+    it('preserves seconds from an external native Date when showSeconds is enabled without feedback', () => {
+      const model = new Date(2026, 4, 15, 14, 30, 45);
+      host.showSeconds = true;
+      host.model = model;
+      fixture.detectChanges();
+
+      expect(comp.formControl.value).toBe('15/05/2026 14:30:45');
+      expect(host.model).toBe(model);
+      expect(host.changes).toEqual([]);
+    });
+
+    it('changes only display precision when showSeconds toggles at runtime', () => {
+      const canonicalModel = '2026/05/15 14:30:45';
+      host.showSeconds = false;
+      host.model = canonicalModel;
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe('15/05/2026 14:30');
+
+      host.showSeconds = true;
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe('15/05/2026 14:30:45');
+      expect(host.model).toBe(canonicalModel);
+      expect(host.changes).toEqual([]);
+
+      host.showSeconds = false;
+      fixture.detectChanges();
+      expect(comp.formControl.value).toBe('15/05/2026 14:30');
+      expect(host.model).toBe(canonicalModel);
+      expect(host.changes).toEqual([]);
     });
 
     it('upward via clear(): emits null and resets valueModel', () => {
@@ -667,6 +715,49 @@ describe('SdDatetime (FormGroup lifecycle)', () => {
 
   it('adds control to FormGroup on init', () => {
     expect(fg.contains('startAt')).toBe(true);
+  });
+
+  it('maps a registered display value to model and sdChange exactly once', () => {
+    fg.get('startAt')!.setValue('20/05/2026 14:30');
+
+    expect(fixture.componentInstance.model).toBe('2026/05/20 14:30:00');
+    expect(fixture.componentInstance.changes).toEqual(['2026/05/20 14:30:00']);
+  });
+
+  it('ignores an invalid registered display value', () => {
+    fixture.componentInstance.model = '2026/05/15 09:00:00';
+    fixture.detectChanges();
+    fixture.componentInstance.changes = [];
+
+    fg.get('startAt')!.setValue('not-a-datetime');
+
+    expect(fixture.componentInstance.model).toBe('2026/05/15 09:00:00');
+    expect(fixture.componentInstance.changes).toEqual([]);
+  });
+
+  it('maps an external native Date model to display without feeding it back', () => {
+    const control = fg.get('startAt')!;
+    const controlWrites: unknown[] = [];
+    const subscription = control.valueChanges.subscribe(value => controlWrites.push(value));
+
+    fixture.componentInstance.model = new Date(2026, 4, 15, 14, 30, 45);
+    fixture.detectChanges();
+
+    expect(control.value).toBe('15/05/2026 14:30');
+    expect(controlWrites).toEqual([]);
+    expect(fixture.componentInstance.changes).toEqual([]);
+    subscription.unsubscribe();
+  });
+
+  it('stops model and output synchronization after destroy', () => {
+    const host = fixture.componentInstance;
+    const control = fg.get('startAt')!;
+
+    fixture.destroy();
+    control.setValue('20/05/2026 14:30');
+
+    expect(host.model).toBeUndefined();
+    expect(host.changes).toEqual([]);
   });
 
   it('removes control from FormGroup on destroy', () => {

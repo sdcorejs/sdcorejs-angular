@@ -124,7 +124,7 @@ export const GetDatetimeValue = (value: string) => {
     }
   }
   if (value?.endsWith('NextDay')) {
-    const relatedValue = +value.replace('LastDay', '');
+    const relatedValue = +value.replace('NextDay', '');
     if (relatedValue) {
       return DateUtilities.toFormat(DateUtilities.addDays(new Date(), relatedValue), 'yyyy/MM/dd HH:mm:ss');
     }

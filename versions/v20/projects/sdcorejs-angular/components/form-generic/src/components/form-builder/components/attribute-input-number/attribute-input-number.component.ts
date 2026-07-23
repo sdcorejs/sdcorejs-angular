@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, Input, output } from '@angular/core';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 
 @Component({
@@ -23,7 +23,7 @@ export class AttributeInputNumber {
       this.model = model;
     }
   }
-  @Output() modelChange = new EventEmitter<number>();
+  readonly modelChange = output<number>();
 
   onChange = (value: any) => {
     this.modelChange.emit(value);

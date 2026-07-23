@@ -34,15 +34,15 @@
 
 ## Highlights
 
-| Area                 | What the library provides                                                                                                                 |
-| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| UI components        | Buttons, badges, avatars, sections, tabs, steppers, modals, drawers, splitters, charts, editors, previews, and navigation primitives      |
-| Data and workflow    | Local or server-backed tables, tree data, query bars, query builders, generic forms, document building, file upload, and Excel import     |
-| Form controls        | Text, numeric, date, date-range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, inline-text, and textarea controls |
-| Application services | Notifications, confirmation dialogs, loading state, API access, storage, cache, Excel, and DOCX helpers                                   |
-| Portal modules       | Auth, Keycloak, permission, layout, and icon modules                                                                                      |
-| Developer experience | Standalone imports, typed APIs, signal-oriented state, `OnPush` components, shared SCSS utilities, and E2E-friendly `data-*` attributes   |
-| Localization         | Built-in Vietnamese, English, Japanese, Korean, and Chinese catalogs, plus a synchronous custom-catalog hook                              |
+| Area                 | What the library provides                                                                                                                  |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| UI components        | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, charts, editors, and document tooling                 |
+| Data and workflow    | Local/server tables, query builders, entity/tree pickers, unsaved-change guards, background tasks, file upload, and Excel import           |
+| Form controls        | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, and inline text |
+| Application services | Typed API/retry/cancel, ref-counted loading, graph-safe storage/cache/persistence, viewport signals, notifications, Excel, and DOCX        |
+| Portal modules       | Auth, Keycloak, permission, layout, and icon modules                                                                                       |
+| Developer experience | Standalone imports, typed APIs, signal-oriented state, `OnPush` components, shared SCSS utilities, and E2E-friendly `data-*` attributes    |
+| Localization         | Built-in Vietnamese, English, Japanese, Korean, and Chinese catalogs, plus a synchronous custom-catalog hook                               |
 
 ## Compatibility
 
@@ -127,19 +127,22 @@ For production work, replace the timer with your typed service call and reset `s
 
 The published documentation manifest is the canonical catalog. These groups summarize the main surfaces without duplicating their complete APIs.
 
-| Area                 | Representative APIs                                                                                              | Starting point                                                                                                                                                                                             |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Components           | `SdTable`, `SdTree`, `SdModal`, `SdQueryBuilder`, `SdDocumentBuilder`, `SdStepper`, and chart components         | [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/) and [component catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                  |
-| Form controls        | `SdInput`, `SdInputNumber`, `SdSelect`, `SdAutocomplete`, `SdDate`, `SdChip`, `SdInlineText`                     | [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts) and [forms manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)          |
-| Services             | `SdNotifyService`, `SdConfirmService`, `SdLoadingService`, `SdStorageService`, `SdExcelService`, `SdDocxService` | [Notify example source](versions/v19/projects/showcase/src/app/pages/services/notify/notify-demo.component.ts) and [services manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) |
-| Modules              | Auth, Keycloak, permission, layout, and icon modules                                                             | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
-| Directives and pipes | Responsive, tooltip, href, scroll, copy, date, datetime, number, safe-HTML, and view helpers                     | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                               |
+| Area                 | Representative APIs                                                                                            | Starting point                                                                                                                                                                                                            |
+| -------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Components           | `SdTable`, `SdTree`, `SdModal`, `SdPreviewPdf`, `SdBreadcrumb`, `SdDataState`, `SdJobProgress`, `SdAuditDiff`  | [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/) and [component catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                 |
+| Form controls        | `SdInput`, `SdTime`, `SdTimeRange`, `SdEntityPicker`, `SdTreeSelect`, `SdSelect`, `SdDate`, `SdInlineText`     | [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts) and [forms manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                         |
+| Services             | `SdApiService`, `SdLoadingService`, `SdCacheService`, `SdStorageService`, `SdViewportService`, `SdTaskService` | [Persistence example source](versions/v19/projects/showcase/src/app/pages/services/persistence/persistence-demo.component.ts) and [services manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) |
+| Modules              | Auth, Keycloak, permission, layout, and icon modules                                                           | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                                              |
+| Directives and pipes | Responsive, tooltip, href, scroll, copy, date, datetime, number, safe-HTML, and view helpers                   | [Versioned API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                                                              |
 
 ### Representative workflows
 
 - `SdTable` covers local and server data, paging, sorting, filters, selection, grouping, tree rows, custom cell templates, and export-oriented workflows.
 - `SdQueryBuilder` and `SdQueryBar` build typed filtering experiences without coupling the UI to a specific backend.
 - `SdDocumentBuilder`, the editor components, Excel import, and upload controls support document-heavy application flows.
+- `SdEntityPicker` and `SdTreeSelect` compose existing table/tree primitives for typed server and lazy-data selection.
+- `SdTaskService` + `SdJobProgress`, `SdUnsavedChangesService`, and `SdAuditDiff` cover long-running work, safe exits, and audit presentation.
+- `SdGraphSerializer` is shared by cache/storage so `Date`, `Map`, `Set`, shared references, and cycles survive a versioned persistence round-trip.
 - Auth, Keycloak, permission, and layout modules provide optional portal-level building blocks; adopt only the modules your application needs.
 
 ## Core concepts
@@ -185,7 +188,20 @@ Controls support combinations of required, length, range, pattern, and custom as
 
 ### Signals and change detection
 
-The component source favors signal inputs, models, computed state, and `ChangeDetectionStrategy.OnPush`. Public outputs and service APIs remain conventional Angular contracts where that is the clearer fit; consumers do not need to convert every application interaction to a signal.
+The component source favors signal inputs, models, computed state, signal outputs, field-level `inject()`, and `ChangeDetectionStrategy.OnPush`. Template binding names remain stable, so normal `[input]` and `(output)` usage does not change when an implementation moves to the signal APIs.
+
+Direct class consumers and tests must use the Angular signal contract after a public member is migrated:
+
+```ts
+fixture.componentRef.setInput('value', nextValue);
+const currentValue = fixture.componentInstance.value();
+
+const observed: unknown[] = [];
+const subscription = fixture.componentInstance.sdChange.subscribe(value => observed.push(value));
+subscription.unsubscribe();
+```
+
+Signal outputs support `emit()` and Angular-managed subscriptions; do not assume RxJS-only `EventEmitter` methods such as `pipe()`, `complete()`, or `error()`. A small number of outputs intentionally remain `EventEmitter` instances where listener presence through `.observed` is part of the component behavior.
 
 ### Theming
 
@@ -229,18 +245,20 @@ export const appConfig: ApplicationConfig = {
 
 ## Examples and documentation
 
-| Resource                                                                                                         | Use it for                                                              |
-| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/)                                                    | Browse interactive component, form, and service demos                   |
-| [Button example source](versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts) | Basic actions, variants, icons, disabled state, and loading state       |
-| [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)         | Model binding, validation, viewed states, and input variants            |
-| [Table example source](versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)    | Data, filters, selection, grouping, paging, and tree workflows          |
-| [Modal example source](versions/v19/projects/showcase/src/app/pages/components/modal/modal-demo.component.ts)    | Dialog structure, projected content, and open/close flows               |
-| [Notify example source](versions/v19/projects/showcase/src/app/pages/services/notify/notify-demo.component.ts)   | Notification service usage and message variants                         |
-| [Latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                        | Discover every published Markdown document for the newest package line  |
-| [Styling reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/STYLE-GUIDE.md)               | Supported SCSS entry points, tokens, fonts, images, and utility classes |
-| [E2E attributes](versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                  | Stable runtime selectors and state attributes for automated tests       |
-| [Changelog](CHANGELOG.md)                                                                                        | Consumer-visible changes, breaking notes, and migration guidance        |
+| Resource                                                                                                                      | Use it for                                                                  |
+| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/)                                                                 | Browse interactive component, form, and service demos                       |
+| [Button example source](versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts)              | Basic actions, variants, icons, disabled state, and loading state           |
+| [Input example source](versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)                      | Model binding, validation, viewed states, and input variants                |
+| [Table example source](versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)                 | Data, filters, selection, grouping, paging, and tree workflows              |
+| [Modal example source](versions/v19/projects/showcase/src/app/pages/components/modal/modal-demo.component.ts)                 | Dialog structure, projected content, and open/close flows                   |
+| [Notify example source](versions/v19/projects/showcase/src/app/pages/services/notify/notify-demo.component.ts)                | Notification service usage and message variants                             |
+| [Persistence example source](versions/v19/projects/showcase/src/app/pages/services/persistence/persistence-demo.component.ts) | Graph round-trip, stable identity, envelopes, and corrupt-input containment |
+| [Latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                     | Discover every published Markdown document for the newest package line      |
+| [Styling reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/STYLE-GUIDE.md)                            | Supported SCSS entry points, tokens, fonts, images, and utility classes     |
+| [E2E attributes](versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                               | Stable runtime selectors and state attributes for automated tests           |
+| [Changelog](CHANGELOG.md)                                                                                                     | Consumer-visible changes, breaking notes, and migration guidance            |
+| [1.4 migration guide](docs/migrations/1.4.md)                                                                                 | Dedupe, loading, persistence, connector, responsive, and signal migrations  |
 
 The showcase is the visual entry point. Use the version registry and manifest when you need a package-matched API reference; each manifest links to raw Markdown for the selected release.
 
@@ -263,6 +281,7 @@ Read `versions.json` to select a release that matches the installed package, the
 - A release suffix is published across the maintained lines from the same v19 source surface, with only required Angular-major adaptations.
 - Pin the package major in applications, for example `@sdcorejs/angular@^20` for Angular 20.
 - Review [CHANGELOG.md](CHANGELOG.md) before every upgrade. Because the package major is reserved for Angular compatibility, breaking changes are labeled explicitly in the changelog.
+- For the `1.4` suffix, follow the [migration guide](docs/migrations/1.4.md) before enabling new request, loading, persistence, and responsive behavior.
 - Version-pinned API docs remain available under `/docs/<package-version>/` after release.
 
 ## Development
@@ -305,6 +324,8 @@ npm run check:sync
 5. Open a pull request that explains the consumer impact and any migration steps.
 
 Keep public imports backward compatible where possible. Record consumer-breaking behavior under `Changed (BREAKING for consumers)` in the changelog.
+
+Release-preparation branches keep package versions unchanged while review is in progress. Apply the shared release suffix only after the reviewed changes are merged into `main`, then publish the matching Angular 19, 20, and 21 package lines through the release workflow.
 
 ## Support and issue reporting
 

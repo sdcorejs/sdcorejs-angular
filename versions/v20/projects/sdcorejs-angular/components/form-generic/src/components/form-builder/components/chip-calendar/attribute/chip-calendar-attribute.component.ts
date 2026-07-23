@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subject, Subscription } from 'rxjs';
 import {
@@ -22,8 +22,11 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeExpression, TranslatePipe],
 })
 export class ChipCalendarAttribute implements AfterViewInit, OnDestroy {
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   form = new FormGroup({});
   component!: SdFormGenericChipCalendar;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericChipCalendar) {
@@ -33,10 +36,10 @@ export class ChipCalendarAttribute implements AfterViewInit, OnDestroy {
   #changes = new Subject<void>();
   #subscription = new Subscription();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngAfterViewInit(): void {
     this.#subscription.add(

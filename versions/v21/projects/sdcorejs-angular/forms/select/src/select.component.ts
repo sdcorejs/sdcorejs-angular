@@ -56,6 +56,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -239,6 +240,11 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   // 4. INTERNAL STATE & STREAMS
   // ==========================================
   formControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+  });
   inputControl = new FormControl('');
 
   loading = signal<boolean>(false);
@@ -407,26 +413,6 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       const val = this.validator();
       const inl = this.inlineError();
       untracked(() => this.#updateValidator(req, val, inl));
-    });
-
-    // ==========================================
-    // EFFECT: QUẢN LÝ FORM GROUP & CONTROL
-    // ==========================================
-    effect(onCleanup => {
-      // 1. Lấy giá trị mới nhất của form và name
-      const formGroup = this.form();
-      const controlName = this.name();
-      if (formGroup && controlName) {
-        // 2. Thêm control vào form
-        formGroup.addControl(controlName, this.formControl);
-        // 3. Đăng ký hàm dọn dẹp (Cleanup)
-        onCleanup(() => {
-          // Hàm này sẽ tự động chạy trong 2 trường hợp:
-          // - Khi Component bị Destroy (thay thế ngOnDestroy)
-          // - Khi form() hoặc name() thay đổi giá trị (nó sẽ gỡ control cũ ra trước khi add cái mới vào)
-          formGroup.removeControl(controlName);
-        });
-      }
     });
 
     effect(() => {

@@ -2,12 +2,13 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  EventEmitter,
   Input,
-  Output,
   ViewChild,
   OnInit,
   OnDestroy,
+  inject,
+  input,
+  output,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -32,12 +33,14 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [SdAutocomplete, SdButton, SdModal, TranslatePipe],
 })
 export class BuildQueries implements OnInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+
   @ViewChild(SdModal) modal?: SdModal;
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   form = new FormGroup({});
   @Input() label?: string;
-  @Input({ required: true }) selections: SdFormGenericDefinitionSelection[] = [];
+  readonly selections = input.required<SdFormGenericDefinitionSelection[]>();
   valuesKey?: string | null;
   @Input({ alias: 'valuesKey', required: true }) set _valuesKey(valuesKey: string | undefined | null) {
     this.valuesKey = valuesKey;
@@ -55,17 +58,20 @@ export class BuildQueries implements OnInit, OnDestroy {
     // Parse JSON -> STRING để hiển thị trên UI
     this.queryString = JSON.stringify(this.model);
   }
-  @Output() modelChange = new EventEmitter<Record<string, string>>();
+  readonly modelChange = output<Record<string, string>>();
 
   // Mỗi lần inputChanges thì tính lại selection
   #inputChanges = new Subject<void>();
   #subscription = new Subscription();
-  constructor(private ref: ChangeDetectorRef) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit() {
     this.#subscription.add(
       this.#inputChanges.pipe(startWith('')).subscribe(() => {
-        this.selection = this.selections?.find?.(e => e.value === this.valuesKey);
+        this.selection = this.selections()?.find?.(e => e.value === this.valuesKey);
       })
     );
   }
@@ -76,7 +82,7 @@ export class BuildQueries implements OnInit, OnDestroy {
 
   edit = async () => {
     this.leftProperties = this.selection?.queries?.items || [];
-    this.rightProperties = [...GetComponentAttributes(this.components), ...GetVariableAttributes(this.variables)].map(e => ({
+    this.rightProperties = [...GetComponentAttributes(this.components()), ...GetVariableAttributes(this.variables())].map(e => ({
       value: '${' + e.value + '}',
       display: e.display,
     }));

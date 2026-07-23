@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, ViewChild, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
 import { SdFormGenericComponent } from '../../../../models';
@@ -39,8 +39,13 @@ import { HtmlComponent } from './components/html/html.component';
 export class LibItemComponent {
   @ViewChild(UploadComponent) itemUpload?: UploadComponent;
   @ViewChild(TableComponent) itemTable?: TableComponent;
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
-  @Input() form = new FormGroup({});
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
+  readonly form = input(new FormGroup({}));
   value: any;
   entity: Record<string, any> = {};
   @Input({

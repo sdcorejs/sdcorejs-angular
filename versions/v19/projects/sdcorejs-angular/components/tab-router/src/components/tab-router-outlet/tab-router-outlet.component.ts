@@ -216,7 +216,7 @@ export class SdTabRouterOutletComponent implements OnDestroy {
         const result = tab.beforeClose();
         canClose = typeof result === 'boolean' ? result : await result;
       } catch {
-        canClose = true;
+        canClose = false;
       }
       if (!canClose) return;
     }

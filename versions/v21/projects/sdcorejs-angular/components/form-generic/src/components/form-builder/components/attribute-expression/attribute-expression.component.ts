@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, viewChild, inject, input, output } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdQueryBuilder, SdQueryBuilderField } from '@sdcorejs/angular/components/query-builder';
@@ -24,10 +24,13 @@ import { filterToFormExpression, formAttributesToQueryFields, formExpressionToFi
   imports: [SdButton, SdModal, SdQueryBuilder, ExpressionQueryPipe, TranslatePipe],
 })
 export class AttributeExpression {
+  private readonly ref = inject(ChangeDetectorRef);
+  private readonly formGenericService = inject(FormGenericService);
+
   readonly modal = viewChild(SdModal);
 
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   @Input() label?: string;
 
   queryFields: SdQueryBuilderField[] = [];
@@ -40,16 +43,16 @@ export class AttributeExpression {
     }
   }
 
-  @Output() modelChange = new EventEmitter<SdFormGenericExpression>();
-  @Output() sdChange = new EventEmitter<SdFormGenericExpression>();
+  readonly modelChange = output<SdFormGenericExpression>();
+  readonly sdChange = output<SdFormGenericExpression>();
 
-  constructor(
-    private readonly ref: ChangeDetectorRef,
-    private readonly formGenericService: FormGenericService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   onEdit = async () => {
-    const attributes = await this.#getAttributes(this.components, this.variables);
+    const attributes = await this.#getAttributes(this.components(), this.variables());
     this.queryFields = formAttributesToQueryFields(attributes);
     this.draftFilter = formExpressionToFilter(this.model);
     this.modal()?.open();

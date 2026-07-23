@@ -7,6 +7,9 @@ import { catchError, switchMap } from 'rxjs/operators';
 
 @Injectable()
 export class SdNoInternetInterceptor implements HttpInterceptor {
+  private snackBar = inject(MatSnackBar);
+  private injector = inject(Injector);
+
   readonly #i18n = inject(I18nService);
 
   // Trạng thái offline để tránh spam request check hoặc hiển thị nhiều snackbar
@@ -27,10 +30,10 @@ export class SdNoInternetInterceptor implements HttpInterceptor {
   // Thời gian lặp lại việc kiểm tra mạng (ms)
   readonly #checkIntervalDuration = 3000;
 
-  constructor(
-    private snackBar: MatSnackBar,
-    private injector: Injector
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(

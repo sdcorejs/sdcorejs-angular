@@ -34,6 +34,12 @@
   background: var(--sd-tree-hover-bg);
 }
 
+.sd-tree__row:focus-visible {
+  z-index: 1;
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: -2px;
+}
+
 .sd-tree__row--selected {
   background: var(--sd-tree-selected-bg);
 }
@@ -236,4 +242,30 @@
   align-items: center;
   gap: 4px;
   margin-right: 8px;
+}
+
+.sd-tree__root-loading,
+.sd-tree__root-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 120px;
+  padding: 16px;
+}
+
+.sd-tree__root-error {
+  flex-direction: column;
+  color: var(--sd-error, #d92d20);
+
+  button {
+    min-height: 36px;
+    padding: 6px 12px;
+    border: 1px solid currentcolor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
 }

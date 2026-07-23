@@ -1,14 +1,4 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  EventEmitter,
-  inject,
-  Output,
-  ViewChild,
-  AfterViewInit,
-  OnDestroy,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, ViewChild, AfterViewInit, OnDestroy, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { MatMenuModule } from '@angular/material/menu';
 import { SdButton } from '@sdcorejs/angular/components/button';
@@ -41,7 +31,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   validations: SdFormGenericValidation[] = [];
   functions: SdFormGenericValidationFunction[] = [];
   alerts = ValidationAlerts;
-  @Output() accept = new EventEmitter<SdFormGenericValidation[]>();
+  readonly accept = output<SdFormGenericValidation[]>();
   private readonly ref = inject(ChangeDetectorRef);
   private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 

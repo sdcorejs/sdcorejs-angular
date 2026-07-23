@@ -24,6 +24,8 @@ export class VariableComponent implements OnInit, OnDestroy {
   }
 
   #subscription = new Subscription();
+
+  // why: this component is also instantiated directly outside Angular's injection context.
   constructor(private ref: ChangeDetectorRef) {}
   ngOnInit() {
     if (this.variables) {

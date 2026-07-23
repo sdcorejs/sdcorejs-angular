@@ -4,7 +4,7 @@
     <div class="T14M">{{ entity[component.key!] | componentViewed: entity : component | async }}</div>
   } @else {
     <sd-chip
-      [form]="form"
+      [form]="form()"
       [label]="component.label || component.key"
       [name]="component.key"
       [autoId]="component.key"

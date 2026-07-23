@@ -1,7 +1,7 @@
 @if (component && entity) {
   @if (subtype === 'date') {
     <sd-date
-      [form]="form"
+      [form]="form()"
       [label]="component.label || component.key"
       [helperText]="component.helperText"
       [name]="component.key"
@@ -14,7 +14,7 @@
       [viewed]="viewed || component.properties?.viewed"></sd-date>
   } @else {
     <sd-datetime
-      [form]="form"
+      [form]="form()"
       [label]="component.label || component.key"
       [helperText]="component.helperText"
       [name]="component.key"

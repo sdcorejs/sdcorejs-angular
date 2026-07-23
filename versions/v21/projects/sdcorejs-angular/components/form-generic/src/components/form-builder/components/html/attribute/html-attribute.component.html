@@ -17,8 +17,8 @@
       <build-queries
         [label]="'core.component.form-builder.query-condition' | translate"
         [queries]="component.properties?.queries"
-        [components]="components"
-        [variables]="variables"
+        [components]="components()"
+        [variables]="variables()"
         [(model)]="component.properties!.query"></build-queries>
     }
     </div>
@@ -46,13 +46,13 @@
     <div class="fb-section__body">
     <attribute-expression
       [label]="'core.component.form-builder.visible-when' | translate"
-      [components]="components"
-      [variables]="variables"
+      [components]="components()"
+      [variables]="variables()"
       [(model)]="component.properties!.visibleWhenExpression"></attribute-expression>
     <attribute-expression
       [label]="'core.component.form-builder.hidden-when' | translate"
-      [components]="components"
-      [variables]="variables"
+      [components]="components()"
+      [variables]="variables()"
       [(model)]="component.properties!.hiddenWhenExpression"></attribute-expression>
     </div>
   </details>

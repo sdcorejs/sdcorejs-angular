@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import {
@@ -32,9 +32,12 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   ],
 })
 export class TextfieldAttribute implements AfterViewInit, OnDestroy {
+  private ref = inject(ChangeDetectorRef);
+  private builderService = inject(BuilderService);
+
   form = new FormGroup({});
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   component!: SdFormGenericTextfield;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTextfield) {
     this.component = component;
@@ -43,10 +46,10 @@ export class TextfieldAttribute implements AfterViewInit, OnDestroy {
 
   #subscription = new Subscription();
 
-  constructor(
-    private ref: ChangeDetectorRef,
-    private builderService: BuilderService
-  ) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   ngAfterViewInit(): void {
     // Khi thay đổi, debound 0.5s rồi mới emit output

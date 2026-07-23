@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit, inject, input, output } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSection } from '@sdcorejs/angular/components/section';
 import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
@@ -26,8 +26,11 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, TranslatePipe],
 })
 export class AttributeSelection implements OnInit {
-  @Input({ required: true }) components!: (SdFormGenericComponent | SdFormGenericGroup)[];
-  @Input({ required: true }) variables!: SdFormGenericVariable[];
+  private ref = inject(ChangeDetectorRef);
+  private formGenericService = inject(FormGenericService);
+
+  readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
+  readonly variables = input.required<SdFormGenericVariable[]>();
   @Input({ required: true }) component!: SdFormGenericValues | SdFormGenericTableColumn;
   // ValuesKey
   valuesKey?: string;
@@ -36,7 +39,7 @@ export class AttributeSelection implements OnInit {
       this.valuesKey = valuesKey?.toString();
     }
   }
-  @Output() valuesKeyChange = new EventEmitter<string>();
+  readonly valuesKeyChange = output<string>();
   selections: SdFormGenericDefinitionSelection[] = [];
 
   // Values
@@ -46,12 +49,12 @@ export class AttributeSelection implements OnInit {
       this.values = values || [];
     }
   }
-  @Output() valuesChange = new EventEmitter<SdFormGenericSelectionStaticItem[]>();
-  @Output() sdChange = new EventEmitter<SdFormGenericComponent>();
-  constructor(
-    private ref: ChangeDetectorRef,
-    private formGenericService: FormGenericService
-  ) {}
+  readonly valuesChange = output<SdFormGenericSelectionStaticItem[]>();
+  readonly sdChange = output<SdFormGenericComponent>();
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit(): void {
     this.formGenericService.selection.definitions().then(selections => {

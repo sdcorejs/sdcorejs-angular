@@ -1,13 +1,11 @@
 import { Utilities } from '@sdcorejs/utils/fns';
 
 import {
-  AfterViewInit,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   computed,
-  effect,
   inject,
   input,
   model,
@@ -15,7 +13,7 @@ import {
   OnInit,
   output,
 } from '@angular/core';
-import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -27,6 +25,8 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
+  ɵSdFormControlParent,
 } from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
@@ -50,12 +50,11 @@ import { Subscription } from 'rxjs';
   },
   imports: [FormsModule, ReactiveFormsModule, MatSlideToggleModule, MatFormFieldModule, SdLabel, TranslatePipe],
 })
-export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
+export class SdSwitch implements OnInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);
 
   id = `I${Utilities.generateUuid()}`;
-  #name = Utilities.generateUuid();
-  #model: boolean | null | undefined = false;
+  readonly #defaultName = Utilities.generateUuid();
   formControl = new SdFormControl();
   #subscription = new Subscription();
 
@@ -67,15 +66,7 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
   readonly name = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
-  readonly form = input<FormGroup | undefined, any>(undefined, {
-    transform: (val: any): FormGroup | undefined => {
-      if (!val) return undefined;
-      if (val instanceof NgForm) return val.form;
-      if (val instanceof FormGroup) return val;
-      if (val?.form instanceof FormGroup) return val.form;
-      return undefined;
-    },
-  });
+  readonly form = input<ɵSdFormControlParent>(undefined);
   readonly label = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
@@ -108,30 +99,19 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
   readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
 
-  constructor() {
-    effect(() => {
-      const val = this.name();
-      if (val) this.#name = val;
-    });
-
-    effect(() => {
-      if (this.disabled()) this.formControl.disable();
-      else this.formControl.enable();
-    });
-
-    effect(() => {
-      const value = this.model();
-      if (this.#model !== value) {
-        this.#model = value;
-        this.formControl.setValue(value, { emitEvent: false });
-      }
-    });
-
-    effect(() => {
-      this.required();
-      this.#updateValidator();
-    });
-  }
+  readonly #formConnector = ɵsdFormControlConnector<boolean | null | undefined, boolean | null | undefined>({
+    form: this.form,
+    name: computed(() => this.name() || this.#defaultName),
+    control: computed(() => this.formControl),
+    model: this.model,
+    writeModel: value => {
+      this.model.set(value);
+      this.sdChange.emit(value);
+    },
+    validators: computed(() => (this.required() ? Validators.required : null)),
+    disabled: this.disabled,
+    controlEquals: (controlValue, modelValue) => (controlValue === null && modelValue === false) || Object.is(controlValue, modelValue),
+  });
 
   ngOnInit() {
     this.#subscription.add(
@@ -141,33 +121,7 @@ export class SdSwitch implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  ngAfterViewInit() {
-    this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-    this.form()?.addControl(this.#name, this.formControl);
-    this.#ref.detectChanges();
-  }
-
   ngOnDestroy() {
-    this.form()?.removeControl(this.#name);
     this.#subscription.unsubscribe();
   }
-
-  #onChange = (value: any) => {
-    this.#model = value;
-    this.model.set(value);
-    this.sdChange.emit(value);
-  };
-
-  #updateValidator = () => {
-    this.formControl.clearValidators();
-    this.formControl.clearAsyncValidators();
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-    if (this.required()) {
-      validators.push(Validators.required);
-    }
-    this.formControl.setValidators(validators);
-    this.formControl.setAsyncValidators(asyncValidators);
-    this.formControl.updateValueAndValidity();
-  };
 }

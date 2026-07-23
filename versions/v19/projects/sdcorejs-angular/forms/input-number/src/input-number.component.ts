@@ -14,11 +14,11 @@ import {
   untracked,
   OnDestroy,
   OnInit,
+  Output,
   output,
   TemplateRef,
   viewChild,
   contentChild,
-  Output,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
@@ -56,6 +56,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
@@ -229,13 +230,19 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   // intent dedicated cho X (clear button), consumer dùng để trigger reload ngay.
   cleared = output<void>();
 
-  @Output() sdFocusForceBlur = new EventEmitter<void>();
+  // why: focus handling reads EventEmitter.observed before emitting a forced blur event.
+  @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
 
   // ==========================================
   // 5. INTERNAL STATE & COMPUTED
   // ==========================================
   formControl = new SdFormControl();
   inputControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+  });
   #subscription = new Subscription();
   matcher = new SdInputNumberErrotStateMatcher(this.formControl);
   #preCompositionValue?: string;
@@ -344,15 +351,10 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
       })
     );
 
-    const formGroup = this.form();
-    formGroup?.addControl(this.name(), this.formControl);
-
     this.ref.detectChanges();
   }
 
   ngOnDestroy() {
-    const formGroup = this.form();
-    formGroup?.removeControl(this.name());
     this.#subscription.unsubscribe();
   }
 

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, ViewChild, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, ViewChild, OnInit, inject, input } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { SdCustomValidator } from '@sdcorejs/angular/forms/models';
@@ -14,9 +14,16 @@ import { SdFormGenericUpload } from '../../../../../../models';
   imports: [CommonModule, SdUploadFile],
 })
 export class UploadComponent implements OnDestroy, OnInit {
-  @Input({ required: true }) setVariables!: Subject<{ key: string; value: any }>;
+  private readonly ref = inject(ChangeDetectorRef);
+
+  readonly setVariables = input.required<
+    Subject<{
+      key: string;
+      value: any;
+    }>
+  >();
   @ViewChild(SdUploadFile) sdUploadFile?: SdUploadFile;
-  @Input() form = new FormGroup({});
+  readonly form = input(new FormGroup({}));
   value: any;
   entity: Record<string, any> = {};
   @Input({
@@ -64,7 +71,10 @@ export class UploadComponent implements OnDestroy, OnInit {
 
   #changes = new Subject<void>();
   #subscription = new Subscription();
-  constructor(private readonly ref: ChangeDetectorRef) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnDestroy(): void {
     this.#subscription.unsubscribe();
@@ -72,10 +82,12 @@ export class UploadComponent implements OnDestroy, OnInit {
 
   ngOnInit() {
     this.#subscription.add(
-      this.setVariables.pipe(filter(variable => variable.key === this.component?.key)).subscribe(variable => {
-        this.entity[variable.key] = variable.value;
-        this.ref.markForCheck();
-      })
+      this.setVariables()
+        .pipe(filter(variable => variable.key === this.component?.key))
+        .subscribe(variable => {
+          this.entity[variable.key] = variable.value;
+          this.ref.markForCheck();
+        })
     );
   }
 

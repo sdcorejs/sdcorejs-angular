@@ -1,77 +1,85 @@
 ---
-generated_at: 2026-07-15T21:28:00+07:00
-git_head: 5602da4c2e853a18216a3c21ab4ac9e01e1892ac
-branch: release/1.3
-tracks: [angular, design, node]
+generated_at: 2026-07-23T15:55:00+07:00
+git_head: e6ec1eb242e84dc6be34cd42eb617c1d002b612e
+branch: chore/prepare-1.4
+tracks: [angular]
 generator: sdcorejs-explore
-target_root: C:/Users/Admin/Documents/sdcorejs/sdcorejs-angular
-target_root_kind: target-project
-dirty: true
-relevant_dirty_paths:
-  - .sdcorejs/persona.md
-  - .sdcorejs/summary.md
-  - .sdcorejs/tasks/current-session.md
-  - .sdcorejs/docs/design
-  - design
-  - docs/superpowers/specs/2026-07-15-sd-table-settings-compact-density-design.md
-stack_profiles: [core-ui-angular, node-general]
-profile_confidence: high
-package_manager: npm
-summary_scope: table settings dialog visual-density design
 ---
 
 # Project Summary - sdcorejs-angular
 
 ## What this project is
 
-- Repository nguồn của package npm `@sdcorejs/angular`, duy trì đồng thời các line Angular 19, 20 và 21.
-- `versions/v19` là source of truth; root `npm run sync` rollout thay đổi tương thích sang v20/v21 và `npm run check:sync` kiểm tra parity.
-- Showcase v19 là tài liệu tương tác và môi trường smoke-test cho các component của library.
+Repository nguồn của `@sdcorejs/angular`, duy trì cùng feature surface cho
+Angular 19, 20 và 21. Release `1.4` đã được chuẩn bị, kiểm chứng và push trên
+branch hiện tại; tag, GitHub release và npm publish chưa nằm trong phạm vi đã
+thực hiện.
 
 ## Stack & track
 
-- Track chính: Angular library/component; track hiện tại: design handoff cho dialog cấu hình bảng.
-- Angular Material/CDK, standalone components, signals, SCSS utilities và ng-packagr.
-- Persona dự án: `tech`.
+- Track: Angular library + Angular Showcase/docs application.
+- Stack: Angular, Angular Material/CDK, TypeScript, RxJS, ng-packagr.
+- Testing: Jasmine/Karma/ChromeHeadless, Angular ESLint, generator tests.
+- Package manager và task runner: npm + PowerShell repository scripts.
 
 ## Architecture map
 
-- Library source: `versions/v19/projects/sdcorejs-angular`.
-- Table config dialog: `components/table/src/components/config/config.component.{html,scss,ts}`.
-- Shared modal footer: `components/modal/src/modal.component.scss`; right action group đã có `gap: 8px`.
-- Showcase table demo: `versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts`.
-- Rollout scripts: root `scripts/sync-multi-version-workspaces.ps1` và `scripts/check-version-sync.mjs`.
+- Canonical library source: `versions/v19/projects/sdcorejs-angular`.
+- Generated mirrors: `versions/v20` và `versions/v21`.
+- Canonical Showcase/docs source: `versions/v19/projects/showcase`.
+- Root release docs: `CHANGELOG.md`, `docs/npm-README.md`,
+  `docs/migrations/1.4.md`.
+- Workspace rollout: `npm run sync`; parity guard: `npm run check:sync`.
+- Current feature target:
+  `versions/v19/projects/sdcorejs-angular/components/table`.
 
 ## Reusable building blocks
 
-- `SdModal` sở hữu header/body/footer layout, footer padding `16px` và action gap `8px`.
-- `SdButton` mặc định size `sm`, cao `32px`; chỉ primary action nên dùng fill trong một action group.
-- `SdInput` hỗ trợ size `sm` cao `32px`, phù hợp vùng table/dense.
-- Spacing utilities theo bội số `4px`; ưu tiên gap của layout container thay vì margin riêng trên từng child.
+- Standalone Angular components using signals and `OnPush`.
+- Typed secondary entrypoints with sibling tests and Markdown documentation.
+- `SdTable` owns the existing server/local load, filter, reload, export and
+  paginator flows; feature changes should preserve those public contracts.
+- Showcase changelog is generated from root `CHANGELOG.md` through
+  `npm run generate:showcase-changelog`.
 
 ## Conventions detected
 
-- Chỉnh shared logic ở v19 trước, sau đó chạy sync sang v20/v21.
-- Không thay global modal spacing cho một dialog riêng.
-- Dùng shared component/token/utility trước khi tạo CSS cục bộ.
-- Giữ button order `Bỏ qua` → `Mặc định` → `Áp dụng`, và chỉ `Áp dụng` là primary fill.
+- Edit canonical shared implementation in v19, then run root sync for v20/v21.
+- Do not hand-edit generated Showcase changelog, generated mirrors, `dist/**` or
+  `published-docs/**`.
+- Regression fixes use RED-first focused specs before minimal implementation.
+- Keep export and paginator predicates independent from reload visibility.
+- Commit, push, tag and publish are explicit delivery actions, not implicit
+  execution steps.
 
 ## Reuse cheatsheet
 
-- Footer chuẩn: bỏ margin child dư thừa và dùng `SdModal` gap `8px` làm single source of truth.
-- Dense table control: ưu tiên `size="sm"` thay vì CSS height tùy biến.
-- Rollout/check: `npm run sync`, sau đó `npm run check:sync`.
-- Showcase route liên quan: `/components/table` theo documentation registry hiện tại.
+- Focused table spec:
+  `versions/v19/projects/sdcorejs-angular/components/table/src/table.component.spec.ts`.
+- Reload template:
+  `versions/v19/projects/sdcorejs-angular/components/table/src/table.component.html`.
+- Public table guide:
+  `versions/v19/projects/sdcorejs-angular/components/table/sd-table.md`.
+- Release note source: `CHANGELOG.md`.
+- Approved execution contract:
+  `.sdcorejs/plans/angular/2026-07-23-12-29-sd-table-empty-reload.md`.
 
 ## Open context
 
-- Design polish cho dialog “Thiết lập bảng” đang được thực hiện; yêu cầu rõ nhất là giảm khoảng cách giữa các button.
-- Nguyên nhân hiện tại: hai nút đầu có `mr-8` trong khi footer đã có flex gap `8px`, tạo khoảng cách hiệu dụng `16px`.
-- Yêu cầu ban đầu chỉ nêu button spacing và switch nhỏ hơn; các chi tiết density còn lại đã được người dùng duyệt qua visual companion và technical contract ngày 2026-07-15.
-- Chưa có focused component test cho layout/footer của `ConfigComponent`.
-- Tích hợp datetime `1.0.3` trước đó đã được ship lên `release/1.3`; các known gap ngoài task design nằm trong `.sdcorejs/tasks/angular.md`.
+- Requested behavior: a configured reload action remains enabled and clickable
+  for `{ items: [], total: 0 }`.
+- The approved implementation and verification-amendment plans have been
+  executed sequentially with RED/GREEN regression evidence.
+- Canonical v19 source, Angular 20/21 mirrors, changelog, user guide and
+  technical documentation are updated.
+- Full tests, focused cross-version tests, release lint, library builds,
+  Showcase build, code review and browser smoke have passed; only the fresh
+  final integrity gate and explicitly requested commit/push remain.
+- Branch `chore/prepare-1.4` is ahead of upstream by the approved design
+  snapshot plus the pending feature commit.
 
 ## Freshness
 
-- Summary phản ánh branch `release/1.3` tại HEAD `5602da4c2e853a18216a3c21ab4ac9e01e1892ac`.
-- Source evidence được kiểm tra ngày 2026-07-15; working tree có design handoff và context artifacts của phiên hiện tại, không có production path bị sửa.
+This summary reflects HEAD `e6ec1eb`, the current empty-result reload working
+tree, its approved plans, completed verification/repair evidence, and the
+explicit commit/push delivery request on 2026-07-23.

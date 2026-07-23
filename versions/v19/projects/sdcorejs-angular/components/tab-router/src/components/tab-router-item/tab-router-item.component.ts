@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnDestroy, OnInit, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 
@@ -19,15 +19,18 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, CommonModule, SdBadge, SdTabInfoPipe],
 })
 export class SdTabRouterItemComponent implements OnInit, OnDestroy {
+  private cdRef = inject(ChangeDetectorRef);
+  private tabRouterService = inject(SdTabRouterService);
+  private router = inject(Router);
+
   @Input({ required: true }) tab!: SdTab;
 
   #subsctiption: Subscription = new Subscription();
   tabInfo?: SdTabInfo;
-  constructor(
-    private cdRef: ChangeDetectorRef,
-    private tabRouterService: SdTabRouterService,
-    private router: Router
-  ) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   ngOnInit(): void {
     this.#subsctiption.add(

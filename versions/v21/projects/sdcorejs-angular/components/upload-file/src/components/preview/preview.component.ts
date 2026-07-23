@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, Output, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ViewChild, inject, output } from '@angular/core';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { PreviewFile } from '../../services';
@@ -15,16 +15,21 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, SdModal, SdButton, CommonModule, MatIcon, TranslatePipe],
 })
 export class PreviewComponent {
+  private cd = inject(ChangeDetectorRef);
+
   @ViewChild(SdModal) modal!: SdModal;
-  @Output() download = new EventEmitter<PreviewFile>();
-  @Output() close = new EventEmitter<void>();
+  readonly download = output<PreviewFile>();
+  readonly close = output<void>();
 
   readonly #i18n = inject(I18nService);
   title: string = this.#i18n.t('core.component.upload-file.preview-title');
   thumbnailPosition: 'right' | 'left' | 'bottom' | 'top' = 'right';
   activeIndex = 0;
   previewFiles: PreviewFile[] = [];
-  constructor(private cd: ChangeDetectorRef) {}
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+  constructor() {}
 
   // Nên sử dụng urlOrFiles ở tham số khi open thay vì dùng @Input để component sử dụng sẽ chỉ cần map ở hàm khi gọi open thay vì phải mất công map mọi lúc để binding vào @Input
   open = async (previewFiles: PreviewFile[] | undefined | null, index?: number) => {

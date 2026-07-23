@@ -81,6 +81,10 @@ export interface SdTreeCommand<T = any> {
 
 export interface SdTreeSelectorOption<T = any> {
   visible?: boolean;
+  /** Keep at most one loaded node selected. Takes precedence over cascade. */
+  single?: boolean;
+  /** Select nodes independently or cascade selection through loaded descendants. */
+  cascade?: 'independent' | 'descendants';
   actions?: SdTreeSelectionAction<T>[];
   message?: string | ((selectedItems: T[]) => string);
   disabled?: (item: T, selectedItems: T[]) => boolean;
@@ -136,6 +140,7 @@ export interface SdTreeNode<T = any> {
   hasChildren: boolean;
   isExpanded: boolean;
   isLoading: boolean;
+  loadError?: unknown;
 }
 
 export interface SdTreeItemContext<T = any> {
@@ -147,10 +152,12 @@ export interface SdTreeItemContext<T = any> {
   expanded: boolean;
   selected: boolean;
   loading: boolean;
+  loadError?: unknown;
   hasChildren: boolean;
   isLeaf: boolean;
   toggle: () => void;
   select: () => void;
+  retry: () => void;
 }
 
 export type SdTreeItemTemplate<T = any> = TemplateRef<SdTreeItemContext<T>>;
@@ -165,4 +172,9 @@ export interface SdTreeToggleEvent<T = any> {
   item: T;
   expanded: boolean;
   node: SdTreeNode<T>;
+}
+
+export interface SdTreeLoadErrorEvent<T = any> {
+  item?: T;
+  error: unknown;
 }

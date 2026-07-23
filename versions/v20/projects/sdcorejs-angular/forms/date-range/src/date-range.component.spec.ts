@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testin
 import { By } from '@angular/platform-browser';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SdDateRange } from './date-range.component';
+import { SdDateRange, SdDateRangeValue } from './date-range.component';
 
 // ---------------------------------------------------------------------------
 // Host components
@@ -62,6 +62,11 @@ class NgFormHost {
 // ---------------------------------------------------------------------------
 
 describe('SdDateRange', () => {
+  it('exposes a named value type for consumer form contracts', () => {
+    const value: SdDateRangeValue = { from: '2026/07/01', to: '2026/07/21' };
+    expect(value.from).toBe('2026/07/01');
+    expect(value.to).toBe('2026/07/21');
+  });
   let fixture: ComponentFixture<HostComponent>;
   let host: HostComponent;
   let comp: SdDateRange;

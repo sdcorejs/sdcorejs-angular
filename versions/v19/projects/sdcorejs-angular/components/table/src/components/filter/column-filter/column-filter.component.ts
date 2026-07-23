@@ -13,7 +13,11 @@ import {
 } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
-import { SdDate, SdInput, SdInputNumber, SdSearch, SdSelect } from '@sdcorejs/angular/forms';
+import { SdDate } from '@sdcorejs/angular/forms/date';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
+import type { SdSearch } from '@sdcorejs/angular/forms/models';
+import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { SdDateRange } from '@sdcorejs/angular/forms/date-range';
 import { OPERATORS } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';

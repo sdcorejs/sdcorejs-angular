@@ -1,26 +1,40 @@
 import { InjectionToken } from '@angular/core';
+import { SdPersistenceIdentityCanonicalizer, SdPersistenceSerializer } from '@sdcorejs/angular/services/persistence';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-export interface SdStorageOption<T = any> {
-  type?: 'session';
+export interface SdStorageOption<T = unknown> {
+  type?: 'local' | 'session';
   default?: T;
-  args?: Record<string, any>;
+  args?: Readonly<Record<string, unknown>>;
+  namespace?: string;
+  version?: string | number;
+  serializer?: SdPersistenceSerializer;
+  identityCanonicalizer?: SdPersistenceIdentityCanonicalizer;
 }
 
-export interface SdStorage<T = any> {
-  get: () => T;
+export interface SdStorage<T = unknown> {
+  get: () => T | undefined;
   set: (data: T) => void;
-  // Ghi vào storage nhưng KHÔNG emit subject. Dùng cho thay đổi UI-only
-  // (vd: column width) để tránh re-trigger các subscriber gây reload data.
   setSilent: (data: T) => void;
   has: () => boolean;
   remove: () => void;
+  destroy: () => void;
+  subject: BehaviorSubject<T | undefined>;
+  observer: Observable<T | undefined>;
+}
+
+export interface SdStorageWithDefault<T> extends Omit<SdStorage<T>, 'get' | 'subject' | 'observer'> {
+  get: () => T;
   subject: BehaviorSubject<T>;
   observer: Observable<T>;
 }
 
 export interface ISdStorageConfiguration {
   key?: (key: string) => string;
+  namespace?: string;
+  version?: string | number;
+  serializer?: SdPersistenceSerializer;
+  identityCanonicalizer?: SdPersistenceIdentityCanonicalizer;
 }
 
 export const SD_STORAGE_CONFIG = new InjectionToken<ISdStorageConfiguration>('storage.configuration');

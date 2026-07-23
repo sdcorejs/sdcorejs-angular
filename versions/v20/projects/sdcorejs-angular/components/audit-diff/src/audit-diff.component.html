@@ -1,0 +1,73 @@
+@let currentRows = rows();
+@let customValue = valueTemplate();
+
+@if (currentRows.length === 0) {
+  <p class="sd-audit-diff__empty" data-audit-empty role="status">{{ text('empty') }}</p>
+} @else if (mode() === 'table') {
+  <div class="sd-audit-diff__table-scroll">
+    <table class="sd-audit-diff__table" [attr.aria-label]="ariaLabel() || text('label')">
+      <thead>
+        <tr>
+          <th scope="col">{{ text('field') }}</th>
+          <th scope="col">{{ text('before') }}</th>
+          <th scope="col">{{ text('after') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of currentRows; track row.id) {
+          <tr data-audit-row [attr.data-change-kind]="row.kind">
+            <th scope="row">
+              <span class="sd-audit-diff__field">{{ row.label }}</span>
+              <span class="sd-audit-diff__kind">{{ text('kind.' + row.kind) }}</span>
+            </th>
+            <td data-audit-before>
+              @if (customValue) {
+                <ng-container
+                  [ngTemplateOutlet]="customValue.template"
+                  [ngTemplateOutletContext]="valueContext(row, 'before')"></ng-container>
+              } @else {
+                {{ displayValue(row, 'before') }}
+              }
+            </td>
+            <td data-audit-after>
+              @if (customValue) {
+                <ng-container
+                  [ngTemplateOutlet]="customValue.template"
+                  [ngTemplateOutletContext]="valueContext(row, 'after')"></ng-container>
+              } @else {
+                {{ displayValue(row, 'after') }}
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <dl class="sd-audit-diff__details" [attr.aria-label]="ariaLabel() || text('label')">
+    @for (row of currentRows; track row.id) {
+      <div class="sd-audit-diff__detail" data-audit-row [attr.data-change-kind]="row.kind">
+        <dt>
+          <span class="sd-audit-diff__field">{{ row.label }}</span>
+          <span class="sd-audit-diff__kind">{{ text('kind.' + row.kind) }}</span>
+        </dt>
+        <dd data-audit-before>
+          <span class="sd-audit-diff__side-label">{{ text('before') }}</span>
+          @if (customValue) {
+            <ng-container [ngTemplateOutlet]="customValue.template" [ngTemplateOutletContext]="valueContext(row, 'before')"></ng-container>
+          } @else {
+            <span>{{ displayValue(row, 'before') }}</span>
+          }
+        </dd>
+        <dd data-audit-after>
+          <span class="sd-audit-diff__side-label">{{ text('after') }}</span>
+          @if (customValue) {
+            <ng-container [ngTemplateOutlet]="customValue.template" [ngTemplateOutletContext]="valueContext(row, 'after')"></ng-container>
+          } @else {
+            <span>{{ displayValue(row, 'after') }}</span>
+          }
+        </dd>
+      </div>
+    }
+  </dl>
+}

@@ -1,7 +1,15 @@
-import { HTTP_INTERCEPTORS, HttpClient, HttpResponse, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import {
+  HTTP_INTERCEPTORS,
+  HttpClient,
+  HttpErrorResponse,
+  HttpRequest,
+  HttpResponse,
+  provideHttpClient,
+  withInterceptorsFromDi,
+} from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
-import { ISdApiConfiguration, SD_API_CONFIG } from '../api.model';
+import { fakeAsync, flushMicrotasks, TestBed } from '@angular/core/testing';
+import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler } from '../api.model';
 import { SdHttpInterceptor } from './api.interceptor';
 
 /**
@@ -24,6 +32,31 @@ function configure(handlers: ISdApiConfiguration['handlers'] | null) {
 }
 
 describe('SdHttpInterceptor', () => {
+  it('accepts narrow typed handler callbacks without unsafe casts', () => {
+    interface MyRequestBody {
+      command: string;
+    }
+
+    interface MyResponseBody {
+      result: string;
+    }
+
+    const handler: SdApiHandler = {
+      hosts: ['/api'],
+      intercept: (request: HttpRequest<MyRequestBody>) => request.clone({ setHeaders: { 'X-Command': request.body?.command ?? '' } }),
+      beforeRemote: (request: HttpRequest<MyRequestBody>) => {
+        void request.body?.command;
+      },
+      afterRemote: (response: HttpResponse<MyResponseBody> | HttpErrorResponse | Error) => {
+        if (response instanceof HttpResponse) void response.body?.result;
+      },
+    };
+
+    expect(handler.intercept).toBeDefined();
+    expect(handler.beforeRemote).toBeDefined();
+    expect(handler.afterRemote).toBeDefined();
+  });
+
   it('lets a normal request through unchanged when no handler matches', () => {
     configure(null);
     const http = TestBed.inject(HttpClient);
@@ -40,10 +73,7 @@ describe('SdHttpInterceptor', () => {
     configure([
       {
         hosts: ['/api'],
-        // why: `intercept` is typed as returning HttpRequest but at runtime the
-        // value is spread into `request.clone({...})` — cast to bypass the
-        // declared (incorrect) type.
-        intercept: ((_request: any) => ({ setHeaders: { 'X-Custom': 'patched' } })) as any,
+        intercept: request => request.clone({ setHeaders: { 'X-Custom': 'patched' } }),
       },
     ]);
     const http = TestBed.inject(HttpClient);
@@ -99,6 +129,164 @@ describe('SdHttpInterceptor', () => {
     req.flush({ value: 1 });
     ctrl.verify();
   });
+
+  it('supports the legacy clone-update shape returned by handler.intercept()', () => {
+    configure([
+      {
+        hosts: ['/api'],
+        intercept: () => ({ setHeaders: { 'X-Legacy': 'patched' } }),
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+
+    http.get('/api/legacy-intercept').subscribe();
+
+    const req = ctrl.expectOne('/api/legacy-intercept');
+    expect(req.request.headers.get('X-Legacy')).toBe('patched');
+    req.flush(null);
+    ctrl.verify();
+  });
+
+  it('waits for an async afterRemote hook before emitting a successful response', fakeAsync(() => {
+    let resolveAfter!: () => void;
+    const afterPromise = new Promise<void>(resolve => {
+      resolveAfter = resolve;
+    });
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: () => afterPromise,
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+    let emitted = false;
+
+    http.get('/api/async-after-success').subscribe(() => (emitted = true));
+    ctrl.expectOne('/api/async-after-success').flush({ ok: true });
+    expect(emitted).toBeFalse();
+
+    resolveAfter();
+    flushMicrotasks();
+    expect(emitted).toBeTrue();
+    ctrl.verify();
+  }));
+
+  it('propagates a synchronous afterRemote failure after a successful HTTP response', () => {
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: () => {
+          throw new Error('synchronous success hook failure');
+        },
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+    let capturedError: unknown;
+
+    http.get('/api/success-sync-hook-failure').subscribe({
+      next: () => fail('successful response must wait for the hook'),
+      error: error => (capturedError = error),
+    });
+    ctrl.expectOne('/api/success-sync-hook-failure').flush({ ok: true });
+
+    expect(capturedError instanceof Error ? capturedError.message : capturedError).toBe('synchronous success hook failure');
+    ctrl.verify();
+  });
+
+  it('propagates a rejected afterRemote Promise after a successful HTTP response', fakeAsync(() => {
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: () => Promise.reject(new Error('asynchronous success hook failure')),
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+    let capturedError: unknown;
+
+    http.get('/api/success-async-hook-failure').subscribe({
+      next: () => fail('successful response must wait for the hook'),
+      error: error => (capturedError = error),
+    });
+    ctrl.expectOne('/api/success-async-hook-failure').flush({ ok: true });
+    expect(capturedError).toBeUndefined();
+
+    flushMicrotasks();
+    expect(capturedError instanceof Error ? capturedError.message : capturedError).toBe('asynchronous success hook failure');
+    ctrl.verify();
+  }));
+
+  it('waits for an async afterRemote hook before emitting an HTTP error', fakeAsync(() => {
+    let resolveAfter!: () => void;
+    const afterPromise = new Promise<void>(resolve => {
+      resolveAfter = resolve;
+    });
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: () => afterPromise,
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+    let emittedError = false;
+
+    http.get('/api/async-after-error').subscribe({ error: () => (emittedError = true) });
+    ctrl.expectOne('/api/async-after-error').flush('fail', { status: 500, statusText: 'Server Error' });
+    expect(emittedError).toBeFalse();
+
+    resolveAfter();
+    flushMicrotasks();
+    expect(emittedError).toBeTrue();
+    ctrl.verify();
+  }));
+
+  it('preserves the original HTTP error when afterRemote throws synchronously', done => {
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: () => {
+          throw new Error('synchronous hook failure');
+        },
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+
+    http.get('/api/original-error-sync-hook').subscribe({
+      error: error => {
+        expect(error instanceof HttpErrorResponse).toBeTrue();
+        expect(error.status).toBe(503);
+        done();
+      },
+    });
+    ctrl.expectOne('/api/original-error-sync-hook').flush('original', { status: 503, statusText: 'Unavailable' });
+    ctrl.verify();
+  });
+
+  it('preserves the original HTTP error after awaiting an afterRemote rejection', fakeAsync(() => {
+    configure([
+      {
+        hosts: ['/api'],
+        afterRemote: () => Promise.reject(new Error('asynchronous hook failure')),
+      },
+    ]);
+    const http = TestBed.inject(HttpClient);
+    const ctrl = TestBed.inject(HttpTestingController);
+    let capturedError: unknown;
+
+    http.get('/api/original-error-async-hook').subscribe({ error: error => (capturedError = error) });
+    ctrl.expectOne('/api/original-error-async-hook').flush('original', { status: 502, statusText: 'Bad Gateway' });
+    expect(capturedError).toBeUndefined();
+
+    flushMicrotasks();
+    expect(capturedError instanceof HttpErrorResponse).toBeTrue();
+    expect(capturedError instanceof HttpErrorResponse ? capturedError.status : undefined).toBe(502);
+    ctrl.verify();
+  }));
 
   it('waits for beforeRemote Promise to resolve before dispatching the request', done => {
     let resolveBefore!: () => void;
@@ -190,13 +378,13 @@ describe('SdHttpInterceptor', () => {
   });
 
   it('no handler match → skips intercept/beforeRemote/afterRemote entirely', done => {
-    const interceptSpy = jasmine.createSpy('intercept');
+    const interceptSpy = jasmine.createSpy<(request: HttpRequest<unknown>) => HttpRequest<unknown>>('intercept');
     const beforeSpy = jasmine.createSpy('beforeRemote');
     const afterSpy = jasmine.createSpy('afterRemote');
     configure([
       {
         hosts: ['https://other-host'],
-        intercept: interceptSpy as any,
+        intercept: interceptSpy,
         beforeRemote: beforeSpy,
         afterRemote: afterSpy,
       },
@@ -223,7 +411,7 @@ describe('SdHttpInterceptor', () => {
         provideHttpClient(withInterceptorsFromDi()),
         provideHttpClientTesting(),
         { provide: HTTP_INTERCEPTORS, useClass: SdHttpInterceptor, multi: true },
-        { provide: SD_API_CONFIG, multi: true, useValue: { handlers: undefined as any } },
+        { provide: SD_API_CONFIG, multi: true, useValue: { handlers: undefined } },
       ],
     });
     const http = TestBed.inject(HttpClient);

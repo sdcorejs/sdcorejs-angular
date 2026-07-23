@@ -1,0 +1,85 @@
+// why: V2 owns a viewport-height navigation shell with a permanent fixed-width rail.
+.sd-sidebar-v2 {
+  min-height: 100vh;
+  background: var(--sd-light);
+}
+
+// why: The rail must remain fixed while its flyout overlays content independently.
+.sd-sidebar-v2__rail {
+  position: fixed;
+  z-index: 30;
+  inset: 0 auto 0 0;
+  width: 72px;
+}
+
+// why: Rail controls use a compact navigation-specific square hit area.
+.sd-sidebar-v2__brand,
+.sd-sidebar-v2__rail-action {
+  width: 56px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sd-black400);
+  cursor: pointer;
+}
+
+// why: Active and hover states need token-based emphasis on the persistent rail.
+.sd-sidebar-v2__rail-action:hover,
+.sd-sidebar-v2__rail-action--active {
+  color: var(--sd-primary);
+  background: var(--sd-primary-light);
+}
+
+// why: Custom rail buttons need an explicit keyboard focus ring.
+.sd-sidebar-v2__brand:focus-visible,
+.sd-sidebar-v2__rail-action:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
+}
+
+// why: Long group titles need a two-line compact label inside the 56px rail item.
+.sd-sidebar-v2__rail-label {
+  width: 52px;
+  font-size: 10px;
+  line-height: 12px;
+  text-align: center;
+}
+
+// why: Consumer logo and image icons need deterministic footprints on the rail.
+.sd-sidebar-v2__logo,
+.sd-sidebar-v2__rail-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+// why: Outside-click capture covers content but stays behind the rail and flyout.
+.sd-sidebar-v2__backdrop {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  border: 0;
+  background: transparent;
+}
+
+// why: The contextual flyout overlays content at a stable width without changing layout geometry.
+.sd-sidebar-v2__flyout {
+  position: fixed;
+  z-index: 20;
+  inset: 0 auto 0 72px;
+  width: 320px;
+}
+
+// why: Projected content always reserves only the permanent rail width.
+.sd-sidebar-v2__content {
+  min-height: 100vh;
+  margin-left: 72px;
+}
+
+// why: Navigation motion must be disabled for users who request reduced animation.
+@media (prefers-reduced-motion: reduce) {
+  .sd-sidebar-v2__flyout {
+    transition: none;
+  }
+}

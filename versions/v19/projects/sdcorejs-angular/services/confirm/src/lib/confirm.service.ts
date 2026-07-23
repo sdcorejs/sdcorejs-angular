@@ -8,9 +8,14 @@ import { I18nService } from '@sdcorejs/angular/i18n';
   providedIn: 'root',
 })
 export class SdConfirmService {
+  private dialog = inject(MatDialog);
+
   readonly #i18n = inject(I18nService);
 
-  constructor(private dialog: MatDialog) {}
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   confirm = (
     message: string,

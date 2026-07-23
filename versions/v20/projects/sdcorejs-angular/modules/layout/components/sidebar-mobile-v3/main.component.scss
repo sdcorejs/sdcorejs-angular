@@ -1,0 +1,73 @@
+// why: Mobile V3 fills the dynamic viewport while keeping its topbar visible.
+.sd-sidebar-mobile-v3 {
+  min-height: 100dvh;
+  background: var(--sd-light);
+}
+
+// why: The mobile shell uses a consistent app-bar height above projected content.
+.sd-sidebar-mobile-v3__topbar {
+  min-height: 56px;
+}
+
+// why: Custom drawer controls require compact touch-friendly targets.
+.sd-sidebar-mobile-v3__icon-action {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sd-black500);
+  cursor: pointer;
+}
+
+// why: Drawer controls need token-based pointer feedback.
+.sd-sidebar-mobile-v3__icon-action:hover {
+  color: var(--sd-primary);
+  background: var(--sd-primary-light);
+}
+
+// why: Custom drawer controls need a visible keyboard focus ring.
+.sd-sidebar-mobile-v3__icon-action:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
+}
+
+// why: Consumer logos need a deterministic footprint in the mobile app bar.
+.sd-sidebar-mobile-v3__logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+// why: The modal backdrop isolates the navigation drawer and captures outside clicks.
+.sd-sidebar-mobile-v3__backdrop {
+  position: fixed;
+  z-index: 40;
+  inset: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--sd-black) 40%, transparent);
+}
+
+// why: The unified mobile drawer slides from the left and cannot exceed the viewport width.
+.sd-sidebar-mobile-v3__drawer {
+  position: fixed;
+  z-index: 50;
+  inset: 0 auto 0 0;
+  width: min(88vw, 360px);
+  max-width: 100%;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+// why: Global search remains discoverable while long navigation trees scroll.
+.sd-sidebar-mobile-v3__search {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+}
+
+// why: Navigation motion must respect the user's reduced-motion preference.
+@media (prefers-reduced-motion: reduce) {
+  .sd-sidebar-mobile-v3__drawer {
+    transition: none;
+  }
+}

@@ -43,6 +43,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
@@ -207,6 +208,11 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   formControl = new SdFormControl();
   #subscription = new Subscription();
   isFocused = false;
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+  });
 
   constructor() {
     // EFFECT 1: Sync model thay đổi từ bên ngoài
@@ -242,9 +248,6 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.#subscription.add(this.formControl.sdChanges.subscribe(() => this.#ref.markForCheck()));
     this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-
-    const formGroup = this.form();
-    formGroup?.addControl(this.name(), this.formControl);
   }
 
   ngAfterViewInit() {
@@ -254,8 +257,6 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    const formGroup = this.form();
-    formGroup?.removeControl(this.name());
     this.#subscription.unsubscribe();
   }
 

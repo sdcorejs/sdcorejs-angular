@@ -50,7 +50,7 @@ describe('AnchorNav', () => {
     });
 
     it('renders icon only when section.icon() is set', () => {
-      const icons = fixture.nativeElement.querySelectorAll('mat-icon.c-anchor-list-item-icon');
+      const icons = fixture.nativeElement.querySelectorAll('sd-icon.c-anchor-list-item-icon');
       expect(icons.length).toBe(1);
       expect(icons[0].textContent?.trim()).toBe('home');
     });

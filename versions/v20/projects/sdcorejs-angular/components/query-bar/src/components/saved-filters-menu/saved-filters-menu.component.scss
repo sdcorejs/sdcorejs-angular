@@ -106,6 +106,12 @@ $qb-danger:        #d23535;
       overflow: hidden;
     }
 
+    // Material applies its menu-item spacing to the renderer inside the SdIcon
+    // host, so reset the nested mat-icon as well as the facade element.
+    sd-icon mat-icon {
+      margin: 0 !important;
+    }
+
     &:hover { background: rgba(0, 0, 0, 0.06); color: $qb-danger; }
   }
 

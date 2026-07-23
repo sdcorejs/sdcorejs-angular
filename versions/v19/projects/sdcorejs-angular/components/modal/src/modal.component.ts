@@ -22,6 +22,14 @@ import { MatDividerModule } from '@angular/material/divider';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Color, Size } from '@sdcorejs/utils/models';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { Observable } from 'rxjs';
+
+export type SdModalBeforeClose = () => boolean | Promise<boolean>;
+
+interface SdModalDismissRef {
+  backdropClick?: () => Observable<MouseEvent>;
+  keydownEvents?: () => Observable<KeyboardEvent>;
+}
 
 @Component({
   selector: 'sd-modal',
@@ -58,8 +66,10 @@ export class SdModal {
   lazyLoadContent = input(true, { transform: booleanAttribute });
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
   disableBackdropClose = input<boolean, boolean | ''>(true, { transform: booleanAttribute }); // default to true to keep backward compatibility
+  beforeClose = input<SdModalBeforeClose | undefined>(undefined);
 
   sdClosed = output<void>();
+  sdCloseError = output<unknown>();
 
   isOpened = signal(false);
   alreadyOpened = signal(false);
@@ -68,6 +78,7 @@ export class SdModal {
   #resolvedWidth = 'md';
   #bottomSheetRef!: MatBottomSheetRef<any>;
   #dialogRef!: MatDialogRef<any>;
+  #closeRequest?: Promise<boolean>;
 
   #dialog = inject(MatDialog);
   #bottomSheet = inject(MatBottomSheet);
@@ -105,13 +116,15 @@ export class SdModal {
     if ((!this.view() && this.#isMobile) || this.view() === 'bottom-sheet') {
       this.#bottomSheetRef = this.#bottomSheet.open(this.templateRef(), {
         panelClass: this.#resolvePanelClass('sd-modal-bottom-sheet-panel'),
-        disableClose: this.disableBackdropClose(),
+        disableClose: this.disableBackdropClose() || !!this.beforeClose(),
       });
+      this.#bindGuardedDismiss(this.#bottomSheetRef);
       this.#bottomSheetRef
         .afterDismissed()
         .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe(() => {
           this.isOpened.set(false);
+          this.#closeRequest = undefined;
           this.sdClosed.emit();
         });
     } else {
@@ -119,22 +132,75 @@ export class SdModal {
         width: this.#resolvedWidth,
         maxWidth: this.#resolvedWidth,
         panelClass: this.#resolvePanelClass('sd-modal-panel'),
-        disableClose: this.disableBackdropClose(),
+        disableClose: this.disableBackdropClose() || !!this.beforeClose(),
       });
+      this.#bindGuardedDismiss(this.#dialogRef);
       this.#dialogRef
         .afterClosed()
         .pipe(takeUntilDestroyed(this.#destroyRef))
         .subscribe(() => {
           this.isOpened.set(false);
+          this.#closeRequest = undefined;
           this.sdClosed.emit();
         });
     }
   };
 
   close = (): void => {
+    if (this.beforeClose()) {
+      void this.requestClose();
+      return;
+    }
+    this.forceClose();
+  };
+
+  requestClose = (): Promise<boolean> => {
+    const guard = this.beforeClose();
+    if (!guard) {
+      this.forceClose();
+      return Promise.resolve(true);
+    }
+    if (this.#closeRequest) return this.#closeRequest;
+
+    const request = Promise.resolve()
+      .then(() => guard())
+      .then(canClose => {
+        if (!canClose) return false;
+        this.forceClose();
+        return true;
+      })
+      .catch((error: unknown) => {
+        this.sdCloseError.emit(error);
+        return false;
+      });
+
+    this.#closeRequest = request;
+    void request.finally(() => {
+      if (this.#closeRequest === request) this.#closeRequest = undefined;
+    });
+    return request;
+  };
+
+  forceClose = (): void => {
     this.#bottomSheetRef?.dismiss();
     this.#dialogRef?.close();
   };
+
+  #bindGuardedDismiss(ref: MatDialogRef<any> | MatBottomSheetRef<any>): void {
+    if (!this.beforeClose() || this.disableBackdropClose()) return;
+
+    const dismissRef = ref as SdModalDismissRef;
+    dismissRef
+      .backdropClick?.()
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe(() => this.close());
+    dismissRef
+      .keydownEvents?.()
+      .pipe(takeUntilDestroyed(this.#destroyRef))
+      .subscribe((event: KeyboardEvent) => {
+        if (event.key === 'Escape') this.close();
+      });
+  }
 
   #resolvePanelClass(baseClass: string): string[] {
     const customClass = this.modalClass();

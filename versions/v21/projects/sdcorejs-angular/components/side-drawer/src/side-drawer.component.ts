@@ -24,6 +24,8 @@ import { fromEvent, merge, Observable, Subject } from 'rxjs';
 import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
+export type SdSideDrawerBeforeClose = () => boolean | Promise<boolean>;
+
 @Component({
   selector: 'sd-side-drawer',
   templateUrl: './side-drawer.component.html',
@@ -41,6 +43,7 @@ export class SdSideDrawer {
   width = input<string>('480px');
   hideClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
   disableBackdropClose = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
+  beforeClose = input<SdSideDrawerBeforeClose | undefined>(undefined);
 
   // Custom CSS class added to the root side-drawer container
   drawerClass = input<any>('');
@@ -49,6 +52,7 @@ export class SdSideDrawer {
   readonly autoId = computed(() => (this.autoIdInput() ? `components-side-drawer-${this.autoIdInput()}` : undefined));
 
   sdClosed = output<void>();
+  sdCloseError = output<unknown>();
 
   #embeddedViewRef!: EmbeddedViewRef<any>;
 
@@ -62,6 +66,7 @@ export class SdSideDrawer {
   isHovered$!: Observable<boolean>;
   #destroy$ = new Subject<void>();
   #previousBodyOverflow: string | null = null;
+  #closeRequest?: Promise<boolean>;
 
   #viewContainerRef = inject(ViewContainerRef);
   #ar = inject(ApplicationRef);
@@ -110,6 +115,41 @@ export class SdSideDrawer {
   };
 
   close = () => {
+    if (this.beforeClose()) {
+      void this.requestClose();
+      return;
+    }
+    this.forceClose();
+  };
+
+  requestClose = (): Promise<boolean> => {
+    const guard = this.beforeClose();
+    if (!guard) {
+      this.forceClose();
+      return Promise.resolve(true);
+    }
+    if (this.#closeRequest) return this.#closeRequest;
+
+    const request = Promise.resolve()
+      .then(() => guard())
+      .then(canClose => {
+        if (!canClose) return false;
+        this.forceClose();
+        return true;
+      })
+      .catch((error: unknown) => {
+        this.sdCloseError.emit(error);
+        return false;
+      });
+
+    this.#closeRequest = request;
+    void request.finally(() => {
+      if (this.#closeRequest === request) this.#closeRequest = undefined;
+    });
+    return request;
+  };
+
+  forceClose = () => {
     this.#ref.markForCheck();
     this.#isOpenedSignal.set(false);
     this.sdClosed.emit();

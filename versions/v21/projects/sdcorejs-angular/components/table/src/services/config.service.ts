@@ -1,5 +1,5 @@
-import { inject, Injectable } from '@angular/core';
-import { SdStorage, SdStorageService } from '@sdcorejs/angular/services';
+import { DestroyRef, inject, Injectable } from '@angular/core';
+import { SdStorageService, SdStorageWithDefault } from '@sdcorejs/angular/services';
 import { Subject } from 'rxjs';
 import { ConfiguredColumn, ConfiguredTable, ConfiguredTableResult } from '../models/table-option-config.model';
 import { SdTableOption } from '../models/table-option.model';
@@ -18,13 +18,21 @@ export class ConfigService {
     FILLER: 'sdFiller',
   };
   #prefix = 'TABLE_CONFIG';
-  #storage?: SdStorage<ConfiguredTable>;
+  #storage?: SdStorageWithDefault<ConfiguredTable>;
   #widthChange = new Subject<{ field: string; width: string }>();
   widthChange$ = this.#widthChange.asObservable();
   private readonly storageService = inject(SdStorageService);
+  readonly #destroyRef = inject(DestroyRef);
   public readonly tableConfiguration: ISdTableConfiguration | null = inject(SD_TABLE_CONFIGURATION, { optional: true });
 
-  #loadConfiguredTable = (option: SdTableOption): SdStorage<ConfiguredTable> => {
+  constructor() {
+    this.#destroyRef.onDestroy(() => {
+      this.#storage?.destroy();
+      this.#storage = undefined;
+    });
+  }
+
+  #loadConfiguredTable = (option: SdTableOption): SdStorageWithDefault<ConfiguredTable> => {
     // Nếu không có key thì không lấy được setting
     if (!option?.key) {
       return this.storageService.create<ConfiguredTable>(Utilities.hash(option), {
@@ -46,8 +54,12 @@ export class ConfigService {
     if (!option?.key) {
       return this.#default(option);
     }
-    const storage = this.#loadConfiguredTable(option)!;
-    return storage.get();
+    const storage = this.#loadConfiguredTable(option);
+    try {
+      return storage.get();
+    } finally {
+      storage.destroy();
+    }
   };
 
   loadConfigurationResult = (option: SdTableOption, configuration: ConfiguredTable): ConfiguredTableResult => {
@@ -183,6 +195,7 @@ export class ConfigService {
   };
 
   init = (tableOption: SdTableOption) => {
+    this.#storage?.destroy();
     this.#storage = this.#loadConfiguredTable(tableOption);
     return this.#storage;
   };

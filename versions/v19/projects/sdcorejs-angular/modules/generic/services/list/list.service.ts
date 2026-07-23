@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 // import hash from 'object-hash';
 import { GenericListOption, TList } from './list.model';
 import { SdGenericService } from '../generic.service';
@@ -12,7 +12,12 @@ import { Utilities } from '@sdcorejs/utils/fns';
   providedIn: 'root',
 })
 export class SdGenericListService {
-  constructor(private genericService: SdGenericService) {}
+  private genericService = inject(SdGenericService);
+
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {}
 
   loadTableOption = async <T>(option: GenericListOption<T>): Promise<SdTableOption<TList<T>>> => {
     // Lấy menuId tùy theo kiểu dữ liệu truyền vào

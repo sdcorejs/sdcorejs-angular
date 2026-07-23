@@ -1,0 +1,41 @@
+<div class="sd-tree-select__control">
+  @if (connectorState().isViewed) {
+    <div data-tree-select-view class="sd-tree-select__view">{{ displayText() || '—' }}</div>
+  } @else {
+    <button
+      #trigger
+      type="button"
+      data-tree-select-trigger
+      class="sd-tree-select__trigger"
+      aria-haspopup="dialog"
+      [attr.aria-label]="ariaLabel() || label() || effectivePlaceholder()"
+      [attr.aria-expanded]="modal()?.isOpened() ?? false"
+      [disabled]="formControl.disabled || readonly()"
+      (click)="open()">
+      <span [class.sd-tree-select__placeholder]="!displayText()">{{ displayText() || effectivePlaceholder() }}</span>
+    </button>
+    @if (clearable() && modelKeys().length > 0 && !formControl.disabled && !readonly()) {
+      <button
+        type="button"
+        class="sd-tree-select__clear"
+        [attr.aria-label]="'core.form.tree-select.clear' | translate"
+        (click)="clear($event)">
+        ×
+      </button>
+    }
+  }
+</div>
+
+<sd-modal [autoId]="autoId()" [title]="effectiveModalTitle()" width="md" (sdClosed)="onModalClosed()">
+  <div class="sd-tree-select__body">
+    <label class="sd-tree-select__search">
+      <span class="visually-hidden">{{ 'core.form.tree-select.search' | translate }}</span>
+      <input type="search" [placeholder]="'core.form.tree-select.search' | translate" (input)="filter($any($event.target).value)" />
+    </label>
+    <sd-tree [option]="treeOption()" (selectChange)="onTreeSelection($event)" (loadError)="sdLoadError.emit($event)" />
+  </div>
+  <button type="button" sdFooterRight data-tree-select-cancel (click)="cancel()">{{ 'core.form.tree-select.cancel' | translate }}</button>
+  <button type="button" sdFooterRight data-tree-select-apply (click)="applySelection()">
+    {{ 'core.form.tree-select.apply' | translate }}
+  </button>
+</sd-modal>

@@ -44,6 +44,60 @@ if (!(Test-Path -LiteralPath $v19Path)) {
   throw "Primary v19 workspace not found: $v19Path"
 }
 
+$canonicalNpmReadmePath = Join-Path $RootPath "docs/npm-README.md"
+$v19PackageReadmePath = Join-Path $v19Path "projects/sdcorejs-angular/README.md"
+if (!(Test-Path -LiteralPath $canonicalNpmReadmePath)) {
+  throw "Canonical npm README not found: $canonicalNpmReadmePath"
+}
+if (!(Test-Path -LiteralPath (Split-Path -Parent $v19PackageReadmePath))) {
+  throw "Primary library directory not found: $(Split-Path -Parent $v19PackageReadmePath)"
+}
+
+# why: docs/npm-README.md is the public package README source of truth. Refresh
+# v19 before mirroring so all published Angular lines carry the same release docs.
+$canonicalNpmReadme = [System.IO.File]::ReadAllText($canonicalNpmReadmePath)
+$currentV19PackageReadme = if (Test-Path -LiteralPath $v19PackageReadmePath) {
+  [System.IO.File]::ReadAllText($v19PackageReadmePath)
+} else {
+  ""
+}
+if ($currentV19PackageReadme -ne $canonicalNpmReadme) {
+  Write-Utf8NoBom -Path $v19PackageReadmePath -Content $canonicalNpmReadme
+}
+
+$v19LibraryPackagePath = Join-Path $v19Path "projects/sdcorejs-angular/package.json"
+if (!(Test-Path -LiteralPath $v19LibraryPackagePath)) {
+  throw "Primary library package not found: $v19LibraryPackagePath"
+}
+$canonicalLibraryVersion = (Get-Content -LiteralPath $v19LibraryPackagePath -Raw -Encoding UTF8 | ConvertFrom-Json).version
+$managedWorkspaceScripts = @(
+  "check-i18n-parity.mjs",
+  "check-i18n.mjs"
+)
+
+function Sync-ManagedWorkspaceScripts {
+  param([string]$DestinationWorkspace)
+
+  foreach ($scriptName in $managedWorkspaceScripts) {
+    $sourcePath = Join-Path $v19Path "scripts/$scriptName"
+    if (!(Test-Path -LiteralPath $sourcePath)) {
+      throw "Primary workspace script not found: $sourcePath"
+    }
+
+    if ($DestinationWorkspace -eq $v19Path) {
+      continue
+    }
+
+    $destinationScripts = Join-Path $DestinationWorkspace "scripts"
+    if (!(Test-Path -LiteralPath $destinationScripts)) {
+      New-Item -ItemType Directory -Path $destinationScripts | Out-Null
+    }
+
+    $content = [System.IO.File]::ReadAllText($sourcePath)
+    Write-Utf8NoBom -Path (Join-Path $destinationScripts $scriptName) -Content $content
+  }
+}
+
 function Set-PackageVersion {
   param(
     [string]$Content,
@@ -110,6 +164,24 @@ function Update-MajorInPackageJson {
     $updated = Set-PackageVersion -Content $updated -PackageName "typescript-eslint" -Version "^8.60.0"
   }
 
+  if ($updated -ne $content) {
+    Write-Utf8NoBom -Path $PackagePath -Content $updated
+  }
+}
+
+function Update-LibraryPackageVersion {
+  param(
+    [string]$PackagePath,
+    [string]$Version
+  )
+
+  if (!(Test-Path -LiteralPath $PackagePath)) {
+    throw "Library package not found: $PackagePath"
+  }
+
+  $content = Get-Content -LiteralPath $PackagePath -Raw -Encoding UTF8
+  $versionPattern = New-Object System.Text.RegularExpressions.Regex('"version"\s*:\s*"[^"]+"')
+  $updated = $versionPattern.Replace($content, ('"version": "' + $Version + '"'), 1)
   if ($updated -ne $content) {
     Write-Utf8NoBom -Path $PackagePath -Content $updated
   }
@@ -187,6 +259,10 @@ foreach ($v in $versions) {
     robocopy $v19Path $dest /MIR /XD .git .sdcorejs node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md package-lock.json /R:1 /W:1 /NFL /NDL /NP | Out-Null
   }
 
+  # scripts/ is otherwise workspace-specific; only these quality gates are
+  # canonical v19 files that every package.json exposes and must keep runnable.
+  Sync-ManagedWorkspaceScripts -DestinationWorkspace $dest
+
   # Explicitly delete projects/demo folder in target if present
   $versionDemoPath = Join-Path $dest "projects/demo"
   if (Test-Path -LiteralPath $versionDemoPath) {
@@ -195,6 +271,10 @@ foreach ($v in $versions) {
 
   $rootPackagePath = Join-Path $dest "package.json"
   Update-MajorInPackageJson -PackagePath $rootPackagePath -Major $v.Major
+
+  $libraryPackagePath = Join-Path $dest "projects/sdcorejs-angular/package.json"
+  $targetLibraryVersion = $canonicalLibraryVersion -replace '^\d+\.', "$($v.Major)."
+  Update-LibraryPackageVersion -PackagePath $libraryPackagePath -Version $targetLibraryVersion
 
   $rootTsConfigPath = Join-Path $dest "tsconfig.json"
   Update-VersionTsConfig -TsConfigPath $rootTsConfigPath

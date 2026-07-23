@@ -22,7 +22,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { SdFormControl, sdFormControlState } from '@sdcorejs/angular/forms/models';
+import { SdFormControl, sdFormControlState, ɵsdFormControlConnector } from '@sdcorejs/angular/forms/models';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
@@ -77,9 +77,6 @@ export class SdUploadFile<TArgs = any> {
   readonly #isMobileOrTablet = BrowserUtilities.isMobile();
   readonly #canvas1 = `C${Utilities.generateUuid()}`;
   readonly #canvas2 = `C${Utilities.generateUuid()}`;
-  #name = Utilities.generateUuid();
-  #formGroup?: FormGroup;
-
   readonly formControl = new SdFormControl();
 
   // why: component là OnPush nhưng template đọc formControl.touched/errors như thuộc tính
@@ -203,16 +200,17 @@ export class SdUploadFile<TArgs = any> {
 
   // ─── Model Signal (two-way binding support: [(model)]) ────────────────
   readonly model = model<(string | number)[]>([]);
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.nameInput,
+    control: computed(() => this.formControl),
+  });
 
   constructor() {
     this.#validateDuplicateConfigurationKeys();
 
     // Sync form group & register form control
     afterNextRender(() => {
-      this.#formGroup = this.form();
-      this.#name = this.nameInput();
-      this.#formGroup?.addControl(this.#name, this.formControl);
-
       // Drag & drop setup
       if (!this.#isMobileOrTablet) {
         this.#setupDropContainer();
@@ -264,7 +262,6 @@ export class SdUploadFile<TArgs = any> {
     // Cleanup on destroy
     this.#destroyRef.onDestroy(() => {
       this.#revokePreviewBlobURLs();
-      this.#formGroup?.removeControl(this.#name);
     });
   }
 

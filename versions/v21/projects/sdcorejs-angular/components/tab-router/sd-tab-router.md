@@ -8,15 +8,18 @@
 **Change detection**: `OnPush` for all three
 
 ## One-line purpose
+
 Browser-style multi-tab router shell — every navigated route becomes a tab; tabs persist their component instances on ordinary switches, can be explicitly reloaded, closed, reordered (drag), and replaced. Drives the "open many records side-by-side" UX seen in admin / CRM apps.
 
 ## When to use
+
 - App shell where users open many detail pages and want to switch back and forth without losing state
 - CRM / admin / ticketing apps where the user juggles 5–20 records at once
 - Any layout that should mimic browser tabs with one URL per tab
 - When you want components to keep scroll position, form state, in-flight requests when the user navigates away and back
 
 ## When NOT to use
+
 - For small apps with linear navigation (a single `<router-outlet>` is fine)
 - For nested tabs INSIDE a route (use a non-routed tab component, not this one)
 - When you want unmount-on-leave semantics (tab-router intentionally KEEPS components alive)
@@ -24,25 +27,28 @@ Browser-style multi-tab router shell — every navigated route becomes a tab; ta
 
 ## Architecture (3 layers)
 
-| Layer | Selector | Role |
-| --- | --- | --- |
+| Layer  | Selector               | Role                                                                                                                                                                                                                                                                     |
+| ------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Outlet | `sd-tab-router-outlet` | Replaces `<router-outlet>`. Listens to raw router events, builds the tab list, hosts component instances via `*ngComponentOutlet`, manages activate / deactivate / close / explicit reload, and supports `replaceTab`, `switchTab`, and `forceReload` navigation states. |
-| Nav | `sd-tab-router-nav` | Renders the horizontal tab strip on top. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis). Auto-switches between `default` and `compact` modes based on available width / number of tabs. |
-| Item | `sd-tab-router-item` | One tab pill — contains an `<sd-badge>` showing icon + name + tooltip, plus a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set). |
+| Nav    | `sd-tab-router-nav`    | Renders the horizontal tab strip on top. Supports drag-to-reorder (CDK Drag-Drop, locked to X-axis). Auto-switches between `default` and `compact` modes based on available width / number of tabs.                                                                      |
+| Item   | `sd-tab-router-item`   | One tab pill — contains an `<sd-badge>` showing icon + name + tooltip, plus a close `×` button. Supports middle-click close; close requests delegate to `SdTabRouterService.close()` (outlet runs `beforeClose` if set).                                                 |
 
 > Tab metadata (name, icon, tooltip, color) is provided **per-component** via the `@SdTabComponent` decorator (see Decorator below). Routes don't declare the metadata — the destination component does.
 
 ## `<sd-tab-router-outlet>`
 
 ### Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
+
+| Name       | Type                                       | Default | Notes                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `disabled` | `boolean` (coerced via `booleanAttribute`) | `false` | When `true`, the outlet bypasses all tab management. Navigation falls through to a standard `<router-outlet>` instead. Useful for embedding the outlet in contexts where tab behaviour should be suppressed (e.g. print view, modal shell). |
 
 ### Outputs
+
 None.
 
 ### Behaviors
+
 - Listens to raw router events only (it never unwraps `Scroll`): `RoutesRecognized` captures `extras.state`, `NavigationEnd` applies the route after redirects, `NavigationSkipped` handles an explicitly forced same-URL reload, and `NavigationCancel` / `NavigationError` discard pending state
 - Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another
 - `NavigationSkipped` continues only for `NavigationSkippedCode.IgnoredSameUrlNavigation` with a directly snapshotted `state.forceReload === true`; this is why reloading the currently active identical URL works even though Angular does not emit `NavigationEnd`
@@ -63,11 +69,13 @@ None.
 ## `<sd-tab-router-nav>`
 
 ### Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `tabs` | `SdTab[]` | `[]` | Array of tab objects (provided by the outlet). |
+
+| Name   | Type      | Default | Notes                                          |
+| ------ | --------- | ------- | ---------------------------------------------- |
+| `tabs` | `SdTab[]` | `[]`    | Array of tab objects (provided by the outlet). |
 
 ### Behaviors
+
 - Renders the strip horizontally, scrollable / wrapped depending on count
 - `mode` is internal: switches to `'compact'` when `(width − tabs*68) / tabs <= 20` — i.e. when each tab would be too narrow to show a name, items collapse to icon-only
 - `cdkDropList` lockaxis x → user drags tabs left/right to reorder (mutates `tabs` in place via `moveItemInArray`)
@@ -77,14 +85,16 @@ None.
 ## `<sd-tab-router-item>`
 
 ### Inputs
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `tab` | `SdTab` (REQUIRED) | — | The tab descriptor. |
+
+| Name  | Type               | Default | Notes               |
+| ----- | ------------------ | ------- | ------------------- |
+| `tab` | `SdTab` (REQUIRED) | —       | The tab descriptor. |
 
 ### Behaviors
+
 - Click → router navigates to `tab.url` with `tab.queryParams` and `state: { switchTab: true }` (so the outlet doesn't recreate, it just activates)
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
-- Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined (must return `true` or resolve to `true` to actually close)
+- Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
 - Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
 - `<sd-badge>` renders the visual: icon, name, tooltip, color
 
@@ -102,27 +112,27 @@ None.
 export class EmployeeDetailComponent { ... }
 ```
 
-| Field | Type | Notes |
-| --- | --- | --- |
-| `component` | `Type<any>` (REQUIRED) | The component class this metadata belongs to. |
-| `name` | `string \| (args) => string` | Tab label. Function form receives `{ url, params, queryParams, data }`. |
-| `icon` | `string \| (args) => string` | Material icon name. |
-| `tooltip` | `string \| (args) => string` | Hover tooltip on the badge. |
-| `color` | `Color \| (args) => Color` | Badge color token. |
+| Field       | Type                         | Notes                                                                   |
+| ----------- | ---------------------------- | ----------------------------------------------------------------------- |
+| `component` | `Type<any>` (REQUIRED)       | The component class this metadata belongs to.                           |
+| `name`      | `string \| (args) => string` | Tab label. Function form receives `{ url, params, queryParams, data }`. |
+| `icon`      | `string \| (args) => string` | Material icon name.                                                     |
+| `tooltip`   | `string \| (args) => string` | Hover tooltip on the badge.                                             |
+| `color`     | `Color \| (args) => Color`   | Badge color token.                                                      |
 
 The decorator self-registers via `SdTabDecoratorService` so metadata is resolved when the route activates.
 
 ## Public API
 
-| API | Kind | Use it when |
-| --- | --- | --- |
-| `<sd-tab-router-outlet [disabled]>` | Component | Replacing the app shell's `<router-outlet>` with a persistent multi-tab router host. |
-| `<sd-tab-router-nav [tabs]>` | Component | Rendering the tab strip supplied by the outlet. Usually used internally, not by feature screens. |
-| `<sd-tab-router-item [tab]>` | Component | Rendering one draggable/closable tab pill inside the nav. Usually used internally. |
-| `@SdTabComponent({...})` | Decorator | Supplying route-component tab metadata: name, icon, tooltip, and color. |
-| `SdTabRouterService` | Service | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first. |
-| `SdTab` / `SdTabInfo` | Interfaces | Strongly typing custom tab metadata or service integrations. |
-| `SD_TAB` | `InjectionToken<SdTab>` | Inject `SdTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
+| API                                 | Kind                    | Use it when                                                                                                                                                                                                                                   |
+| ----------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<sd-tab-router-outlet [disabled]>` | Component               | Replacing the app shell's `<router-outlet>` with a persistent multi-tab router host.                                                                                                                                                          |
+| `<sd-tab-router-nav [tabs]>`        | Component               | Rendering the tab strip supplied by the outlet. Usually used internally, not by feature screens.                                                                                                                                              |
+| `<sd-tab-router-item [tab]>`        | Component               | Rendering one draggable/closable tab pill inside the nav. Usually used internally.                                                                                                                                                            |
+| `@SdTabComponent({...})`            | Decorator               | Supplying route-component tab metadata: name, icon, tooltip, and color.                                                                                                                                                                       |
+| `SdTabRouterService`                | Service                 | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first.                                                                                                    |
+| `SdTab` / `SdTabInfo`               | Interfaces              | Strongly typing custom tab metadata or service integrations.                                                                                                                                                                                  |
+| `SD_TAB`                            | `InjectionToken<SdTab>` | Inject `SdTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
 
 Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.navigate(...)`. App shells wire `<sd-tab-router-outlet>` once.
 
@@ -132,7 +142,7 @@ Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.n
 interface SdTab {
   component: Type<any>;
   injector?: Injector;
-  key: string;        // hash(url + queryParams)
+  key: string; // hash(url + queryParams)
   isActive: boolean;
   url: string;
   params?: Record<string, string | number>;
@@ -151,6 +161,7 @@ interface SdTabInfo {
 ```
 
 ## Visual cues (helps agent map screenshots → component)
+
 - A horizontal strip of "tab pills" at the top of the main content area, browser-style
 - Each pill (`.tab-router__item`):
   - Pill / chip shape rendered via `<sd-badge>` (rounded, colored)
@@ -164,6 +175,7 @@ interface SdTabInfo {
 ## Examples
 
 ### 1. App shell wiring
+
 ```html
 <!-- app.component.html -->
 <sd-page>
@@ -172,6 +184,7 @@ interface SdTabInfo {
 ```
 
 ### 2. Decorating a routed component with tab metadata
+
 ```ts
 import { SdTabComponent } from '@sdcorejs/angular/components/tab-router';
 
@@ -190,9 +203,10 @@ export class EmployeeDetailComponent { ... }
 ```
 
 ### 3. Replace-tab navigation (open Edit on top of Detail)
+
 ```ts
 this.router.navigate(['/employees', id, 'edit'], {
-  state: { replaceTab: true }
+  state: { replaceTab: true },
 });
 ```
 
@@ -200,7 +214,7 @@ this.router.navigate(['/employees', id, 'edit'], {
 
 ```ts
 this.router.navigate(['/employees', id], {
-  state: { forceReload: true }
+  state: { forceReload: true },
 });
 ```
 
@@ -210,7 +224,7 @@ If this is already the active identical URL, Angular emits `NavigationSkipped`; 
 
 ```ts
 this.router.navigate(['/employees', id, 'edit'], {
-  state: { forceReload: true, replaceTab: true }
+  state: { forceReload: true, replaceTab: true },
 });
 ```
 
@@ -241,15 +255,17 @@ Component dùng cả trong lẫn ngoài tab-router: dùng `inject(SD_TAB, { opti
 An explicit `forceReload` does not call this hook; use it only when the caller intentionally wants to discard and recreate the existing tab.
 
 ### 7. Updating tab info at runtime
+
 ```ts
 this.tab.tabInfoChanges.next({
-  name: this.employee.name,         // tab name now matches the loaded record
+  name: this.employee.name, // tab name now matches the loaded record
   icon: this.form.dirty ? 'edit' : 'person',
-  color: this.form.dirty ? 'warning' : 'primary'
+  color: this.form.dirty ? 'warning' : 'primary',
 });
 ```
 
 ## Anti-patterns
+
 - ❌ Using `<router-outlet>` AND `<sd-tab-router-outlet>` in the same shell — they will both react to navigation and double-render
 - ❌ Mutating `tab.isActive` directly in app code — the outlet rebuilds tabs immutably; your mutation will be overwritten on the next nav
 - ❌ Decorating a non-routable component with `@SdTabComponent` — the decorator only takes effect when the route activates the class
@@ -258,11 +274,13 @@ this.tab.tabInfoChanges.next({
 - ❌ Opening the same URL with different query params and expecting tab reuse — keys include `queryParams`, so any difference creates a new tab
 
 ## Accessibility
+
 - Tabs are `<a>` anchors with `[href]` set to the tab URL → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
 - Close button has `aria-hidden` (focusable via tab order is not guaranteed — consider a fork if A11y is critical)
 - No `role="tablist" / "tab" / "tabpanel"` ARIA wiring (this is a router shell, not WAI-ARIA tabs)
 
 ## Related
+
 - `<sd-badge>` — used to render each tab pill
 - Angular `Router` — drives all tab creation / activation
 - `SdTabRouterService` — programmatic API for `setCurrentTab`, `close`, event stream

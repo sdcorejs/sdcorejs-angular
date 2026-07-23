@@ -1,5 +1,7 @@
 import { booleanAttribute, ChangeDetectionStrategy, Component, input, output, TemplateRef, viewChild } from '@angular/core';
 
+export type SdTabBeforeClose = () => boolean | Promise<boolean>;
+
 @Component({
   selector: 'sd-tab',
   standalone: true,
@@ -12,8 +14,41 @@ export class SdTab {
   badge = input<string | number | null | undefined>(undefined);
   disabled = input(false, { transform: booleanAttribute });
   closable = input(false, { transform: booleanAttribute });
+  beforeClose = input<SdTabBeforeClose | undefined>(undefined);
 
   close = output<void>();
+  closeError = output<unknown>();
+
+  #closeRequest?: Promise<boolean>;
+
+  requestClose = (): Promise<boolean> => {
+    const guard = this.beforeClose();
+    if (!guard) {
+      this.forceClose();
+      return Promise.resolve(true);
+    }
+    if (this.#closeRequest) return this.#closeRequest;
+
+    const request = Promise.resolve()
+      .then(() => guard())
+      .then(canClose => {
+        if (!canClose) return false;
+        this.forceClose();
+        return true;
+      })
+      .catch((error: unknown) => {
+        this.closeError.emit(error);
+        return false;
+      });
+
+    this.#closeRequest = request;
+    void request.finally(() => {
+      if (this.#closeRequest === request) this.#closeRequest = undefined;
+    });
+    return request;
+  };
+
+  forceClose = (): void => this.close.emit();
 
   // why: viewChild on `#body` template captures projected content so the parent
   // <sd-tab-group> can render it lazily via matTabContent + ngTemplateOutlet.

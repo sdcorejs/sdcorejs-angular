@@ -9,9 +9,10 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTable, MatTableModule } from '@angular/material/table';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
-import { SdInput, SdSwitch } from '@sdcorejs/angular/forms';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdSwitch } from '@sdcorejs/angular/forms/switch';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdStorage } from '@sdcorejs/angular/services';
+import { SdStorageWithDefault } from '@sdcorejs/angular/services';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTable, ConfiguredTableResult } from '../../models/table-option-config.model';
@@ -69,7 +70,7 @@ export class ConfigComponent {
   configuration = signal<ConfiguredTable | undefined>(undefined);
   // dragDisabled không nên là signal (mutated trong drag handlers, không trigger render).
   dragDisabled = true;
-  #setting?: SdStorage<ConfiguredTable>;
+  #setting?: SdStorageWithDefault<ConfiguredTable>;
 
   // ==========================================
   // 5. WINDOW MOUSEUP — tự destroy qua takeUntilDestroyed (thay @HostListener)

@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { MatSidenav, MatSidenavModule } from '@angular/material/sidenav';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
 
 // NOTE: Import nội bộ trong module layout
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../configurations';
@@ -14,6 +13,7 @@ import { SidebarComponent } from './components/sidebar/sidebar.component';
   styleUrl: './main.component.scss',
   imports: [MatSidenavModule, CommonModule, SidebarComponent],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SidebarV1Component {
   // ==========================================
@@ -28,17 +28,16 @@ export class SidebarV1Component {
   menus = input<SdLayoutMenu[]>([]);
   userInfo = input.required<SdLayoutUserInfo>();
   sidebar = input.required<SidebarConfigurationV1>();
+  isMobile = input(false);
 
   // ==========================================
   // STATE SIGNALS
   // ==========================================
-  isMobileOrTablet = signal<boolean>(BrowserUtilities.isMobile());
-
   // Trạng thái khóa menu (luôn mở rộng hay không)
   isMenuLock = signal<boolean>(this.#layoutStorageService.menuLockStatus?.get() ?? true);
 
   // Trạng thái hiển thị (mở/đóng) của Sidenav
-  isShowSidebar = signal<boolean>(BrowserUtilities.isMobile() ? false : (this.#layoutStorageService.menuLockStatus?.get() ?? true));
+  isShowSidebar = signal<boolean>(this.isMobile() ? false : (this.#layoutStorageService.menuLockStatus?.get() ?? true));
 
   onhover = signal<boolean>(false);
 
@@ -87,7 +86,7 @@ export class SidebarV1Component {
   };
 
   openSidebar = (): void => {
-    if (!this.isMobileOrTablet()) {
+    if (!this.isMobile()) {
       return;
     }
 
@@ -113,7 +112,7 @@ export class SidebarV1Component {
   };
 
   onExpandSideBar = (): void => {
-    if (this.isMobileOrTablet()) {
+    if (this.isMobile()) {
       return;
     }
     if (!this.isShowSidebar()) {
@@ -123,7 +122,7 @@ export class SidebarV1Component {
   };
 
   onMouseleaveSideBar = (): void => {
-    if (this.isMobileOrTablet()) {
+    if (this.isMobile()) {
       return;
     }
     this.#mouseLeave();

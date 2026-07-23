@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -17,10 +17,10 @@ import { SdMiniEditorOption } from './mini-editor.model';
   template: '<div class="ck-editor-stub"></div>',
 })
 class FakeCKEditorComponent {
-  @Input() editor: any;
-  @Input() config: any;
-  @Input() disabled = false;
-  @Output() ready = new EventEmitter<any>();
+  readonly editor = input<any>();
+  readonly config = input<any>();
+  readonly disabled = input(false);
+  readonly ready = output<any>();
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +135,7 @@ describe('SdMiniEditor', () => {
 
     it('disabled defaults to false', () => {
       const fixture = buildFixture();
-      expect(fixture.componentInstance.disabled).toBe(false);
+      expect(fixture.componentInstance.disabled()).toBe(false);
     });
 
     it('option is passed through to the component', () => {
