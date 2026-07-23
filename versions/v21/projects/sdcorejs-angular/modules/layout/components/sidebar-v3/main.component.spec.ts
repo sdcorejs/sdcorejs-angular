@@ -15,7 +15,8 @@ describe('SidebarV3Component', () => {
     localStorage.clear();
     // The library test target omits consumer global styles; load the Core utility declarations under test.
     utilityStyles = document.createElement('style');
-    utilityStyles.textContent = '.d-flex { display: flex !important; } .justify-content-between { justify-content: space-between !important; } .justify-content-center { justify-content: center !important; }';
+    utilityStyles.textContent =
+      '.d-flex { display: flex !important; } .justify-content-between { justify-content: space-between !important; } .justify-content-center { justify-content: center !important; }';
     document.head.appendChild(utilityStyles);
     await TestBed.configureTestingModule({ imports: [SidebarV3Component], providers: [provideRouter([])] }).compileComponents();
   });

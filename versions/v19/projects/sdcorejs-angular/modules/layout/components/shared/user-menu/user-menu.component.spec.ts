@@ -8,7 +8,8 @@ describe('SdLayoutUserMenuComponent', () => {
   beforeEach(async () => {
     // The library test target omits consumer global styles; load the Core utility declarations under test.
     utilityStyles = document.createElement('style');
-    utilityStyles.textContent = '.w-full { width: 100% !important; } .w-56 { width: 56px !important; } .gap-8 { gap: 8px !important; } .gap-0 { gap: 0 !important; }';
+    utilityStyles.textContent =
+      '.w-full { width: 100% !important; } .w-56 { width: 56px !important; } .gap-8 { gap: 8px !important; } .gap-0 { gap: 0 !important; }';
     document.head.appendChild(utilityStyles);
     await TestBed.configureTestingModule({ imports: [SdLayoutUserMenuComponent] }).compileComponents();
     fixture = TestBed.createComponent(SdLayoutUserMenuComponent);
