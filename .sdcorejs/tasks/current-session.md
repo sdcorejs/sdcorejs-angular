@@ -1,125 +1,90 @@
 ---
-updated_at: 2026-07-23T15:56:42+07:00
+updated_at: 2026-07-24T04:18:17+07:00
 status: complete
 track: angular
 active_skill: sdcorejs-ship
-branch: chore/prepare-1.4
+branch: feat/layout-navigation-polish
 ---
 
 # Current Session Checkpoint
 
 ## User Request
 
-Cho phép nút tải lại của `SdTable` vẫn hiển thị và bấm được khi
-`items.length === 0` hoặc `total === 0`.
+Thực thi plan polish Layout V2/V3 theo phương án Soft pill đã duyệt bằng
+subagent-driven workflow trong worktree riêng.
 
 ## Tasks
 
-- [x] Xác định component và điều kiện disable hiện tại.
-- [x] Chốt phạm vi hành vi và phương án sửa tối thiểu.
-- [x] Viết test hồi quy ở trạng thái dữ liệu rỗng.
-- [x] Sửa canonical v19, đồng bộ v20/v21 và cập nhật tài liệu liên quan.
-- [x] Chạy kiểm thử, lint/sync và build release.
-- [x] Hoàn tất finish gate, review, repair loop, tài liệu và kiểm tra UI.
-- [x] Chạy final integrity gate và hoàn tất executor/ship readiness.
+- [x] Task 1 - compact account và header V3.
+- [x] Task 2 - shared Soft-pill search component.
+- [x] Task 3 - tích hợp search vào bốn biến thể V2/V3.
+- [x] Task 4 - changelog và tài liệu Layout.
+- [x] Task 5 - test/build và browser UI check.
+- [x] Task 6 - review, repair và readiness handoff.
 
 ## Current State
 
-- Last completed: fresh final integrity, regression, lint và build gates.
-- In progress: không có trong Angular executor; Git delivery được xử lý bởi
-  `sdcorejs-git` theo yêu cầu riêng của user.
-- Blocked/skipped: không có.
+- Last completed: Task 6 final review, accessibility repair, traceability và
+  fresh branch-readiness verification.
+- In progress: không có.
+- Blocked/skipped: không có; push/PR/tag/release chưa được yêu cầu trong plan
+  thực thi này.
 
 ## Artifacts Touched
 
-- ADD `docs/superpowers/specs/2026-07-23-sd-table-empty-reload-design.md` -
-  hợp đồng hành vi và kiểm thử cho reload khi bảng rỗng.
-- ADD `.sdcorejs/plans/angular/2026-07-23-12-29-sd-table-empty-reload.md` -
-  approved implementation plan snapshot.
-- ADD `.sdcorejs/plans/angular/2026-07-23-15-11-sd-table-empty-reload-revision-2.md`
-  - approved revision 2 amendment snapshot.
-- EDIT `.sdcorejs/summary.md` - refresh project map tại HEAD `e6ec1eb` cho
-  execute-plan preflight.
-- EDIT `versions/v19/projects/sdcorejs-angular/components/table/src/table.component.spec.ts`
-  - regression cho empty-result reload, export và paginator.
-- EDIT `versions/v19/projects/sdcorejs-angular/components/table/src/table.component.html`
-  - bỏ item-count disabled predicate của reload.
-- EDIT `versions/v19/projects/sdcorejs-angular/components/table/sd-table.md` -
-  document empty-result reload contract.
-- EDIT `versions/v19/projects/sdcorejs-angular/components/preview/src/preview-pdf/preview-pdf.component.spec.ts`
-  - test-only typed-array inference compatibility cho TypeScript 5.9.
-- EDIT `versions/v19/projects/sdcorejs-angular/modules/layout/services/responsive/responsive.service.spec.ts`
-  - dùng cùng public viewport entrypoint với production subject để full test
-  không tạo duplicate DI token/class identity.
-- EDIT `CHANGELOG.md` - thêm `Unreleased / Fixed`.
-- GENERATE `versions/v19/projects/showcase/src/app/docs/generated/changelog.generated.ts`
-  - synchronized `Unreleased` changelog data.
-- GENERATE matching table source/test/docs và Showcase changelog dưới
-  `versions/v20`, `versions/v21`; update ba `SYNC-STATUS.md`.
-- ADD `.sdcorejs/documentation/technical-docs/sd-table-empty-result-reload.md`
-  - developer contract, source map và verification evidence.
-- ADD `.sdcorejs/documentation/user-guides/sd-table-empty-result-reload.md` -
-  user-facing retry guidance và 7/7 requirement coverage.
-- EDIT `.sdcorejs/documentation/user-guides/capture-screenshots.playwright.mjs`
-  - ghi follow-up cho dedicated empty-result Showcase fixture.
-- ADD `.sdcorejs/docs/angular/2026-07-23-15-45-sd-table-empty-reload.md` -
-  session summary.
-- EDIT `.sdcorejs/tasks/angular.md` - thêm screenshot fixture vào Next.
-- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cho thay đổi nút reload
-  khi bảng rỗng.
+- EDIT `.sdcorejs/summary.md` - refresh architecture/context tại HEAD `39d544e`.
+- EDIT `.sdcorejs/tasks/current-session.md` - execution checkpoint.
+- CREATE `.sdcorejs/docs/angular/2026-07-24-04-18-layout-v2-v3-navigation-polish.md`
+  - session summary, decisions, verification và follow-up.
+- CREATE `.sdcorejs/docs/product/2026-07-24-04-18-layout-v2-v3-navigation-polish.md`
+  cùng bộ `product/**/layout-v2-v3-navigation-polish.md` - product
+  traceability cho 10 acceptance criteria.
+- EDIT `.sdcorejs/tasks/angular.md` - đánh dấu Layout polish hoàn tất và xếp
+  follow-up accessibility/test quality/delivery.
+- EDIT `.sdcorejs/summary.md` - refresh hoàn tất tại implementation HEAD
+  `2391516`.
 
 ## Verification
 
-- Design spec và plan đã được user duyệt.
-- Approved contract hash:
-  `bff08cae46e555a053f6a125bc0799bdf737b5d73944ef6e8645315259ed249e`.
-- `sdcorejs-explore` summary refresh pass; track Angular và canonical v19 được
-  xác nhận.
-- Focused v19 table baseline: `54/54` pass.
-- Focused RED: `56` pass, reload enabled/click assertions fail đúng nguyên nhân.
-- Focused GREEN: `58/58` pass.
-- Template guard: reload disabled predicate absent; export/paginator predicates
-  still present.
-- Showcase changelog generator: `6/6` pass.
-- Markdown/diff whitespace guard: pass.
-- `npm run sync` và `npm run check:sync`: pass.
-- Post-sync focused table: v19 `58/58`, v20 `58/58` pass.
-- Amendment self-review: pass; một test-only canonical path, sáu exact
-  declarations, đủ RED evidence/commands/acceptance mapping, không placeholder.
-- Focused PDF sau amendment: v19/v20/v21 đều `139/139` pass.
-- Post-amendment focused table v21: `58/58` pass.
-- `npm run lint:release`: pass trên v19/v20/v21.
-- Library build: v19/v20/v21 đều pass.
-- Showcase v19 build: pass; changelog generator ghi nhận 4 entries.
-- Final `npm run check:sync` và `git diff --check`: pass.
-- Finish gate choices: standard tests, user guide + technical doc, review/repair
-  loop.
-- Read-only Angular/code review: không có `BLOCKER`, `REQUIRED` hoặc issue.
-- Full v19 `test:ci` ban đầu lộ 2 responsive spec failures do relative source
-  import khác identity với package import; test-only repair chuyển focused
-  v19/v20/v21 sang `4/4` pass.
-- Full `test:ci` v19/v20/v21: exit `0` khi chạy tuần tự. Một concurrent
-  v20/v21 attempt tạo isolated `SdLoadingService` failure nhưng focused
-  v19/v20/v21 đều `36/36` và hai sequential full suites đều exit `0`, xác nhận
-  browser/Karma contention chứ không phải repo finding.
-- Browser smoke: Showcase HTTP 200, Table Examples render `sd-table`, không có
-  console error. Published-doc remote metadata không khả dụng trong local dev
-  nhưng local catalog/examples và production build vẫn hoạt động.
-- Acceptance verification: 7/7 criteria pass.
-- Branch hygiene content checks: không focused/skipped test, conflict marker,
-  secret, sensitive file hoặc binary mới.
-- Fresh `npm run check:sync`: pass; v20/v21 match canonical v19.
-- Fresh Showcase changelog generator tests: `6/6` pass.
-- Fresh screenshot capture syntax check và `git diff --check`: pass.
-- Fresh `npm run lint:release`: pass trên v19/v20/v21.
-- Fresh combined table/PDF/responsive regression: v19/v20/v21 đều `201/201`
-  pass khi chạy tuần tự.
-- Fresh library build: v19/v20/v21 đều exit `0`.
-- Fresh v19 Showcase production build: exit `0`.
-- Git scope/secret/focused-test/conflict scan: pass.
-- Upstream pre-commit divergence sau fetch: `0 1`; remote không có commit mới.
+- Approved design và implementation plan đã commit.
+- Worktree checkout pass sau khi bật Git long-path.
+- Root, v19/v20/v21 dependency setup pass; v20 cần `--legacy-peer-deps`;
+  package manifest/lock side effects đã được hoàn nguyên.
+- v19 focused user-menu/V2/V3 baseline: `18/18 SUCCESS`, exit `0`.
+- Core docs inventory/style/Input/Layout preflight: pass; registry `21.1.4`,
+  local v19 source remains implementation authority.
+- Task 1 RED: 4 behavior tests plus computed-style cascade regressions fail
+  đúng nguyên nhân.
+- Task 1 GREEN: v19/v20/v21 đều `22/22`, sync/check/diff pass.
+- Task 1 spec review pass; quality repair đóng 2 Important findings, re-review
+  còn 0 Critical/Important.
+- Task 2 RED xác nhận 3 lỗi cascade/token/subscript; GREEN v19/v20/v21 đều
+  `6/6`, sync/check/diff pass.
+- Task 2 spec review pass; quality re-review còn 0 Critical/Important. Một
+  minor assertion icon phụ thuộc Material renderer được ghi nhận; lỗi
+  `aria-hidden` global của editable `SdInput` được giữ ngoài scope Layout.
+- Task 3 RED: `4/29` regression mới fail đúng do bốn biến thể còn render
+  `SdInput` trực tiếp; GREEN v19/v20/v21 changed-spec đều `42/42`.
+- Task 3 spec và quality review pass; còn 0 Critical/Important. Một minor
+  test coverage end-to-end cho parent filtering/Escape được ghi nhận.
+- Task 4 generator/test/sync pass; spec và quality review pass với 0 finding.
+- Task 5 full Layout v19 `84/84`; changed-spec v20/v21 `42/42`; ba library
+  build và Showcase build pass.
+- Browser V2/V3 desktop/mobile pass; search/filter/focus/Escape/body-scroll
+  behavior đúng, console `0` error và `0` warning.
+- `lint:release` ban đầu phát hiện 178 lỗi Prettier do mixed EOL; repair-loop
+  pass 1 commit `b90b656` và lint v19/v20/v21 pass.
+- Final review ban đầu phát hiện compact trigger thiếu accessible name; RED/GREEN
+  repair commit `2391516` thêm tên hiển thị chỉ ở compact mode.
+- Final re-review: `0 BLOCKER`, `0 REQUIRED`, ready.
+- Fresh Layout suite trên HEAD hiện tại: v19/v20/v21 đều `84/84 SUCCESS`.
+- Fresh `npm run lint:release`, `npm run check:sync` và `git diff --check`: pass.
+- Fresh library build v19/v20/v21 và Showcase v19 production build: pass.
+- Acceptance audit: `10/10` criteria có requirement, implementation và test/UAT
+  evidence; không có product gap.
+- Branch scope guards: Layout V1, public barrels và `forms/input` không đổi.
 
 ## Resume From Here
 
-Angular executor và ship gate đã hoàn tất. Tiếp tục explicit-path staging,
-Conventional Commit và push `chore/prepare-1.4` qua `sdcorejs-git`.
+Branch đã sẵn sàng tại local. Chỉ tiếp tục push và tạo PR vào `main` khi user
+đưa ra yêu cầu delivery rõ ràng; tag/release là bước phê duyệt riêng sau merge.

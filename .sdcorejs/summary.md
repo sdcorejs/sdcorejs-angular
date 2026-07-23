@@ -1,7 +1,7 @@
 ---
-generated_at: 2026-07-23T15:55:00+07:00
-git_head: e6ec1eb242e84dc6be34cd42eb617c1d002b612e
-branch: chore/prepare-1.4
+generated_at: 2026-07-24T04:18:17+07:00
+git_head: 239151667dc759cac0405de1ae0f594b729667e9
+branch: feat/layout-navigation-polish
 tracks: [angular]
 generator: sdcorejs-explore
 ---
@@ -11,9 +11,8 @@ generator: sdcorejs-explore
 ## What this project is
 
 Repository nguồn của `@sdcorejs/angular`, duy trì cùng feature surface cho
-Angular 19, 20 và 21. Release `1.4` đã được chuẩn bị, kiểm chứng và push trên
-branch hiện tại; tag, GitHub release và npm publish chưa nằm trong phạm vi đã
-thực hiện.
+Angular 19, 20 và 21. Release `1.4` đã có trên `main`; công việc hiện tại là
+polish nội bộ cho Layout V2/V3, không thay đổi public API.
 
 ## Stack & track
 
@@ -27,59 +26,63 @@ thực hiện.
 - Canonical library source: `versions/v19/projects/sdcorejs-angular`.
 - Generated mirrors: `versions/v20` và `versions/v21`.
 - Canonical Showcase/docs source: `versions/v19/projects/showcase`.
-- Root release docs: `CHANGELOG.md`, `docs/npm-README.md`,
-  `docs/migrations/1.4.md`.
+- Layout sources:
+  `versions/v19/projects/sdcorejs-angular/modules/layout/components`.
+- Root release source: `CHANGELOG.md`.
 - Workspace rollout: `npm run sync`; parity guard: `npm run check:sync`.
-- Current feature target:
-  `versions/v19/projects/sdcorejs-angular/components/table`.
 
 ## Reusable building blocks
 
-- Standalone Angular components using signals and `OnPush`.
-- Typed secondary entrypoints with sibling tests and Markdown documentation.
-- `SdTable` owns the existing server/local load, filter, reload, export and
-  paginator flows; feature changes should preserve those public contracts.
-- Showcase changelog is generated from root `CHANGELOG.md` through
-  `npm run generate:showcase-changelog`.
+- `SdLayoutUserMenuComponent` owns expanded/compact account disclosure.
+- `SidebarV2Component`, `SidebarV3Component` and their mobile counterparts own
+  navigation state and filtering.
+- `SdInput` supplies the existing input/model/`sdChange`/`autoId` contracts.
+- `SdIcon` supplies the existing Layout icon system.
+- Standalone components use signal inputs/outputs and `OnPush`.
 
 ## Conventions detected
 
 - Edit canonical shared implementation in v19, then run root sync for v20/v21.
-- Do not hand-edit generated Showcase changelog, generated mirrors, `dist/**` or
-  `published-docs/**`.
-- Regression fixes use RED-first focused specs before minimal implementation.
-- Keep export and paginator predicates independent from reload visibility.
-- Commit, push, tag and publish are explicit delivery actions, not implicit
-  execution steps.
+- New Layout presentation primitives stay internal unless a public API change
+  is explicitly approved.
+- Do not hand-edit generated mirrors, generated Showcase changelog, `dist/**`
+  or `published-docs/**`.
+- Behavior changes use RED-first focused specs before minimal implementation.
+- Full Karma suites across versions run sequentially to avoid browser
+  contention.
+- Commit, push, PR, tag and publish are separate explicit delivery actions.
 
 ## Reuse cheatsheet
 
-- Focused table spec:
-  `versions/v19/projects/sdcorejs-angular/components/table/src/table.component.spec.ts`.
-- Reload template:
-  `versions/v19/projects/sdcorejs-angular/components/table/src/table.component.html`.
-- Public table guide:
-  `versions/v19/projects/sdcorejs-angular/components/table/sd-table.md`.
-- Release note source: `CHANGELOG.md`.
-- Approved execution contract:
-  `.sdcorejs/plans/angular/2026-07-23-12-29-sd-table-empty-reload.md`.
+- Approved design:
+  `docs/superpowers/specs/2026-07-23-layout-v2-v3-navigation-polish-design.md`.
+- Approved implementation plan:
+  `docs/superpowers/plans/2026-07-23-layout-v2-v3-navigation-polish.md`.
+- Shared account component:
+  `versions/v19/projects/sdcorejs-angular/modules/layout/components/shared/user-menu`.
+- Canonical desktop/mobile sidebars:
+  `versions/v19/projects/sdcorejs-angular/modules/layout/components/sidebar-*`.
+- Existing form primitive:
+  `versions/v19/projects/sdcorejs-angular/forms/input`.
+- Layout guide: `versions/v19/projects/sdcorejs-angular/modules/layout/sd-layout.md`.
 
 ## Open context
 
-- Requested behavior: a configured reload action remains enabled and clickable
-  for `{ items: [], total: 0 }`.
-- The approved implementation and verification-amendment plans have been
-  executed sequentially with RED/GREEN regression evidence.
-- Canonical v19 source, Angular 20/21 mirrors, changelog, user guide and
-  technical documentation are updated.
-- Full tests, focused cross-version tests, release lint, library builds,
-  Showcase build, code review and browser smoke have passed; only the fresh
-  final integrity gate and explicitly requested commit/push remain.
-- Branch `chore/prepare-1.4` is ahead of upstream by the approved design
-  snapshot plus the pending feature commit.
+- Layout V2/V3 polish is implemented and verified: compact account triggers are
+  centered, collapsed V3 hides its brand and the four menu searches share an
+  internal Soft-pill presentation.
+- Placeholders, `autoId`, filtering, signal flow, Layout V1 and public barrels
+  remain unchanged.
+- Angular 19/20/21 Layout suites, release lint, source sync, three library
+  builds, Showcase build and desktop/mobile browser UAT pass.
+- Final review has `0 BLOCKER` and `0 REQUIRED`; compact account triggers expose
+  the display name as their accessible name.
+- Follow-up outside this feature: audit editable `SdInput` instances that
+  inherit `aria-hidden="true"` from global container semantics.
+- Branch remains local until explicit push/PR delivery authorization.
 
 ## Freshness
 
-This summary reflects HEAD `e6ec1eb`, the current empty-result reload working
-tree, its approved plans, completed verification/repair evidence, and the
-explicit commit/push delivery request on 2026-07-23.
+This summary reflects implementation HEAD `2391516`, branch
+`feat/layout-navigation-polish`, completed product/session documentation and
+fresh verification evidence on 2026-07-24.

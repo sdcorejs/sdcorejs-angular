@@ -11,6 +11,9 @@
 
 ## Next
 
+- [ ] Khi được yêu cầu delivery, push `feat/layout-navigation-polish` và mở PR vào `main`.
+- [ ] Audit/fix editable `SdInput` đang kế thừa `aria-hidden="true"` trong một task Forms độc lập.
+- [ ] Giảm coupling của search-icon spec với Material renderer và tăng integration assertion cho filter/Escape.
 - [ ] Add a dedicated Showcase fixture for `SdTable` empty-result reload and capture `images/sd-table-empty-result-reload.png`.
 - [ ] Merge the Showcase Loading manifest hotfix PR and confirm `deploy-pages.yml` completes without the runtime exception.
 - [ ] Normalize `GenericSelectComponent` output types, then migrate its three `EventEmitter` outputs with Angular safe migration.
@@ -31,6 +34,7 @@
 
 ## Done
 
+- [x] (2026-07-24) Polish Layout V2/V3 compact controls và shared Soft-pill search; sync ba Angular line, hoàn tất docs, review, browser UAT và release verification.
 - [x] (2026-07-23) Audit Changelog and 113 Markdown files, enforce canonical npm README sync, refresh release docs, and pass the fresh commit/push delivery gate.
 - [x] (2026-07-23) Complete Task 15 full quality gate: repair full Karma/coverage/i18n/sync issues, browser smoke, review/repair, production builds and package dry-runs.
 - [x] (2026-07-23) Repair Showcase Changelog duplicate-section rendering and Layout demo viewport injection; full Showcase 191/191 passes.
