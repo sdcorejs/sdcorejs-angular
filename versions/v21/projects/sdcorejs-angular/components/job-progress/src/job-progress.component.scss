@@ -1,0 +1,114 @@
+:host {
+  display: block;
+}
+
+.sd-job-progress {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--sd-border-color, #dfe3e8);
+  border-radius: 8px;
+  background: var(--sd-surface, #fff);
+}
+
+.sd-job-progress__header,
+.sd-job-progress__identity,
+.sd-job-progress__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sd-job-progress__header {
+  justify-content: space-between;
+}
+
+.sd-job-progress__identity {
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.sd-job-progress__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sd-job-progress__status,
+.sd-job-progress__percentage,
+.sd-job-progress__message {
+  color: var(--sd-text-muted, #5f6772);
+  font-size: 0.875rem;
+}
+
+.sd-job-progress__track {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sd-progress-track, #e8edf3);
+}
+
+.sd-job-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--sd-primary, #1565c0);
+  transition: width 160ms ease;
+}
+
+.sd-job-progress__fill--indeterminate {
+  animation: sd-job-progress-indeterminate 1.2s ease-in-out infinite;
+}
+
+.sd-job-progress__message,
+.sd-job-progress__error {
+  margin: 0;
+}
+
+.sd-job-progress__error {
+  color: var(--sd-error, #ba1a1a);
+}
+
+.sd-job-progress__actions {
+  justify-content: flex-end;
+}
+
+.sd-job-progress__actions button {
+  padding: 6px 10px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  color: var(--sd-primary, #1565c0);
+  background: transparent;
+  cursor: pointer;
+}
+
+:host([data-mode='compact']) .sd-job-progress {
+  grid-template-columns: minmax(0, 1fr) minmax(80px, 30%);
+  align-items: center;
+  padding: 8px 10px;
+}
+
+:host([data-mode='compact']) .sd-job-progress__actions,
+:host([data-mode='compact']) .sd-job-progress__error {
+  grid-column: 1 / -1;
+}
+
+@keyframes sd-job-progress-indeterminate {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(380%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-job-progress__fill {
+    transition: none;
+  }
+
+  .sd-job-progress__fill--indeterminate {
+    animation: none;
+  }
+}

@@ -40,7 +40,7 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { EditorImageUploadPlugin } from './plugins/image-upload/image-upload.plugin';
 import { EditorOption, SdEditorOption } from './models';
-import { HandleSdCustomValidator, SdCustomValidator, SdFormControl } from '@sdcorejs/angular/forms/models';
+import { HandleSdCustomValidator, SdCustomValidator, SdFormControl, ɵsdFormControlConnector } from '@sdcorejs/angular/forms/models';
 import { SdCKEditorStyles } from '@sdcorejs/angular/components/ckeditor-styles';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
@@ -110,6 +110,11 @@ export class SdEditor {
   // State
   readonly _textLength = signal(0);
   readonly formControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+  });
   readonly isOverLimit = computed(() => {
     const max = this.maxlength();
     return max !== undefined && this._textLength() > max;
@@ -381,9 +386,6 @@ export class SdEditor {
     // Lắng nghe binđing 2 chiều model
     effect(() => this.#onModelSignalChange(this.valueModel()));
 
-    // Lắng nghe name form
-    effect(() => this.form()?.addControl(this.name(), this.formControl));
-
     // Lắng nghe validators
     effect(() => {
       this.required();
@@ -410,7 +412,6 @@ export class SdEditor {
 
   #setupDestroy(): void {
     this.#destroyRef.onDestroy(() => {
-      this.form()?.removeControl(this.name());
       this.#editor?.destroy?.();
     });
   }

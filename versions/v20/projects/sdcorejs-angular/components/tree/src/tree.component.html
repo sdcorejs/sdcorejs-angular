@@ -3,89 +3,112 @@
 @let _selectedCount = selectedCount();
 @let _selectionMessage = selectionMessage();
 @let _selectionActionViews = selectionActionViews();
+@let _rootError = rootError();
 
-<div class="sd-tree" role="tree" [style.--sd-tree-indent-size]="indentSize() + 'px'">
-  @for (node of visibleViewNodes(); track node.id) {
-    <div
-      class="sd-tree__row"
-      role="treeitem"
-      [class.sd-tree__row--selected]="node.selected"
-      [style.--sd-tree-level]="node.level"
-      [attr.aria-expanded]="node.ariaExpanded"
-      [attr.aria-selected]="_selectionVisible ? node.selected : null"
-      [attr.data-autoid]="node.autoIds.row">
-      <div class="sd-tree__main">
-        <button
-          type="button"
-          class="sd-tree__toggle"
-          [class.sd-tree__toggle--placeholder]="!node.hasChildren"
-          [disabled]="node.toggleDisabled"
-          [attr.aria-label]="node.toggleLabel"
-          [attr.data-autoid]="node.autoIds.toggle"
-          (click)="toggle(node, $event)">
-          @if (node.isLoading) {
-            <mat-progress-spinner diameter="16" mode="indeterminate" />
-          } @else if (node.hasChildren) {
-            <sd-icon [name]="node.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+@if (rootLoading()) {
+  <div class="sd-tree__root-loading" role="status" aria-live="polite">
+    <mat-progress-spinner diameter="24" mode="indeterminate" />
+  </div>
+} @else if (_rootError) {
+  <div class="sd-tree__root-error" role="alert">
+    <span>{{ errorMessage(_rootError) }}</span>
+    <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | translate }}</button>
+  </div>
+} @else {
+  <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
+    @for (node of visibleViewNodes(); track node.id) {
+      <div
+        class="sd-tree__row"
+        role="treeitem"
+        [tabIndex]="node.tabIndex"
+        [class.sd-tree__row--selected]="node.selected"
+        [style.--sd-tree-level]="node.level"
+        [attr.aria-level]="node.level + 1"
+        [attr.aria-expanded]="node.ariaExpanded"
+        [attr.aria-selected]="_selectionVisible ? node.selected : null"
+        [attr.aria-checked]="_selectionVisible ? (node.selectionIndeterminate ? 'mixed' : node.selected) : null"
+        [attr.data-autoid]="node.autoIds.row"
+        (focus)="onRowFocus(node)"
+        (keydown)="onRowKeydown(node, $event)">
+        <div class="sd-tree__main">
+          <button
+            type="button"
+            class="sd-tree__toggle"
+            [class.sd-tree__toggle--placeholder]="!node.hasChildren"
+            [disabled]="node.toggleDisabled"
+            [attr.aria-label]="node.toggleLabel"
+            [attr.data-autoid]="node.autoIds.toggle"
+            [attr.data-tree-node-retry]="node.loadError ? node.id : null"
+            (click)="toggle(node, $event)">
+            @if (node.isLoading) {
+              <mat-progress-spinner diameter="16" mode="indeterminate" />
+            } @else if (node.loadError) {
+              <sd-icon name="refresh"></sd-icon>
+            } @else if (node.hasChildren) {
+              <sd-icon [name]="node.isExpanded ? 'expand_more' : 'chevron_right'"></sd-icon>
+            }
+          </button>
+
+          @if (_selectionVisible) {
+            <mat-checkbox
+              class="sd-tree__checkbox"
+              [checked]="node.selected"
+              [indeterminate]="node.selectionIndeterminate"
+              [disabled]="node.selectionDisabled"
+              [attr.data-autoid]="node.autoIds.checkbox"
+              (click)="$event.stopPropagation()"
+              (change)="toggleSelection(node)" />
           }
-        </button>
 
-        @if (_selectionVisible) {
-          <mat-checkbox
-            class="sd-tree__checkbox"
-            [checked]="node.selected"
-            [disabled]="node.selectionDisabled"
-            [attr.data-autoid]="node.autoIds.checkbox"
-            (click)="$event.stopPropagation()"
-            (change)="toggleSelection(node)" />
-        }
-
-        @if (node.icon) {
-          <sd-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon" [name]="node.icon"></sd-icon>
-        }
-
-        <div class="sd-tree__content" [class.sd-tree__content--custom]="_resolvedItemTemplate" [attr.data-autoid]="node.autoIds.label">
-          @if (_resolvedItemTemplate) {
-            <ng-container *ngTemplateOutlet="_resolvedItemTemplate; context: node.context" />
-          } @else {
-            <span class="sd-tree__label">{{ node.label }}</span>
+          @if (node.icon) {
+            <sd-icon class="sd-tree__item-icon" color="primary" [attr.data-autoid]="node.autoIds.icon" [name]="node.icon"></sd-icon>
           }
+
+          <div class="sd-tree__content" [class.sd-tree__content--custom]="_resolvedItemTemplate" [attr.data-autoid]="node.autoIds.label">
+            @if (_resolvedItemTemplate) {
+              <ng-container *ngTemplateOutlet="_resolvedItemTemplate; context: node.context" />
+            } @else {
+              <span class="sd-tree__label">{{ node.label }}</span>
+            }
+          </div>
         </div>
-      </div>
 
-      @if (node.commands.length) {
-        <button
-          type="button"
-          class="sd-tree__command-trigger"
-          mat-icon-button
-          [matMenuTriggerFor]="commandMenu"
-          [attr.data-autoid]="node.autoIds.command"
-          (click)="$event.stopPropagation()">
-          <sd-icon class="c-icon" name="more_vert"></sd-icon>
-        </button>
-        <mat-menu #commandMenu="matMenu" class="sd-tree__command-menu">
-          @for (command of node.commands; track command.key) {
-            <button
-              type="button"
-              class="sd-tree__command-menu-item"
-              mat-menu-item
-              [disabled]="command.disabled"
-              [attr.data-autoid]="command.autoId"
-              (click)="command.command.click(node.data)">
-              <span class="sd-tree__command-menu-content">
-                <sd-icon class="c-icon sd-tree__command-menu-icon"
-                  [class.sd-tree__command-menu-icon--default]="command.defaultColor"
-                  [color]="command.color"
-                  [fontSet]="command.fontSet" [name]="command.icon"></sd-icon>
-                <span class="sd-tree__command-title">{{ command.title }}</span>
-              </span>
-            </button>
-          }
-        </mat-menu>
-      }
-    </div>
-  }
-</div>
+        @if (node.commands.length) {
+          <button
+            type="button"
+            class="sd-tree__command-trigger"
+            mat-icon-button
+            [matMenuTriggerFor]="commandMenu"
+            [attr.data-autoid]="node.autoIds.command"
+            (click)="$event.stopPropagation()">
+            <sd-icon class="c-icon" name="more_vert"></sd-icon>
+          </button>
+          <mat-menu #commandMenu="matMenu" class="sd-tree__command-menu">
+            @for (command of node.commands; track command.key) {
+              <button
+                type="button"
+                class="sd-tree__command-menu-item"
+                mat-menu-item
+                [disabled]="command.disabled"
+                [attr.data-autoid]="command.autoId"
+                (click)="command.command.click(node.data)">
+                <span class="sd-tree__command-menu-content">
+                  <sd-icon
+                    class="c-icon sd-tree__command-menu-icon"
+                    [class.sd-tree__command-menu-icon--default]="command.defaultColor"
+                    [color]="command.color"
+                    [fontSet]="command.fontSet"
+                    [name]="command.icon"></sd-icon>
+                  <span class="sd-tree__command-title">{{ command.title }}</span>
+                </span>
+              </button>
+            }
+          </mat-menu>
+        }
+      </div>
+    }
+  </div>
+}
 
 <sd-quick-action [opened]="_selectedCount > 0">
   <div class="d-flex align-items-center" sdMessage>

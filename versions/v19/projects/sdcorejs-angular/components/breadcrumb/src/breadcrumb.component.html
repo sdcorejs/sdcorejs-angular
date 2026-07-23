@@ -1,0 +1,56 @@
+<nav class="sd-breadcrumb" [attr.aria-label]="ariaLabel()">
+  <ol class="sd-breadcrumb__list">
+    @for (entry of visibleEntries(); track entry.kind === 'item' ? entry.item : $index; let last = $last) {
+      <li class="sd-breadcrumb__entry">
+        @if (entry.kind === 'ellipsis') {
+          <span class="sd-breadcrumb__ellipsis" aria-hidden="true">…</span>
+        } @else {
+          @let item = entry.item;
+          @let template = itemTemplate();
+          @if (!last && !item.disabled && href(item) !== null) {
+            <a class="sd-breadcrumb__item" [attr.href]="href(item)" (click)="activate(item, $event)">
+              @if (template) {
+                <ng-container [ngTemplateOutlet]="template" [ngTemplateOutletContext]="templateContext(item)"></ng-container>
+              } @else {
+                @if (item.icon) {
+                  <sd-icon class="sd-breadcrumb__icon" aria-hidden="true" [name]="item.icon" [fontSet]="item.fontSet"></sd-icon>
+                }
+                <span>{{ item.label }}</span>
+              }
+            </a>
+          } @else if (!last && !item.disabled && (item.url || item.clickable)) {
+            <button type="button" class="sd-breadcrumb__item" (click)="activate(item, $event)">
+              @if (template) {
+                <ng-container [ngTemplateOutlet]="template" [ngTemplateOutletContext]="templateContext(item)"></ng-container>
+              } @else {
+                @if (item.icon) {
+                  <sd-icon class="sd-breadcrumb__icon" aria-hidden="true" [name]="item.icon" [fontSet]="item.fontSet"></sd-icon>
+                }
+                <span>{{ item.label }}</span>
+              }
+            </button>
+          } @else {
+            <span
+              class="sd-breadcrumb__item"
+              [class.sd-breadcrumb__item--disabled]="item.disabled"
+              [attr.aria-disabled]="item.disabled ? 'true' : null"
+              [attr.aria-current]="last ? 'page' : null">
+              @if (template) {
+                <ng-container [ngTemplateOutlet]="template" [ngTemplateOutletContext]="templateContext(item)"></ng-container>
+              } @else {
+                @if (item.icon) {
+                  <sd-icon class="sd-breadcrumb__icon" aria-hidden="true" [name]="item.icon" [fontSet]="item.fontSet"></sd-icon>
+                }
+                <span>{{ item.label }}</span>
+              }
+            </span>
+          }
+        }
+
+        @if (!last) {
+          <sd-icon class="sd-breadcrumb__separator" aria-hidden="true" [name]="separator()"></sd-icon>
+        }
+      </li>
+    }
+  </ol>
+</nav>

@@ -1,58 +1,60 @@
 import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { from, Observable, throwError } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
-import { ISdApiConfiguration, SD_API_CONFIG } from '../api.model';
+import { defer, from, Observable, of, throwError } from 'rxjs';
+import { catchError, concatMap, dematerialize, map, materialize, switchMap } from 'rxjs/operators';
+import { ISdApiConfiguration, SD_API_CONFIG, SdApiHandler } from '../api.model';
 
 @Injectable()
 export class SdHttpInterceptor implements HttpInterceptor {
-  #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) || [];
+  readonly #configurations = inject<ISdApiConfiguration[]>(SD_API_CONFIG, { optional: true }) ?? [];
 
-  intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    const url = request.url;
-    if (!url) {
-      throw new Error(`Invalid URL`);
+  intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
+    if (!request.url) throw new Error('Invalid URL');
+
+    const handler = this.#findHandler(request.url);
+    if (handler?.intercept) {
+      const interceptedRequest = handler.intercept(request);
+      request = interceptedRequest instanceof HttpRequest ? interceptedRequest : request.clone(interceptedRequest);
     }
-    const handlers = this.#configurations.flatMap(configuration => configuration?.handlers || []);
-    const handler = handlers?.find(e => e.hosts.some(host => url.startsWith(host)));
-    const intercept = handler?.intercept;
-    if (intercept) {
-      request = request.clone(intercept(request));
+    if (typeof FormData !== 'undefined' && request.body instanceof FormData) {
+      request = request.clone({ headers: request.headers.delete('Content-Type') });
     }
-    if (request.body instanceof FormData) {
-      request = request.clone({
-        headers: request.headers.delete('Content-Type'),
-      });
-    }
-    const beforeRemoteHandler = handler?.beforeRemote;
-    const afterRemoteHandler = handler?.afterRemote;
-    const beforeRemote = beforeRemoteHandler?.(request);
+
+    const beforeRemote = handler?.beforeRemote?.(request);
     if (beforeRemote instanceof Promise) {
-      return from(beforeRemote).pipe(
-        switchMap(() => next.handle(request)),
-        map((event: HttpEvent<any>) => {
-          if (event instanceof HttpResponse) {
-            afterRemoteHandler?.(event);
-          }
-          return event;
-        }),
-        catchError((error: HttpErrorResponse) => {
-          afterRemoteHandler?.(error);
-          return throwError(() => error);
-        })
-      );
+      return from(beforeRemote).pipe(switchMap(() => this.#handleRemote(request, next, handler)));
     }
+    return this.#handleRemote(request, next, handler);
+  }
+
+  #handleRemote(request: HttpRequest<unknown>, next: HttpHandler, handler: SdApiHandler | undefined): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
-      map((event: HttpEvent<any>) => {
-        if (event instanceof HttpResponse) {
-          afterRemoteHandler?.(event);
+      materialize(),
+      concatMap(notification => {
+        const afterValue =
+          notification.kind === 'N' && notification.value instanceof HttpResponse
+            ? notification.value
+            : notification.kind === 'E' && (notification.error instanceof Error || notification.error instanceof HttpErrorResponse)
+              ? notification.error
+              : undefined;
+        if (!afterValue || !handler?.afterRemote) {
+          return of(notification);
         }
-        return event;
+
+        return defer(() => {
+          const result = handler.afterRemote?.(afterValue);
+          return result instanceof Promise ? result : Promise.resolve();
+        }).pipe(
+          map(() => notification),
+          catchError(hookError => (notification.kind === 'E' ? of(notification) : throwError(() => hookError)))
+        );
       }),
-      catchError((error: HttpErrorResponse) => {
-        afterRemoteHandler?.(error);
-        return throwError(() => error);
-      })
+      dematerialize()
     );
+  }
+
+  #findHandler(url: string): SdApiHandler | undefined {
+    const handlers = this.#configurations.flatMap(configuration => configuration.handlers ?? []);
+    return handlers.find(handler => handler.hosts.some(host => url.startsWith(host)));
   }
 }

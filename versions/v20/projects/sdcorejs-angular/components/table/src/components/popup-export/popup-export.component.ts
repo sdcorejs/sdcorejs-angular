@@ -8,7 +8,7 @@ import { MatSelectionList } from '@angular/material/list';
 import { MatTableModule } from '@angular/material/table';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
-import { SdInput } from '@sdcorejs/angular/forms';
+import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdConfirmService, SdExcelColumn, SdExcelService, SdLoadingService, SdNotifyService } from '@sdcorejs/angular/services';
 // import hash from 'object-hash';
 import { SdTableColumn, SdTableOption } from '../../models';

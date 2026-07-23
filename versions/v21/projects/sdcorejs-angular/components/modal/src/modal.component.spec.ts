@@ -23,6 +23,8 @@ import { SdModal } from './modal.component';
       [hideClose]="hideClose"
       [modalClass]="modalClass"
       [disableBackdropClose]="disableBackdropClose"
+      [beforeClose]="beforeClose"
+      (sdCloseError)="onCloseError($event)"
       (sdClosed)="onClosed()">
       <span id="body-content">modal body</span>
       <span sdFooterRight id="footer-content">footer</span>
@@ -35,7 +37,12 @@ class HostComponent {
   hideClose = false;
   modalClass: string | string[] | Record<string, boolean> = '';
   disableBackdropClose = true;
+  beforeClose: (() => boolean | Promise<boolean>) | undefined;
   closedCount = 0;
+  closeErrors: unknown[] = [];
+  onCloseError(error: unknown): void {
+    this.closeErrors.push(error);
+  }
   onClosed(): void {
     this.closedCount++;
   }
@@ -45,13 +52,22 @@ class HostComponent {
 // Fake dialog / bottom-sheet refs
 // ---------------------------------------------------------------------------
 
-function makeFakeDialogRef(): { ref: MatDialogRef<any>; afterClosed$: Subject<void> } {
+function makeFakeDialogRef(): {
+  ref: MatDialogRef<any>;
+  afterClosed$: Subject<void>;
+  backdropClick$: Subject<MouseEvent>;
+  keydownEvents$: Subject<KeyboardEvent>;
+} {
   const afterClosed$ = new Subject<void>();
+  const backdropClick$ = new Subject<MouseEvent>();
+  const keydownEvents$ = new Subject<KeyboardEvent>();
   const ref = {
     afterClosed: () => afterClosed$.asObservable(),
+    backdropClick: () => backdropClick$.asObservable(),
+    keydownEvents: () => keydownEvents$.asObservable(),
     close: jasmine.createSpy('dialogRef.close'),
   } as unknown as MatDialogRef<any>;
-  return { ref, afterClosed$ };
+  return { ref, afterClosed$, backdropClick$, keydownEvents$ };
 }
 
 function makeFakeBottomSheetRef(): { ref: MatBottomSheetRef<any>; afterDismissed$: Subject<void> } {
@@ -286,6 +302,98 @@ describe('SdModal', () => {
 
       afterClosed$.next();
       expect(component.isOpened()).toBeFalse();
+    });
+
+    it('keeps the dialog open when beforeClose returns false', async () => {
+      const { ref } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+      host.beforeClose = () => false;
+      fixture.detectChanges();
+
+      component.open();
+      const closed = await component.requestClose();
+
+      expect(closed).toBeFalse();
+      expect(ref.close as jasmine.Spy).not.toHaveBeenCalled();
+    });
+
+    it('closes the dialog when async beforeClose resolves true', async () => {
+      const { ref } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+      host.beforeClose = () => Promise.resolve(true);
+      fixture.detectChanges();
+
+      component.open();
+      const closed = await component.requestClose();
+
+      expect(closed).toBeTrue();
+      expect(ref.close as jasmine.Spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('fails closed and emits sdCloseError when beforeClose rejects', async () => {
+      const error = new Error('confirmation failed');
+      host.beforeClose = () => Promise.reject(error);
+      fixture.detectChanges();
+
+      component.open();
+      const closed = await component.requestClose();
+
+      expect(closed).toBeFalse();
+      expect(host.closeErrors).toEqual([error]);
+    });
+
+    it('coalesces concurrent guarded close requests', async () => {
+      let resolveGuard!: (value: boolean) => void;
+      host.beforeClose = () => new Promise<boolean>(resolve => (resolveGuard = resolve));
+      fixture.detectChanges();
+      component.open();
+
+      const first = component.requestClose();
+      const second = component.requestClose();
+
+      expect(second).toBe(first);
+      await Promise.resolve();
+      resolveGuard(false);
+      await first;
+    });
+
+    it('keeps Material automatic close disabled while beforeClose owns the decision', () => {
+      host.disableBackdropClose = false;
+      host.beforeClose = () => true;
+      fixture.detectChanges();
+
+      component.open();
+
+      const opts = dialogOpenSpy.calls.mostRecent().args[1] as any;
+      expect(opts.disableClose).toBeTrue();
+    });
+
+    it('routes backdrop clicks through beforeClose when automatic close is enabled', async () => {
+      const { ref, backdropClick$ } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+      host.disableBackdropClose = false;
+      host.beforeClose = () => false;
+      fixture.detectChanges();
+      component.open();
+
+      backdropClick$.next(new MouseEvent('click'));
+      await fixture.whenStable();
+
+      expect(ref.close as jasmine.Spy).not.toHaveBeenCalled();
+    });
+
+    it('routes Escape through beforeClose when automatic close is enabled', async () => {
+      const { ref, keydownEvents$ } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+      host.disableBackdropClose = false;
+      host.beforeClose = () => true;
+      fixture.detectChanges();
+      component.open();
+
+      keydownEvents$.next(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await fixture.whenStable();
+
+      expect(ref.close as jasmine.Spy).toHaveBeenCalledTimes(1);
     });
   });
 

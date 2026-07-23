@@ -359,7 +359,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       expect(outletCmp.tabs().length).toBe(2);
     });
 
-    it('closes tab when beforeClose throws', async () => {
+    it('does not close tab when beforeClose throws', async () => {
       await navigateAndStabilize(router, fixture, '/a');
       await navigateAndStabilize(router, fixture, '/b');
       const tab = outletCmp.tabs().find(t => t.url === '/a')!;
@@ -372,7 +372,7 @@ describe('SdTabRouterOutletComponent (integration)', () => {
       await fixture.whenStable();
       fixture.detectChanges();
 
-      expect(outletCmp.tabs().length).toBe(1);
+      expect(outletCmp.tabs().length).toBe(2);
     });
   });
 });

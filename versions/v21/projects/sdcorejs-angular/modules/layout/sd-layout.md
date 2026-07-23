@@ -12,19 +12,21 @@ Use it for back-office portals that need permission-aware navigation, responsive
 
 ## Public surface
 
-| API | Purpose |
-|---|---|
-| `SdLayoutComponent` / `sd-layout` | Selects the configured V1, V2, or V3 desktop/mobile pair and projects page content |
-| `SdPageComponent` / `sd-page` | Renders a titled content frame inside the shell |
-| `SidebarV1Component`, `SidebarMobileV1Component` | Existing classic sidebar and mobile drawer |
-| `SidebarV2Component`, `SidebarMobileV2Component` | Compact primary rail with contextual flyout or mobile bottom sheet |
-| `SidebarV3Component`, `SidebarMobileV3Component` | Collapsible navigation with search, Pinned, and Recent sections |
-| `SdLayoutService` | Exposes resolved `userInfo` and `sidebar` signals |
-| `SdLayoutResponsiveService` | Tracks the viewport and evaluates the configured breakpoint reactively |
-| `SdLayoutNavigationStateService` | Shares pinned/recent stable keys and version-scoped UI state |
-| `SdLayoutStorageService` | Persists layout state through `SdStorageService` and migrates legacy pinned objects lazily |
-| `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` | Permission filtering, route focus, and search highlighting |
-| `SD_LAYOUT_CONFIGURATION`, `SD_LAYOUT_VIEWPORT` | Consumer configuration and test/host viewport abstraction |
+| API                                                | Purpose                                                                                        |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `SdLayoutComponent` / `sd-layout`                  | Selects the configured V1, V2, or V3 desktop/mobile pair and projects page content             |
+| `SdPageComponent` / `sd-page`                      | Renders a titled content frame inside the shell                                                |
+| `SidebarV1Component`, `SidebarMobileV1Component`   | Existing classic sidebar and mobile drawer                                                     |
+| `SidebarV2Component`, `SidebarMobileV2Component`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
+| `SidebarV3Component`, `SidebarMobileV3Component`   | Collapsible navigation with search, Pinned, and Recent sections                                |
+| `SdLayoutService`                                  | Exposes resolved `userInfo` and `sidebar` signals                                              |
+| `SdViewportService`                                | Shared signal source for viewport dimensions and responsive state                              |
+| `SdLayoutResponsiveService`                        | Deprecated compatibility adapter that evaluates the layout breakpoint over `SdViewportService` |
+| `SdLayoutNavigationStateService`                   | Shares pinned/recent stable keys and version-scoped UI state                                   |
+| `SdLayoutStorageService`                           | Persists layout state through `SdStorageService` and migrates legacy pinned objects lazily     |
+| `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` | Permission filtering, route focus, and search highlighting                                     |
+| `SD_LAYOUT_CONFIGURATION`                          | Consumer layout configuration                                                                  |
+| `SD_LAYOUT_VIEWPORT`                               | Compatibility alias of the shared `SD_VIEWPORT` test/host abstraction                          |
 
 `SdLayoutModule` also registers the built-in `home`, `not-found`, and `forbidden` child routes.
 
@@ -40,30 +42,23 @@ interface ISdLayoutConfiguration {
   changePassword?: () => void | Promise<void>;
 }
 
-type ISdSidebarConfiguration =
-  | SidebarConfigurationV1
-  | SidebarConfigurationV2
-  | SidebarConfigurationV3;
+type ISdSidebarConfiguration = SidebarConfigurationV1 | SidebarConfigurationV2 | SidebarConfigurationV3;
 ```
 
 Shared sidebar fields are `brandColor`, `brandLightColor`, `logoUrl`, `defaultTitle`, and `pin.enabled`.
 
-| Version | Configuration | Defaults and behavior |
-|---|---|---|
-| V1 | `{ version: 1 }` | Existing classic layout; runtime desktop/mobile switching now uses `mobileBreakpoint` |
-| V2 | `{ version: 2, interaction?, primaryMenuIds? }` | `interaction` defaults to `click`; at most three valid primary groups are used and remaining groups fall back to More |
-| V3 | `{ version: 3, defaultCollapsed?, recent? }` | `defaultCollapsed` defaults to `false`; Recent defaults to enabled with `maxItems: 5` |
+| Version | Configuration                                   | Defaults and behavior                                                                                                 |
+| ------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| V1      | `{ version: 1 }`                                | Existing classic layout; runtime desktop/mobile switching now uses `mobileBreakpoint`                                 |
+| V2      | `{ version: 2, interaction?, primaryMenuIds? }` | `interaction` defaults to `click`; at most three valid primary groups are used and remaining groups fall back to More |
+| V3      | `{ version: 3, defaultCollapsed?, recent? }`    | `defaultCollapsed` defaults to `false`; Recent defaults to enabled with `maxItems: 5`                                 |
 
 ## Setup
 
 ```ts
 import { ApplicationConfig, importProvidersFrom, inject } from '@angular/core';
 import { SdAuthService } from '@sdcorejs/angular/modules/auth';
-import {
-  ISdLayoutConfiguration,
-  SD_LAYOUT_CONFIGURATION,
-  SdLayoutModule,
-} from '@sdcorejs/angular/modules/layout';
+import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION, SdLayoutModule } from '@sdcorejs/angular/modules/layout';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -111,11 +106,7 @@ Provide the permission module configuration used by `MenuPipe` whenever menu per
 All three objects below are compile-ready values for `ISdLayoutConfiguration['sidebar']`.
 
 ```ts
-import {
-  SidebarConfigurationV1,
-  SidebarConfigurationV2,
-  SidebarConfigurationV3,
-} from '@sdcorejs/angular/modules/layout';
+import { SidebarConfigurationV1, SidebarConfigurationV2, SidebarConfigurationV3 } from '@sdcorejs/angular/modules/layout';
 
 const sidebarV1: SidebarConfigurationV1 = {
   version: 1,
@@ -190,7 +181,8 @@ V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missin
 ## Responsive, storage, and migration behavior
 
 - `mobileBreakpoint` defaults to `1024`. A width strictly below the normalized value is mobile; invalid or non-positive values fall back to the default.
-- `SdLayoutResponsiveService` listens to resize events and cleans up the listener with `DestroyRef`; consumers can override `SD_LAYOUT_VIEWPORT` in tests or embedded hosts.
+- `SdLayout` keeps consuming the compatibility `SdLayoutResponsiveService`, which reads `SdViewportService.width`; existing service overrides remain valid and V1/V2/V3 switch from the same application-wide resize listener.
+- `SdLayoutResponsiveService` delegates to `SdViewportService`; `SD_LAYOUT_VIEWPORT` aliases `SD_VIEWPORT`, so existing consumers and test providers continue to work without registering a second listener.
 - Pinned and Recent entries are persisted as stable menu keys. Missing or no-longer-permitted keys are discarded when the current menu tree is hydrated.
 - Existing V1 pinned menu objects are migrated lazily to stable keys the first time the shared navigation state is read. No eager storage rewrite is required during application startup.
 - Pinned and Recent data are shared between sidebar versions. Version-specific UI state such as V2 active/locked group and V3 collapsed state remains scoped by version.
@@ -215,6 +207,6 @@ V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missin
 
 ## Related
 
-- [Auth module](./sd-auth.md) supplies the user and sign-out actions.
-- [Permission module](./sd-permission.md) resolves string permission codes used by menus.
-- [Keycloak module](./sd-keycloak.md) can feed authenticated identity and roles into both configurations.
+- [Auth module](../auth/sd-auth.md) supplies the user and sign-out actions.
+- [Permission module](../permission/sd-permission.md) resolves string permission codes used by menus.
+- [Keycloak module](../keycloak/sd-keycloak.md) can feed authenticated identity and roles into both configurations.

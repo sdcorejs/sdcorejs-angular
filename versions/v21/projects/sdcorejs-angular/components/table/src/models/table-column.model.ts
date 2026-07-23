@@ -1,6 +1,6 @@
 import { Signal, TemplateRef } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
-import { SdSearch } from '@sdcorejs/angular/forms';
+import type { SdSearch } from '@sdcorejs/angular/forms/models';
 import { NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 

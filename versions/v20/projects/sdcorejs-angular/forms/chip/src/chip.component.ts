@@ -47,6 +47,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -184,6 +185,11 @@ export class SdChip implements AfterViewInit, OnDestroy {
   isFocused = false;
   #inputControl = new FormControl();
   #formControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: computed(() => this.name() || this.#name),
+    control: computed(() => this.#formControl),
+  });
   #matcher!: SdChipErrorStateMatcher;
   readonly separatorKeysCodes = [ENTER, COMMA];
   readonly selectable = true;
@@ -256,11 +262,9 @@ export class SdChip implements AfterViewInit, OnDestroy {
         this.#ref.markForCheck();
       })
     );
-    this.form()?.addControl(this.#name, this.#formControl);
   }
 
   ngOnDestroy() {
-    this.form()?.removeControl(this.#name);
     this.#subscription.unsubscribe();
   }
 

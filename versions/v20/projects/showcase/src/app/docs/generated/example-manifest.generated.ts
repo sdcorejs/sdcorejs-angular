@@ -4,6 +4,10 @@
 export type ShowcaseExampleSourceKey =
   | "components/anchor/example-anchor-mac-dinh"
   | "components/anchor/example-mau-va-cat-ngan-chu"
+  | "components/audit-diff/example-custom-value-template"
+  | "components/audit-diff/example-format-redact-va-order"
+  | "components/audit-diff/example-nested-table"
+  | "components/audit-diff/example-stable-key-array"
   | "components/avatar/example-anh-url"
   | "components/avatar/example-cac-kich-thuoc"
   | "components/avatar/example-chu-cai-dau-tu-ten"
@@ -18,6 +22,9 @@ export type ShowcaseExampleSourceKey =
   | "components/badge/example-mau-sac-tag"
   | "components/badge/example-round-voi-icon"
   | "components/badge/example-so-dem"
+  | "components/breadcrumb/example-danh-sach-tinh"
+  | "components/breadcrumb/example-nhan-async"
+  | "components/breadcrumb/example-router-generated"
   | "components/button/example-bang-mau"
   | "components/button/example-bien-the"
   | "components/button/example-chi-icon"
@@ -31,6 +38,11 @@ export type ShowcaseExampleSourceKey =
   | "components/code-editor/example-che-do-xem-json"
   | "components/code-editor/example-ngon-ngu-html"
   | "components/code-editor/example-ngon-ngu-typescript"
+  | "components/data-state/example-empty"
+  | "components/data-state/example-error"
+  | "components/data-state/example-forbidden"
+  | "components/data-state/example-loading"
+  | "components/data-state/example-success"
   | "components/document-builder/example-soan-mau-hop-dong"
   | "components/editor/example-chi-doc"
   | "components/editor/example-soan-noi-dung"
@@ -51,6 +63,10 @@ export type ShowcaseExampleSourceKey =
   | "components/inform/example-bang-mau"
   | "components/inform/example-dong-duoc-action"
   | "components/inform/example-line-clamp"
+  | "components/job-progress/example-details-va-error"
+  | "components/job-progress/example-determinate-bar"
+  | "components/job-progress/example-indeterminate-compact"
+  | "components/job-progress/example-registry-binding"
   | "components/mini-editor/example-dinh-dang-dau-ra-html"
   | "components/mini-editor/example-dinh-dang-dau-ra-markdown"
   | "components/modal/example-basic-modal-footer-right"
@@ -69,6 +85,7 @@ export type ShowcaseExampleSourceKey =
   | "components/org-chart/example-custom-bang-templateref-input"
   | "components/org-chart/example-node-co-mau"
   | "components/preview/example-anh-don"
+  | "components/preview/example-pdf-nang-cao"
   | "components/preview/example-thu-vien-anh"
   | "components/preview/example-xem-pdf"
   | "components/query-bar/example-che-do-inline"
@@ -184,6 +201,10 @@ export type ShowcaseExampleSourceKey =
   | "forms/datetime/example-co-ban"
   | "forms/datetime/example-trang-thai"
   | "forms/datetime/example-validator"
+  | "forms/entity-picker/example-error-retry-va-create-action"
+  | "forms/entity-picker/example-multi-select-va-hydration"
+  | "forms/entity-picker/example-row-va-detail-template"
+  | "forms/entity-picker/example-server-single-select"
   | "forms/inline-text/example-chinh-sua-noi-tuyen"
   | "forms/inline-text/example-formcontrol"
   | "forms/inline-text/example-kieu-vien"
@@ -204,6 +225,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/input/example-cac-trang-thai-bao-loi-inline"
   | "forms/input/example-chinh-sua-noi-tuyen"
   | "forms/input/example-co-ban"
+  | "forms/input/example-input-mask-raw-model-display-value"
   | "forms/input/example-kich-thuoc"
   | "forms/input/example-trang-thai"
   | "forms/input/example-validator"
@@ -230,6 +252,18 @@ export type ShowcaseExampleSourceKey =
   | "forms/textarea/example-co-ban"
   | "forms/textarea/example-trang-thai"
   | "forms/textarea/example-validator"
+  | "forms/time-range/example-co-ban"
+  | "forms/time-range/example-gioi-han-va-thu-tu"
+  | "forms/time-range/example-khoang-mo"
+  | "forms/time-range/example-trang-thai"
+  | "forms/time/example-co-ban"
+  | "forms/time/example-gioi-han-va-buoc-phut"
+  | "forms/time/example-trang-thai"
+  | "forms/time/example-validation"
+  | "forms/tree-select/example-lazy-tree"
+  | "forms/tree-select/example-multiple-cascade"
+  | "forms/tree-select/example-static-single-select"
+  | "forms/tree-select/example-unloaded-key-va-viewed"
   | "modules/layout/example-sidebar-v1-v2-v3"
   | "services/confirm/example-chon-muc-do"
   | "services/confirm/example-chon-ngay"
@@ -254,9 +288,24 @@ export type ShowcaseExampleSourceKey =
   | "services/notify/example-don-dep"
   | "services/notify/example-thoi-luong-tuy-chinh"
   | "services/notify/example-toast-co-action"
+  | "services/persistence/example-deterministic-identity"
+  | "services/persistence/example-graph-round-trip"
+  | "services/persistence/example-invalid-input-containment"
+  | "services/persistence/example-versioned-envelope"
   | "services/storage/example-gia-tri-dang-luu-cap-nhat-truc-tiep-qua-subject"
   | "services/storage/example-localstorage"
-  | "services/storage/example-sessionstorage";
+  | "services/storage/example-sessionstorage"
+  | "services/task/example-cancel-va-retry"
+  | "services/task/example-manual-lifecycle"
+  | "services/task/example-polling-va-terminal-teardown"
+  | "services/task/example-shared-stable-id"
+  | "services/unsaved-changes/example-additive-close-hook"
+  | "services/unsaved-changes/example-async-confirmation-decisions"
+  | "services/unsaved-changes/example-formgroup-adapter"
+  | "services/unsaved-changes/example-multiple-scoped-watchers"
+  | "services/viewport/example-breakpoint-mac-dinh"
+  | "services/viewport/example-signal-theo-breakpoint"
+  | "services/viewport/example-trang-thai-truc-tiep";
 
 export interface ShowcaseExampleManifestEntry {
   readonly sourceKey: ShowcaseExampleSourceKey;
@@ -280,6 +329,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-mau-va-cat-ngan-chu",
     title: "Màu và cắt ngắn chữ",
     description: "Existing “Màu và cắt ngắn chữ” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/audit-diff/example-nested-table",
+    pageKey: "components/audit-diff",
+    sectionId: "example-nested-table",
+    title: "Nested table",
+    description: "Existing “Nested table” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/audit-diff/example-stable-key-array",
+    pageKey: "components/audit-diff",
+    sectionId: "example-stable-key-array",
+    title: "Stable-key array",
+    description: "Reorder không sinh diff giả; item thêm/xóa vẫn đi qua rule của field con.",
+  },
+  {
+    sourceKey: "components/audit-diff/example-format-redact-va-order",
+    pageKey: "components/audit-diff",
+    sectionId: "example-format-redact-va-order",
+    title: "Format, redact và order",
+    description: "Existing “Format, redact và order” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/audit-diff/example-custom-value-template",
+    pageKey: "components/audit-diff",
+    sectionId: "example-custom-value-template",
+    title: "Custom value template",
+    description: "Existing “Custom value template” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/avatar/example-chu-cai-dau-tu-ten",
@@ -380,6 +457,27 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Số đếm” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/breadcrumb/example-danh-sach-tinh",
+    pageKey: "components/breadcrumb",
+    sectionId: "example-danh-sach-tinh",
+    title: "Danh sách tĩnh",
+    description: "Root, dấu rút gọn và context cuối được giữ; item disabled không trở thành control tương tác.",
+  },
+  {
+    sourceKey: "components/breadcrumb/example-router-generated",
+    pageKey: "components/breadcrumb",
+    sectionId: "example-router-generated",
+    title: "Router-generated",
+    description: "Không truyền items: component đọc primary route chain của chính trang tài liệu này và cập nhật sau NavigationEnd.",
+  },
+  {
+    sourceKey: "components/breadcrumb/example-nhan-async",
+    pageKey: "components/breadcrumb",
+    sectionId: "example-nhan-async",
+    title: "Nhãn async",
+    description: "Observable label được cập nhật trực tiếp và tự unsubscribe khi source/component bị thay thế.",
+  },
+  {
     sourceKey: "components/button/example-bien-the",
     pageKey: "components/button",
     sectionId: "example-bien-the",
@@ -469,6 +567,41 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-ngon-ngu-html",
     title: "Ngôn ngữ HTML",
     description: "Existing “Ngôn ngữ HTML” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/data-state/example-loading",
+    pageKey: "components/data-state",
+    sectionId: "example-loading",
+    title: "Loading",
+    description: "Existing “Loading” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/data-state/example-empty",
+    pageKey: "components/data-state",
+    sectionId: "example-empty",
+    title: "Empty",
+    description: "Custom template nhận state/retry/action context thay cho default presentation.",
+  },
+  {
+    sourceKey: "components/data-state/example-error",
+    pageKey: "components/data-state",
+    sectionId: "example-error",
+    title: "Error",
+    description: "Existing “Error” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/data-state/example-forbidden",
+    pageKey: "components/data-state",
+    sectionId: "example-forbidden",
+    title: "Forbidden",
+    description: "Existing “Forbidden” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/data-state/example-success",
+    pageKey: "components/data-state",
+    sectionId: "example-success",
+    title: "Success",
+    description: "Không có presentation wrapper dư thừa; content được project trực tiếp.",
   },
   {
     sourceKey: "components/document-builder/example-soan-mau-hop-dong",
@@ -611,6 +744,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Existing “Action custom (projection)” scenario preserved from the showcase.",
   },
   {
+    sourceKey: "components/job-progress/example-determinate-bar",
+    pageKey: "components/job-progress",
+    sectionId: "example-determinate-bar",
+    title: "Determinate bar",
+    description: "Existing “Determinate bar” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/job-progress/example-indeterminate-compact",
+    pageKey: "components/job-progress",
+    sectionId: "example-indeterminate-compact",
+    title: "Indeterminate compact",
+    description: "Existing “Indeterminate compact” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/job-progress/example-details-va-error",
+    pageKey: "components/job-progress",
+    sectionId: "example-details-va-error",
+    title: "Details và error",
+    description: "Existing “Details và error” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/job-progress/example-registry-binding",
+    pageKey: "components/job-progress",
+    sectionId: "example-registry-binding",
+    title: "Registry binding",
+    description: "Existing “Registry binding” scenario preserved from the showcase.",
+  },
+  {
     sourceKey: "components/mini-editor/example-dinh-dang-dau-ra-html",
     pageKey: "components/mini-editor",
     sectionId: "example-dinh-dang-dau-ra-html",
@@ -749,6 +910,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-xem-pdf",
     title: "Xem PDF",
     description: "Existing “Xem PDF” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/preview/example-pdf-nang-cao",
+    pageKey: "components/preview",
+    sectionId: "example-pdf-nang-cao",
+    title: "PDF nâng cao",
+    description: "Existing “PDF nâng cao” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/query-bar/example-che-do-popover",
@@ -1542,6 +1710,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Bấm vào để mở overlay datetime; text giữ nguyên tới khi chọn. Hover hiện × để xoá.",
   },
   {
+    sourceKey: "forms/entity-picker/example-server-single-select",
+    pageKey: "forms/entity-picker",
+    sectionId: "example-server-single-select",
+    title: "Server single-select",
+    description: "Tìm kiếm, filter, sort và paging đi qua provider; request cũ nhận AbortSignal khi query mới bắt đầu.",
+  },
+  {
+    sourceKey: "forms/entity-picker/example-multi-select-va-hydration",
+    pageKey: "forms/entity-picker",
+    sectionId: "example-multi-select-va-hydration",
+    title: "Multi-select và hydration",
+    description: "EMP-042 không thuộc page đầu nhưng vẫn được hydrate và hiển thị theo stable key.",
+  },
+  {
+    sourceKey: "forms/entity-picker/example-row-va-detail-template",
+    pageKey: "forms/entity-picker",
+    sectionId: "example-row-va-detail-template",
+    title: "Row và detail template",
+    description: "Template nhận entity đã hydrate; table engine và selection engine vẫn do SdTable sở hữu.",
+  },
+  {
+    sourceKey: "forms/entity-picker/example-error-retry-va-create-action",
+    pageKey: "forms/entity-picker",
+    sectionId: "example-error-retry-va-create-action",
+    title: "Error, retry và create action",
+    description: "Provider lỗi hiển thị DataState retry; create chỉ phát event, không hard-code workflow nghiệp vụ.",
+  },
+  {
     sourceKey: "forms/inline-text/example-lien-ket-hai-chieu",
     pageKey: "forms/inline-text",
     sectionId: "example-lien-ket-hai-chieu",
@@ -1624,6 +1820,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-chinh-sua-noi-tuyen",
     title: "Chỉnh sửa nội tuyến",
     description: "Input trong suốt nhìn như text; bấm/focus là gõ trực tiếp (không có panel). Hover đậm nền.",
+  },
+  {
+    sourceKey: "forms/input/example-input-mask-raw-model-display-value",
+    pageKey: "forms/input",
+    sectionId: "example-input-mask-raw-model-display-value",
+    title: "Input mask: raw model / display value",
+    description: "Màn hình hiển thị khoảng cách, nhưng model, sdChange và FormGroup chỉ nhận chuỗi số raw.",
   },
   {
     sourceKey: "forms/input-color/example-co-ban",
@@ -1864,6 +2067,90 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Hiển thị như text không viền — bấm/focus để sửa tại chỗ. Khi disabled thì rơi về xem tĩnh (viewed=true).",
   },
   {
+    sourceKey: "forms/time/example-co-ban",
+    pageKey: "forms/time",
+    sectionId: "example-co-ban",
+    title: "Cơ bản",
+    description: "Có thể gõ 9:05 để nhận model chuẩn hóa 09:05, hoặc mở bộ chọn giờ.",
+  },
+  {
+    sourceKey: "forms/time/example-gioi-han-va-buoc-phut",
+    pageKey: "forms/time",
+    sectionId: "example-gioi-han-va-buoc-phut",
+    title: "Giới hạn và bước phút",
+    description: "Min/max bao gồm biên; phím mũi tên và bộ chọn cùng dùng bước 15 phút.",
+  },
+  {
+    sourceKey: "forms/time/example-validation",
+    pageKey: "forms/time",
+    sectionId: "example-validation",
+    title: "Validation",
+    description: "Text sai như 25:10 được giữ lại để sửa, control invalid và model hợp lệ trước đó không bị ghi đè.",
+  },
+  {
+    sourceKey: "forms/time/example-trang-thai",
+    pageKey: "forms/time",
+    sectionId: "example-trang-thai",
+    title: "Trạng thái",
+    description: "Cùng một model time-only trong các trạng thái không chỉnh sửa.",
+  },
+  {
+    sourceKey: "forms/time-range/example-co-ban",
+    pageKey: "forms/time-range",
+    sectionId: "example-co-ban",
+    title: "Cơ bản",
+    description: "Hai ô cùng phát một model { from, to } đã chuẩn hóa HH:mm.",
+  },
+  {
+    sourceKey: "forms/time-range/example-gioi-han-va-thu-tu",
+    pageKey: "forms/time-range",
+    sectionId: "example-gioi-han-va-thu-tu",
+    title: "Giới hạn và thứ tự",
+    description: "Mỗi đầu kiểm tra min/max/step; giờ bắt đầu sau giờ kết thúc tạo lỗi range.",
+  },
+  {
+    sourceKey: "forms/time-range/example-khoang-mo",
+    pageKey: "forms/time-range",
+    sectionId: "example-khoang-mo",
+    title: "Khoảng mở",
+    description: "Cho phép chỉ có mốc bắt đầu hoặc kết thúc khi field không required.",
+  },
+  {
+    sourceKey: "forms/time-range/example-trang-thai",
+    pageKey: "forms/time-range",
+    sectionId: "example-trang-thai",
+    title: "Trạng thái",
+    description: "Viewed hiển thị model time-only mà không khởi tạo Date ở API công khai.",
+  },
+  {
+    sourceKey: "forms/tree-select/example-static-single-select",
+    pageKey: "forms/tree-select",
+    sectionId: "example-static-single-select",
+    title: "Static single-select",
+    description: "Existing “Static single-select” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "forms/tree-select/example-multiple-cascade",
+    pageKey: "forms/tree-select",
+    sectionId: "example-multiple-cascade",
+    title: "Multiple cascade",
+    description: "Chọn parent áp dụng cho descendants đã load; partial selection hiển thị indeterminate, node locked không tương tác.",
+  },
+  {
+    sourceKey: "forms/tree-select/example-lazy-tree",
+    pageKey: "forms/tree-select",
+    sectionId: "example-lazy-tree",
+    title: "Lazy tree",
+    description: "Children chỉ tải khi mở branch; lỗi được giữ ở node và có retry riêng.",
+  },
+  {
+    sourceKey: "forms/tree-select/example-unloaded-key-va-viewed",
+    pageKey: "forms/tree-select",
+    sectionId: "example-unloaded-key-va-viewed",
+    title: "Unloaded key và viewed",
+    description: "Key chưa load không bị xóa bởi filter/page/lazy state; viewed mode hiển thị fallback key ổn định.",
+  },
+  {
     sourceKey: "modules/layout/example-sidebar-v1-v2-v3",
     pageKey: "modules/layout",
     sectionId: "example-sidebar-v1-v2-v3",
@@ -1980,28 +2267,28 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     pageKey: "services/loading",
     sectionId: "example-loading-toan-trang",
     title: "Loading toàn trang",
-    description: "start('body') → setTimeout 2000ms → stop('body').",
+    description: "run() luôn đóng loading ref trong finally và giữ nguyên result/error của task.",
   },
   {
     sourceKey: "services/loading/example-loading-o-dich",
     pageKey: "services/loading",
     sectionId: "example-loading-o-dich",
     title: "Loading ô đích",
-    description: "start('#demo-target') chỉ phủ phần tử có id='demo-target'.",
+    description: "start('#demo-target') trả về handle idempotent sở hữu đúng host đã match.",
   },
   {
     sourceKey: "services/loading/example-nhieu-host-cung-selector-multi-tab",
     pageKey: "services/loading",
     sectionId: "example-nhieu-host-cung-selector-multi-tab",
     title: "Nhiều host cùng selector (multi-tab)",
-    description: "Giả lập router tabs: nhiều panel cùng class. Một lần start('.demo-tab-panel') gắn overlay lên cả hai — không chỉ panel đầu tiên.",
+    description: "Hai owner overlap trên cùng hai host; đóng owner đầu không gỡ overlay của owner thứ hai.",
   },
   {
     sourceKey: "services/loading/example-bat-tat-thu-cong",
     pageKey: "services/loading",
     sectionId: "example-bat-tat-thu-cong",
     title: "Bật / tắt thủ công",
-    description: "Kiểm tra trạng thái bằng isLoading('body').",
+    description: "Code mới giữ ref; stop(selector) vẫn hoạt động cho call site cũ theo thứ tự start cũ nhất.",
   },
   {
     sourceKey: "services/notify/example-4-loai-toast",
@@ -2032,6 +2319,34 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "clearAll() xóa toàn bộ; clearByType('error') xóa theo loại.",
   },
   {
+    sourceKey: "services/persistence/example-graph-round-trip",
+    pageKey: "services/persistence",
+    sectionId: "example-graph-round-trip",
+    title: "Graph round-trip",
+    description: "Existing “Graph round-trip” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "services/persistence/example-deterministic-identity",
+    pageKey: "services/persistence",
+    sectionId: "example-deterministic-identity",
+    title: "Deterministic identity",
+    description: "Property insertion order does not change the canonical persistence identity.",
+  },
+  {
+    sourceKey: "services/persistence/example-versioned-envelope",
+    pageKey: "services/persistence",
+    sectionId: "example-versioned-envelope",
+    title: "Versioned envelope",
+    description: "Existing “Versioned envelope” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "services/persistence/example-invalid-input-containment",
+    pageKey: "services/persistence",
+    sectionId: "example-invalid-input-containment",
+    title: "Invalid input containment",
+    description: "Consumers can reject malformed documents without mutating the previous cache/storage value.",
+  },
+  {
     sourceKey: "services/storage/example-localstorage",
     pageKey: "services/storage",
     sectionId: "example-localstorage",
@@ -2051,5 +2366,82 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-gia-tri-dang-luu-cap-nhat-truc-tiep-qua-subject",
     title: "Giá trị đang lưu (cập nhật trực tiếp qua subject)",
     description: "Existing “Giá trị đang lưu (cập nhật trực tiếp qua subject)” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "services/task/example-manual-lifecycle",
+    pageKey: "services/task",
+    sectionId: "example-manual-lifecycle",
+    title: "Manual lifecycle",
+    description: "Existing “Manual lifecycle” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "services/task/example-shared-stable-id",
+    pageKey: "services/task",
+    sectionId: "example-shared-stable-id",
+    title: "Shared stable ID",
+    description: "Hai watcher trùng ID dùng chung state/transport; entry chỉ bị xóa sau lease cuối.",
+  },
+  {
+    sourceKey: "services/task/example-polling-va-terminal-teardown",
+    pageKey: "services/task",
+    sectionId: "example-polling-va-terminal-teardown",
+    title: "Polling và terminal teardown",
+    description: "Demo trả terminal state ngay lượt đầu; service không schedule thêm poll sau succeeded.",
+  },
+  {
+    sourceKey: "services/task/example-cancel-va-retry",
+    pageKey: "services/task",
+    sectionId: "example-cancel-va-retry",
+    title: "Cancel và retry",
+    description: "Cancel lỗi giữ nguyên business state; retry không restart một connection đang khỏe.",
+  },
+  {
+    sourceKey: "services/unsaved-changes/example-multiple-scoped-watchers",
+    pageKey: "services/unsaved-changes",
+    sectionId: "example-multiple-scoped-watchers",
+    title: "Multiple scoped watchers",
+    description: "Cùng id có thể tồn tại ở scope khác nhau; register lặp trong cùng scope trả lại đúng registration ref.",
+  },
+  {
+    sourceKey: "services/unsaved-changes/example-formgroup-adapter",
+    pageKey: "services/unsaved-changes",
+    sectionId: "example-formgroup-adapter",
+    title: "FormGroup adapter",
+    description: "Adapter giữ snapshot, cập nhật baseline sau save thành công và tự unsubscribe khi registration bị destroy.",
+  },
+  {
+    sourceKey: "services/unsaved-changes/example-async-confirmation-decisions",
+    pageKey: "services/unsaved-changes",
+    sectionId: "example-async-confirmation-decisions",
+    title: "Async confirmation decisions",
+    description: "Adapter tùy biến trả save/discard/cancel hoặc boolean. Exception/rejection luôn giữ người dùng ở màn hình hiện tại.",
+  },
+  {
+    sourceKey: "services/unsaved-changes/example-additive-close-hook",
+    pageKey: "services/unsaved-changes",
+    sectionId: "example-additive-close-hook",
+    title: "Additive close hook",
+    description: "Gắn cùng closeGuard vào [beforeClose] của SdModal, SdSideDrawer hoặc SdTab; không cần component phụ thuộc trực tiếp vào service.",
+  },
+  {
+    sourceKey: "services/viewport/example-trang-thai-truc-tiep",
+    pageKey: "services/viewport",
+    sectionId: "example-trang-thai-truc-tiep",
+    title: "Trạng thái trực tiếp",
+    description: "Thay đổi kích thước cửa sổ để quan sát các signal cập nhật từ cùng một resize listener.",
+  },
+  {
+    sourceKey: "services/viewport/example-breakpoint-mac-dinh",
+    pageKey: "services/viewport",
+    sectionId: "example-breakpoint-mac-dinh",
+    title: "Breakpoint mặc định",
+    description: "Các mốc dùng min-width semantics; có thể override toàn bộ qua SD_VIEWPORT_BREAKPOINTS.",
+  },
+  {
+    sourceKey: "services/viewport/example-signal-theo-breakpoint",
+    pageKey: "services/viewport",
+    sectionId: "example-signal-theo-breakpoint",
+    title: "Signal theo breakpoint",
+    description: "Consumer chỉ đọc signal, không tự đăng ký hoặc cleanup listener.",
   },
 ] as const satisfies readonly ShowcaseExampleManifestEntry[];

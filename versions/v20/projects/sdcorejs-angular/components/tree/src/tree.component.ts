@@ -2,11 +2,13 @@ import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
   TemplateRef,
   booleanAttribute,
   computed,
   contentChild,
   effect,
+  inject,
   input,
   isSignal,
   output,
@@ -20,6 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
@@ -29,6 +32,7 @@ import {
   SdTreeItem,
   SdTreeItemContext,
   SdTreeItemLazy,
+  SdTreeLoadErrorEvent,
   SdTreeNode,
   SdTreeOption,
   SdTreeSelectionAction,
@@ -64,12 +68,14 @@ export interface SdTreeViewNode<T = any> extends SdTreeNode<T> {
   icon?: string;
   selected: boolean;
   selectionDisabled: boolean;
+  selectionIndeterminate: boolean;
   toggleDisabled: boolean;
   toggleLabel: string;
   ariaExpanded: boolean | null;
   autoIds: SdTreeNodeAutoIds;
   commands: SdTreeViewCommand<T>[];
   context: SdTreeItemContext<T>;
+  tabIndex: 0 | -1;
 }
 
 export interface SdTreeSelectionActionView<T = any> {
@@ -93,6 +99,7 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
     MatTooltipModule,
     SdButton,
     SdQuickAction,
+    TranslatePipe,
   ],
   templateUrl: './tree.component.html',
   styleUrl: './tree.component.scss',
@@ -102,6 +109,7 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
   },
 })
 export class SdTree<T = any> {
+  readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly option = input<SdTreeComponentOption<T> | undefined>(undefined);
 
@@ -119,6 +127,7 @@ export class SdTree<T = any> {
   readonly selectChange = output<SdTreeSelectionEvent<T>>();
   readonly expandChange = output<SdTreeToggleEvent<T>>();
   readonly collapseChange = output<SdTreeToggleEvent<T>>();
+  readonly loadError = output<SdTreeLoadErrorEvent<T>>();
 
   readonly itemDef = contentChild(SdTreeItemDefDirective<T>);
   readonly resolvedItemsSource = computed<SdTreeDataSource<SdTreeItem<T>>>(() => {
@@ -141,14 +150,20 @@ export class SdTree<T = any> {
   readonly #expandedState = signal<Record<string, boolean>>({});
   readonly #loadingState = signal<Record<string, boolean>>({});
   readonly #lazyChildren = signal<Record<string, SdTreeItemLazy<T>[]>>({});
+  readonly #lazyErrorState = signal<Record<string, unknown>>({});
   readonly #selectedIds = signal<Set<string>>(new Set());
   readonly #filterText = signal('');
   readonly #reloadTick = signal(0);
+  readonly rootLoading = signal(false);
+  readonly rootError = signal<unknown | null>(null);
+  readonly activeNodeId = signal<string | null>(null);
 
   #rootLoadId = 0;
   #lastSource?: SdTreeDataSource<SdTreeItem<T>>;
   #lastSourceValue?: SdTreeItem<T>[];
   #lastReloadTick = -1;
+  #treeGeneration = 0;
+  readonly #lazyLoadIds = new Map<string, number>();
 
   readonly normalizedFilterText = computed(() => normalizeText(this.#filterText()));
   readonly selectionVisible = computed(() => this.resolvedSelectable() && this.resolvedSelector()?.visible === true);
@@ -215,7 +230,10 @@ export class SdTree<T = any> {
     const selectedItems = this.selectedItems();
     const selector = this.resolvedSelector();
     const commands = this.resolvedCommands();
-    return this.visibleNodes().map(node => this.#toViewNode(node, selectedIds, selectedItems, selector, commands));
+    const nodes = this.visibleNodes();
+    const requestedActiveId = this.activeNodeId();
+    const activeId = nodes.some(node => node.id === requestedActiveId) ? requestedActiveId : nodes[0]?.id;
+    return nodes.map(node => this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId));
   });
 
   readonly trackByNode = (_index: number, node: SdTreeNode<T>): string => node.id;
@@ -297,7 +315,7 @@ export class SdTree<T = any> {
 
     await this.#ensureLazyChildren(currentNode);
     const nextNode = this.#findNode(currentNode.id) ?? currentNode;
-    if (!nextNode.hasChildren) return;
+    if (!nextNode.hasChildren || nextNode.loadError) return;
 
     this.#expandedState.update(state => ({ ...state, [currentNode.id]: true }));
     const toggleEvent = { item: currentNode.data, expanded: true, node: { ...nextNode, isExpanded: true } };
@@ -309,9 +327,16 @@ export class SdTree<T = any> {
     event?.stopPropagation();
     if (!this.selectionVisible() || this.isSelectionDisabled(node)) return;
 
+    const selector = this.resolvedSelector();
     const selectedIds = new Set(this.selectedIdSet());
-    const nextSelected = !selectedIds.has(node.id);
-    if (nextSelected) {
+    const shouldSelect = !selectedIds.has(node.id);
+    if (selector?.single) {
+      selectedIds.clear();
+      if (shouldSelect) selectedIds.add(node.id);
+    } else if (selector?.cascade === 'descendants') {
+      this.#setNodeAndDescendants(node, shouldSelect, selectedIds);
+      this.#reconcileAncestors(node.parent, selectedIds);
+    } else if (shouldSelect) {
       selectedIds.add(node.id);
     } else {
       selectedIds.delete(node.id);
@@ -321,7 +346,7 @@ export class SdTree<T = any> {
     const selectedItems = this.#selectedItemsFromIds(selectedIds);
     this.option()?.onSelectedItemsChange?.(selectedItems);
     this.selectedItemsChange.emit(selectedItems);
-    const selectionEvent = { item: node.data, selected: nextSelected, selectedItems };
+    const selectionEvent = { item: node.data, selected: selectedIds.has(node.id), selectedItems };
     this.option()?.onSelect?.(selectionEvent);
     this.selectChange.emit(selectionEvent);
   }
@@ -334,6 +359,71 @@ export class SdTree<T = any> {
 
   onSelectionAction(action: SdTreeSelectionAction<T>): void {
     action.click(this.selectedItems());
+  }
+
+  retry(): void {
+    this.reload();
+  }
+
+  retryNode(node: SdTreeNode<T>, event?: Event): void {
+    event?.stopPropagation();
+    this.#lazyErrorState.update(state => {
+      const next = { ...state };
+      delete next[node.id];
+      return next;
+    });
+    void this.toggle(node);
+  }
+
+  errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error || 'Unable to load tree data');
+  }
+
+  onRowFocus(node: SdTreeNode<T>): void {
+    this.activeNodeId.set(node.id);
+  }
+
+  onRowKeydown(node: SdTreeNode<T>, event: KeyboardEvent): void {
+    if (event.target !== event.currentTarget) return;
+    const nodes = this.visibleNodes();
+    const index = nodes.findIndex(item => item.id === node.id);
+    if (index < 0) return;
+
+    switch (event.key) {
+      case 'ArrowDown':
+        event.preventDefault();
+        this.#focusVisibleNode(Math.min(nodes.length - 1, index + 1));
+        return;
+      case 'ArrowUp':
+        event.preventDefault();
+        this.#focusVisibleNode(Math.max(0, index - 1));
+        return;
+      case 'Home':
+        event.preventDefault();
+        this.#focusVisibleNode(0);
+        return;
+      case 'End':
+        event.preventDefault();
+        this.#focusVisibleNode(nodes.length - 1);
+        return;
+      case 'ArrowRight':
+        if (!node.hasChildren) return;
+        event.preventDefault();
+        if (!node.isExpanded) void this.toggle(node);
+        else if (nodes[index + 1]?.parent?.id === node.id) this.#focusVisibleNode(index + 1);
+        return;
+      case 'ArrowLeft':
+        if (!node.isExpanded && !node.parent) return;
+        event.preventDefault();
+        if (node.isExpanded) void this.toggle(node);
+        else this.#focusVisibleNode(nodes.findIndex(item => item.id === node.parent?.id));
+        return;
+      case 'Enter':
+      case ' ':
+        if (!this.selectionVisible()) return;
+        event.preventDefault();
+        this.toggleSelection(node);
+    }
   }
 
   createContext(node: SdTreeNode<T>): SdTreeItemContext<T> {
@@ -353,14 +443,21 @@ export class SdTree<T = any> {
   #applySignalSource(source: SdTreeDataSource<SdTreeItem<T>>, items: SdTreeItem<T>[], reloadTick: number): void {
     if (source === this.#lastSource && items === this.#lastSourceValue && reloadTick === this.#lastReloadTick) return;
 
+    // A signal source takes ownership immediately. Any promise started by the
+    // previous source must no longer be allowed to replace its current value.
+    this.#rootLoadId += 1;
     this.#lastSource = source;
     this.#lastSourceValue = items;
     this.#lastReloadTick = reloadTick;
+    this.rootLoading.set(false);
+    this.rootError.set(null);
     this.#setRootItems(items);
   }
 
   #loadRootItems(source: SdTreeDataSource<SdTreeItem<T>>): void {
     const loadId = ++this.#rootLoadId;
+    this.rootLoading.set(true);
+    this.rootError.set(null);
     try {
       const result = this.#readItemsSource(source);
       if (isPromiseLike(result)) {
@@ -370,20 +467,28 @@ export class SdTree<T = any> {
               this.#setRootItems(items);
             }
           })
-          .catch(() => {
-            if (loadId === this.#rootLoadId) {
-              this.#setRootItems([]);
-            }
+          .catch(error => {
+            if (loadId !== this.#rootLoadId) return;
+            this.rootError.set(error);
+            this.#setRootItems([]);
+            this.loadError.emit({ error });
+          })
+          .finally(() => {
+            if (loadId === this.#rootLoadId) this.rootLoading.set(false);
           });
         return;
       }
 
       if (loadId === this.#rootLoadId) {
         this.#setRootItems(result);
+        this.rootLoading.set(false);
       }
-    } catch {
+    } catch (error) {
       if (loadId === this.#rootLoadId) {
+        this.rootError.set(error);
         this.#setRootItems([]);
+        this.rootLoading.set(false);
+        this.loadError.emit({ error });
       }
     }
   }
@@ -395,9 +500,12 @@ export class SdTree<T = any> {
   }
 
   #setRootItems(items: SdTreeItem<T>[] | undefined | null): void {
+    this.#treeGeneration += 1;
+    this.#lazyLoadIds.clear();
     this.#rootItems.set([...(items ?? [])]);
     this.#lazyChildren.set({});
     this.#loadingState.set({});
+    this.#lazyErrorState.set({});
   }
 
   #toViewNode(
@@ -405,7 +513,8 @@ export class SdTree<T = any> {
     selectedIds: Set<string>,
     selectedItems: T[],
     selector: SdTreeSelectorOption<T> | undefined | null,
-    commands: SdTreeCommand<T>[]
+    commands: SdTreeCommand<T>[],
+    active: boolean
   ): SdTreeViewNode<T> {
     const selected = selectedIds.has(node.id);
     const selectionDisabled = selector?.disabled ? selector.disabled(node.data, selectedItems) : false;
@@ -414,12 +523,14 @@ export class SdTree<T = any> {
       icon: this.#iconOf(node),
       selected,
       selectionDisabled,
+      selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector),
       toggleDisabled: !node.hasChildren || node.isLoading,
-      toggleLabel: node.isExpanded ? 'Collapse tree item' : 'Expand tree item',
+      toggleLabel: node.loadError ? 'Retry loading tree item' : node.isExpanded ? 'Collapse tree item' : 'Expand tree item',
       ariaExpanded: node.hasChildren ? node.isExpanded : null,
       autoIds: this.#nodeAutoIds(node),
       commands: this.#commandViews(node, commands),
       context: undefined as unknown as SdTreeItemContext<T>,
+      tabIndex: active ? (0 as const) : (-1 as const),
     };
 
     viewNode.context = this.#createContext(viewNode, selected);
@@ -452,10 +563,12 @@ export class SdTree<T = any> {
       expanded: node.isExpanded,
       selected,
       loading: node.isLoading,
+      loadError: node.loadError,
       hasChildren: node.hasChildren,
       isLeaf: !node.hasChildren,
       toggle: () => void this.toggle(node),
       select: () => this.toggleSelection(node),
+      retry: () => this.retryNode(node),
     };
   }
 
@@ -495,6 +608,7 @@ export class SdTree<T = any> {
         hasChildren,
         isExpanded,
         isLoading: this.#loadingState()[item.id] ?? false,
+        loadError: this.#lazyErrorState()[item.id],
       };
       node.children = this.#buildNodes(rawChildren, level + 1, node);
       return node;
@@ -540,16 +654,63 @@ export class SdTree<T = any> {
     const option = this.resolvedTree();
     if (option.loadType !== 'lazy' || node.children.length > 0 || this.#lazyChildren()[node.id]) return;
 
+    const generation = this.#treeGeneration;
+    const loadId = (this.#lazyLoadIds.get(node.id) ?? 0) + 1;
+    this.#lazyLoadIds.set(node.id, loadId);
     this.#loadingState.update(state => ({ ...state, [node.id]: true }));
+    this.#lazyErrorState.update(state => {
+      const next = { ...state };
+      delete next[node.id];
+      return next;
+    });
     try {
       const lazyItem = node.treeItem as SdTreeItemLazy<T>;
       const children = await Promise.resolve(option.onExpandChildren(lazyItem));
+      if (generation !== this.#treeGeneration || this.#lazyLoadIds.get(node.id) !== loadId) return;
       this.#lazyChildren.update(state => ({ ...state, [node.id]: children }));
       // Do not write `children` onto lazy items; that field belongs to static items only.
       lazyItem.hasChildren = children.length > 0;
+    } catch (error) {
+      if (generation !== this.#treeGeneration || this.#lazyLoadIds.get(node.id) !== loadId) return;
+      this.#lazyErrorState.update(state => ({ ...state, [node.id]: error }));
+      this.loadError.emit({ item: node.data, error });
     } finally {
-      this.#loadingState.update(state => ({ ...state, [node.id]: false }));
+      if (generation === this.#treeGeneration && this.#lazyLoadIds.get(node.id) === loadId) {
+        this.#loadingState.update(state => ({ ...state, [node.id]: false }));
+      }
     }
+  }
+
+  #setNodeAndDescendants(node: SdTreeNode<T>, selected: boolean, selectedIds: Set<string>): void {
+    if (!this.isSelectionDisabled(node)) {
+      if (selected) selectedIds.add(node.id);
+      else selectedIds.delete(node.id);
+    }
+    node.children.forEach(child => this.#setNodeAndDescendants(child, selected, selectedIds));
+  }
+
+  #reconcileAncestors(node: SdTreeNode<T> | null, selectedIds: Set<string>): void {
+    let current = node;
+    while (current) {
+      const selectableChildren = current.children.filter(child => !this.isSelectionDisabled(child));
+      if (selectableChildren.length > 0 && selectableChildren.every(child => selectedIds.has(child.id))) selectedIds.add(current.id);
+      else selectedIds.delete(current.id);
+      current = current.parent;
+    }
+  }
+
+  #isSelectionIndeterminate(node: SdTreeNode<T>, selectedIds: Set<string>, selector: SdTreeSelectorOption<T> | undefined | null): boolean {
+    if (selector?.cascade !== 'descendants' || selectedIds.has(node.id)) return false;
+    return this.#flattenAll(node.children).some(child => selectedIds.has(child.id));
+  }
+
+  #focusVisibleNode(index: number): void {
+    if (index < 0) return;
+    const node = this.visibleNodes()[index];
+    const row = this.#host.nativeElement.querySelectorAll<HTMLElement>('[role="treeitem"]')[index];
+    if (!node || !row) return;
+    this.activeNodeId.set(node.id);
+    row.focus();
   }
 
   #findNode(id: string): SdTreeNode<T> | undefined {

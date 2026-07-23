@@ -17,6 +17,7 @@ import {
   OnInit,
   Output,
   output,
+  signal,
   TemplateRef,
   untracked,
   viewChild,
@@ -42,6 +43,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -58,6 +60,8 @@ const LEGACY_PATTERN_ALIAS: Record<string, ValidationPatternType> = {
 };
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+import { SdInputMask, SdInputMaskResult, SdInputMaskStatus, sdResolveInputMask } from './input-mask';
 
 @Component({
   selector: 'sd-input',
@@ -161,6 +165,11 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   helperText = input<string | undefined>();
   placeholder = input<string | undefined>();
   type = input<'text' | 'number' | 'password' | 'email'>('text');
+  mask = input<SdInputMask | null | undefined>();
+  readonly maskAdapter = computed(() => sdResolveInputMask(this.mask()));
+  readonly effectiveType = computed(() => (this.maskAdapter() ? 'text' : this.type()));
+  readonly inputMode = computed(() => this.maskAdapter()?.inputMode);
+  readonly maxDisplayLength = computed(() => this.maskAdapter()?.maxDisplayLength);
 
   hideInlineError = input(false, { transform: booleanAttribute });
   blurOnEnter = input(false, { transform: booleanAttribute });
@@ -172,21 +181,12 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   /** Display mode: `false` edit · `true` static view · `'inline'` borderless inline-edit (no panel — the input IS the face). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
 
-  // Tri-state `viewed` — shared primitive. Input has NO panel; in `'inline'` the input is rendered
-  // borderless/transparent (looks like text), always editable — clicking/focusing it edits directly.
-  readonly #viewedState = sdViewedInline(this.viewed, () => this.#focusActiveInput(), this.disabled);
   /** Focus whichever input is live: the inline primitive in `'inline'` mode, else the mat input. */
   #focusActiveInput = (): void => {
     const inline = this.inlineRef();
     if (inline) inline.focus();
     else this.control()?.nativeElement?.focus();
   };
-  /** `true` when `viewed === 'inline'`. */
-  readonly isInline = this.#viewedState.isInline;
-  /** `true` when `viewed === true` (static view, no input). */
-  readonly isViewed = this.#viewedState.isViewed;
-  /** Focus the inline input. No-op unless `viewed='inline'`. */
-  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
   /** View display template: `sdViewDef` overrides the projected `#sdValue` for the static view (unified). */
   readonly viewTemplate = computed<TemplateRef<any> | undefined>(() => this.sdViewDef()?.templateRef ?? this.sdValueTemplate());
 
@@ -231,6 +231,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
     if (errors['required']) return this.#i18n.t('core.form.input.required');
     if (errors['maxlength']) return this.#i18n.t('core.form.input.maxlength', { max: this.maxlength() ?? '' });
+    if (errors['maskIncomplete']) return this.#i18n.t('core.form.input.mask-incomplete');
+    if (errors['maskInvalid']) return this.#i18n.t('core.form.input.mask-invalid');
     if (errors['pattern']) return this.resolvedPatternErrorMsg() || this.#i18n.t('core.form.input.invalid-pattern');
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
@@ -259,37 +261,101 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
 
   formControl = new SdFormControl();
+  /** Display-only control used by the input element while a mask is active. */
+  readonly displayControl = new SdFormControl();
+  readonly activeControl = computed(() => (this.maskAdapter() ? this.displayControl : this.formControl));
+  readonly maskStatus = signal<SdInputMaskStatus>('empty');
+  readonly displayValue = computed(() => {
+    const adapter = this.maskAdapter();
+    return adapter ? adapter.format(this.formControl.value == null ? '' : String(this.formControl.value)).display : this.formControl.value;
+  });
   #subscription = new Subscription();
+  #isComposing = false;
+  #pendingMaskResult: SdInputMaskResult | undefined;
   isFocused = false;
+  readonly #validators = computed<readonly ValidatorFn[]>(() => {
+    const validators: ValidatorFn[] = [];
+    const min = this.minlength();
+    const max = this.maxlength();
+    const pattern = this.resolvedPattern();
+
+    if (min && min > 0) validators.push(Validators.minLength(min));
+    if (max && max > 0) validators.push(Validators.maxLength(max));
+    if (pattern) validators.push(Validators.pattern(pattern));
+    if (this.maskAdapter()) {
+      const maskStatus = this.maskStatus();
+      validators.push(() => {
+        if (maskStatus === 'invalid') return { maskInvalid: true };
+        if (maskStatus === 'incomplete') return { maskIncomplete: true };
+        return null;
+      });
+    }
+    if (this.inlineError()) validators.push(SdInlineErrorValidator);
+    return validators;
+  });
+  readonly #asyncValidators = computed<readonly AsyncValidatorFn[]>(() => {
+    const validator = this.validator();
+    return validator ? [HandleSdCustomValidator(validator)] : [];
+  });
+  readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
+    form: this.form,
+    name: this.name,
+    control: computed(() => this.formControl),
+    validators: this.#validators,
+    asyncValidators: this.#asyncValidators,
+    required: this.required,
+    disabled: this.disabled,
+    readonly: this.readonly,
+    viewed: this.viewed,
+    validationError: computed(() => this.errorMessage()),
+  });
+  /** Shared reactive form policy consumed by template-facing state below. */
+  readonly connectorState = this.#formConnector.state;
+  readonly isReadonly = computed(() => this.connectorState().readonly);
+  readonly visibleErrorMessage = computed(() => this.connectorState().validationError);
+
+  // Tri-state `viewed` — shared primitive. Input has NO panel; in `'inline'` the input is rendered
+  // borderless/transparent (looks like text), always editable — clicking/focusing it edits directly.
+  readonly #viewedState = sdViewedInline(
+    computed(() => this.connectorState().viewed),
+    () => this.#focusActiveInput(),
+    this.disabled
+  );
+  /** `true` when `viewed === 'inline'`. */
+  readonly isInline = this.#viewedState.isInline;
+  /** `true` when `viewed === true` (static view, no input). */
+  readonly isViewed = this.#viewedState.isViewed;
+  /** Focus the inline input. No-op unless `viewed='inline'`. */
+  enterInlineEdit = (): void => this.#viewedState.enterInlineEdit();
 
   constructor() {
     effect(() => {
       const val = this.valueModel();
+      const adapter = this.maskAdapter();
       untracked(() => {
         if (this.formControl.value !== val) {
           this.formControl.setValue(val, { emitEvent: false });
+        }
+        if (adapter) {
+          const rawValue = val == null ? '' : String(val);
+          const result = this.#pendingMaskResult?.raw === rawValue ? this.#pendingMaskResult : adapter.format(rawValue);
+          this.#pendingMaskResult = undefined;
+          this.maskStatus.set(result.status);
+          if (this.displayControl.value !== result.display) {
+            this.displayControl.setValue(result.display, { emitEvent: false });
+          }
+        } else {
+          this.maskStatus.set('empty');
         }
       });
     });
 
     effect(() => {
-      if (this.disabled()) {
-        this.formControl.disable({ emitEvent: false });
-      } else {
-        this.formControl.enable({ emitEvent: false });
-      }
-    });
-
-    effect(() => {
-      const req = this.required();
-      const min = this.minlength();
-      const max = this.maxlength();
-      const pat = this.resolvedPattern();
-      const inl = this.inlineError();
-      const val = this.validator();
-
+      const masked = !!this.maskAdapter();
+      const disabled = this.disabled();
       untracked(() => {
-        this.#updateValidator(req, min, max, pat, inl, val);
+        if (masked && disabled) this.displayControl.disable({ emitEvent: false });
+        else this.displayControl.enable({ emitEvent: false });
       });
     });
   }
@@ -304,44 +370,17 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-
-    const formGroup = this.form();
-    formGroup?.addControl(this.name(), this.formControl);
+    this.#subscription.add(this.displayControl.valueChanges.subscribe(value => this.#onMaskedDisplayChange(value)));
 
     this.#ref.detectChanges();
   }
 
   ngOnDestroy() {
-    const formGroup = this.form();
-    formGroup?.removeControl(this.name());
     this.#subscription.unsubscribe();
   }
 
   reValidate = () => {
     this.formControl.updateValueAndValidity();
-  };
-
-  #updateValidator = (
-    req: boolean,
-    min: number | undefined,
-    max: number | undefined,
-    pat: string | undefined,
-    inl: string | undefined,
-    val: SdCustomValidator | undefined
-  ) => {
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-
-    if (req) validators.push(Validators.required);
-    if (min && min > 0) validators.push(Validators.minLength(min));
-    if (max && max > 0) validators.push(Validators.maxLength(max));
-    if (pat) validators.push(Validators.pattern(pat));
-    if (inl) validators.push(SdInlineErrorValidator);
-    if (val) asyncValidators.push(HandleSdCustomValidator(val));
-
-    this.formControl.setValidators(validators.length ? validators : null);
-    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
-    this.formControl.updateValueAndValidity({ emitEvent: false });
   };
 
   getCurrentLength = (): number => {
@@ -360,6 +399,50 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     this.sdChange.emit(value);
   };
 
+  #onMaskedDisplayChange(value: unknown): void {
+    const adapter = this.maskAdapter();
+    if (!adapter || this.#isComposing) return;
+
+    const nativeInput = this.control()?.nativeElement;
+    const display = value == null ? '' : String(value);
+    const result = adapter.parse(display, nativeInput?.selectionStart, nativeInput?.selectionEnd);
+    this.#applyMaskResult(result);
+  }
+
+  #applyMaskResult(result: SdInputMaskResult): void {
+    this.maskStatus.set(result.status);
+    if (this.displayControl.value !== result.display) {
+      this.displayControl.setValue(result.display, { emitEvent: false });
+    }
+    if (this.formControl.value !== result.raw) {
+      this.#pendingMaskResult = this.valueModel() === result.raw ? undefined : result;
+      this.formControl.setValue(result.raw);
+    } else {
+      this.#pendingMaskResult = undefined;
+      this.formControl.updateValueAndValidity({ emitEvent: false });
+    }
+
+    queueMicrotask(() => {
+      const nativeInput = this.control()?.nativeElement;
+      if (nativeInput) {
+        nativeInput.setSelectionRange(result.selectionStart, result.selectionEnd);
+      }
+    });
+  }
+
+  onCompositionStart(): void {
+    if (this.maskAdapter()) this.#isComposing = true;
+  }
+
+  onCompositionEnd(event: CompositionEvent): void {
+    const adapter = this.maskAdapter();
+    if (!adapter) return;
+    this.#isComposing = false;
+    const target = event.target as HTMLInputElement | null;
+    const display = target?.value ?? String(this.displayControl.value ?? '');
+    this.#applyMaskResult(adapter.parse(display, target?.selectionStart, target?.selectionEnd));
+  }
+
   // why: dựa trên valueModel() (signal model-input) thay vì formControl.value —
   // khi bị wrap (vd <sd-input-color>) effect set formControl chạy SAU lúc template
   // eval nên formControl.value chưa kịp có; valueModel() thì có ngay. Method (không
@@ -376,6 +459,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     // why: clear là thao tác chủ động → model về null (không phải '' hay undefined).
     // undefined chỉ dành cho trạng thái pristine chưa từng nhập.
     this.formControl.setValue(null, { emitEvent: false });
+    this.displayControl.setValue('', { emitEvent: false });
+    this.maskStatus.set('empty');
     this.valueModel.set(null);
     this.sdChange.emit(null);
     this.cleared.emit();
@@ -383,7 +468,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   onKeyupEnter = () => {
     const val: string = (this.formControl.value ?? '').toString();
-    if (val.length > val.trim().length) {
+    if (!this.maskAdapter() && val.length > val.trim().length) {
       this.formControl.setValue(val.trim());
     }
     this.keyupEnter.emit(this.formControl.value);
@@ -405,7 +490,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   onBlur = () => {
     this.isFocused = false;
     const val: string = (this.formControl.value ?? '').toString();
-    if (val.length > val.trim().length) {
+    if (!this.maskAdapter() && val.length > val.trim().length) {
       this.formControl.setValue(val.trim());
     }
     this.sdBlur.emit(this.formControl.value);

@@ -54,10 +54,20 @@ export const routes: Routes = [
       },
       {
         path: ':category/:slug',
+        data: {
+          breadcrumb: (route: import('@angular/router').ActivatedRouteSnapshot) => {
+            const category = route.paramMap.get('category');
+            const page = isDocCategory(category) ? findDocPage(category, route.paramMap.get('slug') ?? '') : undefined;
+            return page?.title ?? route.paramMap.get('slug');
+          },
+        },
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'overview' },
           {
             path: ':tab',
+            data: {
+              breadcrumb: (route: import('@angular/router').ActivatedRouteSnapshot) => route.paramMap.get('tab'),
+            },
             title: route => {
               const category = route.paramMap.get('category');
               const page = isDocCategory(category) ? findDocPage(category, route.paramMap.get('slug') ?? '') : undefined;

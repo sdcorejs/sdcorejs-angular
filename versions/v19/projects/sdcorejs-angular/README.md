@@ -79,10 +79,10 @@ Replace the timer with your typed service call and reset `saving` in a `finally`
 
 | Area              | Representative APIs                                                                                                             |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| UI components     | Buttons, badges, avatars, sections, tabs, steppers, modals, drawers, charts, editors, previews, and navigation primitives       |
-| Data and workflow | Local or server tables, tree data, query bars, query builders, generic forms, document building, file upload, and Excel import  |
-| Form controls     | Text, number, date, date range, datetime, select, autocomplete, checkbox, radio, switch, chip, color, inline text, and textarea |
-| Services          | Notifications, confirmation dialogs, loading state, API access, storage, cache, Excel, and DOCX helpers                         |
+| UI components     | Navigation/data state, PDF preview, job progress, audit diff, modals, drawers, tabs, charts, editors, and document tooling      |
+| Data and workflow | Local/server tables, entity/tree pickers, query builders, unsaved-change guards, background tasks, upload, and Excel import     |
+| Form controls     | Text/mask, number, time/time range, date/date range, datetime, select, autocomplete, checkbox, radio, switch, chip, and color   |
+| Services          | Typed API/retry/cancel, ref-counted loading, graph-safe persistence/cache/storage, viewport signals, notifications, and exports |
 | Portal modules    | Auth, Keycloak, permission, layout, and icon modules                                                                            |
 | Localization      | Built-in `vi`, `en`, `ja`, `ko`, and `zh` catalogs, plus a synchronous custom-catalog provider                                  |
 
@@ -165,22 +165,25 @@ export const appConfig: ApplicationConfig = {
 
 ## Documentation and examples
 
-| Resource                                                                                                                                                                | Purpose                                                        |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/)                                                                                                           | Interactive component, form, and service demos                 |
-| [Button example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts) | Action variants, icons, disabled state, and loading state      |
-| [Input example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)         | Model binding, validation, and viewed states                   |
-| [Table example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)    | Data, selection, filters, grouping, paging, and tree workflows |
-| [Latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                               | Discover all Markdown docs for the latest release              |
-| [Versions registry](https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json)                                                                                     | Select docs matching an installed package version              |
-| [Machine-readable catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json)                                                                               | Discover documentation across maintained package lines         |
-| [E2E attributes](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                  | Stable runtime selectors and state attributes                  |
+| Resource                                                                                                                                                                             | Purpose                                                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/)                                                                                                                        | Interactive component, form, and service demos                             |
+| [Button example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts)              | Action variants, icons, disabled state, and loading state                  |
+| [Input example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)                      | Model binding, validation, and viewed states                               |
+| [Table example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)                 | Data, selection, filters, grouping, paging, and tree workflows             |
+| [Persistence example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/services/persistence/persistence-demo.component.ts) | Graph round-trip, identity, envelopes, and error containment               |
+| [Latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                            | Discover all Markdown docs for the latest release                          |
+| [Versions registry](https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json)                                                                                                  | Select docs matching an installed package version                          |
+| [Machine-readable catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json)                                                                                            | Discover documentation across maintained package lines                     |
+| [E2E attributes](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                               | Stable runtime selectors and state attributes                              |
+| [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.4.md)                                                                                 | Dedupe, loading, persistence, connector, responsive, and signal migrations |
 
 ## Versioning
 
 - Use `@sdcorejs/angular@^19`, `@^20`, or `@^21` to match the application's Angular major.
 - Maintained package lines are released from the same feature surface with required Angular-major adaptations.
 - Consumer-breaking changes and migration notes are recorded in the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md).
+- Before adopting the `1.4` suffix, follow the [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.4.md).
 - Version-pinned reference docs remain available under `https://sdcorejs.github.io/sdcorejs-angular/docs/<package-version>/`.
 
 ## Contributing

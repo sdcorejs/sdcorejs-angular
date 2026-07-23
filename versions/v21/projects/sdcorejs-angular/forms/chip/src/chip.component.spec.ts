@@ -345,7 +345,7 @@ describe('SdChip', () => {
       host.model = ['chip1'];
       host.removable = true;
       fixture.detectChanges();
-      const cancelIcon = fixture.nativeElement.querySelector('mat-icon[matChipRemove]');
+      const cancelIcon = fixture.nativeElement.querySelector('sd-icon[matChipRemove]');
       expect(cancelIcon).not.toBeNull();
     });
 
@@ -353,7 +353,7 @@ describe('SdChip', () => {
       host.model = ['chip1'];
       host.removable = false;
       fixture.detectChanges();
-      const cancelIcon = fixture.nativeElement.querySelector('mat-icon[matChipRemove]');
+      const cancelIcon = fixture.nativeElement.querySelector('sd-icon[matChipRemove]');
       expect(cancelIcon).toBeNull();
     });
 
@@ -361,7 +361,7 @@ describe('SdChip', () => {
       host.model = ['chip1'];
       host.removable = () => true;
       fixture.detectChanges();
-      const cancelIcon = fixture.nativeElement.querySelector('mat-icon[matChipRemove]');
+      const cancelIcon = fixture.nativeElement.querySelector('sd-icon[matChipRemove]');
       expect(cancelIcon).not.toBeNull();
     });
   });

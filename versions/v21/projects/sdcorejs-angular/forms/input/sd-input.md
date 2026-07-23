@@ -40,6 +40,7 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 | `helperText`          | `string \| undefined`                                  | `undefined`                                 | Hint text under the field.                                                                                                                                                                                                                                                                                          |
 | `placeholder`         | `string \| undefined`                                  | `undefined`                                 | Placeholder when empty.                                                                                                                                                                                                                                                                                             |
 | `type`                | `'text' \| 'number' \| 'password' \| 'email'`          | `'text'`                                    | HTML input type. For numeric formatting, prefer `<sd-input-number>` over `type="number"`.                                                                                                                                                                                                                           |
+| `mask`                | `SdInputMaskAdapter \| SdInputMaskPreset \| null`      | `undefined`                                 | Optional reusable display mask. Presets: `VN_PHONE`, `VN_ID`, `VN_TAX_CODE`, `BANK_ACCOUNT`, `BUSINESS_CODE`. The public model remains raw.                                                                                                                                                                         |
 | `minlength`           | `number \| undefined`                                  | `undefined`                                 | Adds `Validators.minLength`.                                                                                                                                                                                                                                                                                        |
 | `maxlength`           | `number \| undefined`                                  | `undefined`                                 | Adds `Validators.maxLength`.                                                                                                                                                                                                                                                                                        |
 | `pattern`             | `ValidationPatternType \| string \| null \| undefined` | `undefined`                                 | Either a known `ValidationPatternType` (e.g. `EMAIL`, `PHONE`, `TAX_CODE` — looked up in `VALIDATION_PATTERNS`) OR a raw regex string.                                                                                                                                                                              |
@@ -104,6 +105,7 @@ Applied automatically on `<sd-input>` for styling hooks:
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
 - **`[(model)]` two-way** — host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing → `valueChanges` → `valueModel.set()` → `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
 - **Auto-trim on blur / Enter** — leading/trailing whitespace is stripped from the value when the user blurs or presses Enter.
+- **Input masks** — when `[mask]` is set, `formControl`, `[(model)]`, `sdChange`, `sdBlur`, E2E `data-value`, validators, and parent forms all see the raw string. A separate display control owns separators and caret mapping. Mask parsing waits for IME `compositionend`; paste and selection edits are reformatted without moving the caret to the end. Empty, incomplete, and invalid values are distinct states. Auto-trim is skipped while masking.
 - **Default `appearance`** — when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at the application bootstrap to flip ALL inputs to `'fill'` (or any other appearance) without touching each template. Falls back to `'outline'` if the token isn't provided.
 
 ### Three ways to integrate
@@ -232,6 +234,23 @@ When this control is rendered in dashboard cards, filter bars, external filter p
   [(model)]="model.taxCode">
 </sd-input>
 ```
+
+### 6. Raw phone model with a display mask
+
+```html
+<!-- Displays 0901 234 567; phone remains "0901234567". -->
+<sd-input label="Điện thoại" mask="VN_PHONE" [(model)]="phone"></sd-input>
+```
+
+Create a custom slot mask with `sdCreateInputMask()`:
+
+```ts
+import { sdCreateInputMask } from '@sdcorejs/angular/forms/input';
+
+readonly orderMask = sdCreateInputMask('AA-####');
+```
+
+Default tokens are `#` required digit, `9` optional digit, `A`/`a` required/optional letter, and `*`/`?` required/optional alphanumeric. Other characters are display-only literals. For domain-specific parsing/formatting, implement `SdInputMaskAdapter.format()` and `.parse()` directly.
 
 ## E2E test attributes
 

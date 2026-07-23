@@ -1,30 +1,15 @@
-import { DestroyRef, Injectable, InjectionToken, inject, signal } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { SD_VIEWPORT, SdViewport, SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { normalizeLayoutMobileBreakpoint } from '../../configurations';
 
-export interface SdLayoutViewport {
-  innerWidth: number;
-  addEventListener(type: 'resize', listener: EventListenerOrEventListenerObject): void;
-  removeEventListener(type: 'resize', listener: EventListenerOrEventListenerObject): void;
-}
+export type SdLayoutViewport = SdViewport;
+export const SD_LAYOUT_VIEWPORT = SD_VIEWPORT;
 
-export const SD_LAYOUT_VIEWPORT = new InjectionToken<SdLayoutViewport | null>('sd.layout.viewport', {
-  providedIn: 'root',
-  factory: () => (typeof window === 'undefined' ? null : window),
-});
-
+/** @deprecated Prefer `SdViewportService` from `@sdcorejs/angular/services/viewport`. */
 @Injectable({ providedIn: 'root' })
 export class SdLayoutResponsiveService {
-  readonly #viewport = inject(SD_LAYOUT_VIEWPORT);
-  readonly #destroyRef = inject(DestroyRef);
-  readonly viewportWidth = signal(this.#viewport?.innerWidth ?? Number.MAX_SAFE_INTEGER);
-
-  constructor() {
-    if (!this.#viewport) return;
-
-    const onResize = (): void => this.viewportWidth.set(this.#viewport?.innerWidth ?? Number.MAX_SAFE_INTEGER);
-    this.#viewport.addEventListener('resize', onResize);
-    this.#destroyRef.onDestroy(() => this.#viewport?.removeEventListener('resize', onResize));
-  }
+  readonly #viewport = inject(SdViewportService);
+  readonly viewportWidth = this.#viewport.width;
 
   isMobile(breakpoint: number): boolean {
     return this.viewportWidth() < normalizeLayoutMobileBreakpoint(breakpoint);

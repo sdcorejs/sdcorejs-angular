@@ -329,7 +329,7 @@ describe('SdChipCalendar', () => {
       host.model = ['2026/05/01'];
       host.removable = true;
       fixture.detectChanges();
-      const cancelIcon = fixture.nativeElement.querySelector('mat-icon[matChipRemove]');
+      const cancelIcon = fixture.nativeElement.querySelector('sd-icon[matChipRemove]');
       expect(cancelIcon).not.toBeNull();
     });
 
@@ -337,7 +337,7 @@ describe('SdChipCalendar', () => {
       host.model = ['2026/05/01'];
       host.removable = false;
       fixture.detectChanges();
-      const cancelIcon = fixture.nativeElement.querySelector('mat-icon[matChipRemove]');
+      const cancelIcon = fixture.nativeElement.querySelector('sd-icon[matChipRemove]');
       expect(cancelIcon).toBeNull();
     });
 
@@ -345,7 +345,7 @@ describe('SdChipCalendar', () => {
       host.model = ['2026/05/01'];
       host.removable = () => true;
       fixture.detectChanges();
-      const cancelIcon = fixture.nativeElement.querySelector('mat-icon[matChipRemove]');
+      const cancelIcon = fixture.nativeElement.querySelector('sd-icon[matChipRemove]');
       expect(cancelIcon).not.toBeNull();
     });
   });

@@ -8,9 +8,11 @@ import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import {
   SdTreeCommand,
   SdTreeComponentOption,
+  SdTreeDataSource,
   SdTreeItemLazy,
   SdTreeItemStatic,
   SdTreeSelectionEvent,
+  SdTreeSelectorOption,
   SdTreeStaticOption,
   SdTreeToggleEvent,
 } from './tree.model';
@@ -65,7 +67,7 @@ class StaticHostComponent {
   editSpy = jasmine.createSpy('edit');
   deleteSpy = jasmine.createSpy('delete');
   selectionActionSpy = jasmine.createSpy('selectionAction');
-  selector = {
+  selector: SdTreeSelectorOption<NodeItem> = {
     visible: true,
     message: (items: NodeItem[]) => `Đã chọn ${items.length} dòng`,
     actions: [
@@ -200,6 +202,63 @@ class ReloadHostComponent {
   };
 }
 
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class SwappableSourceHostComponent {
+  resolvePending!: (items: SdTreeItemStatic<NodeItem>[]) => void;
+  source: SdTreeDataSource<SdTreeItemStatic<NodeItem>> = () =>
+    new Promise(resolve => {
+      this.resolvePending = resolve;
+    });
+
+  get option(): SdTreeComponentOption<NodeItem> {
+    return {
+      autoId: 'swappable',
+      items: this.source,
+      tree: { loadType: 'static' },
+    };
+  }
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class RootErrorHostComponent {
+  loader = jasmine
+    .createSpy('loader')
+    .and.returnValues(Promise.reject(new Error('root failed')), Promise.resolve([treeItem({ id: 'recovered', title: 'Recovered' })]));
+  option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'root-error',
+    items: () => this.loader(),
+    tree: { loadType: 'static' },
+  };
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class LazyErrorHostComponent {
+  items: SdTreeItemLazy<NodeItem>[] = [lazyTreeItem({ id: 'lazy-error', title: 'Lazy error' }, true)];
+  loader = jasmine
+    .createSpy('loader')
+    .and.returnValues(
+      Promise.reject(new Error('lazy failed')),
+      Promise.resolve([lazyTreeItem({ id: 'lazy-recovered', title: 'Lazy recovered' }, false)])
+    );
+  option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'lazy-error',
+    items: this.items,
+    tree: { loadType: 'lazy', onExpandChildren: this.loader },
+  };
+}
+
 describe('SdTree', () => {
   it('renders static tree rows from SdTreeItem, default expansion, roles and stable auto ids', async () => {
     const fixture = await createFixture(StaticHostComponent);
@@ -277,7 +336,7 @@ describe('SdTree', () => {
     expect(fixture.nativeElement.querySelector('.sd-tree__qa-count')?.textContent?.trim()).toBe('1');
     expect(fixture.nativeElement.textContent).toContain('Đã chọn 1 dòng');
 
-    tree.onSelectionAction(component.selector.actions[0]);
+    tree.onSelectionAction(component.selector.actions![0]!);
 
     expect(component.selectionActionSpy).toHaveBeenCalledOnceWith([PAYABLE_DATA]);
 
@@ -459,6 +518,24 @@ describe('SdTree', () => {
     expect(text(fixture)).not.toContain('Initial');
   });
 
+  it('does not let an obsolete async source overwrite a newer signal source', async () => {
+    await TestBed.configureTestingModule({ imports: [NoopAnimationsModule, SwappableSourceHostComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(SwappableSourceHostComponent);
+    const component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.source = signal([treeItem({ id: 'current', title: 'Current signal' })]);
+    fixture.detectChanges();
+    expect(text(fixture)).toContain('Current signal');
+
+    component.resolvePending([treeItem({ id: 'obsolete', title: 'Obsolete async' })]);
+    await Promise.resolve();
+    fixture.detectChanges();
+
+    expect(text(fixture)).toContain('Current signal');
+    expect(text(fixture)).not.toContain('Obsolete async');
+  });
+
   it('loads items from an async source and reloads manually', async () => {
     const fixture = await createFixture(ReloadHostComponent);
     const component = fixture.componentInstance;
@@ -475,6 +552,85 @@ describe('SdTree', () => {
     expect(component.loader).toHaveBeenCalledTimes(2);
     expect(text(fixture)).toContain('Second load');
     expect(text(fixture)).not.toContain('First load');
+  });
+
+  it('uses roving tabindex and supports native tree keyboard navigation and selection', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const rootRow = row(fixture.nativeElement, 'root');
+    const payableRow = row(fixture.nativeElement, 'payable');
+
+    expect(rootRow.tabIndex).toBe(0);
+    expect(payableRow.tabIndex).toBe(-1);
+    rootRow.focus();
+    rootRow.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(document.activeElement).toBe(payableRow);
+
+    payableRow.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(payableRow.getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('supports single selection and descendant cascade with indeterminate parents', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+    component.selector = { ...component.selector, cascade: 'descendants' } satisfies SdTreeSelectorOption<NodeItem>;
+    fixture.detectChanges();
+
+    tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'root')!);
+    fixture.detectChanges();
+
+    expect(tree.selectedItems().map(item => item.id)).toEqual(['root', 'payable', 'receivable']);
+
+    tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+    fixture.detectChanges();
+
+    expect(row(fixture.nativeElement, 'root').getAttribute('aria-checked')).toBe('mixed');
+
+    component.selector = { ...component.selector, cascade: 'independent', single: true };
+    fixture.detectChanges();
+    tree.clearSelection();
+    tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+    tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'receivable')!);
+
+    expect(tree.selectedItems().map(item => item.id)).toEqual(['receivable']);
+  });
+
+  it('renders root load errors and retries without leaking the rejection', async () => {
+    const fixture = await createFixture(RootErrorHostComponent);
+    const component = fixture.componentInstance;
+
+    expect(fixture.nativeElement.querySelector('[data-tree-retry]')).not.toBeNull();
+    expect(text(fixture)).toContain('root failed');
+
+    (fixture.nativeElement.querySelector('[data-tree-retry]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.loader).toHaveBeenCalledTimes(2);
+    expect(text(fixture)).toContain('Recovered');
+  });
+
+  it('contains lazy load errors per node and retries the failed branch', async () => {
+    const fixture = await createFixture(LazyErrorHostComponent);
+    const component = fixture.componentInstance;
+    const tree = treeComponent<NodeItem>(fixture);
+
+    await tree.toggle(tree.visibleNodes()[0]);
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('[data-tree-node-retry="lazy-error"]')).not.toBeNull();
+
+    (fixture.nativeElement.querySelector('[data-tree-node-retry="lazy-error"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.loader).toHaveBeenCalledTimes(2);
+    expect(text(fixture)).toContain('Lazy recovered');
   });
 });
 

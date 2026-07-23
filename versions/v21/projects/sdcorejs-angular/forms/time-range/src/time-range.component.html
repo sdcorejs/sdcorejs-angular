@@ -1,0 +1,91 @@
+@let _label = label();
+@let _errorMessage = errorMessage();
+@let _required = required();
+
+@if (isViewed()) {
+  <sd-view
+    [label]="_label"
+    [labelTemplate]="sdLabelTemplate()"
+    [value]="valueModel()"
+    [display]="displayValue()"
+    [hyperlink]="hyperlink()"
+    [valueTemplate]="viewTemplate()">
+  </sd-view>
+} @else {
+  <ng-content select="[sdLabel]">
+    @if (_label) {
+      <sd-label [label]="_label" [helperText]="helperText()" [required]="_required"></sd-label>
+    }
+  </ng-content>
+
+  <div
+    class="sd-time-range-fields"
+    role="group"
+    [attr.aria-label]="groupAriaLabel()"
+    [attr.aria-invalid]="dataInvalid()"
+    [attr.data-autoId]="autoId()"
+    [attr.data-disabled]="dataDisabled()"
+    [attr.data-invalid]="dataInvalid()"
+    [attr.data-empty]="dataEmpty()"
+    [attr.data-value]="dataValue()"
+    [attr.data-required]="dataRequired()"
+    [attr.data-error-message]="dataErrorMessage()">
+    <sd-time
+      #fromTime
+      class="sd-time-range-endpoint"
+      [form]="form()"
+      [name]="fromName"
+      [autoId]="fromAutoId()"
+      [placeholder]="fromPlaceholder() || 'HH:mm'"
+      [ariaLabel]="fromAriaLabel()"
+      [size]="size()"
+      [min]="min()"
+      [max]="max()"
+      [step]="step()"
+      [required]="_required"
+      [disabled]="disabled()"
+      [readonly]="isReadonly()"
+      [viewed]="isInline() ? 'inline' : false"
+      [hideInlineError]="true"
+      [model]="fromValue()"
+      (modelChange)="onFromChange($event)"
+      (sdFocus)="onFocus()"
+      (sdBlur)="onBlur()">
+    </sd-time>
+
+    <span class="sd-time-range-separator" aria-hidden="true">→</span>
+
+    <sd-time
+      #toTime
+      class="sd-time-range-endpoint"
+      [form]="form()"
+      [name]="toName"
+      [autoId]="toAutoId()"
+      [placeholder]="toPlaceholder() || 'HH:mm'"
+      [ariaLabel]="toAriaLabel()"
+      [size]="size()"
+      [min]="min()"
+      [max]="max()"
+      [step]="step()"
+      [required]="_required"
+      [disabled]="disabled()"
+      [readonly]="isReadonly()"
+      [viewed]="isInline() ? 'inline' : false"
+      [hideInlineError]="true"
+      [model]="toValue()"
+      (modelChange)="onToChange($event)"
+      (sdFocus)="onFocus()"
+      (sdBlur)="onBlur()">
+    </sd-time>
+
+    @if (showClear()) {
+      <button type="button" class="sd-time-range-clear" (click)="clear()" [attr.aria-label]="'core.form.time-range.clear' | translate">
+        <sd-icon name="close"></sd-icon>
+      </button>
+    }
+  </div>
+
+  @if (!hideInlineError() && _errorMessage) {
+    <div class="sd-time-range-error" role="alert">{{ _errorMessage }}</div>
+  }
+}

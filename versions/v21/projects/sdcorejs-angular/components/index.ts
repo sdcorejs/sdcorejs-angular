@@ -26,3 +26,7 @@ export * from '@sdcorejs/angular/components/editor';
 export * from '@sdcorejs/angular/components/splitter';
 export * from '@sdcorejs/angular/components/preview';
 export * from '@sdcorejs/angular/components/autoid-inspector';
+export * from '@sdcorejs/angular/components/breadcrumb';
+export * from '@sdcorejs/angular/components/data-state';
+export * from '@sdcorejs/angular/components/job-progress';
+export * from '@sdcorejs/angular/components/audit-diff';

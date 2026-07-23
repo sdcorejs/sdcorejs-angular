@@ -3,7 +3,7 @@
 @let _hideInlineError = hideInlineError();
 @let _helperText = helperText();
 @let _maxLength = maxlength();
-@let _errorMessage = errorMessage();
+@let _errorMessage = visibleErrorMessage();
 @let _required = required();
 @let _isInline = isInline();
 
@@ -12,17 +12,17 @@
     [label]="_label"
     [labelTemplate]="sdLabelTemplate()"
     [value]="formControl.value"
-    [display]="formControl.value"
+    [display]="displayValue()"
     [hyperlink]="hyperlink()"
     [valueTemplate]="viewTemplate()">
   </sd-view>
 } @else if (_isInline) {
   <sd-inline-text
-    [control]="formControl"
+    [control]="activeControl()"
     [placeholder]="placeholder() || _label || ''"
     [clearable]="clearable() && !_required"
     [autoId]="autoId()"
-    [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
+    [state]="connectorState().invalid ? 'error' : 'auto'"
     (sdFocus)="onFocus()"
     (sdBlur)="onBlur()"
     (keyupEnter)="onKeyupEnter()"
@@ -62,8 +62,8 @@
         <input
           aria-hidden="true"
           [id]="id"
-          [formControl]="formControl"
-          [type]="type()"
+          [formControl]="activeControl()"
+          [type]="effectiveType()"
           #control
           matInput
           [placeholder]="placeholder() || _label || ''"
@@ -71,10 +71,12 @@
           (focus)="onFocus()"
           (blur)="onBlur()"
           [required]="_required"
-          [readonly]="readonly()"
+          [readonly]="isReadonly()"
           [autocomplete]="id"
           autocorrect="off"
           [step]="1"
+          [attr.inputmode]="inputMode()"
+          [attr.maxlength]="maxDisplayLength()"
           [attr.data-autoId]="autoId()"
           [attr.data-disabled]="dataDisabled()"
           [attr.data-invalid]="dataInvalid()"
@@ -84,9 +86,11 @@
           [attr.data-maxlength]="dataMaxLength()"
           [attr.data-minlength]="dataMinLength()"
           [attr.data-pattern]="dataPattern()"
-          [attr.data-error-message]="dataErrorMessage()" />
+          [attr.data-error-message]="dataErrorMessage()"
+          (compositionstart)="onCompositionStart()"
+          (compositionend)="onCompositionEnd($event)" />
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
+        @if (!_hideInlineError && _errorMessage) {
           <mat-error>{{ _errorMessage }}</mat-error>
         }
 
@@ -99,7 +103,7 @@
           </button>
         }
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
+        @if (_hideInlineError && _errorMessage) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
 

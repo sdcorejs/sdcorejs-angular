@@ -53,6 +53,8 @@ export class SdTabGroup {
 
   tabClosed = output<SdTabClosedEvent>();
 
+  readonly #closeRequests = new WeakMap<SdTab, Promise<boolean>>();
+
   protected matTabGroup = viewChild(MatTabGroup);
 
   @HostBinding('attr.data-autoId') get autoIdAttr(): string | null {
@@ -111,7 +113,18 @@ export class SdTabGroup {
   protected onClose(tab: SdTab, index: number, event: MouseEvent): void {
     event.stopPropagation();
     if (tab.disabled()) return;
-    tab.close.emit();
-    this.tabClosed.emit({ index, tab });
+    if (!tab.beforeClose()) {
+      tab.forceClose();
+      this.tabClosed.emit({ index, tab });
+      return;
+    }
+    if (this.#closeRequests.has(tab)) return;
+
+    const request = tab.requestClose();
+    this.#closeRequests.set(tab, request);
+    void request.then(closed => {
+      if (closed) this.tabClosed.emit({ index, tab });
+    });
+    void request.finally(() => this.#closeRequests.delete(tab));
   }
 }

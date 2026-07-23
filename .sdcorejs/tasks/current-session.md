@@ -1,52 +1,50 @@
 ---
-updated_at: 2026-07-19T01:40:47+07:00
+updated_at: 2026-07-23T08:27:16+07:00
 status: complete
 track: angular
-active_skill: sdcorejs-debug
-branch: fix/showcase-loading-manifest-count
+active_skill: sdcorejs-ship
+branch: chore/prepare-1.4
 ---
 
 # Current Session Checkpoint
 
 ## User Request
 
-Khắc phục lỗi production `Example manifest for services/loading has 4 entries; expected 3` sau release v1.3.
+Audit lại Changelog và toàn bộ tài liệu Markdown của release `1.4`, sau đó commit và push branch hiện tại. Không tag hoặc npm publish.
 
 ## Tasks
 
-- [x] Tái hiện lỗi manifest `services/loading` trên source và artifact deploy
-- [x] Truy ngược registry, generator, generated manifest và runtime assertion
-- [x] Xác nhận root cause bằng repro 3/3 và test freshness
-- [x] Thêm regression test, sửa count và verify runtime/build
-- [x] Commit, push và tạo PR hotfix
+- [x] Audit diff, secrets, generated mirrors, Changelog và Markdown.
+- [x] Chạy fresh ship gate: test, lint, build, docs/sync/package checks.
+- [x] Cập nhật tài liệu stale hoặc còn thiếu và verify lại.
+- [x] Chuẩn bị đúng release paths và Conventional Commit message cho delivery.
+- [x] Chuẩn bị remote verification bằng đối chiếu local `HEAD` với `git ls-remote` ngay sau push.
 
 ## Current State
 
-- Last completed: commit `86620b5` đã push và PR #15 đã mở vào `main`.
-- Review: independent review không còn Critical, Important hoặc Minor finding.
-- PR: https://github.com/sdcorejs/sdcorejs-angular/pull/15 (`MERGEABLE`, `CLEAN`).
-- Blocked/skipped: browser smoke skipped vì phiên không có browser backend.
+- Last completed: fresh library/Showcase tests, lint, production builds, sync/i18n/package gates, production browser smoke và final documentation refresh.
+- Delivery: checkpoint này nằm trong release commit; hash remote được xác nhận sau push và báo trong session handoff, không tạo follow-up commit chỉ để ghi hash.
+- Blocked/skipped: chưa có.
 
 ## Artifacts Touched
 
-- EDIT `scripts/generate-showcase-example-sources.test.mjs` - kiểm tra count registry khớp record generator.
-- EDIT `versions/v19|v20|v21/projects/showcase/src/app/docs/core/documentation.registry.ts` - Loading có 4 demo sections.
-- EDIT `versions/v19|v20|v21/projects/showcase/src/app/docs/core/documentation.registry.spec.ts` - aggregate expectations cập nhật lên 254.
-- EDIT `versions/v19|v20|v21/SYNC-STATUS.md` - metadata rollout.
+- EDIT `.sdcorejs/tasks/current-session.md` - checkpoint cho commit/push workflow.
+- EDIT `CHANGELOG.md` - bổ sung release tooling, NextDay và Showcase/Layout final repairs.
+- EDIT `scripts/{check-version-sync.mjs,sync-multi-version-workspaces.ps1}` - fail closed và rollout canonical npm README.
+- EDIT `versions/v19/projects/sdcorejs-angular/modules/layout/sd-layout.md` - sửa ba local links; sync sang v20/v21.
+- EDIT `.sdcorejs/documentation/{technical-docs,user-guides}/{audit-diff,task-and-job-progress}.md` - hoàn thiện contracts, flow, examples và verification.
 
 ## Verification
 
-- `npm run test:showcase-examples` - RED 14/15 trước fix, GREEN 15/15 sau fix.
-- `npm run sync` - pass.
-- `npm run test:showcase-generators` - pass, 27/27.
-- `npm run test:showcase-branding` - pass, 3/3.
-- `npm run check:sync` - pass.
-- `npm run lint:release` - pass cho v19/v20/v21.
-- v19 library + production Showcase build - pass.
-- Repro sau fix - pass 3/3 (`actual=4`, `expected=4`, `throws=False`).
-- Targeted `documentation.registry.spec.ts` - RED 2/6 trước khi cập nhật aggregate, GREEN 6/6 sau fix.
-- Browser smoke - skipped, no browser backend available.
+- Markdown integrity/link/fence/UTF-8 audit - pass, 113 files.
+- Release documentation contract audit - pass, 12/12 public surfaces.
+- Full v19 source-only suite - 3,814 pass, 9 skip, 0 fail; statements 69.70%, branches 60.18%, functions 69.06%, lines 69.97%.
+- Showcase - 191/191; generators 27/27; branding 3/3.
+- i18n - 517 keys × 5 locales trên cả ba workspace; legacy baseline không tăng.
+- Release lint, v19/v20/v21 library builds và v19 Showcase build - pass.
+- Package dry-run - đúng `19.1.4`/`20.1.4`/`21.1.4`, 95 exports, 94 manifests, 0 missing targets mỗi workspace.
+- `npm run check:sync` và production browser smoke - pass.
 
 ## Resume From Here
 
-Merge PR #15 vào `main`, sau đó xác nhận GitHub Pages deploy thành công.
+Open/review PR sau khi branch đã push. Tag, published-doc generation và npm publish cần ủy quyền riêng.

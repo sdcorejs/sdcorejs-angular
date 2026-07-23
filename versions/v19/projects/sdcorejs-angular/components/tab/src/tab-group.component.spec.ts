@@ -26,7 +26,14 @@ import { SdTabClosedEvent, SdTabGroup } from './tab-group.component';
       [autoId]="autoId"
       (tabClosed)="onTabClosed($event)">
       @for (t of tabs(); track t.id) {
-        <sd-tab [label]="t.label" [icon]="t.icon" [badge]="t.badge" [disabled]="t.disabled" [closable]="t.closable">
+        <sd-tab
+          [label]="t.label"
+          [icon]="t.icon"
+          [badge]="t.badge"
+          [disabled]="t.disabled"
+          [closable]="t.closable"
+          [beforeClose]="t.beforeClose"
+          (closeError)="onCloseError($event)">
           <div class="tab-content" [attr.data-tab]="t.id">Content {{ t.id }}</div>
         </sd-tab>
       }
@@ -44,6 +51,7 @@ class HostComponent {
       badge?: string | number | null;
       disabled?: boolean;
       closable?: boolean;
+      beforeClose?: () => boolean | Promise<boolean>;
     }[]
   >([
     { id: 'a', label: 'Alpha' },
@@ -62,8 +70,12 @@ class HostComponent {
   autoId: string | undefined = undefined;
 
   closedEvents: SdTabClosedEvent[] = [];
+  closeErrors: unknown[] = [];
   onTabClosed(ev: SdTabClosedEvent) {
     this.closedEvents.push(ev);
+  }
+  onCloseError(error: unknown) {
+    this.closeErrors.push(error);
   }
 }
 
@@ -418,6 +430,49 @@ describe('SdTabGroup', () => {
       close.click();
       fixture.detectChanges();
       expect(host.selectedIndex).toBe(2);
+    });
+
+    it('does not emit close events when beforeClose returns false', async () => {
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, beforeClose: () => false } : t)));
+      fixture.detectChanges();
+
+      (getTabLabels(fixture)[0].querySelector('.sd-tab__close') as HTMLElement).click();
+      await fixture.whenStable();
+
+      expect(host.closedEvents).toEqual([]);
+    });
+
+    it('emits close events when async beforeClose resolves true', async () => {
+      host.tabs.update(arr => arr.map((t, i) => (i === 0 ? { ...t, beforeClose: () => Promise.resolve(true) } : t)));
+      fixture.detectChanges();
+
+      (getTabLabels(fixture)[0].querySelector('.sd-tab__close') as HTMLElement).click();
+      await fixture.whenStable();
+
+      expect(host.closedEvents.length).toBe(1);
+    });
+
+    it('fails closed and emits closeError when beforeClose throws', async () => {
+      const error = new Error('confirmation failed');
+      host.tabs.update(arr =>
+        arr.map((t, i) =>
+          i === 0
+            ? {
+                ...t,
+                beforeClose: () => {
+                  throw error;
+                },
+              }
+            : t
+        )
+      );
+      fixture.detectChanges();
+
+      (getTabLabels(fixture)[0].querySelector('.sd-tab__close') as HTMLElement).click();
+      await fixture.whenStable();
+
+      expect(host.closedEvents).toEqual([]);
+      expect(host.closeErrors).toEqual([error]);
     });
   });
 

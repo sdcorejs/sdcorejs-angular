@@ -721,6 +721,7 @@ describe('SdUploadFilePreview', () => {
   ];
 
   beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
     await TestBed.configureTestingModule({
       imports: [PreviewComponent, NoopAnimationsModule],
     }).compileComponents();

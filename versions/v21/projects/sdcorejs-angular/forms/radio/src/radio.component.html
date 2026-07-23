@@ -1,4 +1,5 @@
 @let _sdLabelDef = sdLabelDef();
+@let _sdSuffixDef = sdSuffixDef();
 @let _label = label();
 @let _display = display();
 @let _valueField = valueField();
@@ -12,17 +13,17 @@
   }
   @if (_hyperlink) {
     <!-- Nếu có hyperlink thì dùng thẻ a -->
-    <a [sdHref]="_hyperlink!">{{ viewedText() }}</a>
+    <a [sdHref]="_hyperlink!">{{ viewedText() || placeholder() }}</a>
   } @else {
     <!-- Ngoài ra dùng thẻ mặc định -->
-    <div class="T14M">{{ viewedText() | sdEmpty }}</div>
+    <div class="T14M">{{ viewedText() || placeholder() | sdEmpty }}</div>
   }
 } @else {
   <section [ngClass]="{ 'c-section': _display === 'row' }">
     @if (_sdLabelDef?.templateRef) {
-      <ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container>
+      <div [id]="labelId"><ng-container *ngTemplateOutlet="_sdLabelDef!.templateRef"> </ng-container></div>
     } @else if (_label) {
-      <sd-label [label]="_label!" [required]="required()"></sd-label>
+      <sd-label [attr.id]="labelId" [label]="_label!" [required]="required()"></sd-label>
     }
     <mat-radio-group
       [class.c-radio-group-column]="_display === 'column'"
@@ -32,7 +33,12 @@
       [attr.data-disabled]="dataDisabled()"
       [attr.data-empty]="dataEmpty()"
       [attr.data-value]="dataValue()"
-      [attr.data-required]="dataRequired()">
+      [attr.data-required]="dataRequired()"
+      [attr.aria-labelledby]="ariaLabelledBy()"
+      [attr.aria-label]="ariaLabel()"
+      [attr.aria-describedby]="ariaDescribedBy()"
+      [attr.aria-invalid]="ariaInvalid()"
+      [attr.aria-required]="dataRequired()">
       @for (item of normalizedItems(); track item[valueField()]) {
         <mat-radio-button [class.m-0]="_display === 'column'" [class.mr-16]="_display === 'row'" [value]="item[_valueField]">
           {{ item[displayField()] }}
@@ -40,12 +46,16 @@
       }
     </mat-radio-group>
 
-    @if (formControl.errors?.['required'] && formControl.touched) {
-      <mat-error>
+    @if (_sdSuffixDef?.templateRef) {
+      <ng-container *ngTemplateOutlet="_sdSuffixDef!.templateRef"> </ng-container>
+    }
+
+    @if (visibleError() === 'required') {
+      <mat-error [id]="errorId">
         {{ 'core.form.radio.required' | translate }}
       </mat-error>
-    } @else if (formControl.errors?.['inlineError'] && formControl.touched) {
-      <mat-error>
+    } @else if (visibleError() === 'inlineError') {
+      <mat-error [id]="errorId">
         {{ inlineError() }}
       </mat-error>
     }

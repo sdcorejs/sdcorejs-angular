@@ -11,6 +11,10 @@ const syncedRoots = [
   'projects/sdcorejs-angular',
   'projects/showcase',
 ];
+const syncedWorkspaceFiles = [
+  'scripts/check-i18n-parity.mjs',
+  'scripts/check-i18n.mjs',
+];
 
 const excludeDirs = new Set(['.angular', '.git', 'coverage', 'dist', 'node_modules']);
 const maxDetails = 40;
@@ -113,7 +117,67 @@ function compareWorkspace(targetWorkspace) {
   return failures;
 }
 
-const failures = targetWorkspaces.flatMap(compareWorkspace);
+function compareLibraryVersion(targetWorkspace) {
+  const sourcePackagePath = join(repoRoot, 'versions', sourceWorkspace, 'projects', 'sdcorejs-angular', 'package.json');
+  const targetPackagePath = join(repoRoot, 'versions', targetWorkspace, 'projects', 'sdcorejs-angular', 'package.json');
+  const sourceVersion = JSON.parse(readFileSync(sourcePackagePath, 'utf8')).version;
+  const targetVersion = JSON.parse(readFileSync(targetPackagePath, 'utf8')).version;
+  const targetMajor = targetWorkspace.replace(/^v/, '');
+  const expectedVersion = sourceVersion.replace(/^\d+/, targetMajor);
+
+  return targetVersion === expectedVersion
+    ? []
+    : [`package version differs in ${targetWorkspace}: expected ${expectedVersion}, found ${targetVersion}`];
+}
+
+function compareSyncedWorkspaceFiles(targetWorkspace) {
+  const failures = [];
+
+  for (const relativePath of syncedWorkspaceFiles) {
+    const sourcePath = join(repoRoot, 'versions', sourceWorkspace, relativePath);
+    const targetPath = join(repoRoot, 'versions', targetWorkspace, relativePath);
+
+    if (!existsSync(sourcePath)) {
+      failures.push(`missing in ${sourceWorkspace}: ${relativePath}`);
+      continue;
+    }
+
+    if (!existsSync(targetPath)) {
+      failures.push(`missing in ${targetWorkspace}: ${relativePath}`);
+      continue;
+    }
+
+    if (normalizeContent(sourcePath, relativePath) !== normalizeContent(targetPath, relativePath)) {
+      failures.push(`content differs in ${targetWorkspace}: ${relativePath}`);
+    }
+  }
+
+  return failures;
+}
+
+function compareCanonicalNpmReadme(workspace) {
+  const canonicalPath = join(repoRoot, 'docs', 'npm-README.md');
+  const packageReadmePath = join(repoRoot, 'versions', workspace, 'projects', 'sdcorejs-angular', 'README.md');
+
+  if (!existsSync(canonicalPath)) return ['missing canonical npm README: docs/npm-README.md'];
+  if (!existsSync(packageReadmePath)) {
+    return [`missing in ${workspace}: projects/sdcorejs-angular/README.md`];
+  }
+
+  return normalizeContent(canonicalPath, 'docs/npm-README.md') ===
+    normalizeContent(packageReadmePath, 'projects/sdcorejs-angular/README.md')
+    ? []
+    : [`npm README differs in ${workspace}: expected docs/npm-README.md`];
+}
+
+const failures = [
+  ...targetWorkspaces.flatMap(targetWorkspace => [
+    ...compareWorkspace(targetWorkspace),
+    ...compareLibraryVersion(targetWorkspace),
+    ...compareSyncedWorkspaceFiles(targetWorkspace),
+  ]),
+  ...[sourceWorkspace, ...targetWorkspaces].flatMap(compareCanonicalNpmReadme),
+];
 
 if (failures.length > 0) {
   console.error('Version workspace sync check failed.');

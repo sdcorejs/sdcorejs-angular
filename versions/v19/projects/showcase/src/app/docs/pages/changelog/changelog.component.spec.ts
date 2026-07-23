@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { DocsVersionService } from '../../core/docs-version.service';
+import { SHOWCASE_CHANGELOG_RELEASES } from '../../generated/changelog.generated';
 import { ChangelogComponent } from './changelog.component';
 
 describe('ChangelogComponent', () => {
@@ -45,21 +46,28 @@ describe('ChangelogComponent', () => {
   });
 
   it('shows only populated release sections and keeps an empty unreleased entry compact', () => {
+    const unreleased = fixture.nativeElement.querySelector('.release--unreleased') as HTMLElement;
     const headings = [...fixture.nativeElement.querySelectorAll('.release__section h3')].map((heading: HTMLElement) =>
       heading.textContent?.trim()
     );
+    const expectedHeadings = SHOWCASE_CHANGELOG_RELEASES.flatMap(release =>
+      release.sections.filter(section => section.markdown.trim()).map(section => section.title)
+    );
 
-    expect(headings).toEqual(['Fixed']);
-    expect(fixture.nativeElement.querySelectorAll('.release__empty')).toHaveSize(1);
-    expect(fixture.nativeElement.querySelector('.release__empty')?.textContent).toContain('No unreleased changes');
+    expect([...headings].sort()).toEqual([...expectedHeadings].sort());
+    expect(unreleased.querySelectorAll('.release__section')).toHaveSize(0);
+    expect(unreleased.querySelectorAll('.release__empty')).toHaveSize(1);
+    expect(unreleased.querySelector('.release__empty')?.textContent).toContain('No unreleased changes');
   });
 
   it('provides release jump links and links each package version to its documentation', () => {
     const jumpLinks = fixture.nativeElement.querySelectorAll('.changelog__release-nav a');
     const packageLinks = fixture.nativeElement.querySelectorAll('.release__versions a');
+    const expectedPackageHrefs = SHOWCASE_CHANGELOG_RELEASES.flatMap(release =>
+      release.packageVersions.map(packageVersion => `/v/${packageVersion.version}`)
+    );
 
-    expect(jumpLinks).toHaveSize(2);
-    expect(packageLinks).toHaveSize(3);
-    expect(packageLinks[0].getAttribute('href')).toContain('/v/19.1.2');
+    expect(jumpLinks).toHaveSize(SHOWCASE_CHANGELOG_RELEASES.length);
+    expect([...packageLinks].map(link => link.getAttribute('href'))).toEqual(expectedPackageHrefs);
   });
 });

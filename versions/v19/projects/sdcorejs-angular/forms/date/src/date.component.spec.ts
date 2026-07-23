@@ -48,10 +48,12 @@ class HostComponent {
 @Component({
   standalone: true,
   imports: [SdDate],
-  template: `<sd-date name="dob" [form]="fg"></sd-date>`,
+  template: `<sd-date name="dob" [form]="fg" [model]="model" (modelChange)="model = $event" (sdChange)="changes.push($event)"></sd-date>`,
 })
 class FgHost {
   fg!: FormGroup;
+  model: string | number | Date | null | undefined;
+  changes: (string | number | Date | null | undefined)[] = [];
 }
 
 @Component({
@@ -113,6 +115,16 @@ describe('SdDate', () => {
       expect(comp.formControl.value).toBeNull();
     });
 
+    it('maps an external native Date model to the canonical Date control without feedback', () => {
+      host.model = new Date(2026, 4, 15, 18, 45);
+      fixture.detectChanges();
+
+      const value = comp.formControl.value as Date;
+      expect(value instanceof Date).toBeTrue();
+      expect([value.getFullYear(), value.getMonth(), value.getDate()]).toEqual([2026, 4, 15]);
+      expect(host.changes).toEqual([]);
+    });
+
     it('upward: sdChange emits yyyy/MM/dd string on programmatic onChange', () => {
       // event.value giờ là native Date trực tiếp (date-fns adapter), không có .toDate().
       const dateVal = { value: new Date(2026, 4, 20) } as any;
@@ -140,6 +152,21 @@ describe('SdDate', () => {
       comp.clear(event);
       expect(host.changes[host.changes.length - 1]).toBeNull();
     });
+  });
+
+  describe('invalid display conversion', () => {
+    it('keeps the existing model/output when typed display text is invalid', fakeAsync(() => {
+      host.model = '2026/05/15';
+      fixture.detectChanges();
+      host.changes = [];
+
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+
+      expect(host.model).toBe('2026/05/15');
+      expect(host.changes).toEqual([]);
+      expect(comp.formControl.hasError('date')).toBeTrue();
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -400,6 +427,38 @@ describe('SdDate (FormGroup lifecycle)', () => {
 
   it('adds control to FormGroup on init', () => {
     expect(fg.contains('dob')).toBe(true);
+  });
+
+  it('maps a registered native Date control value to model and sdChange exactly once', () => {
+    fg.get('dob')!.setValue(new Date(2026, 4, 20));
+
+    expect(fixture.componentInstance.model).toBe('2026/05/20');
+    expect(fixture.componentInstance.changes).toEqual(['2026/05/20']);
+  });
+
+  it('maps an external model update to the control without feeding it back', () => {
+    const control = fg.get('dob')!;
+    const controlWrites: unknown[] = [];
+    const subscription = control.valueChanges.subscribe(value => controlWrites.push(value));
+
+    fixture.componentInstance.model = '2026/05/15';
+    fixture.detectChanges();
+
+    expect(control.value instanceof Date).toBeTrue();
+    expect(controlWrites).toEqual([]);
+    expect(fixture.componentInstance.changes).toEqual([]);
+    subscription.unsubscribe();
+  });
+
+  it('stops model and output synchronization after destroy', () => {
+    const host = fixture.componentInstance;
+    const control = fg.get('dob')!;
+
+    fixture.destroy();
+    control.setValue(new Date(2026, 4, 20));
+
+    expect(host.model).toBeUndefined();
+    expect(host.changes).toEqual([]);
   });
 
   it('removes control from FormGroup on destroy', () => {

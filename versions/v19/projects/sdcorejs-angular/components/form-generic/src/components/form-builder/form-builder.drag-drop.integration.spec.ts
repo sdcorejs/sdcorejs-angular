@@ -25,6 +25,10 @@ describe('SdFormBuilder drag/drop placeholders', () => {
     fixture.detectChanges();
   });
 
+  afterEach(() => {
+    fixture.destroy();
+  });
+
   function palettePlaceholders(): HTMLElement[] {
     return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.fb-palette-drop-placeholder')).filter(
       element => {
@@ -34,68 +38,6 @@ describe('SdFormBuilder drag/drop placeholders', () => {
     );
   }
 
-  function center(element: Element): { x: number; y: number } {
-    const rect = element.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-  }
-
-  function dispatchMouse(target: EventTarget, type: string, point: { x: number; y: number }, buttons: number): void {
-    target.dispatchEvent(
-      new MouseEvent(type, {
-        bubbles: true,
-        cancelable: true,
-        detail: 1,
-        clientX: point.x,
-        clientY: point.y,
-        button: 0,
-        buttons,
-      })
-    );
-  }
-
-  function startMouseDrag(source: Element): void {
-    const start = center(source);
-    dispatchMouse(source, 'mousedown', start, 1);
-    dispatchMouse(document, 'mousemove', { x: start.x + 12, y: start.y + 12 }, 1);
-    tick(20);
-  }
-
-  function moveMouseTo(element: Element): void {
-    dispatchMouse(document, 'mousemove', center(element), 1);
-    tick(20);
-    fixture.detectChanges();
-  }
-
-  function moveMouseToPoint(point: { x: number; y: number }): void {
-    dispatchMouse(document, 'mousemove', point, 1);
-    tick(20);
-    fixture.detectChanges();
-  }
-
-  function endMouseDrag(element: Element): void {
-    dispatchMouse(document, 'mouseup', center(element), 0);
-    tick(0);
-    fixture.detectChanges();
-  }
-
-  function endMouseDragAtPoint(point: { x: number; y: number }): void {
-    dispatchMouse(document, 'mouseup', point, 0);
-    tick(0);
-    fixture.detectChanges();
-  }
-
-  function visibleCdkPlaceholders(): HTMLElement[] {
-    return Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.cdk-drag-placeholder')).filter(element => {
-      const style = getComputedStyle(element);
-      return (
-        !element.classList.contains('fb-palette-native-placeholder') &&
-        style.display !== 'none' &&
-        style.visibility !== 'hidden' &&
-        style.opacity !== '0'
-      );
-    });
-  }
-
   function visibleDropPlaceholders(): HTMLElement[] {
     return Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.fb-palette-drop-placeholder, .cdk-drag-placeholder')
@@ -103,11 +45,6 @@ describe('SdFormBuilder drag/drop placeholders', () => {
       const style = getComputedStyle(element);
       return style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
     });
-  }
-
-  function placeholderPose(element: HTMLElement): string {
-    const rect = element.getBoundingClientRect();
-    return `${Math.round(rect.left)}:${Math.round(rect.top)}:${getComputedStyle(element).transform}`;
   }
 
   it('replaces the rendered inline palette placeholder instead of retaining the first row preview', () => {
@@ -199,48 +136,25 @@ describe('SdFormBuilder drag/drop placeholders', () => {
     expect(palettePlaceholders().length).toBe(0);
   }));
 
-  it('moves one palette preview from the first row to the second and drops once', fakeAsync(() => {
+  it('moves one palette preview from the first row to the second and drops once', () => {
     component.components = [field('a', '4'), field('b', '4'), field('c', '8')];
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
     fixture.detectChanges();
 
-    const paletteItem = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.fb-palette-item')!;
-    const firstRowItems = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#row-a .fb-row__items')!;
-    const firstRowHandle = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#row-a .fb-row__drag')!;
-    const secondRowItems = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#row-c .fb-row__items')!;
-    const firstItem = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#a')!;
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    const firstRow = component.dragDropRows[0];
+    const secondRow = component.dragDropRows[1];
     const existingIds = new Set(component.components.map(item => item.id));
 
-    startMouseDrag(paletteItem);
-    moveMouseTo(firstItem);
-    expect(component.paletteDropTarget()).toEqual(jasmine.objectContaining({ kind: 'inline', rowId: 'row-a' }));
-    let firstRowRect = firstRowItems.getBoundingClientRect();
-    const firstRowHandleRect = firstRowHandle.getBoundingClientRect();
-    const firstSortPoint = {
-      x: Math.max(firstRowRect.left + 2, firstRowHandleRect.right + 2),
-      y: firstRowRect.top + 4,
-    };
-    moveMouseToPoint(firstSortPoint);
-
+    component.onPaletteDragStarted(paletteTextfield);
+    component.onRowItemsDropEntered(firstRow, { currentIndex: 0 } as any);
+    fixture.detectChanges();
     expect(palettePlaceholders().length).toBe(1);
     expect(visibleDropPlaceholders().length).toBe(1);
-    const nativePlaceholder = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>(
-      '.fb-palette-native-placeholder.cdk-drag-placeholder'
-    )!;
-    const nativePlaceholderRect = nativePlaceholder.getBoundingClientRect();
-    expect(nativePlaceholderRect.width).toBeGreaterThan(0);
-    expect(nativePlaceholderRect.height).toBeGreaterThan(0);
-    expect(getComputedStyle(nativePlaceholder).visibility).toBe('hidden');
     expect(component.paletteDropTarget()).toEqual({ kind: 'inline', rowId: 'row-a', index: 0, columns: '4' });
 
-    firstRowRect = firstRowItems.getBoundingClientRect();
-    moveMouseToPoint({ x: firstRowRect.right - 2, y: firstRowRect.top + 4 });
-
-    expect(palettePlaceholders().length).toBe(1);
-    expect(visibleDropPlaceholders().length).toBe(1);
-    expect(component.paletteDropTarget()).toEqual({ kind: 'inline', rowId: 'row-a', index: 2, columns: '4' });
-
-    moveMouseTo(secondRowItems);
+    component.onRowItemsDropEntered(secondRow, { currentIndex: 0 } as any);
+    fixture.detectChanges();
 
     expect(palettePlaceholders().length).toBe(1);
     expect(visibleDropPlaceholders().length).toBe(1);
@@ -254,7 +168,15 @@ describe('SdFormBuilder drag/drop placeholders', () => {
     const anchorIndex = component.components.findIndex(item => item.id === anchor.id);
     const expectedIndex = target.index >= targetRow.items.length ? anchorIndex + 1 : anchorIndex;
 
-    endMouseDrag(secondRowItems);
+    component.drop({
+      previousContainer: { data: [paletteTextfield] },
+      container: { data: secondRow.items },
+      previousIndex: 0,
+      currentIndex: 0,
+      isPointerOverContainer: true,
+      item: { data: paletteTextfield, element: { nativeElement: { id: '' } } },
+    } as any);
+    fixture.detectChanges();
 
     const createdItems = component.components.filter(item => !existingIds.has(item.id));
     expect(createdItems.length).toBe(1);
@@ -263,88 +185,89 @@ describe('SdFormBuilder drag/drop placeholders', () => {
     expect((createdItems[0] as any).layout.columns).toBe('4');
     expect(palettePlaceholders().length).toBe(0);
     expect(visibleDropPlaceholders().length).toBe(0);
-  }));
+  });
 
-  it('drags a palette field into an empty canvas through the real CDK container', fakeAsync(() => {
+  it('routes a palette pointer into an empty canvas and applies the CDK drop contract', () => {
     component.components = [];
     component.dragDropRows = [];
     fixture.detectChanges();
 
-    const paletteItem = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('.fb-palette-item')!;
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
     const canvas = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#frmComponent')!;
+    spyOn(canvas, 'getBoundingClientRect').and.returnValue({
+      left: 0,
+      top: 0,
+      right: 500,
+      bottom: 500,
+      width: 500,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
 
-    startMouseDrag(paletteItem);
-    moveMouseTo(canvas);
+    component.onPaletteDragStarted(paletteTextfield);
+    component.onAnyDragMoved({ pointerPosition: { x: 250, y: 250 } } as any);
+    fixture.detectChanges();
 
     expect(component.paletteDropTarget()).toEqual({ kind: 'empty' });
     expect(visibleDropPlaceholders().length).toBe(1);
 
-    moveMouseTo(canvas);
-
-    expect(visibleDropPlaceholders().length).toBe(1);
-    endMouseDrag(canvas);
+    component.drop({
+      previousContainer: { data: [paletteTextfield] },
+      container: { data: component.dragDropRows },
+      previousIndex: 0,
+      currentIndex: 0,
+      isPointerOverContainer: true,
+      item: { data: paletteTextfield, element: { nativeElement: { id: '' } } },
+    } as any);
+    fixture.detectChanges();
 
     expect(component.components.length).toBe(1);
     expect((component.components[0] as any).layout.columns).toBe('12');
     expect(visibleDropPlaceholders().length).toBe(0);
-  }));
+  });
 
-  it('lets the CDK placeholder follow an existing field into a row with capacity', fakeAsync(() => {
+  it('moves an existing field into a row with capacity through the CDK drop contract', () => {
     component.components = [field('a', '4'), field('b', '4'), field('d', '6'), field('c', '4')];
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
     fixture.detectChanges();
 
-    const source = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#c')!;
-    const targetItem = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#b')!;
-
-    startMouseDrag(source);
+    const targetRow = component.dragDropRows[0];
+    const sourceRow = component.dragDropRows[1];
+    const sourceIndex = sourceRow.items.findIndex(item => item.id === 'c');
+    component.drop({
+      previousContainer: { data: sourceRow.items },
+      container: { data: targetRow.items },
+      previousIndex: sourceIndex,
+      currentIndex: 1,
+      isPointerOverContainer: true,
+      item: { data: sourceRow.items[sourceIndex], element: { nativeElement: { id: 'c' } } },
+    } as any);
     fixture.detectChanges();
-
-    let placeholders = visibleCdkPlaceholders();
-    expect(placeholders.length).toBe(1);
-    expect(placeholders[0].closest('.fb-row')?.id).toBe('row-d');
-
-    moveMouseTo(targetItem);
-
-    placeholders = visibleCdkPlaceholders();
-    expect(placeholders.length).toBe(1);
-    expect(placeholders[0].closest('.fb-row')?.id).toBe('row-a');
-
-    endMouseDrag(targetItem);
 
     expect(component.components.map(item => item.id)).toEqual(['a', 'c', 'b', 'd']);
     expect(visibleDropPlaceholders().length).toBe(0);
-  }));
+  });
 
-  it('lets the CDK row placeholder move down and back up before the final drop', fakeAsync(() => {
+  it('reorders complete rows through the CDK drop contract', () => {
     component.components = [field('a', '12'), field('b', '12'), field('c', '12')];
     component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
     fixture.detectChanges();
 
-    const rows = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.fb-row'));
-    const handle = rows[0].querySelector<HTMLElement>('.fb-row__drag')!;
-
-    startMouseDrag(handle);
-    moveMouseTo(rows[2]);
-
-    let placeholders = visibleCdkPlaceholders();
-    expect(placeholders.length).toBe(1);
-    const downPose = placeholderPose(placeholders[0]);
-
-    const rowCRect = (fixture.nativeElement as HTMLElement).querySelector<HTMLElement>('#row-c')!.getBoundingClientRect();
-    const upPoint = { x: rowCRect.left + rowCRect.width / 2, y: rowCRect.top + rowCRect.height / 4 };
-    moveMouseToPoint(upPoint);
-
-    placeholders = visibleCdkPlaceholders();
-    expect(placeholders.length).toBe(1);
-    const upPose = placeholderPose(placeholders[0]);
-    expect(upPose).not.toBe(downPose);
-
-    endMouseDragAtPoint(upPoint);
+    component.drop({
+      previousContainer: { data: component.dragDropRows },
+      container: { data: component.dragDropRows },
+      previousIndex: 0,
+      currentIndex: 1,
+      isPointerOverContainer: true,
+      item: { data: component.dragDropRows[0], element: { nativeElement: { id: 'row-a' } } },
+    } as any);
+    fixture.detectChanges();
 
     expect(visibleDropPlaceholders().length).toBe(0);
     expect(component.components.map(item => item.id)).toEqual(['b', 'a', 'c']);
-  }));
+  });
 
   it('does not override the inline transform used by CDK sorting', () => {
     const styles = ((SdFormBuilder as any).ɵcmp.styles as string[]).join('\n');

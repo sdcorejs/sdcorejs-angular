@@ -20,23 +20,23 @@ const STANDARD_RELEASE_SECTIONS = [
 ] as const;
 
 function addDisplaySections(release: ShowcaseChangelogRelease) {
-  const matched = new Set<string>();
+  const matched = new Set<ShowcaseChangelogRelease['sections'][number]>();
   const standard = STANDARD_RELEASE_SECTIONS.flatMap(slot => {
-    const section = release.sections.find(
-      candidate => candidate.key === slot.key || (slot.key === 'migration' && candidate.key.startsWith('migration'))
-    );
-    if (!section || !section.markdown.trim()) return [];
-    matched.add(section.key);
-    return [
-      {
-        key: slot.key,
-        title: slot.title,
-        anchor: section.anchor,
-        markdown: section.markdown,
-      },
-    ];
+    return release.sections.flatMap(section => {
+      const isMatch = section.key === slot.key || (slot.key === 'migration' && section.key.startsWith('migration'));
+      if (!isMatch || !section.markdown.trim()) return [];
+      matched.add(section);
+      return [
+        {
+          key: section.key,
+          title: section.title,
+          anchor: section.anchor,
+          markdown: section.markdown,
+        },
+      ];
+    });
   });
-  const custom = release.sections.filter(section => !matched.has(section.key) && section.markdown.trim());
+  const custom = release.sections.filter(section => !matched.has(section) && section.markdown.trim());
   const displaySections = [...standard, ...custom];
   return { ...release, displaySections, hasContent: !!release.summaryMarkdown.trim() || displaySections.length > 0 };
 }

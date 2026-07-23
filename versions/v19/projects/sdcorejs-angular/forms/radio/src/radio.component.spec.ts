@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdLabelDefDirective, SdSuffixDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdRadio } from './radio.component';
 
 const ITEMS = [
@@ -20,15 +21,17 @@ const ITEMS = [
     [display]="display"
     [disabled]="disabled"
     [required]="required"
+    [placeholder]="placeholder"
     [(model)]="model"
     (sdChange)="onSdChange($event)"></sd-radio>`,
 })
 class HostComponent {
-  label = 'Pick one';
+  label: string | undefined = 'Pick one';
   items: { code: string; name: string }[] = [...ITEMS];
   display: 'row' | 'column' = 'row';
   disabled: boolean | '' | null | undefined = false;
   required: boolean | '' | null | undefined = false;
+  placeholder: string | undefined;
   model: any = null;
   changes: any[] = [];
   onSdChange(v: any) {
@@ -56,6 +59,17 @@ class NgFormHost {
   items = [...ITEMS];
 }
 
+@Component({
+  standalone: true,
+  imports: [SdRadio, SdLabelDefDirective],
+  template: `<sd-radio [items]="items" valueField="code" displayField="name">
+    <ng-template sdLabelDef><span class="projected-radio-label">Projected choice</span></ng-template>
+  </sd-radio>`,
+})
+class ProjectedLabelHost {
+  items = [...ITEMS];
+}
+
 describe('SdRadio', () => {
   let fixture: ComponentFixture<HostComponent>;
   let host: HostComponent;
@@ -63,7 +77,7 @@ describe('SdRadio', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [HostComponent, NoopAnimationsModule],
+      imports: [HostComponent, ProjectedLabelHost, NoopAnimationsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);
@@ -105,6 +119,59 @@ describe('SdRadio', () => {
       fixture.detectChanges();
       const labelEl = fixture.nativeElement.querySelector('sd-label');
       expect(labelEl).toBeTruthy();
+    });
+  });
+
+  describe('accessibility', () => {
+    it('associates a stable accessible group name with the label input', () => {
+      const group = fixture.nativeElement.querySelector('mat-radio-group') as HTMLElement;
+      const labelledBy = group.getAttribute('aria-labelledby');
+
+      expect(labelledBy).toBeTruthy();
+      expect(fixture.nativeElement.querySelector(`#${labelledBy}`)?.textContent).toContain('Pick one');
+      expect(group.getAttribute('aria-label')).toBeNull();
+
+      fixture.detectChanges();
+      expect(group.getAttribute('aria-labelledby')).toBe(labelledBy);
+    });
+
+    it('uses placeholder as the accessible name when no label is available', () => {
+      host.label = undefined;
+      host.placeholder = 'Choose a mode';
+      fixture.detectChanges();
+
+      const group = fixture.nativeElement.querySelector('mat-radio-group') as HTMLElement;
+      expect(group.getAttribute('aria-labelledby')).toBeNull();
+      expect(group.getAttribute('aria-label')).toBe('Choose a mode');
+    });
+
+    it('links the visible required error and exposes invalid and required state', () => {
+      host.required = true;
+      fixture.detectChanges();
+      radio.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const group = fixture.nativeElement.querySelector('mat-radio-group') as HTMLElement;
+      const describedBy = group.getAttribute('aria-describedby');
+      const error = describedBy ? fixture.nativeElement.querySelector(`#${describedBy}`) : null;
+
+      expect(group.getAttribute('aria-required')).toBe('true');
+      expect(group.getAttribute('aria-invalid')).toBe('true');
+      expect(describedBy).toBeTruthy();
+      expect(error).not.toBeNull();
+      expect(error?.textContent?.trim()).toBeTruthy();
+    });
+
+    it('associates projected label content with the radio group', () => {
+      const projectedFixture = TestBed.createComponent(ProjectedLabelHost);
+      projectedFixture.detectChanges();
+
+      const group = projectedFixture.nativeElement.querySelector('mat-radio-group') as HTMLElement;
+      const labelledBy = group.getAttribute('aria-labelledby');
+
+      expect(labelledBy).toBeTruthy();
+      expect(projectedFixture.nativeElement.querySelector(`#${labelledBy}`)?.textContent).toContain('Projected choice');
+      projectedFixture.destroy();
     });
   });
 
@@ -335,20 +402,24 @@ describe('SdRadio (FormGroup lifecycle)', () => {
 describe('SdRadio (viewed + color)', () => {
   @Component({
     standalone: true,
-    imports: [SdRadio, FormsModule],
+    imports: [SdRadio, SdSuffixDefDirective, FormsModule],
     template: `<sd-radio
       [label]="label"
       [items]="items"
       valueField="code"
       displayField="name"
       [viewed]="viewed"
+      [placeholder]="placeholder"
       [color]="color"
-      [(model)]="model"></sd-radio>`,
+      [(model)]="model">
+      <ng-template sdSuffixDef><span class="radio-suffix">Suffix</span></ng-template>
+    </sd-radio>`,
   })
   class VHost {
     label = 'Pick one';
     items = [...ITEMS];
     viewed = false;
+    placeholder = 'Choose one';
     color: any = 'primary';
     model: any = null;
   }
@@ -389,9 +460,13 @@ describe('SdRadio (viewed + color)', () => {
     f.componentInstance.viewed = true;
     f.componentInstance.model = null;
     f.detectChanges();
-    // SdEmptyPipe renders some empty placeholder ('-' or similar) — assert no [object Object] leak.
     const txt = f.nativeElement.textContent as string;
+    expect(txt).toContain('Choose one');
     expect(txt).not.toContain('[object');
+  });
+
+  it('renders the projected suffix beside the editable radio group', () => {
+    expect(f.nativeElement.querySelector('.radio-suffix')?.textContent).toContain('Suffix');
   });
 
   it('color input drives host class .sd-c-<color>', () => {

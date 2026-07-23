@@ -135,16 +135,16 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 84);
-  assert.equal(routes.length, 1291);
+  assert.equal(pages.length, 96);
+  assert.equal(routes.length, 1471);
   assert.deepEqual(categoryCounts, {
-    components: 31,
+    components: 35,
     directives: 6,
-    forms: 16,
+    forms: 20,
     guides: 3,
     'modules-integrations': 10,
     'pipes-utilities': 9,
-    services: 9,
+    services: 13,
   });
   assert.equal(
     pages.some(page => page.slug === 'icon-configuration'),

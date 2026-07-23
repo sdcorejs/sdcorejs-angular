@@ -128,37 +128,38 @@ describe('SdInform', () => {
   describe('icon', () => {
     it('shows auto icon "info" for primary (default)', () => {
       fixture.detectChanges();
-      expect(queryByCss(fixture, 'mat-icon.c-inform-icon').textContent?.trim()).toBe('info');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('info');
     });
     it('auto icon "check_circle" for success', () => {
       setInput(fixture, 'success', true);
-      expect(queryByCss(fixture, 'mat-icon.c-inform-icon').textContent?.trim()).toBe('check_circle');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('check_circle');
     });
     it('auto icon "warning" for warning', () => {
       setInput(fixture, 'warning', true);
-      expect(queryByCss(fixture, 'mat-icon.c-inform-icon').textContent?.trim()).toBe('warning');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('warning');
     });
     it('auto icon "error" for error', () => {
       setInput(fixture, 'error', true);
-      expect(queryByCss(fixture, 'mat-icon.c-inform-icon').textContent?.trim()).toBe('error');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('error');
     });
     it('explicit icon overrides the auto map', () => {
       setInput(fixture, 'icon', 'campaign');
-      expect(queryByCss(fixture, 'mat-icon.c-inform-icon').textContent?.trim()).toBe('campaign');
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon mat-icon').textContent?.trim()).toBe('campaign');
     });
     it('hideIcon removes the icon even when icon is provided', () => {
       setInput(fixture, 'icon', 'campaign');
       setInput(fixture, 'hideIcon', true);
-      expect(fixture.nativeElement.querySelector('mat-icon.c-inform-icon')).toBeNull();
+      expect(fixture.nativeElement.querySelector('sd-icon.c-inform-icon')).toBeNull();
       expect(fixture.componentInstance.effectiveIcon()).toBeNull();
     });
     it('applies fontSet class on the icon', () => {
       setInput(fixture, 'fontSet', 'material-icons-outlined');
-      expect(queryByCss(fixture, 'mat-icon.c-inform-icon').classList.contains('material-icons-outlined')).toBe(true);
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon').classList.contains('sd-icon--material-icons-outlined')).toBe(true);
     });
-    it('coerces falsy fontSet back to "material-icons"', () => {
+    it('normalizes a null fontSet so SdIcon can inherit the provider default', () => {
       setInput(fixture, 'fontSet', null);
-      expect(fixture.componentInstance.fontSet()).toBe('material-icons');
+      expect(fixture.componentInstance.fontSet()).toBeUndefined();
+      expect(queryByCss(fixture, 'sd-icon.c-inform-icon').classList.contains('sd-icon--material')).toBe(true);
     });
   });
 

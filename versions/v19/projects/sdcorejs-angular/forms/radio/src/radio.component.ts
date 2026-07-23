@@ -2,14 +2,12 @@ import { Utilities } from '@sdcorejs/utils/fns';
 
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   computed,
   contentChild,
-  effect,
   inject,
   input,
   model,
@@ -17,7 +15,7 @@ import {
   OnInit,
   output,
 } from '@angular/core';
-import { FormGroup, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -33,6 +31,8 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
+  ɵSdFormControlParent,
 } from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
@@ -69,11 +69,13 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
     TranslatePipe,
   ],
 })
-export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
+export class SdRadio implements OnInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);
 
-  id = `I${Utilities.generateUuid()}`;
-  #name = Utilities.generateUuid();
+  readonly id = `I${Utilities.generateUuid()}`;
+  readonly labelId = `${this.id}-label`;
+  readonly errorId = `${this.id}-error`;
+  readonly #defaultName = Utilities.generateUuid();
   formControl = new SdFormControl();
   #subscription = new Subscription();
 
@@ -85,17 +87,7 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   readonly name = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
-  // why: parent may bind NgForm (template-driven), FormGroup (reactive), or a wrapper with `.form`.
-  // Transform once at the input boundary so the rest of the component only deals with FormGroup.
-  readonly form = input<FormGroup | undefined, any>(undefined, {
-    transform: (val: any): FormGroup | undefined => {
-      if (!val) return undefined;
-      if (val instanceof NgForm) return val.form;
-      if (val instanceof FormGroup) return val;
-      if (val?.form instanceof FormGroup) return val.form;
-      return undefined;
-    },
-  });
+  readonly form = input<ɵSdFormControlParent>(undefined);
   readonly label = input<string | undefined, string | null | undefined>(undefined, {
     transform: (v): string | undefined => v ?? undefined,
   });
@@ -152,6 +144,16 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
   readonly dataEmpty = computed(() => (sdIsEmpty(this.#state().value) ? 'true' : 'false'));
   readonly dataValue = computed(() => sdSerializeDataValue(this.#state().value));
   readonly dataRequired = computed(() => (this.required() ? 'true' : 'false'));
+  readonly visibleError = computed<'required' | 'inlineError' | undefined>(() => {
+    if (!this.#state().touched) return undefined;
+    if (this.formControl.hasError('required')) return 'required';
+    if (this.formControl.hasError('inlineError')) return 'inlineError';
+    return undefined;
+  });
+  readonly ariaLabelledBy = computed(() => (this.sdLabelDef()?.templateRef || this.label() ? this.labelId : undefined));
+  readonly ariaLabel = computed(() => (this.ariaLabelledBy() ? undefined : this.placeholder() || undefined));
+  readonly ariaDescribedBy = computed(() => (this.visibleError() ? this.errorId : undefined));
+  readonly ariaInvalid = computed(() => (this.#state().invalid ? 'true' : 'false'));
 
   readonly viewedText = computed(() => {
     const items = this.items();
@@ -162,30 +164,31 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
     return match?.[dField] ?? '';
   });
 
-  constructor() {
-    effect(() => {
-      const val = this.name();
-      if (val) this.#name = val;
-    });
-
-    effect(() => {
-      const value = this.model();
-      if (value !== this.formControl.value) {
-        this.formControl.setValue(value, { emitEvent: false });
-      }
-    });
-
-    effect(() => {
-      if (this.disabled()) this.formControl.disable();
-      else this.formControl.enable();
-    });
-
-    effect(() => {
-      this.required();
-      this.inlineError();
-      this.#updateValidator();
-    });
-  }
+  readonly #formConnector = ɵsdFormControlConnector<
+    number | string | boolean | undefined | null,
+    number | string | boolean | undefined | null
+  >({
+    form: this.form,
+    name: computed(() => this.name() || this.#defaultName),
+    control: computed(() => this.formControl),
+    model: this.model,
+    writeModel: value => {
+      const vField = this.valueField();
+      this.model.set(value);
+      this.sdChange.emit(value);
+      this.sdSelection.emit({
+        value,
+        item: this.items().find(item => value?.toString() === item?.[vField]?.toString()),
+      });
+    },
+    validators: computed(() => {
+      const validators: ValidatorFn[] = [];
+      if (this.required()) validators.push(Validators.required);
+      if (this.inlineError()) validators.push(SdInlineErrorValidator);
+      return validators;
+    }),
+    disabled: this.disabled,
+  });
 
   ngOnInit() {
     this.#subscription.add(
@@ -195,38 +198,9 @@ export class SdRadio implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  ngAfterViewInit() {
-    this.#subscription.add(
-      this.formControl.valueChanges.subscribe(value => {
-        const vField = this.valueField();
-        this.model.set(value);
-        this.sdChange.emit(value);
-        this.sdSelection.emit({
-          value,
-          item: this.items().find(e => value?.toString() === e?.[vField]?.toString()),
-        });
-      })
-    );
-    this.form()?.addControl(this.#name, this.formControl);
-  }
-
   ngOnDestroy() {
     this.#subscription.unsubscribe();
-    this.form()?.removeControl(this.#name);
   }
-
-  #updateValidator = () => {
-    this.formControl.clearValidators();
-    const validators: ValidatorFn[] = [];
-    if (this.required()) {
-      validators.push(Validators.required);
-    }
-    if (this.inlineError()) {
-      validators.push(SdInlineErrorValidator);
-    }
-    this.formControl.setValidators(validators);
-    this.formControl.updateValueAndValidity();
-  };
 
   reValidate = () => {
     this.formControl.updateValueAndValidity({ emitEvent: true });

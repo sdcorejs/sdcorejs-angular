@@ -67,6 +67,27 @@ describe('ConfigService.persistColumnWidth', () => {
 
     expect(emitted).toBeNull();
   });
+
+  it('destroys replaced, temporary-read, and injector-owned storage facades', () => {
+    const storageService = TestBed.inject(SdStorageService);
+    const createSpy = spyOn(storageService, 'create').and.callThrough();
+
+    const first = service.init(option);
+    let firstCompleted = false;
+    first.observer.subscribe({ complete: () => (firstCompleted = true) });
+    const second = service.init({ ...option, key: 'second-table' });
+    expect(firstCompleted).toBeTrue();
+    expect(() => first.has()).toThrowError('Storage handle has been destroyed');
+
+    service.loadConfiguredTable(option);
+    const temporary = createSpy.calls.mostRecent().returnValue;
+    expect(() => temporary.has()).toThrowError('Storage handle has been destroyed');
+
+    let secondCompleted = false;
+    second.observer.subscribe({ complete: () => (secondCompleted = true) });
+    TestBed.resetTestingModule();
+    expect(secondCompleted).toBeTrue();
+  });
 });
 
 describe('ConfigService.loadConfigurationResult — filler column', () => {

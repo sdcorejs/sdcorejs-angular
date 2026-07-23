@@ -9,8 +9,6 @@ import {
   input,
   model,
   computed,
-  effect,
-  untracked,
   OnDestroy,
   OnInit,
   output,
@@ -18,7 +16,7 @@ import {
   viewChild,
   contentChild,
 } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
@@ -36,6 +34,7 @@ import {
   SdViewedInput,
   sdViewedInline,
   sdViewedTransform,
+  ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
@@ -47,6 +46,26 @@ import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+type SdDateModelValue = string | number | Date | undefined | null;
+
+function normalizeDateModel(value: SdDateModelValue): string | null {
+  if (!DateUtilities.isDate(value)) return null;
+  return DateUtilities.toFormat(value, 'yyyy/MM/dd') || null;
+}
+
+function dateModelToControl(value: SdDateModelValue): Date | null {
+  const normalized = normalizeDateModel(value);
+  return normalized ? parseDate(normalized, 'yyyy/MM/dd', new Date()) : null;
+}
+
+function dateControlToModel(value: Date | null): SdDateModelValue {
+  return value ? normalizeDateModel(value) : null;
+}
+
+function dateControlsEqual(left: Date | null, right: Date | null): boolean {
+  return left === right || normalizeDateModel(left) === normalizeDateModel(right);
+}
 
 @Component({
   selector: 'sd-date',
@@ -205,7 +224,7 @@ export class SdDate implements OnDestroy, OnInit {
   maxDateInput = input<any>(undefined, { alias: 'maxDate' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput() ?? this.maxDateInput()));
 
-  valueModel = model<string | number | Date | undefined | null>(undefined, { alias: 'model' });
+  valueModel = model<SdDateModelValue>(undefined, { alias: 'model' });
 
   // ==========================================
   // 4. SIGNAL OUTPUTS
@@ -218,53 +237,29 @@ export class SdDate implements OnDestroy, OnInit {
   // ==========================================
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
+  readonly #formConnector = ɵsdFormControlConnector<SdDateModelValue, Date | null>({
+    form: this.form,
+    name: this.name,
+    control: computed<AbstractControl<Date | null>>(() => this.formControl),
+    model: this.valueModel,
+    writeModel: value => {
+      this.valueModel.set(value);
+      this.sdChange.emit(value);
+    },
+    modelToControl: dateModelToControl,
+    controlToModel: dateControlToModel,
+    modelEquals: (left, right) => normalizeDateModel(left) === normalizeDateModel(right),
+    controlEquals: dateControlsEqual,
+    validators: computed(() => (this.inlineError() ? SdInlineErrorValidator : null)),
+    required: this.required,
+    disabled: this.disabled,
+    viewed: this.viewed,
+    validationError: computed(() => this.errorMessage()),
+  });
   isFocused = false;
   isValid?: boolean;
 
-  #date: string | undefined | null;
   #subscription = new Subscription();
-
-  constructor() {
-    // EFFECT 1: Sync model thay đổi từ bên ngoài (String/Date -> Date)
-    // Material date-fns adapter dùng native Date làm internal type cho FormControl.
-    effect(() => {
-      let val = this.valueModel();
-      untracked(() => {
-        if (!DateUtilities.isDate(val)) {
-          val = null;
-        }
-        val = DateUtilities.toFormat(val, 'yyyy/MM/dd');
-        if (this.#date !== val) {
-          this.#date = val;
-          const dateObj = DateUtilities.isDate(this.#date)
-            ? parseDate(DateUtilities.toFormat(this.#date, 'yyyy/MM/dd'), 'yyyy/MM/dd', new Date())
-            : null;
-          this.formControl.setValue(dateObj, { emitEvent: false });
-        }
-      });
-    });
-
-    // EFFECT 2: Sync Disable
-    effect(() => {
-      if (this.disabled()) this.formControl.disable({ emitEvent: false });
-      else this.formControl.enable({ emitEvent: false });
-    });
-
-    // EFFECT 3: Update Validators
-    effect(() => {
-      const req = this.required();
-      const inl = this.inlineError();
-
-      untracked(() => {
-        const validators: ValidatorFn[] = [];
-        if (req) validators.push(Validators.required);
-        if (inl) validators.push(SdInlineErrorValidator);
-
-        this.formControl.setValidators(validators.length ? validators : null);
-        this.formControl.updateValueAndValidity({ emitEvent: false });
-      });
-    });
-  }
 
   ngOnInit() {
     this.#subscription.add(
@@ -272,13 +267,9 @@ export class SdDate implements OnDestroy, OnInit {
         this.ref.markForCheck();
       })
     );
-    const formGroup = this.form();
-    formGroup?.addControl(this.name(), this.formControl);
   }
 
   ngOnDestroy() {
-    const formGroup = this.form();
-    formGroup?.removeControl(this.name());
     this.#subscription.unsubscribe();
   }
 
@@ -372,20 +363,12 @@ export class SdDate implements OnDestroy, OnInit {
   };
 
   onChange = (event: MatDatepickerInputEvent<Date>) => {
-    // event.value giờ là native Date (date-fns adapter), không cần .toDate() như Moment.
-    const value = DateUtilities.toFormat(event.value, 'yyyy/MM/dd');
     this.inputRef()?.nativeElement?.focus();
+    const value = this.isValid ? null : event.value;
+    this.isValid = false;
 
-    if (!this.isValid) {
-      if (this.#date !== value) {
-        this.valueModel.set(value);
-        this.sdChange.emit(value);
-      }
-    } else {
-      this.isValid = false;
-      this.formControl.setValue(null);
-      this.valueModel.set(null);
-      this.sdChange.emit(null);
+    if (!dateControlsEqual(this.formControl.value as Date | null, value)) {
+      this.formControl.setValue(value);
     }
   };
 
@@ -393,8 +376,6 @@ export class SdDate implements OnDestroy, OnInit {
     $event?.stopPropagation();
     if (this.formControl.value) {
       this.formControl.setValue(null);
-      this.valueModel.set(null);
-      this.sdChange.emit(null);
     }
   };
 }

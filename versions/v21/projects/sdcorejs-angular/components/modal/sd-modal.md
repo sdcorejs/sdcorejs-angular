@@ -10,36 +10,46 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 
 ## Inputs
 
-| Name | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `autoId` | `string \| null \| undefined` | `undefined` | Renders `data-autoid="components-modal-<autoId>"` on the root template wrapper. |
-| `title` | `string` | `''` | Header title. Header renders when title is truthy. |
-| `width` | `'sx' \| 'sm' \| 'md' \| 'lg' \| string` | `'md'` | Token or CSS width. |
-| `height` | `string` | `'auto'` | Reserved for custom height. |
-| `view` | `'dialog' \| 'bottom-sheet' \| undefined` | `undefined` | `undefined` chooses dialog on desktop and bottom-sheet on mobile. |
-| `modalClass` | `string \| string[] \| Record<string, boolean>` | `''` | Extra Material panel class(es). |
-| `lazyLoadContent` | `boolean` | `true` | Renders projected content only after first open. |
-| `hideClose` | `boolean` | `false` | Hides the built-in close button. Bare attribute = true. |
-| `disableBackdropClose` | `boolean` | `true` | Prevents backdrop/ESC close. Bare attribute = true. |
+| Name                   | Type                                            | Default     | Notes                                                                           |
+| ---------------------- | ----------------------------------------------- | ----------- | ------------------------------------------------------------------------------- |
+| `autoId`               | `string \| null \| undefined`                   | `undefined` | Renders `data-autoid="components-modal-<autoId>"` on the root template wrapper. |
+| `title`                | `string`                                        | `''`        | Header title. Header renders when title is truthy.                              |
+| `width`                | `'sx' \| 'sm' \| 'md' \| 'lg' \| string`        | `'md'`      | Token or CSS width.                                                             |
+| `height`               | `string`                                        | `'auto'`    | Reserved for custom height.                                                     |
+| `view`                 | `'dialog' \| 'bottom-sheet' \| undefined`       | `undefined` | `undefined` chooses dialog on desktop and bottom-sheet on mobile.               |
+| `modalClass`           | `string \| string[] \| Record<string, boolean>` | `''`        | Extra Material panel class(es).                                                 |
+| `lazyLoadContent`      | `boolean`                                       | `true`      | Renders projected content only after first open.                                |
+| `hideClose`            | `boolean`                                       | `false`     | Hides the built-in close button. Bare attribute = true.                         |
+| `disableBackdropClose` | `boolean`                                       | `true`      | Prevents backdrop/ESC close. Bare attribute = true.                             |
+| `beforeClose`          | `SdModalBeforeClose \| undefined`               | `undefined` | Optional sync/async guard. Only `true` closes; errors fail closed.              |
+
+## Outputs
+
+| Name           | Type      | Notes                                                            |
+| -------------- | --------- | ---------------------------------------------------------------- |
+| `sdClosed`     | `void`    | Emitted after the Material dialog/bottom-sheet finishes closing. |
+| `sdCloseError` | `unknown` | Emitted when `beforeClose` throws or rejects.                    |
 
 ## Slots
 
-| Selector | Where it renders |
-| --- | --- |
-| `[sdHeaderLeft]` | Header left. Replaces the fallback title cell. |
-| `[sdHeaderRight]` | Header right, before the close button. |
-| (default) | Scrollable body/content. Padding is `0` by default. |
-| `[sdFooterLeft]` | Footer left action group. |
-| `[sdFooterRight]` | Footer right action group. |
+| Selector          | Where it renders                                    |
+| ----------------- | --------------------------------------------------- |
+| `[sdHeaderLeft]`  | Header left. Replaces the fallback title cell.      |
+| `[sdHeaderRight]` | Header right, before the close button.              |
+| (default)         | Scrollable body/content. Padding is `0` by default. |
+| `[sdFooterLeft]`  | Footer left action group.                           |
+| `[sdFooterRight]` | Footer right action group.                          |
 
 Header/footer padding is `16px`. Body padding is `0`; add your own body wrapper when content needs spacing. The footer is hidden when both footer slots are empty.
 
 ## Public API
 
-| Method | Notes |
-| --- | --- |
-| `open()` | Opens the dialog or bottom-sheet. No-op when already open. |
-| `close()` | Closes the active dialog/bottom-sheet ref. |
+| Method           | Notes                                                                          |
+| ---------------- | ------------------------------------------------------------------------------ |
+| `open()`         | Opens the dialog or bottom-sheet. No-op when already open.                     |
+| `close()`        | Closes the active dialog/bottom-sheet ref.                                     |
+| `requestClose()` | Runs/coalesces `beforeClose`, closes when allowed, and resolves to the result. |
+| `forceClose()`   | Bypasses `beforeClose`; reserve for successful save/discard workflows.         |
 
 ## Examples
 

@@ -15,6 +15,7 @@ import {
   SdLayoutViewport,
 } from '@sdcorejs/angular/modules/layout';
 import { SD_PERMISSION_CONFIGURATION, SdPermissionService } from '@sdcorejs/angular/modules/permission';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 
 type LayoutDemoVersion = 1 | 2 | 3;
@@ -79,6 +80,7 @@ class LayoutDemoViewport implements SdLayoutViewport {
   imports: [DemoPageComponent, DemoSectionComponent, SdLayoutComponent],
   providers: [
     LayoutDemoViewport,
+    SdViewportService,
     MenuPipe,
     SdPermissionService,
     SdLayoutService,
