@@ -23,7 +23,17 @@ const DEFAULT_REGISTRY_PATH = join(
 const DEFAULT_OUTPUT_DIR = join(REPO_ROOT, 'versions', 'v19', 'dist', 'showcase', 'browser');
 
 export const PUBLIC_BASE_URL = 'https://sdcorejs.github.io/sdcorejs-angular/';
-export const SUPPORTED_RELEASES = Object.freeze(['21.1.2', '20.1.2', '19.1.2']);
+export const SUPPORTED_RELEASES = Object.freeze([
+  '21.1.4',
+  '20.1.4',
+  '19.1.4',
+  '21.1.3',
+  '20.1.3',
+  '19.1.3',
+  '21.1.2',
+  '20.1.2',
+  '19.1.2',
+]);
 
 const DOC_TABS = Object.freeze([
   ['overview', 'Overview'],

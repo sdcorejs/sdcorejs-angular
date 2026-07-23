@@ -8,7 +8,7 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ### Fixed
 
-- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.
+- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.
 
 ## [1.4] - 2026-07-23
 

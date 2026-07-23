@@ -58,17 +58,17 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Fixed\n\n- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.",
+    "markdown": "### Fixed\n\n- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.",
     "sections": [
       {
         "key": "fixed",
         "title": "Fixed",
         "level": 3,
         "anchor": "unreleased-fixed",
-        "markdown": "- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.",
+        "markdown": "- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.",
         "items": [
           {
-            "text": "**Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.",
+            "text": "**Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.",
             "ordered": false,
             "children": []
           }
