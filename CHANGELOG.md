@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Fixed
+
+- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.
+
 ## [1.4] - 2026-07-23
 
 Release suffix `1.4` publishes `19.1.4`, `20.1.4`, and `21.1.4` as a stable release across the maintained Angular lines.

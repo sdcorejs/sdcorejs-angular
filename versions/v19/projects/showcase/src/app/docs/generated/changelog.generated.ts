@@ -58,8 +58,24 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "",
-    "sections": []
+    "markdown": "### Fixed\n\n- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "unreleased-fixed",
+        "markdown": "- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.",
+        "items": [
+          {
+            "text": "**Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and synchronized the route-shell expectations, allowing the post-release Pages gate to deploy the complete 97-document catalog.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
   },
   {
     "id": "release-1-4",

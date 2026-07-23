@@ -135,12 +135,12 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 96);
-  assert.equal(routes.length, 1471);
+  assert.equal(pages.length, 97);
+  assert.equal(routes.length, 1486);
   assert.deepEqual(categoryCounts, {
     components: 35,
     directives: 6,
-    forms: 20,
+    forms: 21,
     guides: 3,
     'modules-integrations': 10,
     'pipes-utilities': 9,
