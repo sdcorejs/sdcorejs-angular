@@ -21,6 +21,15 @@
   outline-offset: 2px;
 }
 
+// why: Compact rails expose the avatar itself as the disclosure affordance.
+.sd-layout-user-menu__trigger--compact {
+  width: 56px;
+  min-height: 52px;
+  justify-content: center;
+  gap: 0;
+  padding: 0;
+}
+
 // why: The account menu must overlay navigation content without changing sidebar geometry.
 .sd-layout-user-menu__popup {
   position: absolute;

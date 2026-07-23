@@ -87,4 +87,13 @@ describe('SidebarV2Component', () => {
 
     expect(fixture.componentInstance.isFlyoutOpen()).toBeFalse();
   });
+
+  it('centers the compact account avatar without a disclosure icon', async () => {
+    await create('click');
+
+    const trigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
+    expect(trigger.classList).toContain('sd-layout-user-menu__trigger--compact');
+    expect(trigger.querySelector('sd-avatar')).not.toBeNull();
+    expect(trigger.querySelector('sd-icon')).toBeNull();
+  });
 });

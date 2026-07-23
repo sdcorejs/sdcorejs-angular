@@ -3,7 +3,12 @@
     #trigger
     type="button"
     data-user-trigger
-    class="sd-layout-user-menu__trigger d-flex align-items-center gap-8 w-full text-left"
+    class="sd-layout-user-menu__trigger d-flex align-items-center text-left"
+    [class.sd-layout-user-menu__trigger--compact]="compact()"
+    [class.w-full]="!compact()"
+    [class.gap-8]="!compact()"
+    [class.w-56]="compact()"
+    [class.gap-0]="compact()"
     aria-haspopup="menu"
     [attr.aria-expanded]="isOpen()"
     (click)="toggle()">
@@ -15,8 +20,8 @@
           <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
         }
       </span>
+      <sd-icon [name]="isOpen() ? 'expand_less' : 'expand_more'"></sd-icon>
     }
-    <sd-icon [name]="isOpen() ? 'expand_less' : 'expand_more'"></sd-icon>
   </button>
 
   @if (isOpen()) {
