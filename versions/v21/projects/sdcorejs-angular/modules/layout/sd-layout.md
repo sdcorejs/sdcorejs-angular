@@ -178,6 +178,10 @@ const menus: SdLayoutMenu[] = [
 
 V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missing slots from the remaining visible roots, and exposes overflow through More. V3 search is accent-insensitive and searches the filtered menu tree.
 
+V2's desktop rail and V3's collapsed desktop drawer center the avatar as the account-menu trigger without rendering a separate disclosure chevron. Collapsed V3 also hides the brand block and keeps only the centered expand control; the expanded drawer and both mobile variants retain the full account identity presentation.
+
+V2/V3 desktop and mobile menu searches share the same internal Soft-pill field: a gray token-based surface, leading search icon and primary focus ring. Placeholder text, `autoId` hooks, accent-insensitive filtering and parent-owned search signals keep their existing contracts.
+
 ## Responsive, storage, and migration behavior
 
 - `mobileBreakpoint` defaults to `1024`. A width strictly below the normalized value is mobile; invalid or non-positive values fall back to the default.
