@@ -118,6 +118,8 @@ function makeFakeDoc(
   };
 }
 
+type FakePdfData = Awaited<ReturnType<ReturnType<typeof makeFakeDoc>['getData']>>;
+
 interface FakeTask {
   promise: Promise<SdPdfDocumentProxy>;
   onProgress?: (p: { loaded: number; total: number }) => void;
@@ -1282,8 +1284,8 @@ describe('SdPreviewPdf', () => {
     });
 
     it('uses loaded document bytes for authenticated URL descriptors and only lets the latest request win', async () => {
-      const first = deferred<Uint8Array>();
-      const second = deferred<Uint8Array>();
+      const first = deferred<FakePdfData>();
+      const second = deferred<FakePdfData>();
       let calls = 0;
       const doc = makeFakeDoc(1);
       doc.getData = () => (calls++ === 0 ? first.promise : second.promise);
@@ -1303,7 +1305,7 @@ describe('SdPreviewPdf', () => {
     });
 
     it('invalidates an authenticated download waiting on bytes when the source changes', async () => {
-      const data = deferred<Uint8Array>();
+      const data = deferred<FakePdfData>();
       const doc = makeFakeDoc(1);
       doc.getData = () => data.promise;
       fixture.componentRef.setInput('source', { url: 'https://example.com/private.pdf', withCredentials: true });
@@ -2121,8 +2123,8 @@ describe('SdPreviewPdf', () => {
     it('assigns print request generation before getData so a late older request cannot start', async () => {
       fixture.componentRef.setInput('source', 'https://example.com/print-race.pdf');
       await flush(fixture);
-      const first = deferred<Uint8Array>();
-      const second = deferred<Uint8Array>();
+      const first = deferred<FakePdfData>();
+      const second = deferred<FakePdfData>();
       let calls = 0;
       const doc = makeFakeDoc(1);
       doc.getData = () => (calls++ === 0 ? first.promise : second.promise);
@@ -2145,7 +2147,7 @@ describe('SdPreviewPdf', () => {
     it('invalidates a print request waiting on bytes when the source changes', async () => {
       fixture.componentRef.setInput('source', 'https://example.com/print-stale.pdf');
       await flush(fixture);
-      const data = deferred<Uint8Array>();
+      const data = deferred<FakePdfData>();
       const doc = makeFakeDoc(1);
       doc.getData = () => data.promise;
       lib.resolveNext(doc);

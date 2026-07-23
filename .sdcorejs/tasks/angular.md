@@ -11,6 +11,7 @@
 
 ## Next
 
+- [ ] Add a dedicated Showcase fixture for `SdTable` empty-result reload and capture `images/sd-table-empty-result-reload.png`.
 - [ ] Merge the Showcase Loading manifest hotfix PR and confirm `deploy-pages.yml` completes without the runtime exception.
 - [ ] Normalize `GenericSelectComponent` output types, then migrate its three `EventEmitter` outputs with Angular safe migration.
 - [ ] Revisit the skipped setter/aliased inputs in focused groups with contract tests before attempting manual signal migration.

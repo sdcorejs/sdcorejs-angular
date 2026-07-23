@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { SD_VIEWPORT, SdViewportService } from '../../../../services/viewport';
+import { SD_VIEWPORT, SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { SD_LAYOUT_VIEWPORT, SdLayoutResponsiveService, SdLayoutViewport } from './responsive.service';
 
 class FakeViewport implements SdLayoutViewport {

@@ -58,8 +58,24 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "",
-    "sections": []
+    "markdown": "### Fixed\n\n- **`sd-table` empty-result reload** - kept a configured reload action enabled when the current items or total are zero, allowing users to retry without changing export or paginator behavior.",
+    "sections": [
+      {
+        "key": "fixed",
+        "title": "Fixed",
+        "level": 3,
+        "anchor": "unreleased-fixed",
+        "markdown": "- **`sd-table` empty-result reload** - kept a configured reload action enabled when the current items or total are zero, allowing users to retry without changing export or paginator behavior.",
+        "items": [
+          {
+            "text": "**`sd-table` empty-result reload** - kept a configured reload action enabled when the current items or total are zero, allowing users to retry without changing export or paginator behavior.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
   },
   {
     "id": "release-1-4",

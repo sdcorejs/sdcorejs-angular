@@ -8,6 +8,8 @@ const baseUrl = process.env.SDCOREJS_DOCS_BASE_URL || readArg('--base-url') || '
 
 // API-only guides (for example angular-modern-api-migration) intentionally have no screenshot entry.
 const screenshots = [
+  // TODO(user-guide): register the SdTable empty-result reload screenshot after
+  // Showcase exposes a dedicated fixture with a stable route and selector.
   {
     module: 'datetime',
     title: 'SdDatetime showcase',

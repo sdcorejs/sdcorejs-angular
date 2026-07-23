@@ -399,6 +399,97 @@ describe('Filter commit (blur) vs filter change (enter / reload)', () => {
   }));
 });
 
+describe('empty result reload action', () => {
+  interface Row {
+    id: number;
+    name: string;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table autoId="empty-result" [option]="tableOption"></sd-table>`,
+  })
+  class EmptyResultReloadHostComponent {
+    itemsSpy = jasmine.createSpy('items').and.callFake(() => Promise.resolve({ items: [], total: 0 }));
+    tableOption: SdTableOption<Row> = {
+      type: 'server',
+      items: this.itemsSpy,
+      reload: { visible: true },
+      export: { visible: 'ALL' },
+      paginate: { pageSize: 20 },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    };
+  }
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [EmptyResultReloadHostComponent] });
+  });
+
+  function createLoadedFixture(): ComponentFixture<EmptyResultReloadHostComponent> {
+    const fixture = TestBed.createComponent(EmptyResultReloadHostComponent);
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  function getReloadButton(fixture: ComponentFixture<EmptyResultReloadHostComponent>): HTMLButtonElement | null {
+    return fixture.nativeElement.querySelector(
+      'button[data-autoid="components-button-components-table-empty-result-reload"]'
+    ) as HTMLButtonElement | null;
+  }
+
+  it('keeps reload enabled when the server returns no rows', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const reloadButton = getReloadButton(fixture);
+
+    expect(reloadButton).withContext('reload action must remain rendered for an empty result').not.toBeNull();
+    expect(reloadButton!.disabled).withContext('empty rows must not disable reload').toBeFalse();
+
+    fixture.destroy();
+  }));
+
+  it('refetches an empty server result when reload is clicked', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const host = fixture.componentInstance;
+    const reloadButton = getReloadButton(fixture)!;
+    host.itemsSpy.calls.reset();
+
+    reloadButton.click();
+    tick();
+    flush();
+
+    expect(host.itemsSpy).toHaveBeenCalledTimes(1);
+
+    fixture.destroy();
+  }));
+
+  it('keeps export hidden for an empty result', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const exportButton = fixture.nativeElement.querySelector(
+      'button[data-autoid="components-button-components-table-empty-result-export"]'
+    );
+
+    expect(exportButton).toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('keeps the paginator hidden when total is zero', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const paginator = fixture.nativeElement.querySelector('mat-paginator') as HTMLElement;
+
+    expect(paginator.classList.contains('d-none')).toBeTrue();
+
+    fixture.destroy();
+  }));
+});
+
 describe('STT (index) column — renderIndex fix (multiTemplateDataRows)', () => {
   interface Row {
     id: number;
