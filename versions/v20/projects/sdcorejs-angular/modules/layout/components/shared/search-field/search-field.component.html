@@ -1,0 +1,14 @@
+<div
+  data-layout-search
+  class="sd-layout-search-field sd-layout-search-field--soft-pill d-flex align-items-center gap-8">
+  <sd-icon class="sd-layout-search-field__icon" name="search"></sd-icon>
+  <sd-input
+    class="sd-layout-search-field__control"
+    size="sm"
+    hideInlineError
+    [placeholder]="placeholder()"
+    [autoId]="autoId()"
+    [model]="model()"
+    (sdChange)="sdChange.emit($event)">
+  </sd-input>
+</div>
