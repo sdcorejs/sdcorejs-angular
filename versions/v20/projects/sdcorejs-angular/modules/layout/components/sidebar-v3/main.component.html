@@ -47,13 +47,12 @@
       </nav>
     } @else {
       <div class="p-12">
-        <sd-input
-          size="sm"
+        <sd-layout-search-field
           placeholder="Tìm trong tất cả menu"
           [autoId]="'layout-v3-global-search'"
           [model]="searchText()"
           (sdChange)="searchText.set($event)">
-        </sd-input>
+        </sd-layout-search-field>
       </div>
       <div class="sd-sidebar-v3__navigation d-flex flex-column gap-16 flex-1 overflow-auto px-8 pb-12">
         @if (pinnedMenus().length) {

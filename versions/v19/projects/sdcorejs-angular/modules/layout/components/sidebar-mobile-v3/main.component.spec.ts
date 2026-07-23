@@ -82,4 +82,15 @@ describe('SidebarMobileV3Component', () => {
     expect(document.body.style.overflow).toBe('');
     expect(TestBed.inject(Router)).toBeDefined();
   });
+
+  it('uses the shared search field inside the open drawer', () => {
+    fixture.componentInstance.openDrawer();
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector(
+      'sd-layout-search-field input[data-autoid="forms-input-layout-v3-mobile-global-search"]'
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.placeholder).toBe('Tìm trong tất cả menu');
+  });
 });

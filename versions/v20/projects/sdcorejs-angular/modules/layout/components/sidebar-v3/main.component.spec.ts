@@ -113,4 +113,14 @@ describe('SidebarV3Component', () => {
     expect(accountTrigger.textContent).toContain('Demo User');
     expect(accountTrigger.querySelector('mat-icon')?.textContent?.trim()).toBe('expand_more');
   });
+
+  it('uses the shared search field in the expanded drawer', () => {
+    create();
+
+    const input = fixture.nativeElement.querySelector(
+      'sd-layout-search-field input[data-autoid="forms-input-layout-v3-global-search"]'
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.placeholder).toBe('Tìm trong tất cả menu');
+  });
 });

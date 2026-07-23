@@ -46,13 +46,12 @@
       <div class="sd-sidebar-mobile-v3__navigation d-flex flex-column gap-16 flex-1 overflow-auto p-12">
         <sd-layout-user-menu [userInfo]="userInfo()"></sd-layout-user-menu>
         <div class="sd-sidebar-mobile-v3__search bg-white">
-          <sd-input
-            size="sm"
+          <sd-layout-search-field
             placeholder="Tìm trong tất cả menu"
             [autoId]="'layout-v3-mobile-global-search'"
             [model]="searchText()"
             (sdChange)="searchText.set($event)">
-          </sd-input>
+          </sd-layout-search-field>
         </div>
         @if (pinnedMenus().length) {
           <section data-v3-mobile-pinned class="d-flex flex-column gap-4">

@@ -96,4 +96,16 @@ describe('SidebarV2Component', () => {
     expect(trigger.querySelector('sd-avatar')).not.toBeNull();
     expect(trigger.querySelector('sd-icon')).toBeNull();
   });
+
+  it('uses the shared search field in the contextual flyout', async () => {
+    await create('click');
+    fixture.componentInstance.selectGroup(work);
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector(
+      'sd-layout-search-field input[data-autoid="forms-input-layout-v2-context-search"]'
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.placeholder).toBe('Tìm trong nhóm');
+  });
 });

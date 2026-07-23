@@ -15,17 +15,17 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { SdInput } from '@sdcorejs/angular/forms';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdLayoutUserInfo, SidebarConfigurationV3, resolveSidebarV3Recent } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, searchMenuLeaves } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
+import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
 
 @Component({
   selector: 'sidebar-mobile-v3',
   standalone: true,
-  imports: [A11yModule, SdIcon, SdInput, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
+  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

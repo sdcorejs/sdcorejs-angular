@@ -68,4 +68,15 @@ describe('SidebarMobileV2Component', () => {
     expect(document.body.style.overflow).toBe('');
     expect(document.activeElement).toBe(trigger);
   });
+
+  it('uses the shared search field inside the open sheet', () => {
+    fixture.componentInstance.openMore();
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector(
+      'sd-layout-search-field input[data-autoid="forms-input-layout-v2-mobile-search"]'
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.placeholder).toBe('Tìm trong menu');
+  });
 });
