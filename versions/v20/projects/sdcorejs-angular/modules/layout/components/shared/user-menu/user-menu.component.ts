@@ -8,17 +8,26 @@ import {
   effect,
   inject,
   input,
+  isSignal,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
 import { SdAvatar } from '@sdcorejs/angular/components';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../configurations';
+import { isObservable } from 'rxjs';
+import {
+  SD_LAYOUT_CONFIGURATION,
+  SdLayoutAccountAction,
+  SdLayoutNotificationConfiguration,
+  SdLayoutUserInfo,
+} from '../../../configurations';
 
 @Component({
   selector: 'sd-layout-user-menu',
   standalone: true,
-  imports: [SdAvatar, SdIcon],
+  imports: [SdAvatar, SdIcon, TranslatePipe],
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,20 +41,55 @@ export class SdLayoutUserMenuComponent {
   private readonly menu = viewChild<ElementRef<HTMLElement>>('menu');
 
   userInfo = input.required<SdLayoutUserInfo>();
-  signout = input<(() => void | Promise<void>) | undefined>();
-  changePassword = input<(() => void | Promise<void>) | undefined>();
+  signout = input<SdLayoutAccountAction | undefined>();
+  changePassword = input<SdLayoutAccountAction | undefined>();
+  updateProfile = input<SdLayoutAccountAction | undefined>();
+  setting = input<SdLayoutAccountAction | undefined>();
+  notification = input<SdLayoutNotificationConfiguration | undefined>();
   compact = input(false);
+  presentation = input<'disclosure' | 'mobile' | 'mobile-inline'>('disclosure');
+  opened = output<void>();
+  closed = output<void>();
   isOpen = signal(false);
+  readonly #observableNotificationCount = signal<number | undefined>(undefined);
 
   avatar = computed(() => {
     const user = this.userInfo();
     return user.avatar || user.fullName || user.username || user.email;
   });
   displayName = computed(() => this.userInfo().fullName || this.userInfo().username || this.userInfo().email || 'User');
+  role = computed(() => {
+    const role = this.userInfo().role;
+    const text = role?.text?.trim();
+    return text ? { ...role, text } : undefined;
+  });
   signoutAction = computed(() => this.signout() ?? this.#configuration?.signout);
   changePasswordAction = computed(() => this.changePassword() ?? this.#configuration?.changePassword);
+  updateProfileAction = computed(() => this.updateProfile() ?? this.#configuration?.updateProfile);
+  settingAction = computed(() => this.setting() ?? this.#configuration?.setting);
+  notificationConfiguration = computed(() => this.notification() ?? this.#configuration?.notification);
+  notificationAction = computed(() => this.notificationConfiguration()?.action);
+  notificationCount = computed(() => {
+    const source = this.notificationConfiguration()?.count;
+    const value = isSignal(source) ? source() : isObservable(source) ? this.#observableNotificationCount() : source;
+    return this.#normalizeNotificationCount(value);
+  });
+  notificationBadge = computed(() => {
+    const count = this.notificationCount();
+    return count > 99 ? '99+' : count > 0 ? String(count) : undefined;
+  });
 
   constructor() {
+    // Observable sources may change with component inputs; effect cleanup guarantees one active subscription.
+    effect(onCleanup => {
+      const source = this.notificationConfiguration()?.count;
+      this.#observableNotificationCount.set(undefined);
+      if (!isObservable(source)) return;
+
+      const subscription = source.subscribe(value => this.#observableNotificationCount.set(value));
+      onCleanup(() => subscription.unsubscribe());
+    });
+
     effect(() => {
       if (!this.isOpen()) return;
       this.menu()?.nativeElement.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
@@ -72,7 +116,9 @@ export class SdLayoutUserMenuComponent {
   }
 
   open(): void {
+    if (this.isOpen()) return;
     this.isOpen.set(true);
+    this.opened.emit();
   }
 
   toggle(): void {
@@ -81,7 +127,9 @@ export class SdLayoutUserMenuComponent {
   }
 
   close(restoreFocus = true): void {
+    const wasOpen = this.isOpen();
     this.isOpen.set(false);
+    if (wasOpen) this.closed.emit();
     if (restoreFocus) this.trigger()?.nativeElement.focus();
   }
 
@@ -109,12 +157,31 @@ export class SdLayoutUserMenuComponent {
   }
 
   runChangePassword(): void {
-    this.changePasswordAction()?.();
-    this.close();
+    this.#runAction(this.changePasswordAction());
   }
 
   runSignout(): void {
-    this.signoutAction()?.();
+    this.#runAction(this.signoutAction());
+  }
+
+  runUpdateProfile(): void {
+    this.#runAction(this.updateProfileAction());
+  }
+
+  runSetting(): void {
+    this.#runAction(this.settingAction());
+  }
+
+  runNotification(): void {
+    this.#runAction(this.notificationAction());
+  }
+
+  #runAction(action: SdLayoutAccountAction | undefined): void {
+    action?.();
     this.close();
+  }
+
+  #normalizeNotificationCount(value: number | undefined): number {
+    return Number.isFinite(value) && Number(value) > 0 ? Math.floor(Number(value)) : 0;
   }
 }

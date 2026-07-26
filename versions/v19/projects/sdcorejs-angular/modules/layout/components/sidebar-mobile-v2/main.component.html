@@ -55,7 +55,7 @@
         </button>
       </header>
       <div class="d-flex flex-column gap-12 p-12 overflow-auto">
-        <sd-layout-user-menu [userInfo]="userInfo()"></sd-layout-user-menu>
+        <sd-layout-user-menu presentation="mobile-inline" [userInfo]="userInfo()"></sd-layout-user-menu>
         <sd-layout-search-field
           placeholder="Tìm trong menu"
           [autoId]="'layout-v2-mobile-search'"
@@ -67,6 +67,7 @@
           [query]="searchText()"
           [activePath]="activePath()"
           [pinnedKeys]="pinnedKeys()"
+          pinVisibility="always"
           (navigate)="onNavigate($event)"
           (togglePinned)="onTogglePinned($event)">
         </sd-layout-menu-tree>

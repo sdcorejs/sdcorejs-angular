@@ -62,7 +62,10 @@
 .sd-sidebar-mobile-v3__search {
   position: sticky;
   z-index: 2;
-  top: 0;
+  top: -12px;
+  margin: -12px;
+  padding: 12px;
+  background: var(--sd-white, #fff);
 }
 
 // why: Navigation motion must respect the user's reduced-motion preference.

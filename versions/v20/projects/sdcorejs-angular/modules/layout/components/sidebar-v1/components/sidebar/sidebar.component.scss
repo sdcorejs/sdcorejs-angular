@@ -64,10 +64,19 @@ li {
       width: 52px;
       height: 52px;
 
+      a {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: var(--sd-text-secondary, #44474f);
+      }
+
       img {
         width: 32px;
         height: 32px;
-        object-fit: cover;
+        object-fit: contain;
       }
     }
 
@@ -92,6 +101,8 @@ li {
         display: flex;
         flex-direction: column;
         align-items: center;
+        flex: 0 0 60px;
+        min-width: 60px;
         width: 60px;
         overflow-y: scroll;
         scrollbar-width: none;
@@ -210,6 +221,12 @@ li {
     background-color: #f8f9fa;
     pointer-events: none;
   }
+}
+
+// why: Keep the V1 search focus visible without inheriting thick consumer-wide rings.
+:host ::ng-deep .c-menu-tree-search input:focus-visible {
+  outline: 1px solid var(--sd-primary, #005cbb);
+  outline-offset: 1px;
 }
 
 // End

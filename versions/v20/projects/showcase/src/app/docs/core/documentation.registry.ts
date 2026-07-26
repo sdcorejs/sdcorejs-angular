@@ -1189,7 +1189,7 @@ const PUBLISHED_ONLY_PAGES = [
     publishedDocId: 'modules/layout/sd-layout',
     keywords: ['layout', 'shell', 'responsive', 'portal'],
     status: 'stable',
-    demoSectionCount: 1,
+    demoSectionCount: 3,
     demoPath: 'modules/layout',
     loadComponent: () => import('../../pages/modules/layout/layout-demo.component').then(m => m.LayoutDemoComponent),
   }),

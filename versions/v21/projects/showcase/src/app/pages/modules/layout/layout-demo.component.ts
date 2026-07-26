@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, input, signal } from '@angular/core';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import {
   ISdLayoutConfiguration,
@@ -20,6 +20,17 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 
 type LayoutDemoVersion = 1 | 2 | 3;
 type LayoutDemoViewportMode = 'desktop' | 'mobile';
+
+export const LAYOUT_DEMO_NOTIFICATION_COUNT = signal(6);
+
+const LAYOUT_DEMO_TRANSLATIONS: Readonly<Record<string, string>> = {
+  'core.module.layout.sidebar.search': 'Search menu',
+  'core.module.layout.user.update-profile': 'Update profile',
+  'core.module.layout.user.setting': 'Settings',
+  'core.module.layout.user.notification': 'Notifications',
+  'core.module.layout.user.change-password': 'Change password',
+  'core.module.layout.user.logout': 'Sign out',
+};
 
 const SIDEBAR_CONFIGURATIONS: Readonly<Record<LayoutDemoVersion, ISdSidebarConfiguration>> = {
   1: {
@@ -48,8 +59,20 @@ const DEMO_CONFIGURATION: ISdLayoutConfiguration = {
     fullName: 'Nguyen Minh Anh',
     username: 'minhanh',
     email: 'minhanh@example.com',
+    role: {
+      text: 'Product Owner',
+      icon: 'badge',
+      color: '#005cbb',
+    },
   },
   signout: () => undefined,
+  changePassword: () => undefined,
+  updateProfile: () => undefined,
+  setting: () => undefined,
+  notification: {
+    count: LAYOUT_DEMO_NOTIFICATION_COUNT,
+    action: () => undefined,
+  },
 };
 
 class LayoutDemoViewport implements SdLayoutViewport {
@@ -75,9 +98,9 @@ class LayoutDemoViewport implements SdLayoutViewport {
 }
 
 @Component({
-  selector: 'app-layout-demo',
+  selector: 'app-layout-version-preview',
   standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdLayoutComponent],
+  imports: [SdLayoutComponent],
   providers: [
     LayoutDemoViewport,
     SdViewportService,
@@ -87,73 +110,44 @@ class LayoutDemoViewport implements SdLayoutViewport {
     SdLayoutResponsiveService,
     SdLayoutStorageService,
     SdLayoutNavigationStateService,
-    { provide: I18nService, useValue: { t: (key: string) => key } },
+    { provide: I18nService, useValue: { t: (key: string) => LAYOUT_DEMO_TRANSLATIONS[key] ?? key } },
     { provide: SD_PERMISSION_CONFIGURATION, useValue: { loadPermissions: () => [] } },
     { provide: SD_LAYOUT_CONFIGURATION, useValue: DEMO_CONFIGURATION },
     { provide: SD_LAYOUT_VIEWPORT, useExisting: LayoutDemoViewport },
   ],
   template: `
-    <demo-page
-      #demoPage
-      title="Layout"
-      description="Compare the existing sidebar with two responsive navigation variants using the same menu fixture.">
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sidebar-v1-v2-v3') {
-        <demo-section
-          heading="Sidebar V1, V2 & V3"
-          note="Switch versions and viewport widths without reloading the Showcase page."
-          [props]="[
-            { name: 'version', value: '1 / 2 / 3' },
-            { name: 'mobileBreakpoint', value: '900' },
-            { name: 'viewport', value: 'desktop / mobile' },
-          ]">
-          <div class="layout-demo__controls" aria-label="Layout preview controls">
-            <fieldset>
-              <legend>Sidebar version</legend>
-              @for (option of versionOptions; track option.value) {
-                <button
-                  type="button"
-                  [attr.data-layout-version]="option.value"
-                  [attr.aria-pressed]="selectedVersion() === option.value"
-                  (click)="selectVersion(option.value)">
-                  {{ option.label }}
-                </button>
-              }
-            </fieldset>
-            <fieldset>
-              <legend>Preview viewport</legend>
-              @for (option of viewportOptions; track option.value) {
-                <button
-                  type="button"
-                  [attr.data-layout-viewport]="option.value"
-                  [attr.aria-pressed]="selectedViewport() === option.value"
-                  (click)="selectViewport(option.value)">
-                  {{ option.label }}
-                </button>
-              }
-            </fieldset>
-          </div>
-
-          <div
-            class="layout-demo__preview"
-            [class.layout-demo__preview--mobile]="selectedViewport() === 'mobile'"
-            [attr.data-active-layout-version]="selectedVersion()"
-            [attr.data-active-layout-viewport]="selectedViewport()">
-            <sd-layout [menus]="menus">
-              <main class="layout-demo__content">
-                <span class="layout-demo__eyebrow">Live fixture</span>
-                <h4>Operations overview</h4>
-                <p>The page content stays mounted while the responsive sidebar implementation changes.</p>
-                <div class="layout-demo__metrics" aria-label="Example summary">
-                  <span><strong>24</strong> open tasks</span>
-                  <span><strong>8</strong> approvals</span>
-                  <span><strong>5</strong> reports</span>
-                </div>
-              </main>
-            </sd-layout>
-          </div>
-        </demo-section>
+    <fieldset class="layout-demo__viewport-controls">
+      <legend>Preview viewport</legend>
+      @for (option of viewportOptions; track option.value) {
+        <button
+          type="button"
+          [attr.data-layout-viewport]="option.value"
+          [attr.aria-pressed]="selectedViewport() === option.value"
+          (click)="selectViewport(option.value)">
+          {{ option.label }}
+        </button>
       }
-    </demo-page>
+    </fieldset>
+
+    <div
+      class="layout-demo__preview"
+      [class.layout-demo__preview--mobile]="selectedViewport() === 'mobile'"
+      [class.layout-demo__preview--contain-v1]="version() === 1"
+      [attr.data-active-layout-version]="version()"
+      [attr.data-active-layout-viewport]="selectedViewport()">
+      <sd-layout [menus]="menus()">
+        <main class="layout-demo__content">
+          <span class="layout-demo__eyebrow">V{{ version() }} live fixture</span>
+          <h4>Operations overview</h4>
+          <p>The page content stays mounted while this showcase switches between desktop and mobile.</p>
+          <div class="layout-demo__metrics" aria-label="Example summary">
+            <span><strong>24</strong> open tasks</span>
+            <span><strong>8</strong> approvals</span>
+            <span><strong>5</strong> reports</span>
+          </div>
+        </main>
+      </sd-layout>
+    </div>
   `,
   styles: [
     `
@@ -162,17 +156,11 @@ class LayoutDemoViewport implements SdLayoutViewport {
         width: 100%;
       }
 
-      .layout-demo__controls {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        width: 100%;
-      }
-
-      fieldset {
+      .layout-demo__viewport-controls {
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
+        width: fit-content;
         min-width: 0;
         margin: 0;
         padding: 8px;
@@ -204,7 +192,7 @@ class LayoutDemoViewport implements SdLayoutViewport {
       }
 
       button:focus-visible {
-        outline: 3px solid color-mix(in srgb, var(--sd-primary, #005cbb) 35%, transparent);
+        outline: 2px solid color-mix(in srgb, var(--sd-primary, #005cbb) 35%, transparent);
         outline-offset: 2px;
       }
 
@@ -225,6 +213,26 @@ class LayoutDemoViewport implements SdLayoutViewport {
 
       .layout-demo__preview--mobile {
         width: min(100%, 390px);
+      }
+
+      /* why: V1 normally follows the browser viewport; constrain its legacy 100vh shell to the live preview so the account footer stays visible. */
+      :host ::ng-deep .layout-demo__preview--contain-v1 sd-layout,
+      :host ::ng-deep .layout-demo__preview--contain-v1 sidebar-v1,
+      :host ::ng-deep .layout-demo__preview--contain-v1 sidebar {
+        display: block;
+        height: 100%;
+        min-height: 0;
+      }
+
+      :host ::ng-deep .layout-demo__preview--contain-v1 .c-layout-wrapper,
+      :host ::ng-deep .layout-demo__preview--contain-v1 .c-layout-sidebar,
+      :host ::ng-deep .layout-demo__preview--contain-v1 .c-layout-content {
+        height: 100% !important;
+        max-height: 100% !important;
+      }
+
+      :host ::ng-deep .layout-demo__preview--contain-v1 .c-vertical {
+        height: 100%;
       }
 
       .layout-demo__content {
@@ -287,35 +295,113 @@ class LayoutDemoViewport implements SdLayoutViewport {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class LayoutDemoComponent {
+export class LayoutVersionPreviewComponent {
   readonly #layoutService = inject(SdLayoutService);
   readonly #viewport = inject(LayoutDemoViewport);
 
-  readonly selectedVersion = signal<LayoutDemoVersion>(1);
+  version = input.required<LayoutDemoVersion>();
+  menus = input<SdLayoutMenu[]>([]);
   readonly selectedViewport = signal<LayoutDemoViewportMode>('desktop');
-  readonly versionOptions = [
-    { value: 1, label: 'V1 - Classic' },
-    { value: 2, label: 'V2 - Rail' },
-    { value: 3, label: 'V3 - Collapsible' },
-  ] as const;
   readonly viewportOptions = [
     { value: 'desktop', label: 'Desktop' },
     { value: 'mobile', label: 'Mobile' },
   ] as const;
+
+  constructor() {
+    effect(() => this.#layoutService.sidebar.set(SIDEBAR_CONFIGURATIONS[this.version()]));
+  }
+
+  selectViewport(viewport: LayoutDemoViewportMode): void {
+    this.selectedViewport.set(viewport);
+    this.#viewport.resizeTo(viewport === 'mobile' ? 390 : 1280);
+  }
+}
+
+@Component({
+  selector: 'app-layout-demo',
+  standalone: true,
+  imports: [DemoPageComponent, DemoSectionComponent, LayoutVersionPreviewComponent],
+  template: `
+    <demo-page
+      #demoPage
+      title="Layout"
+      description="Review each responsive sidebar version in an independent live showcase using the same rich menu fixture.">
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sidebar-v1-classic') {
+        <demo-section
+          data-layout-showcase="1"
+          heading="Sidebar V1 - Classic"
+          note="Desktop rail with expand/collapse, menu search after more than 10 items, and the default SDCoreJS logo."
+          [props]="[
+            { name: 'version', value: '1' },
+            { name: 'mobileBreakpoint', value: '900' },
+            { name: 'viewport', value: 'desktop / mobile' },
+          ]">
+          <app-layout-version-preview [version]="1" [menus]="menus"></app-layout-version-preview>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sidebar-v2-rail') {
+        <demo-section
+          data-layout-showcase="2"
+          heading="Sidebar V2 - Rail"
+          note="Primary navigation rail on desktop and bottom navigation with a direct mobile sign-out action."
+          [props]="[
+            { name: 'version', value: '2' },
+            { name: 'mobileBreakpoint', value: '900' },
+            { name: 'viewport', value: 'desktop / mobile' },
+          ]">
+          <app-layout-version-preview [version]="2" [menus]="menus"></app-layout-version-preview>
+        </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-sidebar-v3-collapsible') {
+        <demo-section
+          data-layout-showcase="3"
+          heading="Sidebar V3 - Collapsible"
+          note="Collapsible desktop navigation and a unified mobile drawer with pinned and recent menus."
+          [props]="[
+            { name: 'version', value: '3' },
+            { name: 'mobileBreakpoint', value: '900' },
+            { name: 'viewport', value: 'desktop / mobile' },
+          ]">
+          <app-layout-version-preview [version]="3" [menus]="menus"></app-layout-version-preview>
+        </demo-section>
+      }
+    </demo-page>
+  `,
+  styles: `
+    :host {
+      display: block;
+      width: 100%;
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class LayoutDemoComponent {
   readonly menus: SdLayoutMenu[] = [
     {
       id: 'workspace',
       title: 'Workspace',
-      icon: 'space_dashboard',
+      icon: 'dashboard',
       children: [
         { id: 'overview', title: 'Overview', path: '/layout-demo/overview', icon: 'dashboard', permission: true },
-        { id: 'tasks', title: 'Tasks', path: '/layout-demo/tasks', icon: 'task_alt', permission: true },
+        { id: 'tasks', title: 'Tasks', path: '/layout-demo/tasks', icon: 'check_circle', permission: true },
+        { id: 'approvals', title: 'Approvals', path: '/layout-demo/approvals', icon: 'done_all', permission: true },
+        { id: 'calendar', title: 'Calendar', path: '/layout-demo/calendar', icon: 'event', permission: true },
+        { id: 'teams', title: 'Teams', path: '/layout-demo/teams', icon: 'people', permission: true },
+        { id: 'documents', title: 'Documents', path: '/layout-demo/documents', icon: 'description', permission: true },
+        { id: 'inbox', title: 'Inbox', path: '/layout-demo/inbox', icon: 'inbox', permission: true },
+        { id: 'alerts', title: 'Notifications', path: '/layout-demo/alerts', icon: 'notifications', permission: true },
+        { id: 'projects', title: 'Projects', path: '/layout-demo/projects', icon: 'folder', permission: true },
+        { id: 'archive', title: 'Archive', path: '/layout-demo/archive', icon: 'archive', permission: true },
+        { id: 'history', title: 'History', path: '/layout-demo/history', icon: 'history', permission: true },
+        { id: 'templates', title: 'Templates', path: '/layout-demo/templates', icon: 'content_copy', permission: true },
       ],
     },
     {
       id: 'insights',
       title: 'Insights',
-      icon: 'monitoring',
+      icon: 'bar_chart',
       children: [
         { id: 'reports', title: 'Reports', path: '/layout-demo/reports', icon: 'bar_chart', permission: true },
         { id: 'activity', title: 'Activity', path: '/layout-demo/activity', icon: 'timeline', permission: true },
@@ -327,24 +413,14 @@ export class LayoutDemoComponent {
       icon: 'settings',
       children: [
         { id: 'profile', title: 'Profile', path: '/layout-demo/profile', icon: 'person', permission: true },
-        { id: 'access', title: 'Access control', path: '/layout-demo/access', icon: 'admin_panel_settings', permission: true },
+        { id: 'access', title: 'Access control', path: '/layout-demo/access', icon: 'security', permission: true },
       ],
     },
     {
       id: 'support',
       title: 'Support',
       icon: 'help',
-      children: [{ id: 'help-center', title: 'Help center', path: '/layout-demo/help', icon: 'support', permission: true }],
+      children: [{ id: 'help-center', title: 'Help center', path: '/layout-demo/help', icon: 'help_outline', permission: true }],
     },
   ];
-
-  selectVersion(version: LayoutDemoVersion): void {
-    this.selectedVersion.set(version);
-    this.#layoutService.sidebar.set(SIDEBAR_CONFIGURATIONS[version]);
-  }
-
-  selectViewport(viewport: LayoutDemoViewportMode): void {
-    this.selectedViewport.set(viewport);
-    this.#viewport.resizeTo(viewport === 'mobile' ? 390 : 1280);
-  }
 }

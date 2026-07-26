@@ -9,8 +9,8 @@
   padding: 0 12px;
   border: 0;
   border-radius: 9999px;
-  outline: 2px solid transparent;
-  outline-offset: 2px;
+  outline: 1px solid transparent;
+  outline-offset: 1px;
   background: var(--sd-black100, var(--sd-surface-muted));
   color: var(--sd-black400, var(--sd-text-muted));
 }
@@ -35,4 +35,9 @@
   --mdc-outlined-text-field-focus-outline-color: transparent;
   --mdc-outlined-text-field-input-text-placeholder-color: var(--sd-black400, var(--sd-text-muted));
   --mdc-outlined-text-field-container-shape: 0px;
+}
+
+// why: Consumer-wide focus rules must not stack a second ring over the 1px pill ring.
+:host ::ng-deep .sd-layout-search-field__control input:focus-visible {
+  outline: 0;
 }

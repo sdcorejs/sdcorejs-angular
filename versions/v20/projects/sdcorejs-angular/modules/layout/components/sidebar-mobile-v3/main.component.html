@@ -44,7 +44,7 @@
         </button>
       </header>
       <div class="sd-sidebar-mobile-v3__navigation d-flex flex-column gap-16 flex-1 overflow-auto p-12">
-        <sd-layout-user-menu [userInfo]="userInfo()"></sd-layout-user-menu>
+        <sd-layout-user-menu presentation="mobile-inline" [userInfo]="userInfo()"></sd-layout-user-menu>
         <div class="sd-sidebar-mobile-v3__search bg-white">
           <sd-layout-search-field
             placeholder="Tìm trong tất cả menu"
@@ -60,6 +60,7 @@
               [menus]="pinnedMenus()"
               [activePath]="activePath()"
               [pinnedKeys]="pinnedKeys()"
+              pinVisibility="always"
               (navigate)="navigateMenu($event)"
               (togglePinned)="onTogglePinned($event)">
             </sd-layout-menu-tree>
@@ -79,6 +80,7 @@
             [query]="searchText()"
             [activePath]="activePath()"
             [pinnedKeys]="pinnedKeys()"
+            pinVisibility="always"
             (navigate)="navigateMenu($event)"
             (togglePinned)="onTogglePinned($event)">
           </sd-layout-menu-tree>

@@ -3,15 +3,18 @@
 .sd-layout-user-menu__action {
   border: 0;
   background: transparent;
-  color: var(--sd-black500);
+  color: var(--sd-black500, var(--sd-text, #1a1b1f));
   cursor: pointer;
   border-radius: 8px;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 // why: Account actions need a token-based hover state inside the compact popup.
 .sd-layout-user-menu__trigger:hover,
 .sd-layout-user-menu__action:hover {
-  background: var(--sd-black100);
+  background: var(--sd-black100, var(--sd-surface-muted, #f3f3f3));
 }
 
 // why: Custom disclosure controls need an explicit keyboard focus ring.
@@ -36,5 +39,61 @@
   z-index: 40;
   left: 0;
   bottom: calc(100% + 8px);
-  width: 240px;
+  width: 272px;
+}
+
+// why: Long account labels must use the available popup/mobile width without creating uneven hit targets.
+.sd-layout-user-menu__popup .sd-layout-user-menu__action,
+.sd-layout-user-menu__mobile-actions .sd-layout-user-menu__action {
+  width: 100%;
+}
+
+// why: Identity text must shrink beside the avatar and the direct mobile sign-out action.
+.sd-layout-user-menu__summary {
+  min-width: 0;
+  padding: 0 8px;
+}
+
+// why: The identity row needs an explicit shrink boundary inside the fixed-width account popup.
+.sd-layout-user-menu__identity {
+  min-width: 0;
+}
+
+.sd-layout-user-menu__signout {
+  width: auto;
+  flex: 0 0 auto;
+  min-height: 40px;
+  white-space: nowrap;
+}
+
+// why: Role icons should align with compact metadata instead of inheriting the action icon size.
+.sd-layout-user-menu__role sd-icon {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+// why: Notification counts need a compact token-based badge that remains legible at 99+.
+.sd-layout-user-menu__badge {
+  min-width: 20px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--sd-error, #ba1a1a);
+  color: var(--sd-white, #ffffff);
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.sd-layout-user-menu__signout:hover {
+  background: var(--sd-error-light, #ffdad6);
+  color: var(--sd-error-dark, var(--sd-error, #ba1a1a));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-layout-user-menu__trigger,
+  .sd-layout-user-menu__action {
+    transition: none;
+  }
 }

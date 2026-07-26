@@ -1,12 +1,54 @@
-import { InjectionToken } from '@angular/core';
+import { InjectionToken, Signal } from '@angular/core';
 import { MaybeAsync } from '@sdcorejs/utils/models';
+import { Observable } from 'rxjs';
+
+/** Consumer-owned account action invoked without arguments by the shared user menu. */
+export type SdLayoutAccountAction = () => void | Promise<void>;
+
+/** Notification badge source and the action that opens the consumer's notification experience. */
+export interface SdLayoutNotificationConfiguration {
+  /**
+   * Số lượng thông báo chưa đọc. Hỗ trợ giá trị tĩnh hoặc nguồn reactive dài hạn.
+   */
+  count: number | Signal<number> | Observable<number>;
+
+  /**
+   * Tác vụ do consumer xử lý khi người dùng chọn thông báo.
+   */
+  action: SdLayoutAccountAction;
+}
+
 export interface ISdLayoutConfiguration {
   homeUrl?: string;
   mobileBreakpoint?: number;
   sidebar: ISdSidebarConfiguration | (() => MaybeAsync<ISdSidebarConfiguration>);
   userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
-  signout: () => void | Promise<void>;
-  changePassword?: () => void | Promise<void>;
+  signout: SdLayoutAccountAction;
+  changePassword?: SdLayoutAccountAction;
+
+  /**
+   * Tác vụ chỉnh sửa hồ sơ do consumer cung cấp.
+   */
+  updateProfile?: SdLayoutAccountAction;
+
+  /**
+   * Tác vụ mở thiết lập tài khoản do consumer cung cấp.
+   */
+  setting?: SdLayoutAccountAction;
+
+  /**
+   * Cấu hình số lượng và tác vụ thông báo của tài khoản.
+   */
+  notification?: SdLayoutNotificationConfiguration;
+}
+
+/** Optional role metadata rendered below the user's email when `text` is non-empty. */
+export interface SdLayoutUserRole {
+  text: string;
+  /** Icon name resolved by `SdIcon`. */
+  icon?: string;
+  /** CSS color applied to the role metadata. */
+  color?: string;
 }
 
 export interface SdLayoutUserInfo {
@@ -34,6 +76,12 @@ export interface SdLayoutUserInfo {
    * Hỗ trợ các định dạng: URL (http/https), chuỗi base64 (data:image), hoặc đường dẫn nội bộ.
    */
   avatar?: string;
+
+  /**
+   * Chức vụ hoặc vai trò hiển thị cùng thông tin người dùng.
+   * Không render khi `text` rỗng.
+   */
+  role?: SdLayoutUserRole;
 }
 
 export const DEFAULT_LAYOUT_MOBILE_BREAKPOINT = 1024;

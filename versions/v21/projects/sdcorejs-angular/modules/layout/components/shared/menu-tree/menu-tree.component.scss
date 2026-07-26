@@ -4,9 +4,12 @@
   min-height: 40px;
   border: 0;
   background: transparent;
-  color: var(--sd-black500);
+  color: var(--sd-black500, var(--sd-text, #1a1b1f));
   cursor: pointer;
   border-radius: 8px;
+  transition:
+    background-color 120ms ease,
+    color 120ms ease;
 }
 
 // why: The active route needs persistent navigation emphasis independent of pointer hover.
@@ -19,7 +22,12 @@
 // why: Navigation rows need a token-based hover surface without adding a second button component.
 .sd-layout-menu-tree__route-button:hover,
 .sd-layout-menu-tree__pin:hover {
-  background: var(--sd-black100);
+  background: var(--sd-black100, var(--sd-surface-muted, #f3f3f3));
+  color: var(--sd-primary, #005cbb);
+}
+
+.sd-layout-menu-tree__route-button--active:hover {
+  background: var(--sd-primary-light, #d7e3ff);
 }
 
 // why: Keyboard users need a visible focus indicator on custom navigation actions.
@@ -33,6 +41,19 @@
 .sd-layout-menu-tree__pin {
   width: 36px;
   flex: 0 0 36px;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease,
+    color 120ms ease;
+}
+
+// why: Desktop pin actions appear after an intentional hover delay while pinned/mobile actions remain persistent.
+.sd-layout-menu-tree__pin--visible,
+.sd-layout-menu-tree__pin:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 // why: Group labels separate nested branches without behaving like routes.
@@ -45,4 +66,11 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-layout-menu-tree__route-button,
+  .sd-layout-menu-tree__pin {
+    transition: none;
+  }
 }

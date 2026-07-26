@@ -1,5 +1,5 @@
 ---
-updated_at: 2026-07-24T04:18:17+07:00
+updated_at: 2026-07-26T22:30:00+07:00
 status: complete
 track: angular
 active_skill: sdcorejs-ship
@@ -10,81 +10,50 @@ branch: feat/layout-navigation-polish
 
 ## User Request
 
-Thực thi plan polish Layout V2/V3 theo phương án Soft pill đã duyệt bằng
-subagent-driven workflow trong worktree riêng.
+Nâng cấp user profile V1 và mở rộng account actions thống nhất V1/V2/V3 với
+`role`, `updateProfile`, `setting` và reactive `notification`.
 
 ## Tasks
 
-- [x] Task 1 - compact account và header V3.
-- [x] Task 2 - shared Soft-pill search component.
-- [x] Task 3 - tích hợp search vào bốn biến thể V2/V3.
-- [x] Task 4 - changelog và tài liệu Layout.
-- [x] Task 5 - test/build và browser UI check.
-- [x] Task 6 - review, repair và readiness handoff.
+- [x] Xác nhận public field names và reactive notification contract.
+- [x] Viết, self-review và phê duyệt spec.
+- [x] Viết, self-review và phê duyệt implementation plan.
+- [x] Thực thi approved plan theo TDD, sync v19 sang v20/v21.
+- [x] Hoàn thiện Showcase độc lập cho V1/V2/V3 và browser UAT.
+- [x] Repair hai finding từ code/accessibility review.
+- [x] Cập nhật user guide, technical docs và product traceability.
+- [x] Chạy verify-before-done; chuẩn bị branch-ready read-only gate.
 
 ## Current State
 
-- Last completed: Task 6 final review, accessibility repair, traceability và
-  fresh branch-readiness verification.
-- In progress: không có.
-- Blocked/skipped: không có; push/PR/tag/release chưa được yêu cầu trong plan
-  thực thi này.
+- Last completed: implementation, repair loop, documentation, product traceability và final production builds.
+- In progress: none.
+- Blocked/skipped: none.
+- Showcase: `http://127.0.0.1:4300/` đang trả HTTP 200.
 
 ## Artifacts Touched
 
-- EDIT `.sdcorejs/summary.md` - refresh architecture/context tại HEAD `39d544e`.
-- EDIT `.sdcorejs/tasks/current-session.md` - execution checkpoint.
-- CREATE `.sdcorejs/docs/angular/2026-07-24-04-18-layout-v2-v3-navigation-polish.md`
-  - session summary, decisions, verification và follow-up.
-- CREATE `.sdcorejs/docs/product/2026-07-24-04-18-layout-v2-v3-navigation-polish.md`
-  cùng bộ `product/**/layout-v2-v3-navigation-polish.md` - product
-  traceability cho 10 acceptance criteria.
-- EDIT `.sdcorejs/tasks/angular.md` - đánh dấu Layout polish hoàn tất và xếp
-  follow-up accessibility/test quality/delivery.
-- EDIT `.sdcorejs/summary.md` - refresh hoàn tất tại implementation HEAD
-  `2391516`.
+- CREATE approved spec và plan snapshot dưới `.sdcorejs/specs/angular/` và `.sdcorejs/plans/angular/`.
+- EDIT `versions/v19/projects/sdcorejs-angular/modules/layout/**` cho account-menu contract, UI, a11y và tests.
+- EDIT `versions/v19/projects/showcase/src/app/pages/modules/layout/**` cho ba Showcase độc lập.
+- SYNC `versions/v20/**`, `versions/v21/**` từ v19.
+- CREATE/EDIT user guide, technical docs, product traceability, task ledger và summary.
 
 ## Verification
 
-- Approved design và implementation plan đã commit.
-- Worktree checkout pass sau khi bật Git long-path.
-- Root, v19/v20/v21 dependency setup pass; v20 cần `--legacy-peer-deps`;
-  package manifest/lock side effects đã được hoàn nguyên.
-- v19 focused user-menu/V2/V3 baseline: `18/18 SUCCESS`, exit `0`.
-- Core docs inventory/style/Input/Layout preflight: pass; registry `21.1.4`,
-  local v19 source remains implementation authority.
-- Task 1 RED: 4 behavior tests plus computed-style cascade regressions fail
-  đúng nguyên nhân.
-- Task 1 GREEN: v19/v20/v21 đều `22/22`, sync/check/diff pass.
-- Task 1 spec review pass; quality repair đóng 2 Important findings, re-review
-  còn 0 Critical/Important.
-- Task 2 RED xác nhận 3 lỗi cascade/token/subscript; GREEN v19/v20/v21 đều
-  `6/6`, sync/check/diff pass.
-- Task 2 spec review pass; quality re-review còn 0 Critical/Important. Một
-  minor assertion icon phụ thuộc Material renderer được ghi nhận; lỗi
-  `aria-hidden` global của editable `SdInput` được giữ ngoài scope Layout.
-- Task 3 RED: `4/29` regression mới fail đúng do bốn biến thể còn render
-  `SdInput` trực tiếp; GREEN v19/v20/v21 changed-spec đều `42/42`.
-- Task 3 spec và quality review pass; còn 0 Critical/Important. Một minor
-  test coverage end-to-end cho parent filtering/Escape được ghi nhận.
-- Task 4 generator/test/sync pass; spec và quality review pass với 0 finding.
-- Task 5 full Layout v19 `84/84`; changed-spec v20/v21 `42/42`; ba library
-  build và Showcase build pass.
-- Browser V2/V3 desktop/mobile pass; search/filter/focus/Escape/body-scroll
-  behavior đúng, console `0` error và `0` warning.
-- `lint:release` ban đầu phát hiện 178 lỗi Prettier do mixed EOL; repair-loop
-  pass 1 commit `b90b656` và lint v19/v20/v21 pass.
-- Final review ban đầu phát hiện compact trigger thiếu accessible name; RED/GREEN
-  repair commit `2391516` thêm tên hiển thị chỉ ở compact mode.
-- Final re-review: `0 BLOCKER`, `0 REQUIRED`, ready.
-- Fresh Layout suite trên HEAD hiện tại: v19/v20/v21 đều `84/84 SUCCESS`.
-- Fresh `npm run lint:release`, `npm run check:sync` và `git diff --check`: pass.
-- Fresh library build v19/v20/v21 và Showcase v19 production build: pass.
-- Acceptance audit: `10/10` criteria có requirement, implementation và test/UAT
-  evidence; không có product gap.
-- Branch scope guards: Layout V1, public barrels và `forms/input` không đổi.
+- Approved spec hash: `7104ac488b22c4a7968e149ae11851df3eacc8cde1cd18a4fd789b0e30a44e37`.
+- Approved plan hash: `96de5b6a4fd674731b475dc062480b28236eb0333533592a0800f6075755c6a6`.
+- v19 Layout unit suite: 105 passed, 0 failed.
+- Focused v20/v21 regression suites: 40 passed, 0 failed on each workspace.
+- Showcase spec: 10 passed, 0 failed.
+- Repair regression specs: 4 passed, 0 failed.
+- Targeted ESLint, i18n parity (521 keys × 5 locales), sync/check:sync: passed.
+- Final v19 library production build and final Showcase production build: passed.
+- Browser UAT: V1/V2/V3 desktop/mobile role, actions, badge, expand/collapse, sticky search và inline signout passed.
+- Final hygiene: `git diff --check` clean; no conflict markers, focused tests or secret candidates.
+- Final full Karma re-run hit the Angular runner timeout; no failing assertion was reported. Earlier passing suites and final production builds remain the verification evidence.
 
 ## Resume From Here
 
-Branch đã sẵn sàng tại local. Chỉ tiếp tục push và tạo PR vào `main` khi user
-đưa ra yêu cầu delivery rõ ràng; tag/release là bước phê duyệt riêng sau merge.
+Không còn implementation task. Chạy branch-ready read-only report, sau đó bàn giao
+Showcase để người dùng xác nhận trực quan; không commit/push nếu chưa được yêu cầu.

@@ -4,14 +4,16 @@
 @if (_userInfo && _sidebar) {
   <div class="wrapper" [style.height]="isMobile() ? '100dvh' : '100%'">
     <div class="c-header">
-      @if (_sidebar.logoUrl) {
-        <div class="c-logo">
-          <a href="javascript:;" (click)="openHomePage()">
-            <img alt="logo" [src]="_sidebar.logoUrl" />
-          </a>
-        </div>
-      }
-      <div class="c-title-menu-group">
+      <div class="c-logo">
+        <a href="javascript:;" aria-label="Trang chủ" (click)="openHomePage()">
+          @if (logoUrl(); as _logoUrl) {
+            <img alt="" [src]="_logoUrl" />
+          } @else {
+            <sd-icon name="apps"></sd-icon>
+          }
+        </a>
+      </div>
+      <div class="c-title-menu-group" [class.d-none]="!isShowSidebar()">
         <span>{{ titleMenuGroup() || _sidebar.defaultTitle || 'Back Office' }}</span>
       </div>
     </div>
@@ -78,8 +80,8 @@
             </button>
           }
         </div>
-        <div class="c-menu-tree">
-          @if (totalMenuInMenusByGroup() >= 10) {
+        <div class="c-menu-tree" [class.d-none]="!isShowSidebar()" [attr.inert]="!isShowSidebar() ? '' : null">
+          @if (totalMenuInMenusByGroup() > 10) {
             <div style="padding: 0px 4px" class="c-menu-tree-search">
               <sd-input
                 size="sm"

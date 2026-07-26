@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { SdLayoutMenu, SdLayoutRootMenu } from '../../../services';
 import { SdLayoutMenuTreeComponent } from './menu-tree.component';
 
@@ -40,6 +40,34 @@ describe('SdLayoutMenuTreeComponent', () => {
     fixture.componentRef.setInput('pinnedKeys', ['id:reports']);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('[data-pin-key="id:reports"]').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('reveals an unpinned desktop action only after the V1-compatible hover delay', fakeAsync(() => {
+    const route = fixture.nativeElement.querySelector('[data-menu-key="id:reports"]').parentElement as HTMLElement;
+    const pin = route.querySelector('[data-pin-key="id:reports"]') as HTMLButtonElement;
+
+    expect(getComputedStyle(pin).opacity).toBe('0');
+    fixture.componentInstance.onPinHoverStart('id:reports');
+    tick(299);
+    fixture.detectChanges();
+    expect(getComputedStyle(pin).opacity).toBe('0');
+
+    tick(1);
+    fixture.detectChanges();
+    expect(pin.classList).toContain('sd-layout-menu-tree__pin--visible');
+
+    fixture.componentInstance.onPinHoverEnd('id:reports');
+    fixture.detectChanges();
+    expect(pin.classList).not.toContain('sd-layout-menu-tree__pin--visible');
+  }));
+
+  it('keeps mobile pin actions visible and uses the compatible push_pin glyph', () => {
+    fixture.componentRef.setInput('pinVisibility', 'always');
+    fixture.detectChanges();
+
+    const pin = fixture.nativeElement.querySelector('[data-pin-key="id:reports"]') as HTMLButtonElement;
+    expect(getComputedStyle(pin).opacity).toBe('1');
+    expect(pin.querySelector('mat-icon')?.textContent?.trim()).toBe('push_pin');
   });
 
   it('emits the selected route menu', () => {

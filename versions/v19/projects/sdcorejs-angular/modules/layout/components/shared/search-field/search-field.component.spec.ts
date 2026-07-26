@@ -97,6 +97,8 @@ describe('SdLayoutSearchFieldComponent', () => {
     input.focus();
 
     expect(getComputedStyle(shell).outlineColor).toBe('rgb(0, 92, 187)');
+    expect(getComputedStyle(shell).outlineWidth).toBe('1px');
+    expect(getComputedStyle(input).outlineWidth).toBe('0px');
   });
 
   it('forwards SdInput changes as strings', () => {

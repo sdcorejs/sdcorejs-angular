@@ -34,7 +34,10 @@
 
 ## Done
 
-- [x] (2026-07-24) Polish Layout V2/V3 compact controls và shared Soft-pill search; sync ba Angular line, hoàn tất docs, review, browser UAT và release verification.
+- [x] (2026-07-26) Hoàn thiện shared Layout account menu V1/V2/V3 với role, semantic actions, reactive notification badge, i18n/a11y, Showcase, docs và product traceability.
+- [x] (2026-07-25) Căn profile/đăng xuất V2 mobile cùng hàng và giữ avatar account V1 desktop nhìn thấy, mở menu được trong Showcase.
+- [x] (2026-07-25) Tinh chỉnh pin desktop/mobile, V3 inline sign-out, sticky search và logo fallback V1; xác nhận Layout 94/94 và build Angular 19/20/21.
+- [x] (2026-07-25) Hoàn thiện Layout V1/V2/V3: collapse rail, logo fallback, mobile direct sign-out, hover/focus và ba Showcase độc lập trên Angular 19/20/21.
 - [x] (2026-07-23) Audit Changelog and 113 Markdown files, enforce canonical npm README sync, refresh release docs, and pass the fresh commit/push delivery gate.
 - [x] (2026-07-23) Complete Task 15 full quality gate: repair full Karma/coverage/i18n/sync issues, browser smoke, review/repair, production builds and package dry-runs.
 - [x] (2026-07-23) Repair Showcase Changelog duplicate-section rendering and Layout demo viewport injection; full Showcase 191/191 passes.

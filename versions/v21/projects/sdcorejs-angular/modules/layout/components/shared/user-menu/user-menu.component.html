@@ -1,66 +1,206 @@
+@let _presentation = presentation();
+@let _role = role();
+@let _notificationBadge = notificationBadge();
 <div class="sd-layout-user-menu position-relative">
-  <button
-    #trigger
-    type="button"
-    data-user-trigger
-    class="sd-layout-user-menu__trigger d-flex align-items-center text-left"
-    [class.sd-layout-user-menu__trigger--compact]="compact()"
-    [class.w-full]="!compact()"
-    [class.gap-8]="!compact()"
-    [class.w-56]="compact()"
-    [class.gap-0]="compact()"
-    aria-haspopup="menu"
-    [attr.aria-label]="compact() ? displayName() : null"
-    [attr.aria-expanded]="isOpen()"
-    (click)="toggle()">
-    <sd-avatar [src]="avatar()" [size]="compact() ? 32 : 40"></sd-avatar>
-    @if (!compact()) {
-      <span class="d-flex flex-column flex-1 overflow-hidden">
-        <span class="T14M text-ellipsis">{{ displayName() }}</span>
-        @if (userInfo().email) {
-          <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
-        }
-      </span>
-      <sd-icon [name]="isOpen() ? 'expand_less' : 'expand_more'"></sd-icon>
-    }
-  </button>
-
-  @if (isOpen()) {
-    <div
-      #menu
-      data-user-menu
-      class="sd-layout-user-menu__popup d-flex flex-column gap-4 p-8 bg-white border border-black200 rounded-8 mat-elevation-z4"
-      role="menu"
-      tabindex="-1"
-      (keydown)="onMenuKeydown($event)">
-      <div class="d-flex flex-column gap-4 px-8 py-4">
-        <span class="T14M text-ellipsis">{{ displayName() }}</span>
-        @if (userInfo().email) {
-          <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
+  @if (_presentation !== 'disclosure') {
+    <div class="sd-layout-user-menu__mobile d-flex flex-column gap-8">
+      <div
+        data-mobile-account-row
+        class="sd-layout-user-menu__mobile-row sd-layout-user-menu__mobile--inline d-flex align-items-center gap-8">
+        <div data-user-summary class="sd-layout-user-menu__summary d-flex align-items-center gap-8 flex-1">
+          <sd-avatar [src]="avatar()" [size]="40"></sd-avatar>
+          <span class="d-flex flex-column flex-1 overflow-hidden">
+            <span class="T14M text-ellipsis">{{ displayName() }}</span>
+            @if (userInfo().email) {
+              <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
+            }
+            @if (_role) {
+              <span
+                data-user-role
+                class="sd-layout-user-menu__role d-flex align-items-center gap-4 T12R text-ellipsis"
+                [style.color]="_role.color">
+                @if (_role.icon) {
+                  <sd-icon [name]="_role.icon"></sd-icon>
+                }
+                {{ _role.text }}
+              </span>
+            }
+          </span>
+        </div>
+        @if (signoutAction()) {
+          <button
+            type="button"
+            data-user-action="signout"
+            class="sd-layout-user-menu__action sd-layout-user-menu__signout d-flex align-items-center gap-8 px-8 py-8 T14R text-left text-error"
+            (click)="runSignout()">
+            <sd-icon name="logout"></sd-icon>
+            {{ 'core.module.layout.user.logout' | translate }}
+          </button>
         }
       </div>
-      @if (changePasswordAction()) {
-        <button
-          type="button"
-          role="menuitem"
-          data-user-action="change-password"
-          class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
-          (click)="runChangePassword()">
-          <sd-icon name="lock"></sd-icon>
-          Đổi mật khẩu
-        </button>
-      }
-      @if (signoutAction()) {
-        <button
-          type="button"
-          role="menuitem"
-          data-user-action="signout"
-          class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left text-error"
-          (click)="runSignout()">
-          <sd-icon name="logout"></sd-icon>
-          Đăng xuất
-        </button>
+
+      @if (updateProfileAction() || settingAction() || notificationAction() || changePasswordAction()) {
+        <div data-mobile-account-actions class="sd-layout-user-menu__mobile-actions d-flex flex-column gap-4">
+          @if (updateProfileAction()) {
+            <button
+              type="button"
+              data-user-action="update-profile"
+              class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+              (click)="runUpdateProfile()">
+              <sd-icon name="edit"></sd-icon>
+              {{ 'core.module.layout.user.update-profile' | translate }}
+            </button>
+          }
+          @if (settingAction()) {
+            <button
+              type="button"
+              data-user-action="setting"
+              class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+              (click)="runSetting()">
+              <sd-icon name="settings"></sd-icon>
+              {{ 'core.module.layout.user.setting' | translate }}
+            </button>
+          }
+          @if (notificationAction()) {
+            <button
+              type="button"
+              data-user-action="notification"
+              class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+              (click)="runNotification()">
+              <sd-icon name="notifications"></sd-icon>
+              <span class="flex-1">{{ 'core.module.layout.user.notification' | translate }}</span>
+              @if (_notificationBadge) {
+                <span data-notification-badge class="sd-layout-user-menu__badge">{{ _notificationBadge }}</span>
+              }
+            </button>
+          }
+          @if (changePasswordAction()) {
+            <button
+              type="button"
+              data-user-action="change-password"
+              class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+              (click)="runChangePassword()">
+              <sd-icon name="lock"></sd-icon>
+              {{ 'core.module.layout.user.change-password' | translate }}
+            </button>
+          }
+        </div>
       }
     </div>
+  } @else {
+    <button
+      #trigger
+      type="button"
+      data-user-trigger
+      class="sd-layout-user-menu__trigger d-flex align-items-center text-left"
+      [class.sd-layout-user-menu__trigger--compact]="compact()"
+      [class.w-full]="!compact()"
+      [class.gap-8]="!compact()"
+      [class.w-56]="compact()"
+      [class.gap-0]="compact()"
+      aria-haspopup="menu"
+      [attr.aria-label]="compact() ? displayName() : null"
+      [attr.aria-expanded]="isOpen()"
+      (click)="toggle()">
+      <sd-avatar [src]="avatar()" [size]="compact() ? 32 : 40"></sd-avatar>
+      @if (!compact()) {
+        <span class="d-flex flex-column flex-1 overflow-hidden">
+          <span class="T14M text-ellipsis">{{ displayName() }}</span>
+          @if (userInfo().email) {
+            <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
+          }
+        </span>
+        <sd-icon [name]="isOpen() ? 'expand_less' : 'expand_more'"></sd-icon>
+      }
+    </button>
+
+    @if (isOpen()) {
+      <div
+        #menu
+        data-user-menu
+        class="sd-layout-user-menu__popup d-flex flex-column gap-4 p-8 bg-white border border-black200 rounded-8 mat-elevation-z4"
+        role="menu"
+        tabindex="-1"
+        (keydown)="onMenuKeydown($event)">
+        <div data-user-identity class="sd-layout-user-menu__identity d-flex align-items-center gap-8 px-8 py-4">
+          <sd-avatar [src]="avatar()" [size]="40"></sd-avatar>
+          <span class="d-flex flex-column flex-1 overflow-hidden">
+            <span class="T14M text-ellipsis">{{ displayName() }}</span>
+            @if (userInfo().email) {
+              <span class="T12R text-black400 text-ellipsis">{{ userInfo().email }}</span>
+            }
+            @if (_role) {
+              <span
+                data-user-role
+                class="sd-layout-user-menu__role d-flex align-items-center gap-4 T12R text-ellipsis"
+                [style.color]="_role.color">
+                @if (_role.icon) {
+                  <sd-icon [name]="_role.icon"></sd-icon>
+                }
+                {{ _role.text }}
+              </span>
+            }
+          </span>
+        </div>
+        @if (updateProfileAction()) {
+          <button
+            type="button"
+            role="menuitem"
+            data-user-action="update-profile"
+            class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+            (click)="runUpdateProfile()">
+            <sd-icon name="edit"></sd-icon>
+            {{ 'core.module.layout.user.update-profile' | translate }}
+          </button>
+        }
+        @if (settingAction()) {
+          <button
+            type="button"
+            role="menuitem"
+            data-user-action="setting"
+            class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+            (click)="runSetting()">
+            <sd-icon name="settings"></sd-icon>
+            {{ 'core.module.layout.user.setting' | translate }}
+          </button>
+        }
+        @if (notificationAction()) {
+          <button
+            type="button"
+            role="menuitem"
+            data-user-action="notification"
+            class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+            (click)="runNotification()">
+            <sd-icon name="notifications"></sd-icon>
+            <span class="flex-1">{{ 'core.module.layout.user.notification' | translate }}</span>
+            @if (_notificationBadge) {
+              <span data-notification-badge class="sd-layout-user-menu__badge">{{ _notificationBadge }}</span>
+            }
+          </button>
+        }
+        @if (changePasswordAction()) {
+          <button
+            type="button"
+            role="menuitem"
+            data-user-action="change-password"
+            class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left"
+            (click)="runChangePassword()">
+            <sd-icon name="lock"></sd-icon>
+            {{ 'core.module.layout.user.change-password' | translate }}
+          </button>
+        }
+        @if (signoutAction()) {
+          <button
+            type="button"
+            role="menuitem"
+            data-user-action="signout"
+            class="sd-layout-user-menu__action d-flex align-items-center gap-8 px-8 py-8 T14R text-left text-error"
+            (click)="runSignout()">
+            <sd-icon name="logout"></sd-icon>
+            {{ 'core.module.layout.user.logout' | translate }}
+          </button>
+        }
+      </div>
+    }
   }
 </div>

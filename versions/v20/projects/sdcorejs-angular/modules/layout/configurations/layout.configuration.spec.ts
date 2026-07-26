@@ -1,6 +1,11 @@
+import { signal } from '@angular/core';
+import { of } from 'rxjs';
 import {
   DEFAULT_LAYOUT_MOBILE_BREAKPOINT,
+  ISdLayoutConfiguration,
   ISdSidebarConfiguration,
+  SdLayoutUserRole,
+  SdLayoutUserInfo,
   SidebarConfigurationV1,
   SidebarConfigurationV2,
   SidebarConfigurationV3,
@@ -11,6 +16,29 @@ import {
 } from './layout.configuration';
 
 describe('layout configuration', () => {
+  it('accepts optional role and account actions without changing the required V1 contract', () => {
+    const role: SdLayoutUserRole = { text: 'Administrator', icon: 'badge', color: '#005cbb' };
+    const userInfo: SdLayoutUserInfo = {
+      fullName: 'Demo User',
+      role,
+    };
+    const base = {
+      sidebar: { version: 1 } as const,
+      userInfo,
+      signout: () => undefined,
+      updateProfile: () => undefined,
+      setting: () => undefined,
+    };
+    const configurations: ISdLayoutConfiguration[] = [
+      { ...base, notification: { count: 3, action: () => undefined } },
+      { ...base, notification: { count: signal(7), action: () => undefined } },
+      { ...base, notification: { count: of(11), action: () => undefined } },
+    ];
+
+    expect(configurations.map(configuration => configuration.notification?.count)).toEqual([3, jasmine.any(Function), jasmine.any(Object)]);
+    expect(userInfo.role).toEqual({ text: 'Administrator', icon: 'badge', color: '#005cbb' });
+  });
+
   it('keeps V1 source-compatible while accepting V2 and V3', () => {
     const v1: SidebarConfigurationV1 = { version: 1, defaultTitle: 'Legacy' };
     const v2: SidebarConfigurationV2 = { version: 2 };

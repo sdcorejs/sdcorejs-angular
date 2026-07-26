@@ -59,7 +59,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(304);
+    expect(exampleIds).toHaveSize(306);
     for (const page of DOC_PAGES) {
       expect(page.examples).toHaveSize(page.demoSectionCount);
       for (const example of page.examples) {
@@ -112,7 +112,7 @@ describe('documentation registry', () => {
     const layoutPage = findDocPage('modules-integrations', 'layout');
 
     expect(layoutPage?.sourcePath).toContain('/pages/modules/layout/layout-demo.component.ts');
-    expect(layoutPage?.demoSectionCount).toBe(1);
+    expect(layoutPage?.demoSectionCount).toBe(3);
     expect((await layoutPage?.examples[0]?.loadComponent())?.name).toBe('LayoutDemoComponent');
   });
 });
