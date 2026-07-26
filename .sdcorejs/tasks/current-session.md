@@ -1,6 +1,6 @@
 ---
-updated_at: 2026-07-27T02:22:00+07:00
-status: ready_for_delivery
+updated_at: 2026-07-27T02:29:00+07:00
+status: complete
 track: angular
 active_skill: sdcorejs-git
 branch: feat/layout-navigation-polish
@@ -19,7 +19,7 @@ then commit, push and create a pull request.
 - [x] (2026-07-27) Capture RED regressions for mobile containment and the version catalog.
 - [x] (2026-07-27) Repair Layout, generated-documentation tooling and 1.5 docs.
 - [x] (2026-07-27) Pass tests, lint, sync, builds and browser UAT.
-- [ ] Review the final diff, commit intentionally, push and create the PR.
+- [x] (2026-07-27) Review the final diff, commit intentionally, push and create PR #17.
 
 ## Current state
 
@@ -28,6 +28,8 @@ then commit, push and create a pull request.
 - The 1.5 collector was verified in a temporary output directory with 97
   documents per Angular major.
 - No tag, npm publication or immutable 1.5 archive creation is included.
+- Repair commit `daf49b2` is pushed and PR
+  `https://github.com/sdcorejs/sdcorejs-angular/pull/17` targets `main`.
 
 ## Verification
 
@@ -40,5 +42,5 @@ then commit, push and create a pull request.
 
 ## Resume from here
 
-Run the branch-ready review, stage only the intentional files, commit, push and
-open the pull request against `main`.
+Review CI and PR feedback. Tagging, npm publication and immutable 1.5 archive
+creation require a separate explicit release action after merge approval.

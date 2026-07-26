@@ -11,7 +11,6 @@
 
 ## Next
 
-- [ ] Khi được yêu cầu delivery, push `feat/layout-navigation-polish` và mở PR vào `main`.
 - [ ] Audit/fix editable `SdInput` đang kế thừa `aria-hidden="true"` trong một task Forms độc lập.
 - [ ] Giảm coupling của search-icon spec với Material renderer và tăng integration assertion cho filter/Escape.
 - [ ] Add a dedicated Showcase fixture for `SdTable` empty-result reload and capture `images/sd-table-empty-result-reload.png`.
@@ -34,6 +33,7 @@
 
 ## Done
 
+- [x] (2026-07-27) Push `feat/layout-navigation-polish` và mở PR #17 vào `main` sau khi toàn bộ branch-ready gate xanh.
 - [x] (2026-07-27) Sửa mobile V2/V3 host containment, thêm regression coverage và xác nhận browser UAT ở 390px không còn top clipping.
 - [x] (2026-07-27) Sửa release lint/generated-doc gate, catalog phiên bản 1.2+ và hoàn thiện migration/docs cho release suffix 1.5.
 - [x] (2026-07-26) Hoàn thiện shared Layout account menu V1/V2/V3 với role, semantic actions, reactive notification badge, i18n/a11y, Showcase, docs và product traceability.

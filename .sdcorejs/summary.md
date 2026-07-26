@@ -162,7 +162,7 @@ contract cũ.
   post-publish artifacts and are not pre-created by this branch.
 - Release-phase lint is green after separating authored-source lint from
   generated-source freshness tests.
-- Commit, push and PR creation are authorized and pending. Tagging, npm
+- Repair commit `daf49b2` is pushed and PR #17 targets `main`. Tagging, npm
   publication and immutable 1.5 archive creation remain out of scope.
 
 ## Freshness
@@ -170,4 +170,4 @@ contract cũ.
 This summary reflects the verified repair prepared on top of repository HEAD
 `3a68bb7` on branch `feat/layout-navigation-polish` on 2026-07-27. Source,
 tests, generated artifacts and Angular 19/20/21 mirrors are synchronized.
-Commit/push/PR delivery is pending; release publication is not authorized.
+PR #17 contains the verified branch; release publication is not authorized.
