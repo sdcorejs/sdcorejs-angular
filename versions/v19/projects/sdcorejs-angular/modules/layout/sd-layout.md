@@ -224,6 +224,7 @@ V2/V3 desktop and mobile menu searches share the same internal Soft-pill field: 
 ## Responsive, storage, and migration behavior
 
 - `mobileBreakpoint` defaults to `1024`. A width strictly below the normalized value is mobile; invalid or non-positive values fall back to the default.
+- Layout and the V2/V3 mobile custom-element hosts are block-level so their full-height shells start at the containing block instead of an inline text baseline.
 - `SdLayout` keeps consuming the compatibility `SdLayoutResponsiveService`, which reads `SdViewportService.width`; existing service overrides remain valid and V1/V2/V3 switch from the same application-wide resize listener.
 - `SdLayoutResponsiveService` delegates to `SdViewportService`; `SD_LAYOUT_VIEWPORT` aliases `SD_VIEWPORT`, so existing consumers and test providers continue to work without registering a second listener.
 - Pinned and Recent entries are persisted as stable menu keys. Missing or no-longer-permitted keys are discarded when the current menu tree is hydrated.

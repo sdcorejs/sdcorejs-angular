@@ -18,22 +18,77 @@ const DEFAULT_REGISTRY_PATH = join(
   'app',
   'docs',
   'core',
-  'documentation.registry.ts',
+  'documentation.registry.ts'
 );
 const DEFAULT_OUTPUT_DIR = join(REPO_ROOT, 'versions', 'v19', 'dist', 'showcase', 'browser');
+const DEFAULT_VERSIONS_PATH = join(REPO_ROOT, 'published-docs', 'versions.json');
 
 export const PUBLIC_BASE_URL = 'https://sdcorejs.github.io/sdcorejs-angular/';
-export const SUPPORTED_RELEASES = Object.freeze([
-  '21.1.4',
-  '20.1.4',
-  '19.1.4',
-  '21.1.3',
-  '20.1.3',
-  '19.1.3',
-  '21.1.2',
-  '20.1.2',
-  '19.1.2',
-]);
+const SHOWCASE_RELEASE_MINIMUMS = Object.freeze(
+  new Map([
+    [21, '21.1.2'],
+    [20, '20.1.2'],
+    [19, '19.1.2'],
+  ])
+);
+
+function parseSemanticVersion(value) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/u.exec(String(value).trim());
+  if (!match) return null;
+  return {
+    major: Number(match[1]),
+    minor: Number(match[2]),
+    patch: Number(match[3]),
+    prerelease: match[4]?.split('.') ?? [],
+  };
+}
+
+function comparePrerelease(left, right) {
+  if (!left.length && right.length) return 1;
+  if (left.length && !right.length) return -1;
+
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const a = left[index];
+    const b = right[index];
+    if (a === undefined) return -1;
+    if (b === undefined) return 1;
+    if (a === b) continue;
+    const aNumeric = /^\d+$/u.test(a);
+    const bNumeric = /^\d+$/u.test(b);
+    if (aNumeric && bNumeric) return Number(a) - Number(b);
+    if (aNumeric !== bNumeric) return aNumeric ? -1 : 1;
+    return a < b ? -1 : 1;
+  }
+  return 0;
+}
+
+function compareSemanticVersions(left, right) {
+  const a = parseSemanticVersion(left);
+  const b = parseSemanticVersion(right);
+  if (!a || !b) return String(left).localeCompare(String(right));
+  return a.major - b.major || a.minor - b.minor || a.patch - b.patch || comparePrerelease(a.prerelease, b.prerelease);
+}
+
+/** Selects every published Showcase-era release so future docs need no source-code allowlist. */
+export function selectSupportedReleases(manifest) {
+  if (!manifest || !Array.isArray(manifest.versions)) {
+    throw new Error('Published documentation manifest must contain a versions array.');
+  }
+
+  const releases = manifest.versions
+    .map(entry => entry?.version)
+    .filter(version => {
+      const parsed = parseSemanticVersion(version);
+      const minimum = parsed ? SHOWCASE_RELEASE_MINIMUMS.get(parsed.major) : undefined;
+      return minimum !== undefined && compareSemanticVersions(version, minimum) >= 0;
+    })
+    .sort((left, right) => compareSemanticVersions(right, left));
+
+  if (!releases.length) throw new Error('Published documentation manifest contains no supported Showcase releases.');
+  return releases;
+}
+
+export const SUPPORTED_RELEASES = Object.freeze(selectSupportedReleases(JSON.parse(readFileSync(DEFAULT_VERSIONS_PATH, 'utf8'))));
 
 const DOC_TABS = Object.freeze([
   ['overview', 'Overview'],
@@ -297,38 +352,37 @@ function routeDefinition(routePath, title, description, canonicalRoutePath = rou
 }
 
 /** Builds the complete, deterministic GitHub Pages route-shell manifest. */
-export function createRouteShellDefinitions(pages) {
+export function createRouteShellDefinitions(pages, releases = SUPPORTED_RELEASES) {
   if (!Array.isArray(pages) || pages.length === 0) throw new Error('At least one documentation page is required.');
+  if (!Array.isArray(releases) || releases.length === 0) throw new Error('At least one documentation release is required.');
 
   const routes = [
     routeDefinition(
       'about',
       'About | @sdcorejs/angular Documentation',
-      'About SDCoreJS Angular, its maintainer, release support, and documentation project.',
+      'About SDCoreJS Angular, its maintainer, release support, and documentation project.'
     ),
   ];
-  const representedCategories = Object.keys(CATEGORY_METADATA).filter(category =>
-    pages.some(page => page.category === category),
-  );
+  const representedCategories = Object.keys(CATEGORY_METADATA).filter(category => pages.some(page => page.category === category));
 
-  for (const version of SUPPORTED_RELEASES) {
+  for (const version of releases) {
     const versionTitle = `@sdcorejs/angular ${version}`;
     routes.push(
       routeDefinition(
         `v/${version}`,
         `${versionTitle} — Documentation & Live Examples`,
-        `Version-aware documentation, API references, and live Angular examples for ${versionTitle}.`,
+        `Version-aware documentation, API references, and live Angular examples for ${versionTitle}.`
       ),
       routeDefinition(
         `v/${version}/changelog`,
         `Changelog | ${versionTitle} Documentation`,
-        `Release notes, changes, fixes, and migration information for ${versionTitle}.`,
+        `Release notes, changes, fixes, and migration information for ${versionTitle}.`
       ),
       routeDefinition(
         `v/${version}/getting-started`,
         `Getting started | ${versionTitle} Documentation`,
-        `Install, configure, style, and start building with ${versionTitle}.`,
-      ),
+        `Install, configure, style, and start building with ${versionTitle}.`
+      )
     );
 
     for (const category of representedCategories) {
@@ -337,30 +391,17 @@ export function createRouteShellDefinitions(pages) {
         routeDefinition(
           `v/${version}/${category}`,
           `${metadata.title} | ${versionTitle} Documentation`,
-          `${metadata.description} Browse the ${versionTitle} reference.`,
-        ),
+          `${metadata.description} Browse the ${versionTitle} reference.`
+        )
       );
     }
 
     for (const page of pages) {
       const pagePath = `v/${version}/${page.category}/${page.slug}`;
-      routes.push(
-        routeDefinition(
-          pagePath,
-          `${page.title} | ${versionTitle} Documentation`,
-          page.description,
-          `${pagePath}/overview`,
-        ),
-      );
+      routes.push(routeDefinition(pagePath, `${page.title} | ${versionTitle} Documentation`, page.description, `${pagePath}/overview`));
 
       for (const [tab, tabLabel] of DOC_TABS) {
-        routes.push(
-          routeDefinition(
-            `${pagePath}/${tab}`,
-            `${page.title} · ${tabLabel} | ${versionTitle} Documentation`,
-            page.description,
-          ),
-        );
+        routes.push(routeDefinition(`${pagePath}/${tab}`, `${page.title} · ${tabLabel} | ${versionTitle} Documentation`, page.description));
       }
     }
   }
@@ -399,16 +440,8 @@ function replaceRequiredTag(html, pattern, replacement, label) {
 }
 
 function replaceMetaContent(html, selector, selectorValue, content) {
-  const pattern = new RegExp(
-    `<meta\\b(?=[^>]*\\b${escapeRegExp(selector)}\\s*=\\s*["']${escapeRegExp(selectorValue)}["'])[^>]*>`,
-    'iu',
-  );
-  return replaceRequiredTag(
-    html,
-    pattern,
-    tag => setTagAttribute(tag, 'content', content),
-    `<meta ${selector}="${selectorValue}">`,
-  );
+  const pattern = new RegExp(`<meta\\b(?=[^>]*\\b${escapeRegExp(selector)}\\s*=\\s*["']${escapeRegExp(selectorValue)}["'])[^>]*>`, 'iu');
+  return replaceRequiredTag(html, pattern, tag => setTagAttribute(tag, 'content', content), `<meta ${selector}="${selectorValue}">`);
 }
 
 /** Replaces all route-sensitive document, Open Graph, and Twitter metadata. */
@@ -418,18 +451,13 @@ export function renderRouteShell(template, metadata) {
     throw new Error('Route metadata requires non-empty title, description, and canonicalUrl strings.');
   }
 
-  let html = replaceRequiredTag(
-    template,
-    /<title\b[^>]*>[\s\S]*?<\/title>/iu,
-    `<title>${escapeHtml(title)}</title>`,
-    '<title>',
-  );
+  let html = replaceRequiredTag(template, /<title\b[^>]*>[\s\S]*?<\/title>/iu, `<title>${escapeHtml(title)}</title>`, '<title>');
   html = replaceMetaContent(html, 'name', 'description', description);
   html = replaceRequiredTag(
     html,
     /<link\b(?=[^>]*\brel\s*=\s*["']canonical["'])[^>]*>/iu,
     tag => setTagAttribute(tag, 'href', canonicalUrl),
-    '<link rel="canonical">',
+    '<link rel="canonical">'
   );
   html = replaceMetaContent(html, 'property', 'og:title', title);
   html = replaceMetaContent(html, 'property', 'og:description', description);
@@ -460,7 +488,8 @@ export function generateShowcaseRouteShells(options = {}) {
   const registrySource = readFileSync(registryPath, 'utf8');
   const template = readFileSync(templatePath, 'utf8');
   const pages = parseDocumentationRegistry(registrySource);
-  const routes = createRouteShellDefinitions(pages);
+  const releases = options.releases ?? SUPPORTED_RELEASES;
+  const routes = createRouteShellDefinitions(pages, releases);
 
   for (const route of routes) {
     const outputPath = join(outputDir, ...route.routePath.split('/'), 'index.html');
@@ -476,6 +505,7 @@ export function generateShowcaseRouteShells(options = {}) {
     outputDir,
     pageCount: pages.length,
     categoryCount: new Set(pages.map(page => page.category)).size,
+    releaseCount: releases.length,
     routeCount: routes.length,
     shellCount: routes.length + 1,
   };
@@ -497,7 +527,7 @@ function runCli() {
   });
 
   console.log(
-    `[showcase-route-shells] ${result.shellCount} shell(s): ${result.routeCount} routes + 404 from ${result.pageCount} pages across ${result.categoryCount} categories -> ${result.outputDir}`,
+    `[showcase-route-shells] ${result.shellCount} shell(s): ${result.routeCount} routes + 404 from ${result.pageCount} pages across ${result.categoryCount} categories -> ${result.outputDir}`
   );
 }
 

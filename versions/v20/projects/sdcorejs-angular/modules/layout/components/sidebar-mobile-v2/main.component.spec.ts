@@ -51,6 +51,10 @@ describe('SidebarMobileV2Component', () => {
     document.body.style.overflow = '';
   });
 
+  it('renders the custom-element host as a block so the mobile shell starts inside its preview container', () => {
+    expect(getComputedStyle(fixture.nativeElement).display).toBe('block');
+  });
+
   it('normalizes three unique primary groups and keeps the remaining groups under More', () => {
     expect(fixture.componentInstance.primaryMenus().map(menu => menu.id)).toEqual(['admin', 'dashboard', 'work']);
     expect(fixture.componentInstance.overflowMenus().map(menu => menu.id)).toEqual(['reports', 'help']);

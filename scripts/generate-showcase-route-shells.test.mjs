@@ -12,6 +12,7 @@ import {
   parseDocumentationRegistry,
   renderNotFoundShell,
   renderRouteShell,
+  selectSupportedReleases,
 } from './generate-showcase-route-shells.mjs';
 
 const REGISTRY_FIXTURE = `
@@ -87,21 +88,28 @@ test('parses page metadata regardless of property order and mirrors published-do
   ]);
 });
 
+test('selects every published release from 1.2 onward so 1.5 route shells are automatic', () => {
+  assert.deepEqual(
+    selectSupportedReleases({
+      versions: [
+        { version: '19.1.4' },
+        { version: '21.1.5' },
+        { version: '20.1.2' },
+        { version: '21.1.1' },
+        { version: '22.1.5' },
+        { version: '20.1.5-beta.1' },
+        { version: '19.1.5' },
+      ],
+    }),
+    ['21.1.5', '20.1.5-beta.1', '20.1.2', '19.1.5', '19.1.4']
+  );
+});
+
 test('builds only the supported release routes, including page redirects and all four tabs', () => {
   const pages = parseDocumentationRegistry(REGISTRY_FIXTURE);
-  const routes = createRouteShellDefinitions(pages);
+  const routes = createRouteShellDefinitions(pages, SUPPORTED_RELEASES);
 
-  assert.deepEqual(SUPPORTED_RELEASES, [
-    '21.1.4',
-    '20.1.4',
-    '19.1.4',
-    '21.1.3',
-    '20.1.3',
-    '19.1.3',
-    '21.1.2',
-    '20.1.2',
-    '19.1.2',
-  ]);
+  assert.deepEqual(SUPPORTED_RELEASES, ['21.1.4', '21.1.3', '21.1.2', '20.1.4', '20.1.3', '20.1.2', '19.1.4', '19.1.3', '19.1.2']);
   assert.equal(PUBLIC_BASE_URL, 'https://sdcorejs.github.io/sdcorejs-angular/');
   assert.equal(routes.length, 1 + SUPPORTED_RELEASES.length * (3 + 2 + pages.length * 5));
   assert.ok(routes.some(route => route.routePath === 'about'));
@@ -130,6 +138,15 @@ test('builds only the supported release routes, including page redirects and all
     routes.some(route => route.routePath.includes('21.1.1')),
     false
   );
+});
+
+test('builds route shells for a future release supplied by the published manifest', () => {
+  const pages = parseDocumentationRegistry(REGISTRY_FIXTURE);
+  const routes = createRouteShellDefinitions(pages, ['21.1.5', '20.1.5', '19.1.5']);
+
+  assert.ok(routes.some(route => route.routePath === 'v/21.1.5/components/alert/overview'));
+  assert.ok(routes.some(route => route.routePath === 'v/20.1.5/guides/introduction/api'));
+  assert.ok(routes.some(route => route.routePath === 'v/19.1.5/changelog'));
 });
 
 test('matches the canonical v19 runtime registry and expected deployment route count', () => {

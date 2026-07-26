@@ -45,6 +45,10 @@ describe('SidebarMobileV3Component', () => {
     document.body.style.overflow = '';
   });
 
+  it('renders the custom-element host as a block so the mobile topbar stays inside its preview container', () => {
+    expect(getComputedStyle(fixture.nativeElement).display).toBe('block');
+  });
+
   it('opens the unified drawer and locks body scroll', () => {
     fixture.componentInstance.openDrawer();
 

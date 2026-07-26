@@ -105,6 +105,10 @@ describe('SdLayoutComponent responsive V1/V2/V3 composition', () => {
     fixture.detectChanges();
   });
 
+  it('renders the layout host as a block so the responsive shell does not align to an inline baseline', () => {
+    expect(getComputedStyle(fixture.nativeElement).display).toBe('block');
+  });
+
   ([1, 2, 3] as const).forEach(version => {
     it(`switches V${version} from desktop to mobile live without navigation or reload`, () => {
       sidebar.set({ version, defaultTitle: 'Portal' });

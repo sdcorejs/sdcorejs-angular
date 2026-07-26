@@ -45,7 +45,7 @@ describe('ChangelogComponent', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/v/21.1.2/changelog?major=21#release', { replaceUrl: true });
   });
 
-  it('shows only populated release sections and keeps an empty unreleased entry compact', () => {
+  it('shows only populated release sections and mirrors the generated unreleased entry', () => {
     const unreleased = fixture.nativeElement.querySelector('.release--unreleased') as HTMLElement;
     const headings = [...fixture.nativeElement.querySelectorAll('.release__section h3')].map((heading: HTMLElement) =>
       heading.textContent?.trim()
@@ -53,11 +53,12 @@ describe('ChangelogComponent', () => {
     const expectedHeadings = SHOWCASE_CHANGELOG_RELEASES.flatMap(release =>
       release.sections.filter(section => section.markdown.trim()).map(section => section.title)
     );
+    const expectedUnreleasedSections =
+      SHOWCASE_CHANGELOG_RELEASES.find(release => release.unreleased)?.sections.filter(section => section.markdown.trim()) ?? [];
 
     expect([...headings].sort()).toEqual([...expectedHeadings].sort());
-    expect(unreleased.querySelectorAll('.release__section')).toHaveSize(0);
-    expect(unreleased.querySelectorAll('.release__empty')).toHaveSize(1);
-    expect(unreleased.querySelector('.release__empty')?.textContent).toContain('No unreleased changes');
+    expect(unreleased.querySelectorAll('.release__section')).toHaveSize(expectedUnreleasedSections.length);
+    expect(unreleased.querySelectorAll('.release__empty')).toHaveSize(expectedUnreleasedSections.length ? 0 : 1);
   });
 
   it('provides release jump links and links each package version to its documentation', () => {

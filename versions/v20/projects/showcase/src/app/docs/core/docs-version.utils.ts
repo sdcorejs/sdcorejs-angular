@@ -1,6 +1,10 @@
 import { DocsVersionEntry, DocsVersionGroup, DocsVersionsManifest } from './published-docs.models';
 
-export const SHOWCASE_RELEASE_VERSIONS = ['21.1.2', '20.1.2', '19.1.2'] as const;
+export const SHOWCASE_RELEASE_MINIMUMS = Object.freeze({
+  21: '21.1.2',
+  20: '20.1.2',
+  19: '19.1.2',
+});
 
 interface SemanticVersion {
   major: number;
@@ -76,16 +80,21 @@ export function groupVersionsByMajor(entries: readonly DocsVersionEntry[]): Docs
     }));
 }
 
-/** Restricts the interactive Showcase to the first release published for each supported Angular major. */
+/** Keeps every published Showcase-era release for each supported Angular major. */
 export function selectShowcaseReleaseManifest(manifest: DocsVersionsManifest): DocsVersionsManifest {
-  const entriesByVersion = new Map(manifest.versions.map(entry => [entry.version, entry]));
-  const versions = SHOWCASE_RELEASE_VERSIONS.map(version => entriesByVersion.get(version)).filter(
-    (entry): entry is DocsVersionEntry => entry !== undefined
-  );
-  const missing = SHOWCASE_RELEASE_VERSIONS.filter(version => !entriesByVersion.has(version));
+  const supportedMajors = Object.keys(SHOWCASE_RELEASE_MINIMUMS).map(Number);
+  const versions = groupVersionsByMajor(
+    manifest.versions.filter(entry => {
+      const major = parseSemanticVersion(entry.version).major;
+      const minimum = SHOWCASE_RELEASE_MINIMUMS[major as keyof typeof SHOWCASE_RELEASE_MINIMUMS];
+      return minimum !== undefined && compareSemanticVersions(entry.version, minimum) >= 0;
+    })
+  ).flatMap(group => group.versions);
+  const availableMajors = new Set(versions.map(entry => parseSemanticVersion(entry.version).major));
+  const missingMajors = supportedMajors.filter(major => !availableMajors.has(major));
 
-  if (missing.length) {
-    throw new Error(`Showcase release metadata is missing for: ${missing.join(', ')}`);
+  if (missingMajors.length) {
+    throw new Error(`Showcase release metadata is missing for Angular: ${missingMajors.join(', ')}`);
   }
 
   return {

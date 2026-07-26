@@ -34,6 +34,8 @@
 
 ## Done
 
+- [x] (2026-07-27) Sửa mobile V2/V3 host containment, thêm regression coverage và xác nhận browser UAT ở 390px không còn top clipping.
+- [x] (2026-07-27) Sửa release lint/generated-doc gate, catalog phiên bản 1.2+ và hoàn thiện migration/docs cho release suffix 1.5.
 - [x] (2026-07-26) Hoàn thiện shared Layout account menu V1/V2/V3 với role, semantic actions, reactive notification badge, i18n/a11y, Showcase, docs và product traceability.
 - [x] (2026-07-25) Căn profile/đăng xuất V2 mobile cùng hàng và giữ avatar account V1 desktop nhìn thấy, mở menu được trong Showcase.
 - [x] (2026-07-25) Tinh chỉnh pin desktop/mobile, V3 inline sign-out, sticky search và logo fallback V1; xác nhận Layout 94/94 và build Angular 19/20/21.
