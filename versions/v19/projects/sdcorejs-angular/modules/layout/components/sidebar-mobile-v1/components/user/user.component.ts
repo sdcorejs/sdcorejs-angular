@@ -1,30 +1,18 @@
-import { Component, inject, input, output, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatTooltipModule } from '@angular/material/tooltip';
-// Import sd-core
-import { SdAvatar } from '@sdcorejs/angular/components';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
-// NOTE: Import nội bộ trong module layout thì dùng path tương đối
-import { SD_LAYOUT_CONFIGURATION, SdLayoutUserInfo } from '../../../../configurations';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdLayoutUserInfo } from '../../../../configurations';
+import { SdLayoutUserMenuComponent } from '../../../shared/user-menu/user-menu.component';
 
 @Component({
   selector: 'lib-layout-user',
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
-  imports: [SdIcon, MatMenuModule, MatButtonModule, MatTooltipModule, SdAvatar, TranslatePipe],
+  imports: [SdIcon, SdLayoutUserMenuComponent, TranslatePipe],
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LayoutUserComponent {
-  // ==========================================
-  // INJECT SERVICES
-  // ==========================================
-  #layoutConfiguration = inject(SD_LAYOUT_CONFIGURATION);
-
-  // ==========================================
-  // SIGNAL INPUTS & OUTPUTS
-  // ==========================================
   isMobileOrTablet = input<boolean>(false);
   isMenuLock = input<boolean>(false);
   isShowSidebar = input<boolean>(false);
@@ -34,46 +22,15 @@ export class LayoutUserComponent {
   menuOpened = output<void>();
   toggleMenuLock = output<Event>();
 
-  // Config actions
-  singoutLayoutConfig = this.#layoutConfiguration.signout;
-  changePasswordLayoutConfig = this.#layoutConfiguration?.changePassword;
-
-  // Accordion state for mobile inline expand
-  isExpanded = signal<boolean>(false);
-
-  // ==========================================
-  // EVENT HANDLERS
-  // ==========================================
-  onMenuOpened = (): void => {
+  onMenuOpened(): void {
     this.menuOpened.emit();
-  };
+  }
 
-  onMenuClosed = (): void => {
+  onMenuClosed(): void {
     this.menuClosed.emit();
-  };
+  }
 
-  keepOpenWhenClickInsideMenu = (event: Event): void => {
-    event.stopPropagation();
-  };
-
-  toggleExpanded = (): void => {
-    this.isExpanded.update(v => !v);
-    if (this.isExpanded()) {
-      this.menuOpened.emit();
-    } else {
-      this.menuClosed.emit();
-    }
-  };
-
-  logout = (): void => {
-    this.singoutLayoutConfig();
-  };
-
-  changePassword = (): void => {
-    this.changePasswordLayoutConfig?.();
-  };
-
-  onToggleMenuLock = (event: Event): void => {
+  onToggleMenuLock(event: Event): void {
     this.toggleMenuLock.emit(event);
-  };
+  }
 }

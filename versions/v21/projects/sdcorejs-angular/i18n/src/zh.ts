@@ -569,7 +569,11 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Module: layout (sidebar / user menu) ----
   'core.module.layout.user.change-password': '修改密码',
   'core.module.layout.user.logout': '退出登录',
+  'core.module.layout.user.update-profile': '更新个人资料',
+  'core.module.layout.user.setting': '设置',
+  'core.module.layout.user.notification': '通知',
   'core.module.layout.sidebar.search': '搜索',
+  'core.module.layout.sidebar.toggle': '切换侧边栏',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': '你好，{name}',

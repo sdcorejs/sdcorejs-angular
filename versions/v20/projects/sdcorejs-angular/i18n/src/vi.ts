@@ -571,7 +571,11 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Module: layout (sidebar / user menu) ----
   'core.module.layout.user.change-password': 'Đổi mật khẩu',
   'core.module.layout.user.logout': 'Đăng xuất',
+  'core.module.layout.user.update-profile': 'Chỉnh sửa hồ sơ',
+  'core.module.layout.user.setting': 'Thiết lập',
+  'core.module.layout.user.notification': 'Thông báo',
   'core.module.layout.sidebar.search': 'Tìm kiếm',
+  'core.module.layout.sidebar.toggle': 'Thu gọn hoặc mở rộng thanh điều hướng',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': 'Xin chào, {name}',

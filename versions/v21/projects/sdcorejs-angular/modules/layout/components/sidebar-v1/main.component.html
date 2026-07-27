@@ -1,9 +1,10 @@
 <mat-sidenav-container class="c-layout-wrapper">
   <mat-sidenav
     #sidenav
-    [opened]="isShowSidebar()"
-    (openedChange)="isShowSidebar.set($event)"
+    [opened]="!isMobile() || isShowSidebar()"
+    (openedChange)="onSidenavOpenedChange($event)"
     class="c-layout-sidebar"
+    [class.is-expanded]="isShowSidebar()"
     (click)="openSidebar()"
     (mouseleave)="onMouseleaveSideBar()"
     [mode]="isMobile() ? 'over' : 'side'"

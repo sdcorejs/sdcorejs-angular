@@ -14,7 +14,24 @@ const storage = <T>(value: T) => ({
   remove: () => undefined,
 });
 
-@Component({ selector: 'sidebar', standalone: true, template: '' })
+@Component({
+  selector: 'sidebar',
+  standalone: true,
+  template: `
+    <div class="wide-sidebar-content">
+      <input data-testid="sidebar-search" />
+    </div>
+  `,
+  styles: `
+    .wide-sidebar-content {
+      width: 290px;
+    }
+
+    input {
+      margin-left: 180px;
+    }
+  `,
+})
 class SidebarStubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();
@@ -54,5 +71,29 @@ describe('SidebarV1Component responsive compatibility', () => {
     fixture.detectChanges();
 
     expect(fixture.debugElement.query(node => node.componentInstance instanceof MatSidenav).componentInstance.mode).toBe('over');
+  });
+
+  it('keeps the collapsed desktop rail mounted without horizontal focus scrolling', () => {
+    fixture.componentRef.setInput('isMobile', false);
+    fixture.detectChanges();
+    const sidebar = fixture.nativeElement.querySelector('.c-layout-sidebar') as HTMLElement;
+    const searchInput = fixture.nativeElement.querySelector('[data-testid="sidebar-search"]') as HTMLInputElement;
+
+    fixture.componentInstance.isShowSidebar.set(true);
+    fixture.detectChanges();
+    expect(sidebar.classList).toContain('is-expanded');
+
+    searchInput.focus();
+    fixture.componentInstance.isShowSidebar.set(false);
+    fixture.detectChanges();
+
+    expect(sidebar.classList).toContain('mat-drawer-opened');
+    expect(sidebar.classList).not.toContain('is-expanded');
+    expect(sidebar.getAttribute('aria-hidden')).not.toBe('true');
+    expect(getComputedStyle(sidebar).overflowX).toBe('clip');
+
+    sidebar.scrollLeft = 120;
+
+    expect(sidebar.scrollLeft).toBe(0);
   });
 });

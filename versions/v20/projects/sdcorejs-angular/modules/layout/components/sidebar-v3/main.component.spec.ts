@@ -9,11 +9,19 @@ const menus: SdLayoutMenu[] = [{ id: 'work', title: 'Công việc', children: [d
 
 describe('SidebarV3Component', () => {
   let fixture: ComponentFixture<SidebarV3Component>;
+  let utilityStyles: HTMLStyleElement;
 
   beforeEach(async () => {
     localStorage.clear();
+    // The library test target omits consumer global styles; load the Core utility declarations under test.
+    utilityStyles = document.createElement('style');
+    utilityStyles.textContent =
+      '.d-flex { display: flex !important; } .justify-content-between { justify-content: space-between !important; } .justify-content-center { justify-content: center !important; }';
+    document.head.appendChild(utilityStyles);
     await TestBed.configureTestingModule({ imports: [SidebarV3Component], providers: [provideRouter([])] }).compileComponents();
   });
+
+  afterEach(() => utilityStyles.remove());
 
   function create(sidebar: Record<string, unknown> = { version: 3 }): void {
     fixture = TestBed.createComponent(SidebarV3Component);
@@ -80,5 +88,40 @@ describe('SidebarV3Component', () => {
     expect(fixture.nativeElement.querySelector('[data-v3-pinned]').textContent).toContain('Tổng quan');
     expect(navigationState.recentKeys()[0]).toBe('id:reports');
     expect(navigate).toHaveBeenCalledWith(['/reports'], jasmine.any(Object));
+  });
+
+  it('omits the brand and centers compact controls when collapsed', () => {
+    create({ version: 3, defaultCollapsed: true });
+
+    const header = fixture.nativeElement.querySelector('[data-v3-header]') as HTMLElement;
+    const accountTrigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
+    expect(header.classList).toContain('sd-sidebar-v3__header--collapsed');
+    expect(header.querySelector('[data-v3-brand]')).toBeNull();
+    expect(header.querySelector('button')?.getAttribute('aria-label')).toBe('Mở rộng sidebar');
+    expect(getComputedStyle(header).justifyContent).toBe('center');
+    expect(accountTrigger.classList).toContain('sd-layout-user-menu__trigger--compact');
+    expect(accountTrigger.querySelector('sd-icon')).toBeNull();
+  });
+
+  it('retains the brand and full account disclosure when expanded', () => {
+    create();
+
+    const header = fixture.nativeElement.querySelector('[data-v3-header]') as HTMLElement;
+    const accountTrigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
+    expect(header.querySelector('[data-v3-brand]')).not.toBeNull();
+    expect(header.textContent).toContain('Back Office');
+    expect(getComputedStyle(header).justifyContent).toBe('space-between');
+    expect(accountTrigger.textContent).toContain('Demo User');
+    expect(accountTrigger.querySelector('mat-icon')?.textContent?.trim()).toBe('expand_more');
+  });
+
+  it('uses the shared search field in the expanded drawer', () => {
+    create();
+
+    const input = fixture.nativeElement.querySelector(
+      'sd-layout-search-field input[data-autoid="forms-input-layout-v3-global-search"]'
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.placeholder).toBe('Tìm trong tất cả menu');
   });
 });

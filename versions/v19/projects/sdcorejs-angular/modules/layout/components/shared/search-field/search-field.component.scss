@@ -1,0 +1,43 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+// why: Layout search is a navigation affordance, not a generic outlined form.
+.sd-layout-search-field {
+  min-height: 38px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9999px;
+  outline: 1px solid transparent;
+  outline-offset: 1px;
+  background: var(--sd-black100, var(--sd-surface-muted));
+  color: var(--sd-black400, var(--sd-text-muted));
+}
+
+// why: Keyboard focus must remain visible after the Material outline is hidden.
+.sd-layout-search-field:focus-within {
+  outline-color: var(--sd-primary);
+}
+
+.sd-layout-search-field__icon {
+  flex: 0 0 auto;
+  color: var(--sd-black400, var(--sd-text-muted));
+}
+
+// why: MDC variables are inherited into SdInput without changing global fields.
+.sd-layout-search-field__control {
+  flex: 1;
+  min-width: 0;
+  --sd-border: transparent;
+  --mdc-outlined-text-field-outline-color: transparent;
+  --mdc-outlined-text-field-hover-outline-color: transparent;
+  --mdc-outlined-text-field-focus-outline-color: transparent;
+  --mdc-outlined-text-field-input-text-placeholder-color: var(--sd-black400, var(--sd-text-muted));
+  --mdc-outlined-text-field-container-shape: 0px;
+}
+
+// why: Consumer-wide focus rules must not stack a second ring over the 1px pill ring.
+:host ::ng-deep .sd-layout-search-field__control input:focus-visible {
+  outline: 0;
+}

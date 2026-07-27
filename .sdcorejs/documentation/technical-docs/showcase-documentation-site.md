@@ -2,7 +2,7 @@
 title: Showcase Documentation Site
 track: angular
 status: implemented
-updated_at: 2026-07-13
+updated_at: 2026-07-27
 source_of_truth: versions/v19/projects/showcase
 ---
 
@@ -18,8 +18,9 @@ The Angular showcase is the public documentation application for `@sdcorejs/angu
 - Run `npm run sync` from the repository root to mirror compatible source into v20 and v21.
 - Run `npm run check:sync` after every synchronization or generated-source update. Do not hand-edit the mirrored showcase trees.
 - `documentation.registry.ts` is the typed catalog used by routing, navigation, search, breadcrumbs, pagination, category pages, and example galleries.
-- The registry currently contains 85 pages in seven groups: Guides, Components, Forms, Directives, Services, Modules & Integrations, and Pipes & Utilities.
+- The registry currently contains 97 pages in seven groups: Guides, Components, Forms, Directives, Services, Modules & Integrations, and Pipes & Utilities.
 - `published-docs/versions.json` and each version's `index.json` describe the immutable release archive. The generator integrity test verifies every declared archive, document count, unique ID, referenced Markdown file, and the bidirectional mapping between the latest index and the registry.
+- The interactive version catalog and static route-shell generator select every published `1.2+` archive for Angular 19, 20 and 21 from that manifest. Adding a release such as 1.5 does not require another source-code allowlist.
 
 The main data paths are:
 
@@ -40,21 +41,22 @@ published-docs/<version>/index.json + Markdown
 ## Runtime content flow
 
 1. `docsVersionGuard` resolves `latest` and validates concrete versions at the `/v/:version` parent route. Canonical redirects preserve the remaining path, query parameters, and fragment.
-2. The registry resolves the requested category, page, tab, aliases, and adjacent pages.
-3. Page availability moves from `unknown` to published documentation, current live demo, or unavailable for the selected historical version.
-4. Published tabs fetch Markdown below the deployment base URI. When historical Markdown is missing but the page has a live example, navigation intentionally opens the Examples tab and labels it as a current live demo.
-5. Generated example metadata lazily loads only the selected Angular scenario. Generated source records power View source without bundling every source string into the initial route.
+2. `selectShowcaseReleaseManifest` retains every supported `1.2+` archive and groups versions by Angular major. A concrete published request such as `21.1.4` remains exact instead of falling back to `21.1.2`.
+3. The registry resolves the requested category, page, tab, aliases, and adjacent pages.
+4. Page availability moves from `unknown` to published documentation, current live demo, or unavailable for the selected historical version.
+5. Published tabs fetch Markdown below the deployment base URI. When historical Markdown is missing but the page has a live example, navigation intentionally opens the Examples tab and labels it as a current live demo.
+6. Generated example metadata lazily loads only the selected Angular scenario. Generated source records power View source without bundling every source string into the initial route.
 
 ## Public routes
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Documentation landing page |
-| `/v/:version/getting-started` | Version-aware installation and setup |
-| `/v/:version/:category` | Category overview |
+| Route                              | Purpose                                        |
+| ---------------------------------- | ---------------------------------------------- |
+| `/`                                | Documentation landing page                     |
+| `/v/:version/getting-started`      | Version-aware installation and setup           |
+| `/v/:version/:category`            | Category overview                              |
 | `/v/:version/:category/:slug/:tab` | Overview, Styling, API, or Examples for a page |
-| `/v/:version/changelog` | Version-aware changelog |
-| `/about` | Project information |
+| `/v/:version/changelog`            | Version-aware changelog                        |
+| `/about`                           | Project information                            |
 
 Legacy category/page paths are resolved through registry metadata and redirected to the canonical latest URL. Unknown categories, pages, tabs, and versions render or redirect to the documented not-found behavior instead of silently returning home.
 
@@ -101,6 +103,14 @@ npm run check:sync
 
 `npm run collect-docs` and `npm run collect-release-docs` belong to the release archive workflow. They are not substitutes for normal showcase generation and should not be used to rewrite an existing published version during page authoring.
 
+For a future suffix, validate the complete archive in a temporary directory before tagging:
+
+```powershell
+npm run collect-release-docs -- --patch 1.5 --date <YYYY-MM-DD> --out-root <temporary-directory>
+```
+
+The test output must contain matching `19.1.5`, `20.1.5` and `21.1.5` indexes and their referenced Markdown. Do not commit these temporary archives: `publish-npm.yml` collects and commits immutable `published-docs` only after all matching npm packages publish successfully.
+
 ## Adding or changing a documentation page
 
 1. Update the v19 registry entry, including canonical category/slug, published document ID, aliases, keywords, tabs, and examples.
@@ -132,19 +142,19 @@ The Angular build emits the application under `versions/<major>/dist/showcase/br
 
 ## Key entry points
 
-| File or service | Responsibility |
-| --- | --- |
-| `app.routes.ts` | Lazy public route tree and route titles |
-| `docs/core/documentation.registry.ts` | Canonical page, alias, tab, keyword, and example metadata |
-| `DocsVersionService` | Version manifest, selection, canonical version, and archive URLs |
-| `PublishedDocsService` | Per-version index and Markdown retrieval |
-| `docs-search.utils.ts` / `GlobalSearchComponent` | Search scoring, result grouping, keyboard interaction, and destination selection |
-| `docs-page-availability.ts` | Published/live-demo/unavailable classification |
-| `ShellComponent` | Responsive primary navigation, header, drawer, and page focus |
-| `MarkdownRendererComponent` | Safe Markdown rendering, links, language, code, and copy behavior |
-| `ExampleViewerComponent` | Lazy examples, source disclosure, copy behavior, and full-width dialog |
-| `scripts/generate-showcase-*.mjs` | Changelog/example generation and freshness contracts |
-| `published-docs/versions.json` | Public archive manifest and latest concrete version |
+| File or service                                  | Responsibility                                                                      |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `app.routes.ts`                                  | Lazy public route tree and route titles                                             |
+| `docs/core/documentation.registry.ts`            | Canonical page, alias, tab, keyword, and example metadata                           |
+| `DocsVersionService`                             | Version manifest, selection, canonical version, and archive URLs                    |
+| `PublishedDocsService`                           | Per-version index and Markdown retrieval                                            |
+| `docs-search.utils.ts` / `GlobalSearchComponent` | Search scoring, result grouping, keyboard interaction, and destination selection    |
+| `docs-page-availability.ts`                      | Published/live-demo/unavailable classification                                      |
+| `ShellComponent`                                 | Responsive primary navigation, header, drawer, and page focus                       |
+| `MarkdownRendererComponent`                      | Safe Markdown rendering, links, language, code, and copy behavior                   |
+| `ExampleViewerComponent`                         | Lazy examples, source disclosure, copy behavior, and full-width dialog              |
+| `scripts/generate-showcase-*.mjs`                | Changelog/example generation, manifest-derived route shells and freshness contracts |
+| `published-docs/versions.json`                   | Public archive manifest and latest concrete version                                 |
 
 ## Failure and maintenance behavior
 
@@ -158,4 +168,4 @@ The Angular build emits the application under `versions/<major>/dist/showcase/br
 - Keep one framework-free documentation application instead of adding another documentation runtime.
 - Treat v19 as source of truth to prevent three independently drifting showcase implementations.
 - Preserve released Markdown as immutable historical content while allowing the latest workspace's examples to remain useful from older version pages.
-- Derive navigation and integrity checks from typed metadata rather than maintaining parallel hard-coded menus or counts.
+- Derive navigation, supported releases and integrity checks from typed metadata rather than maintaining parallel hard-coded menus, versions or counts.

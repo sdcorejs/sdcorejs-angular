@@ -5,7 +5,7 @@ import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated
 const EXPECTED_CATEGORY_COUNTS = {
   guides: 3,
   components: 35,
-  forms: 20,
+  forms: 21,
   directives: 6,
   services: 13,
   'modules-integrations': 10,
@@ -13,31 +13,18 @@ const EXPECTED_CATEGORY_COUNTS = {
 } as const;
 
 describe('documentation registry', () => {
-  it('exposes every latest published document exactly once alongside pre-release local pages', () => {
+  it('exposes every latest published document exactly once', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(96);
-    expect(new Set(publishedIds).size).toBe(84);
-    expect(localOnlyPages.map(page => `${page.category}/${page.slug}`)).toEqual([
-      'components/audit-diff',
-      'components/breadcrumb',
-      'components/data-state',
-      'components/job-progress',
-      'forms/entity-picker',
-      'forms/time',
-      'forms/time-range',
-      'forms/tree-select',
-      'services/persistence',
-      'services/task',
-      'services/unsaved-changes',
-      'services/viewport',
-    ]);
+    expect(DOC_PAGES).toHaveSize(97);
+    expect(new Set(publishedIds).size).toBe(97);
+    expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
       expect(getDocPagesByCategory(category)).withContext(category).toHaveSize(EXPECTED_CATEGORY_COUNTS[category]);
     }
-    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(304);
+    expect(DOC_PAGES.reduce((total, page) => total + page.demoSectionCount, 0)).toBe(306);
   });
 
   it('uses unique stable page ids and category/slug pairs', () => {
@@ -59,7 +46,7 @@ describe('documentation registry', () => {
     const exampleIds = DOC_PAGES.flatMap(page => page.examples.map(example => example.id));
 
     expect(new Set(exampleIds).size).toBe(exampleIds.length);
-    expect(exampleIds).toHaveSize(304);
+    expect(exampleIds).toHaveSize(306);
     for (const page of DOC_PAGES) {
       expect(page.examples).toHaveSize(page.demoSectionCount);
       for (const example of page.examples) {
@@ -72,7 +59,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 35, 20, 6, 13, 10, 9]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 35, 21, 6, 13, 10, 9]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');
@@ -83,7 +70,7 @@ describe('documentation registry', () => {
     expect(findDocPage('components', 'form-generic')?.slug).toBe('generic');
     expect(findDocPage('components', 'icon-configuration')?.slug).toBe('icon');
     expect(findDocPage('forms', 'time')?.demoSectionCount).toBe(4);
-    expect(findDocPage('forms', 'time-range')?.publishedDocId).toBeNull();
+    expect(findDocPage('forms', 'time-range')?.publishedDocId).toBe('forms/time-range/sd-time-range');
     expect(findDocPage('services', 'viewport')?.importPath).toBe('@sdcorejs/angular/services/viewport');
     expect(findDocPage('services', 'unsaved-changes')?.demoSectionCount).toBe(4);
     expect(findDocPage('services', 'task')?.demoSectionCount).toBe(4);
@@ -112,7 +99,7 @@ describe('documentation registry', () => {
     const layoutPage = findDocPage('modules-integrations', 'layout');
 
     expect(layoutPage?.sourcePath).toContain('/pages/modules/layout/layout-demo.component.ts');
-    expect(layoutPage?.demoSectionCount).toBe(1);
+    expect(layoutPage?.demoSectionCount).toBe(3);
     expect((await layoutPage?.examples[0]?.loadComponent())?.name).toBe('LayoutDemoComponent');
   });
 });

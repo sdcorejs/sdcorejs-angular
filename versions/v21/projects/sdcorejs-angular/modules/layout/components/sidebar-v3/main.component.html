@@ -3,17 +3,22 @@
     class="sd-sidebar-v3__drawer d-flex flex-column bg-white border-right border-black200"
     data-v3-sidebar
     [attr.data-collapsed]="isCollapsed()">
-    <header class="d-flex align-items-center justify-content-between gap-8 p-12 border-bottom border-black200">
-      <div class="d-flex align-items-center gap-8 overflow-hidden">
-        @if (sidebar().logoUrl) {
-          <img class="sd-sidebar-v3__logo" [src]="sidebar().logoUrl" alt="" />
-        } @else {
-          <sd-icon name="apps"></sd-icon>
-        }
-        @if (!isCollapsed()) {
+    <header
+      data-v3-header
+      class="sd-sidebar-v3__header d-flex align-items-center gap-8 p-12 border-bottom border-black200"
+      [class.sd-sidebar-v3__header--collapsed]="isCollapsed()"
+      [class.justify-content-between]="!isCollapsed()"
+      [class.justify-content-center]="isCollapsed()">
+      @if (!isCollapsed()) {
+        <div data-v3-brand class="d-flex align-items-center gap-8 overflow-hidden">
+          @if (sidebar().logoUrl) {
+            <img class="sd-sidebar-v3__logo" [src]="sidebar().logoUrl" alt="" />
+          } @else {
+            <sd-icon name="apps"></sd-icon>
+          }
           <span class="T16M text-ellipsis">{{ sidebar().defaultTitle || 'Back Office' }}</span>
-        }
-      </div>
+        </div>
+      }
       <button
         type="button"
         class="sd-sidebar-v3__icon-action d-flex align-items-center justify-content-center"
@@ -42,13 +47,12 @@
       </nav>
     } @else {
       <div class="p-12">
-        <sd-input
-          size="sm"
+        <sd-layout-search-field
           placeholder="Tìm trong tất cả menu"
           [autoId]="'layout-v3-global-search'"
           [model]="searchText()"
           (sdChange)="searchText.set($event)">
-        </sd-input>
+        </sd-layout-search-field>
       </div>
       <div class="sd-sidebar-v3__navigation d-flex flex-column gap-16 flex-1 overflow-auto px-8 pb-12">
         @if (pinnedMenus().length) {

@@ -58,17 +58,57 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "### Fixed\n\n- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.",
+    "markdown": "### Changed\n\n- **Layout V2/V3 navigation polish** - centered compact account and drawer controls, removed the collapsed V3 fallback brand icon, and unified desktop/mobile menu search behind an internal Soft-pill presentation without changing public APIs or filtering behavior.\n- **Layout account menu** - added optional profile, settings and notification actions plus role metadata to the shared V1/V2/V3 account presentation; consumers continue to own navigation, authorization and notification data.\n\n### Fixed\n\n- **Showcase published-doc versions** - derive every supported `1.2+` documentation release from `published-docs/versions.json`, so the version selector exposes the existing 1.3/1.4 archives and automatically accepts the 1.5 archives after publishing instead of canonicalizing every route to 1.2.\n- **Layout mobile containment** - render the Layout, Mobile V2 and Mobile V3 custom-element hosts as blocks so full-height shells and the V3 topbar start inside consumer and Showcase containers instead of aligning below an inline baseline.\n\n### Migration notes\n\n- Follow the [release suffix 1.5 migration guide](docs/migrations/1.5.md) for the optional Layout account actions, V2/V3 navigation behavior, mobile containment and version-pinned documentation flow.",
     "sections": [
+      {
+        "key": "changed",
+        "title": "Changed",
+        "level": 3,
+        "anchor": "unreleased-changed",
+        "markdown": "- **Layout V2/V3 navigation polish** - centered compact account and drawer controls, removed the collapsed V3 fallback brand icon, and unified desktop/mobile menu search behind an internal Soft-pill presentation without changing public APIs or filtering behavior.\n- **Layout account menu** - added optional profile, settings and notification actions plus role metadata to the shared V1/V2/V3 account presentation; consumers continue to own navigation, authorization and notification data.",
+        "items": [
+          {
+            "text": "**Layout V2/V3 navigation polish** - centered compact account and drawer controls, removed the collapsed V3 fallback brand icon, and unified desktop/mobile menu search behind an internal Soft-pill presentation without changing public APIs or filtering behavior.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Layout account menu** - added optional profile, settings and notification actions plus role metadata to the shared V1/V2/V3 account presentation; consumers continue to own navigation, authorization and notification data.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
       {
         "key": "fixed",
         "title": "Fixed",
         "level": 3,
         "anchor": "unreleased-fixed",
-        "markdown": "- **Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.",
+        "markdown": "- **Showcase published-doc versions** - derive every supported `1.2+` documentation release from `published-docs/versions.json`, so the version selector exposes the existing 1.3/1.4 archives and automatically accepts the 1.5 archives after publishing instead of canonicalizing every route to 1.2.\n- **Layout mobile containment** - render the Layout, Mobile V2 and Mobile V3 custom-element hosts as blocks so full-height shells and the V3 topbar start inside consumer and Showcase containers instead of aligning below an inline baseline.",
         "items": [
           {
-            "text": "**Showcase published-doc routing** - mapped every 1.4 API document into the runtime documentation registry and emitted static route shells for the 1.2, 1.3 and 1.4 release lines, allowing Pages to deploy the complete 97-document catalog without returning 404 for current versioned routes.",
+            "text": "**Showcase published-doc versions** - derive every supported `1.2+` documentation release from `published-docs/versions.json`, so the version selector exposes the existing 1.3/1.4 archives and automatically accepts the 1.5 archives after publishing instead of canonicalizing every route to 1.2.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Layout mobile containment** - render the Layout, Mobile V2 and Mobile V3 custom-element hosts as blocks so full-height shells and the V3 topbar start inside consumer and Showcase containers instead of aligning below an inline baseline.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "migration",
+        "title": "Migration notes",
+        "level": 3,
+        "anchor": "unreleased-migration-notes",
+        "markdown": "- Follow the [release suffix 1.5 migration guide](docs/migrations/1.5.md) for the optional Layout account actions, V2/V3 navigation behavior, mobile containment and version-pinned documentation flow.",
+        "items": [
+          {
+            "text": "Follow the [release suffix 1.5 migration guide](docs/migrations/1.5.md) for the optional Layout account actions, V2/V3 navigation behavior, mobile containment and version-pinned documentation flow.",
             "ordered": false,
             "children": []
           }

@@ -572,7 +572,11 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Module: layout (sidebar / user menu) ----
   'core.module.layout.user.change-password': 'パスワード変更',
   'core.module.layout.user.logout': 'ログアウト',
+  'core.module.layout.user.update-profile': 'プロフィールを更新',
+  'core.module.layout.user.setting': '設定',
+  'core.module.layout.user.notification': '通知',
   'core.module.layout.sidebar.search': '検索',
+  'core.module.layout.sidebar.toggle': 'サイドバーを切り替える',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': 'こんにちは、{name}さん',

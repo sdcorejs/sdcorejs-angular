@@ -87,4 +87,25 @@ describe('SidebarV2Component', () => {
 
     expect(fixture.componentInstance.isFlyoutOpen()).toBeFalse();
   });
+
+  it('centers the compact account avatar without a disclosure icon', async () => {
+    await create('click');
+
+    const trigger = fixture.nativeElement.querySelector('[data-user-trigger]') as HTMLButtonElement;
+    expect(trigger.classList).toContain('sd-layout-user-menu__trigger--compact');
+    expect(trigger.querySelector('sd-avatar')).not.toBeNull();
+    expect(trigger.querySelector('sd-icon')).toBeNull();
+  });
+
+  it('uses the shared search field in the contextual flyout', async () => {
+    await create('click');
+    fixture.componentInstance.selectGroup(work);
+    fixture.detectChanges();
+
+    const input = fixture.nativeElement.querySelector(
+      'sd-layout-search-field input[data-autoid="forms-input-layout-v2-context-search"]'
+    ) as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.placeholder).toBe('Tìm trong nhóm');
+  });
 });

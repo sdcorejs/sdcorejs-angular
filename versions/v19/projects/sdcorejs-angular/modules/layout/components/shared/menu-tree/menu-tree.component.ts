@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, output, signal } from '@angular/core';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdLayoutMenu, SdLayoutRootMenu, getMenuStableKey, searchMenuLeaves } from '../../../services';
 
@@ -11,6 +11,7 @@ interface SdLayoutMenuTreeNode {
   isGroup: boolean;
   isActive: boolean;
   isPinned: boolean;
+  isPinVisible: boolean;
 }
 
 @Component({
@@ -22,16 +23,23 @@ interface SdLayoutMenuTreeNode {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdLayoutMenuTreeComponent {
+  readonly #destroyRef = inject(DestroyRef);
+  readonly #hoveredPinKey = signal<string | null>(null);
+  #pinHoverTimerId: ReturnType<typeof setTimeout> | undefined;
+
   menus = input<SdLayoutMenu[]>([]);
   query = input('');
   activePath = input('');
   pinnedKeys = input<string[]>([]);
   showPin = input(true);
+  pinVisibility = input<'hover' | 'always'>('hover');
   navigate = output<SdLayoutRootMenu>();
   togglePinned = output<SdLayoutMenu>();
 
   nodes = computed<SdLayoutMenuTreeNode[]>(() => {
     const pinnedKeys = new Set(this.pinnedKeys());
+    const hoveredPinKey = this.#hoveredPinKey();
+    const alwaysShowPin = this.pinVisibility() === 'always';
     const query = this.query().trim();
     const menus = query ? searchMenuLeaves(this.menus(), query) : this.menus();
     const nodes: SdLayoutMenuTreeNode[] = [];
@@ -51,6 +59,7 @@ export class SdLayoutMenuTreeComponent {
           isGroup,
           isActive: !!path && this.#pathMatches(this.activePath(), path),
           isPinned: pinnedKeys.has(key),
+          isPinVisible: alwaysShowPin || pinnedKeys.has(key) || hoveredPinKey === key,
         });
         if (isGroup && 'children' in menu) append(menu.children ?? [], depth + 1, [...ancestors, menu.title ?? key]);
       }
@@ -60,6 +69,10 @@ export class SdLayoutMenuTreeComponent {
     return nodes;
   });
 
+  constructor() {
+    this.#destroyRef.onDestroy(() => this.#clearPinHoverTimer());
+  }
+
   onNavigate(menu: SdLayoutMenu): void {
     if ('path' in menu) this.navigate.emit(menu);
   }
@@ -67,6 +80,26 @@ export class SdLayoutMenuTreeComponent {
   onTogglePinned(event: MouseEvent, menu: SdLayoutMenu): void {
     event.stopPropagation();
     this.togglePinned.emit(menu);
+  }
+
+  onPinHoverStart(key: string): void {
+    if (this.pinVisibility() === 'always') return;
+    this.#clearPinHoverTimer();
+    this.#pinHoverTimerId = setTimeout(() => {
+      this.#hoveredPinKey.set(key);
+      this.#pinHoverTimerId = undefined;
+    }, 300);
+  }
+
+  onPinHoverEnd(key: string): void {
+    this.#clearPinHoverTimer();
+    if (this.#hoveredPinKey() === key) this.#hoveredPinKey.set(null);
+  }
+
+  #clearPinHoverTimer(): void {
+    if (this.#pinHoverTimerId === undefined) return;
+    clearTimeout(this.#pinHoverTimerId);
+    this.#pinHoverTimerId = undefined;
   }
 
   #pathMatches(currentPath: string, menuPath: string): boolean {

@@ -40,12 +40,34 @@ interface ISdLayoutConfiguration {
   userInfo: SdLayoutUserInfo | (() => MaybeAsync<SdLayoutUserInfo>);
   signout: () => void | Promise<void>;
   changePassword?: () => void | Promise<void>;
+  updateProfile?: () => void | Promise<void>;
+  setting?: () => void | Promise<void>;
+  notification?: {
+    count: number | Signal<number> | Observable<number>;
+    action: () => void | Promise<void>;
+  };
 }
 
 type ISdSidebarConfiguration = SidebarConfigurationV1 | SidebarConfigurationV2 | SidebarConfigurationV3;
+
+interface SdLayoutUserInfo {
+  username?: string;
+  email?: string;
+  fullName?: string;
+  avatar?: string;
+  role?: SdLayoutUserRole;
+}
+
+interface SdLayoutUserRole {
+  text: string;
+  icon?: string;
+  color?: string;
+}
 ```
 
 Shared sidebar fields are `brandColor`, `brandLightColor`, `logoUrl`, `defaultTitle`, and `pin.enabled`.
+
+Account actions appear only when their callback is configured. Their order is `updateProfile`, `setting`, `notification`, `changePassword`, then `signout`. Role metadata is hidden when `role.text` is empty. Notification counts are normalized to a non-negative integer, hidden at zero, and capped visually at `99+`; the notification action remains available at zero. Observable sources are subscribed once per current configuration and released with the account menu component.
 
 | Version | Configuration                                   | Defaults and behavior                                                                                                 |
 | ------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -56,9 +78,12 @@ Shared sidebar fields are `brandColor`, `brandLightColor`, `logoUrl`, `defaultTi
 ## Setup
 
 ```ts
-import { ApplicationConfig, importProvidersFrom, inject } from '@angular/core';
+import { ApplicationConfig, importProvidersFrom, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { SdAuthService } from '@sdcorejs/angular/modules/auth';
 import { ISdLayoutConfiguration, SD_LAYOUT_CONFIGURATION, SdLayoutModule } from '@sdcorejs/angular/modules/layout';
+
+const unreadNotificationCount = signal(6);
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -67,6 +92,7 @@ export const appConfig: ApplicationConfig = {
       provide: SD_LAYOUT_CONFIGURATION,
       useFactory: () => {
         const auth = inject(SdAuthService);
+        const router = inject(Router);
         return {
           homeUrl: '/dashboard',
           mobileBreakpoint: 1024,
@@ -82,10 +108,23 @@ export const appConfig: ApplicationConfig = {
               fullName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
               email: user.email,
               username: user.username,
+              role: user.roleName ? { text: user.roleName, icon: 'badge' } : undefined,
             };
           },
           signout: () => auth.signout(),
           changePassword: () => auth.changePassword(),
+          updateProfile: async () => {
+            await router.navigate(['/account/profile']);
+          },
+          setting: async () => {
+            await router.navigate(['/account/settings']);
+          },
+          notification: {
+            count: unreadNotificationCount,
+            action: async () => {
+              await router.navigate(['/notifications']);
+            },
+          },
         } satisfies ISdLayoutConfiguration;
       },
     },
@@ -178,9 +217,14 @@ const menus: SdLayoutMenu[] = [
 
 V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missing slots from the remaining visible roots, and exposes overflow through More. V3 search is accent-insensitive and searches the filtered menu tree.
 
+V2's desktop rail and V3's collapsed desktop drawer center the avatar as the account-menu trigger without rendering a separate disclosure chevron. Collapsed V3 also hides the brand block and keeps only the centered expand control; the expanded drawer and both mobile variants retain the full account identity presentation.
+
+V2/V3 desktop and mobile menu searches share the same internal Soft-pill field: a gray token-based surface, leading search icon and primary focus ring. Placeholder text, `autoId` hooks, accent-insensitive filtering and parent-owned search signals keep their existing contracts.
+
 ## Responsive, storage, and migration behavior
 
 - `mobileBreakpoint` defaults to `1024`. A width strictly below the normalized value is mobile; invalid or non-positive values fall back to the default.
+- Layout and the V2/V3 mobile custom-element hosts are block-level so their full-height shells start at the containing block instead of an inline text baseline.
 - `SdLayout` keeps consuming the compatibility `SdLayoutResponsiveService`, which reads `SdViewportService.width`; existing service overrides remain valid and V1/V2/V3 switch from the same application-wide resize listener.
 - `SdLayoutResponsiveService` delegates to `SdViewportService`; `SD_LAYOUT_VIEWPORT` aliases `SD_VIEWPORT`, so existing consumers and test providers continue to work without registering a second listener.
 - Pinned and Recent entries are persisted as stable menu keys. Missing or no-longer-permitted keys are discarded when the current menu tree is hydrated.

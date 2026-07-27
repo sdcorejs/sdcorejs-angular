@@ -6,7 +6,10 @@
         <span class="text-ellipsis">{{ node.title }}</span>
       </div>
     } @else {
-      <div class="sd-layout-menu-tree__route d-flex align-items-center gap-4">
+      <div
+        class="sd-layout-menu-tree__route d-flex align-items-center gap-4"
+        (mouseenter)="onPinHoverStart(node.key)"
+        (mouseleave)="onPinHoverEnd(node.key)">
         <button
           type="button"
           class="sd-layout-menu-tree__route-button d-flex align-items-center gap-8 flex-1 text-left T14R"
@@ -27,11 +30,12 @@
           <button
             type="button"
             class="sd-layout-menu-tree__pin d-flex align-items-center justify-content-center"
+            [class.sd-layout-menu-tree__pin--visible]="node.isPinVisible"
             [attr.data-pin-key]="node.key"
             [attr.aria-label]="node.isPinned ? 'Unpin ' + node.title : 'Pin ' + node.title"
             [attr.aria-pressed]="node.isPinned"
             (click)="onTogglePinned($event, node.menu)">
-            <sd-icon [name]="node.isPinned ? 'push_pin' : 'keep'"></sd-icon>
+            <sd-icon name="push_pin"></sd-icon>
           </button>
         }
       </div>

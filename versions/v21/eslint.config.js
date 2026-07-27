@@ -15,6 +15,10 @@ const angularTemplateRuleOverrides = {
 
 module.exports = tseslint.config(
   {
+    // why: Showcase generators own formatting for these deterministic build artifacts.
+    ignores: ['projects/showcase/src/app/docs/generated/**/*.ts'],
+  },
+  {
     files: ['**/*.ts'],
     plugins: {
       // @ts-ignore

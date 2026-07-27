@@ -1,18 +1,21 @@
 ---
-title: Viewport foundation và layout compatibility architecture
+title: Viewport foundation và Layout compatibility architecture
 track: angular
-status: implemented-in-v19
-updated_at: 2026-07-23
-source_of_truth: versions/v19/projects/sdcorejs-angular/services/viewport
+status: implemented-v19-v21
+updated_at: 2026-07-26
+source_of_truth:
+  - versions/v19/projects/sdcorejs-angular/services/viewport
+  - versions/v19/projects/sdcorejs-angular/modules/layout
 ---
 
-# Viewport foundation và layout compatibility architecture
+# Viewport foundation và Layout compatibility architecture
 
 ## Mục đích
 
-Task 7 hợp nhất responsive state vào `SdViewportService`: một root service, một injected viewport source và một resize listener. `SdLayout` tiếp tục hỗ trợ các symbol/provider cũ thông qua adapter để tránh breaking behavior trong V1/V2/V3 và test hosts.
-
-Chỉ workspace v19 được sửa; rollout sang v20/v21 nằm ở Task 14.
+`SdViewportService` hợp nhất responsive state thành một root service, một
+injected viewport source và một resize listener. `SdLayout` tiếp tục hỗ trợ các
+symbol/provider cũ qua adapter, đồng thời dùng một account-menu presentation
+chung cho V1/V2/V3. Source chuẩn nằm ở v19 và được đồng bộ sang v20/v21.
 
 ## Public surface
 
@@ -97,6 +100,79 @@ SdLayoutComponent
 - `SdLayoutComponent` vẫn inject compatibility service, nên consumer/test override cũ tiếp tục điều khiển composition.
 - V1/V2/V3 dùng cùng `isMobile` computed và chuyển pair mà không navigation/reload.
 
+## Account menu contract
+
+Public contract nằm trong
+`modules/layout/configurations/layout.configuration.ts`:
+
+```ts
+type SdLayoutAccountAction = () => void | Promise<void>;
+
+interface SdLayoutUserRole {
+  text: string;
+  icon?: string;
+  color?: string;
+}
+
+interface SdLayoutNotificationConfiguration {
+  count: number | Signal<number> | Observable<number>;
+  action: SdLayoutAccountAction;
+}
+```
+
+`ISdLayoutConfiguration` giữ `signout` bắt buộc, `changePassword` tùy chọn và
+thêm đúng ba semantic field: `updateProfile`, `setting`, `notification`.
+Consumer sở hữu callback; Layout không phụ thuộc Router, drawer hay notification
+service cụ thể.
+
+`SdLayoutUserInfo.role` là display metadata. Component trim `role.text` và bỏ
+toàn bộ role row khi text rỗng. `icon` được chuyển cho `SdIcon`; `color` được
+bind qua Angular style binding.
+
+## Shared account presentation
+
+```text
+SD_LAYOUT_CONFIGURATION / component inputs
+                 |
+                 v
+       SdLayoutUserMenuComponent
+        |                     |
+        | disclosure          | mobile / mobile-inline
+        v                     v
+ desktop popup          static identity + signout row
+ ordered actions        optional actions below
+```
+
+- V1 desktop/mobile wrapper chỉ giữ rail toggle và legacy outputs.
+- V2/V3 giữ geometry riêng nhưng render cùng shared component.
+- Desktop action order: `updateProfile`, `setting`, `notification`,
+  `changePassword`, `signout`.
+- Mobile đặt identity + signout cùng hàng; các action còn lại ở list phía dưới.
+- Compact desktop trigger chỉ render avatar, còn popup luôn render identity đầy
+  đủ.
+
+## Notification lifecycle
+
+`notification.count` được resolve theo thứ tự number, Signal, Observable:
+
+- number đọc trực tiếp;
+- Signal được đọc trong `computed`, nên Angular tự theo dõi dependency;
+- Observable có đúng một current subscription trong `effect`; cleanup callback
+  unsubscribe khi source đổi hoặc component destroy.
+
+Count hữu hạn dương được floor. Mọi giá trị khác normalize về 0. Badge ẩn ở 0,
+hiển thị `1..99`, và cap thành `99+`; action thông báo vẫn hiện ở 0.
+
+## Accessibility và i18n
+
+- Trigger dùng native button với `aria-haspopup="menu"` và `aria-expanded`.
+- Popup hỗ trợ `ArrowUp`, `ArrowDown`, `Home`, `End`, `Escape`, focus entry và
+  focus restoration.
+- V1 rail toggle có localized `aria-label` qua
+  `core.module.layout.sidebar.toggle`.
+- Account labels dùng `TranslatePipe`; năm locale en/vi/ja/ko/zh giữ parity.
+- Focus ring rõ ràng và motion được tắt khi `prefers-reduced-motion: reduce`.
+
 ## Showcase và documentation registry
 
 Trang `/v/latest/services/viewport/examples` có ba section: live state, default breakpoints và boolean signals. Registry đánh dấu local pre-release page với `publishedDocId: null`; Task 14 cập nhật published doc mapping sau rollout.
@@ -105,7 +181,19 @@ Generator tạo 268 example entries và 1336 route-shell definitions cho registr
 
 ## Verification evidence
 
-Evidence ngày 2026-07-23:
+Evidence account-menu ngày 2026-07-26:
+
+- v19 Layout suite: 105/105;
+- focused v20 và v21: 40/40 ở mỗi workspace;
+- V1 repair regression: 4/4;
+- i18n parity: 521 keys × 5 locale;
+- targeted ESLint: pass;
+- v19 library build và Showcase build: pass;
+- `npm run sync` và `npm run check:sync`: pass;
+- browser UAT: V1/V2/V3 desktop/mobile, role, actions, badge, V1 expand/collapse,
+  inline mobile signout và preview 390px đều pass.
+
+Evidence viewport ngày 2026-07-23:
 
 - RED ban đầu: missing viewport modules/exports;
 - library GREEN trước review: 20/20;
@@ -118,21 +206,27 @@ Evidence ngày 2026-07-23:
 - `npm run build`: pass, gồm `@sdcorejs/angular/services/viewport` và layout entrypoint;
 - `npm run build:showcase`: pass với 268 example entries.
 
-Full release Karma gate không được suy ra từ focused evidence trên. Baseline source-only sau Task 6 còn 15 failures/9 skipped và function coverage dưới threshold; release vẫn phải repair ở Task 15.
-
 ## Source files chính
 
-| Path                                                             | Trách nhiệm                            |
-| ---------------------------------------------------------------- | -------------------------------------- |
-| `services/viewport/src/viewport.model.ts`                        | Public types và viewport adapter       |
-| `services/viewport/src/viewport.tokens.ts`                       | Browser/config tokens và normalization |
-| `services/viewport/src/viewport.service.ts`                      | Signal graph, listener và cleanup      |
-| `modules/layout/services/responsive/responsive.service.ts`       | Legacy compatibility adapter           |
-| `modules/layout/components/layout-main/layout-main.component.ts` | V1/V2/V3 responsive composition        |
-| `projects/showcase/src/app/pages/services/viewport/**`           | Live demo và focused spec              |
+| Path                                                             | Trách nhiệm                                          |
+| ---------------------------------------------------------------- | ---------------------------------------------------- |
+| `services/viewport/src/viewport.model.ts`                        | Public types và viewport adapter                     |
+| `services/viewport/src/viewport.tokens.ts`                       | Browser/config tokens và normalization               |
+| `services/viewport/src/viewport.service.ts`                      | Signal graph, listener và cleanup                    |
+| `modules/layout/services/responsive/responsive.service.ts`       | Legacy compatibility adapter                         |
+| `modules/layout/components/layout-main/layout-main.component.ts` | V1/V2/V3 responsive composition                      |
+| `modules/layout/configurations/layout.configuration.ts`          | Account action, role và notification public contract |
+| `modules/layout/components/shared/user-menu/*`                   | Shared desktop/mobile account presentation           |
+| `modules/layout/components/sidebar-v1/components/user/*`         | V1 desktop compatibility wrapper                     |
+| `modules/layout/components/sidebar-mobile-v1/components/user/*`  | V1 mobile compatibility wrapper                      |
+| `projects/showcase/src/app/pages/services/viewport/**`           | Live demo và focused spec                            |
+| `projects/showcase/src/app/pages/modules/layout/**`              | Independent V1/V2/V3 live showcases                  |
 
-## Open items
+## Giới hạn
 
-- Rollout v20/v21 và published doc IDs ở Task 14.
-- Browser visual smoke ở desktop/tablet/mobile trong Task 15.
-- Full-suite baseline failures và coverage threshold vẫn là release blocker riêng.
+- Layout không fetch notification, không mở profile/settings pages và không xử
+  lý authorization cho account action; consumer sở hữu các concern này.
+- Contract cố ý không có generic `userActions[]`; chỉ ba semantic extension đã
+  được phê duyệt.
+- Showcase dev server `:4200` hiện có một baseline compile overlay không thuộc
+  Layout ở entity-picker; built Showcase `:4300` được dùng cho visual UAT.

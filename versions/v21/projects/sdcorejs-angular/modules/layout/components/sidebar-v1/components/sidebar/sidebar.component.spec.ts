@@ -41,7 +41,9 @@ describe('SidebarComponent', () => {
     };
   }
 
-  async function create(options: { path?: string; pinned?: SdLayoutMenu[]; pinEnabled?: boolean; mobile?: boolean } = {}) {
+  async function create(
+    options: { path?: string; pinned?: SdLayoutMenu[]; pinEnabled?: boolean; mobile?: boolean; logoUrl?: string } = {}
+  ) {
     routerEvents = new Subject<unknown>();
     router = {
       events: routerEvents,
@@ -77,6 +79,7 @@ describe('SidebarComponent', () => {
       pin: { enabled: options.pinEnabled ?? true },
       brandColor: '#123456',
       brandLightColor: '#abc',
+      logoUrl: options.logoUrl,
     });
     fixture.componentRef.setInput('isShowSidebar', true);
     fixture.componentRef.setInput('isMobile', options.mobile ?? false);
@@ -94,7 +97,20 @@ describe('SidebarComponent', () => {
     expect(component.menusByGroup()).toEqual([orders, admin]);
     expect(component.dataSource.data).toEqual([orders, admin]);
     expect(component.treeControl.isExpanded(admin)).toBeTrue();
-    expect(component.totalMenuInMenusByGroup()).toBe(1);
+    expect(component.totalMenuInMenusByGroup()).toBe(3);
+  });
+
+  it('uses the shared apps fallback when V1 has no configured logo and preserves a custom logo', async () => {
+    await create();
+
+    expect(component.logoUrl()).toBeUndefined();
+
+    fixture.componentRef.setInput('sidebar', {
+      ...component.sidebar(),
+      logoUrl: 'https://cdn.example.com/company.svg',
+    });
+    fixture.detectChanges();
+    expect(component.logoUrl()).toBe('https://cdn.example.com/company.svg');
   });
 
   it('prefers a matching pinned group on first binding and can expand it again', async () => {

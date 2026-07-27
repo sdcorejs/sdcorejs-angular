@@ -51,6 +51,14 @@ const screenshots = [
     steps: [],
   },
   {
+    module: 'viewport-responsive-layout',
+    title: 'SdLayout account-menu showcases',
+    route: '/v/latest/modules-integrations/layout/examples',
+    file: 'images/layout-account-menu-showcase.png',
+    selector: 'app-layout-demo',
+    steps: [],
+  },
+  {
     module: 'breadcrumb-and-data-state',
     title: 'SdBreadcrumb showcase',
     route: '/v/latest/components/breadcrumb/examples',

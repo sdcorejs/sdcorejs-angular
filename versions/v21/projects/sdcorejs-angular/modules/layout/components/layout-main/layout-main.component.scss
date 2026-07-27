@@ -1,0 +1,4 @@
+:host {
+  // why: A block host prevents the full-height layout shell from aligning to an inline baseline.
+  display: block;
+}

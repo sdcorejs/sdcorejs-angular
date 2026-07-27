@@ -2,11 +2,11 @@ import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
-import { SdInput } from '@sdcorejs/angular/forms';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdLayoutUserInfo, SidebarConfigurationV2, resolveSidebarV2Interaction } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
+import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
 
 interface SidebarV2RailItem {
@@ -18,7 +18,7 @@ interface SidebarV2RailItem {
 @Component({
   selector: 'sidebar-v2',
   standalone: true,
-  imports: [SdIcon, SdInput, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
+  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

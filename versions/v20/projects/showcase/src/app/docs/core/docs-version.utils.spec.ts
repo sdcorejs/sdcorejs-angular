@@ -63,13 +63,37 @@ describe('documentation version utilities', () => {
     });
   });
 
-  it('keeps only the first showcase release per Angular major and falls back within the requested major', () => {
-    const showcaseManifest = selectShowcaseReleaseManifest(manifest);
+  it('keeps every published Showcase release from 1.2 onward, including future 1.5 docs', () => {
+    const showcaseManifest = selectShowcaseReleaseManifest({
+      ...manifest,
+      latest: '21.1.5',
+      versions: [
+        { version: '21.1.5', index: 'ignored', released: '2026-07-27', count: 97 },
+        { version: '20.1.5', index: 'ignored', released: '2026-07-27', count: 97 },
+        { version: '19.1.5', index: 'ignored', released: '2026-07-27', count: 97 },
+        { version: '21.1.4', index: 'ignored', released: '2026-07-20', count: 97 },
+        { version: '20.1.4', index: 'ignored', released: '2026-07-20', count: 97 },
+        { version: '19.1.4', index: 'ignored', released: '2026-07-20', count: 97 },
+        ...manifest.versions,
+      ],
+    });
 
-    expect(showcaseManifest.versions.map(entry => entry.version)).toEqual(['21.1.2', '20.1.2', '19.1.2']);
-    expect(resolveRequestedVersion('20.1.1', showcaseManifest)).toEqual({ version: '20.1.2', fallback: true });
-    expect(resolveRequestedVersion('19.1.1', showcaseManifest)).toEqual({ version: '19.1.2', fallback: true });
-    expect(resolveRequestedVersion('99.0.0', showcaseManifest)).toEqual({ version: '21.1.2', fallback: true });
+    expect(showcaseManifest.versions.map(entry => entry.version)).toEqual([
+      '21.1.5',
+      '21.1.4',
+      '21.1.2',
+      '20.1.5',
+      '20.1.4',
+      '20.1.2',
+      '19.1.5',
+      '19.1.4',
+      '19.1.2',
+    ]);
+    expect(showcaseManifest.latest).toBe('21.1.5');
+    expect(resolveRequestedVersion('20.1.4', showcaseManifest)).toEqual({ version: '20.1.4', fallback: false });
+    expect(resolveRequestedVersion('20.1.1', showcaseManifest)).toEqual({ version: '20.1.5', fallback: true });
+    expect(resolveRequestedVersion('19.1.1', showcaseManifest)).toEqual({ version: '19.1.5', fallback: true });
+    expect(resolveRequestedVersion('99.0.0', showcaseManifest)).toEqual({ version: '21.1.5', fallback: true });
   });
 
   it('preserves category, slug, tab, query and fragment while switching versions', () => {

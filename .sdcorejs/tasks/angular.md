@@ -11,6 +11,8 @@
 
 ## Next
 
+- [ ] Audit/fix editable `SdInput` đang kế thừa `aria-hidden="true"` trong một task Forms độc lập.
+- [ ] Giảm coupling của search-icon spec với Material renderer và tăng integration assertion cho filter/Escape.
 - [ ] Add a dedicated Showcase fixture for `SdTable` empty-result reload and capture `images/sd-table-empty-result-reload.png`.
 - [ ] Merge the Showcase Loading manifest hotfix PR and confirm `deploy-pages.yml` completes without the runtime exception.
 - [ ] Normalize `GenericSelectComponent` output types, then migrate its three `EventEmitter` outputs with Angular safe migration.
@@ -31,6 +33,13 @@
 
 ## Done
 
+- [x] (2026-07-27) Push `feat/layout-navigation-polish` và mở PR #17 vào `main` sau khi toàn bộ branch-ready gate xanh.
+- [x] (2026-07-27) Sửa mobile V2/V3 host containment, thêm regression coverage và xác nhận browser UAT ở 390px không còn top clipping.
+- [x] (2026-07-27) Sửa release lint/generated-doc gate, catalog phiên bản 1.2+ và hoàn thiện migration/docs cho release suffix 1.5.
+- [x] (2026-07-26) Hoàn thiện shared Layout account menu V1/V2/V3 với role, semantic actions, reactive notification badge, i18n/a11y, Showcase, docs và product traceability.
+- [x] (2026-07-25) Căn profile/đăng xuất V2 mobile cùng hàng và giữ avatar account V1 desktop nhìn thấy, mở menu được trong Showcase.
+- [x] (2026-07-25) Tinh chỉnh pin desktop/mobile, V3 inline sign-out, sticky search và logo fallback V1; xác nhận Layout 94/94 và build Angular 19/20/21.
+- [x] (2026-07-25) Hoàn thiện Layout V1/V2/V3: collapse rail, logo fallback, mobile direct sign-out, hover/focus và ba Showcase độc lập trên Angular 19/20/21.
 - [x] (2026-07-23) Audit Changelog and 113 Markdown files, enforce canonical npm README sync, refresh release docs, and pass the fresh commit/push delivery gate.
 - [x] (2026-07-23) Complete Task 15 full quality gate: repair full Karma/coverage/i18n/sync issues, browser smoke, review/repair, production builds and package dry-runs.
 - [x] (2026-07-23) Repair Showcase Changelog duplicate-section rendering and Layout demo viewport injection; full Showcase 191/191 passes.

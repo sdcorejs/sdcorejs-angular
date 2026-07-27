@@ -264,7 +264,9 @@ export type ShowcaseExampleSourceKey =
   | "forms/tree-select/example-multiple-cascade"
   | "forms/tree-select/example-static-single-select"
   | "forms/tree-select/example-unloaded-key-va-viewed"
-  | "modules/layout/example-sidebar-v1-v2-v3"
+  | "modules/layout/example-sidebar-v1-classic"
+  | "modules/layout/example-sidebar-v2-rail"
+  | "modules/layout/example-sidebar-v3-collapsible"
   | "services/confirm/example-chon-muc-do"
   | "services/confirm/example-chon-ngay"
   | "services/confirm/example-chon-ngay-gio"
@@ -2151,11 +2153,25 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     description: "Key chưa load không bị xóa bởi filter/page/lazy state; viewed mode hiển thị fallback key ổn định.",
   },
   {
-    sourceKey: "modules/layout/example-sidebar-v1-v2-v3",
+    sourceKey: "modules/layout/example-sidebar-v1-classic",
     pageKey: "modules/layout",
-    sectionId: "example-sidebar-v1-v2-v3",
-    title: "Sidebar V1, V2 & V3",
-    description: "Switch versions and viewport widths without reloading the Showcase page.",
+    sectionId: "example-sidebar-v1-classic",
+    title: "Sidebar V1 - Classic",
+    description: "Desktop rail with expand/collapse, menu search after more than 10 items, and the default SDCoreJS logo.",
+  },
+  {
+    sourceKey: "modules/layout/example-sidebar-v2-rail",
+    pageKey: "modules/layout",
+    sectionId: "example-sidebar-v2-rail",
+    title: "Sidebar V2 - Rail",
+    description: "Primary navigation rail on desktop and bottom navigation with a direct mobile sign-out action.",
+  },
+  {
+    sourceKey: "modules/layout/example-sidebar-v3-collapsible",
+    pageKey: "modules/layout",
+    sectionId: "example-sidebar-v3-collapsible",
+    title: "Sidebar V3 - Collapsible",
+    description: "Collapsible desktop navigation and a unified mobile drawer with pinned and recent menus.",
   },
   {
     sourceKey: "services/confirm/example-xac-nhan-co-ban",

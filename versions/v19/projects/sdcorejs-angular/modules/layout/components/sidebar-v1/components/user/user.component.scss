@@ -1,100 +1,35 @@
-::ng-deep {
-  .c-user-menu-backdrop-f90ce131-fa4c-4f71-a49b-ab7fa374fdd0 + * .cdk-overlay-pane {
-    transform: translate(277px, 83px);
-  }
-}
-
 .c-layout-user-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 60px;
   height: 80px;
-
-  .c-layout-user-avatar {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-  }
-
-  .c-layout-icon-toggle {
-    background-color: transparent;
-    border-top: 1px solid #f0f0f0;
-    box-shadow: none;
-    margin-top: 10px;
-    width: 32px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-  }
 }
 
-// CSS Mat-menu
-.c-user-menu-wrapper {
-  .c-user-info-wrapper {
-    width: 250px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-
-    .c-user-avatar {
-      width: 40px;
-      height: 40px;
-    }
-
-    .c-user-name {
-      font-size: 16px;
-      font-weight: 700;
-      text-align: center;
-    }
-
-    .c-user-email {
-      font-size: 14px;
-      color: #7a7a7a;
-      text-align: center;
-    }
-  }
-
-  .c-sign-button-wrapper {
-    text-align: center;
-    padding: 16px 16px 8px 16px;
-    width: 100%;
-    border-top: 1px solid #dee2e6;
-
-    .c-account-options {
-      all: unset;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      sd-icon {
-        font-size: 21px;
-        width: 21px;
-        height: 21px;
-        color: #8c8c8c;
-      }
-    }
-
-    .c-sign-button {
-      width: 100%;
-      color: #000;
-      padding: 16px;
-      font-weight: 700;
-      background-color: #eef0f2;
-    }
-  }
+// why: The legacy V1 rail reserves a fixed avatar slot independent of the shared disclosure internals.
+.c-layout-user-avatar {
+  display: block;
+  width: 56px;
+  height: 52px;
 }
 
-.c-avatar {
-  max-width: 100%;
-  object-fit: cover;
+// why: The rail pin control keeps the legacy footer geometry while using a semantic button.
+.c-layout-icon-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-top: 1px solid var(--sd-black200, #f0f0f0);
+  background: transparent;
+  color: var(--sd-black400, #8c8c8c);
+  cursor: pointer;
+}
+
+.c-layout-icon-toggle:focus-visible {
+  outline: 2px solid var(--sd-primary);
+  outline-offset: 2px;
 }

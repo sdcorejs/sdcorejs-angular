@@ -569,7 +569,11 @@ export const EN_MESSAGES = {
   // ---- Module: layout (sidebar / user menu) ----
   'core.module.layout.user.change-password': 'Change password',
   'core.module.layout.user.logout': 'Sign out',
+  'core.module.layout.user.update-profile': 'Update profile',
+  'core.module.layout.user.setting': 'Settings',
+  'core.module.layout.user.notification': 'Notifications',
   'core.module.layout.sidebar.search': 'Search',
+  'core.module.layout.sidebar.toggle': 'Toggle sidebar',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': 'Hello, {name}',

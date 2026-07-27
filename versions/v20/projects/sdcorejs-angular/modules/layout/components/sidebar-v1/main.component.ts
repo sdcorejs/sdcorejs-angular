@@ -128,6 +128,12 @@ export class SidebarV1Component {
     this.#mouseLeave();
   };
 
+  onSidenavOpenedChange = (opened: boolean): void => {
+    if (this.isMobile()) {
+      this.isShowSidebar.set(opened);
+    }
+  };
+
   onToggle = (data: boolean | null) => {
     if (data === null) {
       this.#handleMouseLeaveTransition();
@@ -136,13 +142,15 @@ export class SidebarV1Component {
       this.isShowSidebar.set(data);
       this.isMenuLock.set(data);
 
-      // Toggle component MatSidenav
-      const sidenavComp = this.sidenav();
-      if (sidenavComp) {
-        if (data) {
-          sidenavComp.open();
-        } else {
-          sidenavComp.close();
+      // Desktop keeps the Material drawer mounted as a 60px rail; mobile still opens and closes the overlay.
+      if (this.isMobile()) {
+        const sidenavComp = this.sidenav();
+        if (sidenavComp) {
+          if (data) {
+            sidenavComp.open();
+          } else {
+            sidenavComp.close();
+          }
         }
       }
     }

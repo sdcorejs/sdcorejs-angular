@@ -1,3 +1,8 @@
+:host {
+  // why: Keep the full-height mobile shell inside embedded previews and consumer layout containers.
+  display: block;
+}
+
 // why: Mobile V2 reserves space for a fixed bottom navigation bar and safe-area inset.
 .sd-sidebar-mobile-v2 {
   min-height: 100dvh;

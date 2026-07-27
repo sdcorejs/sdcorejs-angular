@@ -88,6 +88,7 @@ export class SidebarComponent {
   // COMPUTED STATE
   // ==========================================
   totalMenuInMenusByGroup = computed(() => this.#getTotalMenus(this.menusByGroup()));
+  logoUrl = computed(() => this.sidebar().logoUrl?.trim() || undefined);
   pinnedNodeKeys = computed(() => new Set(this.pinnedMenuGroup().children?.map(m => this.#getMenuNodeKey(m)) ?? []));
   isPinnedMenuGroupActive = computed(() => this.idMenuGroupActive() === this.pinnedMenuGroup().id);
 
@@ -609,17 +610,17 @@ export class SidebarComponent {
   };
 
   #getTotalMenus = (menus: SdLayoutMenu[]): number => {
-    return menus.reduce((total, menu) => total + this.#countMenuChildrenNode(menu), 0);
+    return menus.reduce((total, menu) => total + this.#countMenuNode(menu), 0);
   };
 
-  #countMenuChildrenNode = (menu: SdLayoutMenu): number => {
+  #countMenuNode = (menu: SdLayoutMenu): number => {
     if (!('children' in menu) || !menu.children?.length) {
-      return 0;
+      return 1;
     }
 
-    let count = menu.children.length;
+    let count = 1;
     for (const child of menu.children) {
-      count += this.#countMenuChildrenNode(child);
+      count += this.#countMenuNode(child);
     }
     return count;
   };

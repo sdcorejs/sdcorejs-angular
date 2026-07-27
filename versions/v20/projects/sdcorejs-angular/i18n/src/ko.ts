@@ -570,7 +570,11 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   // ---- Module: layout (sidebar / user menu) ----
   'core.module.layout.user.change-password': '비밀번호 변경',
   'core.module.layout.user.logout': '로그아웃',
+  'core.module.layout.user.update-profile': '프로필 수정',
+  'core.module.layout.user.setting': '설정',
+  'core.module.layout.user.notification': '알림',
   'core.module.layout.sidebar.search': '검색',
+  'core.module.layout.sidebar.toggle': '사이드바 전환',
 
   // ---- Module: layout (greeting + weekday) ----
   'core.module.layout.greeting.hello': '안녕하세요, {name}님',

@@ -1,3 +1,8 @@
+:host {
+  // why: Keep the mobile topbar anchored to the start of embedded previews and consumer layout containers.
+  display: block;
+}
+
 // why: Mobile V3 fills the dynamic viewport while keeping its topbar visible.
 .sd-sidebar-mobile-v3 {
   min-height: 100dvh;
@@ -62,7 +67,10 @@
 .sd-sidebar-mobile-v3__search {
   position: sticky;
   z-index: 2;
-  top: 0;
+  top: -12px;
+  margin: -12px;
+  padding: 12px;
+  background: var(--sd-white, #fff);
 }
 
 // why: Navigation motion must respect the user's reduced-motion preference.
