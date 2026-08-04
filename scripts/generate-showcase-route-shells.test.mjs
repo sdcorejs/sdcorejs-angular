@@ -109,18 +109,19 @@ test('builds only the supported release routes, including page redirects and all
   const pages = parseDocumentationRegistry(REGISTRY_FIXTURE);
   const routes = createRouteShellDefinitions(pages, SUPPORTED_RELEASES);
 
-  assert.deepEqual(SUPPORTED_RELEASES, ['21.1.4', '21.1.3', '21.1.2', '20.1.4', '20.1.3', '20.1.2', '19.1.4', '19.1.3', '19.1.2']);
+  assert.deepEqual(SUPPORTED_RELEASES, ['21.1.5', '21.1.4', '21.1.3', '21.1.2', '20.1.5', '20.1.4', '20.1.3', '20.1.2', '19.1.5', '19.1.4', '19.1.3', '19.1.2']);
   assert.equal(PUBLIC_BASE_URL, 'https://sdcorejs.github.io/sdcorejs-angular/');
   assert.equal(routes.length, 1 + SUPPORTED_RELEASES.length * (3 + 2 + pages.length * 5));
   assert.ok(routes.some(route => route.routePath === 'about'));
+  assert.ok(routes.some(route => route.routePath === 'v/21.1.5'));
   assert.ok(routes.some(route => route.routePath === 'v/21.1.4'));
   assert.ok(routes.some(route => route.routePath === 'v/20.1.4/changelog'));
   assert.ok(routes.some(route => route.routePath === 'v/19.1.4/getting-started'));
   assert.ok(routes.some(route => route.routePath === 'v/21.1.3/components'));
   assert.ok(routes.some(route => route.routePath === 'v/21.1.2/components/alert'));
   assert.equal(
-    routes.find(route => route.routePath === 'v/21.1.4/components/alert')?.canonicalUrl,
-    `${PUBLIC_BASE_URL}v/21.1.4/components/alert/overview/`
+    routes.find(route => route.routePath === 'v/21.1.5/components/alert')?.canonicalUrl,
+    `${PUBLIC_BASE_URL}v/21.1.5/components/alert/overview/`
   );
   assert.equal(
     routes.some(route => route.routePath.includes('alert-configuration')),
@@ -128,9 +129,9 @@ test('builds only the supported release routes, including page redirects and all
   );
 
   for (const tab of ['overview', 'styling', 'api', 'examples']) {
-    const route = routes.find(candidate => candidate.routePath === `v/21.1.4/components/alert/${tab}`);
+    const route = routes.find(candidate => candidate.routePath === `v/21.1.5/components/alert/${tab}`);
     assert.ok(route, `missing ${tab} route`);
-    assert.equal(route.canonicalUrl, `${PUBLIC_BASE_URL}v/21.1.4/components/alert/${tab}/`);
+    assert.equal(route.canonicalUrl, `${PUBLIC_BASE_URL}v/21.1.5/components/alert/${tab}/`);
     assert.equal(route.description, 'Status feedback for warnings & confirmations.');
   }
 
@@ -163,7 +164,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
   );
 
   assert.equal(pages.length, 97);
-  assert.equal(routes.length, 4456);
+  assert.equal(routes.length, 5941);
   assert.deepEqual(categoryCounts, {
     components: 35,
     directives: 6,
