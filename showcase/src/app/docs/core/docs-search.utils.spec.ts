@@ -1,0 +1,50 @@
+import { DOC_PAGES } from './documentation.registry';
+import { groupSearchResults, searchDocumentation } from './docs-search.utils';
+
+describe('documentation search', () => {
+  it('searches title, slug, keywords, selector, import path and example title', () => {
+    expect(searchDocumentation('sd-button', DOC_PAGES)[0]?.page.slug).toBe('button');
+    expect(searchDocumentation('syntax highlighting', DOC_PAGES)[0]?.page.slug).toBe('code-editor');
+    expect(searchDocumentation('@sdcorejs/angular/services/excel', DOC_PAGES)[0]?.page.slug).toBe('excel');
+    expect(searchDocumentation('secondary vs black', DOC_PAGES)[0]?.page.slug).toBe('button');
+    expect(searchDocumentation('sdTooltip', DOC_PAGES)[0]?.page.category).toBe('directives');
+    expect(searchDocumentation('utilities models', DOC_PAGES)[0]?.page.slug).toBe('models');
+  });
+
+  it('groups matching results by documentation category', () => {
+    const groups = groupSearchResults(searchDocumentation('form', DOC_PAGES));
+
+    expect(groups.length).toBeGreaterThan(0);
+    expect(groups.every(group => group.results.every(result => result.page.category === group.category))).toBeTrue();
+  });
+
+  it('groups Form Generic with Components', () => {
+    const [result] = searchDocumentation('Form Generic', DOC_PAGES);
+
+    expect(result?.page.category).toBe('components');
+    expect(result?.page.slug).toBe('generic');
+  });
+
+  it('uses the documentation navigation order when grouping cross-category results', () => {
+    const groups = groupSearchResults(searchDocumentation('sd', DOC_PAGES));
+
+    expect(groups.map(group => group.category)).toEqual([
+      'guides',
+      'components',
+      'forms',
+      'directives',
+      'services',
+      'modules-integrations',
+      'pipes-utilities',
+    ]);
+  });
+
+  it('returns an empty result for blank input', () => {
+    expect(searchDocumentation('   ', DOC_PAGES)).toEqual([]);
+  });
+
+  it('matches Vietnamese text without accents, including đ', () => {
+    expect(searchDocumentation('kich thuoc', DOC_PAGES).some(result => result.page.slug === 'button')).toBeTrue();
+    expect(searchDocumentation('dieu huong', DOC_PAGES).some(result => result.page.slug === 'anchor')).toBeTrue();
+  });
+});

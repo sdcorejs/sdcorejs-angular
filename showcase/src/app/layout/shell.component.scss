@@ -1,0 +1,390 @@
+:host {
+  display: block;
+  min-height: 100%;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 120;
+  top: 8px;
+  left: 8px;
+  transform: translateY(-160%);
+  border-radius: 8px;
+  background: var(--sd-primary, #005cbb);
+  padding: 9px 12px;
+  color: var(--sd-primary-contrast, white);
+
+  &:focus {
+    transform: translateY(0);
+  }
+}
+
+// why: The sticky header keeps search, version context, and primary navigation reachable.
+.shell {
+  min-height: 100vh;
+  background: var(--docs-surface);
+
+  &__body {
+    display: grid;
+    grid-template-columns: var(--docs-sidebar-width) minmax(0, 1fr);
+    min-height: calc(100vh - var(--docs-header-height));
+  }
+}
+
+.topbar {
+  position: sticky;
+  z-index: 70;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: var(--docs-header-height);
+  border-bottom: 1px solid var(--docs-border-color);
+  background: color-mix(in srgb, var(--docs-surface-raised) 92%, transparent);
+  padding: 0 20px;
+  backdrop-filter: blur(14px);
+
+  &__tools {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-left: auto;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 236px;
+  min-height: var(--docs-control-height-lg, 44px);
+  color: var(--docs-text);
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &__mark {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    overflow: hidden;
+    border-radius: 10px;
+    background: var(--docs-surface-raised);
+  }
+
+  &__logo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: scale(1.3);
+    object-fit: contain;
+  }
+
+  > span:last-child {
+    display: grid;
+    gap: 1px;
+  }
+
+  strong {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  small {
+    color: var(--docs-text-muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.topnav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--docs-control-height-lg, 44px);
+    border-radius: 7px;
+    padding: 8px 10px;
+    color: var(--docs-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+
+    &.active,
+    &:hover {
+      background: var(--docs-surface-muted);
+      color: var(--docs-text);
+      text-decoration: none;
+    }
+  }
+}
+
+.github-link {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 var(--docs-control-height-lg, 44px);
+  width: var(--docs-control-height-lg, 44px);
+  height: var(--docs-control-height-lg, 44px);
+  box-sizing: border-box;
+  border: 1px solid var(--docs-border-color);
+  border-radius: 10px;
+  background: var(--docs-surface-raised);
+  color: var(--docs-text-secondary);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--sd-primary, #005cbb) 42%, var(--docs-border-color));
+    color: var(--docs-text);
+    text-decoration: none;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.mobile-menu {
+  display: none;
+  width: var(--docs-control-height-lg, 44px);
+  height: var(--docs-control-height-lg, 44px);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--docs-text);
+}
+
+// why: Desktop navigation remains independently scrollable for the full documentation catalog.
+.sidebar {
+  position: sticky;
+  top: var(--docs-header-height);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--docs-header-height));
+  overflow-y: auto;
+  border-right: 1px solid var(--docs-border-color);
+  background: var(--docs-surface-raised);
+  padding: 14px 10px 0;
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 10px 10px;
+    color: var(--docs-text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: auto;
+    border-top: 1px solid var(--docs-border-color);
+    padding: 12px 10px;
+    color: var(--docs-text-muted);
+    font-size: 11px;
+  }
+}
+
+.sidebar__primary {
+  display: none;
+  gap: var(--docs-space-1);
+  margin-bottom: var(--docs-space-3);
+  border-bottom: 1px solid var(--docs-border-color);
+  padding: 0 var(--docs-space-2) var(--docs-space-3);
+
+  a {
+    display: flex;
+    align-items: center;
+    min-height: var(--docs-control-height-lg, 44px);
+    border-radius: var(--docs-radius-sm);
+    padding-inline: var(--docs-space-3);
+    color: var(--docs-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+
+    &:hover,
+    &.active {
+      background: var(--sd-primary-light, #e8f1ff);
+      color: var(--sd-primary, #005cbb);
+      text-decoration: none;
+    }
+  }
+}
+
+.nav-group {
+  margin-bottom: 4px;
+
+  &__header {
+    display: grid;
+    grid-template-columns: 20px 1fr auto 20px;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    padding: 9px 10px;
+    color: var(--docs-text-secondary);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--docs-surface-muted);
+    }
+
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--sd-primary, #005cbb);
+      font-size: 18px;
+    }
+
+    span {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    small {
+      border-radius: 999px;
+      background: var(--docs-surface-muted);
+      padding: 2px 6px;
+    }
+  }
+
+  ul {
+    margin: 2px 0 8px;
+    padding: 0 0 0 30px;
+    list-style: none;
+  }
+
+  li a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-left: 2px solid transparent;
+    border-radius: 0 7px 7px 0;
+    padding: 7px 9px;
+    color: var(--docs-text-secondary);
+    font-size: 12px;
+
+    &:hover,
+    &.active {
+      background: var(--sd-primary-light, #e8f1ff);
+      color: var(--sd-primary, #005cbb);
+      text-decoration: none;
+    }
+
+    &.active {
+      border-left-color: var(--sd-primary, #005cbb);
+      font-weight: 600;
+    }
+
+    small {
+      color: var(--docs-text-muted);
+    }
+  }
+}
+
+.availability-label {
+  white-space: nowrap;
+}
+
+.content {
+  min-width: 0;
+}
+
+.nav-backdrop {
+  display: none;
+}
+
+@media (max-width: 1160px) {
+  .topnav {
+    display: none;
+  }
+
+  // why: The catalog becomes an accessible off-canvas drawer below desktop width.
+  .shell__body {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .brand {
+    min-width: 0;
+
+    small {
+      display: none;
+    }
+  }
+
+  .mobile-menu {
+    display: inline-grid;
+    place-items: center;
+  }
+
+  .sidebar__primary {
+    display: grid;
+  }
+
+  .sidebar {
+    position: fixed;
+    z-index: 82;
+    top: var(--docs-header-height);
+    bottom: 0;
+    left: 0;
+    width: min(var(--docs-sidebar-width), 86vw);
+    height: auto;
+    transform: translateX(-105%);
+    transition: transform 180ms ease;
+
+    &.open {
+      transform: translateX(0);
+    }
+  }
+
+  .nav-backdrop {
+    position: fixed;
+    z-index: 81;
+    inset: var(--docs-header-height) 0 0;
+    display: block;
+    border: 0;
+    background: rgb(15 23 42 / 45%);
+  }
+
+  .nav-group__header,
+  .nav-group li a {
+    min-height: var(--docs-control-height-lg, 44px);
+  }
+}
+
+@media (max-width: 620px) {
+  .topbar {
+    overflow: hidden;
+  }
+
+  .brand {
+    flex: 0 0 var(--docs-control-height-lg, 44px);
+    justify-content: center;
+  }
+
+  .topbar__tools {
+    min-width: 0;
+    gap: 6px;
+  }
+
+  .brand > span:last-child,
+  .github-link {
+    display: none;
+  }
+}
