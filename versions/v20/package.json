@@ -18,7 +18,9 @@
                     "test:showcase":  "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng test showcase --watch=false --browsers=ChromeHeadless --source-map=false",
                     "lint":  "ng lint",
                     "check:i18n-parity":  "tsx scripts/check-i18n-parity.mjs",
-                    "check:i18n":  "node scripts/check-i18n.mjs"
+                    "check:i18n":  "node scripts/check-i18n.mjs",
+                    "generate:pdf-worker":  "node scripts/generate-pdf-worker-inline.mjs",
+                    "check:pdf-worker":  "node scripts/generate-pdf-worker-inline.mjs --check"
                 },
     "private":  true,
     "dependencies":  {

@@ -74,7 +74,7 @@
         aria-hidden="true"
         [id]="id"
         matInput
-        (keyup)="onKeyup($event)"
+        (input)="onInput($event)"
         (keydown)="onKeyDown($event)"
         (dateChange)="onChange($event)"
         [autocomplete]="id"

@@ -532,6 +532,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.choose-filter-hint': '시작하려면 필터를 선택해 주세요',
   'core.component.table.no-data': '데이터가 없습니다',
   'core.component.table.export-excel': 'Excel 내보내기',
+  'core.component.table.exporting': '내보내는 중...{percent}%',
+  'core.component.table.export': '내보내기',
   'core.component.table.export-csv': 'CSV 내보내기',
   'core.component.table.showing': '표시 중:',
   'core.component.table.paginator.first-page': '첫 페이지',
@@ -600,6 +602,8 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (home page) ----
   'core.module.layout.home.tab-name': '홈',
+  'core.module.layout.not-found.tab-name': '페이지를 찾을 수 없음',
+  'core.module.layout.forbidden.tab-name': '접근 거부',
   'core.module.layout.home.feature.data': '데이터',
   'core.module.layout.home.feature.reports': '리포트',
   'core.module.layout.home.feature.users': '사용자',

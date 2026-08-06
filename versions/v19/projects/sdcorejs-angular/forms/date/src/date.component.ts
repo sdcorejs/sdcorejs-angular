@@ -42,12 +42,53 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
-import { parse as parseDate } from 'date-fns';
+import { isValid as isValidDate, parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type SdDateModelValue = string | number | Date | undefined | null;
+type SdDateKeyupEvent = Event | { target?: { value?: string | null } };
+
+const DATE_DISPLAY_FORMAT = 'dd/MM/yyyy';
+const DATE_DISPLAY_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/;
+const DATE_INPUT_MAX_DIGITS = 8;
+
+function formatDateInput(value: string, addTrailingSeparator: boolean): string {
+  const digits = value.replace(/\D/g, '').slice(0, DATE_INPUT_MAX_DIGITS);
+  let formatted = digits.slice(0, 2);
+
+  if (digits.length > 2) formatted += `/${digits.slice(2, 4)}`;
+  if (digits.length > 4) formatted += `/${digits.slice(4)}`;
+  if (addTrailingSeparator && (digits.length === 2 || digits.length === 4)) formatted += '/';
+
+  return formatted;
+}
+
+function isPartialDateInput(value: string): boolean {
+  return /^(?:\d{0,2})(?:\/\d{0,2})?(?:\/\d{0,4})?$/.test(value);
+}
+
+function parseDateInput(value: string): Date | null {
+  if (!DATE_DISPLAY_PATTERN.test(value)) return null;
+
+  const parsed = parseDate(value, DATE_DISPLAY_FORMAT, new Date());
+  return isValidDate(parsed) && DateUtilities.toFormat(parsed, DATE_DISPLAY_FORMAT) === value ? parsed : null;
+}
+
+function getCaretPosition(value: string, selectionStart: number, formattedValue: string, addTrailingSeparator: boolean): number {
+  const digitsBeforeCaret = value.slice(0, selectionStart).replace(/\D/g, '').length;
+  let formattedIndex = 0;
+  let digitCount = 0;
+
+  while (formattedIndex < formattedValue.length && digitCount < digitsBeforeCaret) {
+    if (/\d/.test(formattedValue[formattedIndex])) digitCount++;
+    formattedIndex++;
+  }
+
+  if (addTrailingSeparator && digitCount === digitsBeforeCaret && formattedValue[formattedIndex] === '/') formattedIndex++;
+  return formattedIndex;
+}
 
 function normalizeDateModel(value: SdDateModelValue): string | null {
   if (!DateUtilities.isDate(value)) return null;
@@ -258,6 +299,7 @@ export class SdDate implements OnDestroy, OnInit {
   });
   isFocused = false;
   isValid?: boolean;
+  #hasInvalidInput = false;
 
   #subscription = new Subscription();
 
@@ -287,6 +329,25 @@ export class SdDate implements OnDestroy, OnInit {
 
   onBlur = () => {
     this.isFocused = false;
+
+    const input = this.inputRef()?.nativeElement;
+    const displayValue = input?.value ?? '';
+    const parsedValue = this.#hasInvalidInput ? null : parseDateInput(displayValue);
+
+    this.formControl.markAsTouched();
+    this.isValid = false;
+    this.#setDateError(false);
+    this.#hasInvalidInput = false;
+
+    if (parsedValue) {
+      if (!dateControlsEqual(this.formControl.value as Date | null, parsedValue)) {
+        this.formControl.setValue(parsedValue);
+      }
+      return;
+    }
+
+    if (input && displayValue) input.value = '';
+    if (this.formControl.value !== null) this.formControl.setValue(null);
   };
 
   onClick = () => {
@@ -341,31 +402,62 @@ export class SdDate implements OnDestroy, OnInit {
     return false;
   };
 
-  onKeyup = (event: any) => {
-    const currentVal: string = event.target.value;
-    const formControl: AbstractControl = this.formControl;
-    const regex = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d$/g;
+  onInput = (event: Event) => {
+    const input = event.target as HTMLInputElement | null;
+    if (!input) return;
 
-    if (currentVal && !regex.test(currentVal)) {
-      setTimeout(() => {
-        this.isValid = true;
-        formControl.markAsDirty();
-        formControl.markAsTouched();
-        formControl.setErrors({ ...formControl.errors, date: this.#i18n.t('core.form.date.invalid-format') });
-      }, 0);
-    } else {
-      setTimeout(() => {
-        this.isValid = false;
-        formControl.setErrors({ ...formControl.errors, date: null });
-        this.formControl.updateValueAndValidity();
-      }, 0);
+    const rawValue = input.value;
+    const inputType = (event as InputEvent).inputType;
+    const isDeleting = inputType?.startsWith('delete') ?? false;
+    const addTrailingSeparator = !isDeleting;
+    const hasInvalidCharacters = /[^\d/]/.test(rawValue);
+    const selectionStart = input.selectionStart ?? rawValue.length;
+    const formattedValue = formatDateInput(rawValue, addTrailingSeparator);
+
+    if (formattedValue !== rawValue) {
+      input.value = formattedValue;
+      const caretPosition = getCaretPosition(rawValue, selectionStart, formattedValue, addTrailingSeparator);
+      input.setSelectionRange?.(caretPosition, caretPosition);
     }
+
+    this.#hasInvalidInput = hasInvalidCharacters;
+    this.#validateDateInput(formattedValue, hasInvalidCharacters);
   };
+
+  /** Kept as a compatibility entry point for callers that used the old keyup handler. */
+  onKeyup = (event: SdDateKeyupEvent) => {
+    const target = event.target as { value?: string | null } | null | undefined;
+    const value = target?.value ?? '';
+    this.#validateDateInput(value, /[^\d/]/.test(value));
+  };
+
+  #validateDateInput(value: string, hasInvalidCharacters: boolean): void {
+    const parsedValue = parseDateInput(value);
+    const invalid = !!value && (hasInvalidCharacters || (!parsedValue && !isPartialDateInput(value)));
+
+    this.isValid = !!value && !parsedValue;
+    if (invalid) {
+      this.formControl.markAsDirty();
+      this.#setDateError(true);
+    } else {
+      this.#setDateError(false);
+    }
+  }
+
+  #setDateError(invalid: boolean): void {
+    const errors = { ...(this.formControl.errors ?? {}) };
+    if (invalid) errors['date'] = this.#i18n.t('core.form.date.invalid-format');
+    else delete errors['date'];
+
+    this.formControl.setErrors(Object.keys(errors).length > 0 ? errors : null);
+  }
 
   onChange = (event: MatDatepickerInputEvent<Date>) => {
     this.inputRef()?.nativeElement?.focus();
-    const value = this.isValid ? null : event.value;
+    const value = event.value ?? null;
+    this.#hasInvalidInput = false;
     this.isValid = false;
+    this.#setDateError(false);
 
     if (!dateControlsEqual(this.formControl.value as Date | null, value)) {
       this.formControl.setValue(value);

@@ -1,4 +1,5 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -34,12 +35,30 @@ export interface SdTableExportContext<T = any> {
 @Injectable()
 export class TableExportService {
   #excelService = inject(SdExcelService);
+  #i18n = inject(I18nService);
 
   // ==========================================
   // SIGNAL STATE (Component sẽ bind trực tiếp vào đây)
   // ==========================================
   exporting = signal(false);
-  exportTitle = signal('Export');
+
+  // Phần trăm tiến độ export; null = đang rảnh (nút hiện nhãn mặc định).
+  #exportPercent = signal<number | null>(null);
+
+  // WHY computed + i18n: trước đây đây là signal('Export') hard-code tiếng Anh nên
+  // app chạy tiếng Việt vẫn hiện "Export". Đọc qua I18nService.t() để nhãn nút bám
+  // theo catalog ngôn ngữ hiện tại.
+  exportTitle = computed(() => {
+    const percent = this.#exportPercent();
+    return percent === null
+      ? this.#i18n.t('core.component.table.export')
+      : this.#i18n.t('core.component.table.exporting', { percent });
+  });
+
+  /** Đặt tiến độ export (0-100), hoặc null để trả nút về nhãn mặc định. */
+  setExportProgress = (percent: number | null): void => {
+    this.#exportPercent.set(percent === null ? null : Math.min(Math.max(percent, 0), 100));
+  };
 
   // ==========================================
   // PUBLIC METHODS
@@ -116,7 +135,7 @@ export class TableExportService {
         const totalPage = Math.max(1, currentTotal / pageSize);
         const percent = Math.round(((pageNumber - 1) * 100.0) / totalPage);
         // Đảm bảo percent không vượt quá 100
-        this.exportTitle.set(`Exporting...${Math.min(percent, 100)}%`);
+        this.setExportProgress(percent);
 
         const allColumns = this.#allColumns(option);
         const allExportedColumns = this.#allExportedColumns(option);
@@ -229,7 +248,7 @@ export class TableExportService {
       });
     } finally {
       this.exporting.set(false);
-      this.exportTitle.set('Export');
+      this.setExportProgress(null);
     }
   }
 

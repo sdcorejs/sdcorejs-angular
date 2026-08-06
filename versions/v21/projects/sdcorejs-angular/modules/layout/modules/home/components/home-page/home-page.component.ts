@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { SdTabComponent } from '@sdcorejs/angular/components';
-import { I18N_STORAGE_KEY, I18N_MESSAGES, I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { Language } from '@sdcorejs/angular/models';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
 import { SdLayoutService } from '../../../../services';
+import { resolveTabName } from '../../../../utils';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 // End
 
@@ -18,20 +19,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 })
 @SdTabComponent({
   component: HomePageComponent,
-  // WHY: decorator chạy trước Angular DI, nên không inject được I18nService.
-  // Đọc ngôn ngữ hiện tại trực tiếp từ localStorage + I18N_MESSAGES để có giá trị đã dịch.
-  name: () => {
-    const lang = ((): Language => {
-      try {
-        const stored = localStorage.getItem(I18N_STORAGE_KEY) as Language | null;
-        if (stored) return stored;
-      } catch {
-        /* ignore */
-      }
-      return 'vi';
-    })();
-    return I18N_MESSAGES[lang]?.['core.module.layout.home.tab-name'] ?? I18N_MESSAGES.vi['core.module.layout.home.tab-name'];
-  },
+  name: () => resolveTabName('core.module.layout.home.tab-name'),
   icon: 'home',
   color: 'primary',
 })

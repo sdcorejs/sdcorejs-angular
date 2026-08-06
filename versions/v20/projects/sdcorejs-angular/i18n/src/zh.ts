@@ -532,6 +532,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.choose-filter-hint': '请先选择筛选条件',
   'core.component.table.no-data': '暂无数据',
   'core.component.table.export-excel': '导出 Excel',
+  'core.component.table.exporting': '正在导出...{percent}%',
+  'core.component.table.export': '导出数据',
   'core.component.table.export-csv': '导出 CSV',
   'core.component.table.showing': '显示:',
   'core.component.table.paginator.first-page': '首页',
@@ -598,6 +600,8 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (home page) ----
   'core.module.layout.home.tab-name': '首页',
+  'core.module.layout.not-found.tab-name': '页面未找到',
+  'core.module.layout.forbidden.tab-name': '拒绝访问',
   'core.module.layout.home.feature.data': '数据',
   'core.module.layout.home.feature.reports': '报表',
   'core.module.layout.home.feature.users': '用户',

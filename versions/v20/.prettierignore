@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Generated: single 1.4MB string literal (pdf.js worker) — prettier must not touch it
+projects/sdcorejs-angular/components/preview/src/preview-pdf/pdf-worker-inline.generated.ts

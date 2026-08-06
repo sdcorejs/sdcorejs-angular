@@ -528,8 +528,11 @@ export class SidebarComponent {
     const result: SdLayoutMenu[] = [];
     for (const menu of menus) {
       const aliasTitle = StringUtilities.changeAliasLowerCase(menu.title as string);
+      // why: hỗ trợ search theo route (path) và search theo ký tự đầu (viết tắt) bên cạnh search theo tiêu đề
+      const matchByRoutePath = 'path' in menu && !!menu.path && menu.path.toLowerCase().includes(aliasSearchText);
+      const matchByInitials = this.#matchesTitleInitials(aliasTitle, aliasSearchText);
 
-      if (aliasTitle.includes(aliasSearchText)) {
+      if (aliasTitle.includes(aliasSearchText) || matchByRoutePath || matchByInitials) {
         result.push(menu);
         continue;
       }
@@ -544,6 +547,25 @@ export class SidebarComponent {
       }
     }
     return result;
+  };
+
+  #matchesTitleInitials = (aliasTitle: string, aliasSearchText: string): boolean => {
+    const initials = aliasTitle
+      .split(' ')
+      .filter(word => word)
+      .map(word => word[0])
+      .join('');
+    return this.#isOrderedSubsequence(aliasSearchText, initials);
+  };
+
+  #isOrderedSubsequence = (needle: string, haystack: string): boolean => {
+    let matchedCount = 0;
+    for (const char of haystack) {
+      if (char === needle[matchedCount]) {
+        matchedCount++;
+      }
+    }
+    return matchedCount === needle.length;
   };
 
   #isMenuPathMatchByCurrentPath = (path: string): boolean => {

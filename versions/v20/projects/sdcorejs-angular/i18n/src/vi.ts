@@ -532,6 +532,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.choose-filter-hint': 'Vui lòng chọn bộ lọc để bắt đầu',
   'core.component.table.no-data': 'Chưa có dữ liệu',
   'core.component.table.export-excel': 'Xuất excel',
+  'core.component.table.exporting': 'Đang xuất...{percent}%',
+  'core.component.table.export': 'Xuất dữ liệu',
   'core.component.table.export-csv': 'Xuất CSV',
   'core.component.table.showing': 'Đang hiển thị:',
   'core.component.table.paginator.first-page': 'Trang đầu',
@@ -601,6 +603,8 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (home page) ----
   'core.module.layout.home.tab-name': 'Trang chủ',
+  'core.module.layout.not-found.tab-name': 'Không tìm thấy trang',
+  'core.module.layout.forbidden.tab-name': 'Không có quyền',
   'core.module.layout.home.feature.data': 'Dữ liệu',
   'core.module.layout.home.feature.reports': 'Báo cáo',
   'core.module.layout.home.feature.users': 'Người dùng',

@@ -1,17 +1,24 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { SdButton } from '@sdcorejs/angular/components';
+import { SdButton, SdTabComponent } from '@sdcorejs/angular/components';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
 import { SdLayoutService } from '../../../../services';
+import { resolveTabName } from '../../../../utils';
 // End
 
 @Component({
   templateUrl: './root.component.html',
   styleUrl: './root.component.scss',
   imports: [SdButton, SdPageComponent, TranslatePipe],
+})
+@SdTabComponent({
+  component: RootComponent,
+  name: () => resolveTabName('core.module.layout.not-found.tab-name'),
+  icon: 'search_off',
+  color: 'warning',
 })
 export class RootComponent {
   // ==========================================

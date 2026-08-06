@@ -169,6 +169,85 @@ describe('SdDate', () => {
     }));
   });
 
+  describe('display input formatting', () => {
+    const setInputValue = (input: HTMLInputElement, value: string, inputType = 'insertText') => {
+      input.value = value;
+      input.setSelectionRange(value.length, value.length);
+      comp.onInput({ target: input, inputType } as unknown as Event);
+    };
+
+    it('adds separators after the day and month while typing', () => {
+      const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+      setInputValue(input, '22');
+      expect(input.value).toBe('22/');
+
+      setInputValue(input, '22/08');
+      expect(input.value).toBe('22/08/');
+
+      setInputValue(input, '22/08/1991');
+      expect(input.value).toBe('22/08/1991');
+    });
+
+    it('does not re-add a separator that was just deleted', () => {
+      const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      setInputValue(input, '22/');
+      setInputValue(input, '22', 'deleteContentBackward');
+
+      expect(input.value).toBe('22');
+    });
+
+    it('commits a valid typed date on blur', () => {
+      const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      setInputValue(input, '22/08/1991');
+
+      comp.onBlur();
+
+      expect(host.model).toBe('1991/08/22');
+      expect(comp.formControl.value instanceof Date).toBeTrue();
+      expect(input.value).toBe('22/08/1991');
+    });
+
+    it('clears an incomplete or invalid date on blur', () => {
+      host.model = '2026/05/15';
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      setInputValue(input, '22/');
+
+      comp.onBlur();
+
+      expect(host.model).toBeNull();
+      expect(comp.formControl.value).toBeNull();
+      expect(input.value).toBe('');
+    });
+
+    it('clears a date with invalid characters on blur', () => {
+      host.model = '2026/05/15';
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      setInputValue(input, '22a08/1991');
+
+      comp.onBlur();
+
+      expect(host.model).toBeNull();
+      expect(comp.formControl.value).toBeNull();
+      expect(input.value).toBe('');
+    });
+
+    it('clears an impossible calendar date on blur', () => {
+      host.model = '2026/05/15';
+      fixture.detectChanges();
+      const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      setInputValue(input, '31/02/1991');
+
+      comp.onBlur();
+
+      expect(host.model).toBeNull();
+      expect(comp.formControl.value).toBeNull();
+      expect(input.value).toBe('');
+    });
+  });
+
   // -------------------------------------------------------------------------
   describe('min/max validation', () => {
     it('resolvedMin returns a Date when min is an ISO string', () => {

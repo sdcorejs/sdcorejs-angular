@@ -222,6 +222,26 @@ describe('SidebarComponent', () => {
     });
   });
 
+  it('matches menus by route path even when the title has no matching characters', async () => {
+    await create({ path: '/orders' });
+    component.expandMenuGroup(group);
+
+    component.onFilterSearchText('users');
+
+    expect(component.dataSource.data.length).toBe(1);
+    expect(component.dataSource.data[0].id).toBe('admin');
+  });
+
+  it('matches menus by ordered initials of the title (at least 2 chars)', async () => {
+    await create({ path: '/orders' });
+    component.expandMenuGroup(group);
+
+    component.onFilterSearchText('nd');
+
+    expect(component.dataSource.data.length).toBe(1);
+    expect(component.dataSource.data[0].id).toBe('admin');
+  });
+
   it('applies and clears group hover styles for hex, rgb and image icons', async () => {
     await create();
     component.idMenuGroupActive.set('other');
