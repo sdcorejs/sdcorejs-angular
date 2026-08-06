@@ -7,13 +7,10 @@ import { fileURLToPath } from 'node:url';
 const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const REPO_ROOT = resolve(dirname(SCRIPT_PATH), '..');
 
-export const DEFAULT_PAGES_ROOT = join(REPO_ROOT, 'versions', 'v19', 'projects', 'showcase', 'src', 'app', 'pages');
+export const DEFAULT_PAGES_ROOT = join(REPO_ROOT, 'showcase', 'src', 'app', 'pages');
 
 export const DEFAULT_OUTPUT_FILE = join(
   REPO_ROOT,
-  'versions',
-  'v19',
-  'projects',
   'showcase',
   'src',
   'app',
@@ -24,9 +21,6 @@ export const DEFAULT_OUTPUT_FILE = join(
 
 export const DEFAULT_MANIFEST_OUTPUT_FILE = join(
   REPO_ROOT,
-  'versions',
-  'v19',
-  'projects',
   'showcase',
   'src',
   'app',

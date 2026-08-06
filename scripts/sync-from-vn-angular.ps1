@@ -120,7 +120,7 @@ if (!(Test-Path -LiteralPath $v19Path)) {
 Write-Host "[1/5] Mirror copy source -> target v19 workspace" -ForegroundColor Cyan
 # why: /XF CHANGELOG.md — sync chỉ đồng bộ CODE. CHANGELOG do repo TỰ sở hữu (root CHANGELOG.md), deploy độc lập.
 # README npm-facing KHÔNG /XF ở đây (lib folder bị xoá+dựng lại mỗi sync nên /XF không giữ được file) —
-# thay vào đó được REPO SINH RA ở bước cuối: copy docs/npm-README.md đè lên (xem cuối [4/5]).
+# thay vào đó được REPO SINH RA ở bước cuối: copy README.npm.md đè lên (xem cuối [4/5]).
 robocopy $SourcePath $v19Path /MIR /XD .git .sdcorejs node_modules dist .angular coverage versions scripts demo /XF CHANGELOG.md /R:1 /W:1 /NFL /NDL /NP | Out-Null
 
 # Clean up projects/demo inside v19 if it was not caught by robocopy
@@ -234,13 +234,13 @@ if (Test-Path -LiteralPath $v19LibPackagePath) {
 }
 
 # why: README npm-facing do REPO SINH RA, không lấy từ vn-angular. Lib folder bị delete+rebuild mỗi sync
-# nên không thể giữ file repo-owned bằng /XF — thay vào đó copy bản canonical docs/npm-README.md đè lên.
+# nên không thể giữ file repo-owned bằng /XF — thay vào đó copy bản canonical README.npm.md đè lên.
 # Rollout (bước 5, KHÔNG /XF README) sẽ tự copy bản này sang v20/v21 → 3 bản đồng nhất, chỉ maintain 1 file.
-$canonicalReadme = Join-Path $TargetPath "docs/npm-README.md"
+$canonicalReadme = Join-Path $TargetPath "README.npm.md"
 $v19LibReadme = Join-Path $v19Path "projects/sdcorejs-angular/README.md"
 if (Test-Path -LiteralPath $canonicalReadme) {
   Copy-Item -LiteralPath $canonicalReadme -Destination $v19LibReadme -Force
-  Write-Host "    Generated lib README from docs/npm-README.md (repo-owned)" -ForegroundColor DarkGray
+  Write-Host "    Generated lib README from README.npm.md (repo-owned)" -ForegroundColor DarkGray
 } else {
   Write-Warning "Canonical npm README not found: $canonicalReadme - lib README left as synced from vn-angular."
 }

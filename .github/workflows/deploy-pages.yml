@@ -1,34 +1,29 @@
-name: Deploy showcase (v19) to GitHub Pages
+name: Deploy published pages to GitHub Pages
 
-# Build showcase Angular app trong versions/v19 và deploy lên GitHub Pages.
-# Showcase source of truth is v19; v20/v21 receive the same feature surface via
-# the root `npm run sync` rollout, not via this Pages workflow.
+# Assemble GitHub Pages from COMMITTED artifacts. This workflow runs NO Angular build.
+#   published-pages/<suffix>/  one self-contained site per retained release
+#   published-docs/<version>/  raw versioned API docs
+# A new release page is produced locally/at release time by
+# `npm run build:page -- --suffix <x.y>` and committed; see CLAUDE.md.
+#
 # Trigger:
-#   - Push lên branch main khi có thay đổi.
-#   - Sau khi workflow publish npm chạy xong thành công.
-#   - Manual dispatch để re-build on demand.
+#   - Push lên main khi published-pages/** hoặc published-docs/** đổi.
+#   - Sau khi workflow publish npm xong (its docs commit uses GITHUB_TOKEN, which does
+#     NOT trigger push workflows — hence the workflow_run trigger).
+#   - Manual dispatch.
 #
 # Setup yêu cầu trong repo Settings > Pages:
 #   Source = "GitHub Actions" (KHÔNG dùng branch source).
-#   Workflow này tự upload artifact + deploy qua deploy-pages action.
 
 on:
   push:
     branches:
       - main
+    # Only committed artifacts matter now — the deploy assembles, it does not build.
+    # A showcase source change reaches Pages by building a new published-pages/<suffix>/.
     paths:
-      - 'versions/v19/projects/showcase/**'
-      - 'versions/v19/projects/sdcorejs-angular/**'
-      - 'versions/v19/angular.json'
-      - 'versions/v19/package.json'
-      - 'versions/v19/package-lock.json'
+      - 'published-pages/**'
       - 'published-docs/**'
-      - 'CHANGELOG.md'
-      - 'package.json'
-      - 'scripts/collect-*.mjs'
-      - 'scripts/generate-showcase-changelog*.mjs'
-      - 'scripts/generate-showcase-example-sources*.mjs'
-      - 'scripts/generate-showcase-route-shells*.mjs'
       - '.github/workflows/deploy-pages.yml'
   workflow_run:
     workflows:
@@ -58,68 +53,69 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: versions/v19/package-lock.json
 
-      - name: Test showcase changelog generator
-        run: npm run test:showcase-changelog
-
-      - name: Generate showcase changelog data
-        run: npm run generate:showcase-changelog
-
-      - name: Test showcase example source generator
-        run: npm run test:showcase-examples
-
-      - name: Test showcase branding metadata
-        run: npm run test:showcase-branding
-
-      - name: Test showcase route shell generator
-        run: npm run test:showcase-route-shells
-
-      - name: Generate showcase example source data
-        run: npm run generate:showcase-examples
-
-      - name: Install dependencies (v19)
-        run: npm ci --legacy-peer-deps
-        working-directory: versions/v19
-
-      - name: Build sdcorejs-angular library
-        # Showcase import từ @sdcorejs/angular qua tsconfig path → dist phải có trước.
-        run: node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build sdcorejs-angular
-        working-directory: versions/v19
-
-      - name: Build showcase (production)
-        # base-href phải khớp repo name vì Pages URL là <user>.github.io/<repo>/.
+      - name: Verify committed page artifacts
+        # There is no Angular build here. Each release suffix under published-pages/ was built
+        # and committed by `npm run build:page -- --suffix <x.y>`, so the deploy is a pure copy.
         run: |
-          node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase \
-            --configuration production \
-            --base-href=/sdcorejs-angular/
-        working-directory: versions/v19
-
-      - name: Publish versioned API docs into Pages output
-        # Copy the repo-owned published-docs/** archive into the served site and build a
-        # `latest` alias. Pages serves existing static files (.md/.json) directly, BEFORE the
-        # SPA 404 fallback — so /docs/<version>/index.json + raw .md resolve for AI agents.
-        # Runs at repo root (published-docs/ lives there, NOT under versions/).
-        run: |
-          DEST="versions/v19/dist/showcase/browser/docs"
-          mkdir -p "$DEST"
-          cp -R published-docs/. "$DEST"/
-          LATEST=$(node -e "process.stdout.write(require('./published-docs/versions.json').latest || '')")
-          if [ -n "$LATEST" ] && [ -d "$DEST/$LATEST" ]; then
-            rm -rf "$DEST/latest"
-            cp -R "$DEST/$LATEST" "$DEST/latest"
+          if [ ! -d published-pages ]; then
+            echo "::error::published-pages/ is missing. Build a release page first: npm run build:page -- --suffix <x.y>"
+            exit 1
           fi
-          echo "Published docs: latest=$LATEST · versions: $(ls published-docs | grep -v '\.json$' | tr '\n' ' ')"
+          LATEST=$(node -e "process.stdout.write(require('./published-pages/pages.json').latest || '')")
+          if [ -z "$LATEST" ] || [ ! -d "published-pages/$LATEST" ]; then
+            echo "::error::published-pages/pages.json latest=\"$LATEST\" does not resolve to a directory."
+            exit 1
+          fi
+          echo "latest=$LATEST" >> "$GITHUB_ENV"
+          echo "Pages: latest=$LATEST · suffixes: $(ls published-pages | grep -v '\.json$' | tr '\n' ' ')"
 
-      - name: Generate route-specific static HTML shells
-        # Emit indexable 200 shells for every public docs route plus a noindex SPA fallback.
-        run: npm run generate:showcase-route-shells
+      - name: Assemble Pages site
+        # Layout served at https://sdcorejs.github.io/sdcorejs-angular/
+        #   /<suffix>/        one self-contained site per retained release
+        #   /                 redirect to the newest suffix
+        #   /latest/          redirect to the newest suffix
+        #   /docs/**          raw versioned API docs for AI agents (served before the SPA fallback)
+        run: |
+          set -euo pipefail
+          SITE=_site
+          rm -rf "$SITE"
+          mkdir -p "$SITE"
+
+          for dir in published-pages/*/; do
+            suffix=$(basename "$dir")
+            cp -R "$dir" "$SITE/$suffix"
+          done
+          cp published-pages/pages.json "$SITE/pages.json"
+
+          DOCS="$SITE/docs"
+          mkdir -p "$DOCS"
+          cp -R published-docs/. "$DOCS"/
+          DOCS_LATEST=$(node -e "process.stdout.write(require('./published-docs/versions.json').latest || '')")
+          if [ -n "$DOCS_LATEST" ] && [ -d "$DOCS/$DOCS_LATEST" ]; then
+            rm -rf "$DOCS/latest"
+            cp -R "$DOCS/$DOCS_LATEST" "$DOCS/latest"
+          fi
+
+          # why: a redirect instead of a second full copy — an extra page copy is ~26MB and
+          # counts against the 1GB Pages limit.
+          redirect() {
+            printf '<!doctype html><meta charset="utf-8"><title>Redirecting</title>' > "$1"
+            printf '<link rel="canonical" href="/sdcorejs-angular/%s/">' "$latest" >> "$1"
+            printf '<meta http-equiv="refresh" content="0; url=/sdcorejs-angular/%s/">' "$latest" >> "$1"
+            printf '<script>location.replace("/sdcorejs-angular/%s/" + location.hash)</script>' "$latest" >> "$1"
+          }
+          redirect "$SITE/index.html"
+          redirect "$SITE/404.html"
+          mkdir -p "$SITE/latest"
+          redirect "$SITE/latest/index.html"
+
+          echo "Assembled: $(find "$SITE" -type f | wc -l) files, $(du -sh "$SITE" | cut -f1)"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: versions/v19/dist/showcase/browser
+          path: _site
 
   deploy:
     needs: build

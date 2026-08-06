@@ -7,6 +7,7 @@ import test from 'node:test';
 import {
   PUBLIC_BASE_URL,
   SUPPORTED_RELEASES,
+  canonicalReleaseForSuffix,
   createRouteShellDefinitions,
   generateShowcaseRouteShells,
   parseDocumentationRegistry,
@@ -152,7 +153,7 @@ test('builds route shells for a future release supplied by the published manifes
 
 test('matches the canonical v19 runtime registry and expected deployment route count', () => {
   const registrySource = readFileSync(
-    new URL('../versions/v19/projects/showcase/src/app/docs/core/documentation.registry.ts', import.meta.url),
+    new URL('../showcase/src/app/docs/core/documentation.registry.ts', import.meta.url),
     'utf8'
   );
   const pages = parseDocumentationRegistry(registrySource);
@@ -235,4 +236,30 @@ test('writes every route as route/index.html and emits the special 404 shell', (
   } finally {
     rmSync(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('canonicalReleaseForSuffix pins a page to the newest Angular line', () => {
+  assert.equal(canonicalReleaseForSuffix('1.6'), '21.1.6');
+  assert.equal(canonicalReleaseForSuffix('0.11'), '21.0.11');
+});
+
+test('canonicalReleaseForSuffix rejects anything that is not a release suffix', () => {
+  assert.throws(() => canonicalReleaseForSuffix('19.1.6'), /release suffix/i);
+  assert.throws(() => canonicalReleaseForSuffix('v1.6'), /release suffix/i);
+  assert.throws(() => canonicalReleaseForSuffix('1'), /release suffix/i);
+});
+
+test('a version-scoped page pre-renders exactly one release', () => {
+  const pages = [
+    { category: 'components', slug: 'button', title: 'Button' },
+    { category: 'forms', slug: 'input', title: 'Input' },
+  ];
+
+  const single = createRouteShellDefinitions(pages, [canonicalReleaseForSuffix('1.6')]);
+  const all = createRouteShellDefinitions(pages, ['21.1.6', '20.1.6', '19.1.6']);
+
+  assert.ok(single.length < all.length, 'one release must emit fewer shells than three');
+  assert.ok(single.every(route => !route.routePath.startsWith('v/19.')));
+  assert.ok(single.every(route => !route.routePath.startsWith('v/20.')));
+  assert.ok(single.some(route => route.routePath.startsWith('v/21.1.6/')));
 });

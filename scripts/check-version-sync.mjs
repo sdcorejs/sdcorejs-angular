@@ -7,10 +7,10 @@ const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const sourceWorkspace = 'v19';
 const targetWorkspaces = ['v20', 'v21'];
 
-const syncedRoots = [
-  'projects/sdcorejs-angular',
-  'projects/showcase',
-];
+// why: only the published library is mirrored across Angular lines. The showcase is a
+// repo-owned dev/test app that lives at the root `showcase/` workspace and is never
+// published, so it is not part of the per-version sync surface.
+const syncedRoots = ['projects/sdcorejs-angular'];
 const syncedWorkspaceFiles = [
   'scripts/check-i18n-parity.mjs',
   'scripts/check-i18n.mjs',
@@ -156,18 +156,18 @@ function compareSyncedWorkspaceFiles(targetWorkspace) {
 }
 
 function compareCanonicalNpmReadme(workspace) {
-  const canonicalPath = join(repoRoot, 'docs', 'npm-README.md');
+  const canonicalPath = join(repoRoot, 'README.npm.md');
   const packageReadmePath = join(repoRoot, 'versions', workspace, 'projects', 'sdcorejs-angular', 'README.md');
 
-  if (!existsSync(canonicalPath)) return ['missing canonical npm README: docs/npm-README.md'];
+  if (!existsSync(canonicalPath)) return ['missing canonical npm README: README.npm.md'];
   if (!existsSync(packageReadmePath)) {
     return [`missing in ${workspace}: projects/sdcorejs-angular/README.md`];
   }
 
-  return normalizeContent(canonicalPath, 'docs/npm-README.md') ===
+  return normalizeContent(canonicalPath, 'README.npm.md') ===
     normalizeContent(packageReadmePath, 'projects/sdcorejs-angular/README.md')
     ? []
-    : [`npm README differs in ${workspace}: expected docs/npm-README.md`];
+    : [`npm README differs in ${workspace}: expected README.npm.md`];
 }
 
 const failures = [

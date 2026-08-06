@@ -431,7 +431,7 @@ test('checked-in published-doc manifests, indexes, registry mappings, and docume
 
   assert.ok(latestPublishedIds, `Latest published-doc index was not loaded: ${manifest.latest}`);
   const registry = readFileSync(
-    join(REPO_ROOT, 'versions', 'v19', 'projects', 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
+    join(REPO_ROOT, 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
     'utf8'
   );
   const mappedIds = new Set([...registry.matchAll(/publishedDocId:\s*'([^']+)'/g)].map(match => match[1]));
@@ -464,7 +464,7 @@ test('documentation registry demo counts match extracted example records', () =>
   }
 
   const registry = readFileSync(
-    join(REPO_ROOT, 'versions', 'v19', 'projects', 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
+    join(REPO_ROOT, 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
     'utf8'
   );
   const seedBlocks = [...registry.matchAll(/defineDocPage\(\{([\s\S]*?)\n  \}\),/g)].map(match => match[1]);

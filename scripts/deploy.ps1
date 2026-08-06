@@ -88,9 +88,13 @@ foreach ($t in $targets) {
   if (!$DryRun) {
     # why: explicit UTF8 read avoids ANSI cp1252 defaults in Windows PowerShell 5.1.
     # Use no-BOM writes to stay consistent with repo-owned source files.
-    $pkg = Get-Content -LiteralPath $libPackagePath -Raw -Encoding UTF8 | ConvertFrom-Json
-    $pkg.version = $fullVersion
-    $jsonOut = $pkg | ConvertTo-Json -Depth 100
+    # why: string-replace the version instead of a ConvertFrom-Json/ConvertTo-Json round-trip.
+    # ConvertTo-Json reformats the whole file into PowerShell's 4-space/key-aligned style and
+    # clobbers the repo's 2-space prettier format. Mirrors Update-LibraryPackageVersion in
+    # sync-multi-version-workspaces.ps1 and the node writer in publish-npm.yml.
+    $content = Get-Content -LiteralPath $libPackagePath -Raw -Encoding UTF8
+    $versionPattern = New-Object System.Text.RegularExpressions.Regex('"version"\s*:\s*"[^"]+"')
+    $jsonOut = $versionPattern.Replace($content, ('"version": "' + $fullVersion + '"'), 1)
     [System.IO.File]::WriteAllText($libPackagePath, $jsonOut, (New-Object System.Text.UTF8Encoding($false)))
   }
   Write-Host "  version = $fullVersion" -ForegroundColor Green

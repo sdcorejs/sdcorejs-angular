@@ -24,7 +24,6 @@
 //   node scripts/collect-docs.mjs --workspace v21 --version 21.1.0 --skip-existing
 
 import {
-  copyFileSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -34,7 +33,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = join(__dirname, '..');
@@ -47,9 +46,109 @@ const WORKSPACES = new Map([
   ['v21', 21],
 ]);
 
+// A release archive must stay readable forever, so it may not depend on the CURRENT
+// repo layout. A `blob/main/...` deep link breaks the moment a file moves (it already
+// did once when `docs/migrations/` moved to the repo root). Every archived doc is
+// therefore rewritten to point at the immutable release tag that produced it, and the
+// collector fails closed if any `blob/main/` link survives.
+const REPO_URL = 'https://github.com/sdcorejs/sdcorejs-angular';
+const REPO_BLOB_PREFIX = `${REPO_URL}/blob/`;
+const UNPINNED_BLOB_PREFIX = `${REPO_BLOB_PREFIX}main/`;
+
 // Internal / non-API md that must never be published.
 const EXCLUDE_FILES = new Set(['HANDOFF.md']);
 const EXCLUDE_DIRS = new Set(['node_modules', 'dist', '.angular', 'coverage', '.git']);
+
+// `19.1.5` -> `v1.5`. The archive version is `<angular-major>.<release-suffix>` and the
+// release tag is `v<release-suffix>`, so the tag is recoverable from the version alone.
+export function releaseTagFor(version) {
+  const match = /^\d+\.(\d+\.\d+)$/.exec(String(version));
+  if (!match) {
+    throw new Error(`Cannot derive a release tag from version "${version}" (expected <major>.<minor>.<patch>).`);
+  }
+  return `v${match[1]}`;
+}
+
+export function pinRepoLinks(content, releaseTag) {
+  return content.split(UNPINNED_BLOB_PREFIX).join(`${REPO_BLOB_PREFIX}${releaseTag}/`);
+}
+
+// Fail-closed: a surviving `blob/main/` link means the archive is still coupled to the
+// current repo layout and will rot on the next restructure.
+export function assertNoUnpinnedRepoLinks(docs) {
+  const offenders = docs.filter(doc => doc.content.includes(UNPINNED_BLOB_PREFIX)).map(doc => doc.path);
+  if (offenders.length) {
+    throw new Error(
+      `Unpinned ${UNPINNED_BLOB_PREFIX} link(s) in archived docs:\n  ${offenders.join('\n  ')}\n` +
+        'Archived docs must reference the release tag, not main.',
+    );
+  }
+}
+
+// Each archive carries its own release notes so a reader never has to open the repo
+// changelog or a separate migration guide. The root CHANGELOG.md is keyed by release
+// suffix (`## [1.4] - 2026-07-23`), which is the same suffix the archive version encodes.
+export function extractReleaseNotes(changelog, releaseSuffix) {
+  const heading = new RegExp(`^## \\[${releaseSuffix.replace(/\./g, '\\.')}\\](?:\\s+-\\s+(\\S+))?\\s*$`, 'm');
+  const match = heading.exec(changelog);
+  if (!match) return null;
+
+  const bodyStart = match.index + match[0].length;
+  const rest = changelog.slice(bodyStart);
+  const nextHeading = /^## /m.exec(rest);
+  const body = (nextHeading ? rest.slice(0, nextHeading.index) : rest).trim();
+
+  return { date: match[1] || null, body };
+}
+
+// Closest lower archive version on the SAME Angular major — comparing across majors
+// would diff Angular-shim noise instead of feature changes.
+export function previousArchiveVersion(version, knownVersions) {
+  const major = version.split('.')[0];
+  const rank = v => v.split('.').map(Number);
+  const lower = (a, b) => {
+    const [x, y] = [rank(a), rank(b)];
+    for (let i = 0; i < 3; i++) {
+      if (x[i] !== y[i]) return x[i] - y[i];
+    }
+    return 0;
+  };
+
+  const candidates = knownVersions
+    .filter(v => v !== version && v.split('.')[0] === major && lower(v, version) < 0)
+    .sort((a, b) => lower(b, a));
+
+  return candidates[0] || null;
+}
+
+export function buildVersionChangelog({ version, released, notes, previousVersion }) {
+  const tag = releaseTagFor(version);
+  const lines = [`# ${PACKAGE} ${version}`, ''];
+
+  lines.push(`Release tag \`${tag}\`${released ? `, published ${released}` : ''}.`, '');
+
+  if (notes && notes.body) {
+    lines.push(notes.body, '');
+  } else {
+    lines.push(
+      `This release has no recorded changelog section for suffix \`${tag.slice(1)}\`. ` +
+        'Use the source diff below to review what changed.',
+      '',
+    );
+  }
+
+  lines.push('## Compare with the previous release', '');
+  if (previousVersion) {
+    lines.push(
+      `- Previous documented release: [${previousVersion}](${BASE_URL}/${previousVersion}/index.json)`,
+      `- Source diff: ${REPO_URL}/compare/${releaseTagFor(previousVersion)}...${tag}`,
+    );
+  } else {
+    lines.push(`- First documented release for the \`${version.split('.')[0]}\` line; there is no earlier archive.`);
+  }
+
+  return lines.join('\n') + '\n';
+}
 
 // UTF-8-as-CP1252 double-encode mojibake. Matches
 // only multi-char digraphs + C1 controls that never occur in valid Vietnamese/English,
@@ -204,7 +303,7 @@ function cmpVersionDesc(a, b) {
   return 0;
 }
 
-function refreshDocsCatalog(outRoot, registry) {
+export function refreshDocsCatalog(outRoot, registry) {
   const versions = [];
 
   for (const entry of registry.versions || []) {
@@ -311,9 +410,16 @@ function main() {
     }
     rmSync(outVersionDir, { recursive: true, force: true });
   }
+  // why: read the registry BEFORE writing, so the previous-release pointer is resolved
+  // from archives that already exist rather than from the one being created now.
+  const priorRegistry = readJson(registryPath, { versions: [] });
+  const knownVersions = (priorRegistry.versions || []).map(entry => entry.version).filter(Boolean);
+
   mkdirSync(outVersionDir, { recursive: true });
 
+  const releaseTag = releaseTagFor(version);
   const docs = [];
+  const archived = [];
   for (const file of walk(srcRoot)) {
     const rel = relative(srcRoot, file).split(sep).join('/');
     const content = readFileSync(file, 'utf8');
@@ -321,12 +427,30 @@ function main() {
     const category = rel.split('/')[0];
     const title = titleOf(content, id.split('/').pop());
 
+    // why: pin instead of copy — the archive must survive future repo restructures.
+    const archivedContent = pinRepoLinks(content, releaseTag);
     const dest = join(outVersionDir, rel);
     mkdirSync(dirname(dest), { recursive: true });
-    copyFileSync(file, dest);
+    writeFileSync(dest, archivedContent);
+    archived.push({ path: rel, content: archivedContent });
 
     docs.push({ id, title, category, path: rel, url: `${BASE_URL}/${version}/${rel}` });
   }
+  assertNoUnpinnedRepoLinks(archived);
+
+  // why: every archive ships its own release notes + diff link, so a consumer can review
+  // one version without opening the repo changelog or any other version's archive.
+  const rootChangelogPath = join(REPO_ROOT, 'CHANGELOG.md');
+  const notes = existsSync(rootChangelogPath)
+    ? extractReleaseNotes(readFileSync(rootChangelogPath, 'utf8'), releaseTag.slice(1))
+    : null;
+  const previousVersion = previousArchiveVersion(version, knownVersions);
+  const versionChangelog = buildVersionChangelog({ version, released, notes, previousVersion });
+  writeFileSync(join(outVersionDir, 'CHANGELOG.md'), versionChangelog);
+  if (!notes) {
+    console.warn(`[collect-docs] no CHANGELOG.md section for release suffix ${releaseTag.slice(1)}; wrote a diff-only note.`);
+  }
+
   docs.sort((a, b) => a.id.localeCompare(b.id));
 
   const index = {
@@ -337,6 +461,13 @@ function main() {
     count: docs.length,
     docs,
   };
+  // why: the changelog is release metadata, NOT an API doc. Keeping it out of `docs[]`
+  // preserves the 1:1 contract between that list and the showcase documentation registry.
+  index.changelog = { path: 'CHANGELOG.md', url: `${BASE_URL}/${version}/CHANGELOG.md` };
+  if (previousVersion) {
+    index.previousVersion = previousVersion;
+    index.compareUrl = `${REPO_URL}/compare/${releaseTagFor(previousVersion)}...${releaseTag}`;
+  }
   if (syncedFrom) index.syncedFrom = syncedFrom;
   writeFileSync(join(outVersionDir, 'index.json'), JSON.stringify(index, null, 2) + '\n');
 
@@ -361,4 +492,6 @@ function main() {
   console.log(`[collect-docs] registry: ${registry.versions.length} version(s), latest=${registry.latest}`);
 }
 
-main();
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  main();
+}

@@ -10,9 +10,6 @@ const REPO_ROOT = join(SCRIPT_DIR, '..');
 const DEFAULT_INPUT_PATH = join(REPO_ROOT, 'CHANGELOG.md');
 const DEFAULT_OUTPUT_PATH = join(
   REPO_ROOT,
-  'versions',
-  'v19',
-  'projects',
   'showcase',
   'src',
   'app',

@@ -5,7 +5,9 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const workspaces = ['v19', 'v20', 'v21'];
+// The showcase is a single repo-owned workspace at the root; it is not mirrored per
+// Angular line, so branding is asserted once instead of per versions/v<N>.
+const showcaseRoot = join(root, 'showcase');
 const expectedTitle = '@sdcorejs/angular — Documentation & Live Examples';
 const expectedAuthor = 'Trần Thuận Nghĩa';
 const productionUrl = 'https://sdcorejs.github.io/sdcorejs-angular/';
@@ -31,14 +33,13 @@ function pngDimensions(path) {
   return { width: image.readUInt32BE(16), height: image.readUInt32BE(20) };
 }
 
-for (const workspace of workspaces) {
-  test(`${workspace} ships professional static branding and social metadata`, () => {
-    const workspaceRoot = join(root, 'versions', workspace);
-    const indexPath = join(workspaceRoot, 'projects', 'showcase', 'src', 'index.html');
-    const angularConfig = JSON.parse(readFileSync(join(workspaceRoot, 'angular.json'), 'utf8'));
+test('showcase ships professional static branding and social metadata', () => {
+  {
+    const indexPath = join(showcaseRoot, 'src', 'index.html');
+    const angularConfig = JSON.parse(readFileSync(join(showcaseRoot, 'angular.json'), 'utf8'));
     const indexHtml = readFileSync(indexPath, 'utf8');
-    const logoPath = join(workspaceRoot, 'projects', 'showcase', 'src', 'assets', 'brand', 'sdcorejs-logo.png');
-    const socialPath = join(workspaceRoot, 'projects', 'showcase', 'src', 'assets', 'social', 'sdcorejs-angular-og-v1.png');
+    const logoPath = join(showcaseRoot, 'src', 'assets', 'brand', 'sdcorejs-logo.png');
+    const socialPath = join(showcaseRoot, 'src', 'assets', 'social', 'sdcorejs-angular-og-v1.png');
 
     assert.match(indexHtml, new RegExp(`<title>${expectedTitle.replace('&', '&amp;')}</title>`, 'u'));
     assert.equal(metaContent(indexHtml, 'author'), expectedAuthor);
@@ -59,9 +60,9 @@ for (const workspace of workspaces) {
     assert.match(indexHtml, /"@type"\s*:\s*"Person"[\s\S]*"name"\s*:\s*"Trần Thuận Nghĩa"/u);
 
     const assets = angularConfig.projects.showcase.architect.build.options.assets;
-    assert.ok(assets.includes('projects/showcase/src/assets'), `${workspace} must copy showcase assets`);
-    assert.ok(existsSync(logoPath), `${workspace} logo asset is missing`);
-    assert.ok(existsSync(socialPath), `${workspace} social image is missing`);
+    assert.ok(assets.includes('src/assets'), 'showcase must copy its assets');
+    assert.ok(existsSync(logoPath), 'showcase logo asset is missing');
+    assert.ok(existsSync(socialPath), 'showcase social image is missing');
 
     const logo = pngDimensions(logoPath);
     const social = pngDimensions(socialPath);
@@ -70,5 +71,5 @@ for (const workspace of workspaces) {
     assert.ok(social.width / social.height > 1.85 && social.width / social.height < 2, 'social image must stay near 1.91:1');
     assert.equal(metaContent(indexHtml, 'og:image:width'), String(social.width));
     assert.equal(metaContent(indexHtml, 'og:image:height'), String(social.height));
-  });
-}
+  }
+});

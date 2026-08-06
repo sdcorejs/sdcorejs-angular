@@ -258,8 +258,6 @@ export const appConfig: ApplicationConfig = {
 | [Styling reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/assets/STYLE-GUIDE.md)                            | Supported SCSS entry points, tokens, fonts, images, and utility classes     |
 | [E2E attributes](versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                               | Stable runtime selectors and state attributes for automated tests           |
 | [Changelog](CHANGELOG.md)                                                                                                     | Consumer-visible changes, breaking notes, and migration guidance            |
-| [1.5 migration guide](docs/migrations/1.5.md)                                                                                 | Layout account actions, V2/V3 navigation, containment, and versioned docs   |
-| [1.4 migration guide](docs/migrations/1.4.md)                                                                                 | Dedupe, loading, persistence, connector, responsive, and signal migrations  |
 
 The showcase is the visual entry point. Use the version registry and manifest when you need a package-matched API reference; each manifest links to raw Markdown for the selected release.
 
@@ -282,9 +280,7 @@ Read `versions.json` to select a release that matches the installed package, the
 - A release suffix is published across the maintained lines from the same v19 source surface, with only required Angular-major adaptations.
 - Pin the package major in applications, for example `@sdcorejs/angular@^20` for Angular 20.
 - Review [CHANGELOG.md](CHANGELOG.md) before every upgrade. Because the package major is reserved for Angular compatibility, breaking changes are labeled explicitly in the changelog.
-- For the `1.5` suffix, follow the [migration guide](docs/migrations/1.5.md) before enabling optional Layout account actions and the updated V2/V3 navigation presentation.
-- For the `1.4` suffix, follow the [1.4 migration guide](docs/migrations/1.4.md) before enabling request, loading, persistence, and responsive behavior.
-- Version-pinned API docs remain available under `/docs/<package-version>/` after release.
+- Version-pinned API docs remain available under `/docs/<package-version>/` after release. Each published version ships its own `CHANGELOG.md` plus a diff link against the previous release, so a version can be reviewed without reading any other one.
 
 ## Development
 
