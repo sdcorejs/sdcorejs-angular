@@ -7,9 +7,6 @@ git_head: 3a68bb7129427f92be92708c7593c134db4f9b5d
 dirty: true
 relevant_dirty_paths:
   - .sdcorejs/summary.md
-  - .sdcorejs/docs/angular/2026-07-27-01-33-review-layout-v2-v3.md
-  - .sdcorejs/tasks/angular.md
-  - .sdcorejs/tasks/current-session.md
 branch: feat/layout-navigation-polish
 tracks: [angular]
 stack_profiles: [core-ui-angular]
@@ -99,14 +96,6 @@ contract cũ.
 
 ## Reuse cheatsheet
 
-- Approved design:
-  `docs/superpowers/specs/2026-07-23-layout-v2-v3-navigation-polish-design.md`.
-- Approved implementation plan:
-  `docs/superpowers/plans/2026-07-23-layout-v2-v3-navigation-polish.md`.
-- Approved account-menu spec:
-  `.sdcorejs/specs/angular/2026-07-25-16-14-enhance-layout-account-menu.md`.
-- Approved account-menu plan:
-  `.sdcorejs/plans/angular/2026-07-26-04-57-enhance-layout-account-menu.md`.
 - Shared account component:
   `versions/v19/projects/sdcorejs-angular/modules/layout/components/shared/user-menu`.
 - Canonical desktop/mobile sidebars:
@@ -114,10 +103,9 @@ contract cũ.
 - Existing form primitive:
   `versions/v19/projects/sdcorejs-angular/forms/input`.
 - Layout guide: `versions/v19/projects/sdcorejs-angular/modules/layout/sd-layout.md`.
-- Latest session note:
-  `.sdcorejs/docs/angular/2026-07-27-01-33-review-layout-v2-v3.md`.
-- Product traceability:
-  `.sdcorejs/docs/product/2026-07-26-22-04-layout-account-menu.md`.
+
+Spec, plan, session-note and product-traceability artifacts were cleared on
+2026-08-06; `.sdcorejs/` now keeps only this summary, the persona and memories.
 
 ## Open context
 
