@@ -1,0 +1,25 @@
+# See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+#
+# The root .gitignore anchors /dist and /node_modules to the repo root, so this standalone
+# Angular workspace needs its own copy — without it, showcase/node_modules (~625MB) and
+# showcase/dist would be committed.
+
+# Compiled output
+/dist
+/tmp
+/out-tsc
+/bazel-out
+
+# Node
+/node_modules
+npm-debug.log
+yarn-error.log
+
+# Miscellaneous
+/.angular/cache
+.sass-cache/
+/connect.lock
+/coverage
+/libpeerconnection.log
+testem.log
+/typings

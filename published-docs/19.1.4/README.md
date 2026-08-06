@@ -5,9 +5,9 @@ Angular Material-based UI building blocks for data-heavy business applications. 
 [![npm version](https://img.shields.io/npm/v/@sdcorejs/angular.svg)](https://www.npmjs.com/package/@sdcorejs/angular)
 [![monthly npm downloads](https://img.shields.io/npm/dm/@sdcorejs/angular.svg)](https://www.npmjs.com/package/@sdcorejs/angular)
 [![Angular 19, 20, and 21](https://img.shields.io/badge/Angular-19%20%7C%2020%20%7C%2021-DD0031?logo=angular&logoColor=white)](#compatibility)
-[![MIT license](https://img.shields.io/github/license/sdcorejs/sdcorejs-angular.svg)](https://github.com/sdcorejs/sdcorejs-angular/blob/main/LICENSE)
+[![MIT license](https://img.shields.io/github/license/sdcorejs/sdcorejs-angular.svg)](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/LICENSE)
 
-[Showcase](https://sdcorejs.github.io/sdcorejs-angular/) · [Quick start](#quick-start) · [API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) · [Source](https://github.com/sdcorejs/sdcorejs-angular) · [Changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md) · [Issues](https://github.com/sdcorejs/sdcorejs-angular/issues)
+[Showcase](https://sdcorejs.github.io/sdcorejs-angular/) · [Quick start](#quick-start) · [API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json) · [Source](https://github.com/sdcorejs/sdcorejs-angular) · [Changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/CHANGELOG.md) · [Issues](https://github.com/sdcorejs/sdcorejs-angular/issues)
 
 ## Compatibility
 
@@ -19,7 +19,7 @@ Install the package major that matches your Angular application.
 | 20.x    | `@sdcorejs/angular@^20` | `npm install @sdcorejs/angular@^20 @angular/material@^20 @angular/material-date-fns-adapter@^20` |
 | 21.x    | `@sdcorejs/angular@^21` | `npm install @sdcorejs/angular@^21 @angular/material@^21 @angular/material-date-fns-adapter@^21` |
 
-The package manifests accept Angular 19–21 peers, while releases provide an Angular-aligned package line for each major. The first version number is reserved for Angular compatibility, so read the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md) for explicitly labeled breaking changes before upgrading.
+The package manifests accept Angular 19–21 peers, while releases provide an Angular-aligned package line for each major. The first version number is reserved for Angular compatibility, so read the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/CHANGELOG.md) for explicitly labeled breaking changes before upgrading.
 
 ## Installation and setup
 
@@ -168,22 +168,22 @@ export const appConfig: ApplicationConfig = {
 | Resource                                                                                                                                                                             | Purpose                                                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
 | [Live showcase](https://sdcorejs.github.io/sdcorejs-angular/)                                                                                                                        | Interactive component, form, and service demos                             |
-| [Button example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts)              | Action variants, icons, disabled state, and loading state                  |
-| [Input example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)                      | Model binding, validation, and viewed states                               |
-| [Table example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)                 | Data, selection, filters, grouping, paging, and tree workflows             |
-| [Persistence example source](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/showcase/src/app/pages/services/persistence/persistence-demo.component.ts) | Graph round-trip, identity, envelopes, and error containment               |
+| [Button example source](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/versions/v19/projects/showcase/src/app/pages/components/button/button-demo.component.ts)              | Action variants, icons, disabled state, and loading state                  |
+| [Input example source](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/versions/v19/projects/showcase/src/app/pages/forms/input/input-demo.component.ts)                      | Model binding, validation, and viewed states                               |
+| [Table example source](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/versions/v19/projects/showcase/src/app/pages/components/table/table-demo.component.ts)                 | Data, selection, filters, grouping, paging, and tree workflows             |
+| [Persistence example source](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/versions/v19/projects/showcase/src/app/pages/services/persistence/persistence-demo.component.ts) | Graph round-trip, identity, envelopes, and error containment               |
 | [Latest API manifest](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/index.json)                                                                                            | Discover all Markdown docs for the latest release                          |
 | [Versions registry](https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json)                                                                                                  | Select docs matching an installed package version                          |
 | [Machine-readable catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json)                                                                                            | Discover documentation across maintained package lines                     |
-| [E2E attributes](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                               | Stable runtime selectors and state attributes                              |
-| [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.4.md)                                                                                 | Dedupe, loading, persistence, connector, responsive, and signal migrations |
+| [E2E attributes](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                               | Stable runtime selectors and state attributes                              |
+| [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/docs/migrations/1.4.md)                                                                                 | Dedupe, loading, persistence, connector, responsive, and signal migrations |
 
 ## Versioning
 
 - Use `@sdcorejs/angular@^19`, `@^20`, or `@^21` to match the application's Angular major.
 - Maintained package lines are released from the same feature surface with required Angular-major adaptations.
-- Consumer-breaking changes and migration notes are recorded in the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md).
-- Before adopting the `1.4` suffix, follow the [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.4.md).
+- Consumer-breaking changes and migration notes are recorded in the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/CHANGELOG.md).
+- Before adopting the `1.4` suffix, follow the [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/docs/migrations/1.4.md).
 - Version-pinned reference docs remain available under `https://sdcorejs.github.io/sdcorejs-angular/docs/<package-version>/`.
 
 ## Contributing
@@ -202,4 +202,4 @@ Use [GitHub Issues](https://github.com/sdcorejs/sdcorejs-angular/issues) for rep
 
 ## License
 
-MIT © Trần Thuận Nghĩa. See the [repository license](https://github.com/sdcorejs/sdcorejs-angular/blob/main/LICENSE).
+MIT © Trần Thuận Nghĩa. See the [repository license](https://github.com/sdcorejs/sdcorejs-angular/blob/v1.4/LICENSE).

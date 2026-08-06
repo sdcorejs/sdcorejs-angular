@@ -44,7 +44,7 @@ if (!(Test-Path -LiteralPath $v19Path)) {
   throw "Primary v19 workspace not found: $v19Path"
 }
 
-$canonicalNpmReadmePath = Join-Path $RootPath "docs/npm-README.md"
+$canonicalNpmReadmePath = Join-Path $RootPath "README.npm.md"
 $v19PackageReadmePath = Join-Path $v19Path "projects/sdcorejs-angular/README.md"
 if (!(Test-Path -LiteralPath $canonicalNpmReadmePath)) {
   throw "Canonical npm README not found: $canonicalNpmReadmePath"
@@ -53,7 +53,7 @@ if (!(Test-Path -LiteralPath (Split-Path -Parent $v19PackageReadmePath))) {
   throw "Primary library directory not found: $(Split-Path -Parent $v19PackageReadmePath)"
 }
 
-# why: docs/npm-README.md is the public package README source of truth. Refresh
+# why: README.npm.md is the public package README source of truth. Refresh
 # v19 before mirroring so all published Angular lines carry the same release docs.
 $canonicalNpmReadme = [System.IO.File]::ReadAllText($canonicalNpmReadmePath)
 $currentV19PackageReadme = if (Test-Path -LiteralPath $v19PackageReadmePath) {

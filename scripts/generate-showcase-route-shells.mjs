@@ -10,9 +10,6 @@ const REPO_ROOT = join(SCRIPT_DIR, '..');
 
 const DEFAULT_REGISTRY_PATH = join(
   REPO_ROOT,
-  'versions',
-  'v19',
-  'projects',
   'showcase',
   'src',
   'app',
@@ -20,7 +17,7 @@ const DEFAULT_REGISTRY_PATH = join(
   'core',
   'documentation.registry.ts'
 );
-const DEFAULT_OUTPUT_DIR = join(REPO_ROOT, 'versions', 'v19', 'dist', 'showcase', 'browser');
+const DEFAULT_OUTPUT_DIR = join(REPO_ROOT, 'showcase','dist','showcase','browser');
 const DEFAULT_VERSIONS_PATH = join(REPO_ROOT, 'published-docs', 'versions.json');
 
 export const PUBLIC_BASE_URL = 'https://sdcorejs.github.io/sdcorejs-angular/';
@@ -89,6 +86,21 @@ export function selectSupportedReleases(manifest) {
 }
 
 export const SUPPORTED_RELEASES = Object.freeze(selectSupportedReleases(JSON.parse(readFileSync(DEFAULT_VERSIONS_PATH, 'utf8'))));
+
+// The newest maintained Angular line. A page under published-pages/<suffix>/ is already
+// scoped to one release, so it pre-renders exactly ONE npm version instead of every
+// published release — emitting all of them multiplied the shell HTML ~12x (87MB vs 7MB per
+// page) and would have blown past the 1GB GitHub Pages limit after a few retained releases.
+// Deep links to the other Angular lines still resolve client-side via the in-app switcher;
+// they are simply not pre-rendered.
+const CANONICAL_SHELL_MAJOR = Math.max(...SHOWCASE_RELEASE_MINIMUMS.keys());
+
+export function canonicalReleaseForSuffix(suffix) {
+  if (!/^\d+\.\d+$/.test(String(suffix))) {
+    throw new Error(`Invalid release suffix "${suffix}" (expected <digits>.<digits>, for example 1.6).`);
+  }
+  return `${CANONICAL_SHELL_MAJOR}.${suffix}`;
+}
 
 const DOC_TABS = Object.freeze([
   ['overview', 'Overview'],
@@ -517,13 +529,23 @@ function runCli() {
       registry: { type: 'string' },
       template: { type: 'string' },
       output: { type: 'string' },
+      // Scope the shells to one release. `--suffix 1.6` is what build-published-page.mjs
+      // passes; omitting both keeps the legacy every-published-release behavior.
+      suffix: { type: 'string' },
+      release: { type: 'string' },
     },
   });
   const outputDir = values.output ? resolve(values.output) : DEFAULT_OUTPUT_DIR;
+  const releases = values.release
+    ? [values.release]
+    : values.suffix
+      ? [canonicalReleaseForSuffix(values.suffix)]
+      : undefined;
   const result = generateShowcaseRouteShells({
     registryPath: values.registry ? resolve(values.registry) : DEFAULT_REGISTRY_PATH,
     templatePath: values.template ? resolve(values.template) : join(outputDir, 'index.html'),
     outputDir,
+    releases,
   });
 
   console.log(

@@ -7,7 +7,6 @@ import { execSync, spawnSync } from 'node:child_process';
 const rootPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const lintExtensions = /\.(ts|js|mjs|html)$/i;
 const versionFolders = new Set(['v19', 'v20', 'v21']);
-const generatedShowcaseDocs = /^projects\/showcase\/src\/app\/docs\/generated\//;
 
 const phasePaths = {
   forms: ['projects/sdcorejs-angular/forms'],
@@ -67,7 +66,6 @@ const phasePaths = {
     'projects/sdcorejs-angular/components/upload-file',
     'projects/sdcorejs-angular/components/view',
   ],
-  showcase: ['projects/showcase'],
 };
 
 function readArg(name, fallback) {
@@ -86,7 +84,6 @@ function changedFilesForWorkspace(workspace) {
         .filter(Boolean)
         .filter(file => file.startsWith(prefix) && lintExtensions.test(file))
         .map(file => file.slice(prefix.length))
-        .filter(file => !generatedShowcaseDocs.test(file))
         .filter(file => existsSync(path.join(rootPath, prefix, file)));
       if (files.length > 0) return files;
     } catch {

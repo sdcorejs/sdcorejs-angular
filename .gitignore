@@ -49,5 +49,7 @@ Thumbs.db
 .worktrees/
 .agents/
 /plans
+refs/
 GEMINI.md
-AGENTS.md
+# AGENTS.md is repo-owned and committed — it is the shared agent entrypoint
+# alongside CLAUDE.md, not a local scratch file.

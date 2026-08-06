@@ -593,5 +593,11 @@
       "path": "utilities/models/models.md",
       "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.1.3/utilities/models/models.md"
     }
-  ]
+  ],
+  "previousVersion": "20.1.2",
+  "compareUrl": "https://github.com/sdcorejs/sdcorejs-angular/compare/v1.2...v1.3",
+  "changelog": {
+    "path": "CHANGELOG.md",
+    "url": "https://sdcorejs.github.io/sdcorejs-angular/docs/20.1.3/CHANGELOG.md"
+  }
 }

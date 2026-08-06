@@ -6,6 +6,10 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+## [1.5] - 2026-07-28
+
+Release suffix `1.5` publishes `19.1.5`, `20.1.5`, and `21.1.5` as a stable release across the maintained Angular lines.
+
 ### Changed
 
 - **Layout V2/V3 navigation polish** - centered compact account and drawer controls, removed the collapsed V3 fallback brand icon, and unified desktop/mobile menu search behind an internal Soft-pill presentation without changing public APIs or filtering behavior.
@@ -15,10 +19,6 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 - **Showcase published-doc versions** - derive every supported `1.2+` documentation release from `published-docs/versions.json`, so the version selector exposes the existing 1.3/1.4 archives and automatically accepts the 1.5 archives after publishing instead of canonicalizing every route to 1.2.
 - **Layout mobile containment** - render the Layout, Mobile V2 and Mobile V3 custom-element hosts as blocks so full-height shells and the V3 topbar start inside consumer and Showcase containers instead of aligning below an inline baseline.
-
-### Migration notes
-
-- Follow the [release suffix 1.5 migration guide](docs/migrations/1.5.md) for the optional Layout account actions, V2/V3 navigation behavior, mobile containment and version-pinned documentation flow.
 
 ## [1.4] - 2026-07-23
 
@@ -61,10 +61,6 @@ Release suffix `1.4` publishes `19.1.4`, `20.1.4`, and `21.1.4` as a stable rele
 
 - **API compatibility aliases** - deprecated `SdApiOption.autoCache` in favor of `dedupe` and `SD_API_CONFIGURATION` in favor of `SD_API_CONFIG`.
 - **Generic cache callback providers** - deprecated directly typed legacy callbacks; migrate to globally safe `unknown` callbacks or use `adaptLegacySdCacheCallbacks()` temporarily with a runtime guard.
-
-### Migration notes
-
-- Follow the [release suffix 1.4 migration guide](docs/migrations/1.4.md) for request dedupe/retry/cancellation, loading refs, persistence identities/serialization, the internal form connector, live responsive layout and direct signal class consumers.
 
 ## [1.3] - 2026-07-18
 

@@ -23,7 +23,12 @@
     "test:showcase-examples": "node --test scripts/generate-showcase-example-sources.test.mjs",
     "test:showcase-branding": "node --test scripts/showcase-branding.test.mjs",
     "test:showcase-route-shells": "node --test scripts/generate-showcase-route-shells.test.mjs",
+    "test:collect-docs": "node --test scripts/collect-docs.test.mjs",
+    "test:published-page": "node --test scripts/build-published-page.test.mjs",
+    "build:page": "node scripts/build-published-page.mjs",
+    "prune:pages": "node scripts/build-published-page.mjs --prune-only",
     "test:showcase-generators": "npm run test:showcase-changelog && npm run test:showcase-examples && npm run test:showcase-route-shells",
+    "test:scripts": "npm run test:showcase-generators && npm run test:showcase-branding && npm run test:collect-docs && npm run test:published-page",
     "changeset": "changeset"
   },
   "devDependencies": {
