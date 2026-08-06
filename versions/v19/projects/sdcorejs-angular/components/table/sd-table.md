@@ -416,6 +416,19 @@ useValue: {
 
 Per-table options always override these defaults.
 
+## Export button label (i18n)
+
+The export button's label comes from the i18n catalog, so it follows the app language — it used to be the hard-coded English string `Export`, which showed up untranslated for Vietnamese users.
+
+| Key | vi | en |
+|---|---|---|
+| `core.component.table.export` | Xuất dữ liệu | Export |
+| `core.component.table.exporting` | Đang xuất...{percent}% | Exporting...{percent}% |
+| `core.component.table.export-excel` | Xuất excel | Export Excel |
+| `core.component.table.export-csv` | Xuất CSV | Export CSV |
+
+`TableExportService.exportTitle` is a `computed()` over the current language plus the export progress; drive progress with `setExportProgress(percent | null)` (`null` restores the idle label). Do not assign to `exportTitle` — it is no longer writable.
+
 ## Permission gating
 
 The component extends `SdBaseSecureComponent`. Bulk actions (`selector.actions`) and per-row `commands` are usually gated at the application level (hide via `hidden(row)` predicate or before composing the option). For full row visibility wrap the host with `*sdPermission`.

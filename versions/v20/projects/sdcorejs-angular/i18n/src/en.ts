@@ -531,6 +531,8 @@ export const EN_MESSAGES = {
   'core.component.table.choose-filter-hint': 'Please choose a filter to start',
   'core.component.table.no-data': 'No data',
   'core.component.table.export-excel': 'Export Excel',
+  'core.component.table.exporting': 'Exporting...{percent}%',
+  'core.component.table.export': 'Export',
   'core.component.table.export-csv': 'Export CSV',
   'core.component.table.showing': 'Showing:',
   'core.component.table.paginator.first-page': 'First page',
@@ -600,6 +602,8 @@ export const EN_MESSAGES = {
 
   // ---- Module: layout (home page) ----
   'core.module.layout.home.tab-name': 'Home',
+  'core.module.layout.not-found.tab-name': 'Page Not Found',
+  'core.module.layout.forbidden.tab-name': 'Access Denied',
   'core.module.layout.home.feature.data': 'Data',
   'core.module.layout.home.feature.reports': 'Reports',
   'core.module.layout.home.feature.users': 'Users',

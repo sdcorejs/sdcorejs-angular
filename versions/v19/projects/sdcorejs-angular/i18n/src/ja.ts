@@ -533,6 +533,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.table.choose-filter-hint': 'まずフィルターを選択してください',
   'core.component.table.no-data': 'データがありません',
   'core.component.table.export-excel': 'Excelエクスポート',
+  'core.component.table.exporting': 'エクスポート中...{percent}%',
+  'core.component.table.export': 'エクスポート',
   'core.component.table.export-csv': 'CSVエクスポート',
   'core.component.table.showing': '表示中:',
   'core.component.table.paginator.first-page': '最初のページ',
@@ -603,6 +605,8 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: layout (home page) ----
   'core.module.layout.home.tab-name': 'ホーム',
+  'core.module.layout.not-found.tab-name': 'ページが見つかりません',
+  'core.module.layout.forbidden.tab-name': 'アクセス拒否',
   'core.module.layout.home.feature.data': 'データ',
   'core.module.layout.home.feature.reports': 'レポート',
   'core.module.layout.home.feature.users': 'ユーザー',

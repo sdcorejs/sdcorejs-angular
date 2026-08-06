@@ -25,6 +25,7 @@ Use it for back-office portals that need permission-aware navigation, responsive
 | `SdLayoutNavigationStateService`                   | Shares pinned/recent stable keys and version-scoped UI state                                   |
 | `SdLayoutStorageService`                           | Persists layout state through `SdStorageService` and migrates legacy pinned objects lazily     |
 | `MenuPipe`, `MenuFocusPipe`, `HighLightSearchPipe` | Permission filtering, route focus, and search highlighting                                     |
+| `resolveTabName(key)`                              | Resolves a translated `@SdTabComponent` tab label without Angular DI |
 | `SD_LAYOUT_CONFIGURATION`                          | Consumer layout configuration                                                                  |
 | `SD_LAYOUT_VIEWPORT`                               | Compatibility alias of the shared `SD_VIEWPORT` test/host abstraction                          |
 
@@ -220,6 +221,27 @@ V2 honors up to three valid `primaryMenuIds` in the supplied order, fills missin
 V2's desktop rail and V3's collapsed desktop drawer center the avatar as the account-menu trigger without rendering a separate disclosure chevron. Collapsed V3 also hides the brand block and keeps only the centered expand control; the expanded drawer and both mobile variants retain the full account identity presentation.
 
 V2/V3 desktop and mobile menu searches share the same internal Soft-pill field: a gray token-based surface, leading search icon and primary focus ring. Placeholder text, `autoId` hooks, accent-insensitive filtering and parent-owned search signals keep their existing contracts.
+
+## Built-in page tabs
+
+All three built-in pages register themselves with `<sd-tab-router>` via `@SdTabComponent`, so opening them in a tabbed shell shows a proper icon + localized label instead of an empty tab:
+
+| Page | Icon | Color | Label key |
+|---|---|---|---|
+| `home` | `home` | `primary` | `core.module.layout.home.tab-name` |
+| `forbidden` | `block` | `error` | `core.module.layout.forbidden.tab-name` |
+| `not-found` | `search_off` | `warning` | `core.module.layout.not-found.tab-name` |
+
+Labels are translated in all five bundled locales (English: "Home" / "Access Denied" / "Page Not Found"). Follow the same shape when adding a new page:
+
+```ts
+@SdTabComponent({
+  component: MyPageComponent,
+  name: () => resolveTabName('core.module.layout.my-page.tab-name'),
+  icon: 'description',
+  color: 'primary',
+})
+```
 
 ## Responsive, storage, and migration behavior
 
