@@ -1,6 +1,9 @@
 import { InjectionToken } from '@angular/core';
 import * as pdfjsLib from 'pdfjs-dist';
 
+// Worker bundle inlined at build time (scripts/generate-pdf-worker-inline.mjs).
+import { PDF_WORKER_SOURCE } from './pdf-worker-inline.generated';
+
 export interface SdPdfRenderTask {
   readonly promise: Promise<void>;
   cancel(): void;
@@ -82,8 +85,23 @@ function isSdPdfJsLib(value: unknown): value is SdPdfJsLib {
 export const SD_PDFJS_LIB = new InjectionToken<SdPdfJsLib>('SD_PDFJS_LIB', {
   providedIn: 'root',
   factory: (): SdPdfJsLib => {
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+    // WHY một blob URL từ source đã inline, KHÔNG dùng `new URL(..., import.meta.url)`:
+    // esbuild (bundler của Angular) không rewrite `new URL(..., import.meta.url)` thành
+    // asset được emit như webpack/vite. Ở build production/AOT literal đó còn nguyên nên
+    // lúc runtime URL resolve theo chunk đã deploy và trỏ vào file chưa từng ship → 404 →
+    // pdf.js báo "Setting up fake worker failed" (dev/JIT vẫn chạy nên bug chỉ lộ ở prod).
+    // Inline + blob giúp lib tự chứa: consumer không cần khai `assets` trong angular.json.
+    // Guarded: consumer đã tự set workerSrc thì tôn trọng; môi trường không có Blob/
+    // createObjectURL (SSR, test shim) không được làm app crash.
+    try {
+      if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+        // Không revoke: pdf.js có thể tạo lại worker nhiều lần trong vòng đời app.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
+          new Blob([PDF_WORKER_SOURCE], { type: 'text/javascript' })
+        );
+      }
+    } catch {
+      // Consumer app must set workerSrc manually (documented in sd-preview.md).
     }
     const candidate: unknown = pdfjsLib;
     if (!isSdPdfJsLib(candidate)) {
