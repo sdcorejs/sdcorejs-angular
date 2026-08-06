@@ -1,0 +1,1 @@
+function E(t){if(t==null||t==="")return"";if(t instanceof Date)return t.toISOString();if(Array.isArray(t)||typeof t=="object"&&t!==null)try{return JSON.stringify(t)}catch{return""}return String(t)}function _(t){return t==null||t===""?!0:Array.isArray(t)?t.length===0:!1}export{E as a,_ as b};
