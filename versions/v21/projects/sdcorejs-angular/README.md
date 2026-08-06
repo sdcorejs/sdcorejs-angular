@@ -176,17 +176,15 @@ export const appConfig: ApplicationConfig = {
 | [Versions registry](https://sdcorejs.github.io/sdcorejs-angular/docs/versions.json)                                                                                                  | Select docs matching an installed package version                          |
 | [Machine-readable catalog](https://sdcorejs.github.io/sdcorejs-angular/docs/catalog.json)                                                                                            | Discover documentation across maintained package lines                     |
 | [E2E attributes](https://github.com/sdcorejs/sdcorejs-angular/blob/main/versions/v19/projects/sdcorejs-angular/docs/E2E-ATTRIBUTES.md)                                               | Stable runtime selectors and state attributes                              |
-| [1.5 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.5.md)                                                                                 | Layout account actions, V2/V3 navigation, containment, and versioned docs  |
-| [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.4.md)                                                                                 | Dedupe, loading, persistence, connector, responsive, and signal migrations |
+| [Release notes for this version](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/CHANGELOG.md)                                                                               | What changed in this release and how it differs from the previous one      |
 
 ## Versioning
 
 - Use `@sdcorejs/angular@^19`, `@^20`, or `@^21` to match the application's Angular major.
 - Maintained package lines are released from the same feature surface with required Angular-major adaptations.
 - Consumer-breaking changes and migration notes are recorded in the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md).
-- Before adopting the `1.5` suffix, follow the [1.5 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.5.md).
-- Before adopting the `1.4` suffix, follow the [1.4 migration guide](https://github.com/sdcorejs/sdcorejs-angular/blob/main/docs/migrations/1.4.md).
 - Version-pinned reference docs remain available under `https://sdcorejs.github.io/sdcorejs-angular/docs/<package-version>/`.
+- Every published version is self-contained: `docs/<package-version>/CHANGELOG.md` carries that release's notes and a source diff link against the previous release.
 
 ## Contributing
 
