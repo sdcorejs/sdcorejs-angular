@@ -1,1 +1,0 @@
-import{a as t,g as i,i as n}from"./chunk-B5WSIUJ4.js";import{a as r,b as a}from"./chunk-J3S4UFG7.js";var o=e=>n.isEmail(e),s=e=>n.isPhone(e),l=e=>n.isCode(e),p=a(r({},t),{REGEX_PHONE_VN:t.REGEX_VN_PHONE,REGEX_IDVN:t.REGEX_VN_ID,REGEX_IDVN_OR_PASSPORT:t.REGEX_VN_ID_OR_PASSPORT,isValidEmail:o,isValidPhone:s,isValidCode:l});var y=i.hslToHex,b=i.rgbToHex;export{p as a};
