@@ -560,3 +560,46 @@ describe('SdDateRange (viewed inline mode)', () => {
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
 });
+
+// Angular Material re-parses each field after every keystroke and writes the
+// result straight into the control. The stock date-fns adapter accepts a
+// half-typed year ("11/12/2" became year 0002) and reads a bare "11" as the
+// year 1100 via parseISO — neither may reach the control.
+describe('SdDateRange (partial input is not a date)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let comp: SdDateRange;
+  let startInput: HTMLInputElement;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)
+      ?.componentInstance as SdDateRange;
+    startInput = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+  });
+
+  const type = (value: string) => {
+    startInput.value = value;
+    startInput.dispatchEvent(new InputEvent('input', { inputType: 'insertText', bubbles: true }));
+    fixture.detectChanges();
+  };
+
+  for (const partial of ['1', '11', '11/12', '11/12/2', '11/12/20']) {
+    it(`leaves the start date empty while "${partial}" is still being typed`, () => {
+      type(partial);
+
+      expect(comp.control1.value).toBeNull();
+    });
+  }
+
+  it('accepts the start date once the full year has been typed', () => {
+    type('11/12/2026');
+
+    expect(comp.control1.value instanceof Date).toBeTrue();
+    expect((comp.control1.value as Date).getFullYear()).toBe(2026);
+  });
+});

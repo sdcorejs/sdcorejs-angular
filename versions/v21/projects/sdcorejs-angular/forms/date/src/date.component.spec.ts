@@ -686,3 +686,65 @@ describe('SdDate (viewed inline mode)', () => {
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
 });
+
+// Angular Material re-parses the field after every keystroke and writes the
+// result straight into the form control, so a half-typed date must never be
+// accepted ("11/12/2" used to become year 0002, a bare "11" year 1100). These
+// dispatch REAL input events; the older specs call onInput() directly and so
+// never exercise Material's own listener.
+describe('SdDate (partial input is not a date)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let comp: SdDate;
+  let input: HTMLInputElement;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [HostComponent, NoopAnimationsModule] });
+    fixture = TestBed.createComponent(HostComponent);
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate).componentInstance;
+    fixture.detectChanges();
+    input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+  });
+
+  const type = (rawValue: string, inputType = 'insertText') => {
+    input.value = rawValue;
+    input.setSelectionRange(rawValue.length, rawValue.length);
+    input.dispatchEvent(new InputEvent('input', { inputType, bubbles: true }));
+    fixture.detectChanges();
+  };
+
+  for (const partial of ['1', '11/1', '11/12', '11/12/2', '11/12/20', '11/12/202']) {
+    it(`keeps the control empty while "${partial}" is still being typed`, () => {
+      type(partial);
+
+      expect(comp.formControl.value).toBeNull();
+    });
+  }
+
+  it('does not treat a bare day as an ISO century (11 -> year 1100)', () => {
+    type('11/12/2026');
+    type('11', 'deleteContentBackward');
+
+    expect(comp.formControl.value).toBeNull();
+    expect(input.value).toBe('11');
+  });
+
+  it('never rewrites the text the user is still typing', () => {
+    type('11/12/2');
+    expect(input.value).toBe('11/12/2');
+  });
+
+  it('accepts the date once the full year has been typed', () => {
+    type('11/12/2026');
+
+    expect(comp.formControl.value instanceof Date).toBeTrue();
+    expect((comp.formControl.value as Date).getFullYear()).toBe(2026);
+    expect((comp.formControl.value as Date).getMonth()).toBe(11);
+    expect((comp.formControl.value as Date).getDate()).toBe(11);
+  });
+
+  it('rejects an impossible calendar date typed in full', () => {
+    type('31/02/2026');
+
+    expect(comp.formControl.value).toBeNull();
+  });
+});

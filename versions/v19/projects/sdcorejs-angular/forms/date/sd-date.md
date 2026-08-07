@@ -78,8 +78,23 @@ Applied automatically on `<sd-date>` for styling hooks:
 - **Does NOT implement `ControlValueAccessor`.** Standard SDCoreJS pattern: pass `[form]` + `name`, the internal `SdFormControl` registers into the group on `ngOnInit`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** = DETAIL read-only mode: input + calendar icon are hidden, the formatted date (or `<ng-template sdViewDef>`) is shown. With `hyperlink` it renders a clickable link.
-- **Date adapter**: providers include `provideDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage uses native `Date` objects; emitted values are `'yyyy/MM/dd'` strings.
+- **Date adapter**: providers include `provideSdStrictDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage uses native `Date` objects; emitted values are `'yyyy/MM/dd'` strings.
 - **Validators**: `[required]` adds `Validators.required`. `[min]` / `[max]` flow into Material's `matDatepickerMin` / `matDatepickerMax` validators. Manual typed text is regex-validated (`dd/MM/yyyy`) and bad input sets a synthetic `date: 'Sai định dạng'` error. `[inlineError]` injects a synthetic `inlineError` validator. `errorMessage` gives Vietnamese messages for each error key.
+
+## Typing behaviour
+
+Separators are inserted as you type: `2` → `2`, `22` → `22/`, `2208` → `22/08/`, `22081991` → `22/08/1991`. Non-digits are dropped and input is capped at eight digits. Deleting never re-adds the separator you just removed.
+
+**A half-typed date is never accepted as a value.** The field is bound with `[matDatepicker]`, so Angular Material re-parses the text after *every* keystroke and writes the result straight into the form control. The stock date-fns adapter is too permissive for that:
+
+| Typed | Stock adapter | Now |
+| --- | --- | --- |
+| `11/12/2` | year 0002, error flag cleared → field looks valid | rejected, control stays empty |
+| `11/12/20` | year 0020 | rejected |
+| `11` (after deleting) | year 1100, via the `parseISO` century fallback | rejected |
+| `11/12/2026` | 11 Dec 2026 | 11 Dec 2026 |
+
+`SdStrictDateFnsAdapter` closes both holes: it skips the ISO fallback and requires the text to round-trip through the configured format, so the control only ever receives a date the user actually finished typing. The value is committed on blur; incomplete or impossible text (`31/02/2026`) clears the field.
 
 ## Public methods & getters
 

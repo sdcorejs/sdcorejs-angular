@@ -72,8 +72,12 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 - **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` PLUS two internal start/end controls under random uuids for fine-grained validity. All three are removed in `ngOnDestroy`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]` is tri-state** (`boolean | 'inline'`) like the other controls: `true` = static `<sd-view>` DETAIL; `'inline'` = text-face click-to-edit (opens the range picker, text retained until commit); a disabled `'inline'` falls back to static view.
-- **Date adapter**: providers include `provideDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage in `control1`/`control2` uses native `Date` objects; the emitted `model` value is `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }` strings.
+- **Date adapter**: providers include `provideSdStrictDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage in `control1`/`control2` uses native `Date` objects; the emitted `model` value is `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }` strings.
 - **Validators**: `[required]` adds `Validators.required` to both internal controls and the aggregate. Material picker auto-emits `matDatepickerMin` / `matDatepickerMax` errors when `min`/`max` are violated. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày bắt đầu không hợp lệ (nhỏ hơn giới hạn)"; max → "Ngày kết thúc không hợp lệ (lớn hơn giới hạn)".
+
+## Typing behaviour
+
+Both range fields are `matStartDate` / `matEndDate`, so Angular Material re-parses them after every keystroke. They use `SdStrictDateFnsAdapter`, which refuses text the user has not finished typing — `11/12/2` no longer becomes year 0002 and a bare `11` no longer becomes year 1100 through the `parseISO` century fallback.
 
 ## Public methods & getters
 
