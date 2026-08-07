@@ -2,6 +2,14 @@
   "name": "@sdcorejs/angular",
   "version": "19.1.4",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sdcorejs/sdcorejs-angular.git"
+  },
+  "homepage": "https://sdcorejs.github.io/sdcorejs-angular/",
+  "bugs": {
+    "url": "https://github.com/sdcorejs/sdcorejs-angular/issues"
+  },
   "peerDependencies": {
     "@angular/common": "^19.0.0 || ^20.0.0 || ^21.0.0",
     "@angular/core": "^19.0.0 || ^20.0.0 || ^21.0.0",
