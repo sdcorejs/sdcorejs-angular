@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { DocsVersionService } from '../../core/docs-version.service';
-import { SHOWCASE_CHANGELOG_RELEASES } from '../../generated/changelog.generated';
+import { SHOWCASE_CHANGELOG_RELEASES, ShowcaseChangelogRelease } from '../../generated/changelog.generated';
 import { ChangelogComponent } from './changelog.component';
 
 describe('ChangelogComponent', () => {
@@ -50,11 +50,15 @@ describe('ChangelogComponent', () => {
     const headings = [...fixture.nativeElement.querySelectorAll('.release__section h3')].map((heading: HTMLElement) =>
       heading.textContent?.trim()
     );
-    const expectedHeadings = SHOWCASE_CHANGELOG_RELEASES.flatMap(release =>
+    // The generated const is `as const satisfies ...`, so an empty Unreleased
+    // section list narrows to `never[]` and the callbacks below stop compiling.
+    // Read it through the declared interface instead.
+    const releases: readonly ShowcaseChangelogRelease[] = SHOWCASE_CHANGELOG_RELEASES;
+    const expectedHeadings = releases.flatMap(release =>
       release.sections.filter(section => section.markdown.trim()).map(section => section.title)
     );
     const expectedUnreleasedSections =
-      SHOWCASE_CHANGELOG_RELEASES.find(release => release.unreleased)?.sections.filter(section => section.markdown.trim()) ?? [];
+      releases.find(release => release.unreleased)?.sections.filter(section => section.markdown.trim()) ?? [];
 
     expect([...headings].sort()).toEqual([...expectedHeadings].sort());
     expect(unreleased.querySelectorAll('.release__section')).toHaveSize(expectedUnreleasedSections.length);

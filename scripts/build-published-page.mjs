@@ -12,7 +12,7 @@
 //   node scripts/build-published-page.mjs --suffix 1.6
 //   node scripts/build-published-page.mjs --suffix 1.6 --skip-build   # re-copy an existing build
 //   node scripts/build-published-page.mjs --prune-only
-import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -107,6 +107,26 @@ function runNode(args, cwd, label) {
   if (result.status !== 0) throw new Error(`${label} failed with exit code ${result.status}`);
 }
 
+// why: the deploy keeps ONE copy of published-docs at the site root (/<repo>/docs/) while
+// each release SPA lives in its own folder (/<repo>/1.6/). Without this the app resolves
+// docs against its own base href and asks for /<repo>/1.6/docs/... which 404s. Baking the
+// real docs root mirrors how --base-href is baked, and leaves the dev server (no meta tag,
+// docs/ next to the app) untouched.
+function bakeDocsBase() {
+  const indexPath = join(BUILD_OUTPUT, 'index.html');
+  if (!existsSync(indexPath)) throw new Error(`Build output missing index.html: ${indexPath}`);
+
+  const docsBase = `/${REPO_NAME}/docs/`;
+  const meta = `<meta name="sd-docs-base" content="${docsBase}">`;
+  const html = readFileSync(indexPath, 'utf8');
+  if (html.includes('name="sd-docs-base"')) return;
+  if (!html.includes('</head>')) throw new Error('Build output index.html has no </head> to inject the docs base into.');
+
+  writeFileSync(indexPath, html.replace('</head>', `  ${meta}
+</head>`), 'utf8');
+  console.log(`[published-page] baked docs base ${docsBase}`);
+}
+
 function buildShowcase(suffix) {
   const baseHref = `/${REPO_NAME}/${suffix}/`;
 
@@ -131,6 +151,8 @@ function buildShowcase(suffix) {
     SHOWCASE_ROOT,
     'showcase build',
   );
+
+  bakeDocsBase();
 
   // why: indexable 200 shells per route must be baked into the committed page — the deploy
   // no longer runs any generator. `--suffix` scopes them to THIS release only; the page
