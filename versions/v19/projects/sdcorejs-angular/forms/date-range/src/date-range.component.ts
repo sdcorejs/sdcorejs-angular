@@ -16,13 +16,12 @@ import {
   contentChild,
 } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
-import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerInputEvent, MatDatepickerModule, MatDateRangePicker } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
-import {
+import { provideSdStrictDateFnsAdapter,
   SD_FORM_CONFIGURATION,
   sdFormControlState,
   SdViewed,
@@ -56,7 +55,7 @@ export interface SdDateRangeValue {
   providers: [
     // DateFnsAdapter inject MAT_DATE_LOCALE; cấp default en-US để parse/format hoạt động.
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
-    provideDateFnsAdapter({
+    provideSdStrictDateFnsAdapter({
       parse: { dateInput: 'dd/MM/yyyy' },
       display: {
         dateInput: 'dd/MM/yyyy',

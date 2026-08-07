@@ -17,7 +17,6 @@ import {
   contentChild,
 } from '@angular/core';
 import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
-import { provideDateFnsAdapter } from '@angular/material-date-fns-adapter';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
@@ -27,6 +26,7 @@ import { SdView } from '@sdcorejs/angular/components/view';
 import { SdLabelDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
+  provideSdStrictDateFnsAdapter,
   SD_FORM_CONFIGURATION,
   SdFormControl,
   SdInlineErrorValidator,
@@ -42,53 +42,22 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
-import { isValid as isValidDate, parse as parseDate } from 'date-fns';
+import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
+
+import {
+  DATE_DISPLAY_FORMAT,
+  dateControlsEqual,
+  formatDateInput,
+  getCaretPosition,
+  isPartialDateInput,
+  parseDateInput,
+} from './date-input.util';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type SdDateModelValue = string | number | Date | undefined | null;
 type SdDateKeyupEvent = Event | { target?: { value?: string | null } };
-
-const DATE_DISPLAY_FORMAT = 'dd/MM/yyyy';
-const DATE_DISPLAY_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/;
-const DATE_INPUT_MAX_DIGITS = 8;
-
-function formatDateInput(value: string, addTrailingSeparator: boolean): string {
-  const digits = value.replace(/\D/g, '').slice(0, DATE_INPUT_MAX_DIGITS);
-  let formatted = digits.slice(0, 2);
-
-  if (digits.length > 2) formatted += `/${digits.slice(2, 4)}`;
-  if (digits.length > 4) formatted += `/${digits.slice(4)}`;
-  if (addTrailingSeparator && (digits.length === 2 || digits.length === 4)) formatted += '/';
-
-  return formatted;
-}
-
-function isPartialDateInput(value: string): boolean {
-  return /^(?:\d{0,2})(?:\/\d{0,2})?(?:\/\d{0,4})?$/.test(value);
-}
-
-function parseDateInput(value: string): Date | null {
-  if (!DATE_DISPLAY_PATTERN.test(value)) return null;
-
-  const parsed = parseDate(value, DATE_DISPLAY_FORMAT, new Date());
-  return isValidDate(parsed) && DateUtilities.toFormat(parsed, DATE_DISPLAY_FORMAT) === value ? parsed : null;
-}
-
-function getCaretPosition(value: string, selectionStart: number, formattedValue: string, addTrailingSeparator: boolean): number {
-  const digitsBeforeCaret = value.slice(0, selectionStart).replace(/\D/g, '').length;
-  let formattedIndex = 0;
-  let digitCount = 0;
-
-  while (formattedIndex < formattedValue.length && digitCount < digitsBeforeCaret) {
-    if (/\d/.test(formattedValue[formattedIndex])) digitCount++;
-    formattedIndex++;
-  }
-
-  if (addTrailingSeparator && digitCount === digitsBeforeCaret && formattedValue[formattedIndex] === '/') formattedIndex++;
-  return formattedIndex;
-}
 
 function normalizeDateModel(value: SdDateModelValue): string | null {
   if (!DateUtilities.isDate(value)) return null;
@@ -104,10 +73,6 @@ function dateControlToModel(value: Date | null): SdDateModelValue {
   return value ? normalizeDateModel(value) : null;
 }
 
-function dateControlsEqual(left: Date | null, right: Date | null): boolean {
-  return left === right || normalizeDateModel(left) === normalizeDateModel(right);
-}
-
 @Component({
   selector: 'sd-date',
   templateUrl: './date.component.html',
@@ -118,7 +83,9 @@ function dateControlsEqual(left: Date | null, right: Date | null): boolean {
     // DateFnsAdapter inject MAT_DATE_LOCALE; nếu undefined sẽ throw khi format/parse.
     // Provide locale en-US tại scope component để hành vi giống Moment cũ (English default).
     { provide: MAT_DATE_LOCALE, useValue: dfEnUS },
-    provideDateFnsAdapter({
+    // Adapter parse chặt: Material parse lại ô nhập sau mỗi phím gõ, adapter mặc
+    // định nhận cả chuỗi dở dang nên `11/12/2` từng thành năm 0002.
+    provideSdStrictDateFnsAdapter({
       parse: { dateInput: 'dd/MM/yyyy' },
       display: {
         dateInput: 'dd/MM/yyyy',

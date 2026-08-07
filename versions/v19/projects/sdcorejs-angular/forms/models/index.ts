@@ -6,3 +6,4 @@ export type * from './src/sd-search.model';
 export * from './src/form-control-state';
 export * from './src/sd-viewed';
 export * from './src/sd-form-control-connector';
+export * from './src/sd-strict-date-adapter';
