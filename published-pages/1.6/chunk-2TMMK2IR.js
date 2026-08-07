@@ -1,0 +1,1 @@
+import{k as n,l as e,p as i}from"./chunk-WE6GBFWX.js";var s=r=>r instanceof Promise?r:o(r)?i(r):Promise.resolve(r),f=r=>o(r)?r:r instanceof Promise?n(r):e(r);function o(r){return r&&typeof r.subscribe=="function"}export{s as a,f as b};
