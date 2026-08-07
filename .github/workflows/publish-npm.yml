@@ -31,6 +31,9 @@ on:
 
 permissions:
   contents: write
+  # Required by npm trusted publishing: lets the job mint the short-lived OIDC
+  # token npm exchanges for publish rights, instead of a long-lived NPM_TOKEN.
+  id-token: write
 
 concurrency:
   group: publish-npm
@@ -88,10 +91,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Trusted publishing needs Node >= 22.14.0 (npm docs).
+          node-version: 22
           cache: npm
           cache-dependency-path: versions/${{ matrix.version }}/package-lock.json
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Upgrade npm for trusted publishing
+        # Node 22 still bundles npm 10.x; OIDC publishing needs npm >= 11.5.1.
+        run: |
+          npm install -g npm@latest
+          npm --version
 
       - name: Resolve release suffix + npm dist-tag
         id: resolve
@@ -129,10 +139,12 @@ jobs:
         working-directory: versions/${{ matrix.version }}
 
       - name: Publish @sdcorejs/angular@${{ steps.resolve.outputs.version }} (tag=${{ steps.resolve.outputs.tag }})
+        # No NODE_AUTH_TOKEN on purpose. npm authenticates through the OIDC
+        # trusted publisher configured for this repository + workflow file; if a
+        # token is present npm uses it instead and the package's 2FA policy
+        # rejects it with "an automation token was specified".
         run: npm publish --access public --tag ${{ steps.resolve.outputs.tag }}
         working-directory: versions/${{ matrix.version }}/dist/sdcorejs-angular
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-docs:
     name: Publish versioned API docs

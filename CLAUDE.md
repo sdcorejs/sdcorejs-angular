@@ -104,7 +104,7 @@ git push
 
 ### Quy trình deploy npm — qua GitHub Actions (khuyến nghị)
 
-Workflow: `.github/workflows/publish-npm.yml`. Auth qua secret `NPM_TOKEN` (repo Settings > Secrets and variables > Actions). KHÔNG cần `npm login` local.
+Workflow: `.github/workflows/publish-npm.yml`. Auth qua **npm trusted publishing (OIDC)** — không dùng `NPM_TOKEN` nữa, không cần `npm login` local. Job publish chạy với `permissions: id-token: write`, Node 22 + `npm@latest` (OIDC cần npm >= 11.5.1, Node >= 22.14.0) và **cố tình không set `NODE_AUTH_TOKEN`**: nếu có token, npm dùng token thay OIDC và package 2FA policy trả 403 `an automation token was specified`. Trusted publisher trên npmjs.com pin theo repo + tên file workflow, nên đổi tên `publish-npm.yml` là phải khai báo lại bên npm.
 
 **Trigger**:
 - Push tag `v<release-suffix>` → publish 19.<release-suffix> / 20.<release-suffix> / 21.<release-suffix>.
