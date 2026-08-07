@@ -16,8 +16,8 @@
     "experimentalDecorators": true,
     "moduleResolution": "bundler",
     "paths": {
-      "@sdcorejs/angular": ["../versions/v19/dist/sdcorejs-angular"],
-      "@sdcorejs/angular/*": ["../versions/v19/dist/sdcorejs-angular/*"]
+      "@sdcorejs/angular": ["./node_modules/@sdcorejs/angular"],
+      "@sdcorejs/angular/*": ["./node_modules/@sdcorejs/angular/*"]
     },
     "importHelpers": true,
     "target": "ES2022",

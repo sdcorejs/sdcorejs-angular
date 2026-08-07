@@ -7,7 +7,10 @@
     "start": "ng serve showcase",
     "build": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase",
     "build:prod": "node --max_old_space_size=8000 ./node_modules/@angular/cli/bin/ng build showcase --configuration production",
-    "test": "ng test showcase --watch=false --browsers=ChromeHeadless --source-map=false"
+    "test": "ng test showcase --watch=false --browsers=ChromeHeadless --source-map=false",
+    "link:library": "node ../scripts/link-showcase-library.mjs",
+    "prestart": "npm run link:library",
+    "prebuild": "npm run link:library"
   },
   "dependencies": {
     "@angular/animations": "^19.0.0",

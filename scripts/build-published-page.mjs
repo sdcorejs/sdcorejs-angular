@@ -17,6 +17,8 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
+import { linkShowcaseLibrary } from './link-showcase-library.mjs';
+
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SHOWCASE_ROOT = join(REPO_ROOT, 'showcase');
 const PAGES_ROOT = join(REPO_ROOT, 'published-pages');
@@ -133,6 +135,9 @@ function buildShowcase(suffix) {
   // why: the generated .ts data sources must exist before the Angular build reads them.
   // These run here (page build time) rather than at deploy time, so the Pages deploy stays
   // a pure copy of committed artifacts.
+  // the app and the library must share ONE Angular copy; see the script's header.
+  linkShowcaseLibrary();
+
   console.log('[published-page] generating showcase data sources');
   runNode([join(REPO_ROOT, 'scripts', 'generate-showcase-changelog.mjs')], REPO_ROOT, 'changelog generator');
   runNode([join(REPO_ROOT, 'scripts', 'generate-showcase-example-sources.mjs')], REPO_ROOT, 'example-source generator');
