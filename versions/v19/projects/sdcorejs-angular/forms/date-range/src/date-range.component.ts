@@ -21,7 +21,8 @@ import { MatDatepickerInputEvent, MatDatepickerModule, MatDateRangePicker } from
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective } from '@sdcorejs/angular/forms/directives';
-import { provideSdStrictDateFnsAdapter,
+import {
+  provideSdStrictDateFnsAdapter,
   SD_FORM_CONFIGURATION,
   sdFormControlState,
   SdViewed,

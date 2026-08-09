@@ -577,8 +577,7 @@ describe('SdDateRange (partial input is not a date)', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)
-      ?.componentInstance as SdDateRange;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)?.componentInstance as SdDateRange;
     startInput = fixture.nativeElement.querySelector('input') as HTMLInputElement;
   });
 

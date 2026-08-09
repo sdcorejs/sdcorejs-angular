@@ -46,14 +46,7 @@ import { parse as parseDate } from 'date-fns';
 import { enUS as dfEnUS } from 'date-fns/locale';
 import { Subscription } from 'rxjs';
 
-import {
-  DATE_DISPLAY_FORMAT,
-  dateControlsEqual,
-  formatDateInput,
-  getCaretPosition,
-  isPartialDateInput,
-  parseDateInput,
-} from './date-input.util';
+import { dateControlsEqual, formatDateInput, getCaretPosition, isPartialDateInput, parseDateInput } from './date-input.util';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 type SdDateModelValue = string | number | Date | undefined | null;

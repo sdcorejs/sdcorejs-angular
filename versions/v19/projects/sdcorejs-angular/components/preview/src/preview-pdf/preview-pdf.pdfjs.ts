@@ -96,9 +96,7 @@ export const SD_PDFJS_LIB = new InjectionToken<SdPdfJsLib>('SD_PDFJS_LIB', {
     try {
       if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
         // Không revoke: pdf.js có thể tạo lại worker nhiều lần trong vòng đời app.
-        pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(
-          new Blob([PDF_WORKER_SOURCE], { type: 'text/javascript' })
-        );
+        pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([PDF_WORKER_SOURCE], { type: 'text/javascript' }));
       }
     } catch {
       // Consumer app must set workerSrc manually (documented in sd-preview.md).
