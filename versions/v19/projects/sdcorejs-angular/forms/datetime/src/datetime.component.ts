@@ -13,11 +13,13 @@ import {
   OnDestroy,
   OnInit,
   output,
+  signal,
   TemplateRef,
+  untracked,
   viewChild,
   contentChild,
 } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
@@ -273,6 +275,29 @@ export class SdDatetime implements OnDestroy, OnInit {
   // ==========================================
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
+
+  /** `true` khi text vừa nhập không phải datetime dd/MM/yyyy HH:mm(:ss) hợp lệ. */
+  readonly #invalidFormat = signal(false);
+
+  /**
+   * why: lỗi format PHẢI đi qua pipeline validator. Trước đây nó bị nhét thẳng vào control bằng
+   * `setErrors()` — tức là nằm NGOÀI pipeline — nên bất kỳ `updateValueAndValidity` nào chạy sau
+   * (effect validators của connector, hay chính `setValue`) đều xoá sạch lỗi mà không ai hay biết.
+   * Nhánh xoá lỗi cũ còn sai thêm một lần nữa: `setErrors({ ...errors, date: null })` để lại một
+   * object errors KHÔNG rỗng, mà `AbstractControl._calculateStatus()` coi mọi object errors non-null
+   * là INVALID → một datetime hoàn toàn hợp lệ vẫn bị đánh dấu invalid (và phát `statusChanges`
+   * INVALID ra cho form cha) cho tới khi `updateValueAndValidity` kế tiếp che đi. Trả `null` từ
+   * validator thì key `date` biến mất hẳn, không còn `date: null` treo lại.
+   * Validator giữ identity ổn định (connector chỉ gắn 1 lần) và đọc cờ qua `untracked` để không
+   * tự biến mình thành dependency reactive khi bị gọi trong effect/computed.
+   */
+  readonly #datetimeFormatValidator: ValidatorFn = () =>
+    untracked(() => (this.#invalidFormat() ? { date: this.#i18n.t('core.form.datetime.invalid-format') } : null));
+
+  readonly #validators = computed<readonly ValidatorFn[]>(() =>
+    this.inlineError() ? [this.#datetimeFormatValidator, SdInlineErrorValidator] : [this.#datetimeFormatValidator]
+  );
+
   readonly #formConnector = ɵsdFormControlConnector<SdDatetimeModelValue, string | null>({
     form: this.form,
     name: this.name,
@@ -285,7 +310,7 @@ export class SdDatetime implements OnDestroy, OnInit {
     modelToControl: value => datetimeModelToControl(value, this.showSeconds()),
     controlToModel: value => (value ? (datetimeControlToStored(value, this.showSeconds()) ?? this.valueModel()) : null),
     modelEquals: (left, right) => normalizeDatetimeModel(left, this.showSeconds()) === normalizeDatetimeModel(right, this.showSeconds()),
-    validators: computed(() => (this.inlineError() ? SdInlineErrorValidator : null)),
+    validators: this.#validators,
     required: this.required,
     disabled: this.disabled,
     viewed: this.viewed,
@@ -333,6 +358,12 @@ export class SdDatetime implements OnDestroy, OnInit {
   }
 
   onPickerConfirm(value: Date) {
+    // why: chọn được datetime từ picker nghĩa là text sai định dạng đã bị thay thế — cờ phải tắt.
+    // Cờ chỉ được reset trong `onConfirmInput`, nên trước đây gõ bậy rồi chọn từ lịch để lại lỗi
+    // `date` VĨNH VIỄN: control invalid + hiện "Sai định dạng" trên một giá trị hoàn toàn hợp lệ.
+    // Đây là regression MỚI của việc đưa lỗi vào pipeline validator — bản `setErrors` cũ tình cờ
+    // bị `updateValueAndValidity` kế tiếp xoá hộ.
+    this.#setDatetimeError(false);
     const display = DateUtilities.toFormat(value, this.showSeconds() ? 'dd/MM/yyyy HH:mm:ss' : 'dd/MM/yyyy HH:mm') || null;
     if (this.formControl.value !== display) {
       this.formControl.setValue(display);
@@ -427,18 +458,13 @@ export class SdDatetime implements OnDestroy, OnInit {
     const regexToSecond = /^([1-9]|([012][0-9])|(3[01]))\/([0]{0,1}[1-9]|1[012])\/\d\d\d\d [012]{0,1}[0-9]:[0-6][0-9]:[0-6][0-9]$/g;
 
     if (currentVal && !(regexToMinutes.test(currentVal) || regexToSecond.test(currentVal))) {
-      setTimeout(() => {
-        formControl.markAsDirty();
-        formControl.markAsTouched();
-        formControl.setErrors({ ...formControl.errors, date: this.#i18n.t('core.form.datetime.invalid-format') });
-      }, 0);
+      formControl.markAsDirty();
+      formControl.markAsTouched();
+      this.#setDatetimeError(true);
       return;
     }
 
-    setTimeout(() => {
-      formControl.setErrors({ ...formControl.errors, date: null });
-      this.formControl.updateValueAndValidity();
-    }, 0);
+    this.#setDatetimeError(false);
 
     // Đồng bộ qua canonical control; connector sở hữu conversion và model/output timing.
     if (currentVal) {
@@ -454,8 +480,24 @@ export class SdDatetime implements OnDestroy, OnInit {
     }
   };
 
+  /**
+   * Bật/tắt cờ format rồi chạy lại pipeline NGAY.
+   * why: chạy lại đồng bộ để lỗi xuất hiện/biến mất đúng nhịp nhập, đồng thời phát `events` cho
+   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ.
+   * Early-return khi cờ không đổi để một datetime hợp lệ không bị phát thừa một vòng status.
+   */
+  #setDatetimeError(invalid: boolean): void {
+    if (this.#invalidFormat() === invalid) return;
+    this.#invalidFormat.set(invalid);
+    this.formControl.updateValueAndValidity();
+  }
+
   clear = ($event: any) => {
     $event?.stopPropagation();
+    // why: phải tắt cờ TRƯỚC và NGOÀI nhánh `if` — sau khi gõ text sai, `onConfirmInput` return sớm
+    // nên `formControl.value` vẫn là null; nhánh `if` không chạy và lỗi `date` sẽ treo lại trên một
+    // field vừa được xoá trắng.
+    this.#setDatetimeError(false);
     if (this.formControl.value) {
       this.formControl.setValue(null);
     }

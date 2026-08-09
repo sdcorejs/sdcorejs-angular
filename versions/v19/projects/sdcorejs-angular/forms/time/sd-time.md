@@ -42,6 +42,7 @@ Outputs are `sdChange`, `sdFocus`, and `sdBlur`. Public methods include `open()`
 - `min`, `max`, and `step` are validated independently of locale and timezone.
 - Arrow Up/Down advances by `step` minutes and clamps to the configured boundaries.
 - The picker uses a fixed internal date anchor; only the `HH:mm` result is committed.
+- The validation message (inline `<mat-error>` and the `hideInlineError` tooltip icon) is **interaction-gated** — it renders only once the control is touched or dirty. A `[required]` field no longer shows its error on first paint, before the user has typed or blurred.
 
 ## Accessibility and automation
 

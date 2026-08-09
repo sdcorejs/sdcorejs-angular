@@ -77,11 +77,12 @@ Applied automatically on `<sd-chip-calendar>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[model]` + `(modelChange)` (or `[(model)]`) and `[form]+[name]`.
 - **`[viewed]="true"`** = read-only chip strip (no calendar trigger, no ✕).
 - **`[viewed]="'inline'"`** keeps the editable chip strip + calendar trigger mounted (no separate read-only face); a **disabled** `'inline'` collapses to the static `<sd-view>`.
-- **Validators**: `[required]`, `[min]` (`minLength`), `[max]` (`maxLength`). Tooltip messages mirror `<sd-chip>`.
+- **Validators (additive)**: `[required]`, `[min]` (`minLength`), `[max]` (`maxLength`). Tooltip messages mirror `<sd-chip>`. They are routed through the shared form connector, which adds/removes only the validators this component owns — validators you attach yourself to the public `formControl` are preserved (the component no longer calls `clearValidators()` / `setValidators()`).
+- **The model array is replaced, never mutated** — picking a date, toggling one off, selecting an autocomplete option, removing a chip and clearing all build a **new array** and emit it. The array you pass into `[model]` is never written to, and because the reference always changes, `modelChange` fires reliably (signal equality is `Object.is`, so an in-place `push` would have been swallowed).
 
 ## Chip / value structure
 
-Values are date strings formatted `'yyyy/MM/dd'` (produced internally via `DateUtilities.toFormat(date, 'yyyy/MM/dd')`). The component does not emit `Date` objects. Toggling a previously-selected date removes it from the array.
+Values are date strings formatted `'yyyy/MM/dd'` (produced internally via `DateUtilities.toFormat(date, 'yyyy/MM/dd')`). The component does not emit `Date` objects. Toggling a previously-selected date removes it from the (new) array.
 
 > **Display vs. storage**: chips render the stored `'yyyy/MM/dd'` string through Angular's `date` pipe as `'dd/MM/yyyy'` (e.g. stored `2026/05/09` → displayed `09/05/2026`). The emitted `modelChange` array always contains the `'yyyy/MM/dd'` storage format.
 

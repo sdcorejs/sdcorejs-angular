@@ -30,8 +30,10 @@ import {
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   SdFormControl,
+  SdInlineErrorValidator,
   SdViewed,
   SdViewedInput,
+  sdFormControlState,
   sdViewedTransform,
   ɵSdFormControlParent,
   ɵsdCoerceFormGroup,
@@ -75,6 +77,8 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly treeComponent = viewChild(SdTree<T>);
   readonly nodeTemplate = contentChild(SdTreeSelectNodeTemplateDirective<T>);
 
+  readonly errorId = `sd-tree-select-error-${Utilities.generateUuid()}`;
+
   readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `forms-tree-select-${this.autoIdInput()}` : undefined));
   readonly name = input<string>(Utilities.generateUuid());
@@ -94,6 +98,8 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly multiple = input(false, { transform: booleanAttribute });
   readonly cascade = input<'independent' | 'descendants'>('independent');
   readonly required = input(false, { transform: booleanAttribute });
+  /** Component-local error text. Set it to force the control invalid and render the message. */
+  readonly inlineError = input<string | undefined>();
   readonly clearable = input(true, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly readonly = input(false, { transform: booleanAttribute });
@@ -103,6 +109,20 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly sdLoadError = output<SdTreeLoadErrorEvent<T>>();
 
   readonly formControl = new SdFormControl();
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  // why: `[required]` đã gắn Validators.required từ trước nhưng template không render message nào —
+  // tree-select bắt buộc mà bỏ trống chặn submit hoàn toàn im lặng. Map errors → text rồi đưa vào
+  // connector qua `validationError`; connector tự gate theo touched/dirty.
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
+    const errors = this.formControl.errors;
+    if (!errors) return undefined;
+
+    // Chưa có key riêng cho tree-select trong catalog i18n → dùng chung message của select.
+    if (errors['required']) return this.#i18n.t('core.form.select.required');
+    if (errors['inlineError']) return this.inlineError();
+    return undefined;
+  });
   readonly #connector = ɵsdFormControlConnector<SdTreeSelectModel<TKey>, SdTreeSelectModel<TKey>>({
     form: this.form,
     name: this.name,
@@ -114,13 +134,17 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
     },
     modelToControl: value => value,
     controlToModel: value => value,
+    validators: computed(() => (this.inlineError() ? [SdInlineErrorValidator] : null)),
     required: this.required,
     disabled: this.disabled,
     readonly: this.readonly,
     viewed: this.viewed,
+    validationError: this.errorMessage,
   });
 
   readonly connectorState = this.#connector.state;
+  /** Interaction-gated validation message; `undefined` until the control is touched/dirty. */
+  readonly visibleErrorMessage = computed(() => this.connectorState().validationError);
   readonly draftKeys = signal<TKey[]>([]);
   readonly modelKeys = computed(() => normalizeTreeSelectKeys(this.model(), this.multiple()));
   readonly effectivePlaceholder = computed(() => this.placeholder() ?? this.#i18n.t('core.form.tree-select.placeholder'));

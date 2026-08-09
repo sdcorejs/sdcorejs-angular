@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { booleanAttribute, Component, computed, input, model, output } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, computed, input, model, output } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -23,6 +23,10 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   templateUrl: './checkbox.component.html',
   styleUrl: './checkbox.component.scss',
   standalone: true,
+  // why: component 100% signal-driven (input()/model()/computed() + sdFormControlState) nên mọi
+  // thay đổi đều tự mark view dirty. Thiếu OnPush khiến subtree bị dirty-check mỗi tick CD của
+  // toàn app — vô ích, và lệch với mọi control khác trong forms/**.
+  changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     // why: host class .sd-c-<x> + default sd-c-primary cho fallback. Thay data-sd-color
     // để tránh edge case host-attr-binding không reactive trong vài cảnh build pipeline.

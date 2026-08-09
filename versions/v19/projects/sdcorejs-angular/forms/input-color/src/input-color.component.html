@@ -27,7 +27,7 @@
         class="sd-input-color__swatch"
         [style.background]="swatchColor()"
         [class.sd-input-color__swatch--empty]="swatchColor() === 'transparent'"
-        [disabled]="disabled() || readonly() || viewed() === true"
+        [disabled]="disabled() || readonly() || isViewed()"
         (click)="openPicker()"
         title="Mở bảng chọn màu"
         aria-label="Mở bảng chọn màu"></button>

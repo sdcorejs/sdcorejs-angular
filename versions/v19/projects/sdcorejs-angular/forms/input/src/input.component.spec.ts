@@ -683,6 +683,101 @@ describe('SdInput', () => {
     });
   });
 
+  describe('clear() phải để formControl phát event (bug class "invalid nhưng không có message")', () => {
+    // why: clear() cũ dùng setValue(null, { emitEvent: false }) trên control đang mang
+    // required/pattern/mask + async validator → AbstractControl.events im → #state
+    // (sdFormControlState) không tick → errorMessage / dataEmpty / dataValue /
+    // visibleErrorMessage giữ nguyên giá trị cũ → xoá xong field rỗng mà lỗi required KHÔNG
+    // hiện (chỉ còn viền đỏ). Dùng autoDetectChanges (tôn trọng OnPush) chứ KHÔNG dùng
+    // detectChanges — ép check sẽ che đúng lớp lỗi này.
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+    const inputEl = () => fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    it('renders the required message after clear() (no forced CD)', async () => {
+      host.required = true;
+      host.model = 'hello';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      input.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // còn giá trị → chưa có lỗi
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(input.formControl.hasError('required')).toBeTrue();
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes errorMessage()/visibleErrorMessage() computed after clear()', async () => {
+      host.required = true;
+      host.model = 'hello';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      input.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(input.errorMessage()).toBe('Vui lòng nhập thông tin');
+      expect(input.visibleErrorMessage()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes the data-empty / data-value e2e attributes after clear()', async () => {
+      host.clearable = true;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      // gõ qua DOM (đường thật của user) để #state tick lần đầu
+      const el = inputEl();
+      el.value = 'hello';
+      el.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      expect(el.getAttribute('data-empty')).toBe('false');
+      expect(el.getAttribute('data-value')).toBe('hello');
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(el.getAttribute('data-empty')).toBe('true');
+      expect(el.getAttribute('data-value')).toBe('');
+    });
+
+    it('emits sdChange exactly once with null (không phát thừa chuỗi rỗng từ #onChange)', async () => {
+      host.clearable = true;
+      host.model = 'hello';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      host.changes.length = 0;
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(host.changes).toEqual([null]);
+      expect(host.model).toBeNull();
+      expect(input.formControl.value).toBeNull();
+    });
+
+    it('surfaces the async [validator] message evaluated on the cleared value', fakeAsync(() => {
+      host.validator = (v: any) => (v == null || v === '' ? 'Không được để trống' : '');
+      host.model = 'hello';
+      fixture.detectChanges();
+      input.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+      expect(input.errorMessage()).toBeUndefined();
+
+      input.clear();
+      tick(); // async validator resolve trên giá trị mới (null)
+      fixture.detectChanges();
+
+      expect(input.formControl.invalid).toBeTrue();
+      expect(input.errorMessage()).toBe('Không được để trống');
+    }));
+  });
+
   describe('custom [validator] async error message', () => {
     const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
 

@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdTextarea } from './textarea.component';
@@ -23,6 +23,7 @@ import { queryByCss } from '../../../testing/test-utils';
     [maxlength]="maxlength"
     [hideInlineError]="hideInlineError"
     [inlineError]="inlineError"
+    [validator]="validator"
     [(model)]="model"
     (sdChange)="onSdChange($event)"></sd-textarea>`,
 })
@@ -36,6 +37,7 @@ class HostComponent {
   maxlength?: number;
   hideInlineError = false;
   inlineError?: string;
+  validator?: (value: any) => string | Promise<string>;
   model?: any;
   changes: any[] = [];
   onSdChange(v: any) {
@@ -406,6 +408,165 @@ describe('SdTextarea', () => {
       textarea.formControl.markAsTouched();
       fixture.detectChanges();
       expect(el.getAttribute('data-invalid')).toBe('true');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // OnPush change detection
+  // -------------------------------------------------------------------------
+
+  describe('OnPush change detection', () => {
+    // why: sd-textarea là control DUY NHẤT trong forms/** còn để CD mặc định, nên cả cây con
+    // bị dirty-check mỗi tick dù component hoàn toàn signal-driven. Bật OnPush và chứng minh
+    // #state / sdChanges vẫn đủ để template refresh — kiểm bằng autoDetectChanges (tôn trọng
+    // OnPush) chứ KHÔNG dùng detectChanges (ép check sẽ che đúng lớp lỗi này).
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+    it('declares ChangeDetectionStrategy.OnPush', () => {
+      const def = (SdTextarea as unknown as { ɵcmp: { onPush: boolean } }).ɵcmp;
+      expect(def.onPush).toBeTrue();
+    });
+
+    it('renders the required message when the control is touched (no forced CD)', async () => {
+      host.required = true;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // invalid nhưng chưa touched
+
+      textarea.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes the data-* e2e attributes on a value change (no forced CD)', async () => {
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      const el: HTMLTextAreaElement = fixture.nativeElement.querySelector('textarea[matInput]');
+      expect(el.getAttribute('data-empty')).toBe('true');
+
+      textarea.formControl.setValue('xin chào');
+      await fixture.whenStable();
+
+      expect(el.getAttribute('data-empty')).toBe('false');
+      expect(el.getAttribute('data-value')).toBe('xin chào');
+    });
+
+    it('refreshes the maxlength counter as the user types (no forced CD)', async () => {
+      host.maxlength = 10;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      textarea.formControl.setValue('abcd');
+      await fixture.whenStable();
+
+      const counter = fixture.nativeElement.querySelector('.sd-maxlength-counter') as HTMLElement | null;
+      expect(counter?.textContent?.replace(/\s/g, '')).toBe('4/10');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // custom [validator] — shared HandleSdCustomValidator
+  // -------------------------------------------------------------------------
+
+  describe('custom [validator] (shared HandleSdCustomValidator)', () => {
+    // why: bản copy nội bộ #customValidator cũ coerce `c.value || null` → số 0 hợp lệ bị
+    // nuốt thành null trước khi tới validator của consumer. Helper dùng chung
+    // (forms/models/src/sd-custom-validator.model.ts) giữ nguyên 0.
+    it('passes a literal 0 to the consumer validator instead of null', fakeAsync(() => {
+      const seen: any[] = [];
+      host.validator = (v: any) => {
+        seen.push(v);
+        return v === 0 ? 'Không được nhập 0' : '';
+      };
+      fixture.detectChanges();
+
+      textarea.formControl.setValue(0);
+      textarea.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+
+      expect(seen).toContain(0);
+      expect(textarea.formControl.invalid).toBeTrue();
+      expect(textarea.errorMessage()).toBe('Không được nhập 0');
+    }));
+
+    it('still normalises empty string to null for the consumer validator', fakeAsync(() => {
+      const seen: any[] = [];
+      host.validator = (v: any) => {
+        seen.push(v);
+        return '';
+      };
+      fixture.detectChanges();
+
+      textarea.formControl.setValue('');
+      tick();
+      fixture.detectChanges();
+
+      expect(seen).toContain(null);
+    }));
+
+    it('surfaces the validator message after the promise resolves', fakeAsync(() => {
+      host.validator = (v: any) => (v === 'bad' ? 'Giá trị không hợp lệ' : '');
+      fixture.detectChanges();
+
+      textarea.formControl.setValue('bad');
+      textarea.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+
+      expect(textarea.errorMessage()).toBe('Giá trị không hợp lệ');
+    }));
+  });
+
+  // -------------------------------------------------------------------------
+  // additive validator management (connector)
+  // -------------------------------------------------------------------------
+
+  describe('validator management is additive (connector)', () => {
+    // why: block cũ gọi clearValidators() + clearAsyncValidators() rồi setValidators() mỗi khi
+    // BẤT KỲ input nào đổi → xoá sạch validator mà consumer tự gắn lên `formControl` (public).
+    // Giờ đi qua ɵsdFormControlConnector: addValidators/removeValidators, chỉ đụng validator
+    // của chính component.
+    it('keeps a consumer-attached sync validator when a validator input changes', () => {
+      const consumerValidator: ValidatorFn = c => (c.value === 'nope' ? { consumer: true } : null);
+      textarea.formControl.addValidators(consumerValidator);
+      textarea.formControl.updateValueAndValidity();
+
+      host.maxlength = 10; // bất kỳ input validator nào đổi cũng kích hoạt block cũ
+      fixture.detectChanges();
+
+      expect(textarea.formControl.hasValidator(consumerValidator)).toBeTrue();
+      textarea.formControl.setValue('nope');
+      expect(textarea.formControl.hasError('consumer')).toBeTrue();
+    });
+
+    it('keeps a consumer-attached async validator when a validator input changes', fakeAsync(() => {
+      const consumerAsync: AsyncValidatorFn = async c => (c.value === 'nope' ? { consumerAsync: true } : null);
+      textarea.formControl.addAsyncValidators(consumerAsync);
+      textarea.formControl.updateValueAndValidity();
+      tick();
+
+      host.required = true;
+      fixture.detectChanges();
+
+      expect(textarea.formControl.hasAsyncValidator(consumerAsync)).toBeTrue();
+      textarea.formControl.setValue('nope');
+      tick();
+      expect(textarea.formControl.hasError('consumerAsync')).toBeTrue();
+    }));
+
+    it('still removes its OWN validators when the matching input is cleared', () => {
+      host.maxlength = 3;
+      fixture.detectChanges();
+      textarea.formControl.setValue('abcdef');
+      expect(textarea.formControl.hasError('maxlength')).toBeTrue();
+
+      host.maxlength = undefined;
+      fixture.detectChanges();
+      textarea.formControl.updateValueAndValidity();
+
+      expect(textarea.formControl.hasError('maxlength')).toBeFalse();
     });
   });
 });

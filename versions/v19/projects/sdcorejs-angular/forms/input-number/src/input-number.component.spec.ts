@@ -316,6 +316,47 @@ describe('SdInputNumber', () => {
       expect(host.blurValues.length).toBeGreaterThan(0);
       expect(host.blurValues[host.blurValues.length - 1]).toBe(99);
     }));
+
+    // why: nhánh "gõ dở phần thập phân" (vd `12.` / `12,`) reformat rồi return SỚM. Trước đây
+    // nó là nhánh blur DUY NHẤT không emit sdBlur → consumer nghe (sdBlur) để commit/validate
+    // im lặng bỏ sót đúng trường hợp này.
+    it('emits sdBlur when the value ends with the decimal separator (ISO "12.")', fakeAsync(() => {
+      comp.inputControl.setValue('12.', { emitEvent: false });
+      host.blurValues.length = 0;
+
+      comp.onBlur();
+      tick();
+      fixture.detectChanges();
+
+      expect(host.blurValues.length).toBe(1);
+      expect(host.blurValues[0]).toBe(12);
+      expect(comp.inputControl.value).toBe('12');
+    }));
+
+    it('emits sdBlur when the value ends with the decimal separator (VN "12,")', fakeAsync(() => {
+      host.format = '1.234.567,89';
+      fixture.detectChanges();
+      comp.inputControl.setValue('12,', { emitEvent: false });
+      host.blurValues.length = 0;
+
+      comp.onBlur();
+      tick();
+      fixture.detectChanges();
+
+      expect(host.blurValues.length).toBe(1);
+      expect(host.blurValues[0]).toBe(12);
+    }));
+
+    it('emits sdBlur exactly once on the trailing-separator path (no double emit)', fakeAsync(() => {
+      comp.inputControl.setValue('7.', { emitEvent: false });
+      host.blurValues.length = 0;
+
+      comp.onBlur();
+      tick();
+      fixture.detectChanges();
+
+      expect(host.blurValues.length).toBe(1);
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -618,6 +659,94 @@ describe('SdInputNumber', () => {
 
       expect(spy).not.toHaveBeenCalled();
     });
+  });
+
+  describe('clear() phải để formControl phát event (bug class "invalid nhưng không có message")', () => {
+    // why: clear() cũ dùng setValue(null, { emitEvent: false }) — mâu thuẫn thẳng với comment
+    // `why:` ở #onChange ngay trong file này. formControl mang required/min/max + async
+    // validator; chặn event thì #state (sdFormControlState) không tick → errorMessage không
+    // recompute → xoá xong field rỗng mà lỗi required KHÔNG hiện. Dùng autoDetectChanges
+    // (tôn trọng OnPush), KHÔNG dùng detectChanges vì ép check sẽ che lỗi.
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+    it('renders the required message after clear() (no forced CD)', async () => {
+      host.required = true;
+      host.model = 123;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // còn giá trị → chưa có lỗi
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.formControl.hasError('required')).toBeTrue();
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes errorMessage() after clear()', async () => {
+      host.required = true;
+      host.model = 123;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes the data-empty e2e attribute after clear()', async () => {
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      const el = getInput(fixture);
+
+      comp.inputControl.setValue('123');
+      await fixture.whenStable();
+      expect(el.getAttribute('data-empty')).toBe('false');
+      expect(el.getAttribute('data-value')).toBe('123');
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(el.getAttribute('data-empty')).toBe('true');
+      expect(el.getAttribute('data-value')).toBe('');
+    });
+
+    it('emits sdChange exactly once with null (formControl.valueChanges không có subscriber)', async () => {
+      host.model = 123;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      host.changes.length = 0;
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(host.changes).toEqual([null]);
+      expect(comp.formControl.value).toBeNull();
+      expect(comp.inputControl.value).toBe('');
+    });
+
+    it('surfaces the async [validator] message evaluated on the cleared value', fakeAsync(() => {
+      host.validator = (v: any) => (v == null ? 'Không được để trống' : '');
+      host.model = 7;
+      fixture.detectChanges();
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBeUndefined();
+
+      comp.clear();
+      tick(); // async validator resolve trên giá trị mới (null)
+      fixture.detectChanges();
+
+      expect(comp.formControl.invalid).toBeTrue();
+      expect(comp.errorMessage()).toBe('Không được để trống');
+    }));
   });
 
   describe('custom [validator] async error message', () => {

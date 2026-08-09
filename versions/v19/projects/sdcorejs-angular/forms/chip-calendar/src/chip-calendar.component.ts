@@ -20,7 +20,6 @@ import {
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import {
-  AsyncValidatorFn,
   FormControl,
   FormGroup,
   FormGroupDirective,
@@ -190,22 +189,28 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   isFocused = false;
   #inputControl = new FormControl();
   #formControl = new SdFormControl();
+  // why: `min`/`max` là validator do CHÍNH component sở hữu; `required` đi qua option riêng của
+  // connector. Connector chỉ add/remove đúng phần này nên validator do consumer tự gắn vào
+  // `formControl` public không bị xoá — trước đây `clearValidators()` + `setValidators()` xoá sạch.
+  readonly #validators = computed<readonly ValidatorFn[]>(() => {
+    const validators: ValidatorFn[] = [];
+    const min = this.min();
+    const max = this.max();
+    if (min > 0) validators.push(Validators.minLength(min));
+    if (max > 0) validators.push(Validators.maxLength(max));
+    return validators;
+  });
   readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: computed(() => this.name() || this.#name),
     control: computed(() => this.#formControl),
+    validators: this.#validators,
+    required: this.required,
   });
   #matcher!: SdChipCalendarErrorStateMatcher;
   readonly separatorKeysCodes = [ENTER, COMMA];
 
   constructor() {
-    effect(() => {
-      this.required();
-      this.min();
-      this.max();
-      this.#updateValidator();
-    });
-
     effect(() => {
       const values = this.model();
       if (Array.isArray(values)) {
@@ -242,14 +247,23 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     return this.#inputControl;
   }
 
+  // why: PHẢI đọc `required`/`min`/`max` VÔ ĐIỀU KIỆN ở đây. Connector cài/gỡ validator bằng
+  // `updateValueAndValidity({ emitEvent: false })` → `formControl.errors` đổi mà KHÔNG phát event
+  // nào → `#state` (sdFormControlState) không tick. Nếu computed chỉ phụ thuộc `#state` thì bật
+  // `[required]` lúc RUNTIME sẽ giữ nguyên message cũ dưới OnPush: control invalid, viền đỏ, nhưng
+  // KHÔNG có chữ. Đọc sớm (trước `if (!errors) return`) để dependency được ghi nhận cả khi control
+  // đang hợp lệ — đọc trong nhánh `errors[...]` thì lần chạy "không lỗi" không đăng ký dependency.
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    void this.required();
+    const min = this.min();
+    const max = this.max();
     const errors = this.#formControl.errors;
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.chip-calendar.required');
-    if (errors['minlength']) return this.#i18n.t('core.form.chip-calendar.minlength', { min: this.min() });
-    if (errors['maxlength']) return this.#i18n.t('core.form.chip-calendar.maxlength', { max: this.max() });
+    if (errors['minlength']) return this.#i18n.t('core.form.chip-calendar.minlength', { min });
+    if (errors['maxlength']) return this.#i18n.t('core.form.chip-calendar.maxlength', { max });
     return undefined;
   });
 
@@ -269,25 +283,6 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     this.#subscription.unsubscribe();
   }
 
-  #updateValidator = () => {
-    this.#formControl.clearValidators();
-    this.#formControl.clearAsyncValidators();
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-    if (this.required()) {
-      validators.push(Validators.required);
-    }
-    if (this.min() > 0) {
-      validators.push(Validators.minLength(this.min()));
-    }
-    if (this.max() > 0) {
-      validators.push(Validators.maxLength(this.max()));
-    }
-    this.#formControl.setValidators(validators);
-    this.#formControl.setAsyncValidators(asyncValidators);
-    this.#formControl.updateValueAndValidity();
-  };
-
   #clickChip = (event: Event, item: any) => {
     event.stopPropagation();
     event.stopImmediatePropagation();
@@ -299,9 +294,11 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #remove = (item: string): void => {
     const values: string[] = this.#formControl.value ?? [];
     if (typeof item === 'string') {
-      this.#formControl.setValue(values.filter(value => item !== value));
-      this.model.set(this.#formControl.value);
-      this.sdChange.emit(this.#formControl.value);
+      // why: `filter` đã trả mảng mới nên reference đổi → `model.set` phát `modelChange`.
+      const next = values.filter(value => item !== value);
+      this.#formControl.setValue(next);
+      this.model.set(next);
+      this.sdChange.emit(next);
     }
     this.#inputControl.setValue('');
     this.#focus();
@@ -313,10 +310,13 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     if (item) {
       if (typeof item === 'string' || typeof item === 'number') {
         if (!values.includes(item)) {
-          values.push(item);
-          this.#formControl.setValue(values);
-          this.model.set(this.#formControl.value);
-          this.sdChange.emit(this.#formControl.value);
+          // why: PHẢI tạo mảng MỚI. `values` là chính mảng của consumer (model đi thẳng vào
+          // formControl), nên `push` vừa sửa trộm mảng của họ, vừa giữ nguyên reference —
+          // `model()` dùng equality Object.is nên `model.set(sameRef)` KHÔNG phát `modelChange`.
+          const next = [...values, item];
+          this.#formControl.setValue(next);
+          this.model.set(next);
+          this.sdChange.emit(next);
         }
       }
       const inputEl = this.input();
@@ -358,16 +358,13 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
     const value = DateUtilities.toFormat(date, 'yyyy/MM/dd');
     const values: (string | number)[] = this.#formControl.value ?? [];
     if (value) {
-      if (!values.includes(value)) {
-        values.push(value);
-        this.#formControl.setValue(values);
-        this.model.set(this.#formControl.value);
-        this.sdChange.emit(this.#formControl.value);
-      } else {
-        this.#formControl.setValue(values.filter(date => value !== date));
-        this.model.set(this.#formControl.value);
-        this.sdChange.emit(this.#formControl.value);
-      }
+      // why: toggle ngày — cả nhánh thêm lẫn nhánh bỏ đều dựng mảng MỚI. Nhánh thêm trước đây
+      // `push` thẳng vào mảng của consumer: reference không đổi nên `model.set` im lặng
+      // (Object.is) → `[(model)]` không nhận ngày vừa chọn, mà mảng gốc lại bị sửa trộm.
+      const next = values.includes(value) ? values.filter(date => value !== date) : [...values, value];
+      this.#formControl.setValue(next);
+      this.model.set(next);
+      this.sdChange.emit(next);
       this.calendar()?.updateTodaysDate();
       this.#ref.markForCheck();
     }

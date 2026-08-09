@@ -430,8 +430,14 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (sdIsEmpty(this.formControl.value)) return;
     // Reset cả ô hiển thị (inputControl) lẫn giá trị thật (formControl), rồi
     // đồng bộ model + sdChange một lần.
+    // why: KHÔNG dùng { emitEvent: false } cho formControl — đúng lý do đã ghi ở #onChange
+    // bên dưới. formControl mang async validator ([validator] → HandleSdCustomValidator) +
+    // required/min/max; chặn event thì setErrors lúc async resolve cũng im → #state
+    // (sdFormControlState) không tick → errorMessage không recompute → xoá xong field rỗng
+    // mà lỗi required không hiện. inputControl thì VẪN giữ emitEvent:false vì valueChanges
+    // của nó có subscriber (parse + #onChange) sẽ chạy lại và emit sdChange lần hai.
     this.inputControl.setValue('', { emitEvent: false });
-    this.formControl.setValue(null, { emitEvent: false });
+    this.formControl.setValue(null);
     this.valueModel.set(null);
     this.sdChange.emit(null);
     this.cleared.emit();
@@ -519,6 +525,11 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     const arrayValue = val.split(this.decimalSeparator());
     if (arrayValue.length >= 2 && arrayValue[1] == '') {
       this.inputControl.setValue(this.#formatNumber(arrayValue[0]));
+      // why: nhánh "gõ dở phần thập phân" (vd `12,`) trước đây return sớm mà KHÔNG emit
+      // sdBlur — mọi nhánh blur khác đều emit. Consumer nghe (sdBlur) để commit/validate
+      // sẽ im lặng bỏ qua đúng trường hợp này. Emit trước khi return, dùng
+      // formControl.value giống nhánh blur bình thường phía dưới.
+      this.sdBlur.emit(this.formControl.value);
       return;
     }
 

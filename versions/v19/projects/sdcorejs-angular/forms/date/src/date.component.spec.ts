@@ -167,6 +167,52 @@ describe('SdDate', () => {
       expect(host.changes).toEqual([]);
       expect(comp.formControl.hasError('date')).toBeTrue();
     }));
+
+    // why: RED trước fix — lỗi format được nhét bằng `setErrors()`, tức NGOÀI pipeline validator,
+    // nên lần `updateValueAndValidity` kế tiếp (connector, hoặc consumer) xoá sạch nó trong im lặng.
+    it('keeps the invalid-format error after a later updateValueAndValidity', fakeAsync(() => {
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+      expect(comp.formControl.hasError('date')).toBeTrue();
+
+      comp.formControl.updateValueAndValidity();
+      tick();
+
+      expect(comp.formControl.hasError('date')).toBeTrue();
+    }));
+
+    it('keeps the invalid-format error across a setValue on the exposed formControl', fakeAsync(() => {
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+      expect(comp.formControl.hasError('date')).toBeTrue();
+
+      comp.formControl.setValue(null);
+      tick();
+
+      expect(comp.formControl.hasError('date')).toBeTrue();
+    }));
+
+    it('drops the invalid-format error once the typed text parses again', fakeAsync(() => {
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+      expect(comp.formControl.hasError('date')).toBeTrue();
+
+      comp.onKeyup({ target: { value: '22/08/1991' } });
+      tick();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+    }));
+  });
+
+  describe('parse error message', () => {
+    // why: RED trước fix — code bắt `errors['matDatetimePickerParse']`, key KHÔNG tồn tại trong
+    // @angular/material. Key thật là `matDatepickerParse`, nên nhánh parse-error là code chết.
+    it('maps the real Material parse-error key to a message', () => {
+      comp.formControl.setErrors({ matDatepickerParse: { text: '99/99/9999' } });
+      fixture.detectChanges();
+
+      expect(comp.errorMessage()).toBe('Lỗi phân tích: 99/99/9999');
+    });
   });
 
   describe('display input formatting', () => {

@@ -13,4 +13,8 @@
     [attr.data-required]="dataRequired()">
     <sd-label [label]="label()" [required]="required()"></sd-label>
   </mat-slide-toggle>
+  @let _errorMessage = visibleErrorMessage();
+  @if (_errorMessage) {
+    <mat-error>{{ _errorMessage }}</mat-error>
+  }
 }

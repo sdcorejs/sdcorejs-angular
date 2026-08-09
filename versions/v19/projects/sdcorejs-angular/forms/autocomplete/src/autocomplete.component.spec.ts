@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdAutocomplete } from './autocomplete.component';
@@ -419,6 +419,82 @@ describe('SdAutocomplete', () => {
   });
 
   // -------------------------------------------------------------------------
+  // clear() — event propagation + falsy-value guard
+  // -------------------------------------------------------------------------
+  describe('clear() phải để formControl phát event (bug class "invalid nhưng không có message")', () => {
+    // why: clear() cũ dùng setValue(null, { emitEvent: false }) → async [validator] resolve im →
+    // AbstractControl.events không phát → #state (sdFormControlState) không tick → errorMessage
+    // computed giữ giá trị cũ → message không hiện/không clear (chỉ còn viền đỏ). Dùng
+    // autoDetectChanges (tôn trọng OnPush); detectChanges ép check sẽ che đúng lớp lỗi này.
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+    it('renders the validator message after clear() empties the value (no forced CD)', async () => {
+      host.items = ['Alpha', 'Beta'];
+      host.validator = (v: any) => (v === null || v === undefined || v === '' ? 'Vui lòng chọn giá trị' : '');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      comp.onSelect('Alpha' as any);
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // còn giá trị → chưa có lỗi
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.formControl.hasError('customValidator')).toBeTrue();
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng chọn giá trị');
+    });
+
+    it('clears a stale validator message after clear() removes the invalid value', async () => {
+      host.items = ['Alpha', 'Beta'];
+      host.validator = (v: any) => (v === 'Alpha' ? 'Giá trị không hợp lệ' : '');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      comp.onSelect('Alpha' as any);
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()?.textContent?.trim()).toBe('Giá trị không hợp lệ');
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.errorMessage()).toBeUndefined();
+      expect(matError()).toBeNull();
+    });
+
+    it('clears a selected value of 0 (falsy but valid — load path treats 0 as a value)', fakeAsync(() => {
+      host.items = [
+        { id: 0, name: 'Zero' },
+        { id: 1, name: 'One' },
+      ];
+      host.valueField = 'id';
+      host.displayField = 'name';
+      host.model = 0;
+      fixture.detectChanges();
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.valueModel()).toBe(0);
+
+      comp.clear();
+      tick(600);
+      fixture.detectChanges();
+
+      expect(comp.valueModel()).toBeNull();
+      expect(comp.formControl.value).toBeNull();
+      expect(host.changes).toContain(null);
+    }));
+
+    it('stays a no-op when there is genuinely no value', fakeAsync(() => {
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(host.changes.length).toBe(0);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
   // output events
   // -------------------------------------------------------------------------
   describe('output events', () => {
@@ -460,11 +536,35 @@ describe('SdAutocomplete', () => {
   // reValidate
   // -------------------------------------------------------------------------
   describe('reValidate', () => {
-    it('calls updateValueAndValidity on inputControl', () => {
-      const spy = spyOn(comp.inputControl, 'updateValueAndValidity').and.callThrough();
+    // why: required / [validator] / inlineError đều được cài trên formControl. reValidate() cũ gọi
+    // trên inputControl (chỉ giữ text search, không validator nào) → API public không validate gì.
+    it('calls updateValueAndValidity on formControl', () => {
+      const spy = spyOn(comp.formControl, 'updateValueAndValidity').and.callThrough();
       comp.reValidate();
       expect(spy).toHaveBeenCalled();
     });
+
+    it('does NOT target inputControl (no validators live there)', () => {
+      const spy = spyOn(comp.inputControl, 'updateValueAndValidity').and.callThrough();
+      comp.reValidate();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('re-runs the async [validator] so an externally changed verdict is picked up', fakeAsync(() => {
+      let reject = false;
+      host.validator = () => (reject ? 'Không hợp lệ' : '');
+      fixture.detectChanges();
+      tick();
+      expect(comp.formControl.hasError('customValidator')).toBe(false);
+
+      reject = true;
+      comp.reValidate();
+      tick();
+      fixture.detectChanges();
+
+      expect(comp.formControl.hasError('customValidator')).toBe(true);
+      expect(comp.errorMessage()).toBe('Không hợp lệ');
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -746,5 +846,92 @@ describe('SdAutocomplete (viewed inline mode)', () => {
     expect(comp.isViewed()).toBe(true);
     expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Validator ADDITIVE trên formControl công khai
+// ---------------------------------------------------------------------------
+
+describe('SdAutocomplete (consumer validators survive on the public formControl)', () => {
+  // why: #updateValidator cũ gọi setValidators() + setAsyncValidators() → THAY THẾ cả danh sách,
+  // xoá sạch validator do consumer tự gắn lên `formControl` (control này là public API). Giờ đi qua
+  // connector (addValidators/removeValidators) nên chỉ phần component sở hữu mới bị thêm/gỡ.
+  const consumerValidator: ValidatorFn = () => ({ consumer: true });
+  const consumerAsyncValidator: AsyncValidatorFn = () => Promise.resolve({ consumerAsync: true });
+
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdAutocomplete;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [HostComponent, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    host.valueField = 'id';
+    host.displayField = 'name';
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+  });
+
+  /** Đẩy thay đổi state của host xuống input của component rồi chờ ổn định. */
+  const flush = async (): Promise<void> => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+  };
+
+  it('keeps a consumer-attached sync validator when [required] flips on', async () => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+
+    host.required = true;
+    await flush();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBeTrue();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+    expect(comp.formControl.hasError('required')).toBeTrue();
+  });
+
+  it('keeps a consumer-attached sync validator when [inlineError] changes', async () => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+
+    host.inlineError = 'Sai rồi';
+    await flush();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBeTrue();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+    expect(comp.formControl.hasError('inlineError')).toBeTrue();
+  });
+
+  it('keeps a consumer-attached async validator when [validator] is supplied', async () => {
+    comp.formControl.addAsyncValidators(consumerAsyncValidator);
+    comp.formControl.updateValueAndValidity();
+    await fixture.whenStable();
+    expect(comp.formControl.hasError('consumerAsync')).toBeTrue();
+
+    host.validator = () => 'Giá trị không hợp lệ';
+    await flush();
+
+    expect(comp.formControl.hasAsyncValidator(consumerAsyncValidator)).toBeTrue();
+  });
+
+  it('removes only the component-owned validator when [required] flips back off', async () => {
+    comp.formControl.addValidators(consumerValidator);
+    host.required = true;
+    await flush();
+    expect(comp.formControl.hasError('required')).toBeTrue();
+
+    host.required = false;
+    await flush();
+    comp.formControl.updateValueAndValidity();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBeTrue();
+    expect(comp.formControl.hasError('required')).toBeFalse();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
   });
 });

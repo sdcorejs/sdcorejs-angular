@@ -23,16 +23,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import {
-  AsyncValidatorFn,
-  FormControl,
-  FormGroup,
-  FormsModule,
-  NgForm,
-  ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput, MatInputModule } from '@angular/material/input';
@@ -168,8 +159,13 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   helperText = input<string | undefined>();
   placeholder = input<string | undefined>();
 
-  valueField = input.required<NestedKeyOf<T>>();
-  displayField = input.required<NestedKeyOf<T>>();
+  // why: KHÔNG dùng input.required. Component nhận `T extends object | string | number` và template
+  // có nhánh riêng cho mảng primitive (`@else if (!_valueField && !_displayField)`), nhưng
+  // input.required làm nhánh đó không bao giờ tới được: `<sd-select [items]="['a','b']">` ném NG0950
+  // ngay lần render đầu vì template đọc valueField()/displayField() trước khi có giá trị.
+  // Mặc định '' (giống disabledField) → bỏ trống cả hai = item chính là value + label.
+  valueField = input<NestedKeyOf<T> | ''>('');
+  displayField = input<NestedKeyOf<T> | ''>('');
   disabledField = input<NestedKeyOf<T> | ''>('');
   cacheChecksum = input<any>();
 
@@ -209,14 +205,23 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   /**
    * Tổng hợp error message để hiển thị trong tooltip khi hideInlineError = true.
    */
+  // why: `required` và `inlineError` PHẢI được đọc VÔ ĐIỀU KIỆN. Connector cài/gỡ validator bằng
+  // `updateValueAndValidity({ emitEvent: false })` → `formControl.errors` đổi mà KHÔNG phát event
+  // nào → `#state` (sdFormControlState) không tick. Nếu computed chỉ phụ thuộc `#state` thì bật
+  // `[required]` (hoặc set `[inlineError]`) lúc RUNTIME sẽ giữ nguyên message cũ dưới OnPush:
+  // control invalid, viền đỏ, nhưng KHÔNG có chữ. Đọc trong nhánh `errors[...]` là không đủ — lần
+  // chạy "không lỗi" thoát sớm ở `if (!errors)` nên không đăng ký được dependency nào.
+  // `customValidator` thì an toàn: nó tới từ async validator, `setErrors` mặc định CÓ phát event.
   readonly errorMessage = computed<string | undefined>(() => {
     void this.#state();
+    void this.required();
+    const inlineError = this.inlineError();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
     if (errors['required']) return this.#i18n.t('core.form.select.required');
     if (errors['customValidator']) return errors['customValidator'] as string;
-    if (errors['inlineError']) return this.inlineError();
+    if (errors['inlineError']) return inlineError;
     return undefined;
   });
 
@@ -240,10 +245,20 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   // 4. INTERNAL STATE & STREAMS
   // ==========================================
   formControl = new SdFormControl();
+  // why: validator đi qua connector (addValidators/removeValidators — additive) thay vì
+  // clearValidators()+clearAsyncValidators()+setValidators() như trước. `formControl` là public API,
+  // consumer hoàn toàn có thể tự gắn validator lên nó; cách cũ xoá SẠCH những validator đó mỗi lần
+  // required/[validator]/inlineError đổi. Connector chỉ thêm/gỡ đúng phần component sở hữu.
   readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: this.name,
     control: computed(() => this.formControl),
+    required: this.required,
+    validators: computed(() => (this.inlineError() ? [SdInlineErrorValidator] : null)),
+    asyncValidators: computed(() => {
+      const custom = this.validator();
+      return custom ? [HandleSdCustomValidator(custom)] : null;
+    }),
   });
   inputControl = new FormControl('');
 
@@ -406,13 +421,6 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     effect(() => {
       if (this.disabled()) this.formControl.disable({ emitEvent: false });
       else this.formControl.enable({ emitEvent: false });
-    });
-
-    effect(() => {
-      const req = this.required();
-      const val = this.validator();
-      const inl = this.inlineError();
-      untracked(() => this.#updateValidator(req, val, inl));
     });
 
     effect(() => {
@@ -598,21 +606,6 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     });
   }
 
-  #updateValidator = (req: boolean, val: SdCustomValidator | undefined, inl: string | undefined) => {
-    this.formControl.clearValidators();
-    this.formControl.clearAsyncValidators();
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-
-    if (req) validators.push(Validators.required);
-    if (val) asyncValidators.push(HandleSdCustomValidator(val));
-    if (inl) validators.push(SdInlineErrorValidator);
-
-    this.formControl.setValidators(validators.length ? validators : null);
-    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
-    this.formControl.updateValueAndValidity({ emitEvent: false });
-  };
-
   #loadSelectedItems = async (value: any, items: SdSearch) => {
     if (value === undefined || value === null || value === '') return [];
 
@@ -683,12 +676,22 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   onSelectionChange = (change: MatSelectChange) => {
     this.allSelected = !this.selectRef()?.options.some(e => !e.selected);
     const value = change?.value ?? '';
+    // why: KHÔNG dùng { emitEvent: false } khi mirror giá trị chọn sang formControl. formControl mang
+    // async [validator] (HandleSdCustomValidator). CVA của mat-select đã setValue (có event) trước khi
+    // (selectionChange) chạy; setValue im lặng ở đây HUỶ lần async đang pending đó rồi chạy lại im →
+    // setErrors lúc resolve cũng im → #state (sdFormControlState) không tick → errorMessage không
+    // recompute → viền đỏ nhưng KHÔNG có message.
+    // NHƯNG cũng KHÔNG được setValue vô điều kiện: control lúc này ĐÃ mang đúng giá trị (CVA vừa ghi),
+    // nên ghi lại sẽ phát valueChanges LẦN HAI trên chính control và trên FormGroup cha, đồng thời
+    // khởi động lại async [validator] hai lần cho mỗi lần chọn. Guard `!==` giữ đúng MỘT event:
+    // đi qua UI thì CVA lo, gọi trực tiếp (programmatic/test) thì nhánh setValue lo.
     if (this.multiple()) {
-      this.formControl.setValue(value || [], { emitEvent: false });
-      this.#onChange(value || []);
+      const next = value || [];
+      if (this.formControl.value !== next) this.formControl.setValue(next);
+      this.#onChange(next);
     } else {
       this.clearSearch();
-      this.formControl.setValue(value, { emitEvent: false });
+      if (this.formControl.value !== value) this.formControl.setValue(value);
       this.#onChange(value);
     }
   };

@@ -226,6 +226,14 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   readonly errorMessage = computed<string | undefined>(() => {
     // Subscribe to form-state changes so the computed re-evaluates correctly.
     void this.#state();
+    // why: `#state` KHÔNG đủ. Connector cài/gỡ validator bằng `updateValueAndValidity({
+    // emitEvent: false })` → `formControl.errors` đổi mà không phát event nào → `#state` không
+    // tick. Nên phải đọc VÔ ĐIỀU KIỆN cả `required` lẫn danh sách validator do component sở hữu
+    // (`#validators` gói min/max/pattern/mask/inlineError, mảng mới mỗi lần đổi) làm dependency.
+    // Không có 2 dòng này thì bật `[required]` lúc RUNTIME cho ra control invalid + viền đỏ nhưng
+    // message giữ nguyên giá trị cũ dưới OnPush.
+    void this.required();
+    void this.#validators();
     const errors = this.formControl.errors;
     if (!errors) return undefined;
 
@@ -312,7 +320,19 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   /** Shared reactive form policy consumed by template-facing state below. */
   readonly connectorState = this.#formConnector.state;
   readonly isReadonly = computed(() => this.connectorState().readonly);
-  readonly visibleErrorMessage = computed(() => this.connectorState().validationError);
+  // why: KHÔNG lấy `connectorState().validationError`. Cổng hiển thị của connector là
+  // `snapshot.invalid` — snapshot đó do sdFormControlState memo hoá và chỉ đổi khi control PHÁT
+  // event. Connector lại cài validator im lặng (`emitEvent: false`), nên bật `[required]` lúc
+  // runtime làm control invalid thật mà snapshot vẫn "valid" → message bị nuốt (viền đỏ, không
+  // chữ). Đọc trực tiếp `formControl` cho trạng thái tươi, vẫn giữ nguyên luật interaction-gated
+  // (chỉ hiện sau khi người dùng đã chạm/sửa) như connector.
+  readonly visibleErrorMessage = computed(() => {
+    const message = this.errorMessage();
+    if (!message) return undefined;
+    void this.#state();
+    const control = this.formControl;
+    return control.invalid && (control.touched || control.dirty) ? message : undefined;
+  });
 
   // Tri-state `viewed` — shared primitive. Input has NO panel; in `'inline'` the input is rendered
   // borderless/transparent (looks like text), always editable — clicking/focusing it edits directly.
@@ -392,7 +412,14 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     return !!(max && max > 0 && this.getCurrentLength() > max);
   };
 
+  // why: clear() phải để formControl phát event (xem comment ở clear()), nhưng nó ĐÃ tự
+  // set model + emit sdChange(null) rồi. Không chặn thì #onChange chạy thêm một vòng với
+  // `null ?? ''` → consumer nhận thừa một sdChange('') trước sdChange(null) và model bị
+  // nhảy '' → null. Cờ chỉ sống trong đúng lời gọi setValue đồng bộ của clear().
+  #isClearing = false;
+
   #onChange = () => {
+    if (this.#isClearing) return;
     const value = this.formControl.value ?? '';
 
     this.valueModel.set(value);
@@ -458,7 +485,20 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     if (sdIsEmpty(this.valueModel()) && sdIsEmpty(this.formControl.value)) return;
     // why: clear là thao tác chủ động → model về null (không phải '' hay undefined).
     // undefined chỉ dành cho trạng thái pristine chưa từng nhập.
-    this.formControl.setValue(null, { emitEvent: false });
+    // why: KHÔNG dùng { emitEvent: false } cho formControl. Control này mang required /
+    // pattern / mask validator và cả async validator ([validator] → HandleSdCustomValidator).
+    // Chặn event thì AbstractControl.events không phát → #state (sdFormControlState) không
+    // tick → errorMessage / dataEmpty / dataValue / visibleErrorMessage giữ nguyên giá trị
+    // cũ → xoá xong field rỗng nhưng lỗi required KHÔNG hiện (chỉ còn viền đỏ). Đây đúng là
+    // lỗi đã sửa ở #onChange của sd-input-number, chỉ sót nhánh clear().
+    // displayControl thì VẪN giữ emitEvent:false — valueChanges của nó có subscriber
+    // (#onMaskedDisplayChange) sẽ parse ngược và ghi đè lại formControl.
+    this.#isClearing = true;
+    try {
+      this.formControl.setValue(null);
+    } finally {
+      this.#isClearing = false;
+    }
     this.displayControl.setValue('', { emitEvent: false });
     this.maskStatus.set('empty');
     this.valueModel.set(null);

@@ -12,11 +12,13 @@ import {
   OnDestroy,
   OnInit,
   output,
+  signal,
   TemplateRef,
+  untracked,
   viewChild,
   contentChild,
 } from '@angular/core';
-import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatDatepicker, MatDatepickerInputEvent, MatDatepickerModule } from '@angular/material/datepicker';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
@@ -201,8 +203,10 @@ export class SdDate implements OnDestroy, OnInit {
       const d = this.resolvedMax();
       return this.#i18n.t('core.form.date.max-date', { date: d ? new Date(d).toLocaleDateString('vi-VN') : '' });
     }
-    if (errors['matDatetimePickerParse'])
-      return this.#i18n.t('core.form.date.parse-error', { text: errors['matDatetimePickerParse']?.text ?? '' });
+    // why: key thật do `MatDatepickerInput` bắn ra là `matDatepickerParse` (xem `_parseValidator`
+    // trong @angular/material/datepicker). Trước đây code bắt `matDatetimePickerParse` — key này
+    // KHÔNG tồn tại ở đâu cả, nên nhánh parse-error là code chết và lỗi parse không có message.
+    if (errors['matDatepickerParse']) return this.#i18n.t('core.form.date.parse-error', { text: errors['matDatepickerParse']?.text ?? '' });
     if (errors['date']) return errors['date'] as string;
     if (errors['customValidator']) return errors['customValidator'] as string;
     if (errors['inlineError']) return this.inlineError();
@@ -238,6 +242,24 @@ export class SdDate implements OnDestroy, OnInit {
   // ==========================================
   isMobileOrTablet = BrowserUtilities.isMobile();
   formControl = new SdFormControl();
+
+  /** `true` khi text đang gõ không phải ngày dd/MM/yyyy hợp lệ. */
+  readonly #invalidFormat = signal(false);
+
+  /**
+   * why: lỗi format PHẢI đi qua pipeline validator. Trước đây nó bị nhét thẳng vào control bằng
+   * `setErrors()` — tức là nằm NGOÀI pipeline — nên bất kỳ `updateValueAndValidity` nào chạy sau
+   * (effect validators của connector, hay chính `setValue`) đều xoá sạch lỗi mà không ai hay biết.
+   * Validator giữ identity ổn định (connector chỉ gắn 1 lần) và đọc cờ qua `untracked` để không
+   * tự biến mình thành dependency reactive khi bị gọi trong effect/computed.
+   */
+  readonly #dateFormatValidator: ValidatorFn = () =>
+    untracked(() => (this.#invalidFormat() ? { date: this.#i18n.t('core.form.date.invalid-format') } : null));
+
+  readonly #validators = computed<readonly ValidatorFn[]>(() =>
+    this.inlineError() ? [this.#dateFormatValidator, SdInlineErrorValidator] : [this.#dateFormatValidator]
+  );
+
   readonly #formConnector = ɵsdFormControlConnector<SdDateModelValue, Date | null>({
     form: this.form,
     name: this.name,
@@ -251,7 +273,7 @@ export class SdDate implements OnDestroy, OnInit {
     controlToModel: dateControlToModel,
     modelEquals: (left, right) => normalizeDateModel(left) === normalizeDateModel(right),
     controlEquals: dateControlsEqual,
-    validators: computed(() => (this.inlineError() ? SdInlineErrorValidator : null)),
+    validators: this.#validators,
     required: this.required,
     disabled: this.disabled,
     viewed: this.viewed,
@@ -404,12 +426,15 @@ export class SdDate implements OnDestroy, OnInit {
     }
   }
 
+  /**
+   * Bật/tắt cờ format rồi chạy lại pipeline NGAY.
+   * why: chạy lại đồng bộ để lỗi xuất hiện/biến mất đúng nhịp gõ, đồng thời phát `events` cho
+   * `sdFormControlState` tick — connector gắn validator bằng `emitEvent: false` nên không tick hộ.
+   */
   #setDateError(invalid: boolean): void {
-    const errors = { ...(this.formControl.errors ?? {}) };
-    if (invalid) errors['date'] = this.#i18n.t('core.form.date.invalid-format');
-    else delete errors['date'];
-
-    this.formControl.setErrors(Object.keys(errors).length > 0 ? errors : null);
+    if (this.#invalidFormat() === invalid) return;
+    this.#invalidFormat.set(invalid);
+    this.formControl.updateValueAndValidity();
   }
 
   onChange = (event: MatDatepickerInputEvent<Date>) => {

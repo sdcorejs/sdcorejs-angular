@@ -1,9 +1,9 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, signal, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
+import { SD_FORM_CONFIGURATION, SdInlineErrorValidator } from '@sdcorejs/angular/forms/models';
 import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdSelect } from './select.component';
 import { SdSelectFooterActionContext, SdSelectFooterActionDirective } from './select-footer-action.directive';
@@ -1352,4 +1352,500 @@ describe('SdSelect (sdSelectFooterAction)', () => {
     const dir = sd.footerActions()[0];
     expect((dir as any).pattern).toBeUndefined();
   }));
+});
+
+// ---------------------------------------------------------------------------
+// Primitive items — valueField / displayField are OPTIONAL
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (primitive items — valueField/displayField optional)', () => {
+  // why: cả hai từng là input.required nên nhánh primitive của template
+  // (`@else if (!_valueField && !_displayField)`) không bao giờ tới được:
+  // `<sd-select [items]="['a','b']">` ném NG0950 ngay lần render đầu vì template đọc
+  // valueField()/displayField() trước khi có giá trị.
+  @Component({
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select [items]="items" [model]="model"></sd-select>`,
+  })
+  class PrimitiveHost {
+    items: any = ['Alpha', 'Beta'];
+    model: any = undefined;
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({ imports: [PrimitiveHost, NoopAnimationsModule] }).compileComponents();
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('renders without throwing NG0950 when both fields are omitted', () => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(fixture.nativeElement.querySelector('mat-select')).not.toBeNull();
+  });
+
+  it('defaults valueField/displayField to an empty string (same shape as disabledField)', () => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    expect(comp.valueField()).toBe('');
+    expect(comp.displayField()).toBe('');
+  });
+
+  it('uses the primitive itself as both value and display', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    fixture.componentInstance.model = 'Beta';
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    expect(comp.selectedItems() as any).toEqual(['Beta']);
+    expect(comp.display()).toBe('Beta');
+  }));
+
+  it('renders one mat-option per primitive item (the primitive template branch)', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PrimitiveHost);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    comp.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+
+    const labels = Array.from(document.querySelectorAll('.sd-select-panel mat-option')).map(el => (el.textContent || '').trim());
+    expect(labels).toEqual(['Alpha', 'Beta']);
+
+    comp.selectRef()?.close();
+    fixture.detectChanges();
+    tick(600);
+  }));
+
+  it('still supports the object branch when both fields ARE provided', fakeAsync(() => {
+    @Component({
+      standalone: true,
+      imports: [SdSelect],
+      template: `<sd-select valueField="id" displayField="name" [items]="items" [model]="1"></sd-select>`,
+    })
+    class ObjHost {
+      items = FRUIT_ITEMS;
+    }
+
+    const fixture = TestBed.createComponent(ObjHost);
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+    const comp = getComp(fixture);
+    expect(comp.display()).toBe('Apple');
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Validators are ADDITIVE on the publicly exposed formControl
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (consumer validators survive on the public formControl)', () => {
+  // why: #updateValidator cũ gọi clearValidators() + clearAsyncValidators() rồi setValidators() →
+  // xoá sạch validator do consumer tự gắn lên `formControl` (control này là public API). Giờ đi qua
+  // connector (addValidators/removeValidators) nên chỉ phần component sở hữu mới bị thêm/gỡ.
+  const consumerValidator: ValidatorFn = () => ({ consumer: true });
+
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdSelect;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('keeps a consumer-attached sync validator when [required] flips on', fakeAsync(() => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+    expect(comp.formControl.hasError('consumer')).toBe(true);
+
+    host.required = true;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBe(true);
+    expect(comp.formControl.hasError('consumer')).toBe(true);
+  }));
+
+  it('keeps a consumer-attached sync validator when [inlineError] changes', fakeAsync(() => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+
+    host.inlineError = 'Sai rồi';
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBe(true);
+    expect(comp.formControl.hasError('inlineError')).toBe(true);
+  }));
+
+  it('keeps a consumer-attached async validator when [required] flips on', fakeAsync(() => {
+    const consumerAsync: AsyncValidatorFn = async () => ({ consumerAsync: true });
+    comp.formControl.addAsyncValidators(consumerAsync);
+    comp.formControl.updateValueAndValidity();
+    tick();
+
+    host.required = true;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasAsyncValidator(consumerAsync)).toBe(true);
+  }));
+
+  it('still removes the component-owned required validator when [required] flips off', fakeAsync(() => {
+    host.required = true;
+    fixture.detectChanges();
+    tick();
+    expect(comp.formControl.hasValidator(Validators.required)).toBe(true);
+
+    host.required = false;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(Validators.required)).toBe(false);
+  }));
+
+  it('removes the component-owned inlineError validator without touching consumer validators', fakeAsync(() => {
+    comp.formControl.addValidators(consumerValidator);
+    host.inlineError = 'Sai rồi';
+    fixture.detectChanges();
+    tick();
+    expect(comp.formControl.hasValidator(SdInlineErrorValidator)).toBe(true);
+
+    host.inlineError = undefined;
+    fixture.detectChanges();
+    tick();
+
+    expect(comp.formControl.hasValidator(SdInlineErrorValidator)).toBe(false);
+    expect(comp.formControl.hasValidator(consumerValidator)).toBe(true);
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Async [validator] message after picking an option (bug class "invalid, no message")
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (async [validator] message after onSelectionChange)', () => {
+  // why: onSelectionChange cũ mirror giá trị bằng setValue(value, { emitEvent: false }) → huỷ lần
+  // async validator đang pending của CVA rồi chạy lại im → setErrors im → #state không tick →
+  // errorMessage giữ giá trị cũ → viền đỏ nhưng KHÔNG có message. Dùng autoDetectChanges (tôn trọng
+  // OnPush); detectChanges ép check sẽ che đúng lớp lỗi này.
+  @Component({
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name" [items]="items" [validator]="validator" [(model)]="model"></sd-select>`,
+  })
+  class ValidatorHost {
+    items = FRUIT_ITEMS;
+    validator?: (value: any) => string | Promise<string>;
+    model: any = undefined;
+  }
+
+  let fixture: ComponentFixture<ValidatorHost>;
+  let host: ValidatorHost;
+  let comp: SdSelect;
+
+  const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [ValidatorHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(ValidatorHost);
+    host = fixture.componentInstance;
+    fixture.detectChanges();
+    comp = getComp(fixture);
+  });
+
+  it('renders the validator message after selecting an invalid option (no forced CD)', async () => {
+    host.validator = (v: any) => (v === 2 ? 'Giá trị không hợp lệ' : '');
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    comp.formControl.markAsTouched();
+    await fixture.whenStable();
+    expect(matError()).toBeNull();
+
+    comp.onSelectionChange({ value: 2, source: null! });
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('customValidator')).toBeTrue();
+    expect(matError()?.textContent?.trim()).toBe('Giá trị không hợp lệ');
+  });
+
+  it('clears a stale validator message once a valid option is selected', async () => {
+    host.validator = (v: any) => (v === 2 ? 'Giá trị không hợp lệ' : '');
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    comp.formControl.markAsTouched();
+    comp.onSelectionChange({ value: 2, source: null! });
+    await fixture.whenStable();
+    expect(matError()?.textContent?.trim()).toBe('Giá trị không hợp lệ');
+
+    comp.onSelectionChange({ value: 1, source: null! });
+    await fixture.whenStable();
+
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+  });
+
+  it('does not loop the model back and forth when the event is allowed through', async () => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+
+    comp.onSelectionChange({ value: 3, source: null! });
+    await fixture.whenStable();
+
+    expect(comp.formControl.value).toBe(3);
+    expect(host.model).toBe(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Exactly ONE valueChanges per selection — mat-select's CVA already wrote the value
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (one valueChanges emission per selection through the real panel)', () => {
+  // why: `<mat-select [formControl]="formControl">` — CVA của mat-select ghi value KÈM event
+  // NGAY TRƯỚC khi `(selectionChange)` chạy. `onSelectionChange` mirror lại một lần nữa vô điều
+  // kiện thì mỗi lần người dùng chọn sẽ phát valueChanges HAI lần trên control và HAI lần trên
+  // FormGroup cha, đồng thời async [validator] bị khởi động lại hai lượt. Spec này đi qua panel
+  // thật (click <mat-option>) chứ không gọi tay handler — chỉ đường UI thật mới lộ được cú đúp.
+  @Component({
+    standalone: true,
+    imports: [SdSelect, ReactiveFormsModule],
+    template: `<sd-select name="fruit" [form]="fg" valueField="id" displayField="name" [items]="items" [multiple]="multiple"></sd-select>`,
+  })
+  class FormHost {
+    fg = new FormGroup({});
+    items = FRUIT_ITEMS;
+    multiple = false;
+  }
+
+  let fixture: ComponentFixture<FormHost>;
+  let host: FormHost;
+  let comp: SdSelect;
+
+  const optionByText = (text: string): HTMLElement => {
+    const match = Array.from(document.querySelectorAll('mat-option')).find(el => (el.textContent || '').trim() === text);
+    if (!match) throw new Error(`mat-option "${text}" not found in the open panel`);
+    return match as HTMLElement;
+  };
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [FormHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(FormHost);
+    host = fixture.componentInstance;
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('emits valueChanges exactly once on the control and once on the parent FormGroup', async () => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+
+    comp.open();
+    await fixture.whenStable();
+
+    const controlEmissions: any[] = [];
+    const groupEmissions: any[] = [];
+    const subs = [
+      comp.formControl.valueChanges.subscribe(v => controlEmissions.push(v)),
+      host.fg.valueChanges.subscribe(v => groupEmissions.push(v)),
+    ];
+
+    optionByText('Banana').click();
+    await fixture.whenStable();
+
+    subs.forEach(s => s.unsubscribe());
+    expect(comp.formControl.value).toBe(2);
+    expect(controlEmissions).toEqual([2]);
+    expect(groupEmissions.length).toBe(1);
+  });
+
+  it('emits valueChanges exactly once per pick in multiple mode too', async () => {
+    host.multiple = true;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+
+    comp.open();
+    await fixture.whenStable();
+
+    const controlEmissions: any[] = [];
+    const sub = comp.formControl.valueChanges.subscribe(v => controlEmissions.push(v));
+
+    optionByText('Cherry').click();
+    await fixture.whenStable();
+
+    sub.unsubscribe();
+    expect(comp.formControl.value).toEqual([3]);
+    expect(controlEmissions.length).toBe(1);
+  });
+});
+
+describe('SdSelect (the async [validator] restarts only once per selection)', () => {
+  // why: mỗi lần valueChanges phát là một lần async validator chạy lại. Cú đúp setValue vì thế
+  // nhân đôi số lần gọi `[validator]` — với validator gọi API thì đó là 2 request cho 1 cú click.
+  @Component({
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select valueField="id" displayField="name" [items]="items" [validator]="validator"></sd-select>`,
+  })
+  class ValidatorCountHost {
+    items = FRUIT_ITEMS;
+    runs: any[] = [];
+    validator = (v: any) => {
+      this.runs.push(v);
+      return '';
+    };
+  }
+
+  let fixture: ComponentFixture<ValidatorCountHost>;
+  let comp: SdSelect;
+
+  const optionByText = (text: string): HTMLElement => {
+    const match = Array.from(document.querySelectorAll('mat-option')).find(el => (el.textContent || '').trim() === text);
+    if (!match) throw new Error(`mat-option "${text}" not found in the open panel`);
+    return match as HTMLElement;
+  };
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [ValidatorCountHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(ValidatorCountHost);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('calls [validator] exactly once for a single pick', async () => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+
+    comp.open();
+    await fixture.whenStable();
+    fixture.componentInstance.runs.length = 0;
+
+    optionByText('Apple').click();
+    await fixture.whenStable();
+
+    expect(comp.formControl.value).toBe(1);
+    expect(fixture.componentInstance.runs).toEqual([1]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Runtime [required] / [inlineError] must refresh the rendered error message
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (runtime validator inputs refresh the error message)', () => {
+  // why: cùng lớp lỗi với sd-chip. `errorMessage` chỉ phụ thuộc `#state()`, trong khi connector cài
+  // Validators.required / SdInlineErrorValidator bằng `updateValueAndValidity({ emitEvent: false })`
+  // → `formControl.errors` đổi mà KHÔNG phát event → `#state` không tick → computed giữ giá trị cũ
+  // → dưới OnPush control invalid, viền đỏ, nhưng <mat-error> KHÔNG hiện. Host dùng signal cho
+  // required/inlineError để việc đổi input tự đánh thức change detection (không ép detectChanges).
+  @Component({
+    standalone: true,
+    imports: [SdSelect],
+    template: `<sd-select
+      label="Trái cây"
+      valueField="id"
+      displayField="name"
+      [items]="items"
+      [required]="required()"
+      [inlineError]="inlineError()"></sd-select>`,
+  })
+  class RuntimeValidatorHost {
+    items = FRUIT_ITEMS;
+    required = signal(false);
+    inlineError = signal<string | undefined>(undefined);
+  }
+
+  let fixture: ComponentFixture<RuntimeValidatorHost>;
+  let host: RuntimeValidatorHost;
+  let comp: SdSelect;
+
+  const matError = (): HTMLElement | null => fixture.nativeElement.querySelector('mat-error');
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [RuntimeValidatorHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(RuntimeValidatorHost);
+    host = fixture.componentInstance;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+  });
+
+  afterEach(() => {
+    document.querySelectorAll('.cdk-overlay-container').forEach(el => (el.innerHTML = ''));
+  });
+
+  it('renders the required message when [required] flips on at RUNTIME', async () => {
+    comp.formControl.markAsTouched();
+    await fixture.whenStable();
+    // why: đọc computed ở đây để `#state` được "chốt" đúng tick hiện tại. Nếu chỉ soi DOM thì lần
+    // đọc đầu tiên rơi vào SAU khi flip required và `#state` recompute nhờ tick của markAsTouched —
+    // spec sẽ xanh vì lý do sai, che mất đúng lỗi đang kiểm.
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+
+    host.required.set(true);
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('required')).toBeTrue();
+    expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+  });
+
+  it('renders the [inlineError] message when it is set at RUNTIME', async () => {
+    comp.formControl.markAsTouched();
+    await fixture.whenStable();
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+
+    host.inlineError.set('Server từ chối giá trị này');
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('inlineError')).toBeTrue();
+    expect(matError()?.textContent?.trim()).toBe('Server từ chối giá trị này');
+  });
+
+  it('removes the message again when [required] flips back off at RUNTIME', async () => {
+    comp.formControl.markAsTouched();
+    host.required.set(true);
+    await fixture.whenStable();
+    expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    expect(matError()).not.toBeNull();
+
+    host.required.set(false);
+    await fixture.whenStable();
+
+    expect(comp.formControl.hasError('required')).toBeFalse();
+    expect(comp.errorMessage()).toBeUndefined();
+    expect(matError()).toBeNull();
+  });
 });

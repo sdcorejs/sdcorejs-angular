@@ -1,6 +1,8 @@
 @let _label = label();
 @let _appearance = appearance();
-@let _errorMessage = errorMessage();
+<!-- why: dùng bản đã gate theo tương tác của connector, KHÔNG dùng `errorMessage()` thô — field
+     `[required]` trước đây bung lỗi ngay lần paint đầu, khi người dùng còn chưa chạm vào ô nào. -->
+@let _errorMessage = connectorState().validationError;
 @let _helperText = helperText();
 @let _required = required();
 

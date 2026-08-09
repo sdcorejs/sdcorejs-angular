@@ -1,3 +1,5 @@
+@let _errorMessage = visibleErrorMessage();
+
 <div class="sd-tree-select__control">
   @if (connectorState().isViewed) {
     <div data-tree-select-view class="sd-tree-select__view">{{ displayText() || '—' }}</div>
@@ -10,6 +12,8 @@
       aria-haspopup="dialog"
       [attr.aria-label]="ariaLabel() || label() || effectivePlaceholder()"
       [attr.aria-expanded]="modal()?.isOpened() ?? false"
+      [attr.aria-invalid]="_errorMessage ? 'true' : null"
+      [attr.aria-describedby]="_errorMessage ? errorId : null"
       [disabled]="formControl.disabled || readonly()"
       (click)="open()">
       <span [class.sd-tree-select__placeholder]="!displayText()">{{ displayText() || effectivePlaceholder() }}</span>
@@ -25,6 +29,10 @@
     }
   }
 </div>
+
+@if (_errorMessage) {
+  <div [id]="errorId" data-tree-select-error class="sd-tree-select__error" role="alert">{{ _errorMessage }}</div>
+}
 
 <sd-modal [autoId]="autoId()" [title]="effectiveModalTitle()" width="md" (sdClosed)="onModalClosed()">
   <div class="sd-tree-select__body">

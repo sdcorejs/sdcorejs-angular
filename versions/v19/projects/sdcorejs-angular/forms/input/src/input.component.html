@@ -17,17 +17,29 @@
     [valueTemplate]="viewTemplate()">
   </sd-view>
 } @else if (_isInline) {
-  <sd-inline-text
-    [control]="activeControl()"
-    [placeholder]="placeholder() || _label || ''"
-    [clearable]="clearable() && !_required"
-    [autoId]="autoId()"
-    [state]="connectorState().invalid ? 'error' : 'auto'"
-    (sdFocus)="onFocus()"
-    (sdBlur)="onBlur()"
-    (keyupEnter)="onKeyupEnter()"
-    (cleared)="cleared.emit()">
-  </sd-inline-text>
+  <!-- why: nhánh inline PHẢI project `sdSuffixDef` giống nhánh mat-form-field. Trước đây chỉ
+       <sd-inline-text> được render, nên <sd-input-color viewed="'inline'"> mất luôn swatch và
+       <input type="color"> ẩn — openPicker() gọi được nhưng không có element nào để click, tức
+       là no-op câm. <sd-inline-text> là inline-flex tự hug nội dung nên chỉ cần một hàng flex. -->
+  <div class="sd-input-inline">
+    <sd-inline-text
+      [control]="activeControl()"
+      [placeholder]="placeholder() || _label || ''"
+      [clearable]="clearable() && !_required"
+      [autoId]="autoId()"
+      [state]="connectorState().invalid ? 'error' : 'auto'"
+      (sdFocus)="onFocus()"
+      (sdBlur)="onBlur()"
+      (keyupEnter)="onKeyupEnter()"
+      (cleared)="cleared.emit()">
+    </sd-inline-text>
+
+    @if (sdSuffixDef()?.templateRef; as suffixRef) {
+      <span class="sd-input-inline__suffix">
+        <ng-container *ngTemplateOutlet="suffixRef"></ng-container>
+      </span>
+    }
+  </div>
 } @else {
   @if (!_appearance) {
     <ng-content select="[sdLabel]">

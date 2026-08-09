@@ -1,5 +1,6 @@
 @let _selectedTemplate = selectedTemplate();
 @let _detailTemplate = detailTemplate();
+@let _errorMessage = visibleErrorMessage();
 
 <div class="sd-entity-picker__control">
   @if (connectorState().isViewed) {
@@ -19,6 +20,8 @@
       aria-haspopup="dialog"
       [attr.aria-label]="ariaLabel() || label() || effectivePlaceholder()"
       [attr.aria-expanded]="modal()?.isOpened() ?? false"
+      [attr.aria-invalid]="_errorMessage ? 'true' : null"
+      [attr.aria-describedby]="_errorMessage ? errorId : null"
       [disabled]="formControl.disabled || readonly()"
       (click)="open()">
       @if (_selectedTemplate) {
@@ -38,6 +41,10 @@
     }
   }
 </div>
+
+@if (_errorMessage) {
+  <div [id]="errorId" data-entity-picker-error class="sd-entity-picker__error" role="alert">{{ _errorMessage }}</div>
+}
 
 <sd-modal [autoId]="autoId()" [title]="effectiveModalTitle()" width="lg" (sdClosed)="onModalClosed()">
   <div class="sd-entity-picker__body">
