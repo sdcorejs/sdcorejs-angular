@@ -217,15 +217,40 @@ export function sdQueryDefaultOperator(field: SdQueryField): Operator {
 }
 
 /**
+ * Cache của nhánh "simple mode" trong `sdQueryAllowedOperators`, keyed theo chính object field.
+ *
+ * why: nhánh mặc định (`field.operators` không khai báo) là case PHỔ BIẾN nhất và trước đây cấp
+ * phát một mảng `[defaultOperator]` MỚI mỗi lần gọi. Template bind
+ * `[allowedOperators]="allowedOperatorsFor(_b.field)"` nên hàm này chạy lại mỗi chu kỳ change
+ * detection → child OnPush nhận input ref mới → markForCheck → CD mới → mảng mới → vòng lặp vô
+ * hạn, đúng bug class OOM đã ghi ở `query-builder` `#booleanOptionsByKey`. Dùng WeakMap để
+ * không giữ field sống lâu hơn consumer.
+ *
+ * Chỉ memo hoá nhánh mặc định: hai nhánh còn lại trả về hằng số chung
+ * (`SD_QUERY_OPERATORS_BY_TYPE`) hoặc chính mảng của consumer, vốn đã ổn định sẵn — và giữ
+ * chúng ngoài cache để field đổi `operators` tại chỗ vẫn được đọc lại.
+ */
+const DEFAULT_OPERATOR_LIST_CACHE = new WeakMap<SdQueryField, Operator[]>();
+
+/**
  * Operators offered in the chip popover for `field`:
  * - `operators === true` → full set for the type
  * - `operators` is an array → that array (deduped against the type set is the caller's job)
  * - otherwise (simple mode) → just the single default operator (no real choice)
+ *
+ * The returned array is referentially stable for a given `field` object, so it is safe to call
+ * straight from a template binding.
  */
 export function sdQueryAllowedOperators(field: SdQueryField): Operator[] {
   if (field.operators === true) return SD_QUERY_OPERATORS_BY_TYPE[field.type];
   if (Array.isArray(field.operators) && field.operators.length > 0) return field.operators;
-  return [sdQueryDefaultOperator(field)];
+
+  const cached = DEFAULT_OPERATOR_LIST_CACHE.get(field);
+  if (cached) return cached;
+
+  const single: Operator[] = [sdQueryDefaultOperator(field)];
+  DEFAULT_OPERATOR_LIST_CACHE.set(field, single);
+  return single;
 }
 
 /**

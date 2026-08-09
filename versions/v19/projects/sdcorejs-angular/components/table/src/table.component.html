@@ -16,6 +16,7 @@
 @let _configComponent = configComponent();
 @let _mobileFilter = mobileFilter();
 @let _selectedTableItems = selectedTableItems();
+@let _rowCommands = rowCommands();
 <!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
@@ -30,7 +31,7 @@
       [externalFilters]="_tableOption.filter?.externalFilters!">
     </external-filter>
   }
-  @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState;
+  @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState : groupHost;
 
   <!-- Tree toggle dùng chung: indent (theo cấp) + slot chevron/spinner. Nhúng vào
        cột Index hoặc cột data đầu qua *ngTemplateOutlet (context: { row }). -->
@@ -141,8 +142,7 @@
 
         <ng-container matColumnDef="sdSelection" sticky>
           <th class="sd-selection-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-            @let visibleSelectAll = _items | selectionVisibleSelectAll: _tableOption.selector | async;
-            @if (visibleSelectAll) {
+            @if (visibleSelectAll()) {
               <mat-checkbox
                 class="c-selection px-8"
                 color="primary"
@@ -231,12 +231,11 @@
           [sticky]="_tableOption.command?.align !== 'right'"
           [stickyEnd]="_tableOption.command?.align === 'right'">
           <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
-          <td class="px-8" mat-cell *matCellDef="let item">
-            <desktop-command
-              [autoId]="_autoId"
-              [commands]="_tableOption.command?.commands || _tableOption.commands || []"
-              [item]="item"
-              [itemIndex]="groupedItems.indexOf(item)"></desktop-command>
+          <!-- why: `dataIndex` do CDK cấp sẵn. Bản cũ dùng `groupedItems.indexOf(item)` —
+               quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
+               và còn trả sai index khi 2 dòng trùng reference. -->
+          <td class="px-8" mat-cell *matCellDef="let item; let i = dataIndex">
+            <desktop-command [autoId]="_autoId" [commands]="_rowCommands" [item]="item" [itemIndex]="i"></desktop-command>
           </td>
           <td mat-footer-cell *matFooterCellDef></td>
         </ng-container>
@@ -253,6 +252,14 @@
               <!-- why: slot 42px khớp width với sd-selection-cell data row → checkbox group căn TRỤC dọc đúng với checkbox data. -->
               @if (_tableOption.selector?.visible && !_tableOption.selector?.single) {
                 <div class="sd-group-selection-slot d-flex align-items-center justify-content-center">
+                  <!-- why: PHẢI tính live, KHÔNG đọc cache trên meta.group. `selector.selectable`
+                       mặc định là `false` (table-item.model.ts) và chỉ được `SdSelectionVisiblePipe`
+                       đặt đúng khi cell BODY render — mà CDK dựng header TRƯỚC body. Cache do
+                       `SdGroupPipe` ghi lúc dựng header vì thế luôn thấy `total = 0` và khoá cứng
+                       checkbox ở trạng thái bỏ chọn, kể cả khi defaultSelected/preserveSelection
+                       vừa chọn hết. Pipe là pure nên giá trị đó không bao giờ tự sửa.
+                       Chỉ có MỘT group header mỗi group (không phải mỗi row) nên chi phí duyệt ở
+                       đây nhỏ; phần đắt (dựng object context + map data) vẫn được cache. -->
                   <mat-checkbox
                     class="c-selection"
                     color="primary"
@@ -274,6 +281,10 @@
                 </sd-button>
               }
               @if (sdGroupDef()?.templateRef; as tpl) {
+                <!-- why: groupContext() giờ trả context đã precompute trên meta.group (cùng
+                     một reference qua mọi CD pass). Bản cũ dựng object mới + mảng
+                     `items.map(i => i.data)` mới mỗi pass → ngTemplateOutlet phải dựng lại
+                     embedded view của mọi group row. -->
                 <ng-container *ngTemplateOutlet="tpl; context: groupContext(item)"></ng-container>
               } @else {
                 <span class="T14R">{{ item.meta.group.values | json }}</span>
@@ -435,6 +446,10 @@
           class="c-group-row-tr"></tr>
 
         <!-- Data row — dùng displayedColumns đầy đủ; when isDataRow để loại trừ group header. -->
+        <!-- why: [ngStyle] đọc meta.rowStyle — style.rowCss đã được resolve 1 lần mỗi lần
+             render. Bản cũ gọi rowStyle(row) ngay trong binding → chạy callback của consumer
+             cho TỪNG dòng ở MỖI CD pass, và vì trả object MỚI nên NgStyle phải chạy lại
+             KeyValueDiffer trên mọi dòng ở mọi pass. -->
         <tr
           mat-row
           cdkDrag
@@ -450,7 +465,7 @@
           class="c-row"
           [class.sd-tree-row]="!!_tableOption.tree"
           [ngClass]="_tableOption.tree ? 'sd-tree-level-' + (row.meta?.tree?.level ?? 0) : null"
-          [ngStyle]="rowStyle(row)"
+          [ngStyle]="row.meta.rowStyle"
           [class.selected]="row.meta.selector.isSelected"></tr>
 
         <!-- Sub-information row — also gated bởi isDataRow để KHÔNG render empty expand row dưới group header. -->

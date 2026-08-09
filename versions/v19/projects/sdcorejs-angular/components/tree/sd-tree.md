@@ -141,6 +141,41 @@ Branch nodes without `icon` render the default `folder` / `folder_open` icons. L
 
 Static mode uses `children`. Lazy mode uses `hasChildren` before loading and keeps loaded children in the component cache.
 
+## Tree Option
+
+`option.tree` is a discriminated union on `loadType`. Both branches share `SdTreeBaseOption`:
+
+| Key          | Type     | Default     | Notes                                                                          |
+| ------------ | -------- | ----------- | ------------------------------------------------------------------------------ |
+| `loadType`   | `'static' \| 'lazy'` | required | Selects the branch below.                                          |
+| `maxDepth`   | `number` | `undefined` | Deepest rendered `level` (0-based). See "Depth limit".                         |
+| `indentSize` | `number` | `20`        | Pixels of indentation per level.                                               |
+
+| Key               | Type                  | Applies to | Notes                                                              |
+| ----------------- | --------------------- | ---------- | ------------------------------------------------------------------ |
+| `defaultExpanded` | `boolean \| number`   | `static`   | `true` all, `false` none, or a number = expand levels `< number`.  |
+| `onExpandChildren`| `(item) => children`  | `lazy`     | Called once per node on first expand. Required for `loadType: 'lazy'`. |
+
+### Depth limit (`maxDepth`)
+
+```ts
+const option: SdTreeComponentOption<Category> = {
+  items,
+  tree: { loadType: 'static', defaultExpanded: true, maxDepth: 1 },
+};
+```
+
+`maxDepth` is the deepest **0-based** `level` the tree renders. With `maxDepth: 1` the tree renders root nodes (level 0) and their children (level 1); anything deeper is dropped.
+
+A node sitting **at** `maxDepth` is rendered as a **leaf**, even when its data has children:
+
+- `node.hasChildren` is `false` and `node.children` is empty.
+- The toggle is disabled, the chevron is not drawn, and no default folder icon is used (an explicit `treeItem.icon` still renders).
+- `aria-expanded` is omitted.
+- `toggle()` is a no-op, so neither `expandChange` nor `collapseChange` fires, and a lazy tree never calls `onExpandChildren` for that node.
+
+Omit `maxDepth` (the default) to render the full depth of the data.
+
 ## Static Tree
 
 ```ts
@@ -220,6 +255,7 @@ Filtering searches loaded items only. Text is normalized to Vietnamese without a
 ## Visual cues
 
 - Vertical list of tree rows with indentation per level (`indentSize`, default 20px).
+- Nodes at `tree.maxDepth` render as leaves — no chevron, no default folder icon, no expand event.
 - Branch nodes show a toggle icon and default folder / folder-open icon when no explicit node icon is provided.
 - Leaf nodes have no default icon unless `treeItem.icon` is set.
 - Checkbox column appears only when `selector.visible === true`.
@@ -265,6 +301,7 @@ treeOption: SdTreeComponentOption<Category> = {
 - ❌ Expecting lazy children to be searched before they are loaded — filtering only searches loaded nodes.
 - ❌ Using `selectedItems` with objects that cannot be matched by reference or `id` / `code` / `value` — controlled selection cannot resolve rows reliably.
 - ❌ Rendering large expensive subtrees in a custom template without guarding heavy child components.
+- ❌ Treating `maxDepth` as "collapse deeper levels" — deeper nodes are not rendered at all and the boundary node cannot be expanded.
 
 ## E2E test attributes
 

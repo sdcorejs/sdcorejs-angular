@@ -94,9 +94,12 @@ export class TableFormatService {
     rawItems: T[],
     columns: SdTableColumn[],
     cacheValues: Record<string, any[]>,
-    cacheObjValues: Record<string, Record<string, string>>
+    cacheObjValues: Record<string, Record<string, string>>,
+    rowKey?: string
   ): Promise<SdTableItem<T>[]> {
-    const items = rawItems.map(MapToSdTableItem);
+    // why: KHÔNG dùng `rawItems.map(MapToSdTableItem)` — `map` truyền cả index làm
+    // tham số thứ 2, tức index sẽ bị nhận nhầm thành `rowKey`.
+    const items = rawItems.map(item => MapToSdTableItem(item, rowKey));
     const execute = async (column: SdTableColumnNormal) => {
       const { field, click, tooltip, htmlTemplate, transform } = column;
       const fieldStr = field;

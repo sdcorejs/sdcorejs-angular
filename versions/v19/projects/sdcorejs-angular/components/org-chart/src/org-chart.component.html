@@ -44,7 +44,10 @@
         }
       </div>
 
-      @if (_hasChildren && collapsible()) {
+      <!-- why: gate theo resolvedCollapsible() chứ KHÔNG theo input thô collapsible(). Với
+           `[option]="{ collapsible: false }"` thì input thô vẫn là mặc định true → chevron vẫn
+           render nhưng toggle() đã chặn nên bấm không có tác dụng. -->
+      @if (_hasChildren && resolvedCollapsible()) {
         <button
           type="button"
           class="sd-org-chart__toggle"

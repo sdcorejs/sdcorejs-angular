@@ -273,6 +273,43 @@ export class SdQueryBar {
   }
 
   // ---------------------------------------------------------------------------
+  // Row identity — stable synthetic id per filter chip, used as the `@for` track key
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Filter object → synthetic row id.
+   *
+   * why: `@for (... ; track $index)` gắn chip với VỊ TRÍ, không phải với filter. Xoá chip index 0
+   * thì chip index 0 không bị huỷ mà được bind lại sang filter kế tiếp, kéo theo state nội bộ
+   * của chip (`inline-chip` `#editing`, `inline-value-chip` `draft`) sang một filter khác.
+   * Gắn id tổng hợp cho từng dòng để `track` bám đúng filter.
+   *
+   * Lưu trong WeakMap thay vì gắn thẳng thuộc tính lên `Filter` để payload `SdQuery.filters` phát
+   * ra ngoài vẫn sạch (không rò field nội bộ cho consumer).
+   */
+  readonly #rowIds = new WeakMap<Filter, string>();
+  #rowIdSeq = 0;
+
+  /** Stable track key of a filter row. Assigned lazily on first read. */
+  rowId(filter: Filter): string {
+    let id = this.#rowIds.get(filter);
+    if (!id) {
+      id = `qbr-${++this.#rowIdSeq}`;
+      this.#rowIds.set(filter, id);
+    }
+    return id;
+  }
+
+  /**
+   * Chuyển id của một dòng sang object thay thế.
+   * why: mọi mutation đều tạo object mới (`{ ...previous, ...patch }`); không kế thừa id thì mỗi
+   * lần sửa giá trị lại huỷ + dựng lại chip, mất focus và state đang gõ dở.
+   */
+  #inheritRowId(previous: Filter, next: Filter): void {
+    this.#rowIds.set(next, this.rowId(previous));
+  }
+
+  // ---------------------------------------------------------------------------
   // Template helpers
   // ---------------------------------------------------------------------------
 
@@ -315,6 +352,12 @@ export class SdQueryBar {
   readonly #building = signal<BuildingChip | null>(null);
   readonly building = this.#building.asReadonly();
 
+  /**
+   * Allowed operators of `field` — safe to call from a template binding: `sdQueryAllowedOperators`
+   * memo hoá theo object field nên ref trả về ổn định giữa các chu kỳ CD.
+   * why: `<sd-query-build-chip [allowedOperators]>` là OnPush; ref mới mỗi CD sẽ dirty child liên
+   * tục (bug class cấp-phát-mỗi-CD).
+   */
   allowedOperatorsFor(field: SdQueryField): Operator[] {
     return sdQueryAllowedOperators(field);
   }
@@ -448,7 +491,12 @@ export class SdQueryBar {
   updateFilter(index: number, patch: Partial<Filter>): void {
     const list = [...this.filters()];
     if (index < 0 || index >= list.length) return;
-    list[index] = { ...list[index], ...patch } as Filter;
+    const previous = list[index];
+    const next = { ...previous, ...patch } as Filter;
+    // why: cùng một dòng logic, chỉ đổi data/operator → giữ nguyên track key để chip được patch
+    // tại chỗ thay vì huỷ + dựng lại.
+    this.#inheritRowId(previous, next);
+    list[index] = next;
     this.filters.set(list);
   }
 
@@ -459,10 +507,18 @@ export class SdQueryBar {
   removeFilter(index: number): void {
     const list = [...this.filters()];
     if (index < 0 || index >= list.length) return;
-    // close the open popover (if it's this chip's) before the chip + its trigger vanish
-    if (this.editingIndex() === index) {
-      this.popoverChips()[index]?.closeMenu();
-      this.editingIndex.set(null);
+    const editing = this.editingIndex();
+    // why: `editingIndex` là chỉ số vào mảng filters, nên mọi lần xoá ở vị trí <= nó đều làm nó
+    // lệch. Trước đây chỉ xử lý trường hợp bằng nhau → xoá một chip ĐỨNG TRƯỚC khiến editingIndex
+    // trỏ lố 1 ô và `onChipPopoverCommit` ghi giá trị staged vào SAI filter.
+    if (editing !== null && index <= editing) {
+      if (index === editing) {
+        // close the open popover (it's this chip's) before the chip + its trigger vanish
+        this.popoverChips()[index]?.closeMenu();
+        this.editingIndex.set(null);
+      } else {
+        this.editingIndex.set(editing - 1);
+      }
     }
     list.splice(index, 1);
     this.filters.set(list);
@@ -515,6 +571,11 @@ export class SdQueryBar {
     const idx = this.editingIndex();
     if (idx === null) return;
     const list = [...this.filters()];
+    const previous = list[idx];
+    if (!previous) return;
+    // why: popover chỉ đổi operator + value của CHÍNH chip đó → giữ track key, nếu không chip sẽ
+    // bị huỷ ngay lúc menu đóng (trigger của overlay biến mất giữa chừng).
+    this.#inheritRowId(previous, next);
     list[idx] = next;
     this.filters.set(list);
     this.editingIndex.set(null);

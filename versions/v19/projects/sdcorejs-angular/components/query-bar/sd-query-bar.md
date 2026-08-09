@@ -179,6 +179,14 @@ All `boolean` inputs go through `booleanAttribute` (bare attribute = true). All 
 | `onApplyFilter(saved)` | Install a `SdSavedFilter` (filters + logic + search) + trigger apply. |
 | `isFilterActive(filter)` | Helper — true if filter has non-empty data or NULL/NOT_NULL operator. |
 | `chipValueText(filter)` | Helper — value string shown on chip (handles BETWEEN range + multi-value `+N` summary). |
+| `allowedOperatorsFor(field)` | Helper — operators offered for `field`. The array is referentially stable per field object, so it is safe in a template binding. |
+| `rowId(filter)` | Template helper — stable synthetic id of a filter row, used as the `@for ... track` key. Not part of the emitted payload. |
+
+### Chip identity
+
+Chips track by `rowId(filter)`, **not** by index. Each `Filter` object gets a synthetic id on first render, held in an internal `WeakMap` so the emitted `SdQuery.filters` payload stays a clean `Filter[]` (no injected id property). Editing a chip (`updateFilter` / popover commit) carries the id onto the replacement object, so the chip is patched in place; removing a chip destroys exactly that chip instead of shifting every later chip up one slot. This is what keeps per-chip local state (`inline-value-chip` draft, `inline-chip` boolean edit toggle) attached to the filter it belongs to.
+
+`removeFilter(index)` also keeps `editingIndex` aligned: removing the chip being edited closes its popover and clears the index; removing a chip **before** it shifts the index down by one so a later popover commit still lands on the same filter.
 
 ## Sub-component decomposition (7/7 done)
 
@@ -311,7 +319,7 @@ External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
 
 ## Test status
 
-- query-bar suite: **131 SUCCESS** (Karma + ChromeHeadless). Run:
+- query-bar suite: **158 SUCCESS** (Karma + ChromeHeadless). Run:
   ```
   npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
     --include='projects/sdcorejs-angular/components/query-bar/**/*.spec.ts'

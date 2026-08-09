@@ -43,6 +43,7 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `onFilter` (server) | `(filterReq, { externalFilterValid }) => void`                   | no           | Called BEFORE each server fetch; useful to cancel / log / sync URL.                                                                                                                                                                          |
 | `columns`           | `SdTableColumn<T>[]`                                             | yes          | Column definitions (see schema below).                                                                                                                                                                                                       |
 | `key`               | `string`                                                         | no           | Storage key for persisted user column-config (visibility/order/width).                                                                                                                                                                       |
+| `rowKey`            | `string`                                                         | no           | Field that identifies a row (dot-notation supported, e.g. `'id'` / `'user.id'`). Becomes `SdTableItem.meta.id` — the mat-table `trackBy` key, the `preserveSelection` key, the tree expand-state key and the per-row `data-autoid` suffix. See **Row identity** below. |
 | `config`            | `TableOptionConfig`                                              | no           | `{ visible?, resizable?, onResize? }` — gear button, drag-to-resize, resize callback. See **Column resize** section.                                                                                                                         |
 | `selector`          | `SdTableOptionSelector<T>`                                       | no           | Multi-select + bulk actions.                                                                                                                                                                                                                 |
 | `expand`            | `SdTableOptionExpand<T>`                                         | no           | Per-row expansion (master-detail).                                                                                                                                                                                                           |
@@ -58,6 +59,34 @@ Everything is configured via the `SdTableOption<T>` object passed to `[option]`.
 | `style`             | `{ shadow?, maxHeight?, minHeight?, rowCss? }`                   | no           | Shadow toggle, scroll bounds, per-row CSS.                                                                                                                                                                                                   |
 | `rowReorder`        | `{ enabled?, onChange?, icon?, disabled?(row,i) }`               | no           | Drag-and-drop row reordering. Respects groups.                                                                                                                                                                                               |
 | `index`             | `{ enabled?, title?, width? }`                                   | no           | Adds a leading STT (row-number) column. Default `title: '#'`, `width: '50px'`. Numbering is global across pages — `pageIndex * pageSize + i + 1`. Placed after selector/tree/command(left)/group, before data columns. Hidden on group rows. |
+
+### Row identity (`rowKey` → `SdTableItem.meta.id`)
+
+Every row the table renders is wrapped in an `SdTableItem` whose `meta.id` is the row's identity. It is used for:
+
+- the mat-table `trackBy` (which DOM row view is reused for which data row),
+- `selector.preserveSelection` (the key of the internal selected-items map),
+- the tree expand/collapse state map,
+- the per-row `data-autoid` suffixes (`…-expand-<rowId>`, `…-tree-toggle-<rowId>`).
+
+**How the id is derived:**
+
+| `option.rowKey` | Resulting `meta.id`                                                                  | Survives a server re-fetch? |
+| --------------- | ------------------------------------------------------------------------------------ | --------------------------- |
+| set (e.g. `'id'`) | `String(row.id)` — readable and deterministic                                       | yes                         |
+| unset           | generated `sd-row-<n>`, pinned to the row data object's **identity** (via a `WeakMap`) | no                          |
+
+Without `rowKey`, the same data object always maps back to the same id (so local filtering, sorting, paging and tree child re-formatting all keep their ids), but a **new** object — which is what a server fetch produces — gets a new id.
+
+> **Changed (BREAKING for consumers who relied on the old behaviour).** `meta.id` used to be a **content hash** (`Utilities.hash({ data })`). That made two rows with equal content share one id — which corrupted row-view recycling, made `flattenTree` drop the duplicate, and collided in the expand-state / preserved-selection maps. It also made *every* group header share a single id. Ids are no longer derived from content.
+>
+> **Migration:** add `rowKey: '<your id field>'` to `option` if you use any of:
+>
+> - `selector.preserveSelection` on a `type: 'server'` table (selection must survive a re-fetch),
+> - `tree` on a `type: 'server'` table (expand state must survive a re-fetch),
+> - per-row `data-autoid` values as E2E selectors (they must be stable across page loads).
+>
+> Everything else works unchanged with no option edit. A side effect of the fix: two rows with identical content are now rendered as two distinct rows (previously the second one could be swallowed by the tree flattener).
 
 ### Column schema (`SdTableColumn<T>`)
 
@@ -146,6 +175,7 @@ The table adds these special columns conditionally — **do not** define a data 
 | `onSelectAll`     | `(selectedItems) => void`             | Header checkbox callback.                                                                                                                                                                    |
 | `disabled`        | `(rowData, selectedItems) => boolean` | Per-row disable predicate.                                                                                                                                                                   |
 | `defaultSelected` | `(rowData) => boolean`                | Pre-select after each load.                                                                                                                                                                  |
+| `preserveSelection` | `boolean`                           | Keep the selection across paging / filtering / sorting / reload; `selectedTableItems()` then returns every selected row including off-page ones. Matching is by `meta.id` — **set `option.rowKey`** when the table is `type: 'server'`, otherwise a re-fetch produces new row objects with new ids and the selection is not restored. See **Row identity**. |
 
 Header select-all operates only on visible rows that are selectable. Rows disabled by `disabled` or incompatible with the currently available `actions` are skipped. The header is checked only when every selectable visible row is selected; when no visible row is selectable, it stays unchecked. A row that is already selected remains enabled so the user can deselect it.
 
@@ -633,6 +663,8 @@ The drag handle hides automatically for columns excluded from resize. Widths rel
 - ❌ Recreating `tableOption` on every change-detection cycle (e.g. computing it inside the template) — every new reference triggers a full re-init via the `effect`. Keep it as a class property.
 - ❌ Using `type: 'local'` for ≥ 1k rows that come from the server — paging happens client-side, so all rows are fetched and held in memory. Switch to `type: 'server'`.
 - ❌ Skipping `option.key` on a customer-facing list — without it, user column-config is not persisted across page reloads.
+- ❌ Turning on `selector.preserveSelection` (or `tree`) on a `type: 'server'` table without `option.rowKey` — a re-fetch produces new row objects, so the ids change and the selection / expand state is not restored. See **Row identity**.
+- ❌ Returning a fresh object from `style.rowCss` that encodes state the table cannot see — `rowCss` is resolved **once per render** (and after a tree expand), not on every change-detection pass. Trigger a `reload()` when the styling inputs change.
 - ❌ Wiring per-row navigation via the cell `click` callback when the user expects right-click "open in new tab" — use a column with `htmlTemplate` rendering an `<a [sdHref]>` instead.
 - ❌ Defining `commands` AND `command.commands` simultaneously — `command` is the newer API; pick one to avoid confusion.
 - ❌ Putting a heavy server-side `items()` in front of a daterange filter without honoring the `BETWEEN` / `GREATER_OR_EQUAL` operators emitted in `pagingReq.filters` — the table builds the request correctly; your backend must accept that operator vocabulary.
@@ -690,7 +722,7 @@ All interactive children derive their autoId from the table base `components-tab
 | Config modal: skip / reset / apply                    | `components-button-<B>-config-skip` / `-config-reset` / `-config-apply`                                      |
 | External filter: clear / setting / submit             | `components-button-<B>clear` / `…setting` / `…submit`                                                        |
 
-`<rowId>` / `groupKey` come from `SdTableItem.meta.id` (stable hash) / `meta.group.key`, guaranteeing uniqueness per row/group. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
+`<rowId>` / `groupKey` come from `SdTableItem.meta.id` / `meta.group.key`, guaranteeing uniqueness per row/group. **Set `option.rowKey` if you want `<rowId>` to be a readable, deterministic value** (e.g. `…-expand-42`) — without it the id is an internally generated `sd-row-<n>` that changes between page loads and is unusable as a stable E2E selector. See **Row identity** above. Group toggles use `meta.group.key` (a hash of the group field values) and stay deterministic regardless. The base autoId is passed down to `external-filter`, `mobile-filter`, `column-filter`, `desktop-command`, `selector-action`, and `config` via their `[autoId]` input.
 
 > Not yet covered: `popup-export` (export-template modal) — its buttons have no autoId (follow-up).
 

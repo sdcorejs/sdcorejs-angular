@@ -248,7 +248,7 @@
               }
             }
             @case ('values') {
-              <sd-select class="qb-val" [items]="fieldOf(rule)!.values || []" valueField="value" displayField="display" [multiple]="isMulti(rule.operator)" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
+              <sd-select class="qb-val" [items]="valueItems(fieldOf(rule)!)" valueField="value" displayField="display" [multiple]="isMulti(rule.operator)" placeholder="Giá trị" size="sm" [model]="rule.value" (modelChange)="setScalar(rule, $event)" [disabled]="resolvedDisabled()" [clearable]="false" hideInlineError [autoId]="autoIdFor('val-' + index)"></sd-select>
             }
           }
         }

@@ -369,6 +369,42 @@ describe('SdQueryBuilder', () => {
     });
   });
 
+  // `values` items stability — same OOM class as boolean items above.
+  describe('values items stability (OOM fix)', () => {
+    const valuesField = (): SdQueryBuilderField => FIELDS.find(f => f.key === 'status')!;
+
+    it('returns the SAME array reference across calls for the same field', () => {
+      expect(component.valueItems(valuesField())).toBe(component.valueItems(valuesField()));
+    });
+
+    it('returns the SAME empty reference for a values field declared WITHOUT values', () => {
+      // why: đây chính là ca gây treo. `values` là optional, nên template cũ (`fieldOf(rule)!.values || []`)
+      // cấp phát một `[]` MỚI mỗi CD cho field khai thiếu `values` → `sd-select` gọi markForCheck →
+      // CD mới → mảng mới → lặp vô hạn. Ref rỗng phải ổn định.
+      const bare = { key: 'no-values', label: 'Thiếu values', type: 'values' } as SdQueryBuilderField;
+      const a = component.valueItems(bare);
+      const b = component.valueItems(bare);
+
+      expect(a).toBe(b);
+      expect(a.length).toBe(0);
+    });
+
+    it('does not loop / throw when a rule field is switched to a values field', () => {
+      component.addRule(component.tree());
+      component.setField(firstRule(), 'status');
+
+      expect(() => fixture.detectChanges()).not.toThrow();
+      expect(() => fixture.detectChanges()).not.toThrow();
+    });
+
+    it('still exposes the declared option list', () => {
+      expect(component.valueItems(valuesField())).toEqual([
+        { value: 'active', display: 'Hoạt động' },
+        { value: 'inactive', display: 'Ngừng' },
+      ]);
+    });
+  });
+
   // Task 6 — date-mode UI + compact rows (hideInlineError)
   describe('date-mode UI + compact rows', () => {
     const setupDateRule = (op: string) => {

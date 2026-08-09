@@ -3,7 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { SdOrgChart } from './org-chart.component';
 import { SdOrgChartItemDefDirective } from './org-chart-item-def.directive';
-import { SdOrgChartItem } from './org-chart.model';
+import { SdOrgChartItem, SdOrgChartOption } from './org-chart.model';
 
 const ORG_ITEMS: SdOrgChartItem[] = [
   {
@@ -91,6 +91,33 @@ class NonCollapsibleHostComponent {
       expanded: false,
     },
   ];
+}
+
+// why: `[option]` là API mới; `collapsible` nằm TRONG option nên input thô `collapsible()` vẫn giữ
+// mặc định true — đúng cấu hình từng làm chevron render dù toggle đã bị chặn.
+@Component({
+  standalone: true,
+  imports: [SdOrgChart],
+  template: `<sd-org-chart [option]="option" />`,
+})
+class OptionNonCollapsibleHostComponent {
+  readonly option: SdOrgChartOption = {
+    autoId: 'option-locked',
+    items: ORG_ITEMS,
+    collapsible: false,
+  };
+}
+
+@Component({
+  standalone: true,
+  imports: [SdOrgChart],
+  template: `<sd-org-chart [option]="option" />`,
+})
+class OptionCollapsibleHostComponent {
+  readonly option: SdOrgChartOption = {
+    autoId: 'option-open',
+    items: ORG_ITEMS,
+  };
 }
 
 @Component({
@@ -345,6 +372,71 @@ describe('SdOrgChart', () => {
 
     expect(fixture.nativeElement.textContent).not.toContain('Sales');
     expect(component.isExpanded(cmo)).toBeFalse();
+  });
+
+  // why: template gate cũ đọc input THÔ `collapsible()` thay vì `resolvedCollapsible()`, nên
+  // `[option]="{ collapsible: false }"` vẫn render chevron dù `toggle()` đã chặn — nút chết.
+  it('hides the node toggle when collapsible is disabled through option', async () => {
+    const fixture = await createFixture(OptionNonCollapsibleHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+    const chart = fixture.nativeElement as HTMLElement;
+
+    expect(component.resolvedCollapsible()).toBeFalse();
+    expect(chart.querySelector('.sd-org-chart__toggle')).toBeNull();
+    expect(chart.querySelector('[data-autoid="components-org-chart-option-locked-toggle-ceo"]')).toBeNull();
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-expanded')).toBe('true');
+    expect(fixture.nativeElement.textContent).toContain('Anna Fali');
+  });
+
+  it('still renders the node toggle when option omits collapsible', async () => {
+    const fixture = await createFixture(OptionCollapsibleHostComponent);
+    const chart = fixture.nativeElement as HTMLElement;
+
+    expect(chart.querySelector('[data-autoid="components-org-chart-option-open-toggle-ceo"]')).toBeTruthy();
+  });
+
+  // why: `createContext` được gọi thẳng từ template nên trước đây cấp phát một context MỚI cho
+  // MỖI node ở MỖI chu kỳ change detection rồi đưa vào `*ngTemplateOutlet`.
+  it('memoizes the item context so change detection does not allocate a new one per node', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+    const ceo = ORG_ITEMS[0];
+    const cmo = ceo.children![0];
+    const sales = cmo.children![0];
+
+    const ceoContext = component.createContext(ceo, 0, null);
+    const salesContext = component.createContext(sales, 2, cmo);
+
+    fixture.detectChanges();
+    fixture.detectChanges();
+
+    expect(component.createContext(ceo, 0, null)).toBe(ceoContext);
+    expect(component.createContext(sales, 2, cmo)).toBe(salesContext);
+    expect(component.createContext(cmo, 1, ceo)).not.toBe(ceoContext);
+  });
+
+  it('refreshes the memoized context when expansion state changes', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+    const ceo = ORG_ITEMS[0];
+
+    expect(component.createContext(ceo, 0, null).expanded).toBeTrue();
+
+    component.toggle(ceo);
+    fixture.detectChanges();
+
+    expect(component.createContext(ceo, 0, null).expanded).toBeFalse();
+    expect(component.createContext(ceo, 0, null)).toBe(component.createContext(ceo, 0, null));
+  });
+
+  it('reuses one empty children array for leaf nodes', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+    const component = fixture.debugElement.query(By.directive(SdOrgChart)).componentInstance as SdOrgChart;
+    const sales = ORG_ITEMS[0].children![0].children![0];
+    const design = ORG_ITEMS[0].children![1].children![1];
+
+    expect(component.childrenOf(sales)).toEqual([]);
+    expect(component.childrenOf(sales)).toBe(component.childrenOf(design));
   });
 
   it('does not include the old expanded-parent connector selector that drew an extra line', async () => {

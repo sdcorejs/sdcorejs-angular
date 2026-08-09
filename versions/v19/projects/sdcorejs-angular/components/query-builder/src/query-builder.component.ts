@@ -478,6 +478,24 @@ export class SdQueryBuilder {
     return this.#booleanOptionsByKey().get(field.key) ?? QB_EMPTY_OPTIONS;
   }
 
+  /**
+   * Option list cho field `type:'values'`.
+   *
+   * why: template cũ bind thẳng `[items]="fieldOf(rule)!.values || []"`. `values` là OPTIONAL trên
+   * `SdQueryBuilderField`, nên với field khai thiếu `values`, nhánh `|| []` cấp phát một mảng MỚI
+   * mỗi lần change detection chạy — đúng nguyên nhân OOM đã ghi ở `#booleanOptionsByKey`:
+   * `sd-select` có `toObservable(items)` → `markForCheck()` → CD mới → mảng mới → lặp vô hạn.
+   *
+   * why: KHÔNG memo hoá qua `computed<Map>` snapshot. `field.values` vốn ĐÃ là mảng của consumer
+   * nên tự nó ổn định; snapshot vào Map chỉ thêm một tầng cache không bao giờ invalidate khi
+   * consumer nạp option bất đồng bộ bằng cách gán tại chỗ (`fields[0].values = loaded`) — reference
+   * `fields` không đổi nên `computed` giữ nguyên list cũ vĩnh viễn. Chỉ nhánh RỖNG cần hằng số
+   * dùng chung để tránh literal mới mỗi CD.
+   */
+  valueItems(field: SdQueryBuilderField): SdQueryBuilderFieldOption[] {
+    return field.values?.length ? field.values : QB_EMPTY_OPTIONS;
+  }
+
   /** Current date-value mode of a rule, derived from its value (no separate state). */
   dateMode(rule: QbRule): QbDateMode {
     const v = rule.value;

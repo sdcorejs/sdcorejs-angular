@@ -1,9 +1,12 @@
+import { ChangeDetectorRef } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
 
-import { SdTabRouterTab } from '../../models/tab-router.model';
+import { SdBadge } from '@sdcorejs/angular/components/badge';
+import { SdTabInfo, SdTabRouterTab } from '../../models/tab-router.model';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterItemComponent } from './tab-router-item.component';
 
@@ -65,5 +68,86 @@ describe('SdTabRouterItemComponent close delegation', () => {
 
     expect(tabRouterServiceSpy.close).toHaveBeenCalledOnceWith(component.tab);
     expect(beforeCloseSpy).not.toHaveBeenCalled();
+  });
+
+  // why: bản cũ bind `[href]="[tab.url]"` — một MẢNG vào thuộc tính DOM kiểu chuỗi, chỉ "chạy
+  // được" nhờ mảng 1 phần tử tự stringify. `properties['href']` đọc thẳng giá trị đã bind (chưa
+  // qua stringify) nên phân biệt được hai cách bind.
+  it('binds the url string itself instead of a single-element array', () => {
+    const anchorDe = fixture.debugElement.query(By.css('a'));
+    const anchor = anchorDe.nativeElement as HTMLAnchorElement;
+
+    expect(anchorDe.properties['href']).toBe('/test');
+    expect(anchor.getAttribute('href')).toBe('/test');
+  });
+
+  it('keeps the href in sync when the tab url changes', () => {
+    component.tab = { ...component.tab, url: '/next' };
+    // the component is OnPush and `tab` is a plain @Input field, so its own view has to be
+    // marked dirty (the real tab-router service does this through its `events` stream)
+    fixture.debugElement.injector.get(ChangeDetectorRef).markForCheck();
+    fixture.detectChanges();
+
+    const anchorDe = fixture.debugElement.query(By.css('a'));
+    expect(anchorDe.properties['href']).toBe('/next');
+    expect((anchorDe.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/next');
+  });
+});
+
+describe('SdTabRouterItemComponent badge bindings', () => {
+  let fixture: ComponentFixture<SdTabRouterItemComponent>;
+  let tabInfoChanges: Subject<SdTabInfo>;
+
+  const tabInfo: SdTabInfo = {
+    name: 'Danh sách hợp đồng',
+    icon: 'description',
+    color: 'primary',
+  } as SdTabInfo;
+
+  beforeEach(async () => {
+    tabInfoChanges = new Subject<SdTabInfo>();
+
+    await TestBed.configureTestingModule({
+      imports: [SdTabRouterItemComponent, NoopAnimationsModule],
+      providers: [
+        {
+          provide: SdTabRouterService,
+          useValue: { close: jasmine.createSpy('close'), events: new BehaviorSubject(undefined), builders: new BehaviorSubject([]) },
+        },
+        { provide: Router, useValue: { navigate: jasmine.createSpy('navigate') } },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SdTabRouterItemComponent);
+    fixture.componentInstance.tab = {
+      key: 'contracts',
+      component: class {},
+      isActive: false,
+      url: '/contracts',
+      tabInfoChanges,
+    } as SdTabRouterTab;
+
+    fixture.detectChanges();
+    tabInfoChanges.next(tabInfo);
+    fixture.detectChanges();
+  });
+
+  // why: template từng có `[title]="info.icon"` ngay trên `[title]="info.name"` — binding chết do
+  // copy-paste, ghi đè ngay lập tức và bắt sd-badge nhận hai giá trị title mỗi lần CD.
+  it('binds the tab name to the badge title and the icon only to the badge icon', () => {
+    const badge = fixture.debugElement.query(By.directive(SdBadge)).componentInstance as SdBadge;
+
+    expect(badge.title()).toBe(tabInfo.name);
+    expect(badge.icon()).toBe(tabInfo.icon);
+
+    fixture.detectChanges();
+
+    expect(badge.title()).toBe(tabInfo.name);
+  });
+
+  it('renders the tab name, not the icon name, as the badge label', () => {
+    const label = fixture.nativeElement.querySelector('.c-badge-title') as HTMLElement;
+
+    expect(label.textContent?.trim()).toBe(tabInfo.name);
   });
 });

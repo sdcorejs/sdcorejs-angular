@@ -96,7 +96,7 @@ None.
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
 - Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
-- `<sd-badge>` renders the visual: icon, name, tooltip, color
+- `<sd-badge>` renders the visual: `icon` → `[icon]`, `name` → `[title]` (the pill label), `tooltip` (falls back to `name`) → `[tooltip]`, `color` → `[color]`
 
 ## Decorator: `@SdTabComponent`
 
@@ -275,7 +275,7 @@ this.tab.tabInfoChanges.next({
 
 ## Accessibility
 
-- Tabs are `<a>` anchors with `[href]` set to the tab URL → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
+- Tabs are `<a>` anchors with `[href]` bound to the `tab.url` string → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
 - Close button has `aria-hidden` (focusable via tab order is not guaranteed — consider a fork if A11y is critical)
 - No `role="tablist" / "tab" / "tabpanel"` ARIA wiring (this is a router shell, not WAI-ARIA tabs)
 

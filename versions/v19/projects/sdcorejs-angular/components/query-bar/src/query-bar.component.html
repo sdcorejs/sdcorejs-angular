@@ -53,8 +53,11 @@
   @if (_resolvedMode === 'inline') {
     <!-- ===== INLINE MODE (GitLab-style token builder) ===== -->
 
-    <!-- Completed chips -->
-    @for (filter of _filters; track $index; let i = $index) {
+    <!-- Completed chips.
+         why: track theo rowId(filter) chứ KHÔNG theo $index — track $index gắn chip với vị trí,
+         nên xoá filter đầu tiên sẽ bind lại chip cũ sang filter kế tiếp và kéo theo state nội bộ
+         (inline-chip `#editing`, inline-value-chip `draft`) sang sai filter. -->
+    @for (filter of _filters; track rowId(filter); let i = $index) {
       @if (_showOrConnector && i > 0) {
         <span class="c-or-connector" aria-hidden="true">OR</span>
       }
@@ -116,7 +119,8 @@
     </button>
   } @else {
     <!-- ===== POPOVER MODE (default) — compact chips edited via mat-menu ===== -->
-    @for (filter of _filters; track $index; let i = $index) {
+    <!-- why: track theo rowId(filter) — xem ghi chú ở nhánh inline. -->
+    @for (filter of _filters; track rowId(filter); let i = $index) {
       @if (_showOrConnector && i > 0) {
         <span class="c-or-connector" aria-hidden="true">OR</span>
       }
