@@ -1,4 +1,4 @@
-import { Directive, ElementRef, inject, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges, input } from '@angular/core';
+import { DestroyRef, Directive, ElementRef, inject, Renderer2, HostListener, OnInit, OnChanges, SimpleChanges, input } from '@angular/core';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
@@ -13,9 +13,11 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   readonly sdHoverCopyDisabled = input(false);
 
   readonly #i18n = inject(I18nService);
+  readonly #destroyRef = inject(DestroyRef);
 
   #copyButton: HTMLElement | null = null;
   #tooltip!: HTMLElement;
+  #hideTooltipTimer: ReturnType<typeof setTimeout> | null = null;
   get #defaultTooltip(): string {
     return this.#i18n.t('core.directive.hover-copy.tooltip');
   }
@@ -23,7 +25,12 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   /** Inserted by Angular inject() migration for backwards compatibility */
   constructor(...args: unknown[]);
 
-  constructor() {}
+  constructor() {
+    // why: timeout 1s ẩn tooltip trước đây không được lưu lại cũng không huỷ, mà directive lại
+    // không có teardown nào. Host bị destroy trong vòng 1s đó thì callback vẫn chạy và ghi style
+    // lên node đã tháo khỏi DOM (timer sống lâu hơn view).
+    this.#destroyRef.onDestroy(() => this.#clearHideTooltipTimer());
+  }
 
   // https://onemount.atlassian.net/browse/SM-2287
   // Hiện tại khi sdHoverCopyDisabled = true, directive chỉ dùng opacity: 0 và pointerEvents: 'none' để ẩn nút, nhưng điều này không hoàn toàn ngăn chặn được việc click trong một số trường hợp.
@@ -116,12 +123,24 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
       if (copyText && !this.sdHoverCopyDisabled()) {
         BrowserUtilities.copyToClipboard(String(copyText));
         this.#showTooltip('Copied');
-        setTimeout(() => this.#hideTooltip(), 1000);
+        this.#clearHideTooltipTimer();
+        this.#hideTooltipTimer = setTimeout(() => {
+          this.#hideTooltipTimer = null;
+          this.#hideTooltip();
+        }, 1000);
       }
     });
   }
 
+  #clearHideTooltipTimer(): void {
+    if (this.#hideTooltipTimer === null) return;
+    clearTimeout(this.#hideTooltipTimer);
+    this.#hideTooltipTimer = null;
+  }
+
   #removeCopyButton(): void {
+    // why: tooltip nằm trong button — bỏ button mà để timer chạy tiếp là ghi style lên node đã gỡ.
+    this.#clearHideTooltipTimer();
     if (this.#copyButton) {
       this.renderer.removeChild(this.el.nativeElement, this.#copyButton);
       this.#copyButton = null;

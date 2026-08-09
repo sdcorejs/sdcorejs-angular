@@ -194,6 +194,63 @@ describe('SdHoverCopyDirective', () => {
     });
   });
 
+  // ─── teardown ────────────────────────────────────────────────────────────────
+
+  describe('teardown', () => {
+    // why: timeout 1s ẩn tooltip trước đây không lưu handle và directive không có teardown, nên
+    // host bị destroy trong 1s đó vẫn chạy #hideTooltip() trên node đã gỡ khỏi DOM.
+    // fakeAsync sẽ báo "timer(s) still in the queue" nếu timer không được clear khi destroy.
+    it('clears the pending hide-tooltip timeout when the host is destroyed', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      getDirectiveButton()!.click();
+      const tooltip = getTooltip()!;
+      expect(tooltip.innerText).toBe('Copied');
+
+      fixture.destroy();
+
+      // Không tick: nếu timer còn trong hàng đợi, fakeAsync fail ở cuối test.
+      expect(tooltip.innerText).toBe('Copied');
+    }));
+
+    it('does not reset the tooltip after destroy even once 1000ms of virtual time passes', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      getDirectiveButton()!.click();
+      const tooltip = getTooltip()!;
+
+      fixture.destroy();
+      tick(1000);
+
+      expect(tooltip.innerText).toBe('Copied');
+      expect(tooltip.style.opacity).toBe('1');
+    }));
+
+    it('clears the pending hide-tooltip timeout when the button is removed by sdHoverCopyDisabled', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      const tooltip = getTooltip()!;
+      getDirectiveButton()!.click();
+
+      host.disabled = true;
+      fixture.detectChanges();
+
+      // Timer đã bị clear cùng lúc gỡ button — fakeAsync không còn task nào treo.
+      expect(tooltip.innerText).toBe('Copied');
+    }));
+
+    it('restarts the 1s timer on a second click instead of leaking the first one', fakeAsync(() => {
+      directiveInstance.onMouseEnter();
+      const button = getDirectiveButton()!;
+      button.click();
+      tick(600);
+      button.click();
+      tick(600);
+      // Timer đầu đã bị huỷ nên tooltip vẫn còn "Copied" ở mốc 1200ms.
+      expect(getTooltip()!.innerText).toBe('Copied');
+      tick(400);
+      expect(getTooltip()!.innerText).toBe('Sao chép');
+      expect(getTooltip()!.style.opacity).toBe('0');
+    }));
+  });
+
   // ─── ngOnChanges — dynamic enable/disable ────────────────────────────────────
 
   describe('ngOnChanges — dynamic enable/disable', () => {

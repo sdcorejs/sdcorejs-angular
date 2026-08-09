@@ -1,17 +1,8 @@
 import { TestBed } from '@angular/core/testing';
+import { Subject } from 'rxjs';
 import { SdAuthService } from './auth.service';
 import { ISdAuthConfiguration, SD_AUTH_CONFIGURATION } from '../configurations';
 import { SdAuthInfo } from './auth.model';
-
-// ---------------------------------------------------------------------------
-// Default guest user expected when no configuration is supplied
-// ---------------------------------------------------------------------------
-const GUEST_USER: SdAuthInfo = {
-  id: 'guest-id',
-  username: 'guest',
-  firstName: 'Guest',
-  email: 'guest@gmail.com',
-};
 
 // ---------------------------------------------------------------------------
 // Helper: build TestBed with optional auth configuration
@@ -38,9 +29,19 @@ describe('SdAuthService', () => {
       expect(service.getAuthInfo).toBeDefined();
     });
 
-    it('getAuthInfo() returns the default guest user', () => {
+    // why: identity giả (`guest` / `guest@gmail.com`) làm template tin là đã có người đăng nhập và
+    // render UI của user đã xác thực trong khi thực tế chưa ai đăng nhập. `undefined` là trạng thái
+    // trung thực duy nhất — template buộc phải xử lý nhánh chưa xác thực.
+    it('getAuthInfo() returns undefined — no synthetic authenticated identity', () => {
       const service = makeService();
-      expect(service.getAuthInfo!()).toEqual(GUEST_USER);
+      expect(service.getAuthInfo!()).toBeUndefined();
+    });
+
+    it('getAuthInfo() never fabricates a guest username / email', () => {
+      const service = makeService();
+      const info = service.getAuthInfo!() as SdAuthInfo | undefined;
+      expect(info?.username).toBeUndefined();
+      expect(info?.email).toBeUndefined();
     });
 
     it('signout$  is an Observable (defined and has subscribe)', () => {
@@ -76,10 +77,32 @@ describe('SdAuthService', () => {
         guard: { authInfo: () => customUser },
       };
       const service = makeService(config);
-      // Signal is initialValue=defaultUser until the observable resolves;
-      // because authInfo returns a plain object, SdNormalizeAsync wraps it in of()
-      // which toSignal resolves synchronously — value should already be customUser.
+      // authInfo trả về object thuần nên normalizeAsync bọc trong of() và toSignal resolve đồng bộ.
       expect(service.getAuthInfo!()).toEqual(customUser);
+    });
+
+    // why: `initialValue` cũ là user guest, nên trong lúc lookup thật còn pending UI đã render như
+    // một phiên đã đăng nhập. Giá trị khởi tạo phải là `undefined` cho tới khi nguồn thật phát ra.
+    it('getAuthInfo() is undefined while an async authInfo() is still pending', () => {
+      const pending = new Subject<SdAuthInfo>();
+      const config: ISdAuthConfiguration = {
+        guard: { authInfo: () => pending },
+      };
+      const service = makeService(config);
+
+      expect(service.getAuthInfo!()).toBeUndefined();
+    });
+
+    it('getAuthInfo() picks up the real user once the async authInfo() emits', () => {
+      const pending = new Subject<SdAuthInfo>();
+      const config: ISdAuthConfiguration = {
+        guard: { authInfo: () => pending },
+      };
+      const service = makeService(config);
+
+      pending.next({ id: 'u-7', username: 'bob' });
+
+      expect(service.getAuthInfo!()).toEqual({ id: 'u-7', username: 'bob' });
     });
   });
 

@@ -1,8 +1,8 @@
-import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV3, resolveSidebarV3Recent } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, getMenuStableKey, searchMenuLeaves } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
@@ -19,7 +19,6 @@ import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.compone
 })
 export class SidebarV3Component {
   readonly #router = inject(Router);
-  readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
   #initialized = false;
@@ -73,8 +72,10 @@ export class SidebarV3Component {
   navigateMenu(menu: SdLayoutMenu): void {
     if (!('path' in menu)) return;
     this.#navigationState.recordRecent(menu, this.recentConfiguration());
-    if (menu.path.includes('http')) {
-      this.#document.defaultView?.open(menu.path, '_blank', 'noopener');
+    // why: `includes('http')` là substring test — `javascript:fetch(...)//http` lọt qua và chạy như
+    // script trong origin của app. Parse URL thật rồi mới mở, kèm `noopener,noreferrer`.
+    if (sdIsExternalHttpUrl(menu.path)) {
+      sdOpenExternal(menu.path);
       return;
     }
     void this.#router.navigate([menu.path.split('?')[0]], {

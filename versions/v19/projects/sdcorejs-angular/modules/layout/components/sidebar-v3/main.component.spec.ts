@@ -90,6 +90,25 @@ describe('SidebarV3Component', () => {
     expect(navigate).toHaveBeenCalledWith(['/reports'], jasmine.any(Object));
   });
 
+  it('opens an absolute http(s) menu with noopener,noreferrer and never opens a javascript: scheme', () => {
+    create();
+    const windowOpen = spyOn(window, 'open');
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    fixture.componentInstance.navigateMenu({ id: 'docs', title: 'Tài liệu', path: 'https://example.com/docs', permission: true });
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
+    expect(navigate).not.toHaveBeenCalled();
+
+    windowOpen.calls.reset();
+    fixture.componentInstance.navigateMenu({
+      id: 'evil',
+      title: 'Evil',
+      path: 'javascript:fetch("//evil.example.com")//http',
+      permission: true,
+    });
+    expect(windowOpen).not.toHaveBeenCalled();
+  });
+
   it('omits the brand and centers compact controls when collapsed', () => {
     create({ version: 3, defaultCollapsed: true });
 

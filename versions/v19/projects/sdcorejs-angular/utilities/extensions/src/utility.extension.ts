@@ -1,4 +1,18 @@
+import { isDevMode } from '@angular/core';
+import { Utilities } from '@sdcorejs/utils/fns';
+import { sdIsExternalHttpUrl, sdOpenExternal, sdParseUrl } from './url-safety';
+
 export { Utilities, BrowserUtilities } from '@sdcorejs/utils/fns';
+
+// why: `console.*` trong code đã ship làm bẩn log của consumer và có thể lộ chi tiết nội bộ ở
+// production. Gate qua `isDevMode()` để chỉ nói chuyện với dev khi app chạy dev build.
+const devWarn = (...args: unknown[]): void => {
+  if (isDevMode()) console.warn(...args);
+};
+
+const devError = (...args: unknown[]): void => {
+  if (isDevMode()) console.error(...args);
+};
 
 // Hardcoded i18n cho upload utility — pure function nên không inject() được I18nService.
 // Đọc lang trực tiếp từ localStorage (cùng key với I18nService: 'sd-core.language').
@@ -140,7 +154,7 @@ const generateFileName = (fileName?: string | null) => {
 
 const download = (fileOrPath: File | string | undefined | null, fileName?: string | null) => {
   if (!fileOrPath) {
-    console.warn('No file or path provided for download');
+    devWarn('No file or path provided for download');
     return;
   }
   fileName = generateFileName(fileName);
@@ -156,13 +170,17 @@ const download = (fileOrPath: File | string | undefined | null, fileName?: strin
     URL.revokeObjectURL(url); // Giải phóng tài nguyên
     return;
   }
+  // why: nhánh cũ dựng `<a target="_blank">` KHÔNG kèm `rel="noopener"`, nên trang mở ra giữ được
+  // `window.opener` và có thể điều hướng lại tab gốc (reverse tabnabbing). Điều kiện cũ
+  // `startsWith('http')` còn nhận cả `'httpfoo'`. `sdOpenExternal` chỉ mở khi parse ra scheme
+  // http:/https: và luôn truyền `noopener,noreferrer`.
+  if (sdIsExternalHttpUrl(fileOrPath)) {
+    sdOpenExternal(fileOrPath);
+    return;
+  }
   const a = document.createElement('a');
   a.href = fileOrPath;
-  if (fileOrPath.startsWith('http')) {
-    a.target = '_blank'; // mở tab mới
-  } else {
-    a.download = fileName;
-  }
+  a.download = fileName;
   a.style.visibility = 'hidden';
   document.body.appendChild(a);
   a.click();
@@ -185,7 +203,7 @@ const downloadBlob = (blob: Blob, fileName?: string) => {
       link.remove();
     }
   } catch (e) {
-    console.error('BlobToSaveAs error', e);
+    devError('BlobToSaveAs error', e);
   }
 };
 
@@ -240,7 +258,7 @@ const isIncognito = async (): Promise<boolean> => {
       const { quota } = await navigator.storage.estimate();
       if (quota && quota < 120 * 1024 * 1024) return true;
     } catch (err) {
-      console.error(err);
+      devError(err);
     }
   }
 
@@ -266,46 +284,11 @@ const randomId = (prefix?: string | null): string => {
   return id;
 };
 
-const hash = (obj: any): string => {
-  const json = stableStringify(obj);
-  let hash = 0;
-
-  for (let i = 0; i < json.length; i++) {
-    hash = (hash << 5) - hash + json.charCodeAt(i);
-    hash |= 0; // Convert to 32bit integer
-  }
-
-  return `h${Math.abs(hash)}`;
-};
-
-/**
- * Convert object to stable JSON string (keys sorted)
- */
-const stableStringify = (obj: any): string => {
-  if (obj === null || typeof obj !== 'object') {
-    return JSON.stringify(obj);
-  }
-
-  if (obj instanceof File) {
-    // Chỉ serialize các thuộc tính quan trọng của File
-    return JSON.stringify({
-      __type: 'File',
-      name: obj.name,
-      size: obj.size,
-      type: obj.type,
-      lastModified: obj.lastModified,
-    });
-  }
-
-  if (Array.isArray(obj)) {
-    return `[${obj.map(stableStringify).join(',')}]`;
-  }
-
-  const keys = Object.keys(obj).sort();
-  const keyValuePairs = keys.map(key => `"${key}":${stableStringify(obj[key])}`);
-
-  return `{${keyValuePairs.join(',')}}`;
-};
+// why: bản `stableStringify` copy ở đây thiếu nhánh `Date` mà `@sdcorejs/utils` đã có, nên
+// `Object.keys(date)` ra `[]` và MỌI Date serialize thành `{}` — hai object chỉ khác nhau ở một
+// field ngày tháng cho ra cùng một hash. Uỷ quyền hẳn cho implementation canonical thay vì vá bản
+// copy, để không lệch tiếp lần sau (nó cũng đã guard `File` an toàn cho môi trường không có DOM).
+const hash = (obj: any): string => Utilities.hash(obj);
 
 // Hàm `parseQueryParams` dùng để phân tích chuỗi query string (phần sau dấu `?` trên URL)
 //   và chuyển đổi nó thành một đối tượng JavaScript với các cặp key-value.
@@ -319,12 +302,26 @@ const parseQueryParams = (queryString?: string): Record<string, string> => {
 };
 
 /**
- * Lấy địa chỉ IP public của client bằng cách gọi API bên thứ ba.
+ * Lấy địa chỉ IP public của client từ `endpoint` do consumer chỉ định.
+ *
+ * why: bản cũ hardcode `https://api.ipify.org` — một UI library tự gọi ra bên thứ ba mà app không
+ * khai báo là rò rỉ IP người dùng sang một bên không nằm trong hợp đồng xử lý dữ liệu (GDPR) và ép
+ * mọi consumer nhận một network dependency cứng. Endpoint giờ là tham số BẮT BUỘC: không truyền thì
+ * không có request nào rời khỏi app.
+ *
+ * @param endpoint URL tuyệt đối `http(s)` hoặc đường dẫn same-origin, trả về JSON dạng `{ "ip": "..." }`.
+ *                 Ưu tiên endpoint first-party của chính app.
+ * @returns IP đọc được, hoặc `null` khi endpoint không hợp lệ / request lỗi.
  */
-const getClientPublicIp = async (): Promise<string | null> => {
+const getClientPublicIp = async (endpoint: string): Promise<string | null> => {
+  // why: fail-closed trước khi fetch — chặn `javascript:`/`file:`/chuỗi rác lọt vào network layer.
+  const parsed = sdParseUrl(endpoint, typeof window === 'undefined' ? undefined : window.location.origin);
+  if (!parsed || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
+    devError('getClientPublicIp: endpoint must be an absolute http(s) URL or a same-origin path:', endpoint);
+    return null;
+  }
   try {
-    // Gọi đến API của ipify để lấy IP dưới dạng JSON
-    const response = await fetch('https://api.ipify.org?format=json');
+    const response = await fetch(parsed.toString());
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -332,7 +329,7 @@ const getClientPublicIp = async (): Promise<string | null> => {
     // Trả về địa chỉ IP
     return data.ip;
   } catch (error) {
-    console.error('Failed to fetch client IP:', error);
+    devError('Failed to fetch client IP:', error);
     return null; // Trả về null nếu có lỗi
   }
 };

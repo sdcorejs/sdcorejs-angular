@@ -21,6 +21,35 @@ const current = preferences.get();
 
 Object keys are canonicalized deterministically. Options affecting persistence identity include area, namespace, version, args/default presence, serializer and identity canonicalizer.
 
+## Namespaces and the same-origin collision hazard
+
+⚠️ **`localStorage` / `sessionStorage` are scoped to the ORIGIN, not to the app.** Two applications
+deployed on the same origin (`https://portal.example.com/app-a/` and `.../app-b/`) share one storage
+area. Handles created with the same logical key and the same options therefore resolve to the same
+storage key, and each app silently overwrites the other's value.
+
+`namespace` is what partitions them, and **it has no default on purpose**:
+
+| Source | Precedence | Value |
+| --- | --- | --- |
+| `option.namespace` (per handle) | 1 (highest) | as supplied |
+| `SD_STORAGE_CONFIG.namespace` (per app) | 2 | as supplied |
+| — | — | absent (handles share one partition per origin) |
+
+⚠️ **Every application that shares an origin with anything else MUST declare its own `namespace`.**
+The library deliberately does not ship a fallback value: a library-wide constant would be identical in
+both apps, so it would not separate them at all — it would only change the storage key of every
+existing handle and orphan already-persisted data. Only an app-chosen value actually partitions.
+
+The cheapest correct setup is one global `SD_STORAGE_CONFIG.namespace` per application:
+
+```ts
+providers: [{ provide: SD_STORAGE_CONFIG, useValue: { namespace: 'app-a' } satisfies ISdStorageConfiguration }];
+```
+
+Since `namespace` is part of the persistence identity, adopting or changing it starts a new storage
+partition — values written under the previous namespace are no longer read (see *Migration* below).
+
 ## Handle contract
 
 ```ts
@@ -61,7 +90,8 @@ providers: [
 ];
 ```
 
-Per-handle options override global namespace/version/serializer/canonicalizer values.
+Per-handle options override global namespace/version/serializer/canonicalizer values. When neither
+supplies a namespace, the handle is created without one — see the collision hazard above.
 
 ## Errors, SSR and cleanup
 
@@ -76,6 +106,7 @@ Per-handle options override global namespace/version/serializer/canonicalizer va
 - `destroy()` is now public and typed; remove casts/workarounds.
 - Existing JSON values migrate on first successful read.
 - `namespace`/`version` are part of identity, so changing either intentionally starts a new storage partition.
+- **`namespace` still has no default.** Handles created without one keep the storage key they already had, so no persisted value is orphaned by upgrading. Adding a `namespace` is an explicit, opt-in partition change: the previously stored values stop being read from that moment on.
 - Unsupported values now fail explicitly instead of losing types during JSON stringify/parse.
 - Verify custom `SD_STORAGE_CONFIG.key` functions because they now wrap versioned base keys.
 

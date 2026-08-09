@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey, selectPrimaryMenuGroups } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
@@ -106,8 +107,10 @@ export class SidebarMobileV2Component {
 
   #navigate(menu: Extract<SdLayoutMenu, { path: string }>): void {
     this.#navigationState.recordRecent(menu, { enabled: true, maxItems: 5 });
-    if (menu.path.includes('http')) {
-      this.#document.defaultView?.open(menu.path, '_blank', 'noopener');
+    // why: `includes('http')` là substring test — `javascript:fetch(...)//http` lọt qua và chạy như
+    // script trong origin của app. Parse URL thật rồi mới mở, kèm `noopener,noreferrer`.
+    if (sdIsExternalHttpUrl(menu.path)) {
+      sdOpenExternal(menu.path);
       this.closeSheet();
       return;
     }

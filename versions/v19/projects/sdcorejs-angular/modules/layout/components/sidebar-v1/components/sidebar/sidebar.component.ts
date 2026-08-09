@@ -11,6 +11,7 @@ import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
 import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { StringUtilities } from '@sdcorejs/utils/fns';
 
 // NOTE: Import nội bộ trong module layout
@@ -202,8 +203,12 @@ export class SidebarComponent {
 
   navigate = (args: { path: string; queryParams: Params }): void => {
     const { path, queryParams } = args;
-    if (path.includes('http')) {
-      this.#window?.open(path, '_blank', 'noopener');
+    // why: `path.includes('http')` là substring test chứ không phải scheme test — chuỗi
+    // `javascript:fetch(...)//http` lọt qua rồi chạy như script trong chính origin của app.
+    // `sdIsExternalHttpUrl` parse URL thật, `sdOpenExternal` từ chối scheme lạ và luôn gắn
+    // `noopener,noreferrer` (chặn reverse tabnabbing qua `window.opener`).
+    if (sdIsExternalHttpUrl(path)) {
+      sdOpenExternal(path);
       return;
     }
     this.#router.navigate([path.split('?')[0]], {

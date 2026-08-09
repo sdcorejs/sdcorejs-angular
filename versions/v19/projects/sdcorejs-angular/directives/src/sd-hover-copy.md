@@ -33,6 +33,7 @@ None.
 - `mouseenter` on host: shows the button (`display: block`); skipped when `sdHoverCopyDisabled` is `true` or the button was never created.
 - `mouseleave` on host: hides the button (`display: none`) and resets tooltip text to "Sao chép" with `opacity: 0`.
 - Clicking the copy button: calls `BrowserUtilities.copyToClipboard(String(copyText))`, swaps tooltip text to "Copied" with `opacity: 1`, then auto-hides after 1000 ms by resetting to "Sao chép" with `opacity: 0`.
+- **Teardown**: the 1000 ms auto-hide timer is stored and cleared via `DestroyRef.onDestroy`, and also when the button is removed (`sdHoverCopyDisabled` → `true`). A host destroyed within that second no longer runs the reset against a detached node, and clicking twice restarts the timer instead of leaving the first one pending.
 
 ## Known issues
 - **Double-button creation on first render**: because `ngOnChanges` fires before `ngOnInit`, both hooks create a copy button when `sdHoverCopyDisabled` starts as `false`. The directive's internal reference points to the second button (created in `ngOnInit`), so behaviour is correct, but an orphaned first button element stays in the host's DOM. Tracked as a follow-up to SM-2287.

@@ -77,3 +77,31 @@ export const SD_API_CONFIG = new InjectionToken<ISdApiConfiguration>('sd-api.con
 
 /** @deprecated Use `SD_API_CONFIG`. This is the same injection token. */
 export const SD_API_CONFIGURATION = SD_API_CONFIG;
+
+/**
+ * Lỗi nghiệp vụ: HTTP 200 nhưng body envelope báo thất bại (`{ ok: false, ... }`).
+ *
+ * why: trước đây `SdApiService` `throw body` — một plain object. Hệ quả: `error instanceof Error`
+ * là `false`, `error.message` là `undefined`, nên mọi `catch` của consumer và predicate
+ * `retry.retryWhen` đều bỏ sót nhánh này. Bọc vào một Error thật để envelope lỗi đi chung
+ * đường với lỗi HTTP; body gốc vẫn giữ nguyên ở `.body`.
+ */
+export class SdApiError<TBody = unknown> extends Error {
+  override readonly name = 'SdApiError';
+
+  /** Body nguyên bản của response (đúng object server trả về). */
+  readonly body: TBody;
+
+  constructor(body: TBody, message?: string) {
+    super(message ?? readSdApiEnvelopeMessage(body));
+    this.body = body;
+  }
+}
+
+/** Lấy `message` từ envelope nếu server có gửi, để `error.message` nói được điều gì đó hữu ích. */
+function readSdApiEnvelopeMessage(body: unknown): string {
+  if (body !== null && typeof body === 'object' && 'message' in body && typeof body.message === 'string' && body.message.trim()) {
+    return body.message;
+  }
+  return 'The API response envelope reported ok: false';
+}

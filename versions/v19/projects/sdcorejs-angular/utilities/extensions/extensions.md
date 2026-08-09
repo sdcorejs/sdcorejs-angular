@@ -121,7 +121,7 @@ Higher-level value validators built on `StringUtilities.REGEX_*`. New canonical 
 | --- | --- | --- |
 | `fetchAllByPaging` | `<T>(func: (pageSize, pageNumber) => Promise<{items, total}>, defaultPageSize?) => Promise<T[]>` | Drain a paginated API into a single array (default page size `1000`). Renamed from `allWithPaging`. |
 | `randomId` | `(prefix?: string) => string` | Base-36 timestamp ID, optionally prefixed. |
-| `hash` | `(obj: any) => string` | Stable 32-bit non-crypto hash of any object — `h` + abs(int). Uses `stableStringify` (sorted keys, special-cases `File`). |
+| `hash` | `(obj: any) => string` | Stable 32-bit non-crypto hash of any object — `h` + abs(int). Uses `stableStringify` (sorted keys, special-cases `Date` → ISO string and `File`). |
 | `parseQueryParams` | `(queryString?: string) => Record<string, string>` | Wrap `URLSearchParams` into a plain object. |
 | `generateUuid` | `() => string` | `crypto.randomUUID()` with timestamp+random fallback for legacy browsers. |
 | `getNestedValue` | `(obj: any, path: string) => any` | Read nested value by dotted path; safe against `undefined` segments. |
@@ -131,10 +131,43 @@ Higher-level value validators built on `StringUtilities.REGEX_*`. New canonical 
 | Name | Signature | Purpose |
 | --- | --- | --- |
 | `upload` | `(option?: { extensions?, maxSizeInMb?, validator?, multiple? }) => Promise<File \| File[] \| null>` | Programmatic file picker — injects a hidden `<input type=file>`, validates extension/size/custom rule, resolves with selected file(s). |
-| `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (via blob URL) or a string path/URL. External `http*` URLs open in new tab instead. |
+| `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (via blob URL) or a string path/URL. Absolute `http:`/`https:` URLs open in a new tab through `sdOpenExternal` (`noopener,noreferrer`) instead of downloading. |
 | `downloadBlob` | `(blob: Blob, fileName?) => void` | Trigger download of an arbitrary `Blob`. |
 | `copyToClipboard` | `(text: string) => void` | `navigator.clipboard.writeText`. |
 | `isMobile` | `() => boolean` | UA sniff for `Mobi` or `Android`. |
 | `detectIncognito` | `() => Promise<{ isPrivate: boolean; browserName: string }>` | Run browser-specific probes (Safari indexedDB blob, Chrome storage quota, Firefox `serviceWorker`, IE `indexedDB`) and resolve with detected browser name + private-mode flag. `browserName` ∈ `{ 'Safari', 'Chrome', 'Brave', 'Edge', 'Opera', 'Chromium', 'Firefox', 'Internet Explorer', 'Unknown' }`. |
 
 > The legacy `SdUtilities` object is kept as a deprecated aggregate that proxies the union of `Utilities` + `BrowserUtilities` members (plus old `allWithPaging` / `isIncognito` names). Migrate to the split namespaces.
+
+### `SdUtilities.getClientPublicIp` — endpoint is now required (BREAKING)
+
+Only on the deprecated `SdUtilities` aggregate; it has no counterpart in `Utilities` / `BrowserUtilities`.
+
+```ts
+getClientPublicIp(endpoint: string): Promise<string | null>
+```
+
+| Before | After |
+| --- | --- |
+| `SdUtilities.getClientPublicIp()` — always called `https://api.ipify.org?format=json` | `SdUtilities.getClientPublicIp('/api/client-ip')` — calls only what you name |
+
+The hard-coded third-party call is gone. A UI library that silently ships a user's IP address to an
+endpoint the application never declared is a privacy/GDPR exposure and a network dependency every
+consumer inherited without asking. `endpoint` is now a required argument, so **no request leaves the
+app unless the app asks for one** — prefer a first-party endpoint.
+
+- `endpoint` must be an absolute `http:`/`https:` URL or a same-origin path (`/api/client-ip`); it is
+  parsed with `sdParseUrl` and anything else (`javascript:`, `file:`, garbage) returns `null` without
+  issuing a request.
+- The endpoint must answer with JSON shaped `{ "ip": "..." }`.
+- Failures (bad endpoint, network error, non-2xx) resolve to `null` and log **only in dev mode**.
+
+To keep the old behaviour, name the third-party endpoint yourself and disclose it in your privacy
+policy: `SdUtilities.getClientPublicIp('https://api.ipify.org?format=json')`.
+
+### Developer logging is dev-mode only
+
+`download` / `downloadBlob` / `isIncognito` / `getClientPublicIp` used to `console.warn` /
+`console.error` in shipped code. Those calls are now gated behind Angular's `isDevMode()`, so a
+production build stays silent. Return values are unchanged — keep handling `null` / no-op results
+rather than reading the console.

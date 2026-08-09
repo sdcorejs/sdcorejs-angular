@@ -186,7 +186,7 @@ describe('SidebarComponent', () => {
     const windowOpen = spyOn(window, 'open');
 
     component.navigate({ path: 'https://example.com/docs', queryParams: {} });
-    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener');
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
     expect(router.navigate).not.toHaveBeenCalled();
 
     component.navigate({ path: '/reports?old=1', queryParams: { year: 2026 } });
@@ -195,6 +195,16 @@ describe('SidebarComponent', () => {
       state: { switchTab: true },
     });
     expect(sidebarState).toHaveBeenCalledWith(null);
+  });
+
+  it('refuses to open a non-http scheme that merely contains the substring "http"', async () => {
+    await create();
+    const windowOpen = spyOn(window, 'open');
+
+    component.navigate({ path: 'javascript:fetch("//evil.example.com")//http', queryParams: {} });
+
+    expect(windowOpen).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['javascript:fetch("//evil.example.com")//http'], jasmine.any(Object));
   });
 
   it('expands child groups, navigates leaf groups, and filters nested menus by normalized text', async () => {

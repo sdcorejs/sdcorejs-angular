@@ -97,6 +97,24 @@ describe('SidebarMobileV2Component', () => {
     expect(navigate).toHaveBeenCalledWith(['/dashboard'], jasmine.any(Object));
   });
 
+  it('opens an absolute http(s) menu with noopener,noreferrer and never opens a javascript: scheme', () => {
+    const windowOpen = spyOn(window, 'open');
+    const navigate = spyOn(router, 'navigate').and.resolveTo(true);
+
+    fixture.componentInstance.onNavigate({ id: 'docs', title: 'Tài liệu', path: 'https://example.com/docs', permission: true });
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
+    expect(navigate).not.toHaveBeenCalled();
+
+    windowOpen.calls.reset();
+    fixture.componentInstance.onNavigate({
+      id: 'evil',
+      title: 'Evil',
+      path: 'javascript:fetch("//evil.example.com")//http',
+      permission: true,
+    });
+    expect(windowOpen).not.toHaveBeenCalled();
+  });
+
   it('closes on Escape, restores focus and releases body scroll', () => {
     const trigger = fixture.nativeElement.querySelector('[data-mobile-menu-key="id:work"]') as HTMLButtonElement;
     trigger.focus();

@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
@@ -9,7 +10,7 @@ describe('SidebarMobileOverlayComponent', () => {
   let fixture: ComponentFixture<SidebarMobileOverlayComponent>;
   let component: SidebarMobileOverlayComponent;
   let routerEvents: Subject<unknown>;
-  let router: { events: Subject<unknown>; navigate: jasmine.Spy };
+  let router: { events: Subject<unknown>; url: string; navigate: jasmine.Spy };
   let activeId: string;
   let storage: { lastActiveMenuGroupId: { get: jasmine.Spy; set: jasmine.Spy } };
 
@@ -22,7 +23,7 @@ describe('SidebarMobileOverlayComponent', () => {
   beforeEach(async () => {
     activeId = '';
     routerEvents = new Subject<unknown>();
-    router = { events: routerEvents, navigate: jasmine.createSpy('navigate').and.resolveTo(true) };
+    router = { events: routerEvents, url: '/admin/users/detail', navigate: jasmine.createSpy('navigate').and.resolveTo(true) };
     storage = {
       lastActiveMenuGroupId: {
         get: jasmine.createSpy('get').and.callFake(() => activeId),
@@ -84,7 +85,7 @@ describe('SidebarMobileOverlayComponent', () => {
     expect(router.navigate).not.toHaveBeenCalled();
 
     component.navigate({ path: 'https://example.com' });
-    expect(windowOpen).toHaveBeenCalledWith('https://example.com');
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com', '_blank', 'noopener,noreferrer');
 
     component.navigate({ path: '/admin/users?legacy=1', queryParams: { tab: 1 } });
     expect(router.navigate).toHaveBeenCalledWith(['/admin/users'], {
@@ -110,18 +111,41 @@ describe('SidebarMobileOverlayComponent', () => {
     expect(userClosed).toHaveBeenCalled();
   });
 
+  it('refuses to open a non-http scheme that merely contains the substring "http"', () => {
+    const windowOpen = spyOn(window, 'open');
+
+    component.navigate({ path: 'javascript:fetch("//evil.example.com")//http' });
+
+    expect(windowOpen).not.toHaveBeenCalled();
+  });
+
   it('falls back to the last active group and emits an empty title when nothing matches', () => {
     const titleChanged = jasmine.createSpy('titleChanged');
     component.titleMenuGroupChanged.subscribe(titleChanged);
     activeId = 'reports';
-    component.currentPath.set('/outside-one');
     routerEvents.next(new NavigationEnd(1, '/outside-one', '/outside-one'));
     expect(component.titleMenuGroup()).toBe('Reports');
 
     activeId = 'missing';
-    component.currentPath.set('/outside-two');
     routerEvents.next(new NavigationEnd(2, '/outside-two', '/outside-two'));
     expect(component.titleMenuGroup()).toBe('');
     expect(titleChanged).toHaveBeenCalledWith('');
+  });
+
+  it('reads the current path from DOCUMENT and router events instead of the raw window global', () => {
+    // why: field initializer cũ gọi `window.location.pathname` nên component không render được ở SSR.
+    // Giờ path khởi tạo lấy qua DOCUMENT.defaultView và cập nhật từ chính sự kiện NavigationEnd.
+    const document = TestBed.inject(DOCUMENT);
+    const fresh = TestBed.createComponent(SidebarMobileOverlayComponent);
+    fresh.componentRef.setInput('menus', menus);
+    fresh.componentRef.setInput('userInfo', { fullName: 'Mobile User' });
+    fresh.componentRef.setInput('sidebar', { version: 1 });
+    fresh.autoDetectChanges();
+
+    expect(fresh.componentInstance.currentPath()).toBe(document.defaultView!.location.pathname);
+
+    routerEvents.next(new NavigationEnd(3, '/reports?year=2026', '/reports?year=2026'));
+
+    expect(fresh.componentInstance.currentPath()).toBe('/reports');
   });
 });

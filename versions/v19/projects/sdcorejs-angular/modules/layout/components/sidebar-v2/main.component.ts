@@ -1,8 +1,8 @@
-import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2, resolveSidebarV2Interaction } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
@@ -25,7 +25,6 @@ interface SidebarV2RailItem {
 })
 export class SidebarV2Component {
   readonly #router = inject(Router);
-  readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
 
@@ -113,8 +112,10 @@ export class SidebarV2Component {
   onNavigate(menu: SdLayoutMenu): void {
     if (!('path' in menu)) return;
     this.#navigationState.recordRecent(menu, { enabled: true, maxItems: 5 });
-    if (menu.path.includes('http')) {
-      this.#document.defaultView?.open(menu.path, '_blank', 'noopener');
+    // why: `includes('http')` là substring test — `javascript:fetch(...)//http` lọt qua và chạy như
+    // script trong origin của app. Parse URL thật rồi mới mở, kèm `noopener,noreferrer`.
+    if (sdIsExternalHttpUrl(menu.path)) {
+      sdOpenExternal(menu.path);
       this.closeFromNavigation();
       return;
     }

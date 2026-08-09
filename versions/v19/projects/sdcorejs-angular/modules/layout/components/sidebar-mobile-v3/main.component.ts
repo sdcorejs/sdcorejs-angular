@@ -16,6 +16,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV3, resolveSidebarV3Recent } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, searchMenuLeaves } from '../../services';
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
@@ -100,8 +101,10 @@ export class SidebarMobileV3Component {
   navigateMenu(menu: SdLayoutMenu): void {
     if (!('path' in menu)) return;
     this.#navigationState.recordRecent(menu, this.recentConfiguration());
-    if (menu.path.includes('http')) {
-      this.#document.defaultView?.open(menu.path, '_blank', 'noopener');
+    // why: `includes('http')` là substring test — `javascript:fetch(...)//http` lọt qua và chạy như
+    // script trong origin của app. Parse URL thật rồi mới mở, kèm `noopener,noreferrer`.
+    if (sdIsExternalHttpUrl(menu.path)) {
+      sdOpenExternal(menu.path);
       this.closeFromNavigation();
       return;
     }

@@ -25,13 +25,31 @@ The handler implements `handleError(error: any)` and runs:
    - `Failed to fetch dynamically imported module` (Angular esbuild/Vite — most common today)
    - `error loading dynamically imported module` (Firefox/Safari variants)
    - `missing source map`
-3. If matched: logs a `console.warn`, then shows a native `window.confirm` dialog whose text is
-   composed via `I18nService.t()` using keys `core.handler.global-error.update-title` and
-   `core.handler.global-error.update-body`. On OK → `window.location.reload()`.
-4. If NOT matched: `console.error('Application error:', error)` and the error continues to propagate normally for devtools.
+3. If matched: logs a `console.warn` (dev mode only), then — **on the browser platform only** — shows a
+   native `window.confirm` dialog whose text is composed via `I18nService.t()` using keys
+   `core.handler.global-error.update-title` and `core.handler.global-error.update-body`.
+   On OK → `window.location.reload()`.
+4. If NOT matched: `console.error('Application error:', error)` — **always, dev and production** — and the error continues to propagate normally for devtools.
 
-The handler has a single DI dependency (`I18nService`) for localising the confirm dialog text.
-It has no constructor parameters and no side-effects beyond the warn log, the confirm dialog, and the optional reload.
+DI dependencies: `I18nService` (localises the confirm dialog text) and `PLATFORM_ID` (platform detection).
+It has no constructor parameters and no side-effects beyond the log, the confirm dialog, and the optional reload.
+
+### SSR safety
+
+`window.confirm` and `window.location.reload` run only when `isPlatformBrowser(inject(PLATFORM_ID))` is true. On the server the chunk branch classifies and logs, then returns.
+
+Calling those browser APIs unguarded meant the handler itself threw during server rendering — and an `ErrorHandler` that throws masks the original error completely, which is the worst possible failure for a diagnostic component.
+
+### What `isDevMode()` gates — and what it must never gate
+
+| Log | Gated behind `isDevMode()`? | Why |
+| --- | --- | --- |
+| `console.warn('=> Chunk Load error detected:', …)` | **Yes** | Verbose developer diagnostics that dumps the raw lowercased message. The chunk branch already has a user-facing outcome (the reload confirm dialog), so silencing the dump in production loses nothing. |
+| `console.error('Application error:', error)` | **No — unconditional** | Providing this class replaces Angular's default `ErrorHandler`, whose entire job is to log. Gating it makes a production build swallow every non-chunk application error: nothing in the console, nothing for browser-side log collectors, production bugs invisible. |
+
+An app that genuinely wants silence in production should provide its own `ErrorHandler` — that is an application decision, not a library default.
+
+Note that unconditional `console.error` is a floor, not a telemetry strategy: attach a real reporter (Sentry, Datadog, …) alongside this handler for production monitoring.
 
 ## Setup
 
@@ -50,7 +68,8 @@ export const appConfig: ApplicationConfig = {
 
 ## Anti-patterns
 - Do NOT subclass it just to add a Sentry/Datadog hook — wrap it instead, or call your reporter from a sibling provider so the chunk-reload UX is preserved.
-- Do NOT swallow errors — the non-chunk branch deliberately re-logs to `console.error` so devtools still surface stack traces.
+- Do NOT swallow errors — the non-chunk branch deliberately re-logs to `console.error` in every build so devtools still surface stack traces. Putting that call behind `isDevMode()` (or removing it) turns a production `ErrorHandler` into a black hole, because registering this class already replaced Angular's default logging handler.
+- Do NOT rely on `console.error` alone for production diagnostics — it keeps errors visible, but attach a real reporter (Sentry, Datadog, …) for anything you need to monitor off-device.
 - Do NOT replace the `confirm()` with a silent `location.reload()` — silent reloads create infinite loops if the error is actually a server-side 404 on the chunk file.
 - Do NOT register inside a feature module's providers — `ErrorHandler` is a root-singleton DI token; only the root `ApplicationConfig` / `AppModule` should provide it.
 

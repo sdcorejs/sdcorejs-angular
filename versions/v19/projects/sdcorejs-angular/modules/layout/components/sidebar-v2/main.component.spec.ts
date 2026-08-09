@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { SdLayoutMenu } from '../../services';
 import { SidebarV2Component } from './main.component';
 
@@ -95,6 +95,25 @@ describe('SidebarV2Component', () => {
     expect(trigger.classList).toContain('sd-layout-user-menu__trigger--compact');
     expect(trigger.querySelector('sd-avatar')).not.toBeNull();
     expect(trigger.querySelector('sd-icon')).toBeNull();
+  });
+
+  it('opens an absolute http(s) menu with noopener,noreferrer and never opens a javascript: scheme', async () => {
+    await create('click');
+    const windowOpen = spyOn(window, 'open');
+    const navigate = spyOn(TestBed.inject(Router), 'navigate').and.resolveTo(true);
+
+    fixture.componentInstance.onNavigate({ id: 'docs', title: 'Tài liệu', path: 'https://example.com/docs', permission: true });
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
+    expect(navigate).not.toHaveBeenCalled();
+
+    windowOpen.calls.reset();
+    fixture.componentInstance.onNavigate({
+      id: 'evil',
+      title: 'Evil',
+      path: 'javascript:fetch("//evil.example.com")//http',
+      permission: true,
+    });
+    expect(windowOpen).not.toHaveBeenCalled();
   });
 
   it('uses the shared search field in the contextual flyout', async () => {

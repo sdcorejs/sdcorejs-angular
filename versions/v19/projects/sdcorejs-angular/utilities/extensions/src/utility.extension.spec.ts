@@ -77,6 +77,30 @@ describe('SdUtilities', () => {
       expect(h).toBeTruthy();
       expect(h.startsWith('h')).toBeTrue();
     });
+
+    // why: bản stableStringify cũ thiếu nhánh Date nên `Object.keys(date)` ra `[]` và mọi Date
+    // serialize thành `{}` — hai object chỉ khác field ngày tháng cho ra cùng hash.
+    it('produces different hashes for objects differing only by a Date field', () => {
+      const a = { id: 1, createdOn: new Date('2026-01-01T00:00:00.000Z') };
+      const b = { id: 1, createdOn: new Date('2026-06-30T00:00:00.000Z') };
+      expect(SdUtilities.hash(a)).not.toBe(SdUtilities.hash(b));
+    });
+
+    it('produces the same hash for equal Date values', () => {
+      const a = { createdOn: new Date('2026-01-01T00:00:00.000Z') };
+      const b = { createdOn: new Date('2026-01-01T00:00:00.000Z') };
+      expect(SdUtilities.hash(a)).toBe(SdUtilities.hash(b));
+    });
+
+    it('does not collapse a top-level Date to an empty object', () => {
+      expect(SdUtilities.hash(new Date('2026-01-01T00:00:00.000Z'))).not.toBe(SdUtilities.hash({}));
+    });
+
+    it('distinguishes nested Dates inside arrays', () => {
+      const a = [{ at: new Date('2026-01-01T00:00:00.000Z') }];
+      const b = [{ at: new Date('2026-01-02T00:00:00.000Z') }];
+      expect(SdUtilities.hash(a)).not.toBe(SdUtilities.hash(b));
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -400,20 +424,48 @@ describe('SdUtilities', () => {
       expect(clickSpy).toHaveBeenCalled();
     });
 
-    it('sets target="_blank" for http URLs', () => {
+    // why: nhánh cũ dựng `<a target="_blank">` không có `rel="noopener"` (reverse tabnabbing).
+    it('opens external http URLs through sdOpenExternal with noopener,noreferrer', () => {
+      const openSpy = spyOn(window, 'open').and.returnValue(null);
+      const createSpy = spyOn(document, 'createElement').and.callThrough();
+
+      SdUtilities.download('https://example.com/file.pdf', 'file.pdf');
+
+      expect(openSpy).toHaveBeenCalledWith('https://example.com/file.pdf', '_blank', 'noopener,noreferrer');
+      // Không còn dựng thẻ <a target="_blank"> cho link ngoài
+      expect(createSpy).not.toHaveBeenCalledWith('a');
+    });
+
+    it('does NOT open a window for a path that merely starts with "http"', () => {
+      const openSpy = spyOn(window, 'open').and.returnValue(null);
       const clickSpy = jasmine.createSpy('click');
-      const removeSpy = jasmine.createSpy('remove');
-      const anchor = { href: '', target: '', download: '', style: { visibility: '' }, click: clickSpy, remove: removeSpy } as any;
+      const anchor = { href: '', target: '', download: '', style: { visibility: '' }, click: clickSpy, remove: () => {} } as any;
       spyOn(document, 'createElement').and.callFake((tag: string) => {
         if (tag === 'a') return anchor;
         return document.createElement(tag);
       });
       spyOn(document.body, 'appendChild').and.stub();
 
-      SdUtilities.download('https://example.com/file.pdf', 'file.pdf');
+      SdUtilities.download('httpfoo/report.pdf', 'report.pdf');
 
-      expect(anchor.target).toBe('_blank');
+      expect(openSpy).not.toHaveBeenCalled();
+      expect(anchor.download).toBe('report.pdf');
       expect(clickSpy).toHaveBeenCalled();
+    });
+
+    it('does NOT open a window for a javascript: URL', () => {
+      const openSpy = spyOn(window, 'open').and.returnValue(null);
+      const clickSpy = jasmine.createSpy('click');
+      const anchor = { href: '', target: '', download: '', style: { visibility: '' }, click: clickSpy, remove: () => {} } as any;
+      spyOn(document, 'createElement').and.callFake((tag: string) => {
+        if (tag === 'a') return anchor;
+        return document.createElement(tag);
+      });
+      spyOn(document.body, 'appendChild').and.stub();
+
+      SdUtilities.download('javascript:alert(1)//http', 'x.pdf');
+
+      expect(openSpy).not.toHaveBeenCalled();
     });
 
     it('handles File objects by creating object URL', () => {
@@ -713,15 +765,42 @@ describe('SdUtilities', () => {
   // ---------------------------------------------------------------------------
   describe('getClientPublicIp', () => {
     it('returns the IP string on success', async () => {
-      spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response(JSON.stringify({ ip: '1.2.3.4' }), { status: 200 })));
-      const result = await SdUtilities.getClientPublicIp();
+      const fetchSpy = spyOn(window, 'fetch').and.returnValue(
+        Promise.resolve(new Response(JSON.stringify({ ip: '1.2.3.4' }), { status: 200 }))
+      );
+      const result = await SdUtilities.getClientPublicIp('https://ip.my-company.example/json');
       expect(result).toBe('1.2.3.4');
+      expect(fetchSpy).toHaveBeenCalledWith('https://ip.my-company.example/json');
+    });
+
+    // why: bản cũ hardcode `https://api.ipify.org` — lib tự gọi bên thứ ba mà app không khai báo.
+    it('never calls a third-party endpoint on its own', async () => {
+      const fetchSpy = spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response(JSON.stringify({ ip: '1.2.3.4' }))));
+      spyOn(console, 'error');
+      await SdUtilities.getClientPublicIp('');
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('resolves a same-origin path against the current origin', async () => {
+      const fetchSpy = spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response(JSON.stringify({ ip: '10.0.0.1' }))));
+      const result = await SdUtilities.getClientPublicIp('/api/client-ip');
+      expect(result).toBe('10.0.0.1');
+      expect(fetchSpy).toHaveBeenCalledWith(`${window.location.origin}/api/client-ip`);
+    });
+
+    it('refuses a non-http(s) endpoint without issuing a request', async () => {
+      const fetchSpy = spyOn(window, 'fetch');
+      const errorSpy = spyOn(console, 'error');
+      const result = await SdUtilities.getClientPublicIp('javascript:alert(1)');
+      expect(result).toBeNull();
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(errorSpy).toHaveBeenCalled();
     });
 
     it('returns null when fetch throws', async () => {
       spyOn(window, 'fetch').and.returnValue(Promise.reject(new Error('network error')));
       const errorSpy = spyOn(console, 'error');
-      const result = await SdUtilities.getClientPublicIp();
+      const result = await SdUtilities.getClientPublicIp('https://ip.my-company.example/json');
       expect(result).toBeNull();
       expect(errorSpy).toHaveBeenCalled();
     });
@@ -729,9 +808,58 @@ describe('SdUtilities', () => {
     it('returns null when response is not ok', async () => {
       spyOn(window, 'fetch').and.returnValue(Promise.resolve(new Response('Not Found', { status: 404 })));
       const errorSpy = spyOn(console, 'error');
-      const result = await SdUtilities.getClientPublicIp();
+      const result = await SdUtilities.getClientPublicIp('https://ip.my-company.example/json');
       expect(result).toBeNull();
       expect(errorSpy).toHaveBeenCalled();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // dev-mode gating of developer-facing logging
+  // ---------------------------------------------------------------------------
+  describe('console logging is gated behind isDevMode()', () => {
+    // why: `isDevMode()` chỉ đọc global `ngDevMode`, nên tắt cờ này là mô phỏng đúng production build.
+    const globalRef = globalThis as unknown as { ngDevMode?: unknown };
+    let originalNgDevMode: unknown;
+    let hadNgDevMode = false;
+
+    beforeEach(() => {
+      hadNgDevMode = 'ngDevMode' in globalRef;
+      originalNgDevMode = globalRef.ngDevMode;
+    });
+
+    afterEach(() => {
+      if (hadNgDevMode) globalRef.ngDevMode = originalNgDevMode;
+      else delete globalRef.ngDevMode;
+    });
+
+    it('warns in dev mode when download() gets no file or path', () => {
+      const warnSpy = spyOn(console, 'warn');
+      SdUtilities.download(null);
+      expect(warnSpy).toHaveBeenCalled();
+    });
+
+    it('stays silent in production mode when download() gets no file or path', () => {
+      const warnSpy = spyOn(console, 'warn');
+      globalRef.ngDevMode = false;
+      SdUtilities.download(null);
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('stays silent in production mode when downloadBlob() fails', () => {
+      const errorSpy = spyOn(console, 'error');
+      spyOn(window.URL, 'createObjectURL').and.throwError('boom');
+      globalRef.ngDevMode = false;
+      SdUtilities.downloadBlob(new Blob(['x']), 'x.txt');
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
+    it('stays silent in production mode when getClientPublicIp() is given a bad endpoint', async () => {
+      const errorSpy = spyOn(console, 'error');
+      globalRef.ngDevMode = false;
+      const result = await SdUtilities.getClientPublicIp('javascript:alert(1)');
+      expect(result).toBeNull();
+      expect(errorSpy).not.toHaveBeenCalled();
     });
   });
 });

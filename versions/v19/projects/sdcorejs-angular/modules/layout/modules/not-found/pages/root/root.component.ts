@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SdButton, SdTabComponent } from '@sdcorejs/angular/components';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 
@@ -25,6 +25,7 @@ export class RootComponent {
   // INJECT SERVICES (Modern Angular)
   // ==========================================
   readonly #route = inject(ActivatedRoute);
+  readonly #router = inject(Router);
   readonly #layoutService = inject(SdLayoutService);
   readonly #i18n = inject(I18nService);
 
@@ -52,7 +53,12 @@ export class RootComponent {
   // ==========================================
   // PUBLIC METHODS
   // ==========================================
-  reload() {
-    window.location.href = '';
+  /**
+   * why: `window.location.href = ''` vừa là global thô (throw khi SSR vì không có `window`), vừa chỉ
+   * reload lại đúng trang lỗi này thay vì rời khỏi nó — trong khi nút mang nhãn "Quay lại trang chủ".
+   * Điều hướng bằng Router tới `homeUrl` mà consumer đã khai trong SD_LAYOUT_CONFIGURATION.
+   */
+  reload(): void {
+    void this.#router.navigateByUrl(this.#layoutService.homeUrl);
   }
 }

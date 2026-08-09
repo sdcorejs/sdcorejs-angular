@@ -187,6 +187,10 @@ export class SdStorageService {
       option.identityCanonicalizer ?? this.#configuration?.identityCanonicalizer ?? this.#defaultIdentityCanonicalizer;
     const canonicalKey = canonicalizeSdPersistenceValue(identityCanonicalizer, key, 'storage key');
     const legacyStorageKey = this.#legacyStorageKey(key);
+    // why: KHÔNG có namespace mặc định. Một hằng số dùng chung cho cả thư viện (vd `'sdcorejs'`) không
+    // tách được hai app chung origin — cả hai đều nhận đúng hằng số đó nên vẫn va nhau y như cũ — mà
+    // lại đổi identity của MỌI handle đang chạy, khiến dữ liệu đã persist bị bỏ rơi khi nâng cấp.
+    // Tách partition là việc của app: khai báo `namespace` per-handle hoặc qua `SD_STORAGE_CONFIG`.
     const namespace = option.namespace ?? this.#configuration?.namespace;
     const version = option.version ?? this.#configuration?.version;
     const area = option.type ?? 'local';
