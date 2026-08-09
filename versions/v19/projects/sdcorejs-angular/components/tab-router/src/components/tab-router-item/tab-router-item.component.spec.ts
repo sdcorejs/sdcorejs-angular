@@ -3,7 +3,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Subject } from 'rxjs';
 
-import { SdTab } from '../../models/tab-router.model';
+import { SdTabRouterTab } from '../../models/tab-router.model';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabRouterItemComponent } from './tab-router-item.component';
 
@@ -36,7 +36,7 @@ describe('SdTabRouterItemComponent close delegation', () => {
       isActive: false,
       url: '/test',
       tabInfoChanges: new Subject(),
-    } as SdTab;
+    } as SdTabRouterTab;
 
     fixture.detectChanges();
   });

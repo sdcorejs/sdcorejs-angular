@@ -5,7 +5,7 @@ import {
   ExpressionToJavascriptExpression,
   GetAttributes,
   GetDatetimeValue,
-  Operators,
+  SdFormGenericOperators,
   SdFormGenericExpressionCondition,
   TemplateToCondition,
 } from './form-generic-expression.model';
@@ -47,7 +47,7 @@ describe('form generic expression model', () => {
   });
 
   it('exposes operator sets appropriate to each attribute type', () => {
-    expect(Operators.map(item => item.value)).toEqual([
+    expect(SdFormGenericOperators.map(item => item.value)).toEqual([
       'EQUAL',
       'NOT_EQUAL',
       'GREATER_THAN',
@@ -58,7 +58,7 @@ describe('form generic expression model', () => {
       'NOT_NULL',
     ]);
     expect(AttributeOperators.boolean.map(item => item.value)).toEqual(['EQUAL', 'NOT_EQUAL']);
-    expect(AttributeOperators.number).toBe(Operators);
+    expect(AttributeOperators.number).toBe(SdFormGenericOperators);
   });
 
   it('maps nested form controls to expression attributes and ignores unsupported controls', () => {

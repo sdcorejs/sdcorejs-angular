@@ -18,9 +18,21 @@ export interface SdFormGenericExpressionCondition {
   dayInfo: DayInfo;
 }
 
-export type Operator = 'EQUAL' | 'NOT_EQUAL' | 'GREATER_THAN' | 'LESS_THAN' | 'GREATER_OR_EQUAL' | 'LESS_OR_EQUAL' | 'NULL' | 'NOT_NULL';
-export const Operators: {
-  value: Operator;
+// why: renamed from the unprefixed `Operator`/`Operators`. This is a form-generic-specific
+// 8-member subset, and the unprefixed names collided head-on with `Operator` re-exported from
+// `@sdcorejs/utils/models` via `@sdcorejs/angular/utilities`, which made the root barrel
+// (`@sdcorejs/angular`) fail to compile with TS2308.
+export type SdFormGenericOperator =
+  | 'EQUAL'
+  | 'NOT_EQUAL'
+  | 'GREATER_THAN'
+  | 'LESS_THAN'
+  | 'GREATER_OR_EQUAL'
+  | 'LESS_OR_EQUAL'
+  | 'NULL'
+  | 'NOT_NULL';
+export const SdFormGenericOperators: {
+  value: SdFormGenericOperator;
   symbol?: string;
   display: string;
 }[] = [
@@ -142,7 +154,7 @@ interface AttributeValues {
 export const AttributeOperators: Record<
   Attribute['type'],
   {
-    value: Operator;
+    value: SdFormGenericOperator;
     symbol?: string;
     display: string;
   }[]
@@ -169,8 +181,8 @@ export const AttributeOperators: Record<
       display: 'Không rỗng',
     },
   ],
-  number: Operators,
-  datetime: Operators,
+  number: SdFormGenericOperators,
+  datetime: SdFormGenericOperators,
   boolean: [
     {
       value: 'EQUAL',

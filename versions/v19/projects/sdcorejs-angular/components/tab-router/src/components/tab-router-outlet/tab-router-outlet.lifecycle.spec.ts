@@ -18,7 +18,7 @@ import { SdTabRouterService } from '../../services/tab-router.service';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
-import { SD_TAB, SdTab } from '../../models/tab-router.model';
+import { SD_TAB, SdTabRouterTab } from '../../models/tab-router.model';
 import { SdTabRouterItemComponent } from '../tab-router-item/tab-router-item.component';
 
 // Shared counters across instances per class — we don't share state across tests though
@@ -300,7 +300,7 @@ describe('SdTabRouterOutletComponent — lifecycle invariants', () => {
 });
 
 describe('SdTabRouterOutletComponent - SD_TAB injection', () => {
-  const captured: { tabA?: SdTab | null; tabB?: SdTab | null } = {};
+  const captured: { tabA?: SdTabRouterTab | null; tabB?: SdTabRouterTab | null } = {};
 
   @Component({ standalone: true, template: '<span data-cy="sd-tab-a"></span>' })
   class SdTabAComponent {
@@ -353,7 +353,7 @@ describe('SdTabRouterOutletComponent - SD_TAB injection', () => {
     fixture.detectChanges();
   });
 
-  it('provides a different SdTab instance for each tab via SD_TAB', async () => {
+  it('provides a different SdTabRouterTab instance for each tab via SD_TAB', async () => {
     await sdTabRouter.navigateByUrl('/sd-a');
     fixture.detectChanges();
     await fixture.whenStable();

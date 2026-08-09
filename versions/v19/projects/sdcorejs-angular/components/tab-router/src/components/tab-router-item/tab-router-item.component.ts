@@ -3,7 +3,7 @@ import { Subscription } from 'rxjs';
 import { debounceTime, startWith } from 'rxjs/operators';
 
 import { SdBadge } from '@sdcorejs/angular/components/badge';
-import { SdTab, SdTabInfo } from '../../models';
+import { SdTabRouterTab, SdTabInfo } from '../../models';
 import { SdTabRouterService } from '../../services/tab-router.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -23,7 +23,7 @@ export class SdTabRouterItemComponent implements OnInit, OnDestroy {
   private tabRouterService = inject(SdTabRouterService);
   private router = inject(Router);
 
-  @Input({ required: true }) tab!: SdTab;
+  @Input({ required: true }) tab!: SdTabRouterTab;
 
   #subsctiption: Subscription = new Subscription();
   tabInfo?: SdTabInfo;

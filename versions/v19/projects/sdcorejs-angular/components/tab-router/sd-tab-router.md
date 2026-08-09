@@ -1,4 +1,4 @@
-# `<sd-tab-router-outlet>` & friends
+﻿# `<sd-tab-router-outlet>` & friends
 
 **Type**: Component group (3 components + 1 decorator, documented together)
 **Selectors**: `sd-tab-router-outlet`, `sd-tab-router-nav`, `sd-tab-router-item`
@@ -52,10 +52,10 @@ None.
 - Listens to raw router events only (it never unwraps `Scroll`): `RoutesRecognized` captures `extras.state`, `NavigationEnd` applies the route after redirects, `NavigationSkipped` handles an explicitly forced same-URL reload, and `NavigationCancel` / `NavigationError` discard pending state
 - Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another
 - `NavigationSkipped` continues only for `NavigationSkippedCode.IgnoredSameUrlNavigation` with a directly snapshotted `state.forceReload === true`; this is why reloading the currently active identical URL works even though Angular does not emit `NavigationEnd`
-- Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTab` descriptor may be immutably copied when `isActive` changes
+- Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTabRouterTab` descriptor may be immutably copied when `isActive` changes
 - `state.replaceTab = true` → new tab replaces the current active tab (instead of stacking)
 - `state.switchTab = true` → user clicked an existing tab pill (used by item click handler to avoid creating duplicates)
-- `state.forceReload = true` affects an existing target key only: the outlet replaces that tab at the same list index with a fresh `SdTab`, per-tab injector, `tabInfoChanges`, body component, and nav item. Tab count and order stay unchanged
+- `state.forceReload = true` affects an existing target key only: the outlet replaces that tab at the same list index with a fresh `SdTabRouterTab`, per-tab injector, `tabInfoChanges`, body component, and nav item. Tab count and order stay unchanged
 - If the forced target does not exist, it is added normally. `forceReload` does not change missing-target behavior
 - `forceReload` is an explicit replacement operation and therefore bypasses the old tab's `beforeClose` guard
 - `forceReload` and `replaceTab` are independent. When both are `true`, normal replace semantics remove the other active tab and the existing target is recreated at its correctly shifted index
@@ -72,7 +72,7 @@ None.
 
 | Name   | Type      | Default | Notes                                          |
 | ------ | --------- | ------- | ---------------------------------------------- |
-| `tabs` | `SdTab[]` | `[]`    | Array of tab objects (provided by the outlet). |
+| `tabs` | `SdTabRouterTab[]` | `[]`    | Array of tab objects (provided by the outlet). |
 
 ### Behaviors
 
@@ -88,7 +88,7 @@ None.
 
 | Name  | Type               | Default | Notes               |
 | ----- | ------------------ | ------- | ------------------- |
-| `tab` | `SdTab` (REQUIRED) | —       | The tab descriptor. |
+| `tab` | `SdTabRouterTab` (REQUIRED) | —       | The tab descriptor. |
 
 ### Behaviors
 
@@ -131,15 +131,15 @@ The decorator self-registers via `SdTabDecoratorService` so metadata is resolved
 | `<sd-tab-router-item [tab]>`        | Component               | Rendering one draggable/closable tab pill inside the nav. Usually used internally.                                                                                                                                                            |
 | `@SdTabComponent({...})`            | Decorator               | Supplying route-component tab metadata: name, icon, tooltip, and color.                                                                                                                                                                       |
 | `SdTabRouterService`                | Service                 | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first.                                                                                                    |
-| `SdTab` / `SdTabInfo`               | Interfaces              | Strongly typing custom tab metadata or service integrations.                                                                                                                                                                                  |
-| `SD_TAB`                            | `InjectionToken<SdTab>` | Inject `SdTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
+| `SdTabRouterTab` / `SdTabInfo`               | Interfaces              | Strongly typing custom tab metadata or service integrations.                                                                                                                                                                                  |
+| `SD_TAB`                            | `InjectionToken<SdTabRouterTab>` | Inject `SdTabRouterTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
 
 Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.navigate(...)`. App shells wire `<sd-tab-router-outlet>` once.
 
 ## Tab data model
 
 ```ts
-interface SdTab {
+interface SdTabRouterTab {
   component: Type<any>;
   injector?: Injector;
   key: string; // hash(url + queryParams)
@@ -237,7 +237,7 @@ import { SD_TAB } from '@sdcorejs/angular/components/tab-router';
 
 @Component({ ... })
 export class EmployeeDetailComponent {
-  // inject SD_TAB để lấy SdTab của chính tab này (scoped per-tab qua DI)
+  // inject SD_TAB để lấy SdTabRouterTab của chính tab này (scoped per-tab qua DI)
   readonly #tab = inject(SD_TAB);
 
   constructor() {

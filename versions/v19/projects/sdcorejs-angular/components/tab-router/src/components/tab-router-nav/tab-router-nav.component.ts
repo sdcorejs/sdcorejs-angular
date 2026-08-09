@@ -1,7 +1,7 @@
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, inject, input, viewChild } from '@angular/core';
 
-import { SdTab } from '../../models/tab-router.model';
+import { SdTabRouterTab } from '../../models/tab-router.model';
 import { SdTabRouterItemComponent } from '../tab-router-item/tab-router-item.component';
 import { CommonModule } from '@angular/common';
 
@@ -16,7 +16,7 @@ import { CommonModule } from '@angular/common';
 export class SdTabRouterNavComponent {
   tabRouterNav = viewChild<ElementRef>('tabRouterNav');
 
-  tabs = input<SdTab[]>([]);
+  tabs = input<SdTabRouterTab[]>([]);
   mode: 'default' | 'compact' = 'default';
   cdRef = inject(ChangeDetectorRef);
   elementRef = inject<ElementRef<any>>(ElementRef);
@@ -44,7 +44,7 @@ export class SdTabRouterNavComponent {
     this.cdRef.markForCheck();
   };
 
-  onDrop = (event: CdkDragDrop<SdTab[]>) => {
+  onDrop = (event: CdkDragDrop<SdTabRouterTab[]>) => {
     moveItemInArray(this.tabs(), event.previousIndex, event.currentIndex);
   };
 }
