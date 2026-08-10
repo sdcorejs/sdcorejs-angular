@@ -88,7 +88,7 @@
           autocorrect="off"
           matStartDate
           [formControl]="control1"
-          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | translate)"
+          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | sdTranslate)"
           (dateInput)="onStartChange($event)"
           (focus)="onFocus()"
           (blur)="onBlur()"
@@ -104,7 +104,7 @@
           autocorrect="off"
           matEndDate
           [formControl]="control2"
-          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | translate)"
+          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | sdTranslate)"
           (dateInput)="onEndChange($event)"
           (focus)="onFocus()"
           (blur)="onBlur()"
@@ -131,7 +131,7 @@
           type="button"
           matSuffix
           class="cursor-pointer sd-suffix-icon sd-suffix-btn"
-          [attr.aria-label]="'core.form.date-range.clear' | translate"
+          [attr.aria-label]="'core.form.date-range.clear' | sdTranslate"
           (click)="clear()">
           <sd-icon name="cancel"></sd-icon>
         </button>
@@ -141,7 +141,7 @@
         type="button"
         matSuffix
         class="cursor-pointer sd-suffix-icon sd-suffix-btn"
-        [attr.aria-label]="'core.form.date-range.open-picker' | translate"
+        [attr.aria-label]="'core.form.date-range.open-picker' | sdTranslate"
         (click)="onOpenPicker($event)">
         <sd-icon name="today"></sd-icon>
       </button>

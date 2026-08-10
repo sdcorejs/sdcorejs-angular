@@ -2,14 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../services';
-import { SidebarV3Component } from './main.component';
+import { SdSidebarV3 } from './main.component';
 
 const dashboard: SdLayoutMenu = { id: 'dashboard', title: 'Tổng quan', path: '/dashboard', permission: true };
 const reports: SdLayoutMenu = { id: 'reports', title: 'Báo cáo bán hàng', tooltipTitle: 'Doanh số', path: '/reports', permission: true };
 const menus: SdLayoutMenu[] = [{ id: 'work', title: 'Công việc', children: [dashboard, reports] }];
 
-describe('SidebarV3Component', () => {
-  let fixture: ComponentFixture<SidebarV3Component>;
+describe('SdSidebarV3', () => {
+  let fixture: ComponentFixture<SdSidebarV3>;
   let utilityStyles: HTMLStyleElement;
 
   beforeEach(async () => {
@@ -19,13 +19,13 @@ describe('SidebarV3Component', () => {
     utilityStyles.textContent =
       '.d-flex { display: flex !important; } .justify-content-between { justify-content: space-between !important; } .justify-content-center { justify-content: center !important; }';
     document.head.appendChild(utilityStyles);
-    await TestBed.configureTestingModule({ imports: [SidebarV3Component], providers: [provideRouter([])] }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [SdSidebarV3], providers: [provideRouter([])] }).compileComponents();
   });
 
   afterEach(() => utilityStyles.remove());
 
   function create(sidebar: Record<string, unknown> = { version: 3 }): void {
-    fixture = TestBed.createComponent(SidebarV3Component);
+    fixture = TestBed.createComponent(SdSidebarV3);
     fixture.componentRef.setInput('menus', menus);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User' });
     fixture.componentRef.setInput('sidebar', sidebar);

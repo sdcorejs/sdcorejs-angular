@@ -18,7 +18,7 @@ import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdTableColumn } from '../../../models/table-column.model';
 import { SdTableItem } from '../../../models/table-item.model';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Pipe({
   name: 'asString',
@@ -36,7 +36,7 @@ export class ToStringPipe implements PipeTransform {
   styleUrl: './view.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, SdBadge, SdSafeHtmlPipe, SdTooltipDirective, ToStringPipe, TranslatePipe],
+  imports: [CommonModule, SdBadge, SdSafeHtmlPipe, SdTooltipDirective, ToStringPipe, SdTranslatePipe],
 })
 export class ViewComponent {
   // Inject

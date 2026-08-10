@@ -4,19 +4,19 @@ import { type SdIconSet } from '@sdcorejs/angular/modules/icon';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 import { Color } from '@sdcorejs/utils/models';
 
-export type SdTreeDataSource<TItem = any> = TItem[] | Signal<TItem[]> | (() => TItem[] | Promise<TItem[]>);
+export type SdTreeDataSource<TItem = unknown> = TItem[] | Signal<TItem[]> | (() => TItem[] | Promise<TItem[]>);
 
 export type SdTreeLoadType = 'static' | 'lazy';
 
-export type SdTreeOption<T = any> = SdTreeStaticOption<T> | SdTreeLazyOption<T>;
+export type SdTreeOption<T = unknown> = SdTreeStaticOption<T> | SdTreeLazyOption<T>;
 
-export type SdTreeItem<T = any> = SdTreeItemStatic<T> | SdTreeItemLazy<T>;
+export type SdTreeItem<T = unknown> = SdTreeItemStatic<T> | SdTreeItemLazy<T>;
 
-export type SdTreeItemByLoadType<T = any, TLoadType extends SdTreeLoadType = SdTreeLoadType> = TLoadType extends 'lazy'
+export type SdTreeItemByLoadType<T = unknown, TLoadType extends SdTreeLoadType = SdTreeLoadType> = TLoadType extends 'lazy'
   ? SdTreeItemLazy<T>
   : SdTreeItemStatic<T>;
 
-export interface SdTreeItemBase<T = any> {
+export interface SdTreeItemBase<T = unknown> {
   /** Stable node id used for expansion, selection, filtering ancestry, and auto-id generation. */
   id: string;
   /** Text shown by the default tree row. Custom templates can still read `item` / `treeItem`. */
@@ -34,14 +34,14 @@ export interface SdTreeItemBase<T = any> {
   expanded?: boolean;
 }
 
-export interface SdTreeItemStatic<T = any> extends SdTreeItemBase<T> {
+export interface SdTreeItemStatic<T = unknown> extends SdTreeItemBase<T> {
   /** Static-mode children. Lazy mode does not use this field. */
   children?: SdTreeItemStatic<T>[];
   /** `hasChildren` belongs to lazy mode only; static mode derives branches from `children`. */
   hasChildren?: never;
 }
 
-export interface SdTreeItemLazy<T = any> extends SdTreeItemBase<T> {
+export interface SdTreeItemLazy<T = unknown> extends SdTreeItemBase<T> {
   /** Lazy-mode hint. Set `false` for known leaf nodes that do not need `onExpandChildren`. */
   hasChildren?: boolean;
   /** `children` belongs to static mode only; lazy loaded children are cached inside the component. */
@@ -53,13 +53,13 @@ export interface SdTreeBaseOption {
   indentSize?: number;
 }
 
-export interface SdTreeStaticOption<T = any> extends SdTreeBaseOption {
+export interface SdTreeStaticOption<T = unknown> extends SdTreeBaseOption {
   loadType: 'static';
   /** Expand all (`true`), none (`false`), or root levels where `level < number`. */
   defaultExpanded?: boolean | number;
 }
 
-export interface SdTreeLazyOption<T = any> extends SdTreeBaseOption {
+export interface SdTreeLazyOption<T = unknown> extends SdTreeBaseOption {
   loadType: 'lazy';
   /**
    * Called once when a lazy node is first expanded. Return wrapped `SdTreeItemLazy<T>` children,
@@ -68,7 +68,7 @@ export interface SdTreeLazyOption<T = any> extends SdTreeBaseOption {
   onExpandChildren: (item: SdTreeItemLazy<T>) => Promise<SdTreeItemLazy<T>[]> | SdTreeItemLazy<T>[];
 }
 
-export interface SdTreeCommand<T = any> {
+export interface SdTreeCommand<T = unknown> {
   key: string;
   title: string | ((item: T) => string);
   icon?: string | ((item: T) => string | undefined | null);
@@ -79,7 +79,7 @@ export interface SdTreeCommand<T = any> {
   click: (item: T) => void;
 }
 
-export interface SdTreeSelectorOption<T = any> {
+export interface SdTreeSelectorOption<T = unknown> {
   visible?: boolean;
   /** Keep at most one loaded node selected. Takes precedence over cascade. */
   single?: boolean;
@@ -90,7 +90,7 @@ export interface SdTreeSelectorOption<T = any> {
   disabled?: (item: T, selectedItems: T[]) => boolean;
 }
 
-export interface SdTreeSelectionAction<T = any> {
+export interface SdTreeSelectionAction<T = unknown> {
   icon?: string;
   fontSet?: SdUnwrapSignal<SdButton['fontSet']>;
   tooltip?: SdUnwrapSignal<SdButton['tooltip']>;
@@ -101,7 +101,7 @@ export interface SdTreeSelectionAction<T = any> {
   click: (selectedItems: T[]) => void;
 }
 
-export interface SdTreeComponentOptionBase<T = any, TItem extends SdTreeItem<T> = SdTreeItem<T>> {
+export interface SdTreeComponentOptionBase<T = unknown, TItem extends SdTreeItem<T> = SdTreeItem<T>> {
   autoId?: string | null;
   /** Root nodes can be an array, a signal, a sync loader, or an async loader. Call `reload()` to rerun loader sources. */
   items: SdTreeDataSource<TItem>;
@@ -116,18 +116,18 @@ export interface SdTreeComponentOptionBase<T = any, TItem extends SdTreeItem<T> 
   onCollapse?: (event: SdTreeToggleEvent<T>) => void;
 }
 
-export interface SdTreeStaticComponentOption<T = any> extends SdTreeComponentOptionBase<T, SdTreeItemStatic<T>> {
+export interface SdTreeStaticComponentOption<T = unknown> extends SdTreeComponentOptionBase<T, SdTreeItemStatic<T>> {
   /** Static tree is the default when `tree` is omitted. */
   tree?: SdTreeStaticOption<T>;
 }
 
-export interface SdTreeLazyComponentOption<T = any> extends SdTreeComponentOptionBase<T, SdTreeItemLazy<T>> {
+export interface SdTreeLazyComponentOption<T = unknown> extends SdTreeComponentOptionBase<T, SdTreeItemLazy<T>> {
   tree: SdTreeLazyOption<T>;
 }
 
-export type SdTreeComponentOption<T = any> = SdTreeStaticComponentOption<T> | SdTreeLazyComponentOption<T>;
+export type SdTreeComponentOption<T = unknown> = SdTreeStaticComponentOption<T> | SdTreeLazyComponentOption<T>;
 
-export interface SdTreeNode<T = any> {
+export interface SdTreeNode<T = unknown> {
   /** Wrapped tree item containing id/label/icon/data plus mode-specific tree metadata. */
   treeItem: SdTreeItem<T>;
   /** Raw consumer payload. Kept as a shortcut because most callbacks operate on data, not wrapper metadata. */
@@ -149,7 +149,7 @@ export interface SdTreeNode<T = any> {
   readonly loadError?: unknown;
 }
 
-export interface SdTreeItemContext<T = any> {
+export interface SdTreeItemContext<T = unknown> {
   $implicit: T;
   item: T;
   treeItem: SdTreeItem<T>;
@@ -166,21 +166,21 @@ export interface SdTreeItemContext<T = any> {
   retry: () => void;
 }
 
-export type SdTreeItemTemplate<T = any> = TemplateRef<SdTreeItemContext<T>>;
+export type SdTreeItemTemplate<T = unknown> = TemplateRef<SdTreeItemContext<T>>;
 
-export interface SdTreeSelectionEvent<T = any> {
+export interface SdTreeSelectionEvent<T = unknown> {
   item: T;
   selected: boolean;
   selectedItems: T[];
 }
 
-export interface SdTreeToggleEvent<T = any> {
+export interface SdTreeToggleEvent<T = unknown> {
   item: T;
   expanded: boolean;
   node: SdTreeNode<T>;
 }
 
-export interface SdTreeLoadErrorEvent<T = any> {
+export interface SdTreeLoadErrorEvent<T = unknown> {
   item?: T;
   error: unknown;
 }

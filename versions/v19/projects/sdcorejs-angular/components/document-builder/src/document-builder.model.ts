@@ -24,7 +24,7 @@ export interface SdDocumentBuilderOption {
 }
 
 // 1. Interface cho Biến (Variable)
-export interface SdDocumentBuilderVariable<T = any> {
+export interface SdDocumentBuilderVariable<T = unknown> {
   id: string;
   uuid?: string; // Mã này FE tự sinh sau khi biến được drop
   value: string; // Giá trị render ra (ví dụ: {{full_name}})

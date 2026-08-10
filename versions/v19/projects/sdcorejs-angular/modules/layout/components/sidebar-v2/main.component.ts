@@ -16,7 +16,7 @@ interface SidebarV2RailItem {
 }
 
 @Component({
-  selector: 'sidebar-v2',
+  selector: 'sd-sidebar-v2',
   standalone: true,
   imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
   templateUrl: './main.component.html',
@@ -30,7 +30,7 @@ interface SidebarV2RailItem {
     '(keydown.escape)': 'closeFromEscape()',
   },
 })
-export class SidebarV2Component {
+export class SdSidebarV2 {
   readonly #router = inject(Router);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);

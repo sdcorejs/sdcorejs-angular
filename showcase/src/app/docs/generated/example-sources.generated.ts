@@ -1140,7 +1140,7 @@ import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/co
           <sd-document-builder
             style="height: 100%; width: 100%"
             [option]="builderOption"
-            (contentChange)="onContentChange($event)">
+            (sdContentChange)="onContentChange($event)">
           </sd-document-builder>
         </div>
       </demo-section>
@@ -1747,12 +1747,12 @@ export class FormGenericDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdHistoryItem } from '@sdcorejs/angular/components/history';
-import type { SdColor } from '@sdcorejs/angular/utilities';
+import type { Color } from '@sdcorejs/angular/utilities';
 
 // SdHistoryItemType chưa được export ở barrel — khai báo lại tại đây để tránh sửa thư viện.
 interface SdHistoryItemType {
   title: string;
-  status?: { title?: string; color?: SdColor; icon?: string };
+  status?: { title?: string; color?: Color; icon?: string };
   date?: string;
   actor?: string;
   source?: string;
@@ -3619,7 +3619,7 @@ interface Employee {
             [showSearch]="true"
             [showLogicToggle]="true"
             [showClearAll]="true"
-            (apply)="onApply()">
+            (sdApply)="onApply()">
           </sd-query-bar>
         </div>
       </demo-section>
@@ -3636,7 +3636,7 @@ interface Employee {
             density="compact"
             [showLogicToggle]="true"
             [showOperatorOnChip]="true"
-            (apply)="onApply()">
+            (sdApply)="onApply()">
           </sd-query-bar>
         </div>
       </demo-section>
@@ -4975,7 +4975,7 @@ interface FileTab {
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-dong-duoc') {
       <demo-section heading="Tab đóng được" [props]="[{ name: 'closable', value: 'true' }, { name: '(tabClosed)', value: 'event' }]">
         <div class="full">
-          <sd-tab-group (tabClosed)="onTabClosed($event)">
+          <sd-tab-group (sdTabClosed)="onTabClosed($event)">
             @for (file of files(); track file.id) {
               <sd-tab [label]="file.name" icon="description" [closable]="true">
                 <p>Nội dung của file <strong>{{ file.name }}</strong></p>
@@ -6414,8 +6414,8 @@ interface TreeDemoItem {
           <div class="tree-demo-panel">
             <sd-tree
               [option]="selectionDemoOption"
-              (selectedItemsChange)="selectedItems = $event"
-              (selectChange)="lastEvent = 'select: ' + $event.item.title"
+              (sdSelectedItemsChange)="selectedItems = $event"
+              (sdSelectChange)="lastEvent = 'select: ' + $event.item.title"
             ></sd-tree>
           </div>
 
@@ -6447,8 +6447,8 @@ interface TreeDemoItem {
         <div class="tree-demo-panel">
           <sd-tree
             [option]="lazyDemoOption"
-            (expandChange)="lastEvent = 'expand: ' + $event.item.title"
-            (collapseChange)="lastEvent = 'collapse: ' + $event.item.title"
+            (sdExpandChange)="lastEvent = 'expand: ' + $event.item.title"
+            (sdCollapseChange)="lastEvent = 'collapse: ' + $event.item.title"
           ></sd-tree>
         </div>
       </demo-section>
@@ -12061,7 +12061,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <sd-document-builder
         style="height: 100%; width: 100%"
         [option]="builderOption"
-        (contentChange)="onContentChange($event)">
+        (sdContentChange)="onContentChange($event)">
       </sd-document-builder>
     </div>
   </demo-section>`,
@@ -12670,7 +12670,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         density="compact"
         [showLogicToggle]="true"
         [showOperatorOnChip]="true"
-        (apply)="onApply()">
+        (sdApply)="onApply()">
       </sd-query-bar>
     </div>
   </demo-section>`,
@@ -12688,7 +12688,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         [showSearch]="true"
         [showLogicToggle]="true"
         [showClearAll]="true"
-        (apply)="onApply()">
+        (sdApply)="onApply()">
       </sd-query-bar>
     </div>
   </demo-section>`,
@@ -13538,7 +13538,7 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ...SHOWCASE_PAGE_SOURCES["components/tab"],
     html: `<demo-section heading="Tab đóng được" [props]="[{ name: 'closable', value: 'true' }, { name: '(tabClosed)', value: 'event' }]">
     <div class="full">
-      <sd-tab-group (tabClosed)="onTabClosed($event)">
+      <sd-tab-group (sdTabClosed)="onTabClosed($event)">
         @for (file of files(); track file.id) {
           <sd-tab [label]="file.name" icon="description" [closable]="true">
             <p>Nội dung của file <strong>{{ file.name }}</strong></p>
@@ -13921,8 +13921,8 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <div class="tree-demo-panel">
       <sd-tree
         [option]="lazyDemoOption"
-        (expandChange)="lastEvent = 'expand: ' + $event.item.title"
-        (collapseChange)="lastEvent = 'collapse: ' + $event.item.title"
+        (sdExpandChange)="lastEvent = 'expand: ' + $event.item.title"
+        (sdCollapseChange)="lastEvent = 'collapse: ' + $event.item.title"
       ></sd-tree>
     </div>
   </demo-section>`,
@@ -13940,8 +13940,8 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
       <div class="tree-demo-panel">
         <sd-tree
           [option]="selectionDemoOption"
-          (selectedItemsChange)="selectedItems = $event"
-          (selectChange)="lastEvent = 'select: ' + $event.item.title"
+          (sdSelectedItemsChange)="selectedItems = $event"
+          (sdSelectChange)="lastEvent = 'select: ' + $event.item.title"
         ></sd-tree>
       </div>
 

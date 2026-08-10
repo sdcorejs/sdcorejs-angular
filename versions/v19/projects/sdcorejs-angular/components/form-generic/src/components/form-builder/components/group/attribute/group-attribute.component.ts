@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, effect, inject, input, untracked } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
-import { COMPONENT_ICONS, SdFormGenericComponent, SdFormGenericGroup } from '../../../../../models';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SD_COMPONENT_ICONS, SdFormGenericComponent, SdFormGenericGroup } from '../../../../../models';
 import { BuilderService } from '../../../services';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
@@ -14,13 +14,13 @@ const COLOR_PRESETS = ['primary', 'secondary', 'success', 'warning', 'error'] as
   templateUrl: './group-attribute.component.html',
   styleUrl: './group-attribute.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeInput, AttributeExpression, TranslatePipe],
+  imports: [AttributeInput, AttributeExpression, SdTranslatePipe],
 })
 export class GroupAttribute {
   // ── constants ────────────────────────────────────────────────────────
   readonly iconPresets = ICON_PRESETS;
   readonly colorPresets = COLOR_PRESETS;
-  readonly componentIcons = COMPONENT_ICONS;
+  readonly componentIcons = SD_COMPONENT_ICONS;
 
   form = new FormGroup({});
 

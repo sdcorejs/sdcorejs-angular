@@ -21,10 +21,10 @@ import { SdQueryField } from '../../query-bar.model';
       [autoId]="autoId"
       [valueText]="valueText"
       [isNoData]="isNoData"
-      (commit)="committed = $event; commitCount = commitCount + 1"
-      (commitRange)="committedRange = $event; rangeCount = rangeCount + 1"
-      (liveChange)="lived = $event; liveCount = liveCount + 1"
-      (remove)="removed = removed + 1" />
+      (sdCommit)="committed = $event; commitCount = commitCount + 1"
+      (sdCommitRange)="committedRange = $event; rangeCount = rangeCount + 1"
+      (sdLiveChange)="lived = $event; liveCount = liveCount + 1"
+      (sdRemove)="removed = removed + 1" />
   `,
 })
 class Host {

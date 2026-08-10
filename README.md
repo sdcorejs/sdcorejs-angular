@@ -241,7 +241,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 
-`I18nService.setLanguage()` persists a built-in language and reloads by default so the pure `TranslatePipe` sees the new catalog. Applications can provide a complete custom catalog through the synchronous `language: () => catalog` configuration hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing, interpolation, fallbacks, and custom-language constraints.
+`I18nService.setLanguage()` persists a built-in language and reloads by default so the pure `SdTranslatePipe` sees the new catalog. Applications can provide a complete custom catalog through the synchronous `language: () => catalog` configuration hook. See the [i18n reference](https://sdcorejs.github.io/sdcorejs-angular/docs/latest/i18n/i18n.md) for catalog typing, interpolation, fallbacks, and custom-language constraints.
 
 ## Examples and documentation
 

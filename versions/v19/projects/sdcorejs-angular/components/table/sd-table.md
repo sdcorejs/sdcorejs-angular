@@ -429,7 +429,7 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: shows blank body; loading state shows centered Material spinner.
-- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `MatPaginatorIntlCro`.
+- **Pagination bar** (bottom): "Đang hiển thị 1-50/1.234" + page-size selector + first/prev/next/last buttons. Vietnamese labels via `SdTablePaginatorIntl`.
 - **Drag handle** (when `rowReorder.enabled`): leftmost icon column `sdReorder` with the configured icon (default `drag_indicator`); rows can be reordered within the same group.
 - **Row-number (STT) column** (when `index.enabled`): sticky `sdIndex` column rendering the global row number (`pageIndex * pageSize + i + 1`). Sits after selector/tree/command(left)/group, before data columns. Title defaults to `'#'`, width `'50px'`. Hidden on group spanning rows.
 - **Column resize handle** (when `config.resizable`): a 6px transparent strip at the right edge of each data-column header. Cursor changes to `col-resize` on hover; a subtle dark overlay appears on hover for affordance. The handle does not show on `sdSelection`/`sdCommand`/`sdGroup`/`sdSubInformation`/`sdReorder`/`sdIndex` columns or on `type: 'children'` parent headers.

@@ -42,7 +42,7 @@ export class SdStepper {
   autoId = input<string | undefined>(undefined);
 
   // Emits {previousIndex, selectedIndex, previousStep, selectedStep}.
-  selectionChange = output<StepperSelectionEvent>();
+  sdSelectionChange = output<StepperSelectionEvent>();
 
   protected matStepper = viewChild(MatStepper);
 
@@ -97,9 +97,9 @@ export class SdStepper {
   }
 
   protected onSelectionChange(ev: StepperSelectionEvent): void {
-    this.selectionChange.emit(ev);
+    this.sdSelectionChange.emit(ev);
     // Forward to each step that just became selected so consumer can react.
     const step = this.steps()[ev.selectedIndex];
-    step?.selectChange.emit();
+    step?.sdSelectChange.emit();
   }
 }

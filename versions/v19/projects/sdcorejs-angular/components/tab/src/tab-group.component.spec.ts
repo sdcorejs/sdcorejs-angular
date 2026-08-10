@@ -24,7 +24,7 @@ import { SdTabClosedEvent, SdTabGroup } from './tab-group.component';
       [disableRipple]="disableRipple"
       [dynamicHeight]="dynamicHeight"
       [autoId]="autoId"
-      (tabClosed)="onTabClosed($event)">
+      (sdTabClosed)="onTabClosed($event)">
       @for (t of tabs(); track t.id) {
         <sd-tab
           [label]="t.label"
@@ -33,7 +33,7 @@ import { SdTabClosedEvent, SdTabGroup } from './tab-group.component';
           [disabled]="t.disabled"
           [closable]="t.closable"
           [beforeClose]="t.beforeClose"
-          (closeError)="onCloseError($event)">
+          (sdCloseError)="onCloseError($event)">
           <div class="tab-content" [attr.data-tab]="t.id">Content {{ t.id }}</div>
         </sd-tab>
       }

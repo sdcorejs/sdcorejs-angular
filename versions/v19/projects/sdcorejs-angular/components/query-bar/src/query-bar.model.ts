@@ -9,7 +9,7 @@ import { Filter, NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 
 export type SdQueryFieldType = 'string' | 'number' | 'boolean' | 'date' | 'datetime' | 'values' | 'lazy-values';
 
-interface SdQueryFieldBase<T = any> {
+interface SdQueryFieldBase<T = unknown> {
   /** Dot-notation field path (matches `Filter.field`). */
   key: NestedKeyOf<T>;
   /** Human-readable label shown on chip + field picker. */
@@ -35,11 +35,11 @@ interface SdQueryFieldBase<T = any> {
   disabled?: boolean;
 }
 
-export interface SdQueryFieldString<T = any> extends SdQueryFieldBase<T> {
+export interface SdQueryFieldString<T = unknown> extends SdQueryFieldBase<T> {
   type: 'string';
 }
 
-export interface SdQueryFieldNumber<T = any> extends SdQueryFieldBase<T> {
+export interface SdQueryFieldNumber<T = unknown> extends SdQueryFieldBase<T> {
   type: 'number';
   /** Bounds for the input control inside the chip popover. */
   min?: number;
@@ -48,14 +48,14 @@ export interface SdQueryFieldNumber<T = any> extends SdQueryFieldBase<T> {
   step?: number;
 }
 
-export interface SdQueryFieldBoolean<T = any> extends SdQueryFieldBase<T> {
+export interface SdQueryFieldBoolean<T = unknown> extends SdQueryFieldBase<T> {
   type: 'boolean';
   /** Labels rendered for the true/false buttons. Default: "Có" / "Không". */
   trueLabel?: string;
   falseLabel?: string;
 }
 
-export interface SdQueryFieldDate<T = any> extends SdQueryFieldBase<T> {
+export interface SdQueryFieldDate<T = unknown> extends SdQueryFieldBase<T> {
   type: 'date' | 'datetime';
   /** Restrict the picker calendar to this range. */
   min?: Date | string;
@@ -66,7 +66,7 @@ export interface SdQueryFieldDate<T = any> extends SdQueryFieldBase<T> {
  * Statically-known options (sync array, signal, or one-shot promise).
  * Mirrors `SdTableColumnValues.option`.
  */
-export interface SdQueryFieldValues<T = any, K = Record<string, any>> extends SdQueryFieldBase<T> {
+export interface SdQueryFieldValues<T = unknown, K = Record<string, any>> extends SdQueryFieldBase<T> {
   type: 'values';
   option: {
     items: K[] | Signal<K[]> | (() => Promise<K[]>);
@@ -81,7 +81,7 @@ export interface SdQueryFieldValues<T = any, K = Record<string, any>> extends Sd
  * `{ type: 'SEARCH', searchText }` for live queries and `{ type: 'VALUE', value }` for
  * resolving chip-display labels of already-selected IDs.
  */
-export interface SdQueryFieldLazyValues<T = any, K = Record<string, any>> extends SdQueryFieldBase<T> {
+export interface SdQueryFieldLazyValues<T = unknown, K = Record<string, any>> extends SdQueryFieldBase<T> {
   type: 'lazy-values';
   option: {
     search: SdSearch<K>;
@@ -90,7 +90,7 @@ export interface SdQueryFieldLazyValues<T = any, K = Record<string, any>> extend
   };
 }
 
-export type SdQueryField<T = any> =
+export type SdQueryField<T = unknown> =
   | SdQueryFieldString<T>
   | SdQueryFieldNumber<T>
   | SdQueryFieldBoolean<T>
@@ -107,7 +107,7 @@ export type SdQueryField<T = any> =
 
 export type SdQueryLogic = 'AND' | 'OR';
 
-export interface SdQuery<T = any> {
+export interface SdQuery<T = unknown> {
   filters: Filter<T>[];
   /** Global connector between filters. Defaults to `'AND'`. */
   logic?: SdQueryLogic;
@@ -115,7 +115,7 @@ export interface SdQuery<T = any> {
   search?: string;
 }
 
-export interface SdQueryBarOption<T = any> {
+export interface SdQueryBarOption<T = unknown> {
   /** Prefix for auto-generated `data-autoid` on inner controls. */
   autoId?: string;
   /** Available fields the user can filter by. */
@@ -139,7 +139,7 @@ export interface SdQueryBarOption<T = any> {
 }
 
 /** Persisted bookmark of a query (filters + logic + search) — managed by `[savedFiltersKey]`. */
-export interface SdSavedFilter<T = any> {
+export interface SdSavedFilter<T = unknown> {
   id: string;
   name: string;
   query: SdQuery<T>;
@@ -152,7 +152,7 @@ export interface SdSavedFilter<T = any> {
  *   - 'operator' — operator menu open, waiting for the user to pick a condition
  *   - 'value'    — operator locked, value picker / seamless input is the focus
  */
-export interface BuildingChip<T = any> {
+export interface BuildingChip<T = unknown> {
   field: SdQueryField<T>;
   operator?: Operator;
   step: 'operator' | 'value';

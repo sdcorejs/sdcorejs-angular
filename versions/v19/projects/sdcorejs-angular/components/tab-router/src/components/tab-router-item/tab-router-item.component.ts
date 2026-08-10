@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SdTabInfoPipe } from '../../pipes/tab-info.pipe';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'sd-tab-router-item',
@@ -17,7 +17,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   styleUrl: './tab-router-item.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, SdBadge, SdTabInfoPipe, TranslatePipe],
+  imports: [SdIcon, CommonModule, SdBadge, SdTabInfoPipe, SdTranslatePipe],
 })
 export class SdTabRouterItemComponent implements OnInit, OnDestroy {
   private cdRef = inject(ChangeDetectorRef);

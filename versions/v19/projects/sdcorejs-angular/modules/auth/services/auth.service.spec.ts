@@ -119,7 +119,7 @@ describe('SdAuthService', () => {
 
       service.signout();
 
-      // Drain microtask queue so Promise.resolve().then(...) inside SdResolveMaybeAsync fires
+      // Drain microtask queue so Promise.resolve().then(...) inside resolveMaybeAsync fires
       await Promise.resolve();
 
       expect(signoutSpy).toHaveBeenCalledTimes(1);

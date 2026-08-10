@@ -8,17 +8,17 @@ import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, getMenu
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
-  selector: 'sidebar-v3',
+  selector: 'sd-sidebar-v3',
   standalone: true,
-  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, TranslatePipe],
+  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarV3Component {
+export class SdSidebarV3 {
   readonly #router = inject(Router);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);

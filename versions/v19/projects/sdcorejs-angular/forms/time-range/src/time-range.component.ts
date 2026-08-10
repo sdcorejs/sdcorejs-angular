@@ -30,7 +30,7 @@ import {
   ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { SdTime, SdTimeModelValue } from '@sdcorejs/angular/forms/time';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Utilities } from '@sdcorejs/utils/fns';
@@ -61,7 +61,7 @@ function rangeEquals(left: SdTimeRangeModelValue, right: SdTimeRangeModelValue):
     '[class.sd-viewed]': 'connectorState().isViewed || connectorState().isInline',
     '[class.sd-bare]': 'connectorState().isInline',
   },
-  imports: [SdIcon, SdLabel, SdTime, SdView, TranslatePipe],
+  imports: [SdIcon, SdLabel, SdTime, SdView, SdTranslatePipe],
 })
 export class SdTimeRange {
   readonly #i18n = inject(I18nService);

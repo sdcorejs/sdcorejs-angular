@@ -15,30 +15,30 @@
     @if (exprText) {
       <span class="fb-expr__code mono">{{ exprText }}</span>
     } @else {
-      <span class="empty">{{ 'core.component.form-builder.set-expression' | translate }}</span>
+      <span class="empty">{{ 'core.component.form-builder.set-expression' | sdTranslate }}</span>
     }
     <button
       type="button"
       class="fb-icon-btn"
       (click)="onEdit(); $event.stopPropagation()"
-      [attr.aria-label]="'core.component.form-builder.set-expression' | translate">
+      [attr.aria-label]="'core.component.form-builder.set-expression' | sdTranslate">
       <span class="msi">functions</span>
     </button>
   </div>
 </div>
 @if (expression) {
-  <sd-modal [title]="'core.component.form-builder.set-expression' | translate" modalClass="sd-form-builder-dialog">
+  <sd-modal [title]="'core.component.form-builder.set-expression' | sdTranslate" modalClass="sd-form-builder-dialog">
     <div class="c-builder">
       <div class="d-flex justify-content-end">
         <sd-button
           prefixIcon="calculate"
           class="mr-4"
-          [title]="'core.component.form-builder.condition-group' | translate"
+          [title]="'core.component.form-builder.condition-group' | sdTranslate"
           color="primary"
           (click)="addCombinator(expression.conditions)"></sd-button>
         <sd-button
           prefixIcon="add"
-          [title]="'core.component.form-builder.condition' | translate"
+          [title]="'core.component.form-builder.condition' | sdTranslate"
           color="primary"
           (click)="addCondition(expression.conditions)"
           type="fill"></sd-button>
@@ -111,7 +111,7 @@
               } @else if (fieldAttribute.type === 'datetime' && conditionLv1.dayInfo) {
                 <sd-select
                   size="sm"
-                  [placeholder]="'core.component.form-builder.time' | translate"
+                  [placeholder]="'core.component.form-builder.time' | sdTranslate"
                   [form]="form"
                   style="width: 150px"
                   [items]="types"
@@ -193,14 +193,14 @@
                   hideInlineError></sd-autocomplete>
               }
             }
-            <sd-button class="ml-auto" prefixIcon="delete" [tooltip]="'core.component.form-builder.delete' | translate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
+            <sd-button class="ml-auto" prefixIcon="delete" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
           } @else if (conditionLv1.type === 'combinator') {
             <div class="c-builder">
               <div class="d-flex justify-content-end">
-                <sd-button class="mr-4" prefixIcon="delete" [tooltip]="'core.component.form-builder.delete' | translate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
+                <sd-button class="mr-4" prefixIcon="delete" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
                 <sd-button
                   prefixIcon="add"
-                  [title]="'core.component.form-builder.condition' | translate"
+                  [title]="'core.component.form-builder.condition' | sdTranslate"
                   size="sm"
                   color="primary"
                   (click)="addCondition(conditionLv1.conditions)"
@@ -289,7 +289,7 @@
                         <sd-select
                           size="sm"
                           [form]="form"
-                          [placeholder]="'core.component.form-builder.time' | translate"
+                          [placeholder]="'core.component.form-builder.time' | sdTranslate"
                           style="width: 150px"
                           [items]="types"
                           valueField="value"
@@ -373,7 +373,7 @@
                     <sd-button
                       class="ml-auto"
                       prefixIcon="delete"
-                      [tooltip]="'core.component.form-builder.delete' | translate"
+                      [tooltip]="'core.component.form-builder.delete' | sdTranslate"
                       (click)="remove(conditionLv1.conditions, idxLv1)"></sd-button>
                   }
                 </div>
@@ -384,7 +384,7 @@
       }
     </div>
     <ng-container sdFooterRight>
-      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
+      <sd-button prefixIcon="save" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="onAccept()" color="primary" type="fill"></sd-button>
     </ng-container>
   </sd-modal>
 }

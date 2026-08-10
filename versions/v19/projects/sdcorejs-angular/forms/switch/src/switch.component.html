@@ -2,7 +2,7 @@
   @if (label()) {
     <div class="T14R text-secondary">{{ label() }}</div>
   }
-  <div class="T14M">{{ (model() ? 'core.form.switch.on' : 'core.form.switch.off') | translate }}</div>
+  <div class="T14M">{{ (model() ? 'core.form.switch.on' : 'core.form.switch.off') | sdTranslate }}</div>
 } @else {
   <mat-slide-toggle
     [formControl]="formControl"

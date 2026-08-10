@@ -38,10 +38,10 @@ export class SdSplitterHandleComponent {
   ariaValueMax = input<number | undefined>(undefined);
   ariaValueNow = input<number | undefined>(undefined);
 
-  readonly dragStart = output<void>();
-  readonly dragMove = output<number>();
-  readonly dragEnd = output<void>();
-  readonly toggleRequest = output<void>();
+  readonly sdDragStart = output<void>();
+  readonly sdDragMove = output<number>();
+  readonly sdDragEnd = output<void>();
+  readonly sdToggleRequest = output<void>();
 
   #pointerId: number | null = null;
   #startCoord = 0;
@@ -51,7 +51,7 @@ export class SdSplitterHandleComponent {
   @HostListener('dblclick')
   onDblClick(): void {
     if (this.disabled()) return;
-    this.toggleRequest.emit();
+    this.sdToggleRequest.emit();
   }
 
   @HostListener('keydown', ['$event'])
@@ -76,15 +76,15 @@ export class SdSplitterHandleComponent {
       case 'Enter':
       case ' ':
         ev.preventDefault();
-        this.toggleRequest.emit();
+        this.sdToggleRequest.emit();
         return;
     }
     if (delta == null) return;
     ev.preventDefault();
     // Keyboard step là 1 lần commit (không live drag) — emit start+move+end liền
-    this.dragStart.emit();
-    this.dragMove.emit(delta);
-    this.dragEnd.emit();
+    this.sdDragStart.emit();
+    this.sdDragMove.emit(delta);
+    this.sdDragEnd.emit();
   }
 
   @HostListener('pointerdown', ['$event'])
@@ -96,7 +96,7 @@ export class SdSplitterHandleComponent {
     this.#startCoord = this.orientation() === 'horizontal' ? ev.clientX : ev.clientY;
     this.elementRef.nativeElement.setPointerCapture(ev.pointerId);
     ev.preventDefault();
-    this.dragStart.emit();
+    this.sdDragStart.emit();
   }
 
   @HostListener('pointermove', ['$event'])
@@ -109,7 +109,7 @@ export class SdSplitterHandleComponent {
     if (this.#rafPending != null) return;
     this.#rafPending = requestAnimationFrame(() => {
       this.#rafPending = null;
-      this.dragMove.emit(this.#pendingDelta);
+      this.sdDragMove.emit(this.#pendingDelta);
     });
   }
 
@@ -121,7 +121,7 @@ export class SdSplitterHandleComponent {
     this.#pointerId = null;
     // Hủy rAF đang chờ để tránh emit dragMove sau khi drag kết thúc
     this.#cancelPendingFrame();
-    this.dragEnd.emit();
+    this.sdDragEnd.emit();
   }
 
   #cancelPendingFrame(): void {

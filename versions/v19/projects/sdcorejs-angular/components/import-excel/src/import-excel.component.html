@@ -1,16 +1,16 @@
 @if (option) {
-  <sd-modal [title]="option.title || ('core.component.import-excel.title' | translate)" (sdClosed)="onClosed()" #modal>
+  <sd-modal [title]="option.title || ('core.component.import-excel.title' | sdTranslate)" (sdClosed)="onClosed()" #modal>
     <div class="d-flex align-items-center mb-12" style="min-height: 32px">
       @if (excelItems.length) {
         <div class="d-flex">
-          <sd-button class="mr-2" (click)="view('ALL')" icon="cached" [title]="'core.component.import-excel.see-all' | translate" size="sm" type="outline"></sd-button>
+          <sd-button class="mr-2" (click)="view('ALL')" icon="cached" [title]="'core.component.import-excel.see-all' | sdTranslate" size="sm" type="outline"></sd-button>
 
           <sd-button
             class="mr-2"
             (click)="view('SUCCESS')"
             icon="done"
             title="{{ numberOfSuccess }}"
-            [tooltip]="'core.component.import-excel.valid-rows' | translate"
+            [tooltip]="'core.component.import-excel.valid-rows' | sdTranslate"
             size="sm"
             color="success">
           </sd-button>
@@ -20,7 +20,7 @@
             (click)="view('WARNING')"
             icon="warning"
             title="{{ numberOfWarning }}"
-            [tooltip]="'core.component.import-excel.error-rows' | translate"
+            [tooltip]="'core.component.import-excel.error-rows' | sdTranslate"
             size="sm"
             color="warning">
           </sd-button>
@@ -30,7 +30,7 @@
             icon="error"
             title="{{ numberOfError }}"
             color="error"
-            [tooltip]="'core.component.import-excel.warning-rows' | translate"
+            [tooltip]="'core.component.import-excel.warning-rows' | sdTranslate"
             size="sm">
           </sd-button>
         </div>
@@ -45,7 +45,7 @@
               <tr>
                 <th class="text-center c-sticky-left" style="width: 50px">#</th>
                 @if (filteredItems.length) {
-                  <th class="text-center" style="min-width: 250px; width: 250px">{{ 'core.component.import-excel.status' | translate }}</th>
+                  <th class="text-center" style="min-width: 250px; width: 250px">{{ 'core.component.import-excel.status' | sdTranslate }}</th>
                 }
                 @for (column of option.columns; track column.field) {
                   @if (column | columnHidden) {
@@ -76,7 +76,7 @@
                       <div
                         class="text-wrap"
                         [innerHTML]="
-                          item.meta.errorMessages[0] || item.meta.warningMessages[0] || ('<span class=\'text-success\'>' + ('core.component.import-excel.valid-data' | translate) + '</span>')
+                          item.meta.errorMessages[0] || item.meta.warningMessages[0] || ('<span class=\'text-success\'>' + ('core.component.import-excel.valid-data' | sdTranslate) + '</span>')
                         "></div>
                     </td>
 
@@ -147,18 +147,18 @@
                       class="empty-state-wrapper"
                       role="button"
                       tabindex="0"
-                      [attr.aria-label]="'core.component.import-excel.download-template-tooltip' | translate"
+                      [attr.aria-label]="'core.component.import-excel.download-template-tooltip' | sdTranslate"
                       (click)="downloadTemplate()"
                       (keydown.enter)="onDownloadTemplateKeydown($event)"
                       (keydown.space)="onDownloadTemplateKeydown($event)"
-                      [matTooltip]="'core.component.import-excel.download-template-tooltip' | translate">
+                      [matTooltip]="'core.component.import-excel.download-template-tooltip' | sdTranslate">
                       <sd-icon class="empty-icon" name="cloud_download"></sd-icon>
 
-                      <h4>{{ 'core.component.import-excel.no-data-upload' | translate }}</h4>
-                      <span class="text-small text-link"> {{ 'core.component.import-excel.click-here-template' | translate }} </span>
+                      <h4>{{ 'core.component.import-excel.no-data-upload' | sdTranslate }}</h4>
+                      <span class="text-small text-link"> {{ 'core.component.import-excel.click-here-template' | sdTranslate }} </span>
 
                       @if (isDownloadTemplate) {
-                        <div class="mt-3" role="status" aria-live="polite" [attr.aria-label]="'core.component.import-excel.loading' | translate">
+                        <div class="mt-3" role="status" aria-live="polite" [attr.aria-label]="'core.component.import-excel.loading' | sdTranslate">
                           <mat-spinner diameter="24" mode="indeterminate"></mat-spinner>
                         </div>
                       }
@@ -177,16 +177,16 @@
         </div>
       </div>
     </div>
-    <sd-button sdFooterLeft (click)="upload()" prefixIcon="file_upload" [title]="'core.component.import-excel.upload' | translate" size="sm" color="info" [loading]="uploading">
+    <sd-button sdFooterLeft (click)="upload()" prefixIcon="file_upload" [title]="'core.component.import-excel.upload' | sdTranslate" size="sm" color="info" [loading]="uploading">
     </sd-button>
     <div class="d-flex align-items-center" sdFooterRight>
       @if (filteredItems.length) {
-        <sd-button class="mr-4" (click)="export()" prefixIcon="get_app" [title]="'core.component.import-excel.download' | translate" size="sm" color="success" type="outline">
+        <sd-button class="mr-4" (click)="export()" prefixIcon="get_app" [title]="'core.component.import-excel.download' | sdTranslate" size="sm" color="success" type="outline">
         </sd-button>
       }
       <sd-button
         (click)="accept()"
-        [title]="'core.component.import-excel.confirm-save' | translate"
+        [title]="'core.component.import-excel.confirm-save' | sdTranslate"
         [disabled]="(numberOfSuccess === 0 && numberOfWarning === 0) || numberOfError > 0 || isUploaded"
         color="primary"
         type="fill"

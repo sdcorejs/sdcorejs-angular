@@ -41,7 +41,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
@@ -103,7 +103,7 @@ function dateControlToModel(value: Date | null): SdDateModelValue {
     MatDatepickerModule,
     SdLabel,
     SdView,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdDate implements OnDestroy, OnInit {

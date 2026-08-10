@@ -54,7 +54,7 @@ Workhorse text input — single-line `text`/`email`/`password`/`number` field wi
 | `disabled`            | `boolean`                                              | `false`                                     | Disables the control.                                                                                                                                                                                                                                                                                               |
 | `clearable`           | `boolean`                                              | `false`                                     | Shows the value-gated clear button in edit and `'inline'` modes. The button is still hidden when the field is empty, required, disabled, or readonly.                                                                                                                                                               |
 | `viewed`              | `boolean \| 'inline'`                                  | `false`                                     | Display mode. `false` edit · `true` static DETAIL (`<sd-view>` / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), click/focus to edit directly (NO panel, NO overlay); blur reverts to the text look. Disabled `'inline'` → static view. |
-| `blurOnEnter`         | `boolean`                                              | `false`                                     | If `true`, pressing Enter blurs the field after emitting `keyupEnter`.                                                                                                                                                                                                                                              |
+| `blurOnEnter`         | `boolean`                                              | `false`                                     | If `true`, pressing Enter blurs the field after emitting `sdKeyupEnter`.                                                                                                                                                                                                                                              |
 | `hideInlineError`     | `boolean`                                              | `false`                                     | Hide inline message; surfaces error via `errorMessage`.                                                                                                                                                                                                                                                             |
 | `model`               | `any`                                                  | `undefined`                                 | Two-way bound value (use `[(model)]`).                                                                                                                                                                                                                                                                              |
 
@@ -172,7 +172,7 @@ Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"
 
 ```html
 <ng-template sdTableFilterDef="keyword" let-filter let-update="update">
-  <sd-input size="sm" hideInlineError [(model)]="filter.keyword" (keyupEnter)="update()"> </sd-input>
+  <sd-input size="sm" hideInlineError [(model)]="filter.keyword" (sdKeyupEnter)="update()"> </sd-input>
 </ng-template>
 ```
 
@@ -209,7 +209,7 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ### 3. Search-as-you-type with custom suffix
 
 ```html
-<sd-input label="Tìm kiếm" placeholder="Nhập từ khóa…" [(model)]="search" blurOnEnter (keyupEnter)="onSearch($event)">
+<sd-input label="Tìm kiếm" placeholder="Nhập từ khóa…" [(model)]="search" blurOnEnter (sdKeyupEnter)="onSearch($event)">
   <ng-template sdSuffixDef>
     <sd-button type="text" prefixIcon="search" (click)="onSearch(search)"></sd-button>
   </ng-template>

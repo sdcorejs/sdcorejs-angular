@@ -44,7 +44,7 @@ import { Size } from '@sdcorejs/utils/models';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Subscription } from 'rxjs';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -65,7 +65,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     MatTooltipModule,
     SdLabel,
     SdEmptyPipe,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdTextarea implements OnInit, OnDestroy {

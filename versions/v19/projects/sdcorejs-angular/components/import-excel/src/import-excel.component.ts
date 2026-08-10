@@ -18,7 +18,7 @@ import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { ColumnTransformPipe } from './pipes/column-transform.pipe';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
@@ -40,7 +40,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     MatMenuModule,
     MatProgressSpinner,
     SdBadge,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   providers: [ColumnHiddenPipe],
 })

@@ -16,9 +16,9 @@ Use it for back-office portals that need permission-aware navigation, responsive
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `SdLayoutComponent` / `sd-layout`                  | Selects the configured V1, V2, or V3 desktop/mobile pair and projects page content             |
 | `SdPageComponent` / `sd-page`                      | Renders a titled content frame inside the shell                                                |
-| `SidebarV1Component`, `SidebarMobileV1Component`   | Existing classic sidebar and mobile drawer                                                     |
-| `SidebarV2Component`, `SidebarMobileV2Component`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
-| `SidebarV3Component`, `SidebarMobileV3Component`   | Collapsible navigation with search, Pinned, and Recent sections                                |
+| `SdSidebarV1`, `SdSidebarMobileV1`   | Existing classic sidebar and mobile drawer                                                     |
+| `SdSidebarV2`, `SdSidebarMobileV2`   | Compact primary rail with contextual flyout or mobile bottom sheet                             |
+| `SdSidebarV3`, `SdSidebarMobileV3`   | Collapsible navigation with search, Pinned, and Recent sections                                |
 | `SdLayoutService`                                  | Exposes resolved `userInfo` and `sidebar` signals plus the resolved `homeUrl`                  |
 | `SdViewportService`                                | Shared signal source for viewport dimensions and responsive state                              |
 | `SdLayoutResponsiveService`                        | Deprecated compatibility adapter that evaluates the layout breakpoint over `SdViewportService` |

@@ -16,7 +16,7 @@ import {
   viewChildren,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   PdfErrorEvent,
   PdfErrorReason,
@@ -146,7 +146,7 @@ type PdfSidebarTabMode = Exclude<PdfSidebarMode, 'none'>;
 @Component({
   selector: 'sd-preview-pdf',
   standalone: true,
-  imports: [SdIcon, CommonModule, FormsModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, FormsModule, SdTranslatePipe],
   templateUrl: './preview-pdf.component.html',
   styleUrl: './preview-pdf.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -297,16 +297,16 @@ export class SdPreviewPdf {
   // ==========================================
   // OUTPUTS
   // ==========================================
-  readonly close = output<void>();
-  readonly loaded = output<PdfLoadEvent>();
-  readonly pageChange = output<number>();
-  readonly zoomChange = output<number>();
-  readonly download = output<{ filename: string }>();
+  readonly sdClose = output<void>();
+  readonly sdLoaded = output<PdfLoadEvent>();
+  readonly sdPageChange = output<number>();
+  readonly sdZoomChange = output<number>();
+  readonly sdDownload = output<{ filename: string }>();
   readonly loadError = output<PdfErrorEvent>();
   // Fired whenever the search term, results, or active index changes — gives
   // the consumer a stable hook for analytics / sticky highlight bars without
   // poking at the internal state signal.
-  readonly searchChange = output<{ term: string; total: number; current: number; truncated: boolean }>();
+  readonly sdSearchChange = output<{ term: string; total: number; current: number; truncated: boolean }>();
 
   // ==========================================
   // STATE (signals)
@@ -648,7 +648,7 @@ export class SdPreviewPdf {
     const changed = target !== this.#activePage();
     if (changed) {
       this.#activePage.set(target);
-      this.pageChange.emit(target);
+      this.sdPageChange.emit(target);
     }
     this.#ensureThumbnailPageVisible(target);
     if (this.#scrollModeInternal() === 'continuous') {
@@ -806,7 +806,7 @@ export class SdPreviewPdf {
     }
     const downloaded = this.#browser.download(href, filename);
     if (temporaryHref) this.#scheduleTemporaryDownloadUrlRelease(temporaryHref);
-    if (downloaded && !this.#destroyed) this.download.emit({ filename });
+    if (downloaded && !this.#destroyed) this.sdDownload.emit({ filename });
     return downloaded;
   }
 
@@ -817,7 +817,7 @@ export class SdPreviewPdf {
 
   /** Programmatic equivalent of clicking the X — emits the close output. */
   requestClose(): void {
-    this.close.emit();
+    this.sdClose.emit();
   }
 
   /** Retry the active load attempt (called from the error state retry button). */
@@ -1554,8 +1554,8 @@ export class SdPreviewPdf {
     this.#resetContinuousLayout(pdfDoc.numPages);
 
     if (!this.#destroyed) {
-      this.loaded.emit({ totalPages: pdfDoc.numPages, meta });
-      this.pageChange.emit(this.#activePage());
+      this.sdLoaded.emit({ totalPages: pdfDoc.numPages, meta });
+      this.sdPageChange.emit(this.#activePage());
     }
 
     if (this.#scrollModeInternal() === 'continuous') {
@@ -1620,7 +1620,7 @@ export class SdPreviewPdf {
       page.cleanup();
     }
 
-    if (completed) this.zoomChange.emit(scale);
+    if (completed) this.sdZoomChange.emit(scale);
   }
 
   #resolveScale(baseViewport: SdPdfViewport): number {
@@ -1935,7 +1935,7 @@ export class SdPreviewPdf {
   }
 
   #emitSearchChange(): void {
-    this.searchChange.emit({
+    this.sdSearchChange.emit({
       term: this.#searchTerm(),
       total: this.#searchResults().length,
       current: this.#searchActiveIndex() + 1, // 1-based; 0 when no active
@@ -2050,7 +2050,7 @@ export class SdPreviewPdf {
     const midpointPage = this.#continuousPageIndexAt(stage.scrollTop + viewportHeight / 2) + 1;
     if (midpointPage === this.#activePage()) return;
     this.#activePage.set(midpointPage);
-    if (!this.#destroyed) this.pageChange.emit(midpointPage);
+    if (!this.#destroyed) this.sdPageChange.emit(midpointPage);
   }
 
   #positionContinuousPage(pageNumber: number): void {
@@ -2132,7 +2132,7 @@ export class SdPreviewPdf {
       if (!this.#isCurrentContinuousPage(doc, generation, pageNumber)) return;
       this.#updateContinuousMeasurement(pageNumber, logicalViewport.height);
       this.#zoom.set(scale);
-      this.zoomChange.emit(scale);
+      this.sdZoomChange.emit(scale);
     } finally {
       if (this.#continuousReservations.get(pageNumber) === reservation) this.#continuousReservations.delete(pageNumber);
       page?.cleanup();

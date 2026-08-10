@@ -1,4 +1,4 @@
-export interface SdSelectionData<T = any> {
+export interface SdSelectionData<T = unknown> {
   multiple?: boolean;
   // Multiple
   values: any[];

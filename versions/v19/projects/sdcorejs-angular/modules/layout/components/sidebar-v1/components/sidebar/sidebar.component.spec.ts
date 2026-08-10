@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 
 import { SdLayoutNavigationStateService, SdLayoutStorageService } from '../../../../services';
 import { SdLayoutMenu } from '../../../../services';
-import { SidebarComponent } from './sidebar.component';
+import { SdSidebarV1Panel } from './sidebar.component';
 
 function storageCell<T>(initial: T) {
   let value = initial;
@@ -15,9 +15,9 @@ function storageCell<T>(initial: T) {
   };
 }
 
-describe('SidebarComponent', () => {
-  let fixture: ComponentFixture<SidebarComponent>;
-  let component: SidebarComponent;
+describe('SdSidebarV1Panel', () => {
+  let fixture: ComponentFixture<SdSidebarV1Panel>;
+  let component: SdSidebarV1Panel;
   let routerEvents: Subject<unknown>;
   let router: { events: Subject<unknown>; url: string; navigate: jasmine.Spy; navigateByUrl: jasmine.Spy };
   let storage: ReturnType<typeof createStorage>;
@@ -59,17 +59,17 @@ describe('SidebarComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [SidebarComponent],
+      imports: [SdSidebarV1Panel],
       providers: [
         { provide: Router, useValue: router },
         { provide: SdLayoutStorageService, useValue: storage },
         { provide: SdLayoutNavigationStateService, useValue: navigationState },
       ],
     })
-      .overrideComponent(SidebarComponent, { set: { template: '' } })
+      .overrideComponent(SdSidebarV1Panel, { set: { template: '' } })
       .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarComponent);
+    fixture = TestBed.createComponent(SdSidebarV1Panel);
     component = fixture.componentInstance;
     component.currentPath.set(options.path ?? '/orders');
     fixture.componentRef.setInput('menus', menus);
@@ -150,10 +150,10 @@ describe('SidebarComponent', () => {
     const sidebarState = jasmine.createSpy('sidebarState');
     const opened = jasmine.createSpy('opened');
     const closed = jasmine.createSpy('closed');
-    component.expandSideBar.subscribe(expanded);
-    component.showSideBar.subscribe(sidebarState);
-    component.popupUserMenuOpened.subscribe(opened);
-    component.popupUserMenuClosed.subscribe(closed);
+    component.sdExpandSideBar.subscribe(expanded);
+    component.sdShowSideBar.subscribe(sidebarState);
+    component.sdPopupUserMenuOpened.subscribe(opened);
+    component.sdPopupUserMenuClosed.subscribe(closed);
 
     expect(component.hasChild(0, group)).toBeTrue();
     expect(component.hasChild(0, orders)).toBeFalse();
@@ -182,7 +182,7 @@ describe('SidebarComponent', () => {
   it('navigates internal and external links and closes after mobile navigation', async () => {
     await create({ mobile: true });
     const sidebarState = jasmine.createSpy('sidebarState');
-    component.showSideBar.subscribe(sidebarState);
+    component.sdShowSideBar.subscribe(sidebarState);
     const windowOpen = spyOn(window, 'open');
 
     component.navigate({ path: 'https://example.com/docs', queryParams: {} });
@@ -210,7 +210,7 @@ describe('SidebarComponent', () => {
   it('expands child groups, navigates leaf groups, and filters nested menus by normalized text', async () => {
     await create({ path: '/orders' });
     const expanded = jasmine.createSpy('expanded');
-    component.expandSideBar.subscribe(expanded);
+    component.sdExpandSideBar.subscribe(expanded);
 
     component.expandMenuGroup(group);
     expect(component.titleMenuGroup()).toBe('Daily work');

@@ -37,8 +37,8 @@ export class SdLayoutMenuTreeComponent {
   pinnedKeys = input<string[]>([]);
   showPin = input(true);
   pinVisibility = input<'hover' | 'always'>('hover');
-  navigate = output<SdLayoutRootMenu>();
-  togglePinned = output<SdLayoutMenu>();
+  sdNavigate = output<SdLayoutRootMenu>();
+  sdTogglePinned = output<SdLayoutMenu>();
 
   nodes = computed<SdLayoutMenuTreeNode[]>(() => {
     const pinnedKeys = new Set(this.pinnedKeys());
@@ -84,12 +84,12 @@ export class SdLayoutMenuTreeComponent {
   }
 
   onNavigate(menu: SdLayoutMenu): void {
-    if ('path' in menu) this.navigate.emit(menu);
+    if ('path' in menu) this.sdNavigate.emit(menu);
   }
 
   onTogglePinned(event: MouseEvent, menu: SdLayoutMenu): void {
     event.stopPropagation();
-    this.togglePinned.emit(menu);
+    this.sdTogglePinned.emit(menu);
   }
 
   onPinHoverStart(key: string): void {

@@ -38,7 +38,7 @@ import {
 } from './configurations';
 import { FilterDocumentPipe, FilterImagePipe } from './pipes';
 import { IsImage, PreviewFile, UploadFileService } from './services';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 // https://stackoverflow.com/questions/4459379/preview-an-image-before-it-is-uploaded
@@ -58,10 +58,10 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     FilterDocumentPipe,
     SdFormatNumberPipe,
     MatProgressSpinner,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
-export class SdUploadFile<TArgs = any> {
+export class SdUploadFile<TArgs = unknown> {
   // ─── Injected Services ────────────────────────────────────────────────
   readonly #notifyService = inject(SdNotifyService);
   readonly #confirmService = inject(SdConfirmService);
@@ -195,8 +195,8 @@ export class SdUploadFile<TArgs = any> {
   });
 
   // ─── Output Signals ───────────────────────────────────────────────────
-  readonly loaded = output<PreviewFile[]>();
-  readonly filesChanged = output<(string | File)[]>();
+  readonly sdLoaded = output<PreviewFile[]>();
+  readonly sdFilesChanged = output<(string | File)[]>();
 
   // ─── Model Signal (two-way binding support: [(model)]) ────────────────
   readonly model = model<(string | number)[]>([]);
@@ -225,7 +225,7 @@ export class SdUploadFile<TArgs = any> {
       if (Array.isArray(values)) {
         this.#details(values).then(previewFiles => {
           this.previewFiles.set(previewFiles);
-          this.filesChanged.emit(
+          this.sdFilesChanged.emit(
             this.previewFiles()
               .map(e => e.file || e.idOrKey || e.src)
               .filter(val => !!val) as (string | File)[]
@@ -499,7 +499,7 @@ export class SdUploadFile<TArgs = any> {
           const currentModel = [...(this.model() || [])];
           currentModel.splice(idx, 1);
           this.model.set(currentModel);
-          this.filesChanged.emit(
+          this.sdFilesChanged.emit(
             this.previewFiles()
               .map(e => e.file || e.idOrKey || e.src)
               .filter(val => !!val) as (string | File)[]

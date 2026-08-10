@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericCheckbox,
   SdFormGenericComponent,
   SdFormGenericGroup,
@@ -13,13 +13,13 @@ import { FormGroup } from '@angular/forms';
 import { BuilderService } from '../../../services';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'checkbox-attribute',
   templateUrl: './checkbox-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeExpression, TranslatePipe],
+  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeExpression, SdTranslatePipe],
 })
 export class CheckboxAttribute implements AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -31,7 +31,7 @@ export class CheckboxAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericCheckbox;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericCheckbox) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
 
   #subscription = new Subscription();
@@ -68,7 +68,7 @@ export class CheckboxAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

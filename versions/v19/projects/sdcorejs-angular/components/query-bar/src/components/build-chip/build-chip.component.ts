@@ -75,28 +75,28 @@ export class SdQueryBuildChip {
   // ---------------------------------------------------------------------------
 
   /** Operator chosen from the operator-step menu — parent advances to value step. */
-  readonly pickOperator = output<Operator>();
+  readonly sdPickOperator = output<Operator>();
 
   /**
    * Value committed from a non-seamless picker (sd-select / sd-date / sd-date-range /
    * sd-datetime) or a boolean toggle. Parent pushes the completed chip and clears building.
    */
-  readonly commitValue = output<unknown>();
+  readonly sdCommitValue = output<unknown>();
 
   /** × button — abandon the build (parent clears `building` signal). */
-  readonly cancel = output<void>();
+  readonly sdCancel = output<void>();
 
   /**
    * Commit from the seamless (string / number) branch. Parent decides empty → cancel
    * vs push complete (see `onBuildSeamlessCommit`); this just forwards the raw value.
    */
-  readonly seamlessCommit = output<unknown>();
+  readonly sdSeamlessCommit = output<unknown>();
 
   /** Fallback editor (boolean ng-template / other) — staged draft on every change. */
-  readonly draftChange = output<unknown>();
+  readonly sdDraftChange = output<unknown>();
 
   /** Fallback editor — Enter / click commits the staged draft. */
-  readonly draftCommit = output<void>();
+  readonly sdDraftCommit = output<void>();
 
   // ---------------------------------------------------------------------------
   // Internal refs — used by parent via public open*() methods

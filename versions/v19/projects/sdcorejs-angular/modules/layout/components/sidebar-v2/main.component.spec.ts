@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { SdLayoutMenu } from '../../services';
-import { SidebarV2Component } from './main.component';
+import { SdSidebarV2 } from './main.component';
 
 const work: SdLayoutMenu = {
   id: 'work',
@@ -14,12 +14,12 @@ const admin: SdLayoutMenu = {
   children: [{ id: 'users', title: 'Người dùng', path: '/users', permission: true }],
 };
 
-describe('SidebarV2Component', () => {
-  let fixture: ComponentFixture<SidebarV2Component>;
+describe('SdSidebarV2', () => {
+  let fixture: ComponentFixture<SdSidebarV2>;
 
   async function create(interaction: 'click' | 'hover-lock' = 'click'): Promise<void> {
-    await TestBed.configureTestingModule({ imports: [SidebarV2Component], providers: [provideRouter([])] }).compileComponents();
-    fixture = TestBed.createComponent(SidebarV2Component);
+    await TestBed.configureTestingModule({ imports: [SdSidebarV2], providers: [provideRouter([])] }).compileComponents();
+    fixture = TestBed.createComponent(SdSidebarV2);
     fixture.componentRef.setInput('menus', [work, admin]);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User' });
     fixture.componentRef.setInput('sidebar', { version: 2, interaction });

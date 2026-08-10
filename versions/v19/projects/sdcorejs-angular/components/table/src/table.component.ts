@@ -100,11 +100,14 @@ import {
   resolveHasChildren,
   saveTreeExpandState,
 } from './services/tree/tree.util';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
+// why: tên cũ `MatPaginatorIntlCro` là vết copy-paste từ ví dụ locale Croatia — lớp này chỉ phục vụ
+// nhãn phân trang của `<sd-table>` (VI/EN), không liên quan gì tới tiếng Croatia. Tên cũ lại còn
+// mang tiền tố `Mat`, dễ bị hiểu nhầm là API của Angular Material thay vì export public của lib này.
 @Injectable()
-export class MatPaginatorIntlCro extends MatPaginatorIntl {
+export class SdTablePaginatorIntl extends MatPaginatorIntl {
   // i18n labels resolved at construction. Reads VI/EN from I18nService.
   readonly #i18n = inject(I18nService);
   override firstPageLabel = this.#i18n.t('core.component.table.paginator.first-page');
@@ -152,7 +155,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     ConfigService,
     {
       provide: MatPaginatorIntl,
-      useClass: MatPaginatorIntlCro,
+      useClass: SdTablePaginatorIntl,
     },
   ],
   imports: [
@@ -187,7 +190,7 @@ const EMPTY_COMMANDS: SdTableCommand[] = [];
     SelectorActionComponent,
     StickyShadowDirective,
     SdColumnResizeDirective,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {

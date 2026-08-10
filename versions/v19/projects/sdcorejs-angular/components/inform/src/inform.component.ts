@@ -14,7 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { Color } from '@sdcorejs/utils/models';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdInformActionDirective } from './inform-action.directive';
 import { SdIcon, type SdIconSet } from '@sdcorejs/angular/modules/icon';
 
@@ -34,7 +34,7 @@ const SD_INFORM_DEFAULT_ICON: Record<Color, string> = {
   styleUrl: './inform.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, SdTranslatePipe],
 })
 export class SdInform {
   // 1. INPUTS

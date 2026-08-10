@@ -69,7 +69,7 @@
          reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
          spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
     @if (_loading) {
-      <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | translate">
+      <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | sdTranslate">
         <mat-spinner></mat-spinner>
       </div>
     }
@@ -311,7 +311,7 @@
               [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
               [minWidth]="column.minWidth"
               [maxWidth]="column.maxWidth"
-              (resizeEnd)="onColumnResize(column.field, $event)"
+              (sdResizeEnd)="onColumnResize(column.field, $event)"
               [style.width]="column.width"
               [style.min-width]="column.minWidth || column.width"
               [style.max-width]="column.maxWidth"
@@ -352,8 +352,8 @@
                         [columnFilter]="columnFilter!"
                         [cacheValues]="cacheValues"
                         [column]="column"
-                        (filterChange)="onFilterChange()"
-                        (filterCommit)="onFilterCommit()">
+                        (sdFilterChange)="onFilterChange()"
+                        (sdFilterCommit)="onFilterCommit()">
                       </column-filter>
                     </ng-container>
                   }
@@ -417,8 +417,8 @@
                       [cacheValues]="cacheValues"
                       [column]="column"
                       (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
-                      (filterChange)="onFilterChange()"
-                      (filterCommit)="onFilterCommit()">
+                      (sdFilterChange)="onFilterChange()"
+                      (sdFilterCommit)="onFilterCommit()">
                     </column-filter>
                   </ng-container>
                 }
@@ -491,8 +491,8 @@
             } @else {
               <img class="c-image sd-image-filter-empty" alt="filter-empty" />
             }
-            <div class="T16M">{{ 'core.component.table.no-results' | translate }}</div>
-            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | translate }}</div>
+            <div class="T16M">{{ 'core.component.table.no-results' | sdTranslate }}</div>
+            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | sdTranslate }}</div>
           } @else {
             @if (_requireFiltered) {
               @if (tableConfiguration?.images?.filterRequired) {
@@ -500,14 +500,14 @@
               } @else {
                 <img class="c-image sd-image-filter-required" alt="filter-required" />
               }
-              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | translate }}</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | sdTranslate }}</div>
             } @else {
               @if (tableConfiguration?.images?.dataEmpty) {
                 <img class="c-image" [src]="tableConfiguration!.images!.dataEmpty" alt="data-empty" />
               } @else {
                 <img class="c-image sd-image-data-empty" alt="data-empty" />
               }
-              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | translate }}</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | sdTranslate }}</div>
             }
           }
         </div>
@@ -520,7 +520,7 @@
             <sd-button
               [autoId]="_autoId ? _autoId + '-reload' : null"
               class="mr-8"
-              [title]="'core.component.table.reload' | translate"
+              [title]="'core.component.table.reload' | sdTranslate"
               prefixIcon="refresh"
               (click)="reload()"
               type="text">
@@ -540,11 +540,11 @@
                   <mat-menu #menu="matMenu">
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null" (click)="exportExcel()" type="button">
                       <sd-icon name="file_download"></sd-icon>
-                      <span> {{ 'core.component.table.export-excel' | translate }}</span>
+                      <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
                     </button>
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null" (click)="exportCSV()" type="button">
                       <sd-icon name="file_download"></sd-icon>
-                      <span> {{ 'core.component.table.export-csv' | translate }}</span>
+                      <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
                     </button>
                   </mat-menu>
                 } @else if (_export.visible === 'EXCEL') {
@@ -562,7 +562,7 @@
             <sd-button
               [autoId]="_autoId ? _autoId + '-config' : null"
               class="mr-8"
-              [title]="'core.component.table.setup-short' | translate"
+              [title]="'core.component.table.setup-short' | sdTranslate"
               prefixIcon="settings"
               (click)="_configComponent.open()"
               type="text">
@@ -606,13 +606,13 @@
       <ng-container *sdDesktop>
         @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
           <div class="T14R pr-16">
-            {{ 'core.component.table.showing' | translate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+            {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
           </div>
         }
       </ng-container>
     </div>
   </div>
-  <selector-action [autoId]="_autoId" [tableOption]="_tableOption" [selectedTableItems]="_selectedTableItems" (clear)="onClearSelection(groupedItems)" />
+  <selector-action [autoId]="_autoId" [tableOption]="_tableOption" [selectedTableItems]="_selectedTableItems" (sdClear)="onClearSelection(groupedItems)" />
   @if (_tableOption.config?.visible) {
     <config [autoId]="_autoId" [tableOption]="_tableOption" />
   }

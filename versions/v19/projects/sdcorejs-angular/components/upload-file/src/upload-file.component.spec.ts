@@ -880,7 +880,7 @@ describe('SdUploadFilePreview', () => {
   describe('output: download', () => {
     it('emits download event when onDownload is called', () => {
       const emitted: PreviewFile[] = [];
-      component.download.subscribe(f => emitted.push(f));
+      component.sdDownload.subscribe(f => emitted.push(f));
 
       const file = mockPreviewFiles[0];
       component.onDownload(file);
@@ -895,7 +895,7 @@ describe('SdUploadFilePreview', () => {
   describe('output: close', () => {
     it('emits close event when onClose is called', () => {
       let emitted = 0;
-      component.close.subscribe(() => emitted++);
+      component.sdClose.subscribe(() => emitted++);
 
       component.onClose();
 

@@ -90,11 +90,11 @@ Legacy split inputs (`items`, `tree`, `selectedItems`, `selector`, `commands`, `
 
 | Name                  | Type                      | Notes                                                                                |
 | --------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
-| `selectedItemsChange` | `T[]`                     | Emits when selection changes. Also calls `option.onSelectedItemsChange`.             |
-| `selectChange`        | `SdTreeSelectionEvent<T>` | Emits when a row is selected/unselected. Also calls `option.onSelect`.               |
-| `expandChange`        | `SdTreeToggleEvent<T>`    | Emits when a branch expands. Also calls `option.onExpand`.                           |
-| `collapseChange`      | `SdTreeToggleEvent<T>`    | Emits when a branch collapses. Also calls `option.onCollapse`.                       |
-| `loadError`           | `SdTreeLoadErrorEvent<T>` | Emits `{ error }` for a root failure or `{ item, error }` for a lazy branch failure. |
+| `sdSelectedItemsChange` | `T[]`                     | Emits when selection changes. Also calls `option.onSelectedItemsChange`.             |
+| `sdSelectChange`        | `SdTreeSelectionEvent<T>` | Emits when a row is selected/unselected. Also calls `option.onSelect`.               |
+| `sdExpandChange`        | `SdTreeToggleEvent<T>`    | Emits when a branch expands. Also calls `option.onExpand`.                           |
+| `sdCollapseChange`      | `SdTreeToggleEvent<T>`    | Emits when a branch collapses. Also calls `option.onCollapse`.                       |
+| `sdLoadError`           | `SdTreeLoadErrorEvent<T>` | Emits `{ error }` for a root failure or `{ item, error }` for a lazy branch failure. |
 
 ## Option Shape
 
@@ -172,7 +172,7 @@ A node sitting **at** `maxDepth` is rendered as a **leaf**, even when its data h
 - `node.hasChildren` is `false` and `node.children` is empty.
 - The toggle is disabled, the chevron is not drawn, and no default folder icon is used (an explicit `treeItem.icon` still renders).
 - `aria-expanded` is omitted.
-- `toggle()` is a no-op, so neither `expandChange` nor `collapseChange` fires, and a lazy tree never calls `onExpandChildren` for that node.
+- `toggle()` is a no-op, so neither `sdExpandChange` nor `sdCollapseChange` fires, and a lazy tree never calls `onExpandChildren` for that node.
 
 Omit `maxDepth` (the default) to render the full depth of the data.
 
@@ -242,7 +242,7 @@ Command menu icons default to `fontSet: 'material-icons-outlined'` and `color: '
 </sd-tree>
 ```
 
-Custom templates can grow row height; the tree row stretches instead of clipping taller item content. The context also exposes `loadError` and `retry()` for a custom lazy-error presentation.
+Custom templates can grow row height; the tree row stretches instead of clipping taller item content. The context also exposes `sdLoadError` and `retry()` for a custom lazy-error presentation.
 
 ## Public API
 
@@ -260,7 +260,7 @@ Every string the component renders itself goes through `I18nService`, so it foll
 
 | What                                     | Key                                  | Notes                                                                     |
 | ---------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------- |
-| Retry button in the root error state     | `core.component.tree.retry`          | Template, via the `translate` pipe.                                       |
+| Retry button in the root error state     | `core.component.tree.retry`          | Template, via the `sdTranslate` pipe.                                       |
 | Default selection message                | `core.component.tree.selected-count` | Interpolates `{count}`. Used only when `selector.message` is not supplied. |
 | Toggle `aria-label`, collapsed node      | `core.component.tree.expand`         |                                                                           |
 | Toggle `aria-label`, expanded node       | `core.component.tree.collapse`       |                                                                           |

@@ -9,7 +9,7 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { StringUtilities } from '@sdcorejs/utils/fns';
@@ -22,7 +22,7 @@ import { LayoutUserComponent } from '../user/user.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
-  selector: 'sidebar',
+  selector: 'sd-sidebar-v1-panel',
   standalone: true,
   imports: [
     SdIcon,
@@ -38,13 +38,13 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     HighlightSearchPipe,
     SdSuffixDefDirective,
     LayoutUserComponent,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarComponent {
+export class SdSidebarV1Panel {
   // ==========================================
   // INJECT SERVICES (Thay thế Constructor rườm rà)
   // ==========================================
@@ -64,10 +64,10 @@ export class SidebarComponent {
   userInfo = input.required<SdLayoutUserInfo>();
   sidebar = input.required<SidebarConfigurationV1>();
   isMobile = input(false);
-  expandSideBar = output<void>();
-  popupUserMenuClosed = output<void>();
-  popupUserMenuOpened = output<void>();
-  showSideBar = output<boolean | null>();
+  sdExpandSideBar = output<void>();
+  sdPopupUserMenuClosed = output<void>();
+  sdPopupUserMenuOpened = output<void>();
+  sdShowSideBar = output<boolean | null>();
 
   // ==========================================
   // STATE SIGNALS
@@ -177,7 +177,7 @@ export class SidebarComponent {
     this.titleMenuGroup.set(group.title);
     this.#setMenusByGroup(group.children ?? []);
     this.searchText.set('');
-    this.expandSideBar.emit();
+    this.sdExpandSideBar.emit();
   };
 
   onTogglePin = (event: MouseEvent, node: SdLayoutMenu): void => {
@@ -207,7 +207,7 @@ export class SidebarComponent {
     event.stopPropagation();
     this.isMenuLock.update(v => !v);
     this.#layoutStorageService.menuLockStatus?.set(this.isMenuLock());
-    this.showSideBar.emit(this.isMenuLock());
+    this.sdShowSideBar.emit(this.isMenuLock());
   }
 
   openHomePage = (): void => {
@@ -216,9 +216,9 @@ export class SidebarComponent {
     this.#layoutStorageService.lastActiveMenuGroupId.set('');
   };
 
-  onUserMenuClosed = (): void => this.popupUserMenuClosed.emit();
+  onUserMenuClosed = (): void => this.sdPopupUserMenuClosed.emit();
 
-  onUserMenuOpened = (): void => this.popupUserMenuOpened.emit();
+  onUserMenuOpened = (): void => this.sdPopupUserMenuOpened.emit();
 
   navigate = (args: { path: string; queryParams: Params }): void => {
     const { path, queryParams } = args;
@@ -266,7 +266,7 @@ export class SidebarComponent {
       this.#setMenusByGroup(menuGroupNode.children);
       this.searchText.set('');
       this.onFilterSearchText('');
-      this.expandSideBar.emit();
+      this.sdExpandSideBar.emit();
     }
 
     this.idMenuGroupActive.set(menuGroupNode?.id);
@@ -607,7 +607,7 @@ export class SidebarComponent {
   #normalizePath = (p: string): string => (p.endsWith('/') ? p : p + '/');
 
   #closeMenu(): void {
-    this.showSideBar.emit(null);
+    this.sdShowSideBar.emit(null);
   }
 
   #convertColor = (input: string | undefined, opacity = 1): string => {

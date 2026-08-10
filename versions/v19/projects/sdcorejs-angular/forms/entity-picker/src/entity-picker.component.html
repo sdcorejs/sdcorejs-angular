@@ -34,7 +34,7 @@
       <button
         type="button"
         class="sd-entity-picker__clear"
-        [attr.aria-label]="'core.form.entity-picker.clear' | translate"
+        [attr.aria-label]="'core.form.entity-picker.clear' | sdTranslate"
         (click)="clear($event)">
         ×
       </button>
@@ -53,7 +53,7 @@
       [filters]="query().filters"
       [search]="query().search ?? ''"
       showSearch
-      (queryChange)="onQueryChange($event)" />
+      (sdQueryChange)="onQueryChange($event)" />
 
     @if (loadError()) {
       <sd-data-state state="error" compact retryable (sdRetry)="retry()"></sd-data-state>
@@ -69,12 +69,12 @@
   </div>
 
   @if (addable()) {
-    <button type="button" sdFooterLeft data-entity-picker-add (click)="add()">{{ 'core.form.entity-picker.add' | translate }}</button>
+    <button type="button" sdFooterLeft data-entity-picker-add (click)="add()">{{ 'core.form.entity-picker.add' | sdTranslate }}</button>
   }
   <button type="button" sdFooterRight data-entity-picker-cancel (click)="cancel()">
-    {{ 'core.form.entity-picker.cancel' | translate }}
+    {{ 'core.form.entity-picker.cancel' | sdTranslate }}
   </button>
   <button type="button" sdFooterRight data-entity-picker-apply (click)="applySelection()">
-    {{ 'core.form.entity-picker.apply' | translate }}
+    {{ 'core.form.entity-picker.apply' | sdTranslate }}
   </button>
 </sd-modal>

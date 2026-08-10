@@ -30,11 +30,11 @@ export interface SdQueryBuilderField {
   label: string;
   /** Field type — picks the default operator set + value editor control. */
   type: SdQueryBuilderFieldType;
-  /** Material icon shown before the label in the field picker; falls back to `QB_TYPE_ICON[type]` then `'tune'`. */
+  /** Material icon shown before the label in the field picker; falls back to `SD_QB_TYPE_ICON[type]` then `'tune'`. */
   icon?: string;
-  /** Override the allowed operator set (otherwise `QB_OPERATORS_BY_TYPE[type]`). */
+  /** Override the allowed operator set (otherwise `SD_QB_OPERATORS_BY_TYPE[type]`). */
   operators?: Operator[];
-  /** Override the starting operator (otherwise `QB_DEFAULT_OPERATOR_BY_TYPE[type]`). */
+  /** Override the starting operator (otherwise `SD_QB_DEFAULT_OPERATOR_BY_TYPE[type]`). */
   defaultOperator?: Operator;
   /** Options for `type: 'values'` — the select list + display-label lookup. */
   values?: SdQueryBuilderFieldOption[];
@@ -56,7 +56,7 @@ export interface SdQueryBuilderOption {
   autoId?: string;
   fields: SdQueryBuilderField[];
   mode?: 'edit' | 'view';
-  comparisonMode?: QbComparisonMode;
+  comparisonMode?: SdQbComparisonMode;
   disabled?: boolean;
   value?: Filter | null;
   filters?: Filter[];
@@ -71,26 +71,31 @@ export interface SdQueryBuilderOption {
 // NEVER emitted; mapped to/from the public `Filter` by the serializer.
 // ---------------------------------------------------------------------------
 
-export type QbNode = QbGroup | QbRule;
+// why: cả cụm `qb*` / `QB_*` / `Qb*` trước đây được export public từ `@sdcorejs/angular/components/query-builder`
+// (và lọt tiếp ra barrel `@sdcorejs/angular/components`) với tiền tố `qb` tự chế — không nằm trong namespace `sd`
+// của package. `QbGroup`, `QbRule`, `QbToken` là những tên rất dễ trùng với model cùng tên bên app consumer khi
+// import kiểu `export *`. Nay chuẩn hoá về `SdQb*` / `SD_QB_*` / `sdQb*`; các type đã đúng tiền tố `SdQb*`
+// (`SdQbRelativeUnit`, `SdQbRelativeDirection`, …) giữ nguyên.
+export type SdQbNode = SdQbGroup | SdQbRule;
 
 /** Component-level capability for right-hand operands. */
-export type QbComparisonMode = 'value-only' | 'value-or-field';
+export type SdQbComparisonMode = 'value-only' | 'value-or-field';
 
 /** Per-rule right-hand operand source. */
-export type QbValueSource = 'literal' | 'field';
+export type SdQbValueSource = 'literal' | 'field';
 
 /** A logical group of nodes joined by AND / OR. Maps to `FilterAndOr`. */
-export interface QbGroup {
+export interface SdQbGroup {
   id: string;
   kind: 'group';
   logic: 'AND' | 'OR';
-  children: QbNode[];
+  children: SdQbNode[];
   /** UI-only: whether this group's "+" dropdown is open. */
   open?: boolean;
 }
 
 /** A single `field operator value` condition. Maps to a leaf `Filter`. */
-export interface QbRule {
+export interface SdQbRule {
   id: string;
   kind: 'rule';
   field?: string;
@@ -98,13 +103,13 @@ export interface QbRule {
   /** Single value, `{ from, to }` for BETWEEN, or an array for IN / NOT_IN. */
   value?: any;
   /** Internal UI state: literal input or a same-type field reference. */
-  valueSource?: QbValueSource;
+  valueSource?: SdQbValueSource;
   /** Right-hand field key when `valueSource` is `'field'`. */
   compareField?: string;
 }
 
-/** Type guard — narrows a `QbNode` to a `QbGroup`. */
-export function isQbGroup(node: QbNode): node is QbGroup {
+/** Type guard — narrows a `SdQbNode` to a `SdQbGroup`. */
+export function sdIsQbGroup(node: SdQbNode): node is SdQbGroup {
   return node.kind === 'group';
 }
 
@@ -113,12 +118,12 @@ export function isQbGroup(node: QbNode): node is QbGroup {
 // template can wrap each piece in a highlight `<span>` (operator / value / etc).
 // ---------------------------------------------------------------------------
 
-export type QbTokenKind = 'field' | 'op' | 'value' | 'logic' | 'paren' | 'plain';
+export type SdQbTokenKind = 'field' | 'op' | 'value' | 'logic' | 'paren' | 'plain';
 
 /** One piece of the rendered raw query string, tagged for highlight styling. */
-export interface QbToken {
+export interface SdQbToken {
   text: string;
-  kind: QbTokenKind;
+  kind: SdQbTokenKind;
 }
 
 // ---------------------------------------------------------------------------
@@ -128,7 +133,7 @@ export interface QbToken {
 // ---------------------------------------------------------------------------
 
 /** Allowed operators per field type — used when `field.operators` is not set. */
-export const QB_OPERATORS_BY_TYPE: Record<SdQueryBuilderFieldType, Operator[]> = {
+export const SD_QB_OPERATORS_BY_TYPE: Record<SdQueryBuilderFieldType, Operator[]> = {
   string: ['CONTAIN', 'NOT_CONTAIN', 'EQUAL', 'NOT_EQUAL', 'START_WITH', 'END_WITH', 'NULL', 'NOT_NULL'],
   number: ['EQUAL', 'NOT_EQUAL', 'GREATER_THAN', 'GREATER_OR_EQUAL', 'LESS_THAN', 'LESS_OR_EQUAL', 'BETWEEN', 'NULL', 'NOT_NULL'],
   boolean: ['EQUAL', 'NOT_EQUAL'],
@@ -138,7 +143,7 @@ export const QB_OPERATORS_BY_TYPE: Record<SdQueryBuilderFieldType, Operator[]> =
 };
 
 /** Default operator when a rule is first created for a field. */
-export const QB_DEFAULT_OPERATOR_BY_TYPE: Record<SdQueryBuilderFieldType, Operator> = {
+export const SD_QB_DEFAULT_OPERATOR_BY_TYPE: Record<SdQueryBuilderFieldType, Operator> = {
   string: 'CONTAIN',
   number: 'EQUAL',
   boolean: 'EQUAL',
@@ -148,40 +153,40 @@ export const QB_DEFAULT_OPERATOR_BY_TYPE: Record<SdQueryBuilderFieldType, Operat
 };
 
 /** Operators with no value payload — the value editor is hidden for these. */
-export const QB_NO_DATA_OPERATORS: Operator[] = ['NULL', 'NOT_NULL'];
+export const SD_QB_NO_DATA_OPERATORS: Operator[] = ['NULL', 'NOT_NULL'];
 
 /** Operators whose value is an array — the value editor offers multi-select. */
-export const QB_MULTI_OPERATORS: Operator[] = ['IN', 'NOT_IN'];
+export const SD_QB_MULTI_OPERATORS: Operator[] = ['IN', 'NOT_IN'];
 
 /** Operators allowed for `field` — explicit override wins, else the per-type set. */
-export function qbAllowedOperators(field: SdQueryBuilderField | undefined): Operator[] {
+export function sdQbAllowedOperators(field: SdQueryBuilderField | undefined): Operator[] {
   if (!field) return [];
   if (field.operators?.length) return field.operators;
-  return QB_OPERATORS_BY_TYPE[field.type] ?? [];
+  return SD_QB_OPERATORS_BY_TYPE[field.type] ?? [];
 }
 
 /** Starting operator for a new rule on `field` — falls back to the per-type default. */
-export function qbDefaultOperator(field: SdQueryBuilderField | undefined): Operator | undefined {
+export function sdQbDefaultOperator(field: SdQueryBuilderField | undefined): Operator | undefined {
   if (!field) return undefined;
-  const allowed = qbAllowedOperators(field);
+  const allowed = sdQbAllowedOperators(field);
   if (field.defaultOperator && allowed.includes(field.defaultOperator)) return field.defaultOperator;
-  const byType = QB_DEFAULT_OPERATOR_BY_TYPE[field.type];
+  const byType = SD_QB_DEFAULT_OPERATOR_BY_TYPE[field.type];
   return allowed.includes(byType) ? byType : allowed[0];
 }
 
 /** True when `op` is NULL / NOT_NULL (no value editor). */
-export function qbIsNoDataOperator(op: Operator | undefined): boolean {
-  return !!op && QB_NO_DATA_OPERATORS.includes(op);
+export function sdQbIsNoDataOperator(op: Operator | undefined): boolean {
+  return !!op && SD_QB_NO_DATA_OPERATORS.includes(op);
 }
 
 /** True when `op` is IN / NOT_IN (array value). */
-export function qbIsMultiOperator(op: Operator | undefined): boolean {
-  return !!op && QB_MULTI_OPERATORS.includes(op);
+export function sdQbIsMultiOperator(op: Operator | undefined): boolean {
+  return !!op && SD_QB_MULTI_OPERATORS.includes(op);
 }
 
 /** True when the operator accepts one right-hand operand, including a field reference. */
-export function qbSupportsFieldCompareOperator(op: Operator | undefined): boolean {
-  return !!op && !qbIsNoDataOperator(op) && !qbIsMultiOperator(op) && op !== 'BETWEEN';
+export function sdQbSupportsFieldCompareOperator(op: Operator | undefined): boolean {
+  return !!op && !sdQbIsNoDataOperator(op) && !sdQbIsMultiOperator(op) && op !== 'BETWEEN';
 }
 
 /**
@@ -189,7 +194,7 @@ export function qbSupportsFieldCompareOperator(op: Operator | undefined): boolea
  * Mirrors query-bar's `SD_QUERY_TYPE_ICON` so the two components read consistently,
  * but kept local so query-builder has no dependency on the query-bar package.
  */
-export const QB_TYPE_ICON: Record<SdQueryBuilderFieldType, string> = {
+export const SD_QB_TYPE_ICON: Record<SdQueryBuilderFieldType, string> = {
   string: 'text_fields',
   number: 'tag',
   boolean: 'toggle_on',
@@ -200,11 +205,11 @@ export const QB_TYPE_ICON: Record<SdQueryBuilderFieldType, string> = {
 
 /**
  * Icon shown before a field in the field picker / selected trigger.
- * Priority: `field.icon` → `QB_TYPE_ICON[field.type]` → `'tune'` (default, like query-bar).
+ * Priority: `field.icon` → `SD_QB_TYPE_ICON[field.type]` → `'tune'` (default, like query-bar).
  */
-export function qbFieldIcon(field: SdQueryBuilderField | undefined): string {
+export function sdQbFieldIcon(field: SdQueryBuilderField | undefined): string {
   if (!field) return 'tune';
-  return field.icon ?? QB_TYPE_ICON[field.type] ?? 'tune';
+  return field.icon ?? SD_QB_TYPE_ICON[field.type] ?? 'tune';
 }
 
 // ---------------------------------------------------------------------------
@@ -215,18 +220,24 @@ export function qbFieldIcon(field: SdQueryBuilderField | undefined): string {
 let qbSeq = 0;
 
 /** Next stable node id with the given prefix. */
-export function qbId(prefix = 'qb'): string {
+export function sdQbId(prefix = 'qb'): string {
   return `${prefix}-${++qbSeq}`;
 }
 
 /** Build a fresh rule node (optionally pre-filled). */
-export function qbNewRule(field?: string, operator?: Operator, value?: any, valueSource?: QbValueSource, compareField?: string): QbRule {
-  return { id: qbId('r'), kind: 'rule', field, operator, value, valueSource, compareField };
+export function sdQbNewRule(
+  field?: string,
+  operator?: Operator,
+  value?: any,
+  valueSource?: SdQbValueSource,
+  compareField?: string
+): SdQbRule {
+  return { id: sdQbId('r'), kind: 'rule', field, operator, value, valueSource, compareField };
 }
 
 /** Build a fresh group node. */
-export function qbNewGroup(logic: 'AND' | 'OR' = 'AND', children: QbNode[] = []): QbGroup {
-  return { id: qbId('g'), kind: 'group', logic, children };
+export function sdQbNewGroup(logic: 'AND' | 'OR' = 'AND', children: SdQbNode[] = []): SdQbGroup {
+  return { id: sdQbId('g'), kind: 'group', logic, children };
 }
 
 // ---------------------------------------------------------------------------
@@ -246,23 +257,23 @@ export type SdQbRelativeUnit = DateRelative['unit'];
 export type SdQbRelativeDirection = DateRelative['direction'];
 
 /** Sentinel held as a rule value (and emitted as `data`) for the "today" date mode. */
-export const QB_TODAY = 'TODAY';
+export const SD_QB_TODAY = 'TODAY';
 /** The `'TODAY'` sentinel type (matches the utils `date-today` data literal). */
-export type QbToday = typeof QB_TODAY;
+export type SdQbToday = typeof SD_QB_TODAY;
 
 /** Date value editor mode for a date/datetime rule (derived from the rule value). */
-export type QbDateMode = 'absolute' | 'now' | 'relative';
+export type SdQbDateMode = 'absolute' | 'now' | 'relative';
 
 /** Type guard — narrows a rule value to a utils `DateRelative` (offset spec). */
-export const qbIsRelativeDate = FilterUtilities.isDateRelative;
+export const sdQbIsRelativeDate = FilterUtilities.isDateRelative;
 
 /** Type guard — narrows a rule value to the `'TODAY'` sentinel ("now"/today mode). */
-export function qbIsToday(v: any): v is QbToday {
-  return v === QB_TODAY;
+export function sdQbIsToday(v: any): v is SdQbToday {
+  return v === SD_QB_TODAY;
 }
 
 /** Starting relative value when a rule first switches to "relative" mode. */
-export function qbDefaultRelative(): DateRelative {
+export function sdQbDefaultRelative(): DateRelative {
   return { amount: 1, direction: 'previous', unit: 'day' };
 }
 
@@ -277,8 +288,8 @@ export function qbDefaultRelative(): DateRelative {
 // ---------------------------------------------------------------------------
 
 /** One date-mode option — carries a Material icon shown in the dropdown + selected trigger. */
-export interface QbDateModeOption {
-  value: QbDateMode;
+export interface SdQbDateModeOption {
+  value: SdQbDateMode;
   /** i18n key of the label — resolved at read time, NOT at module-eval time. */
   labelKey: string;
   /** Material icon name (outlined set). */
@@ -286,15 +297,15 @@ export interface QbDateModeOption {
 }
 
 /** Stable option list for the date-mode select (module ref — never reallocated). */
-export const QB_DATE_MODES: QbDateModeOption[] = [
+export const SD_QB_DATE_MODES: SdQbDateModeOption[] = [
   { value: 'absolute', labelKey: 'core.component.query-builder.date-mode.absolute', icon: 'event' },
   { value: 'now', labelKey: 'core.component.query-builder.date-mode.now', icon: 'today' },
   { value: 'relative', labelKey: 'core.component.query-builder.date-mode.relative', icon: 'history' },
 ];
 
 /** One value-source option for field-to-field comparison UI. */
-export interface QbValueSourceOption {
-  value: QbValueSource;
+export interface SdQbValueSourceOption {
+  value: SdQbValueSource;
   /** i18n key of the label — resolved at read time, NOT at module-eval time. */
   labelKey: string;
   /** Material icon name (outlined set). */
@@ -302,20 +313,20 @@ export interface QbValueSourceOption {
 }
 
 /** Stable option list for choosing between a literal value and another field. */
-export const QB_VALUE_SOURCE_OPTIONS: QbValueSourceOption[] = [
+export const SD_QB_VALUE_SOURCE_OPTIONS: SdQbValueSourceOption[] = [
   { value: 'literal', labelKey: 'core.component.query-builder.value-source.literal', icon: 'edit_note' },
   { value: 'field', labelKey: 'core.component.query-builder.value-source.field', icon: 'view_column' },
 ];
 
 /** One combined direction×unit option (token `'unit:direction'`). */
-export interface QbRelativeUnitOption {
+export interface SdQbRelativeUnitOption {
   value: string;
   /** i18n key of the label — resolved at read time, NOT at module-eval time. */
   labelKey: string;
 }
 
 /** Stable combined direction×unit option list (token `'unit:direction'`). */
-export const QB_RELATIVE_UNIT_OPTIONS: QbRelativeUnitOption[] = [
+export const SD_QB_RELATIVE_UNIT_OPTIONS: SdQbRelativeUnitOption[] = [
   { value: 'day:previous', labelKey: 'core.component.query-builder.relative.day-previous' },
   { value: 'day:next', labelKey: 'core.component.query-builder.relative.day-next' },
   { value: 'week:previous', labelKey: 'core.component.query-builder.relative.week-previous' },
@@ -330,4 +341,4 @@ export function qbRelativeLabelKey(unit: SdQbRelativeUnit, direction: SdQbRelati
 }
 
 /** Shared empty option array — stable ref for fallbacks (avoids per-call allocation). */
-export const QB_EMPTY_OPTIONS: SdQueryBuilderFieldOption[] = [];
+export const SD_QB_EMPTY_OPTIONS: SdQueryBuilderFieldOption[] = [];

@@ -16,7 +16,7 @@ import {
   ɵSdFormControlParent,
 } from '@sdcorejs/angular/forms/models';
 import { Color } from '@sdcorejs/utils/models';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'sd-checkbox',
@@ -37,7 +37,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     '[class.sd-c-warning]': "color() === 'warning'",
     '[class.sd-c-error]': "color() === 'error'",
   },
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatCheckboxModule, TranslatePipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatFormFieldModule, MatCheckboxModule, SdTranslatePipe],
 })
 export class SdCheckbox {
   id = `I${Utilities.generateUuid()}`;

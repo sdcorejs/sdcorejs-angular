@@ -1,5 +1,5 @@
 import { Filter } from '@sdcorejs/utils/models';
-import { QB_TODAY, qbNewGroup, qbNewRule, QbToken, SdQueryBuilderField } from './query-builder.model';
+import { SD_QB_TODAY, sdQbNewGroup, sdQbNewRule, SdQbToken, SdQueryBuilderField } from './query-builder.model';
 import { I18N_MESSAGES } from '@sdcorejs/angular/i18n';
 import { filterToTokens, filterToTree, treeToFilter } from './query-builder.serializer';
 
@@ -34,15 +34,15 @@ const t = (key: string, params?: Record<string, string | number>): string => {
 };
 
 /** Join token texts back into the rendered raw string. */
-const render = (tokens: QbToken[]): string => tokens.map(t => t.text).join('');
+const render = (tokens: SdQbToken[]): string => tokens.map(t => t.text).join('');
 
 describe('query-builder.serializer › treeToFilter', () => {
   it('returns null for an empty root group', () => {
-    expect(treeToFilter(qbNewGroup('AND', []))).toBeNull();
+    expect(treeToFilter(sdQbNewGroup('AND', []))).toBeNull();
   });
 
   it('wraps a single complete rule under a FilterAndOr root', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('code', 'EQUAL', 'ABC')]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('code', 'EQUAL', 'ABC')]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
       data: [{ field: 'code', operator: 'EQUAL', data: 'ABC' }],
@@ -50,9 +50,9 @@ describe('query-builder.serializer › treeToFilter', () => {
   });
 
   it('emits a nested FilterAndOr tree preserving group structure', () => {
-    const tree = qbNewGroup('OR', [
-      qbNewGroup('AND', [qbNewRule('code', 'EQUAL', 'ABC'), qbNewRule('name', 'CONTAIN', 'abc')]),
-      qbNewRule('price', 'GREATER_THAN', 100),
+    const tree = sdQbNewGroup('OR', [
+      sdQbNewGroup('AND', [sdQbNewRule('code', 'EQUAL', 'ABC'), sdQbNewRule('name', 'CONTAIN', 'abc')]),
+      sdQbNewRule('price', 'GREATER_THAN', 100),
     ]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'OR',
@@ -70,7 +70,7 @@ describe('query-builder.serializer › treeToFilter', () => {
   });
 
   it('maps BETWEEN to FilterBetween { from, to }', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('price', 'BETWEEN', { from: 10, to: 20 })]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('price', 'BETWEEN', { from: 10, to: 20 })]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
       data: [{ field: 'price', operator: 'BETWEEN', data: { from: 10, to: 20 } }],
@@ -78,7 +78,7 @@ describe('query-builder.serializer › treeToFilter', () => {
   });
 
   it('keeps NULL / NOT_NULL as FilterNoData (no data key)', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('code', 'NULL')]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('code', 'NULL')]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
       data: [{ field: 'code', operator: 'NULL' }],
@@ -86,11 +86,11 @@ describe('query-builder.serializer › treeToFilter', () => {
   });
 
   it('drops incomplete rules (missing field / operator / value)', () => {
-    const tree = qbNewGroup('AND', [
-      qbNewRule('code', 'EQUAL', 'ABC'),
-      qbNewRule(undefined, 'EQUAL', 'x'), // no field
-      qbNewRule('name', undefined, 'y'), // no operator
-      qbNewRule('price', 'EQUAL', ''), // empty value
+    const tree = sdQbNewGroup('AND', [
+      sdQbNewRule('code', 'EQUAL', 'ABC'),
+      sdQbNewRule(undefined, 'EQUAL', 'x'), // no field
+      sdQbNewRule('name', undefined, 'y'), // no operator
+      sdQbNewRule('price', 'EQUAL', ''), // empty value
     ]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
@@ -99,17 +99,17 @@ describe('query-builder.serializer › treeToFilter', () => {
   });
 
   it('drops a BETWEEN rule that is missing an endpoint', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('price', 'BETWEEN', { from: 10, to: null })]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('price', 'BETWEEN', { from: 10, to: null })]);
     expect(treeToFilter(tree)).toBeNull();
   });
 
   it('drops an IN rule with an empty array', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('status', 'IN', [])]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('status', 'IN', [])]);
     expect(treeToFilter(tree)).toBeNull();
   });
 
   it('drops an empty nested group', () => {
-    const tree = qbNewGroup('AND', [qbNewGroup('OR', []), qbNewRule('code', 'EQUAL', 'ABC')]);
+    const tree = sdQbNewGroup('AND', [sdQbNewGroup('OR', []), sdQbNewRule('code', 'EQUAL', 'ABC')]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
       data: [{ field: 'code', operator: 'EQUAL', data: 'ABC' }],
@@ -117,29 +117,29 @@ describe('query-builder.serializer › treeToFilter', () => {
   });
 
   it('emits a field-reference operand as dataType field', () => {
-    const rule = qbNewRule('price', 'GREATER_THAN') as any;
+    const rule = sdQbNewRule('price', 'GREATER_THAN') as any;
     rule.valueSource = 'field';
     rule.compareField = 'cost';
 
-    expect(treeToFilter(qbNewGroup('AND', [rule]))).toEqual({
+    expect(treeToFilter(sdQbNewGroup('AND', [rule]))).toEqual({
       operator: 'AND',
       data: [{ field: 'price', operator: 'GREATER_THAN', dataType: 'field', data: 'cost' }],
     } as any);
   });
 
   it('drops an incomplete field-reference operand', () => {
-    const rule = qbNewRule('price', 'GREATER_THAN') as any;
+    const rule = sdQbNewRule('price', 'GREATER_THAN') as any;
     rule.valueSource = 'field';
 
-    expect(treeToFilter(qbNewGroup('AND', [rule]))).toBeNull();
+    expect(treeToFilter(sdQbNewGroup('AND', [rule]))).toBeNull();
   });
 });
 
 describe('query-builder.serializer › filterToTree (roundtrip)', () => {
   it('round-trips a nested filter without structural drift', () => {
-    const tree = qbNewGroup('OR', [
-      qbNewGroup('AND', [qbNewRule('code', 'EQUAL', 'ABC'), qbNewRule('name', 'CONTAIN', 'abc')]),
-      qbNewRule('price', 'GREATER_THAN', 100),
+    const tree = sdQbNewGroup('OR', [
+      sdQbNewGroup('AND', [sdQbNewRule('code', 'EQUAL', 'ABC'), sdQbNewRule('name', 'CONTAIN', 'abc')]),
+      sdQbNewRule('price', 'GREATER_THAN', 100),
     ]);
     const f1 = treeToFilter(tree);
     const f2 = treeToFilter(filterToTree(f1));
@@ -260,7 +260,7 @@ describe('query-builder.serializer › relative dates', () => {
   const str = (f: Filter): string => render(filterToTokens(f, FIELDS, t));
 
   it('emits a date-today value', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('createdAt', 'GREATER_THAN', QB_TODAY)]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'GREATER_THAN', SD_QB_TODAY)]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
       data: [{ field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-today', data: 'TODAY' }],
@@ -268,7 +268,7 @@ describe('query-builder.serializer › relative dates', () => {
   });
 
   it('emits a complete date-relative offset value', () => {
-    const tree = qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { amount: 3, direction: 'previous', unit: 'day' })]);
+    const tree = sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'LESS_THAN', { amount: 3, direction: 'previous', unit: 'day' })]);
     expect(treeToFilter(tree)).toEqual({
       operator: 'AND',
       data: [
@@ -278,21 +278,23 @@ describe('query-builder.serializer › relative dates', () => {
   });
 
   it('drops an incomplete offset (missing amount / unit / direction)', () => {
-    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { unit: 'day' } as any)]))).toBeNull();
-    expect(treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { amount: 2, direction: 'next' } as any)]))).toBeNull();
+    expect(treeToFilter(sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'LESS_THAN', { unit: 'day' } as any)]))).toBeNull();
+    expect(treeToFilter(sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'LESS_THAN', { amount: 2, direction: 'next' } as any)]))).toBeNull();
     expect(
-      treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'LESS_THAN', { amount: 0, direction: 'next', unit: 'day' } as any)]))
+      treeToFilter(sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'LESS_THAN', { amount: 0, direction: 'next', unit: 'day' } as any)]))
     ).toBeNull();
   });
 
   it('round-trips a date-relative offset value without drift', () => {
-    const f1 = treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'GREATER_THAN', { amount: 2, direction: 'next', unit: 'month' })]));
+    const f1 = treeToFilter(
+      sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'GREATER_THAN', { amount: 2, direction: 'next', unit: 'month' })])
+    );
     const f2 = treeToFilter(filterToTree(f1));
     expect(f2).toEqual(f1 as any);
   });
 
   it('round-trips a date-today value without drift', () => {
-    const f1 = treeToFilter(qbNewGroup('AND', [qbNewRule('createdAt', 'EQUAL', QB_TODAY)]));
+    const f1 = treeToFilter(sdQbNewGroup('AND', [sdQbNewRule('createdAt', 'EQUAL', SD_QB_TODAY)]));
     const f2 = treeToFilter(filterToTree(f1));
     expect(f2).toEqual(f1 as any);
   });

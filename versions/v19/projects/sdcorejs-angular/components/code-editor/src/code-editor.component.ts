@@ -21,7 +21,7 @@ import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-json';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-scss';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import 'prismjs/components/prism-markup'; // HTML
 
@@ -30,7 +30,7 @@ export type CodeLanguage = 'html' | 'typescript' | 'json' | 'css' | 'scss';
 @Component({
   selector: 'sd-code-editor',
   standalone: true,
-  imports: [SdIcon, CommonModule, MatTooltipModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, MatTooltipModule, SdTranslatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './code-editor.component.html',
   styleUrl: './code-editor.component.scss',

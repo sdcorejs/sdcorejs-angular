@@ -30,7 +30,7 @@ export class SdStep {
   errorMessage = input<string | undefined>(undefined);
 
   // Emitted when this step transitions to selected.
-  selectChange = output<void>();
+  sdSelectChange = output<void>();
 
   // Body template captured from projected <ng-content>.
   bodyTpl = viewChild.required<TemplateRef<unknown>>('body');

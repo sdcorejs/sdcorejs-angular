@@ -16,7 +16,7 @@ import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { Color } from '@sdcorejs/utils/models';
 import { SdTab } from './tab.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 export interface SdTabClosedEvent {
   index: number;
@@ -26,7 +26,7 @@ export interface SdTabClosedEvent {
 @Component({
   selector: 'sd-tab-group',
   standalone: true,
-  imports: [SdIcon, MatTabsModule, NgTemplateOutlet, TranslatePipe],
+  imports: [SdIcon, MatTabsModule, NgTemplateOutlet, SdTranslatePipe],
   templateUrl: './tab-group.component.html',
   styleUrl: './tab-group.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -52,7 +52,7 @@ export class SdTabGroup {
   dynamicHeight = input(false, { transform: booleanAttribute });
   autoId = input<string | undefined>(undefined);
 
-  tabClosed = output<SdTabClosedEvent>();
+  sdTabClosed = output<SdTabClosedEvent>();
 
   readonly #closeRequests = new WeakMap<SdTab, Promise<boolean>>();
 
@@ -116,7 +116,7 @@ export class SdTabGroup {
     if (tab.disabled()) return;
     if (!tab.beforeClose()) {
       tab.forceClose();
-      this.tabClosed.emit({ index, tab });
+      this.sdTabClosed.emit({ index, tab });
       return;
     }
     if (this.#closeRequests.has(tab)) return;
@@ -124,7 +124,7 @@ export class SdTabGroup {
     const request = tab.requestClose();
     this.#closeRequests.set(tab, request);
     void request.then(closed => {
-      if (closed) this.tabClosed.emit({ index, tab });
+      if (closed) this.sdTabClosed.emit({ index, tab });
     });
     void request.finally(() => this.#closeRequests.delete(tab));
   }

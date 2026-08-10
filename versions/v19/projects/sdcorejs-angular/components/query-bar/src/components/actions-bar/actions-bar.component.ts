@@ -36,15 +36,15 @@ export class SdQueryActionsBar {
   readonly showSavedFilters = input(false, { transform: booleanAttribute });
   readonly savedFiltersKey = input<string | undefined>(undefined);
   readonly query = input<SdQuery>({ filters: [], logic: 'AND' });
-  readonly applyFilter = output<SdSavedFilter>();
+  readonly sdApplyFilter = output<SdSavedFilter>();
 
   // Clear-all —
   readonly showClearAll = input(true, { transform: booleanAttribute });
-  readonly clear = output<void>();
+  readonly sdClear = output<void>();
 
   // Search trigger —
   readonly canSearch = input(false);
-  readonly search = output<void>();
+  readonly sdSearch = output<void>();
 
   // Nhãn i18n —
   // why: bọc trong `computed()` chứ không dùng pipe `translate` (pure pipe không chạy lại khi

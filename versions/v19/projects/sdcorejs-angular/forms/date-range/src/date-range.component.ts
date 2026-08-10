@@ -36,7 +36,7 @@ import {
 import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdView } from '@sdcorejs/angular/components/view';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
@@ -126,7 +126,7 @@ function rangeIsComplete(value: unknown): boolean {
     MatNativeDateModule,
     SdLabel,
     SdView,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdDateRange {

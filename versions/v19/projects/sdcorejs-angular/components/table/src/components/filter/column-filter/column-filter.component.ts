@@ -53,8 +53,8 @@ export class ColumnFilterComponent {
   // ==========================================
   // 2. SIGNAL OUTPUTS
   // ==========================================
-  filterChange = output<void>();
-  filterCommit = output<void>();
+  sdFilterChange = output<void>();
+  sdFilterCommit = output<void>();
 
   // ==========================================
   // 3. COMPUTED
@@ -131,13 +131,13 @@ export class ColumnFilterComponent {
   // ==========================================
   onFilterChange = () => {
     this.#emitFilterOnChange();
-    this.filterChange.emit();
+    this.sdFilterChange.emit();
   };
 
   // Blur input: commit giá trị KHÔNG trigger reload.
   onFilterCommit = () => {
     this.#emitFilterOnChange();
-    this.filterCommit.emit();
+    this.sdFilterCommit.emit();
   };
 
   #emitFilterOnChange = () => {

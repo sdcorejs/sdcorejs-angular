@@ -12,14 +12,14 @@ import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-fiel
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
 
 @Component({
-  selector: 'sidebar-mobile-v2',
+  selector: 'sd-sidebar-mobile-v2',
   standalone: true,
   imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarMobileV2Component {
+export class SdSidebarMobileV2 {
   readonly #router = inject(Router);
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);

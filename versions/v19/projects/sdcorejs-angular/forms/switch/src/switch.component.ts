@@ -17,7 +17,7 @@ import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   SdFormControl,
   sdFormControlState,
@@ -48,7 +48,7 @@ import { Subscription } from 'rxjs';
     '[class.sd-c-warning]': "color() === 'warning'",
     '[class.sd-c-error]': "color() === 'error'",
   },
-  imports: [FormsModule, ReactiveFormsModule, MatSlideToggleModule, MatFormFieldModule, SdLabel, TranslatePipe],
+  imports: [FormsModule, ReactiveFormsModule, MatSlideToggleModule, MatFormFieldModule, SdLabel, SdTranslatePipe],
 })
 export class SdSwitch implements OnInit, OnDestroy {
   readonly #ref = inject(ChangeDetectorRef);

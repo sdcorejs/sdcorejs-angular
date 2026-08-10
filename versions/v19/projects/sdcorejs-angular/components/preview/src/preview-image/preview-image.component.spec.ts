@@ -39,7 +39,7 @@ function makeNonImageFile(name = 'doc.pdf', type = 'application/pdf'): File {
   standalone: true,
   imports: [SdPreviewImage],
   template: `
-    <sd-preview-image #previewRef [items]="items" [thumbnailPosition]="thumbnailPosition" (close)="onClose()"></sd-preview-image>
+    <sd-preview-image #previewRef [items]="items" [thumbnailPosition]="thumbnailPosition" (sdClose)="onClose()"></sd-preview-image>
   `,
 })
 class HostComponent {
@@ -283,7 +283,7 @@ describe('SdPreviewImage', () => {
   describe('output: close', () => {
     it('emits close event when requestClose() is called', () => {
       let emitted = false;
-      component.close.subscribe(() => (emitted = true));
+      component.sdClose.subscribe(() => (emitted = true));
       component.requestClose();
       expect(emitted).toBeTrue();
     });

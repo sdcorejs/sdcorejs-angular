@@ -182,8 +182,8 @@ describe('SdQueryBar', () => {
     it('build / edit / remove do NOT emit queryChange; Search emits apply once', () => {
       const queryChange = jasmine.createSpy('queryChange');
       const apply = jasmine.createSpy('apply');
-      component.queryChange.subscribe(queryChange);
-      component.apply.subscribe(apply);
+      component.sdQueryChange.subscribe(queryChange);
+      component.sdApply.subscribe(apply);
       fixture.componentRef.setInput('mode', 'inline');
 
       seedOneChip();
@@ -244,7 +244,7 @@ describe('SdQueryBar', () => {
       fixture.componentRef.setInput('fields', [stringField]);
       fixture.detectChanges();
       const queryChange = jasmine.createSpy('queryChange');
-      component.queryChange.subscribe(queryChange);
+      component.sdQueryChange.subscribe(queryChange);
 
       // open the add-filter field picker
       const addBtn = fixture.nativeElement.querySelector('.c-add-filter') as HTMLButtonElement;
@@ -299,8 +299,8 @@ describe('SdQueryBar', () => {
     it('mutations do NOT emit queryChange or apply', () => {
       const queryChange = jasmine.createSpy('queryChange');
       const apply = jasmine.createSpy('apply');
-      component.queryChange.subscribe(queryChange);
-      component.apply.subscribe(apply);
+      component.sdQueryChange.subscribe(queryChange);
+      component.sdApply.subscribe(apply);
       fixture.componentRef.setInput('fields', [field]);
 
       component.addFilter(field);
@@ -316,8 +316,8 @@ describe('SdQueryBar', () => {
     it('triggerApply emits queryChange AND apply exactly once', () => {
       const queryChange = jasmine.createSpy('queryChange');
       const apply = jasmine.createSpy('apply');
-      component.queryChange.subscribe(queryChange);
-      component.apply.subscribe(apply);
+      component.sdQueryChange.subscribe(queryChange);
+      component.sdApply.subscribe(apply);
 
       component.triggerApply();
 
@@ -342,7 +342,7 @@ describe('SdQueryBar', () => {
       component.filters.set([{ field: 'name', operator: 'CONTAIN', data: 'a' } as any]);
       fixture.detectChanges();
       const apply = jasmine.createSpy('apply');
-      component.apply.subscribe(apply);
+      component.sdApply.subscribe(apply);
 
       const btn = fixture.nativeElement.querySelector('.c-search-trigger') as HTMLButtonElement;
       expect(btn.disabled).toBe(false);
@@ -362,7 +362,7 @@ describe('SdQueryBar', () => {
       fixture.componentRef.setInput('showSearch', true);
       fixture.detectChanges();
       const apply = jasmine.createSpy('apply');
-      component.apply.subscribe(apply);
+      component.sdApply.subscribe(apply);
 
       const input = fixture.nativeElement.querySelector('.c-search-input') as HTMLInputElement;
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -605,7 +605,7 @@ describe('SdQueryBar (extras)', () => {
       // data via updateFilter on the child's (commit) output.
       const chipDe = fixture.debugElement.query(By.css('sd-query-inline-chip'));
       expect(chipDe).not.toBeNull();
-      chipDe.triggerEventHandler('commit', 'b');
+      chipDe.triggerEventHandler('sdCommit', 'b');
       fixture.detectChanges();
       expect((component.filters()[0] as any).data).toBe('b');
     });

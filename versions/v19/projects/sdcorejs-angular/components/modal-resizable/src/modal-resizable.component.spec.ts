@@ -198,7 +198,7 @@ describe('SdModalResizable', () => {
 
   it('toggles editing and publishes focus state', () => {
     const changed = jasmine.createSpy('changed');
-    component.editingChanged.subscribe(changed);
+    component.sdEditingChanged.subscribe(changed);
 
     component.toggleEditable();
     expect(component.isEditing()).toBeTrue();

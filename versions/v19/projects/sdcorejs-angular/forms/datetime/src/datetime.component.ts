@@ -41,7 +41,7 @@ import {
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Size } from '@sdcorejs/utils/models';
 import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
@@ -120,7 +120,7 @@ function normalizeDatetimeModel(value: SdDatetimeModelValue, showSeconds: boolea
     MatFormFieldModule,
     SdLabel,
     SdView,
-    TranslatePipe,
+    SdTranslatePipe,
     SdMaterialDatetimePicker,
     SdDatetimePickerActions,
     SdDatetimePickerApply,

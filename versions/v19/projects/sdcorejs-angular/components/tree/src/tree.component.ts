@@ -22,7 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
@@ -52,7 +52,7 @@ export interface SdTreeNodeAutoIds {
   command?: string;
 }
 
-export interface SdTreeViewCommand<T = any> {
+export interface SdTreeViewCommand<T = unknown> {
   key: string;
   command: SdTreeCommand<T>;
   title: string;
@@ -64,7 +64,7 @@ export interface SdTreeViewCommand<T = any> {
   defaultColor: boolean;
 }
 
-export interface SdTreeViewNode<T = any> extends SdTreeNode<T> {
+export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   icon?: string;
   selected: boolean;
   selectionDisabled: boolean;
@@ -78,7 +78,7 @@ export interface SdTreeViewNode<T = any> extends SdTreeNode<T> {
   tabIndex: 0 | -1;
 }
 
-export interface SdTreeSelectionActionView<T = any> {
+export interface SdTreeSelectionActionView<T = unknown> {
   action: SdTreeSelectionAction<T>;
   autoId: string | null;
 }
@@ -101,7 +101,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
     MatTooltipModule,
     SdButton,
     SdQuickAction,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   templateUrl: './tree.component.html',
   styleUrl: './tree.component.scss',
@@ -110,7 +110,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
     '[attr.data-autoid]': 'autoId()',
   },
 })
-export class SdTree<T = any> {
+export class SdTree<T = unknown> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #i18n = inject(I18nService);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
@@ -126,10 +126,10 @@ export class SdTree<T = any> {
   readonly selector = input<SdTreeSelectorOption<T> | undefined | null>(undefined);
   readonly itemTemplate = input<TemplateRef<SdTreeItemContext<T>> | undefined | null>(undefined);
 
-  readonly selectedItemsChange = output<T[]>();
-  readonly selectChange = output<SdTreeSelectionEvent<T>>();
-  readonly expandChange = output<SdTreeToggleEvent<T>>();
-  readonly collapseChange = output<SdTreeToggleEvent<T>>();
+  readonly sdSelectedItemsChange = output<T[]>();
+  readonly sdSelectChange = output<SdTreeSelectionEvent<T>>();
+  readonly sdExpandChange = output<SdTreeToggleEvent<T>>();
+  readonly sdCollapseChange = output<SdTreeToggleEvent<T>>();
   readonly loadError = output<SdTreeLoadErrorEvent<T>>();
 
   readonly itemDef = contentChild(SdTreeItemDefDirective<T>);
@@ -321,7 +321,7 @@ export class SdTree<T = any> {
       this.#expandedState.update(state => ({ ...state, [currentNode.id]: false }));
       const toggleEvent = { item: currentNode.data, expanded: false, node: { ...currentNode, isExpanded: false } };
       this.option()?.onCollapse?.(toggleEvent);
-      this.collapseChange.emit(toggleEvent);
+      this.sdCollapseChange.emit(toggleEvent);
       return;
     }
 
@@ -332,7 +332,7 @@ export class SdTree<T = any> {
     this.#expandedState.update(state => ({ ...state, [currentNode.id]: true }));
     const toggleEvent = { item: currentNode.data, expanded: true, node: { ...nextNode, isExpanded: true } };
     this.option()?.onExpand?.(toggleEvent);
-    this.expandChange.emit(toggleEvent);
+    this.sdExpandChange.emit(toggleEvent);
   }
 
   toggleSelection(node: SdTreeNode<T>, event?: Event): void {
@@ -357,16 +357,16 @@ export class SdTree<T = any> {
     this.#selectedIds.set(selectedIds);
     const selectedItems = this.#selectedItemsFromIds(selectedIds);
     this.option()?.onSelectedItemsChange?.(selectedItems);
-    this.selectedItemsChange.emit(selectedItems);
+    this.sdSelectedItemsChange.emit(selectedItems);
     const selectionEvent = { item: node.data, selected: selectedIds.has(node.id), selectedItems };
     this.option()?.onSelect?.(selectionEvent);
-    this.selectChange.emit(selectionEvent);
+    this.sdSelectChange.emit(selectionEvent);
   }
 
   clearSelection(): void {
     this.#selectedIds.set(new Set());
     this.option()?.onSelectedItemsChange?.([]);
-    this.selectedItemsChange.emit([]);
+    this.sdSelectedItemsChange.emit([]);
   }
 
   onSelectionAction(action: SdTreeSelectionAction<T>): void {

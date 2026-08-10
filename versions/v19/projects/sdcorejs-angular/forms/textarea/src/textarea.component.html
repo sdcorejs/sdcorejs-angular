@@ -99,7 +99,7 @@
           class="sd-maxlength-counter"
           [class.sd-maxlength-counter--visible]="isFocused"
           [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
-          [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | translate) : null">
+          [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | sdTranslate) : null">
           {{ getCurrentLength() }}/{{ _maxLength }}
         </div>
       }

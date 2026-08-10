@@ -3,11 +3,11 @@ import { Component, Input } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { SdHistoryItemType } from '../models/history.model';
 import { ViewDateTimePipe } from '../pipes/view-date.pipe';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'sd-history',
-  imports: [CommonModule, SdBadge, ViewDateTimePipe, TranslatePipe],
+  imports: [CommonModule, SdBadge, ViewDateTimePipe, SdTranslatePipe],
   templateUrl: './history.component.html',
   styleUrl: './history.component.scss',
 })

@@ -22,17 +22,17 @@ import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutRootMenu, searchM
 import { SdLayoutMenuTreeComponent } from '../shared/menu-tree/menu-tree.component';
 import { SdLayoutSearchFieldComponent } from '../shared/search-field/search-field.component';
 import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
-  selector: 'sidebar-mobile-v3',
+  selector: 'sd-sidebar-mobile-v3',
   standalone: true,
-  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, TranslatePipe],
+  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SidebarMobileV3Component {
+export class SdSidebarMobileV3 {
   readonly #router = inject(Router);
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);

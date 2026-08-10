@@ -60,7 +60,7 @@ interface SdDocumentBuilderHeading {
 ## Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `contentChange` | `string` | HTML content. Throttled to 500ms (leading + trailing) and normalized. |
+| `sdContentChange` | `string` | HTML content. Throttled to 500ms (leading + trailing) and normalized. |
 
 ## Public methods
 - `setContent(html: string)` — load HTML into the editor.
@@ -101,7 +101,7 @@ None — content is fully driven by editor data + plugins.
 ```html
 <sd-document-builder
   [option]="{ orientation: 'PORTRAIT' }"
-  (contentChange)="onChange($event)">
+  (sdContentChange)="onChange($event)">
 </sd-document-builder>
 ```
 
@@ -137,7 +137,7 @@ goTo(id: string) { this.builder.heading.scroll(id); }
 <aside>
   <a *ngFor="let h of toc()" [class]="'lvl-' + h.level" (click)="goTo(h.id)">{{ h.text }}</a>
 </aside>
-<sd-document-builder #builder [option]="option" (contentChange)="refreshToc()"></sd-document-builder>
+<sd-document-builder #builder [option]="option" (sdContentChange)="refreshToc()"></sd-document-builder>
 ```
 
 ### 4. Export DOCX with header/footer
@@ -151,7 +151,7 @@ this.builder.exportDocx({
 
 ## Anti-patterns
 - DON'T use `<sd-document-builder>` as a generic input on small forms — its toolbar is huge; use `<sd-editor>` instead
-- DON'T `setContent(html)` on every keystroke — use it once on load; rely on `contentChange` for outbound updates
+- DON'T `setContent(html)` on every keystroke — use it once on load; rely on `sdContentChange` for outbound updates
 - DON'T forget `option.onDropVariable` validation — without it, any variable in the side panel can be dropped, even ones the document type forbids
 - DON'T expect `exportDocx` to produce a true `.docx` — output is Word-compatible HTML (`application/msword`); ext should be `.doc` or use a server pipeline for true `.docx`
 - DON'T mutate the editor model directly from outside — go through the public methods or plugin APIs

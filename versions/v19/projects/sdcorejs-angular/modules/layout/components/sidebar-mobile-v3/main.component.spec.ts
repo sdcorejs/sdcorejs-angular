@@ -2,14 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { SD_LAYOUT_CONFIGURATION } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService } from '../../services';
-import { SidebarMobileV3Component } from './main.component';
+import { SdSidebarMobileV3 } from './main.component';
 
 const dashboard: SdLayoutMenu = { id: 'dashboard', title: 'Tổng quan', path: '/dashboard', permission: true };
 const reports: SdLayoutMenu = { id: 'reports', title: 'Báo cáo bán hàng', path: '/reports', permission: true };
 const menus: SdLayoutMenu[] = [{ id: 'work', title: 'Công việc', children: [dashboard, reports] }];
 
-describe('SidebarMobileV3Component', () => {
-  let fixture: ComponentFixture<SidebarMobileV3Component>;
+describe('SdSidebarMobileV3', () => {
+  let fixture: ComponentFixture<SdSidebarMobileV3>;
   let signout: jasmine.Spy;
 
   beforeEach(async () => {
@@ -17,7 +17,7 @@ describe('SidebarMobileV3Component', () => {
     document.body.style.overflow = '';
     signout = jasmine.createSpy('signout');
     await TestBed.configureTestingModule({
-      imports: [SidebarMobileV3Component],
+      imports: [SdSidebarMobileV3],
       providers: [
         provideRouter([]),
         {
@@ -34,7 +34,7 @@ describe('SidebarMobileV3Component', () => {
         },
       ],
     }).compileComponents();
-    fixture = TestBed.createComponent(SidebarMobileV3Component);
+    fixture = TestBed.createComponent(SdSidebarMobileV3);
     fixture.componentRef.setInput('menus', menus);
     fixture.componentRef.setInput('userInfo', { fullName: 'Demo User', role: { text: 'Operator' } });
     fixture.componentRef.setInput('sidebar', { version: 3 });

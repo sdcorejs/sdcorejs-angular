@@ -34,8 +34,8 @@
       [state]="connectorState().invalid ? 'error' : 'auto'"
       (sdFocus)="onFocus()"
       (sdBlur)="onBlur()"
-      (keyupEnter)="onKeyupEnter()"
-      (cleared)="cleared.emit()">
+      (sdKeyupEnter)="onKeyupEnter()"
+      (sdCleared)="sdCleared.emit()">
     </sd-inline-text>
 
     @if (sdSuffixDef()?.templateRef; as suffixRef) {
@@ -146,7 +146,7 @@
           class="sd-maxlength-counter"
           [class.sd-maxlength-counter--visible]="isFocused"
           [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
-          [attr.title]="isMaxlengthExceeded() ? ('core.form.input.exceeded' | translate) : null">
+          [attr.title]="isMaxlengthExceeded() ? ('core.form.input.exceeded' | sdTranslate) : null">
           {{ getCurrentLength() }}/{{ _maxLength }}
         </div>
       }

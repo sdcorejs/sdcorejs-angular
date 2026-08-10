@@ -22,7 +22,7 @@
       <button
         type="button"
         class="sd-tree-select__clear"
-        [attr.aria-label]="'core.form.tree-select.clear' | translate"
+        [attr.aria-label]="'core.form.tree-select.clear' | sdTranslate"
         (click)="clear($event)">
         ×
       </button>
@@ -37,13 +37,13 @@
 <sd-modal [autoId]="autoId()" [title]="effectiveModalTitle()" width="md" (sdClosed)="onModalClosed()">
   <div class="sd-tree-select__body">
     <label class="sd-tree-select__search">
-      <span class="visually-hidden">{{ 'core.form.tree-select.search' | translate }}</span>
-      <input type="search" [placeholder]="'core.form.tree-select.search' | translate" (input)="filter($any($event.target).value)" />
+      <span class="visually-hidden">{{ 'core.form.tree-select.search' | sdTranslate }}</span>
+      <input type="search" [placeholder]="'core.form.tree-select.search' | sdTranslate" (input)="filter($any($event.target).value)" />
     </label>
-    <sd-tree [option]="treeOption()" (selectChange)="onTreeSelection($event)" (loadError)="sdLoadError.emit($event)" />
+    <sd-tree [option]="treeOption()" (sdSelectChange)="onTreeSelection($event)" (loadError)="sdLoadError.emit($event)" />
   </div>
-  <button type="button" sdFooterRight data-tree-select-cancel (click)="cancel()">{{ 'core.form.tree-select.cancel' | translate }}</button>
+  <button type="button" sdFooterRight data-tree-select-cancel (click)="cancel()">{{ 'core.form.tree-select.cancel' | sdTranslate }}</button>
   <button type="button" sdFooterRight data-tree-select-apply (click)="applySelection()">
-    {{ 'core.form.tree-select.apply' | translate }}
+    {{ 'core.form.tree-select.apply' | sdTranslate }}
   </button>
 </sd-modal>

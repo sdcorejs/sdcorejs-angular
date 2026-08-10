@@ -21,7 +21,7 @@ import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdQuery, SdQueryBar, SdQueryField } from '@sdcorejs/angular/components/query-bar';
 import { SdTable, SdTableColumn, SdTableFilterRequest, SdTableOption } from '@sdcorejs/angular/components/table';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   SdFormControl,
   SdInlineErrorValidator,
@@ -107,7 +107,7 @@ export class SdEntityPickerDetailTemplateDirective<T, TKey> {
 @Component({
   selector: 'sd-entity-picker',
   standalone: true,
-  imports: [NgTemplateOutlet, TranslatePipe, SdModal, SdQueryBar, SdTable, SdDataState],
+  imports: [NgTemplateOutlet, SdTranslatePipe, SdModal, SdQueryBar, SdTable, SdDataState],
   templateUrl: './entity-picker.component.html',
   styleUrl: './entity-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

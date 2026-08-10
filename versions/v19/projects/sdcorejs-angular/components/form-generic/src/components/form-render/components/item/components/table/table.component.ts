@@ -25,7 +25,7 @@ import { SdFormGenericTableColumn, SdFormGenericSelectionItem, SdFormGenericTabl
 import { FormGenericService } from '../../../../../../services';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'lib-table',
@@ -47,7 +47,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     SdDate,
     SdDatetime,
     // Pipe cho phần viewed
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
@@ -101,7 +101,12 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   #subscription = new Subscription();
   tableOption?: SdTableOption;
   row: any = {};
-  columnValues: Record<string, SdFormGenericSelectionItem[] | SdSearch> = {};
+  // why: phải nói rõ `SdSearch<SdFormGenericSelectionItem>` chứ không để `SdSearch` trần. Default
+  // generic của `SdSearch` đã siết `any → unknown`, mà `SdSearch<T>` covariant theo `T`
+  // (`(args) => Promise<T[]>`), nên `SdSearch<unknown>` không còn gán được cho `items` của cột
+  // lazy-values (`SdSearch<Record<string, any>>`). Nguồn dữ liệu ở đây luôn là selection item của
+  // form-generic, nên khai báo đúng kiểu là cách sửa chuẩn — không phải cast.
+  columnValues: Record<string, SdFormGenericSelectionItem[] | SdSearch<SdFormGenericSelectionItem>> = {};
   formRenderColumn: Record<string, SdFormGenericTableColumn> = {};
   // Lấy những fileColumns để định nghĩa cellDef tương ứng
   fileKeys: string[] = [];

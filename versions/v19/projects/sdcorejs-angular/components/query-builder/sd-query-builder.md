@@ -72,7 +72,7 @@ interface SdQueryBuilderField {
   key: string;                 // dot-notation path → Filter.field
   label: string;               // field picker + view-mode field token
   type: SdQueryBuilderFieldType;
-  icon?: string;               // leading Material icon in the picker; defaults to QB_TYPE_ICON[type] → 'tune'
+  icon?: string;               // leading Material icon in the picker; defaults to SD_QB_TYPE_ICON[type] → 'tune'
   operators?: Operator[];      // override the per-type allowed set
   defaultOperator?: Operator;  // override the starting operator
   values?: { value: any; display: string }[];  // for type 'values'
@@ -119,23 +119,23 @@ interface DateRelative {
 
 type SdQbRelativeUnit      = DateRelative['unit'];       // alias of the utils member type
 type SdQbRelativeDirection = DateRelative['direction'];
-type QbDateMode            = 'absolute' | 'now' | 'relative';
-type QbToday               = 'TODAY';                    // the date-today sentinel
+type SdQbDateMode            = 'absolute' | 'now' | 'relative';
+type SdQbToday               = 'TODAY';                    // the date-today sentinel
 ```
 
 A date rule's internal `value` is exactly one of:
 - `null` or a concrete date string → **absolute**
-- `'TODAY'` (the `QB_TODAY` sentinel) → **now / today**
+- `'TODAY'` (the `SD_QB_TODAY` sentinel) → **now / today**
 - a `DateRelative` object → **relative offset**
 
 Helpers / constants exported:
-- `qbIsRelativeDate(v): v is DateRelative` — type guard (delegates to `FilterUtilities.isDateRelative`)
-- `qbIsToday(v): v is 'TODAY'` — narrows the today sentinel
-- `qbDefaultRelative(): DateRelative` — returns `{ amount: 1, direction: 'previous', unit: 'day' }` (fresh object each call)
-- `QB_TODAY` — the `'TODAY'` string sentinel
-- `QB_DATE_MODES` — `[{ value:'absolute', labelKey:'core.component.query-builder.date-mode.absolute', icon:'event' }, …]`
-- `QB_RELATIVE_UNIT_OPTIONS` — 6 combined `unit:direction` tokens (`'day:previous'` … `'month:next'`), each carrying a `labelKey`
-- `QB_VALUE_SOURCE_OPTIONS` — the `literal` / `field` operand sources, each carrying a `labelKey`
+- `sdQbIsRelativeDate(v): v is DateRelative` — type guard (delegates to `FilterUtilities.isDateRelative`)
+- `sdQbIsToday(v): v is 'TODAY'` — narrows the today sentinel
+- `sdQbDefaultRelative(): DateRelative` — returns `{ amount: 1, direction: 'previous', unit: 'day' }` (fresh object each call)
+- `SD_QB_TODAY` — the `'TODAY'` string sentinel
+- `SD_QB_DATE_MODES` — `[{ value:'absolute', labelKey:'core.component.query-builder.date-mode.absolute', icon:'event' }, …]`
+- `SD_QB_RELATIVE_UNIT_OPTIONS` — 6 combined `unit:direction` tokens (`'day:previous'` … `'month:next'`), each carrying a `labelKey`
+- `SD_QB_VALUE_SOURCE_OPTIONS` — the `literal` / `field` operand sources, each carrying a `labelKey`
 - `qbRelativeLabelKey(unit, direction)` — i18n key of the combined offset phrase (also covers `hour`, which the UI does not offer but `DateRelative` allows)
 
 > **BREAKING (option tables):** these tables used to carry a pre-translated `display`. They now carry
@@ -163,7 +163,7 @@ An incomplete offset (missing `unit` / `direction`, or `amount < 1`) is invalid 
 **Back-compat:** filters persisted before the migration stored `data: { rel: 'now' | 'offset', … }`. `filterToTree` still reads that legacy shape when seeding `[value]` and re-emits the new `dataType` form on the next change, so old saved queries keep working.
 
 ## Operator vocabulary
-Allowed operators come from `QB_OPERATORS_BY_TYPE[type]` unless `field.operators` overrides. The starting operator is `field.defaultOperator ?? QB_DEFAULT_OPERATOR_BY_TYPE[type]`. The operator selector (`<sd-operator>`) is **hidden** when only one operator is allowed. Helpers exported alongside the component: `qbAllowedOperators`, `qbDefaultOperator`, `qbIsNoDataOperator`, `qbIsMultiOperator`, `qbSupportsFieldCompareOperator`.
+Allowed operators come from `SD_QB_OPERATORS_BY_TYPE[type]` unless `field.operators` overrides. The starting operator is `field.defaultOperator ?? SD_QB_DEFAULT_OPERATOR_BY_TYPE[type]`. The operator selector (`<sd-operator>`) is **hidden** when only one operator is allowed. Helpers exported alongside the component: `sdQbAllowedOperators`, `sdQbDefaultOperator`, `sdQbIsNoDataOperator`, `sdQbIsMultiOperator`, `sdQbSupportsFieldCompareOperator`.
 
 ## Date / datetime value editor
 
@@ -177,15 +177,15 @@ For `date` and `datetime` fields, the value editor behaviour depends on the acti
 - **`NULL` / `NOT_NULL`** — no value editor at all (same as other types).
 
 The mode is **derived from the rule's value** — no separate state. The component exposes:
-- `dateMode(rule): QbDateMode` — reads the current mode (`'absolute'` | `'now'` | `'relative'`)
+- `dateMode(rule): SdQbDateMode` — reads the current mode (`'absolute'` | `'now'` | `'relative'`)
 - `setDateMode(rule, mode)` — reseeds the value per mode
 - `relativeAmount(rule): number` — reads the offset amount (default `1`)
 - `setRelativeAmount(rule, raw)` — sets amount, clamped to integer `>= 1`
 - `relativeUnitDirValue(rule): string` — reads the `'unit:direction'` token (e.g. `'day:previous'`)
 - `setRelativeUnitDir(rule, token)` — writes unit + direction from a `'unit:direction'` token
-- `dateModes()` — `QB_DATE_MODES` with each `labelKey` resolved to `display` through `I18nService` (for template `[items]`)
-- `relativeUnitOptions()` — same treatment for `QB_RELATIVE_UNIT_OPTIONS`
-- `valueSourceOptions()` — same treatment for `QB_VALUE_SOURCE_OPTIONS`
+- `dateModes()` — `SD_QB_DATE_MODES` with each `labelKey` resolved to `display` through `I18nService` (for template `[items]`)
+- `relativeUnitOptions()` — same treatment for `SD_QB_RELATIVE_UNIT_OPTIONS`
+- `valueSourceOptions()` — same treatment for `SD_QB_VALUE_SOURCE_OPTIONS`
 
 All three are `computed()`, so the array reference stays stable across change-detection passes (required by
 `sd-select [items]`, which otherwise loops through `toObservable(items)` → `markForCheck()`), yet is rebuilt
@@ -265,7 +265,7 @@ fields: SdQueryBuilderField[] = [
 ## Anti-patterns
 - ❌ Sharing one `value` object across builder instances — seed a fresh `Filter`/`null` per instance.
 - ❌ Expecting a flat `Filter[]` when you used nested groups — nesting lives in `value` (the tree); `filters` only mirrors the root's direct children.
-- ❌ Hardcoding operator lists in the template — declare `field.operators` / rely on `QB_OPERATORS_BY_TYPE`.
+- ❌ Hardcoding operator lists in the template — declare `field.operators` / rely on `SD_QB_OPERATORS_BY_TYPE`.
 - ❌ Using `mode="view"` to disable editing while keeping the tree UI — use `[disabled]="true"` for that; `view` swaps to the raw-string renderer.
 
 ## Known limitations
@@ -280,7 +280,7 @@ fields: SdQueryBuilderField[] = [
 - `<sd-operator>` — operator picker reused for each rule
 - `<sd-select>` / `<sd-input>` / `<sd-date>` / `<sd-datetime>` — the per-type value editors
 - `Filter` / `Operator` (`@sdcorejs/utils/models`) — output contract
-- `filterToTokens(filter, fields, translate?)` / `treeToFilter` / `filterToTree` — serializer helpers (exported). `translate` is a `QbTranslate` (`(key, params?) => string`); the component passes `I18nService.t`. Omit it only outside an injection context — the serializer then renders the raw i18n keys so a missing translation is visible instead of silently Vietnamese.
+- `filterToTokens(filter, fields, translate?)` / `treeToFilter` / `filterToTree` — serializer helpers (exported). `translate` is a `SdQbTranslate` (`(key, params?) => string`); the component passes `I18nService.t`. Omit it only outside an injection context — the serializer then renders the raw i18n keys so a missing translation is visible instead of silently Vietnamese.
 
 ## Accessibility
 

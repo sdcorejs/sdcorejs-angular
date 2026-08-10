@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { SdTabComponent } from '@sdcorejs/angular/components';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { Language } from '@sdcorejs/angular/models';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
@@ -12,7 +12,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'app-home-page',
-  imports: [SdIcon, SdPageComponent, TranslatePipe],
+  imports: [SdIcon, SdPageComponent, SdTranslatePipe],
   templateUrl: './home-page.component.html',
   styleUrl: './home-page.component.scss',
   standalone: true,

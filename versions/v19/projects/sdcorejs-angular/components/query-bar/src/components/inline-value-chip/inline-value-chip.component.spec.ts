@@ -138,7 +138,7 @@ describe('SdQueryInlineValueChip', () => {
     it('emits remove on × click', () => {
       setup(stringField, 'abc');
       const spy = jasmine.createSpy('remove');
-      component.remove.subscribe(spy);
+      component.sdRemove.subscribe(spy);
       const x = fixture.nativeElement.querySelector('.c-seamless__x') as HTMLButtonElement;
       x.click();
       expect(spy).toHaveBeenCalledTimes(1);

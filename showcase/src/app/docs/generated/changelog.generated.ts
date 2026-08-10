@@ -58,8 +58,94 @@ export const SHOWCASE_CHANGELOG_RELEASES = [
     "unreleased": true,
     "packageVersions": [],
     "summaryMarkdown": "",
-    "markdown": "",
-    "sections": []
+    "markdown": "### Changed (BREAKING for consumers)\n\nĐợt đổi tên public API có chủ đích, **xoá hẳn tên cũ, không giữ alias `@deprecated`**. Lý do gộp một lần: tag format `^\\d+\\.\\d+$` khoá major theo Angular line, nên semver KHÔNG thể phát tín hiệu breaking — mỗi lần hoãn thì chi phí migration về sau lại tăng.\n\n- **Pipe `translate` → `sdTranslate`** (class `TranslatePipe` → `SdTranslatePipe`). Tên cũ đụng trực diện pipe cùng tên của `@ngx-translate/core`; cả hai đều standalone nên app dùng song song KHÔNG import chung vào một component được. Migration: find/replace `| translate` → `| sdTranslate` và `TranslatePipe` → `SdTranslatePipe`.\n- **`MatPaginatorIntlCro` → `SdTablePaginatorIntl`** (`@sdcorejs/angular/components/table`). Tên cũ là vết copy-paste từ ví dụ locale Croatia, lại mang tiền tố `Mat` gây hiểu nhầm là API của Angular Material.\n- **Sidebar bỏ tên không tiền tố** — `SidebarV2Component` → `SdSidebarV2` (`sidebar-v2` → `sd-sidebar-v2`), tương tự `V3`, `MobileV1/V2/V3`; `SidebarMobileOverlayComponent` → `SdSidebarMobileOverlay`. Nội bộ: `SidebarV1Component` → `SdSidebarV1`, `SidebarComponent` (selector `sidebar` — tên element toàn cục cực dễ đụng) → `SdSidebarV1Panel` (`sd-sidebar-v1-panel`).\n- **Helper PascalCase của `form-generic` chuyển sang `sd` + camelCase** — `GenerateId` / `GenerateKey` / `GetAttributes` / `GetComponentAttributes` / `GetDatetimeValue` / `GetVariableAttributes` / `EvaluateExpression` / `ExpressionToJavascriptExpression` / `TemplateToCondition` / `SdFormatComponent` → `sdGenerateId` / `sdGenerateKey` / `sdGetAttributes` / … Chúng là hàm thuần nhưng đọc như class (`new GenerateId()` nhìn vẫn hợp lệ). Const đi kèm: `DayInfoTypes` / `DayInfoPreviouses` / `AttributeOperators` / `TableColumnTypes` / `FormBuilderComponents` / `COMPONENT_ICONS` → `SD_DAY_INFO_TYPES` / `SD_DAY_INFO_PREVIOUSES` / `SD_ATTRIBUTE_OPERATORS` / `SD_TABLE_COLUMN_TYPES` / `SD_FORM_BUILDER_COMPONENTS` / `SD_COMPONENT_ICONS`.\n- **Namespace `qb*` / `QB_*` / `Qb*` của `query-builder` → `sdQb*` / `SD_QB_*` / `SdQb*`** — ví dụ `qbNewRule` → `sdQbNewRule`, `isQbGroup` → `sdIsQbGroup`, `QB_OPERATORS_BY_TYPE` → `SD_QB_OPERATORS_BY_TYPE`, `QbGroup` / `QbRule` / `QbToken` → `SdQbGroup` / `SdQbRule` / `SdQbToken`. Các type đã đúng tiền tố (`SdQbRelativeUnit`, …) giữ nguyên.\n- **Mọi `output()` không tiền tố nay dùng tiền tố `sd`** — `close` / `closeError` / `tabClosed` / `loaded` / `loadError` / `download` / `imageError` / `remove` / `clear` / `cleared` / `apply` / `commit` / `search` / `keyupEnter` / `keydownEscape` / `resizeEnd` / `selectionChange` / `selectChange` / `expandChange` / `collapseChange` / `queryChange` / `contentChange` / `navigate` / … → `sdClose` / `sdCloseError` / `sdTabClosed` / … Trùng lặp `loadError` (trên `<sd-tree>`) và `sdLoadError` (trên `<sd-tree-select>`) cho cùng một sự kiện đã gộp về `sdLoadError`. **Giữ nguyên**: 16 output `modelChange` do Angular sinh cho two-way `[(model)]`, cặp two-way `valueChange` của `<sd-mini-editor>`, và `click` của `<sd-button>` (xem \"Không đổi\" bên dưới).\n- **Xoá toàn bộ alias `@deprecated` dưới `utilities/**`** — `SdColor`, `SdSize`, `SdNestedKeyOf`, `SdOrder`, `SdFilter*`, `SdQueryReq` / `SdPagingReq` / `SdPagingRes`, `SdMaybeAsync` / `SdResolveMaybeAsync` / `SdNormalizeAsync`, `SD_EMPTY_STR`, `hslToHex` / `rgbToHex`, `SdPatternType` / `SdPatternCommon` / `SdPatternCommons`, và các member lỗi thời trên `StringUtilities` (`REGEX_PHONE_VN`, `REGEX_IDVN`, `REGEX_IDVN_OR_PASSPORT`, `isValidEmail`, `isValidPhone`, `isValidCode`). Bảng ánh xạ đầy đủ ở `utilities/models/models.md`. ⚠️ Riêng nhóm pattern KHÔNG phải đổi tên thuần: field `regex` nay là `pattern`, và 3 member đổi tên kèm i18n key (`PHONE_VN` → `VN_PHONE`, `IDVN` → `VN_ID`, `IDVN_OR_PASSPORT` → `VN_ID_OR_PASSPORT`). `<sd-input [pattern]>` vẫn nhận 3 chuỗi cũ qua bảng alias nội bộ nên template không vỡ.\n\n### Changed\n\n- **Siết default generic `any` → `unknown` trên 19 file model** (82 khai báo), gồm `components/tree/src/tree.model.ts` (toàn bộ type export), `components/table/src/services/table-filter/table-filter.model.ts`, `components/table/src/models/table-column.model.ts`, `components/query-bar/src/query-bar.model.ts`, `forms/models/**`, … Consumer viết `SdTableColumn<User>` hay `SdTreeOption<User>` từ nay được suy luận kiểu thật và báo lỗi khi dùng sai, thay vì im lặng như với `any`. Thêm `SdTableColumnAnyRow` cho vài vị trí tham số nội bộ row-agnostic (giải thích trong `table-column.model.ts`).\n- **`SdUtilities` KHÔNG bị xoá** — marker `@deprecated` cũ mô tả sai: đây không phải alias mà là 14 hàm cài đặt cục bộ. Marker đã được gỡ, implementation giữ nguyên.\n\n### Không đổi (có chủ đích)\n\n- `click` của `<sd-button>` giữ nguyên tên. Đổi sang `sdClick` sẽ khiến mọi `(click)` sẵn có của consumer im lặng rơi về DOM event gốc — vẫn chạy nhưng đổi payload và bỏ qua gate `disabled`. Đây là kiểu breaking \"âm thầm\" nguy hiểm nhất, cần một đợt riêng kèm codemod.\n- Một số vùng vẫn giữ default generic `any` vì `unknown` gây lan quá rộng (`import-excel`, `services/excel`, phần lớn `components/table/src/models/**`, `form-generic-component.model.ts`) — chi tiết trong ghi chú review của đợt này.",
+    "sections": [
+      {
+        "key": "changed",
+        "title": "Changed (BREAKING for consumers)",
+        "level": 3,
+        "anchor": "unreleased-changed-breaking-for-consumers",
+        "markdown": "Đợt đổi tên public API có chủ đích, **xoá hẳn tên cũ, không giữ alias `@deprecated`**. Lý do gộp một lần: tag format `^\\d+\\.\\d+$` khoá major theo Angular line, nên semver KHÔNG thể phát tín hiệu breaking — mỗi lần hoãn thì chi phí migration về sau lại tăng.\n\n- **Pipe `translate` → `sdTranslate`** (class `TranslatePipe` → `SdTranslatePipe`). Tên cũ đụng trực diện pipe cùng tên của `@ngx-translate/core`; cả hai đều standalone nên app dùng song song KHÔNG import chung vào một component được. Migration: find/replace `| translate` → `| sdTranslate` và `TranslatePipe` → `SdTranslatePipe`.\n- **`MatPaginatorIntlCro` → `SdTablePaginatorIntl`** (`@sdcorejs/angular/components/table`). Tên cũ là vết copy-paste từ ví dụ locale Croatia, lại mang tiền tố `Mat` gây hiểu nhầm là API của Angular Material.\n- **Sidebar bỏ tên không tiền tố** — `SidebarV2Component` → `SdSidebarV2` (`sidebar-v2` → `sd-sidebar-v2`), tương tự `V3`, `MobileV1/V2/V3`; `SidebarMobileOverlayComponent` → `SdSidebarMobileOverlay`. Nội bộ: `SidebarV1Component` → `SdSidebarV1`, `SidebarComponent` (selector `sidebar` — tên element toàn cục cực dễ đụng) → `SdSidebarV1Panel` (`sd-sidebar-v1-panel`).\n- **Helper PascalCase của `form-generic` chuyển sang `sd` + camelCase** — `GenerateId` / `GenerateKey` / `GetAttributes` / `GetComponentAttributes` / `GetDatetimeValue` / `GetVariableAttributes` / `EvaluateExpression` / `ExpressionToJavascriptExpression` / `TemplateToCondition` / `SdFormatComponent` → `sdGenerateId` / `sdGenerateKey` / `sdGetAttributes` / … Chúng là hàm thuần nhưng đọc như class (`new GenerateId()` nhìn vẫn hợp lệ). Const đi kèm: `DayInfoTypes` / `DayInfoPreviouses` / `AttributeOperators` / `TableColumnTypes` / `FormBuilderComponents` / `COMPONENT_ICONS` → `SD_DAY_INFO_TYPES` / `SD_DAY_INFO_PREVIOUSES` / `SD_ATTRIBUTE_OPERATORS` / `SD_TABLE_COLUMN_TYPES` / `SD_FORM_BUILDER_COMPONENTS` / `SD_COMPONENT_ICONS`.\n- **Namespace `qb*` / `QB_*` / `Qb*` của `query-builder` → `sdQb*` / `SD_QB_*` / `SdQb*`** — ví dụ `qbNewRule` → `sdQbNewRule`, `isQbGroup` → `sdIsQbGroup`, `QB_OPERATORS_BY_TYPE` → `SD_QB_OPERATORS_BY_TYPE`, `QbGroup` / `QbRule` / `QbToken` → `SdQbGroup` / `SdQbRule` / `SdQbToken`. Các type đã đúng tiền tố (`SdQbRelativeUnit`, …) giữ nguyên.\n- **Mọi `output()` không tiền tố nay dùng tiền tố `sd`** — `close` / `closeError` / `tabClosed` / `loaded` / `loadError` / `download` / `imageError` / `remove` / `clear` / `cleared` / `apply` / `commit` / `search` / `keyupEnter` / `keydownEscape` / `resizeEnd` / `selectionChange` / `selectChange` / `expandChange` / `collapseChange` / `queryChange` / `contentChange` / `navigate` / … → `sdClose` / `sdCloseError` / `sdTabClosed` / … Trùng lặp `loadError` (trên `<sd-tree>`) và `sdLoadError` (trên `<sd-tree-select>`) cho cùng một sự kiện đã gộp về `sdLoadError`. **Giữ nguyên**: 16 output `modelChange` do Angular sinh cho two-way `[(model)]`, cặp two-way `valueChange` của `<sd-mini-editor>`, và `click` của `<sd-button>` (xem \"Không đổi\" bên dưới).\n- **Xoá toàn bộ alias `@deprecated` dưới `utilities/**`** — `SdColor`, `SdSize`, `SdNestedKeyOf`, `SdOrder`, `SdFilter*`, `SdQueryReq` / `SdPagingReq` / `SdPagingRes`, `SdMaybeAsync` / `SdResolveMaybeAsync` / `SdNormalizeAsync`, `SD_EMPTY_STR`, `hslToHex` / `rgbToHex`, `SdPatternType` / `SdPatternCommon` / `SdPatternCommons`, và các member lỗi thời trên `StringUtilities` (`REGEX_PHONE_VN`, `REGEX_IDVN`, `REGEX_IDVN_OR_PASSPORT`, `isValidEmail`, `isValidPhone`, `isValidCode`). Bảng ánh xạ đầy đủ ở `utilities/models/models.md`. ⚠️ Riêng nhóm pattern KHÔNG phải đổi tên thuần: field `regex` nay là `pattern`, và 3 member đổi tên kèm i18n key (`PHONE_VN` → `VN_PHONE`, `IDVN` → `VN_ID`, `IDVN_OR_PASSPORT` → `VN_ID_OR_PASSPORT`). `<sd-input [pattern]>` vẫn nhận 3 chuỗi cũ qua bảng alias nội bộ nên template không vỡ.",
+        "items": [
+          {
+            "text": "**Pipe `translate` → `sdTranslate`** (class `TranslatePipe` → `SdTranslatePipe`). Tên cũ đụng trực diện pipe cùng tên của `@ngx-translate/core`; cả hai đều standalone nên app dùng song song KHÔNG import chung vào một component được. Migration: find/replace `| translate` → `| sdTranslate` và `TranslatePipe` → `SdTranslatePipe`.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`MatPaginatorIntlCro` → `SdTablePaginatorIntl`** (`@sdcorejs/angular/components/table`). Tên cũ là vết copy-paste từ ví dụ locale Croatia, lại mang tiền tố `Mat` gây hiểu nhầm là API của Angular Material.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Sidebar bỏ tên không tiền tố** — `SidebarV2Component` → `SdSidebarV2` (`sidebar-v2` → `sd-sidebar-v2`), tương tự `V3`, `MobileV1/V2/V3`; `SidebarMobileOverlayComponent` → `SdSidebarMobileOverlay`. Nội bộ: `SidebarV1Component` → `SdSidebarV1`, `SidebarComponent` (selector `sidebar` — tên element toàn cục cực dễ đụng) → `SdSidebarV1Panel` (`sd-sidebar-v1-panel`).",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Helper PascalCase của `form-generic` chuyển sang `sd` + camelCase** — `GenerateId` / `GenerateKey` / `GetAttributes` / `GetComponentAttributes` / `GetDatetimeValue` / `GetVariableAttributes` / `EvaluateExpression` / `ExpressionToJavascriptExpression` / `TemplateToCondition` / `SdFormatComponent` → `sdGenerateId` / `sdGenerateKey` / `sdGetAttributes` / … Chúng là hàm thuần nhưng đọc như class (`new GenerateId()` nhìn vẫn hợp lệ). Const đi kèm: `DayInfoTypes` / `DayInfoPreviouses` / `AttributeOperators` / `TableColumnTypes` / `FormBuilderComponents` / `COMPONENT_ICONS` → `SD_DAY_INFO_TYPES` / `SD_DAY_INFO_PREVIOUSES` / `SD_ATTRIBUTE_OPERATORS` / `SD_TABLE_COLUMN_TYPES` / `SD_FORM_BUILDER_COMPONENTS` / `SD_COMPONENT_ICONS`.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Namespace `qb*` / `QB_*` / `Qb*` của `query-builder` → `sdQb*` / `SD_QB_*` / `SdQb*`** — ví dụ `qbNewRule` → `sdQbNewRule`, `isQbGroup` → `sdIsQbGroup`, `QB_OPERATORS_BY_TYPE` → `SD_QB_OPERATORS_BY_TYPE`, `QbGroup` / `QbRule` / `QbToken` → `SdQbGroup` / `SdQbRule` / `SdQbToken`. Các type đã đúng tiền tố (`SdQbRelativeUnit`, …) giữ nguyên.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Mọi `output()` không tiền tố nay dùng tiền tố `sd`** — `close` / `closeError` / `tabClosed` / `loaded` / `loadError` / `download` / `imageError` / `remove` / `clear` / `cleared` / `apply` / `commit` / `search` / `keyupEnter` / `keydownEscape` / `resizeEnd` / `selectionChange` / `selectChange` / `expandChange` / `collapseChange` / `queryChange` / `contentChange` / `navigate` / … → `sdClose` / `sdCloseError` / `sdTabClosed` / … Trùng lặp `loadError` (trên `<sd-tree>`) và `sdLoadError` (trên `<sd-tree-select>`) cho cùng một sự kiện đã gộp về `sdLoadError`. **Giữ nguyên**: 16 output `modelChange` do Angular sinh cho two-way `[(model)]`, cặp two-way `valueChange` của `<sd-mini-editor>`, và `click` của `<sd-button>` (xem \"Không đổi\" bên dưới).",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**Xoá toàn bộ alias `@deprecated` dưới `utilities/**`** — `SdColor`, `SdSize`, `SdNestedKeyOf`, `SdOrder`, `SdFilter*`, `SdQueryReq` / `SdPagingReq` / `SdPagingRes`, `SdMaybeAsync` / `SdResolveMaybeAsync` / `SdNormalizeAsync`, `SD_EMPTY_STR`, `hslToHex` / `rgbToHex`, `SdPatternType` / `SdPatternCommon` / `SdPatternCommons`, và các member lỗi thời trên `StringUtilities` (`REGEX_PHONE_VN`, `REGEX_IDVN`, `REGEX_IDVN_OR_PASSPORT`, `isValidEmail`, `isValidPhone`, `isValidCode`). Bảng ánh xạ đầy đủ ở `utilities/models/models.md`. ⚠️ Riêng nhóm pattern KHÔNG phải đổi tên thuần: field `regex` nay là `pattern`, và 3 member đổi tên kèm i18n key (`PHONE_VN` → `VN_PHONE`, `IDVN` → `VN_ID`, `IDVN_OR_PASSPORT` → `VN_ID_OR_PASSPORT`). `<sd-input [pattern]>` vẫn nhận 3 chuỗi cũ qua bảng alias nội bộ nên template không vỡ.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "changed",
+        "title": "Changed",
+        "level": 3,
+        "anchor": "unreleased-changed",
+        "markdown": "- **Siết default generic `any` → `unknown` trên 19 file model** (82 khai báo), gồm `components/tree/src/tree.model.ts` (toàn bộ type export), `components/table/src/services/table-filter/table-filter.model.ts`, `components/table/src/models/table-column.model.ts`, `components/query-bar/src/query-bar.model.ts`, `forms/models/**`, … Consumer viết `SdTableColumn<User>` hay `SdTreeOption<User>` từ nay được suy luận kiểu thật và báo lỗi khi dùng sai, thay vì im lặng như với `any`. Thêm `SdTableColumnAnyRow` cho vài vị trí tham số nội bộ row-agnostic (giải thích trong `table-column.model.ts`).\n- **`SdUtilities` KHÔNG bị xoá** — marker `@deprecated` cũ mô tả sai: đây không phải alias mà là 14 hàm cài đặt cục bộ. Marker đã được gỡ, implementation giữ nguyên.",
+        "items": [
+          {
+            "text": "**Siết default generic `any` → `unknown` trên 19 file model** (82 khai báo), gồm `components/tree/src/tree.model.ts` (toàn bộ type export), `components/table/src/services/table-filter/table-filter.model.ts`, `components/table/src/models/table-column.model.ts`, `components/query-bar/src/query-bar.model.ts`, `forms/models/**`, … Consumer viết `SdTableColumn<User>` hay `SdTreeOption<User>` từ nay được suy luận kiểu thật và báo lỗi khi dùng sai, thay vì im lặng như với `any`. Thêm `SdTableColumnAnyRow` cho vài vị trí tham số nội bộ row-agnostic (giải thích trong `table-column.model.ts`).",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "**`SdUtilities` KHÔNG bị xoá** — marker `@deprecated` cũ mô tả sai: đây không phải alias mà là 14 hàm cài đặt cục bộ. Marker đã được gỡ, implementation giữ nguyên.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      },
+      {
+        "key": "khong-oi-co-chu-ich",
+        "title": "Không đổi (có chủ đích)",
+        "level": 3,
+        "anchor": "unreleased-khong-oi-co-chu-ich",
+        "markdown": "- `click` của `<sd-button>` giữ nguyên tên. Đổi sang `sdClick` sẽ khiến mọi `(click)` sẵn có của consumer im lặng rơi về DOM event gốc — vẫn chạy nhưng đổi payload và bỏ qua gate `disabled`. Đây là kiểu breaking \"âm thầm\" nguy hiểm nhất, cần một đợt riêng kèm codemod.\n- Một số vùng vẫn giữ default generic `any` vì `unknown` gây lan quá rộng (`import-excel`, `services/excel`, phần lớn `components/table/src/models/**`, `form-generic-component.model.ts`) — chi tiết trong ghi chú review của đợt này.",
+        "items": [
+          {
+            "text": "`click` của `<sd-button>` giữ nguyên tên. Đổi sang `sdClick` sẽ khiến mọi `(click)` sẵn có của consumer im lặng rơi về DOM event gốc — vẫn chạy nhưng đổi payload và bỏ qua gate `disabled`. Đây là kiểu breaking \"âm thầm\" nguy hiểm nhất, cần một đợt riêng kèm codemod.",
+            "ordered": false,
+            "children": []
+          },
+          {
+            "text": "Một số vùng vẫn giữ default generic `any` vì `unknown` gây lan quá rộng (`import-excel`, `services/excel`, phần lớn `components/table/src/models/**`, `form-generic-component.model.ts`) — chi tiết trong ghi chú review của đợt này.",
+            "ordered": false,
+            "children": []
+          }
+        ],
+        "children": []
+      }
+    ]
   },
   {
     "id": "release-1-6",

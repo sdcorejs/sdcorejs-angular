@@ -27,7 +27,7 @@ import {
   SdTreeOption,
   SdTreeSelectionEvent,
 } from '@sdcorejs/angular/components/tree';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   SdFormControl,
   SdInlineErrorValidator,
@@ -61,7 +61,7 @@ export class SdTreeSelectNodeTemplateDirective<T> {
 @Component({
   selector: 'sd-tree-select',
   standalone: true,
-  imports: [TranslatePipe, SdModal, SdTree],
+  imports: [SdTranslatePipe, SdModal, SdTree],
   templateUrl: './tree-select.component.html',
   styleUrl: './tree-select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

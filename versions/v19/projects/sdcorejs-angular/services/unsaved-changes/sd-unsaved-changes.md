@@ -71,7 +71,7 @@ readonly beforeClose = createSdUnsavedChangesCloseGuard(this.unsaved, {
 ```html
 <sd-modal [beforeClose]="beforeClose" (sdCloseError)="report($event)">...</sd-modal>
 <sd-side-drawer [beforeClose]="beforeClose" (sdCloseError)="report($event)">...</sd-side-drawer>
-<sd-tab [beforeClose]="beforeClose" (closeError)="report($event)">...</sd-tab>
+<sd-tab [beforeClose]="beforeClose" (sdCloseError)="report($event)">...</sd-tab>
 ```
 
 The hooks are additive. Without `beforeClose`, close remains synchronous and backward-compatible. With a hook, concurrent close requests share one promise. `false`, a thrown error, or a rejected promise keeps the surface open.

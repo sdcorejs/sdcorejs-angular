@@ -9,15 +9,15 @@ import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
 import {
   Attribute,
-  AttributeOperators,
-  GetAttributes,
+  SD_ATTRIBUTE_OPERATORS,
+  sdGetAttributes,
   SdFormGenericComponent,
   SdFormGenericExpression,
   SdFormGenericGroup,
 } from '../../models';
 import { ExpressionFeelPipe } from '../../pipes';
 import { FormGenericService } from '../../services';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
 // Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
@@ -26,7 +26,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   templateUrl: './sd-feel-expression.component.html',
   styleUrl: './sd-feel-expression.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdInput, SdInputNumber, SdSelect, SdAutocomplete, SdButton, SdSelect, SdModal, TranslatePipe],
+  imports: [SdInput, SdInputNumber, SdSelect, SdAutocomplete, SdButton, SdSelect, SdModal, SdTranslatePipe],
 })
 export class SdFeelExpression implements OnInit {
   private ref = inject(ChangeDetectorRef);
@@ -35,7 +35,7 @@ export class SdFeelExpression implements OnInit {
 
   @ViewChild(SdModal) modal?: SdModal;
   form = new FormGroup({});
-  attributeOperators = AttributeOperators;
+  attributeOperators = SD_ATTRIBUTE_OPERATORS;
   attributes: Attribute[] = [];
   attribute: Record<string, Attribute> = {};
   readonly components = input.required<(SdFormGenericComponent | SdFormGenericGroup)[]>();
@@ -52,7 +52,7 @@ export class SdFeelExpression implements OnInit {
       conditions: [],
     };
   }
-  readonly expressionChange = output<SdFormGenericExpression>();
+  readonly sdExpressionChange = output<SdFormGenericExpression>();
 
   //
   model?: string;
@@ -116,7 +116,7 @@ export class SdFeelExpression implements OnInit {
     }
     if (this.expression) {
       this.model = this.expressionFeelPipe.transform(this.expression!);
-      this.expressionChange.emit(this.expression);
+      this.sdExpressionChange.emit(this.expression);
     } else {
       this.model = '';
     }
@@ -135,7 +135,7 @@ export class SdFeelExpression implements OnInit {
     if (components.length) {
       for (const component of components) {
         if (component.type === 'group') {
-          attributes.push(...GetAttributes(component.components));
+          attributes.push(...sdGetAttributes(component.components));
         } else if (component.type === 'textfield' || component.type === 'textarea') {
           attributes.push({
             value: component.key,

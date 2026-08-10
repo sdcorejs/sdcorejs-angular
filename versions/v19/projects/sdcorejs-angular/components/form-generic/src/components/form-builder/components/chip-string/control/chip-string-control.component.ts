@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
-import { SdFormatComponent, SdFormGenericChipString } from '../../../../../models';
+import { sdFormatComponent, SdFormGenericChipString } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
 
@@ -19,7 +19,7 @@ export class ChipStringControl implements AfterViewInit, OnDestroy {
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericChipString) {
     if (this.component !== component) {
       this.component = component;
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
     }
   }
 

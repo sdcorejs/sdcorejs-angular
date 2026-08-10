@@ -18,7 +18,7 @@ export interface SdMiniEditorMentionConfig {
   };
 }
 
-export type SdMiniEditorMentionItem<T = any> = MentionFeedObjectItem & {
+export type SdMiniEditorMentionItem<T = unknown> = MentionFeedObjectItem & {
   data?: T;
 };
 

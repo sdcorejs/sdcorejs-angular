@@ -4,11 +4,11 @@ import { NavigationEnd, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 
 import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
-import { SidebarMobileOverlayComponent } from './sidebar.component';
+import { SdSidebarMobileOverlay } from './sidebar.component';
 
-describe('SidebarMobileOverlayComponent', () => {
-  let fixture: ComponentFixture<SidebarMobileOverlayComponent>;
-  let component: SidebarMobileOverlayComponent;
+describe('SdSidebarMobileOverlay', () => {
+  let fixture: ComponentFixture<SdSidebarMobileOverlay>;
+  let component: SdSidebarMobileOverlay;
   let routerEvents: Subject<unknown>;
   let router: { events: Subject<unknown>; url: string; navigate: jasmine.Spy };
   let activeId: string;
@@ -31,16 +31,16 @@ describe('SidebarMobileOverlayComponent', () => {
       },
     };
     await TestBed.configureTestingModule({
-      imports: [SidebarMobileOverlayComponent],
+      imports: [SdSidebarMobileOverlay],
       providers: [
         { provide: Router, useValue: router },
         { provide: SdLayoutStorageService, useValue: storage },
       ],
     })
-      .overrideComponent(SidebarMobileOverlayComponent, { set: { template: '' } })
+      .overrideComponent(SdSidebarMobileOverlay, { set: { template: '' } })
       .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarMobileOverlayComponent);
+    fixture = TestBed.createComponent(SdSidebarMobileOverlay);
     component = fixture.componentInstance;
     component.currentPath.set('/admin/users/detail');
     fixture.componentRef.setInput('menus', menus);
@@ -78,7 +78,7 @@ describe('SidebarMobileOverlayComponent', () => {
 
   it('ignores missing paths, opens external paths and navigates internally before closing', () => {
     const closed = jasmine.createSpy('closed');
-    component.showSideBar.subscribe(closed);
+    component.sdShowSideBar.subscribe(closed);
     const windowOpen = spyOn(window, 'open');
 
     component.navigate({});
@@ -99,9 +99,9 @@ describe('SidebarMobileOverlayComponent', () => {
     const closed = jasmine.createSpy('closed');
     const opened = jasmine.createSpy('opened');
     const userClosed = jasmine.createSpy('userClosed');
-    component.showSideBar.subscribe(closed);
-    component.popupUserMenuOpened.subscribe(opened);
-    component.popupUserMenuClosed.subscribe(userClosed);
+    component.sdShowSideBar.subscribe(closed);
+    component.sdPopupUserMenuOpened.subscribe(opened);
+    component.sdPopupUserMenuClosed.subscribe(userClosed);
 
     component.onClose();
     component.onUserMenuOpened();
@@ -121,7 +121,7 @@ describe('SidebarMobileOverlayComponent', () => {
 
   it('falls back to the last active group and emits an empty title when nothing matches', () => {
     const titleChanged = jasmine.createSpy('titleChanged');
-    component.titleMenuGroupChanged.subscribe(titleChanged);
+    component.sdTitleMenuGroupChanged.subscribe(titleChanged);
     activeId = 'reports';
     routerEvents.next(new NavigationEnd(1, '/outside-one', '/outside-one'));
     expect(component.titleMenuGroup()).toBe('Reports');
@@ -136,7 +136,7 @@ describe('SidebarMobileOverlayComponent', () => {
     // why: field initializer cũ gọi `window.location.pathname` nên component không render được ở SSR.
     // Giờ path khởi tạo lấy qua DOCUMENT.defaultView và cập nhật từ chính sự kiện NavigationEnd.
     const document = TestBed.inject(DOCUMENT);
-    const fresh = TestBed.createComponent(SidebarMobileOverlayComponent);
+    const fresh = TestBed.createComponent(SdSidebarMobileOverlay);
     fresh.componentRef.setInput('menus', menus);
     fresh.componentRef.setInput('userInfo', { fullName: 'Mobile User' });
     fresh.componentRef.setInput('sidebar', { version: 1 });

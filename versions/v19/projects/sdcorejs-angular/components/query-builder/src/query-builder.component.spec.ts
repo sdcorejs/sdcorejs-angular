@@ -3,7 +3,7 @@ import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQueryBuilder } from './query-builder.component';
-import { QbGroup, QbRule, SdQueryBuilderField } from './query-builder.model';
+import { SdQbGroup, SdQbRule, SdQueryBuilderField } from './query-builder.model';
 
 const FIELDS: SdQueryBuilderField[] = [
   { key: 'code', label: 'Mã', type: 'string' },
@@ -40,7 +40,7 @@ describe('SdQueryBuilder', () => {
     fixture.detectChanges();
   });
 
-  const firstRule = (): QbRule => component.tree().children[0] as QbRule;
+  const firstRule = (): SdQbRule => component.tree().children[0] as SdQbRule;
 
   it('creates the component', () => {
     expect(component).toBeTruthy();
@@ -169,19 +169,19 @@ describe('SdQueryBuilder', () => {
       const c = component;
       c.setGroupLogic(c.tree(), 'OR');
       c.addRule(c.tree());
-      const r0 = c.tree().children[0] as QbRule;
+      const r0 = c.tree().children[0] as SdQbRule;
       c.setField(r0, 'price');
       c.setOperator(r0, 'GREATER_THAN');
       c.setScalar(r0, 100);
       c.addGroup(c.tree());
-      const g = c.tree().children[1] as QbGroup;
+      const g = c.tree().children[1] as SdQbGroup;
       c.setGroupLogic(g, 'AND');
-      const gr0 = g.children[0] as QbRule;
+      const gr0 = g.children[0] as SdQbRule;
       c.setField(gr0, 'code');
       c.setOperator(gr0, 'EQUAL');
       c.setScalar(gr0, 'ABC');
       c.addRule(g);
-      const gr1 = g.children[1] as QbRule;
+      const gr1 = g.children[1] as SdQbRule;
       c.setField(gr1, 'name');
       c.setOperator(gr1, 'CONTAIN');
       c.setScalar(gr1, 'abc');
@@ -459,7 +459,7 @@ describe('SdQueryBuilder', () => {
 
   // Task 5 — date-mode helpers (relative dates — issue #4)
   describe('date-mode helpers (relative dates — issue #4)', () => {
-    const dateRule = (): QbRule => {
+    const dateRule = (): SdQbRule => {
       component.addRule(component.tree());
       const r = firstRule();
       component.setField(r, 'createdAt');

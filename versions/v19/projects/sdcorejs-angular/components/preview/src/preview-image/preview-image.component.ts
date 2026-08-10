@@ -15,7 +15,7 @@ import {
   signal,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { NormalizedImage, PreviewItem, PreviewStage, PreviewTheme, ThumbnailPosition } from './preview-image.types';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -26,7 +26,7 @@ let stageIdSeq = 0;
 @Component({
   selector: 'sd-preview-image',
   standalone: true,
-  imports: [SdIcon, CommonModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, SdTranslatePipe],
   templateUrl: './preview-image.component.html',
   styleUrl: './preview-image.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,10 +110,10 @@ export class SdPreviewImage implements OnDestroy {
   // ==========================================
   // `close`: user requested dismissal (X button hoặc Esc). Consumer tự quyết
   // định đóng modal / điều hướng / hide section.
-  readonly close = output<void>();
-  readonly activeIndexChange = output<number>();
-  readonly download = output<{ index: number; item: NormalizedImage }>();
-  readonly imageError = output<{ index: number; reason: string }>();
+  readonly sdClose = output<void>();
+  readonly sdActiveIndexChange = output<number>();
+  readonly sdDownload = output<{ index: number; item: NormalizedImage }>();
+  readonly sdImageError = output<{ index: number; reason: string }>();
 
   // ==========================================
   // STATE (signals)
@@ -293,7 +293,7 @@ export class SdPreviewImage implements OnDestroy {
     this.#document.body.appendChild(a);
     a.click();
     a.remove();
-    this.download.emit({ index: this.#activeIndex(), item: img });
+    this.sdDownload.emit({ index: this.#activeIndex(), item: img });
   }
 
   toggleFullscreen(): void {
@@ -344,7 +344,7 @@ export class SdPreviewImage implements OnDestroy {
 
   /** User clicked the X button — emit close intent for the consumer to react. */
   requestClose(): void {
-    this.close.emit();
+    this.sdClose.emit();
   }
 
   // ==========================================
@@ -528,7 +528,7 @@ export class SdPreviewImage implements OnDestroy {
     // WHY không set stage='error': lỗi từng ảnh không nên ẩn nav/dots/thumb của
     // cả viewer. Template render placeholder inline ngay trong khung ảnh khi
     // activeImage().error === true — user vẫn có thể chuyển sang ảnh khác.
-    this.imageError.emit({ index: idx, reason: 'render-failed' });
+    this.sdImageError.emit({ index: idx, reason: 'render-failed' });
   }
 
   trackByImage(_i: number, item: NormalizedImage): string {
@@ -593,7 +593,7 @@ export class SdPreviewImage implements OnDestroy {
     // render inline trong stage thay vì lật cả stage sang 'error'. Giữ stage
     // 'ready' để nav/dots/thumbnail/toolbar không bị ẩn.
     this.#stage.set('ready');
-    this.activeIndexChange.emit(index);
+    this.sdActiveIndexChange.emit(index);
     // Auto-scroll thumbnail strip — đợi 1 microtask để DOM rendered xong.
     // WHY scoped query: thumbnail id là global ('sd-preview-thumb-N'); nếu có
     // > 1 instance trên page sẽ collide. Query trong nativeElement để isolate.

@@ -68,9 +68,9 @@ describe('sidebar V1 LayoutUserComponent', () => {
     const opened = jasmine.createSpy('opened');
     const closed = jasmine.createSpy('closed');
     const toggle = jasmine.createSpy('toggle');
-    fixture.componentInstance.menuOpened.subscribe(opened);
-    fixture.componentInstance.menuClosed.subscribe(closed);
-    fixture.componentInstance.toggleMenuLock.subscribe(toggle);
+    fixture.componentInstance.sdMenuOpened.subscribe(opened);
+    fixture.componentInstance.sdMenuClosed.subscribe(closed);
+    fixture.componentInstance.sdToggleMenuLock.subscribe(toggle);
 
     fixture.nativeElement.querySelector('[data-user-trigger]').click();
     fixture.detectChanges();

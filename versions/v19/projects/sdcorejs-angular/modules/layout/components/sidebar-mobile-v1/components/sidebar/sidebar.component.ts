@@ -16,7 +16,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
-export class SidebarMobileOverlayComponent {
+export class SdSidebarMobileOverlay {
   #router = inject(Router);
   #destroyRef = inject(DestroyRef);
   #layoutStorageService = inject(SdLayoutStorageService);
@@ -33,11 +33,11 @@ export class SidebarMobileOverlayComponent {
   sidebar = input.required<SidebarConfigurationV1>();
 
   // showSideBar(null) = đóng sidebar (tương thích với onToggle của main component)
-  showSideBar = output<boolean | null>();
-  expandSideBar = output<void>();
-  popupUserMenuOpened = output<void>();
-  popupUserMenuClosed = output<void>();
-  titleMenuGroupChanged = output<string | undefined>();
+  sdShowSideBar = output<boolean | null>();
+  sdExpandSideBar = output<void>();
+  sdPopupUserMenuOpened = output<void>();
+  sdPopupUserMenuClosed = output<void>();
+  sdTitleMenuGroupChanged = output<string | undefined>();
 
   // ==========================================
   // STATE SIGNALS
@@ -119,7 +119,7 @@ export class SidebarMobileOverlayComponent {
   }
 
   onClose(): void {
-    this.showSideBar.emit(null);
+    this.sdShowSideBar.emit(null);
   }
 
   // Kiểm tra menu có children (là SdLayoutChildrenMenu)
@@ -142,8 +142,8 @@ export class SidebarMobileOverlayComponent {
     return ('queryParams' in menu ? menu.queryParams : undefined) ?? {};
   }
 
-  onUserMenuOpened = (): void => this.popupUserMenuOpened.emit();
-  onUserMenuClosed = (): void => this.popupUserMenuClosed.emit();
+  onUserMenuOpened = (): void => this.sdPopupUserMenuOpened.emit();
+  onUserMenuClosed = (): void => this.sdPopupUserMenuClosed.emit();
 
   // ==========================================
   // PRIVATE LOGIC
@@ -161,10 +161,10 @@ export class SidebarMobileOverlayComponent {
       this.#layoutStorageService.lastActiveMenuGroupId.set(matchedGroup?.id || '');
       const title = matchedGroup?.tooltipTitle || matchedGroup?.title;
       this.titleMenuGroup.set(title);
-      this.titleMenuGroupChanged.emit(title);
+      this.sdTitleMenuGroupChanged.emit(title);
     } else {
       this.titleMenuGroup.set('');
-      this.titleMenuGroupChanged.emit('');
+      this.sdTitleMenuGroupChanged.emit('');
     }
   };
 

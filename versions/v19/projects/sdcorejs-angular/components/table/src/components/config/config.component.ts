@@ -11,7 +11,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdSwitch } from '@sdcorejs/angular/forms/switch';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdStorageWithDefault } from '@sdcorejs/angular/services';
 import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 import { SdTableColumn } from '../../models/table-column.model';
@@ -35,7 +35,7 @@ import { ConfigService } from '../../services/config.service';
     SdInput,
     SdModal,
     SdSwitch,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   providers: [ConfigService],
 })
@@ -45,7 +45,7 @@ export class ConfigComponent {
   // ==========================================
   autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   tableOption = input<SdTableOption | undefined>(undefined);
-  changes = output<ConfiguredTableResult>();
+  sdChanges = output<ConfiguredTableResult>();
 
   // Base autoId (đã là `components-table-<scope>` từ parent), '' khi parent không set.
   autoId = computed(() => this.autoIdInput() || '');

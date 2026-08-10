@@ -54,8 +54,8 @@ interface TreeDemoItem {
           <div class="tree-demo-panel">
             <sd-tree
               [option]="selectionDemoOption"
-              (selectedItemsChange)="selectedItems = $event"
-              (selectChange)="lastEvent = 'select: ' + $event.item.title"
+              (sdSelectedItemsChange)="selectedItems = $event"
+              (sdSelectChange)="lastEvent = 'select: ' + $event.item.title"
             ></sd-tree>
           </div>
 
@@ -87,8 +87,8 @@ interface TreeDemoItem {
         <div class="tree-demo-panel">
           <sd-tree
             [option]="lazyDemoOption"
-            (expandChange)="lastEvent = 'expand: ' + $event.item.title"
-            (collapseChange)="lastEvent = 'collapse: ' + $event.item.title"
+            (sdExpandChange)="lastEvent = 'expand: ' + $event.item.title"
+            (sdCollapseChange)="lastEvent = 'collapse: ' + $event.item.title"
           ></sd-tree>
         </div>
       </demo-section>

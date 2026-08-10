@@ -80,7 +80,7 @@ describe('SdQuerySavedFiltersMenu', () => {
     fixture.componentRef.setInput('key', 'test');
     fixture.detectChanges();
     const spy = jasmine.createSpy('apply');
-    component.apply.subscribe(spy);
+    component.sdApply.subscribe(spy);
 
     component.pick(filter);
 

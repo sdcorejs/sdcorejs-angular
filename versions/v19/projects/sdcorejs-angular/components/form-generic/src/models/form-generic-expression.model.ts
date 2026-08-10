@@ -106,14 +106,14 @@ export interface DayInfo {
   relatedValue?: number;
 }
 
-export const DayInfoTypes = [
+export const SD_DAY_INFO_TYPES = [
   { value: 'RELATED', display: 'Ngày liên quan' },
   { value: 'NOW', display: 'Ngày hiện tại' },
   { value: 'DATETIME', display: 'Ngày cụ thể' },
   { value: 'ATTRIBUTE', display: 'Trường dữ liệu' },
 ];
 
-export const DayInfoPreviouses = [
+export const SD_DAY_INFO_PREVIOUSES = [
   { value: 'LASTDAY', display: 'Ngày trước', format: (n: number) => `${n || 1}LastDay` },
   { value: 'NEXTDAY', display: 'Ngày tới', format: (n: number) => `${n || 1}NextDay` },
   // { value: 'LASTWEEK', display: 'Tuần trước', format: (n: number) => `${n || 1}LastWeek` },
@@ -122,7 +122,7 @@ export const DayInfoPreviouses = [
   // { value: 'NEXTMONTH', display: 'Tháng tới', format: (n: number) => `${n || 1}NextMonth` },
 ];
 
-export const GetDatetimeValue = (value: string) => {
+export const sdGetDatetimeValue = (value: string) => {
   if (!value || typeof value !== 'string') {
     return undefined;
   }
@@ -151,7 +151,7 @@ interface AttributeValues {
   values: { value: string; display: string }[];
 }
 
-export const AttributeOperators: Record<
+export const SD_ATTRIBUTE_OPERATORS: Record<
   Attribute['type'],
   {
     value: SdFormGenericOperator;
@@ -220,12 +220,12 @@ export const AttributeOperators: Record<
 };
 
 // Từ components map thành các attributes
-export const GetAttributes = (components: (SdFormGenericComponent | SdFormGenericGroup)[]): Attribute[] => {
+export const sdGetAttributes = (components: (SdFormGenericComponent | SdFormGenericGroup)[]): Attribute[] => {
   const attributes: Attribute[] = [];
   if (components.length) {
     for (const component of components) {
       if (component.type === 'group') {
-        attributes.push(...GetAttributes(component.components));
+        attributes.push(...sdGetAttributes(component.components));
       } else if (component.type === 'textfield' || component.type === 'textarea') {
         attributes.push({
           value: component.key,
@@ -276,7 +276,7 @@ export const GetAttributes = (components: (SdFormGenericComponent | SdFormGeneri
   return attributes;
 };
 
-export const TemplateToCondition = (template: string | undefined | null, entity: Record<string, any>) => {
+export const sdTemplateToCondition = (template: string | undefined | null, entity: Record<string, any>) => {
   if (!template) {
     return undefined;
   }
@@ -340,7 +340,7 @@ const EvaluateExpressionCondition = (condition: SdFormGenericExpressionCondition
     return !!actualValue;
   }
 
-  const expectedValue = typeof condition.value === 'string' ? GetDatetimeValue(condition.value) || condition.value : condition.value;
+  const expectedValue = typeof condition.value === 'string' ? sdGetDatetimeValue(condition.value) || condition.value : condition.value;
   if (expectedValue === undefined || expectedValue === null || expectedValue === '') {
     return undefined;
   }
@@ -367,7 +367,7 @@ const EvaluateExpressionCondition = (condition: SdFormGenericExpressionCondition
   return undefined;
 };
 
-export const EvaluateExpression = (
+export const sdEvaluateExpression = (
   condition: SdFormGenericExpression | SdFormGenericExpressionCondition,
   entity: Record<string, any>
 ): boolean | undefined => {
@@ -376,7 +376,7 @@ export const EvaluateExpression = (
       return undefined;
     }
 
-    const results = condition.conditions.map(child => EvaluateExpression(child, entity));
+    const results = condition.conditions.map(child => sdEvaluateExpression(child, entity));
     if (results.some(result => typeof result !== 'boolean')) {
       return undefined;
     }
@@ -390,12 +390,12 @@ export const EvaluateExpression = (
   return EvaluateExpressionCondition(condition, entity);
 };
 
-export const ExpressionToJavascriptExpression = (condition: SdFormGenericExpression | SdFormGenericExpressionCondition) => {
+export const sdExpressionToJavascriptExpression = (condition: SdFormGenericExpression | SdFormGenericExpressionCondition) => {
   const queries: string[] = [];
   if (condition.type === 'combinator') {
     if (condition.conditions?.length) {
       for (const child of condition.conditions) {
-        queries.push(`(${ExpressionToJavascriptExpression(child)})`);
+        queries.push(`(${sdExpressionToJavascriptExpression(child)})`);
       }
     }
     // Nếu nhiều hơn 1 điều kiện, bọc điều kiện bằng cặp ngoặc ()
@@ -427,7 +427,7 @@ const ConvertToJavascriptExpression = (condition: SdFormGenericExpressionConditi
     return undefined;
   }
   // Xử lý đối với trường hợp string là 'datetime' thì value sẽ có thể là 'now', '1LastDay' ....
-  const datetimeValue = GetDatetimeValue(value);
+  const datetimeValue = sdGetDatetimeValue(value);
   if (operator === 'EQUAL') {
     // Nếu là chuỗi thì thêm dấu nháy, nếu không thì bỏ qua
     if (typeof value === 'string') {

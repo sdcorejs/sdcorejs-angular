@@ -38,7 +38,7 @@ describe('SdLayoutMenuTreeComponent', () => {
 
   it('emits pin changes and reflects shared pinned state', () => {
     const emitted: SdLayoutMenu[] = [];
-    fixture.componentInstance.togglePinned.subscribe(menu => emitted.push(menu));
+    fixture.componentInstance.sdTogglePinned.subscribe(menu => emitted.push(menu));
     fixture.nativeElement.querySelector('[data-pin-key="id:reports"]').click();
 
     expect(emitted).toEqual([reports]);
@@ -77,7 +77,7 @@ describe('SdLayoutMenuTreeComponent', () => {
 
   it('emits the selected route menu', () => {
     const emitted: SdLayoutRootMenu[] = [];
-    fixture.componentInstance.navigate.subscribe(menu => emitted.push(menu));
+    fixture.componentInstance.sdNavigate.subscribe(menu => emitted.push(menu));
 
     fixture.nativeElement.querySelector('[data-menu-key="id:dashboard"]').click();
 

@@ -13,7 +13,7 @@ import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { FilterValuesPipe } from '../../../pipes';
 import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from '../../../services/table-filter/table-filter.model';
@@ -38,7 +38,7 @@ import { SdTableExternalFilter, SdTableOptionFilter, TableFilterRegister } from 
     SdButton,
     FilterValuesPipe,
     SdCheckbox,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class ExternalFilterComponent {

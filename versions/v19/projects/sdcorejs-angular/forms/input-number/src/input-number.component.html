@@ -29,12 +29,12 @@
     [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
     (sdFocus)="onFocus()"
     (sdBlur)="onBlur()"
-    (keyupEnter)="onKeyupEnter()"
+    (sdKeyupEnter)="onKeyupEnter()"
     (sdKeydown)="onKeydown($event)"
     (sdPaste)="onPaste($event)"
     (sdCompositionStart)="onCompositionStart($event)"
     (sdCompositionEnd)="onCompositionEnd($event)"
-    (cleared)="cleared.emit()">
+    (sdCleared)="sdCleared.emit()">
   </sd-inline-text>
 } @else {
   @if (!_appearance) {

@@ -14,7 +14,7 @@
   [attr.data-field]="_filterField"
   [matTooltip]="_field?.label || _filterField"
   [matMenuTriggerFor]="menu()"
-  (menuOpened)="open.emit()"
+  (menuOpened)="sdOpen.emit()"
   (keydown.enter)="chipTrigger.openMenu()"
   (keydown.space)="$event.preventDefault(); chipTrigger.openMenu()">
   <sd-icon class="c-chip-icon" [name]="_field ? iconFor(_field) : 'tune'"></sd-icon>
@@ -38,8 +38,8 @@
       tabindex="0"
       class="c-chip-remove"
       aria-label="Remove filter"
-      (click)="$event.stopPropagation(); remove.emit()"
-      (keydown.enter)="$event.stopPropagation(); remove.emit()">
+      (click)="$event.stopPropagation(); sdRemove.emit()"
+      (keydown.enter)="$event.stopPropagation(); sdRemove.emit()">
       <sd-icon name="close"></sd-icon>
     </span>
   }

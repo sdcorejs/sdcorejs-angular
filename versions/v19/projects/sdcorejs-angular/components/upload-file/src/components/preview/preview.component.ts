@@ -4,7 +4,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { PreviewFile } from '../../services';
 import { MatIcon } from '@angular/material/icon';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
@@ -12,14 +12,14 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './preview.component.html',
   styleUrl: './preview.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, SdModal, SdButton, CommonModule, MatIcon, TranslatePipe],
+  imports: [SdIcon, SdModal, SdButton, CommonModule, MatIcon, SdTranslatePipe],
 })
 export class PreviewComponent {
   private cd = inject(ChangeDetectorRef);
 
   @ViewChild(SdModal) modal!: SdModal;
-  readonly download = output<PreviewFile>();
-  readonly close = output<void>();
+  readonly sdDownload = output<PreviewFile>();
+  readonly sdClose = output<void>();
 
   readonly #i18n = inject(I18nService);
   title: string = this.#i18n.t('core.component.upload-file.preview-title');
@@ -54,7 +54,7 @@ export class PreviewComponent {
   };
 
   onClose = () => {
-    this.close.emit();
+    this.sdClose.emit();
   };
 
   #scrollView = (index: number, type?: 'center' | 'end' | 'nearest' | 'start') => {
@@ -68,7 +68,7 @@ export class PreviewComponent {
   };
 
   onDownload = (previewFile: PreviewFile) => {
-    this.download.emit(previewFile);
+    this.sdDownload.emit(previewFile);
     this.cd.markForCheck();
   };
 }

@@ -343,7 +343,7 @@ describe('SdMiniEditor', () => {
       const fixture = buildFixture();
       const comp = fixture.componentInstance;
       const changeSpy = jasmine.createSpy('contentChange');
-      comp.contentChange.subscribe(changeSpy);
+      comp.sdContentChange.subscribe(changeSpy);
       comp.registerOnChange(() => {});
 
       const fakeEditor = makeFakeEditor();
@@ -379,7 +379,7 @@ describe('SdMiniEditor', () => {
       const fixture = buildFixture();
       const comp = fixture.componentInstance;
       const focusSpy = jasmine.createSpy('focus');
-      comp.focus.subscribe(focusSpy);
+      comp.sdFocus.subscribe(focusSpy);
 
       const fakeEditor = makeFakeEditor();
       comp.onReady(fakeEditor);
@@ -394,7 +394,7 @@ describe('SdMiniEditor', () => {
       const fixture = buildFixture();
       const comp = fixture.componentInstance;
       const blurSpy = jasmine.createSpy('blur');
-      comp.blur.subscribe(blurSpy);
+      comp.sdBlur.subscribe(blurSpy);
 
       const fakeEditor = makeFakeEditor();
       comp.onReady(fakeEditor);

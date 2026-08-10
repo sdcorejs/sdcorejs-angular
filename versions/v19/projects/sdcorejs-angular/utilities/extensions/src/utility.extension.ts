@@ -375,9 +375,14 @@ const getNestedValue = (obj: any, path: string) => {
 };
 
 /**
- * @deprecated Use {@link Utilities} and {@link BrowserUtilities} from `@sdcorejs/utils/fns` instead.
- * - upload/download/clipboard/isMobile → BrowserUtilities
- * - allWithPaging (→ fetchAllByPaging) / randomId / hash / parseQueryParams / generateUuid / getNestedValue → Utilities
+ * Facade tiện ích chung của `@sdcorejs/angular` (upload/download, clipboard, paging, hash, uuid…).
+ *
+ * why: khối này TỪNG bị đánh dấu `@deprecated` như thể chỉ là alias mỏng của `Utilities` /
+ * `BrowserUtilities` bên `@sdcorejs/utils/fns` — điều đó SAI. Cả 14 member dưới đây là cài đặt
+ * cục bộ trong chính file này (xem phần trên), có hành vi riêng cho môi trường Angular (interceptor,
+ * i18n, DOM). Xoá nó theo diện "dead alias" sẽ mất code thật, nên marker `@deprecated` đã được gỡ
+ * trong đợt breaking rename thay vì gỡ implementation. Các alias thật sự chết ở `utilities/**`
+ * (`SdColor`, `SD_EMPTY_STR`, `SdFilter*`, `SdPatternCommons`, `hslToHex`/`rgbToHex`…) đã bị xoá hẳn.
  */
 const SdUtilities = {
   upload,

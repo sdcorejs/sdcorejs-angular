@@ -129,7 +129,7 @@
         matSuffix
         class="cursor-pointer sd-suffix-icon sd-suffix-btn"
         [disabled]="formControl.disabled"
-        [attr.aria-label]="'core.form.datetime.open-picker' | translate"
+        [attr.aria-label]="'core.form.datetime.open-picker' | sdTranslate"
         (click)="open()">
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" focusable="false">
           <path
@@ -148,10 +148,10 @@
       <sd-datetime-picker-actions>
         <button mat-button type="button" sdDatetimePickerNow>
           <sd-icon name="schedule"></sd-icon>
-          <span>{{ 'core.form.datetime.now' | translate }}</span>
+          <span>{{ 'core.form.datetime.now' | sdTranslate }}</span>
         </button>
-        <button mat-button type="button" sdDatetimePickerCancel>{{ 'core.common.cancel' | translate }}</button>
-        <button mat-flat-button type="button" sdDatetimePickerApply>{{ 'core.form.datetime.confirm' | translate }}</button>
+        <button mat-button type="button" sdDatetimePickerCancel>{{ 'core.common.cancel' | sdTranslate }}</button>
+        <button mat-flat-button type="button" sdDatetimePickerApply>{{ 'core.form.datetime.confirm' | sdTranslate }}</button>
       </sd-datetime-picker-actions>
     </sd-datetime-picker>
   </div>

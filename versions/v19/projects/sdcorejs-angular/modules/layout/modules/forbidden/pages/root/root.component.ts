@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SdButton, SdTabComponent } from '@sdcorejs/angular/components';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';
@@ -12,7 +12,7 @@ import { resolveTabName } from '../../../../utils';
 @Component({
   templateUrl: './root.component.html',
   styleUrl: './root.component.scss',
-  imports: [SdButton, SdPageComponent, TranslatePipe],
+  imports: [SdButton, SdPageComponent, SdTranslatePipe],
 })
 @SdTabComponent({
   component: RootComponent,

@@ -5,7 +5,7 @@
   <div class="wrapper" [style.height]="isMobile() ? '100dvh' : '100%'">
     <div class="c-header">
       <div class="c-logo">
-        <a href="javascript:;" [attr.aria-label]="'core.module.layout.home.tab-name' | translate" (click)="openHomePage()">
+        <a href="javascript:;" [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate" (click)="openHomePage()">
           @if (logoUrl(); as _logoUrl) {
             <img alt="" [src]="_logoUrl" />
           } @else {
@@ -25,7 +25,7 @@
               (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
               (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
               (click)="expandPinnedGroup()"
-              [matTooltip]="'core.module.layout.sidebar.pinned' | translate"
+              [matTooltip]="'core.module.layout.sidebar.pinned' | sdTranslate"
               [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
               [matTooltipPosition]="'right'"
               style="padding: 0; margin: 0; border: none; background-color: transparent">
@@ -85,7 +85,7 @@
             <div style="padding: 0px 4px" class="c-menu-tree-search">
               <sd-input
                 size="sm"
-                [placeholder]="'core.module.layout.sidebar.search' | translate"
+                [placeholder]="'core.module.layout.sidebar.search' | sdTranslate"
                 [autoId]="'layout-v1-menu-search'"
                 [model]="searchText()"
                 (sdChange)="onFilterSearchText($event)">
@@ -148,7 +148,7 @@
                         [attr.aria-pressed]="isPinnedNode(node)"
                         [attr.aria-label]="
                           (isPinnedNode(node) ? 'core.module.layout.menu.unpin' : 'core.module.layout.menu.pin')
-                            | translate: { title: node.title }
+                            | sdTranslate: { title: node.title }
                         "
                         (click)="onTogglePin($event, node)">
                         <sd-icon name="push_pin"></sd-icon>
@@ -205,10 +205,10 @@
       <lib-layout-user
         [userInfo]="_userInfo"
         [isMobileOrTablet]="isMobile()"
-        (menuOpened)="onUserMenuOpened()"
-        (menuClosed)="onUserMenuClosed()"
+        (sdMenuOpened)="onUserMenuOpened()"
+        (sdMenuClosed)="onUserMenuClosed()"
         [isShowSidebar]="isShowSidebar()"
-        (toggleMenuLock)="toggleMenuLock($event)">
+        (sdToggleMenuLock)="toggleMenuLock($event)">
       </lib-layout-user>
     </div>
 

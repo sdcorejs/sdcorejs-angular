@@ -50,7 +50,7 @@ import {
   ɵsdFormControlConnector,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/angular/utilities/extensions';
 import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
@@ -81,7 +81,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     SdLabel,
     SdView,
     SdSelectFooterActionDirective,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit {

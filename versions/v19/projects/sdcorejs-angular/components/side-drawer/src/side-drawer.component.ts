@@ -23,7 +23,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { fromEvent, merge, Observable, Subject } from 'rxjs';
 import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdBodyScrollLockService } from './body-scroll-lock.service';
 
 export type SdSideDrawerBeforeClose = () => boolean | Promise<boolean>;
@@ -34,7 +34,7 @@ export type SdSideDrawerBeforeClose = () => boolean | Promise<boolean>;
   styleUrl: './side-drawer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [SdIcon, CommonModule, PortalModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, PortalModule, SdTranslatePipe],
 })
 export class SdSideDrawer {
   id = `I${Utilities.generateUuid()}`;

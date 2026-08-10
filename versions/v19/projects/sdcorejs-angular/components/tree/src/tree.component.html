@@ -12,7 +12,7 @@
 } @else if (_rootError) {
   <div class="sd-tree__root-error" role="alert">
     <span>{{ errorMessage(_rootError) }}</span>
-    <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | translate }}</button>
+    <button type="button" data-tree-retry (click)="retry()">{{ 'core.component.tree.retry' | sdTranslate }}</button>
   </div>
 } @else {
   <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
