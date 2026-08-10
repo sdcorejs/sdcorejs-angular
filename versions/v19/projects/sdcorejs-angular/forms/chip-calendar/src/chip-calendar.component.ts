@@ -102,6 +102,9 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #subscription = new Subscription();
   #name = Utilities.generateUuid();
   #isBlurring = false;
+  /** why: id ổn định của <mat-error> để ô nhập chip trỏ `aria-describedby` sang — thông báo
+   *  lỗi phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `sd-chip-calendar-error-${Utilities.generateUuid()}`;
 
   menuTrigger = viewChild(MatMenuTrigger);
   calendar = viewChild<MatCalendar<Date>>(MatCalendar);
@@ -393,6 +396,16 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   onRemove = (item: string) => this.#remove(item);
   onSelect = (event: MatAutocompleteSelectedEvent) => this.#select(event);
   onClick = () => this.#onClick();
+  /**
+   * why: khi `sdViewDef` đang hiển thị thì bên trong KHÔNG còn phần tử nào focus được, nên
+   * click là lối vào DUY NHẤT để chuyển sang chế độ sửa. Bàn phím phải mở được y hệt chuột
+   * → Enter/Space chạy chung handler. preventDefault chặn Space cuộn trang (hành vi mặc
+   * định của phần tử không phải <button>).
+   */
+  onViewKeydown = (event: Event) => {
+    event.preventDefault();
+    this.#onClick();
+  };
   onClear = (evt?: any) => this.#clear(evt);
   onSelectDate = (date: Date | null) => this.#selectDate(date);
   onCloseCalendar = () => this.#closeCalendar();

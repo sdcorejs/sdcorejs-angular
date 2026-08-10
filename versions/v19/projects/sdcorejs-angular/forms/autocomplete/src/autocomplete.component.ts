@@ -88,6 +88,9 @@ class SdAutocompleteErrotStateMatcher implements ErrorStateMatcher {
 })
 export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES

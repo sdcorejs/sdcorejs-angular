@@ -300,4 +300,63 @@ describe('SidebarComponent', () => {
     expect((host.querySelector('.c-menu-node-description-icon-pin') as HTMLElement).style.opacity).toBe('0');
     expect(host.style.backgroundColor).toBe('transparent');
   }));
+
+  // -------------------------------------------------------------------------
+  // A11y — mục menu từng là <div (click)> mang aria-hidden="true": cả cụm biến
+  // mất khỏi accessibility tree và bàn phím không điều hướng được.
+  // -------------------------------------------------------------------------
+
+  /** Bắn keydown lên `el` rồi chạy handler với target === currentTarget (như DOM thật). */
+  function pressOn(el: HTMLElement, key: string, handler: (ev: KeyboardEvent) => void): KeyboardEvent {
+    const listener = ((ev: Event) => handler(ev as KeyboardEvent)) as EventListener;
+    el.addEventListener('keydown', listener);
+    const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    el.removeEventListener('keydown', listener);
+    return ev;
+  }
+
+  it('Enter on a menu item navigates, same as a click', async () => {
+    await create({ path: '/outside' });
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onMenuNodeKeydown(ev, report as any));
+
+    expect(router.navigate).toHaveBeenCalledWith(['/reports'], {
+      queryParams: { year: 2026 },
+      state: { switchTab: true },
+    });
+  });
+
+  it('Space on a menu item navigates and blocks the page scroll', async () => {
+    await create({ path: '/outside' });
+
+    const ev = pressOn(document.createElement('div'), ' ', keyEvent => component.onMenuNodeKeydown(keyEvent, report as any));
+
+    expect(router.navigate).toHaveBeenCalled();
+    expect(ev.defaultPrevented).toBe(true);
+  });
+
+  it('Enter on a parent menu node expands it, same as a click', async () => {
+    await create({ path: '/outside' });
+    expect(component.treeControl.isExpanded(admin)).toBeFalse();
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onToggleMenuNodeKeydown(ev, admin));
+
+    expect(component.treeControl.isExpanded(admin)).toBeTrue();
+  });
+
+  // why: nút ghim nằm LỒNG trong mục menu — Enter trên nút ghim không được kéo theo điều hướng.
+  it('ignores keyboard events bubbling up from the nested pin button', async () => {
+    await create({ path: '/outside' });
+    const wrapper = document.createElement('div');
+    const pin = document.createElement('button');
+    wrapper.appendChild(pin);
+
+    const listener = ((ev: Event) => component.onMenuNodeKeydown(ev as KeyboardEvent, report as any)) as EventListener;
+    wrapper.addEventListener('keydown', listener);
+    pin.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    wrapper.removeEventListener('keydown', listener);
+
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
 });

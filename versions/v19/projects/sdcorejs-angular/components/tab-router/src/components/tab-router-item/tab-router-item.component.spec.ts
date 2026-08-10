@@ -92,6 +92,37 @@ describe('SdTabRouterItemComponent close delegation', () => {
     expect(anchorDe.properties['href']).toBe('/next');
     expect((anchorDe.nativeElement as HTMLAnchorElement).getAttribute('href')).toBe('/next');
   });
+
+  // ── A11y ────────────────────────────────────────────────────────────────
+  // why: nút đóng từng mang aria-hidden="true" — vẫn tab tới được nhưng screen reader không đọc
+  // được gì (nút chỉ có icon).
+
+  it('does not hide the close button from the accessibility tree', () => {
+    const close = fixture.nativeElement.querySelector('button.tab-router__close') as HTMLButtonElement;
+
+    expect(close).not.toBeNull();
+    expect(close.hasAttribute('aria-hidden')).toBe(false);
+    expect(close.getAttribute('type')).toBe('button');
+    expect(close.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('closes the tab when the close button is activated by keyboard (native button click)', () => {
+    const close = fixture.nativeElement.querySelector('button.tab-router__close') as HTMLButtonElement;
+
+    close.click();
+
+    expect(tabRouterServiceSpy.close).toHaveBeenCalledOnceWith(component.tab);
+  });
+
+  // why: badge không còn nhân bản (click)="onTabClick" — nó chỉ nuốt event khi có consumer, nên
+  // click trên badge bọt lên <a> cha như bình thường và badge không thành nút lồng trong <a>.
+  it('does not turn the badge into a nested interactive element inside the anchor', () => {
+    const badgeRoot = fixture.nativeElement.querySelector('sd-badge > *') as HTMLElement;
+
+    expect(badgeRoot.getAttribute('role')).toBeNull();
+    expect(badgeRoot.getAttribute('tabindex')).toBeNull();
+    expect(badgeRoot.hasAttribute('aria-hidden')).toBe(false);
+  });
 });
 
 describe('SdTabRouterItemComponent badge bindings', () => {

@@ -75,6 +75,7 @@ The button itself does NOT enforce permission — wrap with the `*sdPermission` 
 - Always set `title` OR `tooltip` for icon-only buttons (screen reader fallback)
 - `disabled` correctly sets `aria-disabled` via Material under the hood
 - Throttling avoids accidental double-submit on rapid clicks
+- **Focus ring**: the component clears the default outline (`&:focus { outline: none }`) so mouse users see no border, but restores a visible ring on `:focus-visible` (`2px solid var(--sd-primary)`, `outline-offset: 2px`). Keyboard users always see where focus is. Do not add a blanket `outline: none` in consumer styles without a `:focus-visible` replacement.
 
 ## Examples
 

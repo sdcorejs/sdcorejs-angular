@@ -498,3 +498,45 @@ describe('SdInputColor (viewed inline mode)', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+describe('SdInputColor (accessibility)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [HostComponent, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+  });
+
+  it('leaves no aria-hidden on any focusable element', () => {
+    // why: <input type="color"> ẩn VẪN giữ aria-hidden — nhưng nó tabindex="-1", kích thước 0,
+    // pointer-events:none nên không phải phần tử focus được; guard vì thế phải sạch.
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('keeps the visible swatch button as the named, keyboard-reachable control', () => {
+    const swatch = fixture.nativeElement.querySelector('button.sd-input-color__swatch') as HTMLButtonElement;
+    expect(swatch).not.toBeNull();
+    expect(swatch.type).toBe('button');
+    expect(swatch.getAttribute('aria-label')).toBeTruthy();
+    expect(swatch.hasAttribute('aria-hidden')).toBe(false);
+  });
+});

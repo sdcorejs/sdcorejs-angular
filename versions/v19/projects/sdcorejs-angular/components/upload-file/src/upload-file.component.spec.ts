@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdUploadFile } from './upload-file.component';
@@ -74,6 +75,58 @@ describe('SdUploadFile', () => {
       // previewFiles is empty (0 < max 10) and not disabled → drop zone visible
       const dropZone = fixture.nativeElement.querySelector('.c-area-upload');
       expect(dropZone).not.toBeNull();
+    });
+  });
+
+  // ─── A11y: drop zone từng là <div (click)> + aria-hidden="true" ───────────
+
+  describe('accessibility: drop zone', () => {
+    const getDropZone = (): HTMLElement => {
+      fixture.detectChanges();
+      return fixture.nativeElement.querySelector('.c-area-upload') as HTMLElement;
+    };
+
+    it('drop zone does not carry aria-hidden', () => {
+      expect(getDropZone().hasAttribute('aria-hidden')).toBe(false);
+    });
+
+    it('drop zone is exposed as a focusable button with an accessible name', () => {
+      const dropZone = getDropZone();
+      expect(dropZone.getAttribute('role')).toBe('button');
+      expect(dropZone.getAttribute('tabindex')).toBe('0');
+      expect(dropZone.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('Enter on the drop zone opens the file picker, same as a click', () => {
+      const spy = spyOn(component, 'onUpload');
+      const dropZone = getDropZone();
+
+      dropZone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('Space on the drop zone opens the file picker and blocks the page scroll', () => {
+      const spy = spyOn(component, 'onUpload');
+      const dropZone = getDropZone();
+
+      const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      dropZone.dispatchEvent(ev);
+
+      expect(spy).toHaveBeenCalled();
+      expect(ev.defaultPrevented).toBe(true);
+    });
+
+    it('the required-error message is announced through role="alert"', () => {
+      fixture.detectChanges();
+      component.formControl.setValidators(Validators.required);
+      component.formControl.setValue(null);
+      component.formControl.markAsTouched();
+      component.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+
+      const alert = fixture.nativeElement.querySelector('[role="alert"]');
+      expect(alert).not.toBeNull();
     });
   });
 

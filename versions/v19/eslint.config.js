@@ -62,10 +62,13 @@ module.exports = tseslint.config(
     files: ['**/*.html'],
     extends: [...angular.configs.templateRecommended, ...angular.configs.templateAccessibility],
     rules: {
-      '@angular-eslint/template/click-events-have-key-events': 'off',
-      '@angular-eslint/template/interactive-supports-focus': 'off',
-      '@angular-eslint/template/label-has-associated-control': 'off',
-      '@angular-eslint/template/role-has-required-aria': 'off',
+      // why: bốn rule accessibility này từng bị TẮT hoàn toàn. Đó là nguyên nhân gốc của tình trạng
+      // a11y: `aria-hidden="true"` bị dùng như một cách dập cảnh báo lint thay vì sửa markup, khiến
+      // 10 `<input>` thật biến mất khỏi accessibility tree — tệ hơn là không làm gì. Bật lại.
+      '@angular-eslint/template/click-events-have-key-events': 'error',
+      '@angular-eslint/template/interactive-supports-focus': 'error',
+      '@angular-eslint/template/label-has-associated-control': 'error',
+      '@angular-eslint/template/role-has-required-aria': 'error',
       ...angularTemplateRuleOverrides,
     },
   }

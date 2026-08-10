@@ -19,6 +19,10 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
 import { NormalizedImage, PreviewItem, PreviewStage, PreviewTheme, ThumbnailPosition } from './preview-image.types';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
+// why: bộ đếm module-level để mỗi instance có id stage riêng — consumer có thể mount nhiều viewer
+// trên cùng một trang và `aria-controls` của các chấm role="tab" phải trỏ đúng stage của mình.
+let stageIdSeq = 0;
+
 @Component({
   selector: 'sd-preview-image',
   standalone: true,
@@ -49,6 +53,10 @@ export class SdPreviewImage implements OnDestroy {
   static readonly MAX_ZOOM = 4;
   static readonly ZOOM_STEP = 0.1;
   static readonly SWIPE_THRESHOLD = 40;
+
+  // why: các chấm chỉ mục nay là role="tab" thật và cần aria-controls trỏ tới stage (role="tabpanel").
+  // Id phải duy nhất theo instance vì consumer có thể mount nhiều viewer trên cùng một trang.
+  readonly stageId = `sd-preview-stage-${++stageIdSeq}`;
 
   // ==========================================
   // DI

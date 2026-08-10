@@ -50,18 +50,26 @@
           [cdkDropListData]="group.items"
           [cdkDropListConnectedTo]="connectedRowDropLists()"
           [cdkDropListEnterPredicate]="noReturnPredicate">
+          <!-- why: bỏ aria-hidden="true" — mục palette là control THẬT (click để thêm component vào
+               form) và có tên hiển thị. aria-hidden xoá nó khỏi accessibility tree trong khi vẫn
+               nhận chuột. Nay role="button" + tabindex="0" + Enter/Space chạy đúng như click, tức
+               người dùng bàn phím dựng được form mà không cần kéo-thả. -->
           @for (formBuilderComponent of group.items; track formBuilderComponent.type) {
             <div
               cdkDrag
               [cdkDragData]="formBuilderComponent"
               class="fb-palette-item"
+              role="button"
+              tabindex="0"
+              [attr.aria-label]="formBuilderComponent.name"
               [matTooltip]="formBuilderComponent.name"
               matTooltipPosition="right"
               (click)="addComponent(formBuilderComponent)"
+              (keydown.enter)="onPaletteItemKeydown(formBuilderComponent, $event)"
+              (keydown.space)="onPaletteItemKeydown(formBuilderComponent, $event)"
               (cdkDragStarted)="onPaletteDragStarted(formBuilderComponent)"
               (cdkDragMoved)="onAnyDragMoved($event)"
-              (cdkDragEnded)="onAnyDragEnded()"
-              aria-hidden="true">
+              (cdkDragEnded)="onAnyDragEnded()">
               <span class="fb-palette-item__icon"
                 ><span class="msi">{{ formBuilderComponent.symbol }}</span></span
               >
@@ -181,6 +189,10 @@
           </div>
         }
 
+        <!-- why: aria-hidden="true" ở đây ẩn TOÀN BỘ canvas — mọi row, mọi component đã đặt và mọi
+             <input> preview bên trong đều biến mất khỏi accessibility tree. Bỏ hẳn. "Click vùng
+             trống để bỏ chọn" chỉ là hành vi chuột nên bổ sung Escape làm tương đương bàn phím;
+             role="group" mô tả đúng bản chất (vùng chứa control) và giữ canvas không nhận tabindex. -->
         <div
           cdkDropList
           cdkDropListOrientation="vertical"
@@ -188,7 +200,9 @@
           [cdkDropListEnterPredicate]="canEnterCanvasDropList"
           (cdkDropListDropped)="drop($event)"
           (click)="clickFormContentEmpty()"
-          aria-hidden="true">
+          (keydown.escape)="clickFormContentEmpty()"
+          role="group"
+          [attr.aria-label]="'core.component.form-builder.layout' | translate">
           @if (isPaletteEmptyDropTarget()) {
             <div class="fb-row-insert-placeholder fb-palette-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
               <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() }"></ng-container>
@@ -214,8 +228,11 @@
               [class.is-row-full]="isRowFull(row)"
               [class.is-row-inline-locked]="isRowInlineDropLocked(row)"
               [class.is-resizing-row]="resizeState()?.rowId === row.id"
-              [id]="row.id"
-              aria-hidden="true">
+              [id]="row.id">
+              <!-- why: bỏ aria-hidden="true" — row là VÙNG CHỨA các component đã đặt (gồm cả input
+                   thật). aria-hidden ẩn hết nội dung con khỏi accessibility tree trong khi chúng
+                   vẫn tab tới được. Row tự nó không phải control (không có click) nên không cần
+                   role/tabindex. -->
               <div class="fb-row__drag" [matTooltip]="'core.component.form-builder.drag-vertically' | translate" cdkDragHandle>
                 <span class="msi">drag_indicator</span>
               </div>
@@ -263,6 +280,11 @@
                     </div>
                   }
                   <!-- Group component renders as outlined card with colored header bar -->
+                  <!-- why: cả ba nhánh item (group / break / component) trước đây mang
+                       aria-hidden="true" — chúng BỌC preview của component, gồm cả <input> thật,
+                       nên toàn bộ biến mất khỏi accessibility tree trong khi vẫn tab tới được. Bỏ
+                       hẳn; item là control chọn-để-sửa nên nhận role="button" + tabindex="0" +
+                       aria-pressed (đang chọn hay không) + Enter/Space phản chiếu click. -->
                   @if (item.type === 'group') {
                     @let g = $any(item);
                     @let cv = groupColorVars(g.properties?.color);
@@ -276,11 +298,16 @@
                       [class.is-hidden]="item.properties?.hidden"
                       [style.flex]="'0 0 calc(' + +(item.layout?.columns || 12) + '/12 * 100% - var(--gap-2))'"
                       [style.maxWidth]="'calc(' + +(item.layout?.columns || 12) + '/12 * 100% - var(--gap-2))'"
+                      role="button"
+                      tabindex="0"
+                      [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                      [attr.aria-label]="item.properties?.label || item.type"
                       (click)="selectComponent(item); $event.stopPropagation()"
+                      (keydown.enter)="onSelectComponentKeydown(item, $event)"
+                      (keydown.space)="onSelectComponentKeydown(item, $event)"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
-                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
-                      aria-hidden="true">
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
@@ -346,7 +373,18 @@
 
                       <!-- Static preview: children render read-only (không drag/resize/select).
                            Sửa nội dung group qua nút Detail (enterGroupEdit). -->
-                      <div class="fb-group__body fb-group__body--static" (click)="enterGroupEdit(g); $event.stopPropagation()">
+                      <!-- why: warning này chỉ lộ ra SAU khi bỏ aria-hidden ở div cha (rule bỏ qua
+                           mọi hậu duệ của một node aria-hidden). Body group là control mở màn hình
+                           Detail nên nhận role="button" + tabindex="0" + Enter/Space; preview con
+                           bên trong đã `pointer-events: none` nên không tranh chấp target. -->
+                      <div
+                        class="fb-group__body fb-group__body--static"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-label]="'core.component.form-builder.detail' | translate"
+                        (click)="enterGroupEdit(g); $event.stopPropagation()"
+                        (keydown.enter)="onEnterGroupEditKeydown(g, $event)"
+                        (keydown.space)="onEnterGroupEditKeydown(g, $event)">
                         @if (!g.components?.length) {
                           <div class="fb-group__empty">
                             <span class="msi" style="font-size: 16px; margin-right: 6px">open_in_full</span>
@@ -371,11 +409,16 @@
                       class="fb-item is-break column-12"
                       [class.is-selected]="item.id === selectedComponent()?.id"
                       [class.is-hidden]="item.properties?.hidden"
+                      role="button"
+                      tabindex="0"
+                      [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                      [attr.aria-label]="item.properties?.label || item.type"
                       (click)="selectComponent(item); $event.stopPropagation()"
+                      (keydown.enter)="onSelectComponentKeydown(item, $event)"
+                      (keydown.space)="onSelectComponentKeydown(item, $event)"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
-                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
-                      aria-hidden="true">
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
@@ -420,11 +463,16 @@
                       [class.is-hidden]="item.properties?.hidden"
                       [class.is-readonly]="item.properties?.viewed"
                       [class.is-resizing]="resizeState()?.itemId === item.id"
+                      role="button"
+                      tabindex="0"
+                      [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                      [attr.aria-label]="item.properties?.label || item.type"
                       (click)="selectComponent(item); $event.stopPropagation()"
+                      (keydown.enter)="onSelectComponentKeydown(item, $event)"
+                      (keydown.space)="onSelectComponentKeydown(item, $event)"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
-                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()"
-                      aria-hidden="true">
+                      (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
                       <div *cdkDragPreview class="fb-drag-preview" aria-hidden="true">
                         <ng-container *ngTemplateOutlet="dragPreviewTemplate"></ng-container>
                       </div>
@@ -567,7 +615,10 @@
         </div>
       </div>
 
-      <div class="fb-attrs__body" aria-hidden="true">
+      <!-- why: aria-hidden="true" ở đây là ổ chứa lớn nhất — panel này render TOÀN BỘ form thuộc
+           tính của component đang chọn (hàng chục <input>/<select> thật). aria-hidden khiến chúng
+           vẫn tab tới được nhưng screen reader không đọc được nhãn nào cả. Bỏ hẳn. -->
+      <div class="fb-attrs__body">
         @if (_selectedComponent.type === 'textfield') {
           <textfield-attribute [components]="components" [variables]="variables" [component]="_selectedComponent"></textfield-attribute>
         } @else if (_selectedComponent.type === 'textarea') {

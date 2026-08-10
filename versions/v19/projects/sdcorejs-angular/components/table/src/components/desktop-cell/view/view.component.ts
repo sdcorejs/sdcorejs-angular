@@ -84,4 +84,14 @@ export class ViewComponent {
   toggle = () => {
     this.isCollapsed.update(current => !current);
   };
+
+  // why: ô HTML có `view.click` nay là role="button" + tabindex="0" nên Enter/Space phải chạy
+  // đúng như click. `view.data` là HTML do consumer cung cấp và có thể chứa control riêng —
+  // chỉ xử lý khi CHÍNH ô đang giữ focus để không kích hoạt hai lần.
+  onViewKeydown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    this.item().meta.display[this.column().field]?.click?.();
+  };
 }

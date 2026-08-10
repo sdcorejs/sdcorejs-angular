@@ -127,6 +127,13 @@
       resize: none;
       outline: none;
       overflow: hidden;                   // Tắt cuộn riêng của textarea, dùng cuộn của khung ngoài
+
+      // why: chữ và nền của textarea đều trong suốt nên `outline: none` khiến nó KHÔNG có bất kỳ
+      // chỉ báo focus nào — chỉ còn caret, quá yếu. Trả lại vòng focus cho điều hướng bàn phím.
+      &:focus-visible {
+        outline: 2px solid var(--sd-primary, #005cbb);
+        outline-offset: -2px;
+      }
     }
 
     /* 2. PRE/CODE: Lớp hiển thị màu PrismJS (Chìm bên dưới) */

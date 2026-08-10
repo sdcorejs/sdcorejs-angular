@@ -404,6 +404,14 @@ export class SdImportExcel implements OnInit, OnDestroy {
     this.#reload();
   };
 
+  // why: vùng trạng thái rỗng nay là role="button" + tabindex="0" nên Enter/Space phải tải file
+  // mẫu đúng như click. preventDefault để Space không cuộn trang.
+  onDownloadTemplateKeydown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    void this.downloadTemplate();
+  };
+
   downloadTemplate = async () => {
     const sheets: SdExcelSheet[] = [];
     if (Array.isArray(this.option?.sheets)) {

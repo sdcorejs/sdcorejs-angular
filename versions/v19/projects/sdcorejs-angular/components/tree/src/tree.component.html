@@ -17,10 +17,13 @@
 } @else {
   <div class="sd-tree" role="tree" [attr.aria-busy]="rootLoading()" [style.--sd-tree-indent-size]="indentSize() + 'px'">
     @for (node of visibleViewNodes(); track node.id) {
+      <!-- why: `[tabIndex]` là property DOM (camelCase) — nó set đúng giá trị nhưng KHÔNG sinh
+           attribute `tabindex` trong markup, nên mọi thứ đọc markup (lint a11y, snapshot test,
+           devtools inspect) đều thấy row là không focusable. Đổi sang `[attr.tabindex]`. -->
       <div
         class="sd-tree__row"
         role="treeitem"
-        [tabIndex]="node.tabIndex"
+        [attr.tabindex]="node.tabIndex"
         [class.sd-tree__row--selected]="node.selected"
         [style.--sd-tree-level]="node.level"
         [attr.aria-level]="node.level + 1"

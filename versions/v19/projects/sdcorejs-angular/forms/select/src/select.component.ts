@@ -50,7 +50,7 @@ import {
   ɵsdFormControlConnector,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
-import { I18nService } from '@sdcorejs/angular/i18n';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/angular/utilities/extensions';
 import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
@@ -81,10 +81,14 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     SdLabel,
     SdView,
     SdSelectFooterActionDirective,
+    TranslatePipe,
   ],
 })
 export class SdSelect<T extends object | string | number = Record<string, unknown>> implements OnInit {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES & INJECTS

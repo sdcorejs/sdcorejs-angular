@@ -48,6 +48,8 @@
     <!-- STAGE ............................................................... -->
     <div
       class="sd-preview-stage"
+      [id]="stageId"
+      role="tabpanel"
       [class.sd-preview-stage--dragging]="zoom() > 1"
       (wheel)="onWheel($event)"
       (pointerdown)="onPointerDown($event)"
@@ -57,8 +59,10 @@
       (dblclick)="onImageDblClick()">
 
       @switch (_stage) {
+        <!-- why: cả hai trạng thái này đều xuất hiện BẤT ĐỒNG BỘ (sau khi normalize/tải ảnh) nên
+             cần live region, nếu không screen reader không biết viewer đã rỗng hay đang tải. -->
         @case ('empty') {
-          <div class="sd-preview-status">
+          <div class="sd-preview-status" role="status" aria-live="polite">
             <div class="sd-preview-status__tile sd-preview-status__tile--muted">
               <sd-icon fontIcon="image_not_supported"></sd-icon>
             </div>
@@ -71,7 +75,7 @@
           </div>
         }
         @case ('loading') {
-          <div class="sd-preview-status">
+          <div class="sd-preview-status" role="status" aria-live="polite">
             <div class="sd-preview-spinner" role="progressbar"></div>
             <div class="sd-preview-status__hint">
               {{ 'core.component.preview-image.loading' | translate }}
@@ -156,14 +160,23 @@
       }
 
       <!-- DOTS INDICATOR ......................................... -->
+      <!-- why: role="tablist" ở đây là ARIA SAI cấu trúc — con của nó là <button> trần, không có
+           role="tab", không aria-selected, và cũng không có tabpanel nào để trỏ tới. Một tablist
+           rỗng tab khiến screen reader thông báo "danh sách tab, 0 tab". Các chấm này thực chất là
+           bộ chọn ảnh, nên hoàn thiện pattern: tablist + tab + aria-selected + aria-controls trỏ
+           về vùng stage. Nhãn cũng sửa: trước đây MỌI chấm đều đọc là "Ảnh tiếp theo". -->
       @if (_thumbnailPosition === 'dots' && _stage === 'ready' && _images.length > 1) {
-        <div class="sd-preview-dots" role="tablist">
+        <div class="sd-preview-dots" role="tablist" [attr.aria-label]="'core.component.preview-image.title' | translate">
           @for (img of _images; track img.id; let i = $index) {
             <button
               type="button"
+              role="tab"
               class="sd-preview-dot"
               [class.sd-preview-dot--active]="i === _activeIndex"
-              [attr.aria-label]="'core.component.preview-image.next' | translate"
+              [attr.aria-selected]="i === _activeIndex"
+              [attr.aria-controls]="stageId"
+              [attr.tabindex]="i === _activeIndex ? 0 : -1"
+              [attr.aria-label]="img.alt || img.name"
               [attr.data-autoId]="autoIdDot(i)"
               (click)="onClickThumbnailImage(i)"></button>
           }

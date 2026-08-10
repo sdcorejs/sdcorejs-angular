@@ -38,10 +38,13 @@
             </button>
           </div>
         }
-        <a class="fb-add-link" (click)="addColumn()">
+        <!-- why: <a> KHÔNG có href không phải là control — nó không nhận focus bàn phím và Enter
+             không kích hoạt được, tức người dùng bàn phím không thêm được cột. Đây là một HÀNH
+             ĐỘNG chứ không phải điều hướng → <button type="button"> mới đúng ngữ nghĩa. -->
+        <button type="button" class="fb-add-link" (click)="addColumn()">
           <span class="msi">add</span>
           {{ 'core.component.form-builder.add-column' | translate }}
-        </a>
+        </button>
       </div>
     }
   </div>

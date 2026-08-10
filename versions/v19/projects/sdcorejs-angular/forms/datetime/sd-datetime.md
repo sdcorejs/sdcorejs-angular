@@ -210,6 +210,24 @@ await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-required', 'false');
 ```
 
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
+
+- The picker trigger is a real `<button type="button">` with an `aria-label` (it used to be a bare
+  `<span (click)>`: not reachable by keyboard, no accessible name).
+
 ## Anti-patterns
 
 - ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.

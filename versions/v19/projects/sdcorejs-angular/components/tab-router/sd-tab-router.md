@@ -278,7 +278,8 @@ this.tab.tabInfoChanges.next({
 ## Accessibility
 
 - Tabs are `<a>` anchors with `[href]` bound to the `tab.url` string → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
-- Close button has `aria-hidden` (focusable via tab order is not guaranteed — consider a fork if A11y is critical)
+- Close button is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring. It is keyboard reachable and Enter/Space close the tab. It previously carried `aria-hidden="true"` — which still let it take tab focus while announcing nothing, strictly worse than doing nothing.
+- The `<sd-badge>` inside a tab is **not** interactive: no `role`, no `tabindex`, no `(click)` binding. Clicks bubble up to the enclosing `<a>`, so there is no interactive-inside-interactive nesting.
 - No `role="tablist" / "tab" / "tabpanel"` ARIA wiring (this is a router shell, not WAI-ARIA tabs)
 
 ## Related

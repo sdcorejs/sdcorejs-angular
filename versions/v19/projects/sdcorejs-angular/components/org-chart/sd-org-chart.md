@@ -174,3 +174,8 @@ const orgItems: SdOrgChartItem[] = [
 
 - `<sd-table>` tree mode: dùng khi dữ liệu phân cấp cần cột, sort, filter, paging.
 - `<sd-avatar>`: dùng riêng cho avatar người dùng nếu không cần layout org chart.
+
+## Accessibility
+
+- Each node `<li>` is `role="treeitem"` and now declares the **required** `aria-selected="false"` — the ARIA `treeitem` role mandates it, and without it screen readers drop the tree semantics entirely. The value is static because the org chart is a read-only diagram with no selection concept.
+- Each node also exposes `aria-level` (1-based depth) so the reading order conveys hierarchy, alongside the existing `aria-expanded` on nodes that have children.

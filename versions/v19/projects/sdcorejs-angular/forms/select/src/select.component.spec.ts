@@ -1898,3 +1898,86 @@ describe('SdSelect deferred focus lifetime', () => {
     fixture.destroy();
   }));
 });
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdSelect],
+  template: `<sd-select [items]="items" [required]="required" valueField="id" displayField="name"></sd-select>`,
+})
+class A11yHost {
+  // why: `filtered` là computed nội bộ (bật khi > 10 item) chứ không phải input — muốn hiện ô
+  // lọc trong panel thì phải nạp đủ item.
+  items: any[] = LARGE_ITEMS;
+  required = false;
+}
+
+describe('SdSelect (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdSelect<any>;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(By.directive(SdSelect)).componentInstance as SdSelect<any>;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('mat-select')).not.toBeNull();
+  });
+
+  it('gives the in-panel filter input a real accessible name and no aria-hidden', () => {
+    cmp.selectRef()?.open();
+    fixture.detectChanges();
+
+    const filter = document.querySelector('input.c-search-input') as HTMLInputElement;
+    expect(filter).not.toBeNull();
+    expect(filter.hasAttribute('aria-hidden')).toBe(false);
+    expect(filter.getAttribute('aria-label')).toBeTruthy();
+
+    cmp.selectRef()?.close();
+    fixture.detectChanges();
+  });
+
+  it('links the rendered inline error to the control via a stable id', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity();
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    // why: <mat-select> tự sở hữu aria-invalid + aria-describedby qua host binding của Material
+    // (MatFormField đẩy id của <mat-error> vào). Ta chỉ cần id ỔN ĐỊNH thay cho id auto-gen.
+    const select = fixture.nativeElement.querySelector('mat-select') as HTMLElement;
+    expect(select.getAttribute('aria-invalid')).toBe('true');
+    expect(select.getAttribute('aria-describedby')).toContain(cmp.errorId);
+  });
+});

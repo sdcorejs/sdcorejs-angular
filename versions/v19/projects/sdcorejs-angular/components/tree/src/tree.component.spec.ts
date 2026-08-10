@@ -645,6 +645,18 @@ describe('SdTree', () => {
     expect(payableRow.getAttribute('aria-selected')).toBe('true');
   });
 
+  // why: bản cũ bind `[tabIndex]` (property DOM, camelCase) — giá trị đúng nhưng KHÔNG sinh
+  // attribute `tabindex` trong markup, nên mọi thứ đọc markup (lint a11y, snapshot, devtools)
+  // đều thấy row là không focusable.
+  it('emits a real tabindex attribute on tree rows, not just the DOM property', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const rootRow = row(fixture.nativeElement, 'root');
+    const payableRow = row(fixture.nativeElement, 'payable');
+
+    expect(rootRow.getAttribute('tabindex')).toBe('0');
+    expect(payableRow.getAttribute('tabindex')).toBe('-1');
+  });
+
   it('supports single selection and descendant cascade with indeterminate parents', async () => {
     const fixture = await createFixture(StaticHostComponent);
     const component = fixture.componentInstance;

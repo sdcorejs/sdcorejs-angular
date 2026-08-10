@@ -132,6 +132,9 @@ function rangeIsComplete(value: unknown): boolean {
 export class SdDateRange {
   id1 = `I${Utilities.generateUuid()}`;
   id2 = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để hai ô nhập trỏ `aria-describedby` sang — thông báo
+   *  lỗi phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id1}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES

@@ -120,6 +120,80 @@ describe('E2E attributes', () => {
     dataLoadingAttr = sdTableEl.getAttribute('data-loading');
     expect(dataLoadingAttr).toBe('false');
   });
+
+  // ── A11y ──────────────────────────────────────────────────────────────
+  // why: bảng tải BẤT ĐỒNG BỘ nhưng trước đây spinner chỉ là hình ảnh — không có live region nào
+  // báo cho screen reader biết đang tải hay bảng đã trả về 0 dòng.
+
+  // why: nội dung bảng chỉ render sau khi vòng load (debounce ~800ms) chạy xong. `beforeEach` gọi
+  // detectChanges NGOÀI fakeAsync nên timer đầu tiên nằm ở zone thật và `tick()` không flush được —
+  // phải set lại option BÊN TRONG fakeAsync để vòng load chạy trong fake zone rồi mới tick.
+  const settleWith = (option: SdTableOption<EmployeeRow>) => {
+    host.tableOption.set(option);
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+  };
+
+  const employeeOption = (): SdTableOption<EmployeeRow> => ({
+    type: 'local',
+    items: () => [
+      { id: 1, name: 'Alice' },
+      { id: 2, name: 'Bob' },
+    ],
+    columns: [
+      { field: 'id', type: 'number', title: 'ID' },
+      { field: 'name', type: 'string', title: 'Name' },
+    ],
+  });
+
+  it('announces the loading state through a polite live region and marks the grid busy', fakeAsync(() => {
+    settleWith(employeeOption());
+    const tableComponent = fixture.debugElement.query(By.directive(SdTable)).componentInstance as SdTable<EmployeeRow>;
+
+    tableComponent.loading.set(true);
+    fixture.detectChanges();
+
+    const status = sdTableEl.querySelector('.c-loading') as HTMLElement;
+    expect(status).not.toBeNull();
+    expect(status.getAttribute('role')).toBe('status');
+    expect(status.getAttribute('aria-live')).toBe('polite');
+    expect(status.getAttribute('aria-label')).toBeTruthy();
+    expect(sdTableEl.querySelector('.c-table')?.getAttribute('aria-busy')).toBe('true');
+
+    tableComponent.loading.set(false);
+    fixture.detectChanges();
+
+    expect(sdTableEl.querySelector('.c-table')?.getAttribute('aria-busy')).toBeNull();
+    flush();
+  }));
+
+  it('announces the empty state through a polite live region', fakeAsync(() => {
+    settleWith({
+      type: 'local',
+      items: () => [],
+      columns: [{ field: 'id', type: 'number', title: 'ID' }],
+    });
+
+    const empty = sdTableEl.querySelector('.c-no-data-row') as HTMLElement;
+    expect(empty).not.toBeNull();
+    expect(empty.getAttribute('role')).toBe('status');
+    expect(empty.getAttribute('aria-live')).toBe('polite');
+    flush();
+  }));
+
+  // why: header sắp xếp từng mang aria-hidden="true". `mat-sort-header` tự gắn role="button" +
+  // tabindex + aria-sort lên chính div đó, nên aria-hidden xoá cả tên cột lẫn hướng sắp xếp khỏi
+  // accessibility tree → người dùng screen reader mất hoàn toàn khả năng sắp xếp bảng.
+  it('keeps the sortable column headers in the accessibility tree', fakeAsync(() => {
+    settleWith(employeeOption());
+    const headers = Array.from(sdTableEl.querySelectorAll<HTMLElement>('.c-header-title'));
+    expect(headers.length).toBeGreaterThan(0);
+    headers.forEach(header => expect(header.hasAttribute('aria-hidden')).toBe(false));
+    expect(headers.some(header => header.hasAttribute('aria-sort'))).toBe(true);
+    flush();
+  }));
 });
 
 describe('Filter commit (blur) vs filter change (enter / reload)', () => {

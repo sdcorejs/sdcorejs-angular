@@ -143,6 +143,16 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 brandColor = signal<string | undefined>('#1565C0');
 ```
 
+## Accessibility
+
+The hidden native `<input type="color">` deliberately **keeps** `aria-hidden="true"`. It is a pure
+proxy: `tabindex="-1"`, zero-sized, `pointer-events: none`, and `openPicker()` only calls `.click()`
+on it. The real, named control is the visible swatch `<button type="button">` next to it, so exposing
+the proxy would add a phantom "color picker" to the accessibility tree.
+
+Everything else (label, text input, `mat-error`, clear button) is inherited from `<sd-input>` — see
+`sd-input.md`.
+
 ## Anti-patterns
 
 - ❌ Two-way binding to a non-string (number, object) — the model expects a hex string or null/undefined

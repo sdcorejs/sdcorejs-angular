@@ -726,6 +726,14 @@ All interactive children derive their autoId from the table base `components-tab
 
 > Not yet covered: `popup-export` (export-template modal) — its buttons have no autoId (follow-up).
 
+## Accessibility
+
+- **Sort headers are in the accessibility tree.** `mat-sort-header` puts `role="button"`, `tabindex` and `aria-sort` on the header `<div>` itself; that element used to carry `aria-hidden="true"`, which erased both the column name and the sort direction while the header still took focus — keyboard/screen-reader users could not sort the table at all. The attribute is gone from all three header variants (group header, first-columns header, second-columns header).
+- **Loading is announced.** The spinner overlay is `role="status" aria-live="polite"` with an i18n `aria-label`, and the scroll container gets `aria-busy="true"` while `loading()` is set. Previously an async fetch produced no announcement whatsoever.
+- **Empty state is announced.** The `no-results` / `choose-filter` / `no-data` block is `role="status" aria-live="polite"`, so a fetch that returns zero rows is reported instead of leaving the user waiting silently.
+- **Row commands are named.** The per-row command buttons (`desktop-command`) dropped `aria-hidden="true"` — they are real `<button>`s that still took tab focus while announcing nothing, because they render an icon with no text. They now expose `aria-label` from the command title, plus `aria-haspopup="menu"` on the submenu trigger.
+- **Clickable HTML cells are keyboard reachable.** A cell whose display config supplies `click` renders as `role="button"` + `tabindex="0"` with Enter/Space mirroring the click (it previously carried `aria-hidden="true"`). The handler ignores key events bubbling from consumer-supplied markup inside the cell, so nested controls do not double-fire.
+
 ## Related
 
 - `<sd-button>`, `<sd-quick-action>` — used in toolbar / per-row commands

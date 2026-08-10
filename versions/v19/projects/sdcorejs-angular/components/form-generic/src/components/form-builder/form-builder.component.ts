@@ -535,6 +535,15 @@ export class SdFormBuilder implements OnInit, OnDestroy {
 
   // ── Group drill-in (Detail) navigation ──────────────────────────────────
   /** Mở canvas thiết kế riêng cho 1 group (chỉ children của nó). Snapshot để Cancel revert. */
+  // why: body group nay là role="button" + tabindex="0" nên Enter/Space phải mở màn hình Detail
+  // đúng như click. stopPropagation để item cha (cũng là role="button") không tự chọn lại.
+  onEnterGroupEditKeydown = (group: SdFormGenericGroup, event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.enterGroupEdit(group);
+  };
+
   enterGroupEdit = (group: SdFormGenericGroup) => {
     this.#groupSnapshot = JSON.stringify(group.components ?? []);
     this.editingGroupId.set(group.id);
@@ -602,6 +611,24 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   selectComponent = (item?: SdFormGenericComponent | SdFormGenericGroup) => {
     this.selectedComponent.set(item);
     this.#ref.markForCheck();
+  };
+
+  // why: mục palette nay là role="button" + tabindex="0" nên Enter/Space phải thêm component đúng
+  // như click — trước đây chỉ kéo-thả hoặc click chuột mới dựng được form.
+  onPaletteItemKeydown = (item: FormBuilderComponent, event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    this.addComponent(item);
+  };
+
+  // why: item trên canvas nay là role="button" + tabindex="0". Lọc theo target vì item BỌC preview
+  // của control thật (input/select) — nếu không, Enter gõ trong preview sẽ chọn lại item.
+  onSelectComponentKeydown = (item: SdFormGenericComponent | SdFormGenericGroup, event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectComponent(item);
   };
 
   onClickedOutside = (e: any) => {

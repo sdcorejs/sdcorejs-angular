@@ -352,3 +352,8 @@ External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
 - `<sd-table>` — common consumer of the query via server `items()`.
 - `<sd-operator>` — operator picker reused inside chips.
 - `<sd-select>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-input>` — value editors used by query fields.
+
+## Accessibility
+
+- **Chip popover** (`<sd-query-chip-popover>`): the header and body wrappers are `role="group"`. They exist only to stop clicks from closing the `mat-menu`, so they must not become tab stops — Tab goes straight to the operator picker and value editors. They now also stop Enter for the same reason; Escape and arrow keys still bubble so the menu closes / navigates normally.
+- **Inline value chip** (`<sd-query-inline-value-chip>`): the pill shell is `role="group"` labelled with the field name. Its click-to-focus affordance is mirrored on Enter through the same handler, which already skips events originating from the inner `<input>` or from the remove `×` button.

@@ -262,3 +262,9 @@ fields: SdQueryBuilderField[] = [
 - `<sd-select>` / `<sd-input>` / `<sd-date>` / `<sd-datetime>` — the per-type value editors
 - `Filter` / `Operator` (`@sdcorejs/utils/models`) — output contract
 - `filterToTokens` / `treeToFilter` / `filterToTree` — serializer helpers (exported)
+
+## Accessibility
+
+- The builder container is `role="group"` (a set of controls, not a widget) so it takes no tab stop of its own — Tab goes straight to the buttons and pickers inside.
+- "Click empty space to close open dropdowns" is a mouse-only affordance; **Escape** now does the same thing, so keyboard users can dismiss an open add-menu.
+- The add-menu dropdown is `role="group"` and swallows Enter as well as click, so activating a button inside it never reaches the container's "close all" handler.

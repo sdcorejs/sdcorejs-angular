@@ -9,7 +9,15 @@
     }
   </div>
 } @else {
-  <div class="qb-container" [class.is-disabled]="resolvedDisabled()" (click)="closeAllDropdowns()">
+  <!-- why: "click ra vùng trống để đóng dropdown" là hành vi CHỈ có ở chuột — người dùng bàn phím
+       không có cách nào đóng. Thêm Escape làm tương đương. role="group": container là một nhóm
+       control nên KHÔNG nhận tabindex, tab đi thẳng vào các nút/select bên trong. -->
+  <div
+    class="qb-container"
+    role="group"
+    [class.is-disabled]="resolvedDisabled()"
+    (click)="closeAllDropdowns()"
+    (keydown.escape)="closeAllDropdowns()">
     <ng-container [ngTemplateOutlet]="groupTpl" [ngTemplateOutletContext]="{ $implicit: tree(), isRoot: true }"></ng-container>
   </div>
 }
@@ -26,7 +34,10 @@
       <div class="qb-actions">
         <button type="button" class="qb-btn qb-btn-add" title="Thêm" aria-label="Thêm điều kiện hoặc nhóm" [disabled]="resolvedDisabled()" (click)="toggleDropdown(group, $event)">+</button>
         @if (group.open) {
-          <div class="qb-dropdown" (click)="$event.stopPropagation()">
+          <!-- why: dropdown là NHÓM hai nút (role="group"), không phải nút — không nhận tabindex,
+               tab đi thẳng vào hai nút. stopPropagation cho cả click lẫn Enter để thao tác bên
+               trong dropdown không kích hoạt handler "đóng tất cả" của container. -->
+          <div class="qb-dropdown" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
             <button type="button" (click)="addRule(group)">+ Điều kiện</button>
             <button type="button" (click)="addGroup(group)">+ Nhóm</button>
           </div>

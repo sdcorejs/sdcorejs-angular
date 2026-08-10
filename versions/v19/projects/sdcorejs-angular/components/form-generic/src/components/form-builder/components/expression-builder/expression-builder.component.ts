@@ -116,6 +116,15 @@ export class ExpressionBuilderComponent implements OnInit {
     this.ref.markForCheck();
   };
 
+  // why: pill `.fb-expr` là role="button" + tabindex="0" nên Enter/Space PHẢI mở modal đúng như
+  // click. Lọc theo target để phím bấm trên nút "functions" lồng bên trong không mở modal hai lần.
+  onExprKeydown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    void this.onEdit();
+  };
+
   addCondition = (conditions: SdFormGenericExpression['conditions']) => {
     conditions.push({
       key: Utilities.randomId(),

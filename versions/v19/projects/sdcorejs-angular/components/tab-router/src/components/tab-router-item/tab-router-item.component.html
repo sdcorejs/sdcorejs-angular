@@ -12,18 +12,25 @@
   (mouseup)="onMouseup($event)">
   @let info = tabInfo | sdTabInfo: tab;
   @if (info) {
+    <!-- why: bỏ `(click)="onTabClick($event)"` khỏi <sd-badge>. Nó chỉ tồn tại vì badge luôn
+         stopPropagation, nên click trên badge không bao giờ tới <a> cha. Badge nay chỉ nuốt event
+         khi thật sự có consumer → click bọt lên <a> như bình thường, và badge không còn phải trở
+         thành role="button" lồng bên trong một <a> (interactive lồng interactive). -->
     <sd-badge
       style="overflow: hidden;white-space: nowrap;"
       [icon]="info.icon"
       [tooltip]="info.tooltip || info.name"
       [title]="info.name"
-      [color]="info.color"
-      (click)="onTabClick($event)"></sd-badge>
+      [color]="info.color"></sd-badge>
+    <!-- why: bỏ aria-hidden="true" khỏi nút đóng — nó là <button> thật, vẫn nhận tab focus nhưng
+         screen reader không đọc được gì (nút chỉ có icon). Gắn type + aria-label i18n. -->
     <button
-      aria-hidden="true"
+      type="button"
       class="tab-router__close d-flex align-items-center justify-content-center ml-auto p-0"
+      [attr.aria-label]="'core.common.close' | translate"
       (click)="close($event)"
       (mousedown)="$event.stopPropagation()">
+      <!-- Icon thuần trang trí — nút đã có aria-label nên giữ aria-hidden ở đây là đúng. -->
       <sd-icon aria-hidden="true" fontIcon="close"></sd-icon>
     </button>
   }

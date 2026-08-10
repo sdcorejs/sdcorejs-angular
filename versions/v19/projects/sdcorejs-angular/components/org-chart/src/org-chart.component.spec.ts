@@ -201,6 +201,22 @@ describe('SdOrgChart', () => {
     expect(nodeElement(chart, 'sales').getAttribute('aria-expanded')).toBeNull();
   });
 
+  // why: role="treeitem" BẮT BUỘC có aria-selected — thiếu nó screen reader bỏ qua ngữ nghĩa tree.
+  // Org-chart là sơ đồ chỉ-đọc nên khai tĩnh "false" (đúng sự thật), kèm aria-level cho độ sâu.
+  it('declares the required aria-selected and an aria-level on every treeitem', async () => {
+    const fixture = await createFixture(DefaultHostComponent);
+
+    const chart = fixture.nativeElement as HTMLElement;
+    const treeItems = Array.from(chart.querySelectorAll<HTMLElement>('[role="treeitem"]'));
+
+    expect(treeItems.length).toBeGreaterThan(0);
+    treeItems.forEach(item => expect(item.getAttribute('aria-selected')).toBe('false'));
+
+    expect(nodeElement(chart, 'ceo').getAttribute('aria-level')).toBe('1');
+    expect(nodeElement(chart, 'cmo').getAttribute('aria-level')).toBe('2');
+    expect(nodeElement(chart, 'sales').getAttribute('aria-level')).toBe('3');
+  });
+
   it('renders stable data-autoid attributes for nodes and default node parts', async () => {
     const fixture = await createFixture(DefaultHostComponent);
 

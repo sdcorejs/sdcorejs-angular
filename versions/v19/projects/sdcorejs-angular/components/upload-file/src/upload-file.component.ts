@@ -528,6 +528,27 @@ export class SdUploadFile<TArgs = any> {
     this.selectedFile.set(this.selectedFile() !== file ? file : null);
   };
 
+  // why: template cần biết có phải thiết bị cảm ứng không để chỉ khi đó mới gắn
+  // role="button"/tabindex lên khung ảnh (onSelect là no-op trên desktop — thêm điểm dừng tab
+  // ở đó chỉ làm phiền người dùng bàn phím).
+  readonly isTouchDevice = this.#isMobileOrTablet;
+
+  // why: drop zone giờ là role="button" + tabindex="0" nên Enter/Space phải mở hộp thoại chọn tệp
+  // y hệt click. preventDefault để Space không cuộn trang.
+  onUploadKeydown = (event: Event) => {
+    event.preventDefault();
+    this.onUpload();
+  };
+
+  // why: khung ảnh bọc các nút (xoá / phóng to). Chỉ xử lý phím khi CHÍNH khung đang giữ focus,
+  // nếu không Enter trên nút xoá sẽ vừa xoá vừa toggle chọn ảnh.
+  onSelectKeydown = (file: PreviewFile, event: KeyboardEvent) => {
+    if (!this.#isMobileOrTablet) return;
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.onSelect(file);
+  };
+
   // ─── Resize ───────────────────────────────────────────────────────────
   #resize = async (file: File): Promise<File> => {
     if (!this.scaleToPixel()) {

@@ -9,6 +9,10 @@
     [attr.data-autoId]="autoId()"
     [attr.data-opened]="dataOpened()"
     [attr.data-loading]="dataLoading()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="title() || null"
+    (keydown.escape)="disableBackdropClose() ? null : close()"
     #drawerContainer>
     @if (_isOpened) {
       <ng-container>
@@ -21,7 +25,12 @@
           <div class="sd-side-drawer-header-right">
             <ng-content select="[sdHeaderRight]"></ng-content>
             @if (!hideClose()) {
-              <button type="button" class="sd-side-drawer-close-btn" (click)="close()" aria-label="Close">
+              <!-- why: aria-label="Close" là chuỗi tiếng Anh cứng trong một thư viện đã có i18n. -->
+              <button
+                type="button"
+                class="sd-side-drawer-close-btn"
+                (click)="close()"
+                [attr.aria-label]="'core.common.close' | translate">
                 <sd-icon name="close"></sd-icon>
               </button>
             }
@@ -41,9 +50,13 @@
       </ng-container>
     }
   </div>
+  <!-- why: backdrop là lớp phủ bắt click thuần trang trí, không có nội dung — nhưng aria-hidden
+       không phải là cách khai báo đúng cho nó. `role="presentation"` mới là tín hiệu chính xác
+       (phần tử này không mang ngữ nghĩa), và quan trọng hơn: trước đây "đóng bằng cách click ra
+       ngoài" KHÔNG có tương đương bàn phím nào cả. Escape được thêm ở drawer container. -->
   @if (_isOpened) {
     <div
-      aria-hidden="true"
+      role="presentation"
       class="sd-side-drawer-backdrop"
       (click)="disableBackdropClose() ? null : close()"
       (wheel)="preventScroll($event)"

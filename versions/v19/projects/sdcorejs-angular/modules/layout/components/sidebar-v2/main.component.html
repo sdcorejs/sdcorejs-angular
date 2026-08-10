@@ -1,4 +1,8 @@
-<div class="sd-sidebar-v2" (keydown.escape)="closeFromEscape()">
+<!-- why: `(keydown.escape)` được gom lên HOST của component (xem `host` trong main.component.ts).
+     Trước đây nó nằm trên div bọc và trên <section> flyout — cả hai đều KHÔNG focusable nên chỉ
+     "chạy nhờ" event nổi bọt từ con, đồng thời khiến markup khai báo interaction handler trên
+     phần tử không nhận được focus. Host là tổ tiên của tất cả nên hành vi giữ nguyên. -->
+<div class="sd-sidebar-v2">
   <aside class="sd-sidebar-v2__rail d-flex flex-column align-items-center gap-8 py-12 bg-white border-right border-black200">
     <button type="button" class="sd-sidebar-v2__brand d-flex align-items-center justify-content-center" aria-label="Trang chủ">
       @if (sidebar().logoUrl) {
@@ -42,9 +46,9 @@
       (keydown.escape)="closeFromEscape()"></button>
     <section
       class="sd-sidebar-v2__flyout d-flex flex-column bg-white border-right border-black200 mat-elevation-z4"
+      role="region"
       [attr.aria-label]="activeGroup()?.title || 'Menu'"
-      (mouseleave)="leaveFlyout()"
-      (keydown.escape)="closeFromEscape()">
+      (mouseleave)="leaveFlyout()">
       <header class="d-flex align-items-center justify-content-between gap-8 px-16 py-12 border-bottom border-black200">
         <span class="T16M text-ellipsis">{{ activeGroup()?.title || sidebar().defaultTitle || 'Menu' }}</span>
         @if (isFlyoutLocked()) {

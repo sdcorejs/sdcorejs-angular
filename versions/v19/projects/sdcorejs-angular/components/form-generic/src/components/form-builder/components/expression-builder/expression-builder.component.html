@@ -7,14 +7,21 @@
     <div class="fb-field__label">{{ label }}</div>
   }
   @let exprText = model | expressionQuery;
-  <div class="fb-expr" (click)="onEdit()" role="button" tabindex="0">
+  <!-- why: pill này đã khai role="button" + tabindex="0" nhưng CHỈ có (click) — tab tới được mà
+       Enter/Space không mở được modal, tức là một nút giả. Bổ sung handler bàn phím phản chiếu
+       đúng click; lọc theo target để Enter trên nút "functions" bên trong không mở modal hai lần. -->
+  <div class="fb-expr" (click)="onEdit()" (keydown.enter)="onExprKeydown($event)" (keydown.space)="onExprKeydown($event)" role="button" tabindex="0">
     <span class="fb-expr__badge">FEEL</span>
     @if (exprText) {
       <span class="fb-expr__code mono">{{ exprText }}</span>
     } @else {
       <span class="empty">{{ 'core.component.form-builder.set-expression' | translate }}</span>
     }
-    <button type="button" class="fb-icon-btn" (click)="onEdit(); $event.stopPropagation()" aria-label="edit expression">
+    <button
+      type="button"
+      class="fb-icon-btn"
+      (click)="onEdit(); $event.stopPropagation()"
+      [attr.aria-label]="'core.component.form-builder.set-expression' | translate">
       <span class="msi">functions</span>
     </button>
   </div>

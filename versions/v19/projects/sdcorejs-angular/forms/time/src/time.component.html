@@ -100,7 +100,10 @@
   </mat-form-field>
 
   <mat-menu #timePickerMenu="matMenu" class="sd-time-picker-menu">
-    <div class="d-flex flex-column" (click)="$event.stopPropagation()">
+    <!-- why: div này chỉ tồn tại để chặn click nổi bọt làm đóng mat-menu — nó không phải một
+         "nút" và không cần focus. role="presentation" là tín hiệu đúng (khác aria-hidden ở chỗ
+         KHÔNG ẩn cây con: spinner giờ/phút và hai nút bên trong vẫn đọc được bình thường). -->
+    <div class="d-flex flex-column" role="presentation" (click)="$event.stopPropagation()">
       <sd-time-spinner [value]="pickerDraft()" [baseValue]="pickerDraft()" [stepMinute]="step()" (valueChange)="onPickerValue($event)">
       </sd-time-spinner>
       <div class="d-flex justify-content-end gap-8 p-8">

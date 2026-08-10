@@ -115,8 +115,16 @@ $sd-button-black-color: map.get(color.$basic_color_map, 'black');
       }
     }
 
+    // why: `outline: none` xoá vòng focus của CHÍNH nút chủ lực của thư viện — người dùng bàn phím
+    // tab qua form mà không thấy mình đang ở nút nào. Giữ `:focus` sạch cho chuột, nhưng trả lại
+    // vòng focus cho điều hướng bàn phím bằng :focus-visible.
     &:focus {
       outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
     }
 
     &.c-disabled {

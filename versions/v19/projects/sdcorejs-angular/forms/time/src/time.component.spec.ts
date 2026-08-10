@@ -176,3 +176,39 @@ describe('SdTime (validation message is interaction-gated)', () => {
     expect(errorIcon()).not.toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Accessibility — panel chọn giờ
+// why: div bọc bên trong mat-menu chỉ tồn tại để chặn click nổi bọt (không cho menu đóng).
+// Trước đây nó bị lint kêu vì có (click) mà không focus được; cách sửa SAI là gắn aria-hidden
+// (sẽ ẩn luôn spinner giờ/phút và 2 nút). role="presentation" mới là tín hiệu đúng: chỉ vô
+// hiệu hoá chính div, KHÔNG lan xuống con.
+// ---------------------------------------------------------------------------
+describe('SdTime (picker panel accessibility)', () => {
+  let fixture: ComponentFixture<TimeHostComponent>;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [TimeHostComponent, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(TimeHostComponent);
+    fixture.detectChanges();
+  });
+
+  it('marks the menu content presentational without hiding the controls inside it', () => {
+    const trigger = fixture.nativeElement.querySelector('button[data-time-picker-trigger]') as HTMLButtonElement;
+    trigger.click();
+    fixture.detectChanges();
+
+    const panel = document.querySelector('.sd-time-picker-menu') as HTMLElement;
+    expect(panel).not.toBeNull();
+    const wrapper = panel.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    // Spinner + nút Hủy/Xác nhận vẫn nằm trong accessibility tree.
+    expect(wrapper.querySelectorAll('button').length).toBeGreaterThan(0);
+    expect(wrapper.closest('[aria-hidden="true"]')).toBeNull();
+
+    trigger.click();
+    fixture.detectChanges();
+  });
+});

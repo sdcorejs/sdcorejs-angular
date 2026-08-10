@@ -771,3 +771,69 @@ describe('SdTextarea deferred focus lifetime', () => {
     fixture.destroy();
   }));
 });
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên một phần tử focus được (hoặc trên phần tử BỌC nội dung focus
+// được) tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc
+// gì cả. Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// Guard dưới đây quét toàn bộ DOM của control và chặn mẫu đó quay lại.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTextarea],
+  template: `<sd-textarea [required]="required"></sd-textarea>`,
+})
+class A11yHost {
+  required = false;
+}
+
+describe('SdTextarea (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdTextarea;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(el => el.componentInstance instanceof SdTextarea)!.componentInstance;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('textarea')).not.toBeNull();
+  });
+
+  it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity({ emitEvent: false });
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    const el = fixture.nativeElement.querySelector('textarea') as HTMLTextAreaElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    expect(el.getAttribute('aria-invalid')).toBe('true');
+    expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
+  });
+});

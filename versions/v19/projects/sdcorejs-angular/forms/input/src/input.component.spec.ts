@@ -859,6 +859,63 @@ describe('SdInput', () => {
       expect(errorFollowsClear).toBe(true);
     });
   });
+
+  describe('accessibility', () => {
+    // why: aria-hidden trên phần tử focus được TỆ HƠN không làm gì — ô vẫn Tab tới được nhưng
+    // screen reader đọc ra khoảng lặng. Guard này chặn việc "dập cảnh báo lint" tái diễn.
+    const inputEl = () => fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    it('does NOT put aria-hidden on the real <input>', () => {
+      fixture.detectChanges();
+      expect(inputEl().hasAttribute('aria-hidden')).toBe(false);
+    });
+
+    it('does NOT put aria-hidden on the layout wrapper that contains the field', () => {
+      fixture.detectChanges();
+      const wrapper = fixture.nativeElement.querySelector('.sd-input-container') as HTMLElement;
+      expect(wrapper).not.toBeNull();
+      expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+      // why: hộp layout vẫn tự khai là trang trí — nhưng bằng role=presentation, thứ KHÔNG ẩn
+      // cây con, khác hẳn aria-hidden.
+      expect(wrapper.getAttribute('role')).toBe('presentation');
+    });
+
+    it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+      host.model = '';
+      host.required = true;
+      fixture.detectChanges();
+      input.formControl.markAsTouched();
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+      expect(error).not.toBeNull();
+      expect(error.id).toBe(input.errorId);
+      expect(inputEl().getAttribute('aria-invalid')).toBe('true');
+      expect(inputEl().getAttribute('aria-describedby')).toContain(input.errorId);
+    });
+
+    it('drops aria-invalid/aria-describedby again once the error clears', () => {
+      host.model = '';
+      host.required = true;
+      fixture.detectChanges();
+      input.formControl.markAsTouched();
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      fixture.detectChanges();
+      expect(inputEl().getAttribute('aria-invalid')).toBe('true');
+
+      input.formControl.setValue('abc', { emitEvent: false });
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+      // why: MatInput cũng có host binding riêng cho aria-invalid, nên khi hết lỗi thuộc tính có
+      // thể biến mất HOẶC còn lại "false" — cả hai đều là "không lỗi". Điều bắt buộc là KHÔNG
+      // còn "true" và aria-describedby không còn trỏ tới message đã gỡ.
+      expect(inputEl().getAttribute('aria-invalid')).not.toBe('true');
+      expect(inputEl().getAttribute('aria-describedby') ?? '').not.toContain(input.errorId);
+    });
+  });
 });
 
 describe('SdInput (FormGroup lifecycle)', () => {

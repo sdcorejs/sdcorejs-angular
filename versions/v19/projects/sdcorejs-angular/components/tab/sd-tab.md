@@ -248,6 +248,11 @@ A child of `<sd-tab-group>` that declares one tab — its label, icon, badge, di
 
 ---
 
+## Accessibility
+
+- The close affordance on a `closable` tab is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring. It was previously `<sd-icon role="button" aria-label="Close tab">` — a custom element, so it was **not** focusable and had **no** keyboard handler: the tab could not be closed without a mouse. The label was also a hard-coded English string in an otherwise i18n'd library.
+- `mat-tab-group` owns the rest of the tablist wiring (`role="tab"`, `aria-selected`, `aria-controls`, roving tabindex); nothing is overridden.
+
 ## Related
 
 - `<sd-tab-router>` — route-driven tabs (each tab is an Angular route)

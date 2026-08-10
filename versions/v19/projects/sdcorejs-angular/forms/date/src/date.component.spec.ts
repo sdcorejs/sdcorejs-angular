@@ -843,3 +843,86 @@ describe('SdDate deferred focus lifetime', () => {
     fixture.destroy();
   }));
 });
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdDate],
+  template: `<sd-date [required]="required"></sd-date>`,
+})
+class A11yHost {
+  required = false;
+}
+
+describe('SdDate (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdDate;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate).componentInstance as SdDate;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('input')).not.toBeNull();
+  });
+
+  it('exposes the calendar trigger as a keyboard-reachable, named <button>', () => {
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.tagName).toBe('BUTTON');
+    expect(btn.type).toBe('button');
+    // why: <button> nằm sẵn trong tab order và UA tự sinh `click` khi nhấn Enter/Space — đó
+    // chính là "bàn phím làm được như chuột" mà không phải tự chế role/tabindex/keydown.
+    expect(btn.tabIndex).toBeGreaterThanOrEqual(0);
+    expect(btn.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('activating the calendar trigger opens the datepicker', () => {
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    btn.click();
+    fixture.detectChanges();
+    expect(cmp.datePicker()?.opened).toBe(true);
+  });
+
+  it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity({ emitEvent: false });
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    const el = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    expect(el.getAttribute('aria-invalid')).toBe('true');
+    expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
+  });
+});

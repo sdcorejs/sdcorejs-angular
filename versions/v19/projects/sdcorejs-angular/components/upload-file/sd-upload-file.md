@@ -302,3 +302,15 @@ interface SdUploadFileDetail {
 - `UploadFileService` — internal `providedIn: 'root'` service that acts as a temporary in-memory cache for `File` objects between selection and upload; managed automatically by the component
 - `<sd-modal>` — used internally by the preview popup
 - `*sdPermission` — wrap to gate by permission
+
+## Accessibility
+
+- **Drop zone**: `role="button"` + `tabindex="0"` + an i18n `aria-label` (`core.component.upload-file.upload`) + a `:focus-visible` ring. Enter/Space open the file picker exactly like a click (Space calls `preventDefault()` so the page does not scroll). It previously carried `aria-hidden="true"` while still taking mouse clicks — invisible to screen readers, unreachable by keyboard.
+- **Image tile**: no longer `aria-hidden`. The tile wraps the remove and zoom buttons; hiding the container left those buttons tab-reachable but silent. `onSelect` is a touch-only affordance, so `role="button"` / `tabindex` / `aria-pressed` are applied **only** on touch devices — desktop keyboard users get no dead tab stop. Its keyboard handler ignores events bubbling from the nested buttons.
+- **Icon-only controls are real buttons**: the zoom-in affordance and the document remove affordance were `<sd-icon (click)>` (a custom element — not focusable, no accessible name); both are now `<button type="button">` with i18n `aria-label`s.
+- The image remove button's `aria-label` was the hard-coded English `"Close"` (also the wrong verb); it now uses an i18n delete label.
+- **Live regions**: the per-image upload spinner is wrapped in `role="status" aria-live="polite"`, and the required-error message uses `role="alert"` so it is announced when validation fails after submit.
+
+### i18n compromise
+
+`aria-label` for the two remove buttons reuses `core.component.form-builder.delete` ("Xóa"). The `upload-file` scope has no delete/remove key and the i18n catalog is owned elsewhere — replace with a dedicated `core.component.upload-file.remove` key when the catalog is next touched.

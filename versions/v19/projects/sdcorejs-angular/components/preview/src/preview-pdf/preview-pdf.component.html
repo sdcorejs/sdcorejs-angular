@@ -292,6 +292,9 @@
                           <span class="sd-preview-pdf-outline-tree__toggle-placeholder" aria-hidden="true"></span>
                         }
 
+                        <!-- why: role="treeitem" BẮT BUỘC có aria-selected — thiếu nó screen reader
+                             không đọc được mục outline nào đang là mục hiện hành. Ở đây "được chọn"
+                             = mục trỏ tới trang đang xem, đúng bằng điều kiện của aria-current. -->
                         @if (row.item.url && row.item.page === null) {
                           <a
                             #outlineItem
@@ -303,6 +306,7 @@
                             [attr.data-outline-id]="row.item.id"
                             [attr.aria-level]="row.level"
                             [attr.aria-expanded]="row.item.children.length > 0 ? isOutlineExpanded(row.item.id) : null"
+                            [attr.aria-selected]="row.item.page === _activePage"
                             [attr.aria-current]="row.item.page === _activePage ? 'page' : null"
                             [attr.tabindex]="outlineFocusId() === row.item.id ? 0 : -1"
                             (focus)="focusOutlineItem(row.item.id)"
@@ -318,6 +322,7 @@
                             [attr.data-outline-id]="row.item.id"
                             [attr.aria-level]="row.level"
                             [attr.aria-expanded]="row.item.children.length > 0 ? isOutlineExpanded(row.item.id) : null"
+                            [attr.aria-selected]="row.item.page === _activePage"
                             [attr.aria-current]="row.item.page === _activePage ? 'page' : null"
                             [attr.tabindex]="outlineFocusId() === row.item.id ? 0 : -1"
                             (focus)="focusOutlineItem(row.item.id)"

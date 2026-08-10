@@ -2,6 +2,7 @@ import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdChipCalendar } from './chip-calendar.component';
 import { queryAllByCss } from '../../../testing/test-utils';
 
@@ -798,4 +799,83 @@ describe('SdChipCalendar deferred focus lifetime', () => {
 
     fixture.destroy();
   }));
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdChipCalendar, SdViewDefDirective],
+  template: `<sd-chip-calendar [required]="required">
+    <ng-template sdViewDef let-value="value"
+      ><span class="custom-view">Xem: {{ value?.length ?? 0 }}</span></ng-template
+    >
+  </sd-chip-calendar>`,
+})
+class A11yViewHost {
+  required = false;
+}
+
+describe('SdChipCalendar (accessibility)', () => {
+  let fixture: ComponentFixture<A11yViewHost>;
+  let cmp: SdChipCalendar;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yViewHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yViewHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar).componentInstance as SdChipCalendar;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('exposes the sdViewDef face as a keyboard-reachable button', () => {
+    const trigger = fixture.nativeElement.querySelector('.sd-chip-calendar__view-trigger') as HTMLElement;
+    expect(trigger).not.toBeNull();
+    expect(trigger.getAttribute('role')).toBe('button');
+    expect(trigger.tabIndex).toBe(0);
+  });
+
+  it('Enter on the sdViewDef face does the same thing as a click (enters edit mode)', () => {
+    const clickFixture = TestBed.createComponent(A11yViewHost);
+    clickFixture.detectChanges();
+    const clickCmp = clickFixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)
+      .componentInstance as SdChipCalendar;
+    (clickFixture.nativeElement.querySelector('.sd-chip-calendar__view-trigger') as HTMLElement).click();
+    clickFixture.detectChanges();
+    const afterClick = clickCmp.isFocused;
+
+    const trigger = fixture.nativeElement.querySelector('.sd-chip-calendar__view-trigger') as HTMLElement;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    fixture.detectChanges();
+
+    expect(afterClick).toBe(true);
+    expect(cmp.isFocused).toBe(afterClick);
+    clickFixture.destroy();
+  });
+
+  it('Space on the sdViewDef face does the same thing as a click', () => {
+    const trigger = fixture.nativeElement.querySelector('.sd-chip-calendar__view-trigger') as HTMLElement;
+    trigger.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true }));
+    fixture.detectChanges();
+    expect(cmp.isFocused).toBe(true);
+  });
 });

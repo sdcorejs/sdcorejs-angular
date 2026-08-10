@@ -88,6 +88,9 @@ import { SdInputMask, SdInputMaskResult, SdInputMaskStatus, sdResolveInputMask }
 })
 export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để `<input>` trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES (Thay thế @ViewChild / @ContentChild)

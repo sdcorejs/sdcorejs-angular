@@ -1727,14 +1727,21 @@ table-control {
   display: flex;
   gap: var(--gap-2);
   margin-top: 4px;
+  // why: đổi từ <span> sang <button type="button"> để bàn phím chọn được màu → reset padding mặc
+  // định của button (giữ hình tròn 24px) và bổ sung focus ring.
   .fb-color-swatch {
     width: 24px;
     height: 24px;
     border-radius: 50%;
     cursor: pointer;
+    padding: 0;
     border: 2px solid transparent;
     &.is-active {
       border-color: var(--md-sys-color-on-surface);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
     }
     &.primary {
       background: var(--md-sys-color-primary);
@@ -1800,6 +1807,8 @@ table-control {
     background: color-mix(in srgb, var(--md-sys-color-primary) 4%, transparent);
   }
 }
+// why: .fb-add-link đổi từ <a> sang <button type="button"> (bàn phím phải thêm được cột) → reset
+// chrome mặc định của button để giữ nguyên diện mạo "link", và thêm focus ring khi tab tới.
 .fb-add-link {
   display: inline-flex;
   align-items: center;
@@ -1809,11 +1818,18 @@ table-control {
   cursor: pointer;
   padding: 4px 0;
   text-decoration: none;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
   .msi {
     font-size: 14px;
   }
   &:hover {
     text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
   }
 }
 

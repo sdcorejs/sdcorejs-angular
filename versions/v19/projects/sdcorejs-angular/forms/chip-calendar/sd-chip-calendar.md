@@ -191,6 +191,21 @@ await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-required', 'false');
 ```
 
+## Accessibility
+
+`aria-hidden="true"` used to sit on the layout `<div>` wrapping the chip grid **and** on the `<div>`
+wrapping `<mat-calendar>` inside the menu — the second one hid the whole date grid from assistive
+tech even though it still took focus and responded to arrow keys.
+
+- Neither wrapper carries `aria-hidden` any more. The menu wrapper is `role="presentation"` (it only
+  exists to stop click bubbling from closing the menu) which does **not** hide the calendar inside.
+- When an `sdViewDef` face is shown there is no focusable element inside it, so the click handler was
+  moved onto that face and it is now `role="button" tabindex="0"` with Enter/Space keyboard handlers
+  that mirror the click exactly. No `aria-label` is set there on purpose: the projected content is
+  the visible label and an `aria-label` would override it.
+- The chip input gets `aria-invalid="true"` plus `aria-describedby` pointing at the `<mat-error>`
+  (stable id, exposed as `errorId`) whenever the inline error renders.
+
 ## Anti-patterns
 
 - ❌ Using `formControlName` or `[(ngModel)]` — not wired.

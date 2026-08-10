@@ -22,6 +22,13 @@ interface SidebarV2RailItem {
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // why: Escape-để-đóng-flyout gom về HOST. Trước đây handler nằm trên div bọc và trên <section>
+  // flyout — cả hai đều không focusable nên chỉ chạy nhờ event nổi bọt từ con, đồng thời khai
+  // interaction handler trên phần tử không nhận được focus. Host là tổ tiên của tất cả nên hành vi
+  // giữ nguyên hệt như cũ.
+  host: {
+    '(keydown.escape)': 'closeFromEscape()',
+  },
 })
 export class SidebarV2Component {
   readonly #router = inject(Router);

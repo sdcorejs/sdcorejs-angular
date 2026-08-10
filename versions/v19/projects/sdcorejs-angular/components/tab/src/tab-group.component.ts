@@ -16,6 +16,7 @@ import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { Color } from '@sdcorejs/utils/models';
 import { SdTab } from './tab.component';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { TranslatePipe } from '@sdcorejs/angular/i18n';
 
 export interface SdTabClosedEvent {
   index: number;
@@ -25,7 +26,7 @@ export interface SdTabClosedEvent {
 @Component({
   selector: 'sd-tab-group',
   standalone: true,
-  imports: [SdIcon, MatTabsModule, NgTemplateOutlet],
+  imports: [SdIcon, MatTabsModule, NgTemplateOutlet, TranslatePipe],
   templateUrl: './tab-group.component.html',
   styleUrl: './tab-group.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

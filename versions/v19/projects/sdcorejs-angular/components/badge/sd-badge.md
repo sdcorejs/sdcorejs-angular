@@ -116,6 +116,11 @@ None — content is driven by `title`, `description`, and `icon`.
 <sd-badge type="tag" info icon="label" title="lg" size="lg"></sd-badge>
 ```
 
+## Accessibility
+- The badge root is **never** `aria-hidden`. It carries the visible `title`/`description` text, so hiding it would erase real content from the accessibility tree.
+- When — and only when — a consumer binds `(click)`, the root becomes a real control: `role="button"`, `tabindex="0"`, a `:focus-visible` ring, and Enter/Space that emit the same `click` output as a mouse click (Space also calls `preventDefault()` so the page does not scroll). Without a `(click)` listener the badge stays a plain, non-focusable status indicator.
+- `onClick` only calls `stopPropagation()` when the `click` output actually has a subscriber. A badge with no listener lets the event bubble to the enclosing control — this is how `<sd-tab-router>` can place a badge inside its `<a>` without nesting two interactive elements.
+
 ## Anti-patterns
 - Using `<sd-badge>` as a primary action — it's a status indicator; for actions use `<sd-button>` or `<sd-quick-action>`
 - Long sentences in `title` — keep it short (1-3 words); use `description` for secondary detail (only with `icon`/`tag` types — `round` không hỗ trợ description)

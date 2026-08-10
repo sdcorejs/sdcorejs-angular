@@ -224,6 +224,8 @@ Signals update the tree reactively when their value changes. Root and lazy reque
 
 Rows use a roving tabindex. Arrow Up/Down move through visible nodes, Home/End jump to the first/last visible node, Arrow Right expands or enters a branch, Arrow Left collapses or moves to the parent, and Enter/Space toggles selection. Each row exposes `role="treeitem"`, `aria-level`, expansion state, and selection/indeterminate state.
 
+The roving index is bound as `[attr.tabindex]`, not `[tabIndex]`. The camelCase form sets the DOM *property* only and emits no `tabindex` attribute, so every tool that reads markup (a11y lint, DOM snapshots, devtools inspection) saw the rows as non-focusable even though focus worked at runtime.
+
 ## Commands
 
 Commands render at the end of each row. The `more_vert` trigger only appears on row hover when at least one command is visible. Command text is kept separate from the label column, so two-line labels do not overlap the trigger.

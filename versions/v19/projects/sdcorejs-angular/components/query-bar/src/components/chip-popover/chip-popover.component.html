@@ -13,7 +13,11 @@
     @let _switchPickerMenu = switchPickerMenu();
 
     @if (_field) {
-      <div class="c-pop-header" (click)="$event.stopPropagation()">
+      <!-- why: header/body của popover là NHÓM control (role="group"), không phải nút — nên chúng
+           KHÔNG được nhận tabindex; tab phải đi thẳng vào các control bên trong. Thêm chặn Enter
+           bên cạnh chặn click: cả hai chỉ để mat-menu không tự đóng khi người dùng thao tác trong
+           popover; Escape và phím mũi tên vẫn bọt lên để menu đóng/điều hướng bình thường. -->
+      <div class="c-pop-header" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
         <sd-icon [name]="iconFor(_field)"></sd-icon>
         <!-- why: nested mat-menu trigger to swap the chip's field — parent provides
              the field-picker MatMenu via [switchPickerMenu]. -->
@@ -39,7 +43,7 @@
           (modelChange)="onEditingOperatorChange($any($event))" />
       </div>
 
-      <div class="c-pop-body" (click)="$event.stopPropagation()">
+      <div class="c-pop-body" role="group" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
         @if (!isNoDataOperator(_editingOperator)) {
           @if (_editingOperator === 'BETWEEN') {
             @if (_field.type === 'date') {

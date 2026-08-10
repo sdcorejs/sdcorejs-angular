@@ -10,12 +10,19 @@
 @let _density = density();
 @let _operator = operator();
 
+<!-- why: vỏ chip là một NHÓM control (nhãn + ô nhập + nút ×), không phải nút → role="group" +
+     aria-label mô tả đúng cấu trúc và cũng cho biết vì sao nó KHÔNG nhận tabindex (tab đi thẳng
+     vào input bên trong). `focusFromShell` đã tự loại click trên input và trên nút × nên gắn thêm
+     Enter dùng chung handler là an toàn và phản chiếu đúng hành vi click. -->
 <span
   class="c-seamless"
+  role="group"
+  [attr.aria-label]="field().label"
   [attr.data-state]="_state"
   [class.c-seamless--compact]="_density === 'compact'"
   [class.c-seamless--comfortable]="_density === 'comfortable'"
-  (click)="focusFromShell($event)">
+  (click)="focusFromShell($event)"
+  (keydown.enter)="focusFromShell($event)">
 
   <!-- Label segment: icon + field name (+ optional operator pill) -->
   <span class="c-seamless__label">

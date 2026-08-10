@@ -148,6 +148,22 @@ export class SidebarComponent {
     this.treeControl.toggle(menu);
   };
 
+  // why: mục menu nay là role="button" + tabindex="0" nên Enter/Space phải điều hướng đúng như
+  // click. Lọc theo target để phím bấm trên nút ghim lồng bên trong không kéo theo điều hướng.
+  onMenuNodeKeydown = (event: KeyboardEvent, node: { path: string; queryParams: Params }): void => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    this.navigate({ path: node.path, queryParams: node.queryParams ?? {} });
+  };
+
+  // why: nhánh có con nay là role="button" + aria-expanded → Enter/Space phải gập/mở đúng như click.
+  onToggleMenuNodeKeydown = (event: KeyboardEvent, menu: SdLayoutMenu): void => {
+    if (event.target !== event.currentTarget) return;
+    event.preventDefault();
+    this.onToggleMenuNode(menu);
+  };
+
   isPinnedNode = (node: SdLayoutMenu): boolean => this.pinnedNodeKeys().has(this.#getMenuNodeKey(node));
   isHoveredNode = (node: SdLayoutMenu): boolean => this.#hoveredMenuNodeKey() === this.#getMenuNodeKey(node);
 

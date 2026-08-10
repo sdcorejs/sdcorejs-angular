@@ -9,6 +9,10 @@
 @let _errorMessage = errorMessage();
 @let _size = size();
 @let _removable = removable();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
+@let _viewTemplate = _sdViewDef?.templateRef;
 
 @if (_isViewed) {
   <sd-view
@@ -27,15 +31,28 @@
     <sd-label [label]="_label" [required]="_required"></sd-label>
   }
 
+  <!-- why: div chỉ là hộp layout — aria-hidden="true" cũ ẩn CẢ cây con (chip, ô nhập, <mat-error>)
+       khỏi accessibility tree. Ở đây (click) KHÔNG phải tiện ích chuột thừa như các control khác:
+       khi sdViewDef đang hiển thị thì không có phần tử focus được nào bên trong, nên click là lối
+       vào DUY NHẤT. Vì vậy handler được chuyển hẳn xuống phần tử view và phần tử đó nhận
+       role="button" + tabindex="0" + keydown Enter/Space; div ngoài không còn handler nào. -->
   <div
     class="d-flex align-items-center"
-    [class.sd-view]="!!_sdViewDef?.templateRef"
+    [class.sd-view]="!!_viewTemplate"
     [class.c-focused]="isFocused"
-    [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
-    @if (_sdViewDef?.templateRef && !isFocused) {
-      <ng-container *ngTemplateOutlet="_sdViewDef!.templateRef; context: { value: formControl.value }"></ng-container>
+    [class.c-disabled]="formControl.disabled">
+    @if (_viewTemplate && !isFocused) {
+      <!-- why: KHÔNG đặt aria-label — nội dung sdViewDef chính là nhãn nhìn thấy được, aria-label
+           sẽ ghi đè và làm AT đọc khác chữ trên màn hình. -->
+      <div
+        class="sd-chip-calendar__view-trigger"
+        role="button"
+        tabindex="0"
+        (click)="onClick()"
+        (keydown.enter)="onViewKeydown($event)"
+        (keydown.space)="onViewKeydown($event)">
+        <ng-container *ngTemplateOutlet="_viewTemplate; context: { value: formControl.value }"></ng-container>
+      </div>
     } @else {
       <mat-form-field
         [class.sd-md]="_size === 'md'"
@@ -82,21 +99,27 @@
             [attr.data-count]="dataCount()"
             [attr.data-required]="dataRequired()"
             [attr.data-error-message]="dataErrorMessage()"
+            [attr.aria-invalid]="_errorVisible ? 'true' : null"
+            [attr.aria-describedby]="_showInlineError ? errorId : null"
             readonly
             #input />
         </mat-chip-grid>
 
         <mat-menu #calendarMenu="matMenu" overlapTrigger="false" (closed)="onCloseCalendar()">
-          <div style="width: 280px" (click)="$event.stopPropagation()" aria-hidden="true">
+          <!-- why: aria-hidden="true" ở đây từng ẩn NGUYÊN <mat-calendar> — tức toàn bộ lưới ngày,
+               nút chuyển tháng và ô ngày đang chọn — khỏi accessibility tree, dù lịch vẫn nhận
+               focus và điều hướng bằng phím mũi tên. role="presentation" chỉ vô hiệu hoá cái div
+               bọc (nó chỉ tồn tại để chặn nổi bọt click làm đóng menu), KHÔNG lan xuống lịch. -->
+          <div style="width: 280px" role="presentation" (click)="$event.stopPropagation()">
             <mat-calendar (selectedChange)="onSelectDate($event)" [dateClass]="dateClass"> </mat-calendar>
           </div>
         </mat-menu>
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
+        @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
       </mat-form-field>
     }

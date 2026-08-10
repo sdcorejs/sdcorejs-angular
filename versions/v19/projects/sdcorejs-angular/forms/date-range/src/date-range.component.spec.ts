@@ -878,3 +878,85 @@ describe('SdDateRange deferred blur emit lifetime', () => {
     fixture.destroy();
   }));
 });
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdDateRange],
+  template: `<sd-date-range [required]="required"></sd-date-range>`,
+})
+class A11yHost {
+  required = false;
+}
+
+describe('SdDateRange (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdDateRange;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(By.directive(SdDateRange)).componentInstance as SdDateRange;
+  });
+
+  it('leaves no aria-hidden on either range input', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+    const inputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    expect(inputs.length).toBe(2);
+    inputs.forEach(el => expect(el.hasAttribute('aria-hidden')).toBe(false));
+  });
+
+  it('exposes the calendar trigger as a keyboard-reachable, named <button>', () => {
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.type).toBe('button');
+    expect(btn.tabIndex).toBeGreaterThanOrEqual(0);
+    expect(btn.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('activating the calendar trigger opens the range picker', () => {
+    const picker = cmp.picker()!;
+    expect(picker).toBeTruthy();
+    spyOn(picker, 'open');
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    btn.click();
+    expect(picker.open).toHaveBeenCalled();
+  });
+
+  it('wires aria-invalid + aria-describedby on BOTH inputs when the inline error renders', async () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    // why: chạm vào đầu range (tương đương blur ô "Từ") — đúng luồng thật, và là điều kiện
+    // MatFormField dùng để cho phép hiện subscript lỗi.
+    cmp.control1.markAsTouched();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    const inputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    inputs.forEach(el => {
+      expect(el.getAttribute('aria-invalid')).toBe('true');
+      expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
+    });
+  });
+});

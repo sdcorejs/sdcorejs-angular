@@ -193,15 +193,31 @@ li {
                 font-size: 20px;
               }
 
+              // why: nút ghim đổi từ <sd-icon> sang <button> để bàn phím ghim được → reset padding
+              // mặc định của button + thêm focus ring. opacity:0 giữ hành vi hiện-khi-hover, nhưng
+              // PHẢI hiện lại khi nhận focus bàn phím — nếu không nó là "nút vô hình mà tab tới được".
               .c-menu-node-description-icon-pin {
                 display: flex;
                 align-items: center;
                 justify-content: start;
                 background-color: transparent;
                 border: none;
+                padding: 0;
                 font-size: 18px;
                 opacity: 0;
+
+                &:focus-visible {
+                  opacity: 1;
+                  outline: 2px solid var(--sd-primary, #005cbb);
+                  outline-offset: 2px;
+                }
               }
+            }
+
+            // why: mục menu nay là role="button" + tabindex="0" nên cần vòng focus thấy được.
+            .c-menu-node-description[role='button']:focus-visible {
+              outline: 2px solid var(--sd-primary, #005cbb);
+              outline-offset: -2px;
             }
           }
         }

@@ -47,3 +47,5 @@ Outputs are `sdChange`, `sdFocus`, and `sdBlur`. Public methods include `open()`
 ## Accessibility and automation
 
 The editor is a numeric-inputmode text field with an accessible label. The picker trigger has its own translated label. `data-autoId`, disabled/invalid/empty/value/required/error metadata follow the common form-control contract.
+
+The `<div>` wrapped around the spinner inside the picker `mat-menu` only exists to stop click bubbling from closing the menu; it is marked `role="presentation"`, never `aria-hidden="true"`. `aria-hidden` there would have hidden the hour/minute spinner and the Cancel/Confirm buttons from assistive tech while they stayed focusable.

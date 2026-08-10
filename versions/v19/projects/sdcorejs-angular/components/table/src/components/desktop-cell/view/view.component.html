@@ -12,17 +12,23 @@
 @if (view) {
   @if (view.isHtml) {
     @if (view.click) {
+      <!-- why: bỏ aria-hidden="true" — ô này có (click) thật nên nó là một control; aria-hidden
+           vừa xoá nội dung ô khỏi accessibility tree vừa để lại một vùng bấm chuột "câm".
+           Nay là role="button" + tabindex="0" + Enter/Space chạy đúng như click. -->
       <div
         #contentContainer
         [attr.data-autoId]="_autoId"
+        role="button"
+        tabindex="0"
         (click)="view.click()"
+        (keydown.enter)="onViewKeydown($event)"
+        (keydown.space)="onViewKeydown($event)"
         class="text-break cursor-pointer"
         [sdTooltip]="view.tooltip || (isExpandByTooltip ? htmlClickTooltip : '')"
         [style]="view.cellStyle"
         [style.max-width]="_truncateWidth"
         [class.c-ellipsis-html]="_truncateEnable"
-        [innerHTML]="view.data | sdSafeHtml"
-        aria-hidden="true"></div>
+        [innerHTML]="view.data | sdSafeHtml"></div>
 
       <ng-template #htmlClickTooltip>
         <div

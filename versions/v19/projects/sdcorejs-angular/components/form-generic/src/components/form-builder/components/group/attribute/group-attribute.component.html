@@ -25,12 +25,19 @@
     <div class="fb-field">
       <div class="fb-field__label">{{ 'core.component.form-builder.group-accent-color' | translate }}</div>
       <div class="fb-color-swatches">
+        <!-- why: ô màu là control chọn màu THẬT nhưng lại là <span (click)> — không nhận focus,
+             Enter/Space không chọn được, và trạng thái "đang chọn" chỉ tồn tại ở CSS. Đổi sang
+             <button type="button"> (tự focusable + Enter/Space) và khai aria-pressed để screen
+             reader biết ô nào đang được chọn. -->
         @for (color of colorPresets; track color) {
-          <span class="fb-color-swatch"
-                [class]="color"
-                [class.is-active]="_group.properties.color === color"
-                (click)="pickColor(color)"
-                [attr.aria-label]="color"></span>
+          <button
+            type="button"
+            class="fb-color-swatch"
+            [class]="color"
+            [class.is-active]="_group.properties.color === color"
+            [attr.aria-pressed]="_group.properties.color === color"
+            (click)="pickColor(color)"
+            [attr.aria-label]="color"></button>
         }
       </div>
     </div>

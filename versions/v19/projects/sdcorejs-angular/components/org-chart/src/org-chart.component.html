@@ -16,12 +16,18 @@
   @let _expanded = isExpanded(item);
   @let _context = createContext(item, depth, parent);
 
+  <!-- why: role="treeitem" BẮT BUỘC phải có aria-selected — thiếu nó screen reader không biết
+       node đang ở trạng thái nào và bỏ qua luôn ngữ nghĩa tree. Org-chart là sơ đồ chỉ-đọc, không
+       có khái niệm chọn node, nên khai báo tĩnh "false" (đúng sự thật) thay vì bỏ trống.
+       aria-level bổ sung để screen reader đọc được độ sâu của node trong sơ đồ. -->
   <li
     class="sd-org-chart__node"
     [class.sd-org-chart__node--expanded]="_hasChildren && _expanded"
     [class.sd-org-chart__node--collapsed]="_hasChildren && !_expanded"
     role="treeitem"
-    [attr.aria-expanded]="_hasChildren ? _expanded : null">
+    [attr.aria-level]="depth + 1"
+    [attr.aria-expanded]="_hasChildren ? _expanded : null"
+    aria-selected="false">
     <div class="sd-org-chart__node-shell">
       <div
         class="sd-org-chart__card"

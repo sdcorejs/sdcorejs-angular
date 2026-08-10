@@ -111,12 +111,17 @@
                                     <sd-icon style="font-size: 18px" name="open_in_new"></sd-icon>
                                   </button>
 
+                                  <!-- why: bỏ aria-hidden="true" — panel này CHÍNH LÀ nội dung của
+                                       menu (danh sách giá trị); ẩn nó đi thì menu mở ra rỗng với
+                                       screen reader. role="group" mô tả đúng và giữ panel không
+                                       nhận tabindex; stopPropagation chỉ để menu không tự đóng. -->
                                   <mat-menu #menu="matMenu">
                                     <div
                                       class="px-3 py-2"
+                                      role="group"
                                       style="max-width: 300px; max-height: 250px; overflow: auto"
                                       (click)="$event.stopPropagation()"
-                                      aria-hidden="true">
+                                      (keydown.enter)="$event.stopPropagation()">
                                       @for (val of arrayItems; track $index) {
                                         <div class="border-bottom py-2 text-wrap" [innerHTML]="val"></div>
                                       }
@@ -134,18 +139,26 @@
               } @else {
                 <tr>
                   <td [attr.colspan]="option.columns.length + 2" class="p-0 border-0 bg-white">
+                    <!-- why: bỏ aria-hidden="true" — đây vừa là THÔNG BÁO trạng thái rỗng vừa là
+                         control tải file mẫu. aria-hidden xoá cả thông báo lẫn control khỏi
+                         accessibility tree. Nay role="button" + tabindex="0" + Enter/Space; live
+                         region riêng cho spinner tải mẫu (tiến trình bất đồng bộ). -->
                     <div
                       class="empty-state-wrapper"
+                      role="button"
+                      tabindex="0"
+                      [attr.aria-label]="'core.component.import-excel.download-template-tooltip' | translate"
                       (click)="downloadTemplate()"
-                      [matTooltip]="'core.component.import-excel.download-template-tooltip' | translate"
-                      aria-hidden="true">
+                      (keydown.enter)="onDownloadTemplateKeydown($event)"
+                      (keydown.space)="onDownloadTemplateKeydown($event)"
+                      [matTooltip]="'core.component.import-excel.download-template-tooltip' | translate">
                       <sd-icon class="empty-icon" name="cloud_download"></sd-icon>
 
                       <h4>{{ 'core.component.import-excel.no-data-upload' | translate }}</h4>
                       <span class="text-small text-link"> {{ 'core.component.import-excel.click-here-template' | translate }} </span>
 
                       @if (isDownloadTemplate) {
-                        <div class="mt-3">
+                        <div class="mt-3" role="status" aria-live="polite" [attr.aria-label]="'core.component.data-state.loading.title' | translate">
                           <mat-spinner diameter="24" mode="indeterminate"></mat-spinner>
                         </div>
                       }

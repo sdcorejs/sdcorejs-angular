@@ -58,6 +58,8 @@
       (sdBlur)="onBlur()">
     </sd-time>
 
+    <!-- why: GIỮ aria-hidden — mũi tên chỉ là trang trí, ý nghĩa "từ → đến" đã nằm trong
+         aria-label của hai <sd-time> con; đọc thêm "mũi tên phải" chỉ gây nhiễu. -->
     <span class="sd-time-range-separator" aria-hidden="true">→</span>
 
     <sd-time

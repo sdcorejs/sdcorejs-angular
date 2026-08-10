@@ -485,6 +485,64 @@ describe('SdSideDrawer', () => {
 
       expect(styles).toContain('margin-left: auto');
     });
+
+    // ── A11y ────────────────────────────────────────────────────────────
+    // why: "click backdrop để đóng" là hành vi CHỈ có ở chuột — drawer không hề có Escape. Và
+    // backdrop dùng aria-hidden thay vì role="presentation" (khai báo đúng cho lớp phủ trang trí).
+
+    it('marks the backdrop presentational instead of aria-hidden', fakeAsync(() => {
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      const backdrop = document.body.querySelector('.sd-side-drawer-backdrop') as HTMLElement;
+      expect(backdrop).not.toBeNull();
+      expect(backdrop.getAttribute('role')).toBe('presentation');
+      expect(backdrop.hasAttribute('aria-hidden')).toBe(false);
+    }));
+
+    it('exposes the drawer as a labelled modal dialog', fakeAsync(() => {
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      const root = getDrawerRoot()!;
+      expect(root.getAttribute('role')).toBe('dialog');
+      expect(root.getAttribute('aria-modal')).toBe('true');
+      expect(root.getAttribute('aria-label')).toBe('Test Drawer');
+    }));
+
+    it('Escape closes the drawer, mirroring the backdrop click', fakeAsync(() => {
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      getDrawerRoot()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      tick();
+
+      expect(component.isOpened()).toBeFalse();
+    }));
+
+    it('Escape does nothing when backdrop dismissal is disabled', fakeAsync(() => {
+      host.disableBackdropClose = true;
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      getDrawerRoot()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      tick();
+
+      expect(component.isOpened()).toBeTrue();
+      component.close();
+      fixture.detectChanges();
+      tick();
+    }));
   });
 });
 
