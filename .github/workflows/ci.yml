@@ -1,0 +1,105 @@
+name: CI
+
+# why: until now the ONLY workflow that touched the library ran on a `v<suffix>` tag,
+# and even that one did not run the tests. A regression therefore surfaced at publish
+# time, after the release decision had already been made. This runs the same gates the
+# release ritual depends on — lint, build, unit tests, and the version-sync check — on
+# every push and pull request, so `main` is known-good before anyone tags it.
+#
+# Deliberately v19-only: v19 is the source of truth and v20/v21 are generated from it
+# by `npm run sync`. `check:sync` is what proves the generated workspaces still match.
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-version-sync:
+    name: Verify v19 rollout to v20/v21
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Check generated version workspaces
+        run: npm run check:sync
+
+  lint-build-test:
+    name: Lint, build and test (v19)
+    runs-on: ubuntu-latest
+    # The suite is ~4.6k specs and finishes in a couple of minutes; the cap only exists
+    # so a wedged headless browser cannot burn a full job allowance.
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: versions/v19/package-lock.json
+
+      - name: Install dependencies
+        # npm install, not npm ci: the checked-in lockfiles can lag behind the manifests
+        # after a sync rollout (see the "Known issues" section of CLAUDE.md).
+        run: npm install --legacy-peer-deps
+        working-directory: versions/v19
+
+      - name: Lint
+        # `npm run lint:release` is a documented pre-release step and it was red on a
+        # clean `main` before this branch. Gating it here stops that recurring.
+        run: npx ng lint
+        working-directory: versions/v19
+
+      - name: Build the library
+        # ng-packagr is the real typecheck gate for the published surface.
+        run: npm run build
+        working-directory: versions/v19
+
+      - name: Unit tests
+        # --code-coverage is REQUIRED, not a nicety: the karma coverage thresholds are
+        # only evaluated when coverage is collected, so without it they gate nothing.
+        # karma.conf.js prints the Jasmine random seed at the top of the run; quote it
+        # when reporting a red run (replay caveat documented in that file).
+        run: npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadlessCI --code-coverage
+        working-directory: versions/v19
+
+  scripts:
+    name: Repo script tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install orchestrator dependencies
+        run: npm install
+
+      - name: Run generator and docs script tests
+        # Covers the showcase generators, the branding guard, collect-docs (which
+        # fail-closes on unpinned `blob/main` links) and the published-page builder.
+        run: npm run test:scripts

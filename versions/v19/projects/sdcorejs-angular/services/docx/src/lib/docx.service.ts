@@ -88,17 +88,27 @@ export class SdDocxService {
     document.body.appendChild(this.#fileInput);
   }
 
-  async #getPandocInstance(): Promise<PandocInstance> {
-    if (this.#pandocInstance) {
-      return this.#pandocInstance;
-    }
-
+  // why: `fetch(pandoc.wasm)` + `WebAssembly.instantiate` là ranh giới DUY NHẤT của service
+  // này không chạy được trong Karma (không có binary ~50MB trong CI, không có network).
+  // Tách riêng ra một method TS `private` — KHÔNG dùng `#private` — để spec có thể
+  // `spyOn(service as any, 'loadPandocInstance')` và cho toàn bộ phần còn lại của
+  // `convertToHtml` chạy bằng code thật. `private` của TS bị xoá lúc compile nên
+  // không lộ thêm API cho consumer, nhưng vẫn spy được ở runtime.
+  private async loadPandocInstance(): Promise<PandocInstance> {
     const wasmResponse = await fetch(this.#PANDOC_WASM_URL);
     if (!wasmResponse.ok) {
       throw new Error(`Failed to fetch pandoc.wasm: ${wasmResponse.status} ${wasmResponse.statusText}`);
     }
     const wasmBinary = await wasmResponse.arrayBuffer();
-    this.#pandocInstance = await createPandocInstance(wasmBinary);
+    return createPandocInstance(wasmBinary);
+  }
+
+  async #getPandocInstance(): Promise<PandocInstance> {
+    if (this.#pandocInstance) {
+      return this.#pandocInstance;
+    }
+
+    this.#pandocInstance = await this.loadPandocInstance();
     return this.#pandocInstance;
   }
 
