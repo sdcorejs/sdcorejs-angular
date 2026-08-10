@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQueryBuilder } from './query-builder.component';
-import { QbGroup, QbRule, SdQueryBuilderField } from './query-builder.model';
+import { SdQbGroup, SdQbRule, SdQueryBuilderField } from './query-builder.model';
 
 const FIELDS: SdQueryBuilderField[] = [
   { key: 'code', label: 'Mã', type: 'string' },
@@ -39,7 +40,7 @@ describe('SdQueryBuilder', () => {
     fixture.detectChanges();
   });
 
-  const firstRule = (): QbRule => component.tree().children[0] as QbRule;
+  const firstRule = (): SdQbRule => component.tree().children[0] as SdQbRule;
 
   it('creates the component', () => {
     expect(component).toBeTruthy();
@@ -168,19 +169,19 @@ describe('SdQueryBuilder', () => {
       const c = component;
       c.setGroupLogic(c.tree(), 'OR');
       c.addRule(c.tree());
-      const r0 = c.tree().children[0] as QbRule;
+      const r0 = c.tree().children[0] as SdQbRule;
       c.setField(r0, 'price');
       c.setOperator(r0, 'GREATER_THAN');
       c.setScalar(r0, 100);
       c.addGroup(c.tree());
-      const g = c.tree().children[1] as QbGroup;
+      const g = c.tree().children[1] as SdQbGroup;
       c.setGroupLogic(g, 'AND');
-      const gr0 = g.children[0] as QbRule;
+      const gr0 = g.children[0] as SdQbRule;
       c.setField(gr0, 'code');
       c.setOperator(gr0, 'EQUAL');
       c.setScalar(gr0, 'ABC');
       c.addRule(g);
-      const gr1 = g.children[1] as QbRule;
+      const gr1 = g.children[1] as SdQbRule;
       c.setField(gr1, 'name');
       c.setOperator(gr1, 'CONTAIN');
       c.setScalar(gr1, 'abc');
@@ -369,6 +370,42 @@ describe('SdQueryBuilder', () => {
     });
   });
 
+  // `values` items stability — same OOM class as boolean items above.
+  describe('values items stability (OOM fix)', () => {
+    const valuesField = (): SdQueryBuilderField => FIELDS.find(f => f.key === 'status')!;
+
+    it('returns the SAME array reference across calls for the same field', () => {
+      expect(component.valueItems(valuesField())).toBe(component.valueItems(valuesField()));
+    });
+
+    it('returns the SAME empty reference for a values field declared WITHOUT values', () => {
+      // why: đây chính là ca gây treo. `values` là optional, nên template cũ (`fieldOf(rule)!.values || []`)
+      // cấp phát một `[]` MỚI mỗi CD cho field khai thiếu `values` → `sd-select` gọi markForCheck →
+      // CD mới → mảng mới → lặp vô hạn. Ref rỗng phải ổn định.
+      const bare = { key: 'no-values', label: 'Thiếu values', type: 'values' } as SdQueryBuilderField;
+      const a = component.valueItems(bare);
+      const b = component.valueItems(bare);
+
+      expect(a).toBe(b);
+      expect(a.length).toBe(0);
+    });
+
+    it('does not loop / throw when a rule field is switched to a values field', () => {
+      component.addRule(component.tree());
+      component.setField(firstRule(), 'status');
+
+      expect(() => fixture.detectChanges()).not.toThrow();
+      expect(() => fixture.detectChanges()).not.toThrow();
+    });
+
+    it('still exposes the declared option list', () => {
+      expect(component.valueItems(valuesField())).toEqual([
+        { value: 'active', display: 'Hoạt động' },
+        { value: 'inactive', display: 'Ngừng' },
+      ]);
+    });
+  });
+
   // Task 6 — date-mode UI + compact rows (hideInlineError)
   describe('date-mode UI + compact rows', () => {
     const setupDateRule = (op: string) => {
@@ -422,7 +459,7 @@ describe('SdQueryBuilder', () => {
 
   // Task 5 — date-mode helpers (relative dates — issue #4)
   describe('date-mode helpers (relative dates — issue #4)', () => {
-    const dateRule = (): QbRule => {
+    const dateRule = (): SdQbRule => {
       component.addRule(component.tree());
       const r = firstRule();
       component.setField(r, 'createdAt');
@@ -479,9 +516,91 @@ describe('SdQueryBuilder', () => {
     });
 
     it('exposes stable option lists for the template', () => {
-      expect(component.dateModes).toBe(component.dateModes);
-      expect(component.relativeUnitOptions).toBe(component.relativeUnitOptions);
-      expect(component.dateModes.map(m => m.value)).toEqual(['absolute', 'now', 'relative']);
+      // why: `[items]` của sd-select phải nhận CÙNG một tham chiếu giữa các chu kỳ CD, nếu không
+      // `toObservable(items)` → `markForCheck()` sẽ lặp vô hạn. Computed memo hoá nên hai lần đọc
+      // liên tiếp (ngôn ngữ không đổi) phải trả về đúng một mảng.
+      expect(component.dateModes()).toBe(component.dateModes());
+      expect(component.relativeUnitOptions()).toBe(component.relativeUnitOptions());
+      expect(component.dateModes().map(m => m.value)).toEqual(['absolute', 'now', 'relative']);
+    });
+  });
+
+  // Chuyển nhãn từ "dịch lúc module-eval" sang "dịch lúc đọc".
+  describe('i18n — option labels resolve at read time', () => {
+    let i18n: I18nService;
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    afterEach(() => {
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    it('date-mode labels follow the active language', () => {
+      expect(component.dateModes().map(m => m.display)).toEqual(['Ngày cụ thể', 'Hôm nay', 'Tương đối']);
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.dateModes().map(m => m.display)).toEqual(['Specific date', 'Today', 'Relative']);
+
+      i18n.setLanguage('ja', { reload: false });
+      expect(component.dateModes().map(m => m.display)).toEqual(['指定した日付', '今日', '相対']);
+    });
+
+    it('value-source + relative-unit labels follow the active language', () => {
+      expect(component.valueSourceOptions().map(o => o.display)).toEqual(['Nhập giá trị', 'Chọn trường']);
+      expect(component.relativeUnitOptions()[0].display).toBe('ngày trước');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.valueSourceOptions().map(o => o.display)).toEqual(['Enter a value', 'Compare with field']);
+      expect(component.relativeUnitOptions()[0].display).toBe('days ago');
+    });
+
+    it('hands a NEW array ref after a language switch, but keeps it stable within one language', () => {
+      // why: hai yêu cầu ngược nhau phải cùng đúng — ổn định giữa các CD (chống vòng lặp OOM của
+      // sd-select) NHƯNG phải đổi khi ngôn ngữ đổi (nếu không nhãn cũ kẹt lại trên UI).
+      const viRef = component.dateModes();
+      expect(component.dateModes()).toBe(viRef);
+
+      i18n.setLanguage('en', { reload: false });
+      const enRef = component.dateModes();
+      expect(enRef).not.toBe(viRef);
+      expect(component.dateModes()).toBe(enRef);
+    });
+
+    it('boolean value options fall back to translated labels and follow the language', () => {
+      const booleanField = FIELDS.find(f => f.key === 'active')!;
+      expect(component.booleanItems(booleanField).map(o => o.display)).toEqual(['Có', 'Không']);
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.booleanItems(booleanField).map(o => o.display)).toEqual(['Yes', 'No']);
+    });
+
+    it('view-mode tokens follow the active language', () => {
+      fixture.componentRef.setInput('mode', 'view');
+      fixture.componentRef.setInput('value', {
+        operator: 'AND',
+        data: [
+          { field: 'createdAt', operator: 'LESS_THAN', dataType: 'date-relative', data: { amount: 3, direction: 'previous', unit: 'day' } },
+        ],
+      } as any);
+      fixture.detectChanges();
+
+      expect(
+        component
+          .tokens()
+          .map(t => t.text)
+          .join('')
+      ).toBe('Ngày tạo < 3 ngày trước');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(
+        component
+          .tokens()
+          .map(t => t.text)
+          .join('')
+      ).toBe('Ngày tạo < 3 days ago');
     });
   });
 });

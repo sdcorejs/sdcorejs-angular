@@ -51,6 +51,18 @@ export interface ISdPermissionConfiguration {
    * Hỗ trợ trả về đồng bộ, Promise hoặc Observable.
    */
   getToken?: () => MaybeAsync<string | undefined | null>;
+
+  /**
+   * Cho phép mirror danh sách mã quyền của key này xuống `sessionStorage` để sống qua reload.
+   *
+   * ⚠️ Mặc định `false` — danh sách quyền CHỈ nằm trong bộ nhớ.
+   *
+   * Bật cờ này nghĩa là chấp nhận: mọi script chạy trên cùng origin đều ĐỌC và GHI được danh sách đó.
+   * Cache KHÔNG phải một ranh giới phân quyền — nó chỉ tiết kiệm một lần gọi API khi reload; backend
+   * vẫn phải kiểm tra quyền cho từng request. Khi bật, nhớ gọi `SdPermissionService.reset()` lúc
+   * signout để xoá cả bản mirror.
+   */
+  persistCache?: boolean;
 }
 
 /**

@@ -110,17 +110,76 @@ describe('ɵsdFormControlConnector', () => {
     expect(Object.is(secondGroup.get('renamed'), replacement)).toBeTrue();
   });
 
-  it('does not replace or remove a control it does not own', () => {
+  it('replaces a FOREIGN control registered under the same name so the value reaches the form', () => {
+    // why: guard ngược cho một bug im lặng. Trước đây connector bỏ qua việc đăng ký khi FormGroup đã
+    // có control trùng `name` (`ownsRegistration = !current`), nên control nội bộ của component
+    // không bao giờ nằm trong form: người dùng gõ, nhưng `group.value[name]` không đổi và form
+    // submit ra rỗng, không một cảnh báo nào. Spec cũ ("does not replace or remove a control it does
+    // not own") khẳng định đúng hành vi hỏng đó.
     const host = fixture.componentInstance;
     const external = new FormControl('external');
     const group = new FormGroup({ field: external });
 
     host.form.set(group);
     fixture.detectChanges();
-    expect(group.get('field')).toBe(external);
 
-    group.setControl('field', new FormControl('replacement'));
-    const replacement = group.get('field');
+    expect(group.get('field')).toBe(host.control());
+    expect(group.get('field')).not.toBe(external);
+  });
+
+  it('propagates the control value to the parent form after replacing a foreign control', () => {
+    const host = fixture.componentInstance;
+    const group = new FormGroup({ field: new FormControl('external') });
+
+    host.form.set(group);
+    fixture.detectChanges();
+
+    host.control().setValue('typed by the user');
+
+    expect(group.value).toEqual({ field: 'typed by the user' });
+  });
+
+  it('restores the displaced control when the connector rebinds to a different name', () => {
+    // why: nếu chỉ `setControl` mà không nhớ control bị đẩy ra, đổi `name` sẽ để control của
+    // component nằm lại ở CẢ key cũ lẫn key mới, còn control gốc của consumer thì mất hẳn.
+    const host = fixture.componentInstance;
+    const external = new FormControl('external');
+    const group = new FormGroup({ field: external });
+
+    host.form.set(group);
+    fixture.detectChanges();
+    expect(group.get('field')).toBe(host.control());
+
+    host.name.set('other');
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(external);
+    expect(group.get('other') === host.control()).toBeTrue();
+  });
+
+  it('restores the displaced control when the host is destroyed', () => {
+    const host = fixture.componentInstance;
+    const external = new FormControl('external');
+    const group = new FormGroup({ field: external });
+
+    host.form.set(group);
+    fixture.detectChanges();
+    expect(group.get('field')).toBe(host.control());
+
+    fixture.destroy();
+
+    expect(group.get('field')).toBe(external);
+  });
+
+  it('does not touch a control that someone else registered over ours', () => {
+    const host = fixture.componentInstance;
+    const group = new FormGroup({ field: new FormControl('external') });
+
+    host.form.set(group);
+    fixture.detectChanges();
+
+    const replacement = new FormControl('replacement');
+    group.setControl('field', replacement);
     host.name.set('other');
     fixture.detectChanges();
 

@@ -26,17 +26,30 @@ function makeGuard(config?: ISdAuthConfiguration): SdAuthGuard {
 // ---------------------------------------------------------------------------
 describe('SdAuthGuard', () => {
   // -------------------------------------------------------------------------
-  // GROUP 1: No SD_AUTH_CONFIGURATION provided
+  // GROUP 1: No SD_AUTH_CONFIGURATION provided — FAIL CLOSED
   // -------------------------------------------------------------------------
   describe('when SD_AUTH_CONFIGURATION is not provided', () => {
     it('instantiates without throwing', () => {
       expect(() => makeGuard()).not.toThrow();
     });
 
-    it('canActivate() returns true (pass-through default)', () => {
+    // why: guard nằm trong route table = route đó được tuyên bố là cần bảo vệ. Quên provider mà vẫn
+    // cho qua thì mọi route "được bảo vệ" thành công khai một cách âm thầm.
+    it('canActivate() returns false (fail closed — deny by default)', () => {
+      spyOn(console, 'error');
       const guard = makeGuard();
       const result = guard.canActivate(routeSnap, stateSnap);
-      expect(result).toBeTrue();
+      expect(result).toBeFalse();
+    });
+
+    it('logs loudly in dev mode so the missing provider is obvious', () => {
+      const errorSpy = spyOn(console, 'error');
+      const guard = makeGuard();
+
+      guard.canActivate(routeSnap, stateSnap);
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.calls.mostRecent().args[0]).toContain('SD_AUTH_CONFIGURATION.guard.auth');
     });
   });
 
@@ -44,14 +57,15 @@ describe('SdAuthGuard', () => {
   // GROUP 2: SD_AUTH_CONFIGURATION provided but guard.auth is absent
   // -------------------------------------------------------------------------
   describe('when configuration has no guard.auth callback', () => {
-    it('canActivate() returns true (no guard callback — pass through)', () => {
+    it('canActivate() returns false (partial config is still a misconfiguration)', () => {
+      spyOn(console, 'error');
       const config: ISdAuthConfiguration = {
         action: { signout: () => Promise.resolve() },
         // guard.auth intentionally omitted
       };
       const guard = makeGuard(config);
       const result = guard.canActivate(routeSnap, stateSnap);
-      expect(result).toBeTrue();
+      expect(result).toBeFalse();
     });
   });
 

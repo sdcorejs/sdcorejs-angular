@@ -22,7 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
@@ -52,7 +52,7 @@ export interface SdTreeNodeAutoIds {
   command?: string;
 }
 
-export interface SdTreeViewCommand<T = any> {
+export interface SdTreeViewCommand<T = unknown> {
   key: string;
   command: SdTreeCommand<T>;
   title: string;
@@ -64,7 +64,7 @@ export interface SdTreeViewCommand<T = any> {
   defaultColor: boolean;
 }
 
-export interface SdTreeViewNode<T = any> extends SdTreeNode<T> {
+export interface SdTreeViewNode<T = unknown> extends SdTreeNode<T> {
   icon?: string;
   selected: boolean;
   selectionDisabled: boolean;
@@ -78,13 +78,15 @@ export interface SdTreeViewNode<T = any> extends SdTreeNode<T> {
   tabIndex: 0 | -1;
 }
 
-export interface SdTreeSelectionActionView<T = any> {
+export interface SdTreeSelectionActionView<T = unknown> {
   action: SdTreeSelectionAction<T>;
   autoId: string | null;
 }
 
 const DEFAULT_STATIC_TREE: SdTreeOption<any> = { loadType: 'static' };
 const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
+/** Shared empty lookup — chế độ không cascade khỏi phải dựng Map mới mỗi lần recompute. */
+const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, number>();
 
 @Component({
   selector: 'sd-tree',
@@ -99,7 +101,7 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
     MatTooltipModule,
     SdButton,
     SdQuickAction,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
   templateUrl: './tree.component.html',
   styleUrl: './tree.component.scss',
@@ -108,8 +110,9 @@ const EMPTY_TREE_ITEMS: SdTreeItem<any>[] = [];
     '[attr.data-autoid]': 'autoId()',
   },
 })
-export class SdTree<T = any> {
+export class SdTree<T = unknown> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #i18n = inject(I18nService);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly option = input<SdTreeComponentOption<T> | undefined>(undefined);
 
@@ -123,10 +126,10 @@ export class SdTree<T = any> {
   readonly selector = input<SdTreeSelectorOption<T> | undefined | null>(undefined);
   readonly itemTemplate = input<TemplateRef<SdTreeItemContext<T>> | undefined | null>(undefined);
 
-  readonly selectedItemsChange = output<T[]>();
-  readonly selectChange = output<SdTreeSelectionEvent<T>>();
-  readonly expandChange = output<SdTreeToggleEvent<T>>();
-  readonly collapseChange = output<SdTreeToggleEvent<T>>();
+  readonly sdSelectedItemsChange = output<T[]>();
+  readonly sdSelectChange = output<SdTreeSelectionEvent<T>>();
+  readonly sdExpandChange = output<SdTreeToggleEvent<T>>();
+  readonly sdCollapseChange = output<SdTreeToggleEvent<T>>();
   readonly loadError = output<SdTreeLoadErrorEvent<T>>();
 
   readonly itemDef = contentChild(SdTreeItemDefDirective<T>);
@@ -201,7 +204,9 @@ export class SdTree<T = any> {
     const items = this.selectedItems();
     const message = this.resolvedSelector()?.message;
     if (typeof message === 'function') return message(items);
-    return message || `Đã chọn ${items.length} mục`;
+    // why: số lượng phải là tham số nội suy, không nối chuỗi — mỗi ngôn ngữ đặt con số ở vị trí khác
+    // nhau ('Đã chọn 3 mục' / '3 item(s) selected' / '已选择 3 项').
+    return message || this.#i18n.t('core.component.tree.selected-count', { count: items.length });
   });
   readonly visibleSelectionActions = computed(() => {
     const items = this.selectedItems();
@@ -233,7 +238,14 @@ export class SdTree<T = any> {
     const nodes = this.visibleNodes();
     const requestedActiveId = this.activeNodeId();
     const activeId = nodes.some(node => node.id === requestedActiveId) ? requestedActiveId : nodes[0]?.id;
-    return nodes.map(node => this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId));
+    // why: đếm 1 lượt bottom-up cho CẢ cây rồi tra theo id. Bản cũ gọi `#flattenAll(node.children)`
+    // cho TỪNG node hiển thị ngay trong map này → O(n²) kèm một mảng mới mỗi node mỗi lần
+    // recompute. Chỉ cascade 'descendants' mới cần số liệu này nên các chế độ khác bỏ qua hẳn.
+    const selectedDescendants =
+      selector?.cascade === 'descendants' ? this.#countSelectedDescendants(this.rootNodes(), selectedIds) : EMPTY_DESCENDANT_COUNTS;
+    return nodes.map(node =>
+      this.#toViewNode(node, selectedIds, selectedItems, selector, commands, node.id === activeId, selectedDescendants)
+    );
   });
 
   readonly trackByNode = (_index: number, node: SdTreeNode<T>): string => node.id;
@@ -309,7 +321,7 @@ export class SdTree<T = any> {
       this.#expandedState.update(state => ({ ...state, [currentNode.id]: false }));
       const toggleEvent = { item: currentNode.data, expanded: false, node: { ...currentNode, isExpanded: false } };
       this.option()?.onCollapse?.(toggleEvent);
-      this.collapseChange.emit(toggleEvent);
+      this.sdCollapseChange.emit(toggleEvent);
       return;
     }
 
@@ -320,7 +332,7 @@ export class SdTree<T = any> {
     this.#expandedState.update(state => ({ ...state, [currentNode.id]: true }));
     const toggleEvent = { item: currentNode.data, expanded: true, node: { ...nextNode, isExpanded: true } };
     this.option()?.onExpand?.(toggleEvent);
-    this.expandChange.emit(toggleEvent);
+    this.sdExpandChange.emit(toggleEvent);
   }
 
   toggleSelection(node: SdTreeNode<T>, event?: Event): void {
@@ -345,16 +357,16 @@ export class SdTree<T = any> {
     this.#selectedIds.set(selectedIds);
     const selectedItems = this.#selectedItemsFromIds(selectedIds);
     this.option()?.onSelectedItemsChange?.(selectedItems);
-    this.selectedItemsChange.emit(selectedItems);
+    this.sdSelectedItemsChange.emit(selectedItems);
     const selectionEvent = { item: node.data, selected: selectedIds.has(node.id), selectedItems };
     this.option()?.onSelect?.(selectionEvent);
-    this.selectChange.emit(selectionEvent);
+    this.sdSelectChange.emit(selectionEvent);
   }
 
   clearSelection(): void {
     this.#selectedIds.set(new Set());
     this.option()?.onSelectedItemsChange?.([]);
-    this.selectedItemsChange.emit([]);
+    this.sdSelectedItemsChange.emit([]);
   }
 
   onSelectionAction(action: SdTreeSelectionAction<T>): void {
@@ -376,7 +388,10 @@ export class SdTree<T = any> {
   }
 
   errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : String(error || 'Unable to load tree data');
+    if (error instanceof Error) return error.message;
+    // why: thông điệp mặc định khi lỗi không mang message — chuỗi này hiện ra cho người dùng cuối
+    // nên phải theo ngôn ngữ đang chọn, không cứng tiếng Anh.
+    return error ? String(error) : this.#i18n.t('core.component.tree.load-error');
   }
 
   onRowFocus(node: SdTreeNode<T>): void {
@@ -514,7 +529,8 @@ export class SdTree<T = any> {
     selectedItems: T[],
     selector: SdTreeSelectorOption<T> | undefined | null,
     commands: SdTreeCommand<T>[],
-    active: boolean
+    active: boolean,
+    selectedDescendants: ReadonlyMap<string, number>
   ): SdTreeViewNode<T> {
     const selected = selectedIds.has(node.id);
     const selectionDisabled = selector?.disabled ? selector.disabled(node.data, selectedItems) : false;
@@ -523,9 +539,13 @@ export class SdTree<T = any> {
       icon: this.#iconOf(node),
       selected,
       selectionDisabled,
-      selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector),
+      selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector, selectedDescendants),
       toggleDisabled: !node.hasChildren || node.isLoading,
-      toggleLabel: node.loadError ? 'Retry loading tree item' : node.isExpanded ? 'Collapse tree item' : 'Expand tree item',
+      // why: nhãn nút gập/mở là tên khả truy cập cho screen reader — trước đây hardcode tiếng Anh
+      // trong một component mà template đã dùng key `core.component.tree.retry`, tức lẫn hai ngôn ngữ.
+      toggleLabel: this.#i18n.t(
+        node.loadError ? 'core.component.tree.retry-item' : node.isExpanded ? 'core.component.tree.collapse' : 'core.component.tree.expand'
+      ),
       ariaExpanded: node.hasChildren ? node.isExpanded : null,
       autoIds: this.#nodeAutoIds(node),
       commands: this.#commandViews(node, commands),
@@ -592,11 +612,15 @@ export class SdTree<T = any> {
     const option = this.resolvedTree();
     const maxDepth = option.maxDepth;
     if (maxDepth !== undefined && level > maxDepth) return [];
+    // why: node NẰM ĐÚNG ở maxDepth không bao giờ có con (đệ quy dừng ở level + 1), nên phải kẹp
+    // `hasChildren` về false. Trước đây `hasChildren` vẫn đọc từ children THÔ → chevron bật, bấm
+    // vào expand ra rỗng mà vẫn bắn `expandChange` (và lazy vẫn gọi `onExpandChildren`).
+    const atMaxDepth = maxDepth !== undefined && level >= maxDepth;
+    const tree = this;
 
     return items.map(item => {
       const rawChildren = this.#childrenOf(item);
-      const hasChildren = rawChildren.length > 0 || this.#hasLazyChildren(item);
-      const isExpanded = this.#expandedState()[item.id] ?? item.expanded ?? this.#defaultExpanded(level);
+      const hasChildren = !atMaxDepth && (rawChildren.length > 0 || this.#hasLazyChildren(item));
       const node: SdTreeNode<T> = {
         treeItem: item,
         data: item.data,
@@ -606,9 +630,20 @@ export class SdTree<T = any> {
         parent,
         children: [],
         hasChildren,
-        isExpanded,
-        isLoading: this.#loadingState()[item.id] ?? false,
-        loadError: this.#lazyErrorState()[item.id],
+        // why: state UI (expand / loading / lazy error) được đọc THEO ID lúc truy cập chứ không
+        // đóng băng lúc build. Nhờ vậy `rootNodes` chỉ phụ thuộc cấu trúc (`#rootItems`,
+        // `#lazyChildren`, option) — mở một node không còn cấp phát lại TOÀN BỘ cây rồi kéo theo
+        // `visibleNodes` + `visibleViewNodes` map lại từ đầu. Consumer nào đọc các field này bên
+        // trong computed/template vẫn nhận đúng dependency signal, nên phản ứng không đổi.
+        get isExpanded(): boolean {
+          return tree.#expandedState()[item.id] ?? item.expanded ?? tree.#defaultExpanded(level);
+        },
+        get isLoading(): boolean {
+          return tree.#loadingState()[item.id] ?? false;
+        },
+        get loadError(): unknown {
+          return tree.#lazyErrorState()[item.id];
+        },
       };
       node.children = this.#buildNodes(rawChildren, level + 1, node);
       return node;
@@ -699,9 +734,32 @@ export class SdTree<T = any> {
     }
   }
 
-  #isSelectionIndeterminate(node: SdTreeNode<T>, selectedIds: Set<string>, selector: SdTreeSelectorOption<T> | undefined | null): boolean {
+  /**
+   * `node.id` → số node ĐƯỢC CHỌN nằm trong subtree của nó (không tính chính nó).
+   * Một lượt duyệt bottom-up cho cả cây, thay cho việc flatten lại subtree của từng node.
+   */
+  #countSelectedDescendants(nodes: SdTreeNode<T>[], selectedIds: Set<string>): ReadonlyMap<string, number> {
+    const counts = new Map<string, number>();
+    const walk = (node: SdTreeNode<T>): number => {
+      let total = 0;
+      for (const child of node.children) {
+        total += walk(child) + (selectedIds.has(child.id) ? 1 : 0);
+      }
+      counts.set(node.id, total);
+      return total;
+    };
+    for (const node of nodes) walk(node);
+    return counts;
+  }
+
+  #isSelectionIndeterminate(
+    node: SdTreeNode<T>,
+    selectedIds: Set<string>,
+    selector: SdTreeSelectorOption<T> | undefined | null,
+    selectedDescendants: ReadonlyMap<string, number>
+  ): boolean {
     if (selector?.cascade !== 'descendants' || selectedIds.has(node.id)) return false;
-    return this.#flattenAll(node.children).some(child => selectedIds.has(child.id));
+    return (selectedDescendants.get(node.id) ?? 0) > 0;
   }
 
   #focusVisibleNode(index: number): void {

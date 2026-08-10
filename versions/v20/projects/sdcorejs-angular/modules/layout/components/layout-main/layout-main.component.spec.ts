@@ -8,7 +8,7 @@ import { SdLayoutResponsiveService } from '../../services';
 import { SdLayoutService } from '../../services/layout.service';
 import { SdLayoutComponent } from './layout-main.component';
 
-@Component({ selector: 'sidebar-v1', standalone: true, template: '<span data-testid="desktop-v1"></span>' })
+@Component({ selector: 'sd-sidebar-v1', standalone: true, template: '<span data-testid="desktop-v1"></span>' })
 class DesktopV1StubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();
@@ -16,35 +16,35 @@ class DesktopV1StubComponent {
   isMobile = input(false);
 }
 
-@Component({ selector: 'sidebar-mobile-v1', standalone: true, template: '<span data-testid="mobile-v1"></span>' })
+@Component({ selector: 'sd-sidebar-mobile-v1', standalone: true, template: '<span data-testid="mobile-v1"></span>' })
 class MobileV1StubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();
   sidebar = input.required<unknown>();
 }
 
-@Component({ selector: 'sidebar-v2', standalone: true, template: '<span data-testid="desktop-v2"></span>' })
+@Component({ selector: 'sd-sidebar-v2', standalone: true, template: '<span data-testid="desktop-v2"></span>' })
 class DesktopV2StubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();
   sidebar = input.required<unknown>();
 }
 
-@Component({ selector: 'sidebar-mobile-v2', standalone: true, template: '<span data-testid="mobile-v2"></span>' })
+@Component({ selector: 'sd-sidebar-mobile-v2', standalone: true, template: '<span data-testid="mobile-v2"></span>' })
 class MobileV2StubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();
   sidebar = input.required<unknown>();
 }
 
-@Component({ selector: 'sidebar-v3', standalone: true, template: '<span data-testid="desktop-v3"></span>' })
+@Component({ selector: 'sd-sidebar-v3', standalone: true, template: '<span data-testid="desktop-v3"></span>' })
 class DesktopV3StubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();
   sidebar = input.required<unknown>();
 }
 
-@Component({ selector: 'sidebar-mobile-v3', standalone: true, template: '<span data-testid="mobile-v3"></span>' })
+@Component({ selector: 'sd-sidebar-mobile-v3', standalone: true, template: '<span data-testid="mobile-v3"></span>' })
 class MobileV3StubComponent {
   menus = input<unknown[]>([]);
   userInfo = input.required<unknown>();

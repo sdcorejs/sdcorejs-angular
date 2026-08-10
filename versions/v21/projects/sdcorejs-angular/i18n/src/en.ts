@@ -616,4 +616,80 @@ export const EN_MESSAGES = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': 'details',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': 'Search...',
+  'core.component.query-bar.no-fields': 'No fields configured',
+  'core.component.query-bar.add-filter': 'Add filter',
+  'core.component.query-bar.clear-all': 'Clear all ({count})',
+  'core.component.query-bar.search': 'Search',
+  'core.component.query-bar.logic-operator': 'Logic operator',
+  'core.component.query-bar.boolean.true': 'Yes',
+  'core.component.query-bar.boolean.false': 'No',
+  'core.component.query-bar.placeholder.value': 'value',
+  'core.component.query-bar.placeholder.text': 'type…',
+  'core.component.query-bar.placeholder.from-number': 'From',
+  'core.component.query-bar.placeholder.to-number': 'To',
+  'core.component.query-bar.placeholder.from-text': 'from…',
+  'core.component.query-bar.placeholder.to-text': 'to…',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': 'Specific date',
+  'core.component.query-builder.date-mode.now': 'Today',
+  'core.component.query-builder.date-mode.relative': 'Relative',
+  'core.component.query-builder.value-source.literal': 'Enter a value',
+  'core.component.query-builder.value-source.field': 'Compare with field',
+  'core.component.query-builder.relative.hour-previous': 'hours ago',
+  'core.component.query-builder.relative.hour-next': 'hours from now',
+  'core.component.query-builder.relative.day-previous': 'days ago',
+  'core.component.query-builder.relative.day-next': 'days from now',
+  'core.component.query-builder.relative.week-previous': 'weeks ago',
+  'core.component.query-builder.relative.week-next': 'weeks from now',
+  'core.component.query-builder.relative.month-previous': 'months ago',
+  'core.component.query-builder.relative.month-next': 'months from now',
+  'core.component.query-builder.relative.format': '{amount} {phrase}',
+  'core.component.query-builder.add': 'Add',
+  'core.component.query-builder.add-node': 'Add a condition or group',
+  'core.component.query-builder.condition': 'Condition',
+  'core.component.query-builder.group': 'Group',
+  'core.component.query-builder.remove-group': 'Remove group',
+  'core.component.query-builder.remove-condition': 'Remove condition',
+  'core.component.query-builder.empty': 'No conditions yet',
+  'core.component.query-builder.select-field': 'Select field',
+  'core.component.query-builder.value': 'Value',
+  'core.component.query-builder.from': 'From',
+  'core.component.query-builder.to': 'To',
+  'core.component.query-builder.boolean.true': 'Yes',
+  'core.component.query-builder.boolean.false': 'No',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '{count} item(s) selected',
+  'core.component.tree.expand': 'Expand tree item',
+  'core.component.tree.collapse': 'Collapse tree item',
+  'core.component.tree.retry-item': 'Retry loading tree item',
+  'core.component.tree.load-error': 'Unable to load tree data',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': 'Copied',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': 'Pinned',
+  'core.module.layout.sidebar.recent': 'Recent',
+  'core.module.layout.sidebar.all-menu': 'All menus',
+  'core.module.layout.menu.pin': 'Pin {title}',
+  'core.module.layout.menu.unpin': 'Unpin {title}',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': 'Open calendar',
+  'core.form.datetime.open-picker': 'Open calendar',
+  'core.form.date-range.open-picker': 'Open calendar',
+  'core.form.date-range.clear': 'Clear date range',
+  'core.form.select.search': 'Search',
+  'core.component.table.loading': 'Loading table data',
+  'core.component.upload-file.loading': 'Uploading file',
+  'core.component.import-excel.loading': 'Loading data',
+  'core.component.upload-file.remove': 'Remove file',
+  'core.component.upload-file.zoom': 'Zoom image',
+  'core.component.upload-file.view-all': 'View all images',
+  'core.component.form-builder.canvas': 'Form design canvas',
 } as const;

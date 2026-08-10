@@ -1,10 +1,10 @@
 <a class="T12R" href="javascript:;" (click)="edit()">{{model || '--'}}</a>
 @if (expression) {
-<sd-modal [title]="'core.component.form-builder.set-expression' | translate" modalClass="sd-form-builder-dialog">
+<sd-modal [title]="'core.component.form-builder.set-expression' | sdTranslate" modalClass="sd-form-builder-dialog">
   <div class="c-builder">
     <div class="d-flex justify-content-end">
-      <sd-button prefixIcon="calculate" class="mr-4" [title]="'core.component.form-builder.condition-group' | translate" color="primary" (click)="addCombinator(expression.conditions)"></sd-button>
-      <sd-button prefixIcon="add" [title]="'core.component.form-builder.condition' | translate" color="primary" (click)="addCondition(expression.conditions)" type="fill"></sd-button>
+      <sd-button prefixIcon="calculate" class="mr-4" [title]="'core.component.form-builder.condition-group' | sdTranslate" color="primary" (click)="addCombinator(expression.conditions)"></sd-button>
+      <sd-button prefixIcon="add" [title]="'core.component.form-builder.condition' | sdTranslate" color="primary" (click)="addCondition(expression.conditions)" type="fill"></sd-button>
     </div>
     <!-- Cấp 1 -->
     @for (conditionLv1 of expression.conditions; track conditionLv1.key; let idxLv1 = $index) {
@@ -49,7 +49,7 @@
             <sd-button
               class="ml-auto"
               prefixIcon="delete"
-              [tooltip]="'core.component.form-builder.delete' | translate"
+              [tooltip]="'core.component.form-builder.delete' | sdTranslate"
               (click)="remove(expression.conditions, idxLv1)"></sd-button>
          
         } @else if (conditionLv1.type === 'combinator') {
@@ -58,9 +58,9 @@
               <sd-button
                 class="mr-4"
                 prefixIcon="delete"
-                [tooltip]="'core.component.form-builder.delete' | translate"
+                [tooltip]="'core.component.form-builder.delete' | sdTranslate"
                 (click)="remove(expression.conditions, idxLv1)"></sd-button>
-              <sd-button prefixIcon="add" [title]="'core.component.form-builder.condition' | translate" size="sm" color="primary" (click)="addCondition(conditionLv1.conditions)" type="fill"></sd-button>
+              <sd-button prefixIcon="add" [title]="'core.component.form-builder.condition' | sdTranslate" size="sm" color="primary" (click)="addCondition(conditionLv1.conditions)" type="fill"></sd-button>
             </div>
             <!-- Cấp 2 -->
             @for (conditionLv2 of conditionLv1.conditions; track conditionLv2.key; let idxLv2 = $index) {
@@ -105,7 +105,7 @@
                     <sd-button
                       class="ml-auto"
                       prefixIcon="delete"
-                      [tooltip]="'core.component.form-builder.delete' | translate"
+                      [tooltip]="'core.component.form-builder.delete' | sdTranslate"
                       (click)="remove(conditionLv1.conditions, idxLv1)"></sd-button>
                  
                 }
@@ -116,6 +116,6 @@
       </div>
     }
   </div>
-  <sd-button sdFooterRight prefixIcon="check" [title]="'core.component.form-builder.confirm' | translate" (click)="onAccept()" color="primary" type="fill"></sd-button>
+  <sd-button sdFooterRight prefixIcon="check" [title]="'core.component.form-builder.confirm' | sdTranslate" (click)="onAccept()" color="primary" type="fill"></sd-button>
 </sd-modal>
 }

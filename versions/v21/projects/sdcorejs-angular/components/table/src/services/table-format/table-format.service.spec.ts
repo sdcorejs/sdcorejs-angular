@@ -4,7 +4,7 @@ import { TableFormatService } from './table-format.service';
 import { SdTableColumn } from '../../models/table-column.model';
 import { signal } from '@angular/core';
 
-// SD_EMPTY_STR resolves to '--'
+// EMPTY_STR resolves to '--'
 const EMPTY_STR = '--';
 
 // ---------------------------------------------------------------------------
@@ -58,7 +58,7 @@ describe('TableFormatService.format', () => {
     expect(result[0].meta.display['name'].isHtml).toBeFalse();
   });
 
-  it('sets display.data to SD_EMPTY_STR for null string value', async () => {
+  it('sets display.data to EMPTY_STR for null string value', async () => {
     const raw = [{ name: null }];
     const cols: SdTableColumn[] = [{ field: 'name', title: 'Name', type: 'string' }];
 
@@ -66,7 +66,7 @@ describe('TableFormatService.format', () => {
     expect(result[0].meta.display['name'].data).toBe(EMPTY_STR);
   });
 
-  it('sets display.data to SD_EMPTY_STR for undefined value', async () => {
+  it('sets display.data to EMPTY_STR for undefined value', async () => {
     const raw = [{ age: undefined }] as any[];
     const cols: SdTableColumn[] = [{ field: 'age' as any, title: 'Age', type: 'string' }];
 
@@ -74,7 +74,7 @@ describe('TableFormatService.format', () => {
     expect(result[0].meta.display['age'].data).toBe(EMPTY_STR);
   });
 
-  it('sets display.data to SD_EMPTY_STR for empty string value', async () => {
+  it('sets display.data to EMPTY_STR for empty string value', async () => {
     const raw = [{ name: '' }];
     const cols: SdTableColumn[] = [{ field: 'name', title: 'Name', type: 'string' }];
 
@@ -95,7 +95,7 @@ describe('TableFormatService.format', () => {
     expect(result[0].meta.display['price'].data).not.toBe(EMPTY_STR);
   });
 
-  it('keeps number value as SD_EMPTY_STR when value is null', async () => {
+  it('keeps number value as EMPTY_STR when value is null', async () => {
     const raw = [{ price: null }];
     const cols: SdTableColumn[] = [{ field: 'price', title: 'Price', type: 'number' }];
 
@@ -147,7 +147,7 @@ describe('TableFormatService.format', () => {
     const cols: SdTableColumn[] = [{ field: 'active', title: 'Active', type: 'boolean' }];
 
     const result = await service.format(raw, cols, {}, {});
-    // null boolean → '' → then SD_EMPTY_STR override
+    // null boolean → '' → then EMPTY_STR override
     expect(result[0].meta.display['active'].data).toBe(EMPTY_STR);
   });
 
@@ -182,7 +182,7 @@ describe('TableFormatService.format', () => {
     expect(result[0].meta.display['time'].isHtml).toBeFalse();
   });
 
-  it('returns SD_EMPTY_STR for invalid date value', async () => {
+  it('returns EMPTY_STR for invalid date value', async () => {
     const raw = [{ createdAt: 'not-a-date' }];
     const cols: SdTableColumn[] = [{ field: 'createdAt', title: 'Created', type: 'date' }];
 
@@ -385,7 +385,7 @@ describe('TableFormatService.format', () => {
     const cols: SdTableColumn[] = [{ field: 'active', title: 'Active', type: 'boolean' }];
 
     const result = await service.format(raw, cols, {}, {});
-    // null → '' → SD_EMPTY_STR path sets badge to undefined
+    // null → '' → EMPTY_STR path sets badge to undefined
     expect(result[0].meta.display['active'].badge).toBeUndefined();
   });
 

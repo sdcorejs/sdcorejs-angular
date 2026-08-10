@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterView
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericTextarea,
@@ -15,7 +15,7 @@ import { AttributeInput } from '../../attribute-input/attribute-input.component'
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
 import { AttributeTemplate } from '../../attribute-template/attribute-template.component';
 import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'textarea-attribute',
@@ -28,7 +28,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     AttributeSwitch,
     AttributeExpression,
     AttributeTextarea,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class TextareaAttribute implements AfterViewInit, OnDestroy {
@@ -41,7 +41,7 @@ export class TextareaAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericTextarea;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTextarea) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
 
   #subscription = new Subscription();
@@ -79,7 +79,7 @@ export class TextareaAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

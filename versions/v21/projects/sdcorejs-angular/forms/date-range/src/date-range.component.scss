@@ -2,6 +2,24 @@
 @use '../../../assets/scss/core/inline-edit' as inline;
 @use 'sass:map';
 
+// why: hai nút suffix (clear + mở lịch) giờ là <button> thật để Tab/Enter/Space chạy được và
+// có accessible name, nhưng giao diện vẫn phải y hệt icon trần cũ → reset chrome của button.
+.sd-suffix-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
+
 // Inline mode (viewed='inline') — text-face + editor ẩn. Style chung từ partial.
 @include inline.sd-inline-panel;
 

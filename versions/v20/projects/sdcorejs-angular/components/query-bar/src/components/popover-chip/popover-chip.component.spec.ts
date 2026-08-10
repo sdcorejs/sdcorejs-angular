@@ -18,8 +18,8 @@ import { SdQueryField } from '../../query-bar.model';
       [showOperator]="showOperator"
       [valueText]="valueText"
       [menu]="menu()!"
-      (open)="opened = true"
-      (remove)="removed = true" />
+      (sdOpen)="opened = true"
+      (sdRemove)="removed = true" />
   `,
 })
 class Host {

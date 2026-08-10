@@ -30,7 +30,7 @@ import { queryByCss } from '../../../testing/test-utils';
     [(model)]="model"
     (sdChange)="onSdChange($event)"
     (sdBlur)="onSdBlur($event)"
-    (keyupEnter)="onKeyupEnter($event)"></sd-input-number>`,
+    (sdKeyupEnter)="onKeyupEnter($event)"></sd-input-number>`,
 })
 class HostComponent {
   label?: string;
@@ -316,6 +316,47 @@ describe('SdInputNumber', () => {
       expect(host.blurValues.length).toBeGreaterThan(0);
       expect(host.blurValues[host.blurValues.length - 1]).toBe(99);
     }));
+
+    // why: nhánh "gõ dở phần thập phân" (vd `12.` / `12,`) reformat rồi return SỚM. Trước đây
+    // nó là nhánh blur DUY NHẤT không emit sdBlur → consumer nghe (sdBlur) để commit/validate
+    // im lặng bỏ sót đúng trường hợp này.
+    it('emits sdBlur when the value ends with the decimal separator (ISO "12.")', fakeAsync(() => {
+      comp.inputControl.setValue('12.', { emitEvent: false });
+      host.blurValues.length = 0;
+
+      comp.onBlur();
+      tick();
+      fixture.detectChanges();
+
+      expect(host.blurValues.length).toBe(1);
+      expect(host.blurValues[0]).toBe(12);
+      expect(comp.inputControl.value).toBe('12');
+    }));
+
+    it('emits sdBlur when the value ends with the decimal separator (VN "12,")', fakeAsync(() => {
+      host.format = '1.234.567,89';
+      fixture.detectChanges();
+      comp.inputControl.setValue('12,', { emitEvent: false });
+      host.blurValues.length = 0;
+
+      comp.onBlur();
+      tick();
+      fixture.detectChanges();
+
+      expect(host.blurValues.length).toBe(1);
+      expect(host.blurValues[0]).toBe(12);
+    }));
+
+    it('emits sdBlur exactly once on the trailing-separator path (no double emit)', fakeAsync(() => {
+      comp.inputControl.setValue('7.', { emitEvent: false });
+      host.blurValues.length = 0;
+
+      comp.onBlur();
+      tick();
+      fixture.detectChanges();
+
+      expect(host.blurValues.length).toBe(1);
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -388,7 +429,7 @@ describe('SdInputNumber', () => {
 
     it('emits keyupEnter on onKeyupEnter', () => {
       const emitted: any[] = [];
-      const sub = comp.keyupEnter.subscribe(v => emitted.push(v));
+      const sub = comp.sdKeyupEnter.subscribe(v => emitted.push(v));
       comp.inputControl.setValue('123', { emitEvent: false });
       comp.onKeyupEnter();
       expect(emitted.length).toBe(1);
@@ -601,7 +642,7 @@ describe('SdInputNumber', () => {
       host.model = 123;
       fixture.detectChanges();
       const spy = jasmine.createSpy('cleared');
-      comp.cleared.subscribe(spy);
+      comp.sdCleared.subscribe(spy);
 
       comp.clear();
       fixture.detectChanges();
@@ -611,13 +652,101 @@ describe('SdInputNumber', () => {
 
     it('cleared NOT emitted when clear() runs while value already empty (early-return path)', () => {
       const spy = jasmine.createSpy('cleared');
-      comp.cleared.subscribe(spy);
+      comp.sdCleared.subscribe(spy);
 
       comp.clear();
       fixture.detectChanges();
 
       expect(spy).not.toHaveBeenCalled();
     });
+  });
+
+  describe('clear() phải để formControl phát event (bug class "invalid nhưng không có message")', () => {
+    // why: clear() cũ dùng setValue(null, { emitEvent: false }) — mâu thuẫn thẳng với comment
+    // `why:` ở #onChange ngay trong file này. formControl mang required/min/max + async
+    // validator; chặn event thì #state (sdFormControlState) không tick → errorMessage không
+    // recompute → xoá xong field rỗng mà lỗi required KHÔNG hiện. Dùng autoDetectChanges
+    // (tôn trọng OnPush), KHÔNG dùng detectChanges vì ép check sẽ che lỗi.
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+    it('renders the required message after clear() (no forced CD)', async () => {
+      host.required = true;
+      host.model = 123;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // còn giá trị → chưa có lỗi
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.formControl.hasError('required')).toBeTrue();
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes errorMessage() after clear()', async () => {
+      host.required = true;
+      host.model = 123;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.errorMessage()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes the data-empty e2e attribute after clear()', async () => {
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      const el = getInput(fixture);
+
+      comp.inputControl.setValue('123');
+      await fixture.whenStable();
+      expect(el.getAttribute('data-empty')).toBe('false');
+      expect(el.getAttribute('data-value')).toBe('123');
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(el.getAttribute('data-empty')).toBe('true');
+      expect(el.getAttribute('data-value')).toBe('');
+    });
+
+    it('emits sdChange exactly once with null (formControl.valueChanges không có subscriber)', async () => {
+      host.model = 123;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      host.changes.length = 0;
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(host.changes).toEqual([null]);
+      expect(comp.formControl.value).toBeNull();
+      expect(comp.inputControl.value).toBe('');
+    });
+
+    it('surfaces the async [validator] message evaluated on the cleared value', fakeAsync(() => {
+      host.validator = (v: any) => (v == null ? 'Không được để trống' : '');
+      host.model = 7;
+      fixture.detectChanges();
+      comp.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+      expect(comp.errorMessage()).toBeUndefined();
+
+      comp.clear();
+      tick(); // async validator resolve trên giá trị mới (null)
+      fixture.detectChanges();
+
+      expect(comp.formControl.invalid).toBeTrue();
+      expect(comp.errorMessage()).toBe('Không được để trống');
+    }));
   });
 
   describe('custom [validator] async error message', () => {
@@ -903,5 +1032,118 @@ describe('SdInputNumber (viewed inline mode)', () => {
     expect(comp.isViewed()).toBe(true);
     expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdInputNumber deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber)!.componentInstance as SdInputNumber;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input };
+  };
+
+  it('does not focus the input after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên một phần tử focus được (hoặc trên phần tử BỌC nội dung focus
+// được) tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc
+// gì cả. Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// Guard dưới đây quét toàn bộ DOM của control và chặn mẫu đó quay lại.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdInputNumber],
+  template: `<sd-input-number [required]="required" [model]="model"></sd-input-number>`,
+})
+class A11yHost {
+  required = false;
+  model: number | null = null;
+}
+
+describe('SdInputNumber (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdInputNumber;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(el => el.componentInstance instanceof SdInputNumber)!.componentInstance;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('input')).not.toBeNull();
+  });
+
+  it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity({ emitEvent: false });
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    const el = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    expect(el.getAttribute('aria-invalid')).toBe('true');
+    expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });

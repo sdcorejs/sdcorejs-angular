@@ -20,6 +20,7 @@ describe('SdTreeSelect', () => {
   let component: SdTreeSelect<Department, number>;
 
   beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
     await TestBed.configureTestingModule({ imports: [NoopAnimationsModule, SdTreeSelect] }).compileComponents();
     fixture = TestBed.createComponent(SdTreeSelect<Department, number>);
     component = fixture.componentInstance;
@@ -99,6 +100,57 @@ describe('SdTreeSelect', () => {
     component.applySelection();
 
     expect(component.model()).toEqual([2]);
+  });
+
+  // why: RED trước fix — `[required]` đã nối Validators.required nhưng template không render
+  // message nào, nên một tree-select bắt buộc bỏ trống chặn submit hoàn toàn im lặng.
+  describe('validation message', () => {
+    it('stays hidden while the control is untouched, even though it is already invalid', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+
+      expect(component.formControl.hasError('required')).toBeTrue();
+      expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).toBeNull();
+    });
+
+    it('renders the required message and wires aria-invalid/aria-describedby once touched', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('[data-tree-select-error]') as HTMLElement | null;
+      const trigger = fixture.nativeElement.querySelector('[data-tree-select-trigger]') as HTMLButtonElement;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+      expect(trigger.getAttribute('aria-invalid')).toBe('true');
+      expect(trigger.getAttribute('aria-describedby')).toBe(error!.id);
+    });
+
+    it('clears the message once a value is selected', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).not.toBeNull();
+
+      component.formControl.setValue(1);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).toBeNull();
+    });
+
+    it('renders a component-local inlineError message', () => {
+      fixture.componentRef.setInput('inlineError', 'Phòng ban đã ngừng hoạt động');
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('[data-tree-select-error]') as HTMLElement | null;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Phòng ban đã ngừng hoạt động');
+    });
   });
 
   it('forwards root and lazy load errors from the composed tree', async () => {

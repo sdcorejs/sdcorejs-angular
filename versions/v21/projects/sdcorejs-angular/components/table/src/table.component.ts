@@ -29,6 +29,7 @@ import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.dire
 import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.directive';
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
 import { SdTableColumn } from './models/table-column.model';
+import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
 import {
   SdConvertToPagingReq,
@@ -67,7 +68,6 @@ import { ConfiguredTableResult } from './models/table-option-config.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { SdTreePipe } from './pipes/sd-tree.pipe';
 import { SdSelectionDisabledPipe } from './pipes/selection-disabled.pipe';
-import { SdSelectionVisibleSelectAllPipe } from './pipes/selection-visible-select-all.pipe';
 import { SdSelectionVisiblePipe } from './pipes/selection-visible.pipe';
 import { SdTableExportContext, TableExportService, TableFormatService } from './services';
 import { ConfigService } from './services/config.service';
@@ -76,15 +76,20 @@ import { filterLocalItems } from './services/table-local/table-local.util';
 import { canSortReorder, isReorderDisabled as isReorderItemDisabled, reorderTableItems } from './services/table-reorder/table-reorder.util';
 import {
   applyDefaultSelected,
+  buildGroupHeaderContext,
   getSelectedRowData,
   getSelectionRows,
   resolveSelectAllState,
   restorePreservedSelection,
+  SdGroupHeaderHost,
+  syncGroupSelectionMeta,
   syncPreservedSelection,
 } from './services/table-selection/table-selection.util';
+import { resolveSelectAllVisible } from './services/table-selection/selection-action.util';
 import { SdTableFilterService } from './services/table-filter/table-filter.service';
 import {
   clearTreeChildCache,
+  collectFormattedTreeRows,
   flattenDataTree,
   getChildrenFromData,
   getChildrenKey,
@@ -95,11 +100,14 @@ import {
   resolveHasChildren,
   saveTreeExpandState,
 } from './services/tree/tree.util';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
+// why: tên cũ `MatPaginatorIntlCro` là vết copy-paste từ ví dụ locale Croatia — lớp này chỉ phục vụ
+// nhãn phân trang của `<sd-table>` (VI/EN), không liên quan gì tới tiếng Croatia. Tên cũ lại còn
+// mang tiền tố `Mat`, dễ bị hiểu nhầm là API của Angular Material thay vì export public của lib này.
 @Injectable()
-export class MatPaginatorIntlCro extends MatPaginatorIntl {
+export class SdTablePaginatorIntl extends MatPaginatorIntl {
   // i18n labels resolved at construction. Reads VI/EN from I18nService.
   readonly #i18n = inject(I18nService);
   override firstPageLabel = this.#i18n.t('core.component.table.paginator.first-page');
@@ -117,6 +125,9 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     return `${from}-${to}/${NumberUtilities.toISO(length)}`;
   };
 }
+
+/** Mảng rỗng dùng chung — tránh cấp phát `[]` mới trong binding mỗi CD pass. */
+const EMPTY_COMMANDS: SdTableCommand[] = [];
 
 @Component({
   selector: 'sd-table',
@@ -144,7 +155,7 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     ConfigService,
     {
       provide: MatPaginatorIntl,
-      useClass: MatPaginatorIntlCro,
+      useClass: SdTablePaginatorIntl,
     },
   ],
   imports: [
@@ -170,7 +181,6 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     SdGroupPipe,
     SdTreePipe,
     SdSelectionVisiblePipe,
-    SdSelectionVisibleSelectAllPipe,
     SdSafeHtmlPipe,
     SdSelectionDisabledPipe,
     SdScrollDirective,
@@ -180,7 +190,7 @@ export class MatPaginatorIntlCro extends MatPaginatorIntl {
     SelectorActionComponent,
     StickyShadowDirective,
     SdColumnResizeDirective,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
@@ -256,6 +266,30 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   loading = signal(false);
   isSelectAll = signal(false);
+
+  /**
+   * Checkbox "chọn tất cả" ở header có hiển thị không.
+   *
+   * why: trước đây là `_items | selectionVisibleSelectAll: … | async` — pipe `async`
+   * với `await setTimeout(500)` bên trong. Sleep đó CHE một vấn đề thứ tự
+   * change-detection: pipe đọc `meta.selector.actions`, mảng chỉ được `SdSelectionVisiblePipe`
+   * ghi khi cell BODY render, mà CDK dựng header TRƯỚC body → pass đầu luôn đọc ra rỗng.
+   * Hệ quả: checkbox hiện trễ 500ms, và vì `transform` là `async` nên MỖI lần re-eval lại
+   * trả một Promise mới + đặt thêm một timer không ai dọn. Computed tự tính từ
+   * `items()` + `selector` nên không phụ thuộc pipe nào chạy trước → bỏ hẳn timer.
+   */
+  visibleSelectAll = computed(() => resolveSelectAllVisible(this.items(), this.tableOption()?.selector));
+
+  /**
+   * Danh sách command của row, memoize theo option.
+   * why: template cũ bind `_tableOption.command?.commands || _tableOption.commands || []`
+   * — nhánh `[]` cấp phát mảng MỚI mỗi CD pass và đẩy vào `input()` của `desktop-command`,
+   * làm child OnPush bị đánh dấu dirty mỗi pass cho từng dòng.
+   */
+  rowCommands = computed(() => {
+    const opt = this.tableOption();
+    return opt?.command?.commands || opt?.commands || EMPTY_COMMANDS;
+  });
 
   isFiltered = signal(false);
   requireFiltered = signal(false);
@@ -686,10 +720,12 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         };
       });
       return {
-        items: await this.#tableFormatService.format(data?.items, opt.columns, this.cacheValues, this.#cacheObjValues).finally(() => {
-          this.loading.set(false);
-          this.#ref.detectChanges();
-        }),
+        items: await this.#tableFormatService
+          .format(data?.items, opt.columns, this.cacheValues, this.#cacheObjValues, opt.rowKey)
+          .finally(() => {
+            this.loading.set(false);
+            this.#ref.detectChanges();
+          }),
         total: data?.total || 0,
       };
     }
@@ -710,7 +746,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
         this.#notifyService.warning(this.#i18n.t('core.component.table.not-an-array'));
         data = [];
       }
-      this.#localItems = await this.#tableFormatService.format(data, opt.columns, this.cacheValues, this.#cacheObjValues);
+      this.#localItems = await this.#tableFormatService.format(data, opt.columns, this.cacheValues, this.#cacheObjValues, opt.rowKey);
     }
     this.loading.set(false);
     this.#ref.detectChanges();
@@ -760,6 +796,9 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
     // Áp dụng defaultSelected: pre-select các item thỏa predicate
     this.#applyDefaultSelected();
+
+    // Resolve style.rowCss 1 lần/row cho lần render này (xem #applyRowStyles).
+    this.#applyRowStyles();
 
     await this.tableOption()?.reload?.onReload?.(this.items(), additionArgs);
     this.#updateSelectedItems();
@@ -862,7 +901,7 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       if (searchActive && row.meta.tree) row.meta.tree.childItems = [];
       return;
     }
-    const formatted = await this.#tableFormatService.format(raw, opt.columns, this.cacheValues, this.#cacheObjValues);
+    const formatted = await this.#tableFormatService.format(raw, opt.columns, this.cacheValues, this.#cacheObjValues, opt.rowKey);
     row.meta.tree!.childItems = formatted;
     initTreeMeta(formatted, treeOpt, {
       level: (row.meta.tree!.level ?? 0) + 1,
@@ -894,6 +933,10 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     if (row.meta.tree.isExpanded) {
       row.meta.tree.isExpanded = false;
       this.#treeExpandState.delete(row.meta.id);
+      // why: `rowCss` nhận ctx `{ level, hasChildren, isExpanded }`, nên style của row PHẢI được
+      // tính lại khi collapse — không chỉ khi expand. Thiếu dòng này thì `meta.rowStyle` giữ mãi
+      // style của trạng thái đang mở.
+      this.#applyRowStyles();
       this.treeRevision.update(n => n + 1);
       this.#ref.markForCheck();
       return;
@@ -928,6 +971,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
       if (row.meta.tree) {
         row.meta.tree.isExpanding = false;
       }
+      // Children mới format + level/isExpanded vừa đổi → refresh cache rowStyle.
+      this.#applyRowStyles();
       this.treeRevision.update(n => n + 1);
       this.#ref.markForCheck();
     }
@@ -1086,6 +1131,36 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   // KHÔNG tự re-trigger pipe (default pure: true) — gọi items.update để invalidate input.
   groupExpandState = new Map<string, boolean>();
 
+  /**
+   * Cầu nối tới SdGroupPipe (arg 4) — object DUY NHẤT, tạo một lần.
+   * why: pipe sinh group header nhưng component mới là nơi biết selection đổi. Pipe đổ
+   * header vào `headers` để `#syncGroupSelectionState` cập nhật `meta.group.isSelected` /
+   * `indeterminate`, thay cho việc template gọi `isGroupAllSelected()`/`isGroupIndeterminate()`
+   * (duyệt toàn bộ children) ở MỖI CD pass.
+   */
+  readonly groupHost: SdGroupHeaderHost<T> = {
+    headers: [],
+    toggleExpand: header => this.toggleGroupExpand(header),
+    // why: hướng toggle phải tính LIVE. Đọc `meta.group.isSelected` (cache do pipe ghi lúc
+    // dựng header, trước khi `selectable` của children được đặt) làm click đầu tiên sau mỗi
+    // lần render toggle ngược chiều.
+    toggleSelect: header => this.onSelectGroup(header, !this.isGroupAllSelected(header)),
+  };
+
+  /**
+   * Tính lại selection state cho mọi group header của lần render gần nhất.
+   *
+   * why: giữ `meta.group.isSelected`/`indeterminate` đúng cho consumer đọc meta trực tiếp.
+   * Template và `groupContext()` KHÔNG dựa vào nó (chúng tính live) — vì hàm này chạy trong
+   * `#render`, trước khi CD kế tiếp cho `SdGroupPipe` dựng lại `groupHost.headers`, nên nó
+   * luôn thao tác trên danh sách header của lần render TRƯỚC (rỗng ở lần render đầu).
+   */
+  #syncGroupSelectionState = () => {
+    for (const header of this.groupHost.headers) {
+      syncGroupSelectionMeta(header);
+    }
+  };
+
   /** Toggle expand/collapse cho 1 group (chỉ ý nghĩa khi option.group.collapsible). */
   toggleGroupExpand = (header: SdTableItem<T>) => {
     if (!header.meta.group?.key) return;
@@ -1112,21 +1187,29 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
    */
   sdGroupColspan = computed(() => this.configuration()?.displayedColumns?.length || 1);
 
-  /** Build context object truyền vào SdTableGroupDefDirective template. */
+  /**
+   * Context truyền vào template `sdTableGroupDef`.
+   *
+   * why: bản cũ dựng object MỚI (kèm `items.map(i => i.data)` mới và 2 lần duyệt children
+   * qua `isGroupAllSelected`/`isGroupIndeterminate`) ở MỖI CD pass, cho MỖI group row —
+   * `ngTemplateOutlet` thấy context đổi reference nên phải dựng lại embedded view. Giờ
+   * context được `SdGroupPipe` precompute và cache trên `meta.group`; ở đây chỉ đọc ra
+   * (fallback `??=` cho header không do pipe sinh) nên reference ổn định qua các pass.
+   *
+   * why: 3 field selection/expand thì phải làm TƯƠI mỗi lần đọc — `SdGroupPipe` dựng context
+   * lúc header được sinh ra, thời điểm đó `selector.selectable` của children vẫn còn là mặc
+   * định `false` (chỉ `SdSelectionVisiblePipe` ở cell BODY mới đặt đúng, mà CDK dựng header
+   * trước body). Cache lại giá trị tính ở thời điểm đó là khoá cứng `isSelected = false`.
+   * Mutate TẠI CHỖ để `ngTemplateOutlet` vẫn thấy cùng một reference và không dựng lại view.
+   */
   groupContext = (header: SdTableItem<T>): SdTableGroupDefContext<T> => {
-    const g = header.meta.group;
-    const items = g?.items || [];
-    return {
-      items,
-      data: items.map(i => i.data),
-      key: g?.key || '',
-      values: g?.values || {},
-      isExpanded: g?.isExpanded ?? true,
-      isSelected: this.isGroupAllSelected(header),
-      indeterminate: this.isGroupIndeterminate(header),
-      toggleExpand: () => this.toggleGroupExpand(header),
-      toggleSelect: () => this.onSelectGroup(header, !this.isGroupAllSelected(header)),
-    };
+    const group = header.meta.group;
+    if (!group) return buildGroupHeaderContext(header, this.groupHost);
+    const context = (group.context ??= buildGroupHeaderContext(header, this.groupHost));
+    context.isSelected = this.isGroupAllSelected(header);
+    context.indeterminate = this.isGroupIndeterminate(header);
+    context.isExpanded = group.isExpanded ?? true;
+    return context;
   };
 
   rowStyle = (row: SdTableItem<T>, index?: number): Record<string, string> | null => {
@@ -1136,6 +1219,23 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
     const ctx =
       this.tableOption()?.tree && tree ? { level: tree.level, hasChildren: tree.hasChildren, isExpanded: tree.isExpanded } : undefined;
     return fn(row.data, index, ctx);
+  };
+
+  /**
+   * Resolve `style.rowCss` MỘT LẦN cho mỗi row và cache vào `meta.rowStyle`.
+   *
+   * why: template cũ bind `[ngStyle]="rowStyle(row)"` — mỗi CD pass là một lần gọi callback
+   * của consumer cho TỪNG dòng, và callback trả object MỚI nên `NgStyle` phải chạy
+   * KeyValueDiffer trên mọi dòng ở mọi pass. Gọi ở cuối `#render` và sau mỗi lần tree
+   * toggle (level / isExpanded / children mới format đều là input của `rowCss`).
+   */
+  #applyRowStyles = () => {
+    const hasRowCss = !!this.tableOption()?.style?.rowCss;
+    const roots = this.items();
+    const rows = this.tableOption()?.tree ? collectFormattedTreeRows(roots) : roots;
+    for (const row of rows) {
+      row.meta.rowStyle = hasRowCss ? this.rowStyle(row) : null;
+    }
   };
 
   // why: khi preserveSelection bật, giữ map nội bộ id → SdTableItem để selection
@@ -1155,6 +1255,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
 
   #updateSelectedItems = () => {
     const rows = this.#getSelectionRows();
+    // Selection vừa đổi → cập nhật checkbox state cache của mọi group header.
+    this.#syncGroupSelectionState();
     if (this.#preserveEnabled()) {
       // Sync map theo state visible: add nếu selected, remove nếu deselected.
       // Off-page items giữ nguyên trong map (không bị visit ở đây).

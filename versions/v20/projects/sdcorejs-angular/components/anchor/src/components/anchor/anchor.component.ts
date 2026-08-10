@@ -8,14 +8,15 @@ import {
   computed,
   contentChildren,
   effect,
+  inject,
   input,
   signal,
   untracked,
   viewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Color } from '@sdcorejs/utils/models';
+import { SdViewportService } from '@sdcorejs/angular/services/viewport';
 import { Subscription, fromEvent, take } from 'rxjs';
 import { AnchorNav } from '../anchor-nav/anchor-nav.component';
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
@@ -38,11 +39,21 @@ export class SdAnchor implements OnDestroy {
   sidebarWidth = input<string>('200px');
   ellipsis = input(false, { transform: booleanAttribute });
   overScroll = input(false, { transform: booleanAttribute });
-  // Mobile: mặc định ẩn nav (sidebar TOC chiếm chỗ trên màn hình hẹp).
-  // Consumer truyền `[hideNav]="false"` để buộc hiển thị trên mobile.
-  hideNav = input(BrowserUtilities.isMobile(), { transform: booleanAttribute });
+  // why: default cũ là `BrowserUtilities.isMobile()` — đọc UA ngay lúc class được KHỞI TẠO
+  // (module evaluation). Trên SSR không có `navigator` nên giá trị server khác client → hydration
+  // lệch; và vì là hằng số nên resize/xoay máy không bao giờ đánh giá lại. Giờ `hideNav` chỉ còn
+  // là cờ ép ẩn thủ công (default false), còn trạng thái mobile lấy từ SdViewportService — signal
+  // SSR-safe, tự cập nhật theo breakpoint khi resize.
+  hideNav = input(false, { transform: booleanAttribute });
+  // why: giữ lại đường thoát cũ (`[hideNav]="false"` để buộc hiện TOC trên mobile) dưới dạng input
+  // riêng, vì `hideNav=false` giờ là default nên không còn phân biệt được "không set" và "set false".
+  hideNavOnMobile = input(true, { transform: booleanAttribute });
   // Màu highlight active nav (text + icon + vertical bar). Default 'primary'.
   color = input<Color>('primary');
+
+  readonly #viewport = inject(SdViewportService);
+  // Trạng thái ẩn/hiện thực tế của nav: ép ẩn thủ công HOẶC đang ở breakpoint mobile.
+  readonly navHidden = computed(() => this.hideNav() || (this.hideNavOnMobile() && this.#viewport.isMobile()));
 
   activeSectionId = signal<string>('');
 
@@ -58,17 +69,19 @@ export class SdAnchor implements OnDestroy {
   constructor() {
     afterNextRender(() => {
       this.#initialized = true;
-      if (!this.hideNav()) {
+      if (!this.navHidden()) {
         this.#registerIntersectionObserver();
       }
     });
 
     // Lắng nghe thay đổi sections để đăng ký lại observer cho từng section.
+    // why: navHidden() phụ thuộc breakpoint nên effect chạy lại khi viewport đổi — phải
+    // disconnect observer lúc nav bị ẩn, nếu không observer treo lại trên DOM đã tháo.
     effect(() => {
       this.sections();
-      if (!this.hideNav() && this.#initialized) {
-        untracked(() => this.#registerIntersectionObserver());
-      }
+      const hidden = this.navHidden();
+      if (!this.#initialized) return;
+      untracked(() => (hidden ? this.#cleanIntersectionObserver() : this.#registerIntersectionObserver()));
     });
   }
 
@@ -108,8 +121,20 @@ export class SdAnchor implements OnDestroy {
     );
 
     // Đăng ký theo dõi từng section có trong anchor.
-    for (const section of this.sections()) {
+    const sections = this.sections();
+    for (const section of sections) {
       this.#intersectionObserver.observe(section.elementRef.nativeElement);
+    }
+
+    // why: activeSectionId chỉ được ghi bởi callback của IntersectionObserver và bởi
+    // scrollSectionByClick — chưa cuộn thì không callback nào ghi, nên TOC mở ra không có mục nào
+    // sáng. Cùng lỗi đó tái diễn khi resize mobile→desktop: nav vừa hiện lại đã trắng cho tới khi
+    // người dùng cuộn. Seed ngay tại đây (nơi DUY NHẤT observer được dựng) về section đầu tiên.
+    // Chỉ seed khi giá trị hiện tại KHÔNG còn trỏ vào section nào đang sống — vừa xử lý '' ban
+    // đầu, vừa xử lý section bị gỡ, mà không đạp lên lựa chọn hợp lệ của người dùng.
+    const active = this.activeSectionId();
+    if (sections.length > 0 && !sections.some(section => section.id === active)) {
+      this.activeSectionId.set(sections[0].id);
     }
   }
 

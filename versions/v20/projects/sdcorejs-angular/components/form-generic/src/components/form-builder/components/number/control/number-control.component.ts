@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
-import { SdFormatComponent, SdFormGenericNumber } from '../../../../../models';
+import { sdFormatComponent, SdFormGenericNumber } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
@@ -18,7 +18,7 @@ export class NumberControl implements AfterViewInit, OnDestroy {
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericNumber) {
     if (this.component !== component) {
       this.component = component;
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
     }
   }
 

@@ -3,7 +3,7 @@
 **Type**: Component (two related components, documented together — used as a pair)
 **Selectors**: `sd-tab-group`, `sd-tab`
 **Import path**: `@sdcorejs/angular/components/tab`
-**Classes**: `SdTabGroup extends SdBaseSecureComponent`, `SdTab`
+**Classes**: `SdTabGroup`, `SdTab`
 **Standalone**: yes
 **Change detection**: `OnPush` on both
 
@@ -35,7 +35,7 @@ Declarative tab container that wraps Angular Material's `mat-tab-group` with a s
 | ------------------- | ------------------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `selectedIndex`     | `number` (model — two-way)                                                            | `0`         | Index of the active tab. Two-way bindable via `[(selectedIndex)]`. Auto-clamped to `[0, tabs.length-1]` when the tab count shrinks.                                                                                                                                                                                                                           |
 | `variant`           | `'line' \| 'pills' \| 'segmented'`                                                    | `'line'`    | Visual skin. `'line'` is Material's default underline ink-bar. `'pills'` renders each tab as a rounded pill with a filled active state (no underline) — useful for nested tab groups and filter bars where the default underline competes with the parent's. `'segmented'` renders a single bordered container with flush tabs (iOS segmented-control style). |
-| `color`             | `SdColor` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Drives the active-tab + indicator + badge colors via the Core CSS vars (`--sd-<color>`, `--sd-<color>-light`). Same palette as `<sd-button>`, `<sd-badge>` — pick `'warning'` for filter bars surfacing pending items, `'success'` for confirmed flows, etc.                                                                                                  |
+| `color`             | `Color` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Drives the active-tab + indicator + badge colors via the Core CSS vars (`--sd-<color>`, `--sd-<color>-light`). Same palette as `<sd-button>`, `<sd-badge>` — pick `'warning'` for filter bars surfacing pending items, `'success'` for confirmed flows, etc.                                                                                                  |
 | `headerPosition`    | `'above' \| 'below'`                                                                  | `'above'`   | Forwarded to `mat-tab-group.headerPosition`.                                                                                                                                                                                                                                                                                                                  |
 | `alignTabs`         | `'start' \| 'center' \| 'end'`                                                        | `'start'`   | Forwarded to `mat-tab-group`'s `[mat-align-tabs]` input. **Only takes effect when `stretchTabs` is `false`** — otherwise tabs fill the row evenly and there's nothing to align.                                                                                                                                                                               |
 | `stretchTabs`       | `boolean`                                                                             | `true`      | `booleanAttribute` transform. Forwarded to `mat-tab-group.stretchTabs`. When `true` (default, Material default behavior), labels fill the available width evenly. Set to `false` to make labels size to their content; pair with `alignTabs` to push them to the left, center, or right.                                                                      |
@@ -49,7 +49,7 @@ Declarative tab container that wraps Angular Material's `mat-tab-group` with a s
 | Name                  | Type                                                 | Notes                                                                                                                               |
 | --------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `selectedIndexChange` | `number`                                             | Emitted by the `selectedIndex` model when the active tab changes (programmatic or user).                                            |
-| `tabClosed`           | `SdTabClosedEvent` (`{ index: number; tab: SdTab }`) | Emitted when the user clicks the close icon on a `[closable]` tab. Parent is responsible for removing the tab from its data source. |
+| `sdTabClosed`           | `SdTabClosedEvent` (`{ index: number; tab: SdTab }`) | Emitted when the user clicks the close icon on a `[closable]` tab. Parent is responsible for removing the tab from its data source. |
 
 ### Public API
 
@@ -116,7 +116,7 @@ Declarative tab container that wraps Angular Material's `mat-tab-group` with a s
   standalone: true,
   imports: [SdTabGroup, SdTab],
   template: `
-    <sd-tab-group (tabClosed)="onClose($event)">
+    <sd-tab-group (sdTabClosed)="onClose($event)">
       @for (file of files(); track file.id) {
         <sd-tab [label]="file.name" [closable]="true">
           <code-editor [file]="file"></code-editor>
@@ -217,15 +217,15 @@ A child of `<sd-tab-group>` that declares one tab — its label, icon, badge, di
 
 | Name         | Type      | Notes                                                                                                |
 | ------------ | --------- | ---------------------------------------------------------------------------------------------------- |
-| `close`      | `void`    | Emitted when the user clicks the close icon on this tab. Only emitted while the tab is not disabled. |
-| `closeError` | `unknown` | Emitted when `beforeClose` throws or rejects.                                                        |
+| `sdClose`      | `void`    | Emitted when the user clicks the close icon on this tab. Only emitted while the tab is not disabled. |
+| `sdCloseError` | `unknown` | Emitted when `beforeClose` throws or rejects.                                                        |
 
 ### Public API
 
 | Method           | Notes                                                                                 |
 | ---------------- | ------------------------------------------------------------------------------------- |
-| `requestClose()` | Runs/coalesces `beforeClose`, emits `close` when allowed, and resolves to the result. |
-| `forceClose()`   | Bypasses `beforeClose` and emits `close`.                                             |
+| `requestClose()` | Runs/coalesces `beforeClose`, emits `sdClose` when allowed, and resolves to the result. |
+| `forceClose()`   | Bypasses `beforeClose` and emits `sdClose`.                                             |
 
 ### Content projection
 
@@ -247,6 +247,11 @@ A child of `<sd-tab-group>` that declares one tab — its label, icon, badge, di
 - ❌ Using `<sd-tab>` outside `<sd-tab-group>` — it works structurally but produces no UI
 
 ---
+
+## Accessibility
+
+- The close affordance on a `closable` tab is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring. It was previously `<sd-icon role="button" aria-label="Close tab">` — a custom element, so it was **not** focusable and had **no** keyboard handler: the tab could not be closed without a mouse. The label was also a hard-coded English string in an otherwise i18n'd library.
+- `mat-tab-group` owns the rest of the tablist wiring (`role="tab"`, `aria-selected`, `aria-controls`, roving tabindex); nothing is overridden.
 
 ## Related
 

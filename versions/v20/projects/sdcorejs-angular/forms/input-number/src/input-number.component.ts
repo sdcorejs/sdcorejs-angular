@@ -57,6 +57,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
@@ -97,6 +98,9 @@ class SdInputNumberErrotStateMatcher implements ErrorStateMatcher {
 })
 export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -116,6 +120,9 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   private coreConfiguration = inject(SD_CORE_CONFIGURATION, { optional: true });
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus bị hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạy
+  // trên view đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -225,10 +232,10 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   sdChange = output<any>();
   sdFocus = output<void>();
   sdBlur = output<any>();
-  keyupEnter = output<any>();
+  sdKeyupEnter = output<any>();
   // why: same lý do như sd-input — sdChange fire per-keystroke. `cleared` là
   // intent dedicated cho X (clear button), consumer dùng để trigger reload ngay.
-  cleared = output<void>();
+  sdCleared = output<void>();
 
   // why: focus handling reads EventEmitter.observed before emitting a forced blur event.
   @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
@@ -430,11 +437,17 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (sdIsEmpty(this.formControl.value)) return;
     // Reset cả ô hiển thị (inputControl) lẫn giá trị thật (formControl), rồi
     // đồng bộ model + sdChange một lần.
+    // why: KHÔNG dùng { emitEvent: false } cho formControl — đúng lý do đã ghi ở #onChange
+    // bên dưới. formControl mang async validator ([validator] → HandleSdCustomValidator) +
+    // required/min/max; chặn event thì setErrors lúc async resolve cũng im → #state
+    // (sdFormControlState) không tick → errorMessage không recompute → xoá xong field rỗng
+    // mà lỗi required không hiện. inputControl thì VẪN giữ emitEvent:false vì valueChanges
+    // của nó có subscriber (parse + #onChange) sẽ chạy lại và emit sdChange lần hai.
     this.inputControl.setValue('', { emitEvent: false });
-    this.formControl.setValue(null, { emitEvent: false });
+    this.formControl.setValue(null);
     this.valueModel.set(null);
     this.sdChange.emit(null);
-    this.cleared.emit();
+    this.sdCleared.emit();
   };
 
   onKeyupEnter = () => {
@@ -442,7 +455,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (val.length > val.trim().length) {
       this.inputControl.setValue(val.trim());
     }
-    this.keyupEnter.emit(this.inputControl.value);
+    this.sdKeyupEnter.emit(this.inputControl.value);
     if (this.blurOnEnter()) {
       this.blur();
     }
@@ -519,6 +532,11 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     const arrayValue = val.split(this.decimalSeparator());
     if (arrayValue.length >= 2 && arrayValue[1] == '') {
       this.inputControl.setValue(this.#formatNumber(arrayValue[0]));
+      // why: nhánh "gõ dở phần thập phân" (vd `12,`) trước đây return sớm mà KHÔNG emit
+      // sdBlur — mọi nhánh blur khác đều emit. Consumer nghe (sdBlur) để commit/validate
+      // sẽ im lặng bỏ qua đúng trường hợp này. Emit trước khi return, dùng
+      // formControl.value giống nhánh blur bình thường phía dưới.
+      this.sdBlur.emit(this.formControl.value);
       return;
     }
 
@@ -545,8 +563,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
-      this.#focusActiveInput();
-    }, 100);
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef để không chạy sau destroy.
+    this.#timers.schedule(() => this.#focusActiveInput(), 100);
   };
 }

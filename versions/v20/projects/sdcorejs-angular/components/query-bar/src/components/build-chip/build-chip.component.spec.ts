@@ -18,12 +18,12 @@ import { BuildingChip, SdQueryField } from '../../query-bar.model';
       [allowedOperators]="allowedOperators"
       [multiple]="multiple"
       [showOperator]="showOperator"
-      (pickOperator)="pickedOperator = $event"
-      (commitValue)="committed = $event; commitCount = commitCount + 1"
-      (cancel)="cancelled = cancelled + 1"
-      (seamlessCommit)="seamless = $event; seamlessCount = seamlessCount + 1"
-      (draftChange)="draft = $event"
-      (draftCommit)="draftCommitted = draftCommitted + 1" />
+      (sdPickOperator)="pickedOperator = $event"
+      (sdCommitValue)="committed = $event; commitCount = commitCount + 1"
+      (sdCancel)="cancelled = cancelled + 1"
+      (sdSeamlessCommit)="seamless = $event; seamlessCount = seamlessCount + 1"
+      (sdDraftChange)="draft = $event"
+      (sdDraftCommit)="draftCommitted = draftCommitted + 1" />
   `,
 })
 class Host {
@@ -267,7 +267,7 @@ describe('SdQueryBuildChip', () => {
     fixture.detectChanges();
 
     const chipDe = fixture.debugElement.query(By.directive(SdQueryInlineValueChip));
-    chipDe.triggerEventHandler('remove', undefined);
+    chipDe.triggerEventHandler('sdRemove', undefined);
     fixture.detectChanges();
     expect(host.cancelled).toBe(1);
   });

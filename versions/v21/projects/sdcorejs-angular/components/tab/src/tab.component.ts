@@ -16,8 +16,8 @@ export class SdTab {
   closable = input(false, { transform: booleanAttribute });
   beforeClose = input<SdTabBeforeClose | undefined>(undefined);
 
-  close = output<void>();
-  closeError = output<unknown>();
+  sdClose = output<void>();
+  sdCloseError = output<unknown>();
 
   #closeRequest?: Promise<boolean>;
 
@@ -37,7 +37,7 @@ export class SdTab {
         return true;
       })
       .catch((error: unknown) => {
-        this.closeError.emit(error);
+        this.sdCloseError.emit(error);
         return false;
       });
 
@@ -48,7 +48,7 @@ export class SdTab {
     return request;
   };
 
-  forceClose = (): void => this.close.emit();
+  forceClose = (): void => this.sdClose.emit();
 
   // why: viewChild on `#body` template captures projected content so the parent
   // <sd-tab-group> can render it lazily via matTabContent + ngTemplateOutlet.

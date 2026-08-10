@@ -43,7 +43,7 @@ export class SdPopupExport {
   selected: Record<string, boolean> = {};
   files: any[] = [];
 
-  readonly export = output<{
+  readonly sdExport = output<{
     file: any | null;
     columns: SdExcelColumn[];
     isCSV?: boolean;
@@ -159,7 +159,7 @@ export class SdPopupExport {
   };
 
   exportDefault = () => {
-    this.export.emit({
+    this.sdExport.emit({
       file: null,
       columns: this.#getExportColumns(),
       isCSV: false,
@@ -167,7 +167,7 @@ export class SdPopupExport {
   };
 
   exportCSV = () => {
-    this.export.emit({
+    this.sdExport.emit({
       file: null,
       columns: this.#getExportColumns(),
       isCSV: true,
@@ -249,7 +249,7 @@ export class SdPopupExport {
   };
 
   onExport = (file: any) => {
-    this.export.emit({
+    this.sdExport.emit({
       file,
       columns: this.columns,
     });

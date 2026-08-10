@@ -123,6 +123,21 @@
   color: rgba(0, 0, 0, 0.87);
   cursor: pointer !important;
 }
+
+// why: "Thêm mới" giờ là <button> thật (có role + Enter/Space sẵn) thay cho <div (click)>;
+// reset chrome mặc định của button để dòng option trông y hệt trước.
+.sd__option--add-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
 .c-loading-icon {
   position: absolute;
   right: 5px;

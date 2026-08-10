@@ -7,8 +7,6 @@
 **Standalone**: yes
 **Change detection**: `OnPush`
 
-> Status: **v1.1 — full decomposition (7/7 sub-components extracted)**. Inline + popover modes, build flow, saved-filters, multi-select head+N display, BETWEEN date-range unified. Design source: `refs/design_handoff_sd_query_bar/`.
-
 ## One-line purpose
 
 Unified filter chip row (Jira / Linear / Notion / GitLab style) — replaces inline / external table filters when callers want a compact single-row UI. Emits `SdQuery` (filters + global AND/OR logic + optional search) consumable by `sd-table` and any list endpoint.
@@ -111,7 +109,7 @@ Constants & helpers exported alongside the models:
 - `sdQueryDefaultOperator(field)` — picks the initial operator
 - `sdQueryShowOperatorSelector(field)` — true when the field exposes >1 operator
 
-Operator labels + icons live in `@sdcorejs/utils` `OPERATORS` table (v1.1.2 adds `BETWEEN`). They are NOT redefined in this component.
+Operator labels + icons live in the `@sdcorejs/utils` `OPERATORS` table (`BETWEEN` included). They are NOT redefined in this component.
 
 ## Inputs
 
@@ -147,8 +145,8 @@ All `boolean` inputs go through `booleanAttribute` (bare attribute = true). All 
 | `filtersChange` | `Filter[]` | Auto-paired with `filters` model. |
 | `logicChange` | `'AND' \| 'OR'` | Auto-paired with `logic` model. |
 | `searchChange` | `string` | Auto-paired with `search` model. |
-| `queryChange` | `SdQuery` | Emitted by `triggerApply()` only (mutations no longer auto-emit). |
-| `apply` | `SdQuery` | User pressed the Search button or Enter in the search input. |
+| `sdQueryChange` | `SdQuery` | Emitted by `triggerApply()` only (mutations no longer auto-emit). |
+| `sdApply` | `SdQuery` | User pressed the Search button or Enter in the search input. |
 
 > **Trigger model:** mutations (`addFilter`, `updateFilter`, …) ONLY mutate `filters` / `logic` / `search` models. The composite `(queryChange)` + `(apply)` outputs fire exactly once per Search action.
 
@@ -179,6 +177,21 @@ All `boolean` inputs go through `booleanAttribute` (bare attribute = true). All 
 | `onApplyFilter(saved)` | Install a `SdSavedFilter` (filters + logic + search) + trigger apply. |
 | `isFilterActive(filter)` | Helper — true if filter has non-empty data or NULL/NOT_NULL operator. |
 | `chipValueText(filter)` | Helper — value string shown on chip (handles BETWEEN range + multi-value `+N` summary). |
+| `allowedOperatorsFor(field)` | Helper — operators offered for `field`. The array is referentially stable per field object, so it is safe in a template binding. |
+| `rowId(filter)` | Template helper — stable synthetic id of a filter row, used as the `@for ... track` key. Not part of the emitted payload. |
+
+### Chip identity
+
+Chips track by `rowId(filter)`, **not** by index. Each `Filter` object gets a synthetic id on first render, held in an internal `WeakMap` so the emitted `SdQuery.filters` payload stays a clean `Filter[]` (no injected id property). Editing a chip (`updateFilter` / popover commit) carries the id onto the replacement object, so the chip is patched in place; removing a chip destroys exactly that chip instead of shifting every later chip up one slot. This is what keeps per-chip local state (`inline-value-chip` draft, `inline-chip` boolean edit toggle) attached to the filter it belongs to.
+
+`removeFilter(index)` also keeps `editingIndex` aligned: removing the chip being edited closes its popover and clears the index; removing a chip **before** it shifts the index down by one so a later popover commit still lands on the same filter.
+
+#### Two constraints on the `filters` array
+
+Both are consumer contracts, and both follow from the id being keyed on object identity:
+
+1. **The same `Filter` object must not appear twice.** Two positions produce the same track key and Angular raises `NG0955`. Disambiguating with an `$index` suffix was tried and is not viable: Angular evaluates the `track` expression against the *previous* collection too while diffing, so a just-removed filter resolves differently, its key changes, and every chip is destroyed and rebuilt. Letting `NG0955` surface is the correct behaviour — its message already names the problem.
+2. **The objects must be stable across change detection.** Building the array inline (`[option]="{ filters: buildFilters() }"`, or a getter that maps fresh objects) hands every chip a new identity on every pass, so every chip is destroyed and rebuilt — worse than the `track $index` this replaced. Hold `filters` in a field or a signal.
 
 ## Sub-component decomposition (7/7 done)
 
@@ -238,7 +251,7 @@ Without a key both buttons stay disabled / hidden. `<sd-query-saved-filters-menu
 <sd-query-bar
   [fields]="fields"
   [showSearch]="true"
-  (apply)="reload($event)">
+  (sdApply)="reload($event)">
 </sd-query-bar>
 ```
 
@@ -266,7 +279,7 @@ reload(query: SdQuery<Order>): void {
   [showSavedFilters]="true"
   savedFiltersKey="orders.list"
   [showLogicToggle]="true"
-  (apply)="onApplyQuery($event)">
+  (sdApply)="onApplyQuery($event)">
 </sd-query-bar>
 ```
 
@@ -276,7 +289,7 @@ reload(query: SdQuery<Order>): void {
 <sd-query-bar
   [fields]="fields"
   [showSearch]="true"
-  (apply)="query.set($event); tableRef.reload()">
+  (sdApply)="query.set($event); tableRef.reload()">
 </sd-query-bar>
 
 <sd-table
@@ -307,16 +320,16 @@ tableOption: SdTableOption<Order> = {
 ## Dependencies
 
 Internal: `@sdcorejs/angular/components/{operator, button}`, `@sdcorejs/angular/forms/{input, input-number, select, date, datetime, date-range}`, `@sdcorejs/angular/i18n`.
-External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
+External: `@sdcorejs/utils` `1.1.4` (`OPERATORS` table + `BETWEEN` icon).
 
-## Test status
+## Tests
 
-- query-bar suite: **131 SUCCESS** (Karma + ChromeHeadless). Run:
-  ```
-  npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
-    --include='projects/sdcorejs-angular/components/query-bar/**/*.spec.ts'
-  ```
-- Each sub-component has its own spec (`<name>.component.spec.ts`) covering its public surface + the rendering branches it owns.
+Each sub-component has its own spec (`<name>.component.spec.ts`) covering its public surface and the rendering branches it owns. Run the whole group with:
+
+```
+npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
+  --include='projects/sdcorejs-angular/components/query-bar/**/*.spec.ts'
+```
 
 ## Known limitations / next iterations
 
@@ -337,3 +350,28 @@ External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
 - `<sd-table>` — common consumer of the query via server `items()`.
 - `<sd-operator>` — operator picker reused inside chips.
 - `<sd-select>`, `<sd-date>`, `<sd-date-range>`, `<sd-datetime>`, `<sd-input>` — value editors used by query fields.
+
+## Accessibility
+
+- **Chip popover** (`<sd-query-chip-popover>`): the header and body wrappers are `role="group"`. They exist only to stop clicks from closing the `mat-menu`, so they must not become tab stops — Tab goes straight to the operator picker and value editors. They now also stop Enter for the same reason; Escape and arrow keys still bubble so the menu closes / navigates normally.
+- **Inline value chip** (`<sd-query-inline-value-chip>`): the pill shell is `role="group"` labelled with the field name. Its click-to-focus affordance is mirrored on Enter through the same handler, which already skips events originating from the inner `<input>` or from the remove `×` button.
+
+## i18n
+
+Every string the bar renders itself resolves through `I18nService`. The bar and its children expose the labels
+as `computed()` signals (not the `sdTranslate` pipe) because the pipe is pure and would not refresh on a runtime
+`setLanguage()`:
+
+| What                                        | Key                                             | Owner                     |
+| ------------------------------------------- | ----------------------------------------------- | ------------------------- |
+| Free-text search placeholder                | `core.component.query-bar.search-placeholder`   | `searchPlaceholder()`     |
+| Add-filter tooltip, no fields configured    | `core.component.query-bar.no-fields`            | `noFieldsLabel()`         |
+| Add-filter tooltip, normal state            | `core.component.query-bar.add-filter`           | `addFilterLabel()`        |
+| Clear-all tooltip (interpolates `{count}`)  | `core.component.query-bar.clear-all`            | `clearAllLabel()` (actions bar) |
+| Search trigger tooltip                      | `core.component.query-bar.search`               | `searchLabel()` (actions bar)   |
+| AND/OR group `aria-label`                   | `core.component.query-bar.logic-operator`       | `logicGroupLabel()` (actions bar) |
+| Boolean chip value, default true / false    | `core.component.query-bar.boolean.true` / `.false` | `chipValueText()`, plus the build chip and inline chip toggle buttons (same keys, so one field never shows two languages) |
+| Seamless value placeholder (number / text)  | `core.component.query-bar.placeholder.value` / `.text` | inline value chip `ph()` |
+| BETWEEN from / to placeholders              | `core.component.query-bar.placeholder.from-number` / `.to-number` / `.from-text` / `.to-text` | inline value chip `phFrom()` / `phTo()` |
+
+`SdQueryField.trueLabel` / `falseLabel` still override the boolean defaults when a field supplies them.

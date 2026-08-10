@@ -6,7 +6,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput, SdSelect } from '@sdcorejs/angular/forms';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ISdFormGenericConfiguration, SD_FORM_GENERIC_CONFIGURATION } from '../../../../configurations';
-import { Attribute, GetAttributes } from '../../../../models';
+import { Attribute, sdGetAttributes } from '../../../../models';
 import {
   SdFormGenericValidation,
   SdFormGenericValidationFunction,
@@ -14,7 +14,7 @@ import {
 } from '../../../../models/form-generic-validation.model';
 import { SdFormGeneric } from '../../../../models/form-generic.model';
 import { ExpressionBuilderComponent } from '../expression-builder/expression-builder.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
@@ -22,7 +22,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './configure-validation.component.html',
   styleUrl: './configure-validation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, TranslatePipe],
+  imports: [SdIcon, MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, SdTranslatePipe],
 })
 export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;
@@ -31,7 +31,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   validations: SdFormGenericValidation[] = [];
   functions: SdFormGenericValidationFunction[] = [];
   alerts = ValidationAlerts;
-  readonly accept = output<SdFormGenericValidation[]>();
+  readonly sdAccept = output<SdFormGenericValidation[]>();
   private readonly ref = inject(ChangeDetectorRef);
   private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 
@@ -57,7 +57,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
     } else {
       this.validations = [];
     }
-    this.attributes = GetAttributes(formGeneric.components);
+    this.attributes = sdGetAttributes(formGeneric.components);
     if (formGeneric) {
       this.modal?.open();
       this.ref.markForCheck();
@@ -93,7 +93,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   };
 
   updateValidations = () => {
-    this.accept.emit(this.validations);
+    this.sdAccept.emit(this.validations);
     this.modal?.close();
   };
 }

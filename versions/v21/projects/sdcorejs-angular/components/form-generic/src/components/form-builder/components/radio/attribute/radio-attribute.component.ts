@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericRadio,
@@ -15,13 +15,13 @@ import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { AttributeSelect } from '../../attribute-select/attribute-select.component';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'radio-attribute',
   templateUrl: './radio-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeSelection, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, TranslatePipe],
+  imports: [AttributeTemplate, AttributeSelection, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, SdTranslatePipe],
 })
 export class RadioAttribute implements AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -33,7 +33,7 @@ export class RadioAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericRadio;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericRadio) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
   #changes = new Subject<void>();
   #subscription = new Subscription();
@@ -76,7 +76,7 @@ export class RadioAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

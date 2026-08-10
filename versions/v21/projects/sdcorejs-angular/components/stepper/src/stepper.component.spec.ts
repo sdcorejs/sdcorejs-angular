@@ -18,7 +18,7 @@ import { SdStepper } from './stepper.component';
       [labelPosition]="labelPosition"
       [color]="color"
       [autoId]="autoId"
-      (selectionChange)="onSelectionChange($event)">
+      (sdSelectionChange)="onSelectionChange($event)">
       @for (s of stepDefs(); track s.id) {
         <sd-step
           [label]="s.label"

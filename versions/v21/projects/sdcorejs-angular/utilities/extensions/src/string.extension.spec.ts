@@ -1,4 +1,4 @@
-import { StringUtilities } from './string.extension';
+import { StringUtilities, ValidationUtilities } from './string.extension';
 
 describe('StringUtilities', () => {
   describe('isNullOrEmpty', () => {
@@ -41,62 +41,62 @@ describe('StringUtilities', () => {
     });
   });
 
-  describe('isValidEmail', () => {
+  describe('ValidationUtilities.isEmail', () => {
     it('returns true for valid emails', () => {
-      expect(StringUtilities.isValidEmail('user@example.com')).toBeTrue();
-      expect(StringUtilities.isValidEmail('user.name+tag@sub.domain.com')).toBeTrue();
-      expect(StringUtilities.isValidEmail('test123@company.org')).toBeTrue();
+      expect(ValidationUtilities.isEmail('user@example.com')).toBeTrue();
+      expect(ValidationUtilities.isEmail('user.name+tag@sub.domain.com')).toBeTrue();
+      expect(ValidationUtilities.isEmail('test123@company.org')).toBeTrue();
     });
 
     it('returns false for invalid emails', () => {
-      expect(StringUtilities.isValidEmail('not-an-email')).toBeFalse();
-      expect(StringUtilities.isValidEmail('@domain.com')).toBeFalse();
-      expect(StringUtilities.isValidEmail('user@')).toBeFalse();
-      expect(StringUtilities.isValidEmail('')).toBeFalse();
-      expect(StringUtilities.isValidEmail(null)).toBeFalse();
-      expect(StringUtilities.isValidEmail(undefined)).toBeFalse();
+      expect(ValidationUtilities.isEmail('not-an-email')).toBeFalse();
+      expect(ValidationUtilities.isEmail('@domain.com')).toBeFalse();
+      expect(ValidationUtilities.isEmail('user@')).toBeFalse();
+      expect(ValidationUtilities.isEmail('')).toBeFalse();
+      expect(ValidationUtilities.isEmail(null)).toBeFalse();
+      expect(ValidationUtilities.isEmail(undefined)).toBeFalse();
     });
   });
 
-  describe('isValidPhone', () => {
+  describe('ValidationUtilities.isPhone', () => {
     it('returns true for valid phone numbers', () => {
-      expect(StringUtilities.isValidPhone('0901234567')).toBeTrue();
-      expect(StringUtilities.isValidPhone('+84901234567')).toBeTrue();
-      expect(StringUtilities.isValidPhone('(+84)901234567')).toBeTrue();
-      expect(StringUtilities.isValidPhone('090-123-4567')).toBeTrue();
+      expect(ValidationUtilities.isPhone('0901234567')).toBeTrue();
+      expect(ValidationUtilities.isPhone('+84901234567')).toBeTrue();
+      expect(ValidationUtilities.isPhone('(+84)901234567')).toBeTrue();
+      expect(ValidationUtilities.isPhone('090-123-4567')).toBeTrue();
     });
 
     it('returns false for invalid phone numbers', () => {
-      expect(StringUtilities.isValidPhone('')).toBeFalse();
-      expect(StringUtilities.isValidPhone(null)).toBeFalse();
-      expect(StringUtilities.isValidPhone('abc')).toBeFalse();
+      expect(ValidationUtilities.isPhone('')).toBeFalse();
+      expect(ValidationUtilities.isPhone(null)).toBeFalse();
+      expect(ValidationUtilities.isPhone('abc')).toBeFalse();
     });
   });
 
-  describe('isValidCode', () => {
+  describe('ValidationUtilities.isCode', () => {
     it('returns true for valid codes (2-20 alphanumeric + @_-)', () => {
-      expect(StringUtilities.isValidCode('abc123')).toBeTrue();
-      expect(StringUtilities.isValidCode('My_Code-01')).toBeTrue();
-      expect(StringUtilities.isValidCode('ab')).toBeTrue();
+      expect(ValidationUtilities.isCode('abc123')).toBeTrue();
+      expect(ValidationUtilities.isCode('My_Code-01')).toBeTrue();
+      expect(ValidationUtilities.isCode('ab')).toBeTrue();
     });
 
     it('returns false for too short codes', () => {
-      expect(StringUtilities.isValidCode('a')).toBeFalse();
+      expect(ValidationUtilities.isCode('a')).toBeFalse();
     });
 
     it('returns false for too long codes', () => {
-      expect(StringUtilities.isValidCode('a'.repeat(21))).toBeFalse();
+      expect(ValidationUtilities.isCode('a'.repeat(21))).toBeFalse();
     });
 
     it('returns false for codes with spaces or invalid characters', () => {
-      expect(StringUtilities.isValidCode('abc def')).toBeFalse();
-      expect(StringUtilities.isValidCode('abc!')).toBeFalse();
+      expect(ValidationUtilities.isCode('abc def')).toBeFalse();
+      expect(ValidationUtilities.isCode('abc!')).toBeFalse();
     });
 
     it('returns false for empty, null, undefined', () => {
-      expect(StringUtilities.isValidCode('')).toBeFalse();
-      expect(StringUtilities.isValidCode(null)).toBeFalse();
-      expect(StringUtilities.isValidCode(undefined)).toBeFalse();
+      expect(ValidationUtilities.isCode('')).toBeFalse();
+      expect(ValidationUtilities.isCode(null)).toBeFalse();
+      expect(ValidationUtilities.isCode(undefined)).toBeFalse();
     });
   });
 
@@ -244,21 +244,21 @@ describe('StringUtilities', () => {
     });
   });
 
-  describe('REGEX_IDVN (CCCD)', () => {
+  describe('REGEX_VN_ID (CCCD)', () => {
     it('validates 12-digit CCCD', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN);
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID);
       expect(regex.test('034201012345')).toBeTrue();
       expect(regex.test('123456789012')).toBeTrue();
     });
 
     it('rejects 9-digit CMND cũ (CCCD chỉ chấp nhận 12 số)', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN);
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID);
       expect(regex.test('123456789')).toBeFalse();
       expect(regex.test('034201012')).toBeFalse();
     });
 
-    it('rejects invalid IDVN values', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN);
+    it('rejects invalid VN_ID values', () => {
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID);
       expect(regex.test('12345678')).toBeFalse(); // 8 digits
       expect(regex.test('12345678901')).toBeFalse(); // 11 digits
       expect(regex.test('1234567890123')).toBeFalse(); // 13 digits
@@ -291,26 +291,26 @@ describe('StringUtilities', () => {
     });
   });
 
-  describe('REGEX_IDVN_OR_PASSPORT (CCCD/Hộ chiếu)', () => {
+  describe('REGEX_VN_ID_OR_PASSPORT (CCCD/Hộ chiếu)', () => {
     it('validates 12-digit CCCD', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN_OR_PASSPORT);
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID_OR_PASSPORT);
       expect(regex.test('034201012345')).toBeTrue();
       expect(regex.test('123456789012')).toBeTrue();
     });
 
     it('validates passport format', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN_OR_PASSPORT);
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID_OR_PASSPORT);
       expect(regex.test('A1234567')).toBeTrue();
       expect(regex.test('Z9999999')).toBeTrue();
     });
 
     it('rejects 9-digit CMND cũ (chỉ chấp nhận CCCD 12 số hoặc passport)', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN_OR_PASSPORT);
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID_OR_PASSPORT);
       expect(regex.test('123456789')).toBeFalse();
     });
 
     it('rejects mixed/invalid formats', () => {
-      const regex = new RegExp(StringUtilities.REGEX_IDVN_OR_PASSPORT);
+      const regex = new RegExp(StringUtilities.REGEX_VN_ID_OR_PASSPORT);
       expect(regex.test('12345678')).toBeFalse(); // 8 digits
       expect(regex.test('a1234567')).toBeFalse(); // lowercase letter
       expect(regex.test('AB1234567')).toBeFalse(); // 2 letters

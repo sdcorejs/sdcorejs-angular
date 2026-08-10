@@ -1,6 +1,6 @@
 import { Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
-import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SD_FORM_CONFIGURATION } from '@sdcorejs/angular/forms/models';
 import { SdAutocomplete } from './autocomplete.component';
@@ -419,6 +419,82 @@ describe('SdAutocomplete', () => {
   });
 
   // -------------------------------------------------------------------------
+  // clear() — event propagation + falsy-value guard
+  // -------------------------------------------------------------------------
+  describe('clear() phải để formControl phát event (bug class "invalid nhưng không có message")', () => {
+    // why: clear() cũ dùng setValue(null, { emitEvent: false }) → async [validator] resolve im →
+    // AbstractControl.events không phát → #state (sdFormControlState) không tick → errorMessage
+    // computed giữ giá trị cũ → message không hiện/không clear (chỉ còn viền đỏ). Dùng
+    // autoDetectChanges (tôn trọng OnPush); detectChanges ép check sẽ che đúng lớp lỗi này.
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+
+    it('renders the validator message after clear() empties the value (no forced CD)', async () => {
+      host.items = ['Alpha', 'Beta'];
+      host.validator = (v: any) => (v === null || v === undefined || v === '' ? 'Vui lòng chọn giá trị' : '');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      comp.onSelect('Alpha' as any);
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // còn giá trị → chưa có lỗi
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.formControl.hasError('customValidator')).toBeTrue();
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng chọn giá trị');
+    });
+
+    it('clears a stale validator message after clear() removes the invalid value', async () => {
+      host.items = ['Alpha', 'Beta'];
+      host.validator = (v: any) => (v === 'Alpha' ? 'Giá trị không hợp lệ' : '');
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      comp.onSelect('Alpha' as any);
+      comp.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()?.textContent?.trim()).toBe('Giá trị không hợp lệ');
+
+      comp.clear();
+      await fixture.whenStable();
+
+      expect(comp.errorMessage()).toBeUndefined();
+      expect(matError()).toBeNull();
+    });
+
+    it('clears a selected value of 0 (falsy but valid — load path treats 0 as a value)', fakeAsync(() => {
+      host.items = [
+        { id: 0, name: 'Zero' },
+        { id: 1, name: 'One' },
+      ];
+      host.valueField = 'id';
+      host.displayField = 'name';
+      host.model = 0;
+      fixture.detectChanges();
+      tick(600);
+      fixture.detectChanges();
+      expect(comp.valueModel()).toBe(0);
+
+      comp.clear();
+      tick(600);
+      fixture.detectChanges();
+
+      expect(comp.valueModel()).toBeNull();
+      expect(comp.formControl.value).toBeNull();
+      expect(host.changes).toContain(null);
+    }));
+
+    it('stays a no-op when there is genuinely no value', fakeAsync(() => {
+      comp.clear();
+      tick();
+      fixture.detectChanges();
+      expect(host.changes.length).toBe(0);
+    }));
+  });
+
+  // -------------------------------------------------------------------------
   // output events
   // -------------------------------------------------------------------------
   describe('output events', () => {
@@ -460,11 +536,35 @@ describe('SdAutocomplete', () => {
   // reValidate
   // -------------------------------------------------------------------------
   describe('reValidate', () => {
-    it('calls updateValueAndValidity on inputControl', () => {
-      const spy = spyOn(comp.inputControl, 'updateValueAndValidity').and.callThrough();
+    // why: required / [validator] / inlineError đều được cài trên formControl. reValidate() cũ gọi
+    // trên inputControl (chỉ giữ text search, không validator nào) → API public không validate gì.
+    it('calls updateValueAndValidity on formControl', () => {
+      const spy = spyOn(comp.formControl, 'updateValueAndValidity').and.callThrough();
       comp.reValidate();
       expect(spy).toHaveBeenCalled();
     });
+
+    it('does NOT target inputControl (no validators live there)', () => {
+      const spy = spyOn(comp.inputControl, 'updateValueAndValidity').and.callThrough();
+      comp.reValidate();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('re-runs the async [validator] so an externally changed verdict is picked up', fakeAsync(() => {
+      let reject = false;
+      host.validator = () => (reject ? 'Không hợp lệ' : '');
+      fixture.detectChanges();
+      tick();
+      expect(comp.formControl.hasError('customValidator')).toBe(false);
+
+      reject = true;
+      comp.reValidate();
+      tick();
+      fixture.detectChanges();
+
+      expect(comp.formControl.hasError('customValidator')).toBe(true);
+      expect(comp.errorMessage()).toBe('Không hợp lệ');
+    }));
   });
 
   // -------------------------------------------------------------------------
@@ -746,5 +846,227 @@ describe('SdAutocomplete (viewed inline mode)', () => {
     expect(comp.isViewed()).toBe(true);
     expect(fixture.nativeElement.querySelector('.sd-inline-view')).toBeNull();
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Validator ADDITIVE trên formControl công khai
+// ---------------------------------------------------------------------------
+
+describe('SdAutocomplete (consumer validators survive on the public formControl)', () => {
+  // why: #updateValidator cũ gọi setValidators() + setAsyncValidators() → THAY THẾ cả danh sách,
+  // xoá sạch validator do consumer tự gắn lên `formControl` (control này là public API). Giờ đi qua
+  // connector (addValidators/removeValidators) nên chỉ phần component sở hữu mới bị thêm/gỡ.
+  const consumerValidator: ValidatorFn = () => ({ consumer: true });
+  const consumerAsyncValidator: AsyncValidatorFn = () => Promise.resolve({ consumerAsync: true });
+
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdAutocomplete;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [HostComponent, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.items = FRUIT_ITEMS;
+    host.valueField = 'id';
+    host.displayField = 'name';
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = getComp(fixture);
+  });
+
+  /** Đẩy thay đổi state của host xuống input của component rồi chờ ổn định. */
+  const flush = async (): Promise<void> => {
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+  };
+
+  it('keeps a consumer-attached sync validator when [required] flips on', async () => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+
+    host.required = true;
+    await flush();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBeTrue();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+    expect(comp.formControl.hasError('required')).toBeTrue();
+  });
+
+  it('keeps a consumer-attached sync validator when [inlineError] changes', async () => {
+    comp.formControl.addValidators(consumerValidator);
+    comp.formControl.updateValueAndValidity();
+
+    host.inlineError = 'Sai rồi';
+    await flush();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBeTrue();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+    expect(comp.formControl.hasError('inlineError')).toBeTrue();
+  });
+
+  it('keeps a consumer-attached async validator when [validator] is supplied', async () => {
+    comp.formControl.addAsyncValidators(consumerAsyncValidator);
+    comp.formControl.updateValueAndValidity();
+    await fixture.whenStable();
+    expect(comp.formControl.hasError('consumerAsync')).toBeTrue();
+
+    host.validator = () => 'Giá trị không hợp lệ';
+    await flush();
+
+    expect(comp.formControl.hasAsyncValidator(consumerAsyncValidator)).toBeTrue();
+  });
+
+  it('removes only the component-owned validator when [required] flips back off', async () => {
+    comp.formControl.addValidators(consumerValidator);
+    host.required = true;
+    await flush();
+    expect(comp.formControl.hasError('required')).toBeTrue();
+
+    host.required = false;
+    await flush();
+    comp.formControl.updateValueAndValidity();
+
+    expect(comp.formControl.hasValidator(consumerValidator)).toBeTrue();
+    expect(comp.formControl.hasError('required')).toBeFalse();
+    expect(comp.formControl.hasError('consumer')).toBeTrue();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus/openPanel must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdAutocomplete deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdAutocomplete)!.componentInstance as SdAutocomplete;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input };
+  };
+
+  it('does not open the panel or focus after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+    const trigger = comp.autocompleteTrigger()!;
+    const openSpy = spyOn(trigger, 'openPanel');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdAutocomplete],
+  template: `<sd-autocomplete [items]="items" [required]="required" [addable]="addable" (sdAdd)="added = added + 1"></sd-autocomplete>`,
+})
+class A11yHost {
+  items: string[] = ['Hà Nội', 'Huế'];
+  required = false;
+  addable = false;
+  added = 0;
+}
+
+describe('SdAutocomplete (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdAutocomplete<any>;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(el => el.componentInstance instanceof SdAutocomplete).componentInstance as SdAutocomplete<any>;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('input')).not.toBeNull();
+  });
+
+  it('renders the "add new" affordance as a real <button type=button>', () => {
+    fixture.componentInstance.addable = true;
+    fixture.detectChanges();
+    cmp.autocompleteTrigger()?.openPanel();
+    fixture.detectChanges();
+
+    const btn = document.querySelector('button.sd__option--add-btn') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.type).toBe('button');
+    // why: <button> tự nằm trong tab order và UA sinh `click` khi Enter/Space — không cần
+    // role/tabindex/keydown tự chế như bản <div (click)> cũ.
+    expect(btn.tabIndex).toBeGreaterThanOrEqual(0);
+
+    btn.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.added).toBe(1);
+  });
+
+  it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity();
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    const el = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    expect(el.getAttribute('aria-invalid')).toBe('true');
+    expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });

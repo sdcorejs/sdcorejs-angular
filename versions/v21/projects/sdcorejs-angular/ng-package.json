@@ -11,7 +11,6 @@
     "ckeditor5",
     "date-fns",
     "exceljs",
-    "@omer-go/docx-parser-converter-ts",
     "@bjorn3/browser_wasi_shim",
     "keycloak-js",
     "prismjs",

@@ -6,13 +6,13 @@
       class="c-layout-user-avatar"
       [userInfo]="userInfo()"
       [compact]="true"
-      (opened)="onMenuOpened()"
-      (closed)="onMenuClosed()"></sd-layout-user-menu>
+      (sdOpened)="onMenuOpened()"
+      (sdClosed)="onMenuClosed()"></sd-layout-user-menu>
 
     <button
       type="button"
       class="c-layout-icon-toggle"
-      [attr.aria-label]="'core.module.layout.sidebar.toggle' | translate"
+      [attr.aria-label]="'core.module.layout.sidebar.toggle' | sdTranslate"
       (click)="onToggleMenuLock($event)">
       <sd-icon [name]="isShowSidebar() ? 'keyboard_arrow_right' : 'keyboard_arrow_left'"></sd-icon>
     </button>

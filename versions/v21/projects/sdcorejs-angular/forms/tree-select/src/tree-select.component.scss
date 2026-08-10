@@ -52,6 +52,15 @@
   cursor: pointer;
 }
 
+// why: message lỗi phải nổi bật như <mat-error> của các control Material khác — cùng cỡ chữ
+// caption + màu error token, đặt ngay dưới trigger.
+.sd-tree-select__error {
+  margin-top: 4px;
+  color: var(--sd-error, #d92d20);
+  font-size: 12px;
+  line-height: 16px;
+}
+
 .sd-tree-select__body {
   display: grid;
   gap: 12px;

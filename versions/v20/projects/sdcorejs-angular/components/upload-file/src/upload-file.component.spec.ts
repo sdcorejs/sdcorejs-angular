@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdUploadFile } from './upload-file.component';
@@ -74,6 +75,58 @@ describe('SdUploadFile', () => {
       // previewFiles is empty (0 < max 10) and not disabled → drop zone visible
       const dropZone = fixture.nativeElement.querySelector('.c-area-upload');
       expect(dropZone).not.toBeNull();
+    });
+  });
+
+  // ─── A11y: drop zone từng là <div (click)> + aria-hidden="true" ───────────
+
+  describe('accessibility: drop zone', () => {
+    const getDropZone = (): HTMLElement => {
+      fixture.detectChanges();
+      return fixture.nativeElement.querySelector('.c-area-upload') as HTMLElement;
+    };
+
+    it('drop zone does not carry aria-hidden', () => {
+      expect(getDropZone().hasAttribute('aria-hidden')).toBe(false);
+    });
+
+    it('drop zone is exposed as a focusable button with an accessible name', () => {
+      const dropZone = getDropZone();
+      expect(dropZone.getAttribute('role')).toBe('button');
+      expect(dropZone.getAttribute('tabindex')).toBe('0');
+      expect(dropZone.getAttribute('aria-label')).toBeTruthy();
+    });
+
+    it('Enter on the drop zone opens the file picker, same as a click', () => {
+      const spy = spyOn(component, 'onUpload');
+      const dropZone = getDropZone();
+
+      dropZone.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('Space on the drop zone opens the file picker and blocks the page scroll', () => {
+      const spy = spyOn(component, 'onUpload');
+      const dropZone = getDropZone();
+
+      const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      dropZone.dispatchEvent(ev);
+
+      expect(spy).toHaveBeenCalled();
+      expect(ev.defaultPrevented).toBe(true);
+    });
+
+    it('the required-error message is announced through role="alert"', () => {
+      fixture.detectChanges();
+      component.formControl.setValidators(Validators.required);
+      component.formControl.setValue(null);
+      component.formControl.markAsTouched();
+      component.formControl.updateValueAndValidity();
+      fixture.detectChanges();
+
+      const alert = fixture.nativeElement.querySelector('[role="alert"]');
+      expect(alert).not.toBeNull();
     });
   });
 
@@ -827,7 +880,7 @@ describe('SdUploadFilePreview', () => {
   describe('output: download', () => {
     it('emits download event when onDownload is called', () => {
       const emitted: PreviewFile[] = [];
-      component.download.subscribe(f => emitted.push(f));
+      component.sdDownload.subscribe(f => emitted.push(f));
 
       const file = mockPreviewFiles[0];
       component.onDownload(file);
@@ -842,7 +895,7 @@ describe('SdUploadFilePreview', () => {
   describe('output: close', () => {
     it('emits close event when onClose is called', () => {
       let emitted = 0;
-      component.close.subscribe(() => emitted++);
+      component.sdClose.subscribe(() => emitted++);
 
       component.onClose();
 
@@ -898,5 +951,68 @@ describe('SdUploadFilePreview', () => {
       expect(document.querySelector('img.thumbnail-img.sd-image-image-error')).toBeNull();
       expect(document.querySelector('.main-image-container .c-image-error')).toBeNull();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// describe: drag & drop listener teardown
+// ---------------------------------------------------------------------------
+// why: 4 listener dragover/dragenter/dragleave/drop được gắn thẳng lên drop container bằng
+// hàm ẩn danh và không bao giờ gỡ. Drop container có thể sống lâu hơn component, nên handler
+// giữ luôn instance đã destroy (kèm injector subtree) và vẫn chạy khi có event.
+
+describe('SdUploadFile drag & drop listener teardown', () => {
+  let fixture: ComponentFixture<SdUploadFile>;
+
+  function dispatchDrag(target: HTMLElement, type: string): boolean {
+    const event = new DragEvent(type, { cancelable: true });
+    target.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [SdUploadFile, NoopAnimationsModule],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SdUploadFile);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  });
+
+  function dropZone(): HTMLElement {
+    const element = fixture.nativeElement.querySelector('.c-area-upload') as HTMLElement | null;
+    if (!element) throw new Error('drop container not rendered');
+    return element;
+  }
+
+  it('binds the drag listeners while the component is alive', () => {
+    const zone = dropZone();
+
+    expect(dispatchDrag(zone, 'dragover')).toBeTrue();
+    expect(zone.style.border).toBe('2px solid grey');
+
+    expect(dispatchDrag(zone, 'dragenter')).toBeTrue();
+
+    dispatchDrag(zone, 'dragleave');
+    expect(zone.style.border).toBe('2px dashed grey');
+  });
+
+  it('stops invoking the drag listeners once the component is destroyed', () => {
+    const zone = dropZone();
+    // Giữ tham chiếu tới element (mô phỏng container do consumer sở hữu) rồi destroy component.
+    fixture.destroy();
+    zone.style.border = '';
+    zone.style.opacity = '';
+
+    expect(dispatchDrag(zone, 'dragover')).toBeFalse();
+    expect(dispatchDrag(zone, 'dragenter')).toBeFalse();
+    expect(dispatchDrag(zone, 'dragleave')).toBeFalse();
+    expect(dispatchDrag(zone, 'drop')).toBeFalse();
+
+    expect(zone.style.border).toBe('');
+    expect(zone.style.opacity).toBe('');
   });
 });

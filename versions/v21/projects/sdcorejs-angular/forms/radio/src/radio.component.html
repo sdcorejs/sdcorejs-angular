@@ -52,7 +52,7 @@
 
     @if (visibleError() === 'required') {
       <mat-error [id]="errorId">
-        {{ 'core.form.radio.required' | translate }}
+        {{ 'core.form.radio.required' | sdTranslate }}
       </mat-error>
     } @else if (visibleError() === 'inlineError') {
       <mat-error [id]="errorId">

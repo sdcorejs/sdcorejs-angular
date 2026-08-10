@@ -9,36 +9,36 @@
 
 @if (_userInfo && _sidebarV1) {
   @if (!isMobile()) {
-    <sidebar-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV1" [isMobile]="false">
+    <sd-sidebar-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV1" [isMobile]="false">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
-    </sidebar-v1>
+    </sd-sidebar-v1>
   } @else {
-    <sidebar-mobile-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV1">
+    <sd-sidebar-mobile-v1 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV1">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
-    </sidebar-mobile-v1>
+    </sd-sidebar-mobile-v1>
   }
 }
 
 @if (_userInfo && _sidebarV3) {
   @if (!isMobile()) {
-    <sidebar-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
+    <sd-sidebar-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
-    </sidebar-v3>
+    </sd-sidebar-v3>
   } @else {
-    <sidebar-mobile-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
+    <sd-sidebar-mobile-v3 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV3">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
-    </sidebar-mobile-v3>
+    </sd-sidebar-mobile-v3>
   }
 }
 
 @if (_userInfo && _sidebarV2) {
   @if (!isMobile()) {
-    <sidebar-v2 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV2">
+    <sd-sidebar-v2 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV2">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
-    </sidebar-v2>
+    </sd-sidebar-v2>
   } @else {
-    <sidebar-mobile-v2 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV2">
+    <sd-sidebar-mobile-v2 [menus]="menus()" [userInfo]="_userInfo" [sidebar]="_sidebarV2">
       <ng-container [ngTemplateOutlet]="projectedContent"></ng-container>
-    </sidebar-mobile-v2>
+    </sd-sidebar-mobile-v2>
   }
 }

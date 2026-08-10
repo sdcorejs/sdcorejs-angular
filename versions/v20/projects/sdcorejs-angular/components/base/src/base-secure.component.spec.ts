@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Component, Injector, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SdLicenseService } from '@sdcorejs/angular/services/license';
 
@@ -54,5 +55,27 @@ describe('SdBaseSecureComponent', () => {
     });
 
     expect(() => TestBed.createComponent(SecureTestHost)).toThrowError('[Security] denied');
+  });
+
+  // why: class này còn là public entry point của package MIT dù đã dormant (CHANGELOG #21).
+  // Trước đây consumer nào extends nó mà không cấu hình `licenseKey` sẽ crash ngay ở production
+  // trên mọi host không phải localhost. Nhánh "chưa cấu hình" giờ phải là no-op.
+  it('does not throw with the REAL SdLicenseService on a non-localhost host and no licenseKey', () => {
+    // why: DOCUMENT chỉ được override trong injector riêng của service — override ở TestBed sẽ làm
+    // hỏng DomRenderer khi createComponent.
+    const licenseService = Injector.create({
+      providers: [
+        { provide: SdLicenseService, useClass: SdLicenseService },
+        { provide: DOCUMENT, useValue: { defaultView: { location: { hostname: 'app.customer.com' } } } },
+        { provide: PLATFORM_ID, useValue: 'browser' },
+      ],
+    }).get(SdLicenseService);
+
+    TestBed.configureTestingModule({
+      imports: [SecureTestHost],
+      providers: [{ provide: SdLicenseService, useValue: licenseService }],
+    });
+
+    expect(() => TestBed.createComponent(SecureTestHost)).not.toThrow();
   });
 });

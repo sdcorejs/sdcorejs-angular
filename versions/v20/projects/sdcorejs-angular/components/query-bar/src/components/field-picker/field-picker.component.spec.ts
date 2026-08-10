@@ -46,8 +46,8 @@ describe('SdQueryFieldPicker', () => {
 
   it('pick emits the chosen field', () => {
     const spy = jasmine.createSpy('pick');
-    component.pick.subscribe(spy);
-    component.pick.emit(fields[0]);
+    component.sdPick.subscribe(spy);
+    component.sdPick.emit(fields[0]);
     expect(spy).toHaveBeenCalledWith(fields[0]);
   });
 

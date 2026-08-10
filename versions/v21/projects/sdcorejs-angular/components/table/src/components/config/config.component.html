@@ -1,7 +1,7 @@
 @let _configuration = configuration();
 @let _autoId = autoId();
 
-<sd-modal width="sm" [title]="'core.component.table.setup' | translate" #modal>
+<sd-modal width="sm" [title]="'core.component.table.setup' | sdTranslate" #modal>
   @if (_configuration) {
     <div class="c-container">
       <div class="c-table" style="max-height: 70vh">
@@ -13,7 +13,7 @@
           (cdkDropListDropped)="dropTable($event)">
           <ng-container matColumnDef="invisible">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 96px">
-              {{ 'core.component.form-builder.display' | translate }}
+              {{ 'core.component.form-builder.display' | sdTranslate }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <div class="d-flex" style="gap: 8px">
@@ -30,7 +30,7 @@
           </ng-container>
           <ng-container matColumnDef="title">
             <th mat-header-cell class="c-th px-4" *matHeaderCellDef>
-              {{ 'core.component.table.column-header' | translate }}
+              {{ 'core.component.table.column-header' | sdTranslate }}
             </th>
             <td class="px-4" mat-cell *matCellDef="let item">
               <sd-input class="pb-4" [placeholder]="item?.origin?.title" [(model)]="item.title" hideInlineError></sd-input>
@@ -38,7 +38,7 @@
           </ng-container>
           <ng-container matColumnDef="width">
             <th mat-header-cell class="c-th px-4" *matHeaderCellDef style="width: 80px">
-              {{ 'core.component.table.width' | translate }}
+              {{ 'core.component.table.width' | sdTranslate }}
             </th>
             <td class="px-4" mat-cell *matCellDef="let item">
               <sd-input class="pb-4" [placeholder]="item?.origin?.width" [(model)]="item.width" hideInlineError></sd-input>
@@ -46,7 +46,7 @@
           </ng-container>
           <ng-container matColumnDef="fixed">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 80px">
-              {{ 'core.component.table.fixed' | translate }}
+              {{ 'core.component.table.fixed' | sdTranslate }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <sd-switch [(model)]="item.fixed" />
@@ -55,7 +55,7 @@
 
           <ng-container matColumnDef="truncate">
             <th mat-header-cell class="c-th text-center px-4" *matHeaderCellDef style="width: 100px">
-              {{ 'core.component.table.char-limit' | translate }}
+              {{ 'core.component.table.char-limit' | sdTranslate }}
             </th>
             <td class="text-center px-4" mat-cell *matCellDef="let item">
               <sd-switch [(model)]="item.truncate" />
@@ -76,8 +76,8 @@
     </div>
   }
   <ng-container sdFooterRight>
-    <sd-button [autoId]="_autoId ? _autoId + '-config-skip' : null" class="mr-8" (click)="close()" [title]="'core.component.table.skip' | translate" color="secondary"> </sd-button>
-    <sd-button [autoId]="_autoId ? _autoId + '-config-reset' : null" class="mr-8" (click)="onReset()" [title]="'core.component.form-builder.default' | translate" color="primary"> </sd-button>
-    <sd-button [autoId]="_autoId ? _autoId + '-config-apply' : null" (click)="onSave()" [title]="'core.component.table.apply' | translate" type="fill" color="primary"> </sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-config-skip' : null" class="mr-8" (click)="close()" [title]="'core.component.table.skip' | sdTranslate" color="secondary"> </sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-config-reset' : null" class="mr-8" (click)="onReset()" [title]="'core.component.form-builder.default' | sdTranslate" color="primary"> </sd-button>
+    <sd-button [autoId]="_autoId ? _autoId + '-config-apply' : null" (click)="onSave()" [title]="'core.component.table.apply' | sdTranslate" type="fill" color="primary"> </sd-button>
   </ng-container>
 </sd-modal>

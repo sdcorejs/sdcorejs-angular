@@ -78,11 +78,12 @@ Applied automatically on `<sd-chip>` for styling hooks:
 - **`[viewed]="true"`** = DETAIL read-only mode: chips display without ✕, no input box; honors `<ng-template sdViewDef>` for custom rendering and `hyperlink` for clickable values.
 - **`[viewed]="'inline'"`** keeps the editable chip strip (chips are already compact, so there is no separate text face) — except when `[disabled]`, where it collapses to the static `<sd-view>`. Use `'inline'` to embed an editable chip field in a mostly-read-only DETAIL layout without the full mat-form-field shell standing out.
 - **Validators**: `[required]`, `[min]` (→ `minLength`), `[max]` (→ `maxLength`). Error tooltip messages: required → "Vui lòng nhập thông tin"; minlength → "Vui lòng nhập ít nhất N giá trị"; maxlength → "Vui lòng nhập tối đa N giá trị".
-- **Reactive validator updates** — validator inputs (`required` / `min` / `max`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity` whenever any of them changes. Toggle `required` at runtime and the control re-validates automatically.
+- **Reactive validator updates (additive)** — validator inputs (`required` / `min` / `max`) are signal inputs routed through the shared form connector, which **adds and removes only the validators this component owns**. Toggle them at runtime and the control re-validates automatically. Validators you attach yourself to the public `formControl` (`formControl.addValidators(...)`) are preserved — the component no longer calls `clearValidators()` / `setValidators()`.
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` and `inputControl.disable() / enable()` via an effect — both the chip strip and the typing area are gated together.
 - **`[(model)]` two-way** — host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(values)`. The reverse direction (add/remove/clear chip → `modelChange` emit) runs through the component's `onAdd` / `onRemove` / `onClear` handlers.
+- **The model array is replaced, never mutated** — every add/select/remove/clear builds a **new array** and emits it. The array you pass into `[model]` is never written to, and because the reference always changes, `modelChange` fires reliably (signal equality is `Object.is`, so an in-place `push` would have been swallowed).
 - **Separator keys** — Enter (`ENTER`) and comma (`COMMA`) from `@angular/cdk/keycodes` both commit a new chip. Duplicate values and empty strings are silently ignored.
-- **Duplicate guard** — `onAdd` checks `values.includes(value)` before pushing; identical chip values are never repeated.
+- **Duplicate guard** — `onAdd` checks `values.includes(value)` before appending; identical chip values are never repeated.
 - **`addable=false` guard** — when `[addable]="false"`, typing new text is accepted in the input but `onAdd` silently discards it; existing chips remain.
 
 ### Three ways to integrate
@@ -106,8 +107,8 @@ Applied automatically on `<sd-chip>` for styling hooks:
 
 | Method        | Signature                                       | Notes                                                                                                                  |
 | ------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `onAdd`       | `(event: MatChipInputEvent) => void`            | Called by `(matChipInputTokenEnd)` — trims value, deduplicates, pushes to formControl, emits `modelChange`+`sdChange`. |
-| `onRemove`    | `(item: any) => void`                           | Filters item from formControl value, emits `modelChange`+`sdChange`, re-focuses input.                                 |
+| `onAdd`       | `(event: MatChipInputEvent) => void`            | Called by `(matChipInputTokenEnd)` — trims value, deduplicates, writes a NEW array to formControl, emits `modelChange`+`sdChange`. |
+| `onRemove`    | `(item: any) => void`                           | Filters item into a new array, emits `modelChange`+`sdChange`, re-focuses input.                                       |
 | `onClear`     | `(event?: any) => void`                         | Resets formControl to `[]`, emits `modelChange`+`sdChange`.                                                            |
 | `onSelect`    | `(event: MatAutocompleteSelectedEvent) => void` | Adds autocomplete-selected item (deduplicates).                                                                        |
 | `focus`       | `() => void`                                    | Programmatically focuses the typing input after 100 ms (guards against blur race).                                     |

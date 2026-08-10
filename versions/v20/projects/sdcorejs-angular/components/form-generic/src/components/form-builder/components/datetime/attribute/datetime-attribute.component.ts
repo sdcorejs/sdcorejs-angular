@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericDatetime,
   SdFormGenericGroup,
@@ -15,13 +15,13 @@ import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
 import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'datetime-attribute',
   templateUrl: './datetime-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, AttributeTextarea, TranslatePipe],
+  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeSelect, AttributeExpression, AttributeTextarea, SdTranslatePipe],
 })
 export class DatetimeAttribute implements AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -33,7 +33,7 @@ export class DatetimeAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericDatetime;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericDatetime) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
 
   #subscription = new Subscription();
@@ -71,7 +71,7 @@ export class DatetimeAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

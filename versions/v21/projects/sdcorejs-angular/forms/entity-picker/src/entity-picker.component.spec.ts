@@ -27,6 +27,7 @@ describe('SdEntityPicker', () => {
   let provider: SdEntityPickerDataProvider<User, number>;
 
   beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
     provider = {
       load: jasmine.createSpy('load').and.resolveTo({ items: USERS, total: USERS.length }),
       hydrate: jasmine
@@ -142,6 +143,58 @@ describe('SdEntityPicker', () => {
 
     expect(fixture.nativeElement.querySelector('[data-entity-picker-trigger]')).toBeNull();
     expect(fixture.nativeElement.querySelector('[data-entity-picker-view]')).not.toBeNull();
+  });
+
+  // why: RED trước fix — `[required]` đã nối Validators.required nhưng template chỉ render
+  // `loadError`, không có bất kỳ surface báo lỗi validation nào. Picker bắt buộc bỏ trống
+  // làm form submit fail hoàn toàn im lặng: người dùng không thấy trường nào sai.
+  describe('validation message', () => {
+    it('stays hidden while the control is untouched, even though it is already invalid', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+
+      expect(component.formControl.hasError('required')).toBeTrue();
+      expect(fixture.nativeElement.querySelector('[data-entity-picker-error]')).toBeNull();
+    });
+
+    it('renders the required message and wires aria-invalid/aria-describedby once touched', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('[data-entity-picker-error]') as HTMLElement | null;
+      const trigger = fixture.nativeElement.querySelector('[data-entity-picker-trigger]') as HTMLButtonElement;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+      expect(trigger.getAttribute('aria-invalid')).toBe('true');
+      expect(trigger.getAttribute('aria-describedby')).toBe(error!.id);
+    });
+
+    it('clears the message once a value is selected', () => {
+      fixture.componentRef.setInput('required', true);
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[data-entity-picker-error]')).not.toBeNull();
+
+      component.formControl.setValue(1);
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('[data-entity-picker-error]')).toBeNull();
+    });
+
+    it('renders a component-local inlineError message', () => {
+      fixture.componentRef.setInput('inlineError', 'Người dùng không còn hoạt động');
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('[data-entity-picker-error]') as HTMLElement | null;
+      expect(error).not.toBeNull();
+      expect(error!.textContent?.trim()).toBe('Người dùng không còn hoạt động');
+    });
   });
 
   it('restores focus to the trigger after the modal closes', async () => {

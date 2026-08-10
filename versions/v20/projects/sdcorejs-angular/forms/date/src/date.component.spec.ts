@@ -167,6 +167,52 @@ describe('SdDate', () => {
       expect(host.changes).toEqual([]);
       expect(comp.formControl.hasError('date')).toBeTrue();
     }));
+
+    // why: RED trước fix — lỗi format được nhét bằng `setErrors()`, tức NGOÀI pipeline validator,
+    // nên lần `updateValueAndValidity` kế tiếp (connector, hoặc consumer) xoá sạch nó trong im lặng.
+    it('keeps the invalid-format error after a later updateValueAndValidity', fakeAsync(() => {
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+      expect(comp.formControl.hasError('date')).toBeTrue();
+
+      comp.formControl.updateValueAndValidity();
+      tick();
+
+      expect(comp.formControl.hasError('date')).toBeTrue();
+    }));
+
+    it('keeps the invalid-format error across a setValue on the exposed formControl', fakeAsync(() => {
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+      expect(comp.formControl.hasError('date')).toBeTrue();
+
+      comp.formControl.setValue(null);
+      tick();
+
+      expect(comp.formControl.hasError('date')).toBeTrue();
+    }));
+
+    it('drops the invalid-format error once the typed text parses again', fakeAsync(() => {
+      comp.onKeyup({ target: { value: 'not-a-date' } });
+      tick();
+      expect(comp.formControl.hasError('date')).toBeTrue();
+
+      comp.onKeyup({ target: { value: '22/08/1991' } });
+      tick();
+
+      expect(comp.formControl.hasError('date')).toBeFalse();
+    }));
+  });
+
+  describe('parse error message', () => {
+    // why: RED trước fix — code bắt `errors['matDatetimePickerParse']`, key KHÔNG tồn tại trong
+    // @angular/material. Key thật là `matDatepickerParse`, nên nhánh parse-error là code chết.
+    it('maps the real Material parse-error key to a message', () => {
+      comp.formControl.setErrors({ matDatepickerParse: { text: '99/99/9999' } });
+      fixture.detectChanges();
+
+      expect(comp.errorMessage()).toBe('Lỗi phân tích: 99/99/9999');
+    });
   });
 
   describe('display input formatting', () => {
@@ -746,5 +792,137 @@ describe('SdDate (partial input is not a date)', () => {
     type('31/02/2026');
 
     expect(comp.formControl.value).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus/open must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdDate deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate)!.componentInstance as SdDate;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input, picker: comp.datePicker()! };
+  };
+
+  it('does not focus or open the calendar after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input, picker } = setup();
+    const focusSpy = spyOn(input, 'focus');
+    const openSpy = spyOn(picker, 'open');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+    expect(openSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input, picker } = setup();
+    const focusSpy = spyOn(input, 'focus');
+    spyOn(picker, 'open');
+
+    comp.focus();
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdDate],
+  template: `<sd-date [required]="required"></sd-date>`,
+})
+class A11yHost {
+  required = false;
+}
+
+describe('SdDate (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdDate;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate).componentInstance as SdDate;
+  });
+
+  it('leaves no aria-hidden on any focusable element (or wrapper of one)', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+  });
+
+  it('marks the layout wrapper role=presentation instead of aria-hidden', () => {
+    const wrapper = fixture.nativeElement.querySelector('div[role="presentation"]') as HTMLElement;
+    expect(wrapper).not.toBeNull();
+    expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+    expect(wrapper.querySelector('input')).not.toBeNull();
+  });
+
+  it('exposes the calendar trigger as a keyboard-reachable, named <button>', () => {
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.tagName).toBe('BUTTON');
+    expect(btn.type).toBe('button');
+    // why: <button> nằm sẵn trong tab order và UA tự sinh `click` khi nhấn Enter/Space — đó
+    // chính là "bàn phím làm được như chuột" mà không phải tự chế role/tabindex/keydown.
+    expect(btn.tabIndex).toBeGreaterThanOrEqual(0);
+    expect(btn.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('activating the calendar trigger opens the datepicker', () => {
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    btn.click();
+    fixture.detectChanges();
+    expect(cmp.datePicker()?.opened).toBe(true);
+  });
+
+  it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    cmp.formControl.markAsTouched();
+    cmp.formControl.updateValueAndValidity({ emitEvent: false });
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    const el = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    expect(el.getAttribute('aria-invalid')).toBe('true');
+    expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });

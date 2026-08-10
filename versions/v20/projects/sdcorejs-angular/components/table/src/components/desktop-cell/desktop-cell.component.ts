@@ -18,7 +18,7 @@ import { SdTableItem } from '../../models/table-item.model';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { ViewComponent } from './view/view.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'desktop-cell',
@@ -26,7 +26,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   styleUrl: './desktop-cell.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, SdTooltipDirective, ViewComponent, TranslatePipe],
+  imports: [CommonModule, SdTooltipDirective, ViewComponent, SdTranslatePipe],
 })
 export class DesktopCellComponent {
   // Inject

@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterView
 import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subject, Subscription } from 'rxjs';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericChipString,
   SdFormGenericComponent,
   SdFormGenericGroup,
@@ -13,13 +13,13 @@ import { AttributeExpression } from '../../attribute-expression/attribute-expres
 import { AttributeInput } from '../../attribute-input/attribute-input.component';
 import { AttributeSwitch } from '../../attribute-switch/attribute-switch.component';
 import { AttributeTemplate } from '../../attribute-template/attribute-template.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'chip-string-attribute',
   templateUrl: './chip-string-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeExpression, TranslatePipe],
+  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeExpression, SdTranslatePipe],
 })
 export class ChipStringAttribute implements AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -31,7 +31,7 @@ export class ChipStringAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericChipString;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericChipString) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
   #changes = new Subject<void>();
   #subscription = new Subscription();
@@ -74,7 +74,7 @@ export class ChipStringAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

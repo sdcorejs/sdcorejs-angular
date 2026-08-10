@@ -13,8 +13,8 @@
   valueField="value"
   displayField="display"
   [items]="[
-    { value: true, display: ('core.confirm.yes-short' | translate) },
-    { value: false, display: ('core.confirm.no-short' | translate) }
+    { value: true, display: ('core.confirm.yes-short' | sdTranslate) },
+    { value: false, display: ('core.confirm.no-short' | sdTranslate) }
   ]"
   (sdChange)="onChange($event)"
   hideInlineError></sd-select>

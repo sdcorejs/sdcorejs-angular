@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -15,14 +15,18 @@ import {
   signal,
 } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { NormalizedImage, PreviewItem, PreviewStage, PreviewTheme, ThumbnailPosition } from './preview-image.types';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+// why: bộ đếm module-level để mỗi instance có id stage riêng — consumer có thể mount nhiều viewer
+// trên cùng một trang và `aria-controls` của các chấm role="tab" phải trỏ đúng stage của mình.
+let stageIdSeq = 0;
 
 @Component({
   selector: 'sd-preview-image',
   standalone: true,
-  imports: [SdIcon, CommonModule, TranslatePipe],
+  imports: [SdIcon, CommonModule, SdTranslatePipe],
   templateUrl: './preview-image.component.html',
   styleUrl: './preview-image.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,11 +54,19 @@ export class SdPreviewImage implements OnDestroy {
   static readonly ZOOM_STEP = 0.1;
   static readonly SWIPE_THRESHOLD = 40;
 
+  // why: các chấm chỉ mục nay là role="tab" thật và cần aria-controls trỏ tới stage (role="tabpanel").
+  // Id phải duy nhất theo instance vì consumer có thể mount nhiều viewer trên cùng một trang.
+  readonly stageId = `sd-preview-stage-${++stageIdSeq}`;
+
   // ==========================================
   // DI
   // ==========================================
   readonly #hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #destroyRef = inject(DestroyRef);
+  // why: KHÔNG đọc biến global `document` — constructor chạy cả trên server khi SSR và sẽ
+  // ném `document is not defined`. Token DOCUMENT luôn resolve được (browser: document thật,
+  // server: document giả của platform-server) — cùng cách preview-pdf.browser.ts đang làm.
+  readonly #document = inject(DOCUMENT);
 
   // ==========================================
   // INPUTS (signal-based, Angular 19 style)
@@ -98,10 +110,10 @@ export class SdPreviewImage implements OnDestroy {
   // ==========================================
   // `close`: user requested dismissal (X button hoặc Esc). Consumer tự quyết
   // định đóng modal / điều hướng / hide section.
-  readonly close = output<void>();
-  readonly activeIndexChange = output<number>();
-  readonly download = output<{ index: number; item: NormalizedImage }>();
-  readonly imageError = output<{ index: number; reason: string }>();
+  readonly sdClose = output<void>();
+  readonly sdActiveIndexChange = output<number>();
+  readonly sdDownload = output<{ index: number; item: NormalizedImage }>();
+  readonly sdImageError = output<{ index: number; reason: string }>();
 
   // ==========================================
   // STATE (signals)
@@ -177,11 +189,11 @@ export class SdPreviewImage implements OnDestroy {
     // Đồng bộ #isFullscreen với trạng thái thực của browser (sự kiện 'fullscreenchange' fire
     // bất kể user thoát fullscreen bằng cách nào: nút Thoát, Esc, F11, programmatic).
     const onFullscreenChange = () => {
-      this.#isFullscreen.set(document.fullscreenElement === this.#hostEl.nativeElement);
+      this.#isFullscreen.set(this.#document.fullscreenElement === this.#hostEl.nativeElement);
     };
-    document.addEventListener('fullscreenchange', onFullscreenChange);
+    this.#document.addEventListener('fullscreenchange', onFullscreenChange);
     this.#destroyRef.onDestroy(() => {
-      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      this.#document.removeEventListener('fullscreenchange', onFullscreenChange);
     });
 
     // Reactive normalize: mỗi lần items() đổi → revoke blob cũ → load mới.
@@ -208,9 +220,9 @@ export class SdPreviewImage implements OnDestroy {
     // Cleanup khi component bị destroy.
     this.#destroyRef.onDestroy(() => {
       this.#revokeAllBlobs();
-      if (document.fullscreenElement === this.#hostEl.nativeElement) {
+      if (this.#document.fullscreenElement === this.#hostEl.nativeElement) {
         // Tránh để fullscreen "treo" khi component bị huỷ giữa chừng.
-        document.exitFullscreen?.().catch(() => undefined);
+        this.#document.exitFullscreen?.().catch(() => undefined);
       }
     });
   }
@@ -275,22 +287,22 @@ export class SdPreviewImage implements OnDestroy {
     // Ưu tiên CDN URL nếu có để tận dụng Content-Disposition của server,
     // fallback về blob URL khi user upload File trực tiếp.
     const href = img.url || img.blobUrl;
-    const a = document.createElement('a');
+    const a = this.#document.createElement('a');
     a.href = href;
     a.download = img.name || 'image';
-    document.body.appendChild(a);
+    this.#document.body.appendChild(a);
     a.click();
     a.remove();
-    this.download.emit({ index: this.#activeIndex(), item: img });
+    this.sdDownload.emit({ index: this.#activeIndex(), item: img });
   }
 
   toggleFullscreen(): void {
     // WHY: trạng thái #isFullscreen được sync qua sự kiện 'fullscreenchange' (xem constructor)
     // — single source of truth. Không cần .then(set(true/false)) ở đây nữa.
-    if (!document.fullscreenElement) {
+    if (!this.#document.fullscreenElement) {
       this.#hostEl.nativeElement.requestFullscreen?.().catch(() => undefined);
     } else {
-      document.exitFullscreen?.().catch(() => undefined);
+      this.#document.exitFullscreen?.().catch(() => undefined);
     }
   }
 
@@ -332,7 +344,7 @@ export class SdPreviewImage implements OnDestroy {
 
   /** User clicked the X button — emit close intent for the consumer to react. */
   requestClose(): void {
-    this.close.emit();
+    this.sdClose.emit();
   }
 
   // ==========================================
@@ -516,7 +528,7 @@ export class SdPreviewImage implements OnDestroy {
     // WHY không set stage='error': lỗi từng ảnh không nên ẩn nav/dots/thumb của
     // cả viewer. Template render placeholder inline ngay trong khung ảnh khi
     // activeImage().error === true — user vẫn có thể chuyển sang ảnh khác.
-    this.imageError.emit({ index: idx, reason: 'render-failed' });
+    this.sdImageError.emit({ index: idx, reason: 'render-failed' });
   }
 
   trackByImage(_i: number, item: NormalizedImage): string {
@@ -581,7 +593,7 @@ export class SdPreviewImage implements OnDestroy {
     // render inline trong stage thay vì lật cả stage sang 'error'. Giữ stage
     // 'ready' để nav/dots/thumbnail/toolbar không bị ẩn.
     this.#stage.set('ready');
-    this.activeIndexChange.emit(index);
+    this.sdActiveIndexChange.emit(index);
     // Auto-scroll thumbnail strip — đợi 1 microtask để DOM rendered xong.
     // WHY scoped query: thumbnail id là global ('sd-preview-thumb-N'); nếu có
     // > 1 instance trên page sẽ collide. Query trong nativeElement để isolate.

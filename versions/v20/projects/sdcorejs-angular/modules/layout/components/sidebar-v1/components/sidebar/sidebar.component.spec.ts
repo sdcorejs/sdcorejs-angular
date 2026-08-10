@@ -5,7 +5,7 @@ import { Subject } from 'rxjs';
 
 import { SdLayoutNavigationStateService, SdLayoutStorageService } from '../../../../services';
 import { SdLayoutMenu } from '../../../../services';
-import { SidebarComponent } from './sidebar.component';
+import { SdSidebarV1Panel } from './sidebar.component';
 
 function storageCell<T>(initial: T) {
   let value = initial;
@@ -15,9 +15,9 @@ function storageCell<T>(initial: T) {
   };
 }
 
-describe('SidebarComponent', () => {
-  let fixture: ComponentFixture<SidebarComponent>;
-  let component: SidebarComponent;
+describe('SdSidebarV1Panel', () => {
+  let fixture: ComponentFixture<SdSidebarV1Panel>;
+  let component: SdSidebarV1Panel;
   let routerEvents: Subject<unknown>;
   let router: { events: Subject<unknown>; url: string; navigate: jasmine.Spy; navigateByUrl: jasmine.Spy };
   let storage: ReturnType<typeof createStorage>;
@@ -59,17 +59,17 @@ describe('SidebarComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [SidebarComponent],
+      imports: [SdSidebarV1Panel],
       providers: [
         { provide: Router, useValue: router },
         { provide: SdLayoutStorageService, useValue: storage },
         { provide: SdLayoutNavigationStateService, useValue: navigationState },
       ],
     })
-      .overrideComponent(SidebarComponent, { set: { template: '' } })
+      .overrideComponent(SdSidebarV1Panel, { set: { template: '' } })
       .compileComponents();
 
-    fixture = TestBed.createComponent(SidebarComponent);
+    fixture = TestBed.createComponent(SdSidebarV1Panel);
     component = fixture.componentInstance;
     component.currentPath.set(options.path ?? '/orders');
     fixture.componentRef.setInput('menus', menus);
@@ -150,10 +150,10 @@ describe('SidebarComponent', () => {
     const sidebarState = jasmine.createSpy('sidebarState');
     const opened = jasmine.createSpy('opened');
     const closed = jasmine.createSpy('closed');
-    component.expandSideBar.subscribe(expanded);
-    component.showSideBar.subscribe(sidebarState);
-    component.popupUserMenuOpened.subscribe(opened);
-    component.popupUserMenuClosed.subscribe(closed);
+    component.sdExpandSideBar.subscribe(expanded);
+    component.sdShowSideBar.subscribe(sidebarState);
+    component.sdPopupUserMenuOpened.subscribe(opened);
+    component.sdPopupUserMenuClosed.subscribe(closed);
 
     expect(component.hasChild(0, group)).toBeTrue();
     expect(component.hasChild(0, orders)).toBeFalse();
@@ -182,11 +182,11 @@ describe('SidebarComponent', () => {
   it('navigates internal and external links and closes after mobile navigation', async () => {
     await create({ mobile: true });
     const sidebarState = jasmine.createSpy('sidebarState');
-    component.showSideBar.subscribe(sidebarState);
+    component.sdShowSideBar.subscribe(sidebarState);
     const windowOpen = spyOn(window, 'open');
 
     component.navigate({ path: 'https://example.com/docs', queryParams: {} });
-    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener');
+    expect(windowOpen).toHaveBeenCalledWith('https://example.com/docs', '_blank', 'noopener,noreferrer');
     expect(router.navigate).not.toHaveBeenCalled();
 
     component.navigate({ path: '/reports?old=1', queryParams: { year: 2026 } });
@@ -197,10 +197,20 @@ describe('SidebarComponent', () => {
     expect(sidebarState).toHaveBeenCalledWith(null);
   });
 
+  it('refuses to open a non-http scheme that merely contains the substring "http"', async () => {
+    await create();
+    const windowOpen = spyOn(window, 'open');
+
+    component.navigate({ path: 'javascript:fetch("//evil.example.com")//http', queryParams: {} });
+
+    expect(windowOpen).not.toHaveBeenCalled();
+    expect(router.navigate).toHaveBeenCalledWith(['javascript:fetch("//evil.example.com")//http'], jasmine.any(Object));
+  });
+
   it('expands child groups, navigates leaf groups, and filters nested menus by normalized text', async () => {
     await create({ path: '/orders' });
     const expanded = jasmine.createSpy('expanded');
-    component.expandSideBar.subscribe(expanded);
+    component.sdExpandSideBar.subscribe(expanded);
 
     component.expandMenuGroup(group);
     expect(component.titleMenuGroup()).toBe('Daily work');
@@ -290,4 +300,63 @@ describe('SidebarComponent', () => {
     expect((host.querySelector('.c-menu-node-description-icon-pin') as HTMLElement).style.opacity).toBe('0');
     expect(host.style.backgroundColor).toBe('transparent');
   }));
+
+  // -------------------------------------------------------------------------
+  // A11y — mục menu từng là <div (click)> mang aria-hidden="true": cả cụm biến
+  // mất khỏi accessibility tree và bàn phím không điều hướng được.
+  // -------------------------------------------------------------------------
+
+  /** Bắn keydown lên `el` rồi chạy handler với target === currentTarget (như DOM thật). */
+  function pressOn(el: HTMLElement, key: string, handler: (ev: KeyboardEvent) => void): KeyboardEvent {
+    const listener = ((ev: Event) => handler(ev as KeyboardEvent)) as EventListener;
+    el.addEventListener('keydown', listener);
+    const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    el.removeEventListener('keydown', listener);
+    return ev;
+  }
+
+  it('Enter on a menu item navigates, same as a click', async () => {
+    await create({ path: '/outside' });
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onMenuNodeKeydown(ev, report as any));
+
+    expect(router.navigate).toHaveBeenCalledWith(['/reports'], {
+      queryParams: { year: 2026 },
+      state: { switchTab: true },
+    });
+  });
+
+  it('Space on a menu item navigates and blocks the page scroll', async () => {
+    await create({ path: '/outside' });
+
+    const ev = pressOn(document.createElement('div'), ' ', keyEvent => component.onMenuNodeKeydown(keyEvent, report as any));
+
+    expect(router.navigate).toHaveBeenCalled();
+    expect(ev.defaultPrevented).toBe(true);
+  });
+
+  it('Enter on a parent menu node expands it, same as a click', async () => {
+    await create({ path: '/outside' });
+    expect(component.treeControl.isExpanded(admin)).toBeFalse();
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onToggleMenuNodeKeydown(ev, admin));
+
+    expect(component.treeControl.isExpanded(admin)).toBeTrue();
+  });
+
+  // why: nút ghim nằm LỒNG trong mục menu — Enter trên nút ghim không được kéo theo điều hướng.
+  it('ignores keyboard events bubbling up from the nested pin button', async () => {
+    await create({ path: '/outside' });
+    const wrapper = document.createElement('div');
+    const pin = document.createElement('button');
+    wrapper.appendChild(pin);
+
+    const listener = ((ev: Event) => component.onMenuNodeKeydown(ev as KeyboardEvent, report as any)) as EventListener;
+    wrapper.addEventListener('keydown', listener);
+    pin.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    wrapper.removeEventListener('keydown', listener);
+
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
 });

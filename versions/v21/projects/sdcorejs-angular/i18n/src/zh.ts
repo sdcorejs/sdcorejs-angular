@@ -614,4 +614,80 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': '详情',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': '搜索...',
+  'core.component.query-bar.no-fields': '尚未配置字段',
+  'core.component.query-bar.add-filter': '添加筛选',
+  'core.component.query-bar.clear-all': '清除全部 ({count})',
+  'core.component.query-bar.search': '搜索',
+  'core.component.query-bar.logic-operator': '逻辑运算符',
+  'core.component.query-bar.boolean.true': '是',
+  'core.component.query-bar.boolean.false': '否',
+  'core.component.query-bar.placeholder.value': '值',
+  'core.component.query-bar.placeholder.text': '输入…',
+  'core.component.query-bar.placeholder.from-number': '起始',
+  'core.component.query-bar.placeholder.to-number': '结束',
+  'core.component.query-bar.placeholder.from-text': '起始…',
+  'core.component.query-bar.placeholder.to-text': '结束…',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': '指定日期',
+  'core.component.query-builder.date-mode.now': '今天',
+  'core.component.query-builder.date-mode.relative': '相对',
+  'core.component.query-builder.value-source.literal': '输入值',
+  'core.component.query-builder.value-source.field': '与字段比较',
+  'core.component.query-builder.relative.hour-previous': '小时前',
+  'core.component.query-builder.relative.hour-next': '小时后',
+  'core.component.query-builder.relative.day-previous': '天前',
+  'core.component.query-builder.relative.day-next': '天后',
+  'core.component.query-builder.relative.week-previous': '周前',
+  'core.component.query-builder.relative.week-next': '周后',
+  'core.component.query-builder.relative.month-previous': '个月前',
+  'core.component.query-builder.relative.month-next': '个月后',
+  'core.component.query-builder.relative.format': '{amount}{phrase}',
+  'core.component.query-builder.add': '添加',
+  'core.component.query-builder.add-node': '添加条件或分组',
+  'core.component.query-builder.condition': '条件',
+  'core.component.query-builder.group': '分组',
+  'core.component.query-builder.remove-group': '删除分组',
+  'core.component.query-builder.remove-condition': '删除条件',
+  'core.component.query-builder.empty': '暂无条件',
+  'core.component.query-builder.select-field': '选择字段',
+  'core.component.query-builder.value': '值',
+  'core.component.query-builder.from': '起始',
+  'core.component.query-builder.to': '结束',
+  'core.component.query-builder.boolean.true': '是',
+  'core.component.query-builder.boolean.false': '否',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '已选择 {count} 项',
+  'core.component.tree.expand': '展开树节点',
+  'core.component.tree.collapse': '折叠树节点',
+  'core.component.tree.retry-item': '重新加载树节点',
+  'core.component.tree.load-error': '无法加载树数据',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': '已复制',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': '已固定',
+  'core.module.layout.sidebar.recent': '最近',
+  'core.module.layout.sidebar.all-menu': '全部菜单',
+  'core.module.layout.menu.pin': '固定 {title}',
+  'core.module.layout.menu.unpin': '取消固定 {title}',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': '打开日历',
+  'core.form.datetime.open-picker': '打开日历',
+  'core.form.date-range.open-picker': '打开日历',
+  'core.form.date-range.clear': '清除日期范围',
+  'core.form.select.search': '搜索',
+  'core.component.table.loading': '正在加载表格数据',
+  'core.component.upload-file.loading': '正在上传文件',
+  'core.component.import-excel.loading': '正在加载数据',
+  'core.component.upload-file.remove': '删除文件',
+  'core.component.upload-file.zoom': '放大图片',
+  'core.component.upload-file.view-all': '查看全部图片',
+  'core.component.form-builder.canvas': '表单设计画布',
 };

@@ -465,4 +465,71 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(duplicated.components[0].key).not.toBe(g.components[0].key);
     expect(duplicated.components[0].label).toBe(g.components[0].label);
   });
+
+  // -------------------------------------------------------------------------
+  // A11y — palette item / canvas item / group body từng là <div (click)> mang
+  // aria-hidden="true": vừa biến mất khỏi accessibility tree vừa không kích hoạt
+  // được bằng bàn phím.
+  // -------------------------------------------------------------------------
+
+  /** Bắn keydown lên `el` rồi chạy handler với target === currentTarget (như DOM thật). */
+  function pressOn(el: HTMLElement, key: string, handler: (ev: KeyboardEvent) => void): KeyboardEvent {
+    const listener = ((ev: Event) => handler(ev as KeyboardEvent)) as EventListener;
+    el.addEventListener('keydown', listener);
+    const ev = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    el.removeEventListener('keydown', listener);
+    return ev;
+  }
+
+  it('Enter on a palette item adds the component, same as a click', () => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    const before = component.components.length;
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onPaletteItemKeydown(paletteTextfield, ev));
+
+    expect(component.components.length).toBe(before + 1);
+  });
+
+  it('Space on a palette item adds the component and blocks the page scroll', () => {
+    const paletteTextfield = component.formBuilderComponents.find(item => item.type === 'textfield')!;
+    const before = component.components.length;
+
+    const ev = pressOn(document.createElement('div'), ' ', keyEvent => component.onPaletteItemKeydown(paletteTextfield, keyEvent));
+
+    expect(component.components.length).toBe(before + 1);
+    expect(ev.defaultPrevented).toBe(true);
+  });
+
+  it('Enter on a canvas item selects it, same as a click', () => {
+    const target = component.components[0] as any;
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onSelectComponentKeydown(target, ev));
+
+    expect(component.selectedComponent()?.id).toBe(target.id);
+  });
+
+  it('Enter on the group body opens the group Detail screen, same as a click', () => {
+    const g = group1();
+
+    pressOn(document.createElement('div'), 'Enter', ev => component.onEnterGroupEditKeydown(g, ev));
+
+    expect(component.editingGroupId()).toBe(g.id);
+  });
+
+  // why: item BỌC preview của control thật (input/select) — phím gõ trong preview KHÔNG được
+  // kích hoạt handler của item, nếu không mỗi lần gõ sẽ chọn lại item.
+  it('ignores keyboard events bubbling up from a nested control', () => {
+    const target = component.components[0] as any;
+    const wrapper = document.createElement('div');
+    const inner = document.createElement('input');
+    wrapper.appendChild(inner);
+
+    const listener = ((ev: Event) => component.onSelectComponentKeydown(target, ev as KeyboardEvent)) as EventListener;
+    wrapper.addEventListener('keydown', listener);
+    inner.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    wrapper.removeEventListener('keydown', listener);
+
+    expect(component.selectedComponent()).toBeUndefined();
+  });
 });

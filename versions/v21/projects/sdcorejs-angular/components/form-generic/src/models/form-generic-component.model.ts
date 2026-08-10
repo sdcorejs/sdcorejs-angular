@@ -46,23 +46,27 @@ export interface SdFormGenericLayout {
     | 12;
 }
 
-export const GenerateId = () => {
+// why: nhóm helper dưới đây trước kia đặt tên PascalCase (`GenerateId`, `FormatComponent`, …) nên đọc
+// hệt như class — `new GenerateId()` nhìn vẫn hợp lệ với người dùng lib, IDE cũng gợi ý chúng lẫn vào
+// danh sách class. Đây là hàm thuần, nên chuyển sang camelCase kèm tiền tố `sd` để vừa lộ rõ là hàm,
+// vừa nằm gọn trong namespace `sd` của package (tránh đụng tên với helper cùng tên của app consumer).
+export const sdGenerateId = () => {
   return Utilities.randomId('id');
 };
 
-export const GenerateKey = () => {
+export const sdGenerateKey = () => {
   return Utilities.randomId('key');
 };
 
-export const SdFormatComponent = (component: SdFormGenericComponent | SdFormGenericGroup) => {
+export const sdFormatComponent = (component: SdFormGenericComponent | SdFormGenericGroup) => {
   if (component) {
     if (!component.id) {
-      component.id = GenerateId();
+      component.id = sdGenerateId();
     }
     // Html và Group không có key và validate
     if (component.type !== 'group') {
       if (!component.key) {
-        component.key = GenerateKey();
+        component.key = sdGenerateKey();
       }
       if (!component.validate) {
         component.validate = {};
@@ -311,7 +315,7 @@ export type SdFormGenericTableColumn<T = any> =
   | TableColumnImage<T>
   | TableColumnFile<T>;
 
-export const TableColumnTypes = [
+export const SD_TABLE_COLUMN_TYPES = [
   {
     value: 'string',
     display: 'Chuỗi',
@@ -459,7 +463,7 @@ export interface FormBuilderComponent {
   name: string;
 }
 
-export const FormBuilderComponents: FormBuilderComponent[] = [
+export const SD_FORM_BUILDER_COMPONENTS: FormBuilderComponent[] = [
   // ── Basic ───────────────────────────────────────────────────
   { type: 'textfield', symbol: 'text_fields', group: 'basic', name: 'Text field' },
   { type: 'textarea', symbol: 'notes', group: 'basic', name: 'Text area' },
@@ -481,17 +485,17 @@ export const FormBuilderComponents: FormBuilderComponent[] = [
 ];
 
 /** Lookup: component type → Material icon + label, used by attribute panel header. */
-export const COMPONENT_ICONS: Record<string, { symbol: string; label: string }> = FormBuilderComponents.reduce(
+export const SD_COMPONENT_ICONS: Record<string, { symbol: string; label: string }> = SD_FORM_BUILDER_COMPONENTS.reduce(
   (acc, c) => ({ ...acc, [c.type]: { symbol: c.symbol, label: c.name } }),
   {} as Record<string, { symbol: string; label: string }>
 );
 
-export const GetComponentAttributes = (components: (SdFormGenericComponent | SdFormGenericGroup)[]) => {
+export const sdGetComponentAttributes = (components: (SdFormGenericComponent | SdFormGenericGroup)[]) => {
   const attributes: { value: string; display: string }[] = [];
   if (components.length) {
     for (const component of components) {
       if (component.type === 'group') {
-        attributes.push(...GetComponentAttributes(component.components));
+        attributes.push(...sdGetComponentAttributes(component.components));
       } else if (component.type !== 'html') {
         attributes.push({
           value: component.key,
@@ -503,7 +507,7 @@ export const GetComponentAttributes = (components: (SdFormGenericComponent | SdF
   return attributes;
 };
 
-export const GetVariableAttributes = (variables: SdFormGenericVariable[]) => {
+export const sdGetVariableAttributes = (variables: SdFormGenericVariable[]) => {
   const attributes: { value: string; display: string }[] = [];
   if (variables.length) {
     for (const variable of variables) {

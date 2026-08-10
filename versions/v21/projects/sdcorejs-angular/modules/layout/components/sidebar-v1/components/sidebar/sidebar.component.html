@@ -5,7 +5,7 @@
   <div class="wrapper" [style.height]="isMobile() ? '100dvh' : '100%'">
     <div class="c-header">
       <div class="c-logo">
-        <a href="javascript:;" aria-label="Trang chủ" (click)="openHomePage()">
+        <a href="javascript:;" [attr.aria-label]="'core.module.layout.home.tab-name' | sdTranslate" (click)="openHomePage()">
           @if (logoUrl(); as _logoUrl) {
             <img alt="" [src]="_logoUrl" />
           } @else {
@@ -25,7 +25,7 @@
               (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
               (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
               (click)="expandPinnedGroup()"
-              [matTooltip]="'Đã ghim'"
+              [matTooltip]="'core.module.layout.sidebar.pinned' | sdTranslate"
               [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
               [matTooltipPosition]="'right'"
               style="padding: 0; margin: 0; border: none; background-color: transparent">
@@ -85,7 +85,7 @@
             <div style="padding: 0px 4px" class="c-menu-tree-search">
               <sd-input
                 size="sm"
-                [placeholder]="'core.module.layout.sidebar.search' | translate"
+                [placeholder]="'core.module.layout.sidebar.search' | sdTranslate"
                 [autoId]="'layout-v1-menu-search'"
                 [model]="searchText()"
                 (sdChange)="onFilterSearchText($event)">
@@ -110,7 +110,19 @@
                     backgroundColor:
                       (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
-                  <div aria-hidden="true" class="c-menu-node-description" (click)="navigate(node)" [class.d-none]="!isShowSidebar()">
+                  <!-- why: bỏ aria-hidden="true" — đây là mục menu điều hướng THẬT, có tiêu đề và
+                       một nút ghim bên trong. aria-hidden xoá cả cụm khỏi accessibility tree trong
+                       khi vẫn nhận chuột, tức screen reader không thấy menu nào cả. Nay role=button
+                       + tabindex + Enter/Space, và aria-current cho mục đang mở. -->
+                  <div
+                    class="c-menu-node-description"
+                    role="button"
+                    tabindex="0"
+                    [attr.aria-current]="(currentPath() | menuFocus: node) ? 'page' : null"
+                    (click)="navigate(node)"
+                    (keydown.enter)="onMenuNodeKeydown($event, node)"
+                    (keydown.space)="onMenuNodeKeydown($event, node)"
+                    [class.d-none]="!isShowSidebar()">
                     <div
                       class="c-menu-node-description-content"
                       [ngStyle]="{
@@ -121,23 +133,35 @@
                       }"
                       [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
 
+                    <!-- why: nút ghim trước đây là <sd-icon (click)> — custom element không nhận
+                         focus bàn phím và không có tên khả truy cập, nên không ghim được bằng phím.
+                         Đổi sang <button type="button"> + aria-pressed, giống pattern đã dùng ở
+                         `shared/menu-tree`. -->
                     @if (_sidebar?.pin?.enabled) {
-                      <sd-icon
+                      <button
+                        type="button"
                         class="c-menu-node-description-icon-pin"
                         [style.opacity]="isPinnedNode(node) || isHoveredNode(node) ? '1' : null"
                         [style.color]="
                           isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || 'var(--sd-primary, #005cbb)' : null
                         "
-                        (click)="onTogglePin($event, node)"
-                        name="push_pin"></sd-icon>
+                        [attr.aria-pressed]="isPinnedNode(node)"
+                        [attr.aria-label]="
+                          (isPinnedNode(node) ? 'core.module.layout.menu.unpin' : 'core.module.layout.menu.pin')
+                            | sdTranslate: { title: node.title }
+                        "
+                        (click)="onTogglePin($event, node)">
+                        <sd-icon name="push_pin"></sd-icon>
+                      </button>
                     }
                   </div>
                 </li>
               </mat-nested-tree-node>
 
+              <!-- why: bỏ aria-hidden="true" — nó ẩn TOÀN BỘ nhánh menu có con (tiêu đề nhóm lẫn
+                   mọi mục con bên trong) khỏi accessibility tree. -->
               <mat-nested-tree-node
                 *matTreeNodeDef="let node; when: hasChild"
-                aria-hidden="true"
                 [class]="{ expanded: treeControl.isExpanded(node), isfocus: currentPath() | menuFocus: node }">
                 <li>
                   <div
@@ -145,7 +169,18 @@
                     (mouseenter)="onMouseOverMenuNode($event, node)"
                     (mouseleave)="onMouseLeaveMenuNode($event, node)">
                     <div class="d-flex align-items-center" style="gap: 10px; width: 100%">
-                      <div [class.d-none]="!isShowSidebar()" class="c-menu-node-description" (click)="onToggleMenuNode(node)">
+                      <!-- why: nhánh có con là nút GẬP/MỞ thật nhưng trước đây chỉ có (click) và
+                           không khai trạng thái. Nay role=button + tabindex + aria-expanded +
+                           Enter/Space. -->
+                      <div
+                        [class.d-none]="!isShowSidebar()"
+                        class="c-menu-node-description"
+                        role="button"
+                        tabindex="0"
+                        [attr.aria-expanded]="treeControl.isExpanded(node)"
+                        (click)="onToggleMenuNode(node)"
+                        (keydown.enter)="onToggleMenuNodeKeydown($event, node)"
+                        (keydown.space)="onToggleMenuNodeKeydown($event, node)">
                         <div
                           class="c-menu-node-description-content"
                           [innerHTML]="node.title | highLightSearch: searchText() | sdSafeHtml"></div>
@@ -170,10 +205,10 @@
       <lib-layout-user
         [userInfo]="_userInfo"
         [isMobileOrTablet]="isMobile()"
-        (menuOpened)="onUserMenuOpened()"
-        (menuClosed)="onUserMenuClosed()"
+        (sdMenuOpened)="onUserMenuOpened()"
+        (sdMenuClosed)="onUserMenuClosed()"
         [isShowSidebar]="isShowSidebar()"
-        (toggleMenuLock)="toggleMenuLock($event)">
+        (sdToggleMenuLock)="toggleMenuLock($event)">
       </lib-layout-user>
     </div>
 

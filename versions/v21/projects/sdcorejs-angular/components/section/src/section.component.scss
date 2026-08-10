@@ -18,6 +18,13 @@
   padding: 8px 16px;
 }
 
+// why: header collapsible nay nhận tabindex="0" nên cần focus ring nhìn thấy được.
+.sd-section-header[role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
 .sd-section-header-left,
 .sd-section-header-right,
 .sd-section-footer-left,

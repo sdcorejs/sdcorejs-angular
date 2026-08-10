@@ -12,7 +12,7 @@ import { SdTab } from './tab.component';
   standalone: true,
   imports: [SdTab],
   template: `
-    <sd-tab [label]="label" [icon]="icon" [badge]="badge" [disabled]="disabled" [closable]="closable" (close)="onClose()">
+    <sd-tab [label]="label" [icon]="icon" [badge]="badge" [disabled]="disabled" [closable]="closable" (sdClose)="onClose()">
       <p class="tab-body">Body text</p>
     </sd-tab>
   `,
@@ -170,7 +170,7 @@ describe('SdTab', () => {
 
   describe('output: close', () => {
     it('emits when close output is invoked', () => {
-      component.close.emit();
+      component.sdClose.emit();
       expect(host.closeCount).toBe(1);
     });
   });

@@ -14,7 +14,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { SdAvatar } from '@sdcorejs/angular/components';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { isObservable } from 'rxjs';
 import {
@@ -27,7 +27,7 @@ import {
 @Component({
   selector: 'sd-layout-user-menu',
   standalone: true,
-  imports: [SdAvatar, SdIcon, TranslatePipe],
+  imports: [SdAvatar, SdIcon, SdTranslatePipe],
   templateUrl: './user-menu.component.html',
   styleUrl: './user-menu.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -48,8 +48,8 @@ export class SdLayoutUserMenuComponent {
   notification = input<SdLayoutNotificationConfiguration | undefined>();
   compact = input(false);
   presentation = input<'disclosure' | 'mobile' | 'mobile-inline'>('disclosure');
-  opened = output<void>();
-  closed = output<void>();
+  sdOpened = output<void>();
+  sdClosed = output<void>();
   isOpen = signal(false);
   readonly #observableNotificationCount = signal<number | undefined>(undefined);
 
@@ -118,7 +118,7 @@ export class SdLayoutUserMenuComponent {
   open(): void {
     if (this.isOpen()) return;
     this.isOpen.set(true);
-    this.opened.emit();
+    this.sdOpened.emit();
   }
 
   toggle(): void {
@@ -129,7 +129,7 @@ export class SdLayoutUserMenuComponent {
   close(restoreFocus = true): void {
     const wasOpen = this.isOpen();
     this.isOpen.set(false);
-    if (wasOpen) this.closed.emit();
+    if (wasOpen) this.sdClosed.emit();
     if (restoreFocus) this.trigger()?.nativeElement.focus();
   }
 

@@ -7,7 +7,7 @@
 **Import path**: `@sdcorejs/angular/pipes` (or direct: `@sdcorejs/angular/pipes/time-different`)
 
 ## One-line purpose
-Streams a relative time string ("2 phút trước") that updates every second while within the chosen threshold; falls back to absolute formatted date once the threshold is exceeded or the input is in the future.
+Streams a relative time string ("2 phút trước") that updates every second while within the chosen threshold, then emits the absolute formatted date once and **completes**; a value already past the threshold (or in the future) emits once with no timer at all.
 
 ## When to use
 - Activity feeds, comment lists, audit logs — recency display that auto-ticks
@@ -17,7 +17,7 @@ Streams a relative time string ("2 phút trước") that updates every second wh
 ## When NOT to use
 
 - Do not use it without `| async`; the pipe returns an `Observable<string>`.
-- Do not use it for thousands of rows in a large table; each rendered instance owns a 1-second interval.
+- Do not use it for thousands of rows of *fresh* data in a large table; each instance still owns a 1-second interval until its value ages past the threshold.
 - Do not use it for strict audit/legal timestamps where absolute time must always be visible.
 
 ## Signature
@@ -56,11 +56,13 @@ transform(
 - Non-date / `null` / `undefined` input → emits `''`.
 - `different` falsy → emits a single absolute formatted value (no interval).
 - Future date (`now - value < 0`) → emits a single absolute formatted value.
-- The pipe sets up `interval(1000)` and emits each tick — combine with `| async` so Angular auto-subscribes/unsubscribes.
+- **Value already older than the threshold → emits the absolute formatted value once and completes; no interval is created at all.**
+- **Value inside the threshold → `interval(1000)` ticks the relative string, then the first tick past the threshold emits the absolute formatted value and the observable completes.** The stream is finite: once the output can no longer change, the timer and the per-tick `async`-pipe change detection stop for good. Still combine with `| async` so Angular auto-subscribes/unsubscribes.
 
 ## Anti-patterns
 - Forgetting `| async` — you'd render `[object Object]` (an `Observable`).
-- Using thousand instances on a long list — each spins up its own `interval(1000)` subscription. For very large lists, consider a single ticker service that fans out updates.
+- Assuming the stream never ends — it completes once the value ages out of the relative window. Do not chain operators that depend on an infinite source.
+- Using thousands of instances on a long list of *recent* rows — each still spins up its own `interval(1000)` until it ages out. For very large lists, consider a single ticker service that fans out updates.
 - Confusing the `month` threshold — in source, `maxMonth = maxHour * 365` (i.e. ~365 hours, not 365 days). If you need a true month boundary, verify against `DateUtilities.timeDifference`'s output.
 
 ## Related

@@ -1,4 +1,4 @@
-import { booleanAttribute, Component, ElementRef, HostListener, inject, input, numberAttribute, output } from '@angular/core';
+import { booleanAttribute, Component, DestroyRef, ElementRef, HostListener, inject, input, numberAttribute, output } from '@angular/core';
 import { SplitterOrientation } from '../splitter.models';
 
 @Component({
@@ -22,6 +22,14 @@ import { SplitterOrientation } from '../splitter.models';
 })
 export class SdSplitterHandleComponent {
   readonly elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #destroyRef = inject(DestroyRef);
+
+  constructor() {
+    // why: destroy giữa lúc drag (splitter re-sync handle, panel bị @if gỡ…) thì pointerup
+    // KHÔNG bao giờ tới → frame đang chờ vẫn chạy và emit dragMove từ component đã tháo.
+    // Huỷ frame ở cả destroy chứ không chỉ ở pointerup.
+    this.#destroyRef.onDestroy(() => this.#cancelPendingFrame());
+  }
 
   orientation = input<SplitterOrientation>('horizontal');
   disabled = input(false, { transform: booleanAttribute });
@@ -30,10 +38,10 @@ export class SdSplitterHandleComponent {
   ariaValueMax = input<number | undefined>(undefined);
   ariaValueNow = input<number | undefined>(undefined);
 
-  readonly dragStart = output<void>();
-  readonly dragMove = output<number>();
-  readonly dragEnd = output<void>();
-  readonly toggleRequest = output<void>();
+  readonly sdDragStart = output<void>();
+  readonly sdDragMove = output<number>();
+  readonly sdDragEnd = output<void>();
+  readonly sdToggleRequest = output<void>();
 
   #pointerId: number | null = null;
   #startCoord = 0;
@@ -43,7 +51,7 @@ export class SdSplitterHandleComponent {
   @HostListener('dblclick')
   onDblClick(): void {
     if (this.disabled()) return;
-    this.toggleRequest.emit();
+    this.sdToggleRequest.emit();
   }
 
   @HostListener('keydown', ['$event'])
@@ -68,15 +76,15 @@ export class SdSplitterHandleComponent {
       case 'Enter':
       case ' ':
         ev.preventDefault();
-        this.toggleRequest.emit();
+        this.sdToggleRequest.emit();
         return;
     }
     if (delta == null) return;
     ev.preventDefault();
     // Keyboard step là 1 lần commit (không live drag) — emit start+move+end liền
-    this.dragStart.emit();
-    this.dragMove.emit(delta);
-    this.dragEnd.emit();
+    this.sdDragStart.emit();
+    this.sdDragMove.emit(delta);
+    this.sdDragEnd.emit();
   }
 
   @HostListener('pointerdown', ['$event'])
@@ -88,7 +96,7 @@ export class SdSplitterHandleComponent {
     this.#startCoord = this.orientation() === 'horizontal' ? ev.clientX : ev.clientY;
     this.elementRef.nativeElement.setPointerCapture(ev.pointerId);
     ev.preventDefault();
-    this.dragStart.emit();
+    this.sdDragStart.emit();
   }
 
   @HostListener('pointermove', ['$event'])
@@ -101,7 +109,7 @@ export class SdSplitterHandleComponent {
     if (this.#rafPending != null) return;
     this.#rafPending = requestAnimationFrame(() => {
       this.#rafPending = null;
-      this.dragMove.emit(this.#pendingDelta);
+      this.sdDragMove.emit(this.#pendingDelta);
     });
   }
 
@@ -112,10 +120,13 @@ export class SdSplitterHandleComponent {
     this.elementRef.nativeElement.releasePointerCapture(ev.pointerId);
     this.#pointerId = null;
     // Hủy rAF đang chờ để tránh emit dragMove sau khi drag kết thúc
-    if (this.#rafPending != null) {
-      cancelAnimationFrame(this.#rafPending);
-      this.#rafPending = null;
-    }
-    this.dragEnd.emit();
+    this.#cancelPendingFrame();
+    this.sdDragEnd.emit();
+  }
+
+  #cancelPendingFrame(): void {
+    if (this.#rafPending == null) return;
+    cancelAnimationFrame(this.#rafPending);
+    this.#rafPending = null;
   }
 }

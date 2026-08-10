@@ -19,7 +19,7 @@ export interface CkCommentColors {
 /**
  * Comment data structure for CkCommentPlugin
  */
-export interface CkComment<T = any> {
+export interface CkComment<T = unknown> {
   id: string | number;
   startPath: number[];
   endPath: number[];

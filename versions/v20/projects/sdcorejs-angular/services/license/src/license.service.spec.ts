@@ -1,3 +1,5 @@
+import { DOCUMENT } from '@angular/common';
+import { PLATFORM_ID, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { SdLicenseService } from './license.service';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
@@ -23,36 +25,26 @@ const HASH_STORE_UAT_NEXA_MOBI = 'MjEwMjMxNjA3NXNpZ25lZA=='; // store.uat.nexa.m
 const HASH_WILDCARD_UAT_NEXA_MOBI = 'LTE0NzAyMDkyMTRzaWduZWQ='; // *.uat.nexa.mobi
 
 // ---------------------------------------------------------------------------
-// Helper: override window.location for the duration of a describe block.
-// We replace with a plain object (avoids the spy restriction in Karma).
+// Helper: the service reads the hostname through DOCUMENT (not the `window` global), so a fake
+// document is all we need to exercise every non-localhost path. The old spec tried to redefine
+// `window.location`, which Chrome forbids — 9 specs silently `pending()`-ed and never asserted.
 // ---------------------------------------------------------------------------
-function withHostname(fakeHostname: string, fn: () => void) {
-  let originalDescriptor: PropertyDescriptor | undefined;
+function documentWithHostname(hostname: string): Provider {
+  return {
+    provide: DOCUMENT,
+    useValue: { defaultView: { location: { hostname } } } as unknown as Document,
+  };
+}
 
-  beforeEach(() => {
-    try {
-      originalDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
-      Object.defineProperty(window, 'location', {
-        configurable: true,
-        writable: true,
-        value: { ...window.location, hostname: fakeHostname },
-      });
-    } catch {
-      // Some browsers disallow redefining window.location
-    }
+function configure(hostname: string, config?: ISdCoreConfiguration, platformId?: object | string): void {
+  TestBed.configureTestingModule({
+    providers: [
+      SdLicenseService,
+      documentWithHostname(hostname),
+      ...(config ? [{ provide: SD_CORE_CONFIGURATION, useValue: config }] : []),
+      ...(platformId ? [{ provide: PLATFORM_ID, useValue: platformId }] : []),
+    ],
   });
-
-  afterEach(() => {
-    try {
-      if (originalDescriptor) {
-        Object.defineProperty(window, 'location', originalDescriptor);
-      }
-    } catch {
-      /* ignore */
-    }
-  });
-
-  fn();
 }
 
 // ---------------------------------------------------------------------------
@@ -91,24 +83,91 @@ describe('SdLicenseService', () => {
   });
 
   // -------------------------------------------------------------------------
-  // GROUP 2: non-localhost paths — uses Object.defineProperty to fake hostname
+  // GROUP 1b: localhost detection must be exact, not a substring test
+  // -------------------------------------------------------------------------
+  describe('localhost detection (exact match)', () => {
+    it('bypasses for the exact host "localhost"', () => {
+      configure('localhost');
+      expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
+    });
+
+    it('bypasses for 127.0.0.1', () => {
+      configure('127.0.0.1');
+      expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
+    });
+
+    it('bypasses for the IPv6 loopback [::1]', () => {
+      configure('[::1]');
+      expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
+    });
+
+    it('bypasses for a real .localhost subdomain (RFC 6761)', () => {
+      configure('api.localhost');
+      expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
+    });
+
+    it('does NOT bypass for localhost.attacker.tld (substring bypass regression)', () => {
+      configure('localhost.attacker.tld', { licenseKey: HASH_APP_EXAMPLE_COM });
+      expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
+    });
+
+    it('does NOT bypass for a host merely containing "localhost"', () => {
+      configure('notlocalhost.example.com', { licenseKey: HASH_APP_EXAMPLE_COM });
+      expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GROUP 1c: non-browser platform (SSR) must never touch `window`
+  // -------------------------------------------------------------------------
+  describe('non-browser platform (SSR)', () => {
+    it('treats a server platform as valid without reading a hostname', () => {
+      TestBed.configureTestingModule({
+        providers: [SdLicenseService, { provide: DOCUMENT, useValue: {} as Document }, { provide: PLATFORM_ID, useValue: 'server' }],
+      });
+      const service = TestBed.inject(SdLicenseService);
+      expect(() => service.enforceLicense()).not.toThrow();
+    });
+
+    it('stays valid on a server platform even when a mismatching licenseKey is configured', () => {
+      configure('evil.attacker.com', { licenseKey: HASH_APP_EXAMPLE_COM }, 'server');
+      const service = TestBed.inject(SdLicenseService);
+      expect(() => service.enforceLicense()).not.toThrow();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GROUP 2: non-localhost paths — hostname supplied through the injected DOCUMENT
   // -------------------------------------------------------------------------
   describe('non-localhost paths', () => {
     // -----------------------------------------------------------------------
-    // 2a. No configuration → throw on non-localhost
+    // 2a. No configuration → dormant no-op (was: hard throw)
     // -----------------------------------------------------------------------
     describe('no SD_CORE_CONFIGURATION on non-localhost host', () => {
-      withHostname('app.example.com', () => {
-        it('throws SecurityError when no SD_CORE_CONFIGURATION is provided', () => {
-          if (window.location.hostname !== 'app.example.com') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService],
-          });
-          expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
-        });
+      it('does NOT throw when no SD_CORE_CONFIGURATION is provided (dormant license gate)', () => {
+        configure('app.example.com');
+        expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
+      });
+
+      it('enforceLicense() is a no-op when no licenseKey is configured', () => {
+        configure('app.example.com');
+        const service = TestBed.inject(SdLicenseService);
+        expect(() => service.enforceLicense()).not.toThrow();
+      });
+
+      it('warns in dev mode that enforcement is disabled', () => {
+        const warnSpy = spyOn(console, 'warn');
+        configure('app.example.com');
+        TestBed.inject(SdLicenseService);
+        expect(warnSpy).toHaveBeenCalledTimes(1);
+        expect(warnSpy.calls.mostRecent().args[0]).toContain('license enforcement is disabled');
+      });
+
+      it('does not warn when a licenseKey IS configured', () => {
+        const warnSpy = spyOn(console, 'warn');
+        configure('app.example.com', { licenseKey: HASH_APP_EXAMPLE_COM });
+        TestBed.inject(SdLicenseService);
+        expect(warnSpy).not.toHaveBeenCalled();
       });
     });
 
@@ -116,19 +175,10 @@ describe('SdLicenseService', () => {
     // 2b. Exact hostname match → valid
     // -----------------------------------------------------------------------
     describe('exact hostname match', () => {
-      withHostname('app.example.com', () => {
-        it('passes when hostname exactly matches the configured licenseKey hash', () => {
-          if (window.location.hostname !== 'app.example.com') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          const service = TestBed.inject(SdLicenseService);
-          expect(() => service.enforceLicense()).not.toThrow();
-        });
+      it('passes when hostname exactly matches the configured licenseKey hash', () => {
+        configure('app.example.com', { licenseKey: HASH_APP_EXAMPLE_COM });
+        const service = TestBed.inject(SdLicenseService);
+        expect(() => service.enforceLicense()).not.toThrow();
       });
     });
 
@@ -136,21 +186,15 @@ describe('SdLicenseService', () => {
     // 2c. Array of keys — one matches exactly
     // -----------------------------------------------------------------------
     describe('array of license keys — one matches exactly', () => {
-      withHostname('store.uat.nexa.mobi', () => {
-        it('passes when licenseKey is an array and one entry matches exactly', () => {
-          if (window.location.hostname !== 'store.uat.nexa.mobi') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = {
-            licenseKey: ['INVALID_HASH', HASH_STORE_UAT_NEXA_MOBI],
-          };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          const service = TestBed.inject(SdLicenseService);
-          expect(() => service.enforceLicense()).not.toThrow();
-        });
+      it('passes when licenseKey is an array and one entry matches exactly', () => {
+        configure('store.uat.nexa.mobi', { licenseKey: ['INVALID_HASH', HASH_STORE_UAT_NEXA_MOBI] });
+        const service = TestBed.inject(SdLicenseService);
+        expect(() => service.enforceLicense()).not.toThrow();
+      });
+
+      it('throws when no entry of the array matches', () => {
+        configure('store.uat.nexa.mobi', { licenseKey: ['INVALID_HASH', HASH_APP_EXAMPLE_COM] });
+        expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
       });
     });
 
@@ -158,19 +202,10 @@ describe('SdLicenseService', () => {
     // 2d. Wildcard match via progressive subdomain stripping
     // -----------------------------------------------------------------------
     describe('wildcard match *.uat.nexa.mobi for store.uat.nexa.mobi', () => {
-      withHostname('store.uat.nexa.mobi', () => {
-        it('passes via wildcard match', () => {
-          if (window.location.hostname !== 'store.uat.nexa.mobi') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: HASH_WILDCARD_UAT_NEXA_MOBI };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          const service = TestBed.inject(SdLicenseService);
-          expect(() => service.enforceLicense()).not.toThrow();
-        });
+      it('passes via wildcard match', () => {
+        configure('store.uat.nexa.mobi', { licenseKey: HASH_WILDCARD_UAT_NEXA_MOBI });
+        const service = TestBed.inject(SdLicenseService);
+        expect(() => service.enforceLicense()).not.toThrow();
       });
     });
 
@@ -178,19 +213,10 @@ describe('SdLicenseService', () => {
     // 2e. Wildcard *.example.com for app.example.com
     // -----------------------------------------------------------------------
     describe('wildcard *.example.com for app.example.com', () => {
-      withHostname('app.example.com', () => {
-        it('passes via wildcard *.example.com', () => {
-          if (window.location.hostname !== 'app.example.com') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: HASH_WILDCARD_EXAMPLE_COM };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          const service = TestBed.inject(SdLicenseService);
-          expect(() => service.enforceLicense()).not.toThrow();
-        });
+      it('passes via wildcard *.example.com', () => {
+        configure('app.example.com', { licenseKey: HASH_WILDCARD_EXAMPLE_COM });
+        const service = TestBed.inject(SdLicenseService);
+        expect(() => service.enforceLicense()).not.toThrow();
       });
     });
 
@@ -198,18 +224,9 @@ describe('SdLicenseService', () => {
     // 2f. Non-matching hostname → throws
     // -----------------------------------------------------------------------
     describe('non-matching hostname', () => {
-      withHostname('evil.attacker.com', () => {
-        it('throws when hostname does not match any configured key', () => {
-          if (window.location.hostname !== 'evil.attacker.com') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
-        });
+      it('throws when hostname does not match any configured key', () => {
+        configure('evil.attacker.com', { licenseKey: HASH_APP_EXAMPLE_COM });
+        expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
       });
     });
 
@@ -217,48 +234,29 @@ describe('SdLicenseService', () => {
     // 2g. enforceLicense() re-throws when constructed on invalid host
     // -----------------------------------------------------------------------
     describe('enforceLicense() throws with hostname in message', () => {
-      withHostname('pirated.domain.io', () => {
-        it('throws [Security] error containing the hostname', () => {
-          if (window.location.hostname !== 'pirated.domain.io') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
+      it('throws [Security] error containing the hostname', () => {
+        configure('pirated.domain.io', { licenseKey: HASH_APP_EXAMPLE_COM });
 
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
+        let thrownError: Error | undefined;
+        try {
+          TestBed.inject(SdLicenseService);
+        } catch (e: unknown) {
+          thrownError = e as Error;
+        }
 
-          let thrownError: Error | undefined;
-          try {
-            TestBed.inject(SdLicenseService);
-          } catch (e: unknown) {
-            thrownError = e as Error;
-          }
-
-          expect(thrownError).toBeDefined();
-          expect(thrownError?.message).toMatch(/\[Security\]/);
-          expect(thrownError?.message).toContain('pirated.domain.io');
-        });
+        expect(thrownError).toBeDefined();
+        expect(thrownError?.message).toMatch(/\[Security\]/);
+        expect(thrownError?.message).toContain('pirated.domain.io');
       });
     });
 
     // -----------------------------------------------------------------------
-    // 2h. licenseKey is an empty array (length 0) → throw
+    // 2h. licenseKey is an empty array (length 0) → dormant no-op
     // -----------------------------------------------------------------------
     describe('licenseKey is an empty array', () => {
-      withHostname('some.domain.com', () => {
-        it('throws when licenseKey array is empty', () => {
-          if (window.location.hostname !== 'some.domain.com') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: [] as any };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
-        });
+      it('does not throw when licenseKey array is empty (treated as unconfigured)', () => {
+        configure('some.domain.com', { licenseKey: [] as unknown as string[] });
+        expect(() => TestBed.inject(SdLicenseService)).not.toThrow();
       });
     });
 
@@ -266,18 +264,9 @@ describe('SdLicenseService', () => {
     // 2i. hostname with only 2 parts (e.g. example.com) — while loop never runs
     // -----------------------------------------------------------------------
     describe('hostname with only 2 parts (wildcard loop skipped)', () => {
-      withHostname('example.com', () => {
-        it('throws when hostname has only 2 parts and no exact match', () => {
-          if (window.location.hostname !== 'example.com') {
-            pending('window.location override not supported in this environment');
-            return;
-          }
-          const config: ISdCoreConfiguration = { licenseKey: HASH_APP_EXAMPLE_COM };
-          TestBed.configureTestingModule({
-            providers: [SdLicenseService, { provide: SD_CORE_CONFIGURATION, useValue: config }],
-          });
-          expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
-        });
+      it('throws when hostname has only 2 parts and no exact match', () => {
+        configure('example.com', { licenseKey: HASH_APP_EXAMPLE_COM });
+        expect(() => TestBed.inject(SdLicenseService)).toThrowError(/\[Security\]/);
       });
     });
   });

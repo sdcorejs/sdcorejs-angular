@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Attribute, Operators, SdFormGenericExpression, SdFormGenericExpressionCondition } from '../models';
+import { Attribute, SdFormGenericOperators, SdFormGenericExpression, SdFormGenericExpressionCondition } from '../models';
 
 @Pipe({
   name: 'expressionView',
@@ -16,7 +16,7 @@ export class ExpressionViewPipe implements PipeTransform {
     results.push(`<div ${containerStyle}>${attributes.find(e => e.value === field)?.display || field}</div>`);
     // Wording operator
     if (operator) {
-      results.push(`<div>${Operators.find(e => e.value === operator)?.display || operator}</div>`);
+      results.push(`<div>${SdFormGenericOperators.find(e => e.value === operator)?.display || operator}</div>`);
     }
     // Wording value
     if (operator && value !== undefined) {

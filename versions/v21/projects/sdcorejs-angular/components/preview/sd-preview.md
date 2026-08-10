@@ -58,10 +58,10 @@ In fullscreen mode (`toggleFullscreen()` or `f` key) the component requests the 
 
 | Name                | Type                                       | Notes                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `close`             | `void`                                     | Emitted when the consumer programmatically calls `requestClose()` (e.g. from their own dismiss button). The component does NOT bind `Esc` to this output — when wrapped in `<sd-modal>` the modal already handles Esc; for standalone embeds the consumer wires their own dismiss control. **The component never closes itself** — it just emits this intent. |
-| `activeIndexChange` | `number`                                   | Emitted whenever the active slide changes (nav arrow, thumbnail, swipe, ← / →).                                                                                                                                                                                                                                                                               |
-| `download`          | `{ index: number; item: NormalizedImage }` | Emitted after `downloadCurrent()` triggers the download anchor click.                                                                                                                                                                                                                                                                                         |
-| `imageError`        | `{ index: number; reason: string }`        | Emitted when an image renders broken (404, CORS, malformed blob). The stage automatically switches to the error artboard.                                                                                                                                                                                                                                     |
+| `sdClose`             | `void`                                     | Emitted when the consumer programmatically calls `requestClose()` (e.g. from their own dismiss button). The component does NOT bind `Esc` to this output — when wrapped in `<sd-modal>` the modal already handles Esc; for standalone embeds the consumer wires their own dismiss control. **The component never closes itself** — it just emits this intent. |
+| `sdActiveIndexChange` | `number`                                   | Emitted whenever the active slide changes (nav arrow, thumbnail, swipe, ← / →).                                                                                                                                                                                                                                                                               |
+| `sdDownload`          | `{ index: number; item: NormalizedImage }` | Emitted after `downloadCurrent()` triggers the download anchor click.                                                                                                                                                                                                                                                                                         |
+| `sdImageError`        | `{ index: number; reason: string }`        | Emitted when an image renders broken (404, CORS, malformed blob). The stage automatically switches to the error artboard.                                                                                                                                                                                                                                     |
 
 ## Public methods (called via template ref / `viewChild`)
 
@@ -75,7 +75,7 @@ In fullscreen mode (`toggleFullscreen()` or `f` key) the component requests the 
 | `downloadCurrent`       | `() => void`                             | Download the active image via an `<a download>` anchor.                     |
 | `toggleFullscreen`      | `() => void`                             | Browser Fullscreen API **on the component host element**.                   |
 | `retryActive`           | `() => Promise<void>`                    | Re-fetch the active image from its CDN URL (Artboard G's "Thử lại" button). |
-| `requestClose`          | `() => void`                             | Programmatic equivalent of clicking the X — just emits the `close` output.  |
+| `requestClose`          | `() => void`                             | Programmatic equivalent of clicking the X — just emits the `sdClose` output.  |
 
 > The old imperative `open(items, options?)` method **has been removed**. Push items via the `[items]` signal input instead.
 
@@ -139,6 +139,12 @@ The component host has `tabindex="0"` and listens to `keydown` via `@HostListene
 
 The host auto-focuses itself on first render (`afterNextRender`) so keyboard shortcuts work immediately when the component appears, even when **not** wrapped in a modal.
 
+### ARIA (dots indicator, live regions)
+
+- `thumbnailPosition="dots"` renders a **complete** tab pattern. The `role="tablist"` container previously held plain `<button>`s with no `role="tab"`, no `aria-selected` and no panel to point at — screen readers announced "tab list, 0 tabs". Each dot is now `role="tab"` with `aria-selected`, a roving `tabindex` (`0` on the active dot, `-1` on the rest) and `aria-controls` pointing at the stage, which is `role="tabpanel"` with a per-instance id.
+- Dot labels come from each image's `alt`/`name`. Every dot previously reused the `preview-image.next` label ("Ảnh tiếp theo"), so all of them announced identically and wrongly.
+- The `empty` and `loading` stage states are `role="status" aria-live="polite"`, so an async load or an empty gallery is announced instead of silently changing.
+
 ### Mouse / Pointer
 
 - **Wheel** on stage: zoom in / out (anchored on cursor, ±10% per tick).
@@ -157,13 +163,17 @@ Every blob URL created by the component is tracked in an internal `Set<string>` 
 
 CDN strings passed in by the caller are NOT revoked — the component owns only the blobs it itself created via `URL.createObjectURL`.
 
+### SSR / document access
+
+`<sd-preview-image>` reaches the DOM only through the injected `DOCUMENT` token (fullscreen listener, fullscreen state, download anchor) — it never touches the global `document`, so the constructor is safe to run during server rendering. The `fullscreenchange` listener is registered in the constructor and removed in `DestroyRef.onDestroy`.
+
 ## Examples
 
 ### 1. Inline gallery inside a page section (consumer provides a height)
 
 ```html
 <div class="image-gallery-section" style="height: 600px;">
-  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (close)="onClose()"> </sd-preview-image>
+  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (sdClose)="onClose()"> </sd-preview-image>
 </div>
 ```
 
@@ -171,7 +181,7 @@ CDN strings passed in by the caller are NOT revoked — the component owns only 
 
 ```html
 <sd-modal #modal [title]="'Xem ảnh'" width="92vw" height="86vh">
-  <sd-preview-image [items]="modalImages()" (close)="modal.close()"> </sd-preview-image>
+  <sd-preview-image [items]="modalImages()" (sdClose)="modal.close()"> </sd-preview-image>
 </sd-modal>
 
 <sd-button (click)="modalImages.set(row.attachments); modal.open()"> Xem ảnh </sd-button>
@@ -210,7 +220,7 @@ onFiles(e: Event) {
 
 ```html
 <!-- preview.page.html -->
-<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (close)="router.navigate(['../'], { relativeTo: route })">
+<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (sdClose)="router.navigate(['../'], { relativeTo: route })">
 </sd-preview-image>
 ```
 
@@ -226,9 +236,9 @@ onFiles(e: Event) {
 ```html
 <sd-preview-image
   [items]="gallery()"
-  (activeIndexChange)="onSlideChanged($event)"
-  (imageError)="logBrokenImage($event)"
-  (download)="trackDownload($event)">
+  (sdActiveIndexChange)="onSlideChanged($event)"
+  (sdImageError)="logBrokenImage($event)"
+  (sdDownload)="trackDownload($event)">
 </sd-preview-image>
 ```
 
@@ -237,7 +247,7 @@ onFiles(e: Event) {
 - DON'T forget to give the parent container a height — without it the component collapses to `min-height: 320px`.
 - DON'T pass PDF / non-image URLs — fetched as `<img>` they show as broken; non-image `File`s are dropped silently.
 - DON'T try to call an `open()` method — it no longer exists. Set `[items]` to a non-empty array instead.
-- DON'T `close.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `close` output (set a signal, call `modal.close()`, navigate away).
+- DON'T `sdClose.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `sdClose` output (set a signal, call `modal.close()`, navigate away).
 - DON'T mix `thumbnailPosition="dots"` with > 20 images — dots become illegible. Switch to `bottom`.
 - DON'T mount one `<sd-preview-image>` per row in a list — declare ONE in the page and swap `[items]`.
 
@@ -304,13 +314,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 
 | Name           | Type                                  | Notes                                                                                                                                                                                                                       |
 | -------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `close`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
-| `loaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
-| `pageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
-| `zoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
-| `download`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
-| `loadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
-| `searchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
+| `sdClose`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
+| `sdLoaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
+| `sdPageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
+| `sdZoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
+| `sdDownload`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
+| `sdLoadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
+| `sdSearchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
 
 ## Public methods (called via template ref / `viewChild`)
 
@@ -323,13 +333,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `toggleSidebar()` / `setSidebarMode(mode)`                                 | Sidebar UI.                                                                                                                                                                                                                                             |
 | `setScrollMode(mode)`                                                      | Switch between single-page and virtualized continuous rendering.                                                                                                                                                                                        |
 | `downloadFile()` / `downloadFileAsync()`                                   | Download the active source. Public URLs require anchor-download support; byte sources and authenticated/options URLs also require Blob/object-URL support. Generated object URLs are revoked on the next safe frame. Repeated requests are latest-wins. |
-| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `searchChange`.                                                                                                                                                    |
+| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `sdSearchChange`.                                                                                                                                                    |
 | `toggleFullscreen()`                                                       | Browser Fullscreen API on the host element.                                                                                                                                                                                                             |
-| `requestClose()`                                                           | Programmatic dismiss — emits `close`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
+| `requestClose()`                                                           | Programmatic dismiss — emits `sdClose`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
 | `retryLoad()`                                                              | Re-runs the active source through `getDocument` (used by the error state retry button).                                                                                                                                                                 |
 | `search(term, { caseSensitive?, wholeWord? })`                             | NFC-normalized, Unicode-aware full-document search. Resolves to the bounded count and exposes `searchTruncated()`; superseded calls are serialized and coalesced to the latest pending query.                                                           |
 | `searchNext()` / `searchPrev()`                                            | Cycle through results; wrap at boundaries. Jumps the page automatically.                                                                                                                                                                                |
-| `clearSearch()`                                                            | Reset search state. Re-emits `searchChange` with `total: 0`.                                                                                                                                                                                            |
+| `clearSearch()`                                                            | Reset search state. Re-emits `sdSearchChange` with `total: 0`.                                                                                                                                                                                            |
 | `openSearch()` / `closeSearch()`                                           | Toggle the search bar; `closeSearch()` also clears results.                                                                                                                                                                                             |
 | `toggleSearchCaseSensitive()` / `toggleSearchWholeWord()`                  | Flip the matching options. Re-runs the active term automatically.                                                                                                                                                                                       |
 | `printFile()` / `print()`                                                  | Start a managed browser print job from cloned PDF bytes. A replacement source, repeated print, or component destruction cancels the active job.                                                                                                         |
@@ -350,7 +360,7 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `Ctrl/Cmd + P`                                    | Starts the managed print flow when a document is ready.                                                                         |
 | `Enter` / `F3` (search input focused)             | `searchNext()`                                                                                                                  |
 | `Shift+Enter` / `Shift+F3` (search input focused) | `searchPrev()`                                                                                                                  |
-| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `close` from a keystroke. |
+| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `sdClose` from a keystroke. |
 
 The host has `tabindex="0"` and auto-focuses on first render so keyboard works immediately.
 
@@ -370,7 +380,7 @@ Continuous mode keeps estimated heights in a Fenwick index: point measurements, 
 
 Thumbnail rendering is virtualized to a 48-row window, so even a 10,000-page document has bounded sidebar DOM. Its PNG LRU retains at most 96 entries, while a four-slot scheduler bounds unresolved page acquisition and rendering across rapid window changes; queued work is pruned to mounted pages (`thumbnailWorkCount()` exposes the current diagnostic size). Search stores at most 1,000 matches and keeps at most 128 page-text entries in its LRU (`pageTextCacheSize()` exposes the current diagnostic size). Only one page-text scan may extract at a time, and repeated live-search calls coalesce to the newest pending query. Each scan uses bounded snapshot/staging maps and commits only after successful completion, avoiding sequential eviction cascades without retaining every page. Search reports `truncated` in the signal, state snapshot, event, counter, and localized status. The sidebar and search disclosure buttons expose `aria-expanded` plus stable `aria-controls` targets. Canvas backing stores are capped at 8,192 pixels per dimension and 16,777,216 pixels total while CSS preserves the logical page size.
 
-Outline destinations support direct page indices, named destinations, and PDF reference objects. Traversal detects cycles against the current ancestor path, allowing a shared DAG node to appear beneath each parent, while globally capping depth at 64 and rendered nodes at 10,000. It preserves safe partial rows when destinations are invalid. The exported `PdfOutlineItem` remains recursive; the UI exposes ARIA tree semantics and standard arrow-key expand/collapse navigation. Only `http`, `https`, and `mailto` external URLs are rendered as links.
+Outline destinations support direct page indices, named destinations, and PDF reference objects. Traversal detects cycles against the current ancestor path, allowing a shared DAG node to appear beneath each parent, while globally capping depth at 64 and rendered nodes at 10,000. It preserves safe partial rows when destinations are invalid. The exported `PdfOutlineItem` remains recursive; the UI exposes ARIA tree semantics and standard arrow-key expand/collapse navigation. Only `http`, `https`, and `mailto` external URLs are rendered as links. Each outline row (`role="treeitem"` — an `<a>` for external links, a `<button>` otherwise) declares the **required** `aria-selected`, true for the entry pointing at the current page; the role mandates the attribute, and without it screen readers drop the tree semantics and never convey which entry is current. It mirrors the same condition as the existing `aria-current="page"`.
 
 ## Current limitations
 
@@ -386,7 +396,7 @@ Outline destinations support direct page indices, named destinations, and PDF re
 
 ```html
 <div class="image-gallery-section" style="height: 600px;">
-  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (close)="onClose()"> </sd-preview-image>
+  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (sdClose)="onClose()"> </sd-preview-image>
 </div>
 ```
 
@@ -394,7 +404,7 @@ Outline destinations support direct page indices, named destinations, and PDF re
 
 ```html
 <sd-modal #modal [title]="'Xem ảnh'" width="92vw" height="86vh">
-  <sd-preview-image [items]="modalImages()" (close)="modal.close()"> </sd-preview-image>
+  <sd-preview-image [items]="modalImages()" (sdClose)="modal.close()"> </sd-preview-image>
 </sd-modal>
 
 <sd-button (click)="modalImages.set(row.attachments); modal.open()"> Xem ảnh </sd-button>
@@ -433,7 +443,7 @@ onFiles(e: Event) {
 
 ```html
 <!-- preview.page.html -->
-<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (close)="router.navigate(['../'], { relativeTo: route })">
+<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (sdClose)="router.navigate(['../'], { relativeTo: route })">
 </sd-preview-image>
 ```
 
@@ -449,9 +459,9 @@ onFiles(e: Event) {
 ```html
 <sd-preview-image
   [items]="gallery()"
-  (activeIndexChange)="onSlideChanged($event)"
-  (imageError)="logBrokenImage($event)"
-  (download)="trackDownload($event)">
+  (sdActiveIndexChange)="onSlideChanged($event)"
+  (sdImageError)="logBrokenImage($event)"
+  (sdDownload)="trackDownload($event)">
 </sd-preview-image>
 ```
 
@@ -460,7 +470,7 @@ onFiles(e: Event) {
 - DON'T forget to give the parent container a height — without it the component collapses to `min-height: 320px`.
 - DON'T pass PDF / non-image URLs — fetched as `<img>` they show as broken; non-image `File`s are dropped silently.
 - DON'T try to call an `open()` method — it no longer exists. Set `[items]` to a non-empty array instead.
-- DON'T `close.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `close` output (set a signal, call `modal.close()`, navigate away).
+- DON'T `sdClose.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `sdClose` output (set a signal, call `modal.close()`, navigate away).
 - DON'T mix `thumbnailPosition="dots"` with > 20 images — dots become illegible. Switch to `bottom`.
 - DON'T mount one `<sd-preview-image>` per row in a list — declare ONE in the page and swap `[items]`.
 
@@ -527,13 +537,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 
 | Name           | Type                                  | Notes                                                                                                                                                                                                                       |
 | -------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `close`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
-| `loaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
-| `pageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
-| `zoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
-| `download`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
-| `loadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
-| `searchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
+| `sdClose`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
+| `sdLoaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
+| `sdPageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
+| `sdZoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
+| `sdDownload`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
+| `sdLoadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
+| `sdSearchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
 
 ## Public methods (called via template ref / `viewChild`)
 
@@ -546,13 +556,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `toggleSidebar()` / `setSidebarMode(mode)`                                 | Sidebar UI.                                                                                                                                                                                                                                             |
 | `setScrollMode(mode)`                                                      | Switch between single-page and virtualized continuous rendering.                                                                                                                                                                                        |
 | `downloadFile()` / `downloadFileAsync()`                                   | Download the active source. Public URLs require anchor-download support; byte sources and authenticated/options URLs also require Blob/object-URL support. Generated object URLs are revoked on the next safe frame. Repeated requests are latest-wins. |
-| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `searchChange`.                                                                                                                                                    |
+| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `sdSearchChange`.                                                                                                                                                    |
 | `toggleFullscreen()`                                                       | Browser Fullscreen API on the host element.                                                                                                                                                                                                             |
-| `requestClose()`                                                           | Programmatic dismiss — emits `close`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
+| `requestClose()`                                                           | Programmatic dismiss — emits `sdClose`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
 | `retryLoad()`                                                              | Re-runs the active source through `getDocument` (used by the error state retry button).                                                                                                                                                                 |
 | `search(term, { caseSensitive?, wholeWord? })`                             | NFC-normalized, Unicode-aware full-document search. Resolves to the bounded count and exposes `searchTruncated()`; superseded calls are serialized and coalesced to the latest pending query.                                                           |
 | `searchNext()` / `searchPrev()`                                            | Cycle through results; wrap at boundaries. Jumps the page automatically.                                                                                                                                                                                |
-| `clearSearch()`                                                            | Reset search state. Re-emits `searchChange` with `total: 0`.                                                                                                                                                                                            |
+| `clearSearch()`                                                            | Reset search state. Re-emits `sdSearchChange` with `total: 0`.                                                                                                                                                                                            |
 | `openSearch()` / `closeSearch()`                                           | Toggle the search bar; `closeSearch()` also clears results.                                                                                                                                                                                             |
 | `toggleSearchCaseSensitive()` / `toggleSearchWholeWord()`                  | Flip the matching options. Re-runs the active term automatically.                                                                                                                                                                                       |
 | `printFile()` / `print()`                                                  | Start a managed browser print job from cloned PDF bytes. A replacement source, repeated print, or component destruction cancels the active job.                                                                                                         |
@@ -573,7 +583,7 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `Ctrl/Cmd + P`                                    | Starts the managed print flow when a document is ready.                                                                         |
 | `Enter` / `F3` (search input focused)             | `searchNext()`                                                                                                                  |
 | `Shift+Enter` / `Shift+F3` (search input focused) | `searchPrev()`                                                                                                                  |
-| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `close` from a keystroke. |
+| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `sdClose` from a keystroke. |
 
 The host has `tabindex="0"` and auto-focuses on first render so keyboard works immediately.
 
@@ -593,7 +603,7 @@ Continuous mode keeps estimated heights in a Fenwick index: point measurements, 
 
 Thumbnail rendering is virtualized to a 48-row window, so even a 10,000-page document has bounded sidebar DOM. Its PNG LRU retains at most 96 entries, while a four-slot scheduler bounds unresolved page acquisition and rendering across rapid window changes; queued work is pruned to mounted pages (`thumbnailWorkCount()` exposes the current diagnostic size). Search stores at most 1,000 matches and keeps at most 128 page-text entries in its LRU (`pageTextCacheSize()` exposes the current diagnostic size). Only one page-text scan may extract at a time, and repeated live-search calls coalesce to the newest pending query. Each scan uses bounded snapshot/staging maps and commits only after successful completion, avoiding sequential eviction cascades without retaining every page. Search reports `truncated` in the signal, state snapshot, event, counter, and localized status. The sidebar and search disclosure buttons expose `aria-expanded` plus stable `aria-controls` targets. Canvas backing stores are capped at 8,192 pixels per dimension and 16,777,216 pixels total while CSS preserves the logical page size.
 
-Outline destinations support direct page indices, named destinations, and PDF reference objects. Traversal detects cycles against the current ancestor path, allowing a shared DAG node to appear beneath each parent, while globally capping depth at 64 and rendered nodes at 10,000. It preserves safe partial rows when destinations are invalid. The exported `PdfOutlineItem` remains recursive; the UI exposes ARIA tree semantics and standard arrow-key expand/collapse navigation. Only `http`, `https`, and `mailto` external URLs are rendered as links.
+Outline destinations support direct page indices, named destinations, and PDF reference objects. Traversal detects cycles against the current ancestor path, allowing a shared DAG node to appear beneath each parent, while globally capping depth at 64 and rendered nodes at 10,000. It preserves safe partial rows when destinations are invalid. The exported `PdfOutlineItem` remains recursive; the UI exposes ARIA tree semantics and standard arrow-key expand/collapse navigation. Only `http`, `https`, and `mailto` external URLs are rendered as links. Each outline row (`role="treeitem"` — an `<a>` for external links, a `<button>` otherwise) declares the **required** `aria-selected`, true for the entry pointing at the current page; the role mandates the attribute, and without it screen readers drop the tree semantics and never convey which entry is current. It mirrors the same condition as the existing `aria-current="page"`.
 
 ## Current limitations
 
@@ -626,7 +636,7 @@ The worker is also exposed as a DI token (`SD_PDFJS_LIB`) for unit tests — see
 
 ```html
 <div style="height: 600px;">
-  <sd-preview-pdf [source]="row.contractUrl" (close)="onClose()" (loaded)="trackOpen($event)"> </sd-preview-pdf>
+  <sd-preview-pdf [source]="row.contractUrl" (sdClose)="onClose()" (sdLoaded)="trackOpen($event)"> </sd-preview-pdf>
 </div>
 ```
 
@@ -670,7 +680,7 @@ open(id: string) {
 
 ```html
 <sd-modal #modal title="Xem hợp đồng" width="92vw" height="86vh">
-  <sd-preview-pdf [source]="modalSrc()" (close)="modal.close()"> </sd-preview-pdf>
+  <sd-preview-pdf [source]="modalSrc()" (sdClose)="modal.close()"> </sd-preview-pdf>
 </sd-modal>
 ```
 
@@ -679,9 +689,9 @@ open(id: string) {
 ```html
 <sd-preview-pdf
   [source]="src()"
-  (loaded)="onLoaded($event)"
-  (pageChange)="trackPage($event)"
-  (download)="logDownload($event)"
+  (sdLoaded)="onLoaded($event)"
+  (sdPageChange)="trackPage($event)"
+  (sdDownload)="logDownload($event)"
   (loadError)="onErr($event)">
 </sd-preview-pdf>
 ```

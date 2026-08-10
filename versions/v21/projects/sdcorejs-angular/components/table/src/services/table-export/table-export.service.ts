@@ -50,9 +50,7 @@ export class TableExportService {
   // theo catalog ngôn ngữ hiện tại.
   exportTitle = computed(() => {
     const percent = this.#exportPercent();
-    return percent === null
-      ? this.#i18n.t('core.component.table.export')
-      : this.#i18n.t('core.component.table.exporting', { percent });
+    return percent === null ? this.#i18n.t('core.component.table.export') : this.#i18n.t('core.component.table.exporting', { percent });
   });
 
   /** Đặt tiến độ export (0-100), hoặc null để trả nút về nhãn mặc định. */

@@ -32,6 +32,49 @@ describe('SdConfirmService', () => {
     expect(service).toBeTruthy();
   });
 
+  // ─── Dismissal always settles the promise ──────────────────────────────────
+
+  // why: mọi API trước đây viết `if (result) { ...ACCEPT/CANCEL... }`, nên đóng dialog bằng ESC,
+  // click backdrop hay `dialogRef.close()` (đều cho `result === undefined`) khiến promise KHÔNG
+  // BAO GIỜ settle — `await` treo vĩnh viễn và closure của caller bị ghim đến hết phiên.
+  // Không có spec nào bắt được: các spec cũ chỉ phát ACCEPT/CANCEL rồi assert.
+  const dismissalCases: { name: string; call: (s: SdConfirmService) => Promise<unknown> }[] = [
+    { name: 'confirm', call: s => s.confirm('x') as Promise<unknown> },
+    { name: 'withInput', call: s => s.withInput('x') },
+    {
+      name: 'withRadio',
+      call: s => s.withRadio('x', { items: [], valueField: 'value', displayField: 'label' }),
+    },
+    {
+      name: 'withSelect',
+      call: s => s.withSelect('x', { items: [], valueField: 'value', displayField: 'label' }),
+    },
+    { name: 'withDate', call: s => s.withDate('x') },
+    { name: 'withDatetime', call: s => s.withDatetime('x') },
+  ];
+
+  for (const { name, call } of dismissalCases) {
+    it(`${name}() rejects instead of hanging when the dialog is dismissed without a choice`, async () => {
+      const settled = call(service);
+      // `undefined` là đúng thứ MatDialogRef.afterClosed() phát ra khi đóng bằng ESC/backdrop/close().
+      afterClosed$.next(undefined);
+      afterClosed$.complete();
+
+      await expectAsync(settled).toBeRejectedWith('CANCEL');
+    });
+  }
+
+  it('confirm() still resolves the value on ACCEPT and rejects on an explicit CANCEL', async () => {
+    const accepted = service.confirm('x') as Promise<unknown>;
+    afterClosed$.next({ action: 'ACCEPT', value: 'ok' });
+    await expectAsync(accepted).toBeResolvedTo('ok');
+
+    afterClosed$ = new Subject();
+    const cancelled = service.confirm('x') as Promise<unknown>;
+    afterClosed$.next({ action: 'CANCEL' });
+    await expectAsync(cancelled).toBeRejectedWith('CANCEL');
+  });
+
   // ─── confirm() ─────────────────────────────────────────────────────────────
 
   it('confirm() should open MatDialog with DialogConfirmComponent', () => {

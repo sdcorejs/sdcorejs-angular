@@ -1,5 +1,17 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, booleanAttribute, computed, effect, input, model, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  booleanAttribute,
+  computed,
+  effect,
+  inject,
+  input,
+  model,
+  signal,
+  untracked,
+} from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
@@ -9,30 +21,30 @@ import { SdItemDefDefDirective } from '@sdcorejs/angular/forms/directives';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { DateRelative, Filter, Operator } from '@sdcorejs/utils/models';
 import {
-  isQbGroup,
-  QB_DATE_MODES,
-  QB_EMPTY_OPTIONS,
-  QB_RELATIVE_UNIT_OPTIONS,
-  QB_TODAY,
-  QB_VALUE_SOURCE_OPTIONS,
-  QbComparisonMode,
-  QbDateMode,
-  QbGroup,
-  QbNode,
-  QbRule,
-  QbToken,
-  QbValueSource,
-  qbAllowedOperators,
-  qbDefaultOperator,
-  qbDefaultRelative,
-  qbSupportsFieldCompareOperator,
-  qbIsMultiOperator,
-  qbIsNoDataOperator,
-  qbIsRelativeDate,
-  qbIsToday,
-  qbFieldIcon,
-  qbNewGroup,
-  qbNewRule,
+  sdIsQbGroup,
+  SD_QB_DATE_MODES,
+  SD_QB_EMPTY_OPTIONS,
+  SD_QB_RELATIVE_UNIT_OPTIONS,
+  SD_QB_TODAY,
+  SD_QB_VALUE_SOURCE_OPTIONS,
+  SdQbComparisonMode,
+  SdQbDateMode,
+  SdQbGroup,
+  SdQbNode,
+  SdQbRule,
+  SdQbToken,
+  SdQbValueSource,
+  sdQbAllowedOperators,
+  sdQbDefaultOperator,
+  sdQbDefaultRelative,
+  sdQbSupportsFieldCompareOperator,
+  sdQbIsMultiOperator,
+  sdQbIsNoDataOperator,
+  sdQbIsRelativeDate,
+  sdQbIsToday,
+  sdQbFieldIcon,
+  sdQbNewGroup,
+  sdQbNewRule,
   SdQueryBuilderField,
   SdQueryBuilderFieldOption,
   SdQueryBuilderOption,
@@ -63,6 +75,8 @@ const QB_EMPTY_FIELDS: SdQueryBuilderField[] = [];
   styleUrl: './query-builder.component.scss',
 })
 export class SdQueryBuilder {
+  readonly #i18n = inject(I18nService);
+
   // -------------------------------------------------------------------------
   // Inputs
   // -------------------------------------------------------------------------
@@ -77,7 +91,7 @@ export class SdQueryBuilder {
   readonly mode = input<'edit' | 'view'>('edit');
 
   /** `value-only` = literal operands only · `value-or-field` = each rule may compare against another field. */
-  readonly comparisonMode = input<QbComparisonMode>('value-only');
+  readonly comparisonMode = input<SdQbComparisonMode>('value-only');
 
   /** Disable all editing controls. */
   readonly disabled = input(false, { transform: booleanAttribute });
@@ -102,7 +116,7 @@ export class SdQueryBuilder {
   // Internal source of truth — the editable tree (carries UI state).
   // -------------------------------------------------------------------------
 
-  readonly #tree = signal<QbGroup>(qbNewGroup('AND'));
+  readonly #tree = signal<SdQbGroup>(sdQbNewGroup('AND'));
   readonly tree = this.#tree.asReadonly();
 
   /** Last filter WE emitted — used to recognise (and ignore) our own echo in the inbound effect. */
@@ -133,20 +147,43 @@ export class SdQueryBuilder {
     for (const f of this.resolvedFields()) {
       if (f.type === 'boolean') {
         map.set(f.key, [
-          { value: true, display: f.trueLabel ?? 'Có' },
-          { value: false, display: f.falseLabel ?? 'Không' },
+          { value: true, display: f.trueLabel ?? this.#i18n.t('core.component.query-builder.boolean.true') },
+          { value: false, display: f.falseLabel ?? this.#i18n.t('core.component.query-builder.boolean.false') },
         ]);
       }
     }
     return map;
   });
 
+  // -------------------------------------------------------------------------
+  // Option lists — dịch lúc ĐỌC, không phải lúc module được đánh giá.
+  //
+  // why: bảng hằng số trong `query-builder.model.ts` chỉ giữ `labelKey`; `computed` ở đây mới sinh
+  // ra `display`. Nhờ vậy đổi ngôn ngữ là nhãn đổi theo (computed phụ thuộc signal `messages()` bên
+  // trong `I18nService.t`), mà tham chiếu mảng vẫn ỔN ĐỊNH giữa các chu kỳ change detection vì
+  // computed chỉ tính lại khi ngôn ngữ đổi — bắt buộc, nếu không `sd-select` sẽ rơi lại vào vòng lặp
+  // `toObservable(items)` → `markForCheck()` → CD mới → mảng mới (xem `#booleanOptionsByKey`).
+  // -------------------------------------------------------------------------
+
   /** Stable option list for the date-mode select. */
-  readonly dateModes = QB_DATE_MODES;
+  readonly dateModes = computed(() => SD_QB_DATE_MODES.map(o => ({ ...o, display: this.#i18n.t(o.labelKey) })));
   /** Stable option list for the literal-vs-field operand select. */
-  readonly valueSourceOptions = QB_VALUE_SOURCE_OPTIONS;
+  readonly valueSourceOptions = computed(() => SD_QB_VALUE_SOURCE_OPTIONS.map(o => ({ ...o, display: this.#i18n.t(o.labelKey) })));
   /** Stable combined unit×direction option list for the relative select. */
-  readonly relativeUnitOptions = QB_RELATIVE_UNIT_OPTIONS;
+  readonly relativeUnitOptions = computed(() => SD_QB_RELATIVE_UNIT_OPTIONS.map(o => ({ ...o, display: this.#i18n.t(o.labelKey) })));
+
+  // Nhãn i18n tĩnh của template (placeholder / title / aria-label / trạng thái rỗng).
+  readonly selectFieldLabel = computed(() => this.#i18n.t('core.component.query-builder.select-field'));
+  readonly valueLabel = computed(() => this.#i18n.t('core.component.query-builder.value'));
+  readonly fromLabel = computed(() => this.#i18n.t('core.component.query-builder.from'));
+  readonly toLabel = computed(() => this.#i18n.t('core.component.query-builder.to'));
+  readonly addLabel = computed(() => this.#i18n.t('core.component.query-builder.add'));
+  readonly addNodeLabel = computed(() => this.#i18n.t('core.component.query-builder.add-node'));
+  readonly conditionLabel = computed(() => this.#i18n.t('core.component.query-builder.condition'));
+  readonly groupLabel = computed(() => this.#i18n.t('core.component.query-builder.group'));
+  readonly removeGroupLabel = computed(() => this.#i18n.t('core.component.query-builder.remove-group'));
+  readonly removeConditionLabel = computed(() => this.#i18n.t('core.component.query-builder.remove-condition'));
+  readonly emptyLabel = computed(() => this.#i18n.t('core.component.query-builder.empty'));
 
   readonly #compareFieldsByKey = computed<Map<string, SdQueryBuilderField[]>>(() => {
     const fields = this.resolvedFields();
@@ -173,16 +210,26 @@ export class SdQueryBuilder {
     return map;
   });
 
-  /** View-mode token stream — recomputed from the emitted value. */
-  readonly tokens = computed<QbToken[]>(() => filterToTokens(this.option()?.value ?? this.value(), this.resolvedFields()));
+  /**
+   * Translator handed to the serializer.
+   * why: `filterToTokens` là hàm thuần cấp module, không inject được. Truyền hàm dịch vào để chuỗi
+   * view-mode ("hôm nay", "3 ngày trước", "Có"/"Không") không còn hardcode tiếng Việt. Trường ổn
+   * định (không tạo mới mỗi lần gọi) để `computed` bên dưới không phụ thuộc tham chiếu mới.
+   */
+  readonly #translate = (key: string, params?: Record<string, string | number>): string => this.#i18n.t(key, params);
+
+  /** View-mode token stream — recomputed from the emitted value (and from the active language). */
+  readonly tokens = computed<SdQbToken[]>(() =>
+    filterToTokens(this.option()?.value ?? this.value(), this.resolvedFields(), this.#translate)
+  );
 
   readonly isView = computed(() => this.resolvedMode() === 'view');
 
   /** Expose the type-guard to the template. */
-  readonly isGroup = isQbGroup;
+  readonly isGroup = sdIsQbGroup;
 
   /** Resolve the leading icon for a field (own `icon` → per-type → `'tune'`) — used by the field picker. */
-  readonly fieldIcon = qbFieldIcon;
+  readonly fieldIcon = sdQbFieldIcon;
 
   constructor() {
     // Inbound seeding: an EXTERNAL write to value / filters rebuilds the tree.
@@ -242,14 +289,14 @@ export class SdQueryBuilder {
   // -------------------------------------------------------------------------
 
   /** Switch a group's AND/OR connector and re-emit. No-op when disabled or unchanged. */
-  setGroupLogic(group: QbGroup, logic: 'AND' | 'OR'): void {
+  setGroupLogic(group: SdQbGroup, logic: 'AND' | 'OR'): void {
     if (this.resolvedDisabled() || group.logic === logic) return;
     group.logic = logic;
     this.#apply();
   }
 
   /** Open this group's "+" menu (closing any other open one). UI-only — does not emit. */
-  toggleDropdown(group: QbGroup, event: Event): void {
+  toggleDropdown(group: SdQbGroup, event: Event): void {
     if (this.resolvedDisabled()) return;
     event.stopPropagation();
     const willOpen = !group.open;
@@ -264,36 +311,36 @@ export class SdQueryBuilder {
     this.#bumpTree();
   }
 
-  #hasOpenDropdown(node: QbNode): boolean {
-    if (!isQbGroup(node)) return false;
+  #hasOpenDropdown(node: SdQbNode): boolean {
+    if (!sdIsQbGroup(node)) return false;
     return node.open === true || node.children.some(c => this.#hasOpenDropdown(c));
   }
 
-  #closeAllDropdowns(node: QbNode): void {
-    if (isQbGroup(node)) {
+  #closeAllDropdowns(node: SdQbNode): void {
+    if (sdIsQbGroup(node)) {
       node.open = false;
       node.children.forEach(c => this.#closeAllDropdowns(c));
     }
   }
 
   /** Append a blank rule to `group`. */
-  addRule(group: QbGroup): void {
+  addRule(group: SdQbGroup): void {
     if (this.resolvedDisabled()) return;
-    group.children.push(qbNewRule());
+    group.children.push(sdQbNewRule());
     group.open = false;
     this.#apply();
   }
 
   /** Append a nested sub-group (seeded with one blank rule) to `group`. */
-  addGroup(group: QbGroup): void {
+  addGroup(group: SdQbGroup): void {
     if (this.resolvedDisabled()) return;
-    group.children.push(qbNewGroup('AND', [qbNewRule()]));
+    group.children.push(sdQbNewGroup('AND', [sdQbNewRule()]));
     group.open = false;
     this.#apply();
   }
 
   /** Remove the child at `index` from `parent` (a rule or a whole sub-group). */
-  removeNode(parent: QbGroup, index: number): void {
+  removeNode(parent: SdQbGroup, index: number): void {
     if (this.resolvedDisabled()) return;
     parent.children.splice(index, 1);
     this.#apply();
@@ -311,12 +358,12 @@ export class SdQueryBuilder {
    * @param key - the chosen field key (from the field picker). Swap-only: a null / undefined
    *   key is a no-op — the field can be changed but never cleared (issue #2).
    */
-  setField(rule: QbRule, key: any): void {
+  setField(rule: SdQbRule, key: any): void {
     if (this.resolvedDisabled()) return;
     if (key == null) return; // swap-only: never clear the field (issue #2)
     rule.field = key;
     const field = this.fieldByKey()[rule.field as string];
-    const op = qbDefaultOperator(field);
+    const op = sdQbDefaultOperator(field);
     rule.operator = op;
     rule.value = this.#defaultValueFor(op);
     this.#useLiteralSource(rule);
@@ -324,7 +371,7 @@ export class SdQueryBuilder {
   }
 
   /** Change `rule`'s operator and reshape its value to fit the new operator (array / range / none). */
-  setOperator(rule: QbRule, op: Operator | undefined): void {
+  setOperator(rule: SdQbRule, op: Operator | undefined): void {
     if (this.resolvedDisabled()) return;
     rule.operator = op;
     if (rule.valueSource === 'field' && this.canCompareWithField(rule)) {
@@ -338,7 +385,7 @@ export class SdQueryBuilder {
   }
 
   /** Set a single-value rule's value (coercing numeric fields to `number`). */
-  setScalar(rule: QbRule, raw: any): void {
+  setScalar(rule: SdQbRule, raw: any): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
     rule.value = this.#coerce(rule, raw);
@@ -346,7 +393,7 @@ export class SdQueryBuilder {
   }
 
   /** Set the lower bound of a BETWEEN rule's `{ from, to }` value. */
-  setBetweenFrom(rule: QbRule, raw: any): void {
+  setBetweenFrom(rule: SdQbRule, raw: any): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
     rule.value = { ...(rule.value ?? {}), from: this.#coerce(rule, raw) };
@@ -354,14 +401,14 @@ export class SdQueryBuilder {
   }
 
   /** Set the upper bound of a BETWEEN rule's `{ from, to }` value. */
-  setBetweenTo(rule: QbRule, raw: any): void {
+  setBetweenTo(rule: SdQbRule, raw: any): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
     rule.value = { ...(rule.value ?? {}), to: this.#coerce(rule, raw) };
     this.#apply();
   }
 
-  setValueSource(rule: QbRule, source: unknown): void {
+  setValueSource(rule: SdQbRule, source: unknown): void {
     if (this.resolvedDisabled()) return;
     if (source === 'field' && this.resolvedComparisonMode() === 'value-or-field' && this.canCompareWithField(rule)) {
       rule.valueSource = 'field';
@@ -374,7 +421,7 @@ export class SdQueryBuilder {
     this.#apply();
   }
 
-  setCompareField(rule: QbRule, key: any): void {
+  setCompareField(rule: SdQbRule, key: any): void {
     if (this.resolvedDisabled()) return;
     if (!this.#isCompareFieldAllowed(rule, key)) return;
     rule.valueSource = 'field';
@@ -384,7 +431,7 @@ export class SdQueryBuilder {
   }
 
   /** Coerce numeric fields to `number` so the emitted Filter carries a real number. */
-  #coerce(rule: QbRule, raw: any): any {
+  #coerce(rule: SdQbRule, raw: any): any {
     const field = this.fieldByKey()[rule.field as string];
     if (field?.type === 'number' && raw !== null && raw !== undefined && raw !== '') {
       const n = Number(raw);
@@ -394,31 +441,31 @@ export class SdQueryBuilder {
   }
 
   #defaultValueFor(op: Operator | undefined): any {
-    if (qbIsMultiOperator(op)) return [];
+    if (sdQbIsMultiOperator(op)) return [];
     if (op === 'BETWEEN') return { from: null, to: null };
     return null;
   }
 
   #reshapeValue(op: Operator | undefined, current: any): any {
-    if (qbIsNoDataOperator(op)) return null;
-    if (qbIsMultiOperator(op)) return Array.isArray(current) ? current : current == null ? [] : [current];
+    if (sdQbIsNoDataOperator(op)) return null;
+    if (sdQbIsMultiOperator(op)) return Array.isArray(current) ? current : current == null ? [] : [current];
     if (op === 'BETWEEN') {
       // a relative spec / 'TODAY' can't be a BETWEEN endpoint — reset to a fresh range
-      return current && typeof current === 'object' && !Array.isArray(current) && !qbIsRelativeDate(current)
+      return current && typeof current === 'object' && !Array.isArray(current) && !sdQbIsRelativeDate(current)
         ? current
         : { from: null, to: null };
     }
     // single value — keep a relative spec or the 'TODAY' sentinel; else drop array/range remnants
-    if (qbIsToday(current) || qbIsRelativeDate(current)) return current;
+    if (sdQbIsToday(current) || sdQbIsRelativeDate(current)) return current;
     return Array.isArray(current) || (current && typeof current === 'object') ? null : current;
   }
 
-  #useLiteralSource(rule: QbRule): void {
+  #useLiteralSource(rule: SdQbRule): void {
     rule.valueSource = 'literal';
     rule.compareField = undefined;
   }
 
-  #isCompareFieldAllowed(rule: QbRule, key: any): boolean {
+  #isCompareFieldAllowed(rule: SdQbRule, key: any): boolean {
     return !!key && this.compareFields(rule).some(f => f.key === key);
   }
 
@@ -427,106 +474,124 @@ export class SdQueryBuilder {
   // -------------------------------------------------------------------------
 
   /** The field metadata for a rule's current `field` key (or undefined if unset). */
-  fieldOf(rule: QbRule): SdQueryBuilderField | undefined {
+  fieldOf(rule: SdQbRule): SdQueryBuilderField | undefined {
     return rule.field ? this.fieldByKey()[rule.field] : undefined;
   }
 
   /** Operators allowed for a rule, derived from its field's type / override. */
-  allowedOperators(rule: QbRule): Operator[] {
-    return qbAllowedOperators(this.fieldOf(rule));
+  allowedOperators(rule: SdQbRule): Operator[] {
+    return sdQbAllowedOperators(this.fieldOf(rule));
   }
 
   /** Whether to render the operator picker — hidden when only one operator is allowed. */
-  showOperatorSelector(rule: QbRule): boolean {
+  showOperatorSelector(rule: SdQbRule): boolean {
     return this.allowedOperators(rule).length > 1;
   }
 
-  compareFields(rule: QbRule): SdQueryBuilderField[] {
+  compareFields(rule: SdQbRule): SdQueryBuilderField[] {
     const field = this.fieldOf(rule);
     if (!field) return QB_EMPTY_FIELDS;
     return this.#compareFieldsByKey().get(field.key) ?? QB_EMPTY_FIELDS;
   }
 
-  canCompareWithField(rule: QbRule): boolean {
-    return qbSupportsFieldCompareOperator(rule.operator) && this.compareFields(rule).length > 0;
+  canCompareWithField(rule: SdQbRule): boolean {
+    return sdQbSupportsFieldCompareOperator(rule.operator) && this.compareFields(rule).length > 0;
   }
 
-  showValueSourceSelector(rule: QbRule): boolean {
+  showValueSourceSelector(rule: SdQbRule): boolean {
     return this.canCompareWithField(rule) && (this.resolvedComparisonMode() === 'value-or-field' || rule.valueSource === 'field');
   }
 
-  valueSourceOf(rule: QbRule): QbValueSource {
+  valueSourceOf(rule: SdQbRule): SdQbValueSource {
     return rule.valueSource === 'field' && this.canCompareWithField(rule) ? 'field' : 'literal';
   }
 
-  isFieldSource(rule: QbRule): boolean {
+  isFieldSource(rule: SdQbRule): boolean {
     return this.valueSourceOf(rule) === 'field';
   }
 
   /** True for NULL / NOT_NULL — the template then renders no value editor. */
   isNoData(op: Operator | undefined): boolean {
-    return qbIsNoDataOperator(op);
+    return sdQbIsNoDataOperator(op);
   }
 
   /** True for IN / NOT_IN — the template then renders a multi-select value editor. */
   isMulti(op: Operator | undefined): boolean {
-    return qbIsMultiOperator(op);
+    return sdQbIsMultiOperator(op);
   }
 
   /** `[true/false]` option list for a boolean field's value select (stable reference). */
   booleanItems(field: SdQueryBuilderField): SdQueryBuilderFieldOption[] {
-    return this.#booleanOptionsByKey().get(field.key) ?? QB_EMPTY_OPTIONS;
+    return this.#booleanOptionsByKey().get(field.key) ?? SD_QB_EMPTY_OPTIONS;
+  }
+
+  /**
+   * Option list cho field `type:'values'`.
+   *
+   * why: template cũ bind thẳng `[items]="fieldOf(rule)!.values || []"`. `values` là OPTIONAL trên
+   * `SdQueryBuilderField`, nên với field khai thiếu `values`, nhánh `|| []` cấp phát một mảng MỚI
+   * mỗi lần change detection chạy — đúng nguyên nhân OOM đã ghi ở `#booleanOptionsByKey`:
+   * `sd-select` có `toObservable(items)` → `markForCheck()` → CD mới → mảng mới → lặp vô hạn.
+   *
+   * why: KHÔNG memo hoá qua `computed<Map>` snapshot. `field.values` vốn ĐÃ là mảng của consumer
+   * nên tự nó ổn định; snapshot vào Map chỉ thêm một tầng cache không bao giờ invalidate khi
+   * consumer nạp option bất đồng bộ bằng cách gán tại chỗ (`fields[0].values = loaded`) — reference
+   * `fields` không đổi nên `computed` giữ nguyên list cũ vĩnh viễn. Chỉ nhánh RỖNG cần hằng số
+   * dùng chung để tránh literal mới mỗi CD.
+   */
+  valueItems(field: SdQueryBuilderField): SdQueryBuilderFieldOption[] {
+    return field.values?.length ? field.values : SD_QB_EMPTY_OPTIONS;
   }
 
   /** Current date-value mode of a rule, derived from its value (no separate state). */
-  dateMode(rule: QbRule): QbDateMode {
+  dateMode(rule: SdQbRule): SdQbDateMode {
     const v = rule.value;
-    if (qbIsToday(v)) return 'now';
-    if (qbIsRelativeDate(v)) return 'relative';
+    if (sdQbIsToday(v)) return 'now';
+    if (sdQbIsRelativeDate(v)) return 'relative';
     return 'absolute';
   }
 
   /** Switch a date/datetime rule's value mode, reseeding the value for the new mode. */
-  setDateMode(rule: QbRule, mode: unknown): void {
+  setDateMode(rule: SdQbRule, mode: unknown): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
-    if (mode === 'now') rule.value = QB_TODAY;
-    else if (mode === 'relative') rule.value = qbDefaultRelative();
+    if (mode === 'now') rule.value = SD_QB_TODAY;
+    else if (mode === 'relative') rule.value = sdQbDefaultRelative();
     else rule.value = null; // absolute — pick a concrete date
     this.#apply();
   }
 
   /** Read the offset amount of a relative rule (default 1). */
-  relativeAmount(rule: QbRule): number {
+  relativeAmount(rule: SdQbRule): number {
     const v = rule.value;
-    return qbIsRelativeDate(v) ? (v.amount ?? 1) : 1;
+    return sdQbIsRelativeDate(v) ? (v.amount ?? 1) : 1;
   }
 
   /** Set the offset amount (clamped to an integer >= 1). */
-  setRelativeAmount(rule: QbRule, raw: any): void {
+  setRelativeAmount(rule: SdQbRule, raw: any): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
     const n = Math.floor(Number(raw));
     const amount = Number.isNaN(n) || n < 1 ? 1 : n;
-    const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
+    const cur = sdQbIsRelativeDate(rule.value) ? rule.value : sdQbDefaultRelative();
     rule.value = { amount, direction: cur.direction, unit: cur.unit } satisfies DateRelative;
     this.#apply();
   }
 
   /** Read the `'unit:direction'` token of a relative rule (default `'day:previous'`). */
-  relativeUnitDirValue(rule: QbRule): string {
+  relativeUnitDirValue(rule: SdQbRule): string {
     const v = rule.value;
-    if (qbIsRelativeDate(v)) return `${v.unit}:${v.direction}`;
+    if (sdQbIsRelativeDate(v)) return `${v.unit}:${v.direction}`;
     return 'day:previous';
   }
 
   /** Set the offset unit + direction from a `'unit:direction'` token. */
-  setRelativeUnitDir(rule: QbRule, token: unknown): void {
+  setRelativeUnitDir(rule: SdQbRule, token: unknown): void {
     if (this.resolvedDisabled()) return;
     this.#useLiteralSource(rule);
     const normalizedToken = typeof token === 'string' ? token : 'day:previous';
     const [unit, direction] = normalizedToken.split(':') as [DateRelative['unit'], DateRelative['direction']];
-    const cur = qbIsRelativeDate(rule.value) ? rule.value : qbDefaultRelative();
+    const cur = sdQbIsRelativeDate(rule.value) ? rule.value : sdQbDefaultRelative();
     rule.value = { amount: cur.amount, direction, unit } satisfies DateRelative;
     this.#apply();
   }

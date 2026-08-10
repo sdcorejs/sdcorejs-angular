@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { SD_VIEWPORT, SdViewport } from '@sdcorejs/angular/services/viewport';
 import { SdAnchor } from './anchor.component';
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
 
@@ -28,14 +28,68 @@ function MockIntersectionObserver(this: any, callback: IntersectionObserverCallb
   this.thresholds = [];
 }
 
+// why: `window.IntersectionObserver` là state toàn cục của cả Karma bundle. Ghi đè mà không trả
+// lại thì stub rò sang MỌI spec file chạy sau — file đó tưởng đang dùng IntersectionObserver thật
+// nhưng nhận một stub không bao giờ bắn callback, và triệu chứng phụ thuộc thứ tự file.
+let originalIntersectionObserver: typeof IntersectionObserver | undefined;
+
 function mockIntersectionObserver(): void {
   capturedIOCallback = null;
   ioConstructorCallCount = 0;
+  originalIntersectionObserver = (window as any).IntersectionObserver;
   (window as any).IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+}
+
+function restoreIntersectionObserver(): void {
+  if (originalIntersectionObserver === undefined) {
+    delete (window as any).IntersectionObserver;
+    return;
+  }
+  (window as any).IntersectionObserver = originalIntersectionObserver;
 }
 
 function triggerIntersection(entries: Partial<IntersectionObserverEntry>[]): void {
   capturedIOCallback?.(entries as IntersectionObserverEntry[], {} as IntersectionObserver);
+}
+
+// ---------------------------------------------------------------------------
+// Viewport double
+// ---------------------------------------------------------------------------
+// why: SdAnchor lấy trạng thái mobile từ SdViewportService, mà service này đọc `window.innerWidth`
+// thật — trong Karma iframe chiều rộng đó không xác định. Mọi suite dưới đây cắm một viewport giả
+// cỡ desktop để nav luôn hiển thị một cách tất định; suite riêng về breakpoint tự cắm cỡ mobile.
+
+class FakeViewport implements SdViewport {
+  innerWidth: number;
+  innerHeight = 800;
+  readonly #listeners = new Set<EventListenerOrEventListenerObject>();
+
+  constructor(innerWidth: number) {
+    this.innerWidth = innerWidth;
+  }
+
+  addEventListener(_type: 'resize', listener: EventListenerOrEventListenerObject): void {
+    this.#listeners.add(listener);
+  }
+
+  removeEventListener(_type: 'resize', listener: EventListenerOrEventListenerObject): void {
+    this.#listeners.delete(listener);
+  }
+
+  get listenerCount(): number {
+    return this.#listeners.size;
+  }
+
+  resizeTo(innerWidth: number): void {
+    this.innerWidth = innerWidth;
+    this.#listeners.forEach(listener =>
+      typeof listener === 'function' ? listener(new Event('resize')) : listener.handleEvent(new Event('resize'))
+    );
+  }
+}
+
+function desktopViewportProvider(): { provide: typeof SD_VIEWPORT; useValue: SdViewport } {
+  return { provide: SD_VIEWPORT, useValue: new FakeViewport(1440) };
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +145,18 @@ class HiddenHost {}
 })
 class HostDefaultComponent {}
 
+@Component({
+  imports: [SdAnchor, SdAnchorItem],
+  template: `
+    <div style="height: 400px">
+      <sd-anchor [hideNavOnMobile]="false">
+        <sd-anchor-item title="Section 1"><div style="height: 200px">x</div></sd-anchor-item>
+      </sd-anchor>
+    </div>
+  `,
+})
+class MobileNavHost {}
+
 function getAnchor(fixture: ComponentFixture<unknown>): SdAnchor {
   const de = fixture.debugElement.query(By.directive(SdAnchor));
   if (!de) throw new Error('SdAnchor not found in fixture');
@@ -104,10 +170,13 @@ describe('SdAnchor', () => {
   let fixture: ComponentFixture<HostComponent>;
   let anchor: SdAnchor;
 
+  afterEach(restoreIntersectionObserver);
+
   beforeEach(async () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
       imports: [HostComponent, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);
@@ -127,8 +196,10 @@ describe('SdAnchor', () => {
       expect(anchor.sections().length).toBe(3);
     }));
 
-    it('activeSectionId starts as empty string before any intersection fires', () => {
-      expect(anchor.activeSectionId()).toBe('');
+    // why: trước đây signal đứng yên ở '' cho tới khi người dùng cuộn, nên TOC mở ra không mục nào
+    // sáng. Giờ #registerIntersectionObserver seed về section đầu ngay ở lần render đầu.
+    it('activeSectionId is seeded to the first section before any intersection fires', () => {
+      expect(anchor.activeSectionId()).toBe(anchor.sections()[0].id);
     });
 
     it('activeSectionId is set when first section becomes intersecting', fakeAsync(() => {
@@ -292,27 +363,36 @@ describe('SdAnchor', () => {
 });
 
 // ---------------------------------------------------------------------------
-// hideNav default = BrowserUtilities.isMobile() (UA-dependent, report regression)
+// hideNav default = false (không còn phụ thuộc UA lúc khởi tạo class)
 // ---------------------------------------------------------------------------
-describe('SdAnchor (hideNav default UA-dependent)', () => {
+describe('SdAnchor (hideNav default)', () => {
   let fixture: ComponentFixture<HostDefaultComponent>;
   let anchor: SdAnchor;
 
+  afterEach(restoreIntersectionObserver);
+
   beforeEach(async () => {
     mockIntersectionObserver();
-    await TestBed.configureTestingModule({ imports: [HostDefaultComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [HostDefaultComponent],
+      providers: [desktopViewportProvider()],
+    }).compileComponents();
     fixture = TestBed.createComponent(HostDefaultComponent);
     fixture.detectChanges();
     anchor = fixture.debugElement.query(By.directive(SdAnchor)).componentInstance;
   });
 
-  it('hideNav() trả default = BrowserUtilities.isMobile()', () => {
-    expect(anchor.hideNav()).toBe(BrowserUtilities.isMobile());
+  it('hideNav() mặc định false — chỉ là cờ ép ẩn thủ công', () => {
+    expect(anchor.hideNav()).toBe(false);
   });
 
-  it('chrome headless desktop → isMobile=false → hideNav=false', () => {
-    expect(BrowserUtilities.isMobile()).toBe(false);
-    expect(anchor.hideNav()).toBe(false);
+  it('hideNavOnMobile() mặc định true — auto-ẩn theo breakpoint vẫn giữ nguyên', () => {
+    expect(anchor.hideNavOnMobile()).toBe(true);
+  });
+
+  it('viewport desktop (mặc định của TestBed) → navHidden false → nav hiển thị', () => {
+    expect(anchor.navHidden()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.c-anchor-list')).not.toBeNull();
   });
 });
 
@@ -323,10 +403,13 @@ describe('SdAnchor (hideNav=true)', () => {
   let fixture: ComponentFixture<HiddenHost>;
   let anchor: SdAnchor;
 
+  afterEach(restoreIntersectionObserver);
+
   beforeEach(async () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
       imports: [HiddenHost, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HiddenHost);
@@ -354,5 +437,119 @@ describe('SdAnchor (hideNav=true)', () => {
     tick();
     fixture.detectChanges();
     expect(() => fixture.destroy()).not.toThrow();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// hideNavOnMobile = false → giữ nav trên mobile
+// ---------------------------------------------------------------------------
+// why: trước đây đường thoát là `[hideNav]="false"`; giờ `hideNav` mặc định false nên không phân
+// biệt được "không set" và "set false" — đường thoát chuyển sang input riêng.
+describe('SdAnchor (hideNavOnMobile=false)', () => {
+  let fixture: ComponentFixture<MobileNavHost>;
+
+  afterEach(restoreIntersectionObserver);
+
+  beforeEach(async () => {
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({
+      imports: [MobileNavHost, NoopAnimationsModule],
+      providers: [{ provide: SD_VIEWPORT, useValue: new FakeViewport(375) }],
+    }).compileComponents();
+    fixture = TestBed.createComponent(MobileNavHost);
+    fixture.detectChanges();
+  });
+
+  it('navHidden() stays false on a mobile viewport', () => {
+    expect(getAnchor(fixture).navHidden()).toBe(false);
+  });
+
+  it('renders the nav column on a mobile viewport', () => {
+    expect(fixture.nativeElement.querySelector('.c-anchor-list')).not.toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Seed activeSectionId
+// ---------------------------------------------------------------------------
+// why: activeSectionId chỉ được ghi bởi callback IntersectionObserver và bởi scrollSectionByClick.
+// Chưa cuộn thì không callback nào chạy → TOC mở ra không mục nào sáng, dù sd-anchor.md nói nó
+// "set to the first section's id immediately after first render". Cùng lỗi đó tái diễn khi resize
+// mobile→desktop: nav vừa hiện lại đã trắng cho tới khi người dùng cuộn.
+
+@Component({
+  imports: [SdAnchor, SdAnchorItem],
+  template: `
+    <div style="height: 400px">
+      <sd-anchor>
+        <sd-anchor-item title="Section 1"><div style="height: 200px">one</div></sd-anchor-item>
+        <sd-anchor-item title="Section 2"><div style="height: 200px">two</div></sd-anchor-item>
+      </sd-anchor>
+    </div>
+  `,
+})
+class SeedHost {}
+
+describe('SdAnchor activeSectionId seeding', () => {
+  afterEach(restoreIntersectionObserver);
+
+  it('seeds the first section id after the first render, without any scroll', fakeAsync(async () => {
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({
+      imports: [SeedHost, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SeedHost);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const anchor = getAnchor(fixture);
+
+    expect(anchor.activeSectionId()).toBe(anchor.sections()[0].id);
+  }));
+
+  it('does not overwrite a section the user already selected', fakeAsync(async () => {
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({
+      imports: [SeedHost, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SeedHost);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const anchor = getAnchor(fixture);
+    const second = anchor.sections()[1];
+
+    anchor.scrollSectionByClick(second.id);
+    // Đăng ký lại observer (điều xảy ra mỗi khi sections/navHidden tick) không được reset lựa chọn.
+    anchor.activeSectionId.set(second.id);
+    fixture.detectChanges();
+    tick(300);
+
+    expect(anchor.activeSectionId()).toBe(second.id);
+  }));
+
+  it('seeds again when the nav comes back after a mobile → desktop resize', fakeAsync(async () => {
+    mockIntersectionObserver();
+    const viewport = new FakeViewport(375);
+    await TestBed.configureTestingModule({
+      imports: [SeedHost, NoopAnimationsModule],
+      providers: [{ provide: SD_VIEWPORT, useValue: viewport }],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SeedHost);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const anchor = getAnchor(fixture);
+
+    expect(anchor.navHidden()).toBeTrue();
+    expect(anchor.activeSectionId()).toBe('');
+
+    viewport.resizeTo(1440);
+    fixture.detectChanges();
+
+    expect(anchor.navHidden()).toBeFalse();
+    expect(anchor.activeSectionId()).toBe(anchor.sections()[0].id);
   }));
 });

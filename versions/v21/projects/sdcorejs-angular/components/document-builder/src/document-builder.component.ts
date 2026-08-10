@@ -82,7 +82,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
     this.#updateState();
   }
 
-  readonly contentChange = output<string>(); // Emit HTML content
+  readonly sdContentChange = output<string>(); // Emit HTML content
 
   Editor = ClassicEditor;
   #editor!: ClassicEditor;
@@ -95,6 +95,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
   #colorPickerConfig = getColorPickerConfig();
   #contentChangeSubject = new Subject<string>();
   #idTimeOutScrollHeading: ReturnType<typeof setTimeout> | null = null;
+  #idTimeOutScrollToTop: ReturnType<typeof setTimeout> | null = null;
   #headingElementsMap = new Map<string, ModelElement>(); // Hash lưu trữ các heading
 
   // Wrapper giữ `this` của I18nService — CKEditor config không truyền được class instance có private fields.
@@ -268,13 +269,24 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
     // Debounce trong rxjs không hỗ trợ leading --> throttleTime
     this.#subscription.add(
       this.#contentChangeSubject.pipe(throttleTime(500, undefined, { leading: true, trailing: true })).subscribe(content => {
-        this.contentChange.emit(normalize(content));
+        this.sdContentChange.emit(normalize(content));
       })
     );
   }
 
   ngOnDestroy() {
     this.#subscription.unsubscribe();
+    // why: timer 5s tắt marker (heading.scroll) và timer 100ms scrollToTop chạy sau destroy sẽ
+    // gọi model.change()/ui.view trên instance CKEditor đã bị tháo → throw hoặc giữ editor sống.
+    // Component không dùng DestroyRef nên clear thủ công ở đây là chốt chặn duy nhất.
+    if (this.#idTimeOutScrollHeading) {
+      clearTimeout(this.#idTimeOutScrollHeading);
+      this.#idTimeOutScrollHeading = null;
+    }
+    if (this.#idTimeOutScrollToTop) {
+      clearTimeout(this.#idTimeOutScrollToTop);
+      this.#idTimeOutScrollToTop = null;
+    }
   }
 
   onReady(editor: ClassicEditor) {
@@ -392,7 +404,13 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
   };
 
   scrollToTop() {
-    setTimeout(() => {
+    // why: phải huỷ handle CŨ trước khi gán handle mới. Gọi scrollToTop() hai lần trong 100ms sẽ
+    // bỏ rơi timer thứ nhất, và `ngOnDestroy` chỉ clear được handle CUỐI — timer mồ côi vẫn chạy và
+    // đọc `this.#editor.ui.view.editable` trên một CKEditor đã teardown. Nhánh `scroll()` đã clear
+    // trước khi gán; nhánh này thì chưa.
+    if (this.#idTimeOutScrollToTop) clearTimeout(this.#idTimeOutScrollToTop);
+    this.#idTimeOutScrollToTop = setTimeout(() => {
+      this.#idTimeOutScrollToTop = null;
       if (this.#editor) {
         const editableElement = this.#editor.ui.view.editable.element;
         if (editableElement) {
@@ -553,6 +571,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
 
         // Tự động tắt marker sau 5 giây
         this.#idTimeOutScrollHeading = setTimeout(() => {
+          this.#idTimeOutScrollHeading = null;
           if (this.#editor) {
             this.#editor.model.change(writer => {
               const marker = this.#editor.model.markers.get('highlightMarker');

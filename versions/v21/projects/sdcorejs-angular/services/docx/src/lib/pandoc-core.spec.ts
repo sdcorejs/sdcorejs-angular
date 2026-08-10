@@ -99,11 +99,12 @@ describe('pandoc-core / createPandocInstance', () => {
     expect(result.stdout).toBe('');
   });
 
-  it('convert() accepts a string file entry', async () => {
+  it('convert() accepts a string file entry and echoes it back in files', async () => {
     const inst = await createPandocInstance(new ArrayBuffer(8));
     const result = await inst.convert({}, null, { 'extra.md': '# extra' });
     expect(result).toBeDefined();
-    expect(result.files['extra.md'] !== undefined || true).toBeTrue();
+    // `files` là bản copy của input, các entry đầu vào phải còn nguyên khi ra.
+    expect(result.files['extra.md']).toBe('# extra');
   });
 
   it('convert() accepts a Blob file entry', async () => {

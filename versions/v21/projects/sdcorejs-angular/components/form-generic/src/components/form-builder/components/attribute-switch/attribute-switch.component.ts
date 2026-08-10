@@ -1,12 +1,12 @@
 import { Component, Input, input, output } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'attribute-switch',
   templateUrl: './attribute-switch.component.html',
-  imports: [SdSelect, TranslatePipe],
+  imports: [SdSelect, SdTranslatePipe],
 })
 export class AttributeSwitch {
   readonly form = input<FormGroup>();

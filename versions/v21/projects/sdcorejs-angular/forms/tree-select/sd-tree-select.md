@@ -36,7 +36,8 @@
 | `multiple`                                        | `boolean`                             | `false`                  | Enables key-array selection.                                                |
 | `cascade`                                         | `'independent' \| 'descendants'`      | `'independent'`          | Applies selection to loaded descendants and reconciles loaded ancestors.    |
 | `form` / `name`                                   | `FormGroup` / `string`                | — / UUID                 | Shared parent-form registration.                                            |
-| `required`, `disabled`, `readonly`                | `boolean`                             | `false`                  | Standard form-control policies.                                             |
+| `required`, `disabled`, `readonly`                | `boolean`                             | `false`                  | Standard form-control policies. `required` renders a message (below).       |
+| `inlineError`                                     | `string \| undefined`                 | `undefined`              | Component-local error text; forces invalid and renders the message.         |
 | `viewed`                                          | `boolean \| 'inline'`                 | `false`                  | Static display mode.                                                        |
 | `clearable`                                       | `boolean`                             | `true`                   | Shows clear when a model exists.                                            |
 | `placeholder`, `modalTitle`, `ariaLabel`, `label` | `string`                              | localized / optional     | Presentation/accessibility labels.                                          |
@@ -83,6 +84,23 @@ The typed context is the `SdTreeItemContext<T>` contract, including node metadat
 | `sdLoadError`              | `SdTreeLoadErrorEvent<T>` | Forwarded root or lazy-node error. |
 
 Public methods include `open()`, `applySelection()`, `cancel()`, `clear()`, `filter()`, `retry()`, `keyOf()`, and `displayEntity()`.
+
+Public signals include `connectorState`, `errorMessage` (raw message for the current errors) and `visibleErrorMessage` (the same message after the interaction gate — this is what the template renders).
+
+## Validation message
+
+`[required]` and `[inlineError]` both surface a message under the trigger:
+
+```html
+<div data-tree-select-error class="sd-tree-select__error" role="alert">Vui lòng nhập thông tin</div>
+```
+
+- `required` → shared select message (i18n key `core.form.select.required`; the catalog has no tree-select-specific key yet).
+- `inlineError` → the exact string you passed.
+- The message is **interaction-gated**: hidden until the control is `touched` or `dirty`. `applySelection()` and `clear()` mark the control touched + dirty; a parent `markAllAsTouched()` on submit also reveals it.
+- While the message is visible, the trigger carries `aria-invalid="true"` and `aria-describedby` pointing at the message element.
+
+`sdLoadError` / tree loading failures are a separate concern and are not routed through this message.
 
 ## Accessibility
 

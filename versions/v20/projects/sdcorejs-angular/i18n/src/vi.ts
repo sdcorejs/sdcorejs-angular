@@ -617,4 +617,80 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': 'chi tiết',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': 'Tìm kiếm...',
+  'core.component.query-bar.no-fields': 'Chưa cấu hình fields',
+  'core.component.query-bar.add-filter': 'Thêm filter',
+  'core.component.query-bar.clear-all': 'Xóa tất cả ({count})',
+  'core.component.query-bar.search': 'Tìm kiếm',
+  'core.component.query-bar.logic-operator': 'Toán tử logic',
+  'core.component.query-bar.boolean.true': 'Có',
+  'core.component.query-bar.boolean.false': 'Không',
+  'core.component.query-bar.placeholder.value': 'giá trị',
+  'core.component.query-bar.placeholder.text': 'nhập…',
+  'core.component.query-bar.placeholder.from-number': 'Từ',
+  'core.component.query-bar.placeholder.to-number': 'Đến',
+  'core.component.query-bar.placeholder.from-text': 'từ…',
+  'core.component.query-bar.placeholder.to-text': 'đến…',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': 'Ngày cụ thể',
+  'core.component.query-builder.date-mode.now': 'Hôm nay',
+  'core.component.query-builder.date-mode.relative': 'Tương đối',
+  'core.component.query-builder.value-source.literal': 'Nhập giá trị',
+  'core.component.query-builder.value-source.field': 'Chọn trường',
+  'core.component.query-builder.relative.hour-previous': 'giờ trước',
+  'core.component.query-builder.relative.hour-next': 'giờ tới',
+  'core.component.query-builder.relative.day-previous': 'ngày trước',
+  'core.component.query-builder.relative.day-next': 'ngày tới',
+  'core.component.query-builder.relative.week-previous': 'tuần trước',
+  'core.component.query-builder.relative.week-next': 'tuần tới',
+  'core.component.query-builder.relative.month-previous': 'tháng trước',
+  'core.component.query-builder.relative.month-next': 'tháng tới',
+  'core.component.query-builder.relative.format': '{amount} {phrase}',
+  'core.component.query-builder.add': 'Thêm',
+  'core.component.query-builder.add-node': 'Thêm điều kiện hoặc nhóm',
+  'core.component.query-builder.condition': 'Điều kiện',
+  'core.component.query-builder.group': 'Nhóm',
+  'core.component.query-builder.remove-group': 'Xoá nhóm',
+  'core.component.query-builder.remove-condition': 'Xoá điều kiện',
+  'core.component.query-builder.empty': 'Chưa có điều kiện',
+  'core.component.query-builder.select-field': 'Chọn trường',
+  'core.component.query-builder.value': 'Giá trị',
+  'core.component.query-builder.from': 'Từ',
+  'core.component.query-builder.to': 'Đến',
+  'core.component.query-builder.boolean.true': 'Có',
+  'core.component.query-builder.boolean.false': 'Không',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': 'Đã chọn {count} mục',
+  'core.component.tree.expand': 'Mở rộng mục',
+  'core.component.tree.collapse': 'Thu gọn mục',
+  'core.component.tree.retry-item': 'Tải lại mục',
+  'core.component.tree.load-error': 'Không tải được dữ liệu cây',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': 'Đã sao chép',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': 'Đã ghim',
+  'core.module.layout.sidebar.recent': 'Gần đây',
+  'core.module.layout.sidebar.all-menu': 'Tất cả menu',
+  'core.module.layout.menu.pin': 'Ghim {title}',
+  'core.module.layout.menu.unpin': 'Bỏ ghim {title}',
+
+  // ---- Nhãn khả truy cập riêng cho từng control (thay cho key mượn tạm) ----
+  'core.form.date.open-picker': 'Mở lịch',
+  'core.form.datetime.open-picker': 'Mở lịch',
+  'core.form.date-range.open-picker': 'Mở lịch',
+  'core.form.date-range.clear': 'Xóa khoảng ngày',
+  'core.form.select.search': 'Tìm kiếm',
+  'core.component.table.loading': 'Đang tải dữ liệu bảng',
+  'core.component.upload-file.loading': 'Đang tải tệp lên',
+  'core.component.import-excel.loading': 'Đang tải dữ liệu',
+  'core.component.upload-file.remove': 'Xóa tệp',
+  'core.component.upload-file.zoom': 'Phóng to ảnh',
+  'core.component.upload-file.view-all': 'Xem tất cả ảnh',
+  'core.component.form-builder.canvas': 'Khu vực thiết kế form',
 };

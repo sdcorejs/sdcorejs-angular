@@ -14,7 +14,7 @@ import { InjectionToken } from '@angular/core';
  * 3) `download` (optional): tải file theo id/key.
  */
 
-export interface ISdUploadFileConfiguration<TArgs = any> {
+export interface ISdUploadFileConfiguration<TArgs = unknown> {
   /**
    * Định danh cấu hình upload.
    * Bắt buộc khi app có nhiều provider upload để tránh mapping nhầm.

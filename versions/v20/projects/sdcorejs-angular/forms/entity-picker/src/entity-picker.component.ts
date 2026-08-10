@@ -21,11 +21,13 @@ import { SdDataState } from '@sdcorejs/angular/components/data-state';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdQuery, SdQueryBar, SdQueryField } from '@sdcorejs/angular/components/query-bar';
 import { SdTable, SdTableColumn, SdTableFilterRequest, SdTableOption } from '@sdcorejs/angular/components/table';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import {
   SdFormControl,
+  SdInlineErrorValidator,
   SdViewed,
   SdViewedInput,
+  sdFormControlState,
   sdViewedTransform,
   ɵSdFormControlParent,
   ɵsdCoerceFormGroup,
@@ -105,7 +107,7 @@ export class SdEntityPickerDetailTemplateDirective<T, TKey> {
 @Component({
   selector: 'sd-entity-picker',
   standalone: true,
-  imports: [NgTemplateOutlet, TranslatePipe, SdModal, SdQueryBar, SdTable, SdDataState],
+  imports: [NgTemplateOutlet, SdTranslatePipe, SdModal, SdQueryBar, SdTable, SdDataState],
   templateUrl: './entity-picker.component.html',
   styleUrl: './entity-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -123,6 +125,8 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
   readonly selectedTemplate = contentChild(SdEntityPickerSelectedTemplateDirective<T, TKey>);
   readonly rowTemplate = contentChild(SdEntityPickerRowTemplateDirective<T>);
   readonly detailTemplate = contentChild(SdEntityPickerDetailTemplateDirective<T, TKey>);
+
+  readonly errorId = `sd-entity-picker-error-${Utilities.generateUuid()}`;
 
   readonly autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   readonly autoId = computed(() => (this.autoIdInput() ? `forms-entity-picker-${this.autoIdInput()}` : undefined));
@@ -144,6 +148,8 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
   readonly disabledEntity = input<((item: T) => boolean) | undefined>();
   readonly multiple = input(false, { transform: booleanAttribute });
   readonly required = input(false, { transform: booleanAttribute });
+  /** Component-local error text. Set it to force the control invalid and render the message. */
+  readonly inlineError = input<string | undefined>();
   readonly clearable = input(true, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly readonly = input(false, { transform: booleanAttribute });
@@ -156,6 +162,21 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
   readonly sdLoadError = output<unknown>();
 
   readonly formControl = new SdFormControl();
+  readonly #state = sdFormControlState(computed(() => this.formControl));
+  // why: `[required]` đã gắn Validators.required từ trước nhưng template không render message nào —
+  // picker bắt buộc mà bỏ trống chặn submit hoàn toàn im lặng (chỉ `loadError` được hiển thị).
+  // Map errors → text rồi đưa vào connector qua `validationError`; connector tự gate theo
+  // touched/dirty nên message chỉ hiện sau khi người dùng đã tương tác.
+  readonly errorMessage = computed<string | undefined>(() => {
+    void this.#state();
+    const errors = this.formControl.errors;
+    if (!errors) return undefined;
+
+    // Chưa có key riêng cho entity-picker trong catalog i18n → dùng chung message của select.
+    if (errors['required']) return this.#i18n.t('core.form.select.required');
+    if (errors['inlineError']) return this.inlineError();
+    return undefined;
+  });
   readonly #connector = ɵsdFormControlConnector<SdEntityPickerModel<TKey>, SdEntityPickerModel<TKey>>({
     form: this.form,
     name: this.name,
@@ -167,13 +188,17 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
     },
     modelToControl: value => value,
     controlToModel: value => value,
+    validators: computed(() => (this.inlineError() ? [SdInlineErrorValidator] : null)),
     required: this.required,
     disabled: this.disabled,
     readonly: this.readonly,
     viewed: this.viewed,
+    validationError: this.errorMessage,
   });
 
   readonly connectorState = this.#connector.state;
+  /** Interaction-gated validation message; `undefined` until the control is touched/dirty. */
+  readonly visibleErrorMessage = computed(() => this.connectorState().validationError);
   readonly draftKeys = signal<TKey[]>([]);
   readonly loadError = signal<unknown | null>(null);
   readonly loading = signal(false);

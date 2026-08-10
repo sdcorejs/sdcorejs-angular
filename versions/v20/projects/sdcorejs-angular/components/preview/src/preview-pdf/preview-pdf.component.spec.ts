@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SD_PDFJS_LIB, SdPdfJsLib, SdPreviewPdf } from './preview-pdf.component';
 import { SD_PDF_BROWSER_ADAPTER, SdPdfBrowserAdapter, SdPdfIntersectionEntry } from './preview-pdf.browser';
 import { SD_PDF_PRINT_ADAPTER, SdPdfPrintAdapter, SdPdfPrintJob } from './preview-pdf.print';
@@ -366,6 +367,11 @@ describe('SdPreviewPdf', () => {
     });
 
     it('renders empty title from i18n', () => {
+      // why: ngôn ngữ là state TOÀN CỤC (I18nService + localStorage). Một spec khác gọi
+      // `setLanguage(...)` mà không khôi phục sẽ làm spec này đỏ tuỳ theo thứ tự chạy — Jasmine
+      // random hoá thứ tự, nên nó xanh khi chạy riêng và đỏ trong full suite. Ghim ngôn ngữ trước
+      // khi render thay vì tin vào giá trị mặc định.
+      TestBed.inject(I18nService).setLanguage('vi');
       fixture.detectChanges();
       const title = fixture.nativeElement.querySelector('.sd-preview-pdf-status__title');
       expect(title?.textContent).toContain('Không có');
@@ -411,7 +417,7 @@ describe('SdPreviewPdf', () => {
 
     beforeEach(async () => {
       loadedEvents = [];
-      comp.loaded.subscribe(e => loadedEvents.push(e));
+      comp.sdLoaded.subscribe(e => loadedEvents.push(e));
       fixture.componentRef.setInput('source', 'https://example.com/a.pdf');
       await flush(fixture);
       lib.resolveNext(makeFakeDoc(3));
@@ -445,7 +451,7 @@ describe('SdPreviewPdf', () => {
 
     beforeEach(async () => {
       pageEvents = [];
-      comp.pageChange.subscribe(p => pageEvents.push(p));
+      comp.sdPageChange.subscribe(p => pageEvents.push(p));
       fixture.componentRef.setInput('source', 'https://example.com/a.pdf');
       await flush(fixture);
       lib.resolveNext(makeFakeDoc(5));
@@ -540,7 +546,7 @@ describe('SdPreviewPdf', () => {
 
     it('emits zoomChange after a render', async () => {
       const events: number[] = [];
-      comp.zoomChange.subscribe(z => events.push(z));
+      comp.sdZoomChange.subscribe(z => events.push(z));
       comp.setZoom(1.2);
       // wait for #renderActivePage's promise chain
       await flush(fixture);
@@ -914,7 +920,7 @@ describe('SdPreviewPdf', () => {
 
     it('Esc does NOT emit close (per new pattern)', () => {
       let closes = 0;
-      comp.close.subscribe(() => closes++);
+      comp.sdClose.subscribe(() => closes++);
       key('Escape');
       expect(closes).toBe(0);
     });
@@ -1188,7 +1194,7 @@ describe('SdPreviewPdf', () => {
   describe('cleanup', () => {
     it('cancels loading and destroys a document that resolves after component destruction', async () => {
       const loaded: number[] = [];
-      comp.loaded.subscribe(event => loaded.push(event.totalPages));
+      comp.sdLoaded.subscribe(event => loaded.push(event.totalPages));
       fixture.componentRef.setInput('source', 'https://example.com/a.pdf');
       await flush(fixture);
       const stale = makeFakeDoc(4);
@@ -1251,7 +1257,7 @@ describe('SdPreviewPdf', () => {
       await flush(fixture);
 
       const events: { filename: string }[] = [];
-      comp.download.subscribe(e => events.push(e));
+      comp.sdDownload.subscribe(e => events.push(e));
       // Stub anchor click to avoid navigation in test runner.
       spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
       comp.downloadFile();
@@ -1267,7 +1273,7 @@ describe('SdPreviewPdf', () => {
       await flush(fixture);
 
       const events: { filename: string }[] = [];
-      comp.download.subscribe(e => events.push(e));
+      comp.sdDownload.subscribe(e => events.push(e));
       spyOn(HTMLAnchorElement.prototype, 'click').and.stub();
       comp.downloadFile();
       expect(events.length).toBe(0);
@@ -1368,7 +1374,7 @@ describe('SdPreviewPdf', () => {
   describe('requestClose', () => {
     it('emits the close output', () => {
       let count = 0;
-      comp.close.subscribe(() => count++);
+      comp.sdClose.subscribe(() => count++);
       comp.requestClose();
       expect(count).toBe(1);
     });
@@ -1511,7 +1517,7 @@ describe('SdPreviewPdf', () => {
 
     it('requestClose() still emits the close output (programmatic dismiss)', () => {
       let count = 0;
-      comp.close.subscribe(() => count++);
+      comp.sdClose.subscribe(() => count++);
       comp.requestClose();
       expect(count).toBe(1);
     });
@@ -1525,7 +1531,7 @@ describe('SdPreviewPdf', () => {
 
     beforeEach(async () => {
       searchEvents = [];
-      comp.searchChange.subscribe(e => searchEvents.push(e));
+      comp.sdSearchChange.subscribe(e => searchEvents.push(e));
       fixture.componentRef.setInput('source', 'https://example.com/a.pdf');
       await flush(fixture);
       lib.resolveNext(
@@ -1720,7 +1726,7 @@ describe('SdPreviewPdf', () => {
       comp.openSearch();
       await comp.search('foo');
       let closes = 0;
-      comp.close.subscribe(() => closes++);
+      comp.sdClose.subscribe(() => closes++);
       const ev = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
       comp.onKeyDown(ev);
       expect(comp.searchBarOpen()).toBe(false);
@@ -1994,7 +2000,7 @@ describe('SdPreviewPdf', () => {
       await loadContinuous(100);
       const stage = fixture.nativeElement.querySelector('.sd-preview-pdf-stage') as HTMLElement;
       const events: number[] = [];
-      comp.pageChange.subscribe(page => events.push(page));
+      comp.sdPageChange.subscribe(page => events.push(page));
 
       stage.scrollTop = 9 * 816;
       comp.onStageScroll();

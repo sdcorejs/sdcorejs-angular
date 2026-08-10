@@ -7,6 +7,10 @@
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = !!formControl.value;
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — message
+     hiện mà control không báo invalid thì screen reader không biết ô đang lỗi. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @let _resolvedMin = resolvedMin();
 @let _resolvedMax = resolvedMax();
@@ -48,13 +52,17 @@
     </ng-content>
   }
 
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con — label, <input>,
+       <mat-error>, nút clear, nút mở picker — khỏi accessibility tree. role="presentation" chỉ
+       vô hiệu hoá chính div, KHÔNG lan xuống con; (click) là tiện ích chuột mà bàn phím đã có
+       qua Tab vào <input>. -->
   <div
     class="d-flex align-items-center"
+    role="presentation"
     [class.sd-inline-editor]="_isInline"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
+    (click)="onClick()">
     <mat-form-field
       class="c-form-field-datetime-input"
       [class.sd-md]="size() === 'md'"
@@ -71,8 +79,9 @@
         </mat-label>
       }
 
+      <!-- why: BỎ aria-hidden trên chính <input> — ô vẫn Tab tới được, aria-hidden chỉ khiến
+           screen reader đọc ra khoảng lặng. -->
       <input
-        aria-hidden="true"
         [attr.data-autoId]="autoId()"
         [attr.data-disabled]="dataDisabled()"
         [attr.data-invalid]="dataInvalid()"
@@ -93,15 +102,17 @@
         [max]="_resolvedMax"
         (focus)="onFocus()"
         (blur)="onBlur()"
+        [attr.aria-invalid]="_errorVisible ? 'true' : null"
+        [attr.aria-describedby]="_showInlineError ? errorId : null"
         #input
         matInput />
 
-      @if (_hideInlineError && _errorMessage && formControl.touched) {
+      @if (_hideInlineError && _errorVisible) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
       }
 
-      @if (!_hideInlineError && _errorMessage && formControl.touched) {
-        <mat-error>{{ _errorMessage }}</mat-error>
+      @if (_showInlineError) {
+        <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
       }
 
       @if (clearable() && formControl.value && !_required && !formControl.disabled && !_bare) {
@@ -110,11 +121,21 @@
         </button>
       }
 
-      <span class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && open()" matSuffix
-        ><svg fill="currentColor" viewBox="0 0 24 24" fill="currentColor" focusable="false">
+      <!-- why: <span (click)> không Tab tới được và không có tên; trước đây nó "hợp lệ" chỉ vì
+           cả cụm bị aria-hidden nên lint bỏ qua. <button type="button"> có sẵn Enter/Space +
+           `disabled` thật; SVG để aria-hidden vì nó chỉ lặp lại nhãn của nút. -->
+      <button
+        type="button"
+        matSuffix
+        class="cursor-pointer sd-suffix-icon sd-suffix-btn"
+        [disabled]="formControl.disabled"
+        [attr.aria-label]="'core.form.datetime.open-picker' | sdTranslate"
+        (click)="open()">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" focusable="false">
           <path
-            d="M15,13H16.5V15.82L18.94,17.23L18.19,18.53L15,16.69V13M19,8H5V19H9.67C9.24,18.09 9,17.07 9,16A7,7 0 0,1 16,9C17.07,9 18.09,9.24 19,9.67V8M5,21C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H6V1H8V3H16V1H18V3H19A2,2 0 0,1 21,5V11.1C22.24,12.36 23,14.09 23,16A7,7 0 0,1 16,23C14.09,23 12.36,22.24 11.1,21H5M16,11.15A4.85,4.85 0 0,0 11.15,16C11.15,18.68 13.32,20.85 16,20.85A4.85,4.85 0 0,0 20.85,16C20.85,13.32 18.68,11.15 16,11.15Z"></path></svg
-      ></span>
+            d="M15,13H16.5V15.82L18.94,17.23L18.19,18.53L15,16.69V13M19,8H5V19H9.67C9.24,18.09 9,17.07 9,16A7,7 0 0,1 16,9C17.07,9 18.09,9.24 19,9.67V8M5,21C3.89,21 3,20.1 3,19V5C3,3.89 3.89,3 5,3H6V1H8V3H16V1H18V3H19A2,2 0 0,1 21,5V11.1C22.24,12.36 23,14.09 23,16A7,7 0 0,1 16,23C14.09,23 12.36,22.24 11.1,21H5M16,11.15A4.85,4.85 0 0,0 11.15,16C11.15,18.68 13.32,20.85 16,20.85A4.85,4.85 0 0,0 20.85,16C20.85,13.32 18.68,11.15 16,11.15Z"></path>
+        </svg>
+      </button>
     </mat-form-field>
 
     <sd-datetime-picker
@@ -127,10 +148,10 @@
       <sd-datetime-picker-actions>
         <button mat-button type="button" sdDatetimePickerNow>
           <sd-icon name="schedule"></sd-icon>
-          <span>{{ 'core.form.datetime.now' | translate }}</span>
+          <span>{{ 'core.form.datetime.now' | sdTranslate }}</span>
         </button>
-        <button mat-button type="button" sdDatetimePickerCancel>{{ 'core.common.cancel' | translate }}</button>
-        <button mat-flat-button type="button" sdDatetimePickerApply>{{ 'core.form.datetime.confirm' | translate }}</button>
+        <button mat-button type="button" sdDatetimePickerCancel>{{ 'core.common.cancel' | sdTranslate }}</button>
+        <button mat-flat-button type="button" sdDatetimePickerApply>{{ 'core.form.datetime.confirm' | sdTranslate }}</button>
       </sd-datetime-picker-actions>
     </sd-datetime-picker>
   </div>

@@ -31,7 +31,7 @@ Two-date range picker — user picks a start date AND an end date through a sing
 | Name              | Type                                                                  | Default                                     | Notes                                                                                                                                           |
 | ----------------- | --------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `autoId`          | `string \| null \| undefined`                                         | `undefined`                                 | Generates `data-autoId="forms-date-range-<value>"` for E2E selectors.                                                                           |
-| `name`            | `string`                                                              | random uuid                                 | FormGroup control name when bound via `[form]`. The component also registers two internal sub-controls (random uuids) for the start/end inputs. |
+| `name`            | `string`                                                              | random uuid                                 | FormGroup control name when bound via `[form]`. This is the ONLY key the component adds to the parent form.                                     |
 | `size`            | `Size` (`'sm' \| 'md' \| 'lg'`)                                       | `'md'`                                      | Field height. Use `size="sm"` inside `<sd-table>` filters/cells or other dense table UI.                                                        |
 | `form`            | `NgForm \| FormGroup \| undefined`                                    | `undefined`                                 | Parent form. NgForm is auto-unwrapped to its inner `FormGroup`.                                                                                 |
 | `label`           | `string \| undefined`                                                 | `undefined`                                 | Field label (rendered via `<sd-label>`).                                                                                                        |
@@ -40,7 +40,7 @@ Two-date range picker — user picks a start date AND an end date through a sing
 | `floatLabel`      | `FloatLabelType`                                                      | `'auto'`                                    | Material float-label behaviour.                                                                                                                 |
 | `min`             | `Date \| string \| 'TODAY'`                                           | `undefined`                                 | Earliest allowed start date. `'TODAY'` resolves to `new Date()`.                                                                                |
 | `max`             | `Date \| string \| 'TODAY'`                                           | `undefined`                                 | Latest allowed end date.                                                                                                                        |
-| `required`        | `boolean`                                                             | `false`                                     | Adds `Validators.required` to BOTH internal controls and the outer aggregate control.                                                           |
+| `required`        | `boolean`                                                             | `false`                                     | Fails validation unless BOTH `from` and `to` are set (see "Form integration" — behaviour changed).                                              |
 | `disabled`        | `boolean`                                                             | `false`                                     | Disables both date inputs and the picker trigger.                                                                                               |
 | `hideInlineError` | `boolean`                                                             | `false`                                     | Hide inline message; surfaces error via `errorMessage` instead.                                                                                 |
 | `model`           | `{ from?: string \| null; to?: string \| null } \| null \| undefined` | `undefined`                                 | Two-way bound range value (use `[(model)]`). Both ends are ISO-style date strings (`yyyy/MM/dd`).                                               |
@@ -69,11 +69,14 @@ Applied automatically on `<sd-date-range>` for styling hooks:
 
 ## Form integration
 
-- **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. On `ngOnInit`, the component calls `formGroup.addControl(name, formControl)` PLUS two internal start/end controls under random uuids for fine-grained validity. All three are removed in `ngOnDestroy`.
+- **Does NOT implement `ControlValueAccessor`.** Forms use the SDCoreJS pattern: pass the parent form via `[form]="formGroup"` (or `[form]="ngForm"`) plus a `name`. The component registers **exactly one** control — the aggregate `formControl`, under `name` — and removes it on destroy.
+- **BREAKING (endpoint controls are no longer registered).** Earlier versions ALSO added the two internal start/end controls to the consumer's `FormGroup` under **random uuid** names. `form.value` therefore carried two extra keys that changed on every component instance, which corrupted the submitted payload shape and made `form.reset(obj)` impossible to write. They are now internal only, so `form.value[name]` is the complete range value. If you were reading those uuid keys, read `form.value[name].from` / `.to` instead. Endpoint validity is not lost: errors raised by Material on the start/end inputs (`matDatepickerParse`, `matDatepickerMin`, `matDatepickerMax`, `matStartDateInvalid`) are copied onto the aggregate control — payload included, so a copied error never goes stale when only its payload changes — and the parent form still turns invalid.
+- **Writes to the aggregate control flow back down to both endpoints.** `form.reset()`, `form.reset({ [name]: { from, to } })`, `form.patchValue({ [name]: … })` and a direct `formControl.setValue(…)` all update `control1` / `control2` (so `<mat-date-range-input>` repaints) and `model`. Endpoints accept `Date` objects or date strings; `model` is normalised back to `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }`. Without this, a reset would leave the two visible date inputs showing stale dates, because they no longer live in the consumer's `FormGroup`.
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]` is tri-state** (`boolean | 'inline'`) like the other controls: `true` = static `<sd-view>` DETAIL; `'inline'` = text-face click-to-edit (opens the range picker, text retained until commit); a disabled `'inline'` falls back to static view.
 - **Date adapter**: providers include `provideSdStrictDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage in `control1`/`control2` uses native `Date` objects; the emitted `model` value is `{ from: 'yyyy/MM/dd', to: 'yyyy/MM/dd' }` strings.
-- **Validators**: `[required]` adds `Validators.required` to both internal controls and the aggregate. Material picker auto-emits `matDatepickerMin` / `matDatepickerMax` errors when `min`/`max` are violated. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày bắt đầu không hợp lệ (nhỏ hơn giới hạn)"; max → "Ngày kết thúc không hợp lệ (lớn hơn giới hạn)".
+- **Validators**: `[required]` adds `Validators.required` to the two internal endpoint controls, and a **range-completeness validator** to the aggregate control that fails unless BOTH `from` and `to` are set. Material picker auto-emits `matDatepickerMin` / `matDatepickerMax` errors when `min`/`max` are violated. Error tooltip messages: required → "Vui lòng nhập thông tin"; min → "Ngày bắt đầu không hợp lệ (nhỏ hơn giới hạn)"; max → "Ngày kết thúc không hợp lệ (lớn hơn giới hạn)".
+- **BREAKING (`[required]` now actually invalidates the form).** The aggregate control's value is always the object `{ from, to }`, and `Validators.required` treats any non-null object as filled — so `[required]` previously could **never** fail on the aggregate control. It now fails whenever either endpoint is missing. Forms that were silently passing validation with an empty or half-filled range will now correctly report invalid.
 
 ## Typing behaviour
 
@@ -92,9 +95,9 @@ Both range fields are `matStartDate` / `matEndDate`, so Angular Material re-pars
 | `onOpenPicker($event)` | event handler                | Stops click propagation and opens the picker if `formControl` is not disabled.                                                                                                           |
 | `onStartChange(event)` | event handler                | Triggers `#emit()` when the start-date input fires `(dateInput)` and the field is not focused.                                                                                           |
 | `onEndChange(event)`   | event handler                | Triggers `#emit()` when the end-date input fires `(dateInput)` and the field is not focused.                                                                                             |
-| `formControl`          | `FormControl`                | Aggregate reactive control registered into the parent `FormGroup` under `name`. Holds `{ from: Date, to: Date }` as value.                                                               |
-| `control1`             | `FormControl`                | Internal reactive control for the start date (native `Date` value). Registered under a random uuid in the parent form.                                                                   |
-| `control2`             | `FormControl`                | Internal reactive control for the end date (native `Date` value). Registered under a random uuid in the parent form.                                                                     |
+| `formControl`          | `FormControl`                | Aggregate reactive control — the ONLY control registered into the parent `FormGroup` (under `name`). Holds `{ from: Date \| null, to: Date \| null }` as value.                          |
+| `control1`             | `FormControl`                | Internal reactive control for the start date (native `Date` value). NOT registered in the parent form; its errors are mirrored onto `formControl`.                                       |
+| `control2`             | `FormControl`                | Internal reactive control for the end date (native `Date` value). NOT registered in the parent form; its errors are mirrored onto `formControl`.                                         |
 | `resolvedMin()`        | computed `Date \| null`      | Resolved `min` boundary — parses the `min` input string / Date / `'TODAY'` into a `Date`.                                                                                                |
 | `resolvedMax()`        | computed `Date \| null`      | Resolved `max` boundary — parses the `max` input string / Date / `'TODAY'` into a `Date`.                                                                                                |
 
@@ -182,6 +185,24 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 <sd-date-range label="Kỳ báo cáo" [model]="report.period" [disabled]="true"> </sd-date-range>
 ```
 
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
+
+- Both range inputs carry `aria-invalid` / `aria-describedby`; the clear and calendar triggers are
+  real `<button type="button">` elements with `aria-label` (they used to be bare `<sd-icon (click)>`).
+
 ## Anti-patterns
 
 - ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
@@ -198,7 +219,7 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 | -------------------- | ------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | `data-autoid`        | `<mat-date-range-input>` | `forms-date-range-<autoId>` | Present only when `[autoId]` input is provided. Prefix `forms-date-range-`.                                 |
 | `data-disabled`      | `<mat-date-range-input>` | `"true"` / `"false"`        | Reflects `formControl.disabled`.                                                                            |
-| `data-invalid`       | `<mat-date-range-input>` | `"true"` / `"false"`        | `"true"` only when the aggregate `formControl` is both invalid AND touched or dirty.                        |
+| `data-invalid`       | `<mat-date-range-input>` | `"true"` / `"false"`        | `"true"` when the aggregate control OR either endpoint control is invalid AND touched or dirty.             |
 | `data-empty`         | `<mat-date-range-input>` | `"true"` / `"false"`        | `"true"` if `value` is `null` / `undefined`, OR if either `value.from` or `value.to` is missing / falsy.    |
 | `data-value`         | `<mat-date-range-input>` | JSON string or `""`         | `sdSerializeDataValue` of the aggregate `{ from: Date, to: Date }` object. Empty string when value is null. |
 | `data-required`      | `<mat-date-range-input>` | `"true"` / `"false"`        | Reflects `required` input; always present.                                                                  |
@@ -206,7 +227,7 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 
 > **Note**: `sd-date-range` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
 
-## Bare / viewed / programmatic open
+## Viewed / programmatic open
 
 | API           | Type                  | Notes                                                                                                                                                                                                                                                                                              |
 | ------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -214,10 +235,11 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 | `[viewed]`    | `boolean \| 'inline'` | `false` edit · `true` static `<sd-view>` (`dd/MM/yyyy → dd/MM/yyyy`) · `'inline'` click-to-edit range picker (text retained until commit). Project `<ng-template #sdValue>` to override the display. Default `false`. (The old `[bare]` input was removed — inline flattens the field internally.) |
 | `open()`      | method                | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode.                                                                                                                                                        |
 
-`bare` and `viewed` are independent and complementary:
+`viewed` is now the only switch — the three states are mutually exclusive:
 
+- `viewed=false` (default) → full editable form-field.
 - `viewed=true` → text-only `<sd-view>`, no form-field.
-- `bare=true, viewed=false` → editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
+- `viewed='inline'` → editable form-field stripped of outline/subscript/arrow (host gets `.sd-bare`) so it sits flush in a chip, fronted by a click-to-edit text face.
 
 ## Related
 

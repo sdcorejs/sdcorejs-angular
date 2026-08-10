@@ -28,7 +28,7 @@
       }
       @if (showToggle()) {
         <button type="button" class="c-inform-toggle" (click)="toggleExpanded()">
-          {{ (expanded() ? 'core.component.inform.show-less' : 'core.component.inform.show-more') | translate }}
+          {{ (expanded() ? 'core.component.inform.show-less' : 'core.component.inform.show-more') | sdTranslate }}
         </button>
       }
 
@@ -47,7 +47,7 @@
       <button
         type="button"
         class="c-inform-close"
-        [attr.aria-label]="'core.common.close' | translate"
+        [attr.aria-label]="'core.common.close' | sdTranslate"
         (click)="onClose($event)">
         <sd-icon aria-hidden="true" name="close"></sd-icon>
       </button>

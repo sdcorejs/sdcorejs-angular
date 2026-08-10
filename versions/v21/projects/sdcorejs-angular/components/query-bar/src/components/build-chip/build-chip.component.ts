@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild } from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdDate } from '@sdcorejs/angular/forms/date';
@@ -39,6 +40,14 @@ type Density = 'compact' | 'comfortable';
   imports: [SdIcon, CommonModule, SdOperator, SdDate, SdDateRange, SdDatetime, SdInput, SdInputNumber, SdSelect, SdQueryInlineValueChip],
 })
 export class SdQueryBuildChip {
+  readonly #i18n = inject(I18nService);
+
+  // why: nhãn mặc định của field boolean phải trùng với nhãn parent dựng cho chip đã hoàn thành
+  // (`SdQueryBar.chipValueText`), nếu không cùng một field sẽ hiện hai ngôn ngữ giữa lúc đang tạo
+  // chip và lúc chip xong.
+  readonly booleanTrueLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.true'));
+  readonly booleanFalseLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.false'));
+
   /** Current build state — drives every visual branch. */
   readonly building = input.required<BuildingChip>();
 
@@ -66,28 +75,28 @@ export class SdQueryBuildChip {
   // ---------------------------------------------------------------------------
 
   /** Operator chosen from the operator-step menu — parent advances to value step. */
-  readonly pickOperator = output<Operator>();
+  readonly sdPickOperator = output<Operator>();
 
   /**
    * Value committed from a non-seamless picker (sd-select / sd-date / sd-date-range /
    * sd-datetime) or a boolean toggle. Parent pushes the completed chip and clears building.
    */
-  readonly commitValue = output<unknown>();
+  readonly sdCommitValue = output<unknown>();
 
   /** × button — abandon the build (parent clears `building` signal). */
-  readonly cancel = output<void>();
+  readonly sdCancel = output<void>();
 
   /**
    * Commit from the seamless (string / number) branch. Parent decides empty → cancel
    * vs push complete (see `onBuildSeamlessCommit`); this just forwards the raw value.
    */
-  readonly seamlessCommit = output<unknown>();
+  readonly sdSeamlessCommit = output<unknown>();
 
   /** Fallback editor (boolean ng-template / other) — staged draft on every change. */
-  readonly draftChange = output<unknown>();
+  readonly sdDraftChange = output<unknown>();
 
   /** Fallback editor — Enter / click commits the staged draft. */
-  readonly draftCommit = output<void>();
+  readonly sdDraftCommit = output<void>();
 
   // ---------------------------------------------------------------------------
   // Internal refs — used by parent via public open*() methods

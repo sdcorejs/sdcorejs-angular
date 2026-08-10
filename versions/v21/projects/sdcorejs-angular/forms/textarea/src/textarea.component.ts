@@ -2,8 +2,9 @@ import { Utilities } from '@sdcorejs/utils/fns';
 
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
+  afterNextRender,
   booleanAttribute,
+  ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
   ElementRef,
@@ -19,21 +20,13 @@ import {
   viewChild,
   contentChild,
 } from '@angular/core';
-import {
-  AbstractControl,
-  AsyncValidatorFn,
-  FormGroup,
-  FormsModule,
-  NgForm,
-  ReactiveFormsModule,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { AsyncValidatorFn, FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdLabelDefDirective, SdSuffixDefDirective, SdViewDefDirective } from '@sdcorejs/angular/forms/directives';
 import {
+  HandleSdCustomValidator,
   SD_FORM_CONFIGURATION,
   SdCustomValidator,
   SdFormControl,
@@ -44,13 +37,14 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
 import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
 import { Subscription } from 'rxjs';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
@@ -58,6 +52,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   selector: 'sd-textarea',
   templateUrl: './textarea.component.html',
   styleUrl: './textarea.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   host: { '[class.sd-has-label]': '!!label()', '[class.sd-viewed]': 'isViewed() || isInline()' },
   imports: [
@@ -70,11 +65,14 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     MatTooltipModule,
     SdLabel,
     SdEmptyPipe,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
-export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
+export class SdTextarea implements OnInit, OnDestroy {
   id = `I${Utilities.generateUuid()}`;
+  /** why: id ổn định của <mat-error> để control trỏ `aria-describedby` sang — thông báo lỗi
+   *  phải đọc được từ chính control, không chỉ hiện ra màn hình. */
+  readonly errorId = `${this.id}-error`;
 
   // ==========================================
   // 1. SIGNAL QUERIES
@@ -90,6 +88,9 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus() hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạy
+  // trên view đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -208,10 +209,34 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   formControl = new SdFormControl();
   #subscription = new Subscription();
   isFocused = false;
+  readonly #validators = computed<readonly ValidatorFn[]>(() => {
+    const validators: ValidatorFn[] = [];
+    const maxLen = this.maxlength();
+    const pattern = this.pattern();
+
+    if (maxLen != null) validators.push(Validators.maxLength(maxLen));
+    if (pattern) validators.push(Validators.pattern(pattern));
+    if (this.inlineError()) validators.push(SdInlineErrorValidator);
+    return validators;
+  });
+  readonly #asyncValidators = computed<readonly AsyncValidatorFn[]>(() => {
+    const validator = this.validator();
+    // why: dùng helper dùng chung thay vì bản copy nội bộ. Bản copy cũ coerce
+    // `c.value || null` nên số 0 hợp lệ bị nuốt thành null trước khi tới validator
+    // của consumer; HandleSdCustomValidator giữ nguyên 0 (`c.value === 0 ? c.value : ...`).
+    return validator ? [HandleSdCustomValidator(validator)] : [];
+  });
+  // why: validator đi qua connector (addValidators/removeValidators — CỘNG DỒN) thay cho
+  // clearValidators()+setValidators() cũ. `formControl` là public: consumer hoàn toàn có
+  // thể tự gắn validator lên nó, và block cũ xoá sạch mọi validator đó mỗi lần bất kỳ
+  // input nào (required/maxlength/pattern/validator/inlineError) đổi.
   readonly #formConnector = ɵsdFormControlConnector<unknown, unknown>({
     form: this.form,
     name: this.name,
     control: computed(() => this.formControl),
+    validators: this.#validators,
+    asyncValidators: this.#asyncValidators,
+    required: this.required,
   });
 
   constructor() {
@@ -233,27 +258,21 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
       else this.formControl.enable({ emitEvent: false });
     });
 
-    // EFFECT 3: Update Validators
-    effect(() => {
-      const req = this.required();
-      const maxLen = this.maxlength();
-      const pat = this.pattern();
-      const val = this.validator();
-      const inl = this.inlineError();
+    // EFFECT 3 (cũ) đã bỏ: validator giờ do ɵsdFormControlConnector quản lý cộng dồn
+    // qua #validators / #asyncValidators / required ở trên.
 
-      untracked(() => this.#updateValidator(req, maxLen, pat, val, inl));
+    // why: đo scrollHeight phải chờ textarea render xong — trước đây là
+    // `ngAfterViewInit` + `setTimeout(..., 0)` mà không giữ handle, nên component bị tháo
+    // ngay sau init (route đổi nhanh) vẫn chạm nativeElement đã detach. `afterNextRender`
+    // diễn đạt đúng ý định "sau lần render kế tiếp" VÀ tự huỷ theo injector.
+    afterNextRender(() => {
+      if (this.autoHeight()) this.#adjustHeight();
     });
   }
 
   ngOnInit() {
     this.#subscription.add(this.formControl.sdChanges.subscribe(() => this.#ref.markForCheck()));
     this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-  }
-
-  ngAfterViewInit() {
-    if (this.autoHeight()) {
-      setTimeout(() => this.#adjustHeight(), 0);
-    }
   }
 
   ngOnDestroy() {
@@ -296,9 +315,8 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
-      this.textareaRef()?.nativeElement?.focus();
-    }, 100);
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => this.textareaRef()?.nativeElement?.focus(), 100);
   };
 
   #onChange = (value: any) => {
@@ -309,29 +327,6 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
     this.sdChange.emit(value);
   };
 
-  #updateValidator = (
-    req: boolean,
-    maxLen: number | null,
-    pat: string | undefined,
-    val: SdCustomValidator | undefined,
-    inl: string | undefined
-  ) => {
-    this.formControl.clearValidators();
-    this.formControl.clearAsyncValidators();
-    const validators: ValidatorFn[] = [];
-    const asyncValidators: AsyncValidatorFn[] = [];
-
-    if (req) validators.push(Validators.required);
-    if (maxLen != null) validators.push(Validators.maxLength(maxLen));
-    if (pat) validators.push(Validators.pattern(pat));
-    if (val) asyncValidators.push(this.#customValidator(val));
-    if (inl) validators.push(SdInlineErrorValidator);
-
-    this.formControl.setValidators(validators.length ? validators : null);
-    this.formControl.setAsyncValidators(asyncValidators.length ? asyncValidators : null);
-    this.formControl.updateValueAndValidity({ emitEvent: false });
-  };
-
   getCurrentLength = (): number => {
     return (this.formControl.value ?? '').toString().length;
   };
@@ -339,22 +334,5 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   isMaxlengthExceeded = (): boolean => {
     const max = this.maxlength();
     return !!(max && max > 0 && this.getCurrentLength() > max);
-  };
-
-  #customValidator = (func: (value: any) => string | Promise<string>): AsyncValidatorFn => {
-    return async (c: AbstractControl): Promise<Record<string, any> | null> => {
-      const value = c.value || null;
-      if (func && typeof func === 'function') {
-        const result = func(value);
-        if (result instanceof Promise) {
-          const message = await result;
-          if (message) return { customValidator: message };
-          return null;
-        }
-        if (result) return { customValidator: result };
-        return null;
-      }
-      return null;
-    };
   };
 }

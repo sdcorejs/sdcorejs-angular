@@ -21,6 +21,16 @@ Install the package major that matches your Angular application.
 
 The package manifests accept Angular 19–21 peers, while releases provide an Angular-aligned package line for each major. The first version number is reserved for Angular compatibility, so read the [changelog](https://github.com/sdcorejs/sdcorejs-angular/blob/main/CHANGELOG.md) for explicitly labeled breaking changes before upgrading.
 
+### Peer dependencies
+
+The package declares these peers. A standard Angular CLI application already provides all of them except `@angular/material` and `@angular/material-date-fns-adapter`, which is why only those two appear in the install commands above.
+
+| Peer | Range |
+| --- | --- |
+| `@angular/animations` · `@angular/cdk` · `@angular/common` · `@angular/core` · `@angular/forms` · `@angular/platform-browser` · `@angular/router` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
+| `@angular/material` · `@angular/material-date-fns-adapter` | `^19.0.0 \|\| ^20.0.0 \|\| ^21.0.0` |
+| `rxjs` | `^7.8.0` |
+
 ## Installation and setup
 
 The examples below use Angular 19; replace `19` with your application's Angular major.

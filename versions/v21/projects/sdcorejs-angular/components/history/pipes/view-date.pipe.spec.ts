@@ -1,5 +1,5 @@
 import { ViewDateTimePipe } from './view-date.pipe';
-import { SD_EMPTY_STR } from '@sdcorejs/angular/utilities';
+import { EMPTY_STR } from '@sdcorejs/angular/utilities';
 
 describe('ViewDateTimePipe', () => {
   let pipe: ViewDateTimePipe;
@@ -9,19 +9,19 @@ describe('ViewDateTimePipe', () => {
   });
 
   it('returns empty marker for null', () => {
-    expect(pipe.transform(null)).toBe(SD_EMPTY_STR);
+    expect(pipe.transform(null)).toBe(EMPTY_STR);
   });
 
   it('returns empty marker for undefined', () => {
-    expect(pipe.transform(undefined)).toBe(SD_EMPTY_STR);
+    expect(pipe.transform(undefined)).toBe(EMPTY_STR);
   });
 
   it('returns empty marker for empty string', () => {
-    expect(pipe.transform('')).toBe(SD_EMPTY_STR);
+    expect(pipe.transform('')).toBe(EMPTY_STR);
   });
 
   it('returns empty marker for an invalid date string', () => {
-    expect(pipe.transform('not-a-date')).toBe(SD_EMPTY_STR);
+    expect(pipe.transform('not-a-date')).toBe(EMPTY_STR);
   });
 
   it('formats a valid ISO date as HH:mm dd/MM/yyyy', () => {

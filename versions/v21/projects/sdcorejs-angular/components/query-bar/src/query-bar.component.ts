@@ -192,14 +192,29 @@ export class SdQueryBar {
   // ---------------------------------------------------------------------------
 
   /** Composite payload — emitted whenever filters / logic / search change. */
-  readonly queryChange = output<SdQuery>();
+  readonly sdQueryChange = output<SdQuery>();
 
   /** Fires when the user presses "Áp dụng" inside a chip popover — host should reload data. */
-  readonly apply = output<SdQuery>();
+  readonly sdApply = output<SdQuery>();
 
   // ---------------------------------------------------------------------------
   // Derived state
   // ---------------------------------------------------------------------------
+
+  // ---------------------------------------------------------------------------
+  // Nhãn i18n cho template
+  // why: `#i18n` trước đây được inject nhưng KHÔNG dùng — mọi chuỗi trong template đều hardcode
+  // tiếng Việt. Bọc qua `computed()` thay vì pipe `translate` vì pipe là pure: nó chỉ chạy lại khi
+  // input đổi tham chiếu, nên đổi ngôn ngữ runtime không refresh được. `t()` đọc signal `messages()`
+  // nên computed tự invalidate khi `I18nService.setLanguage()` chạy.
+  // ---------------------------------------------------------------------------
+
+  /** Placeholder của ô tìm kiếm tự do bên trái. */
+  readonly searchPlaceholder = computed(() => this.#i18n.t('core.component.query-bar.search-placeholder'));
+  /** Tooltip nút "+" khi consumer chưa khai `fields`. */
+  readonly noFieldsLabel = computed(() => this.#i18n.t('core.component.query-bar.no-fields'));
+  /** Tooltip nút "+" ở trạng thái bình thường. */
+  readonly addFilterLabel = computed(() => this.#i18n.t('core.component.query-bar.add-filter'));
 
   /** Map of `field.key` → `SdQueryField` for fast lookup from filters[]. */
   readonly resolvedAutoId = computed(() => this.option()?.autoId ?? this.autoIdInput() ?? undefined);
@@ -273,6 +288,56 @@ export class SdQueryBar {
   }
 
   // ---------------------------------------------------------------------------
+  // Row identity — stable synthetic id per filter chip, used as the `@for` track key
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Filter object → synthetic row id.
+   *
+   * why: `@for (... ; track $index)` gắn chip với VỊ TRÍ, không phải với filter. Xoá chip index 0
+   * thì chip index 0 không bị huỷ mà được bind lại sang filter kế tiếp, kéo theo state nội bộ
+   * của chip (`inline-chip` `#editing`, `inline-value-chip` `draft`) sang một filter khác.
+   * Gắn id tổng hợp cho từng dòng để `track` bám đúng filter.
+   *
+   * Lưu trong WeakMap thay vì gắn thẳng thuộc tính lên `Filter` để payload `SdQuery.filters` phát
+   * ra ngoài vẫn sạch (không rò field nội bộ cho consumer).
+   */
+  readonly #rowIds = new WeakMap<Filter, string>();
+  #rowIdSeq = 0;
+
+  /**
+   * Stable track key of a filter row. Assigned lazily on first read.
+   *
+   * ⚠️ Hai ràng buộc với `filters`, đều là hợp đồng của consumer:
+   *
+   * 1. KHÔNG được chứa cùng một object `Filter` ở hai vị trí. Khoá theo identity nên hai vị trí sẽ
+   *    cho hai track key trùng nhau và Angular ném NG0955. Đã thử khử trùng bằng hậu tố `$index`
+   *    và HỎNG: Angular đánh giá biểu thức `track` trên CẢ collection cũ khi diff, nên một filter
+   *    vừa bị xoá cho `indexOf === -1`, key đổi, và MỌI chip bị huỷ rồi dựng lại. Để Angular báo
+   *    NG0955 là đúng — thông điệp của nó đã chỉ rõ vấn đề.
+   * 2. Object phải ỔN ĐỊNH giữa các lần change detection. Sinh lại object mới mỗi pass
+   *    (vd `[option]="{ filters: buildFilters() }"`) sẽ khiến mọi chip nhận id mới mỗi pass và bị
+   *    huỷ + dựng lại — tệ hơn cả `track $index` cũ.
+   */
+  rowId(filter: Filter): string {
+    let id = this.#rowIds.get(filter);
+    if (!id) {
+      id = `qbr-${++this.#rowIdSeq}`;
+      this.#rowIds.set(filter, id);
+    }
+    return id;
+  }
+
+  /**
+   * Chuyển id của một dòng sang object thay thế.
+   * why: mọi mutation đều tạo object mới (`{ ...previous, ...patch }`); không kế thừa id thì mỗi
+   * lần sửa giá trị lại huỷ + dựng lại chip, mất focus và state đang gõ dở.
+   */
+  #inheritRowId(previous: Filter, next: Filter): void {
+    this.#rowIds.set(next, this.rowId(previous));
+  }
+
+  // ---------------------------------------------------------------------------
   // Template helpers
   // ---------------------------------------------------------------------------
 
@@ -315,6 +380,12 @@ export class SdQueryBar {
   readonly #building = signal<BuildingChip | null>(null);
   readonly building = this.#building.asReadonly();
 
+  /**
+   * Allowed operators of `field` — safe to call from a template binding: `sdQueryAllowedOperators`
+   * memo hoá theo object field nên ref trả về ổn định giữa các chu kỳ CD.
+   * why: `<sd-query-build-chip [allowedOperators]>` là OnPush; ref mới mỗi CD sẽ dirty child liên
+   * tục (bug class cấp-phát-mỗi-CD).
+   */
   allowedOperatorsFor(field: SdQueryField): Operator[] {
     return sdQueryAllowedOperators(field);
   }
@@ -448,7 +519,12 @@ export class SdQueryBar {
   updateFilter(index: number, patch: Partial<Filter>): void {
     const list = [...this.filters()];
     if (index < 0 || index >= list.length) return;
-    list[index] = { ...list[index], ...patch } as Filter;
+    const previous = list[index];
+    const next = { ...previous, ...patch } as Filter;
+    // why: cùng một dòng logic, chỉ đổi data/operator → giữ nguyên track key để chip được patch
+    // tại chỗ thay vì huỷ + dựng lại.
+    this.#inheritRowId(previous, next);
+    list[index] = next;
     this.filters.set(list);
   }
 
@@ -459,10 +535,18 @@ export class SdQueryBar {
   removeFilter(index: number): void {
     const list = [...this.filters()];
     if (index < 0 || index >= list.length) return;
-    // close the open popover (if it's this chip's) before the chip + its trigger vanish
-    if (this.editingIndex() === index) {
-      this.popoverChips()[index]?.closeMenu();
-      this.editingIndex.set(null);
+    const editing = this.editingIndex();
+    // why: `editingIndex` là chỉ số vào mảng filters, nên mọi lần xoá ở vị trí <= nó đều làm nó
+    // lệch. Trước đây chỉ xử lý trường hợp bằng nhau → xoá một chip ĐỨNG TRƯỚC khiến editingIndex
+    // trỏ lố 1 ô và `onChipPopoverCommit` ghi giá trị staged vào SAI filter.
+    if (editing !== null && index <= editing) {
+      if (index === editing) {
+        // close the open popover (it's this chip's) before the chip + its trigger vanish
+        this.popoverChips()[index]?.closeMenu();
+        this.editingIndex.set(null);
+      } else {
+        this.editingIndex.set(editing - 1);
+      }
     }
     list.splice(index, 1);
     this.filters.set(list);
@@ -489,9 +573,9 @@ export class SdQueryBar {
     // signal once, from here only (mutations no longer emit).
     const q = this.#buildQuery();
     this.option()?.onQueryChange?.(q);
-    this.queryChange.emit(q);
+    this.sdQueryChange.emit(q);
     this.option()?.onApply?.(q);
-    this.apply.emit(q);
+    this.sdApply.emit(q);
   }
 
   // ---------------------------------------------------------------------------
@@ -515,6 +599,11 @@ export class SdQueryBar {
     const idx = this.editingIndex();
     if (idx === null) return;
     const list = [...this.filters()];
+    const previous = list[idx];
+    if (!previous) return;
+    // why: popover chỉ đổi operator + value của CHÍNH chip đó → giữ track key, nếu không chip sẽ
+    // bị huỷ ngay lúc menu đóng (trigger của overlay biến mất giữa chừng).
+    this.#inheritRowId(previous, next);
     list[idx] = next;
     this.filters.set(list);
     this.editingIndex.set(null);
@@ -537,8 +626,10 @@ export class SdQueryBar {
     const field = this.fieldByKey()[fieldKey];
     if (!field) return String(raw);
     if (field.type === 'boolean') {
-      const trueLabel = (field as any).trueLabel ?? 'Có';
-      const falseLabel = (field as any).falseLabel ?? 'Không';
+      // why: nhãn mặc định của field boolean phải theo ngôn ngữ đang chọn; consumer vẫn override
+      // được bằng `trueLabel` / `falseLabel` trên chính field.
+      const trueLabel = (field as any).trueLabel ?? this.#i18n.t('core.component.query-bar.boolean.true');
+      const falseLabel = (field as any).falseLabel ?? this.#i18n.t('core.component.query-bar.boolean.false');
       return raw ? trueLabel : falseLabel;
     }
     if (field.type === 'values' || field.type === 'lazy-values') {

@@ -36,7 +36,7 @@ export class SdQuerySavedFiltersMenu {
   readonly query = input<SdQuery>({ filters: [], logic: 'AND' });
 
   /** Fired when the user picks a saved filter from the list. */
-  readonly apply = output<SdSavedFilter>();
+  readonly sdApply = output<SdSavedFilter>();
 
   readonly savedFilters = signal<SdSavedFilter[]>([]);
 
@@ -91,7 +91,7 @@ export class SdQuerySavedFiltersMenu {
 
   /** Apply a saved filter — host re-installs filters/logic/search via `(apply)`. */
   pick(filter: SdSavedFilter): void {
-    this.apply.emit(filter);
+    this.sdApply.emit(filter);
   }
 
   /** Delete a saved filter by id. Stops propagation so the parent button doesn't fire `pick`. */

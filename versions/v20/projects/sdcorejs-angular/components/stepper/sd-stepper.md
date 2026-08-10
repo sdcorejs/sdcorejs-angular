@@ -3,7 +3,7 @@
 **Type**: Component (two related components, documented together — used as a pair)
 **Selectors**: `sd-stepper`, `sd-step`
 **Import path**: `@sdcorejs/angular/components/stepper`
-**Classes**: `SdStepper extends SdBaseSecureComponent`, `SdStep`
+**Classes**: `SdStepper`, `SdStep`
 **Standalone**: yes
 **Change detection**: `OnPush` on both
 
@@ -35,13 +35,13 @@ Declarative wizard / stepper container wrapping Angular Material's `mat-stepper`
 | `headerPosition` | `'top' \| 'bottom'` | `'top'` | Only meaningful for horizontal orientation. `'top'` (default) shows headers above the content, `'bottom'` flips it. |
 | `animationDuration` | `string` | `'500ms'` | CSS time string forwarded to `mat-stepper.animationDuration`. Pass `'0ms'` to disable animation. |
 | `disableRipple` | `boolean` | `false` | `booleanAttribute` transform. Disables the ripple on step header click. |
-| `color` | `SdColor` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Drives the active indicator, completed indicator, and active connector color via the Core CSS vars (`--sd-<color>`). Same palette as `<sd-tab-group>` and `<sd-badge>`. |
+| `color` | `Color` (`'primary' \| 'secondary' \| 'info' \| 'success' \| 'warning' \| 'error'`) | `'primary'` | Drives the active indicator, completed indicator, and active connector color via the Core CSS vars (`--sd-<color>`). Same palette as `<sd-tab-group>` and `<sd-badge>`. |
 | `autoId` | `string \| undefined` | `undefined` | Emitted as `data-autoId` on the host element for e2e selectors. |
 
 ### Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `selectionChange` | `StepperSelectionEvent` (from `@angular/cdk/stepper`) | Emitted whenever the active step changes. Payload: `{ selectedIndex, previouslySelectedIndex, selectedStep, previouslySelectedStep }`. Use to react to a step entering (eg fetch data lazily). |
+| `sdSelectionChange` | `StepperSelectionEvent` (from `@angular/cdk/stepper`) | Emitted whenever the active step changes. Payload: `{ selectedIndex, previouslySelectedIndex, selectedStep, previouslySelectedStep }`. Use to react to a step entering (eg fetch data lazily). |
 
 ### Public API
 | Method | Signature | Notes |
@@ -208,7 +208,7 @@ A child of `<sd-stepper>` that declares one step — its label, icon, optional/e
 ### Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `selectChange` | `void` | Emitted when this step transitions to selected. Useful for lazy data fetch when entering the step. |
+| `sdSelectChange` | `void` | Emitted when this step transitions to selected. Useful for lazy data fetch when entering the step. |
 
 ### Content projection
 | Slot | Purpose |
@@ -233,4 +233,4 @@ A child of `<sd-stepper>` that declares one step — its label, icon, optional/e
 - `<sd-tab-group>` — for parallel views (non-sequential)
 - `<sd-tab-router>` — for route-driven sequences (each step owns a URL)
 - `<sd-input>`, `<sd-select>`, `<sd-checkbox>` — common form controls inside step bodies
-- `@angular/cdk/stepper.StepperSelectionEvent` — the type emitted by `selectionChange`
+- `@angular/cdk/stepper.StepperSelectionEvent` — the type emitted by `sdSelectionChange`

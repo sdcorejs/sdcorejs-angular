@@ -582,7 +582,7 @@ export class VariablePlugin extends Plugin {
    * Lấy tất cả variables trong document.
    * @returns Danh sách tất cả variables (bao gồm bindingValue nếu đã binding)
    */
-  all<T = any>(): SdDocumentBuilderVariable<T>[] {
+  all<T = unknown>(): SdDocumentBuilderVariable<T>[] {
     const model = this.editor.model;
     const root = model.document.getRoot();
     if (!root) return [];

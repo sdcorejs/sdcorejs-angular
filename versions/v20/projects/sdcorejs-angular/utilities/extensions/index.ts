@@ -5,3 +5,4 @@ export * from './src/date.extension';
 export * from './src/utility.extension';
 export * from './src/color.extension';
 export * from './src/object.extension';
+export * from './src/url-safety';

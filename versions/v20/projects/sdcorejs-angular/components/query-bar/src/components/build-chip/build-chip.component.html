@@ -15,8 +15,8 @@
     [showOperator]="showOperator()"
     [autoId]="_autoId"
     [autofocus]="true"
-    (valueChange)="seamlessCommit.emit($event)"
-    (remove)="cancel.emit()" />
+    (valueChange)="sdSeamlessCommit.emit($event)"
+    (sdRemove)="sdCancel.emit()" />
 } @else {
   <div class="c-token c-token-building">
     <span class="c-token-field">{{ _building.field.label }}</span>
@@ -27,7 +27,7 @@
         class="c-token-op"
         [operators]="allowedOperators()"
         [model]="_building.operator"
-        (modelChange)="pickOperator.emit($any($event))" />
+        (modelChange)="sdPickOperator.emit($any($event))" />
     } @else {
       <!-- why: badge readonly cho operator đã chọn — vẫn render <sd-operator>
            để giữ thị giác giống chip hoàn thành (icon + tooltip). -->
@@ -47,7 +47,7 @@
             [displayField]="_bopt.displayField"
             [multiple]="multiple()"
             [model]="$any(_building.value)"
-            (sdChange)="commitValue.emit($event)">
+            (sdChange)="sdCommitValue.emit($event)">
             <!-- why: build chip multi-select cũng cần "head +N" để gọn (giống completed chip). -->
             <ng-template #sdValue let-selectedItems="selectedItems">
               @if ((selectedItems?.length ?? 0) > 1) {
@@ -65,12 +65,12 @@
             <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
               [model]="$any(_building.value)"
-              (sdChange)="commitValue.emit($event)"></sd-date-range>
+              (sdChange)="sdCommitValue.emit($event)"></sd-date-range>
           } @else {
             <sd-date #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
               [model]="$any(_building.value)"
-              (sdChange)="commitValue.emit($event)"></sd-date>
+              (sdChange)="sdCommitValue.emit($event)"></sd-date>
           }
         </span>
       } @else if (_building.field.type === 'datetime') {
@@ -80,12 +80,12 @@
             <sd-date-range #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
               [model]="$any(_building.value)"
-              (sdChange)="commitValue.emit($event)"></sd-date-range>
+              (sdChange)="sdCommitValue.emit($event)"></sd-date-range>
           } @else {
             <sd-datetime #bPicker size="sm" [viewed]="'inline'" [clearable]="false"
               [autoId]="_autoId"
               [model]="$any(_building.value)"
-              (sdChange)="commitValue.emit($event)"></sd-datetime>
+              (sdChange)="sdCommitValue.emit($event)"></sd-datetime>
           }
         </span>
       } @else if (_building.field.type === 'boolean') {
@@ -98,16 +98,16 @@
             class="c-bool-btn c-bool-true"
             [class.c-bool-active]="_building.value === true"
             [attr.data-autoId]="_autoId + '-true'"
-            (click)="commitValue.emit(true)">
-            {{ $any(_building.field).trueLabel || 'Có' }}
+            (click)="sdCommitValue.emit(true)">
+            {{ $any(_building.field).trueLabel || booleanTrueLabel() }}
           </button>
           <button
             type="button"
             class="c-bool-btn c-bool-false"
             [class.c-bool-active]="_building.value === false"
             [attr.data-autoId]="_autoId + '-false'"
-            (click)="commitValue.emit(false)">
-            {{ $any(_building.field).falseLabel || 'Không' }}
+            (click)="sdCommitValue.emit(false)">
+            {{ $any(_building.field).falseLabel || booleanFalseLabel() }}
           </button>
         </span>
       } @else {
@@ -116,13 +116,13 @@
           <sd-input size="sm"
             [autoId]="_autoId"
             [model]="$any(_building.value)"
-            (sdChange)="draftChange.emit($event)"
-            (keyupEnter)="draftCommit.emit()"></sd-input>
+            (sdChange)="sdDraftChange.emit($event)"
+            (sdKeyupEnter)="sdDraftCommit.emit()"></sd-input>
         </span>
       }
     }
 
-    <button type="button" class="c-token-remove" aria-label="Cancel" (click)="cancel.emit()">
+    <button type="button" class="c-token-remove" aria-label="Cancel" (click)="sdCancel.emit()">
       <sd-icon name="close"></sd-icon>
     </button>
   </div>

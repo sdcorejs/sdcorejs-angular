@@ -32,12 +32,12 @@
       prefixIcon="add"
       color="primary"
       (click)="onDetail()"
-      [title]="component.properties?.titleButtonCreate || ('core.component.form-builder.add-new' | translate)"></sd-button>
+      [title]="component.properties?.titleButtonCreate || ('core.component.form-builder.add-new' | sdTranslate)"></sd-button>
     }
     @if(!viewed && !component.properties?.viewed) {
-      <sd-side-drawer [title]="'core.component.form-builder.detail' | translate" width="500px">
+      <sd-side-drawer [title]="'core.component.form-builder.detail' | sdTranslate" width="500px">
         <div sdTitle>
-          <span>{{ 'core.component.form-builder.create-update' | translate }}</span>
+          <span>{{ 'core.component.form-builder.create-update' | sdTranslate }}</span>
         </div>
         <div sdBody class="c-table-create-update">
           @if(!!component.columns?.length) {
@@ -116,7 +116,7 @@
           
         </div>
         <div sdFooterRight class="text-right pr-16">
-          <sd-button [title]="'core.component.form-builder.save' | translate" prefixIcon="save" color="primary" type="fill" (click)="onAccept()"></sd-button>
+          <sd-button [title]="'core.component.form-builder.save' | sdTranslate" prefixIcon="save" color="primary" type="fill" (click)="onAccept()"></sd-button>
         </div>
       </sd-side-drawer>
     }

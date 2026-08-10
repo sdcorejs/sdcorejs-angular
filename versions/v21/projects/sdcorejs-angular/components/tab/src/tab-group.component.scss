@@ -47,6 +47,8 @@
   margin-left: 2px;
 }
 
+// why: đổi từ <sd-icon> sang <button type="button"> để bàn phím đóng được tab → reset chrome mặc
+// định của button (nền/viền/padding) giữ nguyên diện mạo cũ, và thêm focus ring.
 .sd-tab__close {
   font-size: 16px;
   width: 16px;
@@ -56,11 +58,30 @@
   cursor: pointer;
   opacity: 0.6;
   margin-left: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: opacity 120ms ease, color 120ms ease;
+
+  sd-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+  }
 
   &:hover {
     opacity: 1;
     color: var(--sd-tab-close-hover-color);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
   }
 }
 

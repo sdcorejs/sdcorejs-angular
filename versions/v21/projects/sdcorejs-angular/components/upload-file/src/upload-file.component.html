@@ -19,12 +19,19 @@
     [class.justify-content-center]="_align === 'center'"
     [class.justify-content-start]="_align === 'left'">
     @if (_previewFiles.length < max() && !formControl.disabled) {
+      <!-- why: bỏ aria-hidden="true" — đây là drop zone MỞ hộp thoại chọn tệp khi click, tức một
+           control thật. aria-hidden khiến nó vẫn nhận chuột nhưng biến mất khỏi accessibility tree.
+           Nay là role="button" + tabindex="0" + nhãn i18n + Enter/Space chạy đúng như click. -->
       <div
         class="d-flex justify-content-center align-items-center cursor-pointer c-area-upload"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'core.component.upload-file.upload' | sdTranslate"
         [style.width]="_previewWidth"
         [style.height]="_previewHeight"
         (click)="onUpload()"
-        aria-hidden="true"
+        (keydown.enter)="onUploadKeydown($event)"
+        (keydown.space)="onUploadKeydown($event)"
         [attr.data-autoId]="autoId()"
         [attr.data-disabled]="dataDisabled()"
         [attr.data-empty]="dataEmpty()"
@@ -44,13 +51,22 @@
             </div>
           </div>
           <div class="c-preview">
+            <!-- why: bỏ aria-hidden="true" — thẻ này BỌC nút xoá + nút phóng to (nội dung focusable).
+                 aria-hidden trên container khiến các nút bên trong vẫn tab tới được nhưng không đọc
+                 được gì. `onSelect` chỉ có tác dụng trên thiết bị cảm ứng, nên role/tabindex/
+                 aria-pressed chỉ bật đúng ở đó — desktop không sinh thêm điểm dừng tab vô nghĩa. -->
             <div
               class="c-img-container"
               [class.c-disabled]="formControl.disabled"
               [class.c-selected]="selectedFile() === image"
               [class.has-overlay]="idx === _maxOfImage - 1 && formControl.disabled"
+              [attr.role]="isTouchDevice ? 'button' : null"
+              [attr.tabindex]="isTouchDevice ? 0 : null"
+              [attr.aria-pressed]="isTouchDevice ? selectedFile() === image : null"
+              [attr.aria-label]="isTouchDevice ? (image.fileName || ('core.component.upload-file.preview-title' | sdTranslate)) : null"
               (click)="onSelect(image)"
-              aria-hidden="true">
+              (keydown.enter)="onSelectKeydown(image, $event)"
+              (keydown.space)="onSelectKeydown(image, $event)">
               @if (image.isImgError) {
                 <img class="sd-image-image-error" alt="Image Error" style="max-width: 100%;" [style.max-height]="_previewHeight" />
               } @else if(image.previewSrc) {
@@ -58,18 +74,43 @@
               } @else if(image.src) {
                 <img class="c-img" [src]="image.src" alt="Preview" [style.max-height]="_previewHeight" (error)="onImgError(image)" />
               } @else {
-                <mat-spinner style="justify-self: center;" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
-              }
-              @if (idx === _maxOfImage - 1 && formControl.disabled && previewImages.length > _maxOfImage) {
-                <div class="c-overlay-count" (click)="preview()">
-                  <div class="c-overlay-text">+{{ previewImages.length - _maxOfImage }}</div>
+                <!-- why: ảnh đang tải lên là thay đổi trạng thái BẤT ĐỒNG BỘ; trước đây spinner
+                     không được thông báo ở đâu cả. role="status" + aria-live="polite" để screen
+                     reader biết đang có tiến trình. -->
+                <div class="c-uploading" role="status" aria-live="polite" [attr.aria-label]="'core.component.upload-file.loading' | sdTranslate">
+                  <mat-spinner style="justify-self: center;" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
                 </div>
               }
+              @if (idx === _maxOfImage - 1 && formControl.disabled && previewImages.length > _maxOfImage) {
+                <button
+                  type="button"
+                  class="c-overlay-count"
+                  [attr.aria-label]="'core.component.upload-file.preview-title' | sdTranslate"
+                  (click)="preview()">
+                  <span class="c-overlay-text">+{{ previewImages.length - _maxOfImage }}</span>
+                </button>
+              }
               <div class="c-action">
-                <sd-icon class="c-zoom" (click)="preview()" name="zoom_in"></sd-icon>
+                <!-- why: nút phóng to trước đây là <sd-icon (click)> — custom element không nhận
+                     focus bàn phím và không có tên khả truy cập. Đổi sang <button type="button">. -->
+                <button
+                  type="button"
+                  class="c-zoom"
+                  [attr.aria-label]="'core.component.upload-file.preview-title' | sdTranslate"
+                  (click)="preview()">
+                  <sd-icon name="zoom_in"></sd-icon>
+                </button>
               </div>
               @if (!formControl.disabled) {
-                <button class="c-btn-remove" (click)="onRemove(image)" mat-icon-button aria-label="Close" [attr.data-autoId]="removeAutoId(idx)">
+                <!-- why: aria-label="Close" là chuỗi tiếng Anh cứng và sai nghĩa (nút này XOÁ ảnh,
+                     không phải đóng gì cả). Đổi sang nhãn i18n đúng nghĩa. -->
+                <button
+                  type="button"
+                  class="c-btn-remove"
+                  (click)="onRemove(image)"
+                  mat-icon-button
+                  [attr.aria-label]="'core.component.upload-file.remove' | sdTranslate"
+                  [attr.data-autoId]="removeAutoId(idx)">
                   <sd-icon name="close"></sd-icon>
                 </button>
               }
@@ -109,12 +150,23 @@
       }
 
       @if (!formControl.disabled) {
-        <sd-icon class="c-close" (click)="onRemove(document)" [attr.data-autoId]="removeAutoId(docIdx)" name="close"></sd-icon>
+        <!-- why: <sd-icon (click)> không nhận focus bàn phím và không có tên khả truy cập →
+             người dùng bàn phím không thể xoá tài liệu. Đổi sang <button type="button">. -->
+        <button
+          type="button"
+          class="c-close"
+          (click)="onRemove(document)"
+          [attr.aria-label]="'core.component.upload-file.remove' | sdTranslate"
+          [attr.data-autoId]="removeAutoId(docIdx)">
+          <sd-icon name="close"></sd-icon>
+        </button>
       }
     </div>
   }
   @if (showRequiredError()) {
-    <div class="text-error T12R" style="padding: 4px 8px">{{ ('core.component.upload-file.please-upload' | translate) }}</div>
+    <!-- why: thông báo lỗi xuất hiện BẤT ĐỒNG BỘ (sau submit/validator) nên trước đây screen
+         reader không được báo gì. role="alert" đọc ngay khi message xuất hiện. -->
+    <div class="text-error T12R" role="alert" style="padding: 4px 8px">{{ ('core.component.upload-file.please-upload' | sdTranslate) }}</div>
   }
 </div>
-<preview (download)="onDownload($event)"></preview>
+<preview (sdDownload)="onDownload($event)"></preview>

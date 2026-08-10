@@ -4,7 +4,24 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "../../out-tsc/spec",
-    "types": ["jasmine"]
+    "types": ["jasmine"],
+    /*
+     * why: the workspace tsconfig maps `@sdcorejs/angular/*` to `./dist/sdcorejs-angular/*` BEFORE
+     * `./projects/sdcorejs-angular/*`, so dist wins. Under that mapping the test bundle loaded the
+     * last BUILT library for every cross-entry-point import — 59 spec files and 215 source files —
+     * which meant a spec could pass against stale code, and editing a shared source file had no
+     * effect on the specs of its consumers until someone remembered to run `npm run build` first
+     * (see the gotcha recorded in CLAUDE.md "Recent work" #14).
+     *
+     * Overriding `paths` here points the SPEC build at source only, so `ng test` reflects the
+     * working tree. The workspace mapping is left alone because `ng build` legitimately needs dist
+     * resolution for already-built secondary entry points.
+     */
+    "baseUrl": "../../",
+    "paths": {
+      "@sdcorejs/angular": ["./projects/sdcorejs-angular/src/public-api"],
+      "@sdcorejs/angular/*": ["./projects/sdcorejs-angular/*"]
+    }
   },
   "include": ["**/*.spec.ts", "**/*.d.ts"]
 }

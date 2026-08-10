@@ -4,7 +4,7 @@
       type="button"
       mat-menu-item
       [disabled]="isDisabled(field)"
-      (click)="pick.emit(field)">
+      (click)="sdPick.emit(field)">
       <sd-icon class="c-field-item-icon" [name]="iconFor(field)"></sd-icon>
       <span class="c-field-item-label">{{ field.label }}</span>
       <span class="c-field-item-type">{{ field.type }}</span>

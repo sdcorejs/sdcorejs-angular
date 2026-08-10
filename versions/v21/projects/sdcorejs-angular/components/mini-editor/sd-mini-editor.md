@@ -70,7 +70,7 @@ type SdMiniEditorOutputFormat = 'html' | 'markdown';
 | Name | Type | Notes |
 | --- | --- | --- |
 | `valueChange` | `string` | Companion to `[(value)]`. Throttled to 500ms (leading + trailing). |
-| `contentChange` | `string` | Same payload as `valueChange`, kept for clarity / readability. |
+| `sdContentChange` | `string` | Same payload as `valueChange`, kept for clarity / readability. |
 | `blur` | `FocusEvent` | Editor lost focus. |
 | `focus` | `FocusEvent` | Editor gained focus. |
 
@@ -87,7 +87,7 @@ None — toolbar and editor are fully managed by CKEditor.
 
 ## Behavior notes
 - **ControlValueAccessor**: the component implements `ControlValueAccessor` and works with both template-driven (`[(ngModel)]`) and reactive (`[formControl]`) forms. `writeValue` sets the internal `value` and, if the editor is already initialised, calls `setData` on it. `setDisabledState` is NOT yet implemented — use the `[disabled]` input directly.
-- **Throttle on content change**: the `change:data` event from CKEditor is funnelled through an RxJS `Subject` throttled at 500 ms (leading + trailing). Both `valueChange` and `contentChange` fire on the same throttled tick. `option.onChange` is also called inside the same subscriber.
+- **Throttle on content change**: the `change:data` event from CKEditor is funnelled through an RxJS `Subject` throttled at 500 ms (leading + trailing). Both `valueChange` and `sdContentChange` fire on the same throttled tick. `option.onChange` is also called inside the same subscriber.
 - **Output format**: when `option.outputFormat === 'markdown'`, the CKEditor `Markdown` plugin is loaded and `getData()` returns Markdown automatically. No manual conversion happens inside the component — `#convertOutput` is a pass-through.
 - **Mention plugin**: loaded dynamically only when `option.enableMention === true`. A custom `downcast` converter renders mentions as `<span class="ck-custom-mention" data-id="..." data-marker="...">` (marker-prefixed id is split: `id[0]` = marker, `id.slice(1)` = clean id). Backspace/Delete on a mention node removes the entire text node in one keypress.
 - **focusEditor()** and **setContent()** are safe to call before the editor is initialised (they no-op silently).
@@ -117,7 +117,7 @@ None — toolbar and editor are fully managed by CKEditor.
 <sd-mini-editor
   [option]="{ outputFormat: 'markdown', placeholder: 'Ghi chú (Markdown)...' }"
   [(value)]="note"
-  (contentChange)="onChange($event)">
+  (sdContentChange)="onChange($event)">
 </sd-mini-editor>
 ```
 
@@ -160,7 +160,7 @@ option: SdMiniEditorOption = {
 - DON'T pass HTML into `value` when `outputFormat: 'markdown'` is set — the editor will misinterpret it
 - DON'T forget `option` is required — leaving it `undefined` will throw on render
 - DON'T render many `<sd-mini-editor>` instances on one screen — each loads CKEditor; prefer one shared comment box
-- DON'T rely on `valueChange` / `contentChange` for keystroke-by-keystroke logic — they are throttled to 500ms
+- DON'T rely on `valueChange` / `sdContentChange` for keystroke-by-keystroke logic — they are throttled to 500ms
 
 ## Accessibility
 - The CKEditor editing region is a `contenteditable` div — it receives focus in the natural tab order. Keyboard navigation of toolbar buttons is handled by CKEditor internals (arrow keys cycle through toolbar items).

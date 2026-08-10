@@ -79,7 +79,7 @@ Applied automatically on `<sd-date>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** = DETAIL read-only mode: input + calendar icon are hidden, the formatted date (or `<ng-template sdViewDef>`) is shown. With `hyperlink` it renders a clickable link.
 - **Date adapter**: providers include `provideSdStrictDateFnsAdapter` configured for `dd/MM/yyyy` parse/display. Internal storage uses native `Date` objects; emitted values are `'yyyy/MM/dd'` strings.
-- **Validators**: `[required]` adds `Validators.required`. `[min]` / `[max]` flow into Material's `matDatepickerMin` / `matDatepickerMax` validators. Manual typed text is regex-validated (`dd/MM/yyyy`) and bad input sets a synthetic `date: 'Sai định dạng'` error. `[inlineError]` injects a synthetic `inlineError` validator. `errorMessage` gives Vietnamese messages for each error key.
+- **Validators**: `[required]` adds `Validators.required`. `[min]` / `[max]` flow into Material's `matDatepickerMin` / `matDatepickerMax` validators. Manual typed text is validated against `dd/MM/yyyy`; bad input raises `date: 'Sai định dạng'` through a **real `ValidatorFn`** attached to the control. Previously that error was injected out-of-band via `setErrors()`, so the next `updateValueAndValidity()` or `setValue()` — from the connector or from consumer code — silently dropped it; it now survives both. `[inlineError]` injects a synthetic `inlineError` validator. `errorMessage` gives Vietnamese messages for each error key, including Material's `matDatepickerParse` (raised when typed text cannot be parsed at all — this branch previously checked a non-existent `matDatetimePickerParse` key and was unreachable).
 
 ## Typing behaviour
 
@@ -100,7 +100,7 @@ Separators are inserted as you type: `2` → `2`, `22` → `22/`, `2208` → `22
 
 | Member                | Kind                         | Description                                                                                                                                                                         |
 | --------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `errorMessage`        | getter `string \| undefined` | Returns a Vietnamese error message for the first active error on `formControl` (`required`, `matDatepickerMin`, `matDatepickerMax`, `date`, `inlineError`). `undefined` when valid. |
+| `errorMessage`        | getter `string \| undefined` | Returns a Vietnamese error message for the first active error on `formControl` (`required`, `matDatepickerMin`, `matDatepickerMax`, `matDatepickerParse`, `date`, `customValidator`, `inlineError`). `undefined` when valid. |
 | `clear($event)`       | method                       | Stops propagation, nulls `formControl` value, updates `valueModel`, and emits `sdChange(null)`. No-op if the control is already empty.                                              |
 | `focus()`             | method                       | Programmatically focuses the native input and opens the datepicker popup (deferred 100 ms).                                                                                         |
 | `blur()`              | method                       | Programmatically blurs the native input.                                                                                                                                            |
@@ -114,7 +114,7 @@ Separators are inserted as you type: `2` → `2`, `22` → `22/`, `2208` → `22
 
 - Outlined input field showing `DD/MM/YYYY` formatted date
 - Trailing calendar icon button → opens Material datepicker popup
-- Optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`). **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip contexts where the clear-x duplicated the chip's own remove-× and could clear the value when dismissing the picker.
+- Optional slim clear-button (`clearable`, default `false`; `.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) when a value is set and the field is not `required`/`disabled`; shown alongside the calendar icon, suppresses parent click. **Hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Emits `sdChange(null)` on clear. Shared style with `sd-input`/`sd-input-number`/`sd-input-color`/`sd-datetime` (`assets/scss/core/form.scss`). **Not rendered when the host is bare** (`viewed='inline'`, which sets `.sd-bare`) — bare is "value + caret only" for inline chip contexts where the clear-× duplicated the chip's own remove-× and could clear the value when dismissing the picker.
 - Min/max enforcement: dates outside the range are greyed-out and unselectable in the popup
 - Format error: red underline + tooltip "Sai định dạng" while the typed text doesn't match `D/M/YYYY` regex
 - In `[viewed]="true"` mode: no input, no icon — plain formatted date or hyperlink
@@ -218,6 +218,24 @@ const el = page.locator('[data-autoid="forms-date-hireDate"]');
 await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-required', 'true');
 ```
+
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
+
+- The calendar trigger is a real `<button type="button">` with an `aria-label` (it used to be a bare
+  `<sd-icon (click)>`: not reachable by keyboard, no accessible name).
 
 ## Anti-patterns
 

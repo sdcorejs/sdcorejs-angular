@@ -37,8 +37,8 @@ Dropdown picker — single OR multi-select from a static array OR an async API. 
 | `label`           | `string \| undefined`                                                    | `undefined`                                 | Field label.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `helperText`      | `string \| undefined`                                                    | `undefined`                                 | Hint text (rendered as info icon next to label).                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `placeholder`     | `string \| undefined`                                                    | `undefined`                                 | Placeholder when empty.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `valueField`      | `NestedKeyOf<T>` (**required**)                                          | —                                           | Key in each item used as the bound value. Supports nested paths (e.g. `'meta.code'`).                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `displayField`    | `NestedKeyOf<T>` (**required**)                                          | —                                           | Key in each item used as the visible label. Supports nested paths.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `valueField`      | `NestedKeyOf<T> \| ''`                                                   | `''`                                        | Key in each item used as the bound value. Supports nested paths (e.g. `'meta.code'`). **Optional** — leave it (and `displayField`) unset for a primitive `items` array (`string[]` / `number[]`), where the item itself is the value.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `displayField`    | `NestedKeyOf<T> \| ''`                                                   | `''`                                        | Key in each item used as the visible label. Supports nested paths. **Optional** — see `valueField`; both must be set together for object items, or both left unset for primitives.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `disabledField`   | `NestedKeyOf<T> \| ''`                                                   | `''`                                        | Key whose truthy value disables the option.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `cacheChecksum`   | `any`                                                                    | `undefined`                                 | Invalidates async-search cache when the value changes.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `limit`           | `number`                                                                 | `50`                                        | Max items rendered in the panel (paging via `ArrayUtilities.paging`).                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -75,7 +75,7 @@ Dropdown picker — single OR multi-select from a static array OR an async API. 
 | `open()`            | `() => void`       | Opens the dropdown panel programmatically.                                      |
 | `focus()`           | `() => void`       | Focuses and opens the picker (legacy path for `sdViewDef` click-to-edit).       |
 | `enterInlineEdit()` | `() => void`       | Opens the picker from the `viewed='inline'` text face.                          |
-| `reValidate()`      | `() => void`       | Re-runs validators on the underlying control.                                   |
+| `reValidate()`      | `() => void`       | Re-runs validators on `formControl` (where all validators live), with events.   |
 
 ## Host classes
 
@@ -85,7 +85,7 @@ Applied automatically on `<sd-select>` for styling hooks:
 | -------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding.   |
 | `sd-viewed`    | `[viewed]="true"`   | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
-| `sd-bare`      | `[bare]="true"`     | Strips the mat-form-field shell for inline contexts (chip, token).                                    |
+| `sd-bare`      | (internal — set by `viewed='inline'`) | Strips the mat-form-field shell for inline contexts (chip, token). **No longer a public `[bare]` input** (removed); driven by `isInline()`. |
 
 ## Content projection (slots)
 
@@ -104,9 +104,9 @@ Applied automatically on `<sd-select>` for styling hooks:
 - **`formControlName` and `[(ngModel)]` are NOT supported.** Use `[(model)]` for two-way value binding and `[form]+[name]` for FormGroup integration.
 - **`[viewed]="true"`** flips into DETAIL read-only mode rendered by `<sd-view>` — selected item's `displayField` is shown, optionally as a hyperlink.
 - **Validators**: `[required]` → `Validators.required`. `[validator]` → async custom validator. `[inlineError]="msg"` → synthetic `inlineError` validator. Error tooltip messages: required → "Vui lòng nhập thông tin"; customValidator → message returned by validator; inlineError → echoes `inlineError`.
-- **Reactive validator updates** — `required`, `validator`, and `inlineError` are signal inputs; an internal `effect()` calls `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. Validators can be toggled at runtime without manual re-wiring.
+- **Reactive validator updates (additive)** — `required`, `validator`, and `inlineError` are signal inputs routed through the shared form-control connector, which uses `addValidators` / `removeValidators` (plus their async counterparts). Validators can be toggled at runtime without manual re-wiring, and **any validator you attach yourself to the publicly exposed `formControl` survives** — the component only adds/removes the validators it owns. (Previously an internal `effect()` called `clearValidators()` + `clearAsyncValidators()` + `setValidators()`, which silently wiped consumer-attached validators.)
 - **`[disabled]` reactive** — toggling `disabled` calls `formControl.disable() / enable()` via an effect with `emitEvent: false` (no spurious `statusChanges`).
-- **`[(model)]` two-way** — host writes propagate via an effect: when `model` changes the component calls `formControl.setValue(val, { emitEvent: false })` to avoid double-triggering `valueChanges`. The reverse direction (selection → `formControl.setValue` → `valueModel.set()` → `(modelChange)`) flows through the normal signal-model mechanism.
+- **`[(model)]` two-way** — host writes propagate via an effect: when `model` changes the component calls `formControl.setValue(val, { emitEvent: false })` to avoid double-triggering `valueChanges`. The reverse direction (selection → `formControl.setValue` → `valueModel.set()` → `(modelChange)`) flows through the normal signal-model mechanism. Picking an option mirrors the value to `formControl` **with events enabled**, so an async `[validator]` completing after the pick reaches the error message (suppressing the event there used to leave a red outline with no text).
 - **`[form]` transform** — accepts `NgForm` (unwrapped to its inner `FormGroup`), `FormGroup` (used directly), or an object with shape `{ form: FormGroup }` as a safety fallback.
 - **Default `appearance`** — when `[appearance]` is omitted, reads `SD_FORM_CONFIGURATION` injection token; falls back to `'outline'` if the token is absent.
 - **Async search**: when `items` is a function, the component calls it on each search keystroke (debounced 500ms) with `{ type: 'SEARCH', searchText }`, and on initial bind / value-change with `{ type: 'VALUE', value }` to resolve already-selected values into items. Results are cached per `cacheChecksum`+`searchText`.
@@ -153,7 +153,7 @@ Applied automatically on `<sd-select>` for styling hooks:
 - Click opens a dropdown panel below; if `items.length > 10` (or `items` is a function) a search input appears at the top of the panel
 - In `[multiple]="true"` mode: each row in the panel has a checkbox; the field shows a comma-joined list of display values, with a hover tooltip listing each as `• <value> - <display>`
 - Loading spinner appears in the panel while an async `SdSearch` is in flight
-- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears as a suffix when a value is set and the field is not `required`/`disabled`; it **replaces the chevron** and clears via `clear()`. Because it replaces the dropdown icon, it is **always shown** when there's a value — NOT hover-gated (unlike `sd-input`/`sd-date`/`sd-datetime`). Styled identically via the shared class in `assets/scss/core/form.scss`. **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip/token contexts; the clear-x duplicated the chip's own remove-× and was easy to hit while dismissing the panel (would clear the value). The caret is shown instead; the host (chip) owns removal.
+- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears as a suffix when a value is set and the field is not `required`/`disabled`; it **replaces the chevron** and clears via `clear()`. Because it replaces the dropdown icon, it is **always shown** when there's a value — NOT hover-gated (unlike `sd-input`/`sd-date`/`sd-datetime`). Styled identically via the shared class in `assets/scss/core/form.scss`. **Not rendered when the host is bare** (`viewed='inline'`, which sets `.sd-bare`) — bare is "value + caret only" for inline chip/token contexts; the clear-× duplicated the chip's own remove-× and was easy to hit while dismissing the panel (would clear the value). The caret is shown instead, and the inline text face carries its own hover clear-× gated by `[clearable]`; a chip host sets `[clearable]="false"` so it owns removal.
 - Required marker shows as a red `*` next to the label
 - When `[hideInlineError]="true"`: red error-icon suffix with tooltip; otherwise inline `<mat-error>` below the field
 - In `[viewed]="true"` mode: rendered by `<sd-view>` — plain text (or hyperlink) of the selected display value(s)
@@ -233,6 +233,14 @@ When this control is rendered in dashboard cards, filter bars, external filter p
   displayField="name"
   [(model)]="model.status">
 </sd-select>
+```
+
+### 1b. Primitive items (no `valueField` / `displayField`)
+
+Leave **both** field inputs unset and each item is used as its own value and label.
+
+```html
+<sd-select label="Cỡ" [items]="['S', 'M', 'L']" [(model)]="model.size"></sd-select>
 ```
 
 ### 2. Multi-select with checkboxes
@@ -325,6 +333,25 @@ await expect(el).toHaveAttribute('data-empty', 'false');
 await expect(el).toHaveAttribute('data-required', 'true');
 ```
 
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
+
+- The in-panel filter input has an `aria-label` (there is no visible `<label>` in the overlay).
+- `aria-invalid` / `aria-describedby` on `<mat-select>` are owned by Angular Material; the component
+  only guarantees the `<mat-error>` has a stable id (`errorId`) for Material to link to.
+
 ## Anti-patterns
 
 - ❌ Using `formControlName` / `[(ngModel)]` — not wired; use `[form]+[name]` and `[(model)]`.
@@ -333,6 +360,7 @@ await expect(el).toHaveAttribute('data-required', 'true');
 - ❌ Re-creating the `items` array reference on every change-detection cycle — it forces re-fetch / re-cache. Memoize or use a `Signal<T[]>`.
 - ❌ Forgetting `cacheChecksum` when async results depend on another field — stale cached results will leak across context switches.
 - ❌ Using `[disabled]="true"` to express read-only DETAIL state — use `[viewed]="true"` so the value renders as text/hyperlink.
+- ❌ Setting only one of `valueField` / `displayField` — the template renders options only when **both** are set (object items) or **both** are unset (primitive items); setting one alone renders an empty panel.
 
 ## Related
 

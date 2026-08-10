@@ -7,6 +7,10 @@
 @let _required = required();
 @let _maxLength = maxlength();
 @let _isInline = isInline();
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — message
+     hiện mà control không báo invalid thì screen reader không biết ô đang lỗi. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @if (isViewed()) {
   @if (_sdLabelDef?.templateRef) {
@@ -23,12 +27,15 @@
     <sd-label [label]="_label" [required]="_required"></sd-label>
   }
 
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con — label, <textarea>,
+       <mat-error> — khỏi accessibility tree. role="presentation" chỉ vô hiệu hoá chính div,
+       KHÔNG lan xuống con; (click) là tiện ích chuột mà bàn phím đã có qua Tab. -->
   <div
     class="d-flex align-items-center sd-textarea-container"
+    role="presentation"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
+    (click)="onClick()">
     <div class="sd-textarea-field-wrap" [class.sd-inline-textarea]="_isInline">
       <mat-form-field
         [class.sd-md]="size() === 'md'"
@@ -63,16 +70,18 @@
           [attr.data-maxlength]="dataMaxLength()"
           [attr.data-pattern]="dataPattern()"
           [attr.data-error-message]="dataErrorMessage()"
+          [attr.aria-invalid]="_errorVisible ? 'true' : null"
+          [attr.aria-describedby]="_showInlineError ? errorId : null"
           spellcheck="false"
           #textarea>
         </textarea>
 
-        @if (_hideInlineError && _errorMessage && formControl.touched) {
+        @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
 
-        @if (!_hideInlineError && _errorMessage && formControl.touched) {
-          <mat-error>{{ _errorMessage }}</mat-error>
+        @if (_showInlineError) {
+          <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
         }
 
         @if (sdSuffixDef()?.templateRef; as suffixRef) {
@@ -90,7 +99,7 @@
           class="sd-maxlength-counter"
           [class.sd-maxlength-counter--visible]="isFocused"
           [class.sd-maxlength-counter--exceeded]="isMaxlengthExceeded()"
-          [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | translate) : null">
+          [attr.title]="isMaxlengthExceeded() ? ('core.form.textarea.exceeded' | sdTranslate) : null">
           {{ getCurrentLength() }}/{{ _maxLength }}
         </div>
       }

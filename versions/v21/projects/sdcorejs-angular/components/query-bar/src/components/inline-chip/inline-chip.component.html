@@ -35,7 +35,7 @@
             [class.c-bool-active]="_data === true"
             [attr.data-autoId]="_autoId + '-true'"
             (click)="emitBoolean(true)">
-            {{ $any(_field).trueLabel || 'Có' }}
+            {{ $any(_field).trueLabel || booleanTrueLabel() }}
           </button>
           <button
             type="button"
@@ -43,7 +43,7 @@
             [class.c-bool-active]="_data === false"
             [attr.data-autoId]="_autoId + '-false'"
             (click)="emitBoolean(false)">
-            {{ $any(_field).falseLabel || 'Không' }}
+            {{ $any(_field).falseLabel || booleanFalseLabel() }}
           </button>
         </span>
       } @else {
@@ -110,7 +110,7 @@
     }
   }
 
-  <button type="button" class="c-token-remove" aria-label="Remove filter" (click)="remove.emit()">
+  <button type="button" class="c-token-remove" aria-label="Remove filter" (click)="sdRemove.emit()">
     <sd-icon name="close"></sd-icon>
   </button>
 </div>

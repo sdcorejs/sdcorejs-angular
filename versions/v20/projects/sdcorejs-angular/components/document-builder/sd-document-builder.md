@@ -60,7 +60,7 @@ interface SdDocumentBuilderHeading {
 ## Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `contentChange` | `string` | HTML content. Throttled to 500ms (leading + trailing) and normalized. |
+| `sdContentChange` | `string` | HTML content. Throttled to 500ms (leading + trailing) and normalized. |
 
 ## Public methods
 - `setContent(html: string)` — load HTML into the editor.
@@ -74,6 +74,14 @@ interface SdDocumentBuilderHeading {
 - `getVariablePluginAPI(): VariablePlugin | null` — typed handle to the variable plugin.
 - `exportDocx({ fileName?, header?, footer? })` — export to `.doc` (Word HTML) with optional header/footer + correct page size for current orientation.
 - `hightSelectRange(range)` / `removeHighlightSeclectRange()` — visually highlight an arbitrary model range without touching content (markers).
+
+## Lifecycle / teardown
+Two public methods schedule deferred work against the CKEditor instance:
+
+- `heading.scroll(id)` — highlights the target for **5s**, then removes the `highlightMarker` via `editor.model.change()`.
+- `scrollToTop()` — scrolls the canvas after **100ms**.
+
+Both timers are cleared in `ngOnDestroy`. Destroying `<sd-document-builder>` right after either call (route change, tab switch, `@if` removing the branch) therefore leaves the highlight marker in place on an editor that is already gone instead of calling into a torn-down CKEditor instance. Callers do not need to guard these calls before navigating away.
 
 ## Content projection
 None — content is fully driven by editor data + plugins.
@@ -93,7 +101,7 @@ None — content is fully driven by editor data + plugins.
 ```html
 <sd-document-builder
   [option]="{ orientation: 'PORTRAIT' }"
-  (contentChange)="onChange($event)">
+  (sdContentChange)="onChange($event)">
 </sd-document-builder>
 ```
 
@@ -129,7 +137,7 @@ goTo(id: string) { this.builder.heading.scroll(id); }
 <aside>
   <a *ngFor="let h of toc()" [class]="'lvl-' + h.level" (click)="goTo(h.id)">{{ h.text }}</a>
 </aside>
-<sd-document-builder #builder [option]="option" (contentChange)="refreshToc()"></sd-document-builder>
+<sd-document-builder #builder [option]="option" (sdContentChange)="refreshToc()"></sd-document-builder>
 ```
 
 ### 4. Export DOCX with header/footer
@@ -143,7 +151,7 @@ this.builder.exportDocx({
 
 ## Anti-patterns
 - DON'T use `<sd-document-builder>` as a generic input on small forms — its toolbar is huge; use `<sd-editor>` instead
-- DON'T `setContent(html)` on every keystroke — use it once on load; rely on `contentChange` for outbound updates
+- DON'T `setContent(html)` on every keystroke — use it once on load; rely on `sdContentChange` for outbound updates
 - DON'T forget `option.onDropVariable` validation — without it, any variable in the side panel can be dropped, even ones the document type forbids
 - DON'T expect `exportDocx` to produce a true `.docx` — output is Word-compatible HTML (`application/msword`); ext should be `.doc` or use a server pipeline for true `.docx`
 - DON'T mutate the editor model directly from outside — go through the public methods or plugin APIs

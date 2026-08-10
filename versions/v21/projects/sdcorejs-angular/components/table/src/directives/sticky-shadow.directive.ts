@@ -1,8 +1,11 @@
 // sticky-shadow.directive.ts
 import { afterNextRender, Directive, DestroyRef, ElementRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { fromEvent } from 'rxjs';
+import { fromEvent, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+
+/** Cửa sổ gộp (ms) cho cả scroll lẫn mutation — xem chú thích ở constructor. */
+const SHADOW_UPDATE_DEBOUNCE_MS = 10;
 
 /**
  * Directive thêm hiệu ứng đổ bóng (elevation-2) vào cột sticky cuối cùng bên trái
@@ -26,11 +29,18 @@ export class StickyShadowDirective {
     afterNextRender(() => {
       const container = this.#el.nativeElement;
 
-      // Dùng MutationObserver để detect khi CDK render rows mới vào table
-      // (data load async, phân trang, ...) — lúc này td mới có đủ sticky classes
-      const mutationObserver = new MutationObserver(() => {
+      // why: MutationObserver bắn callback theo TỪNG batch DOM, mà CDK render row theo
+      // nhiều batch liên tiếp; `#updateShadow` lại chạy `querySelectorAll` toàn bảng cho
+      // MỖI cột sticky → render một trang 50 dòng quét lại bảng hàng chục lần. Gộp về
+      // đúng 1 lần cho mỗi cụm mutation bằng cùng debounce với đường scroll (đã gộp sẵn).
+      const mutation$ = new Subject<void>();
+      mutation$.pipe(debounceTime(SHADOW_UPDATE_DEBOUNCE_MS), takeUntilDestroyed(this.#destroyRef)).subscribe(() => {
         this.#updateShadow(container);
       });
+
+      // Dùng MutationObserver để detect khi CDK render rows mới vào table
+      // (data load async, phân trang, ...) — lúc này td mới có đủ sticky classes
+      const mutationObserver = new MutationObserver(() => mutation$.next());
 
       mutationObserver.observe(container, {
         childList: true, // Theo dõi thêm/bớt các node con
@@ -39,11 +49,14 @@ export class StickyShadowDirective {
 
       // Cập nhật shadow mỗi khi user scroll ngang
       fromEvent(container, 'scroll')
-        .pipe(debounceTime(10), takeUntilDestroyed(this.#destroyRef))
+        .pipe(debounceTime(SHADOW_UPDATE_DEBOUNCE_MS), takeUntilDestroyed(this.#destroyRef))
         .subscribe(() => this.#updateShadow(container));
 
       // Disconnect MutationObserver khi directive bị destroy
-      this.#destroyRef.onDestroy(() => mutationObserver.disconnect());
+      this.#destroyRef.onDestroy(() => {
+        mutationObserver.disconnect();
+        mutation$.complete();
+      });
     });
   }
 

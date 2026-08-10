@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject, AfterViewInit, OnDestroy, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericUpload,
@@ -16,7 +16,7 @@ import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subscription } from 'rxjs';
 import { AttributeInputNumber } from '../../attribute-input-number/attribute-input-number.component';
 import { AttributeParameter } from '../../attribute-parameter/attribute-parameter.component';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'upload-attribute',
@@ -30,7 +30,7 @@ import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
     AttributeSelect,
     AttributeExpression,
     AttributeParameter,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class UploadAttribute implements AfterViewInit, OnDestroy {
@@ -44,7 +44,7 @@ export class UploadAttribute implements AfterViewInit, OnDestroy {
   extension?: string;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericUpload) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
     this.extension = this.component.properties!.extensions?.join(',') || '';
   }
 
@@ -101,7 +101,7 @@ export class UploadAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.component.properties!.type = this.component.properties!.type || 'file';
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();

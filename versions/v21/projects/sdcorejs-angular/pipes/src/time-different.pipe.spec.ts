@@ -65,4 +65,63 @@ describe('SdTimeDifferentPipe', () => {
     expect(emittedValue).not.toContain('ago');
     sub.unsubscribe();
   }));
+
+  // why: `interval(1000)` cũ không bao giờ complete — N dòng trong list = N timer + N lượt
+  // change-detection mỗi giây, vĩnh viễn, kể cả khi output đã là chuỗi ngày tĩnh.
+  // (fakeAsync sẽ báo "timer(s) still in the queue" ở cuối test nếu observable còn treo timer.)
+  it('completes immediately without starting a timer when the value is already past the window', fakeAsync(() => {
+    const past = new Date(Date.now() - 2 * 60 * 1000); // 2 phút, vượt ngưỡng 'second' (60s)
+    let completed = false;
+    const emissions: string[] = [];
+
+    pipe.transform(past, 'dd/MM/yyyy', 'second').subscribe({
+      next: value => emissions.push(value),
+      complete: () => (completed = true),
+    });
+
+    expect(completed).toBeTrue();
+    expect(emissions.length).toBe(1);
+    expect(emissions[0]).not.toContain('ago');
+  }));
+
+  it('emits the final static format and completes once the relative window is crossed', fakeAsync(() => {
+    // 58 giây tuổi: còn trong ngưỡng 'second' (60s) nên vẫn tick, và sẽ vượt ngưỡng sau 2 tick.
+    const past = new Date(Date.now() - 58 * 1000);
+    const emissions: string[] = [];
+    let completed = false;
+
+    pipe.transform(past, 'dd/MM/yyyy', 'second').subscribe({
+      next: value => emissions.push(value),
+      complete: () => (completed = true),
+    });
+
+    tick(1000); // 59s — vẫn tương đối
+    expect(completed).toBeFalse();
+    expect(emissions[emissions.length - 1]).toContain('ago');
+
+    tick(1000); // 60s — chạm ngưỡng: phát nốt bản tuyệt đối rồi complete
+    expect(completed).toBeTrue();
+    expect(emissions[emissions.length - 1]).not.toContain('ago');
+
+    // Không còn timer nào: tick thêm cũng không sinh emission mới.
+    const countAfterComplete = emissions.length;
+    tick(5000);
+    expect(emissions.length).toBe(countAfterComplete);
+  }));
+
+  it('keeps ticking while the value is still inside the window', fakeAsync(() => {
+    const past = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 giờ, còn trong ngưỡng 'day'
+    const emissions: string[] = [];
+    let completed = false;
+
+    const sub = pipe.transform(past, 'dd/MM/yyyy', 'day').subscribe({
+      next: value => emissions.push(value),
+      complete: () => (completed = true),
+    });
+
+    tick(3000);
+    expect(emissions.length).toBe(3);
+    expect(completed).toBeFalse();
+    sub.unsubscribe();
+  }));
 });

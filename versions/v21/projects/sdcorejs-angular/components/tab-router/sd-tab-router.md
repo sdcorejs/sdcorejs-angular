@@ -1,4 +1,4 @@
-# `<sd-tab-router-outlet>` & friends
+﻿# `<sd-tab-router-outlet>` & friends
 
 **Type**: Component group (3 components + 1 decorator, documented together)
 **Selectors**: `sd-tab-router-outlet`, `sd-tab-router-nav`, `sd-tab-router-item`
@@ -52,10 +52,10 @@ None.
 - Listens to raw router events only (it never unwraps `Scroll`): `RoutesRecognized` captures `extras.state`, `NavigationEnd` applies the route after redirects, `NavigationSkipped` handles an explicitly forced same-URL reload, and `NavigationCancel` / `NavigationError` discard pending state
 - Navigation state is snapshotted synchronously before serialized async handling. In-flight state is stored by navigation id so overlapping navigations cannot overwrite one another
 - `NavigationSkipped` continues only for `NavigationSkippedCode.IgnoredSameUrlNavigation` with a directly snapshotted `state.forceReload === true`; this is why reloading the currently active identical URL works even though Angular does not emit `NavigationEnd`
-- Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTab` descriptor may be immutably copied when `isActive` changes
+- Tab identity = hash of `url + queryParams` — ordinary same-key navigation preserves the per-tab injector, `tabInfoChanges` stream, and component instance/state; the `SdTabRouterTab` descriptor may be immutably copied when `isActive` changes
 - `state.replaceTab = true` → new tab replaces the current active tab (instead of stacking)
 - `state.switchTab = true` → user clicked an existing tab pill (used by item click handler to avoid creating duplicates)
-- `state.forceReload = true` affects an existing target key only: the outlet replaces that tab at the same list index with a fresh `SdTab`, per-tab injector, `tabInfoChanges`, body component, and nav item. Tab count and order stay unchanged
+- `state.forceReload = true` affects an existing target key only: the outlet replaces that tab at the same list index with a fresh `SdTabRouterTab`, per-tab injector, `tabInfoChanges`, body component, and nav item. Tab count and order stay unchanged
 - If the forced target does not exist, it is added normally. `forceReload` does not change missing-target behavior
 - `forceReload` is an explicit replacement operation and therefore bypasses the old tab's `beforeClose` guard
 - `forceReload` and `replaceTab` are independent. When both are `true`, normal replace semantics remove the other active tab and the existing target is recreated at its correctly shifted index
@@ -72,7 +72,7 @@ None.
 
 | Name   | Type      | Default | Notes                                          |
 | ------ | --------- | ------- | ---------------------------------------------- |
-| `tabs` | `SdTab[]` | `[]`    | Array of tab objects (provided by the outlet). |
+| `tabs` | `SdTabRouterTab[]` | `[]`    | Array of tab objects (provided by the outlet). |
 
 ### Behaviors
 
@@ -88,7 +88,7 @@ None.
 
 | Name  | Type               | Default | Notes               |
 | ----- | ------------------ | ------- | ------------------- |
-| `tab` | `SdTab` (REQUIRED) | —       | The tab descriptor. |
+| `tab` | `SdTabRouterTab` (REQUIRED) | —       | The tab descriptor. |
 
 ### Behaviors
 
@@ -96,7 +96,7 @@ None.
 - Middle-click (`mousedown` button 1 default-prevented; `mouseup` triggers close) → close tab
 - Close `×` / middle-click → `tabRouterService.close(tab)`; outlet `#closeTab` runs `tab.beforeClose` if defined. It closes only on `true`; `false`, throw, and rejection all fail closed.
 - Tab info (`name`, `icon`, `tooltip`, `color`) is reactive via `tab.tabInfoChanges: Subject<SdTabInfo>` — components can call `next(...)` to update their tab pill at runtime (e.g. show unsaved-changes dot, change name after rename)
-- `<sd-badge>` renders the visual: icon, name, tooltip, color
+- `<sd-badge>` renders the visual: `icon` → `[icon]`, `name` → `[title]` (the pill label), `tooltip` (falls back to `name`) → `[tooltip]`, `color` → `[color]`
 
 ## Decorator: `@SdTabComponent`
 
@@ -120,7 +120,9 @@ export class EmployeeDetailComponent { ... }
 | `tooltip`   | `string \| (args) => string` | Hover tooltip on the badge.                                             |
 | `color`     | `Color \| (args) => Color`   | Badge color token.                                                      |
 
-The decorator self-registers via `SdTabDecoratorService` so metadata is resolved when the route activates.
+The decorator writes the builder into a plain module-level collection at class-definition time. `<sd-tab-router-outlet>` drains that collection into `SdTabRouterService` when it initialises, and any class decorated later (lazy routes) is forwarded straight to the connected outlet.
+
+> Previously the decorator subscribed to `SdTabDecoratorService.tabRouterService` (a static `BehaviorSubject`) at class-definition time. If an application never provided `SdTabRouterService`, `take(1)` never fired and every decorated class stayed pinned by a live subscriber for the lifetime of the app. `SdTabDecoratorService.tabRouterService` still publishes the service instance for backward compatibility, but the decorator no longer subscribes to it.
 
 ## Public API
 
@@ -131,15 +133,15 @@ The decorator self-registers via `SdTabDecoratorService` so metadata is resolved
 | `<sd-tab-router-item [tab]>`        | Component               | Rendering one draggable/closable tab pill inside the nav. Usually used internally.                                                                                                                                                            |
 | `@SdTabComponent({...})`            | Decorator               | Supplying route-component tab metadata: name, icon, tooltip, and color.                                                                                                                                                                       |
 | `SdTabRouterService`                | Service                 | Advanced programmatic tab operations such as setting the current tab, closing, or listening to tab events. Prefer router navigation first.                                                                                                    |
-| `SdTab` / `SdTabInfo`               | Interfaces              | Strongly typing custom tab metadata or service integrations.                                                                                                                                                                                  |
-| `SD_TAB`                            | `InjectionToken<SdTab>` | Inject `SdTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
+| `SdTabRouterTab` / `SdTabInfo`               | Interfaces              | Strongly typing custom tab metadata or service integrations.                                                                                                                                                                                  |
+| `SD_TAB`                            | `InjectionToken<SdTabRouterTab>` | Inject `SdTabRouterTab` của tab hiện tại từ bên trong component để set `beforeClose` hoặc gọi `tabInfoChanges.next(...)`. Scoped tự động per-tab qua `SdOutletInjector`. Dùng `{ optional: true }` nếu component có thể chạy ngoài tab-router context. |
 
 Feature pages normally need only `@SdTabComponent` plus normal Angular `Router.navigate(...)`. App shells wire `<sd-tab-router-outlet>` once.
 
 ## Tab data model
 
 ```ts
-interface SdTab {
+interface SdTabRouterTab {
   component: Type<any>;
   injector?: Injector;
   key: string; // hash(url + queryParams)
@@ -237,7 +239,7 @@ import { SD_TAB } from '@sdcorejs/angular/components/tab-router';
 
 @Component({ ... })
 export class EmployeeDetailComponent {
-  // inject SD_TAB để lấy SdTab của chính tab này (scoped per-tab qua DI)
+  // inject SD_TAB để lấy SdTabRouterTab của chính tab này (scoped per-tab qua DI)
   readonly #tab = inject(SD_TAB);
 
   constructor() {
@@ -275,8 +277,9 @@ this.tab.tabInfoChanges.next({
 
 ## Accessibility
 
-- Tabs are `<a>` anchors with `[href]` set to the tab URL → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
-- Close button has `aria-hidden` (focusable via tab order is not guaranteed — consider a fork if A11y is critical)
+- Tabs are `<a>` anchors with `[href]` bound to the `tab.url` string → right-click "open in new tab" works (creates a new browser tab, leaves the SPA-tab list alone)
+- Close button is a real `<button type="button">` with an i18n `aria-label` (`core.common.close`) and a `:focus-visible` ring. It is keyboard reachable and Enter/Space close the tab. It previously carried `aria-hidden="true"` — which still let it take tab focus while announcing nothing, strictly worse than doing nothing.
+- The `<sd-badge>` inside a tab is **not** interactive: no `role`, no `tabindex`, no `(click)` binding. Clicks bubble up to the enclosing `<a>`, so there is no interactive-inside-interactive nesting.
 - No `role="tablist" / "tab" / "tabpanel"` ARIA wiring (this is a router shell, not WAI-ARIA tabs)
 
 ## Related
@@ -284,4 +287,4 @@ this.tab.tabInfoChanges.next({
 - `<sd-badge>` — used to render each tab pill
 - Angular `Router` — drives all tab creation / activation
 - `SdTabRouterService` — programmatic API for `setCurrentTab`, `close`, event stream
-- `SdTabDecoratorService` — wiring layer for `@SdTabComponent`
+- `SdTabDecoratorService` — legacy wiring layer; still publishes `SdTabRouterService` on a static `BehaviorSubject`, but `@SdTabComponent` no longer subscribes to it

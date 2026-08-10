@@ -15,7 +15,7 @@ import {
 import { FormGenericService } from '../../../../services';
 import { BuildQueries } from './components/build-queries/build-queries.component';
 import { BuildVariables } from './components/build-variables/build-variables.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
 // Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
@@ -23,7 +23,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
   selector: 'attribute-selection',
   templateUrl: './attribute-selection.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, TranslatePipe],
+  imports: [SdInput, SdAutocomplete, SdButton, SdSection, BuildQueries, BuildVariables, SdTranslatePipe],
 })
 export class AttributeSelection implements OnInit {
   private ref = inject(ChangeDetectorRef);
@@ -39,7 +39,7 @@ export class AttributeSelection implements OnInit {
       this.valuesKey = valuesKey?.toString();
     }
   }
-  readonly valuesKeyChange = output<string>();
+  readonly sdValuesKeyChange = output<string>();
   selections: SdFormGenericDefinitionSelection[] = [];
 
   // Values
@@ -49,7 +49,7 @@ export class AttributeSelection implements OnInit {
       this.values = values || [];
     }
   }
-  readonly valuesChange = output<SdFormGenericSelectionStaticItem[]>();
+  readonly sdValuesChange = output<SdFormGenericSelectionStaticItem[]>();
   readonly sdChange = output<SdFormGenericComponent>();
 
   /** Inserted by Angular inject() migration for backwards compatibility */
@@ -70,15 +70,15 @@ export class AttributeSelection implements OnInit {
   }
 
   onChangeValuesKey = (value: any) => {
-    this.valuesKeyChange.emit(value);
+    this.sdValuesKeyChange.emit(value);
     // Gán values rỗng nếu đã sử dụng valuesKey
     this.values = [];
-    this.valuesChange.emit(this.values);
+    this.sdValuesChange.emit(this.values);
     this.ref.markForCheck();
   };
 
   onChangeValues = () => {
-    this.valuesChange.emit(this.values);
+    this.sdValuesChange.emit(this.values);
   };
 
   addItem = () => {
@@ -86,13 +86,13 @@ export class AttributeSelection implements OnInit {
       value: `value_${new Date().getTime().toString(36)}`,
       label: `Label ${new Date().getTime().toString(36)}`,
     });
-    this.valuesChange.emit(this.values);
+    this.sdValuesChange.emit(this.values);
     this.ref.markForCheck();
   };
 
   removeItem = (idx: number) => {
     this.values.splice(idx, 1);
-    this.valuesChange.emit(this.values);
+    this.sdValuesChange.emit(this.values);
     this.ref.markForCheck();
   };
 }

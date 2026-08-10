@@ -13,14 +13,14 @@ import {
   SdFormGenericGroup,
   SdFormGenericTableColumn,
   SdFormGenericVariable,
-  TableColumnTypes,
+  SD_TABLE_COLUMN_TYPES,
 } from '../../../../models';
 import { AttributeInput } from '../attribute-input/attribute-input.component';
 import { AttributeSelect } from '../attribute-select/attribute-select.component';
 import { AttributeSelection } from '../attribute-selection/attribute-selection.component';
 import { AttributeSwitch } from '../attribute-switch/attribute-switch.component';
 import { AttributeParameter } from '../attribute-parameter/attribute-parameter.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 // Template là các mẫu do Portal định nghĩa sẵn (key, label ....) để người dùng chọn nhanh
 // Khi thực hiện sao chép 1 template chúng ta sẽ CLONE để tránh ảnh hưởng template gốc
@@ -38,7 +38,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     AttributeSelect,
     AttributeSwitch,
     AttributeParameter,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class AttributeTable {
@@ -53,30 +53,30 @@ export class AttributeTable {
       this.columnsKey = columnsKey?.toString();
     }
   }
-  readonly columnsKeyChange = output<string>();
+  readonly sdColumnsKeyChange = output<string>();
   private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
   tables: SdFormGenericDefinitionTable[] = this.formGenericConfiguration?.form?.tables || [];
 
   // Columns
-  types = TableColumnTypes;
+  types = SD_TABLE_COLUMN_TYPES;
   columns: SdFormGenericTableColumn[] = [];
   @Input({ alias: 'columns', required: true }) set _columns(columns: SdFormGenericTableColumn[] | undefined | null) {
     if (this.columns !== columns) {
       this.columns = columns || [];
     }
   }
-  readonly columnsChange = output<SdFormGenericTableColumn[]>();
+  readonly sdColumnsChange = output<SdFormGenericTableColumn[]>();
   column?: SdFormGenericTableColumn;
 
   onChangeColumnsKey = (value: any) => {
-    this.columnsKeyChange.emit(value);
+    this.sdColumnsKeyChange.emit(value);
     const table = this.tables.find(e => e.value === value);
     if (table) {
       this.columns = table.columns();
     } else {
       this.columns = [];
     }
-    this.columnsChange.emit(this.columns);
+    this.sdColumnsChange.emit(this.columns);
   };
 
   addColumn = () => {
@@ -118,7 +118,7 @@ export class AttributeTable {
 
   removeColumn = (idx: number) => {
     this.columns.splice(idx, 1);
-    this.columnsChange.emit(this.columns);
+    this.sdColumnsChange.emit(this.columns);
   };
 
   onConfirm = () => {
@@ -132,7 +132,7 @@ export class AttributeTable {
       } else {
         this.columns.push(this.column);
       }
-      this.columnsChange.emit(this.columns);
+      this.sdColumnsChange.emit(this.columns);
     }
     this.modal?.close();
   };

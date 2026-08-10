@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { EnvironmentInjector, PLATFORM_ID, RendererFactory2, createEnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdLoadingService } from './loading.service';
 
 const STYLE_SELECTOR = 'style[data-sd-loading-styles]';
@@ -569,6 +570,62 @@ describe('SdLoadingService', () => {
     expect(lateRef.closed).toBeTrue();
     expect(ownedService.isLoading()).toBeNull();
     await expectAsync(ownedService.run(() => Promise.resolve('after-destroy'))).toBeResolvedTo('after-destroy');
+  });
+});
+
+describe('SdLoadingService with an animations renderer', () => {
+  const animationHosts = new Set<HTMLElement>();
+
+  afterEach(() => {
+    TestBed.resetTestingModule();
+    for (const host of animationHosts) host.remove();
+    animationHosts.clear();
+    document.body.removeAttribute('aria-busy');
+    document.body.querySelectorAll('.sd-loading').forEach(overlay => overlay.remove());
+    document.head.querySelectorAll(STYLE_SELECTOR).forEach(style => style.remove());
+  });
+
+  // why: khi app bật animations, RendererFactory2 trả về AnimationRendererFactory và
+  // Renderer2.removeChild() chỉ ĐÁNH DẤU element để gỡ (collectedLeaveElements), việc gỡ DOM thật
+  // xảy ra ở lần flush kế tiếp của animation engine. Lúc service bị destroy (hoặc stop() chạy ngoài
+  // một chu kỳ change detection) không còn flush nào nữa → overlay .sd-loading và
+  // style[data-sd-loading-styles] nằm lại trong document vĩnh viễn.
+  it('detaches its overlay and stylesheet immediately when the animations renderer is active', () => {
+    TestBed.configureTestingModule({ imports: [NoopAnimationsModule] });
+    const host = document.createElement('div');
+    host.className = 'animated-loading-host';
+    document.body.appendChild(host);
+    animationHosts.add(host);
+
+    const injector = createEnvironmentInjector([SdLoadingService], TestBed.inject(EnvironmentInjector));
+    const animatedService = injector.get(SdLoadingService);
+    const ref = animatedService.start('.animated-loading-host');
+
+    expect(host.querySelector(':scope > .sd-loading')).toBeTruthy();
+    expect(document.head.querySelectorAll(STYLE_SELECTOR).length).toBe(1);
+
+    ref.close();
+    expect(host.querySelector(':scope > .sd-loading')).toBeNull();
+    expect(animatedService.isLoading('.animated-loading-host')).toBeFalse();
+
+    injector.destroy();
+    expect(document.head.querySelector(STYLE_SELECTOR)).toBeNull();
+  });
+
+  it('leaves no document state behind for the next spec file when animations are active', () => {
+    TestBed.configureTestingModule({ imports: [NoopAnimationsModule] });
+    const host = document.createElement('div');
+    host.className = 'animated-loading-host';
+    document.body.appendChild(host);
+    animationHosts.add(host);
+
+    const injector = createEnvironmentInjector([SdLoadingService], TestBed.inject(EnvironmentInjector));
+    injector.get(SdLoadingService).start('.animated-loading-host');
+    injector.destroy();
+
+    expect(document.head.querySelector(STYLE_SELECTOR)).toBeNull();
+    expect(document.querySelector('.sd-loading')).toBeNull();
+    expect(host.hasAttribute('aria-busy')).toBeFalse();
   });
 });
 

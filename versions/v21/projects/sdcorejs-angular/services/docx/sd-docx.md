@@ -5,6 +5,18 @@
 **Provided in**: `'root'`
 **Import path**: `@sdcorejs/angular/services/docx`
 
+> ## ⚠️ This entry point carries a different licence from the rest of the package
+>
+> `@sdcorejs/angular` declares `"license": "MIT"`, and MIT covers the code written for this project. **This entry point does not consist only of that code.**
+>
+> `services/docx/src/lib/pandoc-core.ts` is a local copy of the environment-agnostic pandoc core, adapted from `pandoc-wasm/src/core.js`. Its own header records the source as https://github.com/pandoc/pandoc-wasm, licensed **GPL-2.0-or-later**. It was copied rather than installed because the `pandoc-wasm` entry points use top-level `await`, which Angular's esbuild/Vite pipeline does not accept.
+>
+> Nothing outside this entry point imports that file, so an application that never imports `@sdcorejs/angular/services/docx` does not bundle it. An application that *does* import it is bundling GPL-2.0-or-later code alongside the MIT code.
+>
+> Separately, `SdDocxService` fetches the pandoc WebAssembly binary at runtime from `https://pandoc.github.io/pandoc-wasm/pandoc.wasm`. That binary is neither committed here nor shipped in the npm package; pandoc itself is GPL-2.0-or-later.
+>
+> The maintainer has chosen to keep this code and document the situation rather than relicense or remove it. The full provenance record is in [`NOTICE`](https://github.com/sdcorejs/sdcorejs-angular/blob/main/NOTICE) at the repository root. This note describes the facts only — what those licences require of *your* project is for you and your own advisers to determine.
+
 ## One-line purpose
 Converts `.doc` / `.docx` files to standalone HTML in the browser by lazily loading a Pandoc WebAssembly binary; exposes both an "open file picker" flow and a programmatic conversion API.
 

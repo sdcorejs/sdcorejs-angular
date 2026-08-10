@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import Keycloak from 'keycloak-js'; // Import trực tiếp SDK gốc của Keycloak
 import { SdKeycloakTenantConfig } from './keycloak.configuration';
 
@@ -8,6 +8,7 @@ export class SdKeycloakService {
   public config!: SdKeycloakTenantConfig;
 
   async init(config: SdKeycloakTenantConfig): Promise<boolean> {
+    this.#assertValidConfig(config);
     this.config = config;
 
     // Đường dẫn 2 file tĩnh trong public/ (consumer cấu hình qua silentRenewUrl / authErrorUrl).
@@ -47,6 +48,28 @@ export class SdKeycloakService {
       console.error('Keycloak init failed:', error);
       window.location.href = authErrorHref;
       return false;
+    }
+  }
+
+  /**
+   * why: `url` / `realm` / `clientId` trước đây được truyền thẳng vào `new Keycloak(...)` mà không
+   * kiểm tra. Thiếu hoặc rỗng thì lỗi chỉ lộ ra sau này dưới dạng một lỗi khởi tạo khó truy vết từ
+   * bên trong `keycloak-js`. Ném sớm với tên field cụ thể.
+   *
+   * `secureRoutes` thì cảnh báo chứ không ném: khi thiếu, `SdKeycloakInterceptor` không đính token
+   * vào BẤT KỲ request nào, nên consumer nhận 401 hàng loạt mà không có manh mối nào. Đây gần như
+   * luôn là cấu hình sót, nhưng vẫn là trạng thái hợp lệ (app chỉ gọi API công khai).
+   */
+  #assertValidConfig(config: SdKeycloakTenantConfig | undefined | null): void {
+    const missing = (['url', 'realm', 'clientId'] as const).filter(field => !config?.[field]?.trim?.());
+    if (!config || missing.length) {
+      throw new Error(`[sd-keycloak] Thiếu cấu hình bắt buộc: ${missing.join(', ') || 'toàn bộ SdKeycloakTenantConfig'}.`);
+    }
+    if (isDevMode() && !config.secureRoutes?.length) {
+      console.warn(
+        '[sd-keycloak] `secureRoutes` rỗng — SdKeycloakInterceptor sẽ KHÔNG đính access token vào bất kỳ request nào. ' +
+          "Khai báo path cùng origin (vd ['/api/v1']) hoặc origin tuyệt đối (vd ['https://api.example.com/v1'])."
+      );
     }
   }
 

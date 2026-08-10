@@ -4,7 +4,7 @@
 <div class="c-query-bar__actions">
   <!-- AND / OR toggle -->
   @if (showLogicToggle() && filtersCount() >= 2) {
-    <div class="c-logic-toggle" role="group" aria-label="Logic operator">
+    <div class="c-logic-toggle" role="group" [attr.aria-label]="logicGroupLabel()">
       <button
         type="button"
         class="c-logic-segment"
@@ -26,8 +26,8 @@
     <button
       type="button"
       class="c-clear-all"
-      [matTooltip]="'Xóa tất cả (' + filtersCount() + ')'"
-      (click)="clear.emit()">
+      [matTooltip]="clearAllLabel()"
+      (click)="sdClear.emit()">
       <sd-icon name="delete_sweep"></sd-icon>
     </button>
   }
@@ -40,7 +40,7 @@
     <sd-query-saved-filters-menu
       [key]="savedFiltersKey()"
       [query]="query()"
-      (apply)="applyFilter.emit($event)" />
+      (sdApply)="sdApplyFilter.emit($event)" />
   }
 
   <!-- why: far-right "submit at the end of the toolbar" position; sole query trigger. -->
@@ -48,8 +48,8 @@
     type="button"
     class="c-search-trigger"
     [disabled]="!canSearch()"
-    matTooltip="Tìm kiếm"
-    (click)="search.emit()">
+    [matTooltip]="searchLabel()"
+    (click)="sdSearch.emit()">
     <sd-icon name="search"></sd-icon>
   </button>
 </div>

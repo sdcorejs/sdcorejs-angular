@@ -21,4 +21,17 @@
   font-size: 12px;
   cursor: pointer;
   outline: none;
+
+  // why: `outline: none` ở trên xoá luôn vòng focus mặc định → người dùng bàn phím mất dấu.
+  // Trả lại bằng :focus-visible (chuột vẫn không thấy viền).
+  &:focus-visible {
+    outline: 2px solid var(--sd-primary, #005cbb);
+    outline-offset: 2px;
+  }
+}
+
+// why: ô HTML clickable nay có tabindex="0" nên phải có vòng focus thấy được.
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: -2px;
 }

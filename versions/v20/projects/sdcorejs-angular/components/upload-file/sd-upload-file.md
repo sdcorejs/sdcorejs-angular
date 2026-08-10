@@ -79,8 +79,8 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 
 | Name           | Type                                | Notes                                                                                                                                                                                                                               |
 | -------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loaded`       | `OutputRef<PreviewFile[]>`          | Declared output — reserved for future use; currently not emitted. Do not rely on it until the API is stabilised.                                                                                                                    |
-| `filesChanged` | `OutputRef<(string \| File)[]>`     | Emits whenever the file set changes (add, remove, reorder). Items are mixed: server keys (string), CDN URLs (string), or freshly-picked `File` objects. Emitted after every `#details` resolution.                                  |
+| `sdLoaded`       | `OutputRef<PreviewFile[]>`          | Declared output — reserved for future use; currently not emitted. Do not rely on it until the API is stabilised.                                                                                                                    |
+| `sdFilesChanged` | `OutputRef<(string \| File)[]>`     | Emits whenever the file set changes (add, remove, reorder). Items are mixed: server keys (string), CDN URLs (string), or freshly-picked `File` objects. Emitted after every `#details` resolution.                                  |
 | `model`        | `ModelSignal<(string \| number)[]>` | **Two-way bindable via `[(model)]`**. Holds idOrKeys / cdn URLs / hashed-keys-of-pending-uploads. Set this from your form to pre-populate. Updating the array triggers `#details()` to resolve metadata and refresh `previewFiles`. |
 
 ## Public API (call via template ref)
@@ -146,6 +146,7 @@ export class AttachmentComponent {
 ## Visual cues (helps agent map screenshots → component)
 
 - **Drop zone**: square box with **2px dashed grey border**, centered Material icon `file_upload` (cloud / arrow-up), `previewWidth` × `previewHeight` (default 50×50). On dragover, border becomes **2px solid grey** and opacity 0.9. Click opens native file picker.
+- **Drag listener lifecycle**: the `dragover` / `dragenter` / `dragleave` / `drop` handlers are bound to the drop container after first render (desktop only) and removed in `DestroyRef.onDestroy`. Holding a reference to the drop element after the component is destroyed no longer replays uploads or restyles the element.
 - **Image type**: row of square thumbnails (drop zone first, then images). Hover reveals zoom-in icon + close (X) button. Drag handle to reorder.
 - **Document type**: stacked rows below images. Each row = file-type icon (extension-colored: pdf/doc/xls/png/…) + filename as a link + size in KB + close icon.
 - **Disabled / viewed mode**: drop zone hidden; for image type, only first `maxOfImage` thumbnails shown; if more, an overlay `+N` count appears on the last to open the gallery popup.
@@ -272,8 +273,8 @@ Typically not used standalone, but accessible via `viewChild(PreviewComponent)` 
 | `open(files, index?)`           | `(PreviewFile[], number?) => Promise<void>` | Opens the gallery modal at the given index (default 0). No-op if array is empty or null. |
 | `updateCurrentImage(direction)` | `(1 \| -1) => void`                         | Navigates forward (1) or backward (-1) with wrap-around.                                 |
 | `onClickThumbnailImage(index)`  | `(number) => void`                          | Jumps to thumbnail at `index`.                                                           |
-| `onDownload(previewFile)`       | `(PreviewFile) => void`                     | Emits the `download` output.                                                             |
-| `onClose()`                     | `() => void`                                | Emits the `close` output.                                                                |
+| `onDownload(previewFile)`       | `(PreviewFile) => void`                     | Emits the `sdDownload` output.                                                             |
+| `onClose()`                     | `() => void`                                | Emits the `sdClose` output.                                                                |
 | `activeIndex`                   | `number`                                    | Currently selected image index.                                                          |
 | `previewFiles`                  | `PreviewFile[]`                             | Files loaded into the gallery.                                                           |
 | `@Output() download`            | `EventEmitter<PreviewFile>`                 | Emitted when user clicks the download button on a non-image file.                        |
@@ -301,3 +302,15 @@ interface SdUploadFileDetail {
 - `UploadFileService` — internal `providedIn: 'root'` service that acts as a temporary in-memory cache for `File` objects between selection and upload; managed automatically by the component
 - `<sd-modal>` — used internally by the preview popup
 - `*sdPermission` — wrap to gate by permission
+
+## Accessibility
+
+- **Drop zone**: `role="button"` + `tabindex="0"` + an i18n `aria-label` (`core.component.upload-file.upload`) + a `:focus-visible` ring. Enter/Space open the file picker exactly like a click (Space calls `preventDefault()` so the page does not scroll). It previously carried `aria-hidden="true"` while still taking mouse clicks — invisible to screen readers, unreachable by keyboard.
+- **Image tile**: no longer `aria-hidden`. The tile wraps the remove and zoom buttons; hiding the container left those buttons tab-reachable but silent. `onSelect` is a touch-only affordance, so `role="button"` / `tabindex` / `aria-pressed` are applied **only** on touch devices — desktop keyboard users get no dead tab stop. Its keyboard handler ignores events bubbling from the nested buttons.
+- **Icon-only controls are real buttons**: the zoom-in affordance and the document remove affordance were `<sd-icon (click)>` (a custom element — not focusable, no accessible name); both are now `<button type="button">` with i18n `aria-label`s.
+- The image remove button's `aria-label` was the hard-coded English `"Close"` (also the wrong verb); it now uses an i18n delete label.
+- **Live regions**: the per-image upload spinner is wrapped in `role="status" aria-live="polite"`, and the required-error message uses `role="alert"` so it is announced when validation fails after submit.
+
+### i18n compromise
+
+`aria-label` for the two remove buttons reuses `core.component.form-builder.delete` ("Xóa"). The `upload-file` scope has no delete/remove key and the i18n catalog is owned elsewhere — replace with a dedicated `core.component.upload-file.remove` key when the catalog is next touched.

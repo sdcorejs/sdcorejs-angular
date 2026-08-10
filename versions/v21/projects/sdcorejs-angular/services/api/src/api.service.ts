@@ -1,12 +1,15 @@
 import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams, HttpRequest, HttpResponse } from '@angular/common/http';
 import { DestroyRef, inject, Injectable } from '@angular/core';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
-import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
+import { digestSdPersistenceKey, SdGraphSerializer } from '@sdcorejs/angular/services/persistence';
+import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { Observable, of, Subscription, throwError, timer, TimeoutError } from 'rxjs';
 import { filter, map, retry, timeout } from 'rxjs/operators';
+import { sdApiMatchesHandlerHosts } from './api-host';
 import {
   ISdApiConfiguration,
   SD_API_CONFIG,
+  SdApiError,
   SdApiHandler,
   SdApiRetryOption,
   SdDeleteOption,
@@ -56,6 +59,7 @@ export class SdApiService {
   readonly #sharedRequests = new Map<string, SharedRequest>();
   readonly #activeRequests = new Set<SharedRequest>();
   readonly #objectIds = new WeakMap<object, number>();
+  readonly #keySerializer = new SdGraphSerializer();
   #nextObjectId = 1;
   #destroyed = false;
 
@@ -114,6 +118,10 @@ export class SdApiService {
     }
 
     const key = this.#generateKey(url, method, body, option);
+    // why: không sinh được key canonical thì bỏ hẳn lớp cache (xem #digestKey) — KHÔNG mint key
+    // duy nhất, vì key đó chảy thẳng vào cache bền và không bao giờ đọc lại được.
+    if (key === undefined) return this.#request<T>(url, method, body, option);
+
     const cache = this.#cacheService.create<T>(key, option.cacheOption);
     try {
       const cached = cache.snapshot();
@@ -339,18 +347,20 @@ export class SdApiService {
 
   #mapResponse(body: unknown, handler: SdApiHandler | undefined): unknown {
     if (body !== null && typeof body === 'object' && 'ok' in body && body.ok === false) {
-      throw body;
+      // why: ném plain object khiến `instanceof Error`, `.message` và mọi retry predicate trượt
+      // qua nhánh này. Bọc vào SdApiError nhưng vẫn giữ body gốc ở `.body`.
+      throw new SdApiError(body);
     }
     return handler?.mapResponse ? handler.mapResponse(body) : body;
   }
 
   #getHandler(url: string): SdApiHandler | undefined {
     const handlers = this.#configurations.flatMap(configuration => configuration.handlers ?? []);
-    return handlers.find(handler => handler.hosts.some(host => url.startsWith(host)));
+    return handlers.find(handler => sdApiMatchesHandlerHosts(url, handler.hosts));
   }
 
-  #generateKey(url: string, method: HttpMethod, body: unknown, option?: SdHttpOptions): string {
-    return Utilities.hash({
+  #generateKey(url: string, method: HttpMethod, body: unknown, option?: SdHttpOptions): string | undefined {
+    return this.#digestKey({
       method,
       url,
       body: this.#normalizeBody(body),
@@ -374,11 +384,43 @@ export class SdApiService {
     });
   }
 
-  #generateRequestKey(url: string, method: HttpMethod, body: unknown, option?: SdHttpOptions): string {
-    return Utilities.hash({
-      responseKey: this.#generateKey(url, method, body, option),
+  #generateRequestKey(url: string, method: HttpMethod, body: unknown, option?: SdHttpOptions): string | undefined {
+    const responseKey = this.#generateKey(url, method, body, option);
+    // why: không có key cache thì cũng KHÔNG được có key dedupe. Nếu vẫn digest với
+    // `responseKey: undefined` thì mọi request không canonicalize được sẽ ra chung một key và
+    // share nhầm response in-flight của nhau — đúng thứ fail-closed sinh ra để chặn.
+    if (responseKey === undefined) return undefined;
+
+    return this.#digestKey({
+      responseKey,
       dedupeWindowMs: this.#normalizeDedupeWindow(option?.dedupeWindowMs),
     });
+  }
+
+  /**
+   * why: key cache + key dedupe trước đây lấy từ `Utilities.hash` — rolling hash 32-bit rồi
+   * `Math.abs` nên thực chất chỉ còn 31 bit. Một va chạm là hai request KHÁC nhau dùng chung một
+   * response in-flight hoặc chung một body đã cache, tức rò dữ liệu chéo request. Đổi sang
+   * SHA-256 (`digestSdPersistenceKey`, đồng bộ, đã dùng sẵn ở services/persistence + services/cache
+   * nên không phải đổi call site sang async) trên chuỗi canonical của `SdGraphSerializer` —
+   * serializer này sort key object và xử lý vòng lặp tham chiếu nên hai request giống nhau về
+   * ngữ nghĩa luôn ra cùng một chuỗi.
+   *
+   * Trả `undefined` = "không có key" ⇒ caller BỎ HẲN cache + dedupe cho lời gọi này.
+   */
+  #digestKey(descriptor: Record<string, unknown>): string | undefined {
+    try {
+      return `sd-api@1:${digestSdPersistenceKey(this.#keySerializer.stringify(descriptor))}`;
+    } catch {
+      // why: fail-closed. Không canonicalize được (giá trị lạ trong headers/params) thì bỏ hẳn
+      // cache/dedupe — mất tối ưu còn hơn chia sẻ nhầm response.
+      //
+      // Bản trước sinh một key DUY NHẤT mỗi lần gọi. Nhưng key này cũng chính là key cache, và
+      // `SdCacheService.create(key, cacheOption)` với `cacheOption.type: 'local'` ghi xuống storage
+      // bền: mỗi request không canonicalize được để lại một entry không bao giờ đọc lại (key không
+      // bao giờ sinh ra lần thứ hai) và không bao giờ bị evict — rò rỉ storage không giới hạn.
+      return undefined;
+    }
   }
 
   #normalizeDedupeWindow(dedupeWindowMs: number | undefined): number {

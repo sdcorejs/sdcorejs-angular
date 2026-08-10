@@ -1,7 +1,8 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import { Component, DestroyRef, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
+import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 
 import { SdLayoutUserInfo, SidebarConfigurationV1 } from '../../../../configurations';
 import { SdLayoutMenu, SdLayoutStorageService } from '../../../../services';
@@ -15,10 +16,13 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss',
 })
-export class SidebarMobileOverlayComponent {
+export class SdSidebarMobileOverlay {
   #router = inject(Router);
   #destroyRef = inject(DestroyRef);
   #layoutStorageService = inject(SdLayoutStorageService);
+  // why: các sidebar anh em đều lấy window qua DOCUMENT.defaultView; đọc global `window` trực tiếp
+  // sẽ throw khi render phía server (SSR) vì global đó không tồn tại.
+  #window = inject(DOCUMENT).defaultView;
 
   // ==========================================
   // INPUTS & OUTPUTS
@@ -29,17 +33,17 @@ export class SidebarMobileOverlayComponent {
   sidebar = input.required<SidebarConfigurationV1>();
 
   // showSideBar(null) = đóng sidebar (tương thích với onToggle của main component)
-  showSideBar = output<boolean | null>();
-  expandSideBar = output<void>();
-  popupUserMenuOpened = output<void>();
-  popupUserMenuClosed = output<void>();
-  titleMenuGroupChanged = output<string | undefined>();
+  sdShowSideBar = output<boolean | null>();
+  sdExpandSideBar = output<void>();
+  sdPopupUserMenuOpened = output<void>();
+  sdPopupUserMenuClosed = output<void>();
+  sdTitleMenuGroupChanged = output<string | undefined>();
 
   // ==========================================
   // STATE SIGNALS
   // ==========================================
   titleMenuGroup = signal<string | undefined>('');
-  currentPath = signal<string>(window.location.pathname);
+  currentPath = signal<string>(this.#window?.location.pathname ?? this.#router.url.split(/[?#]/, 1)[0] ?? '');
 
   // Lưu danh sách ID các menu group đang được mở
   expandedMobileGroups = signal<Set<string>>(new Set<string>());
@@ -60,8 +64,11 @@ export class SidebarMobileOverlayComponent {
     // Bind title khi điều hướng
     this.#router.events.pipe(takeUntilDestroyed(this.#destroyRef)).subscribe(event => {
       if (event instanceof NavigationEnd) {
-        if (this.currentPath() !== window.location.pathname) {
-          this.currentPath.set(window.location.pathname);
+        // why: giống sidebar v1 desktop — lấy path từ chính sự kiện router thay vì đọc global
+        // `window.location`, để component chạy được cả khi không có global window (SSR).
+        const currentPath = event.urlAfterRedirects.split(/[?#]/, 1)[0] ?? '';
+        if (this.currentPath() !== currentPath) {
+          this.currentPath.set(currentPath);
           this.#bindingMenuGroupByCurrentPath(this.menus());
         }
       }
@@ -93,8 +100,12 @@ export class SidebarMobileOverlayComponent {
     const { path, queryParams } = args;
     if (!path) return;
 
-    if (path.includes('http')) {
-      window.open(path);
+    // why: `path.includes('http')` là substring test chứ không phải scheme test —
+    // `javascript:fetch(...)//http` lọt qua rồi chạy như script trong chính origin của app. Ngoài ra
+    // `window.open(path)` cũ không truyền `noopener` nên tab mới giữ được `window.opener` và có thể
+    // điều hướng ngược tab gốc (reverse tabnabbing). `sdOpenExternal` luôn gắn `noopener,noreferrer`.
+    if (sdIsExternalHttpUrl(path)) {
+      sdOpenExternal(path);
       return;
     }
 
@@ -108,7 +119,7 @@ export class SidebarMobileOverlayComponent {
   }
 
   onClose(): void {
-    this.showSideBar.emit(null);
+    this.sdShowSideBar.emit(null);
   }
 
   // Kiểm tra menu có children (là SdLayoutChildrenMenu)
@@ -131,8 +142,8 @@ export class SidebarMobileOverlayComponent {
     return ('queryParams' in menu ? menu.queryParams : undefined) ?? {};
   }
 
-  onUserMenuOpened = (): void => this.popupUserMenuOpened.emit();
-  onUserMenuClosed = (): void => this.popupUserMenuClosed.emit();
+  onUserMenuOpened = (): void => this.sdPopupUserMenuOpened.emit();
+  onUserMenuClosed = (): void => this.sdPopupUserMenuClosed.emit();
 
   // ==========================================
   // PRIVATE LOGIC
@@ -150,10 +161,10 @@ export class SidebarMobileOverlayComponent {
       this.#layoutStorageService.lastActiveMenuGroupId.set(matchedGroup?.id || '');
       const title = matchedGroup?.tooltipTitle || matchedGroup?.title;
       this.titleMenuGroup.set(title);
-      this.titleMenuGroupChanged.emit(title);
+      this.sdTitleMenuGroupChanged.emit(title);
     } else {
       this.titleMenuGroup.set('');
-      this.titleMenuGroupChanged.emit('');
+      this.sdTitleMenuGroupChanged.emit('');
     }
   };
 

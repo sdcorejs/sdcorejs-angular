@@ -8,6 +8,21 @@
   display: block;
 }
 
+// why: nhánh inline cũng project `sdSuffixDef` (swatch của <sd-input-color>, icon search…),
+// nên cần một hàng flex để suffix nằm cạnh text thay vì rơi xuống dòng dưới.
+.sd-input-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.sd-input-inline__suffix {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+}
+
 // why: chỉ pad-top khi có label để chừa chỗ cho mat float-label, tránh bị cắt ở mép trên.
 :host(.sd-has-label) {
   padding-top: 4px;

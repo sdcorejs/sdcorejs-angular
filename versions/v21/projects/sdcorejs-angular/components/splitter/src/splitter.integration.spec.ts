@@ -393,3 +393,116 @@ describe('sd-splitter nested', () => {
     expect(allHandles.length).toBe(2);
   });
 });
+
+// ---------------------------------------------------------------------------
+// why: #syncHandles từng chạy TRỰC TIẾP trong effect(). afterRender callback chạy với
+// setActiveConsumer(null) còn effect thì KHÔNG, nên khi #syncHandles được dời vào effect, mọi
+// panel.resizable() nó đọc trở thành dependency ngầm — bật/tắt [resizable] của một panel làm cả
+// pass chạy lại và appendChild lại TOÀN BỘ panel host element. appendChild trên node đã đúng chỗ
+// vẫn là move thật: iframe/video reload, focus + scrollTop trong panel bay sạch. Suite này đo hệ
+// quả quan sát được, không đo cách cài đặt.
+// ---------------------------------------------------------------------------
+
+@Component({
+  standalone: true,
+  imports: [SdSplitterComponent, SdSplitterPanelComponent],
+  template: `
+    <sd-splitter style="width:400px;height:200px;">
+      <sd-splitter-panel panelId="a" size="1" [resizable]="leftResizable()">
+        <div id="scroller" style="height:60px;overflow:auto">
+          <div style="height:400px">tall</div>
+        </div>
+        <button id="inside-a" type="button">focus me</button>
+      </sd-splitter-panel>
+      <sd-splitter-panel panelId="b" size="1">B</sd-splitter-panel>
+      @if (showThird()) {
+        <sd-splitter-panel panelId="c" size="1">C</sd-splitter-panel>
+      }
+    </sd-splitter>
+  `,
+})
+class ResizableToggleHost {
+  leftResizable = signal(true);
+  showThird = signal(false);
+}
+
+describe('sd-splitter live DOM preservation', () => {
+  let fix: ComponentFixture<ResizableToggleHost>;
+  let splitterEl: HTMLElement;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({ imports: [ResizableToggleHost], providers: [SdStorageService] });
+    fix = TestBed.createComponent(ResizableToggleHost);
+    fix.detectChanges();
+    await fix.whenStable();
+    fix.detectChanges();
+    splitterEl = fix.nativeElement.querySelector('sd-splitter') as HTMLElement;
+  });
+
+  async function toggleResizable(): Promise<void> {
+    fix.componentInstance.leftResizable.set(false);
+    fix.detectChanges();
+    await fix.whenStable();
+    fix.detectChanges();
+  }
+
+  it('does not re-append panel hosts when only [resizable] changed', async () => {
+    const appendSpy = spyOn(splitterEl, 'appendChild').and.callThrough();
+
+    await toggleResizable();
+
+    expect(appendSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps focus inside a panel while [resizable] is toggled', async () => {
+    const button = splitterEl.querySelector<HTMLButtonElement>('#inside-a')!;
+    button.focus();
+    expect(document.activeElement).toBe(button);
+
+    await toggleResizable();
+
+    expect(document.activeElement).toBe(button);
+  });
+
+  it('keeps scroll position inside a panel while [resizable] is toggled', async () => {
+    const scroller = splitterEl.querySelector<HTMLElement>('#scroller')!;
+    scroller.scrollTop = 120;
+    expect(scroller.scrollTop).toBe(120);
+
+    await toggleResizable();
+
+    expect(scroller.scrollTop).toBe(120);
+  });
+
+  // why: bỏ tracking đi kèm rủi ro effect KHÔNG chạy lại nữa. untracked() chỉ được cắt tracking,
+  // KHÔNG được cắt tín hiệu — [resizable] vẫn phải tới được handle.
+  it('still propagates [resizable] to the handle it guards', async () => {
+    const handle = splitterEl.querySelector<HTMLElement>('sd-splitter-handle')!;
+    expect(handle.classList.contains('sd-splitter__handle--disabled')).toBeFalse();
+
+    await toggleResizable();
+
+    expect(handle.classList.contains('sd-splitter__handle--disabled')).toBeTrue();
+  });
+
+  it('still interleaves panels and handles when the panel count changes', async () => {
+    expect(tagSequence()).toEqual(['sd-splitter-panel', 'sd-splitter-handle', 'sd-splitter-panel']);
+
+    fix.componentInstance.showThird.set(true);
+    fix.detectChanges();
+    await fix.whenStable();
+    fix.detectChanges();
+
+    expect(tagSequence()).toEqual([
+      'sd-splitter-panel',
+      'sd-splitter-handle',
+      'sd-splitter-panel',
+      'sd-splitter-handle',
+      'sd-splitter-panel',
+    ]);
+  });
+
+  function tagSequence(): string[] {
+    return Array.from(splitterEl.children).map(child => child.tagName.toLowerCase());
+  }
+});

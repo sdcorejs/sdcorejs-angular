@@ -51,7 +51,7 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | `disabled`        | `boolean`                               | `false`                                     | Disables the control.                                                                                                                                                                                                                                                                                 |
 | `clearable`       | `boolean`                               | `false`                                     | Shows the value-gated clear button in edit and `'inline'` modes. The button is still hidden when the field is empty, required, disabled, or readonly.                                                                                                                                                 |
 | `viewed`          | `boolean \| 'inline'`                   | `false`                                     | Display mode. `false` edit · `true` static DETAIL (formatted number / `sdViewDef`) · `'inline'` **borderless inline-edit** — the real `<input>` renders transparent/borderless (looks like text), focus to edit, blur reformats (e.g. `12.345`); NO panel/overlay. Disabled `'inline'` → static view. |
-| `blurOnEnter`     | `boolean`                               | `false`                                     | If `true`, Enter blurs the field after emitting `keyupEnter`.                                                                                                                                                                                                                                         |
+| `blurOnEnter`     | `boolean`                               | `false`                                     | If `true`, Enter blurs the field after emitting `sdKeyupEnter`.                                                                                                                                                                                                                                         |
 | `hideInlineError` | `boolean`                               | `false`                                     | Hide inline message; surfaces error via `errorMessage`.                                                                                                                                                                                                                                               |
 | `model`           | `any` (`number \| null`)                | `undefined`                                 | Two-way bound numeric value (use `[(model)]`). Stored as a JS number; emitted as number on change.                                                                                                                                                                                                    |
 
@@ -63,7 +63,7 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 | ------------------ | --------------------- | ---------------------------------------------------------------------------- |
 | `sdChange`         | `number \| null`      | Emitted when the parsed numeric value changes.                               |
 | `sdFocus`          | `void`                | Fires on focus.                                                              |
-| `sdBlur`           | `number \| null`      | Fires on blur, payload = current numeric value (or `null` if cleared).       |
+| `sdBlur`           | `number \| null`      | Fires on **every** blur, payload = current numeric value (or `null` if cleared) — including the "trailing decimal separator" path (`"12."` / `"12,"`), which is reformatted to `12` and then emits like any other blur. |
 | `keyupEnter`       | `string`              | Fires on Enter keyup, payload = the formatted display string.                |
 | `sdFocusForceBlur` | `void` (EventEmitter) | When a parent subscribes, focusing the input immediately blurs it and emits. |
 
@@ -71,7 +71,7 @@ Numeric input with locale-aware formatting (VN `1.234.567,89` or ISO `1,234,567.
 
 | Name             | Signature          | Notes                                                                                                           |
 | ---------------- | ------------------ | --------------------------------------------------------------------------------------------------------------- |
-| `clear($event?)` | `(Event?) => void` | Resets display + value to `null` and emits `sdChange(null)`. No-op when empty. Backs the built-in clear button. |
+| `clear($event?)` | `(Event?) => void` | Resets display + value to `null` and emits `sdChange(null)` **exactly once**. Re-validates and surfaces the resulting message (e.g. `required`) immediately. No-op when empty. Backs the built-in clear button. |
 | `showClear()`    | `() => boolean`    | Whether the built-in clear button renders: `clearable`, has a value, and not `required`/`disabled`/`readonly`.  |
 
 ## E2E test attributes
@@ -127,9 +127,9 @@ Applied automatically on `<sd-input-number>` for styling hooks:
 - **Reactive validator updates** — validator inputs (`required` / `min` / `max` / `inlineError` / `validator`) are signal inputs; an internal `effect()` re-runs `setValidators` + `updateValueAndValidity({ emitEvent: false })` whenever any of them changes. Validators update automatically at runtime — no manual `reValidate()` needed.
 - **`[disabled]` reactive** — toggling `disabled` calls `inputControl.disable() / enable()` and `formControl.disable() / enable()` via an effect, with `emitEvent: false` (no spurious `statusChanges`).
 - **`[(model)]` two-way** — host-side writes propagate via an effect: when `model` changes, the component calls `formControl.setValue(val, { emitEvent: false })` and syncs `inputControl` with the formatted display string so the host won't re-trigger its own `(modelChange)` listener. The reverse direction (user typing → `inputControl.valueChanges` → parse → `valueModel.set()` → `(modelChange)` emit) runs through the normal Angular signal-model mechanism.
-- **Why the typing path mirrors to `formControl` WITH events** — when the user types, the parsed value is written back via `formControl.setValue(value)` **without** `{ emitEvent: false }`. This is deliberate: `formControl` carries the (async) `[validator]`, and the error message is derived through a `computed` that only recomputes when the control's reactive snapshot (`sdFormControlState`) ticks on a control event. Suppressing the event here would mean the async validator's `setErrors(...)` completion also runs silently → the snapshot never ticks → the error message never appears (the field would show a red outline yet no message). `formControl.valueChanges` has no subscriber, so emitting causes no loop. (Bug fixed 2026-06-05.)
+- **Why the typing path mirrors to `formControl` WITH events** — when the user types, the parsed value is written back via `formControl.setValue(value)` **without** `{ emitEvent: false }`. This is deliberate: `formControl` carries the (async) `[validator]`, and the error message is derived through a `computed` that only recomputes when the control's reactive snapshot (`sdFormControlState`) ticks on a control event. Suppressing the event here would mean the async validator's `setErrors(...)` completion also runs silently → the snapshot never ticks → the error message never appears (the field would show a red outline yet no message). `formControl.valueChanges` has no subscriber, so emitting causes no loop. (Bug fixed 2026-06-05.) **`clear()` follows the same rule** — it also writes `formControl.setValue(null)` with events, otherwise clearing a `required` field left `errorMessage`, `data-empty` and `data-value` frozen on the pre-clear value (empty field, red outline, no message). The display control (`inputControl`) keeps `{ emitEvent: false }` because its subscriber would re-parse and emit a second `sdChange`. (Bug fixed 2026-08-09.)
 - **Locale formatting** is driven by `SD_CORE_CONFIGURATION.format.number`. When set to `'1.234.567,89'` (VN-style), thousands separator is `.` and decimal separator is `,`. Otherwise ISO-style: thousands `,` and decimal `.`. Keystrokes that would break the active regex are blocked; paste and IME composition are validated and rolled back if invalid.
-- **Blur clean-up** — on blur, a trailing decimal separator (e.g. `"123."`) is stripped; whitespace is trimmed; an empty or whitespace-only value resolves to `null`.
+- **Blur clean-up** — on blur, a trailing decimal separator (e.g. `"123."`) is stripped; whitespace is trimmed; an empty or whitespace-only value resolves to `null`. **Every** blur branch emits `sdBlur` exactly once, including the trailing-separator one (it used to return early without emitting, so consumers listening on `(sdBlur)` silently missed that case).
 - **Default `appearance`** — when `[appearance]` is omitted, the component reads the `SD_FORM_CONFIGURATION` injection token (`{ appearance: MatFormFieldAppearance }`). Provide it once at application bootstrap to flip ALL form fields to `'fill'` (or any other appearance). Falls back to `'outline'` if the token is not provided.
 
 ### Three ways to integrate
@@ -251,6 +251,21 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ```html
 <sd-input-number label="Tổng giá trị hợp đồng" [model]="contract.totalValue" [viewed]="true"> </sd-input-number>
 ```
+
+## Accessibility
+
+`aria-hidden="true"` used to sit on the real `<input>` **and** on the layout `<div>` that wraps the
+whole `mat-form-field`. That single attribute removed the label, the control, the `mat-error` and the
+clear button from the accessibility tree at once, while the control still took keyboard focus — a
+screen reader landed on it and announced nothing.
+
+- The control element carries **no** `aria-hidden`.
+- The layout wrapper is marked `role="presentation"` (layout only). Unlike `aria-hidden` this does
+  **not** hide descendants; its `(click)` handler is a mouse convenience that keyboard users already
+  get by tabbing straight into the control.
+- When the inline error renders, the control gets `aria-invalid="true"` and an
+  `aria-describedby` pointing at the `<mat-error>` (stable id, exposed as `errorId`). Both are gated
+  on the same condition as the message itself.
 
 ## Anti-patterns
 

@@ -3,14 +3,14 @@
 <details class="fb-section" open>
   <summary class="fb-section__head">
     <span class="msi">info</span>
-    <span class="fb-section__title">{{ 'core.component.form-builder.general' | translate }}</span>
+    <span class="fb-section__title">{{ 'core.component.form-builder.general' | sdTranslate }}</span>
     <span class="msi chev">chevron_right</span>
   </summary>
   <div class="fb-section__body">
-    <attribute-input [form]="form" [(model)]="_group.label" [label]="'core.component.form-builder.label' | translate"></attribute-input>
+    <attribute-input [form]="form" [(model)]="_group.label" [label]="'core.component.form-builder.label' | sdTranslate"></attribute-input>
 
     <div class="fb-field">
-      <div class="fb-field__label">{{ 'core.component.form-builder.group-icon' | translate }}</div>
+      <div class="fb-field__label">{{ 'core.component.form-builder.group-icon' | sdTranslate }}</div>
       <div class="fb-icon-picker">
         @for (icon of iconPresets; track icon) {
           <button type="button" class="fb-icon-picker__btn"
@@ -23,14 +23,21 @@
     </div>
 
     <div class="fb-field">
-      <div class="fb-field__label">{{ 'core.component.form-builder.group-accent-color' | translate }}</div>
+      <div class="fb-field__label">{{ 'core.component.form-builder.group-accent-color' | sdTranslate }}</div>
       <div class="fb-color-swatches">
+        <!-- why: ô màu là control chọn màu THẬT nhưng lại là <span (click)> — không nhận focus,
+             Enter/Space không chọn được, và trạng thái "đang chọn" chỉ tồn tại ở CSS. Đổi sang
+             <button type="button"> (tự focusable + Enter/Space) và khai aria-pressed để screen
+             reader biết ô nào đang được chọn. -->
         @for (color of colorPresets; track color) {
-          <span class="fb-color-swatch"
-                [class]="color"
-                [class.is-active]="_group.properties.color === color"
-                (click)="pickColor(color)"
-                [attr.aria-label]="color"></span>
+          <button
+            type="button"
+            class="fb-color-swatch"
+            [class]="color"
+            [class.is-active]="_group.properties.color === color"
+            [attr.aria-pressed]="_group.properties.color === color"
+            (click)="pickColor(color)"
+            [attr.aria-label]="color"></button>
         }
       </div>
     </div>
@@ -40,12 +47,12 @@
 <details class="fb-section" open>
   <summary class="fb-section__head">
     <span class="msi">account_tree</span>
-    <span class="fb-section__title">{{ 'core.component.form-builder.group-children' | translate }}</span>
+    <span class="fb-section__title">{{ 'core.component.form-builder.group-children' | sdTranslate }}</span>
     <span class="msi chev">chevron_right</span>
   </summary>
   <div class="fb-section__body">
     @if (!_group.components?.length) {
-      <div class="fb-children-empty">{{ 'core.component.form-builder.group-no-children' | translate }}</div>
+      <div class="fb-children-empty">{{ 'core.component.form-builder.group-no-children' | sdTranslate }}</div>
     } @else {
       <div class="fb-children-list">
         @for (child of _group.components; track child.id) {
@@ -63,7 +70,7 @@
 <details class="fb-section" open>
   <summary class="fb-section__head">
     <span class="msi">visibility</span>
-    <span class="fb-section__title">{{ 'core.component.form-builder.display' | translate }}</span>
+    <span class="fb-section__title">{{ 'core.component.form-builder.display' | sdTranslate }}</span>
     <span class="msi chev">chevron_right</span>
   </summary>
   <div class="fb-section__body">
@@ -71,13 +78,13 @@
       [components]="[]"
       [variables]="[]"
       [(model)]="_group.properties.visibleWhenExpression"
-      [label]="'core.component.form-builder.visible-when' | translate">
+      [label]="'core.component.form-builder.visible-when' | sdTranslate">
     </attribute-expression>
     <attribute-expression
       [components]="[]"
       [variables]="[]"
       [(model)]="_group.properties.hiddenWhenExpression"
-      [label]="'core.component.form-builder.hidden-when' | translate">
+      [label]="'core.component.form-builder.hidden-when' | sdTranslate">
     </attribute-expression>
   </div>
 </details>

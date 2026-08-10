@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdLayoutUserInfo } from '../../../../configurations';
 import { SdLayoutUserMenuComponent } from '../../../shared/user-menu/user-menu.component';
@@ -8,7 +8,7 @@ import { SdLayoutUserMenuComponent } from '../../../shared/user-menu/user-menu.c
   selector: 'lib-layout-user',
   templateUrl: './user.component.html',
   styleUrl: './user.component.scss',
-  imports: [SdIcon, SdLayoutUserMenuComponent, TranslatePipe],
+  imports: [SdIcon, SdLayoutUserMenuComponent, SdTranslatePipe],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -18,19 +18,19 @@ export class LayoutUserComponent {
   isShowSidebar = input<boolean>(false);
   userInfo = input.required<SdLayoutUserInfo>();
 
-  menuClosed = output<void>();
-  menuOpened = output<void>();
-  toggleMenuLock = output<Event>();
+  sdMenuClosed = output<void>();
+  sdMenuOpened = output<void>();
+  sdToggleMenuLock = output<Event>();
 
   onMenuOpened(): void {
-    this.menuOpened.emit();
+    this.sdMenuOpened.emit();
   }
 
   onMenuClosed(): void {
-    this.menuClosed.emit();
+    this.sdMenuClosed.emit();
   }
 
   onToggleMenuLock(event: Event): void {
-    this.toggleMenuLock.emit(event);
+    this.sdToggleMenuLock.emit(event);
   }
 }

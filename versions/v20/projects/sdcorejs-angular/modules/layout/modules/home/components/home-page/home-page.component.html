@@ -2,7 +2,7 @@
 <sd-page>
   <div class="d-flex flex-column" headerLeft>
     <div class="font-weight-medium fs-20">
-      {{ 'core.module.layout.greeting.hello' | translate: { name: _userInfo?.fullName ?? _userInfo?.email ?? _userInfo?.username ?? '' } }}
+      {{ 'core.module.layout.greeting.hello' | sdTranslate: { name: _userInfo?.fullName ?? _userInfo?.email ?? _userInfo?.username ?? '' } }}
     </div>
     <span class="T12R text-secondary">{{ todayInfo() }}</span>
   </div>
@@ -37,7 +37,7 @@
             <div class="feature-icon-wrap">
               <sd-icon class="feature-icon" [name]="feature.icon"></sd-icon>
             </div>
-            <span class="feature-label">{{ feature.key | translate }}</span>
+            <span class="feature-label">{{ feature.key | sdTranslate }}</span>
           </div>
         </div>
       }

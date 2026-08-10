@@ -174,6 +174,26 @@ describe('SdDateRange', () => {
       comp.formControl.updateValueAndValidity({ emitEvent: false });
       expect(comp.formControl.hasError('required')).toBe(false);
     });
+
+    // why: RED trước fix — `Validators.required` dùng `isEmptyInputValue`, mà value của control
+    // tổng LUÔN là object `{ from, to }`. Object không bao giờ "empty" nên `[required]` không
+    // bao giờ bắt được range rỗng; test cũ chỉ pass vì nó `setValue(null)` thủ công.
+    it('flags required on the aggregate control while it holds the real { from, to } object', () => {
+      host.required = true;
+      fixture.detectChanges();
+
+      expect(comp.formControl.value).toEqual({ from: null, to: null });
+      expect(comp.formControl.hasError('required')).toBe(true);
+    });
+
+    it('flags required when only one endpoint of the range is filled', () => {
+      host.required = true;
+      host.model = { from: '2026/01/01', to: null };
+      fixture.detectChanges();
+
+      expect(comp.formControl.value).toEqual(jasmine.objectContaining({ to: null }));
+      expect(comp.formControl.hasError('required')).toBe(true);
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -230,6 +250,33 @@ describe('SdDateRange', () => {
       host.model = { from: '2026/01/01', to: '2026/01/31' };
       fixture.detectChanges();
       expect(comp.errorMessage()).toBeUndefined();
+    });
+
+    // why: RED trước fix — `errorMessage` chỉ đọc `#state` (control tổng) nên khi Material bắn
+    // matDatepickerMin lên control1, computed vẫn giữ nguyên giá trị memo hoá (undefined).
+    it('recomputes from endpoint errors (matDatepickerMin on control1), not just the aggregate', () => {
+      host.min = '2026-01-01';
+      fixture.detectChanges();
+      // memo hoá computed ở trạng thái sạch TRƯỚC khi lỗi xuất hiện — đây là điều kiện lộ bug
+      expect(comp.errorMessage()).toBeUndefined();
+
+      comp.control1.setValue(new Date(2020, 0, 1));
+      fixture.detectChanges();
+
+      expect(comp.control1.hasError('matDatepickerMin')).toBe(true);
+      expect(comp.errorMessage()).toBe('Ngày bắt đầu không hợp lệ (nhỏ hơn giới hạn)');
+    });
+
+    // why: lỗi của 2 đầu range phải được kéo lên control tổng — nếu không form cha VALID
+    // trong khi UI đang đỏ, và submit lọt một range vi phạm min/max.
+    it('propagates endpoint errors onto the aggregate control so the parent form sees them', () => {
+      host.min = '2026-01-01';
+      fixture.detectChanges();
+
+      comp.control1.setValue(new Date(2020, 0, 1));
+      fixture.detectChanges();
+
+      expect(comp.formControl.hasError('matDatepickerMin')).toBe(true);
     });
   });
 
@@ -445,7 +492,10 @@ describe('SdDateRange', () => {
 describe('SdDateRange (FormGroup lifecycle)', () => {
   let fg: FormGroup;
   let fixture: ComponentFixture<FgHost>;
+  let comp: SdDateRange;
 
+  // autoDetectChanges (KHÔNG detectChanges cưỡng bức) để tôn trọng OnPush — round-trip của
+  // `fg.reset` / `fg.patchValue` đi qua subscriber + effect, chỉ CD tự nhiên mới đo đúng.
   beforeEach(async () => {
     fg = new FormGroup({});
     await TestBed.configureTestingModule({
@@ -453,7 +503,9 @@ describe('SdDateRange (FormGroup lifecycle)', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(FgHost);
     fixture.componentInstance.fg = fg;
-    fixture.detectChanges();
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = fixture.debugElement.query(By.directive(SdDateRange)).componentInstance as SdDateRange;
   });
 
   it('adds named control to FormGroup on init', () => {
@@ -463,6 +515,62 @@ describe('SdDateRange (FormGroup lifecycle)', () => {
   it('removes named control from FormGroup on destroy', () => {
     fixture.destroy();
     expect(fg.contains('period')).toBe(false);
+  });
+
+  // why: RED trước fix — 2 control đầu range được đăng ký dưới 2 tên UUID ngẫu nhiên, nên
+  // `form.value` có 3 key và 2 trong số đó đổi theo từng instance: vỡ shape giá trị + `reset(obj)`.
+  it('registers ONLY the aggregate control — no extra generated keys in form.value', () => {
+    expect(Object.keys(fg.value)).toEqual(['period']);
+    expect(Object.keys(fg.controls)).toEqual(['period']);
+  });
+
+  // why: RED trước fix — bài test cũ chỉ assert `Object.keys(fg.value)` (y hệt bài ngay trên) nên
+  // KHÔNG chứng minh được gì về round-trip, trong khi round-trip đang HỎNG thật: control1/control2
+  // đã bị gỡ khỏi FormGroup và không còn ai đẩy giá trị của control tổng xuống 2 đầu range, nên
+  // `<mat-date-range-input>` giữ nguyên ngày cũ trong khi `form.value.period` đã đổi.
+  it('round-trips form.reset(obj) down into both endpoints and the model', async () => {
+    fg.reset({ period: { from: new Date(2026, 0, 1), to: new Date(2026, 0, 31) } });
+    await fixture.whenStable();
+
+    expect(Object.keys(fg.value)).toEqual(['period']);
+    expect(comp.control1.value instanceof Date).toBeTrue();
+    expect(comp.control2.value instanceof Date).toBeTrue();
+    expect((comp.control1.value as Date).getDate()).toBe(1);
+    expect((comp.control2.value as Date).getDate()).toBe(31);
+    expect(comp.valueModel()).toEqual({ from: '2026/01/01', to: '2026/01/31' });
+  });
+
+  it('round-trips form.patchValue(obj) down into both endpoints and the model', async () => {
+    fg.patchValue({ period: { from: new Date(2026, 5, 10), to: new Date(2026, 5, 20) } });
+    await fixture.whenStable();
+
+    expect((comp.control1.value as Date).getMonth()).toBe(5);
+    expect((comp.control1.value as Date).getDate()).toBe(10);
+    expect((comp.control2.value as Date).getDate()).toBe(20);
+    expect(comp.valueModel()).toEqual({ from: '2026/06/10', to: '2026/06/20' });
+  });
+
+  it('clears both endpoints and the model on a bare form.reset()', async () => {
+    fg.patchValue({ period: { from: new Date(2026, 5, 10), to: new Date(2026, 5, 20) } });
+    await fixture.whenStable();
+    expect(comp.control1.value).not.toBeNull();
+
+    fg.reset();
+    await fixture.whenStable();
+
+    expect(comp.control1.value).toBeNull();
+    expect(comp.control2.value).toBeNull();
+    expect(comp.valueModel()).toEqual({ from: null, to: null });
+  });
+
+  it('renders the reset range in the mat-date-range-input, not just in the model', async () => {
+    fg.reset({ period: { from: new Date(2026, 0, 1), to: new Date(2026, 0, 31) } });
+    await fixture.whenStable();
+
+    const startInput = fixture.nativeElement.querySelector('input[matStartDate]') as HTMLInputElement;
+    const endInput = fixture.nativeElement.querySelector('input[matEndDate]') as HTMLInputElement;
+    expect(startInput.value).toBe('01/01/2026');
+    expect(endInput.value).toBe('31/01/2026');
   });
 });
 
@@ -561,6 +669,121 @@ describe('SdDateRange (viewed inline mode)', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// OnPush reactivity — mọi write vào formControl từng dùng `{ emitEvent: false }`,
+// nên `sdFormControlState` không tick và view đóng băng ở lần render đầu.
+// Dùng autoDetectChanges (KHÔNG detectChanges cưỡng bức) để tôn trọng OnPush —
+// detectChanges cưỡng bức che đúng lớp bug này.
+// ---------------------------------------------------------------------------
+
+describe('SdDateRange (OnPush error/state reactivity)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let host: HostComponent;
+  let comp: SdDateRange;
+
+  // why: `required` phải được set TRƯỚC lần CD đầu — sau đó mọi thay đổi chỉ được lái bằng
+  // signal/control event, để bài test thực sự đo khả năng tự vẽ lại của OnPush.
+  async function mount(required = false): Promise<void> {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    host = fixture.componentInstance;
+    host.required = required;
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)?.componentInstance as SdDateRange;
+  }
+
+  const rangeInput = () => fixture.nativeElement.querySelector('mat-date-range-input') as HTMLElement;
+
+  it('refreshes data-empty / data-value after a post-init model write', async () => {
+    await mount();
+    expect(rangeInput().getAttribute('data-empty')).toBe('true');
+
+    comp.valueModel.set({ from: '2026/01/01', to: '2026/01/31' });
+    await fixture.whenStable();
+
+    expect(rangeInput().getAttribute('data-empty')).toBe('false');
+    expect(rangeInput().getAttribute('data-value')).toContain('2026');
+  });
+
+  // why: chạm vào đầu range (tương đương blur ô "Từ") — đây cũng là điều kiện MatFormField
+  // dùng để cho phép hiện subscript lỗi, nên nó phản ánh đúng luồng thật của người dùng.
+  it('renders the <mat-error> once a required range is touched', async () => {
+    await mount(true);
+
+    comp.control1.markAsTouched();
+    await fixture.whenStable();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+    expect(error?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    expect(rangeInput().getAttribute('data-invalid')).toBe('true');
+    expect(rangeInput().getAttribute('data-error-message')).toBe('Vui lòng nhập thông tin');
+  });
+
+  it('clears the rendered error again once the range is filled', async () => {
+    await mount(true);
+    comp.control1.markAsTouched();
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('mat-error')).not.toBeNull();
+
+    comp.valueModel.set({ from: '2026/01/01', to: '2026/01/31' });
+    await fixture.whenStable();
+
+    expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+    expect(rangeInput().getAttribute('data-invalid')).toBe('false');
+    expect(rangeInput().getAttribute('data-error-message')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Lỗi của 2 đầu range được COPY sang control tổng, nên chữ ký dùng để quyết định
+// "có chạy lại validator tổng không" phải gồm cả PAYLOAD, không chỉ tên key.
+// ---------------------------------------------------------------------------
+
+describe('SdDateRange (endpoint error payload reaches the aggregate)', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let comp: SdDateRange;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.autoDetectChanges();
+    await fixture.whenStable();
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)?.componentInstance as SdDateRange;
+  });
+
+  // why: RED trước fix — chữ ký chỉ gồm TÊN key, nên `matDatepickerParse` đổi payload từ "11/1"
+  // sang "11/12" cho ra cùng chữ ký, validator tổng không chạy lại và object lỗi đã copy sang
+  // `formControl` treo lại text cũ.
+  it('refreshes the copied endpoint error when only its payload changes', async () => {
+    comp.control1.setErrors({ matDatepickerParse: { text: '11/1' } });
+    await fixture.whenStable();
+    expect(comp.formControl.errors?.['matDatepickerParse']).toEqual({ text: '11/1' });
+
+    comp.control1.setErrors({ matDatepickerParse: { text: '11/12' } });
+    await fixture.whenStable();
+
+    expect(comp.formControl.errors?.['matDatepickerParse']).toEqual({ text: '11/12' });
+  });
+
+  it('refreshes a min-boundary payload copied from the end endpoint', async () => {
+    comp.control2.setErrors({ matDatepickerMin: { min: new Date(2026, 0, 1), actual: new Date(2025, 0, 1) } });
+    await fixture.whenStable();
+    expect((comp.formControl.errors?.['matDatepickerMin'] as { actual: Date }).actual.getFullYear()).toBe(2025);
+
+    comp.control2.setErrors({ matDatepickerMin: { min: new Date(2026, 0, 1), actual: new Date(2024, 0, 1) } });
+    await fixture.whenStable();
+
+    expect((comp.formControl.errors?.['matDatepickerMin'] as { actual: Date }).actual.getFullYear()).toBe(2024);
+  });
+});
+
 // Angular Material re-parses each field after every keystroke and writes the
 // result straight into the control. The stock date-fns adapter accepts a
 // half-typed year ("11/12/2" became year 0002) and reads a bare "11" as the
@@ -577,8 +800,7 @@ describe('SdDateRange (partial input is not a date)', () => {
     }).compileComponents();
     fixture = TestBed.createComponent(HostComponent);
     fixture.detectChanges();
-    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)
-      ?.componentInstance as SdDateRange;
+    comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)?.componentInstance as SdDateRange;
     startInput = fixture.nativeElement.querySelector('input') as HTMLInputElement;
   });
 
@@ -601,5 +823,140 @@ describe('SdDateRange (partial input is not a date)', () => {
 
     expect(comp.control1.value instanceof Date).toBeTrue();
     expect((comp.control1.value as Date).getFullYear()).toBe(2026);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred blur emit must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdDateRange deferred blur emit lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)!.componentInstance as SdDateRange;
+    return { fixture, host: fixture.componentInstance, comp };
+  };
+
+  it('does not emit sdChange after the view is destroyed inside the blur window', fakeAsync(() => {
+    const { fixture, host, comp } = setup();
+    // why: spy đặt TRÊN OutputEmitterRef nên bắt được lời gọi emit() kể cả khi Angular đã
+    // ngắt subscriber — nếu chỉ đếm host.changes thì guard nội bộ của output() che mất bug.
+    const emit = spyOn(comp.sdChange, 'emit').and.callThrough();
+
+    comp.onFocus();
+    comp.control1.setValue(new Date(2026, 0, 1));
+    comp.onBlur();
+    host.changes.length = 0;
+
+    fixture.destroy();
+
+    expect(() => tick(50)).not.toThrow();
+    expect(emit).not.toHaveBeenCalled();
+    expect(host.changes.length).toBe(0);
+  }));
+
+  it('still emits sdChange on the next macrotask while the view is alive', fakeAsync(() => {
+    const { fixture, host, comp } = setup();
+
+    comp.onFocus();
+    comp.control1.setValue(new Date(2026, 0, 1));
+    comp.onBlur();
+    host.changes.length = 0;
+
+    expect(host.changes.length).toBe(0);
+    tick();
+    expect(host.changes.length).toBe(1);
+
+    fixture.destroy();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// Accessibility
+// why: `aria-hidden="true"` trên phần tử focus được (hoặc trên phần tử BỌC nội dung focus được)
+// tệ hơn là không làm gì: control vẫn nhận focus bằng Tab nhưng screen reader không đọc gì.
+// Trước đây nó bị rắc khắp forms/** chỉ để dập 4 rule a11y đang bị tắt trong eslint.
+// ---------------------------------------------------------------------------
+const FOCUSABLE_SELECTOR =
+  'input:not([tabindex="-1"]), textarea:not([tabindex="-1"]), select:not([tabindex="-1"]), ' +
+  'button:not([tabindex="-1"]), a[href]:not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+
+/** Trả về tag của mọi phần tử aria-hidden mà bản thân nó hoặc con nó focus được. */
+function ariaHiddenFocusables(root: HTMLElement): string[] {
+  return Array.from(root.querySelectorAll('[aria-hidden="true"]'))
+    .filter(el => el.matches(FOCUSABLE_SELECTOR) || el.querySelector(FOCUSABLE_SELECTOR) !== null)
+    .map(el => el.tagName.toLowerCase());
+}
+
+@Component({
+  standalone: true,
+  imports: [SdDateRange],
+  template: `<sd-date-range [required]="required"></sd-date-range>`,
+})
+class A11yHost {
+  required = false;
+}
+
+describe('SdDateRange (accessibility)', () => {
+  let fixture: ComponentFixture<A11yHost>;
+  let cmp: SdDateRange;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({ imports: [A11yHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(A11yHost);
+    fixture.detectChanges();
+    cmp = fixture.debugElement.query(By.directive(SdDateRange)).componentInstance as SdDateRange;
+  });
+
+  it('leaves no aria-hidden on either range input', () => {
+    expect(ariaHiddenFocusables(fixture.nativeElement)).toEqual([]);
+    const inputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    expect(inputs.length).toBe(2);
+    inputs.forEach(el => expect(el.hasAttribute('aria-hidden')).toBe(false));
+  });
+
+  it('exposes the calendar trigger as a keyboard-reachable, named <button>', () => {
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    expect(btn).not.toBeNull();
+    expect(btn.type).toBe('button');
+    expect(btn.tabIndex).toBeGreaterThanOrEqual(0);
+    expect(btn.getAttribute('aria-label')).toBeTruthy();
+  });
+
+  it('activating the calendar trigger opens the range picker', () => {
+    const picker = cmp.picker()!;
+    expect(picker).toBeTruthy();
+    spyOn(picker, 'open');
+    const btn = fixture.nativeElement.querySelector('button.sd-suffix-btn') as HTMLButtonElement;
+    btn.click();
+    expect(picker.open).toHaveBeenCalled();
+  });
+
+  it('wires aria-invalid + aria-describedby on BOTH inputs when the inline error renders', async () => {
+    fixture.componentInstance.required = true;
+    fixture.detectChanges();
+    // why: chạm vào đầu range (tương đương blur ô "Từ") — đúng luồng thật, và là điều kiện
+    // MatFormField dùng để cho phép hiện subscript lỗi.
+    cmp.control1.markAsTouched();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+    expect(error).not.toBeNull();
+    expect(error.id).toBe(cmp.errorId);
+    const inputs = Array.from(fixture.nativeElement.querySelectorAll('input')) as HTMLInputElement[];
+    inputs.forEach(el => {
+      expect(el.getAttribute('aria-invalid')).toBe('true');
+      expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
+    });
   });
 });

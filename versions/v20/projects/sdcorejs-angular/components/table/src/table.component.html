@@ -16,6 +16,7 @@
 @let _configComponent = configComponent();
 @let _mobileFilter = mobileFilter();
 @let _selectedTableItems = selectedTableItems();
+@let _rowCommands = rowCommands();
 <!-- why: tree không còn cột riêng — khi KHÔNG có cột Index, icon expand nhúng vào
      cột data đầu tiên. Đây là field của cột đó (null nếu có Index hoặc không tree). -->
 @let _treeFirstField = _tableOption?.tree && !_tableOption.index?.enabled ? _configuration?.firstColumns?.[0]?.field : null;
@@ -30,7 +31,7 @@
       [externalFilters]="_tableOption.filter?.externalFilters!">
     </external-filter>
   }
-  @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState;
+  @let groupedItems = _items | sdTree: _tableOption.tree : treeRevision() | sdGroup: _tableOption : groupExpandState : groupHost;
 
   <!-- Tree toggle dùng chung: indent (theo cấp) + slot chevron/spinner. Nhúng vào
        cột Index hoặc cột data đầu qua *ngTemplateOutlet (context: { row }). -->
@@ -64,8 +65,11 @@
 
   <ng-content select="[sdTableTop]"></ng-content>
   <div class="c-container">
+    <!-- why: bảng tải dữ liệu BẤT ĐỒNG BỘ nhưng trước đây chỉ có spinner thuần hình ảnh — screen
+         reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
+         spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
     @if (_loading) {
-      <div class="c-loading">
+      <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | sdTranslate">
         <mat-spinner></mat-spinner>
       </div>
     }
@@ -73,6 +77,7 @@
       class="c-table"
       sdScroll
       stickyShadow
+      [attr.aria-busy]="_loading ? 'true' : null"
       [style.max-height]="_tableOption.style?.maxHeight"
       [style.min-height]="_tableOption.style?.minHeight">
       <table
@@ -141,8 +146,7 @@
 
         <ng-container matColumnDef="sdSelection" sticky>
           <th class="sd-selection-cell p-0" mat-header-cell *matHeaderCellDef [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
-            @let visibleSelectAll = _items | selectionVisibleSelectAll: _tableOption.selector | async;
-            @if (visibleSelectAll) {
+            @if (visibleSelectAll()) {
               <mat-checkbox
                 class="c-selection px-8"
                 color="primary"
@@ -231,12 +235,11 @@
           [sticky]="_tableOption.command?.align !== 'right'"
           [stickyEnd]="_tableOption.command?.align === 'right'">
           <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
-          <td class="px-8" mat-cell *matCellDef="let item">
-            <desktop-command
-              [autoId]="_autoId"
-              [commands]="_tableOption.command?.commands || _tableOption.commands || []"
-              [item]="item"
-              [itemIndex]="groupedItems.indexOf(item)"></desktop-command>
+          <!-- why: `dataIndex` do CDK cấp sẵn. Bản cũ dùng `groupedItems.indexOf(item)` —
+               quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
+               và còn trả sai index khi 2 dòng trùng reference. -->
+          <td class="px-8" mat-cell *matCellDef="let item; let i = dataIndex">
+            <desktop-command [autoId]="_autoId" [commands]="_rowCommands" [item]="item" [itemIndex]="i"></desktop-command>
           </td>
           <td mat-footer-cell *matFooterCellDef></td>
         </ng-container>
@@ -253,6 +256,14 @@
               <!-- why: slot 42px khớp width với sd-selection-cell data row → checkbox group căn TRỤC dọc đúng với checkbox data. -->
               @if (_tableOption.selector?.visible && !_tableOption.selector?.single) {
                 <div class="sd-group-selection-slot d-flex align-items-center justify-content-center">
+                  <!-- why: PHẢI tính live, KHÔNG đọc cache trên meta.group. `selector.selectable`
+                       mặc định là `false` (table-item.model.ts) và chỉ được `SdSelectionVisiblePipe`
+                       đặt đúng khi cell BODY render — mà CDK dựng header TRƯỚC body. Cache do
+                       `SdGroupPipe` ghi lúc dựng header vì thế luôn thấy `total = 0` và khoá cứng
+                       checkbox ở trạng thái bỏ chọn, kể cả khi defaultSelected/preserveSelection
+                       vừa chọn hết. Pipe là pure nên giá trị đó không bao giờ tự sửa.
+                       Chỉ có MỘT group header mỗi group (không phải mỗi row) nên chi phí duyệt ở
+                       đây nhỏ; phần đắt (dựng object context + map data) vẫn được cache. -->
                   <mat-checkbox
                     class="c-selection"
                     color="primary"
@@ -274,6 +285,10 @@
                 </sd-button>
               }
               @if (sdGroupDef()?.templateRef; as tpl) {
+                <!-- why: groupContext() giờ trả context đã precompute trên meta.group (cùng
+                     một reference qua mọi CD pass). Bản cũ dựng object mới + mảng
+                     `items.map(i => i.data)` mới mỗi pass → ngTemplateOutlet phải dựng lại
+                     embedded view của mọi group row. -->
                 <ng-container *ngTemplateOutlet="tpl; context: groupContext(item)"></ng-container>
               } @else {
                 <span class="T14R">{{ item.meta.group.values | json }}</span>
@@ -296,16 +311,19 @@
               [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
               [minWidth]="column.minWidth"
               [maxWidth]="column.maxWidth"
-              (resizeEnd)="onColumnResize(column.field, $event)"
+              (sdResizeEnd)="onColumnResize(column.field, $event)"
               [style.width]="column.width"
               [style.min-width]="column.minWidth || column.width"
               [style.max-width]="column.maxWidth"
               [attr.rowspan]="_configuration.multipleHeader && column.type !== 'children' ? 2 : 1"
               [attr.colspan]="column.type === 'children' ? column.children.length : 1">
               <div>
+                <!-- why: bỏ aria-hidden="true" khỏi header. `mat-sort-header` tự gắn role="button",
+                     tabindex và aria-sort lên chính div này — aria-hidden khiến header vẫn tab tới
+                     được nhưng không đọc được tên cột lẫn hướng sắp xếp, tức người dùng screen
+                     reader mất hoàn toàn khả năng sắp xếp bảng. -->
                 @if (column.type === 'children') {
                   <div
-                    aria-hidden="true"
                     class="c-header-title"
                     [class.justify-content-end]="column.align === 'right'"
                     [class.text-right]="column.align === 'right'">
@@ -313,7 +331,6 @@
                   </div>
                 } @else {
                   <div
-                    aria-hidden="true"
                     mat-sort-header
                     class="c-header-title"
                     [class.justify-content-end]="column.align === 'right'"
@@ -335,8 +352,8 @@
                         [columnFilter]="columnFilter!"
                         [cacheValues]="cacheValues"
                         [column]="column"
-                        (filterChange)="onFilterChange()"
-                        (filterCommit)="onFilterCommit()">
+                        (sdFilterChange)="onFilterChange()"
+                        (sdFilterCommit)="onFilterCommit()">
                       </column-filter>
                     </ng-container>
                   }
@@ -380,8 +397,9 @@
               [style.min-width]="column.minWidth || column.width"
               [style.max-width]="column.maxWidth">
               <div>
+                <!-- why: xem chú thích ở header nhóm trên — mat-sort-header là control thật,
+                     aria-hidden xoá tên cột + aria-sort khỏi accessibility tree. -->
                 <div
-                  aria-hidden="true"
                   mat-sort-header
                   class="c-header-title"
                   [class.justify-content-end]="column.align === 'right'"
@@ -399,8 +417,8 @@
                       [cacheValues]="cacheValues"
                       [column]="column"
                       (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
-                      (filterChange)="onFilterChange()"
-                      (filterCommit)="onFilterCommit()">
+                      (sdFilterChange)="onFilterChange()"
+                      (sdFilterCommit)="onFilterCommit()">
                     </column-filter>
                   </ng-container>
                 }
@@ -435,6 +453,10 @@
           class="c-group-row-tr"></tr>
 
         <!-- Data row — dùng displayedColumns đầy đủ; when isDataRow để loại trừ group header. -->
+        <!-- why: [ngStyle] đọc meta.rowStyle — style.rowCss đã được resolve 1 lần mỗi lần
+             render. Bản cũ gọi rowStyle(row) ngay trong binding → chạy callback của consumer
+             cho TỪNG dòng ở MỖI CD pass, và vì trả object MỚI nên NgStyle phải chạy lại
+             KeyValueDiffer trên mọi dòng ở mọi pass. -->
         <tr
           mat-row
           cdkDrag
@@ -450,7 +472,7 @@
           class="c-row"
           [class.sd-tree-row]="!!_tableOption.tree"
           [ngClass]="_tableOption.tree ? 'sd-tree-level-' + (row.meta?.tree?.level ?? 0) : null"
-          [ngStyle]="rowStyle(row)"
+          [ngStyle]="row.meta.rowStyle"
           [class.selected]="row.meta.selector.isSelected"></tr>
 
         <!-- Sub-information row — also gated bởi isDataRow để KHÔNG render empty expand row dưới group header. -->
@@ -459,16 +481,18 @@
           <tr mat-footer-row *matFooterRowDef="_configuration.displayedFooters; sticky: true"></tr>
         }
       </table>
+      <!-- why: trạng thái rỗng cũng xuất hiện BẤT ĐỒNG BỘ sau khi fetch xong; không có live region
+           thì người dùng screen reader chờ mãi mà không biết bảng đã trả về 0 dòng. -->
       @if (!_loading && !_total) {
-        <div class="c-no-data-row">
+        <div class="c-no-data-row" role="status" aria-live="polite">
           @if (_isFiltered) {
             @if (tableConfiguration?.images?.filterEmpty) {
               <img class="c-image" [src]="tableConfiguration!.images!.filterEmpty" alt="filter-empty" />
             } @else {
               <img class="c-image sd-image-filter-empty" alt="filter-empty" />
             }
-            <div class="T16M">{{ 'core.component.table.no-results' | translate }}</div>
-            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | translate }}</div>
+            <div class="T16M">{{ 'core.component.table.no-results' | sdTranslate }}</div>
+            <div class="T16R text-secondary">{{ 'core.component.table.no-results-hint' | sdTranslate }}</div>
           } @else {
             @if (_requireFiltered) {
               @if (tableConfiguration?.images?.filterRequired) {
@@ -476,14 +500,14 @@
               } @else {
                 <img class="c-image sd-image-filter-required" alt="filter-required" />
               }
-              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | translate }}</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.choose-filter-hint' | sdTranslate }}</div>
             } @else {
               @if (tableConfiguration?.images?.dataEmpty) {
                 <img class="c-image" [src]="tableConfiguration!.images!.dataEmpty" alt="data-empty" />
               } @else {
                 <img class="c-image sd-image-data-empty" alt="data-empty" />
               }
-              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | translate }}</div>
+              <div class="T16R text-secondary">{{ 'core.component.table.no-data' | sdTranslate }}</div>
             }
           }
         </div>
@@ -496,7 +520,7 @@
             <sd-button
               [autoId]="_autoId ? _autoId + '-reload' : null"
               class="mr-8"
-              [title]="'core.component.table.reload' | translate"
+              [title]="'core.component.table.reload' | sdTranslate"
               prefixIcon="refresh"
               (click)="reload()"
               type="text">
@@ -516,11 +540,11 @@
                   <mat-menu #menu="matMenu">
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-excel' : null" (click)="exportExcel()" type="button">
                       <sd-icon name="file_download"></sd-icon>
-                      <span> {{ 'core.component.table.export-excel' | translate }}</span>
+                      <span> {{ 'core.component.table.export-excel' | sdTranslate }}</span>
                     </button>
                     <button mat-menu-item [attr.data-autoid]="_autoId ? _autoId + '-export-csv' : null" (click)="exportCSV()" type="button">
                       <sd-icon name="file_download"></sd-icon>
-                      <span> {{ 'core.component.table.export-csv' | translate }}</span>
+                      <span> {{ 'core.component.table.export-csv' | sdTranslate }}</span>
                     </button>
                   </mat-menu>
                 } @else if (_export.visible === 'EXCEL') {
@@ -538,7 +562,7 @@
             <sd-button
               [autoId]="_autoId ? _autoId + '-config' : null"
               class="mr-8"
-              [title]="'core.component.table.setup-short' | translate"
+              [title]="'core.component.table.setup-short' | sdTranslate"
               prefixIcon="settings"
               (click)="_configComponent.open()"
               type="text">
@@ -582,13 +606,13 @@
       <ng-container *sdDesktop>
         @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
           <div class="T14R pr-16">
-            {{ 'core.component.table.showing' | translate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
+            {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
           </div>
         }
       </ng-container>
     </div>
   </div>
-  <selector-action [autoId]="_autoId" [tableOption]="_tableOption" [selectedTableItems]="_selectedTableItems" (clear)="onClearSelection(groupedItems)" />
+  <selector-action [autoId]="_autoId" [tableOption]="_tableOption" [selectedTableItems]="_selectedTableItems" (sdClear)="onClearSelection(groupedItems)" />
   @if (_tableOption.config?.visible) {
     <config [autoId]="_autoId" [tableOption]="_tableOption" />
   }

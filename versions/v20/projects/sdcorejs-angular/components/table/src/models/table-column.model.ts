@@ -4,7 +4,7 @@ import type { SdSearch } from '@sdcorejs/angular/forms/models';
 import { NestedKeyOf, Operator } from '@sdcorejs/utils/models';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
 
-export type SdTableColumn<T = any> =
+export type SdTableColumn<T = unknown> =
   | SdTableColumnText<T>
   | SdTableColumnNumber<T>
   | SdTableColumnBool<T>
@@ -13,7 +13,25 @@ export type SdTableColumn<T = any> =
   | SdTableColumnLazyValues<T>
   | SdTableColumnChildren<T>;
 
-export type SdTableColumnTransformFunc<T = any> = (
+/**
+ * Cột bảng dùng ở các API **không quan tâm kiểu hàng** — chúng chỉ đọc `field` / `type` / `hidden` /
+ * `filter` và không bao giờ chạm vào dữ liệu hàng (service filter, `SdConvertToPagingReq`, …).
+ *
+ * why: `SdTableColumn<T>` **bất biến (invariant)** theo `T`, vì `T` xuất hiện ở CẢ HAI chiều:
+ * - covariant — `field: NestedKeyOf<T>`;
+ * - contravariant — `transform` / `tooltip` / `click` / `useBadge` / `htmlTemplate` đều nhận `rowData: T`.
+ *
+ * Vì bất biến nên KHÔNG tồn tại siêu kiểu chung: `SdTableColumn<unknown>` hỏng ở chiều contravariant,
+ * `SdTableColumn<never>` hỏng ở chiều covariant (`field` co về `never`). Trước đây default generic là
+ * `any` nên mọi thứ gán được cho nhau — không phải vì kiểu đúng, mà vì `any` tắt kiểm tra hai chiều.
+ *
+ * Public default đã siết sang `unknown` (consumer viết `SdTableColumn<User>` sẽ được suy luận thật và
+ * báo lỗi khi dùng sai). Riêng vài vị trí tham số NỘI BỘ row-agnostic dưới đây vẫn cần một escape
+ * hatch: alias này khoanh vùng `any` vào đúng một chỗ có tài liệu, thay vì rải `any` khắp API công khai.
+ */
+export type SdTableColumnAnyRow = SdTableColumn<any>;
+
+export type SdTableColumnTransformFunc<T = unknown> = (
   value: any,
   rowData: T,
   args?: {
@@ -29,10 +47,10 @@ interface Badge {
 }
 
 // 1. Dành cho các cột bình thường (Không có items)
-type UseBadgeFunc<T = any> = (value: any, rowData: T) => Badge;
+type UseBadgeFunc<T = unknown> = (value: any, rowData: T) => Badge;
 // 2. Dành cho cột có items (values / lazy-values)
 // Thêm Generic K đại diện cho kiểu của 1 item trong danh sách
-type UseBadgeValuesFunc<T = any, K = any> = (
+type UseBadgeValuesFunc<T = unknown, K = unknown> = (
   value: any,
   rowData: T,
   items: K[] // <-- Trả về mảng dữ liệu đã load để tiện tra cứu
@@ -52,7 +70,7 @@ interface ColumnCellOption {
   };
 }
 
-interface SdTableColumnBase<T = any> {
+interface SdTableColumnBase<T = unknown> {
   title: string | ColumnTitleOption;
   cell?: ColumnCellOption;
   width?: string;
@@ -85,20 +103,20 @@ interface SdTableColumnBase<T = any> {
   };
 }
 
-interface SdTableColumnText<T = any> extends SdTableColumnBase<T> {
+interface SdTableColumnText<T = unknown> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'string';
   useBadge?: UseBadgeFunc<T>;
 }
 
-interface SdTableColumnNumber<T = any> extends SdTableColumnBase<T> {
+interface SdTableColumnNumber<T = unknown> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'number';
   useBadge?: UseBadgeFunc<T>;
   filter?: SdTableColumnBase<T>['filter'] & { type?: 'split-number' };
 }
 
-interface SdTableColumnBool<T = any> extends SdTableColumnBase<T> {
+interface SdTableColumnBool<T = unknown> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'boolean';
   useBadge?: UseBadgeFunc<T>;
@@ -108,7 +126,7 @@ interface SdTableColumnBool<T = any> extends SdTableColumnBase<T> {
   };
 }
 
-interface SdTableColumnDate<T = any> extends SdTableColumnBase<T> {
+interface SdTableColumnDate<T = unknown> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'date' | 'datetime' | 'time';
   useBadge?: UseBadgeFunc<T>;
@@ -116,7 +134,7 @@ interface SdTableColumnDate<T = any> extends SdTableColumnBase<T> {
 }
 
 // Thêm Generic K (mặc định là any hoặc Record<string, any> để không lỗi code cũ)
-export interface SdTableColumnValues<T = any, K = Record<string, any>> extends SdTableColumnBase<T> {
+export interface SdTableColumnValues<T = unknown, K = Record<string, any>> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'values';
   useBadge?: UseBadgeValuesFunc<T, K>;
@@ -130,7 +148,7 @@ export interface SdTableColumnValues<T = any, K = Record<string, any>> extends S
   };
 }
 
-export interface SdTableColumnLazyValues<T = any, K = Record<string, any>> extends SdTableColumnBase<T> {
+export interface SdTableColumnLazyValues<T = unknown, K = Record<string, any>> extends SdTableColumnBase<T> {
   field: NestedKeyOf<T>;
   type: 'lazy-values';
   useBadge?: UseBadgeFunc<T>;
@@ -147,9 +165,9 @@ export interface SdTableColumnLazyValues<T = any, K = Record<string, any>> exten
   };
 }
 
-export type SdTableColumnNormal<T = any> = Exclude<SdTableColumn<T>, SdTableColumnChildren<T>>;
+export type SdTableColumnNormal<T = unknown> = Exclude<SdTableColumn<T>, SdTableColumnChildren<T>>;
 
-export interface SdTableColumnChildren<T = any> extends SdTableColumnBase<T> {
+export interface SdTableColumnChildren<T = unknown> extends SdTableColumnBase<T> {
   field: string;
   type: 'children';
   children: SdTableColumnNormal<T>[];

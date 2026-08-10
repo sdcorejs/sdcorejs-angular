@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { EvaluateExpression, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericHtml } from '../models';
+import { sdEvaluateExpression, SdFormGenericComponent, SdFormGenericGroup, SdFormGenericHtml } from '../models';
 
 @Pipe({
   name: 'whenExpression',
@@ -13,7 +13,7 @@ export class WhenExpressionPipe implements PipeTransform {
     }
     const hiddenWhenExpression = component.properties?.hiddenWhenExpression;
     if (hiddenWhenExpression) {
-      const result = EvaluateExpression(hiddenWhenExpression, variables);
+      const result = sdEvaluateExpression(hiddenWhenExpression, variables);
       if (typeof result === 'boolean') {
         return result;
       }
@@ -21,7 +21,7 @@ export class WhenExpressionPipe implements PipeTransform {
     }
     const visibleWhenExpression = component.properties?.visibleWhenExpression;
     if (visibleWhenExpression) {
-      const result = EvaluateExpression(visibleWhenExpression, variables);
+      const result = sdEvaluateExpression(visibleWhenExpression, variables);
       if (typeof result === 'boolean') {
         return !result;
       }
@@ -32,7 +32,7 @@ export class WhenExpressionPipe implements PipeTransform {
   #disabled = (component: Exclude<SdFormGenericComponent, SdFormGenericHtml>, variables: Record<string, any>) => {
     const disabledWhenExpression = component.properties?.disabledWhenExpression;
     if (disabledWhenExpression) {
-      const result = EvaluateExpression(disabledWhenExpression, variables);
+      const result = sdEvaluateExpression(disabledWhenExpression, variables);
       if (typeof result === 'boolean') {
         return result;
       }
@@ -43,7 +43,7 @@ export class WhenExpressionPipe implements PipeTransform {
   #required = (component: Exclude<SdFormGenericComponent, SdFormGenericHtml>, variables: Record<string, any>) => {
     const requiredWhenExpression = component.properties?.requiredWhenExpression;
     if (requiredWhenExpression) {
-      const result = EvaluateExpression(requiredWhenExpression, variables);
+      const result = sdEvaluateExpression(requiredWhenExpression, variables);
       if (typeof result === 'boolean') {
         return result;
       }

@@ -23,7 +23,7 @@ export class AnchorNav implements OnDestroy {
   parentAutoId = input<string | undefined | null>(undefined);
   color = input<Color>('primary');
 
-  // CSS var binding cho active state — map SdColor → global token `--sd-{color}`.
+  // CSS var binding cho active state — map Color → global token `--sd-{color}`.
   // SCSS đọc qua `var(--anchor-active-color)` cho border + text + icon.
   cssActiveVar = computed(() => `var(--sd-${this.color()})`);
 
@@ -33,14 +33,16 @@ export class AnchorNav implements OnDestroy {
     return parent && key ? `${parent}-${key}` : undefined;
   }
 
-  clickSection = output<string>();
+  sdClickSection = output<string>();
 
   #delay = 200;
   #clickSectionSubject = new Subject<string>();
   #subscription = new Subscription();
 
   constructor() {
-    this.#subscription.add(this.#clickSectionSubject.pipe(debounceTime(this.#delay)).subscribe((id: string) => this.clickSection.emit(id)));
+    this.#subscription.add(
+      this.#clickSectionSubject.pipe(debounceTime(this.#delay)).subscribe((id: string) => this.sdClickSection.emit(id))
+    );
   }
 
   onClickSection = (id: string): void => {

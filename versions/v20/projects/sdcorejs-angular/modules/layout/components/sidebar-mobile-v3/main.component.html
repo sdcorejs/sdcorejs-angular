@@ -55,34 +55,34 @@
         </div>
         @if (pinnedMenus().length) {
           <section data-v3-mobile-pinned class="d-flex flex-column gap-4">
-            <h2 class="T12M text-black400 px-12 m-0">Đã ghim</h2>
+            <h2 class="T12M text-black400 px-12 m-0">{{ 'core.module.layout.sidebar.pinned' | sdTranslate }}</h2>
             <sd-layout-menu-tree
               [menus]="pinnedMenus()"
               [activePath]="activePath()"
               [pinnedKeys]="pinnedKeys()"
               pinVisibility="always"
-              (navigate)="navigateMenu($event)"
-              (togglePinned)="onTogglePinned($event)">
+              (sdNavigate)="navigateMenu($event)"
+              (sdTogglePinned)="onTogglePinned($event)">
             </sd-layout-menu-tree>
           </section>
         }
         @if (recentConfiguration().enabled && recentMenus().length) {
           <section data-v3-mobile-recent class="d-flex flex-column gap-4">
-            <h2 class="T12M text-black400 px-12 m-0">Gần đây</h2>
-            <sd-layout-menu-tree [menus]="recentMenus()" [activePath]="activePath()" [showPin]="false" (navigate)="navigateMenu($event)">
+            <h2 class="T12M text-black400 px-12 m-0">{{ 'core.module.layout.sidebar.recent' | sdTranslate }}</h2>
+            <sd-layout-menu-tree [menus]="recentMenus()" [activePath]="activePath()" [showPin]="false" (sdNavigate)="navigateMenu($event)">
             </sd-layout-menu-tree>
           </section>
         }
         <section class="d-flex flex-column gap-4">
-          <h2 class="T12M text-black400 px-12 m-0">Tất cả menu</h2>
+          <h2 class="T12M text-black400 px-12 m-0">{{ 'core.module.layout.sidebar.all-menu' | sdTranslate }}</h2>
           <sd-layout-menu-tree
             [menus]="menus()"
             [query]="searchText()"
             [activePath]="activePath()"
             [pinnedKeys]="pinnedKeys()"
             pinVisibility="always"
-            (navigate)="navigateMenu($event)"
-            (togglePinned)="onTogglePinned($event)">
+            (sdNavigate)="navigateMenu($event)"
+            (sdTogglePinned)="onTogglePinned($event)">
           </sd-layout-menu-tree>
         </section>
       </div>

@@ -311,4 +311,35 @@ describe('SdImportExcel', () => {
     expect(unsubscribe).not.toHaveBeenCalled();
     expect(paginator.page.observed).toBeFalse();
   });
+
+  // -------------------------------------------------------------------------
+  // A11y — vùng trạng thái rỗng vừa là THÔNG BÁO vừa là control tải file mẫu,
+  // nhưng từng mang aria-hidden="true" và không kích hoạt được bằng bàn phím.
+  // -------------------------------------------------------------------------
+
+  it('Enter on the empty state downloads the template, same as a click', () => {
+    const spy = spyOn(component, 'downloadTemplate').and.resolveTo(undefined as never);
+    const el = document.createElement('div');
+    const listener = ((ev: Event) => component.onDownloadTemplateKeydown(ev as KeyboardEvent)) as EventListener;
+
+    el.addEventListener('keydown', listener);
+    el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    el.removeEventListener('keydown', listener);
+
+    expect(spy).toHaveBeenCalled();
+  });
+
+  it('Space on the empty state downloads the template and blocks the page scroll', () => {
+    const spy = spyOn(component, 'downloadTemplate').and.resolveTo(undefined as never);
+    const el = document.createElement('div');
+    const listener = ((ev: Event) => component.onDownloadTemplateKeydown(ev as KeyboardEvent)) as EventListener;
+
+    el.addEventListener('keydown', listener);
+    const ev = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    el.dispatchEvent(ev);
+    el.removeEventListener('keydown', listener);
+
+    expect(spy).toHaveBeenCalled();
+    expect(ev.defaultPrevented).toBe(true);
+  });
 });

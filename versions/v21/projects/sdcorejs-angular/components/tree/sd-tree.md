@@ -90,11 +90,11 @@ Legacy split inputs (`items`, `tree`, `selectedItems`, `selector`, `commands`, `
 
 | Name                  | Type                      | Notes                                                                                |
 | --------------------- | ------------------------- | ------------------------------------------------------------------------------------ |
-| `selectedItemsChange` | `T[]`                     | Emits when selection changes. Also calls `option.onSelectedItemsChange`.             |
-| `selectChange`        | `SdTreeSelectionEvent<T>` | Emits when a row is selected/unselected. Also calls `option.onSelect`.               |
-| `expandChange`        | `SdTreeToggleEvent<T>`    | Emits when a branch expands. Also calls `option.onExpand`.                           |
-| `collapseChange`      | `SdTreeToggleEvent<T>`    | Emits when a branch collapses. Also calls `option.onCollapse`.                       |
-| `loadError`           | `SdTreeLoadErrorEvent<T>` | Emits `{ error }` for a root failure or `{ item, error }` for a lazy branch failure. |
+| `sdSelectedItemsChange` | `T[]`                     | Emits when selection changes. Also calls `option.onSelectedItemsChange`.             |
+| `sdSelectChange`        | `SdTreeSelectionEvent<T>` | Emits when a row is selected/unselected. Also calls `option.onSelect`.               |
+| `sdExpandChange`        | `SdTreeToggleEvent<T>`    | Emits when a branch expands. Also calls `option.onExpand`.                           |
+| `sdCollapseChange`      | `SdTreeToggleEvent<T>`    | Emits when a branch collapses. Also calls `option.onCollapse`.                       |
+| `sdLoadError`           | `SdTreeLoadErrorEvent<T>` | Emits `{ error }` for a root failure or `{ item, error }` for a lazy branch failure. |
 
 ## Option Shape
 
@@ -140,6 +140,41 @@ interface SdTreeItemLazy<T> extends SdTreeItemBase<T> {
 Branch nodes without `icon` render the default `folder` / `folder_open` icons. Leaf nodes without `icon` render no icon. Use `icon` on any node when you want an explicit icon; there is no separate `leafIcon`.
 
 Static mode uses `children`. Lazy mode uses `hasChildren` before loading and keeps loaded children in the component cache.
+
+## Tree Option
+
+`option.tree` is a discriminated union on `loadType`. Both branches share `SdTreeBaseOption`:
+
+| Key          | Type     | Default     | Notes                                                                          |
+| ------------ | -------- | ----------- | ------------------------------------------------------------------------------ |
+| `loadType`   | `'static' \| 'lazy'` | required | Selects the branch below.                                          |
+| `maxDepth`   | `number` | `undefined` | Deepest rendered `level` (0-based). See "Depth limit".                         |
+| `indentSize` | `number` | `20`        | Pixels of indentation per level.                                               |
+
+| Key               | Type                  | Applies to | Notes                                                              |
+| ----------------- | --------------------- | ---------- | ------------------------------------------------------------------ |
+| `defaultExpanded` | `boolean \| number`   | `static`   | `true` all, `false` none, or a number = expand levels `< number`.  |
+| `onExpandChildren`| `(item) => children`  | `lazy`     | Called once per node on first expand. Required for `loadType: 'lazy'`. |
+
+### Depth limit (`maxDepth`)
+
+```ts
+const option: SdTreeComponentOption<Category> = {
+  items,
+  tree: { loadType: 'static', defaultExpanded: true, maxDepth: 1 },
+};
+```
+
+`maxDepth` is the deepest **0-based** `level` the tree renders. With `maxDepth: 1` the tree renders root nodes (level 0) and their children (level 1); anything deeper is dropped.
+
+A node sitting **at** `maxDepth` is rendered as a **leaf**, even when its data has children:
+
+- `node.hasChildren` is `false` and `node.children` is empty.
+- The toggle is disabled, the chevron is not drawn, and no default folder icon is used (an explicit `treeItem.icon` still renders).
+- `aria-expanded` is omitted.
+- `toggle()` is a no-op, so neither `sdExpandChange` nor `sdCollapseChange` fires, and a lazy tree never calls `onExpandChildren` for that node.
+
+Omit `maxDepth` (the default) to render the full depth of the data.
 
 ## Static Tree
 
@@ -189,6 +224,8 @@ Signals update the tree reactively when their value changes. Root and lazy reque
 
 Rows use a roving tabindex. Arrow Up/Down move through visible nodes, Home/End jump to the first/last visible node, Arrow Right expands or enters a branch, Arrow Left collapses or moves to the parent, and Enter/Space toggles selection. Each row exposes `role="treeitem"`, `aria-level`, expansion state, and selection/indeterminate state.
 
+The roving index is bound as `[attr.tabindex]`, not `[tabIndex]`. The camelCase form sets the DOM *property* only and emits no `tabindex` attribute, so every tool that reads markup (a11y lint, DOM snapshots, devtools inspection) saw the rows as non-focusable even though focus worked at runtime.
+
 ## Commands
 
 Commands render at the end of each row. The `more_vert` trigger only appears on row hover when at least one command is visible. Command text is kept separate from the label column, so two-line labels do not overlap the trigger.
@@ -205,7 +242,7 @@ Command menu icons default to `fontSet: 'material-icons-outlined'` and `color: '
 </sd-tree>
 ```
 
-Custom templates can grow row height; the tree row stretches instead of clipping taller item content. The context also exposes `loadError` and `retry()` for a custom lazy-error presentation.
+Custom templates can grow row height; the tree row stretches instead of clipping taller item content. The context also exposes `sdLoadError` and `retry()` for a custom lazy-error presentation.
 
 ## Public API
 
@@ -217,9 +254,26 @@ tree.retry();
 
 Filtering searches loaded items only. Text is normalized to Vietnamese without accents, so `ke toan` matches labels with Vietnamese accents.
 
+## i18n
+
+Every string the component renders itself goes through `I18nService`, so it follows the active language:
+
+| What                                     | Key                                  | Notes                                                                     |
+| ---------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------- |
+| Retry button in the root error state     | `core.component.tree.retry`          | Template, via the `sdTranslate` pipe.                                       |
+| Default selection message                | `core.component.tree.selected-count` | Interpolates `{count}`. Used only when `selector.message` is not supplied. |
+| Toggle `aria-label`, collapsed node      | `core.component.tree.expand`         |                                                                           |
+| Toggle `aria-label`, expanded node       | `core.component.tree.collapse`       |                                                                           |
+| Toggle `aria-label`, node failed to load | `core.component.tree.retry-item`     |                                                                           |
+| `errorMessage()` fallback                | `core.component.tree.load-error`     | Used only when the thrown value carries no message of its own.            |
+
+`selector.message` (string or `(items) => string`) still wins over `core.component.tree.selected-count` — supply
+it when the host wants its own wording. `errorMessage()` returns `error.message` verbatim for a real `Error`.
+
 ## Visual cues
 
 - Vertical list of tree rows with indentation per level (`indentSize`, default 20px).
+- Nodes at `tree.maxDepth` render as leaves — no chevron, no default folder icon, no expand event.
 - Branch nodes show a toggle icon and default folder / folder-open icon when no explicit node icon is provided.
 - Leaf nodes have no default icon unless `treeItem.icon` is set.
 - Checkbox column appears only when `selector.visible === true`.
@@ -265,6 +319,7 @@ treeOption: SdTreeComponentOption<Category> = {
 - ❌ Expecting lazy children to be searched before they are loaded — filtering only searches loaded nodes.
 - ❌ Using `selectedItems` with objects that cannot be matched by reference or `id` / `code` / `value` — controlled selection cannot resolve rows reliably.
 - ❌ Rendering large expensive subtrees in a custom template without guarding heavy child components.
+- ❌ Treating `maxDepth` as "collapse deeper levels" — deeper nodes are not rendered at all and the boundary node cannot be expanded.
 
 ## E2E test attributes
 

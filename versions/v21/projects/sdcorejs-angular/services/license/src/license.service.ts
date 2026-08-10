@@ -1,6 +1,12 @@
-import { inject, Injectable } from '@angular/core';
+import { DOCUMENT, isPlatformBrowser } from '@angular/common';
+import { inject, Injectable, isDevMode, PLATFORM_ID } from '@angular/core';
 import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/configurations';
 
+/**
+ * @deprecated Dormant since release `1.6` — no component in the package enforces a license any more
+ * (see CHANGELOG entry #21). Kept only so existing subclasses of `SdBaseSecureComponent` keep
+ * compiling; it will be **removed in release `1.8`**. Do not wire new code to it.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -8,11 +14,26 @@ export class SdLicenseService {
   readonly #SALT = 'angular-core-976e2fa6f8b44dadbc63f87b057a331f';
   #isValid = false;
   private readonly coreConfiguration: ISdCoreConfiguration | null = inject(SD_CORE_CONFIGURATION, { optional: true });
+  // why: đọc thẳng `window.location.hostname` trong constructor làm service chết dưới SSR
+  // (`ReferenceError: window is not defined`) và không test được vì Chrome cấm redefine `window.location`.
+  // Lấy hostname qua DOCUMENT/PLATFORM_ID để vừa an toàn nền tảng, vừa thay thế được bằng DI trong test.
+  readonly #document = inject(DOCUMENT);
+  readonly #platformId = inject(PLATFORM_ID);
+  readonly #hostname: string;
 
   constructor() {
+    // why: `#readHostname` là arrow-field khai báo sau constructor nên chỉ gọi được trong constructor
+    // body (mọi field initialiser đã chạy xong tại thời điểm này).
+    this.#hostname = this.#readHostname();
     this.#verify();
   }
 
+  /**
+   * @deprecated Sẽ bị xoá ở release `1.8`. Không còn component nào trong package gọi hàm này.
+   *
+   * No-op when no `licenseKey` is configured (the common case for this MIT package). Only a
+   * hostname that fails an explicitly configured key list still throws.
+   */
   enforceLicense = () => {
     if (!this.#isValid) {
       this.#throwSecurityError();
@@ -20,7 +41,14 @@ export class SdLicenseService {
   };
 
   #verify = () => {
-    const hostname = window.location.hostname; // Ví dụ: store.uat.nexa.mobi
+    // why: SSR/web-worker không có `window`; coi platform không phải browser là hợp lệ và để lần
+    // verify thật chạy lại phía client khi app hydrate — thay vì làm nổ cả server render.
+    if (!isPlatformBrowser(this.#platformId)) {
+      this.#isValid = true;
+      return;
+    }
+
+    const hostname = this.#hostname; // Ví dụ: store.uat.nexa.mobi
 
     // 1. Bypass Localhost
     if (this.#isLocalhost(hostname)) {
@@ -30,8 +58,12 @@ export class SdLicenseService {
 
     const configKeys = this.#getConfiguredKeys();
     if (configKeys.length === 0) {
-      this.#isValid = false;
-      this.#throwSecurityError();
+      // why: đây là package MIT public và license gate đang dormant (CHANGELOG #21) — không component
+      // nào extends SdBaseSecureComponent nữa. Throw ở nhánh "chưa cấu hình" biến một entry point còn
+      // sống thành crash production cho bất kỳ consumer nào lỡ extends class đó. Không cấu hình
+      // `licenseKey` = không bật license gate, chỉ nhắc dev một lần ở dev build.
+      this.#isValid = true;
+      this.#warnLicenseDisabled();
       return;
     }
 
@@ -78,7 +110,24 @@ export class SdLicenseService {
   };
 
   #isLocalhost = (domain: string) => {
-    return domain === 'localhost' || domain === '127.0.0.1' || domain.includes('localhost');
+    // why: `domain.includes('localhost')` duyệt cả `localhost.attacker.tld` và `notlocalhost.com`,
+    // nên chỉ cần dựng hostname chứa chuỗi 'localhost' là bypass sạch license check.
+    // Chỉ chấp nhận đúng loopback host, hoặc subdomain thật của `.localhost` (RFC 6761).
+    const host = domain.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1' || host.endsWith('.localhost');
+  };
+
+  #readHostname = (): string => {
+    if (!isPlatformBrowser(this.#platformId)) return '';
+    return this.#document?.defaultView?.location?.hostname ?? '';
+  };
+
+  #warnLicenseDisabled = () => {
+    if (!isDevMode()) return;
+    console.warn(
+      '[SdLicenseService] No `licenseKey` configured on SD_CORE_CONFIGURATION — license enforcement is disabled. ' +
+        'SdLicenseService and SdBaseSecureComponent are deprecated and will be removed in release 1.8.'
+    );
   };
 
   #generateHash = (input: string): string => {
@@ -93,6 +142,6 @@ export class SdLicenseService {
   };
 
   #throwSecurityError = () => {
-    throw new Error(`[Security] Unauthorized usage of UI Lib on domain: ${window.location.hostname}`);
+    throw new Error(`[Security] Unauthorized usage of UI Lib on domain: ${this.#hostname}`);
   };
 }

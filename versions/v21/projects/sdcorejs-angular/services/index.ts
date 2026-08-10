@@ -10,3 +10,4 @@ export * from '@sdcorejs/angular/services/docx';
 export * from '@sdcorejs/angular/services/viewport';
 export * from '@sdcorejs/angular/services/unsaved-changes';
 export * from '@sdcorejs/angular/services/task';
+export * from '@sdcorejs/angular/services/license';

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericSelect,
@@ -14,13 +14,13 @@ import { FormGroup } from '@angular/forms';
 import { debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'select-attribute',
   templateUrl: './select-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeSelection, AttributeInput, AttributeSwitch, AttributeExpression, TranslatePipe],
+  imports: [AttributeTemplate, AttributeSelection, AttributeInput, AttributeSwitch, AttributeExpression, SdTranslatePipe],
 })
 export class SelectAttribute implements AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -32,7 +32,7 @@ export class SelectAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericSelect;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericSelect) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
 
   #changes = new Subject<void>();
@@ -80,7 +80,7 @@ export class SelectAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

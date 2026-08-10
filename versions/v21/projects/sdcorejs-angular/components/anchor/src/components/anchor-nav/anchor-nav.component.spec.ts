@@ -174,7 +174,7 @@ describe('AnchorNav', () => {
   describe('clickSection (debounced)', () => {
     it('emits clicked id after the 200ms debounce', fakeAsync(() => {
       const spy = jasmine.createSpy('clickSection');
-      component.clickSection.subscribe(spy);
+      component.sdClickSection.subscribe(spy);
 
       component.onClickSection('s1');
       expect(spy).not.toHaveBeenCalled();
@@ -185,7 +185,7 @@ describe('AnchorNav', () => {
 
     it('debounces rapid clicks — only the last id within window is emitted', fakeAsync(() => {
       const spy = jasmine.createSpy('clickSection');
-      component.clickSection.subscribe(spy);
+      component.sdClickSection.subscribe(spy);
 
       component.onClickSection('s1');
       tick(50);
@@ -200,7 +200,7 @@ describe('AnchorNav', () => {
 
     it('fires from click on .c-anchor-list-item', fakeAsync(() => {
       const spy = jasmine.createSpy('clickSection');
-      component.clickSection.subscribe(spy);
+      component.sdClickSection.subscribe(spy);
 
       const rows = fixture.nativeElement.querySelectorAll('.c-anchor-list-item');
       (rows[1] as HTMLElement).click();
@@ -211,7 +211,7 @@ describe('AnchorNav', () => {
 
     it('fires from keydown.enter on .c-anchor-list-item', fakeAsync(() => {
       const spy = jasmine.createSpy('clickSection');
-      component.clickSection.subscribe(spy);
+      component.sdClickSection.subscribe(spy);
 
       const rows = fixture.nativeElement.querySelectorAll('.c-anchor-list-item');
       const evt = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
@@ -225,7 +225,7 @@ describe('AnchorNav', () => {
   describe('ngOnDestroy', () => {
     it('unsubscribes — no emission fires after destroy', fakeAsync(() => {
       const spy = jasmine.createSpy('clickSection');
-      component.clickSection.subscribe(spy);
+      component.sdClickSection.subscribe(spy);
 
       component.onClickSection('s1');
       fixture.destroy();

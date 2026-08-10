@@ -111,7 +111,10 @@
           max-height: calc(100% - 5px);
         }
 
+        // why: đổi từ <div (click)> sang <button type="button"> để bàn phím mở được preview →
+        // reset chrome mặc định của button, giữ nguyên diện mạo overlay cũ.
         .c-overlay-count {
+          border: 0;
           display: flex;
           top: 50%;
           left: 50%;
@@ -195,21 +198,41 @@
     color: map.get(color.$color_map, 'primary');
   }
 
+  // why: .c-zoom đổi từ <sd-icon> sang <button> để nhận focus bàn phím → reset chrome mặc định
+  // của button (nền/viền/padding) để giữ nguyên diện mạo cũ.
   .c-zoom {
     height: 18px;
     width: 18px;
     font-size: 18px;
     cursor: pointer;
     color: #fff;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 }
 
 :host ::ng-deep {
   button {
+    // why: bỏ outline mặc định của Material nhưng PHẢI trả lại vòng focus cho bàn phím —
+    // :focus-visible chỉ hiện khi điều hướng bằng phím, chuột vẫn sạch như cũ.
     &:focus {
       outline: none;
     }
+    &:focus-visible {
+      outline: 2px solid var(--sd-primary, #005cbb);
+      outline-offset: 2px;
+    }
   }
+}
+
+// why: drop zone + khung ảnh nay nhận tabindex nên cần vòng focus thấy được.
+:host [role='button']:focus-visible {
+  outline: 2px solid var(--sd-primary, #005cbb);
+  outline-offset: 2px;
 }
 
 .c-drag-placeholder {
@@ -366,6 +389,8 @@
     white-space: nowrap; // không xuống dòng
     text-overflow: ellipsis; // hiển thị ...
   }
+  // why: .c-close đổi từ <sd-icon> sang <button> (bàn phím phải xoá được tài liệu) → reset
+  // chrome mặc định của button để giữ nguyên diện mạo cũ.
   .c-close {
     margin-left: auto;
     font-size: 16px;
@@ -374,6 +399,12 @@
     cursor: pointer;
     border-radius: 50%;
     flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: map.get(color.$color_map, 'text-secondary');
     &:hover {
       background-color: map.get(color.$color_map, 'border'); // nền xám nhạt

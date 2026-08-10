@@ -3,6 +3,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdTree } from './tree.component';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import {
@@ -11,6 +12,7 @@ import {
   SdTreeDataSource,
   SdTreeItemLazy,
   SdTreeItemStatic,
+  SdTreeNode,
   SdTreeSelectionEvent,
   SdTreeSelectorOption,
   SdTreeStaticOption,
@@ -43,7 +45,11 @@ const STATIC_ITEMS: SdTreeItemStatic<NodeItem>[] = [
   standalone: true,
   imports: [SdTree],
   template: `
-    <sd-tree [option]="option" (selectChange)="onSelect($event)" (expandChange)="onExpand($event)" (collapseChange)="onCollapse($event)" />
+    <sd-tree
+      [option]="option"
+      (sdSelectChange)="onSelect($event)"
+      (sdExpandChange)="onExpand($event)"
+      (sdCollapseChange)="onCollapse($event)" />
   `,
 })
 class StaticHostComponent {
@@ -256,6 +262,77 @@ class LazyErrorHostComponent {
     autoId: 'lazy-error',
     items: this.items,
     tree: { loadType: 'lazy', onExpandChildren: this.loader },
+  };
+}
+
+// why: các host dưới đây giữ `option` là FIELD (không phải getter như StaticHostComponent) — getter
+// trả object mới mỗi CD nên input đổi ref liên tục và mọi computed dẫn xuất đều tính lại, che mất
+// đúng thứ cần đo: tính ổn định của `rootNodes`.
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class StableOptionHostComponent {
+  readonly option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'stable',
+    items: STATIC_ITEMS,
+    tree: { loadType: 'static', defaultExpanded: true },
+    selector: { visible: true },
+  };
+}
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class StableLazyHostComponent {
+  resolveChildren!: (items: SdTreeItemLazy<NodeItem>[]) => void;
+  loader = jasmine.createSpy('loader').and.callFake(
+    () =>
+      new Promise<SdTreeItemLazy<NodeItem>[]>(resolve => {
+        this.resolveChildren = resolve;
+      })
+  );
+  readonly option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'lazy-stable',
+    items: [lazyTreeItem({ id: 'lazy-root', title: 'Lazy root' }, true)],
+    tree: { loadType: 'lazy', onExpandChildren: this.loader },
+  };
+}
+
+const CASCADE_ITEMS = binaryTreeItems(6);
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" />`,
+})
+class CascadeHostComponent {
+  readonly option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'cascade',
+    items: CASCADE_ITEMS,
+    tree: { loadType: 'static', defaultExpanded: true },
+    selector: { visible: true, cascade: 'descendants' },
+  };
+}
+
+const DEEP_ITEMS: SdTreeItemStatic<NodeItem>[] = [
+  treeItem({ id: 'l0', title: 'Level 0' }, [treeItem({ id: 'l1', title: 'Level 1' }, [treeItem({ id: 'l2', title: 'Level 2' })])]),
+];
+
+@Component({
+  standalone: true,
+  imports: [SdTree],
+  template: `<sd-tree [option]="option" (sdExpandChange)="expandedEvents.push($event)" />`,
+})
+class MaxDepthHostComponent {
+  expandedEvents: SdTreeToggleEvent<NodeItem>[] = [];
+  readonly option: SdTreeComponentOption<NodeItem> = {
+    autoId: 'max-depth',
+    items: DEEP_ITEMS,
+    tree: { loadType: 'static', defaultExpanded: true, maxDepth: 1 },
   };
 }
 
@@ -573,6 +650,18 @@ describe('SdTree', () => {
     expect(payableRow.getAttribute('aria-selected')).toBe('true');
   });
 
+  // why: bản cũ bind `[tabIndex]` (property DOM, camelCase) — giá trị đúng nhưng KHÔNG sinh
+  // attribute `tabindex` trong markup, nên mọi thứ đọc markup (lint a11y, snapshot, devtools)
+  // đều thấy row là không focusable.
+  it('emits a real tabindex attribute on tree rows, not just the DOM property', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const rootRow = row(fixture.nativeElement, 'root');
+    const payableRow = row(fixture.nativeElement, 'payable');
+
+    expect(rootRow.getAttribute('tabindex')).toBe('0');
+    expect(payableRow.getAttribute('tabindex')).toBe('-1');
+  });
+
   it('supports single selection and descendant cascade with indeterminate parents', async () => {
     const fixture = await createFixture(StaticHostComponent);
     const component = fixture.componentInstance;
@@ -632,6 +721,215 @@ describe('SdTree', () => {
     expect(component.loader).toHaveBeenCalledTimes(2);
     expect(text(fixture)).toContain('Lazy recovered');
   });
+
+  // -------------------------------------------------------------------------
+  // Regression: node tree must not be rebuilt for pure UI-state changes
+  // -------------------------------------------------------------------------
+
+  describe('node tree allocation', () => {
+    it('keeps rootNodes referentially stable across change detection passes', async () => {
+      const fixture = await createFixture(StableOptionHostComponent);
+      const tree = treeComponent<NodeItem>(fixture);
+      const before = tree.rootNodes();
+
+      fixture.detectChanges();
+      fixture.detectChanges();
+
+      expect(tree.rootNodes()).toBe(before);
+    });
+
+    // why: `#expandedState` từng là dependency của `rootNodes` → mở/đóng MỘT node dựng lại TOÀN BỘ
+    // cây, kéo theo `visibleNodes` + `visibleViewNodes` map lại từ đầu.
+    it('does not rebuild the node tree when a branch is collapsed or expanded', async () => {
+      const fixture = await createFixture(StableOptionHostComponent);
+      const tree = treeComponent<NodeItem>(fixture);
+      const before = tree.rootNodes();
+      const rootNode = before[0];
+
+      await tree.toggle(rootNode);
+      fixture.detectChanges();
+
+      expect(tree.rootNodes()).toBe(before);
+      expect(tree.rootNodes()[0]).toBe(rootNode);
+      expect(rootNode.isExpanded).toBeFalse();
+      expect(tree.visibleNodes().map(node => node.id)).toEqual(['root', 'hr', 'contract']);
+      expect(row(fixture.nativeElement, 'root').getAttribute('aria-expanded')).toBe('false');
+
+      await tree.toggle(rootNode);
+      fixture.detectChanges();
+
+      expect(tree.rootNodes()).toBe(before);
+      expect(rootNode.isExpanded).toBeTrue();
+      expect(row(fixture.nativeElement, 'root').getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('does not rebuild the node tree while a lazy branch is loading, only once its children arrive', async () => {
+      const fixture = await createFixture(StableLazyHostComponent);
+      const tree = treeComponent<NodeItem>(fixture);
+      const before = tree.rootNodes();
+
+      const pending = tree.toggle(before[0]);
+      fixture.detectChanges();
+
+      expect(before[0].isLoading).toBeTrue();
+      expect(tree.rootNodes()).toBe(before);
+
+      fixture.componentInstance.resolveChildren([lazyTreeItem({ id: 'lazy-child', title: 'Lazy child' }, false)]);
+      await pending;
+      fixture.detectChanges();
+
+      // structure genuinely changed — a rebuild here is expected
+      expect(tree.rootNodes()).not.toBe(before);
+      expect(text(fixture)).toContain('Lazy child');
+    });
+
+    // why: `#isSelectionIndeterminate` từng gọi `#flattenAll(node.children)` cho TỪNG node hiển thị
+    // ngay trong map của `visibleViewNodes` → O(n²) và một mảng mới mỗi node mỗi lần recompute.
+    it('derives indeterminate state in one bottom-up pass instead of flattening every subtree', async () => {
+      const fixture = await createFixture(CascadeHostComponent);
+      const tree = treeComponent<NodeItem>(fixture);
+
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'n-0-0-0-0-0-0')!);
+      fixture.detectChanges();
+
+      const roots = tree.rootNodes();
+      const nodeCount = tree.visibleNodes().length;
+      expect(nodeCount).toBe(127);
+      expect(tree.visibleViewNodes().find(node => node.id === 'n')?.selectionIndeterminate).toBeTrue();
+      expect(tree.visibleViewNodes().find(node => node.id === 'n-1')?.selectionIndeterminate).toBeFalse();
+
+      let childrenReads = 0;
+      const instrument = (nodes: SdTreeNode<NodeItem>[]): void => {
+        for (const node of nodes) {
+          const children = node.children;
+          Object.defineProperty(node, 'children', {
+            configurable: true,
+            get: () => {
+              childrenReads += 1;
+              return children;
+            },
+          });
+          instrument(children);
+        }
+      };
+      instrument(roots);
+
+      // activeNodeId only invalidates visibleViewNodes, so this measures exactly one recompute
+      tree.activeNodeId.set('n-1');
+      const views = tree.visibleViewNodes();
+
+      expect(tree.rootNodes()).toBe(roots);
+      expect(views.length).toBe(nodeCount);
+      expect(childrenReads).toBeLessThanOrEqual(nodeCount * 3);
+    });
+  });
+
+  describe('maxDepth', () => {
+    it('drops nodes past maxDepth and clamps the boundary node to a leaf', async () => {
+      const fixture = await createFixture(MaxDepthHostComponent);
+      const tree = treeComponent<NodeItem>(fixture);
+      const host = fixture.nativeElement as HTMLElement;
+      const boundary = tree.visibleNodes().find(node => node.id === 'l1')!;
+
+      expect(tree.visibleNodes().map(node => node.id)).toEqual(['l0', 'l1']);
+      expect(boundary.hasChildren).toBeFalse();
+      expect(boundary.children).toEqual([]);
+      expect(row(host, 'l1').getAttribute('aria-expanded')).toBeNull();
+      expect(toggle(host, 'l1').disabled).toBeTrue();
+      expect(icon(host, 'l1')).toBeNull();
+      // the node above the boundary is untouched
+      expect(row(host, 'l0').getAttribute('aria-expanded')).toBe('true');
+      expect(icon(host, 'l0')?.textContent?.trim()).toBe('folder_open');
+    });
+
+    it('never emits expandChange for a node sitting at maxDepth', async () => {
+      const fixture = await createFixture(MaxDepthHostComponent);
+      const tree = treeComponent<NodeItem>(fixture);
+      const host = fixture.nativeElement as HTMLElement;
+
+      toggle(host, 'l1').click();
+      await tree.toggle(tree.visibleNodes().find(node => node.id === 'l1')!);
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.expandedEvents).toEqual([]);
+      expect(tree.visibleNodes().map(node => node.id)).toEqual(['l0', 'l1']);
+      expect(text(fixture)).not.toContain('Level 2');
+    });
+  });
+
+  // Template đã dùng key `core.component.tree.retry` từ trước, nhưng nhãn screen-reader của nút
+  // gập/mở, message chọn và lỗi mặc định lại hardcode — một component hai ngôn ngữ, không dịch được.
+  describe('i18n', () => {
+    // why: `createFixture` mới gọi `TestBed.configureTestingModule`, nên KHÔNG được `TestBed.inject`
+    // trong `beforeEach` — inject sớm sẽ khởi tạo test module và làm configure sau đó ném lỗi.
+    // `setLanguage` ghi localStorage và `#resolveInitial` đọc lại, nên một spec chạy trước có thể để
+    // lại ngôn ngữ khác — chốt 'vi' rồi render lại để assertion không phụ thuộc thứ tự chạy.
+    const useI18n = (fixture: ComponentFixture<unknown>): I18nService => {
+      const i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+      fixture.detectChanges();
+      return i18n;
+    };
+
+    afterEach(() => {
+      TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+    });
+
+    it('falls back to the translated selection message and interpolates the count', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      const i18n = useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+      fixture.componentInstance.selector = { visible: true };
+      fixture.detectChanges();
+
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+      fixture.detectChanges();
+      expect(tree.selectionMessage()).toBe('Đã chọn 1 mục');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(tree.selectionMessage()).toBe('1 item(s) selected');
+    });
+
+    it('keeps a consumer-supplied selection message untouched', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+      fixture.detectChanges();
+      expect(tree.selectionMessage()).toBe('Đã chọn 1 dòng');
+    });
+
+    it('translates the expand / collapse toggle labels and writes them to aria-label', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      const i18n = useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+      const host = fixture.nativeElement as HTMLElement;
+
+      // root mở sẵn (defaultExpanded: 1) → nhãn là "thu gọn"
+      expect(toggle(host, 'root').getAttribute('aria-label')).toBe('Thu gọn mục');
+
+      await tree.toggle(tree.visibleNodes().find(node => node.id === 'root')!);
+      fixture.detectChanges();
+      expect(toggle(host, 'root').getAttribute('aria-label')).toBe('Mở rộng mục');
+
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(toggle(host, 'root').getAttribute('aria-label')).toBe('Expand tree item');
+    });
+
+    it('translates the default load-error message but keeps a real Error message intact', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      const i18n = useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+
+      expect(tree.errorMessage(null)).toBe('Không tải được dữ liệu cây');
+      expect(tree.errorMessage(new Error('boom'))).toBe('boom');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(tree.errorMessage(undefined)).toBe('Unable to load tree data');
+    });
+  });
 });
 
 async function createFixture<T>(component: new () => T): Promise<ComponentFixture<T>> {
@@ -654,6 +952,16 @@ function treeItem(data: NodeItem, children?: SdTreeItemStatic<NodeItem>[], icon?
     data,
     children,
   };
+}
+
+/** Complete binary tree of `2^(depth + 1) - 1` static items — wide enough to expose O(n²) walks. */
+function binaryTreeItems(depth: number, prefix = 'n'): SdTreeItemStatic<NodeItem>[] {
+  const build = (id: string, level: number): SdTreeItemStatic<NodeItem> => {
+    const data: NodeItem = { id, title: id };
+    if (level >= depth) return treeItem(data);
+    return treeItem(data, [build(`${id}-0`, level + 1), build(`${id}-1`, level + 1)]);
+  };
+  return [build(prefix, 0)];
 }
 
 function lazyTreeItem(data: NodeItem, hasChildren?: boolean, icon?: string): SdTreeItemLazy<NodeItem> {

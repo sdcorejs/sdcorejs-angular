@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdLayoutMenu, SdLayoutRootMenu } from '../../../services';
 import { SdLayoutMenuTreeComponent } from './menu-tree.component';
 
@@ -11,6 +12,10 @@ describe('SdLayoutMenuTreeComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({ imports: [SdLayoutMenuTreeComponent] }).compileComponents();
+    // why: `I18nService.setLanguage` ghi vào localStorage và `#resolveInitial` đọc lại, nên một spec
+    // chạy trước có thể để lại ngôn ngữ khác. Chốt 'vi' TRƯỚC khi dựng fixture để assertion tiếng
+    // Việt bên dưới không phụ thuộc thứ tự chạy của Jasmine (random seed).
+    TestBed.inject(I18nService).setLanguage('vi', { reload: false });
     fixture = TestBed.createComponent(SdLayoutMenuTreeComponent);
     fixture.componentRef.setInput('menus', menus);
     fixture.componentRef.setInput('activePath', '/reports');
@@ -33,7 +38,7 @@ describe('SdLayoutMenuTreeComponent', () => {
 
   it('emits pin changes and reflects shared pinned state', () => {
     const emitted: SdLayoutMenu[] = [];
-    fixture.componentInstance.togglePinned.subscribe(menu => emitted.push(menu));
+    fixture.componentInstance.sdTogglePinned.subscribe(menu => emitted.push(menu));
     fixture.nativeElement.querySelector('[data-pin-key="id:reports"]').click();
 
     expect(emitted).toEqual([reports]);
@@ -72,10 +77,39 @@ describe('SdLayoutMenuTreeComponent', () => {
 
   it('emits the selected route menu', () => {
     const emitted: SdLayoutRootMenu[] = [];
-    fixture.componentInstance.navigate.subscribe(menu => emitted.push(menu));
+    fixture.componentInstance.sdNavigate.subscribe(menu => emitted.push(menu));
 
     fixture.nativeElement.querySelector('[data-menu-key="id:dashboard"]').click();
 
     expect(emitted).toEqual([dashboard]);
+  });
+
+  // why: aria-label của nút ghim trước đây nối `'Pin ' + node.title` — tiếng Anh cứng trong một
+  // module mà phần còn lại đã i18n, và ép trật tự "động từ trước tên" lên mọi ngôn ngữ.
+  describe('i18n — pin toggle accessible name', () => {
+    const pinLabel = (): string | null => fixture.nativeElement.querySelector('[data-pin-key="id:reports"]').getAttribute('aria-label');
+
+    afterEach(() => {
+      TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+    });
+
+    it('interpolates the menu title into the translated pin / unpin label', () => {
+      expect(pinLabel()).toBe('Ghim Báo cáo bán hàng');
+
+      fixture.componentRef.setInput('pinnedKeys', ['id:reports']);
+      fixture.detectChanges();
+      expect(pinLabel()).toBe('Bỏ ghim Báo cáo bán hàng');
+    });
+
+    it('follows a language switch', () => {
+      const i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(pinLabel()).toBe('Pin Báo cáo bán hàng');
+
+      fixture.componentRef.setInput('pinnedKeys', ['id:reports']);
+      fixture.detectChanges();
+      expect(pinLabel()).toBe('Unpin Báo cáo bán hàng');
+    });
   });
 });

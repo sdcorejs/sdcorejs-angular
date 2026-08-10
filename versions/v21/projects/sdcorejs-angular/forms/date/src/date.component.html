@@ -7,6 +7,10 @@
 @let _isInline = isInline();
 @let _bare = _isInline;
 @let _hasValue = !!formControl.value;
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — message
+     hiện mà control không báo invalid thì screen reader không biết ô đang lỗi. -->
+@let _errorVisible = !!_errorMessage && formControl.touched;
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @let _resolvedMin = resolvedMin();
 @let _resolvedMax = resolvedMax();
@@ -47,13 +51,17 @@
     </ng-content>
   }
 
+  <!-- why: div chỉ là hộp layout. aria-hidden="true" cũ ẩn CẢ cây con — label, <input>,
+       <mat-error>, nút clear, nút mở lịch — khỏi accessibility tree. role="presentation" chỉ
+       vô hiệu hoá chính div, KHÔNG lan xuống con; (click) là tiện ích chuột mà bàn phím đã có
+       qua Tab vào <input>. -->
   <div
     class="d-flex align-items-center"
+    role="presentation"
     [class.sd-inline-editor]="_isInline"
     [class.c-focused]="isFocused"
     [class.c-disabled]="formControl.disabled"
-    (click)="onClick()"
-    aria-hidden="true">
+    (click)="onClick()">
     <mat-form-field
       class="c-form-field-date-input"
       [class.sd-md]="size() === 'md'"
@@ -70,8 +78,9 @@
         </mat-label>
       }
 
+      <!-- why: BỎ aria-hidden trên chính <input> — ô vẫn Tab tới được, aria-hidden chỉ khiến
+           screen reader đọc ra khoảng lặng. -->
       <input
-        aria-hidden="true"
         [id]="id"
         matInput
         (input)="onInput($event)"
@@ -94,17 +103,19 @@
         [attr.data-value]="dataValue()"
         [attr.data-required]="dataRequired()"
         [attr.data-error-message]="dataErrorMessage()"
+        [attr.aria-invalid]="_errorVisible ? 'true' : null"
+        [attr.aria-describedby]="_showInlineError ? errorId : null"
         #input
         [maxLength]="10" />
 
       <mat-datepicker #picker [touchUi]="isMobileOrTablet"></mat-datepicker>
 
-      @if (_hideInlineError && _errorMessage && formControl.touched) {
+      @if (_hideInlineError && _errorVisible) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
       }
 
-      @if (!_hideInlineError && _errorMessage && formControl.touched) {
-        <mat-error>{{ _errorMessage }}</mat-error>
+      @if (_showInlineError) {
+        <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
       }
 
       @if (clearable() && formControl.value && !_required && !formControl.disabled && !_bare) {
@@ -113,7 +124,19 @@
         </button>
       }
 
-      <sd-icon class="cursor-pointer sd-suffix-icon" (click)="!formControl.disabled && picker.open()" #btn matSuffix name="today"></sd-icon>
+      <!-- why: nút mở lịch trước là <sd-icon> trần — không Tab tới được, không có tên, và nằm
+           trong cây bị aria-hidden nên vô hình hoàn toàn với AT. <button type="button"> có sẵn
+           semantics Enter/Space + `disabled` thật, khỏi phải bịa role/tabindex/keydown. -->
+      <button
+        #btn
+        type="button"
+        matSuffix
+        class="cursor-pointer sd-suffix-icon sd-suffix-btn"
+        [disabled]="formControl.disabled"
+        [attr.aria-label]="'core.form.date.open-picker' | sdTranslate"
+        (click)="picker.open()">
+        <sd-icon name="today"></sd-icon>
+      </button>
     </mat-form-field>
   </div>
 }

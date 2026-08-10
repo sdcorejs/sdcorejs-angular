@@ -1,5 +1,5 @@
 import { Directive, effect, inject, input, TemplateRef, ViewContainerRef } from '@angular/core';
-import { SdPermissionService } from '../services';
+import { SdPermissionInput, SdPermissionService } from '../services';
 
 @Directive({
   selector: '[sdPermission]',
@@ -10,7 +10,7 @@ export class SdPermissionDirective {
   readonly #permissionService = inject(SdPermissionService);
 
   // Nếu là mảng thì chỉ cần có 1 permission trong mảng đó xem như có quyền
-  readonly sdPermission = input<string | string[] | undefined | null>(undefined);
+  readonly sdPermission = input<SdPermissionInput>(undefined);
   readonly sdPermissionKey = input<string | undefined>(undefined);
 
   constructor() {
@@ -20,13 +20,10 @@ export class SdPermissionDirective {
 
       this.#viewContainerRef.clear();
 
-      // Nếu không gắn permission thì render
-      if (!permission?.toString()) {
-        this.#viewContainerRef.createEmbeddedView(this.#templateRef);
-        return;
-      }
-
-      // Kiểm tra permission theo key (nếu có)
+      // why: code cũ render vô điều kiện khi `permission` rỗng, nên `*sdPermission="perm"` với `perm`
+      // undefined (typo tên biến, dữ liệu chưa về, mã quyền rỗng từ API) hiện nút cho tất cả mọi
+      // người. Giờ mọi quyết định đều đi qua `hasPermission` — nó fail closed và chỉ chấp nhận
+      // `SD_PERMISSION_PUBLIC` như opt-out tường minh, nên không còn nhánh render ngầm nào nữa.
       if (this.#permissionService.hasPermission(permission, permissionKey)) {
         this.#viewContainerRef.createEmbeddedView(this.#templateRef);
       }

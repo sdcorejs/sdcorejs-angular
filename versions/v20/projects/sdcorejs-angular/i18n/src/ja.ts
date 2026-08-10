@@ -619,4 +619,80 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': '詳細',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': '検索...',
+  'core.component.query-bar.no-fields': 'フィールドが設定されていません',
+  'core.component.query-bar.add-filter': 'フィルターを追加',
+  'core.component.query-bar.clear-all': 'すべてクリア ({count})',
+  'core.component.query-bar.search': '検索',
+  'core.component.query-bar.logic-operator': '論理演算子',
+  'core.component.query-bar.boolean.true': 'はい',
+  'core.component.query-bar.boolean.false': 'いいえ',
+  'core.component.query-bar.placeholder.value': '値',
+  'core.component.query-bar.placeholder.text': '入力…',
+  'core.component.query-bar.placeholder.from-number': '開始',
+  'core.component.query-bar.placeholder.to-number': '終了',
+  'core.component.query-bar.placeholder.from-text': '開始…',
+  'core.component.query-bar.placeholder.to-text': '終了…',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': '指定した日付',
+  'core.component.query-builder.date-mode.now': '今日',
+  'core.component.query-builder.date-mode.relative': '相対',
+  'core.component.query-builder.value-source.literal': '値を入力',
+  'core.component.query-builder.value-source.field': 'フィールドと比較',
+  'core.component.query-builder.relative.hour-previous': '時間前',
+  'core.component.query-builder.relative.hour-next': '時間後',
+  'core.component.query-builder.relative.day-previous': '日前',
+  'core.component.query-builder.relative.day-next': '日後',
+  'core.component.query-builder.relative.week-previous': '週間前',
+  'core.component.query-builder.relative.week-next': '週間後',
+  'core.component.query-builder.relative.month-previous': 'ヶ月前',
+  'core.component.query-builder.relative.month-next': 'ヶ月後',
+  'core.component.query-builder.relative.format': '{amount}{phrase}',
+  'core.component.query-builder.add': '追加',
+  'core.component.query-builder.add-node': '条件またはグループを追加',
+  'core.component.query-builder.condition': '条件',
+  'core.component.query-builder.group': 'グループ',
+  'core.component.query-builder.remove-group': 'グループを削除',
+  'core.component.query-builder.remove-condition': '条件を削除',
+  'core.component.query-builder.empty': '条件がまだありません',
+  'core.component.query-builder.select-field': 'フィールドを選択',
+  'core.component.query-builder.value': '値',
+  'core.component.query-builder.from': '開始',
+  'core.component.query-builder.to': '終了',
+  'core.component.query-builder.boolean.true': 'はい',
+  'core.component.query-builder.boolean.false': 'いいえ',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '{count} 件選択中',
+  'core.component.tree.expand': 'ツリー項目を展開',
+  'core.component.tree.collapse': 'ツリー項目を折りたたむ',
+  'core.component.tree.retry-item': 'ツリー項目を再読み込み',
+  'core.component.tree.load-error': 'ツリーデータを読み込めません',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': 'コピーしました',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': 'ピン留め済み',
+  'core.module.layout.sidebar.recent': '最近',
+  'core.module.layout.sidebar.all-menu': 'すべてのメニュー',
+  'core.module.layout.menu.pin': '{title} をピン留め',
+  'core.module.layout.menu.unpin': '{title} のピン留めを解除',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': 'カレンダーを開く',
+  'core.form.datetime.open-picker': 'カレンダーを開く',
+  'core.form.date-range.open-picker': 'カレンダーを開く',
+  'core.form.date-range.clear': '日付範囲をクリア',
+  'core.form.select.search': '検索',
+  'core.component.table.loading': 'テーブルデータを読み込み中',
+  'core.component.upload-file.loading': 'ファイルをアップロード中',
+  'core.component.import-excel.loading': 'データを読み込み中',
+  'core.component.upload-file.remove': 'ファイルを削除',
+  'core.component.upload-file.zoom': '画像を拡大',
+  'core.component.upload-file.view-all': 'すべての画像を表示',
+  'core.component.form-builder.canvas': 'フォーム設計キャンバス',
 };

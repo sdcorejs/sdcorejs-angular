@@ -18,7 +18,7 @@ import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { SdTooltipDirective } from '@sdcorejs/angular/directives';
 import { SdTableColumn } from '../../../models/table-column.model';
 import { SdTableItem } from '../../../models/table-item.model';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Pipe({
   name: 'asString',
@@ -36,7 +36,7 @@ export class ToStringPipe implements PipeTransform {
   styleUrl: './view.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, SdBadge, SdSafeHtmlPipe, SdTooltipDirective, ToStringPipe, TranslatePipe],
+  imports: [CommonModule, SdBadge, SdSafeHtmlPipe, SdTooltipDirective, ToStringPipe, SdTranslatePipe],
 })
 export class ViewComponent {
   // Inject
@@ -83,5 +83,15 @@ export class ViewComponent {
 
   toggle = () => {
     this.isCollapsed.update(current => !current);
+  };
+
+  // why: ô HTML có `view.click` nay là role="button" + tabindex="0" nên Enter/Space phải chạy
+  // đúng như click. `view.data` là HTML do consumer cung cấp và có thể chứa control riêng —
+  // chỉ xử lý khi CHÍNH ô đang giữ focus để không kích hoạt hai lần.
+  onViewKeydown = (event: KeyboardEvent) => {
+    if (event.target !== event.currentTarget) return;
+    // why: chặn Space cuộn trang.
+    event.preventDefault();
+    this.item().meta.display[this.column().field]?.click?.();
   };
 }

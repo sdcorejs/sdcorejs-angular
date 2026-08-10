@@ -1,5 +1,5 @@
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { DestroyRef, Injectable, PLATFORM_ID, Renderer2, RendererFactory2, inject } from '@angular/core';
+import { DestroyRef, Injectable, PLATFORM_ID, inject } from '@angular/core';
 
 export interface SdLoadingRef {
   readonly closed: boolean;
@@ -76,6 +76,15 @@ const CLOSED_LOADING_REF: SdLoadingRef = Object.freeze({
   },
 });
 
+/*
+ * why: service này cố tình KHÔNG dùng Renderer2. Khi app bật animations, `RendererFactory2` trả về
+ * `AnimationRendererFactory` và `Renderer2.removeChild()` chỉ đẩy element vào hàng đợi
+ * `collectedLeaveElements` của animation engine — DOM chỉ thật sự bị gỡ ở lần flush kế tiếp (sau một
+ * chu kỳ change detection). Overlay và `style[data-sd-loading-styles]` ở đây là DOM ngoài view, được
+ * gỡ lúc destroy injector hoặc từ ngữ cảnh async ngoài Angular, tức không còn flush nào chạy sau đó →
+ * node nằm lại trong document vĩnh viễn (overlay z-index 99999 khoá cả trang). Ghi DOM trực tiếp trên
+ * `DOCUMENT` giữ append/remove đối xứng và đồng bộ; nhánh SSR đã được `isPlatformBrowser` chặn sẵn.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -83,7 +92,6 @@ export class SdLoadingService {
   private static readonly documentRecords = new WeakMap<Document, SdLoadingDocumentRecord>();
 
   readonly #document: Document;
-  readonly #renderer: Renderer2 | null;
   readonly #isBrowser: boolean;
   readonly #destroyRef = inject(DestroyRef);
   readonly #handleQueue: SdLoadingHandleState[] = [];
@@ -96,22 +104,18 @@ export class SdLoadingService {
   constructor() {
     this.#document = inject(DOCUMENT);
     this.#isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-
-    const rendererFactory = inject(RendererFactory2);
-    this.#renderer = this.#isBrowser ? rendererFactory.createRenderer(null, null) : null;
     this.#destroyRef.onDestroy(() => this.#destroy());
   }
 
   /** Starts loading for every current selector match and returns ownership of those exact hosts. */
   start = (selector = 'body'): SdLoadingRef => {
-    const renderer = this.#renderer;
-    if (this.#destroyed || !this.#isBrowser || !renderer) return CLOSED_LOADING_REF;
+    if (this.#destroyed || !this.#isBrowser) return CLOSED_LOADING_REF;
 
     const hosts = Array.from(this.#document.querySelectorAll(selector));
     if (hosts.length === 0) return CLOSED_LOADING_REF;
 
     const documentRecord = this.#getOrCreateDocumentRecord();
-    this.#ensureStyles(documentRecord, renderer);
+    this.#ensureStyles(documentRecord);
     const state: SdLoadingHandleState = { selector, contributions: [], closed: false };
     for (const host of hosts) {
       const contribution: SdLoadingContribution = {
@@ -121,7 +125,7 @@ export class SdLoadingService {
         released: false,
       };
       state.contributions.push(contribution);
-      this.#acquireHost(documentRecord, contribution, renderer);
+      this.#acquireHost(documentRecord, contribution);
     }
     this.#handleQueue.push(state);
 
@@ -129,7 +133,7 @@ export class SdLoadingService {
       get closed(): boolean {
         return state.closed;
       },
-      close: () => this.#closeHandle(state, renderer),
+      close: () => this.#closeHandle(state),
     };
   };
 
@@ -150,12 +154,11 @@ export class SdLoadingService {
 
   /** Releases the oldest exact-selector start, with a current-host fallback for legacy cross-selector calls. */
   stop = (selector = 'body'): void => {
-    const renderer = this.#renderer;
-    if (this.#destroyed || !this.#isBrowser || !renderer) return;
+    if (this.#destroyed || !this.#isBrowser) return;
 
     const exactHandle = this.#handleQueue.find(state => !state.closed && state.selector === selector);
     if (exactHandle) {
-      this.#closeHandle(exactHandle, renderer);
+      this.#closeHandle(exactHandle);
       return;
     }
 
@@ -166,7 +169,7 @@ export class SdLoadingService {
       const contribution = documentRecord.hostStates
         .get(host)
         ?.contributions.find(candidate => !candidate.released && candidate.service === this);
-      if (contribution) this.#releaseContribution(documentRecord, contribution, renderer);
+      if (contribution) this.#releaseContribution(documentRecord, contribution);
     }
   };
 
@@ -196,38 +199,35 @@ export class SdLoadingService {
     return record;
   }
 
-  #acquireHost(documentRecord: SdLoadingDocumentRecord, contribution: SdLoadingContribution, renderer: Renderer2): void {
+  #acquireHost(documentRecord: SdLoadingDocumentRecord, contribution: SdLoadingContribution): void {
     const host = contribution.host;
     const existing = documentRecord.hostStates.get(host);
     if (existing) {
-      this.#repairOverlay(host, existing, renderer);
+      this.#repairOverlay(host, existing);
       existing.count += 1;
       existing.contributions.push(contribution);
       return;
     }
 
     const state: SdLoadingHostState = {
-      overlay: this.#createOverlay(renderer),
+      overlay: this.#createOverlay(),
       previousAriaBusy: host.getAttribute('aria-busy'),
       contributions: [contribution],
       count: 1,
     };
-    renderer.setAttribute(host, 'aria-busy', 'true');
-    renderer.appendChild(host, state.overlay);
+    host.setAttribute('aria-busy', 'true');
+    host.appendChild(state.overlay);
     documentRecord.hostStates.set(host, state);
     documentRecord.liveHosts.add(host);
   }
 
-  #repairOverlay(host: Element, state: SdLoadingHostState, renderer: Renderer2): void {
-    const currentParent = state.overlay.parentNode;
-    if (currentParent !== host) {
-      if (currentParent) renderer.removeChild(currentParent, state.overlay);
-      renderer.appendChild(host, state.overlay);
-    }
-    if (host.getAttribute('aria-busy') !== 'true') renderer.setAttribute(host, 'aria-busy', 'true');
+  #repairOverlay(host: Element, state: SdLoadingHostState): void {
+    // why: appendChild tự động rút overlay khỏi parent cũ, nên không cần removeChild riêng.
+    if (state.overlay.parentNode !== host) host.appendChild(state.overlay);
+    if (host.getAttribute('aria-busy') !== 'true') host.setAttribute('aria-busy', 'true');
   }
 
-  #releaseContribution(documentRecord: SdLoadingDocumentRecord, contribution: SdLoadingContribution, renderer: Renderer2): void {
+  #releaseContribution(documentRecord: SdLoadingDocumentRecord, contribution: SdLoadingContribution): void {
     if (contribution.released) return;
     contribution.released = true;
 
@@ -237,19 +237,18 @@ export class SdLoadingService {
       if (contributionIndex >= 0) state.contributions.splice(contributionIndex, 1);
       state.count -= 1;
 
-      if (state.count <= 0) this.#removeHost(documentRecord, contribution.host, state, renderer);
+      if (state.count <= 0) this.#removeHost(documentRecord, contribution.host, state);
     }
 
     contribution.service.#closeOwnerWhenReleased(contribution.owner);
   }
 
-  #removeHost(documentRecord: SdLoadingDocumentRecord, host: Element, state: SdLoadingHostState, renderer: Renderer2): void {
-    const parent = state.overlay.parentNode;
-    if (parent) renderer.removeChild(parent, state.overlay);
+  #removeHost(documentRecord: SdLoadingDocumentRecord, host: Element, state: SdLoadingHostState): void {
+    state.overlay.remove();
 
     if (host.getAttribute('aria-busy') === 'true') {
-      if (state.previousAriaBusy === null) renderer.removeAttribute(host, 'aria-busy');
-      else renderer.setAttribute(host, 'aria-busy', state.previousAriaBusy);
+      if (state.previousAriaBusy === null) host.removeAttribute('aria-busy');
+      else host.setAttribute('aria-busy', state.previousAriaBusy);
     }
 
     documentRecord.hostStates.delete(host);
@@ -257,7 +256,7 @@ export class SdLoadingService {
     this.#deleteDocumentRecordWhenEmpty(documentRecord);
   }
 
-  #closeHandle(state: SdLoadingHandleState, renderer: Renderer2): void {
+  #closeHandle(state: SdLoadingHandleState): void {
     if (state.closed) return;
 
     state.closed = true;
@@ -265,7 +264,7 @@ export class SdLoadingService {
     const documentRecord = SdLoadingService.documentRecords.get(this.#document);
     if (documentRecord) {
       for (const contribution of [...state.contributions]) {
-        this.#releaseContribution(documentRecord, contribution, renderer);
+        this.#releaseContribution(documentRecord, contribution);
       }
     } else {
       for (const contribution of state.contributions) contribution.released = true;
@@ -286,33 +285,33 @@ export class SdLoadingService {
     if (handleIndex >= 0) this.#handleQueue.splice(handleIndex, 1);
   }
 
-  #createOverlay(renderer: Renderer2): HTMLElement {
-    const container: HTMLElement = renderer.createElement('div');
-    const spinner: HTMLElement = renderer.createElement('div');
+  #createOverlay(): HTMLElement {
+    const container = this.#document.createElement('div');
+    const spinner = this.#document.createElement('div');
 
-    renderer.addClass(container, 'sd-loading');
-    renderer.setAttribute(container, 'role', 'status');
-    renderer.setAttribute(container, 'aria-live', 'polite');
-    renderer.setAttribute(container, 'aria-label', 'Loading');
+    container.classList.add('sd-loading');
+    container.setAttribute('role', 'status');
+    container.setAttribute('aria-live', 'polite');
+    container.setAttribute('aria-label', 'Loading');
 
-    renderer.addClass(spinner, 'sd-loading-spinner');
-    renderer.setAttribute(spinner, 'aria-hidden', 'true');
-    renderer.appendChild(container, spinner);
+    spinner.classList.add('sd-loading-spinner');
+    spinner.setAttribute('aria-hidden', 'true');
+    container.appendChild(spinner);
     return container;
   }
 
-  #ensureStyles(documentRecord: SdLoadingDocumentRecord, renderer: Renderer2): void {
+  #ensureStyles(documentRecord: SdLoadingDocumentRecord): void {
     let record = documentRecord.style;
     if (record && !this.#isCurrentStyle(record.element)) {
       const owners = record.owners;
-      this.#detachOwnedStyleContent(record, renderer);
-      record = this.#createStyleRecord(renderer, owners);
+      this.#detachOwnedStyleContent(record);
+      record = this.#createStyleRecord(owners);
       documentRecord.style = record;
     } else if (!record) {
-      record = this.#createStyleRecord(renderer, new Set<SdLoadingService>());
+      record = this.#createStyleRecord(new Set<SdLoadingService>());
       documentRecord.style = record;
     } else {
-      this.#ensureRequiredStyleText(record, renderer);
+      this.#ensureRequiredStyleText(record);
     }
 
     record.owners.add(this);
@@ -323,7 +322,7 @@ export class SdLoadingService {
     return element.isConnected && element.parentNode === this.#document.head && element.hasAttribute(SD_LOADING_STYLE_ATTRIBUTE);
   }
 
-  #createStyleRecord(renderer: Renderer2, owners: Set<SdLoadingService>): SdLoadingStyleRecord {
+  #createStyleRecord(owners: Set<SdLoadingService>): SdLoadingStyleRecord {
     const existing = this.#document.head.querySelector<HTMLStyleElement>(`style[${SD_LOADING_STYLE_ATTRIBUTE}]`);
     if (existing) {
       const record: SdLoadingStyleRecord = {
@@ -332,19 +331,19 @@ export class SdLoadingService {
         owners,
         ownedText: null,
       };
-      this.#ensureRequiredStyleText(record, renderer);
+      this.#ensureRequiredStyleText(record);
       return record;
     }
 
-    const style: HTMLStyleElement = renderer.createElement('style');
-    const ownedText: Text = renderer.createText(SD_LOADING_STYLES);
-    renderer.setAttribute(style, SD_LOADING_STYLE_ATTRIBUTE, '');
-    renderer.appendChild(style, ownedText);
-    renderer.appendChild(this.#document.head, style);
+    const style = this.#document.createElement('style');
+    const ownedText = this.#document.createTextNode(SD_LOADING_STYLES);
+    style.setAttribute(SD_LOADING_STYLE_ATTRIBUTE, '');
+    style.appendChild(ownedText);
+    this.#document.head.appendChild(style);
     return { element: style, libraryOwned: true, owners, ownedText };
   }
 
-  #ensureRequiredStyleText(record: SdLoadingStyleRecord, renderer: Renderer2): void {
+  #ensureRequiredStyleText(record: SdLoadingStyleRecord): void {
     const currentText = record.element.textContent ?? '';
     const hasRequiredRules =
       currentText.includes('.sd-loading {') &&
@@ -354,19 +353,14 @@ export class SdLoadingService {
 
     if (record.ownedText && record.ownedText.parentNode !== record.element) record.ownedText = null;
     if (!record.ownedText) {
-      record.ownedText = renderer.createText(SD_LOADING_STYLES);
-      renderer.appendChild(record.element, record.ownedText);
+      record.ownedText = this.#document.createTextNode(SD_LOADING_STYLES);
+      record.element.appendChild(record.ownedText);
     }
   }
 
-  #detachOwnedStyleContent(record: SdLoadingStyleRecord, renderer: Renderer2): void {
-    if (record.libraryOwned) {
-      const parent = record.element.parentNode;
-      if (parent) renderer.removeChild(parent, record.element);
-    } else if (record.ownedText) {
-      const textParent = record.ownedText.parentNode;
-      if (textParent) renderer.removeChild(textParent, record.ownedText);
-    }
+  #detachOwnedStyleContent(record: SdLoadingStyleRecord): void {
+    if (record.libraryOwned) record.element.remove();
+    else record.ownedText?.remove();
     record.ownedText = null;
   }
 
@@ -374,20 +368,20 @@ export class SdLoadingService {
     if (this.#destroyed) return;
     this.#destroyed = true;
 
-    const renderer = this.#renderer;
-    if (renderer) {
-      for (const state of [...this.#handleQueue]) this.#closeHandle(state, renderer);
-      this.#unregisterStyles(renderer);
-    } else {
-      for (const state of this.#handleQueue) {
-        state.closed = true;
-        state.contributions.length = 0;
-      }
-      this.#handleQueue.length = 0;
+    if (this.#isBrowser) {
+      for (const state of [...this.#handleQueue]) this.#closeHandle(state);
+      this.#unregisterStyles();
+      return;
     }
+
+    for (const state of this.#handleQueue) {
+      state.closed = true;
+      state.contributions.length = 0;
+    }
+    this.#handleQueue.length = 0;
   }
 
-  #unregisterStyles(renderer: Renderer2): void {
+  #unregisterStyles(): void {
     if (!this.#styleRegistered) return;
     this.#styleRegistered = false;
 
@@ -397,7 +391,7 @@ export class SdLoadingService {
 
     record.owners.delete(this);
     if (record.owners.size === 0) {
-      this.#detachOwnedStyleContent(record, renderer);
+      this.#detachOwnedStyleContent(record);
       documentRecord.style = undefined;
     }
     this.#deleteDocumentRecordWhenEmpty(documentRecord);

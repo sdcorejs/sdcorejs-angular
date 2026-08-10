@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericTable,
@@ -14,13 +14,13 @@ import { debounceTime, filter, Subject, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
 import { FormGroup } from '@angular/forms';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'table-attribute',
   templateUrl: './table-attribute.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeTable, AttributeExpression, TranslatePipe],
+  imports: [AttributeTemplate, AttributeInput, AttributeSwitch, AttributeTable, AttributeExpression, SdTranslatePipe],
 })
 export class TableAttribute implements AfterViewInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
@@ -32,7 +32,7 @@ export class TableAttribute implements AfterViewInit, OnDestroy {
   component!: SdFormGenericTable;
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericTable) {
     this.component = component;
-    SdFormatComponent(this.component);
+    sdFormatComponent(this.component);
   }
 
   #changes = new Subject<void>();
@@ -76,7 +76,7 @@ export class TableAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();
     }

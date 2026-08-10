@@ -1,15 +1,15 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { TranslatePipe } from './i18n.pipe';
+import { SdTranslatePipe } from './i18n.pipe';
 import { I18N_STORAGE_KEY } from './i18n.token';
 
-@Component({ standalone: true, imports: [TranslatePipe], template: `{{ key() | translate: params() }}` })
+@Component({ standalone: true, imports: [SdTranslatePipe], template: `{{ key() | sdTranslate: params() }}` })
 class Host {
   readonly key = signal('core.common.cancel');
   readonly params = signal<Record<string, string> | undefined>(undefined);
 }
 
-describe('TranslatePipe', () => {
+describe('SdTranslatePipe', () => {
   beforeEach(() => localStorage.removeItem(I18N_STORAGE_KEY));
 
   it('renders translation', () => {

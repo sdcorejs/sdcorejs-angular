@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject, input } from '@angular/core';
 import {
-  SdFormatComponent,
+  sdFormatComponent,
   SdFormGenericComponent,
   SdFormGenericGroup,
   SdFormGenericNumber,
@@ -15,7 +15,7 @@ import { BuilderService } from '../../../services';
 import { FormGroup } from '@angular/forms';
 import { AttributeExpression } from '../../attribute-expression/attribute-expression.component';
 import { AttributeTextarea } from '../../attribute-textarea/attribute-textarea.component';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'number-attribute',
@@ -28,7 +28,7 @@ import { TranslatePipe } from '@sdcorejs/angular/i18n';
     AttributeSwitch,
     AttributeExpression,
     AttributeTextarea,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class NumberAttribute implements AfterViewInit, OnDestroy {
@@ -43,7 +43,7 @@ export class NumberAttribute implements AfterViewInit, OnDestroy {
   @Input({ alias: 'component', required: true }) set _component(component: SdFormGenericNumber) {
     if (this.component !== component) {
       this.component = component;
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
     }
   }
   #subscription = new Subscription();
@@ -81,7 +81,7 @@ export class NumberAttribute implements AfterViewInit, OnDestroy {
         ...template,
         id: this.component.id, // Giữ lại id để componentEmitters định danh được component nào bị thay đổi
       });
-      SdFormatComponent(this.component);
+      sdFormatComponent(this.component);
       this.isTemplate = true;
       this.builderService.componentEmitters.next(this.component);
       this.ref.markForCheck();

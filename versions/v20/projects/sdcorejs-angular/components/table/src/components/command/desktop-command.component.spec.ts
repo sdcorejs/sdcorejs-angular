@@ -63,4 +63,30 @@ describe('DesktopCommand', () => {
     expect(icon.classList).toContain('material-icons-outlined');
     expect(title.textContent?.trim()).toBe('Edit');
   });
+
+  // why: hai nút command từng mang aria-hidden="true" — chúng là <button> THẬT, vẫn nhận tab focus
+  // nhưng screen reader không đọc được gì (nút chỉ có icon, không có text).
+  it('does not hide the menu-trigger button from the accessibility tree', async () => {
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const trigger = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+
+    expect(trigger.hasAttribute('aria-hidden')).toBe(false);
+    expect(trigger.getAttribute('type')).toBe('button');
+    expect(trigger.getAttribute('aria-label')).toBe('More');
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+  });
+
+  it('names the plain command button from its command title', async () => {
+    fixture.componentInstance.commands = [{ type: 'normal', icon: 'edit', title: 'Sửa', click: () => undefined }] as any;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+
+    expect(button.hasAttribute('aria-hidden')).toBe(false);
+    expect(button.getAttribute('aria-label')).toBe('Sửa');
+  });
 });

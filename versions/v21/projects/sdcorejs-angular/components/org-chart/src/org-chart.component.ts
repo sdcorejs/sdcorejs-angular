@@ -1,8 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, TemplateRef, booleanAttribute, computed, contentChild, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  TemplateRef,
+  booleanAttribute,
+  computed,
+  contentChild,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { SdOrgChartItemDefDirective } from './org-chart-item-def.directive';
 import { SdOrgChartItem, SdOrgChartItemContext, SdOrgChartOption } from './org-chart.model';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+
+/** Shared empty children list — leaf nodes reuse this ref instead of a new `[]` per call. */
+const EMPTY_ORG_CHART_ITEMS: SdOrgChartItem[] = [];
 
 @Component({
   selector: 'sd-org-chart',
@@ -37,14 +50,41 @@ export class SdOrgChart {
 
   readonly #expandedState = signal<Record<string, boolean>>({});
 
+  /**
+   * Node object → template context, memo hoá trong một `computed`.
+   *
+   * why: `createContext()` được gọi thẳng từ template (`@let _context = createContext(...)`) nên
+   * trước đây MỖI node cấp phát một context MỚI ở MỖI chu kỳ change detection, rồi đưa vào
+   * `*ngTemplateOutlet` — đúng bug class cấp-phát-mỗi-CD (`ngTemplateOutletContext` đổi ref mỗi
+   * CD → outlet ghi lại context liên tục). Computed chỉ phụ thuộc CẤU TRÚC items (không phụ thuộc
+   * trạng thái expand — xem `#buildContext`), nên giữa hai lần CD ref context là như nhau.
+   */
+  readonly #contextByItem = computed<Map<SdOrgChartItem, SdOrgChartItemContext>>(() => {
+    // why: khoá theo CHÍNH object node, KHÔNG theo `item.id`. Hai node trùng `id` ở hai nhánh khác
+    // nhau là hợp lệ (id chỉ cần duy nhất trong phạm vi consumer quan tâm), nhưng khoá theo id thì
+    // chúng dùng CHUNG một context — node thứ hai nhận `depth`/`parent` của node thứ nhất và
+    // template `sdOrgChartItemDef` render sai dữ liệu.
+    const map = new Map<SdOrgChartItem, SdOrgChartItemContext>();
+    const walk = (items: SdOrgChartItem[], depth: number, parent: SdOrgChartItem | null): void => {
+      for (const item of items) {
+        map.set(item, this.#buildContext(item, depth, parent));
+        const children = this.childrenOf(item);
+        if (children.length > 0) walk(children, depth + 1, item);
+      }
+    };
+    walk(this.resolvedItems(), 0, null);
+    return map;
+  });
+
   readonly trackByItem = (_index: number, item: SdOrgChartItem) => item.id;
 
   hasChildren = (item: SdOrgChartItem): boolean => {
     return this.childrenOf(item).length > 0;
   };
 
+  /** why: trả về hằng số dùng chung thay vì `[]` mới, để leaf không cấp phát mỗi lần CD gọi tới. */
   childrenOf = (item: SdOrgChartItem): SdOrgChartItem[] => {
-    return item.children || [];
+    return item.children || EMPTY_ORG_CHART_ITEMS;
   };
 
   isExpanded = (item: SdOrgChartItem): boolean => {
@@ -73,20 +113,20 @@ export class SdOrgChart {
     this.option()?.onToggle?.({ item, expanded });
   };
 
+  /**
+   * Template context của một node. Ref ổn định giữa các lần CD nhờ `#contextByItem`.
+   * Item không nằm trong `resolvedItems()` (gọi thủ công từ bên ngoài) thì dựng mới — trường hợp
+   * này không nằm trên đường render nên không gây churn.
+   */
   createContext = (item: SdOrgChartItem, depth: number, parent: SdOrgChartItem | null): SdOrgChartItemContext => {
-    const hasChildren = this.hasChildren(item);
-    const expanded = this.isExpanded(item);
-
-    return {
-      $implicit: item,
-      item,
-      depth,
-      parent,
-      expanded,
-      hasChildren,
-      isLeaf: !hasChildren,
-      toggle: () => this.toggle(item),
-    };
+    const context = this.#contextByItem().get(item);
+    if (!context) return this.#buildContext(item, depth, parent);
+    // why: `expanded` phải làm TƯƠI mỗi lần đọc và mutate TẠI CHỖ. Nếu để `#contextByItem` đọc
+    // `#expandedState` thì mở/đóng MỘT node sẽ vứt và dựng lại context của TOÀN BỘ chart —
+    // memo hoá thô hơn hẳn thứ nó bảo vệ. Mutate tại chỗ giữ nguyên ref nên `ngTemplateOutlet`
+    // không phải ghi lại context.
+    context.expanded = this.isExpanded(item);
+    return context;
   };
 
   nodeAutoId = (item: SdOrgChartItem, part: 'node' | 'image' | 'title' | 'description' | 'toggle'): string | undefined => {
@@ -96,6 +136,24 @@ export class SdOrgChart {
     }
 
     return `${base}-${part}-${this.#autoIdKey(item)}`;
+  };
+
+  #buildContext = (item: SdOrgChartItem, depth: number, parent: SdOrgChartItem | null): SdOrgChartItemContext => {
+    const hasChildren = this.hasChildren(item);
+
+    return {
+      $implicit: item,
+      item,
+      depth,
+      parent,
+      // why: `untracked` để `#contextByItem` KHÔNG phụ thuộc `#expandedState`. Không có nó thì
+      // toggle một node làm computed chạy lại và dựng mới context của mọi node. Giá trị thật được
+      // `createContext()` làm tươi tại chỗ mỗi lần đọc.
+      expanded: untracked(() => this.isExpanded(item)),
+      hasChildren,
+      isLeaf: !hasChildren,
+      toggle: () => this.toggle(item),
+    };
   };
 
   #itemKey = (item: SdOrgChartItem): string => {

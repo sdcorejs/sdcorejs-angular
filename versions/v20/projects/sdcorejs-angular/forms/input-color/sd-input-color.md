@@ -59,8 +59,17 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 
 | Name                | Signature          | Notes                                                                                                                                                                                                                                                           |
 | ------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `openPicker()`      | `() => void`       | Opens the native browser color picker. No-op when disabled / readonly / viewed.                                                                                                                                                                                 |
-| `clear(ev?: Event)` | `(Event?) => void` | Programmatic clear — sets the model to `null` and emits `sdChange(null)`. No-op when not clearable (required, disabled, readonly, viewed, or already empty). The **visible** clear button is rendered by the inner `<sd-input>` (built-in), not by this method. |
+| `openPicker()`      | `() => void`       | Opens the native browser color picker. No-op when `disabled`, `readonly`, or `viewed === true` (static view). **Works in `viewed="'inline'"`** — inline is still editable. |
+| `clear(ev?: Event)` | `(Event?) => void` | Programmatic clear — sets the model to `null` and emits `sdChange(null)`. No-op when `required`, `disabled`, `readonly`, `viewed === true`, or already empty. **Works in `viewed="'inline'"`**. The **visible** clear button is rendered by the inner `<sd-input>` (built-in), not by this method. |
+
+## Public signals
+
+| Name         | Type             | Notes                                                                                                            |
+| ------------ | ---------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `isViewed()` | `Signal<boolean>`| `true` only for `viewed === true` — and for `disabled` + `viewed === 'inline'`, which degrades to the static view. |
+| `isInline()` | `Signal<boolean>`| `true` for `viewed === 'inline'` while the control is still editable.                                             |
+
+Both come from the shared `sdViewedInline()` composable, the same primitive the other form controls use. **Gate on `isViewed()`, never on the raw `viewed()`** — `viewed` is tri-state (`boolean | 'inline'`) and `'inline'` is truthy, so a raw truthiness check silently disables inline mode.
 
 ## Behaviors / quirks
 
@@ -71,7 +80,8 @@ A hex color input with a swatch suffix that opens the browser's native color pic
 - **Click swatch → open picker** — the swatch button programmatically triggers `.click()` on a hidden `<input type="color">`. Browser shows its native picker dialog. The swatch is a clean colored square (no overlay icon) so the chosen color reads at a glance.
 - **Clear button** — opt in with `clearable` (default `false`). It is rendered by the inner `<sd-input>` (shared `.sd-clear-btn`, thin `close` icon), shown to the left of the swatch when the field has a value AND is editable AND not `required`. It is **hover-gated** (only visible on hover/focus). Click clears the model to `null` and emits `sdChange(null)` (the inner input emits `null`/`''` → `onInputChange` normalizes to `null`; `undefined` stays only for the pristine never-touched state). The clear click does NOT open the picker. `input-color` no longer ships its own clear markup — it relies on the built-in one.
 - **Disabled / readonly / `viewed === true`** — swatch button is disabled, picker won't open, clear button is hidden.
-- **`viewed === 'inline'`** — forwarded to the inner `<sd-input>` (borderless click-to-edit). The swatch stays enabled so you can still recolor in place. But disabled + `'inline'` collapses the inner input to its static `<sd-view>` (no suffix), so the swatch is not rendered at all.
+- **`viewed === 'inline'`** — forwarded to the inner `<sd-input>` (borderless click-to-edit). `openPicker()` and `clear()` remain functional in this mode; they are gated on `isViewed()` (strictly `viewed === true`), not on raw truthiness of `viewed`. Disabled + `'inline'` degrades to the static view, so both become no-ops again.
+- **Known limitation — no swatch in `'inline'` mode.** `<sd-input>` renders `<sd-inline-text>` for `'inline'`, and that branch does not project `sdSuffixDef`, so the swatch button and the hidden `<input type="color">` are not in the DOM. `openPicker()` is therefore reachable but has nothing to click until the inline branch gains suffix projection. Use `viewed="false"` when the user needs the OS colour picker.
 
 ## Visual cues
 
@@ -132,6 +142,16 @@ When this control is rendered in dashboard cards, filter bars, external filter p
 ```ts
 brandColor = signal<string | undefined>('#1565C0');
 ```
+
+## Accessibility
+
+The hidden native `<input type="color">` deliberately **keeps** `aria-hidden="true"`. It is a pure
+proxy: `tabindex="-1"`, zero-sized, `pointer-events: none`, and `openPicker()` only calls `.click()`
+on it. The real, named control is the visible swatch `<button type="button">` next to it, so exposing
+the proxy would add a phantom "color picker" to the accessibility tree.
+
+Everything else (label, text input, `mat-error`, clear button) is inherited from `<sd-input>` — see
+`sd-input.md`.
 
 ## Anti-patterns
 

@@ -36,7 +36,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Color } from '@sdcorejs/utils/models';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdEmptyPipe } from '@sdcorejs/angular/pipes';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdHrefDirective } from '@sdcorejs/angular/directives';
@@ -66,7 +66,7 @@ import { SdHrefDirective } from '@sdcorejs/angular/directives';
     SdLabel,
     SdEmptyPipe,
     SdHrefDirective,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdRadio implements OnInit, OnDestroy {

@@ -1,4 +1,4 @@
-export interface SdAuthInfo<T = any> {
+export interface SdAuthInfo<T = unknown> {
   id?: string;
   username?: string;
   firstName?: string;

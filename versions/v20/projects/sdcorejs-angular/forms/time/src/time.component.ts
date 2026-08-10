@@ -37,7 +37,7 @@ import {
   ɵsdCoerceFormGroup,
   ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
-import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import {
@@ -91,7 +91,7 @@ export type SdTimeModelValue = string | null | undefined;
     SdLabel,
     SdTimeSpinner,
     SdView,
-    TranslatePipe,
+    SdTranslatePipe,
   ],
 })
 export class SdTime {

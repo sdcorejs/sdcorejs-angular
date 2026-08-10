@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Subject } from 'rxjs';
 
 import { SdTabInfoPipe } from './tab-info.pipe';
-import { SdTab, SdTabInfo } from '../models/tab-router.model';
+import { SdTabRouterTab, SdTabInfo } from '../models/tab-router.model';
 import { SdTabRouterService } from '../services/tab-router.service';
 
 @Component({ standalone: true, template: '' })
@@ -11,7 +11,7 @@ class DummyA {}
 @Component({ standalone: true, template: '' })
 class DummyB {}
 
-const makeTab = (over: Partial<SdTab> = {}): SdTab =>
+const makeTab = (over: Partial<SdTabRouterTab> = {}): SdTabRouterTab =>
   ({
     component: DummyA,
     key: 'k',
@@ -22,7 +22,7 @@ const makeTab = (over: Partial<SdTab> = {}): SdTab =>
     data: { extra: true },
     tabInfoChanges: new Subject<SdTabInfo>(),
     ...over,
-  }) as SdTab;
+  }) as SdTabRouterTab;
 
 describe('SdTabInfoPipe', () => {
   let pipe: SdTabInfoPipe;

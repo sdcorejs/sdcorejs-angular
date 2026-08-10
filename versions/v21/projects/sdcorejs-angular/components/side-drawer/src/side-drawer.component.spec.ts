@@ -485,5 +485,158 @@ describe('SdSideDrawer', () => {
 
       expect(styles).toContain('margin-left: auto');
     });
+
+    // ── A11y ────────────────────────────────────────────────────────────
+    // why: "click backdrop để đóng" là hành vi CHỈ có ở chuột — drawer không hề có Escape. Và
+    // backdrop dùng aria-hidden thay vì role="presentation" (khai báo đúng cho lớp phủ trang trí).
+
+    it('marks the backdrop presentational instead of aria-hidden', fakeAsync(() => {
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      const backdrop = document.body.querySelector('.sd-side-drawer-backdrop') as HTMLElement;
+      expect(backdrop).not.toBeNull();
+      expect(backdrop.getAttribute('role')).toBe('presentation');
+      expect(backdrop.hasAttribute('aria-hidden')).toBe(false);
+    }));
+
+    it('exposes the drawer as a labelled modal dialog', fakeAsync(() => {
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      const root = getDrawerRoot()!;
+      expect(root.getAttribute('role')).toBe('dialog');
+      expect(root.getAttribute('aria-modal')).toBe('true');
+      expect(root.getAttribute('aria-label')).toBe('Test Drawer');
+    }));
+
+    it('Escape closes the drawer, mirroring the backdrop click', fakeAsync(() => {
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      getDrawerRoot()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      tick();
+
+      expect(component.isOpened()).toBeFalse();
+    }));
+
+    it('Escape does nothing when backdrop dismissal is disabled', fakeAsync(() => {
+      host.disableBackdropClose = true;
+      fixture.detectChanges();
+      component.open();
+      fixture.detectChanges();
+      tick();
+
+      getDrawerRoot()!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      fixture.detectChanges();
+      tick();
+
+      expect(component.isOpened()).toBeTrue();
+      component.close();
+      fixture.detectChanges();
+      tick();
+    }));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Khoá scroll body phải stack-safe khi có nhiều drawer chồng nhau
+// ---------------------------------------------------------------------------
+
+@Component({
+  standalone: true,
+  imports: [SdSideDrawer],
+  template: `
+    <sd-side-drawer title="Outer"><span>outer body</span></sd-side-drawer>
+    <sd-side-drawer title="Inner"><span>inner body</span></sd-side-drawer>
+  `,
+})
+class StackedHostComponent {}
+
+describe('SdSideDrawer — stacked body scroll lock', () => {
+  let fixture: ComponentFixture<StackedHostComponent>;
+  let outer: SdSideDrawer;
+  let inner: SdSideDrawer;
+
+  beforeEach(async () => {
+    document.body.style.overflow = '';
+    await TestBed.configureTestingModule({
+      imports: [StackedHostComponent, NoopAnimationsModule],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(StackedHostComponent);
+    fixture.detectChanges();
+    const drawers = fixture.debugElement.queryAll(By.directive(SdSideDrawer));
+    outer = drawers[0].componentInstance as SdSideDrawer;
+    inner = drawers[1].componentInstance as SdSideDrawer;
+  });
+
+  afterEach(() => {
+    document.body.style.overflow = '';
+  });
+
+  it('keeps the page locked when the OUTER drawer closes first and the inner one is still open', () => {
+    outer.open();
+    inner.open();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    outer.close();
+    // Drawer trong vẫn mở → trang phải còn khoá
+    expect(document.body.style.overflow).toBe('hidden');
+
+    inner.close();
+    // Drawer cuối cùng đóng → trả scroll về nguyên trạng
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  it('restores scroll after the last stacked drawer closes in LIFO order', () => {
+    outer.open();
+    inner.open();
+
+    inner.close();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    outer.close();
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  it('does not leave the page permanently locked when stacked drawers are destroyed while open', () => {
+    outer.open();
+    inner.open();
+
+    fixture.destroy();
+
+    expect(document.body.style.overflow).toBe('');
+  });
+
+  it('preserves an overflow value the app set before any drawer opened', () => {
+    document.body.style.overflow = 'auto';
+
+    outer.open();
+    inner.open();
+    outer.close();
+    inner.close();
+
+    expect(document.body.style.overflow).toBe('auto');
+  });
+
+  it('is idempotent — repeated open()/close() on the same drawer keeps the lock balanced', () => {
+    outer.open();
+    outer.open();
+    inner.open();
+
+    outer.close();
+    outer.close();
+    expect(document.body.style.overflow).toBe('hidden');
+
+    inner.close();
+    expect(document.body.style.overflow).toBe('');
   });
 });

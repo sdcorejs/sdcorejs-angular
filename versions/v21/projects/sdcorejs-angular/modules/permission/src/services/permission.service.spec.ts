@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { SdPermissionService } from './permission.service';
+import { SD_PERMISSION_PUBLIC, SdPermissionService } from './permission.service';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
 import { SdCacheService } from '@sdcorejs/angular/services/cache';
 
@@ -7,29 +7,31 @@ import { SdCacheService } from '@sdcorejs/angular/services/cache';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Minimal SdCacheService stub — uses in-memory Map instead of sessionStorage */
-function makeCacheServiceStub(): SdCacheService {
-  const store = new Map<string, unknown>();
-
+/**
+ * Minimal SdCacheService stub — an in-memory Map that mimics a persistent store.
+ * `store` is shared across `create()` calls (like the real sessionStorage-backed cache) so a spec can
+ * assert exactly which keys were written, and that `remove()` really wipes them.
+ */
+function makeCacheServiceStub(store = new Map<string, unknown>(), createdKeys: string[] = []): SdCacheService {
   const stub: Partial<SdCacheService> = {
     create<T>(key: string): any {
-      let value: T | undefined = undefined;
+      createdKeys.push(key);
       return {
-        get: () => (value !== undefined ? value : undefined) as T,
+        get: () => store.get(key) as T | undefined,
         set: (v: T) => {
-          value = v;
+          store.set(key, v);
         },
-        has: () => value !== undefined,
+        has: () => store.has(key),
         remove: () => {
-          value = undefined;
+          store.delete(key);
         },
         destroy: () => {
-          value = undefined;
+          store.delete(key);
         },
         load: async (cb: () => Promise<T>) => {
-          if (value !== undefined) return value;
+          if (store.has(key)) return store.get(key) as T;
           const result = await cb();
-          if (result !== undefined && result !== null) value = result;
+          if (result !== undefined && result !== null) store.set(key, result);
           return result;
         },
         observer: { subscribe: () => ({ unsubscribe: () => {} }) },
@@ -40,15 +42,27 @@ function makeCacheServiceStub(): SdCacheService {
   return stub as SdCacheService;
 }
 
-function makeService(configs: ISdPermissionConfiguration | ISdPermissionConfiguration[]): SdPermissionService {
+/** Shared handles so specs can inspect what the service persisted. */
+interface CacheProbe {
+  store: Map<string, unknown>;
+  createdKeys: string[];
+}
+
+function makeService(configs: ISdPermissionConfiguration | ISdPermissionConfiguration[], probe?: CacheProbe): SdPermissionService {
+  const store = probe?.store ?? new Map<string, unknown>();
+  const createdKeys = probe?.createdKeys ?? [];
   TestBed.configureTestingModule({
     providers: [
       SdPermissionService,
       { provide: SD_PERMISSION_CONFIGURATION, useValue: configs },
-      { provide: SdCacheService, useFactory: makeCacheServiceStub },
+      { provide: SdCacheService, useFactory: () => makeCacheServiceStub(store, createdKeys) },
     ],
   });
   return TestBed.inject(SdPermissionService);
+}
+
+function makeProbe(): CacheProbe {
+  return { store: new Map<string, unknown>(), createdKeys: [] };
 }
 
 // ---------------------------------------------------------------------------
@@ -199,9 +213,56 @@ describe('SdPermissionService', () => {
   // GROUP 4: hasPermission()
   // -------------------------------------------------------------------------
   describe('hasPermission()', () => {
-    it('returns true for empty / falsy permission (no restriction)', () => {
+    // why: nhánh "rỗng ⇒ true" cũ là fail-open — route gõ sai key `data`, binding trỏ vào biến
+    // undefined, hay mã quyền rỗng do API trả về đều được cấp quyền mà không có dấu hiệu nào.
+    it('returns FALSE for an empty string permission (fail closed)', () => {
+      spyOn(console, 'error');
       const service = makeService({ loadPermissions: () => [] });
-      expect(service.hasPermission('')).toBeTrue();
+      expect(service.hasPermission('')).toBeFalse();
+    });
+
+    it('returns FALSE for undefined permission (fail closed)', () => {
+      spyOn(console, 'error');
+      const service = makeService({ loadPermissions: () => [] });
+      expect(service.hasPermission(undefined)).toBeFalse();
+    });
+
+    it('returns FALSE for null permission (fail closed)', () => {
+      spyOn(console, 'error');
+      const service = makeService({ loadPermissions: () => [] });
+      expect(service.hasPermission(null)).toBeFalse();
+    });
+
+    it('returns FALSE for an empty array and for an array of blank strings', () => {
+      spyOn(console, 'error');
+      const service = makeService({ loadPermissions: () => [] });
+      expect(service.hasPermission([])).toBeFalse();
+      expect(service.hasPermission(['', '   '])).toBeFalse();
+    });
+
+    it('logs loudly in dev mode when an empty permission is checked', () => {
+      const errorSpy = spyOn(console, 'error');
+      const service = makeService({ loadPermissions: () => [] });
+
+      service.hasPermission('');
+
+      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy.calls.mostRecent().args[0]).toContain('SD_PERMISSION_PUBLIC');
+    });
+
+    it('returns true only for the explicit SD_PERMISSION_PUBLIC opt-out', () => {
+      const service = makeService({ loadPermissions: () => [] });
+      expect(service.hasPermission(SD_PERMISSION_PUBLIC)).toBeTrue();
+      expect(service.hasPermission([SD_PERMISSION_PUBLIC])).toBeTrue();
+    });
+
+    it('does not log when the explicit opt-out is used', () => {
+      const errorSpy = spyOn(console, 'error');
+      const service = makeService({ loadPermissions: () => [] });
+
+      service.hasPermission(SD_PERMISSION_PUBLIC);
+
+      expect(errorSpy).not.toHaveBeenCalled();
     });
 
     it('returns false when no permissions have been loaded yet', () => {
@@ -309,9 +370,9 @@ describe('SdPermissionService', () => {
   });
 
   // -------------------------------------------------------------------------
-  // GROUP 6: decodeToken()
+  // GROUP 6: readUnverifiedTokenClaims() (ex decodeToken)
   // -------------------------------------------------------------------------
-  describe('decodeToken()', () => {
+  describe('readUnverifiedTokenClaims()', () => {
     /**
      * Build a minimal valid JWT string:
      * header.payload.signature  (signature can be any placeholder)
@@ -329,7 +390,7 @@ describe('SdPermissionService', () => {
         getToken: () => jwt,
       });
 
-      const result = await service.decodeToken<{ sub: string; role: string }>();
+      const result = await service.readUnverifiedTokenClaims<{ sub: string; role: string }>();
       expect(result).not.toBeNull();
       expect(result!.sub).toBe('user-1');
       expect(result!.role).toBe('admin');
@@ -340,7 +401,7 @@ describe('SdPermissionService', () => {
         loadPermissions: () => [],
         getToken: () => undefined,
       });
-      const result = await service.decodeToken();
+      const result = await service.readUnverifiedTokenClaims();
       expect(result).toBeNull();
     });
 
@@ -349,8 +410,205 @@ describe('SdPermissionService', () => {
         loadPermissions: () => [],
         getToken: () => 'not.valid-base64!.sig',
       });
-      const result = await service.decodeToken();
+      const result = await service.readUnverifiedTokenClaims();
       expect(result).toBeNull();
+    });
+
+    // why: tên `decodeToken` che giấu sự thật là payload KHÔNG được xác thực chữ ký/exp. Ràng tên mới
+    // vào spec để nó là API chính thức, alias cũ chỉ còn là lớp tương thích.
+    it('is the API name — it accepts a forged unsigned token as-is (no signature check)', async () => {
+      const forged = buildJwt({ sub: 'attacker', role: 'SUPER_ADMIN' });
+      const service = makeService({ loadPermissions: () => [], getToken: () => forged });
+
+      const result = await service.readUnverifiedTokenClaims<{ role: string }>();
+
+      // Không có bước verify nào — chính vì thế kết quả không được dùng để ra quyết định phân quyền.
+      expect(result!.role).toBe('SUPER_ADMIN');
+    });
+
+    it('deprecated decodeToken() still delegates to readUnverifiedTokenClaims()', async () => {
+      const jwt = buildJwt({ sub: 'user-1' });
+      const service = makeService({ loadPermissions: () => [], getToken: () => jwt });
+
+      const result = await service.decodeToken<{ sub: string }>();
+      expect(result!.sub).toBe('user-1');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GROUP 7: permission codes never touch storage by default
+  // -------------------------------------------------------------------------
+  describe('resolved permission codes are memory-only by default', () => {
+    // why: bản cũ mirror danh sách mã quyền xuống sessionStorage dưới một UUID cố định — mọi script
+    // trên cùng origin ĐỌC và GHI được, tức chỉ cần chạy một dòng JS là tự cấp quyền trên UI.
+    it('does NOT create any cache handle when persistCache is not enabled', async () => {
+      const probe = makeProbe();
+      const service = makeService({ loadPermissions: () => Promise.resolve(['PERM_A']) }, probe);
+
+      await service.loadPermissions();
+
+      expect(probe.createdKeys).toEqual([]);
+      expect(probe.store.size).toBe(0);
+    });
+
+    it('still answers hasPermission() from memory without any persisted entry', async () => {
+      const probe = makeProbe();
+      const service = makeService({ loadPermissions: () => Promise.resolve(['PERM_A']) }, probe);
+
+      await service.loadPermissions();
+
+      expect(service.hasPermission('PERM_A')).toBeTrue();
+      expect(probe.store.size).toBe(0);
+    });
+
+    it('writes a namespaced per-key entry ONLY when persistCache is opted in', async () => {
+      const probe = makeProbe();
+      const service = makeService({ key: 'pcm', persistCache: true, loadPermissions: () => Promise.resolve(['PCM_PERM']) }, probe);
+
+      await service.loadPermissions('pcm');
+
+      expect(probe.createdKeys).toEqual(['sd-permission.codes.pcm']);
+      expect(probe.store.get('sd-permission.codes.pcm')).toEqual(['PCM_PERM']);
+    });
+
+    it('hydrates from the opted-in cache instead of re-calling the loader', async () => {
+      const probe = makeProbe();
+      probe.store.set('sd-permission.codes.__undefined__', ['CACHED_PERM']);
+      const loadSpy = jasmine.createSpy('loadPermissions').and.returnValue(Promise.resolve(['FRESH_PERM']));
+      const service = makeService({ persistCache: true, loadPermissions: loadSpy }, probe);
+
+      const result = await service.loadPermissions();
+
+      expect(loadSpy).not.toHaveBeenCalled();
+      expect(result).toEqual(['CACHED_PERM']);
+    });
+
+    it('does NOT hydrate from a stale entry when persistCache is off', async () => {
+      const probe = makeProbe();
+      probe.store.set('sd-permission.codes.__undefined__', ['ATTACKER_PERM']);
+      const service = makeService({ loadPermissions: () => Promise.resolve(['REAL_PERM']) }, probe);
+
+      const result = await service.loadPermissions();
+
+      expect(result).toEqual(['REAL_PERM']);
+      expect(service.hasPermission('ATTACKER_PERM')).toBeFalse();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // GROUP 8: reset() / invalidate()
+  // -------------------------------------------------------------------------
+  describe('reset() / invalidate()', () => {
+    // why: service là singleton `providedIn: 'root'`. Không có API xoá thì signout → signin trong
+    // cùng phiên SPA giữ nguyên bộ quyền của user cũ (`loadPermissions` short-circuit theo key).
+    it('reset() drops cached permissions so the next signin re-runs the loader', async () => {
+      let currentUser = ['USER_A_PERM'];
+      const loadSpy = jasmine.createSpy('loadPermissions').and.callFake(() => Promise.resolve(currentUser));
+      const service = makeService({ loadPermissions: loadSpy });
+
+      await service.loadPermissions();
+      expect(service.hasPermission('USER_A_PERM')).toBeTrue();
+
+      // signout → signin bằng một user khác
+      service.reset();
+      currentUser = ['USER_B_PERM'];
+      await service.loadPermissions();
+
+      expect(loadSpy).toHaveBeenCalledTimes(2);
+      expect(service.hasPermission('USER_A_PERM')).toBeFalse();
+      expect(service.hasPermission('USER_B_PERM')).toBeTrue();
+    });
+
+    it('reset() denies immediately — before the new permissions are loaded', async () => {
+      const service = makeService({ loadPermissions: () => Promise.resolve(['USER_A_PERM']) });
+      await service.loadPermissions();
+
+      service.reset();
+
+      expect(service.hasPermission('USER_A_PERM')).toBeFalse();
+    });
+
+    it('reset() clears every configured key at once', async () => {
+      const service = makeService([
+        { key: 'pcm', loadPermissions: () => Promise.resolve(['PCM_PERM']) },
+        { key: 'oms', loadPermissions: () => Promise.resolve(['OMS_PERM']) },
+      ]);
+      await service.loadAllPermissions();
+
+      service.reset();
+
+      expect(service.hasPermission('PCM_PERM', 'pcm')).toBeFalse();
+      expect(service.hasPermission('OMS_PERM', 'oms')).toBeFalse();
+    });
+
+    it('reset() also wipes the opted-in sessionStorage mirror', async () => {
+      const probe = makeProbe();
+      const service = makeService({ persistCache: true, loadPermissions: () => Promise.resolve(['PERM_A']) }, probe);
+      await service.loadPermissions();
+      expect(probe.store.size).toBe(1);
+
+      service.reset();
+
+      expect(probe.store.size).toBe(0);
+    });
+
+    it('reset() wipes a persisted entry left over from a previous page load', () => {
+      const probe = makeProbe();
+      probe.store.set('sd-permission.codes.__undefined__', ['STALE_PERM']);
+      const service = makeService({ persistCache: true, loadPermissions: () => [] }, probe);
+
+      // Chưa gọi loadPermissions lần nào trong phiên này — reset vẫn phải dọn được entry cũ.
+      service.reset();
+
+      expect(probe.store.size).toBe(0);
+    });
+
+    it('invalidate(key) clears only that key and leaves the others loaded', async () => {
+      const pcmSpy = jasmine.createSpy('pcm').and.returnValue(Promise.resolve(['PCM_PERM']));
+      const omsSpy = jasmine.createSpy('oms').and.returnValue(Promise.resolve(['OMS_PERM']));
+      const service = makeService([
+        { key: 'pcm', loadPermissions: pcmSpy },
+        { key: 'oms', loadPermissions: omsSpy },
+      ]);
+      await service.loadAllPermissions();
+
+      service.invalidate('pcm');
+
+      expect(service.hasPermission('PCM_PERM', 'pcm')).toBeFalse();
+      expect(service.hasPermission('OMS_PERM', 'oms')).toBeTrue();
+
+      await service.loadPermissions('pcm');
+      expect(pcmSpy).toHaveBeenCalledTimes(2);
+      expect(omsSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('invalidate() with no argument clears the portal-level (undefined) key', async () => {
+      const loadSpy = jasmine.createSpy('load').and.returnValue(Promise.resolve(['PORTAL_PERM']));
+      const service = makeService({ loadPermissions: loadSpy });
+      await service.loadPermissions();
+
+      service.invalidate();
+
+      expect(service.hasPermission('PORTAL_PERM')).toBeFalse();
+      await service.loadPermissions();
+      expect(loadSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it('invalidate(key) removes the opted-in persisted entry of that key only', async () => {
+      const probe = makeProbe();
+      const service = makeService(
+        [
+          { key: 'pcm', persistCache: true, loadPermissions: () => Promise.resolve(['PCM_PERM']) },
+          { key: 'oms', persistCache: true, loadPermissions: () => Promise.resolve(['OMS_PERM']) },
+        ],
+        probe
+      );
+      await service.loadAllPermissions();
+
+      service.invalidate('pcm');
+
+      expect(probe.store.has('sd-permission.codes.pcm')).toBeFalse();
+      expect(probe.store.get('sd-permission.codes.oms')).toEqual(['OMS_PERM']);
     });
   });
 });

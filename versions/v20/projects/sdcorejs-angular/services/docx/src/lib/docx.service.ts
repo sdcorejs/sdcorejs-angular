@@ -36,7 +36,17 @@ export class SdDocxService {
         return;
       }
 
+      // why: `sd-docx.md` công bố "resolves with `null` if the user cancels", nhưng service chỉ
+      // nghe `change`. Bấm Esc / Cancel trong hộp thoại chọn file của HĐH KHÔNG phát `change` —
+      // promise không bao giờ settle, `await` treo vĩnh viễn và closure của caller bị ghim lại.
+      // `cancel` là sự kiện chuẩn của `<input type="file">` cho đúng trường hợp đó.
+      const handleCancel = () => {
+        this.#fileInput?.removeEventListener('change', handleChange);
+        resolve(null);
+      };
+
       const handleChange = async (event: Event) => {
+        this.#fileInput?.removeEventListener('cancel', handleCancel);
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
 
@@ -61,6 +71,7 @@ export class SdDocxService {
       };
 
       this.#fileInput.addEventListener('change', handleChange, { once: true });
+      this.#fileInput.addEventListener('cancel', handleCancel, { once: true });
       this.#fileInput.click();
     });
   }
@@ -77,17 +88,27 @@ export class SdDocxService {
     document.body.appendChild(this.#fileInput);
   }
 
-  async #getPandocInstance(): Promise<PandocInstance> {
-    if (this.#pandocInstance) {
-      return this.#pandocInstance;
-    }
-
+  // why: `fetch(pandoc.wasm)` + `WebAssembly.instantiate` là ranh giới DUY NHẤT của service
+  // này không chạy được trong Karma (không có binary ~50MB trong CI, không có network).
+  // Tách riêng ra một method TS `private` — KHÔNG dùng `#private` — để spec có thể
+  // `spyOn(service as any, 'loadPandocInstance')` và cho toàn bộ phần còn lại của
+  // `convertToHtml` chạy bằng code thật. `private` của TS bị xoá lúc compile nên
+  // không lộ thêm API cho consumer, nhưng vẫn spy được ở runtime.
+  private async loadPandocInstance(): Promise<PandocInstance> {
     const wasmResponse = await fetch(this.#PANDOC_WASM_URL);
     if (!wasmResponse.ok) {
       throw new Error(`Failed to fetch pandoc.wasm: ${wasmResponse.status} ${wasmResponse.statusText}`);
     }
     const wasmBinary = await wasmResponse.arrayBuffer();
-    this.#pandocInstance = await createPandocInstance(wasmBinary);
+    return createPandocInstance(wasmBinary);
+  }
+
+  async #getPandocInstance(): Promise<PandocInstance> {
+    if (this.#pandocInstance) {
+      return this.#pandocInstance;
+    }
+
+    this.#pandocInstance = await this.loadPandocInstance();
     return this.#pandocInstance;
   }
 

@@ -12,6 +12,10 @@
 @let _bare = _isInline;
 @let _hasValue = !!(control1.value || control2.value);
 @let _labelTemplate = _sdLabelDef?.templateRef ?? undefined;
+<!-- why: một cổng gate duy nhất cho <mat-error>, aria-invalid và aria-describedby — trước đây
+     message hiện mà hai ô nhập không hề báo invalid nên screen reader không biết đang lỗi. -->
+@let _errorVisible = !!_errorMessage && (formControl.touched || control1.touched || control2.touched);
+@let _showInlineError = !_hideInlineError && _errorVisible;
 
 @if (isViewed()) {
   <sd-view
@@ -76,50 +80,71 @@
         [attr.data-value]="dataValue()"
         [attr.data-required]="dataRequired()"
         [attr.data-error-message]="dataErrorMessage()">
+        <!-- why: BỎ aria-hidden trên hai ô nhập THẬT — cả hai đều Tab tới và gõ được, aria-hidden
+             chỉ khiến screen reader đọc ra khoảng lặng ở đúng chỗ người dùng đang đứng. -->
         <input
-          aria-hidden="true"
           [id]="id1"
           autocomplete="off"
           autocorrect="off"
           matStartDate
           [formControl]="control1"
-          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | translate)"
+          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.from' | sdTranslate)"
           (dateInput)="onStartChange($event)"
           (focus)="onFocus()"
           (blur)="onBlur()"
           (keyup.enter)="onEnter()"
           [attr.data-qclabel]="_label"
-          [attr.data-autoId]="fromAutoId()" />
+          [attr.data-autoId]="fromAutoId()"
+          [attr.aria-invalid]="_errorVisible ? 'true' : null"
+          [attr.aria-describedby]="_showInlineError ? errorId : null" />
 
         <input
-          aria-hidden="true"
           [id]="id2"
           [autocomplete]="id2"
           autocorrect="off"
           matEndDate
           [formControl]="control2"
-          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | translate)"
+          [placeholder]="formControl.disabled ? '' : ('core.form.date-range.to' | sdTranslate)"
           (dateInput)="onEndChange($event)"
           (focus)="onFocus()"
           (blur)="onBlur()"
           (keyup.enter)="onEnter()"
           [attr.data-qclabel]="_label"
-          [attr.data-autoId]="toAutoId()" />
+          [attr.data-autoId]="toAutoId()"
+          [attr.aria-invalid]="_errorVisible ? 'true' : null"
+          [attr.aria-describedby]="_showInlineError ? errorId : null" />
       </mat-date-range-input>
 
-      @if (_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
+      @if (_hideInlineError && _errorVisible) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
       }
 
-      @if (!_hideInlineError && _errorMessage && (formControl.touched || control1.touched || control2.touched)) {
-        <mat-error>{{ _errorMessage }}</mat-error>
+      @if (_showInlineError) {
+        <mat-error [id]="errorId">{{ _errorMessage }}</mat-error>
       }
 
+      <!-- why: hai nút suffix trước đây là <sd-icon (click)> trần — không Tab tới được, không có
+           accessible name, và lint bỏ qua vì <sd-icon> không phải phần tử DOM chuẩn. <button
+           type="button"> lấy sẵn Enter/Space + role; nhãn lấy từ i18n (xem mục compromise). -->
       @if ((control1.value || control2.value) && !_bare) {
-        <sd-icon class="cursor-pointer sd-suffix-icon" (click)="clear()" matSuffix name="cancel"></sd-icon>
+        <button
+          type="button"
+          matSuffix
+          class="cursor-pointer sd-suffix-icon sd-suffix-btn"
+          [attr.aria-label]="'core.form.date-range.clear' | sdTranslate"
+          (click)="clear()">
+          <sd-icon name="cancel"></sd-icon>
+        </button>
       }
 
-      <sd-icon class="cursor-pointer sd-suffix-icon" (click)="onOpenPicker($event)" matSuffix name="today"></sd-icon>
+      <button
+        type="button"
+        matSuffix
+        class="cursor-pointer sd-suffix-icon sd-suffix-btn"
+        [attr.aria-label]="'core.form.date-range.open-picker' | sdTranslate"
+        (click)="onOpenPicker($event)">
+        <sd-icon name="today"></sd-icon>
+      </button>
 
       <mat-date-range-picker [touchUi]="isMobileOrTablet" (closed)="onClosePicker()" #picker></mat-date-range-picker>
     </mat-form-field>

@@ -310,7 +310,7 @@ describe('SdInput', () => {
   describe('onKeyupEnter', () => {
     it('trims value and emits keyupEnter', () => {
       const emitted: any[] = [];
-      const sub = input.keyupEnter.subscribe(v => emitted.push(v));
+      const sub = input.sdKeyupEnter.subscribe(v => emitted.push(v));
       input.formControl.setValue('abc  ');
       input.onKeyupEnter();
       expect(input.formControl.value).toBe('abc');
@@ -321,7 +321,7 @@ describe('SdInput', () => {
 
     it('emits keyupEnter even when value has no whitespace', () => {
       const emitted: any[] = [];
-      const sub = input.keyupEnter.subscribe(v => emitted.push(v));
+      const sub = input.sdKeyupEnter.subscribe(v => emitted.push(v));
       input.formControl.setValue('clean');
       input.onKeyupEnter();
       expect(emitted.length).toBe(1);
@@ -663,7 +663,7 @@ describe('SdInput', () => {
       host.model = 'hello';
       fixture.detectChanges();
       const spy = jasmine.createSpy('cleared');
-      input.cleared.subscribe(spy);
+      input.sdCleared.subscribe(spy);
 
       input.clear();
       fixture.detectChanges();
@@ -673,7 +673,7 @@ describe('SdInput', () => {
 
     it('cleared NOT emitted when clear() runs while already empty (early-return path)', () => {
       const spy = jasmine.createSpy('cleared');
-      input.cleared.subscribe(spy);
+      input.sdCleared.subscribe(spy);
 
       // model is empty initially
       input.clear();
@@ -681,6 +681,101 @@ describe('SdInput', () => {
 
       expect(spy).not.toHaveBeenCalled();
     });
+  });
+
+  describe('clear() phải để formControl phát event (bug class "invalid nhưng không có message")', () => {
+    // why: clear() cũ dùng setValue(null, { emitEvent: false }) trên control đang mang
+    // required/pattern/mask + async validator → AbstractControl.events im → #state
+    // (sdFormControlState) không tick → errorMessage / dataEmpty / dataValue /
+    // visibleErrorMessage giữ nguyên giá trị cũ → xoá xong field rỗng mà lỗi required KHÔNG
+    // hiện (chỉ còn viền đỏ). Dùng autoDetectChanges (tôn trọng OnPush) chứ KHÔNG dùng
+    // detectChanges — ép check sẽ che đúng lớp lỗi này.
+    const matError = () => fixture.nativeElement.querySelector('mat-error') as HTMLElement | null;
+    const inputEl = () => fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    it('renders the required message after clear() (no forced CD)', async () => {
+      host.required = true;
+      host.model = 'hello';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      input.formControl.markAsTouched();
+      await fixture.whenStable();
+      expect(matError()).toBeNull(); // còn giá trị → chưa có lỗi
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(input.formControl.hasError('required')).toBeTrue();
+      expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes errorMessage()/visibleErrorMessage() computed after clear()', async () => {
+      host.required = true;
+      host.model = 'hello';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      input.formControl.markAsTouched();
+      await fixture.whenStable();
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(input.errorMessage()).toBe('Vui lòng nhập thông tin');
+      expect(input.visibleErrorMessage()).toBe('Vui lòng nhập thông tin');
+    });
+
+    it('refreshes the data-empty / data-value e2e attributes after clear()', async () => {
+      host.clearable = true;
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+
+      // gõ qua DOM (đường thật của user) để #state tick lần đầu
+      const el = inputEl();
+      el.value = 'hello';
+      el.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      expect(el.getAttribute('data-empty')).toBe('false');
+      expect(el.getAttribute('data-value')).toBe('hello');
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(el.getAttribute('data-empty')).toBe('true');
+      expect(el.getAttribute('data-value')).toBe('');
+    });
+
+    it('emits sdChange exactly once with null (không phát thừa chuỗi rỗng từ #onChange)', async () => {
+      host.clearable = true;
+      host.model = 'hello';
+      fixture.autoDetectChanges();
+      await fixture.whenStable();
+      host.changes.length = 0;
+
+      input.clear();
+      await fixture.whenStable();
+
+      expect(host.changes).toEqual([null]);
+      expect(host.model).toBeNull();
+      expect(input.formControl.value).toBeNull();
+    });
+
+    it('surfaces the async [validator] message evaluated on the cleared value', fakeAsync(() => {
+      host.validator = (v: any) => (v == null || v === '' ? 'Không được để trống' : '');
+      host.model = 'hello';
+      fixture.detectChanges();
+      input.formControl.markAsTouched();
+      tick();
+      fixture.detectChanges();
+      expect(input.errorMessage()).toBeUndefined();
+
+      input.clear();
+      tick(); // async validator resolve trên giá trị mới (null)
+      fixture.detectChanges();
+
+      expect(input.formControl.invalid).toBeTrue();
+      expect(input.errorMessage()).toBe('Không được để trống');
+    }));
   });
 
   describe('custom [validator] async error message', () => {
@@ -762,6 +857,63 @@ describe('SdInput', () => {
       const errorIcon = errorIconEl()!;
       const errorFollowsClear = !!(clearBtn.compareDocumentPosition(errorIcon) & Node.DOCUMENT_POSITION_FOLLOWING);
       expect(errorFollowsClear).toBe(true);
+    });
+  });
+
+  describe('accessibility', () => {
+    // why: aria-hidden trên phần tử focus được TỆ HƠN không làm gì — ô vẫn Tab tới được nhưng
+    // screen reader đọc ra khoảng lặng. Guard này chặn việc "dập cảnh báo lint" tái diễn.
+    const inputEl = () => fixture.nativeElement.querySelector('input') as HTMLInputElement;
+
+    it('does NOT put aria-hidden on the real <input>', () => {
+      fixture.detectChanges();
+      expect(inputEl().hasAttribute('aria-hidden')).toBe(false);
+    });
+
+    it('does NOT put aria-hidden on the layout wrapper that contains the field', () => {
+      fixture.detectChanges();
+      const wrapper = fixture.nativeElement.querySelector('.sd-input-container') as HTMLElement;
+      expect(wrapper).not.toBeNull();
+      expect(wrapper.hasAttribute('aria-hidden')).toBe(false);
+      // why: hộp layout vẫn tự khai là trang trí — nhưng bằng role=presentation, thứ KHÔNG ẩn
+      // cây con, khác hẳn aria-hidden.
+      expect(wrapper.getAttribute('role')).toBe('presentation');
+    });
+
+    it('wires aria-invalid + aria-describedby to the rendered inline error', () => {
+      host.model = '';
+      host.required = true;
+      fixture.detectChanges();
+      input.formControl.markAsTouched();
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      fixture.detectChanges();
+
+      const error = fixture.nativeElement.querySelector('mat-error') as HTMLElement;
+      expect(error).not.toBeNull();
+      expect(error.id).toBe(input.errorId);
+      expect(inputEl().getAttribute('aria-invalid')).toBe('true');
+      expect(inputEl().getAttribute('aria-describedby')).toContain(input.errorId);
+    });
+
+    it('drops aria-invalid/aria-describedby again once the error clears', () => {
+      host.model = '';
+      host.required = true;
+      fixture.detectChanges();
+      input.formControl.markAsTouched();
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      fixture.detectChanges();
+      expect(inputEl().getAttribute('aria-invalid')).toBe('true');
+
+      input.formControl.setValue('abc', { emitEvent: false });
+      input.formControl.updateValueAndValidity({ emitEvent: false });
+      fixture.detectChanges();
+
+      expect(fixture.nativeElement.querySelector('mat-error')).toBeNull();
+      // why: MatInput cũng có host binding riêng cho aria-invalid, nên khi hết lỗi thuộc tính có
+      // thể biến mất HOẶC còn lại "false" — cả hai đều là "không lỗi". Điều bắt buộc là KHÔNG
+      // còn "true" và aria-describedby không còn trỏ tới message đã gỡ.
+      expect(inputEl().getAttribute('aria-invalid')).not.toBe('true');
+      expect(inputEl().getAttribute('aria-describedby') ?? '').not.toContain(input.errorId);
     });
   });
 });
@@ -922,4 +1074,50 @@ describe('SdInput (viewed inline mode)', () => {
     expect(fixture.nativeElement.querySelector('input[matInput]')).toBeNull();
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdInput deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInput)!.componentInstance as SdInput;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input };
+  };
+
+  it('does not focus the input after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
 });

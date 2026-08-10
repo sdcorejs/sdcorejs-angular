@@ -1,6 +1,8 @@
 @let _label = label();
 @let _appearance = appearance();
-@let _errorMessage = errorMessage();
+<!-- why: dùng bản đã gate theo tương tác của connector, KHÔNG dùng `errorMessage()` thô — field
+     `[required]` trước đây bung lỗi ngay lần paint đầu, khi người dùng còn chưa chạm vào ô nào. -->
+@let _errorMessage = connectorState().validationError;
 @let _helperText = helperText();
 @let _required = required();
 
@@ -74,7 +76,7 @@
         class="sd-clear-btn sd-hover"
         matSuffix
         (click)="clear($event)"
-        [attr.aria-label]="'core.form.time.clear' | translate">
+        [attr.aria-label]="'core.form.time.clear' | sdTranslate">
         <sd-icon name="close"></sd-icon>
       </button>
     }
@@ -91,19 +93,22 @@
       data-time-picker-trigger
       [matMenuTriggerFor]="timePickerMenu"
       [disabled]="formControl.disabled || isReadonly()"
-      [attr.aria-label]="'core.form.time.open-picker' | translate"
+      [attr.aria-label]="'core.form.time.open-picker' | sdTranslate"
       (menuOpened)="preparePicker()">
       <sd-icon name="schedule"></sd-icon>
     </button>
   </mat-form-field>
 
   <mat-menu #timePickerMenu="matMenu" class="sd-time-picker-menu">
-    <div class="d-flex flex-column" (click)="$event.stopPropagation()">
+    <!-- why: div này chỉ tồn tại để chặn click nổi bọt làm đóng mat-menu — nó không phải một
+         "nút" và không cần focus. role="presentation" là tín hiệu đúng (khác aria-hidden ở chỗ
+         KHÔNG ẩn cây con: spinner giờ/phút và hai nút bên trong vẫn đọc được bình thường). -->
+    <div class="d-flex flex-column" role="presentation" (click)="$event.stopPropagation()">
       <sd-time-spinner [value]="pickerDraft()" [baseValue]="pickerDraft()" [stepMinute]="step()" (valueChange)="onPickerValue($event)">
       </sd-time-spinner>
       <div class="d-flex justify-content-end gap-8 p-8">
-        <button type="button" mat-button (click)="cancelPicker()">{{ 'core.common.cancel' | translate }}</button>
-        <button type="button" mat-flat-button (click)="applyPicker()">{{ 'core.form.time.confirm' | translate }}</button>
+        <button type="button" mat-button (click)="cancelPicker()">{{ 'core.common.cancel' | sdTranslate }}</button>
+        <button type="button" mat-flat-button (click)="applyPicker()">{{ 'core.form.time.confirm' | sdTranslate }}</button>
       </div>
     </div>
   </mat-menu>
