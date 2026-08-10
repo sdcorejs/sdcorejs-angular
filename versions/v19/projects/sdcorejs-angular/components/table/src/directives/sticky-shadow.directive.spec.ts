@@ -76,14 +76,19 @@ describe('StickyShadowDirective', () => {
   it('gộp cụm mutation liên tiếp — số lần quét lại bảng KHÔNG tỉ lệ với số batch', async () => {
     const spy = spyOnScans();
 
-    // why: bản cũ gọi #updateShadow NGAY trong callback của MutationObserver, mà
-    // #updateShadow chạy querySelectorAll toàn bảng cho MỖI cột sticky → 12 batch là 12
-    // lần quét lại cả bảng. Debounce gộp cụm về 1 (nới lỏng ngưỡng để không phụ thuộc
-    // độ trễ timer của máy chạy CI).
-    await appendRowsInSeparateBatches(12);
+    // why: bản cũ gọi #updateShadow NGAY trong callback của MutationObserver, mà #updateShadow
+    // chạy querySelectorAll toàn bảng cho MỖI cột sticky → 12 batch là 12 lần quét lại cả bảng.
+    //
+    // why: ngưỡng đặt ở MỘT NỬA số batch, không phải một hằng số nhỏ. MutationObserver dùng
+    // microtask thật nên không điều khiển được bằng fakeAsync, và `wait(0)` trên máy CI đang tải
+    // nặng thường bị clamp vượt quá cửa sổ debounce 10ms — mỗi lần như vậy là một lần flush giữa
+    // chừng. Ngưỡng chặt (`< 4`) vì thế đỏ ngẫu nhiên, trong khi ngưỡng nửa-số-batch vẫn phân biệt
+    // rõ "có gộp" (một vài lần quét) với "không gộp" (đúng 12 lần).
+    const BATCHES = 12;
+    await appendRowsInSeparateBatches(BATCHES);
     await wait(80);
 
-    expect(headerLookups(spy)).toBeLessThan(4);
+    expect(headerLookups(spy)).toBeLessThan(BATCHES / 2);
   });
 
   it('vẫn cập nhật shadow sau khi rows được render (không nuốt update)', async () => {

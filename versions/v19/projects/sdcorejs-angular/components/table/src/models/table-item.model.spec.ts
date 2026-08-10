@@ -47,8 +47,16 @@ describe('resolveTableItemId / MapToSdTableItem — row identity', () => {
       expect(MapToSdTableItem<Row>({ name: 'A' }).meta.id).not.toBe(MapToSdTableItem<Row>({ name: 'A' }).meta.id);
     });
 
-    it('data không phải object (primitive) vẫn nhận id duy nhất', () => {
-      expect(resolveTableItemId('same')).not.toBe(resolveTableItemId('same'));
+    it('data nguyên thuỷ có id ỔN ĐỊNH theo giá trị', () => {
+      // why: giá trị nguyên thuỷ không vào được WeakMap. Nếu sinh id mới mỗi lần `format()` thì
+      // `trackBy`, `#treeExpandState` và preserved-selection churn sau MỖI lần reload. Với một
+      // primitive thì nội dung CHÍNH LÀ identity — khác hẳn hash nội dung của một object.
+      expect(resolveTableItemId('same')).toBe(resolveTableItemId('same'));
+      expect(resolveTableItemId(7)).toBe(resolveTableItemId(7));
+    });
+
+    it('phân biệt primitive khác kiểu nhưng cùng biểu diễn chuỗi', () => {
+      expect(resolveTableItemId(7)).not.toBe(resolveTableItemId('7'));
     });
   });
 
@@ -76,6 +84,18 @@ describe('resolveTableItemId / MapToSdTableItem — row identity', () => {
 
     it('id = 0 vẫn là giá trị hợp lệ', () => {
       expect(MapToSdTableItem<Row>({ id: 0, name: 'A' }, 'id').meta.id).toBe('0');
+    });
+
+    it('rowKey trỏ vào object/array → BỎ QUA, không stringify thành "[object Object]"', () => {
+      // why: `String({})` cho `'[object Object]'` với MỌI row → trùng key trackBy (CDK tái dùng
+      // view sai) và `visited` Set trong flattenTree gộp cả cây thành một row.
+      const objectKey = MapToSdTableItem<Row>({ id: { nested: 1 } as never, name: 'A' }, 'id').meta.id;
+      const arrayKey = MapToSdTableItem<Row>({ id: [1, 2] as never, name: 'B' }, 'id').meta.id;
+
+      expect(objectKey).not.toContain('[object');
+      expect(objectKey).toMatch(/^sd-row-\d+$/);
+      expect(arrayKey).toMatch(/^sd-row-\d+$/);
+      expect(objectKey).not.toBe(arrayKey);
     });
   });
 

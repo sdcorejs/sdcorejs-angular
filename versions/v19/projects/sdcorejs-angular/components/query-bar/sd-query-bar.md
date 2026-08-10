@@ -188,6 +188,13 @@ Chips track by `rowId(filter)`, **not** by index. Each `Filter` object gets a sy
 
 `removeFilter(index)` also keeps `editingIndex` aligned: removing the chip being edited closes its popover and clears the index; removing a chip **before** it shifts the index down by one so a later popover commit still lands on the same filter.
 
+#### Two constraints on the `filters` array
+
+Both are consumer contracts, and both follow from the id being keyed on object identity:
+
+1. **The same `Filter` object must not appear twice.** Two positions produce the same track key and Angular raises `NG0955`. Disambiguating with an `$index` suffix was tried and is not viable: Angular evaluates the `track` expression against the *previous* collection too while diffing, so a just-removed filter resolves differently, its key changes, and every chip is destroyed and rebuilt. Letting `NG0955` surface is the correct behaviour — its message already names the problem.
+2. **The objects must be stable across change detection.** Building the array inline (`[option]="{ filters: buildFilters() }"`, or a getter that maps fresh objects) hands every chip a new identity on every pass, so every chip is destroyed and rebuilt — worse than the `track $index` this replaced. Hold `filters` in a field or a signal.
+
 ## Sub-component decomposition (7/7 done)
 
 `<sd-query-bar>` is an orchestrator. State surface: `filters` / `logic` / `search` models, `editingIndex` (which popover-chip is open), `building` (inline in-progress chip). All UI lives in children:

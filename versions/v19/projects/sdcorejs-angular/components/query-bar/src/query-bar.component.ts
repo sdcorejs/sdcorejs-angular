@@ -290,7 +290,20 @@ export class SdQueryBar {
   readonly #rowIds = new WeakMap<Filter, string>();
   #rowIdSeq = 0;
 
-  /** Stable track key of a filter row. Assigned lazily on first read. */
+  /**
+   * Stable track key of a filter row. Assigned lazily on first read.
+   *
+   * ⚠️ Hai ràng buộc với `filters`, đều là hợp đồng của consumer:
+   *
+   * 1. KHÔNG được chứa cùng một object `Filter` ở hai vị trí. Khoá theo identity nên hai vị trí sẽ
+   *    cho hai track key trùng nhau và Angular ném NG0955. Đã thử khử trùng bằng hậu tố `$index`
+   *    và HỎNG: Angular đánh giá biểu thức `track` trên CẢ collection cũ khi diff, nên một filter
+   *    vừa bị xoá cho `indexOf === -1`, key đổi, và MỌI chip bị huỷ rồi dựng lại. Để Angular báo
+   *    NG0955 là đúng — thông điệp của nó đã chỉ rõ vấn đề.
+   * 2. Object phải ỔN ĐỊNH giữa các lần change detection. Sinh lại object mới mỗi pass
+   *    (vd `[option]="{ filters: buildFilters() }"`) sẽ khiến mọi chip nhận id mới mỗi pass và bị
+   *    huỷ + dựng lại — tệ hơn cả `track $index` cũ.
+   */
   rowId(filter: Filter): string {
     let id = this.#rowIds.get(filter);
     if (!id) {

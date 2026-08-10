@@ -1,3 +1,4 @@
+import { isDevMode } from '@angular/core';
 import { SdBadge } from '@sdcorejs/angular/components/badge';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdUnwrapSignal } from '@sdcorejs/angular/utilities/models';
@@ -115,7 +116,19 @@ const nextRowId = (): string => `sd-row-${++rowIdSequence}`;
 export const resolveTableItemId = <T = any>(item: T, rowKey?: string): string => {
   if (rowKey) {
     const raw = Utilities.getNestedValue(item as Record<string, unknown>, rowKey);
-    if (raw !== undefined && raw !== null && raw !== '') return String(raw);
+    // why: CHỈ nhận giá trị nguyên thuỷ. `rowKey` trỏ vào object/array thì `String(raw)` cho ra
+    // `'[object Object]'` với MỌI row — trùng key `trackBy` (CDK tái dùng view sai) và `visited`
+    // Set trong `flattenTree` gộp cả cây thành một row. Rơi về id sinh tự động và cảnh báo ở dev.
+    if (raw !== undefined && raw !== null && raw !== '') {
+      const kind = typeof raw;
+      if (kind === 'string' || kind === 'number' || kind === 'bigint' || kind === 'boolean') return String(raw);
+      if (isDevMode()) {
+        console.error(
+          `[sd-table] option.rowKey "${rowKey}" trả về giá trị kiểu ${kind}, không phải nguyên thuỷ. ` +
+            `Bỏ qua và dùng id sinh tự động. Trỏ rowKey vào một field định danh (string/number).`
+        );
+      }
+    }
   }
   if (item !== null && typeof item === 'object') {
     const cached = rowIdByData.get(item as object);
@@ -124,7 +137,11 @@ export const resolveTableItemId = <T = any>(item: T, rowKey?: string): string =>
     rowIdByData.set(item as object, generated);
     return generated;
   }
-  return nextRowId();
+  // why: row data nguyên thuỷ (mảng string/number) KHÔNG vào được WeakMap. Sinh id mới mỗi lần
+  // `format()` sẽ làm `trackBy`, `#treeExpandState` và preserved-selection churn sau mỗi lần
+  // reload. Với một giá trị nguyên thuỷ thì NỘI DUNG chính là identity, nên khoá theo
+  // `typeof + value` là đúng ngữ nghĩa (khác hẳn hash nội dung của một object).
+  return `sd-row-lit-${typeof item}-${String(item)}`;
 };
 
 export const MapToSdTableItem = <T = any>(item: T, rowKey?: string): SdTableItem<T> => ({

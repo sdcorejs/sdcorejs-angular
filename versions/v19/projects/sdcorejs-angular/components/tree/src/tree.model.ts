@@ -138,9 +138,15 @@ export interface SdTreeNode<T = any> {
   parent: SdTreeNode<T> | null;
   children: SdTreeNode<T>[];
   hasChildren: boolean;
-  isExpanded: boolean;
-  isLoading: boolean;
-  loadError?: unknown;
+  /**
+   * why: ba field dưới đây là GETTER chỉ-đọc, đọc thẳng từ signal state của component — nhờ vậy
+   * mở/đóng một node không phải dựng lại toàn bộ cây node. Khai `readonly` để `node.isExpanded = true`
+   * báo lỗi lúc biên dịch; nếu để mutable thì nó vẫn type-check rồi ném `TypeError` ở runtime.
+   * Đổi trạng thái qua API của component (`toggle()` / `expand()` / `collapse()`).
+   */
+  readonly isExpanded: boolean;
+  readonly isLoading: boolean;
+  readonly loadError?: unknown;
 }
 
 export interface SdTreeItemContext<T = any> {
