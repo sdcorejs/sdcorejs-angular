@@ -61,6 +61,23 @@ class ViewportHost {}
 
 describe('SdAnchor viewport-driven nav visibility', () => {
   let fixture: ComponentFixture<ViewportHost>;
+  // why: `window.IntersectionObserver` là state toàn cục của cả Karma bundle. Ghi đè mà không trả
+  // lại thì stub này rò sang MỌI spec file chạy sau trong cùng bundle — spec đó tưởng đang dùng
+  // IntersectionObserver thật nhưng lại nhận một stub không bao giờ bắn callback, và triệu chứng
+  // phụ thuộc thứ tự file (gần như không debug nổi).
+  let originalIntersectionObserver: typeof IntersectionObserver | undefined;
+
+  beforeEach(() => {
+    originalIntersectionObserver = (window as any).IntersectionObserver;
+  });
+
+  afterEach(() => {
+    if (originalIntersectionObserver === undefined) {
+      delete (window as any).IntersectionObserver;
+      return;
+    }
+    (window as any).IntersectionObserver = originalIntersectionObserver;
+  });
 
   async function setup(viewport: SdViewport | null): Promise<void> {
     (window as any).IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;

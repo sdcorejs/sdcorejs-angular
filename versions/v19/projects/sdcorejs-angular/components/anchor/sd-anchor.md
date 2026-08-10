@@ -45,7 +45,7 @@ None exposed on the host element.
 ## State (`<sd-anchor>`)
 | Signal | Type | Initial | Description |
 | --- | --- | --- | --- |
-| `activeSectionId` | `Signal<string>` | `''` | UUID of the currently visible / active section. Set to the first section's id immediately after first render (unless `navHidden()` is true). Updated automatically by the scroll-spy listener and synchronously on `scrollSectionByClick()`. Read-only from the outside — do not mutate directly. |
+| `activeSectionId` | `Signal<string>` | `''` | UUID of the currently visible / active section. Seeded to the first section's id whenever the scroll-spy observer is (re-)registered — immediately after first render, and again when the nav re-appears after a `navHidden()` → visible transition (e.g. a mobile → desktop resize) or when the projected sections change. Seeding only fills in a value that no longer points at a live section, so it never overrides the user's current selection. While `navHidden()` is true the observer is not registered and the signal stays `''`. Otherwise updated automatically by the scroll-spy listener and synchronously on `scrollSectionByClick()`. Read-only from the outside — do not mutate directly. |
 
 ## Inputs (`<sd-anchor-item>`)
 | Name | Type | Default | Notes |

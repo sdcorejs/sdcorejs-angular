@@ -121,8 +121,20 @@ export class SdAnchor implements OnDestroy {
     );
 
     // Đăng ký theo dõi từng section có trong anchor.
-    for (const section of this.sections()) {
+    const sections = this.sections();
+    for (const section of sections) {
       this.#intersectionObserver.observe(section.elementRef.nativeElement);
+    }
+
+    // why: activeSectionId chỉ được ghi bởi callback của IntersectionObserver và bởi
+    // scrollSectionByClick — chưa cuộn thì không callback nào ghi, nên TOC mở ra không có mục nào
+    // sáng. Cùng lỗi đó tái diễn khi resize mobile→desktop: nav vừa hiện lại đã trắng cho tới khi
+    // người dùng cuộn. Seed ngay tại đây (nơi DUY NHẤT observer được dựng) về section đầu tiên.
+    // Chỉ seed khi giá trị hiện tại KHÔNG còn trỏ vào section nào đang sống — vừa xử lý '' ban
+    // đầu, vừa xử lý section bị gỡ, mà không đạp lên lựa chọn hợp lệ của người dùng.
+    const active = this.activeSectionId();
+    if (sections.length > 0 && !sections.some(section => section.id === active)) {
+      this.activeSectionId.set(sections[0].id);
     }
   }
 

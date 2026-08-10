@@ -27,7 +27,7 @@ import { SdModal } from '@sdcorejs/angular/components/modal';
 
 | Name           | Type      | Notes                                                            |
 | -------------- | --------- | ---------------------------------------------------------------- |
-| `sdClosed`     | `void`    | Emitted after the Material dialog/bottom-sheet finishes closing. |
+| `sdClosed`     | `void`    | Emitted after the Material dialog/bottom-sheet finishes closing — **including the destroy path**, where it is emitted synchronously (see Lifecycle). Emitted at most once per open. |
 | `sdCloseError` | `unknown` | Emitted when `beforeClose` throws or rejects.                    |
 
 ## Slots
@@ -55,7 +55,11 @@ Header/footer padding is `16px`. Body padding is `0`; add your own body wrapper 
 
 The dialog / bottom-sheet opens into the CDK overlay container on `<body>`, **outside** the host view. Destroying `<sd-modal>` while it is open — route change, `@if` removing the branch, parent list re-render — therefore does **not** remove the overlay on its own.
 
-`<sd-modal>` closes its own overlay on destroy: the active `MatDialogRef` / `MatBottomSheetRef` is force-closed via `DestroyRef.onDestroy`, so no orphaned panel or backdrop is left blocking the page.
+`<sd-modal>` closes its own overlay on destroy: the active `MatDialogRef` / `MatBottomSheetRef` is force-closed from `ngOnDestroy`, so no orphaned panel or backdrop is left blocking the page.
+
+`(sdClosed)` **does** fire on this path, and it fires **synchronously**, before the overlay is force-closed. `isOpened()` flips back to `false` at the same moment. This matters because the normal emit path rides on `afterClosed()` / `afterDismissed()`, which are asynchronous — by the time they emit, the component's `takeUntilDestroyed` subscription is already gone. Emitting up front keeps consumers that clean up on `(sdClosed)` (unlock a form, cancel an in-flight request, restore a tab) working when the host is torn down while the modal is open. The emit is idempotent: if the Material ref still manages to emit afterwards, `sdClosed` does not fire twice.
+
+Two implementation constraints are load-bearing here, so do not "simplify" them: the hook must be `ngOnDestroy` (Angular runs lifecycle destroy hooks **before** any `DestroyRef.onDestroy` callback, and `output()` registers its own `DestroyRef.onDestroy` at field-initialization time — a callback registered in the constructor would run after the emitter is already marked destroyed and `emit()` would be a no-op), and the emit must precede `forceClose()`.
 
 `beforeClose` is **not** consulted on this path. Teardown has already happened and cannot be vetoed; a guard that returns `false` would only strand the overlay. Run confirmation flows before destroying the host (e.g. in a route guard), not from `beforeClose`.
 
@@ -86,3 +90,8 @@ The dialog / bottom-sheet opens into the CDK overlay container on `<body>`, **ou
   <sd-button sdFooterRight type="fill" color="primary" title="Confirm" (click)="sheet.close()"></sd-button>
 </sd-modal>
 ```
+
+## Accessibility
+
+- `<sd-modal>` uses `ViewEncapsulation.None`, so its stylesheet is **global**. The rule `.sd-modal-root button:focus { outline: none !important }` therefore stripped the focus ring from every consumer-projected button inside any modal, and `!important` meant consumers could not win it back. A matching `.sd-modal-root button:focus-visible { outline: 2px solid var(--sd-primary) !important }` now restores a visible ring for keyboard navigation while mouse clicks stay borderless.
+- The built-in close button already had its own `:focus-visible` ring; it is unchanged.

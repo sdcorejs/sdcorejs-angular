@@ -478,6 +478,69 @@ describe('SdModal', () => {
 
       expect(ref.close as jasmine.Spy).toHaveBeenCalled();
     });
+
+    // why: afterClosed()/afterDismissed() bắn BẤT ĐỒNG BỘ và subscription của chúng dùng
+    // takeUntilDestroyed(#destroyRef) — tới lúc chúng bắn thì đã bị gỡ. Nếu destroy không tự emit
+    // thì consumer nghe (sdClosed) để dọn state (mở lại tab, unlock form, huỷ request…) sẽ không
+    // bao giờ được gọi khi modal bị destroy lúc đang mở, và isOpened() kẹt ở true.
+    it('emits sdClosed synchronously when an OPEN modal is destroyed', () => {
+      const { ref } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+
+      component.open();
+      expect(host.closedCount).toBe(0);
+
+      fixture.destroy();
+
+      expect(host.closedCount).toBe(1);
+    });
+
+    it('flips isOpened back to false on the destroy path', () => {
+      const { ref } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+
+      component.open();
+      expect(component.isOpened()).toBeTrue();
+
+      fixture.destroy();
+
+      expect(component.isOpened()).toBeFalse();
+    });
+
+    it('emits sdClosed exactly once even if afterClosed$ still fires after destroy', () => {
+      const { ref, afterClosed$ } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+
+      component.open();
+      fixture.destroy();
+      afterClosed$.next();
+
+      expect(host.closedCount).toBe(1);
+    });
+
+    it('does NOT emit sdClosed when a never-opened modal is destroyed', () => {
+      fixture.destroy();
+
+      expect(host.closedCount).toBe(0);
+    });
+
+    it('emits sdClosed when an open bottom sheet host is destroyed', () => {
+      const { ref } = makeFakeBottomSheetRef();
+      const bsFixture = TestBed.createComponent(SdModal);
+      bsFixture.componentRef.setInput('view', 'bottom-sheet');
+      bsFixture.detectChanges();
+      const bsComponent = bsFixture.componentInstance;
+      const bsInjector: Injector = bsFixture.debugElement.injector;
+      spyOn(bsInjector.get(MatBottomSheet), 'open').and.returnValue(ref);
+
+      let closedCount = 0;
+      bsComponent.sdClosed.subscribe(() => closedCount++);
+
+      bsComponent.open();
+      bsFixture.destroy();
+
+      expect(closedCount).toBe(1);
+    });
   });
 
   describe('view="bottom-sheet"', () => {

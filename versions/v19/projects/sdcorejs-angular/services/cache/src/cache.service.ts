@@ -353,6 +353,12 @@ export class SdCacheService {
       this.#broadcast(state);
       return undefined;
     }
+    // why: #readEntry (đường hydrate) là nơi DUY NHẤT từng refresh recency, mà hydrate chỉ chạy
+    // MỘT lần cho mỗi state. Handle còn mở thì mọi get()/has()/snapshot()/load() sau đó đi thẳng
+    // vào nhánh `state.hydrated` này và không đụng gì tới LRU → key nóng nhất (SdApiService giữ
+    // handle suốt request) tụt xuống đáy và bị evict trước cả key nguội. Chạm ở đây để mọi lượt
+    // ĐỌC đều tính là "vừa dùng", đúng như sd-cache.md cam kết.
+    if (normalized.area === 'memory') this.#refreshMemoryRecency(normalized.ownerDigest);
     return state.entry;
   }
 
@@ -590,6 +596,16 @@ export class SdCacheService {
   #touchMemoryEntry(ownerDigest: string, entry: SdCacheStoredValue<unknown>): void {
     this.#memoryEntries.delete(ownerDigest);
     this.#memoryEntries.set(ownerDigest, entry);
+  }
+
+  // why: bản chỉ-đọc của #touchMemoryEntry — KHÔNG ghi lại value. Handle còn mở đọc từ
+  // state.entry (bản clone riêng), nên nếu key đã bị evict thì đọc không được phép hồi sinh nó:
+  // "handle còn mở vẫn phục vụ giá trị của chính nó dù entry chung đã bị evict" là hành vi đã
+  // ghi trong sd-cache.md.
+  #refreshMemoryRecency(ownerDigest: string): void {
+    const entry = this.#memoryEntries.get(ownerDigest);
+    if (entry === undefined) return;
+    this.#touchMemoryEntry(ownerDigest, entry);
   }
 
   #evictMemoryOverflow(): void {

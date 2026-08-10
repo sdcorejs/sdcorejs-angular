@@ -28,10 +28,24 @@ function MockIntersectionObserver(this: any, callback: IntersectionObserverCallb
   this.thresholds = [];
 }
 
+// why: `window.IntersectionObserver` là state toàn cục của cả Karma bundle. Ghi đè mà không trả
+// lại thì stub rò sang MỌI spec file chạy sau — file đó tưởng đang dùng IntersectionObserver thật
+// nhưng nhận một stub không bao giờ bắn callback, và triệu chứng phụ thuộc thứ tự file.
+let originalIntersectionObserver: typeof IntersectionObserver | undefined;
+
 function mockIntersectionObserver(): void {
   capturedIOCallback = null;
   ioConstructorCallCount = 0;
+  originalIntersectionObserver = (window as any).IntersectionObserver;
   (window as any).IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
+}
+
+function restoreIntersectionObserver(): void {
+  if (originalIntersectionObserver === undefined) {
+    delete (window as any).IntersectionObserver;
+    return;
+  }
+  (window as any).IntersectionObserver = originalIntersectionObserver;
 }
 
 function triggerIntersection(entries: Partial<IntersectionObserverEntry>[]): void {
@@ -156,6 +170,8 @@ describe('SdAnchor', () => {
   let fixture: ComponentFixture<HostComponent>;
   let anchor: SdAnchor;
 
+  afterEach(restoreIntersectionObserver);
+
   beforeEach(async () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
@@ -180,8 +196,10 @@ describe('SdAnchor', () => {
       expect(anchor.sections().length).toBe(3);
     }));
 
-    it('activeSectionId starts as empty string before any intersection fires', () => {
-      expect(anchor.activeSectionId()).toBe('');
+    // why: trước đây signal đứng yên ở '' cho tới khi người dùng cuộn, nên TOC mở ra không mục nào
+    // sáng. Giờ #registerIntersectionObserver seed về section đầu ngay ở lần render đầu.
+    it('activeSectionId is seeded to the first section before any intersection fires', () => {
+      expect(anchor.activeSectionId()).toBe(anchor.sections()[0].id);
     });
 
     it('activeSectionId is set when first section becomes intersecting', fakeAsync(() => {
@@ -351,6 +369,8 @@ describe('SdAnchor (hideNav default)', () => {
   let fixture: ComponentFixture<HostDefaultComponent>;
   let anchor: SdAnchor;
 
+  afterEach(restoreIntersectionObserver);
+
   beforeEach(async () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
@@ -382,6 +402,8 @@ describe('SdAnchor (hideNav default)', () => {
 describe('SdAnchor (hideNav=true)', () => {
   let fixture: ComponentFixture<HiddenHost>;
   let anchor: SdAnchor;
+
+  afterEach(restoreIntersectionObserver);
 
   beforeEach(async () => {
     mockIntersectionObserver();
@@ -426,6 +448,8 @@ describe('SdAnchor (hideNav=true)', () => {
 describe('SdAnchor (hideNavOnMobile=false)', () => {
   let fixture: ComponentFixture<MobileNavHost>;
 
+  afterEach(restoreIntersectionObserver);
+
   beforeEach(async () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
@@ -443,4 +467,89 @@ describe('SdAnchor (hideNavOnMobile=false)', () => {
   it('renders the nav column on a mobile viewport', () => {
     expect(fixture.nativeElement.querySelector('.c-anchor-list')).not.toBeNull();
   });
+});
+
+// ---------------------------------------------------------------------------
+// Seed activeSectionId
+// ---------------------------------------------------------------------------
+// why: activeSectionId chỉ được ghi bởi callback IntersectionObserver và bởi scrollSectionByClick.
+// Chưa cuộn thì không callback nào chạy → TOC mở ra không mục nào sáng, dù sd-anchor.md nói nó
+// "set to the first section's id immediately after first render". Cùng lỗi đó tái diễn khi resize
+// mobile→desktop: nav vừa hiện lại đã trắng cho tới khi người dùng cuộn.
+
+@Component({
+  imports: [SdAnchor, SdAnchorItem],
+  template: `
+    <div style="height: 400px">
+      <sd-anchor>
+        <sd-anchor-item title="Section 1"><div style="height: 200px">one</div></sd-anchor-item>
+        <sd-anchor-item title="Section 2"><div style="height: 200px">two</div></sd-anchor-item>
+      </sd-anchor>
+    </div>
+  `,
+})
+class SeedHost {}
+
+describe('SdAnchor activeSectionId seeding', () => {
+  afterEach(restoreIntersectionObserver);
+
+  it('seeds the first section id after the first render, without any scroll', fakeAsync(async () => {
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({
+      imports: [SeedHost, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SeedHost);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const anchor = getAnchor(fixture);
+
+    expect(anchor.activeSectionId()).toBe(anchor.sections()[0].id);
+  }));
+
+  it('does not overwrite a section the user already selected', fakeAsync(async () => {
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({
+      imports: [SeedHost, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SeedHost);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const anchor = getAnchor(fixture);
+    const second = anchor.sections()[1];
+
+    anchor.scrollSectionByClick(second.id);
+    // Đăng ký lại observer (điều xảy ra mỗi khi sections/navHidden tick) không được reset lựa chọn.
+    anchor.activeSectionId.set(second.id);
+    fixture.detectChanges();
+    tick(300);
+
+    expect(anchor.activeSectionId()).toBe(second.id);
+  }));
+
+  it('seeds again when the nav comes back after a mobile → desktop resize', fakeAsync(async () => {
+    mockIntersectionObserver();
+    const viewport = new FakeViewport(375);
+    await TestBed.configureTestingModule({
+      imports: [SeedHost, NoopAnimationsModule],
+      providers: [{ provide: SD_VIEWPORT, useValue: viewport }],
+    }).compileComponents();
+    const fixture = TestBed.createComponent(SeedHost);
+    fixture.detectChanges();
+    tick();
+    fixture.detectChanges();
+    const anchor = getAnchor(fixture);
+
+    expect(anchor.navHidden()).toBeTrue();
+    expect(anchor.activeSectionId()).toBe('');
+
+    viewport.resizeTo(1440);
+    fixture.detectChanges();
+
+    expect(anchor.navHidden()).toBeFalse();
+    expect(anchor.activeSectionId()).toBe(anchor.sections()[0].id);
+  }));
 });

@@ -1,4 +1,4 @@
-import { Component, Injector, runInInjectionContext } from '@angular/core';
+import { Component, EnvironmentInjector, createEnvironmentInjector, runInInjectionContext } from '@angular/core';
 import { fakeAsync, TestBed, tick } from '@angular/core/testing';
 
 import { ɵsdTimerScope } from './sd-timer-scope';
@@ -109,14 +109,49 @@ describe('ɵsdTimerScope', () => {
     fixture.destroy();
   }));
 
+  // why: bản cũ dựng scope trên Injector GỐC của TestBed — injector đó không bao giờ bị destroy
+  // trong spec này, nên nhánh onDestroy của scope ngoài-component không hề được chạy: spec chỉ
+  // chứng minh "schedule chạy", còn phần dễ hỏng nhất (destroy injector cha → clear timer) thì
+  // trắng coverage. Dùng EnvironmentInjector con để destroy được tất định.
   it('works from any injection context, not just components', fakeAsync(() => {
-    const scope = runInInjectionContext(TestBed.inject(Injector), () => ɵsdTimerScope());
+    const injector = createEnvironmentInjector([], TestBed.inject(EnvironmentInjector));
+    const scope = runInInjectionContext(injector, () => ɵsdTimerScope());
     const ran: string[] = [];
 
     scope.schedule(() => ran.push('root'), 10);
     tick(10);
 
     expect(ran).toEqual(['root']);
+    injector.destroy();
+  }));
+
+  it('clears pending handlers when the owning EnvironmentInjector is destroyed', fakeAsync(() => {
+    const injector = createEnvironmentInjector([], TestBed.inject(EnvironmentInjector));
+    const scope = runInInjectionContext(injector, () => ɵsdTimerScope());
+    const ran: string[] = [];
+
+    scope.schedule(() => ran.push('a'), 100);
+    scope.schedule(() => ran.push('b'), 150);
+    expect(scope.pending).toBe(2);
+
+    injector.destroy();
+
+    expect(scope.pending).toBe(0);
+    tick(500);
+    expect(ran).toEqual([]);
+  }));
+
+  it('ignores scheduling after the owning EnvironmentInjector is destroyed', fakeAsync(() => {
+    const injector = createEnvironmentInjector([], TestBed.inject(EnvironmentInjector));
+    const scope = runInInjectionContext(injector, () => ɵsdTimerScope());
+    const ran: string[] = [];
+
+    injector.destroy();
+    scope.schedule(() => ran.push('after-destroy'), 10);
+
+    expect(scope.pending).toBe(0);
+    tick(100);
+    expect(ran).toEqual([]);
   }));
 
   it('refuses to be created outside an injection context', () => {

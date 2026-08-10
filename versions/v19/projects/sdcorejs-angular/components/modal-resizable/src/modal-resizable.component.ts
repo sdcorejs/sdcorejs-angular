@@ -21,6 +21,84 @@ import { SdLoadingService } from '@sdcorejs/angular/services';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { SdModalResizableRegistry } from './modal-resizable.registry';
 
+/**
+ * `<sd-modal-resizable>` — right-docked, non-modal panel that can be minimized, expanded or pushed
+ * fullscreen. Several panels stack side by side along the right edge of the viewport, so the user
+ * can keep multiple records open at once while still working with the page behind them.
+ *
+ * Use it for side-by-side comparison / inspector workflows. Use `<sd-modal>` when the task is
+ * blocking, and `<sd-side-drawer>` when a single overlay with a backdrop is enough.
+ *
+ * NOTE ON DOCS: this component deliberately has **no** sibling `sd-modal-resizable.md`. Every `*.md`
+ * under the library is swept into `published-docs/<version>/index.json` by `scripts/collect-docs.mjs`,
+ * and `scripts/generate-showcase-example-sources.test.mjs` asserts that list is 1:1 with the
+ * `publishedDocId` set in the showcase documentation registry. A published doc with no showcase page
+ * therefore turns that release guard red. Keep the reference here until the component ships a
+ * showcase demo + registry entry; only then add the `.md`.
+ *
+ * ```ts
+ * import { SdModalResizable } from '@sdcorejs/angular/components/modal-resizable';
+ * ```
+ *
+ * ```html
+ * <sd-button title="Open detail" type="fill" color="primary" (click)="panel.open()"></sd-button>
+ *
+ * <sd-modal-resizable #panel width="520px">
+ *   <span sdTitle>Đơn hàng #1024</span>
+ *
+ *   <div sdBody class="panel-body">
+ *     <sd-section icon="receipt" title="Thông tin chung">
+ *       <sd-section-item label="Khách hàng">Nguyen Van An</sd-section-item>
+ *     </sd-section>
+ *   </div>
+ *
+ *   <sd-button sdFooterRight type="text" title="Đóng" (click)="panel.close()"></sd-button>
+ * </sd-modal-resizable>
+ * ```
+ *
+ * ### Slots
+ * | Selector          | Where it renders          |
+ * | ----------------- | ------------------------- |
+ * | `[sdTitle]`       | Header title area.        |
+ * | `[sdBody]`        | Scrollable content area.  |
+ * | `[sdFooterLeft]`  | Footer left action group. |
+ * | `[sdFooterRight]` | Footer right action group.|
+ *
+ * Header, body and footer only render while the panel is open.
+ *
+ * ### Panel stacking
+ * The panel is portalled onto `document.body` (via `CdkPortal` + `DomPortalOutlet`), so laying panels
+ * out is a concern shared by all live instances rather than by a single view. Arrangement is scoped
+ * through the root-provided `SdModalResizableRegistry`: each instance registers its panel id on
+ * construction and unregisters it on destroy. `open`, `close`, `minimize`, `maximize` and
+ * `toggleMaximum` re-run the arrangement and rewrite inline `width` / `right` **only on registered,
+ * still-mounted panels**, in registration order. Consequences worth knowing:
+ * - Markup of your own that happens to carry the `.modal-resizable` class is **not** touched.
+ *   (Earlier builds ran `document.querySelectorAll('.modal-resizable')` and rewrote every match.)
+ * - A destroyed panel immediately stops taking up a slot for the instances that outlive it.
+ * - Panels marked `c-closed`, and expanded panels with no captured `data-width`, are skipped.
+ *
+ * ### Lifecycle / teardown
+ * `open()`, `close()` and the arrangement pass each schedule a short `setTimeout` (100ms / 100ms /
+ * 200ms) that mutates DOM. All of them are tracked and cleared in `DestroyRef.onDestroy`, together
+ * with unregistering from the registry and destroying the portal view. Destroying the component
+ * mid-animation cannot run layout work against a detached panel.
+ *
+ * ### Anti-patterns
+ * - Rendering it inside a scroll container and expecting it to be clipped — it lives on `<body>`.
+ * - Reusing the `.modal-resizable` class on your own elements to "join" the stack; register a real
+ *   component instead.
+ * - Writing inline `width` / `right` on a panel yourself — the next arrangement pass overwrites both.
+ *
+ * ### Tests
+ * `src/modal-resizable.component.spec.ts` — portal attach, open/close/minimize/maximize math,
+ * loading, editing, timer teardown, registry scoping. Run:
+ * `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/modal-resizable/src/modal-resizable.component.spec.ts'`
+ *
+ * ### Related
+ * `<sd-modal>` (blocking dialog / bottom-sheet), `<sd-side-drawer>` (single right-side overlay with
+ * a body scroll lock), `SdLoadingService` (powers `startLoading()` / `stopLoading()`).
+ */
 @Component({
   selector: 'sd-modal-resizable',
   templateUrl: './modal-resizable.component.html',
@@ -30,10 +108,14 @@ import { SdModalResizableRegistry } from './modal-resizable.registry';
   imports: [SdIcon, CommonModule, MatDialogModule, MatButtonModule, PortalModule],
 })
 export class SdModalResizable {
+  /** Generated DOM id of the panel element (`I<uuid>`). */
   readonly id = `I${Utilities.generateUuid()}`;
   readonly portal = viewChild.required(CdkPortal);
+  /** Marks the panel as editable. Bare attribute = `true`. Default `false`. */
   readonly editable = input<boolean, boolean | ''>(false, { transform: booleanAttribute });
+  /** CSS width used while the panel is expanded (not a minimum). Default `'480px'`. */
   readonly width = input<string>('480px');
+  /** Emitted by `toggleEditable()` with the new editing state. */
   readonly editingChanged = output<boolean>();
   #embeddedViewRef!: EmbeddedViewRef<any>;
   readonly #ref = inject(ChangeDetectorRef);
@@ -44,6 +126,7 @@ export class SdModalResizable {
   // onDestroy clear sạch, tránh callback chạy trên portal đã tháo (element không còn, hoặc tệ
   // hơn: element của instance khác vừa tái sử dụng id).
   readonly #timers = new Set<ReturnType<typeof setTimeout>>();
+  // Trạng thái panel — đọc được từ ngoài (template/consumer), chỉ component tự ghi.
   readonly isEditing = signal(false);
   readonly isOpened = signal(false);
   readonly isHover = signal(false);
@@ -80,6 +163,7 @@ export class SdModalResizable {
     this.#timers.add(timer);
   }
 
+  /** Opens the panel, captures its rendered width, and expands it. */
   open = () => {
     this.isOpened.set(true);
     this.#detectChanges();
@@ -98,6 +182,7 @@ export class SdModalResizable {
     this.maximize();
   };
 
+  /** Collapses the panel to zero width and stops loading. */
   close = () => {
     this.isOpened.set(false);
     this.#detectChanges();
@@ -113,24 +198,28 @@ export class SdModalResizable {
     this.#arrangePanels();
   };
 
+  /** Shrinks the panel to the 300px minimum strip. */
   minimize = () => {
     this.isMinimum.set(true);
     this.#detectChanges();
     this.#arrangePanels();
   };
 
+  /** Restores the panel to its expanded width. */
   maximize = () => {
     this.isMinimum.set(false);
     this.#detectChanges();
     this.#arrangePanels();
   };
 
+  /** Toggles fullscreen (`calc(100% - 16px)`). */
   toggleMaximum = () => {
     this.isMaximum.update(isMaximum => !isMaximum);
     this.#detectChanges();
     this.#arrangePanels();
   };
 
+  /** Drives the scoped loading overlay through `SdLoadingService`. */
   startLoading = () => {
     this.isLoading.set(true);
     this.#detectChanges();
@@ -138,22 +227,26 @@ export class SdModalResizable {
     this.#loadingService.start(`#${this.id}`);
   };
 
+  /** Stops the scoped loading overlay. */
   stopLoading = () => {
     this.isLoading.set(false);
     this.#detectChanges();
     this.#loadingService.stop(`#${this.id}`);
   };
 
+  /** Flips `isEditing` and emits `editingChanged`. */
   toggleEditable() {
     this.isEditing.update(isEditing => !isEditing);
     this.#detectChanges();
     this.editingChanged.emit(this.isEditing());
   }
 
+  /** Hover state hook bound in the template. */
   onFocus = () => {
     this.isHover.set(true);
   };
 
+  /** Hover state hook bound in the template. */
   onBlur = () => {
     this.isHover.set(false);
   };

@@ -1376,6 +1376,64 @@ describe('SdCacheService', () => {
     expect(service.create<string>('recency-c').get()).toBe('C');
   });
 
+  // why: spec trên tạo handle MỚI cho mỗi lần đọc, nên nó chỉ chạm vào đường hydrate — đường
+  // DUY NHẤT từng refresh recency. SdApiService (và mọi consumer giữ handle) đọc nhiều lần qua
+  // MỘT handle đang mở: lúc đó state.hydrated đã true, #readEntry không chạy lại, và trước khi
+  // sửa thì key nóng nhất lại là key bị evict đầu tiên.
+  it('refreshes recency on every read through one already-open handle, not only on hydration', () => {
+    const service = configure({ maxMemoryEntries: 2 });
+    writeMemoryEntry(service, 'hot', 'A');
+
+    // Handle mở LIÊN TỤC từ đây: lần đọc đầu tiên đi qua hydrate nên không chứng minh được gì.
+    const hot = service.create<string>('hot');
+    expect(hot.get()).toBe('A');
+
+    writeMemoryEntry(service, 'cold', 'B');
+
+    // Lần đọc THỨ HAI qua đúng handle đó — phải đẩy 'hot' lên "vừa dùng gần nhất".
+    expect(hot.get()).toBe('A');
+    hot.release();
+
+    writeMemoryEntry(service, 'overflow', 'C');
+
+    expect(service.create<string>('cold').has()).toBeFalse();
+    expect(service.create<string>('hot').get()).toBe('A');
+    expect(service.create<string>('overflow').get()).toBe('C');
+  });
+
+  it('counts has() and snapshot() through an open handle as recent use', () => {
+    const service = configure({ maxMemoryEntries: 2 });
+    writeMemoryEntry(service, 'probed', 'A');
+
+    const probed = service.create<string>('probed');
+    writeMemoryEntry(service, 'other', 'B');
+
+    expect(probed.has()).toBeTrue();
+    expect(probed.snapshot()).toEqual({ present: true, value: 'A' });
+    probed.release();
+
+    writeMemoryEntry(service, 'overflow', 'C');
+
+    expect(service.create<string>('other').has()).toBeFalse();
+    expect(service.create<string>('probed').get()).toBe('A');
+  });
+
+  it('does not resurrect an evicted owner when a surviving handle reads it', () => {
+    const service = configure({ maxMemoryEntries: 1 });
+    writeMemoryEntry(service, 'evicted', 'A');
+    const survivor = service.create<string>('evicted');
+
+    writeMemoryEntry(service, 'winner', 'B');
+
+    // Handle còn mở vẫn phục vụ bản clone của chính nó…
+    expect(survivor.get()).toBe('A');
+    survivor.release();
+
+    // …nhưng lần đọc đó KHÔNG được ghi lại entry chung đã bị evict.
+    expect(service.create<string>('evicted').has()).toBeFalse();
+    expect(service.create<string>('winner').get()).toBe('B');
+  });
+
   it('bounds memory growth at the default when no configuration is supplied', () => {
     const service = configure();
     const total = SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES + 2;

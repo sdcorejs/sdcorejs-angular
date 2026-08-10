@@ -333,4 +333,42 @@ describe('SdNotifyService teardown', () => {
 
     expect(service.toasts().length).toBe(0);
   }));
+
+  // why: 3 spec trên chạy trong EnvironmentInjector con nên appRef VẪN sống — chúng chỉ đi qua
+  // nhánh `!this.appRef.destroyed`. Nhánh CÒN LẠI mới là nhánh chạy trên teardown root thật
+  // (SSR mỗi request, micro-frontend unmount, TestBed reset): hook destroy của service chạy SAU
+  // ApplicationRef.destroy(), lúc đó detachView chỉ log NG0406 nên bị bỏ qua cùng componentRef
+  // .destroy(). Không có spec nào chạm vào nó thì "chỉ detach khi appRef còn sống" là niềm tin,
+  // không phải sự thật đã kiểm chứng. Mô phỏng bằng cách ép getter `destroyed` trả true.
+  it('skips detachView when ApplicationRef is already destroyed, but still removes the DOM node', () => {
+    const appRef = TestBed.inject(ApplicationRef);
+    const before = toastContainers().length;
+    const { destroy } = createIsolatedService();
+
+    const created = toastContainers();
+    expect(created.length).toBe(before + 1);
+    const container = created[created.length - 1];
+
+    const detachSpy = spyOn(appRef, 'detachView').and.callThrough();
+    spyOnProperty(appRef, 'destroyed', 'get').and.returnValue(true);
+
+    expect(() => destroy()).not.toThrow();
+
+    expect(detachSpy).not.toHaveBeenCalled();
+    expect(document.body.contains(container)).toBeFalse();
+    expect(toastContainers().length).toBe(before);
+  });
+
+  it('still stops buffered flushes when ApplicationRef is already destroyed', fakeAsync(() => {
+    const appRef = TestBed.inject(ApplicationRef);
+    const { service, destroy } = createIsolatedService();
+
+    service.error('late error');
+    spyOnProperty(appRef, 'destroyed', 'get').and.returnValue(true);
+
+    destroy();
+    tick(500);
+
+    expect(service.toasts().length).toBe(0);
+  }));
 });

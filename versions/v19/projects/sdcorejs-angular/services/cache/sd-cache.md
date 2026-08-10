@@ -58,6 +58,8 @@ Storage corruption, quota/security failures and unavailable browser storage do n
 - **Default cap:** `SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES` = **500** entries.
 - **Configure:** `maxMemoryEntries` on `SD_CACHE_CONFIG`. Values that are not finite or `< 1` fall back to the default.
 - **Scope:** memory only. `session`/`local` entries are governed by browser storage quota, not by this cap.
+- **What counts as a read:** every `get()`, `has()`, `snapshot()` and cache-hit `load()` — including repeated calls through a handle that is already open, not just the first read that hydrates it. Recency is a property of the call, never of the handle's age.
+- A read never resurrects an already-evicted owner: the still-open handle keeps serving its own hydrated copy, but the shared entry stays gone.
 
 ```ts
 providers: [
