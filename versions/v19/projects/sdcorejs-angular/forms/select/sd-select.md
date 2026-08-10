@@ -85,7 +85,7 @@ Applied automatically on `<sd-select>` for styling hooks:
 | -------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
 | `sd-has-label` | `[label]` is truthy | Adds `padding-top: 4px` so the floating label has room and is not clipped. Absent → no top padding.   |
 | `sd-viewed`    | `[viewed]="true"`   | Removes top padding (read-only text only). Overrides `sd-has-label` when both are set (source order). |
-| `sd-bare`      | `[bare]="true"`     | Strips the mat-form-field shell for inline contexts (chip, token).                                    |
+| `sd-bare`      | (internal — set by `viewed='inline'`) | Strips the mat-form-field shell for inline contexts (chip, token). **No longer a public `[bare]` input** (removed); driven by `isInline()`. |
 
 ## Content projection (slots)
 
@@ -153,7 +153,7 @@ Applied automatically on `<sd-select>` for styling hooks:
 - Click opens a dropdown panel below; if `items.length > 10` (or `items` is a function) a search input appears at the top of the panel
 - In `[multiple]="true"` mode: each row in the panel has a checkbox; the field shows a comma-joined list of display values, with a hover tooltip listing each as `• <value> - <display>`
 - Loading spinner appears in the panel while an async `SdSearch` is in flight
-- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears as a suffix when a value is set and the field is not `required`/`disabled`; it **replaces the chevron** and clears via `clear()`. Because it replaces the dropdown icon, it is **always shown** when there's a value — NOT hover-gated (unlike `sd-input`/`sd-date`/`sd-datetime`). Styled identically via the shared class in `assets/scss/core/form.scss`. **Not rendered in `[bare]` mode** — bare is "value + caret only" for inline chip/token contexts; the clear-x duplicated the chip's own remove-× and was easy to hit while dismissing the panel (would clear the value). The caret is shown instead; the host (chip) owns removal.
+- A slim clear-button (`.sd-clear-btn` — round transparent button with a thin `close` icon, grey → red on hover) appears as a suffix when a value is set and the field is not `required`/`disabled`; it **replaces the chevron** and clears via `clear()`. Because it replaces the dropdown icon, it is **always shown** when there's a value — NOT hover-gated (unlike `sd-input`/`sd-date`/`sd-datetime`). Styled identically via the shared class in `assets/scss/core/form.scss`. **Not rendered when the host is bare** (`viewed='inline'`, which sets `.sd-bare`) — bare is "value + caret only" for inline chip/token contexts; the clear-× duplicated the chip's own remove-× and was easy to hit while dismissing the panel (would clear the value). The caret is shown instead, and the inline text face carries its own hover clear-× gated by `[clearable]`; a chip host sets `[clearable]="false"` so it owns removal.
 - Required marker shows as a red `*` next to the label
 - When `[hideInlineError]="true"`: red error-icon suffix with tooltip; otherwise inline `<mat-error>` below the field
 - In `[viewed]="true"` mode: rendered by `<sd-view>` — plain text (or hyperlink) of the selected display value(s)

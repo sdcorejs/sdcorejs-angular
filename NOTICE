@@ -1,0 +1,68 @@
+NOTICE — third-party and vendored code in @sdcorejs/angular
+===========================================================
+
+The `@sdcorejs/angular` package declares `"license": "MIT"` in its
+`package.json`, and the MIT text in `LICENSE` covers the code written for this
+project.
+
+This file records third-party code that is **copied into** this repository and
+shipped inside the published package, together with the licence that code
+carries. It is informational: it describes what is present and where it came
+from. It does not grant, restrict, or reinterpret any licence, and it is not
+legal advice. Readers who need to know what these terms require of them should
+read the referenced licences and take their own advice.
+
+
+-----------------------------------------------------------------------------
+1. Pandoc WASM core  —  GPL-2.0-or-later
+-----------------------------------------------------------------------------
+
+File in this repository
+    versions/v19/projects/sdcorejs-angular/services/docx/src/lib/pandoc-core.ts
+    (and the mirrored copies under versions/v20 and versions/v21)
+
+Published as
+    @sdcorejs/angular/services/docx
+
+Upstream project
+    pandoc-wasm — https://github.com/pandoc/pandoc-wasm
+
+Upstream licence
+    GPL-2.0-or-later
+
+What was taken
+    The environment-agnostic pandoc core from `pandoc-wasm/src/core.js`, adapted
+    to TypeScript. The file's own header states this:
+
+        Pandoc WASM core logic — adapted from pandoc-wasm/src/core.js
+        This file is a local copy of the environment-agnostic pandoc core.
+        Source: https://github.com/pandoc/pandoc-wasm (GPL-2.0-or-later)
+
+Why it was copied rather than depended on
+    The `pandoc-wasm` package entry points use top-level `await`, which is not
+    compatible with the esbuild/Vite pipeline Angular uses. The copy imports
+    `@bjorn3/browser_wasi_shim` directly and avoids those entry points.
+
+Scope
+    This code is reached only through the `@sdcorejs/angular/services/docx`
+    entry point (`SdDocxService`). No other entry point imports it. An
+    application that does not import `services/docx` does not bundle it.
+
+Related runtime artefact (not vendored)
+    `SdDocxService` fetches the pandoc WebAssembly binary at runtime from
+    https://pandoc.github.io/pandoc-wasm/pandoc.wasm. That binary is not
+    committed to this repository and is not part of the published npm package;
+    pandoc itself is GPL-2.0-or-later.
+
+Status
+    The maintainer has decided to keep this code as-is and document it here,
+    rather than relicense the package or remove the entry point.
+
+
+-----------------------------------------------------------------------------
+Runtime dependencies
+-----------------------------------------------------------------------------
+
+Ordinary npm dependencies declared in `package.json` are not vendored — they
+are installed from the registry under their own licences and are not covered by
+this file. Use `npm ls` / `npm view <pkg> license` to inspect them.

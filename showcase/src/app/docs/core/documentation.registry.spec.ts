@@ -4,8 +4,8 @@ import { SHOWCASE_EXAMPLE_SOURCES } from '../generated/example-sources.generated
 
 const EXPECTED_CATEGORY_COUNTS = {
   guides: 3,
-  components: 35,
-  forms: 21,
+  components: 36,
+  forms: 22,
   directives: 6,
   services: 13,
   'modules-integrations': 10,
@@ -17,8 +17,8 @@ describe('documentation registry', () => {
     const publishedIds = DOC_PAGES.map(page => page.publishedDocId).filter(id => id !== null);
     const localOnlyPages = DOC_PAGES.filter(page => page.publishedDocId === null);
 
-    expect(DOC_PAGES).toHaveSize(97);
-    expect(new Set(publishedIds).size).toBe(97);
+    expect(DOC_PAGES).toHaveSize(99);
+    expect(new Set(publishedIds).size).toBe(99);
     expect(localOnlyPages).toHaveSize(0);
     expect(DOC_CATEGORIES).toHaveSize(7);
     for (const category of DOC_CATEGORIES) {
@@ -59,7 +59,7 @@ describe('documentation registry', () => {
   });
 
   it('derives navigation groups and canonical/legacy lookup helpers from the registry', () => {
-    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 35, 21, 6, 13, 10, 9]);
+    expect(DOC_NAV_GROUPS.map(group => group.pages.length)).toEqual([3, 36, 22, 6, 13, 10, 9]);
     expect(findDocPage('components', 'button')?.title).toBe('Button');
     expect(findDocPage('directives', 'tooltip')?.publishedDocId).toBe('directives/src/sd-tooltip');
     expect(findDocPage('components', 'generic')?.title).toBe('Form Generic');

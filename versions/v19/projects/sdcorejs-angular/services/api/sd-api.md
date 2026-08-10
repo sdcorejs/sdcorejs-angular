@@ -13,9 +13,17 @@ post<T = unknown>(url: string, body?: unknown, option?: SdPostOption): Promise<T
 put<T = unknown>(url: string, body?: unknown, option?: SdPutOption): Promise<T>;
 patch<T = unknown>(url: string, body?: unknown, option?: SdPatchOption): Promise<T>;
 delete<T = unknown>(url: string, option?: SdDeleteOption): Promise<T>;
-upload<T = unknown>(url: string, option?: UploadOption): Promise<T | null | undefined>;
+upload<T = unknown>(url: string, option?: { extensions?: string[]; maxSizeInMb?: number }): Promise<T | null | undefined>;
 uploadFile<T = unknown>(url: string, file: File | null | undefined): Promise<T | null>;
 ```
+
+`upload()`'s option is an **inline anonymous type**, not a named export — there is no `UploadOption` symbol to import. Pass an object literal:
+
+```ts
+const doc = await api.upload<UploadResult>('/api/files', { extensions: ['pdf', 'docx'], maxSizeInMb: 10 });
+```
+
+The option is forwarded verbatim to `BrowserUtilities.upload()` (`@sdcorejs/utils/fns`), which opens the picker and enforces the extension / size filter. When the user cancels, no file is produced and `upload()` resolves to `undefined` without issuing a request.
 
 Specify `T` at the call site. The default is intentionally `unknown` so an untyped response is not treated as trusted application data.
 

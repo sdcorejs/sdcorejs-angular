@@ -6,6 +6,12 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Added
+
+- **`SdToastData` + `SdToastType` are now exported** from `@sdcorejs/angular/services/notify`. Both already sat on the public surface of `SdNotifyService` (`toasts: WritableSignal<ToastData[]>`, `clearByType(type: ToastType)`) but were not exported, so a consumer could not annotate either. Aliased with the `Sd` prefix like the existing `NotifyOption as SdNotifyOption`. The toast container/toast components stay internal — they are not exported and `…/services/notify/components` is not an entry point, contrary to what `sd-notify.md` used to claim.
+- **Docs for three previously undocumented entry points** — `components/form-generic` (form builder, form renderer, `sd-feel-expression`, the schema model and the configuration token), `components/ckeditor-styles`, and `forms/directives` (`sdSuffixDef` / `sdLabelDef` / `sdViewDef` / `sdItemDef`, with a table of which control reads which).
+- **`NOTICE` at the repo root** recording that `services/docx` ships a vendored copy of the pandoc-wasm core under GPL-2.0-or-later while the package declares MIT. Referenced from the root `README.md` and from `sd-docx.md`, which now states plainly that this one entry point carries a different licence.
+
 ### Changed (BREAKING for consumers)
 
 Đợt đổi tên public API có chủ đích, **xoá hẳn tên cũ, không giữ alias `@deprecated`**. Lý do gộp một lần: tag format `^\d+\.\d+$` khoá major theo Angular line, nên semver KHÔNG thể phát tín hiệu breaking — mỗi lần hoãn thì chi phí migration về sau lại tăng.

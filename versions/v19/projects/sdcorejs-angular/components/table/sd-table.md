@@ -3,7 +3,7 @@
 **Type**: Component (generic over `T`)
 **Selector**: `sd-table`
 **Import path**: `@sdcorejs/angular/components/table` (or barrel: `@sdcorejs/angular/components`)
-**Class**: `SdTable<T = unknown> extends SdBaseSecureComponent`
+**Class**: `SdTable<T = unknown>` (implements `AfterViewInit`, `OnDestroy`)
 **Standalone**: yes
 **Change detection**: `OnPush`
 
@@ -461,7 +461,7 @@ The export button's label comes from the i18n catalog, so it follows the app lan
 
 ## Permission gating
 
-The component extends `SdBaseSecureComponent`. Bulk actions (`selector.actions`) and per-row `commands` are usually gated at the application level (hide via `hidden(row)` predicate or before composing the option). For full row visibility wrap the host with `*sdPermission`.
+None built in. `<sd-table>` does not extend `SdBaseSecureComponent` — that inheritance was dropped from every component (CHANGELOG entry #21). Bulk actions (`selector.actions`) and per-row `commands` are gated at the application level (hide via the `hidden(row)` predicate, or omit the option when composing it). To gate the whole table, wrap the host with `*sdPermission`.
 
 ## Examples
 

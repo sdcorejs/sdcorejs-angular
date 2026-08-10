@@ -340,3 +340,5 @@ Use [GitHub Issues](https://github.com/sdcorejs/sdcorejs-angular/issues) for rep
 ## License
 
 `@sdcorejs/angular` is released under the [MIT License](LICENSE).
+
+The package also ships one file of vendored third-party code that carries a different licence: `services/docx` contains a local copy of the pandoc-wasm core, which is GPL-2.0-or-later. [NOTICE](NOTICE) records what was copied, where it came from, why it was vendored instead of installed, and which entry point it affects.

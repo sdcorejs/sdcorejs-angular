@@ -258,6 +258,21 @@ function walk(dir, acc = []) {
   return acc;
 }
 
+// The doc IDs a release archive built from `workspace` WOULD contain, without
+// writing anything. The showcase documentation registry must stay 1:1 with this
+// set (see `generate-showcase-example-sources.test.mjs`); exposing the sweep here
+// keeps that guard on the same discovery rules the archive actually uses instead
+// of a second, drifting copy.
+export function workspaceDocIds(workspace = 'v19') {
+  const srcRoot = join(REPO_ROOT, 'versions', workspace, 'projects', 'sdcorejs-angular');
+  if (!existsSync(srcRoot)) {
+    throw new Error(`Cannot sweep docs: workspace source root does not exist: ${srcRoot}`);
+  }
+  return walk(srcRoot)
+    .map(file => relative(srcRoot, file).split(sep).join('/').replace(/\.md$/, ''))
+    .sort((a, b) => a.localeCompare(b));
+}
+
 function titleOf(content, fallback) {
   for (const line of content.split(/\r?\n/)) {
     const m = line.match(/^#\s+(.+?)\s*$/);

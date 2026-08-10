@@ -227,7 +227,7 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 
 > **Note**: `sd-date-range` does not support maxlength / minlength / pattern. No `data-maxlength`, `data-minlength`, or `data-pattern` attributes are emitted.
 
-## Bare / viewed / programmatic open
+## Viewed / programmatic open
 
 | API           | Type                  | Notes                                                                                                                                                                                                                                                                                              |
 | ------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -235,10 +235,11 @@ All five attributes live on the **`<mat-date-range-input>`** element — the sin
 | `[viewed]`    | `boolean \| 'inline'` | `false` edit · `true` static `<sd-view>` (`dd/MM/yyyy → dd/MM/yyyy`) · `'inline'` click-to-edit range picker (text retained until commit). Project `<ng-template #sdValue>` to override the display. Default `false`. (The old `[bare]` input was removed — inline flattens the field internally.) |
 | `open()`      | method                | Programmatically opens the range picker panel (anchors to the trigger). Used by query-bar chip's auto-open after the user enters edit mode.                                                                                                                                                        |
 
-`bare` and `viewed` are independent and complementary:
+`viewed` is now the only switch — the three states are mutually exclusive:
 
+- `viewed=false` (default) → full editable form-field.
 - `viewed=true` → text-only `<sd-view>`, no form-field.
-- `bare=true, viewed=false` → editable form-field stripped of outline/subscript/arrow so it sits flush in a chip.
+- `viewed='inline'` → editable form-field stripped of outline/subscript/arrow (host gets `.sd-bare`) so it sits flush in a chip, fronted by a click-to-edit text face.
 
 ## Related
 

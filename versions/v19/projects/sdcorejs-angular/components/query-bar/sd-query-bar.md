@@ -7,8 +7,6 @@
 **Standalone**: yes
 **Change detection**: `OnPush`
 
-> Status: **v1.1 — full decomposition (7/7 sub-components extracted)**. Inline + popover modes, build flow, saved-filters, multi-select head+N display, BETWEEN date-range unified. Design source: `refs/design_handoff_sd_query_bar/`.
-
 ## One-line purpose
 
 Unified filter chip row (Jira / Linear / Notion / GitLab style) — replaces inline / external table filters when callers want a compact single-row UI. Emits `SdQuery` (filters + global AND/OR logic + optional search) consumable by `sd-table` and any list endpoint.
@@ -111,7 +109,7 @@ Constants & helpers exported alongside the models:
 - `sdQueryDefaultOperator(field)` — picks the initial operator
 - `sdQueryShowOperatorSelector(field)` — true when the field exposes >1 operator
 
-Operator labels + icons live in `@sdcorejs/utils` `OPERATORS` table (v1.1.2 adds `BETWEEN`). They are NOT redefined in this component.
+Operator labels + icons live in the `@sdcorejs/utils` `OPERATORS` table (`BETWEEN` included). They are NOT redefined in this component.
 
 ## Inputs
 
@@ -322,16 +320,16 @@ tableOption: SdTableOption<Order> = {
 ## Dependencies
 
 Internal: `@sdcorejs/angular/components/{operator, button}`, `@sdcorejs/angular/forms/{input, input-number, select, date, datetime, date-range}`, `@sdcorejs/angular/i18n`.
-External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
+External: `@sdcorejs/utils` `1.1.4` (`OPERATORS` table + `BETWEEN` icon).
 
-## Test status
+## Tests
 
-- query-bar suite: **158 SUCCESS** (Karma + ChromeHeadless). Run:
-  ```
-  npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
-    --include='projects/sdcorejs-angular/components/query-bar/**/*.spec.ts'
-  ```
-- Each sub-component has its own spec (`<name>.component.spec.ts`) covering its public surface + the rendering branches it owns.
+Each sub-component has its own spec (`<name>.component.spec.ts`) covering its public surface and the rendering branches it owns. Run the whole group with:
+
+```
+npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless \
+  --include='projects/sdcorejs-angular/components/query-bar/**/*.spec.ts'
+```
 
 ## Known limitations / next iterations
 

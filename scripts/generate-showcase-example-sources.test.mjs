@@ -15,6 +15,7 @@ import {
   renderGeneratedManifest,
   renderGeneratedModule,
 } from './generate-showcase-example-sources.mjs';
+import { workspaceDocIds } from './collect-docs.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -430,6 +431,17 @@ test('checked-in published-doc manifests, indexes, registry mappings, and docume
   }
 
   assert.ok(latestPublishedIds, `Latest published-doc index was not loaded: ${manifest.latest}`);
+});
+
+// why: the registry is compared against a LIVE sweep of the v19 source, not against the
+// last published archive. An archive is a frozen snapshot of one release, so the moment a
+// doc is added, renamed or deleted mid-cycle it stops describing the current tree — and a
+// guard pinned to it goes green while the registry rots. That is exactly how the mapping to
+// the deleted `modules/generic/sd-generic` survived: the frozen index still listed it. The
+// set swept here is the set the NEXT archive will contain, so a break shows up on the commit
+// that causes it rather than at release time.
+test('documentation registry is 1:1 with the docs the next release archive will sweep', () => {
+  const sweptIds = new Set(workspaceDocIds('v19'));
   const registry = readFileSync(
     join(REPO_ROOT, 'showcase', 'src', 'app', 'docs', 'core', 'documentation.registry.ts'),
     'utf8'
@@ -437,17 +449,20 @@ test('checked-in published-doc manifests, indexes, registry mappings, and docume
   const mappedIds = new Set([...registry.matchAll(/publishedDocId:\s*'([^']+)'/g)].map(match => match[1]));
 
   assert.ok(mappedIds.size > 0, 'Documentation registry must contain published-doc mappings');
-  assert.equal(
-    mappedIds.size,
-    latestPublishedIds.size,
-    'Latest published-doc index and registry contain different numbers of document IDs'
-  );
   for (const mappedId of mappedIds) {
-    assert.ok(latestPublishedIds.has(mappedId), `Latest index is missing registry published-doc mapping: ${mappedId}`);
+    assert.ok(
+      sweptIds.has(mappedId),
+      `Documentation registry maps a publishedDocId with no matching .md under versions/v19: ${mappedId}`
+    );
   }
-  for (const publishedId of latestPublishedIds) {
-    assert.ok(mappedIds.has(publishedId), `Documentation registry is missing latest published document: ${publishedId}`);
+  for (const sweptId of sweptIds) {
+    assert.ok(
+      mappedIds.has(sweptId),
+      `versions/v19 ships a doc with no registry entry: ${sweptId}. ` +
+        'Add a definePublishedDocPage() mapping, or the release archive guard will fail.'
+    );
   }
+  assert.equal(mappedIds.size, sweptIds.size, 'Swept docs and registry mappings differ in count');
 });
 
 test('checked-in generated example artifacts are fresh', () => {
