@@ -77,7 +77,7 @@
                 <!-- why: ảnh đang tải lên là thay đổi trạng thái BẤT ĐỒNG BỘ; trước đây spinner
                      không được thông báo ở đâu cả. role="status" + aria-live="polite" để screen
                      reader biết đang có tiến trình. -->
-                <div class="c-uploading" role="status" aria-live="polite" [attr.aria-label]="'core.component.data-state.loading.title' | translate">
+                <div class="c-uploading" role="status" aria-live="polite" [attr.aria-label]="'core.component.upload-file.loading' | translate">
                   <mat-spinner style="justify-self: center;" strokeWidth="2" mode="indeterminate" diameter="18" value="100"></mat-spinner>
                 </div>
               }
@@ -109,7 +109,7 @@
                   class="c-btn-remove"
                   (click)="onRemove(image)"
                   mat-icon-button
-                  [attr.aria-label]="'core.component.form-builder.delete' | translate"
+                  [attr.aria-label]="'core.component.upload-file.remove' | translate"
                   [attr.data-autoId]="removeAutoId(idx)">
                   <sd-icon name="close"></sd-icon>
                 </button>
@@ -156,7 +156,7 @@
           type="button"
           class="c-close"
           (click)="onRemove(document)"
-          [attr.aria-label]="'core.component.form-builder.delete' | translate"
+          [attr.aria-label]="'core.component.upload-file.remove' | translate"
           [attr.data-autoId]="removeAutoId(docIdx)">
           <sd-icon name="close"></sd-icon>
         </button>

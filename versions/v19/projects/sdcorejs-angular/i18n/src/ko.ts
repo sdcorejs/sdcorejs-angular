@@ -616,4 +616,80 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Module: generic (generic-select) ----
   'core.module.generic.generic-select.detail-link': '상세',
+
+  // ---- Component: query-bar ----
+  'core.component.query-bar.search-placeholder': '검색...',
+  'core.component.query-bar.no-fields': '필드가 설정되지 않았습니다',
+  'core.component.query-bar.add-filter': '필터 추가',
+  'core.component.query-bar.clear-all': '전체 지우기 ({count})',
+  'core.component.query-bar.search': '검색',
+  'core.component.query-bar.logic-operator': '논리 연산자',
+  'core.component.query-bar.boolean.true': '예',
+  'core.component.query-bar.boolean.false': '아니오',
+  'core.component.query-bar.placeholder.value': '값',
+  'core.component.query-bar.placeholder.text': '입력…',
+  'core.component.query-bar.placeholder.from-number': '시작',
+  'core.component.query-bar.placeholder.to-number': '종료',
+  'core.component.query-bar.placeholder.from-text': '시작…',
+  'core.component.query-bar.placeholder.to-text': '종료…',
+
+  // ---- Component: query-builder ----
+  'core.component.query-builder.date-mode.absolute': '특정 날짜',
+  'core.component.query-builder.date-mode.now': '오늘',
+  'core.component.query-builder.date-mode.relative': '상대',
+  'core.component.query-builder.value-source.literal': '값 입력',
+  'core.component.query-builder.value-source.field': '필드와 비교',
+  'core.component.query-builder.relative.hour-previous': '시간 전',
+  'core.component.query-builder.relative.hour-next': '시간 후',
+  'core.component.query-builder.relative.day-previous': '일 전',
+  'core.component.query-builder.relative.day-next': '일 후',
+  'core.component.query-builder.relative.week-previous': '주 전',
+  'core.component.query-builder.relative.week-next': '주 후',
+  'core.component.query-builder.relative.month-previous': '개월 전',
+  'core.component.query-builder.relative.month-next': '개월 후',
+  'core.component.query-builder.relative.format': '{amount}{phrase}',
+  'core.component.query-builder.add': '추가',
+  'core.component.query-builder.add-node': '조건 또는 그룹 추가',
+  'core.component.query-builder.condition': '조건',
+  'core.component.query-builder.group': '그룹',
+  'core.component.query-builder.remove-group': '그룹 삭제',
+  'core.component.query-builder.remove-condition': '조건 삭제',
+  'core.component.query-builder.empty': '아직 조건이 없습니다',
+  'core.component.query-builder.select-field': '필드 선택',
+  'core.component.query-builder.value': '값',
+  'core.component.query-builder.from': '시작',
+  'core.component.query-builder.to': '종료',
+  'core.component.query-builder.boolean.true': '예',
+  'core.component.query-builder.boolean.false': '아니오',
+
+  // ---- Component: tree ----
+  'core.component.tree.selected-count': '{count}개 선택됨',
+  'core.component.tree.expand': '트리 항목 펼치기',
+  'core.component.tree.collapse': '트리 항목 접기',
+  'core.component.tree.retry-item': '트리 항목 다시 불러오기',
+  'core.component.tree.load-error': '트리 데이터를 불러올 수 없습니다',
+
+  // ---- Directive: hover-copy ----
+  'core.directive.hover-copy.copied': '복사되었습니다',
+
+  // ---- Module: layout (sidebar sections + pin) ----
+  'core.module.layout.sidebar.pinned': '고정됨',
+  'core.module.layout.sidebar.recent': '최근',
+  'core.module.layout.sidebar.all-menu': '전체 메뉴',
+  'core.module.layout.menu.pin': '{title} 고정',
+  'core.module.layout.menu.unpin': '{title} 고정 해제',
+
+  // ---- Per-control accessible names (replacing borrowed keys) ----
+  'core.form.date.open-picker': '달력 열기',
+  'core.form.datetime.open-picker': '달력 열기',
+  'core.form.date-range.open-picker': '달력 열기',
+  'core.form.date-range.clear': '날짜 범위 지우기',
+  'core.form.select.search': '검색',
+  'core.component.table.loading': '표 데이터를 불러오는 중',
+  'core.component.upload-file.loading': '파일 업로드 중',
+  'core.component.import-excel.loading': '데이터를 불러오는 중',
+  'core.component.upload-file.remove': '파일 삭제',
+  'core.component.upload-file.zoom': '이미지 확대',
+  'core.component.upload-file.view-all': '모든 이미지 보기',
+  'core.component.form-builder.canvas': '폼 디자인 캔버스',
 };

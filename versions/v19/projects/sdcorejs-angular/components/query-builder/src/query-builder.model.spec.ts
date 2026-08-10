@@ -1,4 +1,14 @@
-import { QB_DATE_MODES, QB_RELATIVE_UNIT_OPTIONS, QB_TODAY, qbDefaultRelative, qbIsRelativeDate, qbIsToday } from './query-builder.model';
+import { I18N_MESSAGES } from '@sdcorejs/angular/i18n';
+import {
+  QB_DATE_MODES,
+  QB_RELATIVE_UNIT_OPTIONS,
+  QB_TODAY,
+  QB_VALUE_SOURCE_OPTIONS,
+  qbDefaultRelative,
+  qbIsRelativeDate,
+  qbIsToday,
+  qbRelativeLabelKey,
+} from './query-builder.model';
 
 describe('query-builder.model › relative date helpers', () => {
   it('qbIsRelativeDate recognises a utils DateRelative offset spec', () => {
@@ -34,7 +44,7 @@ describe('query-builder.model › relative date helpers', () => {
     expect(QB_DATE_MODES.map(m => m.value)).toEqual(['absolute', 'now', 'relative']);
   });
 
-  it('QB_RELATIVE_UNIT_OPTIONS lists the 6 unit×direction tokens with VN labels', () => {
+  it('QB_RELATIVE_UNIT_OPTIONS lists the 6 unit×direction tokens keyed for i18n', () => {
     expect(QB_RELATIVE_UNIT_OPTIONS.map(o => o.value)).toEqual([
       'day:previous',
       'day:next',
@@ -43,12 +53,44 @@ describe('query-builder.model › relative date helpers', () => {
       'month:previous',
       'month:next',
     ]);
-    expect(QB_RELATIVE_UNIT_OPTIONS.find(o => o.value === 'day:previous')!.display).toBe('ngày trước');
-    expect(QB_RELATIVE_UNIT_OPTIONS.find(o => o.value === 'month:next')!.display).toBe('tháng tới');
+    expect(QB_RELATIVE_UNIT_OPTIONS.find(o => o.value === 'day:previous')!.labelKey).toBe(
+      'core.component.query-builder.relative.day-previous'
+    );
+    expect(QB_RELATIVE_UNIT_OPTIONS.find(o => o.value === 'month:next')!.labelKey).toBe('core.component.query-builder.relative.month-next');
   });
 
   it('QB_DATE_MODES / QB_RELATIVE_UNIT_OPTIONS are stable module references', () => {
     expect(QB_DATE_MODES).toBe(QB_DATE_MODES);
     expect(QB_RELATIVE_UNIT_OPTIONS).toBe(QB_RELATIVE_UNIT_OPTIONS);
+  });
+});
+
+describe('query-builder.model › option tables carry i18n keys, not baked labels', () => {
+  // why: bảng hằng số được đánh giá MỘT lần lúc load module. Nhãn dịch sẵn ở đây sẽ đóng băng theo
+  // ngôn ngữ lúc đó; guard này chốt rằng chúng chỉ giữ key và việc dịch xảy ra lúc đọc.
+  const ALL_OPTIONS = [...QB_DATE_MODES, ...QB_VALUE_SOURCE_OPTIONS, ...QB_RELATIVE_UNIT_OPTIONS];
+
+  it('never exposes a `display` field baked at module-eval time', () => {
+    for (const option of ALL_OPTIONS) {
+      expect((option as unknown as Record<string, unknown>)['display']).toBeUndefined();
+    }
+  });
+
+  it('every labelKey resolves in all five shipped catalogues', () => {
+    for (const option of ALL_OPTIONS) {
+      for (const locale of ['vi', 'en', 'ja', 'ko', 'zh'] as const) {
+        expect(I18N_MESSAGES[locale][option.labelKey]).withContext(`${locale} is missing ${option.labelKey}`).toBeDefined();
+      }
+    }
+  });
+
+  it('qbRelativeLabelKey covers every unit×direction the utils model allows', () => {
+    for (const unit of ['hour', 'day', 'week', 'month'] as const) {
+      for (const direction of ['previous', 'next'] as const) {
+        expect(I18N_MESSAGES.vi[qbRelativeLabelKey(unit, direction)])
+          .withContext(`vi is missing ${qbRelativeLabelKey(unit, direction)}`)
+          .toBeDefined();
+      }
+    }
   });
 });

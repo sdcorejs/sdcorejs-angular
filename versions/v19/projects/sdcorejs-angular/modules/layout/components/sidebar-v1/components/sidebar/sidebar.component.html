@@ -5,7 +5,7 @@
   <div class="wrapper" [style.height]="isMobile() ? '100dvh' : '100%'">
     <div class="c-header">
       <div class="c-logo">
-        <a href="javascript:;" aria-label="Trang chủ" (click)="openHomePage()">
+        <a href="javascript:;" [attr.aria-label]="'core.module.layout.home.tab-name' | translate" (click)="openHomePage()">
           @if (logoUrl(); as _logoUrl) {
             <img alt="" [src]="_logoUrl" />
           } @else {
@@ -25,7 +25,7 @@
               (mouseenter)="onMouseOverMenuGroupNode($event, pinnedMenuGroup())"
               (mouseleave)="onMouseLeaveMenuGroupNode($event, pinnedMenuGroup())"
               (click)="expandPinnedGroup()"
-              [matTooltip]="'Đã ghim'"
+              [matTooltip]="'core.module.layout.sidebar.pinned' | translate"
               [matTooltipClass]="'c-tooltip-menu-group-7a22ab15-0083-4d4c-9c0c-00a30bc8c140'"
               [matTooltipPosition]="'right'"
               style="padding: 0; margin: 0; border: none; background-color: transparent">
@@ -146,7 +146,10 @@
                           isPinnedNode(node) || isHoveredNode(node) ? sidebar().brandColor || 'var(--sd-primary, #005cbb)' : null
                         "
                         [attr.aria-pressed]="isPinnedNode(node)"
-                        [attr.aria-label]="node.title"
+                        [attr.aria-label]="
+                          (isPinnedNode(node) ? 'core.module.layout.menu.unpin' : 'core.module.layout.menu.pin')
+                            | translate: { title: node.title }
+                        "
                         (click)="onTogglePin($event, node)">
                         <sd-icon name="push_pin"></sd-icon>
                       </button>

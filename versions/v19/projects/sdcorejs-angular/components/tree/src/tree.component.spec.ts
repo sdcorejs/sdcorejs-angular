@@ -3,6 +3,7 @@ import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdTree } from './tree.component';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import {
@@ -849,6 +850,80 @@ describe('SdTree', () => {
       expect(fixture.componentInstance.expandedEvents).toEqual([]);
       expect(tree.visibleNodes().map(node => node.id)).toEqual(['l0', 'l1']);
       expect(text(fixture)).not.toContain('Level 2');
+    });
+  });
+
+  // Template đã dùng key `core.component.tree.retry` từ trước, nhưng nhãn screen-reader của nút
+  // gập/mở, message chọn và lỗi mặc định lại hardcode — một component hai ngôn ngữ, không dịch được.
+  describe('i18n', () => {
+    // why: `createFixture` mới gọi `TestBed.configureTestingModule`, nên KHÔNG được `TestBed.inject`
+    // trong `beforeEach` — inject sớm sẽ khởi tạo test module và làm configure sau đó ném lỗi.
+    // `setLanguage` ghi localStorage và `#resolveInitial` đọc lại, nên một spec chạy trước có thể để
+    // lại ngôn ngữ khác — chốt 'vi' rồi render lại để assertion không phụ thuộc thứ tự chạy.
+    const useI18n = (fixture: ComponentFixture<unknown>): I18nService => {
+      const i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+      fixture.detectChanges();
+      return i18n;
+    };
+
+    afterEach(() => {
+      TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+    });
+
+    it('falls back to the translated selection message and interpolates the count', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      const i18n = useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+      fixture.componentInstance.selector = { visible: true };
+      fixture.detectChanges();
+
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+      fixture.detectChanges();
+      expect(tree.selectionMessage()).toBe('Đã chọn 1 mục');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(tree.selectionMessage()).toBe('1 item(s) selected');
+    });
+
+    it('keeps a consumer-supplied selection message untouched', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+
+      tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+      fixture.detectChanges();
+      expect(tree.selectionMessage()).toBe('Đã chọn 1 dòng');
+    });
+
+    it('translates the expand / collapse toggle labels and writes them to aria-label', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      const i18n = useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+      const host = fixture.nativeElement as HTMLElement;
+
+      // root mở sẵn (defaultExpanded: 1) → nhãn là "thu gọn"
+      expect(toggle(host, 'root').getAttribute('aria-label')).toBe('Thu gọn mục');
+
+      await tree.toggle(tree.visibleNodes().find(node => node.id === 'root')!);
+      fixture.detectChanges();
+      expect(toggle(host, 'root').getAttribute('aria-label')).toBe('Mở rộng mục');
+
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(toggle(host, 'root').getAttribute('aria-label')).toBe('Expand tree item');
+    });
+
+    it('translates the default load-error message but keeps a real Error message intact', async () => {
+      const fixture = await createFixture(StaticHostComponent);
+      const i18n = useI18n(fixture);
+      const tree = treeComponent<NodeItem>(fixture);
+
+      expect(tree.errorMessage(null)).toBe('Không tải được dữ liệu cây');
+      expect(tree.errorMessage(new Error('boom'))).toBe('boom');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(tree.errorMessage(undefined)).toBe('Unable to load tree data');
     });
   });
 });

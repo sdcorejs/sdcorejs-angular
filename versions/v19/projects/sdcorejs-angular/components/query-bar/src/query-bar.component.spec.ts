@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { Operator } from '@sdcorejs/utils/models';
 
 import { SdQueryBar } from './query-bar.component';
@@ -947,6 +948,65 @@ describe('SdQueryBar (extras)', () => {
       fixture.detectChanges();
 
       expect(component.editingIndex()).toBe(0);
+    });
+  });
+
+  // `#i18n` được inject từ lâu nhưng KHÔNG hề được gọi — mọi chuỗi vẫn hardcode tiếng Việt.
+  // Nhóm spec này chốt rằng nó thực sự tham gia vào việc dựng chuỗi hiển thị.
+  describe('i18n — the injected I18nService actually drives the labels', () => {
+    let i18n: I18nService;
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    afterEach(() => {
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    it('resolves the search placeholder + add-filter tooltips from the catalogue', () => {
+      expect(component.searchPlaceholder()).toBe(i18n.t('core.component.query-bar.search-placeholder'));
+      expect(component.noFieldsLabel()).toBe(i18n.t('core.component.query-bar.no-fields'));
+      expect(component.addFilterLabel()).toBe(i18n.t('core.component.query-bar.add-filter'));
+    });
+
+    it('re-renders the search placeholder into the DOM after a language switch', () => {
+      fixture.componentRef.setInput('showSearch', true);
+      fixture.detectChanges();
+
+      const input = (): HTMLInputElement => fixture.nativeElement.querySelector('.c-search-input');
+      expect(input().placeholder).toBe('Tìm kiếm...');
+
+      i18n.setLanguage('en', { reload: false });
+      fixture.detectChanges();
+      expect(input().placeholder).toBe('Search...');
+    });
+
+    it('translates both branches of the add-filter tooltip', () => {
+      expect(component.noFieldsLabel()).toBe('Chưa cấu hình fields');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.noFieldsLabel()).toBe('No fields configured');
+      expect(component.addFilterLabel()).toBe('Add filter');
+    });
+
+    it('renders a boolean chip value through the catalogue, and lets the field override it', () => {
+      const field = { key: 'active', label: 'Active', type: 'boolean' } as SdQueryField;
+      fixture.componentRef.setInput('fields', [field]);
+      fixture.detectChanges();
+
+      const filter = { field: 'active', operator: 'EQUAL', data: true } as any;
+      expect(component.chipValueText(filter)).toBe('Có');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.chipValueText(filter)).toBe('Yes');
+      expect(component.chipValueText({ field: 'active', operator: 'EQUAL', data: false } as any)).toBe('No');
+
+      // consumer override vẫn thắng nhãn i18n mặc định
+      fixture.componentRef.setInput('fields', [{ ...field, trueLabel: 'ON', falseLabel: 'OFF' } as SdQueryField]);
+      fixture.detectChanges();
+      expect(component.chipValueText(filter)).toBe('ON');
     });
   });
 });

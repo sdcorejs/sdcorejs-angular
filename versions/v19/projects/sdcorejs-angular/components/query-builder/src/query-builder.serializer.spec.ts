@@ -1,5 +1,6 @@
 import { Filter } from '@sdcorejs/utils/models';
 import { QB_TODAY, qbNewGroup, qbNewRule, QbToken, SdQueryBuilderField } from './query-builder.model';
+import { I18N_MESSAGES } from '@sdcorejs/angular/i18n';
 import { filterToTokens, filterToTree, treeToFilter } from './query-builder.serializer';
 
 const FIELDS: SdQueryBuilderField[] = [
@@ -21,6 +22,16 @@ const FIELDS: SdQueryBuilderField[] = [
   { key: 'active', label: 'Kích hoạt', type: 'boolean', trueLabel: 'Có', falseLabel: 'Không' },
   { key: 'createdAt', label: 'Ngày tạo', type: 'date' },
 ];
+
+/**
+ * Translator dựng từ catalog `vi` thật.
+ * why: serializer nay nhận hàm dịch từ ngoài (component truyền `I18nService.t`); spec dùng đúng
+ * catalog đang ship để nhãn trong chuỗi view khớp với thứ người dùng thấy, thay vì hardcode lại.
+ */
+const t = (key: string, params?: Record<string, string | number>): string => {
+  const raw = I18N_MESSAGES.vi[key] ?? key;
+  return params ? raw.replace(/\{(\w+)\}/g, (m, name) => (name in params ? String(params[name]) : m)) : raw;
+};
 
 /** Join token texts back into the rendered raw string. */
 const render = (tokens: QbToken[]): string => tokens.map(t => t.text).join('');
@@ -165,10 +176,10 @@ describe('query-builder.serializer › filterToTree (roundtrip)', () => {
 });
 
 describe('query-builder.serializer › filterToTokens (SQL-ish, field = label)', () => {
-  const str = (f: Filter): string => render(filterToTokens(f, FIELDS));
+  const str = (f: Filter): string => render(filterToTokens(f, FIELDS, t));
 
   it('returns no tokens for null', () => {
-    expect(filterToTokens(null, FIELDS)).toEqual([]);
+    expect(filterToTokens(null, FIELDS, t)).toEqual([]);
   });
 
   it('renders EQUAL with a quoted string and the field label', () => {
@@ -234,7 +245,7 @@ describe('query-builder.serializer › filterToTokens (SQL-ish, field = label)',
   });
 
   it('tags operator and value tokens with distinct kinds for highlighting', () => {
-    const tokens = filterToTokens({ field: 'code', operator: 'EQUAL', data: 'ABC' } as any, FIELDS);
+    const tokens = filterToTokens({ field: 'code', operator: 'EQUAL', data: 'ABC' } as any, FIELDS, t);
     expect(tokens.some(t => t.kind === 'field' && t.text === 'Mã')).toBe(true);
     expect(tokens.some(t => t.kind === 'op' && t.text === '=')).toBe(true);
     expect(tokens.some(t => t.kind === 'value' && t.text === "'ABC'")).toBe(true);
@@ -246,7 +257,7 @@ describe('query-builder.serializer › filterToTokens (SQL-ish, field = label)',
 });
 
 describe('query-builder.serializer › relative dates', () => {
-  const str = (f: Filter): string => render(filterToTokens(f, FIELDS));
+  const str = (f: Filter): string => render(filterToTokens(f, FIELDS, t));
 
   it('emits a date-today value', () => {
     const tree = qbNewGroup('AND', [qbNewRule('createdAt', 'GREATER_THAN', QB_TODAY)]);
@@ -286,8 +297,8 @@ describe('query-builder.serializer › relative dates', () => {
     expect(f2).toEqual(f1 as any);
   });
 
-  it('renders date-today / date-relative values as readable Vietnamese', () => {
-    expect(str({ field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-today', data: 'TODAY' } as any)).toBe('Ngày tạo > hôm nay');
+  it('renders date-today / date-relative values through the injected translator', () => {
+    expect(str({ field: 'createdAt', operator: 'GREATER_THAN', dataType: 'date-today', data: 'TODAY' } as any)).toBe('Ngày tạo > Hôm nay');
     expect(
       str({
         field: 'createdAt',
@@ -304,6 +315,30 @@ describe('query-builder.serializer › relative dates', () => {
         data: { amount: 1, direction: 'next', unit: 'month' },
       } as any)
     ).toBe('Ngày tạo = 1 tháng tới');
+  });
+
+  it('renders the same value tokens in another language when handed another translator', () => {
+    // why: chốt rằng chuỗi view KHÔNG còn khoá cứng tiếng Việt — đổi translator là đổi ngôn ngữ.
+    const en = (key: string, params?: Record<string, string | number>): string => {
+      const raw = I18N_MESSAGES.en[key] ?? key;
+      return params ? raw.replace(/\{(\w+)\}/g, (m, name) => (name in params ? String(params[name]) : m)) : raw;
+    };
+    const filter = {
+      field: 'createdAt',
+      operator: 'LESS_THAN',
+      dataType: 'date-relative',
+      data: { amount: 3, direction: 'previous', unit: 'day' },
+    } as any;
+    expect(render(filterToTokens(filter, FIELDS, en))).toBe('Ngày tạo < 3 days ago');
+    expect(render(filterToTokens({ field: 'active', operator: 'EQUAL', data: true } as any, FIELDS, en))).toBe('Kích hoạt = Có');
+  });
+
+  it('falls back to raw i18n keys when called without a translator (pure-function use)', () => {
+    // why: `filterToTokens` vẫn phải gọi được ngoài Angular; khi đó nó trả key để việc thiếu bản
+    // dịch lộ ra ngay thay vì im lặng in ra tiếng Việt.
+    expect(render(filterToTokens({ field: 'createdAt', operator: 'EQUAL', dataType: 'date-today', data: 'TODAY' } as any, FIELDS))).toBe(
+      'Ngày tạo = core.component.query-builder.date-mode.now'
+    );
   });
 
   it('back-compat: seeds legacy { rel } payloads and re-emits the new dataType shape', () => {

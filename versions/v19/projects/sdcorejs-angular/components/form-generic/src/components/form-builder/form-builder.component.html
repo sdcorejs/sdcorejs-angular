@@ -119,7 +119,7 @@
     } @else {
       <header class="fb-canvas__header">
         <div class="fb-canvas__title">
-          <span>{{ 'core.component.form-builder.layout' | translate }}</span>
+          <span>{{ 'core.component.form-builder.canvas' | translate }}</span>
         </div>
         <div class="fb-canvas__actions">
           <!-- Toolbar cluster: view JSON / variables / validation -->
@@ -202,7 +202,7 @@
           (click)="clickFormContentEmpty()"
           (keydown.escape)="clickFormContentEmpty()"
           role="group"
-          [attr.aria-label]="'core.component.form-builder.layout' | translate">
+          [attr.aria-label]="'core.component.form-builder.canvas' | translate">
           @if (isPaletteEmptyDropTarget()) {
             <div class="fb-row-insert-placeholder fb-palette-drop-placeholder" [style.--fb-placeholder-columns]="12" aria-hidden="true">
               <ng-container *ngTemplateOutlet="dropPlaceholderTemplate; context: { $implicit: draggedPaletteItem() }"></ng-container>

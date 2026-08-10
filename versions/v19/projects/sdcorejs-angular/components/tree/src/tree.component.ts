@@ -22,7 +22,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdQuickAction } from '@sdcorejs/angular/components/quick-action';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdTreeItemDefDirective } from './tree-item-def.directive';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import {
@@ -112,6 +112,7 @@ const EMPTY_DESCENDANT_COUNTS: ReadonlyMap<string, number> = new Map<string, num
 })
 export class SdTree<T = any> {
   readonly #host = inject<ElementRef<HTMLElement>>(ElementRef);
+  readonly #i18n = inject(I18nService);
   readonly autoIdInput = input<string | undefined | null>(undefined, { alias: 'autoId' });
   readonly option = input<SdTreeComponentOption<T> | undefined>(undefined);
 
@@ -203,7 +204,9 @@ export class SdTree<T = any> {
     const items = this.selectedItems();
     const message = this.resolvedSelector()?.message;
     if (typeof message === 'function') return message(items);
-    return message || `Đã chọn ${items.length} mục`;
+    // why: số lượng phải là tham số nội suy, không nối chuỗi — mỗi ngôn ngữ đặt con số ở vị trí khác
+    // nhau ('Đã chọn 3 mục' / '3 item(s) selected' / '已选择 3 项').
+    return message || this.#i18n.t('core.component.tree.selected-count', { count: items.length });
   });
   readonly visibleSelectionActions = computed(() => {
     const items = this.selectedItems();
@@ -385,7 +388,10 @@ export class SdTree<T = any> {
   }
 
   errorMessage(error: unknown): string {
-    return error instanceof Error ? error.message : String(error || 'Unable to load tree data');
+    if (error instanceof Error) return error.message;
+    // why: thông điệp mặc định khi lỗi không mang message — chuỗi này hiện ra cho người dùng cuối
+    // nên phải theo ngôn ngữ đang chọn, không cứng tiếng Anh.
+    return error ? String(error) : this.#i18n.t('core.component.tree.load-error');
   }
 
   onRowFocus(node: SdTreeNode<T>): void {
@@ -535,7 +541,11 @@ export class SdTree<T = any> {
       selectionDisabled,
       selectionIndeterminate: this.#isSelectionIndeterminate(node, selectedIds, selector, selectedDescendants),
       toggleDisabled: !node.hasChildren || node.isLoading,
-      toggleLabel: node.loadError ? 'Retry loading tree item' : node.isExpanded ? 'Collapse tree item' : 'Expand tree item',
+      // why: nhãn nút gập/mở là tên khả truy cập cho screen reader — trước đây hardcode tiếng Anh
+      // trong một component mà template đã dùng key `core.component.tree.retry`, tức lẫn hai ngôn ngữ.
+      toggleLabel: this.#i18n.t(
+        node.loadError ? 'core.component.tree.retry-item' : node.isExpanded ? 'core.component.tree.collapse' : 'core.component.tree.expand'
+      ),
       ariaExpanded: node.hasChildren ? node.isExpanded : null,
       autoIds: this.#nodeAutoIds(node),
       commands: this.#commandViews(node, commands),

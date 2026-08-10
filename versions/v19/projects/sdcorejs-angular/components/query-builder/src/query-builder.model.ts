@@ -38,9 +38,9 @@ export interface SdQueryBuilderField {
   defaultOperator?: Operator;
   /** Options for `type: 'values'` — the select list + display-label lookup. */
   values?: SdQueryBuilderFieldOption[];
-  /** Label for the `true` branch of a boolean field (default `'Có'`). */
+  /** Label for the `true` branch of a boolean field (defaults to i18n `core.component.query-builder.boolean.true`). */
   trueLabel?: string;
-  /** Label for the `false` branch of a boolean field (default `'Không'`). */
+  /** Label for the `false` branch of a boolean field (defaults to i18n `core.component.query-builder.boolean.false`). */
   falseLabel?: string;
   /** Lower bound for number / date value editors. */
   min?: number | string;
@@ -266,44 +266,68 @@ export function qbDefaultRelative(): DateRelative {
   return { amount: 1, direction: 'previous', unit: 'day' };
 }
 
+// ---------------------------------------------------------------------------
+// Option tables — mỗi option mang KEY i18n, không mang nhãn đã dịch.
+//
+// why: các bảng này là hằng số cấp module, được đánh giá đúng MỘT lần lúc load module. Nhãn dịch
+// sẵn ở đây sẽ đóng băng theo ngôn ngữ tại thời điểm đó và không bao giờ phản ứng với
+// `I18nService.setLanguage()`. Giữ key ở đây rồi dịch lúc ĐỌC (computed trong component) để nhãn
+// bám theo ngôn ngữ hiện tại, đồng thời `computed` vẫn memo hoá nên tham chiếu mảng ổn định giữa
+// các chu kỳ change detection — điều kiện bắt buộc của `sd-select [items]` (xem `#booleanOptionsByKey`).
+// ---------------------------------------------------------------------------
+
 /** One date-mode option — carries a Material icon shown in the dropdown + selected trigger. */
 export interface QbDateModeOption {
   value: QbDateMode;
-  display: string;
+  /** i18n key of the label — resolved at read time, NOT at module-eval time. */
+  labelKey: string;
   /** Material icon name (outlined set). */
   icon: string;
 }
 
 /** Stable option list for the date-mode select (module ref — never reallocated). */
 export const QB_DATE_MODES: QbDateModeOption[] = [
-  { value: 'absolute', display: 'Ngày cụ thể', icon: 'event' },
-  { value: 'now', display: 'Hôm nay', icon: 'today' },
-  { value: 'relative', display: 'Tương đối', icon: 'history' },
+  { value: 'absolute', labelKey: 'core.component.query-builder.date-mode.absolute', icon: 'event' },
+  { value: 'now', labelKey: 'core.component.query-builder.date-mode.now', icon: 'today' },
+  { value: 'relative', labelKey: 'core.component.query-builder.date-mode.relative', icon: 'history' },
 ];
 
 /** One value-source option for field-to-field comparison UI. */
 export interface QbValueSourceOption {
   value: QbValueSource;
-  display: string;
+  /** i18n key of the label — resolved at read time, NOT at module-eval time. */
+  labelKey: string;
   /** Material icon name (outlined set). */
   icon: string;
 }
 
 /** Stable option list for choosing between a literal value and another field. */
 export const QB_VALUE_SOURCE_OPTIONS: QbValueSourceOption[] = [
-  { value: 'literal', display: 'Nhập giá trị', icon: 'edit_note' },
-  { value: 'field', display: 'Chọn trường', icon: 'view_column' },
+  { value: 'literal', labelKey: 'core.component.query-builder.value-source.literal', icon: 'edit_note' },
+  { value: 'field', labelKey: 'core.component.query-builder.value-source.field', icon: 'view_column' },
 ];
 
+/** One combined direction×unit option (token `'unit:direction'`). */
+export interface QbRelativeUnitOption {
+  value: string;
+  /** i18n key of the label — resolved at read time, NOT at module-eval time. */
+  labelKey: string;
+}
+
 /** Stable combined direction×unit option list (token `'unit:direction'`). */
-export const QB_RELATIVE_UNIT_OPTIONS: { value: string; display: string }[] = [
-  { value: 'day:previous', display: 'ngày trước' },
-  { value: 'day:next', display: 'ngày tới' },
-  { value: 'week:previous', display: 'tuần trước' },
-  { value: 'week:next', display: 'tuần tới' },
-  { value: 'month:previous', display: 'tháng trước' },
-  { value: 'month:next', display: 'tháng tới' },
+export const QB_RELATIVE_UNIT_OPTIONS: QbRelativeUnitOption[] = [
+  { value: 'day:previous', labelKey: 'core.component.query-builder.relative.day-previous' },
+  { value: 'day:next', labelKey: 'core.component.query-builder.relative.day-next' },
+  { value: 'week:previous', labelKey: 'core.component.query-builder.relative.week-previous' },
+  { value: 'week:next', labelKey: 'core.component.query-builder.relative.week-next' },
+  { value: 'month:previous', labelKey: 'core.component.query-builder.relative.month-previous' },
+  { value: 'month:next', labelKey: 'core.component.query-builder.relative.month-next' },
 ];
+
+/** i18n key of the combined `unit`×`direction` phrase for a relative-date offset. */
+export function qbRelativeLabelKey(unit: SdQbRelativeUnit, direction: SdQbRelativeDirection): string {
+  return `core.component.query-builder.relative.${unit}-${direction}`;
+}
 
 /** Shared empty option array — stable ref for fallbacks (avoids per-call allocation). */
 export const QB_EMPTY_OPTIONS: SdQueryBuilderFieldOption[] = [];

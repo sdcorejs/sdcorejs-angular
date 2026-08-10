@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdLayoutMenu, SdLayoutNavigationStateService, SdLayoutStorageService } from '../../services';
 import { SidebarV3Component } from './main.component';
 
@@ -142,5 +143,15 @@ describe('SidebarV3Component', () => {
     ) as HTMLInputElement;
     expect(input).not.toBeNull();
     expect(input.placeholder).toBe('Tìm trong tất cả menu');
+  });
+
+  // why: ba tiêu đề section trước đây là literal tiếng Việt trong template, không dịch được.
+  it('renders the all-menu section heading from the i18n catalogue', () => {
+    TestBed.inject(I18nService).setLanguage('vi', { reload: false });
+    create();
+
+    const headings = Array.from(fixture.nativeElement.querySelectorAll('h2')).map(h => (h as HTMLElement).textContent?.trim());
+    expect(headings).toContain('Tất cả menu');
+    expect(headings).not.toContain('');
   });
 });

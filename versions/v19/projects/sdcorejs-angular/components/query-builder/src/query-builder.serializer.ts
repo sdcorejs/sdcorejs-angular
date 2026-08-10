@@ -14,8 +14,19 @@ import {
   QbToken,
   qbNewGroup,
   qbNewRule,
+  qbRelativeLabelKey,
   SdQueryBuilderField,
 } from './query-builder.model';
+
+/**
+ * Hàm dịch một key i18n, do component truyền xuống.
+ * why: `filterToTokens` là hàm thuần cấp module nên không inject `I18nService` được; nhận translator
+ * qua tham số vẫn giữ được tính thuần mà bỏ được chuỗi tiếng Việt hardcode trong chuỗi view.
+ */
+export type QbTranslate = (key: string, params?: Record<string, string | number>) => string;
+
+/** Fallback khi caller không truyền translator: trả về chính key để thiếu i18n lộ ra, không im lặng. */
+const IDENTITY_TRANSLATE: QbTranslate = key => key;
 
 // SQL symbol for each single-value comparison operator.
 const SYMBOL: Partial<Record<Operator, string>> = {
@@ -181,22 +192,25 @@ function escapeStr(s: string): string {
   return s.replace(/'/g, "''");
 }
 
-const REL_UNIT_VI: Record<DateRelative['unit'], string> = { hour: 'giờ', day: 'ngày', week: 'tuần', month: 'tháng' };
-
-/** Render a relative-date offset as readable Vietnamese for the view string. */
-function formatRelative(v: DateRelative): string {
-  const unit = REL_UNIT_VI[v.unit] ?? REL_UNIT_VI.day;
-  const dir = v.direction === 'next' ? 'tới' : 'trước';
-  return `${v.amount} ${unit} ${dir}`;
+/** Render a relative-date offset as a readable phrase in the active language. */
+function formatRelative(v: DateRelative, t: QbTranslate): string {
+  // why: mỗi ngôn ngữ ghép `amount` với cụm đơn vị+hướng theo trật tự khác nhau ('3 ngày trước' /
+  // '3 days ago' / '3日前'), nên để catalog quyết định trật tự thay vì nối chuỗi cứng ở đây.
+  return t('core.component.query-builder.relative.format', {
+    amount: v.amount,
+    phrase: t(qbRelativeLabelKey(v.unit, v.direction)),
+  });
 }
 
 /** Format one scalar value for the view string — quoted/labelled per field type. */
-function formatScalar(field: SdQueryBuilderField | undefined, raw: any): string {
-  if (qbIsToday(raw)) return 'hôm nay';
-  if (qbIsRelativeDate(raw)) return formatRelative(raw);
+function formatScalar(field: SdQueryBuilderField | undefined, raw: any, t: QbTranslate): string {
+  if (qbIsToday(raw)) return t('core.component.query-builder.date-mode.now');
+  if (qbIsRelativeDate(raw)) return formatRelative(raw, t);
   if (raw === null || raw === undefined) return '';
   if (field?.type === 'boolean') {
-    return raw ? (field.trueLabel ?? 'Có') : (field.falseLabel ?? 'Không');
+    return raw
+      ? (field.trueLabel ?? t('core.component.query-builder.boolean.true'))
+      : (field.falseLabel ?? t('core.component.query-builder.boolean.false'));
   }
   if (field?.type === 'values') {
     const opt = field.values?.find(o => o.value === raw);
@@ -221,7 +235,7 @@ function operatorToken(operator: Operator): string {
   return SYMBOL[operator] ?? operator;
 }
 
-function ruleTokens(filter: any, fields: SdQueryBuilderField[]): QbToken[] {
+function ruleTokens(filter: any, fields: SdQueryBuilderField[], t: QbTranslate): QbToken[] {
   const field = fields.find(f => f.key === filter.field);
   const out: QbToken[] = [{ kind: 'field', text: field?.label ?? String(filter.field) }];
   const sp = () => out.push({ kind: 'plain', text: ' ' });
@@ -237,9 +251,9 @@ function ruleTokens(filter: any, fields: SdQueryBuilderField[]): QbToken[] {
     sp();
     out.push({ kind: 'op', text: 'between' });
     sp();
-    out.push({ kind: 'value', text: formatScalar(field, filter.data?.from) });
+    out.push({ kind: 'value', text: formatScalar(field, filter.data?.from, t) });
     out.push({ kind: 'plain', text: ' and ' });
-    out.push({ kind: 'value', text: formatScalar(field, filter.data?.to) });
+    out.push({ kind: 'value', text: formatScalar(field, filter.data?.to, t) });
     return out;
   }
 
@@ -248,7 +262,7 @@ function ruleTokens(filter: any, fields: SdQueryBuilderField[]): QbToken[] {
     out.push({ kind: 'op', text: operator === 'IN' ? 'in' : 'not in' });
     sp();
     const arr: any[] = Array.isArray(filter.data) ? filter.data : [];
-    out.push({ kind: 'value', text: `(${arr.map((v: any) => formatScalar(field, v)).join(', ')})` });
+    out.push({ kind: 'value', text: `(${arr.map((v: any) => formatScalar(field, v, t)).join(', ')})` });
     return out;
   }
 
@@ -272,16 +286,16 @@ function ruleTokens(filter: any, fields: SdQueryBuilderField[]): QbToken[] {
   sp();
   out.push({ kind: 'op', text: operatorToken(operator) });
   sp();
-  out.push({ kind: 'value', text: formatScalar(field, filter.data) });
+  out.push({ kind: 'value', text: formatScalar(field, filter.data, t) });
   return out;
 }
 
-function tokensFor(filter: Filter, fields: SdQueryBuilderField[]): QbToken[] {
+function tokensFor(filter: Filter, fields: SdQueryBuilderField[], t: QbTranslate): QbToken[] {
   if (isAndOr(filter)) {
     const out: QbToken[] = [];
     filter.data.forEach((child, i) => {
       if (i > 0) out.push({ kind: 'logic', text: ` ${filter.operator.toLowerCase()} ` });
-      const childTokens = tokensFor(child, fields);
+      const childTokens = tokensFor(child, fields, t);
       // Wrap a nested multi-child group in parentheses; a single-child group needs none.
       if (isAndOr(child) && child.data.length > 1) {
         out.push({ kind: 'paren', text: '(' }, ...childTokens, { kind: 'paren', text: ')' });
@@ -291,7 +305,7 @@ function tokensFor(filter: Filter, fields: SdQueryBuilderField[]): QbToken[] {
     });
     return out;
   }
-  return ruleTokens(filter, fields);
+  return ruleTokens(filter, fields, t);
 }
 
 /**
@@ -303,9 +317,16 @@ function tokensFor(filter: Filter, fields: SdQueryBuilderField[]): QbToken[] {
  *
  * @param filter - the `Filter` to render, or `null` / `undefined`.
  * @param fields - field metadata, used to resolve each field key to its display label + value formatting.
+ * @param translate - i18n lookup for language-dependent value tokens (today / relative offsets /
+ *   boolean labels). Optional so the serializer stays callable outside an Angular injection context;
+ *   omitting it renders the raw i18n keys.
  * @returns the ordered tokens, or `[]` when `filter` is empty.
  */
-export function filterToTokens(filter: Filter | null | undefined, fields: SdQueryBuilderField[]): QbToken[] {
+export function filterToTokens(
+  filter: Filter | null | undefined,
+  fields: SdQueryBuilderField[],
+  translate: QbTranslate = IDENTITY_TRANSLATE
+): QbToken[] {
   if (!filter) return [];
-  return tokensFor(filter, fields);
+  return tokensFor(filter, fields, translate);
 }

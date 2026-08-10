@@ -9,7 +9,7 @@ import { MatTreeModule, MatTreeNestedDataSource } from '@angular/material/tree';
 import { NavigationEnd, Params, Router, RouterModule } from '@angular/router';
 
 import { SdInput, SdSuffixDefDirective } from '@sdcorejs/angular/forms';
-import { TranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
 import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { StringUtilities } from '@sdcorejs/utils/fns';
@@ -52,6 +52,7 @@ export class SidebarComponent {
   #layoutStorageService = inject(SdLayoutStorageService);
   #navigationState = inject(SdLayoutNavigationStateService);
   #menuFocusPipe = inject(MenuFocusPipe);
+  #i18n = inject(I18nService);
   #window = inject(DOCUMENT).defaultView;
   #destroyRef = inject(DestroyRef); // Dùng để unsubscribe RxJS tự động
 
@@ -79,9 +80,11 @@ export class SidebarComponent {
   menusByGroup = signal<SdLayoutMenu[]>([]);
   #hoveredMenuNodeKey = signal<string | null>(null);
   #pinIconHoverTimerId = signal<ReturnType<typeof setTimeout> | null>(null);
+  // why: `title` của nhóm ghim là nhãn HIỂN THỊ (đổ vào `titleMenuGroup` trên header), không phải
+  // id — phải dịch. Tính trong computed nên đổi ngôn ngữ là tiêu đề nhóm đổi theo.
   pinnedMenuGroup = computed<SdLayoutChildrenMenu>(() => ({
     id: 'pinned-menu-group',
-    title: 'Đã ghim',
+    title: this.#i18n.t('core.module.layout.sidebar.pinned'),
     children: this.#navigationState.pinnedMenus(),
   }));
 

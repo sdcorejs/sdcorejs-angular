@@ -12,6 +12,8 @@
 @let _editingIndex = editingIndex();
 @let _resolvedMode = resolvedMode();
 @let _resolvedShowOperatorOnChip = resolvedShowOperatorOnChip();
+@let _noFieldsLabel = noFieldsLabel();
+@let _addFilterLabel = addFilterLabel();
 
 <div
   class="c-query-bar"
@@ -32,7 +34,7 @@
         [ngModel]="search()"
         (ngModelChange)="setSearch($event)"
         (keydown.enter)="triggerApply()"
-        placeholder="Tìm kiếm..." />
+        [placeholder]="searchPlaceholder()" />
     </div>
     <span class="c-divider" aria-hidden="true"></span>
   }
@@ -114,7 +116,7 @@
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
       [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
-      [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   } @else {
@@ -145,7 +147,7 @@
       class="c-add-filter"
       [matMenuTriggerFor]="addPicker.menu()"
       [disabled]="_resolvedFields.length === 0 || _usedFieldKeys.size >= _resolvedFields.length"
-      [matTooltip]="_resolvedFields.length === 0 ? 'Chưa cấu hình fields' : 'Thêm filter'">
+      [matTooltip]="_resolvedFields.length === 0 ? _noFieldsLabel : _addFilterLabel">
       <sd-icon name="add"></sd-icon>
     </button>
   }

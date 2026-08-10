@@ -357,3 +357,23 @@ External: `@sdcorejs/utils` `^1.1.2` (`OPERATORS` table + `BETWEEN` icon).
 
 - **Chip popover** (`<sd-query-chip-popover>`): the header and body wrappers are `role="group"`. They exist only to stop clicks from closing the `mat-menu`, so they must not become tab stops — Tab goes straight to the operator picker and value editors. They now also stop Enter for the same reason; Escape and arrow keys still bubble so the menu closes / navigates normally.
 - **Inline value chip** (`<sd-query-inline-value-chip>`): the pill shell is `role="group"` labelled with the field name. Its click-to-focus affordance is mirrored on Enter through the same handler, which already skips events originating from the inner `<input>` or from the remove `×` button.
+
+## i18n
+
+Every string the bar renders itself resolves through `I18nService`. The bar and its children expose the labels
+as `computed()` signals (not the `translate` pipe) because the pipe is pure and would not refresh on a runtime
+`setLanguage()`:
+
+| What                                        | Key                                             | Owner                     |
+| ------------------------------------------- | ----------------------------------------------- | ------------------------- |
+| Free-text search placeholder                | `core.component.query-bar.search-placeholder`   | `searchPlaceholder()`     |
+| Add-filter tooltip, no fields configured    | `core.component.query-bar.no-fields`            | `noFieldsLabel()`         |
+| Add-filter tooltip, normal state            | `core.component.query-bar.add-filter`           | `addFilterLabel()`        |
+| Clear-all tooltip (interpolates `{count}`)  | `core.component.query-bar.clear-all`            | `clearAllLabel()` (actions bar) |
+| Search trigger tooltip                      | `core.component.query-bar.search`               | `searchLabel()` (actions bar)   |
+| AND/OR group `aria-label`                   | `core.component.query-bar.logic-operator`       | `logicGroupLabel()` (actions bar) |
+| Boolean chip value, default true / false    | `core.component.query-bar.boolean.true` / `.false` | `chipValueText()`, plus the build chip and inline chip toggle buttons (same keys, so one field never shows two languages) |
+| Seamless value placeholder (number / text)  | `core.component.query-bar.placeholder.value` / `.text` | inline value chip `ph()` |
+| BETWEEN from / to placeholders              | `core.component.query-bar.placeholder.from-number` / `.to-number` / `.from-text` / `.to-text` | inline value chip `phFrom()` / `phTo()` |
+
+`SdQueryField.trueLabel` / `falseLabel` still override the boolean defaults when a field supplies them.

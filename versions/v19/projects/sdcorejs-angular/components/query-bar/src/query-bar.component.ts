@@ -201,6 +201,21 @@ export class SdQueryBar {
   // Derived state
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // Nhãn i18n cho template
+  // why: `#i18n` trước đây được inject nhưng KHÔNG dùng — mọi chuỗi trong template đều hardcode
+  // tiếng Việt. Bọc qua `computed()` thay vì pipe `translate` vì pipe là pure: nó chỉ chạy lại khi
+  // input đổi tham chiếu, nên đổi ngôn ngữ runtime không refresh được. `t()` đọc signal `messages()`
+  // nên computed tự invalidate khi `I18nService.setLanguage()` chạy.
+  // ---------------------------------------------------------------------------
+
+  /** Placeholder của ô tìm kiếm tự do bên trái. */
+  readonly searchPlaceholder = computed(() => this.#i18n.t('core.component.query-bar.search-placeholder'));
+  /** Tooltip nút "+" khi consumer chưa khai `fields`. */
+  readonly noFieldsLabel = computed(() => this.#i18n.t('core.component.query-bar.no-fields'));
+  /** Tooltip nút "+" ở trạng thái bình thường. */
+  readonly addFilterLabel = computed(() => this.#i18n.t('core.component.query-bar.add-filter'));
+
   /** Map of `field.key` → `SdQueryField` for fast lookup from filters[]. */
   readonly resolvedAutoId = computed(() => this.option()?.autoId ?? this.autoIdInput() ?? undefined);
   readonly resolvedFields = computed(() => this.option()?.fields ?? this.fields());
@@ -611,8 +626,10 @@ export class SdQueryBar {
     const field = this.fieldByKey()[fieldKey];
     if (!field) return String(raw);
     if (field.type === 'boolean') {
-      const trueLabel = (field as any).trueLabel ?? 'Có';
-      const falseLabel = (field as any).falseLabel ?? 'Không';
+      // why: nhãn mặc định của field boolean phải theo ngôn ngữ đang chọn; consumer vẫn override
+      // được bằng `trueLabel` / `falseLabel` trên chính field.
+      const trueLabel = (field as any).trueLabel ?? this.#i18n.t('core.component.query-bar.boolean.true');
+      const falseLabel = (field as any).falseLabel ?? this.#i18n.t('core.component.query-bar.boolean.false');
       return raw ? trueLabel : falseLabel;
     }
     if (field.type === 'values' || field.type === 'lazy-values') {

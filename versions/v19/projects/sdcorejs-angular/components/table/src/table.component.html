@@ -69,7 +69,7 @@
          reader không được báo gì cả. role="status" + aria-live="polite" đọc trạng thái ngay khi
          spinner xuất hiện; aria-busy trên vùng bảng cho biết nội dung đang được thay thế. -->
     @if (_loading) {
-      <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.data-state.loading.title' | translate">
+      <div class="c-loading" role="status" aria-live="polite" [attr.aria-label]="'core.component.table.loading' | translate">
         <mat-spinner></mat-spinner>
       </div>
     }

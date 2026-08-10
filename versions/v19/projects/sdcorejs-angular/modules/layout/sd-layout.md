@@ -329,6 +329,26 @@ Labels are translated in all five bundled locales (English: "Home" / "Access Den
 - Motion used for preview/sidebar transitions is removed when `prefers-reduced-motion: reduce` is active.
 - Keep menu titles meaningful and unique; icons are supplementary and must not be the only accessible label.
 
+## i18n
+
+Chrome the layout owns (as opposed to consumer-supplied menu titles) resolves through `I18nService`:
+
+| What                                                               | Key                                   |
+| ------------------------------------------------------------------ | ------------------------------------- |
+| "Pinned" heading (v1 tooltip + group title, v3, mobile v3)         | `core.module.layout.sidebar.pinned`   |
+| "Recent" heading (v3, mobile v3)                                   | `core.module.layout.sidebar.recent`   |
+| "All menus" heading (v3, mobile v3)                                | `core.module.layout.sidebar.all-menu` |
+| Pin toggle `aria-label` (shared `menu-tree`, v1 sidebar)           | `core.module.layout.menu.pin`         |
+| Unpin toggle `aria-label` (shared `menu-tree`, v1 sidebar)         | `core.module.layout.menu.unpin`       |
+| Home link `aria-label` on the v1 logo                              | `core.module.layout.home.tab-name`    |
+
+`menu.pin` / `menu.unpin` interpolate `{title}` (the menu's own title) so each locale places the verb and the
+name in its own order — the previous `'Pin ' + title` concatenation forced English word order everywhere. The
+label is built inside the `nodes` / `pinnedMenuGroup` computeds, so it follows a language change.
+
+`SdLayoutService` deliberately keeps its "SD_LAYOUT_CONFIGURATION was not provided" throw/warn out of the
+catalogue: those are developer diagnostics, not user-facing copy (marked `@i18n-ignore` in the source).
+
 ## Notes and anti-patterns
 
 - Do not pass an Observable directly to `userInfo` or `sidebar`; pass a value or a function returning a supported `MaybeAsync` value.

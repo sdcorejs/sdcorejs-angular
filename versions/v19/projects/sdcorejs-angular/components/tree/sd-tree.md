@@ -254,6 +254,22 @@ tree.retry();
 
 Filtering searches loaded items only. Text is normalized to Vietnamese without accents, so `ke toan` matches labels with Vietnamese accents.
 
+## i18n
+
+Every string the component renders itself goes through `I18nService`, so it follows the active language:
+
+| What                                     | Key                                  | Notes                                                                     |
+| ---------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------- |
+| Retry button in the root error state     | `core.component.tree.retry`          | Template, via the `translate` pipe.                                       |
+| Default selection message                | `core.component.tree.selected-count` | Interpolates `{count}`. Used only when `selector.message` is not supplied. |
+| Toggle `aria-label`, collapsed node      | `core.component.tree.expand`         |                                                                           |
+| Toggle `aria-label`, expanded node       | `core.component.tree.collapse`       |                                                                           |
+| Toggle `aria-label`, node failed to load | `core.component.tree.retry-item`     |                                                                           |
+| `errorMessage()` fallback                | `core.component.tree.load-error`     | Used only when the thrown value carries no message of its own.            |
+
+`selector.message` (string or `(items) => string`) still wins over `core.component.tree.selected-count` — supply
+it when the host wants its own wording. `errorMessage()` returns `error.message` verbatim for a real `Error`.
+
 ## Visual cues
 
 - Vertical list of tree rows with indentation per level (`indentSize`, default 20px).

@@ -21,6 +21,11 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
   get #defaultTooltip(): string {
     return this.#i18n.t('core.directive.hover-copy.tooltip');
   }
+  // why: tooltip mặc định đã đi qua I18nService từ trước, riêng phản hồi sau khi copy vẫn cứng
+  // 'Copied' — cùng một tooltip mà hai ngôn ngữ. Đọc lúc hiển thị để bám ngôn ngữ hiện tại.
+  get #copiedTooltip(): string {
+    return this.#i18n.t('core.directive.hover-copy.copied');
+  }
 
   /** Inserted by Angular inject() migration for backwards compatibility */
   constructor(...args: unknown[]);
@@ -122,7 +127,7 @@ export class SdHoverCopyDirective implements OnInit, OnChanges {
       const copyText = this.copyText();
       if (copyText && !this.sdHoverCopyDisabled()) {
         BrowserUtilities.copyToClipboard(String(copyText));
-        this.#showTooltip('Copied');
+        this.#showTooltip(this.#copiedTooltip);
         this.#clearHideTooltipTimer();
         this.#hideTooltipTimer = setTimeout(() => {
           this.#hideTooltipTimer = null;

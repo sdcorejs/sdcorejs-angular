@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 import { SdQueryBuilder } from './query-builder.component';
 import { QbGroup, QbRule, SdQueryBuilderField } from './query-builder.model';
@@ -515,9 +516,91 @@ describe('SdQueryBuilder', () => {
     });
 
     it('exposes stable option lists for the template', () => {
-      expect(component.dateModes).toBe(component.dateModes);
-      expect(component.relativeUnitOptions).toBe(component.relativeUnitOptions);
-      expect(component.dateModes.map(m => m.value)).toEqual(['absolute', 'now', 'relative']);
+      // why: `[items]` của sd-select phải nhận CÙNG một tham chiếu giữa các chu kỳ CD, nếu không
+      // `toObservable(items)` → `markForCheck()` sẽ lặp vô hạn. Computed memo hoá nên hai lần đọc
+      // liên tiếp (ngôn ngữ không đổi) phải trả về đúng một mảng.
+      expect(component.dateModes()).toBe(component.dateModes());
+      expect(component.relativeUnitOptions()).toBe(component.relativeUnitOptions());
+      expect(component.dateModes().map(m => m.value)).toEqual(['absolute', 'now', 'relative']);
+    });
+  });
+
+  // Chuyển nhãn từ "dịch lúc module-eval" sang "dịch lúc đọc".
+  describe('i18n — option labels resolve at read time', () => {
+    let i18n: I18nService;
+
+    beforeEach(() => {
+      i18n = TestBed.inject(I18nService);
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    afterEach(() => {
+      i18n.setLanguage('vi', { reload: false });
+    });
+
+    it('date-mode labels follow the active language', () => {
+      expect(component.dateModes().map(m => m.display)).toEqual(['Ngày cụ thể', 'Hôm nay', 'Tương đối']);
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.dateModes().map(m => m.display)).toEqual(['Specific date', 'Today', 'Relative']);
+
+      i18n.setLanguage('ja', { reload: false });
+      expect(component.dateModes().map(m => m.display)).toEqual(['指定した日付', '今日', '相対']);
+    });
+
+    it('value-source + relative-unit labels follow the active language', () => {
+      expect(component.valueSourceOptions().map(o => o.display)).toEqual(['Nhập giá trị', 'Chọn trường']);
+      expect(component.relativeUnitOptions()[0].display).toBe('ngày trước');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.valueSourceOptions().map(o => o.display)).toEqual(['Enter a value', 'Compare with field']);
+      expect(component.relativeUnitOptions()[0].display).toBe('days ago');
+    });
+
+    it('hands a NEW array ref after a language switch, but keeps it stable within one language', () => {
+      // why: hai yêu cầu ngược nhau phải cùng đúng — ổn định giữa các CD (chống vòng lặp OOM của
+      // sd-select) NHƯNG phải đổi khi ngôn ngữ đổi (nếu không nhãn cũ kẹt lại trên UI).
+      const viRef = component.dateModes();
+      expect(component.dateModes()).toBe(viRef);
+
+      i18n.setLanguage('en', { reload: false });
+      const enRef = component.dateModes();
+      expect(enRef).not.toBe(viRef);
+      expect(component.dateModes()).toBe(enRef);
+    });
+
+    it('boolean value options fall back to translated labels and follow the language', () => {
+      const booleanField = FIELDS.find(f => f.key === 'active')!;
+      expect(component.booleanItems(booleanField).map(o => o.display)).toEqual(['Có', 'Không']);
+
+      i18n.setLanguage('en', { reload: false });
+      expect(component.booleanItems(booleanField).map(o => o.display)).toEqual(['Yes', 'No']);
+    });
+
+    it('view-mode tokens follow the active language', () => {
+      fixture.componentRef.setInput('mode', 'view');
+      fixture.componentRef.setInput('value', {
+        operator: 'AND',
+        data: [
+          { field: 'createdAt', operator: 'LESS_THAN', dataType: 'date-relative', data: { amount: 3, direction: 'previous', unit: 'day' } },
+        ],
+      } as any);
+      fixture.detectChanges();
+
+      expect(
+        component
+          .tokens()
+          .map(t => t.text)
+          .join('')
+      ).toBe('Ngày tạo < 3 ngày trước');
+
+      i18n.setLanguage('en', { reload: false });
+      expect(
+        component
+          .tokens()
+          .map(t => t.text)
+          .join('')
+      ).toBe('Ngày tạo < 3 days ago');
     });
   });
 });

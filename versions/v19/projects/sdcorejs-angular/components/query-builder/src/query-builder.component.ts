@@ -1,5 +1,17 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, Component, booleanAttribute, computed, effect, input, model, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  booleanAttribute,
+  computed,
+  effect,
+  inject,
+  input,
+  model,
+  signal,
+  untracked,
+} from '@angular/core';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
 import { SdInput } from '@sdcorejs/angular/forms/input';
@@ -63,6 +75,8 @@ const QB_EMPTY_FIELDS: SdQueryBuilderField[] = [];
   styleUrl: './query-builder.component.scss',
 })
 export class SdQueryBuilder {
+  readonly #i18n = inject(I18nService);
+
   // -------------------------------------------------------------------------
   // Inputs
   // -------------------------------------------------------------------------
@@ -133,20 +147,43 @@ export class SdQueryBuilder {
     for (const f of this.resolvedFields()) {
       if (f.type === 'boolean') {
         map.set(f.key, [
-          { value: true, display: f.trueLabel ?? 'Có' },
-          { value: false, display: f.falseLabel ?? 'Không' },
+          { value: true, display: f.trueLabel ?? this.#i18n.t('core.component.query-builder.boolean.true') },
+          { value: false, display: f.falseLabel ?? this.#i18n.t('core.component.query-builder.boolean.false') },
         ]);
       }
     }
     return map;
   });
 
+  // -------------------------------------------------------------------------
+  // Option lists — dịch lúc ĐỌC, không phải lúc module được đánh giá.
+  //
+  // why: bảng hằng số trong `query-builder.model.ts` chỉ giữ `labelKey`; `computed` ở đây mới sinh
+  // ra `display`. Nhờ vậy đổi ngôn ngữ là nhãn đổi theo (computed phụ thuộc signal `messages()` bên
+  // trong `I18nService.t`), mà tham chiếu mảng vẫn ỔN ĐỊNH giữa các chu kỳ change detection vì
+  // computed chỉ tính lại khi ngôn ngữ đổi — bắt buộc, nếu không `sd-select` sẽ rơi lại vào vòng lặp
+  // `toObservable(items)` → `markForCheck()` → CD mới → mảng mới (xem `#booleanOptionsByKey`).
+  // -------------------------------------------------------------------------
+
   /** Stable option list for the date-mode select. */
-  readonly dateModes = QB_DATE_MODES;
+  readonly dateModes = computed(() => QB_DATE_MODES.map(o => ({ ...o, display: this.#i18n.t(o.labelKey) })));
   /** Stable option list for the literal-vs-field operand select. */
-  readonly valueSourceOptions = QB_VALUE_SOURCE_OPTIONS;
+  readonly valueSourceOptions = computed(() => QB_VALUE_SOURCE_OPTIONS.map(o => ({ ...o, display: this.#i18n.t(o.labelKey) })));
   /** Stable combined unit×direction option list for the relative select. */
-  readonly relativeUnitOptions = QB_RELATIVE_UNIT_OPTIONS;
+  readonly relativeUnitOptions = computed(() => QB_RELATIVE_UNIT_OPTIONS.map(o => ({ ...o, display: this.#i18n.t(o.labelKey) })));
+
+  // Nhãn i18n tĩnh của template (placeholder / title / aria-label / trạng thái rỗng).
+  readonly selectFieldLabel = computed(() => this.#i18n.t('core.component.query-builder.select-field'));
+  readonly valueLabel = computed(() => this.#i18n.t('core.component.query-builder.value'));
+  readonly fromLabel = computed(() => this.#i18n.t('core.component.query-builder.from'));
+  readonly toLabel = computed(() => this.#i18n.t('core.component.query-builder.to'));
+  readonly addLabel = computed(() => this.#i18n.t('core.component.query-builder.add'));
+  readonly addNodeLabel = computed(() => this.#i18n.t('core.component.query-builder.add-node'));
+  readonly conditionLabel = computed(() => this.#i18n.t('core.component.query-builder.condition'));
+  readonly groupLabel = computed(() => this.#i18n.t('core.component.query-builder.group'));
+  readonly removeGroupLabel = computed(() => this.#i18n.t('core.component.query-builder.remove-group'));
+  readonly removeConditionLabel = computed(() => this.#i18n.t('core.component.query-builder.remove-condition'));
+  readonly emptyLabel = computed(() => this.#i18n.t('core.component.query-builder.empty'));
 
   readonly #compareFieldsByKey = computed<Map<string, SdQueryBuilderField[]>>(() => {
     const fields = this.resolvedFields();
@@ -173,8 +210,16 @@ export class SdQueryBuilder {
     return map;
   });
 
-  /** View-mode token stream — recomputed from the emitted value. */
-  readonly tokens = computed<QbToken[]>(() => filterToTokens(this.option()?.value ?? this.value(), this.resolvedFields()));
+  /**
+   * Translator handed to the serializer.
+   * why: `filterToTokens` là hàm thuần cấp module, không inject được. Truyền hàm dịch vào để chuỗi
+   * view-mode ("hôm nay", "3 ngày trước", "Có"/"Không") không còn hardcode tiếng Việt. Trường ổn
+   * định (không tạo mới mỗi lần gọi) để `computed` bên dưới không phụ thuộc tham chiếu mới.
+   */
+  readonly #translate = (key: string, params?: Record<string, string | number>): string => this.#i18n.t(key, params);
+
+  /** View-mode token stream — recomputed from the emitted value (and from the active language). */
+  readonly tokens = computed<QbToken[]>(() => filterToTokens(this.option()?.value ?? this.value(), this.resolvedFields(), this.#translate));
 
   readonly isView = computed(() => this.resolvedMode() === 'view');
 
