@@ -48,6 +48,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -117,6 +118,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
   #el = inject(ElementRef);
   readonly #i18n = inject(I18nService);
+  // why: focus/mở panel + focus ô search đều hoãn 100ms; handle phải bị clear khi destroy,
+  // nếu không callback vẫn chạm selectRef/matInputRef của view đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 2. SIGNAL INPUTS & MODEL
@@ -731,7 +735,9 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   focus = () => {
     this.focused.set(true);
     this.updatePanelWidth();
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef. Mở panel trên mat-select đã
+    // destroy sẽ dựng overlay mồ côi không ai đóng.
+    this.#timers.schedule(() => {
       this.selectRef()?.focus();
       this.selectRef()?.open();
     }, 100);
@@ -763,7 +769,8 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
     if (isOpened) {
       this.focused.set(true);
       this.clearSearch();
-      setTimeout(() => this.matInputRef()?.focus(), 100);
+      // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+      this.#timers.schedule(() => this.matInputRef()?.focus(), 100);
       this.#hashedValue = Utilities.hash({ value: this.formControl.value });
     } else {
       this.focused.set(false);

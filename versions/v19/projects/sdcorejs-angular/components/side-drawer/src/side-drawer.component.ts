@@ -23,6 +23,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 import { fromEvent, merge, Observable, Subject } from 'rxjs';
 import { map, takeUntil, startWith, distinctUntilChanged } from 'rxjs/operators';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdBodyScrollLockService } from './body-scroll-lock.service';
 
 export type SdSideDrawerBeforeClose = () => boolean | Promise<boolean>;
 
@@ -65,7 +66,9 @@ export class SdSideDrawer {
 
   isHovered$!: Observable<boolean>;
   #destroy$ = new Subject<void>();
-  #previousBodyOverflow: string | null = null;
+  // Instance này có đang giữ 1 khoá scroll hay không — giữ cho lock/release luôn cân bằng
+  // dù open()/close() bị gọi lặp.
+  #holdsScrollLock = false;
   #closeRequest?: Promise<boolean>;
 
   #viewContainerRef = inject(ViewContainerRef);
@@ -74,6 +77,7 @@ export class SdSideDrawer {
   #ref = inject(ChangeDetectorRef);
   #loadingService = inject(SdLoadingService);
   #destroyRef = inject(DestroyRef);
+  #scrollLock = inject(SdBodyScrollLockService);
 
   constructor() {
     // Thay thế ngAfterViewInit, tự động chạy nội dung này khi DOM sẵn sàng để render
@@ -95,13 +99,8 @@ export class SdSideDrawer {
         this.#embeddedViewRef.destroy();
       }
 
-      if (this.#isOpenedSignal()) {
-        if (this.#previousBodyOverflow !== null) {
-          document.body.style.overflow = this.#previousBodyOverflow;
-        } else {
-          document.body.style.overflow = '';
-        }
-      }
+      // Destroy khi đang mở cũng phải nhả khoá, nếu không ref-count kẹt > 0 và trang khoá scroll mãi.
+      this.#releaseScrollLock();
     });
   }
 
@@ -109,9 +108,8 @@ export class SdSideDrawer {
     this.#ref.markForCheck();
     this.#isOpenedSignal.set(true);
 
-    // Chặn scroll ở document body
-    this.#previousBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    // Chặn scroll ở document body qua khoá ref-count dùng chung (stack-safe với drawer lồng nhau)
+    this.#acquireScrollLock();
   };
 
   close = () => {
@@ -155,14 +153,21 @@ export class SdSideDrawer {
     this.sdClosed.emit();
     this.stopLoading();
 
-    // Khôi phục lại scroll ở document body
-    if (this.#previousBodyOverflow !== null) {
-      document.body.style.overflow = this.#previousBodyOverflow;
-      this.#previousBodyOverflow = null;
-    } else {
-      document.body.style.overflow = '';
-    }
+    // Khôi phục lại scroll ở document body (chỉ thật sự khôi phục khi drawer cuối cùng nhả khoá)
+    this.#releaseScrollLock();
   };
+
+  #acquireScrollLock(): void {
+    if (this.#holdsScrollLock) return;
+    this.#holdsScrollLock = true;
+    this.#scrollLock.lock();
+  }
+
+  #releaseScrollLock(): void {
+    if (!this.#holdsScrollLock) return;
+    this.#holdsScrollLock = false;
+    this.#scrollLock.release();
+  }
 
   startLoading = () => {
     this.#isLoadingSignal.set(true);

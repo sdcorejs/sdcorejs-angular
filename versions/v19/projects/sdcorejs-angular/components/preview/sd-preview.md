@@ -157,6 +157,10 @@ Every blob URL created by the component is tracked in an internal `Set<string>` 
 
 CDN strings passed in by the caller are NOT revoked — the component owns only the blobs it itself created via `URL.createObjectURL`.
 
+### SSR / document access
+
+`<sd-preview-image>` reaches the DOM only through the injected `DOCUMENT` token (fullscreen listener, fullscreen state, download anchor) — it never touches the global `document`, so the constructor is safe to run during server rendering. The `fullscreenchange` listener is registered in the constructor and removed in `DestroyRef.onDestroy`.
+
 ## Examples
 
 ### 1. Inline gallery inside a page section (consumer provides a height)

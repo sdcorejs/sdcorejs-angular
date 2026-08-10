@@ -794,3 +794,52 @@ describe('SdDate (partial input is not a date)', () => {
     expect(comp.formControl.value).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus/open must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdDate deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDate)!.componentInstance as SdDate;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input, picker: comp.datePicker()! };
+  };
+
+  it('does not focus or open the calendar after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input, picker } = setup();
+    const focusSpy = spyOn(input, 'focus');
+    const openSpy = spyOn(picker, 'open');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+    expect(openSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input, picker } = setup();
+    const focusSpy = spyOn(input, 'focus');
+    spyOn(picker, 'open');
+
+    comp.focus();
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});

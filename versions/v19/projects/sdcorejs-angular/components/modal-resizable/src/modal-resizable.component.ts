@@ -19,6 +19,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { SdLoadingService } from '@sdcorejs/angular/services';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdModalResizableRegistry } from './modal-resizable.registry';
 
 @Component({
   selector: 'sd-modal-resizable',
@@ -38,6 +39,11 @@ export class SdModalResizable {
   readonly #ref = inject(ChangeDetectorRef);
   readonly #loadingService = inject(SdLoadingService);
   readonly #destroyRef = inject(DestroyRef);
+  readonly #registry = inject(SdModalResizableRegistry);
+  // why: open/close/#arrangePanels đều hẹn setTimeout thao tác DOM. Gom id vào một set để
+  // onDestroy clear sạch, tránh callback chạy trên portal đã tháo (element không còn, hoặc tệ
+  // hơn: element của instance khác vừa tái sử dụng id).
+  readonly #timers = new Set<ReturnType<typeof setTimeout>>();
   readonly isEditing = signal(false);
   readonly isOpened = signal(false);
   readonly isHover = signal(false);
@@ -46,6 +52,8 @@ export class SdModalResizable {
   readonly isMaximum = signal(false);
 
   constructor() {
+    this.#registry.register(this.id);
+
     afterNextRender(() => {
       // why: attachTemplatePortal tạo embedded view từ VCR của chính CdkPortal →
       // KHÔNG cần appRef/injector/document. Chỉ truyền outletElement để tương thích
@@ -56,8 +64,20 @@ export class SdModalResizable {
     });
 
     this.#destroyRef.onDestroy(() => {
+      this.#registry.unregister(this.id);
+      for (const timer of this.#timers) clearTimeout(timer);
+      this.#timers.clear();
       this.#embeddedViewRef?.destroy();
     });
+  }
+
+  /** setTimeout có theo dõi — huỷ được hàng loạt trong onDestroy. */
+  #schedule(callback: () => void, delay: number): void {
+    const timer = setTimeout(() => {
+      this.#timers.delete(timer);
+      callback();
+    }, delay);
+    this.#timers.add(timer);
   }
 
   open = () => {
@@ -66,7 +86,7 @@ export class SdModalResizable {
 
     const element = this.#getElement();
     if (element && !element.classList.contains('c-minium')) {
-      setTimeout(() => {
+      this.#schedule(() => {
         const maximumWidth = element.offsetWidth;
         if (maximumWidth > 0) {
           element.dataset['width'] = maximumWidth.toString();
@@ -81,7 +101,7 @@ export class SdModalResizable {
   close = () => {
     this.isOpened.set(false);
     this.#detectChanges();
-    setTimeout(() => {
+    this.#schedule(() => {
       const element = this.#getElement();
       element?.style.setProperty('width', '0px');
       element?.style.setProperty('right', '0px');
@@ -139,10 +159,13 @@ export class SdModalResizable {
   };
 
   #arrangePanels = () => {
-    setTimeout(() => {
+    this.#schedule(() => {
       let totalRight = 0;
       const minimumWidth = 300;
-      document.querySelectorAll<HTMLElement>('.modal-resizable').forEach(item => {
+      // why: chỉ xếp chỗ các panel do <sd-modal-resizable> đang sống sở hữu (registry), KHÔNG
+      // querySelectorAll('.modal-resizable') toàn document — query đó ghi đè inline width/right
+      // lên mọi phần tử trùng class, kể cả markup của component khác không liên quan.
+      this.#registry.panels().forEach(item => {
         if (item.classList.contains('c-minium')) {
           item.style.setProperty('width', `${minimumWidth}px`);
           item.style.setProperty('right', `${totalRight}px`);

@@ -37,6 +37,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { sdFormControlState } from '@sdcorejs/angular/forms/models';
@@ -124,6 +125,9 @@ export class SdDate implements OnDestroy, OnInit {
   private ref = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus + mở datepicker hoãn 100ms; handle phải bị clear khi destroy, nếu không
+  // datePicker().open() dựng overlay lịch mồ côi sau khi control đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -346,7 +350,8 @@ export class SdDate implements OnDestroy, OnInit {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       this.inputRef()?.nativeElement?.focus();
       this.datePicker()?.open();
     }, 100);

@@ -88,6 +88,8 @@ The handle component (`<sd-splitter-handle>`) is internal and NOT exported from 
 - **Persistence requires `panelId`**: `storageKey` restore matches by `[panelId]` first, falling back to index ONLY when the panel has no `panelId` set. Without `panelId`, reordering panels in the template will mis-restore sizes.
 - **Unit mismatch during restore**: if a stored panel's `unit` doesn't match the current declaration, that panel is skipped (the rest still restore). Useful when migrating a layout — bump the unit and the old saved state is ignored.
 - **`<sd-splitter-handle>` is auto-managed**: do not place it in your template; the container creates / destroys / re-orders handles via `createComponent()` + `appendChild()` after each render.
+- **Handle sync registers ONE render hook for the component's lifetime**: the container registers a single `afterNextRender` in its constructor (to gate on the first render) and then re-syncs from a reactive `effect()`. Registering `afterNextRender` *inside* an effect would queue a new one-shot hook — plus a new `AfterRenderManager` sequence and a new `DestroyRef.onDestroy` entry — on every `panels` / `orientation` / `disabled` / `keyboardStep` tick.
+- **Destroying mid-drag is safe**: a handle batches `pointermove` into one `requestAnimationFrame`. That frame is cancelled on `pointerup`/`pointercancel` **and** on destroy, so tearing the splitter down mid-drag cannot fire a frame that emits `dragMove` from a torn-down handle.
 
 ### Examples
 
@@ -276,8 +278,8 @@ import type { Color, Size } from '@sdcorejs/utils';
 
 ## Tests
 - `splitter-state.service.spec.ts` — unit: `applyDelta` (flex/px/mix), clamp min/max, snap, collapse/expand, reconcile.
-- `splitter.component.spec.ts` — component wiring.
-- `splitter-handle.component.spec.ts`, `splitter-panel.component.spec.ts` — child units.
+- `splitter.component.spec.ts` — component wiring, **render-hook registration (no per-tick `afterNextRender`)**.
+- `splitter-handle.component.spec.ts` — child unit + **pending drag frame cancelled on destroy**; `splitter-panel.component.spec.ts` — child unit.
 - `splitter.integration.spec.ts` — drag, snap, storage roundtrip, nested, **overshoot dead-zone (horizontal + vertical)**, **snap then slow reverse → expand**.
 - Run: `npx ng test sdcorejs-angular --watch=false --browsers=ChromeHeadless --include='projects/sdcorejs-angular/components/splitter/src/splitter.integration.spec.ts'`
 

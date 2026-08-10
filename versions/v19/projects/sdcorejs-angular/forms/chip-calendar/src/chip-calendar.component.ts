@@ -49,6 +49,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -95,6 +96,9 @@ class SdChipCalendarErrorStateMatcher implements ErrorStateMatcher {
 export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
+  // why: focus hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạm
+  // input của view đã tháo.
+  readonly #timers = ɵsdTimerScope();
   #subscription = new Subscription();
   #name = Utilities.generateUuid();
   #isBlurring = false;
@@ -338,7 +342,8 @@ export class SdChipCalendar implements AfterViewInit, OnDestroy {
   #focus = () => {
     this.isFocused = true;
     this.#isBlurring = false;
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       if (this.isFocused) {
         this.input()?.nativeElement?.focus();
       }

@@ -31,6 +31,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
@@ -144,6 +145,10 @@ export class SdDateRange {
   private cdRef = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: onBlur hoãn 1 macrotask rồi mới emit sdChange. Không giữ handle thì blur ngay trước
+  // khi control bị tháo vẫn bắn output sau destroy — consumer đã unsubscribe, hoặc tệ hơn là
+  // nhận một lần emit "ma" cho control không còn tồn tại.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -520,7 +525,9 @@ export class SdDateRange {
   onBlur = () => {
     this.#isFocus = false;
     this.#emit();
-    setTimeout(() => {
+    // why: vẫn hoãn đúng 1 macrotask như cũ (để onFocus của ô kia kịp huỷ emit khi tab giữa
+    // from/to) — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       if (!this.#isFocus && this.#isModelChange && !(this.#isSdChangeEmittedByEnter || this.#isSdChangeEmittedByClear)) {
         this.sdChange.emit(this.valueModel());
       }

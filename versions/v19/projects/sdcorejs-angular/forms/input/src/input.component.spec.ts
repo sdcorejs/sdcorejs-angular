@@ -1018,3 +1018,49 @@ describe('SdInput (viewed inline mode)', () => {
     expect(fixture.nativeElement.querySelector('sd-view')).not.toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdInput deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdInput)!.componentInstance as SdInput;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input };
+  };
+
+  it('does not focus the input after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.focus();
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});

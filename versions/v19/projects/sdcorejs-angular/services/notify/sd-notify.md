@@ -73,7 +73,7 @@ clearByType(type: 'success' | 'info' | 'warning' | 'error'): void;
 Read-only signal of currently visible toasts (newest first). Useful if you build a custom container.
 
 ## Configuration / DI tokens
-None. The container is created automatically via `createComponent(SdToastContainerComponent, ...)` and appended to `document.body` in the constructor.
+None. The container is created automatically via `createComponent(SdToastContainerComponent, ...)` and appended to the injected `DOCUMENT` body in the constructor, and torn down through `DestroyRef.onDestroy` when the owning injector is destroyed.
 
 ### `SdNotifyOption`
 ```typescript
@@ -99,6 +99,7 @@ export interface ToastData {
 
 ## Behavior notes
 - **Auto-mount**: the constructor creates `SdToastContainerComponent` once and appends it to `document.body`. Importing the service into any consumer triggers this — the container is global.
+- **Auto-teardown**: `DestroyRef.onDestroy` cancels every pending debounce timer, clears the buffer, detaches the container view from `ApplicationRef` and removes the container node from `<body>`. `providedIn: 'root'` is not "forever" — the root injector is destroyed on `TestBed` reset, per SSR request and on micro-frontend unmount; without this hook each bootstrap left a live `ComponentRef` plus an orphan `<toast-container>` node behind, and a pending flush could still write into the destroyed service's signal. Detach is skipped when `ApplicationRef` is already destroyed (it tears down its own views first), so teardown never logs `NG0406`.
 - **Max visible**: 5 toasts (`#MAX_TOASTS`). Newer toasts push older ones out (slice(0, 5) after unshift).
 - **Order**: newest first (prepended to the array).
 - **Debounce window**: 500 ms (`#DEBOUNCE_TIME`) for `warning` / `error`. Each new call resets the timer.
@@ -212,6 +213,22 @@ Key points:
 - **Do NOT provide a fake `DOCUMENT`** — Angular's renderer reads `DOCUMENT` for `createElement`. Replacing it entirely breaks the DI hierarchy.
 - **`fakeAsync` + `tick(500)`** is required to test buffered (`warning` / `error`) behavior.
 - `service.clearAll()` in `afterEach` cancels any pending `setTimeout` so debounce timers do not bleed into subsequent tests.
+
+### Testing teardown
+
+To assert teardown deterministically without tearing down the whole `TestBed`, run the service inside a child `EnvironmentInjector` and destroy that:
+
+```typescript
+import { EnvironmentInjector, createEnvironmentInjector } from '@angular/core';
+
+const injector = createEnvironmentInjector([SdNotifyService], TestBed.inject(EnvironmentInjector));
+const service = injector.get(SdNotifyService);
+
+injector.destroy();
+expect(document.body.querySelector('toast-container')).toBeNull();
+```
+
+Note this path must NOT stub `ApplicationRef.attachView` — the real attach/detach pair is what the teardown assertion exercises.
 
 ### Spec file
 `projects/sdcorejs-angular/services/notify/src/notify.service.spec.ts`

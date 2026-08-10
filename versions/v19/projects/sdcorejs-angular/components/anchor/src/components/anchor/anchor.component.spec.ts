@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { BrowserUtilities } from '@sdcorejs/utils/fns';
+import { SD_VIEWPORT, SdViewport } from '@sdcorejs/angular/services/viewport';
 import { SdAnchor } from './anchor.component';
 import { SdAnchorItem } from '../anchor-item/anchor-item.component';
 
@@ -36,6 +36,46 @@ function mockIntersectionObserver(): void {
 
 function triggerIntersection(entries: Partial<IntersectionObserverEntry>[]): void {
   capturedIOCallback?.(entries as IntersectionObserverEntry[], {} as IntersectionObserver);
+}
+
+// ---------------------------------------------------------------------------
+// Viewport double
+// ---------------------------------------------------------------------------
+// why: SdAnchor lấy trạng thái mobile từ SdViewportService, mà service này đọc `window.innerWidth`
+// thật — trong Karma iframe chiều rộng đó không xác định. Mọi suite dưới đây cắm một viewport giả
+// cỡ desktop để nav luôn hiển thị một cách tất định; suite riêng về breakpoint tự cắm cỡ mobile.
+
+class FakeViewport implements SdViewport {
+  innerWidth: number;
+  innerHeight = 800;
+  readonly #listeners = new Set<EventListenerOrEventListenerObject>();
+
+  constructor(innerWidth: number) {
+    this.innerWidth = innerWidth;
+  }
+
+  addEventListener(_type: 'resize', listener: EventListenerOrEventListenerObject): void {
+    this.#listeners.add(listener);
+  }
+
+  removeEventListener(_type: 'resize', listener: EventListenerOrEventListenerObject): void {
+    this.#listeners.delete(listener);
+  }
+
+  get listenerCount(): number {
+    return this.#listeners.size;
+  }
+
+  resizeTo(innerWidth: number): void {
+    this.innerWidth = innerWidth;
+    this.#listeners.forEach(listener =>
+      typeof listener === 'function' ? listener(new Event('resize')) : listener.handleEvent(new Event('resize'))
+    );
+  }
+}
+
+function desktopViewportProvider(): { provide: typeof SD_VIEWPORT; useValue: SdViewport } {
+  return { provide: SD_VIEWPORT, useValue: new FakeViewport(1440) };
 }
 
 // ---------------------------------------------------------------------------
@@ -91,6 +131,18 @@ class HiddenHost {}
 })
 class HostDefaultComponent {}
 
+@Component({
+  imports: [SdAnchor, SdAnchorItem],
+  template: `
+    <div style="height: 400px">
+      <sd-anchor [hideNavOnMobile]="false">
+        <sd-anchor-item title="Section 1"><div style="height: 200px">x</div></sd-anchor-item>
+      </sd-anchor>
+    </div>
+  `,
+})
+class MobileNavHost {}
+
 function getAnchor(fixture: ComponentFixture<unknown>): SdAnchor {
   const de = fixture.debugElement.query(By.directive(SdAnchor));
   if (!de) throw new Error('SdAnchor not found in fixture');
@@ -108,6 +160,7 @@ describe('SdAnchor', () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
       imports: [HostComponent, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HostComponent);
@@ -292,27 +345,34 @@ describe('SdAnchor', () => {
 });
 
 // ---------------------------------------------------------------------------
-// hideNav default = BrowserUtilities.isMobile() (UA-dependent, report regression)
+// hideNav default = false (không còn phụ thuộc UA lúc khởi tạo class)
 // ---------------------------------------------------------------------------
-describe('SdAnchor (hideNav default UA-dependent)', () => {
+describe('SdAnchor (hideNav default)', () => {
   let fixture: ComponentFixture<HostDefaultComponent>;
   let anchor: SdAnchor;
 
   beforeEach(async () => {
     mockIntersectionObserver();
-    await TestBed.configureTestingModule({ imports: [HostDefaultComponent] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [HostDefaultComponent],
+      providers: [desktopViewportProvider()],
+    }).compileComponents();
     fixture = TestBed.createComponent(HostDefaultComponent);
     fixture.detectChanges();
     anchor = fixture.debugElement.query(By.directive(SdAnchor)).componentInstance;
   });
 
-  it('hideNav() trả default = BrowserUtilities.isMobile()', () => {
-    expect(anchor.hideNav()).toBe(BrowserUtilities.isMobile());
+  it('hideNav() mặc định false — chỉ là cờ ép ẩn thủ công', () => {
+    expect(anchor.hideNav()).toBe(false);
   });
 
-  it('chrome headless desktop → isMobile=false → hideNav=false', () => {
-    expect(BrowserUtilities.isMobile()).toBe(false);
-    expect(anchor.hideNav()).toBe(false);
+  it('hideNavOnMobile() mặc định true — auto-ẩn theo breakpoint vẫn giữ nguyên', () => {
+    expect(anchor.hideNavOnMobile()).toBe(true);
+  });
+
+  it('viewport desktop (mặc định của TestBed) → navHidden false → nav hiển thị', () => {
+    expect(anchor.navHidden()).toBe(false);
+    expect(fixture.nativeElement.querySelector('.c-anchor-list')).not.toBeNull();
   });
 });
 
@@ -327,6 +387,7 @@ describe('SdAnchor (hideNav=true)', () => {
     mockIntersectionObserver();
     await TestBed.configureTestingModule({
       imports: [HiddenHost, NoopAnimationsModule],
+      providers: [desktopViewportProvider()],
     }).compileComponents();
 
     fixture = TestBed.createComponent(HiddenHost);
@@ -355,4 +416,31 @@ describe('SdAnchor (hideNav=true)', () => {
     fixture.detectChanges();
     expect(() => fixture.destroy()).not.toThrow();
   }));
+});
+
+// ---------------------------------------------------------------------------
+// hideNavOnMobile = false → giữ nav trên mobile
+// ---------------------------------------------------------------------------
+// why: trước đây đường thoát là `[hideNav]="false"`; giờ `hideNav` mặc định false nên không phân
+// biệt được "không set" và "set false" — đường thoát chuyển sang input riêng.
+describe('SdAnchor (hideNavOnMobile=false)', () => {
+  let fixture: ComponentFixture<MobileNavHost>;
+
+  beforeEach(async () => {
+    mockIntersectionObserver();
+    await TestBed.configureTestingModule({
+      imports: [MobileNavHost, NoopAnimationsModule],
+      providers: [{ provide: SD_VIEWPORT, useValue: new FakeViewport(375) }],
+    }).compileComponents();
+    fixture = TestBed.createComponent(MobileNavHost);
+    fixture.detectChanges();
+  });
+
+  it('navHidden() stays false on a mobile viewport', () => {
+    expect(getAnchor(fixture).navHidden()).toBe(false);
+  });
+
+  it('renders the nav column on a mobile viewport', () => {
+    expect(fixture.nativeElement.querySelector('.c-anchor-list')).not.toBeNull();
+  });
 });

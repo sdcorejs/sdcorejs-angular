@@ -900,3 +900,66 @@ describe('SdUploadFilePreview', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// describe: drag & drop listener teardown
+// ---------------------------------------------------------------------------
+// why: 4 listener dragover/dragenter/dragleave/drop được gắn thẳng lên drop container bằng
+// hàm ẩn danh và không bao giờ gỡ. Drop container có thể sống lâu hơn component, nên handler
+// giữ luôn instance đã destroy (kèm injector subtree) và vẫn chạy khi có event.
+
+describe('SdUploadFile drag & drop listener teardown', () => {
+  let fixture: ComponentFixture<SdUploadFile>;
+
+  function dispatchDrag(target: HTMLElement, type: string): boolean {
+    const event = new DragEvent(type, { cancelable: true });
+    target.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [SdUploadFile, NoopAnimationsModule],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(SdUploadFile);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  });
+
+  function dropZone(): HTMLElement {
+    const element = fixture.nativeElement.querySelector('.c-area-upload') as HTMLElement | null;
+    if (!element) throw new Error('drop container not rendered');
+    return element;
+  }
+
+  it('binds the drag listeners while the component is alive', () => {
+    const zone = dropZone();
+
+    expect(dispatchDrag(zone, 'dragover')).toBeTrue();
+    expect(zone.style.border).toBe('2px solid grey');
+
+    expect(dispatchDrag(zone, 'dragenter')).toBeTrue();
+
+    dispatchDrag(zone, 'dragleave');
+    expect(zone.style.border).toBe('2px dashed grey');
+  });
+
+  it('stops invoking the drag listeners once the component is destroyed', () => {
+    const zone = dropZone();
+    // Giữ tham chiếu tới element (mô phỏng container do consumer sở hữu) rồi destroy component.
+    fixture.destroy();
+    zone.style.border = '';
+    zone.style.opacity = '';
+
+    expect(dispatchDrag(zone, 'dragover')).toBeFalse();
+    expect(dispatchDrag(zone, 'dragenter')).toBeFalse();
+    expect(dispatchDrag(zone, 'dragleave')).toBeFalse();
+    expect(dispatchDrag(zone, 'drop')).toBeFalse();
+
+    expect(zone.style.border).toBe('');
+    expect(zone.style.opacity).toBe('');
+  });
+});

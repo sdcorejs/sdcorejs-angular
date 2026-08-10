@@ -33,6 +33,7 @@ import { SdNotifyService } from '@sdcorejs/angular/services/notify';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { SdTabActivated, SdTabDeactivated } from '../../events/tab-router.event';
+import { ɵsdConnectTabComponentBuilders } from '../../decorators/tab.decorator';
 import { SdTabAction } from '../../actions/tab-router.action';
 import { SdTabRouterTab, SD_TAB } from '../../models';
 import { SdTabDecoratorService } from '../../services/tab-decorator.service';
@@ -65,12 +66,14 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   #tabRouterService = inject(SdTabRouterService);
   #sdNotifyService = inject(SdNotifyService);
   readonly #i18n = inject(I18nService);
-  // Inject để đảm bảo SdTabDecoratorService được khởi tạo (nó register BehaviorSubject
-  // tĩnh để @SdTabComponent decorator có thể truy cập SdTabRouterService). Không dùng trực tiếp ở đây.
+  // why: @SdTabComponent KHÔNG còn đọc BehaviorSubject tĩnh này nữa (đã chuyển sang collection
+  // tĩnh + drain ở constructor bên dưới). Vẫn inject để `SdTabDecoratorService.tabRouterService`
+  // tiếp tục phát instance service ra cho consumer cũ. Không dùng trực tiếp ở đây.
   #tabDecoratorService = inject(SdTabDecoratorService);
 
   #rootRoute?: ActivatedRoute;
   #subscription = new Subscription();
+  #disconnectTabBuilders: (() => void) | undefined;
 
   // Lưu state theo navigation id để các navigation chồng lấn không ghi đè lẫn nhau.
   #pendingNavigationStates = new Map<number, Record<string, any>>();
@@ -120,6 +123,11 @@ export class SdTabRouterOutletComponent implements OnDestroy {
       })
     );
 
+    // why: @SdTabComponent chỉ ghi builder vào một collection tĩnh (không subscribe gì cả,
+    // xem tab.decorator.ts). Outlet là nơi duy nhất chắc chắn có SdTabRouterService nên nó
+    // drain collection đó vào service khi khởi tạo, và ngắt kết nối khi destroy.
+    this.#disconnectTabBuilders = ɵsdConnectTabComponentBuilders(builder => this.#tabRouterService.addBuilder(builder));
+
     // Initial navigation có thể hoàn tất trước khi outlet subscribe router.events
     // (blocking init hoặc outlet mount muộn). Catch-up sau first render.
     afterNextRender(() => {
@@ -130,6 +138,8 @@ export class SdTabRouterOutletComponent implements OnDestroy {
   ngOnDestroy(): void {
     this.#subscription.unsubscribe();
     this.#pendingNavigationStates.clear();
+    this.#disconnectTabBuilders?.();
+    this.#disconnectTabBuilders = undefined;
   }
 
   #scheduleActivation = (task: () => Promise<void>): Promise<void> => {

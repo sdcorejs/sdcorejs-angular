@@ -47,6 +47,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
@@ -89,6 +90,10 @@ class SdChipErrorStateMatcher implements ErrorStateMatcher {
 export class SdChip implements AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   readonly #i18n = inject(I18nService);
+  // why: blur hoãn 150ms rồi gọi #ref.detectChanges(). Gỡ chip / đổi route trong 150ms đó là
+  // đủ để detectChanges() chạy trên view đã destroy → ViewDestroyedError. Scope handle theo
+  // DestroyRef để timer bị clear cùng lúc view tháo.
+  readonly #timers = ɵsdTimerScope();
   #subscription = new Subscription();
   #name = Utilities.generateUuid();
 
@@ -350,7 +355,9 @@ export class SdChip implements AfterViewInit, OnDestroy {
 
   #onBlur = () => {
     this.#isBlurring = true;
-    setTimeout(() => {
+    // why: vẫn 150ms như cũ (cửa sổ để click vào chip/option huỷ blur) — chỉ scope handle
+    // theo DestroyRef.
+    this.#timers.schedule(() => {
       if (this.#isBlurring) {
         this.isFocused = false;
         this.#inputControl.setValue('', {
@@ -372,7 +379,8 @@ export class SdChip implements AfterViewInit, OnDestroy {
   #focus = () => {
     this.isFocused = true;
     this.#isBlurring = false;
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       if (this.isFocused) {
         this.input()?.nativeElement?.focus();
       }

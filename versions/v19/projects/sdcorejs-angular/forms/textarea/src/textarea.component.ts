@@ -2,7 +2,7 @@ import { Utilities } from '@sdcorejs/utils/fns';
 
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
+  afterNextRender,
   booleanAttribute,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -37,6 +37,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
@@ -67,7 +68,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     TranslatePipe,
   ],
 })
-export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
+export class SdTextarea implements OnInit, OnDestroy {
   id = `I${Utilities.generateUuid()}`;
 
   // ==========================================
@@ -84,6 +85,9 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
   #ref = inject(ChangeDetectorRef);
   #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus() hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạy
+  // trên view đã tháo.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -253,17 +257,19 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
 
     // EFFECT 3 (cũ) đã bỏ: validator giờ do ɵsdFormControlConnector quản lý cộng dồn
     // qua #validators / #asyncValidators / required ở trên.
+
+    // why: đo scrollHeight phải chờ textarea render xong — trước đây là
+    // `ngAfterViewInit` + `setTimeout(..., 0)` mà không giữ handle, nên component bị tháo
+    // ngay sau init (route đổi nhanh) vẫn chạm nativeElement đã detach. `afterNextRender`
+    // diễn đạt đúng ý định "sau lần render kế tiếp" VÀ tự huỷ theo injector.
+    afterNextRender(() => {
+      if (this.autoHeight()) this.#adjustHeight();
+    });
   }
 
   ngOnInit() {
     this.#subscription.add(this.formControl.sdChanges.subscribe(() => this.#ref.markForCheck()));
     this.#subscription.add(this.formControl.valueChanges.subscribe(this.#onChange));
-  }
-
-  ngAfterViewInit() {
-    if (this.autoHeight()) {
-      setTimeout(() => this.#adjustHeight(), 0);
-    }
   }
 
   ngOnDestroy() {
@@ -306,9 +312,8 @@ export class SdTextarea implements OnInit, AfterViewInit, OnDestroy {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
-      this.textareaRef()?.nativeElement?.focus();
-    }, 100);
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => this.textareaRef()?.nativeElement?.focus(), 100);
   };
 
   #onChange = (value: any) => {

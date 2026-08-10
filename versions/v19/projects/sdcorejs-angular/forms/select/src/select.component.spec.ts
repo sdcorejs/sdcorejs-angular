@@ -1849,3 +1849,52 @@ describe('SdSelect (runtime validator inputs refresh the error message)', () => 
     expect(matError()).toBeNull();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus/open must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdSelect deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdSelect)!.componentInstance as SdSelect;
+    return { fixture, comp, matSelect: comp.selectRef()! };
+  };
+
+  it('does not open the mat-select panel after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, matSelect } = setup();
+    const openSpy = spyOn(matSelect, 'open');
+    const focusSpy = spyOn(matSelect, 'focus');
+
+    comp.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    // why: mở overlay trên mat-select đã destroy để lại panel mồ côi không ai đóng.
+    expect(openSpy).not.toHaveBeenCalled();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still opens on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, matSelect } = setup();
+    const openSpy = spyOn(matSelect, 'open');
+    spyOn(matSelect, 'focus');
+
+    comp.focus();
+    tick(99);
+    expect(openSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(openSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});

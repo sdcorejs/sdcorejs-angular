@@ -16,7 +16,15 @@ import {
 } from '@sdcorejs/angular/services/persistence';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { BehaviorSubject } from 'rxjs';
-import { SD_CACHE_CONFIG, SdCache, SdCacheOption, SdCacheSnapshot, SdCacheStoredValue, SdCacheWithDefault } from './cache.model';
+import {
+  SD_CACHE_CONFIG,
+  SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES,
+  SdCache,
+  SdCacheOption,
+  SdCacheSnapshot,
+  SdCacheStoredValue,
+  SdCacheWithDefault,
+} from './cache.model';
 
 interface CacheHandleFacade {
   emit: (present: boolean, value: unknown) => void;
@@ -68,6 +76,11 @@ export class SdCacheService {
   readonly #memoryEntries = new Map<string, SdCacheStoredValue<unknown>>();
   readonly #failedOwners = new Map<string, true>();
   readonly #maxFailedOwners = 256;
+  // why: #memoryEntries trước đây không có trần và TTL thì opt-in, trong khi SdApiService luôn gọi
+  // release() (không phải destroy()) sau mỗi request — release chỉ bỏ state của handle, KHÔNG bỏ
+  // entry memory. Hệ quả: mỗi URL được cache để lại một entry sống hết đời app → bộ nhớ tăng đơn
+  // điệu. Chặn bằng LRU có trần, cấu hình qua SD_CACHE_CONFIG.maxMemoryEntries.
+  readonly #maxMemoryEntries = this.#normalizeMaxMemoryEntries(this.#configuration?.maxMemoryEntries);
   #destroyed = false;
 
   constructor() {
@@ -382,7 +395,9 @@ export class SdCacheService {
   #readEntry(normalized: NormalizedCacheOption): CacheEntryRead {
     if (normalized.area === 'memory') {
       const entry = this.#memoryEntries.get(normalized.ownerDigest);
-      return entry ? { status: 'found', entry: this.#cloneEntry(entry, normalized.serializer) } : { status: 'absent' };
+      if (!entry) return { status: 'absent' };
+      this.#touchMemoryEntry(normalized.ownerDigest, entry);
+      return { status: 'found', entry: this.#cloneEntry(entry, normalized.serializer) };
     }
     if (this.#failedOwners.has(normalized.ownerDigest)) return { status: 'unavailable' };
     const primary = readSdPersistenceStorageItem(this.#adapter, normalized.area, normalized.storageKey);
@@ -446,7 +461,8 @@ export class SdCacheService {
 
   #writePersistent(normalized: NormalizedCacheOption, entry: SdCacheStoredValue<unknown>): boolean {
     if (normalized.area === 'memory') {
-      this.#memoryEntries.set(normalized.ownerDigest, this.#cloneEntry(entry, normalized.serializer));
+      this.#touchMemoryEntry(normalized.ownerDigest, this.#cloneEntry(entry, normalized.serializer));
+      this.#evictMemoryOverflow();
       return true;
     }
     try {
@@ -562,6 +578,26 @@ export class SdCacheService {
     if (this.#failedOwners.size <= this.#maxFailedOwners) return;
     const oldest = this.#failedOwners.keys().next().value;
     if (oldest !== undefined) this.#failedOwners.delete(oldest);
+  }
+
+  #normalizeMaxMemoryEntries(value: number | undefined): number {
+    if (value === undefined || !Number.isFinite(value) || value < 1) return SD_CACHE_DEFAULT_MAX_MEMORY_ENTRIES;
+    return Math.floor(value);
+  }
+
+  // why: Map giữ thứ tự chèn, nên delete-rồi-set đẩy key về cuối = "vừa dùng gần nhất".
+  // Đây là toàn bộ cơ chế recency của LRU, không cần cấu trúc dữ liệu phụ.
+  #touchMemoryEntry(ownerDigest: string, entry: SdCacheStoredValue<unknown>): void {
+    this.#memoryEntries.delete(ownerDigest);
+    this.#memoryEntries.set(ownerDigest, entry);
+  }
+
+  #evictMemoryOverflow(): void {
+    while (this.#memoryEntries.size > this.#maxMemoryEntries) {
+      const oldest = this.#memoryEntries.keys().next().value;
+      if (oldest === undefined) return;
+      this.#memoryEntries.delete(oldest);
+    }
   }
 
   #cloneEntry(entry: SdCacheStoredValue<unknown>, serializer: SdPersistenceSerializer): SdCacheStoredValue<unknown> {

@@ -1,5 +1,5 @@
 import { Component, Injector, ViewContainerRef } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flush } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
@@ -431,6 +431,55 @@ describe('SdModal', () => {
   // view="bottom-sheet"
   // -------------------------------------------------------------------------
 
+  // -------------------------------------------------------------------------
+  // Destroy cleanup — overlay không được sống sót sau host
+  // -------------------------------------------------------------------------
+
+  describe('destroy cleanup', () => {
+    it('closes the open dialog when the host view is destroyed', () => {
+      const { ref } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+
+      component.open();
+      fixture.destroy();
+
+      expect(ref.close as jasmine.Spy).toHaveBeenCalled();
+    });
+
+    it('dismisses the open bottom sheet when the host view is destroyed', () => {
+      const { ref } = makeFakeBottomSheetRef();
+      bottomSheetOpenSpy.and.returnValue(ref);
+      // Ép nhánh bottom-sheet bằng cách gọi thẳng service qua input view
+      const bsFixture = TestBed.createComponent(SdModal);
+      bsFixture.componentRef.setInput('view', 'bottom-sheet');
+      bsFixture.detectChanges();
+      const bsComponent = bsFixture.componentInstance;
+      const bsInjector: Injector = bsFixture.debugElement.injector;
+      spyOn(bsInjector.get(MatBottomSheet), 'open').and.returnValue(ref);
+
+      bsComponent.open();
+      bsFixture.destroy();
+
+      expect(ref.dismiss as jasmine.Spy).toHaveBeenCalled();
+    });
+
+    it('does not throw when destroyed without ever opening', () => {
+      expect(() => fixture.destroy()).not.toThrow();
+    });
+
+    it('ignores beforeClose on destroy — teardown cannot be vetoed', () => {
+      const { ref } = makeFakeDialogRef();
+      dialogOpenSpy.and.returnValue(ref);
+      host.beforeClose = () => false;
+      fixture.detectChanges();
+
+      component.open();
+      fixture.destroy();
+
+      expect(ref.close as jasmine.Spy).toHaveBeenCalled();
+    });
+  });
+
   describe('view="bottom-sheet"', () => {
     @Component({
       standalone: true,
@@ -664,4 +713,53 @@ describe('SdModal', () => {
       expect(eModal.autoId()).toBe('components-modal-confirm');
     });
   });
+});
+
+// ---------------------------------------------------------------------------
+// Overlay teardown với MatDialog THẬT (không stub) — bằng chứng trực tiếp rằng
+// overlay + backdrop không ở lại trong CDK overlay container sau khi host destroy.
+// ---------------------------------------------------------------------------
+
+describe('SdModal — real overlay teardown', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let component: SdModal;
+
+  function overlayPanes(): NodeListOf<Element> {
+    return document.querySelectorAll('.cdk-overlay-container .sd-modal-panel');
+  }
+
+  function overlayBackdrops(): NodeListOf<Element> {
+    return document.querySelectorAll('.cdk-overlay-container .cdk-overlay-backdrop');
+  }
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    component = getModal(fixture);
+  });
+
+  it('mounts a real dialog overlay on open()', fakeAsync(() => {
+    component.open();
+    fixture.detectChanges();
+    flush();
+
+    expect(overlayPanes().length).toBe(1);
+  }));
+
+  it('leaves no orphaned overlay or backdrop in the CDK container after the host is destroyed', fakeAsync(() => {
+    component.open();
+    fixture.detectChanges();
+    flush();
+    expect(overlayPanes().length).toBe(1);
+
+    fixture.destroy();
+    flush();
+
+    expect(overlayPanes().length).toBe(0);
+    expect(overlayBackdrops().length).toBe(0);
+  }));
 });

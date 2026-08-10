@@ -15,6 +15,7 @@ import {
   input,
   numberAttribute,
   output,
+  signal,
 } from '@angular/core';
 import { SdSplitterHandleComponent } from './splitter-handle/splitter-handle.component';
 import { SdSplitterPanelComponent } from './splitter-panel/splitter-panel.component';
@@ -74,6 +75,8 @@ export class SdSplitterComponent {
   #dragStartSize: { handleIndex: number; containerPx: number } | null = null;
   #dragLastDelta = 0;
   #prevCollapsedMap = new Map<string | number, boolean>();
+  // Lật true sau lần render đầu → effect sync handle mới được phép chạm DOM.
+  #firstRenderDone = signal(false);
 
   constructor() {
     // 1. Reconcile state khi panels signal đổi (panel add/remove qua @if/@for)
@@ -150,16 +153,21 @@ export class SdSplitterComponent {
       }
     });
 
-    // Sync handles sau khi DOM render xong (panels đã projected vào host)
+    // Sync handles sau khi DOM render xong (panels đã projected vào host).
+    // why: afterNextRender đăng ký BÊN TRONG effect() sẽ tạo MỘT hook one-shot mới cho MỖI lần
+    // panels/orientation/disabled/keyboardStep tick — cùng với đó là một sequence + một
+    // DestroyRef.onDestroy mới xếp hàng trong AfterRenderManager. Đăng ký ĐÚNG MỘT lần ở
+    // constructor (chỉ để mở cổng sau lần render đầu), rồi đọc reactive value trong effect.
+    afterNextRender(() => this.#firstRenderDone.set(true), { injector: this.#injector });
+
     effect(() => {
       const panelCount = this.panels().length;
       const orientation = this.resolvedOrientation();
       const disabled = this.resolvedDisabled();
       const keyboardStep = this.resolvedKeyboardStep();
-      afterNextRender(
-        () => this.#syncHandles(panelCount, orientation, disabled, keyboardStep),
-        { injector: this.#injector } // component-scoped → auto-cancel khi component destroy
-      );
+      // Lần CD đầu tiên panel chưa render xong → chờ afterNextRender mở cổng rồi effect tự chạy lại.
+      if (!this.#firstRenderDone()) return;
+      this.#syncHandles(panelCount, orientation, disabled, keyboardStep);
     });
 
     // Destroy handle ComponentRef khi container bị destroy (tránh leak)

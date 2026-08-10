@@ -752,3 +752,50 @@ describe('SdChipCalendar (runtime validator inputs refresh the error message)', 
     expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập ít nhất 2 giá trị');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred focus must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdChipCalendar deferred focus lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdChipCalendar)!.componentInstance as SdChipCalendar;
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    return { fixture, comp, input };
+  };
+
+  it('does not focus the chip input after the view is destroyed inside the 100ms window', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    // why: onClickChip là entry public duy nhất dẫn tới #focus().
+    comp.onClickChip(new MouseEvent('click'), '2026/01/01');
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still focuses on the same 100ms delay while the view is alive', fakeAsync(() => {
+    const { fixture, comp, input } = setup();
+    const focusSpy = spyOn(input, 'focus');
+
+    comp.onClickChip(new MouseEvent('click'), '2026/01/01');
+    tick(99);
+    expect(focusSpy).not.toHaveBeenCalled();
+
+    tick(1);
+    expect(focusSpy).toHaveBeenCalled();
+
+    fixture.destroy();
+  }));
+});

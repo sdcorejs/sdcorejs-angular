@@ -275,19 +275,24 @@ export class SdUploadFile<TArgs = any> {
   }
 
   #bindDropEvents(dropContainer: HTMLElement) {
-    dropContainer.addEventListener('dragover', (evt: Event) => {
+    // why: 4 listener này trước đây là hàm ẩn danh nên không bao giờ gỡ được. Drop container
+    // có thể sống lâu hơn component (consumer giữ element, hoặc element bị tách khỏi view mà
+    // vẫn còn tham chiếu) → handler giữ luôn component đã destroy kèm cả injector subtree,
+    // và một cú drop sau teardown vẫn chạy #uploadFile trên state đã chết.
+    // Giữ reference + gỡ trong DestroyRef.onDestroy để teardown là tất định.
+    const onDragOver = (evt: Event): void => {
       evt.preventDefault();
       (dropContainer as any).style.opacity = 0.9;
       dropContainer.style.border = '2px solid grey';
-    });
-    dropContainer.addEventListener('dragenter', (evt: Event) => {
+    };
+    const onDragEnter = (evt: Event): void => {
       evt.preventDefault();
-    });
-    dropContainer.addEventListener('dragleave', () => {
+    };
+    const onDragLeave = (): void => {
       (dropContainer as any).style.opacity = 0.6;
       dropContainer.style.border = '2px dashed grey';
-    });
-    dropContainer.addEventListener('drop', async (evt: DragEvent) => {
+    };
+    const onDrop = async (evt: DragEvent): Promise<void> => {
       evt.preventDefault();
       (dropContainer as any).style.opacity = 0.6;
       dropContainer.style.border = '2px dashed grey';
@@ -296,6 +301,18 @@ export class SdUploadFile<TArgs = any> {
         files.push(file);
       }
       await this.#uploadFile(files);
+    };
+
+    dropContainer.addEventListener('dragover', onDragOver);
+    dropContainer.addEventListener('dragenter', onDragEnter);
+    dropContainer.addEventListener('dragleave', onDragLeave);
+    dropContainer.addEventListener('drop', onDrop);
+
+    this.#destroyRef.onDestroy(() => {
+      dropContainer.removeEventListener('dragover', onDragOver);
+      dropContainer.removeEventListener('dragenter', onDragEnter);
+      dropContainer.removeEventListener('dragleave', onDragLeave);
+      dropContainer.removeEventListener('drop', onDrop);
     });
   }
 

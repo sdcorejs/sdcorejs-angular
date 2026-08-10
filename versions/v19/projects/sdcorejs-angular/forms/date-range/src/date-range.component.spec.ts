@@ -825,3 +825,56 @@ describe('SdDateRange (partial input is not a date)', () => {
     expect((comp.control1.value as Date).getFullYear()).toBe(2026);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred blur emit must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdDateRange deferred blur emit lifetime', () => {
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  const setup = () => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const comp = fixture.debugElement.query(el => el.componentInstance instanceof SdDateRange)!.componentInstance as SdDateRange;
+    return { fixture, host: fixture.componentInstance, comp };
+  };
+
+  it('does not emit sdChange after the view is destroyed inside the blur window', fakeAsync(() => {
+    const { fixture, host, comp } = setup();
+    // why: spy đặt TRÊN OutputEmitterRef nên bắt được lời gọi emit() kể cả khi Angular đã
+    // ngắt subscriber — nếu chỉ đếm host.changes thì guard nội bộ của output() che mất bug.
+    const emit = spyOn(comp.sdChange, 'emit').and.callThrough();
+
+    comp.onFocus();
+    comp.control1.setValue(new Date(2026, 0, 1));
+    comp.onBlur();
+    host.changes.length = 0;
+
+    fixture.destroy();
+
+    expect(() => tick(50)).not.toThrow();
+    expect(emit).not.toHaveBeenCalled();
+    expect(host.changes.length).toBe(0);
+  }));
+
+  it('still emits sdChange on the next macrotask while the view is alive', fakeAsync(() => {
+    const { fixture, host, comp } = setup();
+
+    comp.onFocus();
+    comp.control1.setValue(new Date(2026, 0, 1));
+    comp.onBlur();
+    host.changes.length = 0;
+
+    expect(host.changes.length).toBe(0);
+    tick();
+    expect(host.changes.length).toBe(1);
+
+    fixture.destroy();
+  }));
+});

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DOCUMENT } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -55,6 +55,10 @@ export class SdPreviewImage implements OnDestroy {
   // ==========================================
   readonly #hostEl = inject<ElementRef<HTMLElement>>(ElementRef);
   readonly #destroyRef = inject(DestroyRef);
+  // why: KHÔNG đọc biến global `document` — constructor chạy cả trên server khi SSR và sẽ
+  // ném `document is not defined`. Token DOCUMENT luôn resolve được (browser: document thật,
+  // server: document giả của platform-server) — cùng cách preview-pdf.browser.ts đang làm.
+  readonly #document = inject(DOCUMENT);
 
   // ==========================================
   // INPUTS (signal-based, Angular 19 style)
@@ -177,11 +181,11 @@ export class SdPreviewImage implements OnDestroy {
     // Đồng bộ #isFullscreen với trạng thái thực của browser (sự kiện 'fullscreenchange' fire
     // bất kể user thoát fullscreen bằng cách nào: nút Thoát, Esc, F11, programmatic).
     const onFullscreenChange = () => {
-      this.#isFullscreen.set(document.fullscreenElement === this.#hostEl.nativeElement);
+      this.#isFullscreen.set(this.#document.fullscreenElement === this.#hostEl.nativeElement);
     };
-    document.addEventListener('fullscreenchange', onFullscreenChange);
+    this.#document.addEventListener('fullscreenchange', onFullscreenChange);
     this.#destroyRef.onDestroy(() => {
-      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      this.#document.removeEventListener('fullscreenchange', onFullscreenChange);
     });
 
     // Reactive normalize: mỗi lần items() đổi → revoke blob cũ → load mới.
@@ -208,9 +212,9 @@ export class SdPreviewImage implements OnDestroy {
     // Cleanup khi component bị destroy.
     this.#destroyRef.onDestroy(() => {
       this.#revokeAllBlobs();
-      if (document.fullscreenElement === this.#hostEl.nativeElement) {
+      if (this.#document.fullscreenElement === this.#hostEl.nativeElement) {
         // Tránh để fullscreen "treo" khi component bị huỷ giữa chừng.
-        document.exitFullscreen?.().catch(() => undefined);
+        this.#document.exitFullscreen?.().catch(() => undefined);
       }
     });
   }
@@ -275,10 +279,10 @@ export class SdPreviewImage implements OnDestroy {
     // Ưu tiên CDN URL nếu có để tận dụng Content-Disposition của server,
     // fallback về blob URL khi user upload File trực tiếp.
     const href = img.url || img.blobUrl;
-    const a = document.createElement('a');
+    const a = this.#document.createElement('a');
     a.href = href;
     a.download = img.name || 'image';
-    document.body.appendChild(a);
+    this.#document.body.appendChild(a);
     a.click();
     a.remove();
     this.download.emit({ index: this.#activeIndex(), item: img });
@@ -287,10 +291,10 @@ export class SdPreviewImage implements OnDestroy {
   toggleFullscreen(): void {
     // WHY: trạng thái #isFullscreen được sync qua sự kiện 'fullscreenchange' (xem constructor)
     // — single source of truth. Không cần .then(set(true/false)) ở đây nữa.
-    if (!document.fullscreenElement) {
+    if (!this.#document.fullscreenElement) {
       this.#hostEl.nativeElement.requestFullscreen?.().catch(() => undefined);
     } else {
-      document.exitFullscreen?.().catch(() => undefined);
+      this.#document.exitFullscreen?.().catch(() => undefined);
     }
   }
 

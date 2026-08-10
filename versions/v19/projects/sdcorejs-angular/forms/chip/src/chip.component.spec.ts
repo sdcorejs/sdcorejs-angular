@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
 import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { FormGroup, FormsModule, NgForm, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -761,4 +761,74 @@ describe('SdChip (runtime validator inputs refresh the error message)', () => {
     expect(fixture.componentInstance.formControl.hasError('minlength')).toBeTrue();
     expect(matError()?.textContent?.trim()).toBe('Vui lòng nhập ít nhất 2 giá trị');
   });
+});
+
+// ---------------------------------------------------------------------------
+// Timer lifetime — the deferred blur/focus must not outlive the view
+// ---------------------------------------------------------------------------
+
+describe('SdChip deferred timer lifetime', () => {
+  const chipOf = (fixture: ComponentFixture<HostComponent>) =>
+    fixture.debugElement.query(el => el.componentInstance instanceof SdChip)!.componentInstance as SdChip;
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  it('does not detect changes after the view is destroyed inside the 150ms blur window', fakeAsync(() => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const chip = chipOf(fixture);
+    const chipDe = fixture.debugElement.query(el => el.componentInstance instanceof SdChip)!;
+
+    chip.onFocus();
+    chip.onBlur();
+
+    // why: `#ref` của component là một ViewRef; spy trên prototype nên bắt được đúng lời gọi
+    // detectChanges() phát ra từ trong timer, không cần chọc vào private field.
+    const viewRefPrototype = Object.getPrototypeOf(chipDe.injector.get(ChangeDetectorRef));
+    const detectChanges = spyOn(viewRefPrototype, 'detectChanges');
+
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(detectChanges).not.toHaveBeenCalled();
+    // why: cả thân timer bị huỷ, không chỉ riêng detectChanges.
+    expect(chip.isFocused).toBeTrue();
+  }));
+
+  it('does not focus the chip input after the view is destroyed inside the 100ms focus window', fakeAsync(() => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const chip = chipOf(fixture);
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    const focusSpy = spyOn(input, 'focus');
+
+    chip.focus();
+    fixture.destroy();
+
+    expect(() => tick(300)).not.toThrow();
+    expect(focusSpy).not.toHaveBeenCalled();
+  }));
+
+  it('still runs the deferred blur while the view is alive', fakeAsync(() => {
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    const chip = chipOf(fixture);
+
+    chip.onFocus();
+    expect(chip.isFocused).toBeTrue();
+
+    chip.onBlur();
+    tick(149);
+    expect(chip.isFocused).toBeTrue();
+
+    tick(1);
+    expect(chip.isFocused).toBeFalse();
+
+    fixture.destroy();
+  }));
 });

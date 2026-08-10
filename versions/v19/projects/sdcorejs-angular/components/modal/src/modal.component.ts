@@ -86,6 +86,14 @@ export class SdModal {
 
   constructor() {
     this.#isMobile = BrowserUtilities.isMobile();
+
+    // why: overlay của MatDialog/MatBottomSheet sống trong CDK overlay container ở <body>,
+    // KHÔNG nằm trong view của <sd-modal>. Host bị destroy (điều hướng route, @if tắt nhánh…)
+    // mà không close ref thì overlay + backdrop ở lại mồ côi, che và chặn click cả trang.
+    // Dùng forceClose (không qua beforeClose) vì đã destroy thì không thể huỷ việc đóng.
+    this.#destroyRef.onDestroy(() => {
+      this.forceClose();
+    });
   }
 
   #resolveWidth(): string {

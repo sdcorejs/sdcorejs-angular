@@ -120,7 +120,9 @@ export class EmployeeDetailComponent { ... }
 | `tooltip`   | `string \| (args) => string` | Hover tooltip on the badge.                                             |
 | `color`     | `Color \| (args) => Color`   | Badge color token.                                                      |
 
-The decorator self-registers via `SdTabDecoratorService` so metadata is resolved when the route activates.
+The decorator writes the builder into a plain module-level collection at class-definition time. `<sd-tab-router-outlet>` drains that collection into `SdTabRouterService` when it initialises, and any class decorated later (lazy routes) is forwarded straight to the connected outlet.
+
+> Previously the decorator subscribed to `SdTabDecoratorService.tabRouterService` (a static `BehaviorSubject`) at class-definition time. If an application never provided `SdTabRouterService`, `take(1)` never fired and every decorated class stayed pinned by a live subscriber for the lifetime of the app. `SdTabDecoratorService.tabRouterService` still publishes the service instance for backward compatibility, but the decorator no longer subscribes to it.
 
 ## Public API
 
@@ -284,4 +286,4 @@ this.tab.tabInfoChanges.next({
 - `<sd-badge>` — used to render each tab pill
 - Angular `Router` — drives all tab creation / activation
 - `SdTabRouterService` — programmatic API for `setCurrentTab`, `close`, event stream
-- `SdTabDecoratorService` — wiring layer for `@SdTabComponent`
+- `SdTabDecoratorService` — legacy wiring layer; still publishes `SdTabRouterService` on a static `BehaviorSubject`, but `@SdTabComponent` no longer subscribes to it

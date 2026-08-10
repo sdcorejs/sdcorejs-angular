@@ -44,6 +44,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { I18nService, TranslatePipe } from '@sdcorejs/angular/i18n';
@@ -141,6 +142,9 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   #ref = inject(ChangeDetectorRef);
   #formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus bị hoãn 100ms; handle phải bị clear khi destroy, nếu không timer vẫn chạy
+  // trên view đã tháo (đổi route nhanh là đủ tái hiện).
+  readonly #timers = ɵsdTimerScope();
 
   appearanceInput = input<MatFormFieldAppearance | undefined>(undefined, { alias: 'appearance' });
   appearance = computed(() => this.appearanceInput() ?? this.#formConfig?.appearance ?? 'outline');
@@ -554,8 +558,8 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
-      this.#focusActiveInput();
-    }, 100);
+    // why: vẫn 100ms như cũ (chờ Material dựng xong input mới focus) — chỉ khác là handle
+    // được scope theo DestroyRef nên không còn chạy sau destroy.
+    this.#timers.schedule(() => this.#focusActiveInput(), 100);
   };
 }

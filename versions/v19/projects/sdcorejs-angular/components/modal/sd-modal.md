@@ -51,6 +51,14 @@ Header/footer padding is `16px`. Body padding is `0`; add your own body wrapper 
 | `requestClose()` | Runs/coalesces `beforeClose`, closes when allowed, and resolves to the result. |
 | `forceClose()`   | Bypasses `beforeClose`; reserve for successful save/discard workflows.         |
 
+## Lifecycle
+
+The dialog / bottom-sheet opens into the CDK overlay container on `<body>`, **outside** the host view. Destroying `<sd-modal>` while it is open — route change, `@if` removing the branch, parent list re-render — therefore does **not** remove the overlay on its own.
+
+`<sd-modal>` closes its own overlay on destroy: the active `MatDialogRef` / `MatBottomSheetRef` is force-closed via `DestroyRef.onDestroy`, so no orphaned panel or backdrop is left blocking the page.
+
+`beforeClose` is **not** consulted on this path. Teardown has already happened and cannot be vetoed; a guard that returns `false` would only strand the overlay. Run confirmation flows before destroying the host (e.g. in a route guard), not from `beforeClose`.
+
 ## Examples
 
 ```html

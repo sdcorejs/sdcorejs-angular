@@ -146,6 +146,7 @@ export class AttachmentComponent {
 ## Visual cues (helps agent map screenshots → component)
 
 - **Drop zone**: square box with **2px dashed grey border**, centered Material icon `file_upload` (cloud / arrow-up), `previewWidth` × `previewHeight` (default 50×50). On dragover, border becomes **2px solid grey** and opacity 0.9. Click opens native file picker.
+- **Drag listener lifecycle**: the `dragover` / `dragenter` / `dragleave` / `drop` handlers are bound to the drop container after first render (desktop only) and removed in `DestroyRef.onDestroy`. Holding a reference to the drop element after the component is destroyed no longer replays uploads or restyles the element.
 - **Image type**: row of square thumbnails (drop zone first, then images). Hover reveals zoom-in icon + close (X) button. Drag handle to reorder.
 - **Document type**: stacked rows below images. Each row = file-type icon (extension-colored: pdf/doc/xls/png/…) + filename as a link + size in KB + close icon.
 - **Disabled / viewed mode**: drop zone hidden; for image type, only first `maxOfImage` thumbnails shown; if more, an overlay `+N` count appears on the last to open the gallery popup.

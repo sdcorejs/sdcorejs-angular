@@ -46,6 +46,7 @@ import {
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
@@ -105,6 +106,9 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
   private ref = inject(ChangeDetectorRef);
   private formConfig = inject(SD_FORM_CONFIGURATION, { optional: true });
   readonly #i18n = inject(I18nService);
+  // why: focus() (và open() gọi lại nó) hoãn 100ms rồi mới openPanel(). Không giữ handle thì
+  // panel overlay có thể mở SAU khi control đã destroy và không còn ai đóng nó.
+  readonly #timers = ɵsdTimerScope();
 
   // ==========================================
   // 3. SIGNAL INPUTS & MODEL
@@ -528,7 +532,8 @@ export class SdAutocomplete<T = any> implements OnInit, OnDestroy {
 
   focus = () => {
     this.isFocused = true;
-    setTimeout(() => {
+    // why: vẫn 100ms như cũ — chỉ scope handle theo DestroyRef.
+    this.#timers.schedule(() => {
       this.autocompleteTrigger()?.openPanel();
       this.inputRef()?.nativeElement?.focus();
     }, 100);

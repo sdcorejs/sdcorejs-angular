@@ -75,6 +75,14 @@ interface SdDocumentBuilderHeading {
 - `exportDocx({ fileName?, header?, footer? })` — export to `.doc` (Word HTML) with optional header/footer + correct page size for current orientation.
 - `hightSelectRange(range)` / `removeHighlightSeclectRange()` — visually highlight an arbitrary model range without touching content (markers).
 
+## Lifecycle / teardown
+Two public methods schedule deferred work against the CKEditor instance:
+
+- `heading.scroll(id)` — highlights the target for **5s**, then removes the `highlightMarker` via `editor.model.change()`.
+- `scrollToTop()` — scrolls the canvas after **100ms**.
+
+Both timers are cleared in `ngOnDestroy`. Destroying `<sd-document-builder>` right after either call (route change, tab switch, `@if` removing the branch) therefore leaves the highlight marker in place on an editor that is already gone instead of calling into a torn-down CKEditor instance. Callers do not need to guard these calls before navigating away.
+
 ## Content projection
 None — content is fully driven by editor data + plugins.
 

@@ -2,7 +2,7 @@ import { Component, DebugElement, ViewChild } from '@angular/core';
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { IMAGE_LOADER } from '@angular/common';
+import { DOCUMENT, IMAGE_LOADER } from '@angular/common';
 import { SdPreviewImage } from './preview-image.component';
 
 // ---------------------------------------------------------------------------
@@ -351,5 +351,88 @@ describe('SdPreviewImage — autoId', () => {
     expect(comp.autoIdThumb(0)).toBe('components-preview-image-gallery-thumb-0');
     expect(comp.autoIdThumb(3)).toBe('components-preview-image-gallery-thumb-3');
     expect(comp.autoIdDot(1)).toBe('components-preview-image-gallery-dot-1');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// describe: SSR-safe document access
+// ---------------------------------------------------------------------------
+// why: constructor đọc biến global `document` nên component ném `document is not defined`
+// khi render trên server. Spec dùng một Proxy quanh document thật, cấp qua token DOCUMENT:
+// nếu component đi qua token thì listener 'fullscreenchange' phải xuất hiện trong bản ghi.
+
+interface RecordedDocumentListener {
+  type: string;
+  listener: EventListenerOrEventListenerObject;
+}
+
+function createRecordingDocument(): {
+  documentProxy: Document;
+  added: RecordedDocumentListener[];
+  removed: RecordedDocumentListener[];
+} {
+  const added: RecordedDocumentListener[] = [];
+  const removed: RecordedDocumentListener[] = [];
+  const documentProxy = new Proxy(document, {
+    get(target: Document, property: string | symbol) {
+      if (property === 'addEventListener') {
+        return (type: string, listener: EventListenerOrEventListenerObject, options?: unknown) => {
+          added.push({ type, listener });
+          return target.addEventListener(type, listener, options as AddEventListenerOptions);
+        };
+      }
+      if (property === 'removeEventListener') {
+        return (type: string, listener: EventListenerOrEventListenerObject, options?: unknown) => {
+          removed.push({ type, listener });
+          return target.removeEventListener(type, listener, options as EventListenerOptions);
+        };
+      }
+      const value = Reflect.get(target, property) as unknown;
+      return typeof value === 'function' ? (value as (...args: unknown[]) => unknown).bind(target) : value;
+    },
+  }) as Document;
+  return { documentProxy, added, removed };
+}
+
+describe('SdPreviewImage document injection', () => {
+  let fixture: ComponentFixture<HostComponent>;
+  let added: RecordedDocumentListener[];
+  let removed: RecordedDocumentListener[];
+
+  beforeEach(async () => {
+    spyOn(URL, 'createObjectURL').and.returnValue('blob:mock-url');
+    spyOn(URL, 'revokeObjectURL').and.stub();
+
+    const recording = createRecordingDocument();
+    added = recording.added;
+    removed = recording.removed;
+
+    await TestBed.configureTestingModule({
+      imports: [HostComponent, NoopAnimationsModule],
+      providers: [
+        { provide: DOCUMENT, useValue: recording.documentProxy },
+        { provide: IMAGE_LOADER, useValue: (config: { src: string }) => config.src },
+      ],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+  });
+
+  function fullscreenListeners(entries: RecordedDocumentListener[]): RecordedDocumentListener[] {
+    return entries.filter(entry => entry.type === 'fullscreenchange');
+  }
+
+  it('binds fullscreenchange through the injected DOCUMENT, not the global one', () => {
+    expect(fullscreenListeners(added).length).toBe(1);
+  });
+
+  it('removes the fullscreenchange listener from the injected DOCUMENT on destroy', () => {
+    const bound = fullscreenListeners(added)[0];
+    expect(bound).toBeDefined();
+
+    fixture.destroy();
+
+    expect(fullscreenListeners(removed).some(entry => entry.listener === bound.listener)).toBeTrue();
   });
 });

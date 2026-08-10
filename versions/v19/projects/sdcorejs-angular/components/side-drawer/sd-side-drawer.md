@@ -50,6 +50,20 @@ Header/footer padding is `16px`. Body padding is `0`; add your own wrapper when 
 | `startLoading()` | Starts the loading overlay inside the drawer.                                  |
 | `stopLoading()`  | Stops the loading overlay.                                                     |
 
+## Body scroll lock
+
+While a drawer is open, page scroll is locked by setting `document.body.style.overflow = 'hidden'`.
+
+The lock is **ref-counted and shared across every `<sd-side-drawer>` instance** (root-provided `SdBodyScrollLockService`), so stacked drawers behave correctly:
+
+- The first drawer to open records the app's previous `overflow` value and applies the lock.
+- Further drawers only bump the counter — the DOM is not touched again.
+- Closing a drawer only restores `overflow` when it is the **last** one holding a lock. Close order does not matter: closing the outer drawer first keeps the page locked while an inner drawer is still open, and the original value (not `hidden`) is restored at the end.
+- Destroying a drawer while it is open releases its lock too, so teardown can never strand the page in a permanently unscrollable state.
+- `open()` / `close()` are idempotent per instance — repeated calls cannot unbalance the counter.
+
+Do not write `document.body.style.overflow` yourself while a drawer is open; the value is restored from the snapshot taken at the first lock.
+
 ## Example
 
 ```html
