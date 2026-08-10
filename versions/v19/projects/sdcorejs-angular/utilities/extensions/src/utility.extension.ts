@@ -74,6 +74,10 @@ const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validato
     element.style.display = 'none';
     body.appendChild(element);
 
+    // why: trước đây `<input>` ẩn chỉ bị gỡ ở LẦN GỌI SAU (qua `getElementById(uploadId).remove()`),
+    // nên một lần upload bị huỷ để lại element + listener sống trong `<body>` vô thời hạn.
+    const cleanup = () => element.remove();
+
     element.addEventListener('change', (evt: any) => {
       try {
         const target = evt.target as DataTransfer;
@@ -111,8 +115,12 @@ const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validato
               }
               files.push(file);
             }
-            resolve(files);
           }
+          // why: `resolve(files)` trước đây nằm TRONG vòng lặp, nên promise settle ngay ở file đầu
+          // tiên. Mọi file sau đó vẫn được validate, nhưng `throwUploadError` khi đó gọi `reject`
+          // trên một promise ĐÃ settle → không có tác dụng: lỗi sai định dạng / quá dung lượng của
+          // các file sau bị nuốt im lặng, và caller nhận về một mảng thiếu file.
+          resolve(files);
         } else {
           const file = target.files.item(0);
           if (file) {
@@ -134,12 +142,26 @@ const upload = (option?: { extensions?: string[]; maxSizeInMb?: number; validato
               }
             }
             resolve(file);
+          } else {
+            // `change` bắn nhưng không có file (hiếm, phụ thuộc trình duyệt) — vẫn phải settle.
+            resolve(null);
           }
         }
       } catch (error) {
         reject(error);
+      } finally {
+        cleanup();
       }
     });
+
+    // why: bấm Esc / Cancel trong hộp thoại chọn file của HĐH KHÔNG phát `change`, nên trước đây
+    // promise không bao giờ settle — `await SdUtilities.upload()` treo vĩnh viễn và closure của
+    // caller bị ghim lại. `cancel` là sự kiện chuẩn của `<input type="file">` cho đúng ca này.
+    element.addEventListener('cancel', () => {
+      cleanup();
+      resolve(null);
+    });
+
     element.click();
   });
   return promise;

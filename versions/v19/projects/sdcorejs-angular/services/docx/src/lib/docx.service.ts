@@ -36,7 +36,17 @@ export class SdDocxService {
         return;
       }
 
+      // why: `sd-docx.md` công bố "resolves with `null` if the user cancels", nhưng service chỉ
+      // nghe `change`. Bấm Esc / Cancel trong hộp thoại chọn file của HĐH KHÔNG phát `change` —
+      // promise không bao giờ settle, `await` treo vĩnh viễn và closure của caller bị ghim lại.
+      // `cancel` là sự kiện chuẩn của `<input type="file">` cho đúng trường hợp đó.
+      const handleCancel = () => {
+        this.#fileInput?.removeEventListener('change', handleChange);
+        resolve(null);
+      };
+
       const handleChange = async (event: Event) => {
+        this.#fileInput?.removeEventListener('cancel', handleCancel);
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
 
@@ -61,6 +71,7 @@ export class SdDocxService {
       };
 
       this.#fileInput.addEventListener('change', handleChange, { once: true });
+      this.#fileInput.addEventListener('cancel', handleCancel, { once: true });
       this.#fileInput.click();
     });
   }

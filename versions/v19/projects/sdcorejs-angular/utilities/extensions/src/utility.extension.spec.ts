@@ -581,20 +581,54 @@ describe('SdUtilities', () => {
       expect(result).toBe(file);
     });
 
-    it('resolves with null when no file is returned (no files in list)', async () => {
-      // When files list is empty, single-mode skips resolve (hangs) — so we
-      // test through the multiple=false path where item(0) returns null
+    const UPLOAD_INPUT_ID = 'U1e09c1c0-b647-437e-995e-d7a1a1b60550';
+
+    it('resolves with null when the change event carries no file', async () => {
+      // why: spec cũ race promise với một sentinel `'timeout'` rồi assert sentinel THẮNG — tức nó
+      // khẳng định "promise treo" chính là hành vi đúng. Không phải: nhánh single bỏ qua `resolve`
+      // khi `item(0)` trả null, nên `await SdUtilities.upload()` đứng im mãi mãi và closure của
+      // caller bị ghim đến hết phiên.
       const promise = SdUtilities.upload({ extensions: ['pdf'] });
-      const inputId = 'U1e09c1c0-b647-437e-995e-d7a1a1b60550';
-      const input = document.getElementById(inputId) as HTMLInputElement;
+      const input = document.getElementById(UPLOAD_INPUT_ID) as HTMLInputElement;
       const emptyFileList = { length: 0, item: () => null, [Symbol.iterator]: function* () {} };
       const event = new Event('change', { bubbles: true });
       Object.defineProperty(event, 'target', { writable: false, value: { files: emptyFileList } });
       input?.dispatchEvent(event);
-      // Promise never resolves when file is null — just ensure no throw yet
-      // We'll race with a timeout
-      const raceResult = await Promise.race([promise, new Promise(resolve => setTimeout(() => resolve('timeout'), 50))]);
-      expect(raceResult).toBe('timeout'); // still pending — no crash
+
+      await expectAsync(promise).toBeResolvedTo(null);
+    });
+
+    it('resolves with null when the OS file dialog is cancelled', async () => {
+      // why: bấm Esc/Cancel KHÔNG phát `change`, chỉ phát `cancel`. Không nghe sự kiện đó thì
+      // promise không bao giờ settle.
+      const promise = SdUtilities.upload();
+      const input = document.getElementById(UPLOAD_INPUT_ID) as HTMLInputElement;
+      input?.dispatchEvent(new Event('cancel'));
+
+      await expectAsync(promise).toBeResolvedTo(null);
+    });
+
+    it('removes the hidden input from the DOM once the upload settles', async () => {
+      // why: element ẩn trước đây chỉ bị gỡ ở LẦN GỌI SAU, nên một lần huỷ để lại element +
+      // listener sống trong <body> vô thời hạn.
+      const promise = SdUtilities.upload();
+      const input = document.getElementById(UPLOAD_INPUT_ID) as HTMLInputElement;
+      input?.dispatchEvent(new Event('cancel'));
+      await promise;
+
+      expect(document.getElementById(UPLOAD_INPUT_ID)).toBeNull();
+    });
+
+    it('validates EVERY file in multiple mode, not just the first', async () => {
+      // why: `resolve(files)` nằm TRONG vòng lặp nên promise settle ngay ở file đầu; file sau sai
+      // định dạng vẫn chạy `throwUploadError`, nhưng `reject` trên một promise ĐÃ settle là no-op —
+      // lỗi bị nuốt im lặng và caller nhận về mảng thiếu file.
+      const good = new File(['data'], 'a.pdf', { type: 'application/pdf' });
+      const bad = new File(['data'], 'b.png', { type: 'image/png' });
+      const promise = SdUtilities.upload({ multiple: true, extensions: ['pdf'] });
+      fireChangeWithFiles([good, bad]);
+
+      await expectAsync(promise).toBeRejectedWithError(/Invalid file format|File tải lên không đúng định dạng|ファイル形式/);
     });
 
     it('rejects with "invalid-format" error for file with no extension (single mode)', async () => {

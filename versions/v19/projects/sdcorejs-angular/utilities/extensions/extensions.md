@@ -130,7 +130,7 @@ Higher-level value validators built on `StringUtilities.REGEX_*`. New canonical 
 
 | Name | Signature | Purpose |
 | --- | --- | --- |
-| `upload` | `(option?: { extensions?, maxSizeInMb?, validator?, multiple? }) => Promise<File \| File[] \| null>` | Programmatic file picker — injects a hidden `<input type=file>`, validates extension/size/custom rule, resolves with selected file(s). |
+| `upload` | `(option?: { extensions?, maxSizeInMb?, validator?, multiple? }) => Promise<File \| File[] \| null>` | Programmatic file picker — injects a hidden `<input type=file>`, validates extension/size/custom rule, resolves with the selected file(s). Resolves `null` when the OS dialog is cancelled or the change event carries no file (previously the promise never settled on either path). In `multiple` mode EVERY file is validated, so one bad file rejects the whole call — previously validation stopped effectively at the first file. The hidden input is removed as soon as the call settles. |
 | `download` | `(fileOrPath: File \| string, fileName?) => void` | Trigger browser download of a `File` (via blob URL) or a string path/URL. Absolute `http:`/`https:` URLs open in a new tab through `sdOpenExternal` (`noopener,noreferrer`) instead of downloading. |
 | `downloadBlob` | `(blob: Blob, fileName?) => void` | Trigger download of an arbitrary `Blob`. |
 | `copyToClipboard` | `(text: string) => void` | `navigator.clipboard.writeText`. |
