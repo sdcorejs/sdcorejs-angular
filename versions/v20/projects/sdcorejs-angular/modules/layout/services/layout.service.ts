@@ -52,7 +52,9 @@ export class SdLayoutService {
         throw new Error(
           // @i18n-ignore dev-facing error — không cần dịch
           '[SdLayoutService] SD_LAYOUT_CONFIGURATION chưa được provide. ' +
+            // @i18n-ignore
             'Provide token này (xem ISdLayoutConfiguration) để cấu hình user info / sidebar / signout. ' +
+            // @i18n-ignore
             'Nếu đang chạy demo/playground và CHỦ ĐỘNG muốn mock data, provide SD_LAYOUT_DEMO_FALLBACK = true.'
         );
       }

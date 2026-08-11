@@ -35,7 +35,7 @@ A schema-driven form system: `<sd-form-builder>` is a drag-and-drop designer tha
 
 **Not exported** (internal): the 14 field sub-components (`TextFieldControl`, `SelectAttribute`, …), `BuilderService`, `FormGenericService`, and all seven pipes (`ComponentViewedPipe`, `WhenExpressionPipe`, `ExpressionQueryPipe`, `ExpressionViewPipe`, `ExpressionFeelPipe`, `HtmlPipe`, `HyperlinkPipe`). The builder and renderer compose them internally; there is no supported way to mount one on its own.
 
-> **Known gap**: `src/models/form-generic-validation.model.ts` is **not** in the models barrel, so `SdFormGenericValidation`, `SdFormGenericValidationFunction`, `SdFormGenericValidationConfiguration` and `ValidationAlerts` cannot be imported by name — even though `SdFormGeneric.validations` and `IWorkflowConfigurationForm.validation` are typed with them. Build the objects as literals (structural typing accepts them); you just cannot annotate a variable with those names.
+`SdFormGenericValidation`, `SdFormGenericValidationFunction`, `SdFormGenericValidationConfiguration` and `ValidationAlerts` are exported from the models barrel, so the types behind `SdFormGeneric.validations` and `IWorkflowConfigurationForm.validation` can be imported by name.
 
 ### Helper functions and constants
 

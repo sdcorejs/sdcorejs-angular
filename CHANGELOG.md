@@ -12,6 +12,8 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 - **Docs for three previously undocumented entry points** — `components/form-generic` (form builder, form renderer, `sd-feel-expression`, the schema model and the configuration token), `components/ckeditor-styles`, and `forms/directives` (`sdSuffixDef` / `sdLabelDef` / `sdViewDef` / `sdItemDef`, with a table of which control reads which).
 - **CI actually runs the tests.** A `test` job now gates every npm publish, and a new `ci.yml` runs `check:sync`, lint, build, the unit suite and the repo script tests on every push and pull request. Previously nothing ran the ~4,600 specs at all, and `npm run lint:release` — a documented pre-release step — was red on a clean `main`.
 - **64 new i18n keys across all five locales** (vi, en, ja, ko, zh; 525 → 589, parity verified) covering `query-bar`, `query-builder`, `tree`, `sd-hover-copy` and `modules/layout`, which previously shipped hardcoded Vietnamese and English.
+- **`SdFormGenericValidation` + 3 symbol liên quan import được bằng tên** — `form-generic-validation.model` giờ nằm trong models barrel của `components/form-generic`; trước đây `SdFormGeneric.validations` dùng các type này nhưng consumer không annotate được biến bằng chúng.
+- **`npm run check:i18n` xanh lần đầu và đáng tin** — stripper hiểu regex literal (một regex chứa quote/backtick từng đẩy máy trạng thái vào string vĩnh viễn, đếm nhầm comment là code — `excel.service.ts` bị đếm 22 chỗ toàn comment); checker giờ đọc marker `// @i18n-ignore` (dòng đó hoặc dòng ngay dưới) đúng như i18n.md đã hứa; budget per-file tính lại theo số thực. +9 test (`npm run test:check-i18n`, gộp vào `test:scripts`).
 
 ### Security
 

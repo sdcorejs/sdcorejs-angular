@@ -63,11 +63,14 @@ export class SdKeycloakService {
   #assertValidConfig(config: SdKeycloakTenantConfig | undefined | null): void {
     const missing = (['url', 'realm', 'clientId'] as const).filter(field => !config?.[field]?.trim?.());
     if (!config || missing.length) {
+      // @i18n-ignore dev-facing config error — không cần dịch
       throw new Error(`[sd-keycloak] Thiếu cấu hình bắt buộc: ${missing.join(', ') || 'toàn bộ SdKeycloakTenantConfig'}.`);
     }
     if (isDevMode() && !config.secureRoutes?.length) {
       console.warn(
+        // @i18n-ignore dev-facing console.warn — không cần dịch
         '[sd-keycloak] `secureRoutes` rỗng — SdKeycloakInterceptor sẽ KHÔNG đính access token vào bất kỳ request nào. ' +
+          // @i18n-ignore
           "Khai báo path cùng origin (vd ['/api/v1']) hoặc origin tuyệt đối (vd ['https://api.example.com/v1'])."
       );
     }
