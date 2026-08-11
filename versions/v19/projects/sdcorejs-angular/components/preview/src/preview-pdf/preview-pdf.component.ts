@@ -297,16 +297,16 @@ export class SdPreviewPdf {
   // ==========================================
   // OUTPUTS
   // ==========================================
-  readonly sdClose = output<void>();
-  readonly sdLoaded = output<PdfLoadEvent>();
-  readonly sdPageChange = output<number>();
-  readonly sdZoomChange = output<number>();
-  readonly sdDownload = output<{ filename: string }>();
+  readonly close = output<void>();
+  readonly loaded = output<PdfLoadEvent>();
+  readonly pageChange = output<number>();
+  readonly zoomChange = output<number>();
+  readonly download = output<{ filename: string }>();
   readonly loadError = output<PdfErrorEvent>();
   // Fired whenever the search term, results, or active index changes — gives
   // the consumer a stable hook for analytics / sticky highlight bars without
   // poking at the internal state signal.
-  readonly sdSearchChange = output<{ term: string; total: number; current: number; truncated: boolean }>();
+  readonly searchChange = output<{ term: string; total: number; current: number; truncated: boolean }>();
 
   // ==========================================
   // STATE (signals)
@@ -648,7 +648,7 @@ export class SdPreviewPdf {
     const changed = target !== this.#activePage();
     if (changed) {
       this.#activePage.set(target);
-      this.sdPageChange.emit(target);
+      this.pageChange.emit(target);
     }
     this.#ensureThumbnailPageVisible(target);
     if (this.#scrollModeInternal() === 'continuous') {
@@ -806,7 +806,7 @@ export class SdPreviewPdf {
     }
     const downloaded = this.#browser.download(href, filename);
     if (temporaryHref) this.#scheduleTemporaryDownloadUrlRelease(temporaryHref);
-    if (downloaded && !this.#destroyed) this.sdDownload.emit({ filename });
+    if (downloaded && !this.#destroyed) this.download.emit({ filename });
     return downloaded;
   }
 
@@ -817,7 +817,7 @@ export class SdPreviewPdf {
 
   /** Programmatic equivalent of clicking the X — emits the close output. */
   requestClose(): void {
-    this.sdClose.emit();
+    this.close.emit();
   }
 
   /** Retry the active load attempt (called from the error state retry button). */
@@ -1554,8 +1554,8 @@ export class SdPreviewPdf {
     this.#resetContinuousLayout(pdfDoc.numPages);
 
     if (!this.#destroyed) {
-      this.sdLoaded.emit({ totalPages: pdfDoc.numPages, meta });
-      this.sdPageChange.emit(this.#activePage());
+      this.loaded.emit({ totalPages: pdfDoc.numPages, meta });
+      this.pageChange.emit(this.#activePage());
     }
 
     if (this.#scrollModeInternal() === 'continuous') {
@@ -1620,7 +1620,7 @@ export class SdPreviewPdf {
       page.cleanup();
     }
 
-    if (completed) this.sdZoomChange.emit(scale);
+    if (completed) this.zoomChange.emit(scale);
   }
 
   #resolveScale(baseViewport: SdPdfViewport): number {
@@ -1935,7 +1935,7 @@ export class SdPreviewPdf {
   }
 
   #emitSearchChange(): void {
-    this.sdSearchChange.emit({
+    this.searchChange.emit({
       term: this.#searchTerm(),
       total: this.#searchResults().length,
       current: this.#searchActiveIndex() + 1, // 1-based; 0 when no active
@@ -2050,7 +2050,7 @@ export class SdPreviewPdf {
     const midpointPage = this.#continuousPageIndexAt(stage.scrollTop + viewportHeight / 2) + 1;
     if (midpointPage === this.#activePage()) return;
     this.#activePage.set(midpointPage);
-    if (!this.#destroyed) this.sdPageChange.emit(midpointPage);
+    if (!this.#destroyed) this.pageChange.emit(midpointPage);
   }
 
   #positionContinuousPage(pageNumber: number): void {
@@ -2132,7 +2132,7 @@ export class SdPreviewPdf {
       if (!this.#isCurrentContinuousPage(doc, generation, pageNumber)) return;
       this.#updateContinuousMeasurement(pageNumber, logicalViewport.height);
       this.#zoom.set(scale);
-      this.sdZoomChange.emit(scale);
+      this.zoomChange.emit(scale);
     } finally {
       if (this.#continuousReservations.get(pageNumber) === reservation) this.#continuousReservations.delete(pageNumber);
       page?.cleanup();

@@ -18,19 +18,19 @@ export class LayoutUserComponent {
   isShowSidebar = input<boolean>(false);
   userInfo = input.required<SdLayoutUserInfo>();
 
-  sdMenuClosed = output<void>();
-  sdMenuOpened = output<void>();
-  sdToggleMenuLock = output<Event>();
+  menuClosed = output<void>();
+  menuOpened = output<void>();
+  toggleMenuLock = output<Event>();
 
   onMenuOpened(): void {
-    this.sdMenuOpened.emit();
+    this.menuOpened.emit();
   }
 
   onMenuClosed(): void {
-    this.sdMenuClosed.emit();
+    this.menuClosed.emit();
   }
 
   onToggleMenuLock(event: Event): void {
-    this.sdToggleMenuLock.emit(event);
+    this.toggleMenuLock.emit(event);
   }
 }

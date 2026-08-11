@@ -37,9 +37,9 @@
           type="text"
           [label]="_label"
           [(model)]="_columnFilter[_column.field]"
-          (sdKeyupEnter)="onFilterChange()"
+          (keyupEnter)="onFilterChange()"
           (sdBlur)="onFilterCommit()"
-          (sdCleared)="onFilterChange()"
+          (cleared)="onFilterChange()"
           [disabled]="_column.filter?.disabled"
           clearable
           hideInlineError>
@@ -52,9 +52,9 @@
             size="sm"
             [label]="_label"
             [(model)]="_columnFilter[_column.field]"
-            (sdKeyupEnter)="onFilterChange()"
+            (keyupEnter)="onFilterChange()"
             (sdBlur)="onFilterCommit()"
-            (sdCleared)="onFilterChange()"
+            (cleared)="onFilterChange()"
             [disabled]="_column.filter?.disabled"
             clearable
             hideInlineError>
@@ -171,7 +171,7 @@
       [(model)]="_columnFilter[field].from"
       (sdChange)="onFilterChange()"
       (sdBlur)="onFilterCommit()"
-      (sdCleared)="onFilterChange()"
+      (cleared)="onFilterChange()"
       [disabled]="disabled"
       clearable
       hideInlineError>
@@ -184,7 +184,7 @@
       [(model)]="_columnFilter[field].to"
       (sdChange)="onFilterChange()"
       (sdBlur)="onFilterCommit()"
-      (sdCleared)="onFilterChange()"
+      (cleared)="onFilterChange()"
       [disabled]="disabled"
       clearable
       hideInlineError>

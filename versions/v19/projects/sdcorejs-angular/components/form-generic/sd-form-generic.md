@@ -257,7 +257,7 @@ The condition editor. Opens an `<sd-modal>` in which the user composes a conditi
 
 | Name | Payload | Notes |
 | --- | --- | --- |
-| `sdExpressionChange` | `SdFormGenericExpression` | The edited tree. |
+| `expressionChange` | `SdFormGenericExpression` | The edited tree. |
 | `modelChange` | `string \| undefined` | Completes the two-way `[(model)]`. |
 | `sdChange` | `{ model?, expression? }` | Both at once. |
 

@@ -96,14 +96,14 @@ describe('SdEntityPicker', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(component.loadError()).toEqual(jasmine.any(Error));
+    expect(component.loadErrorState()).toEqual(jasmine.any(Error));
 
     fixture.componentRef.setInput('model', 2);
     fixture.detectChanges();
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(component.loadError()).toBeNull();
+    expect(component.loadErrorState()).toBeNull();
   });
 
   it('aborts the previous server request and ignores stale request errors', async () => {
@@ -123,7 +123,7 @@ describe('SdEntityPicker', () => {
     expect(await second).toEqual({ items: [USERS[0]], total: 1 });
     deferreds[0].reject(new Error('stale failure'));
     expect(await first).toEqual({ items: [], total: 0 });
-    expect(component.loadError()).toBeNull();
+    expect(component.loadErrorState()).toBeNull();
   });
 
   it('registers with the parent form and honors disabled/viewed presentation', () => {

@@ -45,11 +45,7 @@ const STATIC_ITEMS: SdTreeItemStatic<NodeItem>[] = [
   standalone: true,
   imports: [SdTree],
   template: `
-    <sd-tree
-      [option]="option"
-      (sdSelectChange)="onSelect($event)"
-      (sdExpandChange)="onExpand($event)"
-      (sdCollapseChange)="onCollapse($event)" />
+    <sd-tree [option]="option" (selectChange)="onSelect($event)" (expandChange)="onExpand($event)" (collapseChange)="onCollapse($event)" />
   `,
 })
 class StaticHostComponent {
@@ -325,7 +321,7 @@ const DEEP_ITEMS: SdTreeItemStatic<NodeItem>[] = [
 @Component({
   standalone: true,
   imports: [SdTree],
-  template: `<sd-tree [option]="option" (sdExpandChange)="expandedEvents.push($event)" />`,
+  template: `<sd-tree [option]="option" (expandChange)="expandedEvents.push($event)" />`,
 })
 class MaxDepthHostComponent {
   expandedEvents: SdTreeToggleEvent<NodeItem>[] = [];

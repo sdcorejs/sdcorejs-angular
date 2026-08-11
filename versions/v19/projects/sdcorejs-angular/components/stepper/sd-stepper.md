@@ -41,7 +41,7 @@ Declarative wizard / stepper container wrapping Angular Material's `mat-stepper`
 ### Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `sdSelectionChange` | `StepperSelectionEvent` (from `@angular/cdk/stepper`) | Emitted whenever the active step changes. Payload: `{ selectedIndex, previouslySelectedIndex, selectedStep, previouslySelectedStep }`. Use to react to a step entering (eg fetch data lazily). |
+| `selectionChange` | `StepperSelectionEvent` (from `@angular/cdk/stepper`) | Emitted whenever the active step changes. Payload: `{ selectedIndex, previouslySelectedIndex, selectedStep, previouslySelectedStep }`. Use to react to a step entering (eg fetch data lazily). |
 
 ### Public API
 | Method | Signature | Notes |
@@ -208,7 +208,7 @@ A child of `<sd-stepper>` that declares one step — its label, icon, optional/e
 ### Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `sdSelectChange` | `void` | Emitted when this step transitions to selected. Useful for lazy data fetch when entering the step. |
+| `selectChange` | `void` | Emitted when this step transitions to selected. Useful for lazy data fetch when entering the step. |
 
 ### Content projection
 | Slot | Purpose |
@@ -233,4 +233,4 @@ A child of `<sd-stepper>` that declares one step — its label, icon, optional/e
 - `<sd-tab-group>` — for parallel views (non-sequential)
 - `<sd-tab-router>` — for route-driven sequences (each step owns a URL)
 - `<sd-input>`, `<sd-select>`, `<sd-checkbox>` — common form controls inside step bodies
-- `@angular/cdk/stepper.StepperSelectionEvent` — the type emitted by `sdSelectionChange`
+- `@angular/cdk/stepper.StepperSelectionEvent` — the type emitted by `selectionChange`

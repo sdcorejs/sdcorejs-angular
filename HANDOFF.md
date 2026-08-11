@@ -3,7 +3,7 @@
 > File này bàn giao **branch `fix/full-scan-review`**. Nó khác với `versions/v19/HANDOFF.md`
 > (artifact cũ từ đợt `1.4`, không liên quan, chưa đụng tới).
 >
-> Cập nhật: 2026-08-11 · Base: `main` @ `25480b6` · Đã push lên `origin`.
+> Cập nhật: 2026-08-11 (lần 2 — sau khi đảo nhóm output rename) · Base: `main` @ `25480b6`.
 
 ---
 
@@ -11,8 +11,8 @@
 
 | | |
 |---|---|
-| Branch | `fix/full-scan-review` (đã push, `origin` và local trùng nhau) |
-| Số commit trên branch | 15 |
+| Branch | `fix/full-scan-review` |
+| Số commit trên branch | 17 (16: đảo nhóm ~73 output rename — xem §4; 17: sync rollout v20/v21 tách riêng vì hook git-secrets vỡ E2BIG khi một commit staged ~400 file) |
 | Working tree | sạch |
 | Merge vào `main` | **chưa** |
 | Tag release | **chưa** |
@@ -92,6 +92,8 @@ cd versions/v19 && npm run check:i18n-parity
 | 13 | `68ab2ad7` | `refactor!` — **BREAKING**: đổi tên public API mà semver không thể phát tín hiệu. |
 | 14 | `2f586553` | `docs` — làm `.md` đúng trở lại + ghi nhận code GPL được vendor vào. |
 | 15 | `5eeda62a` | `chore(release)` — `npm run sync` sang v20/v21 + viết CHANGELOG. |
+| 16 | *(revert)* | `revert!` — đảo nhóm ~73 output rename của #13 theo quyết định user (giữ tên đã publish, khớp thông lệ Material). Gộp `sdLoadError` → `loadError` (breaking duy nhất còn lại của nhóm output). Chi tiết §4. |
+| 17 | *(sync)* | `chore(sync)` — rollout #16 sang v20/v21. Tách riêng chỉ vì hook git-secrets E2BIG. |
 
 ---
 
@@ -104,14 +106,13 @@ Người dùng đã chọn ba việc này khi bắt đầu. Ghi lại để khô
 | Code GPL-2.0 vendor trong package MIT (`services/docx`) | **Giữ nguyên code**, chỉ thêm `NOTICE` + ghi rõ trong tài liệu. Không relicense, không xoá entry point. **Kết luận pháp lý vẫn để mở** — cần hỏi luật sư trước khi tag. |
 | Nhóm breaking rename | **Làm luôn, xoá thẳng tên cũ**, không giữ alias `@deprecated`. |
 | Nhóm giảm bundle (16.32 MB) | **Hoãn.** Chưa động vào. |
+| **Nhóm ~73 output rename — ĐÃ ĐẢO LẠI (2026-08-11)** | User không đồng ý scale + muốn tên quen thuộc (`close`, `search`, … khớp thông lệ Material, và là tên đã publish tới 1.6). Đã revert diff-driven theo đúng commit `68ab2ad7` (544 thay thế / 125 file), **16 tên `sd*` đã publish từ 1.4/1.6 giữ nguyên** (đổi chúng mới là breaking). Breaking duy nhất còn lại của nhóm output: `sdLoadError` → `loadError` trên `<sd-tree-select>` / `<sd-entity-picker>` (user chọn gộp; `<sd-tree>` / `<sd-preview-pdf>` vốn đã publish `loadError`). Signal nội bộ `loadError` của entity-picker đổi thành `loadErrorState` để nhường tên cho output. |
 
-Một quyết định kỹ thuật quan trọng phát sinh trong lúc làm:
-
-**`(click)` của `<sd-button>` cố ý KHÔNG đổi tên.** Mọi output khác đã thêm tiền tố `sd`,
-riêng cái này thì không. Lý do: đổi thành `sdClick` sẽ khiến mọi `(click)` sẵn có của consumer
-**âm thầm rơi về DOM event gốc** — vẫn chạy, không lỗi biên dịch, nhưng payload khác và
-**bỏ qua gate `disabled`**. Đây là kiểu breaking im lặng, nguy hiểm nhất. Cần một đợt riêng
-kèm codemod. Đã ghi trong `CHANGELOG.md` mục "Không đổi (có chủ đích)".
+Một quyết định kỹ thuật quan trọng phát sinh trong lúc làm (nay là mặc định sau khi đảo
+nhóm output): **`(click)` của `<sd-button>` giữ nguyên tên.** Đổi thành `sdClick` sẽ khiến
+mọi `(click)` sẵn có của consumer **âm thầm rơi về DOM event gốc** — vẫn chạy, không lỗi
+biên dịch, nhưng payload khác và **bỏ qua gate `disabled`**. Đây là kiểu breaking im lặng,
+nguy hiểm nhất. Đã ghi trong `CHANGELOG.md` mục "Không đổi (có chủ đích)".
 
 ---
 
@@ -133,7 +134,7 @@ Mỗi mục dưới đây đã được xác minh còn tồn tại tại thời 
 | # | Vị trí | Vấn đề | Tại sao hoãn |
 |---|---|---|---|
 | 1 | `services/excel/src/lib/excel.service.ts:302` | Set `numFmt = '#'` cho ô số, rồi dòng 306 ghi đè cả `style` → format bị mất. Xác minh với exceljs 4.4. | Sửa sẽ **đổi diện mạo file Excel** người dùng xuất ra. Cần quyết định sản phẩm, không phải bug fix thuần. |
-| 2 | `components/button/src/button.component.ts:101` | `click = output<Event>()` — output duy nhất còn thiếu tiền tố `sd`. | Xem §4. Cần codemod. |
+| 2 | Toàn bộ tầng output | Surface output **mixed có chủ đích** sau khi đảo nhóm rename: ~78 tên không prefix (convention chính, khớp Material) + 16 tên `sd*` đã publish từ 1.4/1.6 (`sdChanges`, `sdBlur`, `sdFocus`, `sdClosed`/`sdCloseError` trên modal/side-drawer/inform/import-excel, `sdCancel` job-progress, …). | Thống nhất về một phía nào cũng breaking. Nếu làm thì cần đợt riêng kèm codemod, xem §4. |
 | 3 | `components/form-generic/src/models/index.ts` | Thiếu `export * from './form-generic-validation.model'` → `SdFormGenericValidation` và 3 type liên quan **không import được bằng tên**, dù `SdFormGeneric.validations` dùng chúng. | Cùng lớp lỗi với `ToastData` (đã sửa), nhưng nằm ngoài phạm vi đợt đó. Fix nhỏ. Đã ghi "Known gap" trong `sd-form-generic.md`. |
 | 4 | `versions/v19/projects/sdcorejs-angular/karma.conf.js` | Coverage vẫn chỉ đo **405/639 file**. `includeAllSources: true` đã bật nhưng **đo được là no-op** dưới builder này (đã ghi lý do đầy đủ trong comment tại chỗ). | Fix thật cần một test entry dùng `require.context` khai trong `angular.json` — đổi cấu trúc test bundle, cần đợt riêng. |
 | 5 | ~60 generic khắp `components/table/src/models/**`, `import-excel`, `services/excel`, `form-generic-component.model.ts` | Vẫn để `<T = any>`. | Đã thử chuyển `unknown`: sinh **161 lỗi type**, 55 trong đó là `TS18046` cần narrow thật ở runtime. Đó là dự án về tính đúng đắn, không phải đợt đổi tên. Danh sách file chính xác nằm trong `CHANGELOG.md`. |

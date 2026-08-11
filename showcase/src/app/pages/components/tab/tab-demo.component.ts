@@ -59,7 +59,7 @@ interface FileTab {
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-tab-dong-duoc') {
       <demo-section heading="Tab đóng được" [props]="[{ name: 'closable', value: 'true' }, { name: '(tabClosed)', value: 'event' }]">
         <div class="full">
-          <sd-tab-group (sdTabClosed)="onTabClosed($event)">
+          <sd-tab-group (tabClosed)="onTabClosed($event)">
             @for (file of files(); track file.id) {
               <sd-tab [label]="file.name" icon="description" [closable]="true">
                 <p>Nội dung của file <strong>{{ file.name }}</strong></p>

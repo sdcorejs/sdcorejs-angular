@@ -205,10 +205,10 @@
       <lib-layout-user
         [userInfo]="_userInfo"
         [isMobileOrTablet]="isMobile()"
-        (sdMenuOpened)="onUserMenuOpened()"
-        (sdMenuClosed)="onUserMenuClosed()"
+        (menuOpened)="onUserMenuOpened()"
+        (menuClosed)="onUserMenuClosed()"
         [isShowSidebar]="isShowSidebar()"
-        (sdToggleMenuLock)="toggleMenuLock($event)">
+        (toggleMenuLock)="toggleMenuLock($event)">
       </lib-layout-user>
     </div>
 

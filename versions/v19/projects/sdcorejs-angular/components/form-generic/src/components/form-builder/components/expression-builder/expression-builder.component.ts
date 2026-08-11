@@ -98,7 +98,7 @@ export class ExpressionBuilderComponent implements OnInit {
   }
   readonly modelChange = output<SdFormGenericExpression | undefined>();
   readonly sdChange = output<SdFormGenericExpression | undefined>();
-  readonly sdEdit = output<void>();
+  readonly edit = output<void>();
 
   /** Inserted by Angular inject() migration for backwards compatibility */
   constructor(...args: unknown[]);
@@ -111,7 +111,7 @@ export class ExpressionBuilderComponent implements OnInit {
     // Khi cập nhật expression thì clone ra
     this.expression = JSON.parse(JSON.stringify(this.model));
     // Thông báo cho component cha có sự kiện edit trong trường hợp attributes có thay đổi
-    this.sdEdit.emit();
+    this.edit.emit();
     this.modal?.open?.();
     this.ref.markForCheck();
   };

@@ -35,7 +35,7 @@ interface Employee {
             [showSearch]="true"
             [showLogicToggle]="true"
             [showClearAll]="true"
-            (sdApply)="onApply()">
+            (apply)="onApply()">
           </sd-query-bar>
         </div>
       </demo-section>
@@ -52,7 +52,7 @@ interface Employee {
             density="compact"
             [showLogicToggle]="true"
             [showOperatorOnChip]="true"
-            (sdApply)="onApply()">
+            (apply)="onApply()">
           </sd-query-bar>
         </div>
       </demo-section>

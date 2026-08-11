@@ -53,7 +53,7 @@ export class AttributeTable {
       this.columnsKey = columnsKey?.toString();
     }
   }
-  readonly sdColumnsKeyChange = output<string>();
+  readonly columnsKeyChange = output<string>();
   private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
   tables: SdFormGenericDefinitionTable[] = this.formGenericConfiguration?.form?.tables || [];
 
@@ -65,18 +65,18 @@ export class AttributeTable {
       this.columns = columns || [];
     }
   }
-  readonly sdColumnsChange = output<SdFormGenericTableColumn[]>();
+  readonly columnsChange = output<SdFormGenericTableColumn[]>();
   column?: SdFormGenericTableColumn;
 
   onChangeColumnsKey = (value: any) => {
-    this.sdColumnsKeyChange.emit(value);
+    this.columnsKeyChange.emit(value);
     const table = this.tables.find(e => e.value === value);
     if (table) {
       this.columns = table.columns();
     } else {
       this.columns = [];
     }
-    this.sdColumnsChange.emit(this.columns);
+    this.columnsChange.emit(this.columns);
   };
 
   addColumn = () => {
@@ -118,7 +118,7 @@ export class AttributeTable {
 
   removeColumn = (idx: number) => {
     this.columns.splice(idx, 1);
-    this.sdColumnsChange.emit(this.columns);
+    this.columnsChange.emit(this.columns);
   };
 
   onConfirm = () => {
@@ -132,7 +132,7 @@ export class AttributeTable {
       } else {
         this.columns.push(this.column);
       }
-      this.sdColumnsChange.emit(this.columns);
+      this.columnsChange.emit(this.columns);
     }
     this.modal?.close();
   };

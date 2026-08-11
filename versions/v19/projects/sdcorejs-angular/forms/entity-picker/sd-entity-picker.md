@@ -95,7 +95,7 @@ The selected/detail context exposes `$implicit`, `entities`, and `keys`; the row
 | -------------------------- | --------------------------- | ---------------------------------- |
 | `modelChange` / `sdChange` | `SdEntityPickerModel<TKey>` | Committed model changes.           |
 | `sdAdd`                    | `void`                      | Host-owned create workflow.        |
-| `sdLoadError`              | `unknown`                   | Current page or hydration failure. |
+| `loadError`              | `unknown`                   | Current page or hydration failure. |
 
 Public methods include `open()`, `applySelection()`, `cancel()`, `clear()`, `retry()`, `keyOf()`, and `displayEntity()`.
 

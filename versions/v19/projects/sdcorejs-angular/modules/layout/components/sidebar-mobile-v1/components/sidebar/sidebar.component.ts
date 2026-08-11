@@ -33,11 +33,11 @@ export class SdSidebarMobileOverlay {
   sidebar = input.required<SidebarConfigurationV1>();
 
   // showSideBar(null) = đóng sidebar (tương thích với onToggle của main component)
-  sdShowSideBar = output<boolean | null>();
-  sdExpandSideBar = output<void>();
-  sdPopupUserMenuOpened = output<void>();
-  sdPopupUserMenuClosed = output<void>();
-  sdTitleMenuGroupChanged = output<string | undefined>();
+  showSideBar = output<boolean | null>();
+  expandSideBar = output<void>();
+  popupUserMenuOpened = output<void>();
+  popupUserMenuClosed = output<void>();
+  titleMenuGroupChanged = output<string | undefined>();
 
   // ==========================================
   // STATE SIGNALS
@@ -119,7 +119,7 @@ export class SdSidebarMobileOverlay {
   }
 
   onClose(): void {
-    this.sdShowSideBar.emit(null);
+    this.showSideBar.emit(null);
   }
 
   // Kiểm tra menu có children (là SdLayoutChildrenMenu)
@@ -142,8 +142,8 @@ export class SdSidebarMobileOverlay {
     return ('queryParams' in menu ? menu.queryParams : undefined) ?? {};
   }
 
-  onUserMenuOpened = (): void => this.sdPopupUserMenuOpened.emit();
-  onUserMenuClosed = (): void => this.sdPopupUserMenuClosed.emit();
+  onUserMenuOpened = (): void => this.popupUserMenuOpened.emit();
+  onUserMenuClosed = (): void => this.popupUserMenuClosed.emit();
 
   // ==========================================
   // PRIVATE LOGIC
@@ -161,10 +161,10 @@ export class SdSidebarMobileOverlay {
       this.#layoutStorageService.lastActiveMenuGroupId.set(matchedGroup?.id || '');
       const title = matchedGroup?.tooltipTitle || matchedGroup?.title;
       this.titleMenuGroup.set(title);
-      this.sdTitleMenuGroupChanged.emit(title);
+      this.titleMenuGroupChanged.emit(title);
     } else {
       this.titleMenuGroup.set('');
-      this.sdTitleMenuGroupChanged.emit('');
+      this.titleMenuGroupChanged.emit('');
     }
   };
 

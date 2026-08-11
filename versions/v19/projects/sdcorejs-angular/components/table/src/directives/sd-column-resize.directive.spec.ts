@@ -16,7 +16,7 @@ import { SdColumnResizeDirective } from './sd-column-resize.directive';
             [sdColumnResize]="enabled()"
             [minWidth]="minWidth()"
             [maxWidth]="maxWidth()"
-            (sdResizeEnd)="onResizeEnd($event)">
+            (resizeEnd)="onResizeEnd($event)">
             Header
           </th>
         </tr>

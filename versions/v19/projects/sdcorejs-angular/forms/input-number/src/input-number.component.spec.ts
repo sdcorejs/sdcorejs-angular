@@ -30,7 +30,7 @@ import { queryByCss } from '../../../testing/test-utils';
     [(model)]="model"
     (sdChange)="onSdChange($event)"
     (sdBlur)="onSdBlur($event)"
-    (sdKeyupEnter)="onKeyupEnter($event)"></sd-input-number>`,
+    (keyupEnter)="onKeyupEnter($event)"></sd-input-number>`,
 })
 class HostComponent {
   label?: string;
@@ -429,7 +429,7 @@ describe('SdInputNumber', () => {
 
     it('emits keyupEnter on onKeyupEnter', () => {
       const emitted: any[] = [];
-      const sub = comp.sdKeyupEnter.subscribe(v => emitted.push(v));
+      const sub = comp.keyupEnter.subscribe(v => emitted.push(v));
       comp.inputControl.setValue('123', { emitEvent: false });
       comp.onKeyupEnter();
       expect(emitted.length).toBe(1);
@@ -642,7 +642,7 @@ describe('SdInputNumber', () => {
       host.model = 123;
       fixture.detectChanges();
       const spy = jasmine.createSpy('cleared');
-      comp.sdCleared.subscribe(spy);
+      comp.cleared.subscribe(spy);
 
       comp.clear();
       fixture.detectChanges();
@@ -652,7 +652,7 @@ describe('SdInputNumber', () => {
 
     it('cleared NOT emitted when clear() runs while value already empty (early-return path)', () => {
       const spy = jasmine.createSpy('cleared');
-      comp.sdCleared.subscribe(spy);
+      comp.cleared.subscribe(spy);
 
       comp.clear();
       fixture.detectChanges();

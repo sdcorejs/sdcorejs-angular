@@ -30,8 +30,8 @@ import { SdQueryField } from '../../query-bar.model';
       [chipIndex]="chipIndex"
       [autoIdBase]="autoIdBase"
       [switchPickerMenu]="switchMenu()!"
-      (sdCommit)="committed = $event; commitCount = commitCount + 1"
-      (sdSwapField)="swapped = $event" />
+      (commit)="committed = $event; commitCount = commitCount + 1"
+      (swapField)="swapped = $event" />
   `,
 })
 class Host {

@@ -54,7 +54,7 @@ export class HtmlAttribute implements OnInit, AfterViewInit, OnDestroy {
   form = new FormGroup({});
   definitionHtmls: SdFormGenericDefinitionHtml[] = [];
   // Mong muốn là khi attribute changes thông báo cho control biết để control render content tương ứng
-  readonly sdAttributeChanges = output();
+  readonly attributeChanges = output();
 
   #subscription = new Subscription();
   rightProperties: { value: string; display: string }[] = [];

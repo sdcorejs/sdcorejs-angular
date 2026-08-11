@@ -61,15 +61,15 @@
               [activePath]="activePath()"
               [pinnedKeys]="pinnedKeys()"
               pinVisibility="always"
-              (sdNavigate)="navigateMenu($event)"
-              (sdTogglePinned)="onTogglePinned($event)">
+              (navigate)="navigateMenu($event)"
+              (togglePinned)="onTogglePinned($event)">
             </sd-layout-menu-tree>
           </section>
         }
         @if (recentConfiguration().enabled && recentMenus().length) {
           <section data-v3-mobile-recent class="d-flex flex-column gap-4">
             <h2 class="T12M text-black400 px-12 m-0">{{ 'core.module.layout.sidebar.recent' | sdTranslate }}</h2>
-            <sd-layout-menu-tree [menus]="recentMenus()" [activePath]="activePath()" [showPin]="false" (sdNavigate)="navigateMenu($event)">
+            <sd-layout-menu-tree [menus]="recentMenus()" [activePath]="activePath()" [showPin]="false" (navigate)="navigateMenu($event)">
             </sd-layout-menu-tree>
           </section>
         }
@@ -81,8 +81,8 @@
             [activePath]="activePath()"
             [pinnedKeys]="pinnedKeys()"
             pinVisibility="always"
-            (sdNavigate)="navigateMenu($event)"
-            (sdTogglePinned)="onTogglePinned($event)">
+            (navigate)="navigateMenu($event)"
+            (togglePinned)="onTogglePinned($event)">
           </sd-layout-menu-tree>
         </section>
       </div>

@@ -79,16 +79,16 @@ export class SdQueryInlineChip {
   // ---------------------------------------------------------------------------
 
   /** Single-value commit — parent runs `updateFilter(i, { data })`. */
-  readonly sdCommit = output<unknown>();
+  readonly commit = output<unknown>();
 
   /** BETWEEN commit (date/datetime) — parent runs `setFilterRange(i, ev)`. */
-  readonly sdCommitRange = output<{ from: unknown; to: unknown } | null>();
+  readonly commitRange = output<{ from: unknown; to: unknown } | null>();
 
   /** Live edit during multi-select — parent runs `editValueFn(i)(v)`. */
-  readonly sdLiveChange = output<unknown>();
+  readonly liveChange = output<unknown>();
 
   /** × removal. */
-  readonly sdRemove = output<void>();
+  readonly remove = output<void>();
 
   // ---------------------------------------------------------------------------
   // Internal state
@@ -134,22 +134,22 @@ export class SdQueryInlineChip {
    * forwards the value; it no longer toggles `#editing` (that's boolean-only now).
    */
   emitSingleCommit(v: unknown): void {
-    this.sdCommit.emit(v);
+    this.commit.emit(v);
   }
 
   /** BETWEEN commit — sd-date-range (viewed='inline') emits `{from, to}`; chip just forwards it. */
   emitRangeCommit(ev: { from: unknown; to: unknown } | null): void {
-    this.sdCommitRange.emit(ev ?? null);
+    this.commitRange.emit(ev ?? null);
   }
 
   /** Multi-select live emit (sd-select inline). */
   emitLive(v: unknown): void {
-    this.sdLiveChange.emit(v);
+    this.liveChange.emit(v);
   }
 
   /** Boolean toggle commit — exits edit. */
   emitBoolean(v: boolean): void {
-    this.sdCommit.emit(v);
+    this.commit.emit(v);
     this.#editing.set(false);
   }
 }

@@ -145,8 +145,8 @@ All `boolean` inputs go through `booleanAttribute` (bare attribute = true). All 
 | `filtersChange` | `Filter[]` | Auto-paired with `filters` model. |
 | `logicChange` | `'AND' \| 'OR'` | Auto-paired with `logic` model. |
 | `searchChange` | `string` | Auto-paired with `search` model. |
-| `sdQueryChange` | `SdQuery` | Emitted by `triggerApply()` only (mutations no longer auto-emit). |
-| `sdApply` | `SdQuery` | User pressed the Search button or Enter in the search input. |
+| `queryChange` | `SdQuery` | Emitted by `triggerApply()` only (mutations no longer auto-emit). |
+| `apply` | `SdQuery` | User pressed the Search button or Enter in the search input. |
 
 > **Trigger model:** mutations (`addFilter`, `updateFilter`, …) ONLY mutate `filters` / `logic` / `search` models. The composite `(queryChange)` + `(apply)` outputs fire exactly once per Search action.
 
@@ -251,7 +251,7 @@ Without a key both buttons stay disabled / hidden. `<sd-query-saved-filters-menu
 <sd-query-bar
   [fields]="fields"
   [showSearch]="true"
-  (sdApply)="reload($event)">
+  (apply)="reload($event)">
 </sd-query-bar>
 ```
 
@@ -279,7 +279,7 @@ reload(query: SdQuery<Order>): void {
   [showSavedFilters]="true"
   savedFiltersKey="orders.list"
   [showLogicToggle]="true"
-  (sdApply)="onApplyQuery($event)">
+  (apply)="onApplyQuery($event)">
 </sd-query-bar>
 ```
 
@@ -289,7 +289,7 @@ reload(query: SdQuery<Order>): void {
 <sd-query-bar
   [fields]="fields"
   [showSearch]="true"
-  (sdApply)="query.set($event); tableRef.reload()">
+  (apply)="query.set($event); tableRef.reload()">
 </sd-query-bar>
 
 <sd-table

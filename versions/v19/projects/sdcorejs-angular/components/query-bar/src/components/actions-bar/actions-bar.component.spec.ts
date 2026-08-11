@@ -46,7 +46,7 @@ describe('SdQueryActionsBar', () => {
     fixture.detectChanges();
     const btn = fixture.nativeElement.querySelector('.c-clear-all') as HTMLButtonElement;
     const spy = jasmine.createSpy('clear');
-    component.sdClear.subscribe(spy);
+    component.clear.subscribe(spy);
     btn.click();
     expect(spy).toHaveBeenCalled();
   });
@@ -59,7 +59,7 @@ describe('SdQueryActionsBar', () => {
     fixture.detectChanges();
     expect(btn.disabled).toBe(false);
     const spy = jasmine.createSpy('search');
-    component.sdSearch.subscribe(spy);
+    component.search.subscribe(spy);
     btn.click();
     expect(spy).toHaveBeenCalled();
   });

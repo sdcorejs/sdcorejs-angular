@@ -17,7 +17,7 @@ import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/co
           <sd-document-builder
             style="height: 100%; width: 100%"
             [option]="builderOption"
-            (sdContentChange)="onContentChange($event)">
+            (contentChange)="onContentChange($event)">
           </sd-document-builder>
         </div>
       </demo-section>

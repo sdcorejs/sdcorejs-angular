@@ -195,8 +195,8 @@ export class SdUploadFile<TArgs = unknown> {
   });
 
   // ─── Output Signals ───────────────────────────────────────────────────
-  readonly sdLoaded = output<PreviewFile[]>();
-  readonly sdFilesChanged = output<(string | File)[]>();
+  readonly loaded = output<PreviewFile[]>();
+  readonly filesChanged = output<(string | File)[]>();
 
   // ─── Model Signal (two-way binding support: [(model)]) ────────────────
   readonly model = model<(string | number)[]>([]);
@@ -225,7 +225,7 @@ export class SdUploadFile<TArgs = unknown> {
       if (Array.isArray(values)) {
         this.#details(values).then(previewFiles => {
           this.previewFiles.set(previewFiles);
-          this.sdFilesChanged.emit(
+          this.filesChanged.emit(
             this.previewFiles()
               .map(e => e.file || e.idOrKey || e.src)
               .filter(val => !!val) as (string | File)[]
@@ -499,7 +499,7 @@ export class SdUploadFile<TArgs = unknown> {
           const currentModel = [...(this.model() || [])];
           currentModel.splice(idx, 1);
           this.model.set(currentModel);
-          this.sdFilesChanged.emit(
+          this.filesChanged.emit(
             this.previewFiles()
               .map(e => e.file || e.idOrKey || e.src)
               .filter(val => !!val) as (string | File)[]

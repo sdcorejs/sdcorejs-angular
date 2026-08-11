@@ -31,7 +31,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   validations: SdFormGenericValidation[] = [];
   functions: SdFormGenericValidationFunction[] = [];
   alerts = ValidationAlerts;
-  readonly sdAccept = output<SdFormGenericValidation[]>();
+  readonly accept = output<SdFormGenericValidation[]>();
   private readonly ref = inject(ChangeDetectorRef);
   private readonly formGenericConfiguration: ISdFormGenericConfiguration | null = inject(SD_FORM_GENERIC_CONFIGURATION, { optional: true });
 
@@ -93,7 +93,7 @@ export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   };
 
   updateValidations = () => {
-    this.sdAccept.emit(this.validations);
+    this.accept.emit(this.validations);
     this.modal?.close();
   };
 }

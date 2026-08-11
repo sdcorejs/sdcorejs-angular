@@ -156,7 +156,7 @@ describe('SdTreeSelect', () => {
   it('forwards root and lazy load errors from the composed tree', async () => {
     const error = new Error('tree failed');
     const loadError = jasmine.createSpy('loadError');
-    component.sdLoadError.subscribe(loadError);
+    component.loadError.subscribe(loadError);
     fixture.componentRef.setInput('items', () => Promise.reject(error));
     fixture.detectChanges();
     await fixture.whenStable();

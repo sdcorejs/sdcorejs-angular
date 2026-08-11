@@ -64,10 +64,10 @@ export class SdSidebarV1Panel {
   userInfo = input.required<SdLayoutUserInfo>();
   sidebar = input.required<SidebarConfigurationV1>();
   isMobile = input(false);
-  sdExpandSideBar = output<void>();
-  sdPopupUserMenuClosed = output<void>();
-  sdPopupUserMenuOpened = output<void>();
-  sdShowSideBar = output<boolean | null>();
+  expandSideBar = output<void>();
+  popupUserMenuClosed = output<void>();
+  popupUserMenuOpened = output<void>();
+  showSideBar = output<boolean | null>();
 
   // ==========================================
   // STATE SIGNALS
@@ -177,7 +177,7 @@ export class SdSidebarV1Panel {
     this.titleMenuGroup.set(group.title);
     this.#setMenusByGroup(group.children ?? []);
     this.searchText.set('');
-    this.sdExpandSideBar.emit();
+    this.expandSideBar.emit();
   };
 
   onTogglePin = (event: MouseEvent, node: SdLayoutMenu): void => {
@@ -207,7 +207,7 @@ export class SdSidebarV1Panel {
     event.stopPropagation();
     this.isMenuLock.update(v => !v);
     this.#layoutStorageService.menuLockStatus?.set(this.isMenuLock());
-    this.sdShowSideBar.emit(this.isMenuLock());
+    this.showSideBar.emit(this.isMenuLock());
   }
 
   openHomePage = (): void => {
@@ -216,9 +216,9 @@ export class SdSidebarV1Panel {
     this.#layoutStorageService.lastActiveMenuGroupId.set('');
   };
 
-  onUserMenuClosed = (): void => this.sdPopupUserMenuClosed.emit();
+  onUserMenuClosed = (): void => this.popupUserMenuClosed.emit();
 
-  onUserMenuOpened = (): void => this.sdPopupUserMenuOpened.emit();
+  onUserMenuOpened = (): void => this.popupUserMenuOpened.emit();
 
   navigate = (args: { path: string; queryParams: Params }): void => {
     const { path, queryParams } = args;
@@ -266,7 +266,7 @@ export class SdSidebarV1Panel {
       this.#setMenusByGroup(menuGroupNode.children);
       this.searchText.set('');
       this.onFilterSearchText('');
-      this.sdExpandSideBar.emit();
+      this.expandSideBar.emit();
     }
 
     this.idMenuGroupActive.set(menuGroupNode?.id);
@@ -607,7 +607,7 @@ export class SdSidebarV1Panel {
   #normalizePath = (p: string): string => (p.endsWith('/') ? p : p + '/');
 
   #closeMenu(): void {
-    this.sdShowSideBar.emit(null);
+    this.showSideBar.emit(null);
   }
 
   #convertColor = (input: string | undefined, opacity = 1): string => {

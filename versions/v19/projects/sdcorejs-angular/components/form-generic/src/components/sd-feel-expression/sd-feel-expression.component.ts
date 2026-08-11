@@ -52,7 +52,7 @@ export class SdFeelExpression implements OnInit {
       conditions: [],
     };
   }
-  readonly sdExpressionChange = output<SdFormGenericExpression>();
+  readonly expressionChange = output<SdFormGenericExpression>();
 
   //
   model?: string;
@@ -116,7 +116,7 @@ export class SdFeelExpression implements OnInit {
     }
     if (this.expression) {
       this.model = this.expressionFeelPipe.transform(this.expression!);
-      this.sdExpressionChange.emit(this.expression);
+      this.expressionChange.emit(this.expression);
     } else {
       this.model = '';
     }

@@ -192,10 +192,10 @@ export class SdQueryBar {
   // ---------------------------------------------------------------------------
 
   /** Composite payload — emitted whenever filters / logic / search change. */
-  readonly sdQueryChange = output<SdQuery>();
+  readonly queryChange = output<SdQuery>();
 
   /** Fires when the user presses "Áp dụng" inside a chip popover — host should reload data. */
-  readonly sdApply = output<SdQuery>();
+  readonly apply = output<SdQuery>();
 
   // ---------------------------------------------------------------------------
   // Derived state
@@ -573,9 +573,9 @@ export class SdQueryBar {
     // signal once, from here only (mutations no longer emit).
     const q = this.#buildQuery();
     this.option()?.onQueryChange?.(q);
-    this.sdQueryChange.emit(q);
+    this.queryChange.emit(q);
     this.option()?.onApply?.(q);
-    this.sdApply.emit(q);
+    this.apply.emit(q);
   }
 
   // ---------------------------------------------------------------------------

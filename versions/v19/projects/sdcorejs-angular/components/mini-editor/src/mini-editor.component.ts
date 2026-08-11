@@ -33,7 +33,7 @@ import { SdMiniEditorOption, SdMiniEditorConfig, SdMiniEditorMentionItem } from 
  * <sd-mini-editor
  *   [option]="editorOption"
  *   [(ngModel)]="content"
- *   (sdContentChange)="onContentChange($event)"
+ *   (contentChange)="onContentChange($event)"
  * >
  * </sd-mini-editor>
  * ```
@@ -66,13 +66,13 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
   readonly valueChange = output<string>();
 
   /** Event emitter khi content thay đổi */
-  readonly sdContentChange = output<string>();
+  readonly contentChange = output<string>();
 
   /** Event emitter khi blur */
-  readonly sdBlur = output<FocusEvent>();
+  readonly blur = output<FocusEvent>();
 
   /** Event emitter khi focus */
-  readonly sdFocus = output<FocusEvent>();
+  readonly focus = output<FocusEvent>();
 
   /** Disabled state */
   readonly disabled = input(false);
@@ -137,7 +137,7 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
         this.value = output;
         this.#onChange(output);
         this.valueChange.emit(output);
-        this.sdContentChange.emit(output);
+        this.contentChange.emit(output);
         this.option?.onChange?.(output);
       })
     );
@@ -175,13 +175,13 @@ export class SdMiniEditor implements ControlValueAccessor, OnDestroy {
     // Lắng nghe focus/blur events
     editor.editing.view.document.on('focus', evt => {
       const domEvent = (evt as any).domEvent as FocusEvent;
-      this.sdFocus.emit(domEvent);
+      this.focus.emit(domEvent);
       this.option?.onFocus?.(domEvent);
     });
 
     editor.editing.view.document.on('blur', evt => {
       const domEvent = (evt as any).domEvent as FocusEvent;
-      this.sdBlur.emit(domEvent);
+      this.blur.emit(domEvent);
       this.option?.onBlur?.(domEvent);
     });
 

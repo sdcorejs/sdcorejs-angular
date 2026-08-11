@@ -58,10 +58,10 @@ In fullscreen mode (`toggleFullscreen()` or `f` key) the component requests the 
 
 | Name                | Type                                       | Notes                                                                                                                                                                                                                                                                                                                                                         |
 | ------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdClose`             | `void`                                     | Emitted when the consumer programmatically calls `requestClose()` (e.g. from their own dismiss button). The component does NOT bind `Esc` to this output — when wrapped in `<sd-modal>` the modal already handles Esc; for standalone embeds the consumer wires their own dismiss control. **The component never closes itself** — it just emits this intent. |
-| `sdActiveIndexChange` | `number`                                   | Emitted whenever the active slide changes (nav arrow, thumbnail, swipe, ← / →).                                                                                                                                                                                                                                                                               |
-| `sdDownload`          | `{ index: number; item: NormalizedImage }` | Emitted after `downloadCurrent()` triggers the download anchor click.                                                                                                                                                                                                                                                                                         |
-| `sdImageError`        | `{ index: number; reason: string }`        | Emitted when an image renders broken (404, CORS, malformed blob). The stage automatically switches to the error artboard.                                                                                                                                                                                                                                     |
+| `close`             | `void`                                     | Emitted when the consumer programmatically calls `requestClose()` (e.g. from their own dismiss button). The component does NOT bind `Esc` to this output — when wrapped in `<sd-modal>` the modal already handles Esc; for standalone embeds the consumer wires their own dismiss control. **The component never closes itself** — it just emits this intent. |
+| `activeIndexChange` | `number`                                   | Emitted whenever the active slide changes (nav arrow, thumbnail, swipe, ← / →).                                                                                                                                                                                                                                                                               |
+| `download`          | `{ index: number; item: NormalizedImage }` | Emitted after `downloadCurrent()` triggers the download anchor click.                                                                                                                                                                                                                                                                                         |
+| `imageError`        | `{ index: number; reason: string }`        | Emitted when an image renders broken (404, CORS, malformed blob). The stage automatically switches to the error artboard.                                                                                                                                                                                                                                     |
 
 ## Public methods (called via template ref / `viewChild`)
 
@@ -75,7 +75,7 @@ In fullscreen mode (`toggleFullscreen()` or `f` key) the component requests the 
 | `downloadCurrent`       | `() => void`                             | Download the active image via an `<a download>` anchor.                     |
 | `toggleFullscreen`      | `() => void`                             | Browser Fullscreen API **on the component host element**.                   |
 | `retryActive`           | `() => Promise<void>`                    | Re-fetch the active image from its CDN URL (Artboard G's "Thử lại" button). |
-| `requestClose`          | `() => void`                             | Programmatic equivalent of clicking the X — just emits the `sdClose` output.  |
+| `requestClose`          | `() => void`                             | Programmatic equivalent of clicking the X — just emits the `close` output.  |
 
 > The old imperative `open(items, options?)` method **has been removed**. Push items via the `[items]` signal input instead.
 
@@ -173,7 +173,7 @@ CDN strings passed in by the caller are NOT revoked — the component owns only 
 
 ```html
 <div class="image-gallery-section" style="height: 600px;">
-  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (sdClose)="onClose()"> </sd-preview-image>
+  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (close)="onClose()"> </sd-preview-image>
 </div>
 ```
 
@@ -181,7 +181,7 @@ CDN strings passed in by the caller are NOT revoked — the component owns only 
 
 ```html
 <sd-modal #modal [title]="'Xem ảnh'" width="92vw" height="86vh">
-  <sd-preview-image [items]="modalImages()" (sdClose)="modal.close()"> </sd-preview-image>
+  <sd-preview-image [items]="modalImages()" (close)="modal.close()"> </sd-preview-image>
 </sd-modal>
 
 <sd-button (click)="modalImages.set(row.attachments); modal.open()"> Xem ảnh </sd-button>
@@ -220,7 +220,7 @@ onFiles(e: Event) {
 
 ```html
 <!-- preview.page.html -->
-<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (sdClose)="router.navigate(['../'], { relativeTo: route })">
+<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (close)="router.navigate(['../'], { relativeTo: route })">
 </sd-preview-image>
 ```
 
@@ -236,9 +236,9 @@ onFiles(e: Event) {
 ```html
 <sd-preview-image
   [items]="gallery()"
-  (sdActiveIndexChange)="onSlideChanged($event)"
-  (sdImageError)="logBrokenImage($event)"
-  (sdDownload)="trackDownload($event)">
+  (activeIndexChange)="onSlideChanged($event)"
+  (imageError)="logBrokenImage($event)"
+  (download)="trackDownload($event)">
 </sd-preview-image>
 ```
 
@@ -247,7 +247,7 @@ onFiles(e: Event) {
 - DON'T forget to give the parent container a height — without it the component collapses to `min-height: 320px`.
 - DON'T pass PDF / non-image URLs — fetched as `<img>` they show as broken; non-image `File`s are dropped silently.
 - DON'T try to call an `open()` method — it no longer exists. Set `[items]` to a non-empty array instead.
-- DON'T `sdClose.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `sdClose` output (set a signal, call `modal.close()`, navigate away).
+- DON'T `close.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `close` output (set a signal, call `modal.close()`, navigate away).
 - DON'T mix `thumbnailPosition="dots"` with > 20 images — dots become illegible. Switch to `bottom`.
 - DON'T mount one `<sd-preview-image>` per row in a list — declare ONE in the page and swap `[items]`.
 
@@ -314,13 +314,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 
 | Name           | Type                                  | Notes                                                                                                                                                                                                                       |
 | -------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdClose`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
-| `sdLoaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
-| `sdPageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
-| `sdZoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
-| `sdDownload`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
-| `sdLoadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
-| `sdSearchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
+| `close`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
+| `loaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
+| `pageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
+| `zoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
+| `download`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
+| `loadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
+| `searchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
 
 ## Public methods (called via template ref / `viewChild`)
 
@@ -333,13 +333,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `toggleSidebar()` / `setSidebarMode(mode)`                                 | Sidebar UI.                                                                                                                                                                                                                                             |
 | `setScrollMode(mode)`                                                      | Switch between single-page and virtualized continuous rendering.                                                                                                                                                                                        |
 | `downloadFile()` / `downloadFileAsync()`                                   | Download the active source. Public URLs require anchor-download support; byte sources and authenticated/options URLs also require Blob/object-URL support. Generated object URLs are revoked on the next safe frame. Repeated requests are latest-wins. |
-| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `sdSearchChange`.                                                                                                                                                    |
+| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `searchChange`.                                                                                                                                                    |
 | `toggleFullscreen()`                                                       | Browser Fullscreen API on the host element.                                                                                                                                                                                                             |
-| `requestClose()`                                                           | Programmatic dismiss — emits `sdClose`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
+| `requestClose()`                                                           | Programmatic dismiss — emits `close`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
 | `retryLoad()`                                                              | Re-runs the active source through `getDocument` (used by the error state retry button).                                                                                                                                                                 |
 | `search(term, { caseSensitive?, wholeWord? })`                             | NFC-normalized, Unicode-aware full-document search. Resolves to the bounded count and exposes `searchTruncated()`; superseded calls are serialized and coalesced to the latest pending query.                                                           |
 | `searchNext()` / `searchPrev()`                                            | Cycle through results; wrap at boundaries. Jumps the page automatically.                                                                                                                                                                                |
-| `clearSearch()`                                                            | Reset search state. Re-emits `sdSearchChange` with `total: 0`.                                                                                                                                                                                            |
+| `clearSearch()`                                                            | Reset search state. Re-emits `searchChange` with `total: 0`.                                                                                                                                                                                            |
 | `openSearch()` / `closeSearch()`                                           | Toggle the search bar; `closeSearch()` also clears results.                                                                                                                                                                                             |
 | `toggleSearchCaseSensitive()` / `toggleSearchWholeWord()`                  | Flip the matching options. Re-runs the active term automatically.                                                                                                                                                                                       |
 | `printFile()` / `print()`                                                  | Start a managed browser print job from cloned PDF bytes. A replacement source, repeated print, or component destruction cancels the active job.                                                                                                         |
@@ -360,7 +360,7 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `Ctrl/Cmd + P`                                    | Starts the managed print flow when a document is ready.                                                                         |
 | `Enter` / `F3` (search input focused)             | `searchNext()`                                                                                                                  |
 | `Shift+Enter` / `Shift+F3` (search input focused) | `searchPrev()`                                                                                                                  |
-| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `sdClose` from a keystroke. |
+| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `close` from a keystroke. |
 
 The host has `tabindex="0"` and auto-focuses on first render so keyboard works immediately.
 
@@ -396,7 +396,7 @@ Outline destinations support direct page indices, named destinations, and PDF re
 
 ```html
 <div class="image-gallery-section" style="height: 600px;">
-  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (sdClose)="onClose()"> </sd-preview-image>
+  <sd-preview-image [items]="myImages()" thumbnailPosition="bottom" (close)="onClose()"> </sd-preview-image>
 </div>
 ```
 
@@ -404,7 +404,7 @@ Outline destinations support direct page indices, named destinations, and PDF re
 
 ```html
 <sd-modal #modal [title]="'Xem ảnh'" width="92vw" height="86vh">
-  <sd-preview-image [items]="modalImages()" (sdClose)="modal.close()"> </sd-preview-image>
+  <sd-preview-image [items]="modalImages()" (close)="modal.close()"> </sd-preview-image>
 </sd-modal>
 
 <sd-button (click)="modalImages.set(row.attachments); modal.open()"> Xem ảnh </sd-button>
@@ -443,7 +443,7 @@ onFiles(e: Event) {
 
 ```html
 <!-- preview.page.html -->
-<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (sdClose)="router.navigate(['../'], { relativeTo: route })">
+<sd-preview-image [items]="route.images()" [thumbnailPosition]="'bottom'" (close)="router.navigate(['../'], { relativeTo: route })">
 </sd-preview-image>
 ```
 
@@ -459,9 +459,9 @@ onFiles(e: Event) {
 ```html
 <sd-preview-image
   [items]="gallery()"
-  (sdActiveIndexChange)="onSlideChanged($event)"
-  (sdImageError)="logBrokenImage($event)"
-  (sdDownload)="trackDownload($event)">
+  (activeIndexChange)="onSlideChanged($event)"
+  (imageError)="logBrokenImage($event)"
+  (download)="trackDownload($event)">
 </sd-preview-image>
 ```
 
@@ -470,7 +470,7 @@ onFiles(e: Event) {
 - DON'T forget to give the parent container a height — without it the component collapses to `min-height: 320px`.
 - DON'T pass PDF / non-image URLs — fetched as `<img>` they show as broken; non-image `File`s are dropped silently.
 - DON'T try to call an `open()` method — it no longer exists. Set `[items]` to a non-empty array instead.
-- DON'T `sdClose.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `sdClose` output (set a signal, call `modal.close()`, navigate away).
+- DON'T `close.emit()` and expect the component to hide itself — the component never owns its own visibility. Consumer must react to the `close` output (set a signal, call `modal.close()`, navigate away).
 - DON'T mix `thumbnailPosition="dots"` with > 20 images — dots become illegible. Switch to `bottom`.
 - DON'T mount one `<sd-preview-image>` per row in a list — declare ONE in the page and swap `[items]`.
 
@@ -537,13 +537,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 
 | Name           | Type                                  | Notes                                                                                                                                                                                                                       |
 | -------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdClose`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
-| `sdLoaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
-| `sdPageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
-| `sdZoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
-| `sdDownload`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
-| `sdLoadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
-| `sdSearchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
+| `close`        | `void`                                | Fires only when the consumer calls `requestClose()` programmatically. **The component has no built-in close button and does NOT auto-close on Esc** — wrap it in a modal or page section that owns its own dismiss control. |
+| `loaded`       | `{ totalPages, meta }`                | Fires once per successful load.                                                                                                                                                                                             |
+| `pageChange`   | `number`                              | New active page number.                                                                                                                                                                                                     |
+| `zoomChange`   | `number`                              | New numeric zoom after a render.                                                                                                                                                                                            |
+| `download`     | `{ filename }`                        | After `downloadFile()` triggers the anchor click.                                                                                                                                                                           |
+| `loadError`    | `{ reason, message? }`                | `reason` is one of `'invalid' \| 'password' \| 'network' \| 'unknown'`.                                                                                                                                                     |
+| `searchChange` | `{ term, total, current, truncated }` | Fires whenever search state changes. `current` is 1-based and `0` when no result is focused; `truncated` reports the bounded-result cap.                                                                                    |
 
 ## Public methods (called via template ref / `viewChild`)
 
@@ -556,13 +556,13 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `toggleSidebar()` / `setSidebarMode(mode)`                                 | Sidebar UI.                                                                                                                                                                                                                                             |
 | `setScrollMode(mode)`                                                      | Switch between single-page and virtualized continuous rendering.                                                                                                                                                                                        |
 | `downloadFile()` / `downloadFileAsync()`                                   | Download the active source. Public URLs require anchor-download support; byte sources and authenticated/options URLs also require Blob/object-URL support. Generated object URLs are revoked on the next safe frame. Repeated requests are latest-wins. |
-| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `sdSearchChange`.                                                                                                                                                    |
+| `activateSearchResult(index)`                                              | Activate and navigate to a sidebar search result, update its counter/style, and emit `searchChange`.                                                                                                                                                    |
 | `toggleFullscreen()`                                                       | Browser Fullscreen API on the host element.                                                                                                                                                                                                             |
-| `requestClose()`                                                           | Programmatic dismiss — emits `sdClose`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
+| `requestClose()`                                                           | Programmatic dismiss — emits `close`. There is no built-in UI button bound to this; consumer owns its own dismiss control.                                                                                                                              |
 | `retryLoad()`                                                              | Re-runs the active source through `getDocument` (used by the error state retry button).                                                                                                                                                                 |
 | `search(term, { caseSensitive?, wholeWord? })`                             | NFC-normalized, Unicode-aware full-document search. Resolves to the bounded count and exposes `searchTruncated()`; superseded calls are serialized and coalesced to the latest pending query.                                                           |
 | `searchNext()` / `searchPrev()`                                            | Cycle through results; wrap at boundaries. Jumps the page automatically.                                                                                                                                                                                |
-| `clearSearch()`                                                            | Reset search state. Re-emits `sdSearchChange` with `total: 0`.                                                                                                                                                                                            |
+| `clearSearch()`                                                            | Reset search state. Re-emits `searchChange` with `total: 0`.                                                                                                                                                                                            |
 | `openSearch()` / `closeSearch()`                                           | Toggle the search bar; `closeSearch()` also clears results.                                                                                                                                                                                             |
 | `toggleSearchCaseSensitive()` / `toggleSearchWholeWord()`                  | Flip the matching options. Re-runs the active term automatically.                                                                                                                                                                                       |
 | `printFile()` / `print()`                                                  | Start a managed browser print job from cloned PDF bytes. A replacement source, repeated print, or component destruction cancels the active job.                                                                                                         |
@@ -583,7 +583,7 @@ Same as `<sd-preview-image>` — `display: block; width: 100%; height: 100%; min
 | `Ctrl/Cmd + P`                                    | Starts the managed print flow when a document is ready.                                                                         |
 | `Enter` / `F3` (search input focused)             | `searchNext()`                                                                                                                  |
 | `Shift+Enter` / `Shift+F3` (search input focused) | `searchPrev()`                                                                                                                  |
-| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `sdClose` from a keystroke. |
+| `Esc`                                             | Closes the search bar when open (and clears results). Otherwise **no-op** — the component never emits `close` from a keystroke. |
 
 The host has `tabindex="0"` and auto-focuses on first render so keyboard works immediately.
 
@@ -636,7 +636,7 @@ The worker is also exposed as a DI token (`SD_PDFJS_LIB`) for unit tests — see
 
 ```html
 <div style="height: 600px;">
-  <sd-preview-pdf [source]="row.contractUrl" (sdClose)="onClose()" (sdLoaded)="trackOpen($event)"> </sd-preview-pdf>
+  <sd-preview-pdf [source]="row.contractUrl" (close)="onClose()" (loaded)="trackOpen($event)"> </sd-preview-pdf>
 </div>
 ```
 
@@ -680,7 +680,7 @@ open(id: string) {
 
 ```html
 <sd-modal #modal title="Xem hợp đồng" width="92vw" height="86vh">
-  <sd-preview-pdf [source]="modalSrc()" (sdClose)="modal.close()"> </sd-preview-pdf>
+  <sd-preview-pdf [source]="modalSrc()" (close)="modal.close()"> </sd-preview-pdf>
 </sd-modal>
 ```
 
@@ -689,9 +689,9 @@ open(id: string) {
 ```html
 <sd-preview-pdf
   [source]="src()"
-  (sdLoaded)="onLoaded($event)"
-  (sdPageChange)="trackPage($event)"
-  (sdDownload)="logDownload($event)"
+  (loaded)="onLoaded($event)"
+  (pageChange)="trackPage($event)"
+  (download)="logDownload($event)"
   (loadError)="onErr($event)">
 </sd-preview-pdf>
 ```

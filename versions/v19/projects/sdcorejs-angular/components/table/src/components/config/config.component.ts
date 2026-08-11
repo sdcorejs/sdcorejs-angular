@@ -45,7 +45,7 @@ export class ConfigComponent {
   // ==========================================
   autoIdInput = input<string | null | undefined>(undefined, { alias: 'autoId' });
   tableOption = input<SdTableOption | undefined>(undefined);
-  sdChanges = output<ConfiguredTableResult>();
+  changes = output<ConfiguredTableResult>();
 
   // Base autoId (đã là `components-table-<scope>` từ parent), '' khi parent không set.
   autoId = computed(() => this.autoIdInput() || '');
