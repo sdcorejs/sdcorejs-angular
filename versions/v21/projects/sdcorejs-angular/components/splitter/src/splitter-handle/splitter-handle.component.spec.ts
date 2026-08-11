@@ -19,9 +19,9 @@ function dispatchKey(target: EventTarget, key: string) {
       [ariaValueMin]="0"
       [ariaValueMax]="100"
       [ariaValueNow]="50"
-      (sdDragStart)="events.push('start')"
-      (sdDragMove)="onMove($event)"
-      (sdDragEnd)="events.push('end')">
+      (dragStart)="events.push('start')"
+      (dragMove)="onMove($event)"
+      (dragEnd)="events.push('end')">
     </sd-splitter-handle>
   `,
 })
@@ -135,7 +135,7 @@ describe('SdSplitterHandleComponent — keyboard', () => {
   it('Enter → emit toggleRequest', () => {
     const cmp = fixture.debugElement.query(By.directive(SdSplitterHandleComponent)).componentInstance as SdSplitterHandleComponent;
     let count = 0;
-    cmp.sdToggleRequest.subscribe(() => count++);
+    cmp.toggleRequest.subscribe(() => count++);
     dispatchKey(handleEl, 'Enter');
     expect(count).toBe(1);
   });
@@ -164,7 +164,7 @@ describe('SdSplitterHandleComponent — dblclick + aria', () => {
   it('dblclick → emit toggleRequest', () => {
     const cmp = fixture.debugElement.query(By.directive(SdSplitterHandleComponent)).componentInstance as SdSplitterHandleComponent;
     let count = 0;
-    cmp.sdToggleRequest.subscribe(() => count++);
+    cmp.toggleRequest.subscribe(() => count++);
     handleEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     expect(count).toBe(1);
   });
@@ -174,7 +174,7 @@ describe('SdSplitterHandleComponent — dblclick + aria', () => {
     fixture.detectChanges();
     const cmp = fixture.debugElement.query(By.directive(SdSplitterHandleComponent)).componentInstance as SdSplitterHandleComponent;
     let count = 0;
-    cmp.sdToggleRequest.subscribe(() => count++);
+    cmp.toggleRequest.subscribe(() => count++);
     handleEl.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
     expect(count).toBe(0);
   });

@@ -48,8 +48,8 @@ export class SdLayoutUserMenuComponent {
   notification = input<SdLayoutNotificationConfiguration | undefined>();
   compact = input(false);
   presentation = input<'disclosure' | 'mobile' | 'mobile-inline'>('disclosure');
-  sdOpened = output<void>();
-  sdClosed = output<void>();
+  opened = output<void>();
+  closed = output<void>();
   isOpen = signal(false);
   readonly #observableNotificationCount = signal<number | undefined>(undefined);
 
@@ -118,7 +118,7 @@ export class SdLayoutUserMenuComponent {
   open(): void {
     if (this.isOpen()) return;
     this.isOpen.set(true);
-    this.sdOpened.emit();
+    this.opened.emit();
   }
 
   toggle(): void {
@@ -129,7 +129,7 @@ export class SdLayoutUserMenuComponent {
   close(restoreFocus = true): void {
     const wasOpen = this.isOpen();
     this.isOpen.set(false);
-    if (wasOpen) this.sdClosed.emit();
+    if (wasOpen) this.closed.emit();
     if (restoreFocus) this.trigger()?.nativeElement.focus();
   }
 

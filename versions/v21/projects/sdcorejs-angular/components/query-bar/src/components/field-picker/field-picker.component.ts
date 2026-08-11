@@ -35,7 +35,7 @@ export class SdQueryFieldPicker {
   readonly usedKeys = input<Set<string>>(new Set<string>());
 
   /** Emits when the user picks an enabled field. */
-  readonly sdPick = output<SdQueryField>();
+  readonly pick = output<SdQueryField>();
 
   /** MatMenu instance — parent binds `[matMenuTriggerFor]="picker.menu()"`. */
   readonly menu = viewChild.required(MatMenu);

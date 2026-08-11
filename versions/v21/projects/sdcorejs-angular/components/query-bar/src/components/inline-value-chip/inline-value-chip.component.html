@@ -51,8 +51,8 @@
           [autoId]="_autoId ? _autoId + '-from' : undefined"
           (sdFocus)="onFocus()"
           (sdBlur)="commitRange()"
-          (sdKeyupEnter)="firstInput.blur()"
-          (sdKeydownEscape)="revertAndBlur(firstInput)" />
+          (keyupEnter)="firstInput.blur()"
+          (keydownEscape)="revertAndBlur(firstInput)" />
         <span class="c-seamless__dash" aria-hidden="true">—</span>
         <sd-inline-text
           #secondInput
@@ -65,8 +65,8 @@
           [autoId]="_autoId ? _autoId + '-to' : undefined"
           (sdFocus)="onFocus()"
           (sdBlur)="commitRange()"
-          (sdKeyupEnter)="secondInput.blur()"
-          (sdKeydownEscape)="revertAndBlur(secondInput)" />
+          (keyupEnter)="secondInput.blur()"
+          (keydownEscape)="revertAndBlur(secondInput)" />
       } @else {
         <sd-inline-text
           #firstInput
@@ -80,8 +80,8 @@
           [autoId]="_autoId ?? undefined"
           (sdFocus)="onFocus()"
           (sdBlur)="commitSingle()"
-          (sdKeyupEnter)="firstInput.blur()"
-          (sdKeydownEscape)="revertAndBlur(firstInput)" />
+          (keyupEnter)="firstInput.blur()"
+          (keydownEscape)="revertAndBlur(firstInput)" />
       }
     </span>
   }

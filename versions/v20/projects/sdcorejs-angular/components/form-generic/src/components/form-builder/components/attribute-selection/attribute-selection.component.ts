@@ -39,7 +39,7 @@ export class AttributeSelection implements OnInit {
       this.valuesKey = valuesKey?.toString();
     }
   }
-  readonly sdValuesKeyChange = output<string>();
+  readonly valuesKeyChange = output<string>();
   selections: SdFormGenericDefinitionSelection[] = [];
 
   // Values
@@ -49,7 +49,7 @@ export class AttributeSelection implements OnInit {
       this.values = values || [];
     }
   }
-  readonly sdValuesChange = output<SdFormGenericSelectionStaticItem[]>();
+  readonly valuesChange = output<SdFormGenericSelectionStaticItem[]>();
   readonly sdChange = output<SdFormGenericComponent>();
 
   /** Inserted by Angular inject() migration for backwards compatibility */
@@ -70,15 +70,15 @@ export class AttributeSelection implements OnInit {
   }
 
   onChangeValuesKey = (value: any) => {
-    this.sdValuesKeyChange.emit(value);
+    this.valuesKeyChange.emit(value);
     // Gán values rỗng nếu đã sử dụng valuesKey
     this.values = [];
-    this.sdValuesChange.emit(this.values);
+    this.valuesChange.emit(this.values);
     this.ref.markForCheck();
   };
 
   onChangeValues = () => {
-    this.sdValuesChange.emit(this.values);
+    this.valuesChange.emit(this.values);
   };
 
   addItem = () => {
@@ -86,13 +86,13 @@ export class AttributeSelection implements OnInit {
       value: `value_${new Date().getTime().toString(36)}`,
       label: `Label ${new Date().getTime().toString(36)}`,
     });
-    this.sdValuesChange.emit(this.values);
+    this.valuesChange.emit(this.values);
     this.ref.markForCheck();
   };
 
   removeItem = (idx: number) => {
     this.values.splice(idx, 1);
-    this.sdValuesChange.emit(this.values);
+    this.valuesChange.emit(this.values);
     this.ref.markForCheck();
   };
 }

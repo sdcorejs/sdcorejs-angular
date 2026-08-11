@@ -310,7 +310,7 @@ describe('SdInput', () => {
   describe('onKeyupEnter', () => {
     it('trims value and emits keyupEnter', () => {
       const emitted: any[] = [];
-      const sub = input.sdKeyupEnter.subscribe(v => emitted.push(v));
+      const sub = input.keyupEnter.subscribe(v => emitted.push(v));
       input.formControl.setValue('abc  ');
       input.onKeyupEnter();
       expect(input.formControl.value).toBe('abc');
@@ -321,7 +321,7 @@ describe('SdInput', () => {
 
     it('emits keyupEnter even when value has no whitespace', () => {
       const emitted: any[] = [];
-      const sub = input.sdKeyupEnter.subscribe(v => emitted.push(v));
+      const sub = input.keyupEnter.subscribe(v => emitted.push(v));
       input.formControl.setValue('clean');
       input.onKeyupEnter();
       expect(emitted.length).toBe(1);
@@ -663,7 +663,7 @@ describe('SdInput', () => {
       host.model = 'hello';
       fixture.detectChanges();
       const spy = jasmine.createSpy('cleared');
-      input.sdCleared.subscribe(spy);
+      input.cleared.subscribe(spy);
 
       input.clear();
       fixture.detectChanges();
@@ -673,7 +673,7 @@ describe('SdInput', () => {
 
     it('cleared NOT emitted when clear() runs while already empty (early-return path)', () => {
       const spy = jasmine.createSpy('cleared');
-      input.sdCleared.subscribe(spy);
+      input.cleared.subscribe(spy);
 
       // model is empty initially
       input.clear();

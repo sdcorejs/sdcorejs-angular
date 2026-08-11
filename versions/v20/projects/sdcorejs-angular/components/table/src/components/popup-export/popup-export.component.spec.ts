@@ -61,7 +61,7 @@ describe('SdPopupExport', () => {
 
   it('builds exportable columns and emits default and CSV requests', () => {
     const emissions: { file: unknown; columns: { field: string }[]; isCSV?: boolean }[] = [];
-    component.sdExport.subscribe(value => emissions.push(value));
+    component.export.subscribe(value => emissions.push(value));
     component._tableOption = option();
 
     component.exportDefault();
@@ -79,7 +79,7 @@ describe('SdPopupExport', () => {
       secondColumns: [{ field: 'child' }, { field: 'name' }],
     });
     const emissions: { columns: { field: string }[] }[] = [];
-    component.sdExport.subscribe(value => emissions.push(value));
+    component.export.subscribe(value => emissions.push(value));
 
     component.exportDefault();
 
@@ -89,7 +89,7 @@ describe('SdPopupExport', () => {
   it('exports immediately when no reusable-template key is configured', async () => {
     component._tableOption = option();
     const emitted = jasmine.createSpy('emitted');
-    component.sdExport.subscribe(emitted);
+    component.export.subscribe(emitted);
 
     await component.open();
 
@@ -139,7 +139,7 @@ describe('SdPopupExport', () => {
   it('emits an existing template file with all available columns', () => {
     component._tableOption = option();
     const emitted = jasmine.createSpy('emitted');
-    component.sdExport.subscribe(emitted);
+    component.export.subscribe(emitted);
     const file = { fileName: 'saved.xlsx' };
 
     component.onExport(file);

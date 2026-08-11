@@ -266,11 +266,11 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
   sdChange = output<any>();
   sdFocus = output<void>(); // Đổi sang void vì không truyền data
   sdBlur = output<any>();
-  sdKeyupEnter = output<any>();
+  keyupEnter = output<any>();
   // why: sdChange fire per-keystroke nên consumer KHÔNG dùng nó để trigger
   // "commit filter" (sẽ over-reload). `cleared` là intent rõ ràng cho action
   // X (clear button) — consumer như column-filter dùng để fire reload ngay.
-  sdCleared = output<void>();
+  cleared = output<void>();
 
   // why: focus handling reads EventEmitter.observed before emitting a forced blur event.
   @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
@@ -510,7 +510,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     this.maskStatus.set('empty');
     this.valueModel.set(null);
     this.sdChange.emit(null);
-    this.sdCleared.emit();
+    this.cleared.emit();
   };
 
   onKeyupEnter = () => {
@@ -518,7 +518,7 @@ export class SdInput implements OnDestroy, OnInit, AfterViewInit {
     if (!this.maskAdapter() && val.length > val.trim().length) {
       this.formControl.setValue(val.trim());
     }
-    this.sdKeyupEnter.emit(this.formControl.value);
+    this.keyupEnter.emit(this.formControl.value);
     if (this.blurOnEnter()) {
       this.blur();
     }

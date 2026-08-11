@@ -116,7 +116,7 @@ export class SdModalResizable {
   /** CSS width used while the panel is expanded (not a minimum). Default `'480px'`. */
   readonly width = input<string>('480px');
   /** Emitted by `toggleEditable()` with the new editing state. */
-  readonly sdEditingChanged = output<boolean>();
+  readonly editingChanged = output<boolean>();
   #embeddedViewRef!: EmbeddedViewRef<any>;
   readonly #ref = inject(ChangeDetectorRef);
   readonly #loadingService = inject(SdLoadingService);
@@ -238,7 +238,7 @@ export class SdModalResizable {
   toggleEditable() {
     this.isEditing.update(isEditing => !isEditing);
     this.#detectChanges();
-    this.sdEditingChanged.emit(this.isEditing());
+    this.editingChanged.emit(this.isEditing());
   }
 
   /** Hover state hook bound in the template. */

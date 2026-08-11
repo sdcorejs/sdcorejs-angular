@@ -52,7 +52,7 @@ export class SdTabGroup {
   dynamicHeight = input(false, { transform: booleanAttribute });
   autoId = input<string | undefined>(undefined);
 
-  sdTabClosed = output<SdTabClosedEvent>();
+  tabClosed = output<SdTabClosedEvent>();
 
   readonly #closeRequests = new WeakMap<SdTab, Promise<boolean>>();
 
@@ -116,7 +116,7 @@ export class SdTabGroup {
     if (tab.disabled()) return;
     if (!tab.beforeClose()) {
       tab.forceClose();
-      this.sdTabClosed.emit({ index, tab });
+      this.tabClosed.emit({ index, tab });
       return;
     }
     if (this.#closeRequests.has(tab)) return;
@@ -124,7 +124,7 @@ export class SdTabGroup {
     const request = tab.requestClose();
     this.#closeRequests.set(tab, request);
     void request.then(closed => {
-      if (closed) this.sdTabClosed.emit({ index, tab });
+      if (closed) this.tabClosed.emit({ index, tab });
     });
     void request.finally(() => this.#closeRequests.delete(tab));
   }

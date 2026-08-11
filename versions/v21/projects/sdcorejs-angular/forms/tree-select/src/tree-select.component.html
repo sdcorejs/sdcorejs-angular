@@ -40,7 +40,7 @@
       <span class="visually-hidden">{{ 'core.form.tree-select.search' | sdTranslate }}</span>
       <input type="search" [placeholder]="'core.form.tree-select.search' | sdTranslate" (input)="filter($any($event.target).value)" />
     </label>
-    <sd-tree [option]="treeOption()" (sdSelectChange)="onTreeSelection($event)" (loadError)="sdLoadError.emit($event)" />
+    <sd-tree [option]="treeOption()" (selectChange)="onTreeSelection($event)" (loadError)="loadError.emit($event)" />
   </div>
   <button type="button" sdFooterRight data-tree-select-cancel (click)="cancel()">{{ 'core.form.tree-select.cancel' | sdTranslate }}</button>
   <button type="button" sdFooterRight data-tree-select-apply (click)="applySelection()">

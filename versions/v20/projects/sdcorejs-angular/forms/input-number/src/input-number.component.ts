@@ -232,10 +232,10 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
   sdChange = output<any>();
   sdFocus = output<void>();
   sdBlur = output<any>();
-  sdKeyupEnter = output<any>();
+  keyupEnter = output<any>();
   // why: same lý do như sd-input — sdChange fire per-keystroke. `cleared` là
   // intent dedicated cho X (clear button), consumer dùng để trigger reload ngay.
-  sdCleared = output<void>();
+  cleared = output<void>();
 
   // why: focus handling reads EventEmitter.observed before emitting a forced blur event.
   @Output() readonly sdFocusForceBlur = new EventEmitter<void>();
@@ -447,7 +447,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     this.formControl.setValue(null);
     this.valueModel.set(null);
     this.sdChange.emit(null);
-    this.sdCleared.emit();
+    this.cleared.emit();
   };
 
   onKeyupEnter = () => {
@@ -455,7 +455,7 @@ export class SdInputNumber implements OnDestroy, OnInit, AfterViewInit {
     if (val.length > val.trim().length) {
       this.inputControl.setValue(val.trim());
     }
-    this.sdKeyupEnter.emit(this.inputControl.value);
+    this.keyupEnter.emit(this.inputControl.value);
     if (this.blurOnEnter()) {
       this.blur();
     }

@@ -34,8 +34,8 @@
       [state]="connectorState().invalid ? 'error' : 'auto'"
       (sdFocus)="onFocus()"
       (sdBlur)="onBlur()"
-      (sdKeyupEnter)="onKeyupEnter()"
-      (sdCleared)="sdCleared.emit()">
+      (keyupEnter)="onKeyupEnter()"
+      (cleared)="cleared.emit()">
     </sd-inline-text>
 
     @if (sdSuffixDef()?.templateRef; as suffixRef) {

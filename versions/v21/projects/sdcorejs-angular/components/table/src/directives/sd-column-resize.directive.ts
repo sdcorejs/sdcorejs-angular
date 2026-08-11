@@ -11,7 +11,7 @@ export class SdColumnResizeDirective implements OnDestroy {
   minWidth = input<string | undefined>();
   maxWidth = input<string | undefined>();
   // Emit width cuối cùng dạng 'NNpx' khi mouseup
-  sdResizeEnd = output<string>();
+  resizeEnd = output<string>();
 
   #el = inject(ElementRef<HTMLElement>);
   #renderer = inject(Renderer2);
@@ -108,7 +108,7 @@ export class SdColumnResizeDirective implements OnDestroy {
     const finalPx = `${Math.round(this.#currentWidth)}px`;
     this.#cleanupDrag();
     // emit trong Angular zone để consumer chạy CD bình thường
-    this.#zone.run(() => this.sdResizeEnd.emit(finalPx));
+    this.#zone.run(() => this.resizeEnd.emit(finalPx));
   };
 
   #cleanupDrag() {

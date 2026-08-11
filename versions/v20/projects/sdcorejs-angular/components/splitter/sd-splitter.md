@@ -50,9 +50,9 @@ New usage should bind only `[option]`, like `sd-table`. Put `orientation`, `disa
 ### Outputs
 | Name | Type | Notes |
 | --- | --- | --- |
-| `sdResizeEnd` | `SplitterLayoutState` | Fires once at the end of a drag / keyboard step — the FINAL committed layout (after clamp + snap). Prefer this over `sdLayoutChange` for "save to backend" side-effects. |
-| `sdLayoutChange` | `SplitterLayoutState` | Fires on every commit (drag-end, keyboard step, programmatic API call). Suppressed during live drag — only emits on commit. Use for in-memory layout mirroring. |
-| `sdCollapsedChange` | `{ panelId: string \| number; collapsed: boolean }` | Emitted only when a panel's collapsed flag actually flips (diff against previous map). Fires for snap-collapse, double-click toggle, Enter/Space on focused handle, and imperative `collapse()` / `expand()` / `toggle()`. |
+| `resizeEnd` | `SplitterLayoutState` | Fires once at the end of a drag / keyboard step — the FINAL committed layout (after clamp + snap). Prefer this over `layoutChange` for "save to backend" side-effects. |
+| `layoutChange` | `SplitterLayoutState` | Fires on every commit (drag-end, keyboard step, programmatic API call). Suppressed during live drag — only emits on commit. Use for in-memory layout mirroring. |
+| `collapsedChange` | `{ panelId: string \| number; collapsed: boolean }` | Emitted only when a panel's collapsed flag actually flips (diff against previous map). Fires for snap-collapse, double-click toggle, Enter/Space on focused handle, and imperative `collapse()` / `expand()` / `toggle()`. |
 
 ### Public API (imperative — call via `viewChild`)
 | Method | Signature | Notes |
@@ -90,7 +90,7 @@ The handle component (`<sd-splitter-handle>`) is internal and NOT exported from 
 - **`<sd-splitter-handle>` is auto-managed**: do not place it in your template; the container creates / destroys / re-orders handles via `createComponent()` + `appendChild()` after each render.
 - **Handle sync registers ONE render hook for the component's lifetime**: the container registers a single `afterNextRender` in its constructor (to gate on the first render) and then re-syncs from a reactive `effect()`. Registering `afterNextRender` *inside* an effect would queue a new one-shot hook — plus a new `AfterRenderManager` sequence and a new `DestroyRef.onDestroy` entry — on every `panels` / `orientation` / `disabled` / `keyboardStep` tick.
 - **Panel host elements are never moved unnecessarily**: the sync pass re-appends panels and handles ONLY when the actual `panel → handle → panel` sequence in the DOM differs from the intended one. `appendChild()` on a node that is already in place is still a real move — the browser detaches and re-attaches it, which reloads `<iframe>` / `<video>` / `<audio>` children and drops focus + `scrollTop` inside the panel. Toggling `[resizable]`, `[disabled]`, `[orientation]` or `[keyboardStep]` therefore re-configures the handles without disturbing live panel content; only adding/removing a panel actually re-orders the DOM. The sync body runs inside `untracked()` and every reactive value it needs — including each panel's `resizable()` — is read explicitly at the top of the effect, so the dependency set is the declaration, not whatever the body happens to touch.
-- **Destroying mid-drag is safe**: a handle batches `pointermove` into one `requestAnimationFrame`. That frame is cancelled on `pointerup`/`pointercancel` **and** on destroy, so tearing the splitter down mid-drag cannot fire a frame that emits `sdDragMove` from a torn-down handle.
+- **Destroying mid-drag is safe**: a handle batches `pointermove` into one `requestAnimationFrame`. That frame is cancelled on `pointerup`/`pointercancel` **and** on destroy, so tearing the splitter down mid-drag cannot fire a frame that emits `dragMove` from a torn-down handle.
 
 ### Examples
 
@@ -149,7 +149,7 @@ import { SdButton } from '@sdcorejs/angular/components/button';
       <sd-splitter #splitter
                    orientation="horizontal"
                    storageKey="orders-workspace.layout"
-                   (sdResizeEnd)="onResizeEnd($event)">
+                   (resizeEnd)="onResizeEnd($event)">
         <sd-splitter-panel panelId="sidebar" [size]="240" unit="px"
                            [minSize]="160" [collapsible]="true">
           <nav>Sidebar (collapsible)</nav>

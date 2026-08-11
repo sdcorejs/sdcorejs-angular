@@ -89,10 +89,10 @@ export class SdQueryChipPopover {
   // ---------------------------------------------------------------------------
 
   /** Emitted when mat-menu closes — parent splices `next` into filters[idx]. */
-  readonly sdCommit = output<Filter>();
+  readonly commit = output<Filter>();
 
   /** Emitted when nested field-switcher picks a new field — parent calls changeFilterField. */
-  readonly sdSwapField = output<SdQueryField>();
+  readonly swapField = output<SdQueryField>();
 
   // ---------------------------------------------------------------------------
   // Staging signals — uncommitted edits, committed on menu close.
@@ -250,7 +250,7 @@ export class SdQueryChipPopover {
       operator: this.editingOperator(),
       data: this.editingValue(),
     } as Filter;
-    this.sdCommit.emit(next);
+    this.commit.emit(next);
   }
 
   // ---------------------------------------------------------------------------

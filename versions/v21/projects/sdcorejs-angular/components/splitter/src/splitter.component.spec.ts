@@ -264,9 +264,9 @@ describe('SdSplitterComponent — outputs', () => {
     template: `
       <sd-splitter
         style="width:400px;height:200px;"
-        (sdResizeEnd)="captured.resizeEnd.push($event)"
-        (sdCollapsedChange)="captured.collapsedChange.push($event)"
-        (sdLayoutChange)="captured.layoutChange.push($event)">
+        (resizeEnd)="captured.resizeEnd.push($event)"
+        (collapsedChange)="captured.collapsedChange.push($event)"
+        (layoutChange)="captured.layoutChange.push($event)">
         <sd-splitter-panel panelId="a" size="1" collapsible>A</sd-splitter-panel>
         <sd-splitter-panel panelId="b" size="1">B</sd-splitter-panel>
       </sd-splitter>

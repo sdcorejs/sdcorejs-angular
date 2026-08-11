@@ -78,7 +78,7 @@ describe('SdSidebarMobileOverlay', () => {
 
   it('ignores missing paths, opens external paths and navigates internally before closing', () => {
     const closed = jasmine.createSpy('closed');
-    component.sdShowSideBar.subscribe(closed);
+    component.showSideBar.subscribe(closed);
     const windowOpen = spyOn(window, 'open');
 
     component.navigate({});
@@ -99,9 +99,9 @@ describe('SdSidebarMobileOverlay', () => {
     const closed = jasmine.createSpy('closed');
     const opened = jasmine.createSpy('opened');
     const userClosed = jasmine.createSpy('userClosed');
-    component.sdShowSideBar.subscribe(closed);
-    component.sdPopupUserMenuOpened.subscribe(opened);
-    component.sdPopupUserMenuClosed.subscribe(userClosed);
+    component.showSideBar.subscribe(closed);
+    component.popupUserMenuOpened.subscribe(opened);
+    component.popupUserMenuClosed.subscribe(userClosed);
 
     component.onClose();
     component.onUserMenuOpened();
@@ -121,7 +121,7 @@ describe('SdSidebarMobileOverlay', () => {
 
   it('falls back to the last active group and emits an empty title when nothing matches', () => {
     const titleChanged = jasmine.createSpy('titleChanged');
-    component.sdTitleMenuGroupChanged.subscribe(titleChanged);
+    component.titleMenuGroupChanged.subscribe(titleChanged);
     activeId = 'reports';
     routerEvents.next(new NavigationEnd(1, '/outside-one', '/outside-one'));
     expect(component.titleMenuGroup()).toBe('Reports');

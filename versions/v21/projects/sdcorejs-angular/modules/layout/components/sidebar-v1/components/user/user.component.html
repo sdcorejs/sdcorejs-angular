@@ -3,8 +3,8 @@
     class="c-layout-user-avatar"
     [userInfo]="userInfo()"
     [compact]="true"
-    (sdOpened)="onMenuOpened()"
-    (sdClosed)="onMenuClosed()"></sd-layout-user-menu>
+    (opened)="onMenuOpened()"
+    (closed)="onMenuClosed()"></sd-layout-user-menu>
 
   @if (!isMobileOrTablet()) {
     <button

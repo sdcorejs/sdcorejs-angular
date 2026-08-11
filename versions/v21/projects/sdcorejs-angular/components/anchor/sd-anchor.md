@@ -40,7 +40,7 @@ Signal-based scroll-spy navigation (OnPush) — pairs a side TOC with the actual
 ## Outputs (`<sd-anchor>`)
 None exposed on the host element.
 
-> Internally `<anchor-nav>` emits `sdClickSection` which the host listens to and routes to `scrollSectionByClick()`. This is an implementation detail; consumers should never bind to it directly.
+> Internally `<anchor-nav>` emits `clickSection` which the host listens to and routes to `scrollSectionByClick()`. This is an implementation detail; consumers should never bind to it directly.
 
 ## State (`<sd-anchor>`)
 | Signal | Type | Initial | Description |
@@ -86,7 +86,7 @@ None exposed on the host element.
 ```
 
 ## Internal components (không expose ra ngoài)
-- **`<anchor-nav>`** (class `AnchorNav`, folder `components/anchor-nav/`) — TOC sidebar render danh sách items, emit `sdClickSection` lên parent. Đổi tên từ `SdAnchorVerticalList` / `<sd-anchor-vertical-list>` / `(sdClickSection)` cũ. Internal-only, không export, không dùng từ consumer code.
+- **`<anchor-nav>`** (class `AnchorNav`, folder `components/anchor-nav/`) — TOC sidebar render danh sách items, emit `clickSection` lên parent. Đổi tên từ `SdAnchorVerticalList` / `<sd-anchor-vertical-list>` / `(sdClickSection)` cũ. Internal-only, không export, không dùng từ consumer code.
 
 ## Behavior notes
 - **Initialisation**: `afterNextRender` fires once after the first browser paint. If `navHidden()` is false at that point, `activeSectionId` is set to the first section's id and the scroll-spy subscription is registered. If `navHidden()` is true, both steps are skipped and `activeSectionId` stays `''`.

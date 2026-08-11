@@ -53,9 +53,9 @@
       [filters]="query().filters"
       [search]="query().search ?? ''"
       showSearch
-      (sdQueryChange)="onQueryChange($event)" />
+      (queryChange)="onQueryChange($event)" />
 
-    @if (loadError()) {
+    @if (loadErrorState()) {
       <sd-data-state state="error" compact retryable (sdRetry)="retry()"></sd-data-state>
     } @else {
       <sd-table [option]="tableOption()"></sd-table>

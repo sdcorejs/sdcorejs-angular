@@ -41,9 +41,9 @@ export class SdQueryPopoverChip {
   readonly menu = input.required<MatMenu>();
 
   /** Fired when the chip popover opens (parent seeds its editing state). */
-  readonly sdOpen = output<void>();
+  readonly open = output<void>();
   /** Fired when the user clicks the × removal icon. */
-  readonly sdRemove = output<void>();
+  readonly remove = output<void>();
 
   readonly iconFor = sdQueryFieldIcon;
 

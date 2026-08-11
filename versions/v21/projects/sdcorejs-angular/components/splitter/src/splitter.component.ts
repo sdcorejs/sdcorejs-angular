@@ -65,9 +65,9 @@ export class SdSplitterComponent {
   resolvedSnapThreshold = computed(() => this.option()?.snapThreshold ?? this.snapThreshold());
   resolvedKeyboardStep = computed(() => this.option()?.keyboardStep ?? this.keyboardStep());
 
-  readonly sdResizeEnd = output<SplitterLayoutState>();
-  readonly sdCollapsedChange = output<{ panelId: string | number; collapsed: boolean }>();
-  readonly sdLayoutChange = output<SplitterLayoutState>();
+  readonly resizeEnd = output<SplitterLayoutState>();
+  readonly collapsedChange = output<{ panelId: string | number; collapsed: boolean }>();
+  readonly layoutChange = output<SplitterLayoutState>();
 
   readonly panels = contentChildren(SdSplitterPanelComponent);
 
@@ -102,7 +102,7 @@ export class SdSplitterComponent {
       const layout = this.#state.committedLayout();
       if (layout.panels.length === 0) return;
       this.option()?.onLayoutChange?.(layout);
-      this.sdLayoutChange.emit(layout);
+      this.layoutChange.emit(layout);
 
       // Detect collapsed change qua diff với prev map
       const currMap = this.#state.collapsedMap();
@@ -111,7 +111,7 @@ export class SdSplitterComponent {
         if (prev !== isCollapsed) {
           const event = { panelId: id, collapsed: isCollapsed };
           this.option()?.onCollapsedChange?.(event);
-          this.sdCollapsedChange.emit(event);
+          this.collapsedChange.emit(event);
         }
       }
       this.#prevCollapsedMap = new Map(currMap);
@@ -213,10 +213,10 @@ export class SdSplitterComponent {
     while (this.#handleRefs.length < needed) {
       const ref = createComponent(SdSplitterHandleComponent, { environmentInjector: this.#envInjector });
       const handleIndex = this.#handleRefs.length;
-      ref.instance.sdDragStart.subscribe(() => this.#onDragStart(handleIndex));
-      ref.instance.sdDragMove.subscribe(delta => this.#onDragMove(handleIndex, delta));
-      ref.instance.sdDragEnd.subscribe(() => this.#onDragEnd(handleIndex));
-      ref.instance.sdToggleRequest.subscribe(() => this.#onHandleToggle(handleIndex));
+      ref.instance.dragStart.subscribe(() => this.#onDragStart(handleIndex));
+      ref.instance.dragMove.subscribe(delta => this.#onDragMove(handleIndex, delta));
+      ref.instance.dragEnd.subscribe(() => this.#onDragEnd(handleIndex));
+      ref.instance.toggleRequest.subscribe(() => this.#onHandleToggle(handleIndex));
       this.#handleRefs.push(ref);
     }
     // Apply inputs với disabled tính theo per-panel resizable (đã đọc sẵn ở effect)
@@ -274,7 +274,7 @@ export class SdSplitterComponent {
     this.#state.commit();
     const layout = this.#state.committedLayout();
     this.option()?.onResizeEnd?.(layout);
-    this.sdResizeEnd.emit(layout);
+    this.resizeEnd.emit(layout);
   }
 
   #onHandleToggle(handleIndex: number): void {

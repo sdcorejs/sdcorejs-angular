@@ -18,8 +18,8 @@ export class PreviewComponent {
   private cd = inject(ChangeDetectorRef);
 
   @ViewChild(SdModal) modal!: SdModal;
-  readonly sdDownload = output<PreviewFile>();
-  readonly sdClose = output<void>();
+  readonly download = output<PreviewFile>();
+  readonly close = output<void>();
 
   readonly #i18n = inject(I18nService);
   title: string = this.#i18n.t('core.component.upload-file.preview-title');
@@ -54,7 +54,7 @@ export class PreviewComponent {
   };
 
   onClose = () => {
-    this.sdClose.emit();
+    this.close.emit();
   };
 
   #scrollView = (index: number, type?: 'center' | 'end' | 'nearest' | 'start') => {
@@ -68,7 +68,7 @@ export class PreviewComponent {
   };
 
   onDownload = (previewFile: PreviewFile) => {
-    this.sdDownload.emit(previewFile);
+    this.download.emit(previewFile);
     this.cd.markForCheck();
   };
 }

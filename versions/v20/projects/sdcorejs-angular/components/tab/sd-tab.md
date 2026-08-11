@@ -49,7 +49,7 @@ Declarative tab container that wraps Angular Material's `mat-tab-group` with a s
 | Name                  | Type                                                 | Notes                                                                                                                               |
 | --------------------- | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `selectedIndexChange` | `number`                                             | Emitted by the `selectedIndex` model when the active tab changes (programmatic or user).                                            |
-| `sdTabClosed`           | `SdTabClosedEvent` (`{ index: number; tab: SdTab }`) | Emitted when the user clicks the close icon on a `[closable]` tab. Parent is responsible for removing the tab from its data source. |
+| `tabClosed`           | `SdTabClosedEvent` (`{ index: number; tab: SdTab }`) | Emitted when the user clicks the close icon on a `[closable]` tab. Parent is responsible for removing the tab from its data source. |
 
 ### Public API
 
@@ -116,7 +116,7 @@ Declarative tab container that wraps Angular Material's `mat-tab-group` with a s
   standalone: true,
   imports: [SdTabGroup, SdTab],
   template: `
-    <sd-tab-group (sdTabClosed)="onClose($event)">
+    <sd-tab-group (tabClosed)="onClose($event)">
       @for (file of files(); track file.id) {
         <sd-tab [label]="file.name" [closable]="true">
           <code-editor [file]="file"></code-editor>
@@ -217,15 +217,15 @@ A child of `<sd-tab-group>` that declares one tab — its label, icon, badge, di
 
 | Name         | Type      | Notes                                                                                                |
 | ------------ | --------- | ---------------------------------------------------------------------------------------------------- |
-| `sdClose`      | `void`    | Emitted when the user clicks the close icon on this tab. Only emitted while the tab is not disabled. |
-| `sdCloseError` | `unknown` | Emitted when `beforeClose` throws or rejects.                                                        |
+| `close`      | `void`    | Emitted when the user clicks the close icon on this tab. Only emitted while the tab is not disabled. |
+| `closeError` | `unknown` | Emitted when `beforeClose` throws or rejects.                                                        |
 
 ### Public API
 
 | Method           | Notes                                                                                 |
 | ---------------- | ------------------------------------------------------------------------------------- |
-| `requestClose()` | Runs/coalesces `beforeClose`, emits `sdClose` when allowed, and resolves to the result. |
-| `forceClose()`   | Bypasses `beforeClose` and emits `sdClose`.                                             |
+| `requestClose()` | Runs/coalesces `beforeClose`, emits `close` when allowed, and resolves to the result. |
+| `forceClose()`   | Bypasses `beforeClose` and emits `close`.                                             |
 
 ### Content projection
 

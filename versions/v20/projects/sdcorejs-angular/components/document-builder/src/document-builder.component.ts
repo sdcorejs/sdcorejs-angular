@@ -82,7 +82,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
     this.#updateState();
   }
 
-  readonly sdContentChange = output<string>(); // Emit HTML content
+  readonly contentChange = output<string>(); // Emit HTML content
 
   Editor = ClassicEditor;
   #editor!: ClassicEditor;
@@ -269,7 +269,7 @@ export class SdDocumentBuilder implements OnInit, OnDestroy {
     // Debounce trong rxjs không hỗ trợ leading --> throttleTime
     this.#subscription.add(
       this.#contentChangeSubject.pipe(throttleTime(500, undefined, { leading: true, trailing: true })).subscribe(content => {
-        this.sdContentChange.emit(normalize(content));
+        this.contentChange.emit(normalize(content));
       })
     );
   }

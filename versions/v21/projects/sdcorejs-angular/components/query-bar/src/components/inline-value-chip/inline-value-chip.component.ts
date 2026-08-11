@@ -52,7 +52,7 @@ export class SdQueryInlineValueChip {
   /** Emitted on commit (Enter / blur) with the parsed next value. */
   readonly valueChange = output<unknown>();
   /** Emitted when the user clicks the × segment. */
-  readonly sdRemove = output<void>();
+  readonly remove = output<void>();
 
   private readonly firstInput = viewChild<SdInlineText>('firstInput');
 
@@ -169,7 +169,7 @@ export class SdQueryInlineValueChip {
 
   onRemove(ev: Event): void {
     ev.stopPropagation();
-    this.sdRemove.emit();
+    this.remove.emit();
   }
 
   /** Format a stored value for display — number → vi-VN grouped digits. */

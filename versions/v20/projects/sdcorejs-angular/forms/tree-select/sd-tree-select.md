@@ -81,7 +81,7 @@ The typed context is the `SdTreeItemContext<T>` contract, including node metadat
 | Output                     | Payload                   | Notes                              |
 | -------------------------- | ------------------------- | ---------------------------------- |
 | `modelChange` / `sdChange` | `SdTreeSelectModel<TKey>` | Committed model changes.           |
-| `sdLoadError`              | `SdTreeLoadErrorEvent<T>` | Forwarded root or lazy-node error. |
+| `loadError`              | `SdTreeLoadErrorEvent<T>` | Forwarded root or lazy-node error. |
 
 Public methods include `open()`, `applySelection()`, `cancel()`, `clear()`, `filter()`, `retry()`, `keyOf()`, and `displayEntity()`.
 
@@ -100,7 +100,7 @@ Public signals include `connectorState`, `errorMessage` (raw message for the cur
 - The message is **interaction-gated**: hidden until the control is `touched` or `dirty`. `applySelection()` and `clear()` mark the control touched + dirty; a parent `markAllAsTouched()` on submit also reveals it.
 - While the message is visible, the trigger carries `aria-invalid="true"` and `aria-describedby` pointing at the message element.
 
-`sdLoadError` / tree loading failures are a separate concern and are not routed through this message.
+`loadError` / tree loading failures are a separate concern and are not routed through this message.
 
 ## Accessibility
 

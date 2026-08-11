@@ -38,10 +38,10 @@ class SidebarStubComponent {
   sidebar = input.required<unknown>();
   isShowSidebar = input(false);
   isMobile = input(false);
-  sdShowSideBar = output<boolean | null>();
-  sdExpandSideBar = output<void>();
-  sdPopupUserMenuOpened = output<void>();
-  sdPopupUserMenuClosed = output<void>();
+  showSideBar = output<boolean | null>();
+  expandSideBar = output<void>();
+  popupUserMenuOpened = output<void>();
+  popupUserMenuClosed = output<void>();
 }
 
 describe('SdSidebarV1 responsive compatibility', () => {

@@ -67,9 +67,9 @@ export class SdInlineText {
   /** Lower bound (chars) so short/empty values keep a clickable target. */
   readonly minSize = input(2);
 
-  readonly sdCleared = output<void>();
-  readonly sdKeyupEnter = output<void>();
-  readonly sdKeydownEscape = output<void>();
+  readonly cleared = output<void>();
+  readonly keyupEnter = output<void>();
+  readonly keydownEscape = output<void>();
   readonly sdFocus = output<FocusEvent>();
   readonly sdBlur = output<FocusEvent>();
   readonly sdKeydown = output<KeyboardEvent>();
@@ -148,11 +148,11 @@ export class SdInlineText {
   }
 
   protected onKeyup(ev: KeyboardEvent): void {
-    if (ev.key === 'Enter') this.sdKeyupEnter.emit();
+    if (ev.key === 'Enter') this.keyupEnter.emit();
   }
 
   protected onKeydown(ev: KeyboardEvent): void {
-    if (ev.key === 'Escape') this.sdKeydownEscape.emit();
+    if (ev.key === 'Escape') this.keydownEscape.emit();
     this.sdKeydown.emit(ev);
   }
 
@@ -175,7 +175,7 @@ export class SdInlineText {
     if (c) c.setValue('');
     else this.value.set('');
     this.tick.update(n => n + 1);
-    this.sdCleared.emit();
+    this.cleared.emit();
   }
 
   // ── public API ───────────────────────────────────────────────────────────

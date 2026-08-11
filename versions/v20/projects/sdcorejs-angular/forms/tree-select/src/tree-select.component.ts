@@ -106,7 +106,7 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
   readonly model = model<SdTreeSelectModel<TKey>>(undefined);
   readonly sdChange = output<SdTreeSelectModel<TKey>>();
-  readonly sdLoadError = output<SdTreeLoadErrorEvent<T>>();
+  readonly loadError = output<SdTreeLoadErrorEvent<T>>();
 
   readonly formControl = new SdFormControl();
   readonly #state = sdFormControlState(computed(() => this.formControl));

@@ -24,7 +24,7 @@ describe('ColumnFilterComponent', () => {
     it('emits filterChange', () => {
       bootstrap({ field: 'name', type: 'string', title: 'Name' } as SdTableColumn, { name: '' });
       const spy = jasmine.createSpy('filterChange');
-      component.sdFilterChange.subscribe(spy);
+      component.filterChange.subscribe(spy);
 
       component.onFilterChange();
 
@@ -34,7 +34,7 @@ describe('ColumnFilterComponent', () => {
     it('does NOT emit filterCommit', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const spy = jasmine.createSpy('filterCommit');
-      component.sdFilterCommit.subscribe(spy);
+      component.filterCommit.subscribe(spy);
 
       component.onFilterChange();
 
@@ -67,7 +67,7 @@ describe('ColumnFilterComponent', () => {
     it('emits filterCommit', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const spy = jasmine.createSpy('filterCommit');
-      component.sdFilterCommit.subscribe(spy);
+      component.filterCommit.subscribe(spy);
 
       component.onFilterCommit();
 
@@ -77,7 +77,7 @@ describe('ColumnFilterComponent', () => {
     it('does NOT emit filterChange (blur không trigger reload)', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const spy = jasmine.createSpy('filterChange');
-      component.sdFilterChange.subscribe(spy);
+      component.filterChange.subscribe(spy);
 
       component.onFilterCommit();
 
@@ -136,13 +136,13 @@ describe('ColumnFilterComponent', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const filterChangeSpy = jasmine.createSpy('filterChange');
       const filterCommitSpy = jasmine.createSpy('filterCommit');
-      component.sdFilterChange.subscribe(filterChangeSpy);
-      component.sdFilterCommit.subscribe(filterCommitSpy);
+      component.filterChange.subscribe(filterChangeSpy);
+      component.filterCommit.subscribe(filterCommitSpy);
 
       const debugInput = fixture.debugElement.query(By.css('sd-input'));
       expect(debugInput).withContext('sd-input rendered for type=string').toBeTruthy();
 
-      debugInput.triggerEventHandler('sdKeyupEnter', null);
+      debugInput.triggerEventHandler('keyupEnter', null);
 
       expect(filterChangeSpy).toHaveBeenCalledTimes(1);
       expect(filterCommitSpy).not.toHaveBeenCalled();
@@ -152,8 +152,8 @@ describe('ColumnFilterComponent', () => {
       bootstrap({ field: 'name', type: 'string' } as SdTableColumn, { name: '' });
       const filterChangeSpy = jasmine.createSpy('filterChange');
       const filterCommitSpy = jasmine.createSpy('filterCommit');
-      component.sdFilterChange.subscribe(filterChangeSpy);
-      component.sdFilterCommit.subscribe(filterCommitSpy);
+      component.filterChange.subscribe(filterChangeSpy);
+      component.filterCommit.subscribe(filterCommitSpy);
 
       const debugInput = fixture.debugElement.query(By.css('sd-input'));
       debugInput.triggerEventHandler('sdBlur', null);
@@ -166,13 +166,13 @@ describe('ColumnFilterComponent', () => {
       bootstrap({ field: 'age', type: 'number' } as SdTableColumn, { age: null });
       const filterChangeSpy = jasmine.createSpy('filterChange');
       const filterCommitSpy = jasmine.createSpy('filterCommit');
-      component.sdFilterChange.subscribe(filterChangeSpy);
-      component.sdFilterCommit.subscribe(filterCommitSpy);
+      component.filterChange.subscribe(filterChangeSpy);
+      component.filterCommit.subscribe(filterCommitSpy);
 
       const debugInputNumber = fixture.debugElement.query(By.css('sd-input-number'));
       expect(debugInputNumber).withContext('sd-input-number rendered for type=number').toBeTruthy();
 
-      debugInputNumber.triggerEventHandler('sdKeyupEnter', null);
+      debugInputNumber.triggerEventHandler('keyupEnter', null);
       expect(filterChangeSpy).toHaveBeenCalledTimes(1);
       expect(filterCommitSpy).not.toHaveBeenCalled();
 
@@ -189,7 +189,7 @@ describe('ColumnFilterComponent', () => {
 
       const debugInputNumber = fixture.debugElement.query(By.css('sd-input-number'));
       columnFilter['age'] = 18;
-      debugInputNumber.triggerEventHandler('sdKeyupEnter', null);
+      debugInputNumber.triggerEventHandler('keyupEnter', null);
       debugInputNumber.triggerEventHandler('sdBlur', null);
 
       expect(onChange).toHaveBeenCalledOnceWith(18, column, columnFilter);

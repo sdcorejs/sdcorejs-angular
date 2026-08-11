@@ -66,9 +66,9 @@ modes:
 | Output | Payload | Fired on |
 |---|---|---|
 | `valueChange` | `string` | value model change (uncontrolled) |
-| `sdCleared` | `void` | clear-× click |
-| `sdKeyupEnter` | `void` | `Enter` keyup |
-| `sdKeydownEscape` | `void` | `Escape` keydown |
+| `cleared` | `void` | clear-× click |
+| `keyupEnter` | `void` | `Enter` keyup |
+| `keydownEscape` | `void` | `Escape` keydown |
 | `sdFocus` / `sdBlur` | `FocusEvent` | focus / blur |
 | `sdKeydown` | `KeyboardEvent` | any keydown |
 | `sdPaste` | `ClipboardEvent` | paste |
@@ -99,7 +99,7 @@ modes:
   (valueChange)="draft.set($event)"
   [placeholder]="'nhập…'"
   (sdBlur)="commit()"
-  (sdKeydownEscape)="revert()" />
+  (keydownEscape)="revert()" />
 ```
 
 ### Controlled (inside a form control)
@@ -113,7 +113,7 @@ modes:
   [state]="formControl.invalid && formControl.touched ? 'error' : 'auto'"
   (sdFocus)="onFocus()"
   (sdBlur)="onBlur()"
-  (sdKeyupEnter)="onKeyupEnter()" />
+  (keyupEnter)="onKeyupEnter()" />
 ```
 
 ## Notes

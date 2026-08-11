@@ -159,7 +159,7 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
 
   readonly sdChange = output<SdEntityPickerModel<TKey>>();
   readonly sdAdd = output<void>();
-  readonly sdLoadError = output<unknown>();
+  readonly loadError = output<unknown>();
 
   readonly formControl = new SdFormControl();
   readonly #state = sdFormControlState(computed(() => this.formControl));
@@ -200,7 +200,7 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
   /** Interaction-gated validation message; `undefined` until the control is touched/dirty. */
   readonly visibleErrorMessage = computed(() => this.connectorState().validationError);
   readonly draftKeys = signal<TKey[]>([]);
-  readonly loadError = signal<unknown | null>(null);
+  readonly loadErrorState = signal<unknown | null>(null);
   readonly loading = signal(false);
   readonly hydrating = signal(false);
   readonly query = signal<SdQuery<T>>({ filters: [], logic: 'AND', search: '' });
@@ -276,14 +276,14 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
         .then(items => {
           if (controller.signal.aborted) return;
           this.#mergeEntities(items);
-          if (this.loadError() === this.#hydrationError) this.loadError.set(null);
+          if (this.loadErrorState() === this.#hydrationError) this.loadErrorState.set(null);
           this.#hydrationError = null;
         })
         .catch(error => {
           if (!controller.signal.aborted && !isAbortError(error)) {
             this.#hydrationError = error;
-            this.loadError.set(error);
-            this.sdLoadError.emit(error);
+            this.loadErrorState.set(error);
+            this.loadError.emit(error);
           }
         })
         .finally(() => {
@@ -380,7 +380,7 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
       signal: controller.signal,
     };
     this.loading.set(true);
-    this.loadError.set(null);
+    this.loadErrorState.set(null);
 
     try {
       const page = await Promise.resolve(provider.load(request));
@@ -389,8 +389,8 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
       return { items: [...page.items], total: Math.max(0, page.total) };
     } catch (error) {
       if (controller.signal.aborted || version !== this.#loadVersion || isAbortError(error)) return { items: [], total: 0 };
-      this.loadError.set(error);
-      this.sdLoadError.emit(error);
+      this.loadErrorState.set(error);
+      this.loadError.emit(error);
       return { items: [], total: 0 };
     } finally {
       if (version === this.#loadVersion) this.loading.set(false);
@@ -398,7 +398,7 @@ export class SdEntityPicker<T = unknown, TKey = string | number> {
   }
 
   retry(): void {
-    this.loadError.set(null);
+    this.loadErrorState.set(null);
     void this.table()?.reload();
   }
 

@@ -311,7 +311,7 @@
               [sdColumnResize]="!!_tableOption.config?.resizable && column.type !== 'children'"
               [minWidth]="column.minWidth"
               [maxWidth]="column.maxWidth"
-              (sdResizeEnd)="onColumnResize(column.field, $event)"
+              (resizeEnd)="onColumnResize(column.field, $event)"
               [style.width]="column.width"
               [style.min-width]="column.minWidth || column.width"
               [style.max-width]="column.maxWidth"
@@ -352,8 +352,8 @@
                         [columnFilter]="columnFilter!"
                         [cacheValues]="cacheValues"
                         [column]="column"
-                        (sdFilterChange)="onFilterChange()"
-                        (sdFilterCommit)="onFilterCommit()">
+                        (filterChange)="onFilterChange()"
+                        (filterCommit)="onFilterCommit()">
                       </column-filter>
                     </ng-container>
                   }
@@ -417,8 +417,8 @@
                       [cacheValues]="cacheValues"
                       [column]="column"
                       (operatorChange)="columnOperator[column.field] = $event!; onOperatorChange(column, $event)"
-                      (sdFilterChange)="onFilterChange()"
-                      (sdFilterCommit)="onFilterCommit()">
+                      (filterChange)="onFilterChange()"
+                      (filterCommit)="onFilterCommit()">
                     </column-filter>
                   </ng-container>
                 }
@@ -612,7 +612,7 @@
       </ng-container>
     </div>
   </div>
-  <selector-action [autoId]="_autoId" [tableOption]="_tableOption" [selectedTableItems]="_selectedTableItems" (sdClear)="onClearSelection(groupedItems)" />
+  <selector-action [autoId]="_autoId" [tableOption]="_tableOption" [selectedTableItems]="_selectedTableItems" (clear)="onClearSelection(groupedItems)" />
   @if (_tableOption.config?.visible) {
     <config [autoId]="_autoId" [tableOption]="_tableOption" />
   }

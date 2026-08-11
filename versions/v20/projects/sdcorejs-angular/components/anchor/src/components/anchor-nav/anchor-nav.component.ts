@@ -33,16 +33,14 @@ export class AnchorNav implements OnDestroy {
     return parent && key ? `${parent}-${key}` : undefined;
   }
 
-  sdClickSection = output<string>();
+  clickSection = output<string>();
 
   #delay = 200;
   #clickSectionSubject = new Subject<string>();
   #subscription = new Subscription();
 
   constructor() {
-    this.#subscription.add(
-      this.#clickSectionSubject.pipe(debounceTime(this.#delay)).subscribe((id: string) => this.sdClickSection.emit(id))
-    );
+    this.#subscription.add(this.#clickSectionSubject.pipe(debounceTime(this.#delay)).subscribe((id: string) => this.clickSection.emit(id)));
   }
 
   onClickSection = (id: string): void => {

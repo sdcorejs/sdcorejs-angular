@@ -79,8 +79,8 @@ If multiple configs are provided as an array, **duplicate `key` values throw on 
 
 | Name           | Type                                | Notes                                                                                                                                                                                                                               |
 | -------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sdLoaded`       | `OutputRef<PreviewFile[]>`          | Declared output — reserved for future use; currently not emitted. Do not rely on it until the API is stabilised.                                                                                                                    |
-| `sdFilesChanged` | `OutputRef<(string \| File)[]>`     | Emits whenever the file set changes (add, remove, reorder). Items are mixed: server keys (string), CDN URLs (string), or freshly-picked `File` objects. Emitted after every `#details` resolution.                                  |
+| `loaded`       | `OutputRef<PreviewFile[]>`          | Declared output — reserved for future use; currently not emitted. Do not rely on it until the API is stabilised.                                                                                                                    |
+| `filesChanged` | `OutputRef<(string \| File)[]>`     | Emits whenever the file set changes (add, remove, reorder). Items are mixed: server keys (string), CDN URLs (string), or freshly-picked `File` objects. Emitted after every `#details` resolution.                                  |
 | `model`        | `ModelSignal<(string \| number)[]>` | **Two-way bindable via `[(model)]`**. Holds idOrKeys / cdn URLs / hashed-keys-of-pending-uploads. Set this from your form to pre-populate. Updating the array triggers `#details()` to resolve metadata and refresh `previewFiles`. |
 
 ## Public API (call via template ref)
@@ -273,8 +273,8 @@ Typically not used standalone, but accessible via `viewChild(PreviewComponent)` 
 | `open(files, index?)`           | `(PreviewFile[], number?) => Promise<void>` | Opens the gallery modal at the given index (default 0). No-op if array is empty or null. |
 | `updateCurrentImage(direction)` | `(1 \| -1) => void`                         | Navigates forward (1) or backward (-1) with wrap-around.                                 |
 | `onClickThumbnailImage(index)`  | `(number) => void`                          | Jumps to thumbnail at `index`.                                                           |
-| `onDownload(previewFile)`       | `(PreviewFile) => void`                     | Emits the `sdDownload` output.                                                             |
-| `onClose()`                     | `() => void`                                | Emits the `sdClose` output.                                                                |
+| `onDownload(previewFile)`       | `(PreviewFile) => void`                     | Emits the `download` output.                                                             |
+| `onClose()`                     | `() => void`                                | Emits the `close` output.                                                                |
 | `activeIndex`                   | `number`                                    | Currently selected image index.                                                          |
 | `previewFiles`                  | `PreviewFile[]`                             | Files loaded into the gallery.                                                           |
 | `@Output() download`            | `EventEmitter<PreviewFile>`                 | Emitted when user clicks the download button on a non-image file.                        |
