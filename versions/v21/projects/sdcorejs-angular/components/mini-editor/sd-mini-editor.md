@@ -19,7 +19,6 @@ Compact rich-text input (CKEditor 5 ClassicEditor) for short-form content like c
 
 ## When NOT to use
 - For long documents with images, tables, headings → use `<sd-editor>`
-- For full document/template authoring with variables, page breaks, page orientation → use `<sd-document-builder>`
 - For plain unformatted text → use `<sd-input type="textarea">`
 - For code → use `<sd-code-editor>`
 
@@ -156,7 +155,7 @@ option: SdMiniEditorOption = {
 ```
 
 ## Anti-patterns
-- DON'T use `<sd-mini-editor>` for long-form documents — its toolbar is intentionally minimal; use `<sd-editor>` or `<sd-document-builder>`
+- DON'T use `<sd-mini-editor>` for long-form documents — its toolbar is intentionally minimal; use `<sd-editor>`
 - DON'T pass HTML into `value` when `outputFormat: 'markdown'` is set — the editor will misinterpret it
 - DON'T forget `option` is required — leaving it `undefined` will throw on render
 - DON'T render many `<sd-mini-editor>` instances on one screen — each loads CKEditor; prefer one shared comment box
@@ -171,6 +170,5 @@ option: SdMiniEditorOption = {
 
 ## Related
 - `<sd-editor>` — full rich text with images, alignment, font sizes, validation
-- `<sd-document-builder>` — document/template authoring with variables, page settings, comments
 - `<sd-input type="textarea">` — plain unformatted text
 - `<sd-code-editor>` — Monaco-based code editor

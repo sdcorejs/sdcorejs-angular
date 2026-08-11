@@ -91,11 +91,6 @@ export const EN_MESSAGES = {
   'core.excel.cannot-read-file': 'Could not read file content',
   'core.excel.no-sheet': 'Excel file has no data sheet',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': 'Invalid format. Please select a template in DOC or DOCX format',
-  'core.docx.size-exceeded': 'Template file size exceeds the supported limit. Please try again',
-  'core.docx.convert-error': 'An error occurred while converting the DOCX file',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': 'Success',
   'core.notify.type.info': 'Information',
@@ -265,14 +260,6 @@ export const EN_MESSAGES = {
   'core.component.editor.image.max-width': 'Image width {width}px exceeds the limit of {max}px',
   'core.component.editor.image.max-height': 'Image height {height}px exceeds the limit of {max}px',
   'core.component.editor.image.max-per-selection': 'You can select at most {max} images per selection',
-
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': 'Current page number',
-  'core.component.document-builder.page-number.total': 'Total pages',
-  'core.component.document-builder.ck-comment.label': 'Comment',
-  'core.component.document-builder.ck-comment.text-too-long': 'Text too long ({length} characters). Maximum {max} characters.',
-  'core.component.document-builder.variable.not-allowed': 'Adding variable to the text is not allowed',
-  'core.component.document-builder.variable.invalid-data': 'Invalid variable data',
 
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': 'Field key',

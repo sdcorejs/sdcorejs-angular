@@ -31,7 +31,7 @@ None. No inputs, no outputs, no methods, no content projection. The template is 
 
 ## When to use it directly
 
-Almost never. `<sd-editor>`, `<sd-mini-editor>` and `<sd-document-builder>` already embed it.
+Almost never. `<sd-editor>` and `<sd-mini-editor>` already embed it.
 
 Use it directly only when you mount CKEditor yourself — for example rendering CKEditor-produced HTML in a viewer that must match the editor's typography, or wiring `@ckeditor/ckeditor5-angular` without the SDCoreJS wrappers:
 
@@ -62,5 +62,4 @@ export class ArticleViewComponent {
 
 - `<sd-editor>` — full CKEditor wrapper; embeds this component.
 - `<sd-mini-editor>` — compact editor; embeds this component.
-- `<sd-document-builder>` — document composer; embeds this component.
 - `assets/scss/ckeditor5.scss` — the stylesheet this component owns.

@@ -256,7 +256,6 @@ onFiles(e: Event) {
 - `<sd-modal>` — optional chrome host when you want overlay + focus trap
 - `<sd-side-drawer>` — alternative chrome host for compare-style workflows
 - `<sd-preview-pdf>` — sibling component for PDF documents (see below)
-- `<sd-document-builder>` — for Word / Excel previews
 - `<sd-button>` — typically used by callers to update `items()`
 
 ---
@@ -285,7 +284,7 @@ Dark-themed PDF document viewer — same self-contained surface contract as `<sd
 ## When NOT to use
 
 - For images → use `<sd-preview-image>`
-- For Word / Excel → not supported (use `<sd-document-builder>`)
+- For Word / Excel → not supported
 - For password-protected PDFs that need an inline password prompt — this commit emits `loadError({ reason: 'password' })` only; consumer must render their own password dialog
 
 ## Sizing
@@ -479,7 +478,6 @@ onFiles(e: Event) {
 - `<sd-modal>` — optional chrome host when you want overlay + focus trap
 - `<sd-side-drawer>` — alternative chrome host for compare-style workflows
 - `<sd-preview-pdf>` — sibling component for PDF documents (see below)
-- `<sd-document-builder>` — for Word / Excel previews
 - `<sd-button>` — typically used by callers to update `items()`
 
 ---
@@ -508,7 +506,7 @@ Dark-themed PDF document viewer — same self-contained surface contract as `<sd
 ## When NOT to use
 
 - For images → use `<sd-preview-image>`
-- For Word / Excel → not supported (use `<sd-document-builder>`)
+- For Word / Excel → not supported
 - For password-protected PDFs that need an inline password prompt — this commit emits `loadError({ reason: 'password' })` only; consumer must render their own password dialog
 
 ## Sizing
@@ -708,4 +706,3 @@ open(id: string) {
 
 - `<sd-preview-image>` — sibling component for images
 - `<sd-modal>` / `<sd-side-drawer>` — optional chrome hosts
-- `<sd-document-builder>` — for non-PDF documents (Word / Excel)

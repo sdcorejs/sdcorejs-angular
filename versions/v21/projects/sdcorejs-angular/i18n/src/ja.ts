@@ -93,11 +93,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': 'ファイルの内容を読み取れませんでした',
   'core.excel.no-sheet': 'Excelファイルにデータシートがありません',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': '形式が正しくありません。DOCまたはDOCX形式のテンプレートを選択してください',
-  'core.docx.size-exceeded': 'テンプレートファイルのサイズが上限を超えています。もう一度お試しください',
-  'core.docx.convert-error': 'DOCXファイルの変換中にエラーが発生しました',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': '成功',
   'core.notify.type.info': '情報',
@@ -267,14 +262,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-width': '画像の幅 {width}px は上限 {max}px を超えています',
   'core.component.editor.image.max-height': '画像の高さ {height}px は上限 {max}px を超えています',
   'core.component.editor.image.max-per-selection': '一度に選択できる画像は最大{max}枚です',
-
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': '現在のページ番号',
-  'core.component.document-builder.page-number.total': '総ページ数',
-  'core.component.document-builder.ck-comment.label': 'コメント',
-  'core.component.document-builder.ck-comment.text-too-long': 'テキストが長すぎます（{length}文字）。最大{max}文字です。',
-  'core.component.document-builder.variable.not-allowed': 'テキストへの変数の追加は許可されていません',
-  'core.component.document-builder.variable.invalid-data': '変数データが正しくありません',
 
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': 'フィールドキー',

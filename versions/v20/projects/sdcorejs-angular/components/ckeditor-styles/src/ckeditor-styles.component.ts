@@ -7,7 +7,7 @@ import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/
  * - CKEditor's CSS must be global (applies to body-rendered overlays, dialogs, balloons),
  *   which means whichever Angular component declares it must use ViewEncapsulation.None.
  * - Switching encapsulation on the main editor components (`<sd-editor>`, `<sd-mini-editor>`,
- *   `<sd-document-builder>`) would un-scope all their local styles too.
+ *   `<sd-mini-editor>`) would un-scope all their local styles too.
  * - Instead, this tiny no-render component owns the global CSS. The editor components embed
  *   `<sd-ckeditor-styles>` at the top of their template; the CSS is injected once into <head>
  *   the first time any editor instance mounts. Editor components themselves keep
