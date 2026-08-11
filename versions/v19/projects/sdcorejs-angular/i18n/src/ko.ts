@@ -92,11 +92,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': '파일 내용을 읽을 수 없습니다',
   'core.excel.no-sheet': 'Excel 파일에 데이터 시트가 없습니다',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': '형식이 올바르지 않습니다. DOC 또는 DOCX 형식의 템플릿을 선택해 주세요',
-  'core.docx.size-exceeded': '템플릿 파일 크기가 지원 한도를 초과했습니다. 다시 시도해 주세요',
-  'core.docx.convert-error': 'DOCX 파일 변환 중 오류가 발생했습니다',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': '성공',
   'core.notify.type.info': '정보',
@@ -266,14 +261,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-width': '이미지 너비 {width}px가 한도 {max}px를 초과합니다',
   'core.component.editor.image.max-height': '이미지 높이 {height}px가 한도 {max}px를 초과합니다',
   'core.component.editor.image.max-per-selection': '한 번에 최대 {max}장의 이미지를 선택할 수 있습니다',
-
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': '현재 페이지 번호',
-  'core.component.document-builder.page-number.total': '전체 페이지 수',
-  'core.component.document-builder.ck-comment.label': '댓글',
-  'core.component.document-builder.ck-comment.text-too-long': '텍스트가 너무 깁니다 ({length}자). 최대 {max}자입니다.',
-  'core.component.document-builder.variable.not-allowed': '텍스트에 변수를 추가할 수 없습니다',
-  'core.component.document-builder.variable.invalid-data': '변수 데이터가 올바르지 않습니다',
 
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': '필드 키',

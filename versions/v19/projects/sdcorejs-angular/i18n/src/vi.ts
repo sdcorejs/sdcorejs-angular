@@ -92,11 +92,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': 'Không đọc được nội dung file',
   'core.excel.no-sheet': 'File Excel không có sheet dữ liệu',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': 'Định dạng không hợp lệ. Vui lòng chọn Mẫu có định dạng DOC hoặc DOCX',
-  'core.docx.size-exceeded': 'Kích thước tệp mẫu vượt quá tiêu chuẩn hỗ trợ của hệ thống. Vui lòng thử lại',
-  'core.docx.convert-error': 'Có lỗi xảy ra khi chuyển đổi file DOCX',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': 'Thành công',
   'core.notify.type.info': 'Thông tin',
@@ -266,14 +261,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-width': 'Chiều rộng ảnh {width}px vượt quá giới hạn {max}px',
   'core.component.editor.image.max-height': 'Chiều cao ảnh {height}px vượt quá giới hạn {max}px',
   'core.component.editor.image.max-per-selection': 'Chỉ được phép chọn tối đa {max} ảnh mỗi lần',
-
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': 'Số trang hiện tại',
-  'core.component.document-builder.page-number.total': 'Tổng số trang',
-  'core.component.document-builder.ck-comment.label': 'Bình luận',
-  'core.component.document-builder.ck-comment.text-too-long': 'Văn bản quá dài ({length} ký tự). Tối đa {max} ký tự.',
-  'core.component.document-builder.variable.not-allowed': 'Không cho phép thêm variable vào văn bản',
-  'core.component.document-builder.variable.invalid-data': 'Dữ liệu variable không hợp lệ',
 
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': 'Trường dữ liệu',

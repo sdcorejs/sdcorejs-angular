@@ -3,7 +3,7 @@
 > File này bàn giao **branch `fix/full-scan-review`**. Nó khác với `versions/v19/HANDOFF.md`
 > (artifact cũ từ đợt `1.4`, không liên quan, chưa đụng tới).
 >
-> Cập nhật: 2026-08-11 (lần 2 — sau khi đảo nhóm output rename) · Base: `main` @ `25480b6`.
+> Cập nhật: 2026-08-11 (lần 3 — sau khi đảo nhóm output rename và xoá docx/document-builder) · Base: `main` @ `25480b6`.
 
 ---
 
@@ -12,7 +12,7 @@
 | | |
 |---|---|
 | Branch | `fix/full-scan-review` |
-| Số commit trên branch | 17 (16: đảo nhóm ~73 output rename — xem §4; 17: sync rollout v20/v21 tách riêng vì hook git-secrets vỡ E2BIG khi một commit staged ~400 file) |
+| Số commit trên branch | 19 (16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync — commit code/sync tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
 | Working tree | sạch |
 | Merge vào `main` | **chưa** |
 | Tag release | **chưa** |
@@ -27,10 +27,10 @@
 | `ng build sdcorejs-angular` (v20) | PASS |
 | `ng build sdcorejs-angular` (v21) | PASS |
 | `ng lint` (v19) | PASS — 0 error, 0 warning, **4 rule a11y đã bật ở mức `error`** |
-| Full suite (v19) | **4651 SUCCESS**, 0 fail (baseline đầu branch: 3950) |
+| Full suite (v19) | **4607 SUCCESS**, 0 fail (baseline đầu branch: 3950; 44 spec của docx/document-builder đi theo folder bị xoá) |
 | Coverage threshold | Có thực thi thật — 72/62/71/72 |
 | `npm run test:scripts` | 61/61 |
-| `npm run check:i18n-parity` | PASS — 589 key × 5 ngôn ngữ |
+| `npm run check:i18n-parity` | PASS — 580 key × 5 ngôn ngữ (−9 key docx/document-builder) |
 | Mojibake scan | 0 hit |
 
 ---
@@ -71,7 +71,7 @@ cd versions/v19 && npm run check:i18n-parity
 
 ---
 
-## 3. 15 commit — mỗi commit làm gì
+## 3. 19 commit — mỗi commit làm gì
 
 Đọc theo thứ tự này; commit message của từng cái giải thích đầy đủ **tại sao**, không chỉ *cái gì*.
 
@@ -94,6 +94,8 @@ cd versions/v19 && npm run check:i18n-parity
 | 15 | `5eeda62a` | `chore(release)` — `npm run sync` sang v20/v21 + viết CHANGELOG. |
 | 16 | *(revert)* | `revert!` — đảo nhóm ~73 output rename của #13 theo quyết định user (giữ tên đã publish, khớp thông lệ Material). Gộp `sdLoadError` → `loadError` (breaking duy nhất còn lại của nhóm output). Chi tiết §4. |
 | 17 | *(sync)* | `chore(sync)` — rollout #16 sang v20/v21. Tách riêng chỉ vì hook git-secrets E2BIG. |
+| 18 | *(removal)* | `feat!` — xoá hẳn `services/docx` (code GPL) + `components/document-builder` (legacy) theo yêu cầu user. Gỡ dep `@bjorn3/browser_wasi_shim`, 9 i18n key, NOTICE, 2 demo showcase, 3 lockfile mồ côi cấp lib. |
+| 19 | *(sync)* | `chore(sync)` — rollout #18 sang v20/v21. |
 
 ---
 
@@ -103,7 +105,7 @@ Người dùng đã chọn ba việc này khi bắt đầu. Ghi lại để khô
 
 | Vấn đề | Quyết định |
 |---|---|
-| Code GPL-2.0 vendor trong package MIT (`services/docx`) | **Giữ nguyên code**, chỉ thêm `NOTICE` + ghi rõ trong tài liệu. Không relicense, không xoá entry point. **Kết luận pháp lý vẫn để mở** — cần hỏi luật sư trước khi tag. |
+| Code GPL-2.0 vendor trong package MIT (`services/docx`) | ~~Giữ nguyên code + `NOTICE`~~ **Đảo quyết định (2026-08-11): XOÁ HẲN** `services/docx` + `components/document-builder` (legacy, user không dùng) theo yêu cầu user. Hết xung đột giấy phép cho release mới → **không còn chặn tag**. Lưu ý tồn dư: các bản 19.x–21.x ≤ 1.6 **đã publish** vẫn chứa code GPL trên npm — nếu cần xử lý (deprecate/unpublish) thì vẫn phải hỏi luật sư, nhưng không chặn release mới. |
 | Nhóm breaking rename | **Làm luôn, xoá thẳng tên cũ**, không giữ alias `@deprecated`. |
 | Nhóm giảm bundle (16.32 MB) | **Hoãn.** Chưa động vào. |
 | **Nhóm ~73 output rename — ĐÃ ĐẢO LẠI (2026-08-11)** | User không đồng ý scale + muốn tên quen thuộc (`close`, `search`, … khớp thông lệ Material, và là tên đã publish tới 1.6). Đã revert diff-driven theo đúng commit `68ab2ad7` (544 thay thế / 125 file), **16 tên `sd*` đã publish từ 1.4/1.6 giữ nguyên** (đổi chúng mới là breaking). Breaking duy nhất còn lại của nhóm output: `sdLoadError` → `loadError` trên `<sd-tree-select>` / `<sd-entity-picker>` (user chọn gộp; `<sd-tree>` / `<sd-preview-pdf>` vốn đã publish `loadError`). Signal nội bộ `loadError` của entity-picker đổi thành `loadErrorState` để nhường tên cho output. |
@@ -120,10 +122,10 @@ nguy hiểm nhất. Đã ghi trong `CHANGELOG.md` mục "Không đổi (có ch�
 
 ### 5.1. Cần làm trước khi merge
 
-1. **Review PR.** 15 commit, ~1500 file. Đọc theo thứ tự commit; message của mỗi commit là
+1. **Review PR.** 19 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
    phần giải thích chính.
-2. **Hỏi luật sư về vụ GPL** (xem §4). File `NOTICE` ở root mô tả đúng hiện trạng và
-   cố ý không đưa ra kết luận pháp lý.
+2. ~~Hỏi luật sư về vụ GPL~~ — đã hết chặn: `services/docx` (code GPL) xoá hẳn khỏi source
+   (2026-08-11, xem §4). Chỉ còn câu hỏi pháp lý KHÔNG chặn merge về các bản đã publish.
 3. **Thông báo breaking cho team dùng thư viện.** Bảng migration đầy đủ nằm trong
    `CHANGELOG.md`, mục `### Changed (BREAKING for consumers)`.
 
@@ -152,8 +154,8 @@ Mỗi mục dưới đây đã được xác minh còn tồn tại tại thời 
 - Hai wrapper `role="button"` (canvas của form-builder, hàng menu sidebar-v1) vẫn **lồng
   phần tử tương tác bên trong**. Handler lọc theo `target` nên không kích hoạt hai lần,
   nhưng gỡ hẳn cấu trúc lồng cần restructure template.
-- `document-builder/.../variable.plugin.scss:106` có `outline: none !important` trên
-  highlight chọn widget của CKEditor — không phải focus ring của control, nên để nguyên.
+- ~~`document-builder/.../variable.plugin.scss:106` outline note~~ — hết liên quan,
+  `components/document-builder` đã xoá hẳn (2026-08-11, xem §4).
 
 ---
 
@@ -288,7 +290,7 @@ Nếu làm tiếp các đợt lớn, **giữ bước 3**.
 |---|---|
 | Báo cáo review gốc (đánh giá đầy đủ **trước** khi sửa) | `.sdcorejs/docs/2026-08-11-full-scan-review.md` |
 | Bảng migration breaking | `CHANGELOG.md` → `### Changed (BREAKING for consumers)` |
-| Nguồn gốc code GPL | `NOTICE` (root), `services/docx/sd-docx.md` |
+| Nguồn gốc code GPL (đã xoá 2026-08-11) | git history: `NOTICE` + `services/docx/sd-docx.md` trước commit xoá |
 | Luật cứng của repo | `CLAUDE.md` (đầy đủ) · `AGENTS.md` (bản rút gọn, phải sửa cùng lúc) |
 | Ánh xạ alias `@deprecated` đã xoá | `versions/v19/projects/sdcorejs-angular/utilities/models/models.md` |
 | Ràng buộc `filters` của query-bar | `components/query-bar/sd-query-bar.md` → "Chip identity" |

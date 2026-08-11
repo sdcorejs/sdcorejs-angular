@@ -1120,78 +1120,6 @@ export class DataStateDemoComponent {
   border-radius: 8px;
 }`,
   },
-  "components/document-builder": {
-    typescript: `import { AfterViewInit, ChangeDetectionStrategy, Component, signal, viewChild } from '@angular/core';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdDocumentBuilder, SdDocumentBuilderOption } from '@sdcorejs/angular/components/document-builder';
-
-@Component({
-  selector: 'app-document-builder-demo',
-  standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, SdDocumentBuilder],
-  template: \`
-    <demo-page #demoPage
-      title="Document Builder"
-      description="Trình soạn thảo tài liệu đầy đủ — định dạng nâng cao, chèn bảng, ảnh, heading, biến (variable), comment. Dùng để dựng mẫu hợp đồng, văn bản nội bộ.">
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-soan-mau-hop-dong') {
-      <demo-section heading="Soạn mẫu hợp đồng" [props]="[{ name: 'option', value: 'config' }, { name: 'contentChange', value: 'event' }]">
-        <div class="doc-box">
-          <sd-document-builder
-            style="height: 100%; width: 100%"
-            [option]="builderOption"
-            (contentChange)="onContentChange($event)">
-          </sd-document-builder>
-        </div>
-      </demo-section>
-      }
-    </demo-page>
-  \`,
-  styles: [\`
-    .doc-box {
-      width: 100%;
-      height: 520px;
-    }
-  \`],
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class DocumentBuilderDemoComponent implements AfterViewInit {
-  readonly builderRef = viewChild(SdDocumentBuilder);
-
-  readonly builderOption: SdDocumentBuilderOption = {
-    orientation: 'PORTRAIT',
-  };
-
-  readonly defaultContent = \`
-    <h2>HỢP ĐỒNG LAO ĐỘNG</h2>
-    <p>Hôm nay, ngày ____/____/______, tại văn phòng công ty, chúng tôi gồm có:</p>
-    <p><strong>Bên A:</strong> Công ty TNHH ABC</p>
-    <p><strong>Bên B:</strong> Ông/Bà ______________________, CCCD số ______________</p>
-    <h3>Điều 1: Công việc và địa điểm làm việc</h3>
-    <p>Bên B đồng ý làm việc tại vị trí lập trình viên, thuộc phòng Công nghệ thông tin.</p>
-    <h3>Điều 2: Thời hạn hợp đồng</h3>
-    <p>Hợp đồng có thời hạn 12 tháng, kể từ ngày ký.</p>
-    <h3>Điều 3: Lương và phúc lợi</h3>
-    <p>Mức lương cơ bản là 20.000.000 VNĐ mỗi tháng.</p>
-  \`;
-
-  readonly htmlOutput = signal<string>('');
-
-  ngAfterViewInit(): void {
-    // Document Builder không có @Input content — phải gọi setContent sau khi view init.
-    queueMicrotask(() => this.builderRef()?.setContent(this.defaultContent));
-  }
-
-  onContentChange(html: string): void {
-    this.htmlOutput.set(html);
-  }
-}
-`,
-    scss: `.doc-box {
-  width: 100%;
-  height: 520px;
-}`,
-  },
   "components/editor": {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
@@ -10357,96 +10285,6 @@ export class ConfirmDemoComponent {
 }
 `,
   },
-  "services/docx": {
-    typescript: `import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { MatButtonModule } from '@angular/material/button';
-import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
-import { SdDocxService } from '@sdcorejs/angular/services/docx';
-
-@Component({
-  selector: 'app-docx-demo',
-  standalone: true,
-  imports: [DemoPageComponent, DemoSectionComponent, MatButtonModule],
-  template: \`
-    <demo-page #demoPage title="Docx" description="SdDocxService – chuyển đổi file .docx sang HTML qua pandoc.wasm. API chính: open() mở file picker; convertToHtml(file) / convertToHtmlString(file) chuyển trực tiếp một File/Blob.">
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-mo-file-docx') {
-      <demo-section heading="Mở file .docx" [props]="[{ name: 'open()', value: 'method' }]" note="open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.">
-        <button mat-flat-button color="primary" [disabled]="busy()" (click)="onOpen()">Chọn file .docx</button>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chuyen-doi-sang-html') {
-      <demo-section heading="Chuyển đổi sang HTML" [props]="[{ name: 'convertToHtmlString()', value: 'method' }]" note="convertToHtmlString() – không trả mảng cảnh báo.">
-        <button mat-stroked-button color="primary" [disabled]="busy()" (click)="onOpenString()">Chọn file & lấy HTML</button>
-      </demo-section>
-      }
-
-      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-ket-qua') {
-      <demo-section heading="Kết quả">
-        <div style="width:100%">
-          <div style="font-size:12px;color:#666;margin-bottom:6px">{{ status() }}</div>
-          @if (preview()) {
-            <div style="max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:6px;padding:12px;background:#fff" [innerHTML]="preview()"></div>
-          }
-        </div>
-      </demo-section>
-      }
-    </demo-page>
-  \`,
-  changeDetection: ChangeDetectionStrategy.OnPush,
-})
-export class DocxDemoComponent {
-  readonly #docx = inject(SdDocxService);
-  readonly busy = signal(false);
-  readonly status = signal('(chưa chọn file)');
-  readonly preview = signal<string | null>(null);
-
-  async onOpen() {
-    this.busy.set(true);
-    this.status.set('Đang xử lý...');
-    try {
-      const result = await this.#docx.open();
-      if (!result) {
-        this.status.set('Đã hủy hoặc không có file.');
-        this.preview.set(null);
-      } else {
-        this.status.set(\`Thành công. \${result.messages.length} cảnh báo.\`);
-        this.preview.set(result.html);
-      }
-    } finally {
-      this.busy.set(false);
-    }
-  }
-
-  async onOpenString() {
-    this.busy.set(true);
-    this.status.set('Đang xử lý...');
-    try {
-      const html = await new Promise<string | null>((resolve) => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.doc,.docx';
-        input.onchange = async () => {
-          const file = input.files?.[0];
-          if (!file) { resolve(null); return; }
-          resolve(await this.#docx.convertToHtmlString(file));
-        };
-        input.click();
-      });
-      if (html == null) {
-        this.status.set('Đã hủy hoặc lỗi chuyển đổi.');
-        this.preview.set(null);
-      } else {
-        this.status.set('Đã chuyển đổi sang HTML.');
-        this.preview.set(html);
-      }
-    } finally {
-      this.busy.set(false);
-    }
-  }
-}
-`,
-  },
   "services/excel": {
     typescript: `import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -12053,18 +11891,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
         <article data-success>Dữ liệu đã sẵn sàng</article>
       </sd-data-state>
     </demo-section>`,
-  },
-  "components/document-builder/example-soan-mau-hop-dong": {
-    ...SHOWCASE_PAGE_SOURCES["components/document-builder"],
-    html: `<demo-section heading="Soạn mẫu hợp đồng" [props]="[{ name: 'option', value: 'config' }, { name: 'contentChange', value: 'event' }]">
-    <div class="doc-box">
-      <sd-document-builder
-        style="height: 100%; width: 100%"
-        [option]="builderOption"
-        (contentChange)="onContentChange($event)">
-      </sd-document-builder>
-    </div>
-  </demo-section>`,
   },
   "components/editor/example-chi-doc": {
     ...SHOWCASE_PAGE_SOURCES["components/editor"],
@@ -15460,29 +15286,6 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     ...SHOWCASE_PAGE_SOURCES["services/confirm"],
     html: `<demo-section heading="Xác nhận xóa" [props]="[{ name: 'confirm()', value: 'method' }]" note="Tùy chỉnh tiêu đề, nhãn nút và màu nút.">
     <button mat-flat-button color="warn" (click)="onDelete()">Xóa bản ghi</button>
-  </demo-section>`,
-  },
-  "services/docx/example-chuyen-doi-sang-html": {
-    ...SHOWCASE_PAGE_SOURCES["services/docx"],
-    html: `<demo-section heading="Chuyển đổi sang HTML" [props]="[{ name: 'convertToHtmlString()', value: 'method' }]" note="convertToHtmlString() – không trả mảng cảnh báo.">
-    <button mat-stroked-button color="primary" [disabled]="busy()" (click)="onOpenString()">Chọn file & lấy HTML</button>
-  </demo-section>`,
-  },
-  "services/docx/example-ket-qua": {
-    ...SHOWCASE_PAGE_SOURCES["services/docx"],
-    html: `<demo-section heading="Kết quả">
-    <div style="width:100%">
-      <div style="font-size:12px;color:#666;margin-bottom:6px">{{ status() }}</div>
-      @if (preview()) {
-        <div style="max-height:280px;overflow:auto;border:1px solid #ddd;border-radius:6px;padding:12px;background:#fff" [innerHTML]="preview()"></div>
-      }
-    </div>
-  </demo-section>`,
-  },
-  "services/docx/example-mo-file-docx": {
-    ...SHOWCASE_PAGE_SOURCES["services/docx"],
-    html: `<demo-section heading="Mở file .docx" [props]="[{ name: 'open()', value: 'method' }]" note="open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.">
-    <button mat-flat-button color="primary" [disabled]="busy()" (click)="onOpen()">Chọn file .docx</button>
   </demo-section>`,
   },
   "services/excel/example-tai-template-trong": {

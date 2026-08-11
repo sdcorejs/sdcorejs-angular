@@ -43,7 +43,6 @@ export type ShowcaseExampleSourceKey =
   | "components/data-state/example-forbidden"
   | "components/data-state/example-loading"
   | "components/data-state/example-success"
-  | "components/document-builder/example-soan-mau-hop-dong"
   | "components/editor/example-chi-doc"
   | "components/editor/example-soan-noi-dung"
   | "components/form-generic/example-builder-render"
@@ -276,9 +275,6 @@ export type ShowcaseExampleSourceKey =
   | "services/confirm/example-nhat-ky-gan-nhat"
   | "services/confirm/example-xac-nhan-co-ban"
   | "services/confirm/example-xac-nhan-xoa"
-  | "services/docx/example-chuyen-doi-sang-html"
-  | "services/docx/example-ket-qua"
-  | "services/docx/example-mo-file-docx"
   | "services/excel/example-tai-template-trong"
   | "services/excel/example-xuat-file-csv"
   | "services/excel/example-xuat-file-xlsx"
@@ -604,13 +600,6 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-success",
     title: "Success",
     description: "Không có presentation wrapper dư thừa; content được project trực tiếp.",
-  },
-  {
-    sourceKey: "components/document-builder/example-soan-mau-hop-dong",
-    pageKey: "components/document-builder",
-    sectionId: "example-soan-mau-hop-dong",
-    title: "Soạn mẫu hợp đồng",
-    description: "Existing “Soạn mẫu hợp đồng” scenario preserved from the showcase.",
   },
   {
     sourceKey: "components/editor/example-soan-noi-dung",
@@ -2235,27 +2224,6 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-nhat-ky-gan-nhat",
     title: "Nhật ký gần nhất",
     description: "Existing “Nhật ký gần nhất” scenario preserved from the showcase.",
-  },
-  {
-    sourceKey: "services/docx/example-mo-file-docx",
-    pageKey: "services/docx",
-    sectionId: "example-mo-file-docx",
-    title: "Mở file .docx",
-    description: "open() – mở file picker, đọc file, gọi pandoc.wasm, trả về { html, messages }. WASM được tải lần đầu (~vài MB) nên có thể chậm.",
-  },
-  {
-    sourceKey: "services/docx/example-chuyen-doi-sang-html",
-    pageKey: "services/docx",
-    sectionId: "example-chuyen-doi-sang-html",
-    title: "Chuyển đổi sang HTML",
-    description: "convertToHtmlString() – không trả mảng cảnh báo.",
-  },
-  {
-    sourceKey: "services/docx/example-ket-qua",
-    pageKey: "services/docx",
-    sectionId: "example-ket-qua",
-    title: "Kết quả",
-    description: "Existing “Kết quả” scenario preserved from the showcase.",
   },
   {
     sourceKey: "services/excel/example-xuat-file-xlsx",

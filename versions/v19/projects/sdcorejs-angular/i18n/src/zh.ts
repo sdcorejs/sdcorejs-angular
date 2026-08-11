@@ -92,11 +92,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.excel.cannot-read-file': '无法读取文件内容',
   'core.excel.no-sheet': 'Excel 文件没有数据表',
 
-  // ---- Service: docx ----
-  'core.docx.invalid-format': '格式不正确，请选择 DOC 或 DOCX 格式的模板',
-  'core.docx.size-exceeded': '模板文件大小超出支持范围，请重试',
-  'core.docx.convert-error': '转换 DOCX 文件时发生错误',
-
   // ---- Service: notify (toast) ----
   'core.notify.type.success': '成功',
   'core.notify.type.info': '信息',
@@ -266,14 +261,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.component.editor.image.max-width': '图片宽度 {width}px 超过限制 {max}px',
   'core.component.editor.image.max-height': '图片高度 {height}px 超过限制 {max}px',
   'core.component.editor.image.max-per-selection': '每次最多选择 {max} 张图片',
-
-  // ---- Component: document-builder ----
-  'core.component.document-builder.page-number.current': '当前页码',
-  'core.component.document-builder.page-number.total': '总页数',
-  'core.component.document-builder.ck-comment.label': '评论',
-  'core.component.document-builder.ck-comment.text-too-long': '文本过长（{length} 字符）。最多 {max} 字符。',
-  'core.component.document-builder.variable.not-allowed': '不允许在文本中添加变量',
-  'core.component.document-builder.variable.invalid-data': '变量数据无效',
 
   // ---- Component: form-builder ----
   'core.component.form-builder.field-key': '字段键',
