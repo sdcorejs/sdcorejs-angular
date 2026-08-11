@@ -34,7 +34,7 @@ Pick via `[mode]`:
 
 ## Models
 
-Reuses `Filter` and `Operator` from `@sdcorejs/utils/models` (re-exported by `@sdcorejs/angular/utilities/models`). No new operator vocabulary.
+Reuses `Filter` and `Operator` from `@sdcorejs/utils/models`. No new operator vocabulary.
 
 ```ts
 // Field config — discriminated union by `type` (mirrors sd-table column.type)

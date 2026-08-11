@@ -8,7 +8,7 @@ import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, DateUtilities } from '@sdcorejs/utils/fns';
 import {
   Attribute,
   SD_ATTRIBUTE_OPERATORS,

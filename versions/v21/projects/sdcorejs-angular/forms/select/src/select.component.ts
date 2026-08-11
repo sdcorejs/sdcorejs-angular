@@ -52,7 +52,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
-import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, StringUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 import { combineLatest, timer } from 'rxjs';

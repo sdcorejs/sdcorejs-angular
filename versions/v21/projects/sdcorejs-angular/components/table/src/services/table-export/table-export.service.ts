@@ -3,7 +3,7 @@ import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelColumn, SdExcelService } from '@sdcorejs/angular/services';
 import { SdExcelSheet } from '@sdcorejs/angular/services/excel';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { SdTableColumn } from '../../models/table-column.model';
 import { ConfiguredTableResult } from '../../models/table-option-config.model';
 import { SdTableOptionExportColumn } from '../../models/table-option-export.model';

@@ -1,6 +1,6 @@
 import { inject, Injectable, isDevMode } from '@angular/core';
 import { SdCache, SdCacheService } from '@sdcorejs/angular/services/cache';
-import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities } from '@sdcorejs/utils/fns';
 import { ISdPermissionConfiguration, SD_PERMISSION_CONFIGURATION } from '../configurations';
 import { MaybeAsync, resolveMaybeAsync } from '@sdcorejs/utils/models';
 

@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { StringUtilities } from '@sdcorejs/utils/fns';
 
 @Pipe({
   name: 'hyperlink',

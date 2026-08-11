@@ -13,7 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdExcelService, SdExcelSheet, SdExcelTemplate, SdExcelTemplateColumn } from '@sdcorejs/angular/services/excel';
 import { SdNotifyService } from '@sdcorejs/angular/services/notify';
-import { DateUtilities, NumberUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 import { SdLoadingService } from '@sdcorejs/angular/services/loading';
 import { ColumnTransformPipe } from './pipes/column-transform.pipe';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';

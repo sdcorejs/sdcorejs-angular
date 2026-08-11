@@ -1,6 +1,6 @@
 import { Pipe, PipeTransform, SecurityContext, inject } from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
-import { StringUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { StringUtilities } from '@sdcorejs/utils/fns';
 import { SdFormGenericHtml } from '../models';
 
 @Pipe({

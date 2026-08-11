@@ -5,7 +5,7 @@ import { MatMenu, MatMenuModule, MatMenuTrigger } from '@angular/material/menu';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { SdQueryChipPopover } from './chip-popover.component';
-import { Filter } from '@sdcorejs/angular/utilities/models';
+import { Filter } from '@sdcorejs/utils/models';
 import { SdQueryField } from '../../query-bar.model';
 
 /**

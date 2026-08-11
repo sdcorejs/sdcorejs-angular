@@ -37,7 +37,7 @@ import { sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { SdView } from '@sdcorejs/angular/components/view';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities, Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { parse as parseDate } from 'date-fns';

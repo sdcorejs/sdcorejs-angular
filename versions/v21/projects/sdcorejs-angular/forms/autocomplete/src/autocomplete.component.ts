@@ -50,7 +50,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
-import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Observable, Subscription, combineLatest, defer, from, of, timer } from 'rxjs';

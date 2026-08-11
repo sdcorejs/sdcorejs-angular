@@ -1,6 +1,6 @@
 import { TemplateRef } from '@angular/core';
 import type { SdSearch } from '@sdcorejs/angular/forms/models';
-import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Filter, NestedKeyOf, Operator, Order, PagingReq } from '@sdcorejs/utils/models';
 import { Observable } from 'rxjs';
 import { SdTableColumn, SdTableColumnAnyRow } from '../../models/table-column.model';

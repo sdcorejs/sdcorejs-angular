@@ -8,7 +8,6 @@
  * the recommended path for bundle size; this barrel exists so the root import works.
  */
 export * from '@sdcorejs/angular/configurations';
-export * from '@sdcorejs/angular/models';
 export * from '@sdcorejs/angular/i18n';
 export * from '@sdcorejs/angular/utilities';
 export * from '@sdcorejs/angular/pipes';

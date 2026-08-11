@@ -53,7 +53,7 @@ import { SdSafeHtmlPipe } from '@sdcorejs/angular/pipes';
 
 import { Operator } from '@sdcorejs/utils/models';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 
 import { ColumnFilterComponent, ColumnTitleComponent, ExternalFilterComponent, MobileFilterComponent } from './components';
 import { ConfigComponent } from './components/config/config.component';

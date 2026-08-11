@@ -1,6 +1,6 @@
 import { Operator as SdOperator } from '@sdcorejs/utils/models';
 import { SdFormGenericComponent, SdFormGenericGroup } from './form-generic-component.model';
-import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 
 export interface SdFormGenericExpression {
   key: string; // Random, phục vụ cho @for ở attribute-expression

@@ -53,7 +53,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
-import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdRemovableChipPipe } from './pipes';
