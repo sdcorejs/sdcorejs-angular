@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { StringUtilities } from '@sdcorejs/angular/utilities';
+import { StringUtilities } from '@sdcorejs/utils/fns';
 import { SdTableCommand, SdTableCommandChildren, SdTableCommandNormal } from '../../../models/table-command.model';
 import { SdTableItem } from '../../../models/table-item.model';
 

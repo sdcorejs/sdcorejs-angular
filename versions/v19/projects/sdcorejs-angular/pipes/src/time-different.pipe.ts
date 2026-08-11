@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { interval, Observable, of } from 'rxjs';
 import { map, takeWhile } from 'rxjs/operators';
 @Pipe({

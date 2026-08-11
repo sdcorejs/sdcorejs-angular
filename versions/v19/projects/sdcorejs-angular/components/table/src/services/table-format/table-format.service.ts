@@ -2,7 +2,7 @@ import { Injectable, inject, isSignal } from '@angular/core';
 import { SdFormatDatePipe, SdFormatDatetimePipe, SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
 import { EMPTY_STR } from '@sdcorejs/utils/constants';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { ArrayUtilities, NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities, NumberUtilities } from '@sdcorejs/utils/fns';
 
 import { SdTableColumn, SdTableColumnNormal } from '../../models/table-column.model';
 import { MapToSdTableItem, SdTableDisplay, SdTableItem } from '../../models/table-item.model';

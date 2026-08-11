@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import type { CellValue, Style } from 'exceljs';
 // import hash from 'object-hash';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { BrowserUtilities } from '@sdcorejs/utils/fns';
 import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdExcelExportOption, SdExcelTemplate } from './excel.model';

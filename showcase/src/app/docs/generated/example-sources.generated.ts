@@ -1675,7 +1675,7 @@ export class FormGenericDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdHistoryItem } from '@sdcorejs/angular/components/history';
-import type { Color } from '@sdcorejs/angular/utilities';
+import type { Color } from '@sdcorejs/utils/models';
 
 // SdHistoryItemType chưa được export ở barrel — khai báo lại tại đây để tránh sửa thư viện.
 interface SdHistoryItemType {
@@ -2973,7 +2973,7 @@ export class ModalDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
-import type { Operator } from '@sdcorejs/angular/utilities/models';
+import type { Operator } from '@sdcorejs/utils/models';
 
 @Component({
   selector: 'app-operator-demo',
@@ -3513,7 +3513,7 @@ export class PreviewDemoComponent {
     typescript: `import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdQueryBar, SdQueryField, SdQueryLogic } from '@sdcorejs/angular/components/query-bar';
-import { Filter } from '@sdcorejs/angular/utilities/models';
+import { Filter } from '@sdcorejs/utils/models';
 
 interface Employee {
   id: number;

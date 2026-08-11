@@ -61,7 +61,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { SdFormatNumberPipe } from '@sdcorejs/angular/pipes';
-import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { NumberUtilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
 import { Subscription } from 'rxjs';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';

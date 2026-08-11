@@ -1,5 +1,5 @@
 import { ViewDateTimePipe } from './view-date.pipe';
-import { EMPTY_STR } from '@sdcorejs/angular/utilities';
+import { EMPTY_STR } from '@sdcorejs/utils/constants';
 
 describe('ViewDateTimePipe', () => {
   let pipe: ViewDateTimePipe;

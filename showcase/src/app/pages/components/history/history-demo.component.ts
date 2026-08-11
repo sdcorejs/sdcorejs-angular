@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdHistoryItem } from '@sdcorejs/angular/components/history';
-import type { Color } from '@sdcorejs/angular/utilities';
+import type { Color } from '@sdcorejs/utils/models';
 
 // SdHistoryItemType chưa được export ở barrel — khai báo lại tại đây để tránh sửa thư viện.
 interface SdHistoryItemType {

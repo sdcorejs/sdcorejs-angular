@@ -41,7 +41,7 @@ import {
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
 import { Size } from '@sdcorejs/utils/models';
-import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { NumberUtilities } from '@sdcorejs/utils/fns';
 import { Subscription } from 'rxjs';
 import { SdLabel } from '@sdcorejs/angular/forms/label';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';

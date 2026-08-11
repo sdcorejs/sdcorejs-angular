@@ -1,5 +1,5 @@
 import { InjectionToken } from '@angular/core';
-import type { Language } from '@sdcorejs/angular/models';
+import type { Language } from '@sdcorejs/utils/models';
 
 export interface ISdCoreConfiguration {
   // License Key được cấp theo domain/sub domain, ví dụ: domain.com, sub.domain.com

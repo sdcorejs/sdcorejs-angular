@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterView
 import { sdFormatComponent, SdFormGenericNumber } from '../../../../../models';
 import { filter, Subscription } from 'rxjs';
 import { BuilderService } from '../../../services';
-import { NumberUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { NumberUtilities } from '@sdcorejs/utils/fns';
 
 @Component({
   selector: 'number-control',

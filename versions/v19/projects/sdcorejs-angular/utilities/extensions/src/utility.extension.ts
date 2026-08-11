@@ -2,8 +2,6 @@ import { isDevMode } from '@angular/core';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { sdIsExternalHttpUrl, sdOpenExternal, sdParseUrl } from './url-safety';
 
-export { Utilities, BrowserUtilities } from '@sdcorejs/utils/fns';
-
 // why: `console.*` trong code đã ship làm bẩn log của consumer và có thể lộ chi tiết nội bộ ở
 // production. Gate qua `isDevMode()` để chỉ nói chuyện với dev khi app chạy dev build.
 const devWarn = (...args: unknown[]): void => {

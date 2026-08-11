@@ -1,8 +1,5 @@
 import type { EN_MESSAGES } from './en';
-import { SUPPORTED_LANGUAGES, type Language } from '@sdcorejs/angular/models';
 
-export { SUPPORTED_LANGUAGES };
-export type { Language };
 export type I18nKey = keyof typeof EN_MESSAGES;
 export type I18nParams = Record<string, string | number>;
 

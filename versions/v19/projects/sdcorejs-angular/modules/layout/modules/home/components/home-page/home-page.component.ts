@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { SdTabComponent } from '@sdcorejs/angular/components';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { Language } from '@sdcorejs/angular/models';
+import { Language } from '@sdcorejs/utils/models';
 
 // NOTE: Import nội bộ trong module layout thì dùng path tương đối
 import { SdPageComponent } from '../../../../components';

@@ -6,7 +6,7 @@ import { SdAutocomplete } from '@sdcorejs/angular/forms/autocomplete';
 import { SdInput } from '@sdcorejs/angular/forms/input';
 import { SdInputNumber } from '@sdcorejs/angular/forms/input-number';
 import { SdSelect } from '@sdcorejs/angular/forms/select';
-import { ArrayUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { ArrayUtilities } from '@sdcorejs/utils/fns';
 import {
   Attribute,
   SD_ATTRIBUTE_OPERATORS,

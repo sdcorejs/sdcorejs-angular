@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-page.component';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
-import type { Operator } from '@sdcorejs/angular/utilities/models';
+import type { Operator } from '@sdcorejs/utils/models';
 
 @Component({
   selector: 'app-operator-demo',

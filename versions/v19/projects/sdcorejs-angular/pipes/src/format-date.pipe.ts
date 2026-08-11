@@ -1,5 +1,5 @@
 import { Injectable, Pipe, PipeTransform } from '@angular/core';
-import { DateUtilities } from '@sdcorejs/angular/utilities/extensions';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 
 @Pipe({
   name: 'sdFormatDate',

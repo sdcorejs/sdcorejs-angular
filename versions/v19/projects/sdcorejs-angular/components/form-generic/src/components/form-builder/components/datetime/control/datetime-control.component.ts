@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, AfterViewInit, OnDestroy, inject } from '@angular/core';
-import { DateUtilities } from '@sdcorejs/angular/utilities';
+import { DateUtilities } from '@sdcorejs/utils/fns';
 import { filter, Subscription } from 'rxjs';
 import { SdFormGenericDatetime } from '../../../../../models';
 import { BuilderService } from '../../../services';
