@@ -1,7 +1,6 @@
 # HANDOFF — branch `fix/full-scan-review`
 
-> File này bàn giao **branch `fix/full-scan-review`**. Nó khác với `versions/v19/HANDOFF.md`
-> (artifact cũ từ đợt `1.4`, không liên quan, chưa đụng tới).
+> File này bàn giao **branch `fix/full-scan-review`**.
 >
 > Cập nhật: 2026-08-11 (lần 4 — sau khi đảo nhóm output rename, xoá docx/document-builder, và bỏ toàn bộ re-export `@sdcorejs/utils`) · Base: `main` @ `25480b6`.
 
@@ -12,7 +11,7 @@
 | | |
 |---|---|
 | Branch | `fix/full-scan-review` |
-| Số commit trên branch | 22 (22: trả 2 món nợ kỹ thuật nhỏ; 16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync; 20–21: bỏ toàn bộ re-export @sdcorejs/utils + sync — commit code/sync luôn tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
+| Số commit trên branch | 23 (22: trả 2 nợ nhỏ; 23: xoá HANDOFF cũ thời vn-angular; 16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync; 20–21: bỏ toàn bộ re-export @sdcorejs/utils + sync — commit code/sync luôn tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
 | Working tree | sạch |
 | Merge vào `main` | **chưa** |
 | Tag release | **chưa** |
@@ -72,7 +71,7 @@ cd versions/v19 && npm run check:i18n-parity
 
 ---
 
-## 3. 22 commit — mỗi commit làm gì
+## 3. 23 commit — mỗi commit làm gì
 
 Đọc theo thứ tự này; commit message của từng cái giải thích đầy đủ **tại sao**, không chỉ *cái gì*.
 
@@ -100,6 +99,7 @@ cd versions/v19 && npm run check:i18n-parity
 | 20 | *(removal)* | `refactor!` — bỏ TOÀN BỘ re-export từ `@sdcorejs/utils` (extensions 8 namespace, utilities/models 10 file, xoá entry point `@sdcorejs/angular/models`, i18n thôi re-export `Language`/`SUPPORTED_LANGUAGES`). Nguyên tắc user chốt: utils sở hữu thì utils cover. |
 | 21 | *(sync)* | `chore(sync)` — rollout #20 sang v20/v21. |
 | 22 | *(debt)* | `fix` — trả 2 nợ nhỏ: export `form-generic-validation.model` vào barrel; `check-i18n.mjs` hiểu regex literal + đọc `@i18n-ignore` + budget theo số thực + 9 test. `check:i18n` xanh lần đầu. |
+| 23 | *(cleanup)* | `chore` — xoá `versions/v{19,20,21}/HANDOFF.md` (handoff branch `release/0.0.1` thời vn-angular, beta.104 — hết giá trị, còn trong git history). |
 
 ---
 
@@ -127,7 +127,7 @@ nguy hiểm nhất. Đã ghi trong `CHANGELOG.md` mục "Không đổi (có ch�
 
 ### 5.1. Cần làm trước khi merge
 
-1. **Review PR.** 22 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
+1. **Review PR.** 23 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
    phần giải thích chính.
 2. ~~Hỏi luật sư về vụ GPL~~ — đã hết chặn: `services/docx` (code GPL) xoá hẳn khỏi source
    (2026-08-11, xem mục 4). Chỉ còn câu hỏi pháp lý KHÔNG chặn merge về các bản đã publish.
@@ -145,8 +145,7 @@ Mỗi mục dưới đây đã được xác minh còn tồn tại tại thời 
 | 3 | `versions/v19/projects/sdcorejs-angular/karma.conf.js` | Coverage vẫn chỉ đo **405/639 file**. `includeAllSources: true` đã bật nhưng **đo được là no-op** dưới builder này (đã ghi lý do đầy đủ trong comment tại chỗ). | Fix thật cần một test entry dùng `require.context` khai trong `angular.json` — đổi cấu trúc test bundle, cần đợt riêng. |
 | 4 | ~60 generic khắp `components/table/src/models/**`, `import-excel`, `services/excel`, `form-generic-component.model.ts` | Vẫn để `<T = any>`. | Đã thử chuyển `unknown`: sinh **161 lỗi type**, 55 trong đó là `TS18046` cần narrow thật ở runtime. Đó là dự án về tính đúng đắn, không phải đợt đổi tên. Danh sách file chính xác nằm trong `CHANGELOG.md`. |
 | 5 | Bundle `dist/` = 16.32 MB | `components/preview` chiếm 29% vì `pdf-worker-inline.generated.ts` là **một string literal 1.398.249 byte**, nhân 3 lần (bundle + sourcemap + `.d.ts`). `upload-file` = 1.4 MB vì 86 ảnh PNG base64. | Người dùng đã chọn hoãn. |
-| 6 | `versions/v19/HANDOFF.md` (và bản mirror ở v20/v21) | Artifact cũ từ đợt `1.4`, có vẻ đã lỗi thời. | Nằm ngoài `projects/` nên không bị `collect-docs` quét; chưa xác minh nội dung. Nếu xoá thì phải chạy lại `npm run sync`. |
-| 7 | `components/query-bar` (chip-popover, saved-filters-menu, field-picker), `sidebar-v2`, `sidebar-mobile-v2` | Còn chuỗi tiếng Việt hardcode — `check:i18n` giờ XANH và track chúng theo budget per-file (giảm được, không tăng được). `saved-filters-menu` còn dùng `window.prompt()`. | Cần thêm key × 5 locale. Đợt riêng. |
+| 6 | `components/query-bar` (chip-popover, saved-filters-menu, field-picker), `sidebar-v2`, `sidebar-mobile-v2` | Còn chuỗi tiếng Việt hardcode — `check:i18n` giờ XANH và track chúng theo budget per-file (giảm được, không tăng được). `saved-filters-menu` còn dùng `window.prompt()`. | Cần thêm key × 5 locale. Đợt riêng. |
 
 ### 5.3. Nợ về accessibility (đã sửa phần lớn, còn lại có chủ đích)
 
