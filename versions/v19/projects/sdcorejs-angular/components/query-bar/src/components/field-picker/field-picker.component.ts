@@ -1,8 +1,9 @@
-import { ChangeDetectionStrategy, Component, computed, input, output, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, output, viewChild } from '@angular/core';
 import { MatMenu, MatMenuModule } from '@angular/material/menu';
 
 import { SdQueryField, sdQueryFieldIcon } from '../../query-bar.model';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService } from '@sdcorejs/angular/i18n';
 
 /**
  * Field picker mat-menu for `sd-query-bar`.
@@ -25,6 +26,9 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, MatMenuModule],
 })
 export class SdQueryFieldPicker {
+  readonly #i18n = inject(I18nService);
+  readonly emptyLabel = computed(() => this.#i18n.t('core.component.query-bar.field-empty'));
+
   /** Field list shown in the menu (caller-supplied; rendered in input order). */
   readonly fields = input<SdQueryField[]>([]);
 

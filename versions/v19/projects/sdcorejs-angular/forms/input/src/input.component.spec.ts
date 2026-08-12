@@ -858,6 +858,25 @@ describe('SdInput', () => {
       const errorFollowsClear = !!(clearBtn.compareDocumentPosition(errorIcon) & Node.DOCUMENT_POSITION_FOLLOWING);
       expect(errorFollowsClear).toBe(true);
     });
+
+    // why: chế độ hideInlineError chỉ hiện lỗi dạng tooltip trên icon → trước đây KHÔNG có
+    // text node nào cho screen reader; aria-describedby cũng chỉ gắn ở chế độ inline. Giờ
+    // message sống trong span .sd-visually-hidden (id = errorId) và describedby trỏ vào đó.
+    it('exposes the error message to screen readers in hideInlineError mode', () => {
+      setupErrorWithValue();
+      const sr = fixture.nativeElement.querySelector('span.sd-visually-hidden') as HTMLElement;
+      expect(sr).not.toBeNull();
+      expect(sr.textContent?.trim()).toBeTruthy();
+      expect(sr.id).toBe(input.errorId);
+      const inputEl = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+      expect(inputEl.getAttribute('aria-describedby')).toBe(input.errorId);
+    });
+
+    it('renders no sr-only error text while the control is valid', () => {
+      host.hideInlineError = true;
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('span.sd-visually-hidden')).toBeNull();
+    });
   });
 
   describe('accessibility', () => {

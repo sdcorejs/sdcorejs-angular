@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, input, isSignal, output, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, isSignal, output, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatMenu, MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { isObservable } from 'rxjs';
 
 import { SdButton } from '@sdcorejs/angular/components/button';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { SdOperator } from '@sdcorejs/angular/components/operator';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
@@ -65,6 +66,16 @@ interface Range {
   ],
 })
 export class SdQueryChipPopover {
+  readonly #i18n = inject(I18nService);
+  readonly swapFieldTooltip = computed(() => this.#i18n.t('core.component.query-bar.swap-field'));
+  readonly fromPlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.from-number'));
+  readonly toPlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.to-number'));
+  readonly booleanTrueLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.true'));
+  readonly booleanFalseLabel = computed(() => this.#i18n.t('core.component.query-bar.boolean.false'));
+  readonly selectValuePlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.select-value'));
+  readonly enterValuePlaceholder = computed(() => this.#i18n.t('core.component.query-bar.placeholder.enter-value'));
+  readonly loadingValuesLabel = computed(() => this.#i18n.t('core.component.query-bar.loading-values'));
+
   // ---------------------------------------------------------------------------
   // Inputs
   // ---------------------------------------------------------------------------

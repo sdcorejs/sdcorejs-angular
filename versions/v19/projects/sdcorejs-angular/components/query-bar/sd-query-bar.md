@@ -238,7 +238,8 @@ Both are consumer contracts, and both follow from the id being keyed on object i
 
 When both are set, the toolbar exposes two adjacent buttons next to Search:
 
-- The **bookmark dropdown** lists `SdSavedFilter[]` from `localStorage` under `sd-query-bar:savedFilters:<key>` — pick to apply, click `×` to delete. Empty state: "Chưa có bộ lọc nào." Leading icon is `filter_alt` (matches the saved-filter intent — not a generic "play").
+- The **bookmark dropdown** lists `SdSavedFilter[]` from `localStorage` under `sd-query-bar:savedFilters:<key>` — pick to apply, click `×` to delete. Empty state comes from `core.component.query-bar.saved-filters.empty`. Leading icon is `filter_alt` (matches the saved-filter intent — not a generic "play").
+- **Naming a saved filter uses `SdConfirmService.withInput`**, not `window.prompt`: `promptSave()` is `async` and resolves after the dialog settles (it returns without saving when the dialog is cancelled or the name is blank). `window.prompt` blocked the UI thread, could not be styled or translated, and is disabled outright in some embedding contexts. Consumers calling `promptSave()` from their own toolbar button get a `Promise<void>`; awaiting it is optional.
 - A separate **"Lưu bộ lọc hiện tại"** icon button (`bookmark_add`) sits immediately before the Search trigger. Clicking it prompts for a name and snapshots the current `{filters, logic, search}` into a new entry. The save action is intentionally adjacent to Search so the "name → save → search" flow stays in one toolbar zone.
 
 Without a key both buttons stay disabled / hidden. `<sd-query-saved-filters-menu>` owns persistence — the host only reacts to `(applyFilter)`.
@@ -372,6 +373,13 @@ as `computed()` signals (not the `sdTranslate` pipe) because the pipe is pure an
 | AND/OR group `aria-label`                   | `core.component.query-bar.logic-operator`       | `logicGroupLabel()` (actions bar) |
 | Boolean chip value, default true / false    | `core.component.query-bar.boolean.true` / `.false` | `chipValueText()`, plus the build chip and inline chip toggle buttons (same keys, so one field never shows two languages) |
 | Seamless value placeholder (number / text)  | `core.component.query-bar.placeholder.value` / `.text` | inline value chip `ph()` |
-| BETWEEN from / to placeholders              | `core.component.query-bar.placeholder.from-number` / `.to-number` / `.from-text` / `.to-text` | inline value chip `phFrom()` / `phTo()` |
+| BETWEEN from / to placeholders              | `core.component.query-bar.placeholder.from-number` / `.to-number` / `.from-text` / `.to-text` | inline value chip `phFrom()` / `phTo()`; popover editor `fromPlaceholder()` / `toPlaceholder()` |
+| Popover: swap-field tooltip                 | `core.component.query-bar.swap-field`           | chip popover `swapFieldTooltip()` |
+| Popover: value placeholders (select / text)  | `core.component.query-bar.placeholder.select-value` / `.enter-value` | chip popover `selectValuePlaceholder()` / `enterValuePlaceholder()` |
+| Popover: lazy-values loading text           | `core.component.query-bar.loading-values`       | chip popover `loadingValuesLabel()` |
+| Field picker empty state                    | `core.component.query-bar.field-empty`          | field picker `emptyLabel()` |
+| Saved filters: tooltip / disabled tooltip   | `core.component.query-bar.saved-filters.tooltip` / `.tooltip-disabled` | saved-filters menu |
+| Saved filters: delete / empty / save        | `core.component.query-bar.saved-filters.delete` / `.empty` / `.save` | saved-filters menu |
+| Saved filters: name prompt label            | `core.component.query-bar.saved-filters.name-label` | saved-filters menu `promptSave()` |
 
 `SdQueryField.trueLabel` / `falseLabel` still override the boolean defaults when a field supplies them.

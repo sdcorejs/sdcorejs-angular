@@ -622,15 +622,6 @@ export class SdFormBuilder implements OnInit, OnDestroy {
     this.addComponent(item);
   };
 
-  // why: item trên canvas nay là role="button" + tabindex="0". Lọc theo target vì item BỌC preview
-  // của control thật (input/select) — nếu không, Enter gõ trong preview sẽ chọn lại item.
-  onSelectComponentKeydown = (item: SdFormGenericComponent | SdFormGenericGroup, event: KeyboardEvent) => {
-    if (event.target !== event.currentTarget) return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.selectComponent(item);
-  };
-
   onClickedOutside = (e: any) => {
     const classList = (e.target as Element).classList;
     if (!classList.length || classList.contains('components') || classList.contains('cdk-drop-list')) {

@@ -11,7 +11,7 @@
 | | |
 |---|---|
 | Branch | `fix/full-scan-review` |
-| Số commit trên branch | 23 (22: trả 2 nợ nhỏ; 23: xoá HANDOFF cũ thời vn-angular; 16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync; 20–21: bỏ toàn bộ re-export @sdcorejs/utils + sync — commit code/sync luôn tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
+| Số commit trên branch | 25 (24–25: đợt nợ kỹ thuật — Excel numFmt + i18n sót + a11y; 22: trả 2 nợ nhỏ; 23: xoá HANDOFF cũ thời vn-angular; 16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync; 20–21: bỏ toàn bộ re-export @sdcorejs/utils + sync — commit code/sync luôn tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
 | Working tree | sạch |
 | Merge vào `main` | **chưa** |
 | Tag release | **chưa** |
@@ -28,10 +28,10 @@
 | `ng lint` (v19) | PASS — 0 error, 0 warning, **4 rule a11y đã bật ở mức `error`** |
 | Full suite (v19) | **4438 SUCCESS**, 0 fail (baseline đầu branch: 3950; 44 spec docx/document-builder + 169 spec của các file re-export utils đi theo phần bị xoá) |
 | Coverage threshold | Có thực thi thật — 72/62/71/72 |
-| `npm run test:scripts` | 70/70 (+9 test mới cho `check-i18n.mjs`) |
-| `npm run check:i18n-parity` | PASS — 580 key × 5 ngôn ngữ (−9 key docx/document-builder) |
+| `npm run test:scripts` | 70/70 (gồm 9 test cho `check-i18n.mjs`) |
+| `npm run check:i18n-parity` | PASS — **599 key × 5 ngôn ngữ** (+32 key của đợt i18n/a11y) |
 | Mojibake scan | 0 hit |
-| `npm run check:i18n` (v19) | **PASS — lần đầu xanh**: stripper hiểu regex literal, đọc `@i18n-ignore`, budget per-file khớp số thực (164 occurrence tracked) |
+| `npm run check:i18n` (v19) | PASS — budget siết còn **25 file / 132 occurrence** (trước đợt này: 32 file / 164) |
 
 ---
 
@@ -71,7 +71,7 @@ cd versions/v19 && npm run check:i18n-parity
 
 ---
 
-## 3. 23 commit — mỗi commit làm gì
+## 3. 25 commit — mỗi commit làm gì
 
 Đọc theo thứ tự này; commit message của từng cái giải thích đầy đủ **tại sao**, không chỉ *cái gì*.
 
@@ -99,6 +99,8 @@ cd versions/v19 && npm run check:i18n-parity
 | 20 | *(removal)* | `refactor!` — bỏ TOÀN BỘ re-export từ `@sdcorejs/utils` (extensions 8 namespace, utilities/models 10 file, xoá entry point `@sdcorejs/angular/models`, i18n thôi re-export `Language`/`SUPPORTED_LANGUAGES`). Nguyên tắc user chốt: utils sở hữu thì utils cover. |
 | 21 | *(sync)* | `chore(sync)` — rollout #20 sang v20/v21. |
 | 22 | *(debt)* | `fix` — trả 2 nợ nhỏ: export `form-generic-validation.model` vào barrel; `check-i18n.mjs` hiểu regex literal + đọc `@i18n-ignore` + budget theo số thực + 9 test. `check:i18n` xanh lần đầu. |
+| 24 | *(debt)* | `fix` — đợt nợ kỹ thuật: Excel `numFmt` (số nguyên có format thật, spec RED→GREEN), 32 i18n key × 5 locale cho query-bar/sidebar-v2/mobile-v2, `window.prompt` → `SdConfirmService.withInput`, và 3 mục nợ a11y ở mục 5.3. |
+| 25 | *(sync)* | `chore(sync)` — rollout #24 sang v20/v21. |
 | 23 | *(cleanup)* | `chore` — xoá `versions/v{19,20,21}/HANDOFF.md` (handoff branch `release/0.0.1` thời vn-angular, beta.104 — hết giá trị, còn trong git history). |
 
 ---
@@ -127,7 +129,7 @@ nguy hiểm nhất. Đã ghi trong `CHANGELOG.md` mục "Không đổi (có ch�
 
 ### 5.1. Cần làm trước khi merge
 
-1. **Review PR.** 23 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
+1. **Review PR.** 25 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
    phần giải thích chính.
 2. ~~Hỏi luật sư về vụ GPL~~ — đã hết chặn: `services/docx` (code GPL) xoá hẳn khỏi source
    (2026-08-11, xem mục 4). Chỉ còn câu hỏi pháp lý KHÔNG chặn merge về các bản đã publish.
@@ -140,24 +142,32 @@ Mỗi mục dưới đây đã được xác minh còn tồn tại tại thời 
 
 | # | Vị trí | Vấn đề | Tại sao hoãn |
 |---|---|---|---|
-| 1 | `services/excel/src/lib/excel.service.ts:302` | Set `numFmt = '#'` cho ô số, rồi dòng 306 ghi đè cả `style` → format bị mất. Xác minh với exceljs 4.4. | Sửa sẽ **đổi diện mạo file Excel** người dùng xuất ra. Cần quyết định sản phẩm, không phải bug fix thuần. |
 | 2 | Toàn bộ tầng output | Surface output **mixed có chủ đích** sau khi đảo nhóm rename: ~78 tên không prefix (convention chính, khớp Material) + 16 tên `sd*` đã publish từ 1.4/1.6 (`sdChanges`, `sdBlur`, `sdFocus`, `sdClosed`/`sdCloseError` trên modal/side-drawer/inform/import-excel, `sdCancel` job-progress, …). | Thống nhất về một phía nào cũng breaking. Nếu làm thì cần đợt riêng kèm codemod, xem mục 4. |
 | 3 | `versions/v19/projects/sdcorejs-angular/karma.conf.js` | Coverage vẫn chỉ đo **405/639 file**. `includeAllSources: true` đã bật nhưng **đo được là no-op** dưới builder này (đã ghi lý do đầy đủ trong comment tại chỗ). | Fix thật cần một test entry dùng `require.context` khai trong `angular.json` — đổi cấu trúc test bundle, cần đợt riêng. |
 | 4 | ~60 generic khắp `components/table/src/models/**`, `import-excel`, `services/excel`, `form-generic-component.model.ts` | Vẫn để `<T = any>`. | Đã thử chuyển `unknown`: sinh **161 lỗi type**, 55 trong đó là `TS18046` cần narrow thật ở runtime. Đó là dự án về tính đúng đắn, không phải đợt đổi tên. Danh sách file chính xác nằm trong `CHANGELOG.md`. |
 | 5 | Bundle `dist/` = 16.32 MB | `components/preview` chiếm 29% vì `pdf-worker-inline.generated.ts` là **một string literal 1.398.249 byte**, nhân 3 lần (bundle + sourcemap + `.d.ts`). `upload-file` = 1.4 MB vì 86 ảnh PNG base64. | Người dùng đã chọn hoãn. |
-| 6 | `components/query-bar` (chip-popover, saved-filters-menu, field-picker), `sidebar-v2`, `sidebar-mobile-v2` | Còn chuỗi tiếng Việt hardcode — `check:i18n` giờ XANH và track chúng theo budget per-file (giảm được, không tăng được). `saved-filters-menu` còn dùng `window.prompt()`. | Cần thêm key × 5 locale. Đợt riêng. |
 
-### 5.3. Nợ về accessibility (đã sửa phần lớn, còn lại có chủ đích)
+### 5.3. Nợ về accessibility
 
-- `[hideInlineError]` chỉ hiện lỗi dạng tooltip → **không có text node** để `aria-describedby`
-  trỏ tới, nên trình đọc màn hình không đọc gì ở chế độ đó.
-- Vài `aria-label` đang **mượn key i18n gần nhất** thay vì có key riêng (đã liệt kê trong
-  `.md` của từng component).
-- Hai wrapper `role="button"` (canvas của form-builder, hàng menu sidebar-v1) vẫn **lồng
-  phần tử tương tác bên trong**. Handler lọc theo `target` nên không kích hoạt hai lần,
-  nhưng gỡ hẳn cấu trúc lồng cần restructure template.
-- ~~`document-builder/.../variable.plugin.scss:106` outline note~~ — hết liên quan,
-  `components/document-builder` đã xoá hẳn (2026-08-11, xem mục 4).
+Ba mục nợ trong bản bàn giao trước đã **trả xong** (2026-08-12):
+
+- ~~`[hideInlineError]` không có text node cho `aria-describedby`~~ → message giờ render thêm vào
+  `span.sd-visually-hidden` (class utility mới trong `assets/scss`), `aria-describedby` trỏ vào đó.
+  Áp cho 12 control (input, input-number, textarea, select, autocomplete, date, date-range,
+  datetime, chip, chip-calendar, time, editor). Có 2 spec guard ở `sd-input`.
+  ⚠️ Bẫy khi sửa tiếp: `@if` chứa **2 root node** thì Angular chiếu cả block vào slot mặc định,
+  `matSuffix` mất tác dụng và cả icon lẫn span rơi khỏi suffix container — mỗi `@if` phải 1 root.
+- ~~`aria-label` mượn key i18n gần nhất~~ → chỗ duy nhất còn ghi chú (`sd-upload-file.md`) thực tế
+  đã có key riêng `core.component.upload-file.remove`; doc đã sửa lại cho đúng hiện trạng.
+- ~~Hai wrapper `role="button"` lồng phần tử tương tác~~ → đã restructure:
+  hàng menu sidebar-v1 chuyển `role`/`tabindex`/`aria-current`/`(click)`/Enter-Space xuống phần
+  tiêu đề (nút ghim thành sibling độc lập); 3 card trên canvas form-builder bỏ hẳn `role="button"`,
+  affordance bàn phím/AT thành `<button>` thật đầu `.fb-actions` (`aria-pressed` + `aria-label`),
+  toolbar hiện cả khi `:focus-within`.
+
+Còn lại có chủ ý: 3 card form-builder giữ `(click)` cho chuột nên **tắt 2 rule a11y tại đúng dòng**
+(`click-events-have-key-events`, `interactive-supports-focus`) kèm comment giải thích — thêm
+`tabindex`/`keydown` vào card sẽ dựng lại chính cái bẫy vừa gỡ.
 
 ---
 

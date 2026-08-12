@@ -402,6 +402,10 @@ const schema: SdFormGeneric = {
 };
 ```
 
+## Accessibility — canvas items
+
+A canvas card (`.fb-item` / `.fb-group`) wraps both its floating action buttons and, for component items, a live control preview containing real inputs. It therefore carries **no** `role="button"`: a `role="button"` wrapper makes assistive tech collapse the whole card into one control and drop everything nested inside it. The card keeps `(click)` as a mouse convenience; the keyboard / screen-reader affordance is a real `<button>` at the head of the card's action toolbar, carrying `aria-pressed` (selected state) and an `aria-label` from the item label. The toolbar is revealed on `:focus-within` as well as `:hover`, so keyboard focus never lands on an invisible control. Tooltip label: `core.component.form-builder.select-item`.
+
 ## Anti-patterns
 
 - ❌ Mutating the object bound to `[formGeneric]` and expecting the canvas to update — the builder only reacts to a **new reference**.
