@@ -501,12 +501,20 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     expect(ev.defaultPrevented).toBe(true);
   });
 
-  it('Enter on a canvas item selects it, same as a click', () => {
-    const target = component.components[0] as any;
-
-    pressOn(document.createElement('div'), 'Enter', ev => component.onSelectComponentKeydown(target, ev));
-
-    expect(component.selectedComponent()?.id).toBe(target.id);
+  // why: affordance chọn item cho bàn phím/AT giờ là nút thật trong .fb-actions (card bọc cả nút
+  // hành động và preview control thật, nên role=button trên card khiến AT gộp hết thành một nút).
+  it('the keyboard select affordance is a real button inside the item actions, not the card itself', () => {
+    // suite này cố ý không render ở beforeEach — spec này cần DOM nên seed rows + render tại chỗ.
+    component.dragDropRows = buildFormBuilderRows(component.components as any) as any;
+    fixture.detectChanges();
+    const card = fixture.nativeElement.querySelector('.fb-item, .fb-group') as HTMLElement;
+    expect(card).not.toBeNull();
+    expect(card.getAttribute('role')).toBeNull();
+    expect(card.getAttribute('tabindex')).toBeNull();
+    const selectBtn = card.querySelector('.fb-actions button[aria-pressed]') as HTMLButtonElement;
+    expect(selectBtn).not.toBeNull();
+    selectBtn.click();
+    expect(component.selectedComponent()).toBeDefined();
   });
 
   it('Enter on the group body opens the group Detail screen, same as a click', () => {
@@ -515,21 +523,5 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
     pressOn(document.createElement('div'), 'Enter', ev => component.onEnterGroupEditKeydown(g, ev));
 
     expect(component.editingGroupId()).toBe(g.id);
-  });
-
-  // why: item BỌC preview của control thật (input/select) — phím gõ trong preview KHÔNG được
-  // kích hoạt handler của item, nếu không mỗi lần gõ sẽ chọn lại item.
-  it('ignores keyboard events bubbling up from a nested control', () => {
-    const target = component.components[0] as any;
-    const wrapper = document.createElement('div');
-    const inner = document.createElement('input');
-    wrapper.appendChild(inner);
-
-    const listener = ((ev: Event) => component.onSelectComponentKeydown(target, ev as KeyboardEvent)) as EventListener;
-    wrapper.addEventListener('keydown', listener);
-    inner.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    wrapper.removeEventListener('keydown', listener);
-
-    expect(component.selectedComponent()).toBeUndefined();
   });
 });

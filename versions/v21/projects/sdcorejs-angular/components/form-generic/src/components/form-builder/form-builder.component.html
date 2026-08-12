@@ -280,14 +280,18 @@
                     </div>
                   }
                   <!-- Group component renders as outlined card with colored header bar -->
-                  <!-- why: cả ba nhánh item (group / break / component) trước đây mang
-                       aria-hidden="true" — chúng BỌC preview của component, gồm cả <input> thật,
-                       nên toàn bộ biến mất khỏi accessibility tree trong khi vẫn tab tới được. Bỏ
-                       hẳn; item là control chọn-để-sửa nên nhận role="button" + tabindex="0" +
-                       aria-pressed (đang chọn hay không) + Enter/Space phản chiếu click. -->
+                  <!-- why: card KHÔNG mang role="button". Nó bọc cả .fb-actions (nút thật) và, với
+                       nhánh component, preview control có <input> thật — role="button" ở đây khiến AT
+                       gộp toàn bộ card thành MỘT nút và mọi control bên trong biến mất khỏi
+                       accessibility tree (đúng lỗi mà aria-hidden cũ từng gây ra). Affordance bàn
+                       phím/AT là <button> thật ở đầu .fb-actions (aria-pressed + aria-label), toolbar
+                       hiện cả khi :focus-within. (click) trên card chỉ là tiện ích chuột, nên hai rule
+                       a11y dưới đây bị tắt CÓ CHỦ Ý — thêm tabindex/keydown vào card sẽ dựng lại đúng
+                       cái bẫy vừa gỡ. -->
                   @if (item.type === 'group') {
                     @let g = $any(item);
                     @let cv = groupColorVars(g.properties?.color);
+                    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                     <div
                       cdkDrag
                       [cdkDragData]="item"
@@ -298,13 +302,7 @@
                       [class.is-hidden]="item.properties?.hidden"
                       [style.flex]="'0 0 calc(' + +(item.layout?.columns || 12) + '/12 * 100% - var(--gap-2))'"
                       [style.maxWidth]="'calc(' + +(item.layout?.columns || 12) + '/12 * 100% - var(--gap-2))'"
-                      role="button"
-                      tabindex="0"
-                      [attr.aria-pressed]="item.id === selectedComponent()?.id"
-                      [attr.aria-label]="item.properties?.label || item.type"
                       (click)="selectComponent(item); $event.stopPropagation()"
-                      (keydown.enter)="onSelectComponentKeydown(item, $event)"
-                      (keydown.space)="onSelectComponentKeydown(item, $event)"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
@@ -334,6 +332,19 @@
                       </div>
                       <!-- Floating action toolbar -->
                       <div class="fb-actions">
+                        <!-- why: đây là affordance "chọn item để sửa" cho bàn phím / screen reader. Nó KHÔNG nằm
+                             trên thẻ card bọc ngoài: card bọc cả .fb-actions (nút thật) và preview control (input
+                             thật), nên role="button" ở đó khiến AT gộp toàn bộ thành một nút và các control bên
+                             trong biến mất khỏi accessibility tree. Card giữ (click) làm tiện ích chuột. -->
+                        <button
+                          type="button"
+                          class="fb-icon-btn"
+                          [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                          [attr.aria-label]="item.properties?.label || item.type"
+                          [matTooltip]="'core.component.form-builder.select-item' | sdTranslate"
+                          (click)="selectComponent(item); $event.stopPropagation()">
+                          <span class="msi">ads_click</span>
+                        </button>
                         <!-- why: Detail = mở canvas thiết kế riêng cho group (thay cho drag/drop trong group). -->
                         <button
                           type="button"
@@ -402,6 +413,7 @@
                     </div>
                   } @else if (item.type === 'break') {
                     <!-- Break: row separator cố định. Render 12-col line, không có resize/edit attribute. -->
+                    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                     <div
                       cdkDrag
                       [cdkDragData]="item"
@@ -409,13 +421,7 @@
                       class="fb-item is-break column-12"
                       [class.is-selected]="item.id === selectedComponent()?.id"
                       [class.is-hidden]="item.properties?.hidden"
-                      role="button"
-                      tabindex="0"
-                      [attr.aria-pressed]="item.id === selectedComponent()?.id"
-                      [attr.aria-label]="item.properties?.label || item.type"
                       (click)="selectComponent(item); $event.stopPropagation()"
-                      (keydown.enter)="onSelectComponentKeydown(item, $event)"
-                      (keydown.space)="onSelectComponentKeydown(item, $event)"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
@@ -430,6 +436,19 @@
                         <span class="fb-break-label">{{ 'core.component.form-builder.break' | sdTranslate }}</span>
                       </div>
                       <div class="fb-actions">
+                        <!-- why: đây là affordance "chọn item để sửa" cho bàn phím / screen reader. Nó KHÔNG nằm
+                             trên thẻ card bọc ngoài: card bọc cả .fb-actions (nút thật) và preview control (input
+                             thật), nên role="button" ở đó khiến AT gộp toàn bộ thành một nút và các control bên
+                             trong biến mất khỏi accessibility tree. Card giữ (click) làm tiện ích chuột. -->
+                        <button
+                          type="button"
+                          class="fb-icon-btn"
+                          [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                          [attr.aria-label]="item.properties?.label || item.type"
+                          [matTooltip]="'core.component.form-builder.select-item' | sdTranslate"
+                          (click)="selectComponent(item); $event.stopPropagation()">
+                          <span class="msi">ads_click</span>
+                        </button>
                         <button
                           type="button"
                           class="fb-icon-btn"
@@ -454,6 +473,7 @@
                     </div>
                   } @else {
                     <!-- Regular form component -->
+                    <!-- eslint-disable-next-line @angular-eslint/template/click-events-have-key-events, @angular-eslint/template/interactive-supports-focus -->
                     <div
                       cdkDrag
                       [cdkDragData]="item"
@@ -463,13 +483,7 @@
                       [class.is-hidden]="item.properties?.hidden"
                       [class.is-readonly]="item.properties?.viewed"
                       [class.is-resizing]="resizeState()?.itemId === item.id"
-                      role="button"
-                      tabindex="0"
-                      [attr.aria-pressed]="item.id === selectedComponent()?.id"
-                      [attr.aria-label]="item.properties?.label || item.type"
                       (click)="selectComponent(item); $event.stopPropagation()"
-                      (keydown.enter)="onSelectComponentKeydown(item, $event)"
-                      (keydown.space)="onSelectComponentKeydown(item, $event)"
                       (cdkDragStarted)="dragStartComponentItem($event)"
                       (cdkDragMoved)="onAnyDragMoved($event)"
                       (cdkDragEnded)="dragEndComponentItem($event); onAnyDragEnded()">
@@ -504,6 +518,19 @@
 
                       <!-- Floating action toolbar pill -->
                       <div class="fb-actions">
+                        <!-- why: đây là affordance "chọn item để sửa" cho bàn phím / screen reader. Nó KHÔNG nằm
+                             trên thẻ card bọc ngoài: card bọc cả .fb-actions (nút thật) và preview control (input
+                             thật), nên role="button" ở đó khiến AT gộp toàn bộ thành một nút và các control bên
+                             trong biến mất khỏi accessibility tree. Card giữ (click) làm tiện ích chuột. -->
+                        <button
+                          type="button"
+                          class="fb-icon-btn"
+                          [attr.aria-pressed]="item.id === selectedComponent()?.id"
+                          [attr.aria-label]="item.properties?.label || item.type"
+                          [matTooltip]="'core.component.form-builder.select-item' | sdTranslate"
+                          (click)="selectComponent(item); $event.stopPropagation()">
+                          <span class="msi">ads_click</span>
+                        </button>
                         <button
                           type="button"
                           class="fb-icon-btn"

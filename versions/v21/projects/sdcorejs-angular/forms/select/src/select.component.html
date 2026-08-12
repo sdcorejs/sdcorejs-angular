@@ -202,6 +202,9 @@
         @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
         }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
+        }
 
         <!-- why: <mat-error> phải có id ỔN ĐỊNH. MatFormField tự nối id này vào aria-describedby
              của <mat-select> (và host binding của MatSelect lo aria-invalid), nhưng chỉ khi id
@@ -348,6 +351,9 @@
 
         @if (_hideInlineError && _errorVisible) {
           <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+        }
+        @if (_hideInlineError && _errorVisible) {
+          <span class="sd-visually-hidden" matSuffix>{{ _errorMessage }}</span>
         }
 
         <!-- why: <mat-error> phải có id ỔN ĐỊNH. MatFormField tự nối id này vào aria-describedby

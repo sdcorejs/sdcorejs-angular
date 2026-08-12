@@ -370,6 +370,35 @@ describe('SdExcelService', () => {
     expect(typeof cellValue(sheet, 3, 3)).toBe('string');
   });
 
+  it('export gives whole-number cells the integer format WITHOUT losing the shared cell style', async () => {
+    // why: bản cũ set `cell.numFmt = '#'` rồi gán `cell.style = {...}` ngay sau — với exceljs,
+    // gán `style` THAY THẾ toàn bộ object style nên numFmt chết từ ngày đầu. Fix phải đưa numFmt
+    // vào cùng object style. Đồng thời '#' là format lỗi ('0' hiển thị ô TRỐNG, thập phân bị làm
+    // tròn phần hiển thị) → số nguyên dùng '0', số thập phân giữ General để không mất phần lẻ.
+    await service.export(
+      makeExportOption({
+        columns: [
+          { field: 'qty', title: 'SL' },
+          { field: 'rate', title: 'Tỷ lệ' },
+        ],
+        items: [
+          { qty: 42, rate: 3.75 },
+          { qty: 0, rate: 0.5 },
+        ],
+      })
+    );
+
+    const sheet = (await writtenWorkbook()).getWorksheet('data')!;
+    expect(sheet.getCell(3, 1).numFmt).toBe('0');
+    // style dùng chung không bị mất khi numFmt có mặt
+    expect(sheet.getCell(3, 1).alignment?.vertical).toBe('middle');
+    // 0 vẫn phải hiển thị được — '0' render "0", format '#' cũ render ô trống
+    expect(sheet.getCell(4, 1).numFmt).toBe('0');
+    // số thập phân giữ General (không numFmt) để phần lẻ không bị làm tròn hiển thị
+    expect(sheet.getCell(3, 2).numFmt ?? '').toBe('');
+    expect(sheet.getCell(4, 2).numFmt ?? '').toBe('');
+  });
+
   it('export neutralizes formula-injection payloads in item cells but leaves numbers alone', async () => {
     await service.export(
       makeExportOption({

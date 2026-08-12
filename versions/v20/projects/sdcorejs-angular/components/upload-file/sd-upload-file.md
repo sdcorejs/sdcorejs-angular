@@ -313,4 +313,4 @@ interface SdUploadFileDetail {
 
 ### i18n compromise
 
-`aria-label` for the two remove buttons reuses `core.component.form-builder.delete` ("Xóa"). The `upload-file` scope has no delete/remove key and the i18n catalog is owned elsewhere — replace with a dedicated `core.component.upload-file.remove` key when the catalog is next touched.
+`aria-label` for the two remove buttons uses the dedicated `core.component.upload-file.remove` key ("Xóa tệp").

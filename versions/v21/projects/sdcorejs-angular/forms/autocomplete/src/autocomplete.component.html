@@ -105,7 +105,7 @@
         [attr.data-required]="dataRequired()"
         [attr.data-error-message]="dataErrorMessage()"
         [attr.aria-invalid]="_errorVisible ? 'true' : null"
-        [attr.aria-describedby]="_showInlineError ? errorId : null" />
+        [attr.aria-describedby]="_errorMessage ? errorId : null" />
 
       @if (!_loading && nVal && !inputControl.disabled && !_bare) {
         <button type="button" class="sd-clear-btn" matSuffix (click)="clear($event)" title="Xóa" aria-label="Xóa">
@@ -151,6 +151,9 @@
 
       @if (_hideInlineError && _errorVisible) {
         <sd-icon matSuffix class="sd-error-icon" [matTooltip]="_errorMessage" matTooltipPosition="above" name="error"></sd-icon>
+      }
+      @if (_hideInlineError && _errorVisible) {
+        <span class="sd-visually-hidden" [id]="errorId" matSuffix>{{ _errorMessage }}</span>
       }
 
       @if (_showInlineError) {

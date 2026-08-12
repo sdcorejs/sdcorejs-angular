@@ -327,6 +327,7 @@ Labels are translated in all five bundled locales (English: "Home" / "Access Den
 - Desktop flyouts and mobile sheets close with Escape. Mobile overlays trap focus, restore focus to their trigger, and release body scroll when closed or destroyed.
 - Active, expanded, pressed, dialog, and navigation states are exposed with the corresponding ARIA attributes.
 - Motion used for preview/sidebar transitions is removed when `prefers-reduced-motion: reduce` is active.
+- **No nested interactive elements.** On the v1 sidebar the menu row keeps its click handler as a mouse convenience, but `role="button"` / `tabindex` / `aria-current` / Enter-Space sit on the TITLE element, with the pin toggle as an independent sibling button. A `role="button"` wrapper around another button makes assistive tech collapse the pair into a single control and drop the inner one.
 - Keep menu titles meaningful and unique; icons are supplementary and must not be the only accessible label.
 
 ## i18n
@@ -341,6 +342,13 @@ Chrome the layout owns (as opposed to consumer-supplied menu titles) resolves th
 | Pin toggle `aria-label` (shared `menu-tree`, v1 sidebar)           | `core.module.layout.menu.pin`         |
 | Unpin toggle `aria-label` (shared `menu-tree`, v1 sidebar)         | `core.module.layout.menu.unpin`       |
 | Home link `aria-label` on the v1 logo                              | `core.module.layout.home.tab-name`    |
+| Brand button `aria-label` (v2 rail)                                | `core.module.layout.home.tab-name`    |
+| Menu-group nav `aria-label` (v2 rail)                              | `core.module.layout.sidebar.menu-groups` |
+| Backdrop / close `aria-label` (v2, mobile v2)                      | `core.module.layout.sidebar.close-menu` |
+| Context search placeholder (v2)                                    | `core.module.layout.sidebar.search-in-group` |
+| Primary-nav `aria-label` (mobile v2)                               | `core.module.layout.sidebar.primary-nav` |
+| "More" bar action label + `aria-label` (mobile v2)                  | `core.module.layout.sidebar.more` / `.more-menu` |
+| Menu search placeholder (mobile v2)                                | `core.module.layout.sidebar.search-in-menu` |
 
 `menu.pin` / `menu.unpin` interpolate `{title}` (the menu's own title) so each locale places the verb and the
 name in its own order — the previous `'Pin ' + title` concatenation forced English word order everywhere. The

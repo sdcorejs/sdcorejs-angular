@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2, resolveSidebarV2Interaction } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey } from '../../services';
@@ -18,7 +19,7 @@ interface SidebarV2RailItem {
 @Component({
   selector: 'sd-sidebar-v2',
   standalone: true,
-  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
+  imports: [SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

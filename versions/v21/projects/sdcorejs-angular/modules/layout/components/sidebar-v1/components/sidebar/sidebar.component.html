@@ -110,21 +110,19 @@
                     backgroundColor:
                       (currentPath() | menuFocus: node) ? _sidebar.brandLightColor || 'var(--sd-primary-light, #d7e3ff)' : 'transparent',
                   }">
-                  <!-- why: bỏ aria-hidden="true" — đây là mục menu điều hướng THẬT, có tiêu đề và
-                       một nút ghim bên trong. aria-hidden xoá cả cụm khỏi accessibility tree trong
-                       khi vẫn nhận chuột, tức screen reader không thấy menu nào cả. Nay role=button
-                       + tabindex + Enter/Space, và aria-current cho mục đang mở. -->
-                  <div
-                    class="c-menu-node-description"
-                    role="button"
-                    tabindex="0"
-                    [attr.aria-current]="(currentPath() | menuFocus: node) ? 'page' : null"
-                    (click)="navigate(node)"
-                    (keydown.enter)="onMenuNodeKeydown($event, node)"
-                    (keydown.space)="onMenuNodeKeydown($event, node)"
-                    [class.d-none]="!isShowSidebar()">
+                  <!-- why: role=button KHÔNG được bọc phần tử tương tác khác (nút ghim bên trong) —
+                       AT coi cả cụm là MỘT nút và nút ghim biến mất khỏi accessibility tree. Nay
+                       role=button + tabindex + Enter/Space + aria-current + (click) nằm CÙNG trên
+                       phần TIÊU ĐỀ, nút ghim là sibling độc lập; cả hai đều focus được. -->
+                  <div class="c-menu-node-description" [class.d-none]="!isShowSidebar()">
                     <div
                       class="c-menu-node-description-content"
+                      role="button"
+                      tabindex="0"
+                      [attr.aria-current]="(currentPath() | menuFocus: node) ? 'page' : null"
+                      (click)="navigate(node)"
+                      (keydown.enter)="onMenuNodeKeydown($event, node)"
+                      (keydown.space)="onMenuNodeKeydown($event, node)"
                       [ngStyle]="{
                         color:
                           (currentPath() | menuFocus: node)

@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, injec
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 import { sdIsExternalHttpUrl, sdOpenExternal } from '@sdcorejs/angular/utilities';
 import { SdLayoutUserInfo, SidebarConfigurationV2 } from '../../configurations';
 import { SdLayoutMenu, SdLayoutNavigationStateService, getMenuStableKey, selectPrimaryMenuGroups } from '../../services';
@@ -14,13 +15,14 @@ import { SdLayoutUserMenuComponent } from '../shared/user-menu/user-menu.compone
 @Component({
   selector: 'sd-sidebar-mobile-v2',
   standalone: true,
-  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent],
+  imports: [A11yModule, SdIcon, SdLayoutSearchFieldComponent, SdLayoutMenuTreeComponent, SdLayoutUserMenuComponent, SdTranslatePipe],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SdSidebarMobileV2 {
   readonly #router = inject(Router);
+  readonly #i18n = inject(I18nService);
   readonly #document = inject(DOCUMENT);
   readonly #destroyRef = inject(DestroyRef);
   readonly #navigationState = inject(SdLayoutNavigationStateService);
@@ -57,7 +59,7 @@ export class SdSidebarMobileV2 {
   }
 
   openMore(trigger?: EventTarget | null): void {
-    this.#openSheet('more', 'Thêm', this.overflowMenus(), trigger);
+    this.#openSheet('more', this.#i18n.t('core.module.layout.sidebar.more'), this.overflowMenus(), trigger);
   }
 
   activateMenu(menu: SdLayoutMenu, trigger?: EventTarget | null): void {

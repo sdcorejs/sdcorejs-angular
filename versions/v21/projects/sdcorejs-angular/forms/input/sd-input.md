@@ -134,7 +134,7 @@ Applied automatically on `<sd-input>` for styling hooks:
 - Required marker shows as a red `*` next to the label
 - Optional built-in **slim clear button** (`clearable`, default `false`; `.sd-clear-btn`, thin `close` icon) at the trailing edge when the field has a value AND is not `required`/`disabled`/`readonly`. It is **hover-gated** (`sd-hover`) — hidden until the field is hovered or focused. Click resets the value to `null` and emits `sdChange(null)` (clear is an explicit action → `null`, never `''`/`undefined`; `undefined` is reserved for the pristine never-touched state). Shared style/behavior with `sd-input-number`/`sd-input-color`/`sd-date`/`sd-datetime`.
 - Optional suffix slot (`sdSuffixDef`) for an extra icon button at the trailing edge — common patterns: search icon, eye-toggle for password. Renders to the right of the built-in clear button.
-- Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + a trailing-edge `error` icon (`.sd-error-icon`) carrying the message as a tooltip. The error icon sits **flush at the right edge**; when the built-in clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
+- Inline error message appears below the field in red — unless `[hideInlineError]="true"`, in which case the field gets a red outline + a trailing-edge `error` icon (`.sd-error-icon`) carrying the message as a tooltip. In this mode the message is ALSO rendered into a screen-reader-only element (`span.sd-visually-hidden`, wired to the control through `aria-describedby`), so assistive tech announces the error even though the visible text lives only in a tooltip. The error icon sits **flush at the right edge**; when the built-in clear button is also present it renders to the **left** of the error icon (the hover-gated clear reserves its slot via `visibility:hidden`, so it never shifts the error icon inward).
 - Helper text shows as light-gray text below the field (or as an info icon next to the label, depending on layout)
 - In `[viewed]="true"` mode: no input chrome — just the value as plain text (or as a hyperlink if `hyperlink` is set)
 
@@ -178,7 +178,7 @@ Inside `<sd-table>` custom cells or custom inline filters, always use `size="sm"
 
 ## Dense dashboard/filter usage
 
-When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height.
+When this control is rendered in dashboard cards, filter bars, external filter panels, table toolbars, query bars, or other compact non-form surfaces, prefer `hideInlineError` so Material does not reserve the inline error/subscript row under the field. Pair it with `size="sm"` when the component supports `size`. Validation remains visible through the compact error icon/tooltip without increasing the control height, and the message is also exposed to assistive tech through a screen-reader-only element (`span.sd-visually-hidden`) referenced by `aria-describedby`.
 
 ```html
 <sd-input size="sm" hideInlineError placeholder="Search" [(model)]="filter.keyword"></sd-input>

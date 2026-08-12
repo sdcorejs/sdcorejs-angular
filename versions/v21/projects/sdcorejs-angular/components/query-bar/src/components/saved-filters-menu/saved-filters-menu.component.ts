@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { SdQuery, SdSavedFilter } from '../../query-bar.model';
 import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService } from '@sdcorejs/angular/i18n';
+import { SdConfirmService } from '@sdcorejs/angular/services/confirm';
 
 /**
  * Saved-filters dropdown for `sd-query-bar`.
@@ -29,6 +31,14 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
   imports: [SdIcon, MatMenuModule, MatTooltipModule],
 })
 export class SdQuerySavedFiltersMenu {
+  readonly #i18n = inject(I18nService);
+  readonly #confirm = inject(SdConfirmService);
+  readonly tooltipLabel = computed(() => this.#i18n.t('core.component.query-bar.saved-filters.tooltip'));
+  readonly tooltipDisabledLabel = computed(() => this.#i18n.t('core.component.query-bar.saved-filters.tooltip-disabled'));
+  readonly deleteLabel = computed(() => this.#i18n.t('core.component.query-bar.saved-filters.delete'));
+  readonly emptyLabel = computed(() => this.#i18n.t('core.component.query-bar.saved-filters.empty'));
+  readonly saveLabel = computed(() => this.#i18n.t('core.component.query-bar.saved-filters.save'));
+
   /** Namespace key used to scope localStorage. `undefined` → menu disabled. */
   readonly key = input<string | undefined>(undefined);
 
@@ -75,9 +85,19 @@ export class SdQuerySavedFiltersMenu {
    * saved filter. Public so the parent toolbar can wire its external "save"
    * button to this method without re-implementing persistence.
    */
-  promptSave(): void {
+  async promptSave(): Promise<void> {
     if (!this.#storageKey()) return;
-    const name = window.prompt('Tên bộ lọc:');
+    // why: window.prompt chặn UI thread, không style/i18n được và bị vô hiệu trong vài
+    // môi trường (iframe sandbox) — dialog withInput dùng chung hạ tầng confirm của lib.
+    let name: string | undefined;
+    try {
+      name = await this.#confirm.withInput(this.#i18n.t('core.component.query-bar.saved-filters.name-label'), {
+        title: this.#i18n.t('core.component.query-bar.saved-filters.save'),
+        required: true,
+      });
+    } catch {
+      return; // user huỷ dialog
+    }
     if (!name?.trim()) return;
     const filter: SdSavedFilter = {
       id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
