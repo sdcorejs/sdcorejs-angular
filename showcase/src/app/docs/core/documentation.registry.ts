@@ -752,9 +752,9 @@ const FORM_PAGES = [
     selector: 'sd-select',
     importPath: '@sdcorejs/angular/forms/select',
     publishedDocId: 'forms/select/sd-select',
-    keywords: ['dropdown', 'options', 'footer action', 'template'],
+    keywords: ['dropdown', 'options', 'footer action', 'template', 'select all'],
     status: 'stable',
-    demoSectionCount: 10,
+    demoSectionCount: 11,
     loadComponent: () => import('../../pages/forms/select/select-demo.component').then(m => m.SelectDemoComponent),
   }),
   defineDocPage({

@@ -24,7 +24,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, NgForm, ReactiveFormsModule } from '@angular/forms';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatPseudoCheckbox } from '@angular/material/core';
 import { FloatLabelType, MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
 import { MatInput, MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -76,7 +76,7 @@ import { SdIcon } from '@sdcorejs/angular/modules/icon';
     MatTooltipModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatCheckboxModule,
+    MatPseudoCheckbox,
     MatProgressSpinnerModule,
     SdLabel,
     SdView,
@@ -190,6 +190,11 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   /** Display mode: `false` edit · `true` static view · `'inline'` view + click-to-edit (bare editor). */
   viewed = input<SdViewed, SdViewedInput>(false, { transform: sdViewedTransform });
   multiple = input(false, { transform: booleanAttribute });
+  /**
+   * Hiện option "Tất cả" đầu panel (chỉ multiple + items là mảng tĩnh/Signal — ẩn với
+   * SdSearch lazy vì dataset không xác định). Opt-in, default `false`.
+   */
+  showSelectAll = input(false, { transform: booleanAttribute });
   /**
    * Whether the `viewed='inline'` text face shows a hover clear-× to empty the value.
    * Default `true`. Set `false` where the HOST owns removal (e.g. `<sd-query-bar>` chips,
@@ -323,6 +328,41 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
   });
 
   delayTime = computed(() => (typeof this.actualItems() === 'function' ? 500 : 0));
+
+  /**
+   * Scope của "Tất cả": item enabled khớp search text hiện tại, tính trên MẢNG NGUỒN
+   * `actualItems()`.
+   */
+  // why: KHÔNG đọc filteredItems — nó đã bị cắt theo `limit` paging nên tick all sẽ thiếu item;
+  // luật khớp search phải trùng với filter của allItems$ (aliasIncludes trên cả value + display).
+  readonly selectAllScope = computed<T[]>(() => {
+    const data = this.actualItems();
+    if (!Array.isArray(data)) return [];
+    const sText = this.searchText() || '';
+    return (data as T[]).filter(item => {
+      if (item == null || this.itemDisabled(item)) return false;
+      return StringUtilities.aliasIncludes(this.itemValue(item), sText) || StringUtilities.aliasIncludes(this.itemDisplay(item), sText);
+    });
+  });
+
+  /** Row "Tất cả" chỉ render khi opt-in + multiple + items tĩnh + scope có item để thao tác. */
+  readonly selectAllVisible = computed(
+    () => this.showSelectAll() && this.multiple() && Array.isArray(this.actualItems()) && this.selectAllScope().length > 0
+  );
+
+  /** Trạng thái checkbox "Tất cả", tính trên items ENABLED trong scope (item disabled bỏ qua). */
+  readonly selectAllState = computed<'checked' | 'indeterminate' | 'unchecked'>(() => {
+    const scope = this.selectAllScope();
+    const val = this.normalizedValue();
+    const selected = new Set((Array.isArray(val) ? val : []).map(v => String(v)));
+    if (!scope.length || !selected.size) return 'unchecked';
+    let count = 0;
+    for (const item of scope) {
+      if (selected.has(String(this.itemValue(item)))) count++;
+    }
+    if (count === 0) return 'unchecked';
+    return count === scope.length ? 'checked' : 'indeterminate';
+  });
 
   // ==========================================
   // 5. GETTER & HELPERS
@@ -702,6 +742,40 @@ export class SdSelect<T extends object | string | number = Record<string, unknow
       if (this.formControl.value !== value) this.formControl.setValue(value);
       this.#onChange(value);
     }
+  };
+
+  /**
+   * Toggle "Tất cả" theo scope hiện tại (items enabled khớp search):
+   * - Đang `checked` → BỎ chọn các value trong scope (giữ value ngoài scope, kể cả item disabled đã chọn).
+   * - Ngược lại → CHỌN THÊM toàn bộ scope, union với selection hiện có (additive khi đang search).
+   */
+  // why: KHÔNG emit sdChange/sdSelection ở đây — giữ đúng semantics hiện hành: hai output đó chỉ
+  // bắn khi panel đóng với giá trị đổi (onOpenedChange so hash).
+  // why: setValue KHÔNG dùng { emitEvent: false } — cùng lý do như onSelectionChange: formControl
+  // mang async [validator], setValue im lặng sẽ huỷ lần async pending rồi chạy lại im → setErrors
+  // không phát event → #state không tick → errorMessage stale (viền đỏ mà không có message).
+  // Guard `!==` giữ đúng MỘT event: đây là đường programmatic nên nhánh setValue luôn chạy.
+  toggleSelectAll = (): void => {
+    const scope = this.selectAllScope();
+    if (!scope.length) return;
+
+    const current = this.normalizedValue();
+    // why: normalizedValue có nhánh bọc scalar boolean thành mảng — với multiple thực tế value là
+    // (number | string)[], cast để khớp chữ ký #onChange.
+    const currentArr: (number | string)[] = Array.isArray(current) ? ([...current] as (number | string)[]) : [];
+    const scopeValues = scope.map(item => this.itemValue(item) as number | string);
+
+    let next: (number | string)[];
+    if (this.selectAllState() === 'checked') {
+      const scopeKeys = new Set(scopeValues.map(v => String(v)));
+      next = currentArr.filter(v => !scopeKeys.has(String(v)));
+    } else {
+      const existing = new Set(currentArr.map(v => String(v)));
+      next = [...currentArr, ...scopeValues.filter(v => !existing.has(String(v)))];
+    }
+
+    if (this.formControl.value !== next) this.formControl.setValue(next);
+    this.#onChange(next);
   };
 
   reValidate = () => {

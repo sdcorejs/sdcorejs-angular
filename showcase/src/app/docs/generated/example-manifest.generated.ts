@@ -234,6 +234,7 @@ export type ShowcaseExampleSourceKey =
   | "forms/radio/example-validator"
   | "forms/select/example-api-footer-action"
   | "forms/select/example-chinh-sua-noi-tuyen"
+  | "forms/select/example-chon-nhieu-voi-dong-tat-ca"
   | "forms/select/example-co-ban"
   | "forms/select/example-footer-action-giong-dropdown-item"
   | "forms/select/example-footer-action-khi-khong-co-ket-qua"
@@ -1958,6 +1959,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-kich-thuoc",
     title: "Kích thước",
     description: "UI gọn cho bảng / toolbar.",
+  },
+  {
+    sourceKey: "forms/select/example-chon-nhieu-voi-dong-tat-ca",
+    pageKey: "forms/select",
+    sectionId: "example-chon-nhieu-voi-dong-tat-ca",
+    title: "Chọn nhiều với dòng Tất cả",
+    description: "Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.",
   },
   {
     sourceKey: "forms/select/example-footer-action-khi-khong-co-ket-qua",

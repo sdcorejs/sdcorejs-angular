@@ -55,9 +55,10 @@ Dropdown picker — single OR multi-select from a static array OR an async API. 
 | `hideInlineError` | `boolean`                                                                | `false`                                     | Hide inline message; surface error via tooltip on a red error icon. Bare attribute = `true`.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `validator`       | `SdCustomValidator \| undefined`                                         | `undefined`                                 | Async custom validator (wrapped via `HandleSdCustomValidator`).                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `inlineError`     | `string \| undefined`                                                    | `undefined`                                 | Forces a synthetic `inlineError` validator with this message.                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `showSelectAll`   | `boolean`                                                                | `false`                                     | Renders a "Tất cả" (i18n `core.form.select.selectAll`) checkbox row at the top of the panel. Only in `[multiple]` mode with a **static array / Signal** `items` (ignored for `SdSearch` lazy items). See *Select all* section. Bare attribute = `true`.                                                                                                                                                                                                                                                                     |
 | `clearable`       | `boolean`                                                                | `true`                                      | In `viewed='inline'`, show a hover clear-× at the end of the text face (clears the value via `clear()`, `stopPropagation` so it does NOT open the panel). Set `false` where the HOST owns removal (e.g. `<sd-query-bar>` chips, whose own `×` removes the whole filter) to avoid two ×.                                                                                                                                                                                                                                   |
 
-> **Coerce note**: `required`, `disabled`, `multiple`, `hideInlineError`, `clearable` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-select multiple>`) is treated as `true`. `viewed` uses a custom `sdViewedTransform` (shared from `forms/models`) — same bare-attribute coercion, but also accepts the literal `'inline'`. Computeds `isViewed()` (`=== true`, static view) / `isInline()` (`=== 'inline'`) drive the template; `enterInlineEdit()` opens the picker from the inline text face.
+> **Coerce note**: `required`, `disabled`, `multiple`, `showSelectAll`, `hideInlineError`, `clearable` use the `booleanAttribute` transform — bare attribute presence (e.g. `<sd-select multiple>`) is treated as `true`. `viewed` uses a custom `sdViewedTransform` (shared from `forms/models`) — same bare-attribute coercion, but also accepts the literal `'inline'`. Computeds `isViewed()` (`=== true`, static view) / `isInline()` (`=== 'inline'`) drive the template; `enterInlineEdit()` opens the picker from the inline text face.
 
 ## Outputs
 
@@ -76,6 +77,29 @@ Dropdown picker — single OR multi-select from a static array OR an async API. 
 | `focus()`           | `() => void`       | Focuses and opens the picker (legacy path for `sdViewDef` click-to-edit).       |
 | `enterInlineEdit()` | `() => void`       | Opens the picker from the `viewed='inline'` text face.                          |
 | `reValidate()`      | `() => void`       | Re-runs validators on `formControl` (where all validators live), with events.   |
+| `toggleSelectAll()` | `() => void`       | Toggles the *Select all* scope (see below). No-op when the scope is empty.       |
+
+## Select all (`showSelectAll`, multiple + static items)
+
+`<sd-select multiple showSelectAll [items]="staticArray">` renders a checkbox row (`.sd-select-all-row`) at the top of the panel, above the option list (below the search box when search is enabled).
+
+- **Scope** = items in the SOURCE array that match the current search text (same `aliasIncludes` rule as the option filter, on both value + display) AND are not disabled via `disabledField`. The scope ignores `limit` paging — ticking selects **all** matching enabled items, not just the rendered ones.
+- **Tick** (from unchecked/indeterminate): selects the whole scope, **union** with the current selection — items selected outside the current search filter are kept (additive).
+- **Untick** (from checked): removes only the scope values. Disabled items that were already selected are kept (disabled items are never touched, in either direction).
+- **Checkbox state**: `checked` when every enabled item in scope is selected · `indeterminate` when some are · unchecked when none.
+- **Emissions**: unchanged — `sdChange`/`sdSelection` fire only when the panel closes with a changed value.
+- **Not available** for `SdSearch` (lazy/server) items — the full dataset is unknown, so "all" is undefined; the input is silently ignored.
+- **Markup**: the row reuses the option's own `<mat-pseudo-checkbox>` + `.mdc-list-item__primary-text`, so it inherits the option sizing, spacing, and theme colour instead of re-styling a real `mat-checkbox`. The pseudo-checkbox is `aria-hidden`, so the row itself carries `role="checkbox"`, `aria-checked` (`mixed` when indeterminate), `tabindex="0"` and Enter/Space.
+- **E2E**: the row carries `data-autoid="<autoId>-select-all"` when `[autoId]` is set.
+
+```html
+<sd-select
+  label="Tags" multiple showSelectAll
+  [items]="tagOptions"
+  valueField="id" displayField="label"
+  [(model)]="selectedTagIds">
+</sd-select>
+```
 
 ## Host classes
 

@@ -8679,6 +8679,26 @@ interface Option { value: string; display: string; }
       </demo-section>
       }
 
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-chon-nhieu-voi-dong-tat-ca') {
+      <demo-section
+        heading="Chọn nhiều với dòng Tất cả"
+        [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
+        note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+        <div class="select-demo-column">
+          <sd-select
+            label="Đơn vị tham gia" multiple showSelectAll
+            [items]="selectAllItems"
+            valueField="value" displayField="display" disabledField="disabled"
+            placeholder="Chọn các đơn vị..."
+            minWidthPanel="360px"
+            [(model)]="selectAllDepts"
+            [form]="form">
+          </sd-select>
+          <div class="select-demo-status">Đã chọn ({{ selectAllDepts()?.length ?? 0 }}): <b>{{ selectAllDepts()?.join(', ') || '(trống)' }}</b></div>
+        </div>
+      </demo-section>
+      }
+
       @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-footer-action-khi-khong-co-ket-qua') {
       <demo-section
         heading="Footer action khi không có kết quả"
@@ -9006,12 +9026,18 @@ export class SelectDemoComponent {
 
   footerItems: Option[] = [...this.largeItems];
 
+  /** why: 'LEGAL' disabled để demo hành vi bỏ qua item disabled của dòng "Tất cả" */
+  selectAllItems: (Option & { disabled?: boolean })[] = this.largeItems.map(item =>
+    item.value === 'LEGAL' ? { ...item, disabled: true } : { ...item }
+  );
+
   dept = signal<string | null>(null);
   deptR = signal<string | null>(null);
   lockedA = signal<string | null>('HR');
   lockedB = signal<string | null>('FIN');
   inlineDept = signal<string | null>('IT');
   quick = signal<string | null>(null);
+  selectAllDepts = signal<string[] | null>(null);
   footerDept = signal<string | null>(null);
   footerActionDept = signal<string | null>(null);
   footerItemDept = signal<string | null>(null);
@@ -14752,6 +14778,26 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
           [viewed]="'inline'" [(model)]="inlineDept" [form]="form"></sd-select>
       </div>
       <div style="font-size:12px; color:#555">Giá trị: <b>{{ inlineDept() ?? '(trống)' }}</b></div>
+    </div>
+  </demo-section>`,
+  },
+  "forms/select/example-chon-nhieu-voi-dong-tat-ca": {
+    ...SHOWCASE_PAGE_SOURCES["forms/select"],
+    html: `<demo-section
+    heading="Chọn nhiều với dòng Tất cả"
+    [props]="[{ name: 'showSelectAll', value: 'true' }, { name: 'multiple', value: 'true' }, { name: 'disabledField', value: 'disabled' }]"
+    note="Row 'Tất cả' đầu panel — chỉ hiện khi multiple + items là mảng tĩnh. Tick chọn toàn bộ items enabled khớp search hiện tại (item disabled 'Pháp chế' không bị đụng); đang search thì tick CHỈ thêm items khớp filter, selection cũ giữ nguyên. Checkbox có 3 trạng thái checked / indeterminate / unchecked.">
+    <div class="select-demo-column">
+      <sd-select
+        label="Đơn vị tham gia" multiple showSelectAll
+        [items]="selectAllItems"
+        valueField="value" displayField="display" disabledField="disabled"
+        placeholder="Chọn các đơn vị..."
+        minWidthPanel="360px"
+        [(model)]="selectAllDepts"
+        [form]="form">
+      </sd-select>
+      <div class="select-demo-status">Đã chọn ({{ selectAllDepts()?.length ?? 0 }}): <b>{{ selectAllDepts()?.join(', ') || '(trống)' }}</b></div>
     </div>
   </demo-section>`,
   },

@@ -244,6 +244,7 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': '선택해 주세요',
+  'core.form.select.selectAll': '전체',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '정보를 입력해 주세요',

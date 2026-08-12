@@ -245,6 +245,7 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': '選択してください',
+  'core.form.select.selectAll': 'すべて',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '入力してください',

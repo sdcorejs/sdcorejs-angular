@@ -244,6 +244,7 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
 
   // ---- Forms: select ----
   'core.form.select.required': '请选择',
+  'core.form.select.selectAll': '全部',
 
   // ---- Forms: textarea ----
   'core.form.textarea.required': '请输入内容',

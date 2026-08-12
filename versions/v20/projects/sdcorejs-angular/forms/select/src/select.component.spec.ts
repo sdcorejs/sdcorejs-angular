@@ -1981,3 +1981,358 @@ describe('SdSelect (accessibility)', () => {
     expect(select.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Select all (showSelectAll) — multiple + static items only
+// ---------------------------------------------------------------------------
+
+describe('SdSelect (select all)', () => {
+  /** id 2 disabled — dùng cho các case bỏ qua item disabled */
+  const SA_ITEMS = [
+    { id: 1, name: 'Apple' },
+    { id: 2, name: 'Banana', disabled: true },
+    { id: 3, name: 'Cherry' },
+    { id: 4, name: 'Berry' },
+  ];
+
+  /** 120 items (limit mặc định 50) — disabled tại index 0/40/80 → 117 enabled */
+  const SA_LARGE = Array.from({ length: 120 }, (_, i) => ({
+    id: i + 1,
+    name: `Row ${i + 1}`,
+    disabled: i % 40 === 0,
+  }));
+  const SA_LARGE_ENABLED_IDS = SA_LARGE.filter(e => !e.disabled).map(e => e.id);
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, FormsModule, ReactiveFormsModule],
+    template: `<sd-select
+      [items]="items"
+      valueField="id"
+      displayField="name"
+      disabledField="disabled"
+      [multiple]="multiple"
+      [showSelectAll]="showSelectAll"
+      [autoId]="autoId"
+      [(model)]="model"
+      (sdChange)="onSdChange($event)"
+      (sdSelection)="onSdSelection($event)"></sd-select>`,
+  })
+  class SelectAllHost {
+    items: any = SA_ITEMS;
+    multiple = true;
+    showSelectAll = true;
+    autoId?: string;
+    model?: any;
+    changes: any[] = [];
+    selections: any[] = [];
+    onSdChange(v: any) { this.changes.push(v); }
+    onSdSelection(v: any) { this.selections.push(v); }
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdSelect, FormsModule, ReactiveFormsModule],
+    template: `<sd-select [items]="items" [multiple]="true" [showSelectAll]="true" [(model)]="model"></sd-select>`,
+  })
+  class PrimitiveSelectAllHost {
+    items = ['a', 'b', 'c'];
+    model?: any;
+  }
+
+  function createHost(mutate?: (host: SelectAllHost) => void): {
+    fixture: ComponentFixture<SelectAllHost>;
+    host: SelectAllHost;
+    comp: SdSelect<any>;
+  } {
+    const fixture = TestBed.createComponent(SelectAllHost);
+    const host = fixture.componentInstance;
+    mutate?.(host);
+    fixture.detectChanges();
+    const comp = getComp(fixture) as SdSelect<any>;
+    return { fixture, host, comp };
+  }
+
+  function openPanel(fixture: ComponentFixture<any>, comp: SdSelect<any>): void {
+    comp.open();
+    fixture.detectChanges();
+    tick(600);
+    fixture.detectChanges();
+  }
+
+  function selectAllRow(): HTMLElement | null {
+    return document.body.querySelector<HTMLElement>('.sd-select-panel .sd-select-all-row');
+  }
+
+  beforeEach(async () => {
+    localStorage.setItem('sd-core.language', 'vi');
+    await TestBed.configureTestingModule({
+      imports: [SelectAllHost, PrimitiveSelectAllHost, NoopAnimationsModule],
+    }).compileComponents();
+  });
+
+  afterEach(() => {
+    document.body.querySelectorAll('.cdk-overlay-container').forEach(el => {
+      el.innerHTML = '';
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // AC-001 — render row + label i18n
+  // -------------------------------------------------------------------------
+  it('AC-001: renders .sd-select-all-row with a mat-pseudo-checkbox at the top of the panel', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow();
+    expect(row).not.toBeNull();
+    expect(row!.querySelector('mat-pseudo-checkbox')).not.toBeNull();
+  }));
+
+  // why: row phải dùng ĐÚNG element mà mat-option multiple render — mat-checkbox MDC lệch cột và
+  // ăn màu accent của theme thay vì primary. Khoá lại bằng test để không ai đổi ngược.
+  it('AC-001: uses the same pseudo-checkbox element/class as the options (not a real mat-checkbox)', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow()!;
+    expect(row.querySelector('mat-checkbox')).toBeNull();
+    expect(row.querySelector('.mat-mdc-option-pseudo-checkbox')).not.toBeNull();
+    expect(row.querySelector('.mdc-list-item__primary-text')?.textContent?.trim()).toBe('Tất cả');
+  }));
+
+  it('AC-001: row exposes checkbox semantics (role + aria-checked tracks the state)', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow()!;
+    expect(row.getAttribute('role')).toBe('checkbox');
+    expect(row.getAttribute('aria-checked')).toBe('mixed');
+  }));
+
+  it('AC-001: clicking the row toggles the selection', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    selectAllRow()!.click();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1, 3, 4]);
+  }));
+
+  it('AC-001: label comes from i18n core.form.select.selectAll (vi = "Tất cả")', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    expect(selectAllRow()!.textContent).toContain('Tất cả');
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-002 — hidden when default / single / lazy
+  // -------------------------------------------------------------------------
+  it('AC-002: showSelectAll defaults to false → selectAllVisible false, no row rendered', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.showSelectAll = false));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.showSelectAll()).toBe(false);
+    expect(comp.selectAllVisible()).toBe(false);
+    openPanel(fixture, comp);
+    expect(selectAllRow()).toBeNull();
+  }));
+
+  it('AC-002: single mode → selectAllVisible false even with showSelectAll', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.multiple = false));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllVisible()).toBe(false);
+    openPanel(fixture, comp);
+    expect(selectAllRow()).toBeNull();
+  }));
+
+  it('AC-002: lazy SdSearch items → selectAllVisible false', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => {
+      h.items = async () => SA_ITEMS;
+    });
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllVisible()).toBe(false);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-003 — tick chọn hết items enabled, không dính limit paging
+  // -------------------------------------------------------------------------
+  it('AC-003: toggleSelectAll selects every enabled item across the FULL source array (120 items, limit 50)', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.items = SA_LARGE));
+    tick(600);
+    fixture.detectChanges();
+
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual(SA_LARGE_ENABLED_IDS);
+    expect((comp.formControl.value as any[]).length).toBe(117);
+  }));
+
+  it('AC-003: disabled items are not selected by toggleSelectAll', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1, 3, 4]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-004 — untick giữ item disabled đang chọn sẵn
+  // -------------------------------------------------------------------------
+  it('AC-004: untick from checked removes enabled values but keeps a pre-selected disabled value', fakeAsync(() => {
+    const { fixture, host, comp } = createHost(h => (h.model = [1, 2, 3, 4]));
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.selectAllState()).toBe('checked');
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([2]);
+    expect(host.model).toEqual([2]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-005 — search additive
+  // -------------------------------------------------------------------------
+  it('AC-005: with active search, tick adds only matching enabled items and keeps existing selection', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+
+    comp.inputControl.setValue('ber');
+    tick(600);
+    fixture.detectChanges();
+
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    // 'ber' khớp 'Berry' (id 4); id 1 đã chọn từ trước phải giữ nguyên
+    expect(comp.formControl.value).toEqual([1, 4]);
+  }));
+
+  it('AC-005: with active search, untick removes only matching items from the selection', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1, 4]));
+    tick(600);
+    fixture.detectChanges();
+
+    comp.inputControl.setValue('ber');
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.selectAllState()).toBe('checked');
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-006 — checked / indeterminate / unchecked
+  // -------------------------------------------------------------------------
+  it('AC-006: no selection → unchecked', fakeAsync(() => {
+    const { fixture, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllState()).toBe('unchecked');
+  }));
+
+  it('AC-006: partial selection → indeterminate', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1]));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllState()).toBe('indeterminate');
+  }));
+
+  it('AC-006: all ENABLED items selected → checked (unselected disabled item does not block)', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.model = [1, 3, 4]));
+    tick(600);
+    fixture.detectChanges();
+    expect(comp.selectAllState()).toBe('checked');
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-007 — formControl/valueModel đổi; sdChange/sdSelection chỉ bắn khi đóng panel
+  // -------------------------------------------------------------------------
+  it('AC-007: toggleSelectAll updates formControl + valueModel but does NOT emit sdChange immediately', fakeAsync(() => {
+    const { fixture, host, comp } = createHost();
+    tick(600);
+    fixture.detectChanges();
+
+    comp.onOpenedChange(true);
+    tick(200);
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual([1, 3, 4]);
+    expect(host.model).toEqual([1, 3, 4]);
+    expect(host.changes.length).toBe(0);
+
+    comp.onOpenedChange(false);
+    tick();
+    fixture.detectChanges();
+
+    expect(host.changes.length).toBe(1);
+    expect(host.changes[0]).toEqual([1, 3, 4]);
+    const sel = host.selections[host.selections.length - 1];
+    expect(sel.multiple).toBe(true);
+    expect(sel.values).toEqual([1, 3, 4]);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-008 — primitive items (không valueField/displayField)
+  // -------------------------------------------------------------------------
+  it('AC-008: primitive items — toggleSelectAll selects every item', fakeAsync(() => {
+    const fixture = TestBed.createComponent(PrimitiveSelectAllHost);
+    fixture.detectChanges();
+    const comp = getComp(fixture) as SdSelect<any>;
+    tick(600);
+    fixture.detectChanges();
+
+    expect(comp.selectAllVisible()).toBe(true);
+    comp.toggleSelectAll();
+    tick();
+    fixture.detectChanges();
+
+    expect(comp.formControl.value).toEqual(['a', 'b', 'c']);
+  }));
+
+  // -------------------------------------------------------------------------
+  // AC-009 — data-autoid
+  // -------------------------------------------------------------------------
+  it('AC-009: row carries data-autoid "<autoId>-select-all" when autoId is set', fakeAsync(() => {
+    const { fixture, comp } = createHost(h => (h.autoId = 'demo'));
+    tick(600);
+    fixture.detectChanges();
+    openPanel(fixture, comp);
+
+    const row = selectAllRow();
+    expect(row).not.toBeNull();
+    expect(row!.getAttribute('data-autoid')).toBe('forms-select-demo-select-all');
+  }));
+});
