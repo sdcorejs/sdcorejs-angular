@@ -23,5 +23,13 @@
       "@sdcorejs/angular/*": ["./projects/sdcorejs-angular/*"]
     }
   },
-  "include": ["**/*.spec.ts", "**/*.d.ts"]
+  /*
+   * why: `coverage-includes.spec.ts` pulls every source file into the test bundle so coverage is
+   * measured over the whole library. `@ngtools/webpack` refuses to build a file that is not part of
+   * the TypeScript program, so the sources have to be in `include` too — with only
+   * `**\/*.spec.ts` here every non-spec file failed with "missing from the TypeScript compilation".
+   * Side benefit: `ng test` now type-checks the sources under the spec `paths` mapping (source, not
+   * dist), so a type error in an untested file surfaces here instead of only in `ng build`.
+   */
+  "include": ["**/*.ts"]
 }

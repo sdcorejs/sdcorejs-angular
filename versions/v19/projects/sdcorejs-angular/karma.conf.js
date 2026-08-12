@@ -42,25 +42,26 @@ module.exports = function (config) {
     coverageReporter: {
       dir: require('path').join(__dirname, '../../coverage/sd-angular'),
       subdir: '.',
-      // Ý định: đếm CẢ file không được spec nào import, để thêm test đầu tiên vào một
-      // vùng chưa có test KHÔNG làm tụt % (file chưa ai import hiện không nằm ở cả tử
-      // số lẫn mẫu số).
+      // Ý định: đếm CẢ file không spec nào import, để thêm test đầu tiên vào một vùng chưa có
+      // test KHÔNG làm tụt % (file chưa ai import thì không nằm ở cả tử số lẫn mẫu số).
       //
-      // ⚠️ ĐÃ ĐO: với `@angular-devkit/build-angular:karma` (webpack) cờ này là NO-OP.
-      // Chạy full suite trước/sau khi bật, 2026-08-10: vẫn đúng 405 file trong
-      // lcov.info, mẫu số statements 24_948 -> 24_949 (chênh 1 là do sửa docx.service.ts,
-      // không phải do cờ).
-      // Lý do: instrument do babel-plugin-istanbul chạy TRONG webpack, còn
-      // `includeAllSources` của karma-coverage chỉ đọc `globalCoverageMap` mà
-      // PREPROCESSOR của chính nó nạp (`karma-coverage/lib/preprocessor.js:164`) —
-      // preprocessor đó không hề chạy ở setup này. Entry bundle chỉ gồm `**/*.spec.ts`
-      // + import bắc cầu (`build-angular/src/builders/karma/find-tests-plugin.js`), nên
-      // file không ai import thì không vào bundle => không có gì để đếm.
-      //
-      // Hệ quả phải nhớ: % dưới đây là trên 405/639 file source, KHÔNG phải toàn bộ repo.
-      // Muốn phủ thật thì phải cho mọi file source vào bundle (test entry `main` +
-      // `require.context`) — việc đó nằm ở `angular.json`, không phải file này.
+      // ⚠️ Cờ này là NO-OP ở setup hiện tại — ĐÃ ĐO 2026-08-10: bật/tắt không đổi con số nào.
+      // Lý do: instrument do babel-plugin-istanbul chạy TRONG webpack, còn `includeAllSources`
+      // của karma-coverage chỉ đọc `globalCoverageMap` mà PREPROCESSOR của chính nó nạp
+      // (`karma-coverage/lib/preprocessor.js:164`) — preprocessor đó không hề chạy ở đây.
       // Giữ cờ để khi builder đổi sang cơ chế dùng preprocessor thì đúng ngay.
+      //
+      // Cách THẬT SỰ có tác dụng: `coverage-includes.spec.ts` (cùng thư mục) dùng
+      // `import.meta.webpackContext` kéo mọi file source vào bundle. Đọc comment đầu file đó
+      // trước khi sửa — có 3 cái bẫy đã trả giá bằng từng lần chạy.
+      //
+      // Số đo 2026-08-12, cùng một commit, chỉ khác có/không `coverage-includes.spec.ts`:
+      //   không có: 365 file · 22_818 stmt · 79.16 / 68.10 / 76.70 / 80.00
+      //   có:       371 file · 22_873 stmt · 79.01 / 68.00 / 76.48 / 79.83
+      // Tức là chỉ thêm 6 file (2 attribute-date của form-builder, 4 directive/pipe của table).
+      // Ghi chú cũ "405/639 file" gây hiểu sai: 639 là đếm mọi file `.ts`. Trong 576 file không
+      // phải spec, 206 file KHÔNG BAO GIỜ vào lcov được vì không sinh code runtime — 161 barrel
+      // chỉ re-export + 45 file type-only. Đã verify: 0 file có code runtime bị bỏ sót.
       includeAllSources: true,
       reporters: [
         { type: 'html' },
@@ -72,31 +73,41 @@ module.exports = function (config) {
       // sub-packages (chart, editor, datetime popups, table services) have
       // no tests yet and would generate spurious CI failures.
       //
-      // Lịch sử baseline (mỗi lần đo là một lần chạy thật `ng test --code-coverage`):
+      // Lịch sử baseline (mỗi mốc là một lần chạy thật `ng test --code-coverage`):
       //   Plan 1+2   (820 tests):  75.19 / 58.09 / 73.9  / 76.82
       //   Plan 3   (1_123 tests):  72.39 / 54.30 / 71.57 / 73.83
       //   Plan 4   (1_313 tests):  69.44 / 53.82 / 70.04 / 70.51
-      //   2026-08-10 (4_595 tests, includeAllSources TẮT):
-      //                            72.32 / 62.50 / 71.64 / 72.62  trên 405 file
-      //   2026-08-10 (4_625 tests, includeAllSources BẬT + excel/docx spec chạy code
-      //     thật thay vì tự stub chính method đang test):
-      //                            73.14 / 63.17 / 72.20 / 73.52  trên 405 file
-      //     (18249/24949 stmt, 7148/11315 branch, 3436/4759 func, 16360/22250 line)
-      //     Phần tăng đến 100% từ hai spec excel/docx — cờ includeAllSources không
-      //     đổi được con số nào, xem ghi chú ở trên.
+      //   2026-08-10 (4_625 tests):  73.14 / 63.17 / 72.20 / 73.52  trên 405 file
+      //   2026-08-12 (4_443 tests):  79.01 / 68.00 / 76.48 / 79.83  trên 371 file
+      //     (18072/22873 stmt, 7104/10447 branch, 3445/4504 func, 16150/20230 line)
+      //     Số file tụt 405 -> 371 vì branch này xoá `services/docx`, `components/document-builder`
+      //     và 15 file re-export của `utilities/**`; % tăng vì phần bị xoá gần như không có test.
       //
-      // Threshold = số đo thật trừ ~1-1.5pp: đủ chặt để một vùng mất test là đỏ,
-      // đủ lỏng để không vỡ vì nhiễu (timing, DOM-heavy spec trong headless).
+      // Threshold = số đo thật trừ ~1pp: đủ chặt để một vùng mất test là đỏ, đủ lỏng để không vỡ
+      // vì nhiễu (timing, DOM-heavy spec trong headless). Trước đợt này threshold là
+      // 72/62/71/72 — thấp hơn số đo thật ~7pp, tức gate gần như không chặn gì.
       check: {
         global: {
-          statements: 72,
-          branches: 62,
-          functions: 71,
-          lines: 72,
+          statements: 78,
+          branches: 67,
+          functions: 75,
+          lines: 78,
         },
       },
     },
     reporters: ['progress', 'kjhtml', 'coverage'],
+    // why: từ khi `coverage-includes.spec.ts` kéo TOÀN BỘ source vào bundle (để mẫu số coverage
+    // gồm cả file không spec nào import), page load đầu tiên nặng hẳn lên — bundle đã instrument,
+    // cộng ckeditor/pdfjs/exceljs/chart.js. Với default (`browserNoActivityTimeout` 30s,
+    // `browserDisconnectTimeout` 2s, `pingTimeout` 5s) Chrome bị coi là chết TRƯỚC KHI chạy
+    // spec đầu tiên: "Disconnected reconnect failed before timeout of 2000ms (ping timeout)",
+    // 0 spec chạy, exit 0 — tức là một run rỗng trông như run xanh. Các mốc dưới đây là để chờ
+    // được page load nặng, KHÔNG phải để che spec chậm.
+    browserNoActivityTimeout: 180000,
+    browserDisconnectTimeout: 60000,
+    browserDisconnectTolerance: 2,
+    captureTimeout: 180000,
+    pingTimeout: 60000,
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,

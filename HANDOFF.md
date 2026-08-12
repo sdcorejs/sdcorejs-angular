@@ -11,7 +11,7 @@
 | | |
 |---|---|
 | Branch | `fix/full-scan-review` |
-| Số commit trên branch | 25 (24–25: đợt nợ kỹ thuật — Excel numFmt + i18n sót + a11y; 22: trả 2 nợ nhỏ; 23: xoá HANDOFF cũ thời vn-angular; 16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync; 20–21: bỏ toàn bộ re-export @sdcorejs/utils + sync — commit code/sync luôn tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
+| Số commit trên branch | 26 (26: coverage mẫu số đầy đủ + threshold; 24–25: đợt nợ kỹ thuật — Excel numFmt + i18n sót + a11y; 22: trả 2 nợ nhỏ; 23: xoá HANDOFF cũ thời vn-angular; 16–17: đảo nhóm ~73 output rename + sync; 18–19: xoá docx/document-builder + sync; 20–21: bỏ toàn bộ re-export @sdcorejs/utils + sync — commit code/sync luôn tách đôi vì hook git-secrets vỡ E2BIG khi staged ~400 file) |
 | Working tree | sạch |
 | Merge vào `main` | **chưa** |
 | Tag release | **chưa** |
@@ -27,7 +27,7 @@
 | `ng build sdcorejs-angular` (v21) | PASS |
 | `ng lint` (v19) | PASS — 0 error, 0 warning, **4 rule a11y đã bật ở mức `error`** |
 | Full suite (v19) | **4438 SUCCESS**, 0 fail (baseline đầu branch: 3950; 44 spec docx/document-builder + 169 spec của các file re-export utils đi theo phần bị xoá) |
-| Coverage threshold | Có thực thi thật — 72/62/71/72 |
+| Coverage threshold | **78/67/75/78** trên mẫu số đầy đủ (đo thật: 79.01 / 68.00 / 76.48 / 79.83 · 371 file · 4443 spec) |
 | `npm run test:scripts` | 70/70 (gồm 9 test cho `check-i18n.mjs`) |
 | `npm run check:i18n-parity` | PASS — **599 key × 5 ngôn ngữ** (+32 key của đợt i18n/a11y) |
 | Mojibake scan | 0 hit |
@@ -71,7 +71,7 @@ cd versions/v19 && npm run check:i18n-parity
 
 ---
 
-## 3. 25 commit — mỗi commit làm gì
+## 3. 26 commit — mỗi commit làm gì
 
 Đọc theo thứ tự này; commit message của từng cái giải thích đầy đủ **tại sao**, không chỉ *cái gì*.
 
@@ -101,6 +101,7 @@ cd versions/v19 && npm run check:i18n-parity
 | 22 | *(debt)* | `fix` — trả 2 nợ nhỏ: export `form-generic-validation.model` vào barrel; `check-i18n.mjs` hiểu regex literal + đọc `@i18n-ignore` + budget theo số thực + 9 test. `check:i18n` xanh lần đầu. |
 | 24 | *(debt)* | `fix` — đợt nợ kỹ thuật: Excel `numFmt` (số nguyên có format thật, spec RED→GREEN), 32 i18n key × 5 locale cho query-bar/sidebar-v2/mobile-v2, `window.prompt` → `SdConfirmService.withInput`, và 3 mục nợ a11y ở mục 5.3. |
 | 25 | *(sync)* | `chore(sync)` — rollout #24 sang v20/v21. |
+| 26 | *(coverage)* | `test` — `coverage-includes.spec.ts` (`import.meta.webpackContext`) đưa mọi file source vào bundle; `tsconfig.spec.json` include `**/*.ts`; threshold 72/62/71/72 → 78/67/75/78; nâng timeout karma vì run rỗng từng báo XANH. Gồm cả rollout v20/v21 trong cùng commit (diff nhỏ, hook git-secrets không vỡ). |
 | 23 | *(cleanup)* | `chore` — xoá `versions/v{19,20,21}/HANDOFF.md` (handoff branch `release/0.0.1` thời vn-angular, beta.104 — hết giá trị, còn trong git history). |
 
 ---
@@ -129,7 +130,7 @@ nguy hiểm nhất. Đã ghi trong `CHANGELOG.md` mục "Không đổi (có ch�
 
 ### 5.1. Cần làm trước khi merge
 
-1. **Review PR.** 25 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
+1. **Review PR.** 26 commit, ~1700 file. Đọc theo thứ tự commit; message của mỗi commit là
    phần giải thích chính.
 2. ~~Hỏi luật sư về vụ GPL~~ — đã hết chặn: `services/docx` (code GPL) xoá hẳn khỏi source
    (2026-08-11, xem mục 4). Chỉ còn câu hỏi pháp lý KHÔNG chặn merge về các bản đã publish.
@@ -142,10 +143,9 @@ Mỗi mục dưới đây đã được xác minh còn tồn tại tại thời 
 
 | # | Vị trí | Vấn đề | Tại sao hoãn |
 |---|---|---|---|
-| 2 | Toàn bộ tầng output | Surface output **mixed có chủ đích** sau khi đảo nhóm rename: ~78 tên không prefix (convention chính, khớp Material) + 16 tên `sd*` đã publish từ 1.4/1.6 (`sdChanges`, `sdBlur`, `sdFocus`, `sdClosed`/`sdCloseError` trên modal/side-drawer/inform/import-excel, `sdCancel` job-progress, …). | Thống nhất về một phía nào cũng breaking. Nếu làm thì cần đợt riêng kèm codemod, xem mục 4. |
-| 3 | `versions/v19/projects/sdcorejs-angular/karma.conf.js` | Coverage vẫn chỉ đo **405/639 file**. `includeAllSources: true` đã bật nhưng **đo được là no-op** dưới builder này (đã ghi lý do đầy đủ trong comment tại chỗ). | Fix thật cần một test entry dùng `require.context` khai trong `angular.json` — đổi cấu trúc test bundle, cần đợt riêng. |
-| 4 | ~60 generic khắp `components/table/src/models/**`, `import-excel`, `services/excel`, `form-generic-component.model.ts` | Vẫn để `<T = any>`. | Đã thử chuyển `unknown`: sinh **161 lỗi type**, 55 trong đó là `TS18046` cần narrow thật ở runtime. Đó là dự án về tính đúng đắn, không phải đợt đổi tên. Danh sách file chính xác nằm trong `CHANGELOG.md`. |
-| 5 | Bundle `dist/` = 16.32 MB | `components/preview` chiếm 29% vì `pdf-worker-inline.generated.ts` là **một string literal 1.398.249 byte**, nhân 3 lần (bundle + sourcemap + `.d.ts`). `upload-file` = 1.4 MB vì 86 ảnh PNG base64. | Người dùng đã chọn hoãn. |
+| 1 | Toàn bộ tầng output | Surface output **mixed có chủ đích** sau khi đảo nhóm rename: ~78 tên không prefix (convention chính, khớp Material) + 16 tên `sd*` đã publish từ 1.4/1.6 (`sdChanges`, `sdBlur`, `sdFocus`, `sdClosed`/`sdCloseError` trên modal/side-drawer/inform/import-excel, `sdCancel` job-progress, …). | Thống nhất về một phía nào cũng breaking. Nếu làm thì cần đợt riêng kèm codemod, xem mục 4 (Quyết định đã chốt). |
+| 2 | ~60 generic khắp `components/table/src/models/**`, `import-excel`, `services/excel`, `form-generic-component.model.ts` | Vẫn để `<T = any>`. | Đã thử chuyển `unknown`: sinh **161 lỗi type**, 55 trong đó là `TS18046` cần narrow thật ở runtime. Đó là dự án về tính đúng đắn, không phải đợt đổi tên. Danh sách file chính xác nằm trong `CHANGELOG.md`. |
+| 3 | Bundle `dist/` = 16.32 MB | `components/preview` chiếm 29% vì `pdf-worker-inline.generated.ts` là **một string literal 1.398.249 byte**, nhân 3 lần (bundle + sourcemap + `.d.ts`). `upload-file` = 1.4 MB vì 86 ảnh PNG base64. | Người dùng đã chọn hoãn. |
 
 ### 5.3. Nợ về accessibility
 
