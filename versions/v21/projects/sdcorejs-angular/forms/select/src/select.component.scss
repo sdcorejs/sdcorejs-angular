@@ -170,12 +170,16 @@
     padding: 8px 12px;
     cursor: pointer;
     user-select: none;
-    border-bottom: 1px solid #f2f2f2;
-    background-color: #fff;
+    // why: KHÔNG set background — mat-option để trong suốt (`background: rgba(0,0,0,0)`) và ăn nền
+    // panel, vốn là surface-container của M3 chứ không phải trắng. Hardcode #fff làm row nổi lên
+    // như một mảng trắng giữa danh sách xám.
+    border-bottom: 1px solid var(--mat-sys-outline-variant, #f2f2f2);
 
+    // why: mượn đúng state-layer token mà Material dùng cho option hover, để row sáng lên y hệt
+    // các dòng bên dưới; fallback cho theme M2 chưa có token M3.
     &:hover,
     &:focus-visible {
-      background-color: rgba(0, 0, 0, 0.04);
+      background-color: var(--mat-option-hover-state-layer-color, rgba(0, 0, 0, 0.04));
       outline: none;
     }
 
