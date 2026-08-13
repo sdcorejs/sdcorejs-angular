@@ -100,7 +100,7 @@ interface SdFormGenericComponentBase {
 | `textarea` | `SdFormGenericTextarea` | `defaultValue?: string`; `validate.{minlength,maxlength}` |
 | `number` | `SdFormGenericNumber` | `defaultValue?: number`; `validate.{min,max}` |
 | `datetime` | `SdFormGenericDatetime` | `subtype: 'date' \| 'datetime'`; `defaultValue?: string`; `validate.{min,max}` (accepts the literal `'TODAY'`) |
-| `checkbox` | `SdFormGenericCheckbox` | `defaultValue?: boolean` |
+| `checkbox` | `SdFormGenericCheckbox` | `defaultValue?: boolean`. **`validate.required` is not enforced** — `<sd-checkbox>` has no `required` input, so a checkbox cannot be made mandatory from the schema. |
 | `select` | `SdFormGenericSelect` | `values?` / `valuesKey?`; `defaultValue?: string \| string[]`; `properties.{query,multiple,setVariables}` |
 | `radio` | `SdFormGenericRadio` | `values?` / `valuesKey?`; `defaultValue?: string`; `properties.direction: 'row' \| 'column'` |
 | `checklist` | `SdFormGenericChecklist` | `values?` / `valuesKey?`; `defaultValue?: string[]`; `properties.query` |

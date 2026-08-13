@@ -178,7 +178,14 @@ const SEED: SdFormGeneric = {
       ],
     } as any,
   ],
-  validations: [],
+  // why: badge đếm trên toolbar chỉ hiện khi có cấu hình — seed rỗng thì không có gì để nhìn.
+  validations: [
+    {
+      alert: 'warning',
+      type: 'function',
+      code: 'reviewBeforeSubmit',
+    } as any,
+  ],
 };
 
 const DRAG_DROP_POPUP_SEED: SdFormGeneric = {

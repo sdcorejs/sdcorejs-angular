@@ -126,7 +126,10 @@
           }
           
         </div>
-        <div sdFooterRight class="text-right pr-16">
+        <!-- why: `.sd-side-drawer-footer` đã có padding 16px — mọi consumer sdFooterRight khác trong
+             lib đều dựa vào đó. `pr-16` ở đây cộng thêm 16px nữa, đẩy nút Lưu vào trong; `text-right`
+             thì vô tác dụng vì slot đã là flex justify-end. -->
+        <div sdFooterRight>
           <sd-button [title]="'core.component.form-builder.save' | sdTranslate" prefixIcon="save" color="primary" type="fill" (click)="onAccept()"></sd-button>
         </div>
       </sd-side-drawer>

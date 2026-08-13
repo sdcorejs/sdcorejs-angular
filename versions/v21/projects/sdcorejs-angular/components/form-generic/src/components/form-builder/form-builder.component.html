@@ -728,9 +728,7 @@
 <sd-modal title="JSON" view="dialog" width="80%" modalClass="sd-form-builder-dialog" #popupViewJSON>
   <!-- why: schema là JSON nhiều tầng — textarea trần không cho biết dấu ngoặc nào khớp dấu nào,
        cũng không báo cú pháp hỏng cho tới lúc bấm Lưu. -->
-  <div class="fb-json-dialog">
-    <sd-code-editor language="json" [(model)]="jsonString" maxHeight="60vh"></sd-code-editor>
-  </div>
+  <sd-code-editor language="json" [(model)]="jsonString" maxHeight="60vh"></sd-code-editor>
   <ng-container sdFooterRight>
     <sd-button
       type="fill"
@@ -751,28 +749,39 @@
        screen reader đều đọc sai. -->
   <div class="fb-variables">
     @if (clonedVariables.length) {
-      @for (variable of clonedVariables; track variable.id) {
-        <div class="fb-variables__row">
-          <sd-input
-            size="sm"
-            [form]="form"
-            [label]="'core.component.form-builder.field-key' | sdTranslate"
-            [(model)]="variable.key"
-            required></sd-input>
-          <sd-input
-            size="sm"
-            [form]="form"
-            [label]="'core.component.form-builder.display-label' | sdTranslate"
-            [(model)]="variable.label"
-            required></sd-input>
-          <sd-button
-            prefixIcon="delete"
-            type="text"
-            color="error"
-            [tooltip]="'core.component.form-builder.delete' | sdTranslate"
-            (click)="removeVariables(variable.id)"></sd-button>
-        </div>
-      }
+      <!-- why: mỗi biến chỉ có hai trường cùng kiểu, lặp lại theo hàng — đó là dữ liệu dạng bảng.
+           Đặt nhãn cột MỘT lần ở header thay vì lặp nhãn nổi trên từng ô của từng hàng. -->
+      <table class="fb-variables__table">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'core.component.form-builder.field-key' | sdTranslate }}</th>
+            <th scope="col">{{ 'core.component.form-builder.display-label' | sdTranslate }}</th>
+            <!-- why: cột thao tác không cần nhãn nhìn thấy, nhưng vẫn phải có tên cho screen reader —
+                 lib không có tiện ích .sr-only nên đặt tên bằng aria-label ngay trên ô header. -->
+            <th scope="col" class="fb-variables__actions-col" [attr.aria-label]="'core.component.form-builder.delete' | sdTranslate"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (variable of clonedVariables; track variable.id) {
+            <tr>
+              <td>
+                <sd-input size="sm" [form]="form" [(model)]="variable.key" hideInlineError required></sd-input>
+              </td>
+              <td>
+                <sd-input size="sm" [form]="form" [(model)]="variable.label" hideInlineError required></sd-input>
+              </td>
+              <td class="fb-variables__actions-col">
+                <sd-button
+                  prefixIcon="delete"
+                  type="text"
+                  color="error"
+                  [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+                  (click)="removeVariables(variable.id)"></sd-button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
     } @else {
       <p class="fb-variables__empty">{{ 'core.component.form-builder.no-variable' | sdTranslate }}</p>
     }

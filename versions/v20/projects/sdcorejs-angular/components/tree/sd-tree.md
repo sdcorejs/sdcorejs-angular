@@ -226,6 +226,12 @@ Rows use a roving tabindex. Arrow Up/Down move through visible nodes, Home/End j
 
 The roving index is bound as `[attr.tabindex]`, not `[tabIndex]`. The camelCase form sets the DOM *property* only and emits no `tabindex` attribute, so every tool that reads markup (a11y lint, DOM snapshots, devtools inspection) saw the rows as non-focusable even though focus worked at runtime.
 
+## Row layout
+
+Every leading control — chevron, checkbox, item icon and the command trigger — occupies one `--sd-tree-control-size` slot (28px) and aligns to the **first line of the label**, not to the middle of the text block. That matters for labels long enough to wrap: aligning to the block centre would drag the chevron and checkbox down with the second line while neighbouring rows stayed put. Single-line rows are unaffected — the row's 8px vertical padding makes the natural height match the 44px `min-height`, so first-line and centre alignment coincide.
+
+The checkbox gets `--mdc-checkbox-state-layer-size` set to the slot size. Material sizes `.mdc-checkbox` as a content-box from that token (40px by default), so clamping only its `height` leaves the real box overflowing the slot and the whole column drifts.
+
 ## Commands
 
 Commands render at the end of each row. The `more_vert` trigger only appears on row hover when at least one command is visible. Command text is kept separate from the label column, so two-line labels do not overlap the trigger.
