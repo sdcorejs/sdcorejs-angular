@@ -143,6 +143,8 @@ export interface TableOptionConfig {
 | `resizable` | `boolean`                             | When `true`, a 6px drag handle appears on the right edge of every **data** column header. Cursor switches to `col-resize` on hover; dragging updates the width live (mousemove updates inline style outside Angular zone for smoothness) and persists on mouseup. **Excluded from resize:** the special columns `sdSelection`, `sdCommand`, `sdGroup`, `sdSubInformation`, `sdReorder`, `sdIndex`, and `type: 'children'` parent header cells. |
 | `onResize`  | `(field, width, columnWidth) => void` | Fires once per `mouseup`. `field` = column resized, `width` = new width (e.g. `'220px'`), `columnWidth` = snapshot `Record<field, width>` of **all** data columns that currently have a width set (including ones not resized this time). Useful for syncing width state to a remote profile or analytics.                                                                                                                                     |
 
+**Column-config dialog layout:** one row per configurable column, in display order. Each row carries a drag handle (`⠿`, reorders the column), a **Hiển thị** checkbox, the header title and width inputs (`size="sm"`), and **Cố định** / **Giới hạn ký tự** checkboxes. A localized hint above the table (`core.component.table.config.drag-hint`) advertises the drag affordance, which is otherwise invisible. Turning **Hiển thị** off dims the row and disables its title/width/fixed/truncate editors — those settings are meaningless for a hidden column — while the display checkbox itself stays enabled so the column can be brought back.
+
 **Persistence:** When `option.key` is provided, resize writes to the same storage entry used by the column-config dialog (under the prefix `TABLE_CONFIG`). Without a key it falls back to session storage keyed by `Utilities.hash(option)`.
 
 **Reload semantics:** Resizing does **NOT** trigger a data reload, value cache refresh, or filter re-register — it only updates the configuration signal locally and writes storage silently (via the new `SdStorage.setSilent`). Safe to use on heavy server-mode tables.
@@ -307,6 +309,15 @@ None. All callbacks live inside the `option` object (`onSelect`, `onReload`, `co
 - `[sdTableFooterDef]="'<field>'"` — custom footer cell (totals row). Presence of any footer def turns on the footer row.
 - `[sdTableFilterDef]="'<field>'"` — custom inline-filter template per column.
 - `[sdTableExpandDef]` — custom row-expansion (sub-information) template.
+- `[sdTableCommandHeaderDef]` — content for the **header cell of the command column**, which is otherwise empty. No field argument (there is only one command column). Use it for a table-level action — typically "add row" — so it sits directly above the per-row command buttons instead of needing its own strip below the table. Rendered centered; the cell stays 50px wide, so keep it to one icon button. Nothing is rendered (no wrapper element) when the template is absent.
+
+```html
+<sd-table [option]="option">
+  <ng-template sdTableCommandHeaderDef>
+    <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addRow()"></sd-button>
+  </ng-template>
+</sd-table>
+```
 
 ### Standalone imports for projected table templates
 

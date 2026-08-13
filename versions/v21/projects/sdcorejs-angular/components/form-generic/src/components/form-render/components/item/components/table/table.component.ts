@@ -17,7 +17,13 @@ import {
 import { FormGroup } from '@angular/forms';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdSideDrawer } from '@sdcorejs/angular/components/side-drawer';
-import { SdTableCellDefDirective, SdTable, SdTableColumn, SdTableOption } from '@sdcorejs/angular/components/table';
+import {
+  SdTableCellDefDirective,
+  SdTableCommandHeaderDefDirective,
+  SdTable,
+  SdTableColumn,
+  SdTableOption,
+} from '@sdcorejs/angular/components/table';
 import { SdUploadFile } from '@sdcorejs/angular/components/upload-file';
 import { SdAutocomplete, SdInput, SdInputNumber, SdRadio, SdSearch } from '@sdcorejs/angular/forms';
 import { filter, startWith, Subject, Subscription } from 'rxjs';
@@ -25,7 +31,7 @@ import { SdFormGenericTableColumn, SdFormGenericSelectionItem, SdFormGenericTabl
 import { FormGenericService } from '../../../../../../services';
 import { SdDate } from '@sdcorejs/angular/forms/date';
 import { SdDatetime } from '@sdcorejs/angular/forms/datetime';
-import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
 
 @Component({
   selector: 'lib-table',
@@ -40,6 +46,7 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
     SdUploadFile,
     SdTable,
     SdTableCellDefDirective,
+    SdTableCommandHeaderDefDirective,
     SdSideDrawer,
     SdButton,
     SdUploadFile,
@@ -53,6 +60,7 @@ import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
 export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
   private ref = inject(ChangeDetectorRef);
   private readonly formGenericService = inject(FormGenericService);
+  readonly #i18n = inject(I18nService);
 
   @ViewChildren(SdUploadFile) uploadFiles?: QueryList<SdUploadFile>;
   @ViewChild(SdTable) table?: SdTable;
@@ -352,6 +360,17 @@ export class TableComponent implements AfterViewInit, OnDestroy, OnInit {
 
   ngOnDestroy(): void {
     this.#subscription.unsubscribe();
+  }
+
+  /**
+   * Tiêu đề của side-drawer phải nói đúng tác vụ đang làm — trước đây nó cứng là "Chi tiết" cho cả
+   * thêm mới lẫn sửa, còn dòng "Tạo mới/cập nhật" thì rơi vào thân drawer vì gắn nhầm slot.
+   */
+  get detailTitle(): string {
+    if (this.viewed || this.component?.properties?.viewed) return this.#i18n.t('core.component.form-builder.detail');
+    return this.#selectedIndex === -1
+      ? this.component?.properties?.titleButtonCreate || this.#i18n.t('core.component.form-builder.add-row')
+      : this.#i18n.t('core.component.form-builder.update-row');
   }
 
   onDetail = (row?: any) => {

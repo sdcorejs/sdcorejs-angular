@@ -5227,6 +5227,7 @@ import {
   SdTable,
   SdTableOption,
   SdTableCellDefDirective,
+  SdTableCommandHeaderDefDirective,
   SdTableExpandDefDirective,
   SdTableGroupDefDirective,
   SdMaterialFooterDefDirective,
@@ -5367,6 +5368,7 @@ const TASKS: Task[] = [
     DecimalPipe,
     SdTable,
     SdTableCellDefDirective,
+    SdTableCommandHeaderDefDirective,
     SdTableExpandDefDirective,
     SdTableGroupDefDirective,
     SdMaterialFooterDefDirective,
@@ -5576,6 +5578,21 @@ const TASKS: Task[] = [
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-hanh-dong-o-header-cot-command') {
+      <demo-section
+        heading="Hành động ở header cột command"
+        [props]="[{ name: 'sdTableCommandHeaderDef', value: 'template' }]"
+        note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
+        <div class="table-box">
+          <sd-table [option]="commandHeaderOption">
+            <ng-template sdTableCommandHeaderDef>
+              <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
+            </ng-template>
+          </sd-table>
         </div>
       </demo-section>
       }
@@ -6095,6 +6112,25 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  // why: dùng signal cho items để nút "thêm dòng" trong header command có thứ để tác động thật,
+  // thay vì chỉ là một nút trang trí.
+  readonly commandHeaderRows = signal<Employee[]>(EMPLOYEES.slice(0, 3));
+  readonly commandHeaderOption: SdTableOption<Employee> = {
+    type: 'local',
+    items: () => this.commandHeaderRows(),
+    paginate: { hidden: true },
+    commands: [
+      { icon: 'edit', title: 'Sửa', click: () => undefined },
+      { icon: 'delete', title: 'Xoá', click: row => this.commandHeaderRows.update(rows => rows.filter(e => e.id !== row.id)) },
+    ],
+    columns: [
+      { field: 'name', type: 'string', title: 'Nhân sự', width: '260px' },
+      { field: 'department', type: 'string', title: 'Phòng', width: '140px' },
+      { field: 'position', type: 'string', title: 'Chức vụ' },
+    ],
+    style: { shadow: true },
+  };
+
   readonly customCellOption: SdTableOption<Employee> = {
     type: 'local',
     items: () => EMPLOYEES.slice(0, 6),
@@ -6173,6 +6209,14 @@ export class TableDemoComponent {
     ],
     style: { shadow: true },
   };
+
+  addCommandHeaderRow(): void {
+    this.commandHeaderRows.update(rows => {
+      const next = EMPLOYEES[rows.length % EMPLOYEES.length];
+      // Cấp id mới để bảng không trùng key khi vòng lại danh sách mẫu.
+      return [...rows, { ...next, id: Math.max(0, ...rows.map(e => e.id)) + 1 }];
+    });
+  }
 
   totalSalary(items: SdTableItem<Employee>[]): number {
     return (items || []).reduce((sum, e) => sum + (e?.data?.salary ?? 0), 0);
@@ -6412,11 +6456,15 @@ interface TreeDemoItem {
         <div class="tree-demo-panel">
           <sd-tree [option]="customDemoOption">
             <ng-template sdTreeItemDef let-item let-level="level" let-isLeaf="isLeaf" let-toggle="toggle">
+              <!-- why: SdTreeItemDefDirective mặc định generic là unknown (khác SdOrgChartItemDef,
+                   vốn default về type node cụ thể), nên dưới strictTemplates item không đọc được
+                   property nào. Alias qua @let + cast một lần thay vì rải $any() khắp template. -->
+              @let _node = $any(item);
               <button type="button" class="tree-custom-item" [class.tree-custom-item--leaf]="isLeaf" (click)="toggle()">
                 <span>L{{ level + 1 }}</span>
-                <strong>{{ item.title }}</strong>
-                @if (item.description) {
-                  <small>{{ item.description }}</small>
+                <strong>{{ _node.title }}</strong>
+                @if (_node.description) {
+                  <small>{{ _node.description }}</small>
                 }
               </button>
             </ng-template>
@@ -13551,6 +13599,21 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     </div>
   </demo-section>`,
   },
+  "components/table/example-hanh-dong-o-header-cot-command": {
+    ...SHOWCASE_PAGE_SOURCES["components/table"],
+    html: `<demo-section
+    heading="Hành động ở header cột command"
+    [props]="[{ name: 'sdTableCommandHeaderDef', value: 'template' }]"
+    note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
+    <div class="table-box">
+      <sd-table [option]="commandHeaderOption">
+        <ng-template sdTableCommandHeaderDef>
+          <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
+        </ng-template>
+      </sd-table>
+    </div>
+  </demo-section>`,
+  },
   "components/table/example-keo-tha-doi-thu-tu": {
     ...SHOWCASE_PAGE_SOURCES["components/table"],
     html: `<demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
@@ -13730,11 +13793,15 @@ export const SHOWCASE_EXAMPLE_SOURCES = {
     <div class="tree-demo-panel">
       <sd-tree [option]="customDemoOption">
         <ng-template sdTreeItemDef let-item let-level="level" let-isLeaf="isLeaf" let-toggle="toggle">
+          <!-- why: SdTreeItemDefDirective mặc định generic là unknown (khác SdOrgChartItemDef,
+               vốn default về type node cụ thể), nên dưới strictTemplates item không đọc được
+               property nào. Alias qua @let + cast một lần thay vì rải $any() khắp template. -->
+          @let _node = $any(item);
           <button type="button" class="tree-custom-item" [class.tree-custom-item--leaf]="isLeaf" (click)="toggle()">
             <span>L{{ level + 1 }}</span>
-            <strong>{{ item.title }}</strong>
-            @if (item.description) {
-              <small>{{ item.description }}</small>
+            <strong>{{ _node.title }}</strong>
+            @if (_node.description) {
+              <small>{{ _node.description }}</small>
             }
           </button>
         </ng-template>

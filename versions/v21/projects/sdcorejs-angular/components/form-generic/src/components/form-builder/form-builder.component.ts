@@ -30,7 +30,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
 import { SdInput } from '@sdcorejs/angular/forms/input';
-import { SdTextarea } from '@sdcorejs/angular/forms/textarea';
+import { SdCodeEditor } from '@sdcorejs/angular/components/code-editor';
 import { SdConfirmService, SdNotifyService } from '@sdcorejs/angular/services';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { debounceTime, startWith, Subject, Subscription } from 'rxjs';
@@ -133,7 +133,7 @@ type PaletteDropTarget =
     GroupAttribute,
     SdModal,
     SdInput,
-    SdTextarea,
+    SdCodeEditor,
     SdButton,
     SdFormRender,
     ConfigureValidationComponent,
@@ -899,7 +899,9 @@ export class SdFormBuilder implements OnInit, OnDestroy {
   // Copy form hiện tại
   jsonString?: string;
   viewJSON = () => {
-    this.jsonString = JSON.stringify({ components: this.components });
+    // why: JSON một dòng thì không đọc nổi và cũng không sửa được bằng tay; schema này lồng nhiều
+    // tầng nên in thụt lề mới dùng được với editor.
+    this.jsonString = JSON.stringify({ components: this.components }, null, 2);
     this.popupViewJSON()?.open();
     this.#ref.markForCheck();
   };

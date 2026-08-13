@@ -15,14 +15,13 @@ import {
 import { SdFormGeneric } from '../../../../models/form-generic.model';
 import { ExpressionBuilderComponent } from '../expression-builder/expression-builder.component';
 import { SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
 
 @Component({
   selector: 'configure-validation',
   templateUrl: './configure-validation.component.html',
   styleUrl: './configure-validation.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [SdIcon, MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, SdTranslatePipe],
+  imports: [MatMenuModule, SdModal, SdButton, SdInput, SdSelect, ExpressionBuilderComponent, SdTranslatePipe],
 })
 export class ConfigureValidationComponent implements AfterViewInit, OnDestroy {
   @ViewChild(SdModal) modal?: SdModal;

@@ -158,16 +158,41 @@
       align-items: center;
       background-color: #fff;
 
-      .c-action {
-        padding: 5px;
+      // why: mat-paginator tự vẽ nền `--mat-paginator-container-background-color` (mặc định
+      // `--mat-sys-surface` của M3 — KHÔNG phải trắng), nên nó phủ một mảng màu khác lên đúng nửa
+      // phải của footer. Nó là một phần của footer chứ không phải surface riêng → để trong suốt và
+      // ăn nền của .c-paginator.
+      .mat-mdc-paginator {
+        background: transparent;
 
-        // Text buttons are 32px high but Material keeps a 48px touch target.
-        // The 3px vertical margin plus the existing 5px action padding contains it
-        // without reserving footer height when no action button is rendered.
+        // why: chiều cao footer bị hai thứ đẩy lên — `--mat-paginator-container-size` (min-height
+        // 56px của .mat-mdc-paginator-container) và state layer 40px của hai nút chuyển trang, tức
+        // vòng hover tròn quanh icon. Bảng ở đây là UI dày đặc, dòng chỉ 36px, nên hạ cả hai bằng
+        // token của Material thay vì đè width/height lên chính element.
+        --mat-paginator-container-size: 40px;
+        --mdc-icon-button-state-layer-size: 32px;
+        --mdc-icon-button-icon-size: 20px;
+      }
+
+      // why: footer là một hàng flex chứa ba loại nội dung rất khác nhau — cụm nút, mat-paginator,
+      // và dòng "Đang hiển thị". Trước đây khoảng đệm chỉ đặt trên .c-action, tức SAI CHỖ, gây hai
+      // lỗi ngược nhau: cụm nút rỗng vẫn giữ 10px (dải trắng dưới hàng cuối khi bảng không phân
+      // trang), còn dòng "Đang hiển thị" thì không có đệm nào nên dính sát mép. Mỗi nội dung tự
+      // mang đệm của nó, còn container không tự dựng chiều cao.
+      .c-action {
+        padding: 0;
+
+        // Nút text cao 32px nhưng Material giữ touch target 48px; margin dọc 8px (32+16) dựng lại
+        // đúng 48px đó — phần bù này trước nằm ở padding container.
         sd-button {
-          margin-top: 3px;
-          margin-bottom: 3px;
+          margin: 8px 5px;
         }
+      }
+
+      // Dòng "Đang hiển thị 1-N/N" khi bảng đủ ngắn để ẩn paginator: cần đệm riêng, nếu không nó
+      // là nội dung DUY NHẤT trong footer và bị bó sát mép.
+      .c-summary {
+        padding: 8px 16px;
       }
     }
 

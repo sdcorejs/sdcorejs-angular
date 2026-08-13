@@ -109,6 +109,30 @@
       background 0.12s ease,
       color 0.12s ease;
 
+    // why: nút mang badge phải là mốc định vị, nếu không badge sẽ neo theo toolbar.
+    &--badged {
+      position: relative;
+      overflow: visible;
+    }
+
+    // Badge đếm: cho biết form đã cấu hình bao nhiêu biến / bao nhiêu xác thực mà không phải mở dialog.
+    &__badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      min-width: 14px;
+      height: 14px;
+      padding: 0 3px;
+      border-radius: 7px;
+      background: var(--md-sys-color-error, #b3261e);
+      color: var(--md-sys-color-on-error, #fff);
+      font-size: 9px;
+      font-weight: 600;
+      line-height: 14px;
+      text-align: center;
+      pointer-events: none;
+    }
+
     &:hover {
       background: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
       color: var(--md-sys-color-on-surface);
@@ -802,6 +826,48 @@
     padding: 12px 16px;
     background: var(--sd-surface, #fff);
     box-shadow: 0 -1px 0 var(--sd-border, #dde0e5);
+  }
+
+  // ── Dialog "Cấu hình biến" ────────────────────────────────────────────
+  // why: các hàng trước đây là d-flex trần với gap 8px — hai ô input giãn hết cỡ, nút xoá tròn đỏ
+  // to ngang nút chính, và không có gì phân tách hàng này với hàng kia. Cho mỗi hàng một khung
+  // riêng, khoá bề rộng cột và hạ nút xoá xuống dạng text.
+  .fb-variables {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    &__row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+      align-items: center;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      background: var(--sd-surface, #fff);
+    }
+
+    &__empty {
+      margin: 0;
+      padding: 16px;
+      border: 1px dashed var(--sd-border, #e6e6e6);
+      border-radius: 8px;
+      color: var(--sd-text-secondary, #6b7280);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    &__add {
+      align-self: flex-start;
+    }
+  }
+
+  // Editor JSON cần khung riêng: sd-code-editor tự cuộn, đừng để modal cuộn lồng thêm một lớp nữa.
+  .fb-json-dialog {
+    border: 1px solid var(--sd-border, #e6e6e6);
+    border-radius: 8px;
+    overflow: hidden;
   }
 }
 

@@ -7,7 +7,9 @@
           @if (!!component.components.length) {
             <div class="col-12 mt-16">
               <sd-section [title]="component.label" [icon]="component.properties.icon">
-                <div class="row mx-0">
+                <!-- why: `.sd-section-body` để padding 0 (mỗi nội dung tự quyết), nên các field chỉ
+                     còn px-8/py-8 của riêng chúng và dính sát khung section. Group tự chừa lề. -->
+                <div class="row mx-0 c-group-body">
                   @for (childComponent of component.components; track childComponent.id) {
                     @let childExpression = hashedValues | whenExpression: childComponent : formValue;
                     @if (!childExpression.hidden) {

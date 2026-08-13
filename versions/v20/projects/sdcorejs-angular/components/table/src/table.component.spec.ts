@@ -6,6 +6,7 @@ import { SdTableOption } from './models/table-option.model';
 import { SdTableItem } from './models/table-item.model';
 import { SdGroupPipe } from './pipes/sd-group.pipe';
 import { buildColumnWidthMap } from './services/column-width.util';
+import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 
 describe('buildColumnWidthMap', () => {
   it('trả map field → width cho mọi field có width', () => {
@@ -1521,6 +1522,9 @@ describe('hidden paginator footer height', () => {
       <div class="table-shell visible-paginator-table">
         <sd-table [option]="visiblePaginatorOption"></sd-table>
       </div>
+      <div class="table-shell bare-table">
+        <sd-table [option]="bareOption"></sd-table>
+      </div>
     `,
     styles: [
       `
@@ -1551,6 +1555,17 @@ describe('hidden paginator footer height', () => {
       type: 'local',
       items: () => [{ id: 1, name: 'Only row' }],
       paginate: { pageSize: 20 },
+      columns: [
+        { field: 'id', type: 'number', title: 'ID' },
+        { field: 'name', type: 'string', title: 'Name' },
+      ],
+    };
+
+    // Bảng trần: không phân trang, không reload/export/config → footer không có gì để hiện.
+    bareOption: SdTableOption<Row> = {
+      type: 'local',
+      items: () => [{ id: 1, name: 'Only row' }],
+      paginate: { hidden: true },
       columns: [
         { field: 'id', type: 'number', title: 'ID' },
         { field: 'name', type: 'string', title: 'Name' },
@@ -1618,14 +1633,174 @@ describe('hidden paginator footer height', () => {
     fixture.destroy();
   }));
 
-  it('preserves the normal visible paginator height', fakeAsync(() => {
+  // why: hai lỗi ngược nhau của cùng một nguyên nhân — khoảng đệm đặt trên container thay vì trên
+  // nội dung. Không có gì để hiện thì footer vẫn giữ 10px; còn khi chỉ có dòng "Đang hiển thị" thì
+  // dòng đó không được đệm và bị bó sát mép.
+  it('collapses the footer entirely when it has nothing to show', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const table = fixture.nativeElement.querySelector('.bare-table sd-table') as HTMLElement;
+    const paginatorFooter = table.querySelector('.c-paginator') as HTMLElement;
+    const paginator = table.querySelector('mat-paginator') as HTMLElement;
+
+    expect(getComputedStyle(paginator).display).toBe('none');
+    expect(paginatorFooter.querySelector('sd-button')).toBeNull();
+    expect(paginatorFooter.querySelector('.c-summary')).withContext('hidden paginator hides the summary too').toBeNull();
+    expect(paginatorFooter.getBoundingClientRect().height)
+      .withContext('an empty footer must not reserve any height')
+      .toBe(0);
+
+    fixture.destroy();
+  }));
+
+  it('gives the showing-summary its own breathing room', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const table = fixture.nativeElement.querySelector('.summary-table sd-table') as HTMLElement;
+    const summary = table.querySelector('.c-summary') as HTMLElement;
+
+    expect(summary).withContext('short data set must render the summary').not.toBeNull();
+    const padding = getComputedStyle(summary);
+    expect(parseFloat(padding.paddingTop)).toBeGreaterThanOrEqual(4);
+    expect(parseFloat(padding.paddingBottom)).toBeGreaterThanOrEqual(4);
+    expect(summary.getBoundingClientRect().height)
+      .withContext('summary must not be squeezed flat')
+      .toBeGreaterThanOrEqual(28);
+
+    fixture.destroy();
+  }));
+
+  // why: Material sơn nền paginator bằng --mat-sys-surface, khác màu nền của footer, nên nửa phải
+  // của thanh footer hiện ra như một mảng màu riêng.
+  it('lets the paginator inherit the footer background instead of painting its own', fakeAsync(() => {
+    const fixture = createLoadedFixture();
+    const table = fixture.nativeElement.querySelector('.visible-paginator-table sd-table') as HTMLElement;
+    const paginator = table.querySelector('mat-paginator') as HTMLElement;
+
+    expect(getComputedStyle(paginator).backgroundColor).toBe('rgba(0, 0, 0, 0)');
+
+    fixture.destroy();
+  }));
+
+  // why: ngưỡng cũ là >= 56px, tức đúng min-height mặc định của Material. Bảng này là UI dày đặc
+  // (dòng 36px) nên footer được hạ xuống qua token; phép đo giờ khoá KHOẢNG cao hợp lệ — vẫn phải
+  // dựng đủ chỗ cho paginator, nhưng không được quay lại 56px.
+  it('keeps the visible paginator compact', fakeAsync(() => {
     const fixture = createLoadedFixture();
     const table = fixture.nativeElement.querySelector('.visible-paginator-table sd-table') as HTMLElement;
     const paginatorFooter = table.querySelector('.c-paginator') as HTMLElement;
     const paginator = table.querySelector('mat-paginator') as HTMLElement;
+    const container = paginator.querySelector('.mat-mdc-paginator-container') as HTMLElement;
+    const nextButton = paginator.querySelector('.mat-mdc-paginator-navigation-next') as HTMLElement;
 
     expect(getComputedStyle(paginator).display).not.toBe('none');
-    expect(paginatorFooter.getBoundingClientRect().height).toBeGreaterThanOrEqual(56);
+    expect(container.getBoundingClientRect().height)
+      .withContext('paginator row must not fall back to the 56px default')
+      .toBeLessThan(56);
+    expect(paginatorFooter.getBoundingClientRect().height)
+      .withContext('footer still has to fit the paginator')
+      .toBeGreaterThanOrEqual(40);
+    expect(nextButton.getBoundingClientRect().height)
+      .withContext('page buttons keep the smaller hover state layer')
+      .toBeLessThanOrEqual(32);
+
+    fixture.destroy();
+  }));
+});
+
+// ---------------------------------------------------------------------------
+// sdTableCommandHeaderDef — nội dung cho ô header của cột command
+// ---------------------------------------------------------------------------
+
+describe('sdTableCommandHeaderDef', () => {
+  interface Row {
+    id: number;
+    name: string;
+  }
+
+  const rowOption = (): SdTableOption<Row> => ({
+    type: 'local',
+    items: () => [
+      { id: 1, name: 'Implementation' },
+      { id: 2, name: 'Training' },
+    ],
+    commands: [{ icon: 'edit', click: () => undefined }],
+    columns: [
+      { field: 'id', type: 'number', title: 'ID' },
+      { field: 'name', type: 'string', title: 'Name' },
+    ],
+  });
+
+  @Component({
+    standalone: true,
+    imports: [SdTable, SdTableCommandHeaderDefDirective],
+    template: `
+      <sd-table [option]="option">
+        <ng-template sdTableCommandHeaderDef>
+          <button type="button" class="add-row" (click)="added = added + 1">+</button>
+        </ng-template>
+      </sd-table>
+    `,
+  })
+  class WithHeaderHost {
+    option = rowOption();
+    added = 0;
+  }
+
+  @Component({
+    standalone: true,
+    imports: [SdTable],
+    template: `<sd-table [option]="option"></sd-table>`,
+  })
+  class WithoutHeaderHost {
+    option = rowOption();
+  }
+
+  function settle(fixture: ComponentFixture<WithHeaderHost | WithoutHeaderHost>): void {
+    fixture.detectChanges();
+    tick(800);
+    flush();
+    fixture.detectChanges();
+  }
+
+  function commandHeader(fixture: ComponentFixture<WithHeaderHost | WithoutHeaderHost>): HTMLElement {
+    const host = fixture.nativeElement as HTMLElement;
+    // why: mat-table gắn `mat-column-<matColumnDef>` lên mọi cell — bám vào đó thay vì đoán vị trí,
+    // vì cột command sticky ở ĐẦU khi `command.align` không phải 'right'.
+    const header = host.querySelector<HTMLElement>('th.mat-column-sdCommand');
+    if (!header) throw new Error('command header cell not rendered');
+    return header;
+  }
+
+  it('renders the projected template inside the command header cell', fakeAsync(() => {
+    const fixture = TestBed.createComponent(WithHeaderHost);
+    settle(fixture);
+
+    const header = commandHeader(fixture);
+    expect(header.querySelector('.add-row')).withContext('projected content must land in the command header').not.toBeNull();
+
+    fixture.destroy();
+  }));
+
+  it('keeps the projected control interactive', fakeAsync(() => {
+    const fixture = TestBed.createComponent(WithHeaderHost);
+    settle(fixture);
+
+    commandHeader(fixture).querySelector<HTMLElement>('.add-row')!.click();
+    fixture.detectChanges();
+
+    expect(fixture.componentInstance.added).toBe(1);
+
+    fixture.destroy();
+  }));
+
+  // why: ô header của cột command vốn trống — không khai báo template thì nó phải TIẾP TỤC trống,
+  // không sinh thêm wrapper hay chiều cao nào.
+  it('leaves the command header empty when no template is projected', fakeAsync(() => {
+    const fixture = TestBed.createComponent(WithoutHeaderHost);
+    settle(fixture);
+
+    const header = commandHeader(fixture);
+    expect(header.querySelector('.sd-command-header')).toBeNull();
+    expect(header.textContent?.trim()).toBe('');
 
     fixture.destroy();
   }));

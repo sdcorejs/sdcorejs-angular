@@ -6,6 +6,7 @@ import {
   SdTable,
   SdTableOption,
   SdTableCellDefDirective,
+  SdTableCommandHeaderDefDirective,
   SdTableExpandDefDirective,
   SdTableGroupDefDirective,
   SdMaterialFooterDefDirective,
@@ -146,6 +147,7 @@ const TASKS: Task[] = [
     DecimalPipe,
     SdTable,
     SdTableCellDefDirective,
+    SdTableCommandHeaderDefDirective,
     SdTableExpandDefDirective,
     SdTableGroupDefDirective,
     SdMaterialFooterDefDirective,
@@ -355,6 +357,21 @@ const TASKS: Task[] = [
       <demo-section heading="Kéo thả đổi thứ tự" [props]="[{ name: 'rowReorder', value: 'true' }]">
         <div class="table-box">
           <sd-table [option]="reorderOption"></sd-table>
+        </div>
+      </demo-section>
+      }
+
+      @if (!demoPage.focusedSectionId || demoPage.focusedSectionId === 'example-hanh-dong-o-header-cot-command') {
+      <demo-section
+        heading="Hành động ở header cột command"
+        [props]="[{ name: 'sdTableCommandHeaderDef', value: 'template' }]"
+        note="Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.">
+        <div class="table-box">
+          <sd-table [option]="commandHeaderOption">
+            <ng-template sdTableCommandHeaderDef>
+              <sd-button prefixIcon="add" type="text" color="primary" tooltip="Thêm dòng" (click)="addCommandHeaderRow()"></sd-button>
+            </ng-template>
+          </sd-table>
         </div>
       </demo-section>
       }
@@ -874,6 +891,25 @@ export class TableDemoComponent {
     style: { shadow: true },
   };
 
+  // why: dùng signal cho items để nút "thêm dòng" trong header command có thứ để tác động thật,
+  // thay vì chỉ là một nút trang trí.
+  readonly commandHeaderRows = signal<Employee[]>(EMPLOYEES.slice(0, 3));
+  readonly commandHeaderOption: SdTableOption<Employee> = {
+    type: 'local',
+    items: () => this.commandHeaderRows(),
+    paginate: { hidden: true },
+    commands: [
+      { icon: 'edit', title: 'Sửa', click: () => undefined },
+      { icon: 'delete', title: 'Xoá', click: row => this.commandHeaderRows.update(rows => rows.filter(e => e.id !== row.id)) },
+    ],
+    columns: [
+      { field: 'name', type: 'string', title: 'Nhân sự', width: '260px' },
+      { field: 'department', type: 'string', title: 'Phòng', width: '140px' },
+      { field: 'position', type: 'string', title: 'Chức vụ' },
+    ],
+    style: { shadow: true },
+  };
+
   readonly customCellOption: SdTableOption<Employee> = {
     type: 'local',
     items: () => EMPLOYEES.slice(0, 6),
@@ -952,6 +988,14 @@ export class TableDemoComponent {
     ],
     style: { shadow: true },
   };
+
+  addCommandHeaderRow(): void {
+    this.commandHeaderRows.update(rows => {
+      const next = EMPLOYEES[rows.length % EMPLOYEES.length];
+      // Cấp id mới để bảng không trùng key khi vòng lại danh sách mẫu.
+      return [...rows, { ...next, id: Math.max(0, ...rows.map(e => e.id)) + 1 }];
+    });
+  }
 
   totalSalary(items: SdTableItem<Employee>[]): number {
     return (items || []).reduce((sum, e) => sum + (e?.data?.salary ?? 0), 0);

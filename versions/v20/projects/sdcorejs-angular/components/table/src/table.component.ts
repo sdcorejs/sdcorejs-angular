@@ -28,6 +28,7 @@ import { SdTableGroupDefDirective, SdTableGroupDefContext } from './directives/s
 import { SdTableFilterDefDirective } from './directives/sd-table-filter-def.directive';
 import { SdMaterialFooterDefDirective } from './directives/sd-table-footer-def.directive';
 import { SdTableTitleDefDirective } from './directives/sd-table-title-def.directive';
+import { SdTableCommandHeaderDefDirective } from './directives/sd-table-command-header-def.directive';
 import { SdTableColumn } from './models/table-column.model';
 import { SdTableCommand } from './models/table-command.model';
 import { SdTableOption } from './models/table-option.model';
@@ -218,6 +219,8 @@ export class SdTable<T = unknown> implements AfterViewInit, OnDestroy {
   sdSubInformation = contentChild(SdTableExpandDefDirective);
   sdGroupDef = contentChild(SdTableGroupDefDirective);
   sdCellDefs = contentChildren(SdTableCellDefDirective);
+  /** Nội dung tuỳ chọn cho ô header của cột command (mặc định ô này để trống). */
+  sdCommandHeaderDef = contentChild(SdTableCommandHeaderDefDirective);
   sdFooterDefs = contentChildren(SdMaterialFooterDefDirective);
   sdFilterDefs = contentChildren(SdTableFilterDefDirective);
   sdTitleDefs = contentChildren(SdTableTitleDefDirective);

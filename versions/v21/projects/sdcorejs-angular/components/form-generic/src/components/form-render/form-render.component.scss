@@ -1,3 +1,10 @@
 :host {
   display: contents;
 }
+
+// why: sd-section cố ý để `.sd-section-body { padding: 0 }` — mỗi nội dung tự quyết lề. Field bên
+// trong group chỉ mang px-8/py-8 của riêng nó, nên nếu group không chừa lề thì chúng dính sát khung
+// section. 8px ở đây cộng với px-8 của field thành 16px mỗi bên, khớp lề của section header.
+.c-group-body {
+  padding: 8px 8px 12px;
+}

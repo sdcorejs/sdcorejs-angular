@@ -1,6 +1,23 @@
 @if(component && tableOption) {
   <div style="width: 100%">
     <sd-table [option]="tableOption">
+      <!-- why: nút thêm dòng nằm ở ô header của cột command — ô đó vốn để trống, và đặt ở đây thì
+           hành động "thêm" đứng ngay trên cụm sửa/xoá của từng dòng thay vì chiếm thêm một dải
+           riêng dưới bảng. -->
+      <!-- why: KHÔNG bọc ng-template trong @if — contentChild chỉ quét nội dung chiếu vào tĩnh, còn
+           @if dựng một embedded view nên template sẽ không bao giờ được nhìn thấy và nút biến mất.
+           Template luôn tồn tại; điều kiện nằm BÊN TRONG. -->
+      <ng-template sdTableCommandHeaderDef>
+        @if(!viewed && !component.properties?.viewed) {
+          <sd-button
+            prefixIcon="add"
+            type="text"
+            color="primary"
+            (click)="onDetail()"
+            [title]="''"
+            [tooltip]="component.properties?.titleButtonCreate || ('core.component.form-builder.add-new' | sdTranslate)"></sd-button>
+        }
+      </ng-template>
       @for(key of imageKeys; track key) {
         <ng-template [sdTableCellDef]="key" let-item="item">
           <sd-upload-file
@@ -28,23 +45,17 @@
       }
     </sd-table>
     @if(!viewed && !component.properties?.viewed) {
-      <sd-button
-      prefixIcon="add"
-      color="primary"
-      (click)="onDetail()"
-      [title]="component.properties?.titleButtonCreate || ('core.component.form-builder.add-new' | sdTranslate)"></sd-button>
-    }
-    @if(!viewed && !component.properties?.viewed) {
-      <sd-side-drawer [title]="'core.component.form-builder.detail' | sdTranslate" width="500px">
-        <div sdTitle>
-          <span>{{ 'core.component.form-builder.create-update' | sdTranslate }}</span>
-        </div>
-        <div sdBody class="c-table-create-update">
+      <!-- why: `sdTitle` / `sdBody` KHÔNG phải slot của sd-side-drawer (nó chỉ có sdHeaderLeft /
+           sdHeaderRight / sdFooterLeft / sdFooterRight + ng-content mặc định), nên hai khối đó
+           trước đây rơi thẳng vào thân drawer — "Tạo mới/cập nhật" hiện trong body còn tiêu đề kẹt
+           ở "Chi tiết". Dùng [title] động theo tác vụ và để nội dung ở content mặc định. -->
+      <sd-side-drawer [title]="detailTitle" width="500px">
+        <div class="c-table-create-update">
           @if(!!component.columns?.length) {
-            <div class="row mx-0">
+            <div class="c-drawer-fields">
               @for(column of component.columns;track column.key) {
                 @let validate = formRenderColumn[column.key].validate;
-                <div class="col-12 px-0 mt-16">
+                <div>
                   @if(column.type === 'string') {
                     <sd-input
                     [form]="form()"

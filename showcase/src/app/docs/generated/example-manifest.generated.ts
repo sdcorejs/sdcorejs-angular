@@ -143,6 +143,7 @@ export type ShowcaseExampleSourceKey =
   | "components/table/example-footer-tong-hop"
   | "components/table/example-full-demo-local"
   | "components/table/example-giu-selection-xuyen-trang"
+  | "components/table/example-hanh-dong-o-header-cot-command"
   | "components/table/example-keo-tha-doi-thu-tu"
   | "components/table/example-khong-co-filler"
   | "components/table/example-lenh-dong-co-menu-con"
@@ -1350,6 +1351,13 @@ export const SHOWCASE_EXAMPLE_MANIFEST = [
     sectionId: "example-keo-tha-doi-thu-tu",
     title: "Kéo thả đổi thứ tự",
     description: "Existing “Kéo thả đổi thứ tự” scenario preserved from the showcase.",
+  },
+  {
+    sourceKey: "components/table/example-hanh-dong-o-header-cot-command",
+    pageKey: "components/table",
+    sectionId: "example-hanh-dong-o-header-cot-command",
+    title: "Hành động ở header cột command",
+    description: "Ô header của cột command vốn để trống. Chiếu nội dung vào đó để đặt một hành động cấp bảng (ở đây là thêm dòng) ngay trên cụm sửa/xoá của từng dòng, khỏi cần thêm một dải riêng dưới bảng.",
   },
   {
     sourceKey: "components/table/example-cell-template-tuy-chinh",

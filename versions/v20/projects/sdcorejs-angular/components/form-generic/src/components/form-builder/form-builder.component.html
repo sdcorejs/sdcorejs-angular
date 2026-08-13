@@ -126,19 +126,27 @@
           <button type="button" class="fb-icon-btn" [matTooltip]="'core.component.form-builder.view-json' | sdTranslate" (click)="viewJSON()">
             <span class="msi">data_object</span>
           </button>
+          <!-- why: số biến / số xác thực trước đây chỉ biết được sau khi mở dialog. Badge cho thấy
+               form đã cấu hình gì ngay trên toolbar. -->
           <button
             type="button"
-            class="fb-icon-btn"
+            class="fb-icon-btn fb-icon-btn--badged"
             [matTooltip]="'core.component.form-builder.config-variable' | sdTranslate"
             (click)="configureVariables()">
             <span class="msi">data_array</span>
+            @if (variables.length) {
+              <span class="fb-icon-btn__badge" [attr.aria-label]="variables.length">{{ variables.length }}</span>
+            }
           </button>
           <button
             type="button"
-            class="fb-icon-btn"
+            class="fb-icon-btn fb-icon-btn--badged"
             [matTooltip]="'core.component.form-builder.config-validation-warning-error' | sdTranslate"
             (click)="openConfigureValidation()">
             <span class="msi">rule</span>
+            @if (validations.length) {
+              <span class="fb-icon-btn__badge" [attr.aria-label]="validations.length">{{ validations.length }}</span>
+            }
           </button>
 
           <span class="fb-divider"></span>
@@ -718,7 +726,11 @@
 
 <!-- ══════════════════════ JSON / variables modals ═══════════════════════ -->
 <sd-modal title="JSON" view="dialog" width="80%" modalClass="sd-form-builder-dialog" #popupViewJSON>
-  <sd-textarea [(model)]="jsonString"></sd-textarea>
+  <!-- why: schema là JSON nhiều tầng — textarea trần không cho biết dấu ngoặc nào khớp dấu nào,
+       cũng không báo cú pháp hỏng cho tới lúc bấm Lưu. -->
+  <div class="fb-json-dialog">
+    <sd-code-editor language="json" [(model)]="jsonString" maxHeight="60vh"></sd-code-editor>
+  </div>
   <ng-container sdFooterRight>
     <sd-button
       type="fill"
@@ -734,18 +746,45 @@
   width="800px"
   modalClass="sd-form-builder-dialog"
   #popupConfigureVariables>
-  @for (variable of clonedVariables; track variable.id) {
-    <div class="d-flex align-items-center" style="gap: 8px">
-      <sd-input [form]="form" [label]="'core.component.form-builder.field-key' | sdTranslate" [(model)]="variable.key" required></sd-input>
-      <sd-input
-        [form]="form"
-        [label]="'core.component.form-builder.display-label' | sdTranslate"
-        [(model)]="variable.label"
-        required></sd-input>
-      <sd-button prefixIcon="delete" (click)="removeVariables(variable.id)" color="error"></sd-button>
-    </div>
-  }
-  <a href="javascript:;" (click)="addVariables()">{{ 'core.component.form-builder.add-variable' | sdTranslate }}</a>
+  <!-- why: trước đây các hàng nằm trần trong modal (modal body padding 0) nên dính sát mép, không
+       có trạng thái rỗng, và nút thêm là <a href="javascript:;"> — không phải nút thật, bàn phím và
+       screen reader đều đọc sai. -->
+  <div class="fb-variables">
+    @if (clonedVariables.length) {
+      @for (variable of clonedVariables; track variable.id) {
+        <div class="fb-variables__row">
+          <sd-input
+            size="sm"
+            [form]="form"
+            [label]="'core.component.form-builder.field-key' | sdTranslate"
+            [(model)]="variable.key"
+            required></sd-input>
+          <sd-input
+            size="sm"
+            [form]="form"
+            [label]="'core.component.form-builder.display-label' | sdTranslate"
+            [(model)]="variable.label"
+            required></sd-input>
+          <sd-button
+            prefixIcon="delete"
+            type="text"
+            color="error"
+            [tooltip]="'core.component.form-builder.delete' | sdTranslate"
+            (click)="removeVariables(variable.id)"></sd-button>
+        </div>
+      }
+    } @else {
+      <p class="fb-variables__empty">{{ 'core.component.form-builder.no-variable' | sdTranslate }}</p>
+    }
+
+    <sd-button
+      class="fb-variables__add"
+      type="text"
+      color="primary"
+      prefixIcon="add"
+      [title]="'core.component.form-builder.add-variable' | sdTranslate"
+      (click)="addVariables()"></sd-button>
+  </div>
   <ng-container sdFooterRight>
     <sd-button
       type="fill"

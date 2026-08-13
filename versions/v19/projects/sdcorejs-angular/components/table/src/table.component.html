@@ -234,7 +234,16 @@
           matColumnDef="sdCommand"
           [sticky]="_tableOption.command?.align !== 'right'"
           [stickyEnd]="_tableOption.command?.align === 'right'">
-          <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1"></th>
+          <!-- why: ô header của cột command vốn để trống. Cho consumer chiếm chỗ đó bằng
+               `sdTableCommandHeaderDef` (thường là nút thêm dòng) thì hành động cấp bảng nằm ngay
+               trên cụm nút của từng dòng, thay vì phải dựng thêm một dải riêng dưới bảng. -->
+          <th class="p-0" mat-header-cell *matHeaderCellDef style="width: 50px" [attr.rowspan]="_configuration.multipleHeader ? 2 : 1">
+            @if (sdCommandHeaderDef(); as _commandHeaderDef) {
+              <div class="sd-command-header d-flex align-items-center justify-content-center">
+                <ng-container *ngTemplateOutlet="_commandHeaderDef.templateRef"></ng-container>
+              </div>
+            }
+          </th>
           <!-- why: `dataIndex` do CDK cấp sẵn. Bản cũ dùng `groupedItems.indexOf(item)` —
                quét toàn mảng cho MỖI dòng render ở MỖI CD pass (O(n²) trên đường render),
                và còn trả sai index khi 2 dòng trùng reference. -->
@@ -605,7 +614,7 @@
       <!-- "Đang hiển thị..." chỉ desktop -->
       <ng-container *sdDesktop>
         @if (!_tableOption.paginate?.hidden && hidePaginator && _total !== undefined && _total > 0) {
-          <div class="T14R pr-16">
+          <div class="T14R c-summary">
             {{ 'core.component.table.showing' | sdTranslate }} <span class="T14M ml-2">1-{{ _total }}/{{ _total }}</span>
           </div>
         }

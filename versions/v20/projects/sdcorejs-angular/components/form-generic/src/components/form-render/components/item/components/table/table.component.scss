@@ -1,9 +1,18 @@
 :host {
   display: contents;
 }
+// why: bản cũ là `margin: -16px; padding: 16px; height: calc(100vh - 97px)`. Margin âm để BÙ phần
+// padding mà sd-side-drawer từng có — nay `.sd-side-drawer-content` đặt `padding: 0` (cố ý, để mỗi
+// nội dung tự quyết) nên margin âm kéo nội dung tràn ra ngoài và sinh scroll ngang. Chiều cao
+// `100vh - 97px` cũng là số ma, không còn khớp header/footer thật; drawer đã tự cuộn phần body.
 .c-table-create-update {
-  background: #fff;
-  margin: -16px;
   padding: 16px;
-  height: calc(100vh - 97px);
+}
+
+// Các field trong drawer xếp dọc; khoảng cách khai báo bằng gap thay vì `mt-16` gắn lên từng field
+// (kể cả field đầu, tạo khoảng hở thừa ngay dưới tiêu đề).
+.c-drawer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }

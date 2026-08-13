@@ -193,11 +193,11 @@
                   hideInlineError></sd-autocomplete>
               }
             }
-            <sd-button class="ml-auto" prefixIcon="delete" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
+            <sd-button class="ml-auto" prefixIcon="delete" type="text" color="error" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
           } @else if (conditionLv1.type === 'combinator') {
             <div class="c-builder">
               <div class="d-flex justify-content-end">
-                <sd-button class="mr-4" prefixIcon="delete" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
+                <sd-button class="mr-4" prefixIcon="delete" type="text" color="error" [tooltip]="'core.component.form-builder.delete' | sdTranslate" (click)="remove(expression.conditions, idxLv1)"></sd-button>
                 <sd-button
                   prefixIcon="add"
                   [title]="'core.component.form-builder.condition' | sdTranslate"
@@ -370,11 +370,16 @@
                           hideInlineError></sd-autocomplete>
                       }
                     }
+                    <!-- why: chỗ này từng truyền `idxLv1` — index của nhóm ở CẤP 1 — vào mảng
+                         điều kiện cấp 2, nên bấm xoá một dòng con sẽ xoá nhầm dòng khác (hoặc
+                         không xoá gì khi nhóm nằm ở vị trí vượt quá số con). Phải là `idxLv2`. -->
                     <sd-button
                       class="ml-auto"
                       prefixIcon="delete"
+                      type="text"
+                      color="error"
                       [tooltip]="'core.component.form-builder.delete' | sdTranslate"
-                      (click)="remove(conditionLv1.conditions, idxLv1)"></sd-button>
+                      (click)="remove(conditionLv1.conditions, idxLv2)"></sd-button>
                   }
                 </div>
               }
