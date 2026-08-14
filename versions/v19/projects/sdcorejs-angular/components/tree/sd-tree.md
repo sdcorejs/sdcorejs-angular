@@ -232,6 +232,8 @@ Every leading control — chevron, checkbox, item icon and the command trigger �
 
 The checkbox gets `--mdc-checkbox-state-layer-size` set to the slot size. Material sizes `.mdc-checkbox` as a content-box from that token (40px by default), so clamping only its `height` leaves the real box overflowing the slot and the whole column drifts.
 
+The tick box itself is `--sd-tree-checkbox-size` (16px), down from Material's built-in 18px, which reads better next to the 14px label. Material hard-codes that 18px and derives both the `.mdc-checkbox` padding and the `.mdc-checkbox__background` offset from it, so the override sets all three together — resizing the box alone would push the glyph off the centre of the slot. The slot and Material's 48px touch target are unchanged, so only the painted glyph shrinks.
+
 ## Commands
 
 Commands render at the end of each row. The `more_vert` trigger only appears on row hover when at least one command is visible. Command text is kept separate from the label column, so two-line labels do not overlap the trigger.

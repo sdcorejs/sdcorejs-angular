@@ -37,4 +37,17 @@ describe('SelectorActionComponent autoId propagation', () => {
     const anyClear = fixture.nativeElement.querySelector('[data-autoid$="-clear-selection"]');
     expect(anyClear).toBeNull();
   });
+
+  it('rounds the count badge with the same radius as the quick-action bar', () => {
+    const bar = fixture.nativeElement.querySelector('.c-quick-action') as HTMLElement;
+    const badge = fixture.nativeElement.querySelector('.c-bg-length') as HTMLElement;
+    const barStyle = getComputedStyle(bar);
+    const badgeStyle = getComputedStyle(badge);
+
+    expect(badgeStyle.borderTopLeftRadius).toBe(barStyle.borderTopLeftRadius);
+    expect(badgeStyle.borderBottomLeftRadius).toBe(barStyle.borderBottomLeftRadius);
+    // Cạnh phải của badge nằm giữa thanh nên phải vuông.
+    expect(badgeStyle.borderTopRightRadius).toBe('0px');
+    expect(badgeStyle.borderBottomRightRadius).toBe('0px');
+  });
 });

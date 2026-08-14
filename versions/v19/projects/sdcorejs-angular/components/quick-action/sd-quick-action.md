@@ -26,6 +26,7 @@ Floating bottom toolbar that slides up to reveal a message (left) and optional a
 - **Width**: `max-content` (sizes to natural content), capped at `min(90vw, 720px)`. No fixed `min-width`.
 - **Reveal animation**: slides up from below with `transform: translate3d(0, 100%, 0)` → `translate3d(0, 0, 0)`, opacity 0 → 1, 200ms ease-in-out. `visibility` toggled too so it's removed from the a11y tree when hidden.
 - **Empty action slot**: when `[sdAction]` projects nothing, the action wrapper is `display: none` and the gap collapses — so a message-only toolbar isn't stretched / lopsided.
+- **Corner radius**: the bar is `border-radius: 8px`. Projected content that sits flush against an edge — a coloured count badge at the left, for instance — paints over that corner, so it must repeat the same 8px on the edge it touches (`border-radius: 8px 0 0 8px`). A smaller radius there makes one end of the bar read as squarer than the other.
 
 ## Inputs
 | Name | Type | Default | Notes |
