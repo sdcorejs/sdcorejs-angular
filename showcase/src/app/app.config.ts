@@ -28,12 +28,8 @@ import { ISdCoreConfiguration, SD_CORE_CONFIGURATION } from '@sdcorejs/angular/c
 import { provideSdIcon } from '@sdcorejs/angular/modules/icon';
 import { routes } from './app.routes';
 
-// why: licenseKey gắn với từng domain. Key dưới đây cấp cho `sdcorejs.github.io`
-// (showcase deploy lên GitHub Pages). Local dev không cần key — components có thể
-// hiển thị watermark hoặc disable feature gated tùy license.
 const SHOWCASE_CORE_CONFIG: ISdCoreConfiguration = {
   language: 'vi',
-  licenseKey: 'OTYyMDUwNzg2c2lnbmVk',
 };
 
 export const appConfig: ApplicationConfig = {

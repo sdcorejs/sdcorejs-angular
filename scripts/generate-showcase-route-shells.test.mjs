@@ -167,10 +167,7 @@ test('builds route shells for a future release supplied by the published manifes
 });
 
 test('matches the canonical v19 runtime registry and expected deployment route count', () => {
-  const registrySource = readFileSync(
-    new URL('../showcase/src/app/docs/core/documentation.registry.ts', import.meta.url),
-    'utf8'
-  );
+  const registrySource = readFileSync(new URL('../showcase/src/app/docs/core/documentation.registry.ts', import.meta.url), 'utf8');
   const pages = parseDocumentationRegistry(registrySource);
   const routes = createRouteShellDefinitions(pages);
   const categoryCounts = Object.fromEntries(
@@ -179,7 +176,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
       .map(category => [category, pages.filter(page => page.category === category).length])
   );
 
-  assert.equal(pages.length, 97);
+  assert.equal(pages.length, 96);
 
   // why: `routes.length` từng là hằng số 5941 và đã mục ngay khi release 1.6 ra (thực tế 7426).
   // Con số đó là TÍCH của hai thứ đã được kiểm ở nơi khác — số release được hỗ trợ và số route mỗi
@@ -189,7 +186,11 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     release => routes.filter(route => route.routePath === `v/${release}` || route.routePath.startsWith(`v/${release}/`)).length
   );
   assert.equal(new Set(routesPerRelease).size, 1, `every release must emit the same route count, got ${routesPerRelease.join(', ')}`);
-  assert.equal(routes.length, 1 + SUPPORTED_RELEASES.length * routesPerRelease[0], 'total = 1 root redirect + one identical block per release');
+  assert.equal(
+    routes.length,
+    1 + SUPPORTED_RELEASES.length * routesPerRelease[0],
+    'total = 1 root redirect + one identical block per release'
+  );
   assert.deepEqual(categoryCounts, {
     components: 35,
     directives: 6,
@@ -197,7 +198,7 @@ test('matches the canonical v19 runtime registry and expected deployment route c
     guides: 3,
     'modules-integrations': 10,
     'pipes-utilities': 9,
-    services: 12,
+    services: 11,
   });
   assert.equal(
     pages.some(page => page.slug === 'icon-configuration'),

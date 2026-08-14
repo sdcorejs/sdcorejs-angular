@@ -451,6 +451,24 @@ describe('SdTree', () => {
     expect(row(fixture.nativeElement, 'payable').getAttribute('aria-selected')).toBe('false');
   });
 
+  // why: `<sd-tree-select>` dựng sd-tree với selector KHÔNG có action nào (chọn xong bấm "Áp dụng"
+  // ở footer modal). Thanh quick-action khi đó chỉ nhắc lại đúng thứ checkbox đã nói, lại còn nổi
+  // đè lên cây trong modal. Không có action ⇒ không mở thanh.
+  it('keeps the quick action closed when the selector declares no actions', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const component = fixture.componentInstance;
+    component.selector = { visible: true, message: () => 'Đã chọn' };
+    fixture.detectChanges();
+
+    const tree = treeComponent<NodeItem>(fixture);
+    tree.toggleSelection(tree.visibleNodes().find(node => node.id === 'payable')!);
+    fixture.detectChanges();
+
+    expect(tree.selectedCount()).toBe(1);
+    expect(tree.selectionQuickActionOpened()).toBeFalse();
+    expect(fixture.nativeElement.querySelector('.c-quick-action.active')).toBeNull();
+  });
+
   it('honors selectedItems input as the initial selected state', async () => {
     const fixture = await createFixture(SelectedHostComponent);
     const tree = treeComponent<NodeItem>(fixture);

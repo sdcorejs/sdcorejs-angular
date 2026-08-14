@@ -45,6 +45,15 @@ describe('SdTimeRange', () => {
     component = fixture.debugElement.query(By.directive(SdTimeRange)).componentInstance as SdTimeRange;
   });
 
+  // why: model chảy qua hai chặng effect (range → endpoint signal → formControl của <sd-time>),
+  // mỗi chặng chỉ hiện ra ở vòng change-detection kế tiếp. Một detectChanges() là chưa đủ để
+  // template của endpoint nhìn thấy giá trị mới.
+  function settle(): void {
+    fixture.detectChanges();
+    fixture.detectChanges();
+    fixture.detectChanges();
+  }
+
   function typeEndpoint(index: 0 | 1, value: string): void {
     const inputs = fixture.nativeElement.querySelectorAll('sd-time input[matInput]') as NodeListOf<HTMLInputElement>;
     inputs[index].value = value;
@@ -155,6 +164,37 @@ describe('SdTimeRange', () => {
     fixture.detectChanges();
 
     expect(host.value).toEqual({ from: null, to: null });
+  });
+
+  // why: bản cũ dựng MỘT nút × của riêng range, đặt sau ô "đến" nên nó lệch khỏi cả hai ô.
+  // Giờ `clearable` được truyền xuống từng <sd-time>, mỗi ô mang nút × trong suffix của chính nó.
+  it('renders one clear button inside each endpoint instead of a single group-level clear', () => {
+    host.value = { from: '09:00', to: '17:00' };
+    settle();
+
+    const endpointClears = fixture.nativeElement.querySelectorAll('sd-time .sd-clear-btn');
+
+    expect(endpointClears.length).toBe(2);
+    expect(fixture.nativeElement.querySelector('.sd-time-range-clear')).toBeNull();
+  });
+
+  it('clears only the endpoint whose own clear button was pressed', () => {
+    host.value = { from: '09:00', to: '17:00' };
+    settle();
+
+    const endpointClears = fixture.nativeElement.querySelectorAll('sd-time .sd-clear-btn') as NodeListOf<HTMLButtonElement>;
+    endpointClears[0].click();
+    settle();
+
+    expect(host.value).toEqual({ from: null, to: '17:00' });
+  });
+
+  it('hides the endpoint clear buttons when clearable is false', () => {
+    host.clearable = false;
+    host.value = { from: '09:00', to: '17:00' };
+    settle();
+
+    expect(fixture.nativeElement.querySelectorAll('sd-time .sd-clear-btn').length).toBe(0);
   });
 
   it('renders a labelled accessible group with two endpoint inputs', () => {

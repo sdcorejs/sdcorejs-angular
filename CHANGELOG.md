@@ -6,6 +6,38 @@ Format dựa trên [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Maj
 
 ## [Unreleased]
 
+### Changed (BREAKING for consumers)
+
+- **`SdLicenseService`, `SdBaseSecureComponent` and `ISdCoreConfiguration.licenseKey` are gone.** The package is MIT and public; no component has enforced a license since the gate was made dormant, so the three surfaces were carrying a promise the library does not keep. Removed outright rather than left deprecated: an exported base class whose constructor could still `throw` on a mis-configured host is a production hazard for anyone who inherits it.
+
+  Migration — delete `licenseKey` from the object you provide for `SD_CORE_CONFIGURATION` (the field no longer exists, so TypeScript will point at it):
+
+  ```diff
+   const sdCoreConfig: ISdCoreConfiguration = {
+  -  licenseKey: environment.sdLicenseKeys,
+     language: 'vi',
+     format: { number: '1.234.567,89' },
+   };
+  ```
+
+  If you `extends SdBaseSecureComponent` anywhere, drop the `extends` clause and the `super()` call — the class did nothing except call `enforceLicense()`. The entry points `@sdcorejs/angular/services/license` and `@sdcorejs/angular/components/base` no longer resolve, and `services/license/sd-license.md` is no longer published. Consumers gating features by permission should keep using `*sdPermission`, which is unrelated and unchanged. `ISdCoreConfiguration.language` — always supported, never documented — is now in the configuration doc.
+
+### Changed
+
+- **`<sd-tree-select>`'s trigger is now the same shell as `<sd-select>`.** It used to draw its own bordered `<button>`, which meant a form mixing the two showed two different field heights, corner radii, label positions and error placements, and the `label` input was accepted but never rendered at all. The trigger is a readonly `<input matInput>` inside a `<mat-form-field>`, so it inherits the floating label, the error subscript, the suffix slot and the size/appearance tokens from the same place every other control does. The only intentional difference is the suffix icon — `account_tree` instead of the select caret — signalling that this control opens a tree dialog rather than a dropdown; the clear `×` replaces that icon while a value is present, exactly as in `<sd-select>`. New inputs `size`, `appearance`, `helperText` and `hideInlineError` come with the shell. Inside the modal, the search box is an `<sd-input>` and Cancel/Apply are `<sd-button>`s (`outline`/`secondary` and `fill`/`primary`); the body now sets its own `16px` padding, since `.sd-modal-body` is deliberately padding-free and the search field had been sitting flush against the modal edge. **Behaviour note:** `aria-invalid` now follows Material's convention — unset while the field is both `required` and empty, `true` for every other error — because the field is a Material control now. The message element is a `<mat-error>` (still tagged `data-tree-select-error`) instead of a bare `<div>`.
+
+- **The selection quick-action bar stays closed when the selection has no actions**, in both `<sd-table>` and `<sd-tree>`. It used to open on any selection, so a table or tree that declares `selector.visible` without `selector.actions` floated a bar over the content whose entire payload was a count the checkboxes already showed and a `×` to undo the click that opened it. The gate is the *resolved* action list, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed too; deselect through the checkboxes. `<sd-tree>` exposes the decision as `selectionQuickActionOpened()`. This is what removes the bar from `<sd-tree-select>`'s picker modal, where the tree declares no actions and Apply/Cancel already live in the footer.
+
+- **`<sd-time-range>` clears one endpoint at a time.** The single group-level `×` sat after the "to" field, aligned with neither input, and could only empty both ends at once — so narrowing a range meant clearing it and retyping. `clearable` is forwarded to both `<sd-time>` endpoints instead, giving each field the same in-suffix clear `<sd-input>` has. The `→` separator is sized to the input row height (`--sd-time-range-row-height`, resolved per `size`) rather than a hard-coded 56px, so it is centred against the fields instead of against the taller error-subscript box. `clear()` still empties both endpoints regardless of `clearable`. Removed: the `showClear` signal and the `.sd-time-range-clear` element.
+
+### Fixed
+
+- **`<sd-time>`'s clear button never appeared.** `showClear` is a `computed` reading `formControl.value` — a plain property that emits no signal — so it settled on `false` at first paint, while the field was empty, and never recomputed. The bug had been dormant because `clearable` defaults to `false`; `<sd-time-range>` turning it on is what surfaced it. It now tracks the control's event stream *and* `valueModel`, the latter because the shared form connector writes programmatic values with `{ emitEvent: false }` and so never ticks the event stream at all.
+
+### Added
+
+- **Live demos for the six directives and seven pipes** that shipped as reference text only: `*sdDesktop`, `*sdMobile`, `[sdHoverCopy]`, `a[sdHref]`, `[sdScroll]`, `[sdTooltip]`, and `sdEmpty`, `sdFormatDate`, `sdFormatDatetime`, `sdFormatNumber`, `sdSafeHtml`, `sdTimeDifferent`, `sdView`. 28 new showcase sections; each page moves from a published-doc entry to a full demo page, so the Examples tab and the deep-linkable section anchors work there like they do for components.
+
 ### Changed
 
 - **The `<sd-table>` column-setup dialog was rebuilt around its own density.** Every row is a list of on/off values, so the three `sd-switch` controls became `sd-checkbox` — a switch reads as a heavyweight, standalone setting and seven stacked pairs of them dominated the dialog. The title and width fields drop to `size="sm"` and every cell gains vertical padding, so text no longer sits flush against the row edge. The grid lines move from Material's default (`on-surface` at ~12%) to `outline-variant`, keep only horizontal rules, and sit inside a single rounded border, so the eye follows rows instead of a heavy lattice. The width and toggle columns are width-capped to give the header-title field the remaining space, the drag handle became a real `<button>` (keyboard/AT reachable, `grab` cursor, no button chrome) and rows highlight on hover. **New:** a localized hint above the table (`core.component.table.config.drag-hint`) advertises drag-to-reorder, which had no affordance beyond an unlabelled handle; turning **Hiển thị** off now dims the row and disables its title/width/fixed/truncate editors — those settings do nothing for a hidden column — while leaving the display checkbox itself enabled so the column can be restored. Footer buttons lose their `mr-8`; the modal footer already lays them out with `gap: 8px`, so the margin only widened the gaps unevenly. Two new i18n keys across all five locales; first specs for the dialog (6).

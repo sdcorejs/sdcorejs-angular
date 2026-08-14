@@ -71,6 +71,10 @@ In addition to the shared `form`, `name`, `label`, `size`, `disabled`, `readonly
 
 `sdChange` emits the aggregate model. `sdFocus` and `sdBlur` report interaction at group level. `clear()` commits `{ from: null, to: null }`.
 
+### Clearing
+
+`clearable` is forwarded to both `<sd-time>` endpoints, so each field carries its own clear `×` inside the input suffix — the same affordance `<sd-input>` uses. There is no group-level clear button: a range is cleared one endpoint at a time, or programmatically via `clear()`, which still empties both at once regardless of `clearable`.
+
 ## Accessibility
 
-The editor exposes a labelled `role="group"` containing two independently labelled time fields. The `→` separator between them keeps `aria-hidden="true"` on purpose: it is decorative, and the from/to meaning is already carried by each `<sd-time>`'s own label. Group-level invalid and E2E data-state attributes represent the aggregate control, which also absorbs endpoint validity (see "Form integration") so malformed typed text still invalidates the parent form. Those attributes follow the interaction-gated view of validity, so they stay `false` until the user has touched the field even while `form.invalid` is already `true`.
+The editor exposes a labelled `role="group"` containing two independently labelled time fields. The `→` separator between them is sized to the input row height (`--sd-time-range-row-height`, resolved per `size`) so it stays optically centred against the two fields rather than against the taller error-subscript box, and it keeps `aria-hidden="true"` on purpose: it is decorative, and the from/to meaning is already carried by each `<sd-time>`'s own label. Group-level invalid and E2E data-state attributes represent the aggregate control, which also absorbs endpoint validity (see "Form integration") so malformed typed text still invalidates the parent form. Those attributes follow the interaction-gated view of validity, so they stay `false` until the user has touched the field even while `form.invalid` is already `true`.

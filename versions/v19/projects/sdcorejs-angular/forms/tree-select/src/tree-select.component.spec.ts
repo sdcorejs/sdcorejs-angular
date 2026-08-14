@@ -113,7 +113,7 @@ describe('SdTreeSelect', () => {
       expect(fixture.nativeElement.querySelector('[data-tree-select-error]')).toBeNull();
     });
 
-    it('renders the required message and wires aria-invalid/aria-describedby once touched', () => {
+    it('renders the required message, reddens the field and wires aria-describedby once touched', () => {
       fixture.componentRef.setInput('required', true);
       fixture.detectChanges();
 
@@ -121,11 +121,26 @@ describe('SdTreeSelect', () => {
       fixture.detectChanges();
 
       const error = fixture.nativeElement.querySelector('[data-tree-select-error]') as HTMLElement | null;
-      const trigger = fixture.nativeElement.querySelector('[data-tree-select-trigger]') as HTMLButtonElement;
+      const trigger = fixture.nativeElement.querySelector('[data-tree-select-trigger]') as HTMLInputElement;
       expect(error).not.toBeNull();
       expect(error!.textContent?.trim()).toBe('Vui lòng nhập thông tin');
-      expect(trigger.getAttribute('aria-invalid')).toBe('true');
+      // why: <mat-error> chỉ được MatFormField render khi `errorState === true`, và cùng cờ đó bật
+      // luôn viền đỏ. Nên sự hiện diện của message + class này chứng minh errorStateMatcher đã nối
+      // đúng trạng thái lỗi của connector vào Material.
+      expect(fixture.nativeElement.querySelector('.mat-form-field-invalid')).not.toBeNull();
       expect(trigger.getAttribute('aria-describedby')).toBe(error!.id);
+    });
+
+    // why: Material cố tình để `aria-invalid` là null khi field vừa `required` vừa RỖNG (chưa nhập
+    // thì chưa "sai"); chỉ lỗi không phải required mới bật cờ. sd-select cũng hành xử y hệt.
+    it('exposes aria-invalid for a non-required error', () => {
+      fixture.componentRef.setInput('inlineError', 'Phòng ban đã ngừng hoạt động');
+      fixture.detectChanges();
+      component.formControl.markAsTouched();
+      fixture.detectChanges();
+
+      const trigger = fixture.nativeElement.querySelector('[data-tree-select-trigger]') as HTMLInputElement;
+      expect(trigger.getAttribute('aria-invalid')).toBe('true');
     });
 
     it('clears the message once a value is selected', () => {

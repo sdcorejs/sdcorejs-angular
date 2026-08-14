@@ -104,7 +104,7 @@ Legacy split inputs (`items`, `tree`, `selectedItems`, `selector`, `commands`, `
 | `items`                 | `SdTreeDataSource<SdTreeItemStatic<T>>` or `SdTreeDataSource<SdTreeItemLazy<T>>` | Root items as an array, signal, sync loader, or async loader. Item shape follows `tree.loadType`. |
 | `tree`                  | `SdTreeOption<T>`                                                                | Static/lazy config. Defaults to static.                                                           |
 | `selectedItems`         | `T[] \| null`                                                                    | Controlled selected raw data items.                                                               |
-| `selector`              | `SdTreeSelectorOption<T> \| null`                                                | Checkbox/quick-action config. Checkbox renders only when `selector.visible === true`.             |
+| `selector`              | `SdTreeSelectorOption<T> \| null`                                                | Checkbox/quick-action config. Checkbox renders only when `selector.visible === true`; the floating bar additionally needs at least one visible `actions` entry. |
 | `commands`              | `SdTreeCommand<T>[] \| null`                                                     | Trailing row menu commands.                                                                       |
 | `itemTemplate`          | `TemplateRef<SdTreeItemContext<T>> \| null`                                      | Custom item template; projected `sdTreeItemDef` wins.                                             |
 | `selectable`            | `boolean`                                                                        | Back-compat selection switch. Prefer `selector.visible`.                                          |
@@ -258,9 +258,23 @@ Custom templates can grow row height; the tree row stretches instead of clipping
 tree.filter(searchText);
 tree.reload();
 tree.retry();
+
+tree.selectionQuickActionOpened(); // Signal<boolean> — is the floating selection bar showing?
 ```
 
 Filtering searches loaded items only. Text is normalized to Vietnamese without accents, so `ke toan` matches labels with Vietnamese accents.
+
+## Selection quick-action bar
+
+When rows are selected the component floats a `<sd-quick-action>` bar carrying the selected count, `selector.message`, one button per visible `selector.actions` entry, and a clear-selection `×`.
+
+It opens only when **both** conditions hold — something is selected **and** at least one action survives the `hidden` predicates:
+
+```ts
+selectionQuickActionOpened(); // selectedCount() > 0 && selectionActionViews().length > 0
+```
+
+A selector with no actions therefore keeps the bar closed. Such a bar would float over the tree only to restate what the checkboxes already show, with `×` as its single control; deselect through the checkboxes instead. This is what keeps the bar out of `<sd-tree-select>`, whose embedded tree declares no actions and whose Apply/Cancel already live in the modal footer.
 
 ## i18n
 
@@ -285,6 +299,7 @@ it when the host wants its own wording. `errorMessage()` returns `error.message`
 - Branch nodes show a toggle icon and default folder / folder-open icon when no explicit node icon is provided.
 - Leaf nodes have no default icon unless `treeItem.icon` is set.
 - Checkbox column appears only when `selector.visible === true`.
+- Floating selection bar appears only when the selection resolves to at least one action — see "Selection quick-action bar".
 - Row command trigger appears at the end of a row only when visible commands exist, usually on hover.
 - Loading spinner appears on a lazy node while `onExpandChildren` is resolving.
 

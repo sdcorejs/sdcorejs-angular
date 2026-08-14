@@ -1022,7 +1022,7 @@ const PUBLISHED_ONLY_PAGES = [
     publishedDocId: 'forms/directives/sd-form-directives',
     keywords: ['template', 'projection', 'suffix', 'label', 'view', 'item'],
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'directives',
     slug: 'desktop',
     title: 'Desktop Directive',
@@ -1031,8 +1031,11 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/directives',
     publishedDocId: 'directives/src/sd-desktop',
     keywords: ['responsive', 'desktop', 'breakpoint'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/directives/desktop/desktop-demo.component').then(m => m.DesktopDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'directives',
     slug: 'hover-copy',
     title: 'Hover Copy Directive',
@@ -1041,8 +1044,11 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/directives',
     publishedDocId: 'directives/src/sd-hover-copy',
     keywords: ['clipboard', 'copy', 'hover'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/directives/hover-copy/hover-copy-demo.component').then(m => m.HoverCopyDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'directives',
     slug: 'href',
     title: 'Href Directive',
@@ -1051,8 +1057,11 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/directives',
     publishedDocId: 'directives/src/sd-href',
     keywords: ['link', 'navigation', 'anchor'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/directives/href/href-demo.component').then(m => m.HrefDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'directives',
     slug: 'mobile',
     title: 'Mobile Directive',
@@ -1061,8 +1070,11 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/directives',
     publishedDocId: 'directives/src/sd-mobile',
     keywords: ['responsive', 'mobile', 'breakpoint'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/directives/mobile/mobile-demo.component').then(m => m.MobileDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'directives',
     slug: 'scroll',
     title: 'Scroll Directive',
@@ -1071,8 +1083,11 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/directives',
     publishedDocId: 'directives/src/sd-scroll',
     keywords: ['scroll', 'position', 'event'],
+    status: 'stable',
+    demoSectionCount: 1,
+    loadComponent: () => import('../../pages/directives/scroll/scroll-demo.component').then(m => m.ScrollDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'directives',
     slug: 'tooltip',
     title: 'Tooltip Directive',
@@ -1081,6 +1096,9 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/directives',
     publishedDocId: 'directives/src/sd-tooltip',
     keywords: ['tooltip', 'hint', 'help'],
+    status: 'stable',
+    demoSectionCount: 3,
+    loadComponent: () => import('../../pages/directives/tooltip/tooltip-demo.component').then(m => m.TooltipDemoComponent),
   }),
   definePublishedDocPage({
     category: 'services',
@@ -1099,15 +1117,6 @@ const PUBLISHED_ONLY_PAGES = [
     importPath: '@sdcorejs/angular/services/cache',
     publishedDocId: 'services/cache/sd-cache',
     keywords: ['cache', 'data', 'performance'],
-  }),
-  definePublishedDocPage({
-    category: 'services',
-    slug: 'license',
-    title: 'License Service',
-    description: 'Loads and validates application license information for protected features.',
-    importPath: '@sdcorejs/angular/services/license',
-    publishedDocId: 'services/license/sd-license',
-    keywords: ['license', 'validation', 'feature access'],
   }),
   definePublishedDocPage({
     category: 'modules-integrations',
@@ -1195,68 +1204,99 @@ const PUBLISHED_ONLY_PAGES = [
     publishedDocId: 'modules/permission/sd-permission',
     keywords: ['permission', 'role', 'authorization', 'access'],
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'empty',
     title: 'Empty Pipe',
     description: 'Displays a consistent fallback for empty values.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/empty',
     keywords: ['sdEmpty', 'fallback', 'empty value'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/pipes-utilities/empty/empty-demo.component').then(m => m.EmptyDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'format-date',
     title: 'Format Date Pipe',
     description: 'Formats date-only values with the configured application locale.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/format-date',
     keywords: ['sdFormatDate', 'date', 'format'],
+    status: 'stable',
+    demoSectionCount: 3,
+    loadComponent: () => import('../../pages/pipes-utilities/format-date/format-date-demo.component').then(m => m.FormatDateDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'format-datetime',
     title: 'Format Datetime Pipe',
     description: 'Formats date-time values with the configured application locale.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/format-datetime',
     keywords: ['sdFormatDatetime', 'datetime', 'format'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () =>
+      import('../../pages/pipes-utilities/format-datetime/format-datetime-demo.component').then(m => m.FormatDatetimeDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'format-number',
     title: 'Format Number Pipe',
     description: 'Formats numeric values with locale-aware separators and precision.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/format-number',
     keywords: ['sdFormatNumber', 'number', 'format'],
+    status: 'stable',
+    demoSectionCount: 3,
+    loadComponent: () =>
+      import('../../pages/pipes-utilities/format-number/format-number-demo.component').then(m => m.FormatNumberDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'safe-html',
     title: 'Safe HTML Pipe',
     description: 'Marks trusted HTML for controlled rendering in Angular templates.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/safe-html',
     keywords: ['sdSafeHtml', 'html', 'sanitization'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/pipes-utilities/safe-html/safe-html-demo.component').then(m => m.SafeHtmlDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'time-different',
     title: 'Time Difference Pipe',
     description: 'Presents elapsed time between date-time values in a reusable display format.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/time-different',
     keywords: ['sdTimeDifferent', 'duration', 'elapsed time'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () =>
+      import('../../pages/pipes-utilities/time-different/time-different-demo.component').then(m => m.TimeDifferentDemoComponent),
   }),
-  definePublishedDocPage({
+  defineDocPage({
     category: 'pipes-utilities',
     slug: 'view',
     title: 'View Pipe',
     description: 'Normalizes values for compact read-only presentation.',
+    selector: null,
     importPath: '@sdcorejs/angular/pipes',
     publishedDocId: 'pipes/src/view',
     keywords: ['sdView', 'display', 'read only'],
+    status: 'stable',
+    demoSectionCount: 2,
+    loadComponent: () => import('../../pages/pipes-utilities/view/view-demo.component').then(m => m.ViewDemoComponent),
   }),
   definePublishedDocPage({
     category: 'pipes-utilities',

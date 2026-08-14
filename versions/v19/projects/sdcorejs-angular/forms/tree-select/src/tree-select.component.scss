@@ -3,88 +3,32 @@
   min-width: 0;
 }
 
-.sd-tree-select__control {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  border: 1px solid var(--sd-border, #d0d5dd);
-  border-radius: 6px;
-  background: #fff;
-}
-
-.sd-tree-select__trigger,
-.sd-tree-select__view {
-  flex: 1 1 auto;
-  min-width: 0;
-  min-height: 40px;
-  padding: 9px 12px;
-  border: 0;
-  background: transparent;
-  color: var(--sd-text, #2f3136);
-  font: inherit;
-  text-align: start;
-}
-
+// why: trigger là <input readonly>, nên con trỏ text mặc định nói dối rằng ô này gõ được.
+// Đổi sang pointer để nó đọc như một control "bấm để mở", giống mat-select.
 .sd-tree-select__trigger {
   cursor: pointer;
 
-  &:focus-visible {
-    outline: 2px solid var(--sd-primary, #1677ff);
-    outline-offset: 2px;
-  }
-
   &:disabled {
     cursor: default;
-    opacity: 0.6;
   }
 }
 
-.sd-tree-select__placeholder {
-  color: var(--sd-text-secondary, #667085);
-}
-
-.sd-tree-select__clear {
-  flex: 0 0 36px;
-  min-height: 36px;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
-}
-
-// why: message lỗi phải nổi bật như <mat-error> của các control Material khác — cùng cỡ chữ
-// caption + màu error token, đặt ngay dưới trigger.
-.sd-tree-select__error {
-  margin-top: 4px;
-  color: var(--sd-error, #d92d20);
-  font-size: 12px;
-  line-height: 16px;
-}
-
+// why: `.sd-modal-body` cố tình `padding: 0` (consumer tự quản), nên trước đây ô tìm kiếm và
+// cây dính sát mép modal. Padding sống ở đây, cùng nhịp 16px với header/footer của sd-modal.
 .sd-tree-select__body {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 12px;
+  padding: 16px;
   min-height: 320px;
 }
 
-.sd-tree-select__search input {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 40px;
-  padding: 8px 12px;
-  border: 1px solid var(--sd-border, #d0d5dd);
-  border-radius: 6px;
-  font: inherit;
+.sd-tree-select__search {
+  flex: 0 0 auto;
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+.sd-tree-select__tree {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }

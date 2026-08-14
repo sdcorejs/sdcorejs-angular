@@ -213,7 +213,6 @@ export const VI_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': 'Các mốc giờ phải theo khoảng {step} phút',
   'core.form.time-range.from': 'Từ',
   'core.form.time-range.to': 'Đến',
-  'core.form.time-range.clear': 'Xóa khoảng giờ',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': 'Giờ',

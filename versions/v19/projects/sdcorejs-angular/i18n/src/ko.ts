@@ -213,7 +213,6 @@ export const KO_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': '시간은 {step}분 간격에 맞아야 합니다',
   'core.form.time-range.from': '시작',
   'core.form.time-range.to': '종료',
-  'core.form.time-range.clear': '시간 범위 지우기',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': '시',
