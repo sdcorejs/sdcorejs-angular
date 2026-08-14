@@ -2026,8 +2026,12 @@ describe('SdSelect (select all)', () => {
     model?: any;
     changes: any[] = [];
     selections: any[] = [];
-    onSdChange(v: any) { this.changes.push(v); }
-    onSdSelection(v: any) { this.selections.push(v); }
+    onSdChange(v: any) {
+      this.changes.push(v);
+    }
+    onSdSelection(v: any) {
+      this.selections.push(v);
+    }
   }
 
   @Component({

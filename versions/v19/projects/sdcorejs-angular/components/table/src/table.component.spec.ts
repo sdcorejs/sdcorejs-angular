@@ -1645,9 +1645,7 @@ describe('hidden paginator footer height', () => {
     expect(getComputedStyle(paginator).display).toBe('none');
     expect(paginatorFooter.querySelector('sd-button')).toBeNull();
     expect(paginatorFooter.querySelector('.c-summary')).withContext('hidden paginator hides the summary too').toBeNull();
-    expect(paginatorFooter.getBoundingClientRect().height)
-      .withContext('an empty footer must not reserve any height')
-      .toBe(0);
+    expect(paginatorFooter.getBoundingClientRect().height).withContext('an empty footer must not reserve any height').toBe(0);
 
     fixture.destroy();
   }));
@@ -1661,9 +1659,7 @@ describe('hidden paginator footer height', () => {
     const padding = getComputedStyle(summary);
     expect(parseFloat(padding.paddingTop)).toBeGreaterThanOrEqual(4);
     expect(parseFloat(padding.paddingBottom)).toBeGreaterThanOrEqual(4);
-    expect(summary.getBoundingClientRect().height)
-      .withContext('summary must not be squeezed flat')
-      .toBeGreaterThanOrEqual(28);
+    expect(summary.getBoundingClientRect().height).withContext('summary must not be squeezed flat').toBeGreaterThanOrEqual(28);
 
     fixture.destroy();
   }));
@@ -1692,12 +1688,8 @@ describe('hidden paginator footer height', () => {
     const nextButton = paginator.querySelector('.mat-mdc-paginator-navigation-next') as HTMLElement;
 
     expect(getComputedStyle(paginator).display).not.toBe('none');
-    expect(container.getBoundingClientRect().height)
-      .withContext('paginator row must not fall back to the 56px default')
-      .toBeLessThan(56);
-    expect(paginatorFooter.getBoundingClientRect().height)
-      .withContext('footer still has to fit the paginator')
-      .toBeGreaterThanOrEqual(40);
+    expect(container.getBoundingClientRect().height).withContext('paginator row must not fall back to the 56px default').toBeLessThan(56);
+    expect(paginatorFooter.getBoundingClientRect().height).withContext('footer still has to fit the paginator').toBeGreaterThanOrEqual(40);
     expect(nextButton.getBoundingClientRect().height)
       .withContext('page buttons keep the smaller hover state layer')
       .toBeLessThanOrEqual(32);
