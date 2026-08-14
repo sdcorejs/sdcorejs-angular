@@ -48,6 +48,7 @@
       [max]="max()"
       [step]="step()"
       [required]="_required"
+      [clearable]="clearable()"
       [disabled]="disabled()"
       [readonly]="isReadonly()"
       [viewed]="isInline() ? 'inline' : false"
@@ -74,6 +75,7 @@
       [max]="max()"
       [step]="step()"
       [required]="_required"
+      [clearable]="clearable()"
       [disabled]="disabled()"
       [readonly]="isReadonly()"
       [viewed]="isInline() ? 'inline' : false"
@@ -83,12 +85,6 @@
       (sdFocus)="onFocus()"
       (sdBlur)="onBlur()">
     </sd-time>
-
-    @if (showClear()) {
-      <button type="button" class="sd-time-range-clear" (click)="clear()" [attr.aria-label]="'core.form.time-range.clear' | sdTranslate">
-        <sd-icon name="close"></sd-icon>
-      </button>
-    }
   </div>
 
   @if (!hideInlineError() && _errorMessage) {

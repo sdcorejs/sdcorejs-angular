@@ -214,7 +214,6 @@ export const JA_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': '時刻は{step}分間隔で入力してください',
   'core.form.time-range.from': '開始',
   'core.form.time-range.to': '終了',
-  'core.form.time-range.clear': '時間範囲をクリア',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': '時',

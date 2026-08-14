@@ -212,7 +212,6 @@ export const EN_MESSAGES = {
   'core.form.time-range.step': 'Times must align to a {step}-minute interval',
   'core.form.time-range.from': 'From',
   'core.form.time-range.to': 'To',
-  'core.form.time-range.clear': 'Clear time range',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': 'Hour',

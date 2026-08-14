@@ -213,7 +213,6 @@ export const ZH_MESSAGES: Record<keyof typeof EN_MESSAGES, string> = {
   'core.form.time-range.step': '时间必须符合 {step} 分钟间隔',
   'core.form.time-range.from': '开始',
   'core.form.time-range.to': '结束',
-  'core.form.time-range.clear': '清除时间范围',
 
   // ---- Forms: time-spinner ----
   'core.form.time-spinner.hour': '时',

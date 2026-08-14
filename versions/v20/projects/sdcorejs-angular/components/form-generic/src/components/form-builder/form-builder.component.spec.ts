@@ -1,6 +1,5 @@
 import { ComponentFixture, fakeAsync, TestBed, tick } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { SdLicenseService } from '@sdcorejs/angular/services/license';
 
 import { SdFormBuilder } from './form-builder.component';
 import { buildFormBuilderRows } from './form-builder-layout';
@@ -33,8 +32,6 @@ describe('SdFormBuilder — group drill-in (Detail)', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SdFormBuilder, NoopAnimationsModule],
-      // why: SdBaseSecureComponent gọi licenseService.enforceLicense() trong constructor.
-      providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => {} } }],
     });
     fixture = TestBed.createComponent(SdFormBuilder);
     component = fixture.componentInstance;

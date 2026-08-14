@@ -30,8 +30,7 @@ import {
   ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
 import { SdTime, SdTimeModelValue } from '@sdcorejs/angular/forms/time';
-import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
-import { SdIcon } from '@sdcorejs/angular/modules/icon';
+import { I18nService } from '@sdcorejs/angular/i18n';
 import { sdIsEmpty, sdSerializeDataValue } from '@sdcorejs/angular/utilities/data-state';
 import { Utilities } from '@sdcorejs/utils/fns';
 import { Size } from '@sdcorejs/utils/models';
@@ -60,8 +59,13 @@ function rangeEquals(left: SdTimeRangeModelValue, right: SdTimeRangeModelValue):
     '[class.sd-has-label]': '!!label()',
     '[class.sd-viewed]': 'connectorState().isViewed || connectorState().isInline',
     '[class.sd-bare]': 'connectorState().isInline',
+    // why: mũi tên "→" phải canh giữa theo CHIỀU CAO Ô INPUT, không phải theo cả field (field còn
+    // ôm subscript lỗi bên dưới). Chiều cao ô đổi theo size của mat-form-field, nên host phát class
+    // size để SCSS chọn đúng `--sd-time-range-row-height`.
+    '[class.sd-time-range--md]': "size() === 'md'",
+    '[class.sd-time-range--sm]': "size() === 'sm'",
   },
-  imports: [SdIcon, SdLabel, SdTime, SdView, SdTranslatePipe],
+  imports: [SdLabel, SdTime, SdView],
 })
 export class SdTimeRange {
   readonly #i18n = inject(I18nService);
@@ -189,14 +193,6 @@ export class SdTimeRange {
     const to = value?.to ?? '';
     return from || to ? `${from} → ${to}` : '';
   });
-  readonly showClear = computed(() => {
-    const fromControlValue = this.fromTime()?.connectorState().value;
-    const toControlValue = this.toTime()?.connectorState().value;
-    const hasValue =
-      !sdIsEmpty(fromControlValue) || !sdIsEmpty(toControlValue) || !sdIsEmpty(this.fromValue()) || !sdIsEmpty(this.toValue());
-    return this.clearable() && hasValue && !this.required() && !this.disabled() && !this.isReadonly();
-  });
-
   /**
    * Endpoint invalid ĐÃ gate theo tương tác — CHỈ dùng cho hiển thị (message, `data-invalid`).
    * `connectorState().invalid` của `sd-time` là `invalid && (touched || dirty)`.

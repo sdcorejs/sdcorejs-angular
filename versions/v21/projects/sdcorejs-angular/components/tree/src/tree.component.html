@@ -1,8 +1,8 @@
 @let _resolvedItemTemplate = resolvedItemTemplate();
 @let _selectionVisible = selectionVisible();
-@let _selectedCount = selectedCount();
 @let _selectionMessage = selectionMessage();
 @let _selectionActionViews = selectionActionViews();
+@let _selectionQuickActionOpened = selectionQuickActionOpened();
 @let _rootError = rootError();
 
 @if (rootLoading()) {
@@ -113,10 +113,10 @@
   </div>
 }
 
-<sd-quick-action [opened]="_selectedCount > 0">
+<sd-quick-action [opened]="_selectionQuickActionOpened">
   <div class="d-flex align-items-center" sdMessage>
     <div class="c-bg-length">
-      <span class="c-length sd-tree__qa-count">{{ _selectedCount }}</span>
+      <span class="c-length sd-tree__qa-count">{{ selectedCount() }}</span>
     </div>
     <div class="c-message">
       {{ _selectionMessage }}

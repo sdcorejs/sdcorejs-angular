@@ -1,13 +1,11 @@
 import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks } from '@angular/core/testing';
 import { FormGroup } from '@angular/forms';
-import { SdLicenseService } from '@sdcorejs/angular/services/license';
 import { SdFormRender } from './form-render.component';
 
 describe('SdFormRender - configuration data safety', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SdFormRender],
-      providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => {} } }],
     });
   });
 
@@ -76,7 +74,6 @@ describe('SdFormRender - initial preview render', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [SdFormRender],
-      providers: [{ provide: SdLicenseService, useValue: { enforceLicense: () => {} } }],
     });
 
     fixture = TestBed.createComponent(SdFormRender);

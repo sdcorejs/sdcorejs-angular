@@ -227,6 +227,13 @@ export class SdTree<T = unknown> {
   });
 
   /**
+   * why: chọn node mà selector KHÔNG khai action nào thì thanh quick-action chỉ còn bộ đếm + nút ✕.
+   * Nó nổi đè lên cây để nói lại đúng thứ checkbox đã nói. Đó cũng là lý do `<sd-tree-select>` —
+   * vốn chỉ chọn rồi bấm "Áp dụng" ở footer modal, không có action nào — không còn thấy thanh này.
+   */
+  readonly selectionQuickActionOpened = computed(() => this.selectedCount() > 0 && this.selectionActionViews().length > 0);
+
+  /**
    * Template-facing row model. Expensive/variable values are resolved once per
    * signal recomputation so the HTML does not call helper methods for every CD pass.
    */

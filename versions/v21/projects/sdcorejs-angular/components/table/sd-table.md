@@ -437,6 +437,7 @@ When rendering SD form controls in `sdTableFilterDef`, editable cells, external-
 - **Header row**: column titles, sort arrows on sortable columns, inline filter row beneath header (input/select/daterange depending on column `type`). Sticky on scroll.
 - **Body rows**: standard row height, hover highlight, per-row commands cell on the **right** (default) or `command.align='left'`. Tree expand toggle (`chevron_right` collapsed / `expand_more` expanded, light hover bg) is **embedded in the first column** — the `sdIndex` cell when `index.enabled`, otherwise the first data column — indented per depth (no separate toggle column). Expand caret for master-detail when `expand` configured.
 - **Selection column**: leftmost checkbox column when `selector.visible`. Header checkbox toggles select-all.
+- **Selection-action bar** (`<selector-action>`, floating): opens only when rows are selected **and** `selector.actions` resolves to at least one action the selection is allowed to run. A table with `selector.visible` but no `actions` never floats the bar — it would restate the checkbox state with `×` as its only control; deselect through the checkboxes instead. The per-row allow-list still applies, so a selection mixing rows with different permitted actions can resolve to zero and keep the bar closed.
 - **Sticky columns**: any column with `fixed: true` stays pinned while horizontal scroll happens; rendered with a subtle box-shadow on the boundary (via `StickyShadowDirective`).
 - **Group rows**: spanning row with HTML rendered from `group.htmlTemplate`, separating sub-sections.
 - **Empty state**: shows blank body; loading state shows centered Material spinner.
@@ -472,7 +473,7 @@ The export button's label comes from the i18n catalog, so it follows the app lan
 
 ## Permission gating
 
-None built in. `<sd-table>` does not extend `SdBaseSecureComponent` — that inheritance was dropped from every component (CHANGELOG entry #21). Bulk actions (`selector.actions`) and per-row `commands` are gated at the application level (hide via the `hidden(row)` predicate, or omit the option when composing it). To gate the whole table, wrap the host with `*sdPermission`.
+None built in. The package ships no license or permission gate of its own. Bulk actions (`selector.actions`) and per-row `commands` are gated at the application level (hide via the `hidden(row)` predicate, or omit the option when composing it). To gate the whole table, wrap the host with `*sdPermission`.
 
 ## Examples
 

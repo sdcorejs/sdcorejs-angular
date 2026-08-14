@@ -7,15 +7,23 @@ import {
   booleanAttribute,
   computed,
   contentChild,
+  effect,
   inject,
   input,
   model,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
-import { AbstractControl, FormGroup } from '@angular/forms';
+import { AbstractControl, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ErrorStateMatcher } from '@angular/material/core';
+import { MatFormFieldAppearance, MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { SdButton } from '@sdcorejs/angular/components/button';
 import { SdModal } from '@sdcorejs/angular/components/modal';
+import { SdView } from '@sdcorejs/angular/components/view';
 import {
   SdTree,
   SdTreeComponentOption,
@@ -28,7 +36,10 @@ import {
   SdTreeSelectionEvent,
 } from '@sdcorejs/angular/components/tree';
 import { I18nService, SdTranslatePipe } from '@sdcorejs/angular/i18n';
+import { SdInput } from '@sdcorejs/angular/forms/input';
+import { SdLabel } from '@sdcorejs/angular/forms/label';
 import {
+  SD_FORM_CONFIGURATION,
   SdFormControl,
   SdInlineErrorValidator,
   SdViewed,
@@ -39,8 +50,9 @@ import {
   ɵsdCoerceFormGroup,
   ɵsdFormControlConnector,
 } from '@sdcorejs/angular/forms/models';
+import { SdIcon } from '@sdcorejs/angular/modules/icon';
 import { Utilities } from '@sdcorejs/utils/fns';
-import { NestedKeyOf } from '@sdcorejs/utils/models';
+import { NestedKeyOf, Size } from '@sdcorejs/utils/models';
 
 export type SdTreeSelectModel<TKey> = TKey | TKey[] | null | undefined;
 
@@ -61,7 +73,20 @@ export class SdTreeSelectNodeTemplateDirective<T> {
 @Component({
   selector: 'sd-tree-select',
   standalone: true,
-  imports: [SdTranslatePipe, SdModal, SdTree],
+  imports: [
+    MatFormFieldModule,
+    MatInputModule,
+    MatTooltipModule,
+    ReactiveFormsModule,
+    SdButton,
+    SdIcon,
+    SdInput,
+    SdLabel,
+    SdModal,
+    SdTranslatePipe,
+    SdTree,
+    SdView,
+  ],
   templateUrl: './tree-select.component.html',
   styleUrl: './tree-select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -72,7 +97,8 @@ export class SdTreeSelectNodeTemplateDirective<T> {
 })
 export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly #i18n = inject(I18nService);
-  readonly trigger = viewChild<ElementRef<HTMLButtonElement>>('trigger');
+  readonly #formConfiguration = inject(SD_FORM_CONFIGURATION, { optional: true });
+  readonly trigger = viewChild<ElementRef<HTMLInputElement>>('trigger');
   readonly modal = viewChild(SdModal);
   readonly treeComponent = viewChild(SdTree<T>);
   readonly nodeTemplate = contentChild(SdTreeSelectNodeTemplateDirective<T>);
@@ -84,9 +110,14 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly name = input<string>(Utilities.generateUuid());
   readonly form = input<FormGroup | undefined, ɵSdFormControlParent>(undefined, { transform: ɵsdCoerceFormGroup });
   readonly label = input<string | undefined>();
+  readonly helperText = input<string | undefined>();
   readonly placeholder = input<string | null | undefined>();
   readonly modalTitle = input<string | null | undefined>();
   readonly ariaLabel = input<string | undefined>();
+  readonly size = input<Size>('md');
+  readonly appearanceInput = input<MatFormFieldAppearance | undefined>(undefined, { alias: 'appearance' });
+  readonly appearance = computed(() => this.appearanceInput() ?? this.#formConfiguration?.appearance ?? 'outline');
+  readonly hideInlineError = input(false, { transform: booleanAttribute });
   readonly items = input<SdTreeDataSource<SdTreeItem<T>>>([]);
   readonly tree = input<SdTreeOption<T>>({ loadType: 'static' });
   readonly valueField = input<NestedKeyOf<T> | undefined>();
@@ -145,6 +176,23 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
   readonly connectorState = this.#connector.state;
   /** Interaction-gated validation message; `undefined` until the control is touched/dirty. */
   readonly visibleErrorMessage = computed(() => this.connectorState().validationError);
+  /**
+   * Text-only control backing the readonly trigger; `formControl` above holds the real keys.
+   *
+   * why: phải là một `FormControl` THẬT chứ không phải `[value]`. `MatInput.ngDoCheck` chỉ gọi
+   * `updateErrorState()` khi có `NgControl` — không có nó thì `errorState` đứng yên ở `false`, mà
+   * `<mat-error>`, viền đỏ và `aria-invalid` đều bám vào cờ đó, nên field bắt buộc bỏ trống lại im
+   * lặng y như bug cũ. Trạng thái disabled cũng chảy qua control này (MatInput tự đồng bộ
+   * `disabled` từ `ngControl` mỗi vòng CD, nên bind `[disabled]` trên template sẽ bị ghi đè).
+   */
+  readonly displayControl = new FormControl<string>('', { nonNullable: true });
+
+  /**
+   * why: MatInput đã có `NgControl`, nhưng control đó là ô TEXT — nó không biết gì về `required`
+   * hay validator của tree-select. Matcher nối thẳng `errorState` của Material vào message đã gate
+   * theo tương tác của connector.
+   */
+  readonly errorStateMatcher: ErrorStateMatcher = { isErrorState: () => !!this.visibleErrorMessage() };
   readonly draftKeys = signal<TKey[]>([]);
   readonly modelKeys = computed(() => normalizeTreeSelectKeys(this.model(), this.multiple()));
   readonly effectivePlaceholder = computed(() => this.placeholder() ?? this.#i18n.t('core.form.tree-select.placeholder'));
@@ -183,8 +231,26 @@ export class SdTreeSelect<T = unknown, TKey = string | number> {
       }) as SdTreeComponentOption<T>
   );
 
-  open(): void {
+  constructor() {
+    effect(() => {
+      const text = this.displayText();
+      void this.#state();
+      const disabled = this.formControl.disabled;
+      untracked(() => {
+        if (this.displayControl.value !== text) this.displayControl.setValue(text, { emitEvent: false });
+        if (disabled !== this.displayControl.disabled) {
+          if (disabled) this.displayControl.disable({ emitEvent: false });
+          else this.displayControl.enable({ emitEvent: false });
+        }
+      });
+    });
+  }
+
+  open(event?: Event): void {
     if (this.formControl.disabled || this.readonly() || this.connectorState().isViewed) return;
+    // why: Space trên <input readonly> không gõ được ký tự nào nhưng vẫn cuộn trang — chặn để
+    // phím Space chỉ còn nghĩa "mở popup", đúng như trên trigger <button> trước đây.
+    event?.preventDefault();
     this.draftKeys.set([...this.modelKeys()]);
     this.modal()?.open();
   }

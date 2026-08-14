@@ -17,6 +17,7 @@ import { SdTime } from './time.component';
     [max]="max"
     [step]="step"
     [required]="required"
+    [clearable]="clearable"
     [hideInlineError]="hideInlineError"
     [(model)]="value"></sd-time>`,
 })
@@ -27,6 +28,7 @@ class TimeHostComponent {
   max: string | null = null;
   step = 1;
   required = false;
+  clearable = false;
   hideInlineError = false;
   value: string | null | undefined = undefined;
 }
@@ -50,6 +52,67 @@ describe('SdTime', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     fixture.detectChanges();
   }
+
+  // why: RED trước fix — `showClear` là computed đọc `formControl.value` (property thường, không
+  // phát tín hiệu). Nó chốt `false` ở lần render đầu lúc ô còn rỗng và không bao giờ tính lại, nên
+  // bật `[clearable]` xong nút × vẫn không xuất hiện dù ô đã có giá trị. Bug ngủ đông vì
+  // `clearable` mặc định false; `<sd-time-range>` bật nó lên mới lộ ra.
+  describe('clear button', () => {
+    function clearButton(): HTMLButtonElement | null {
+      return fixture.nativeElement.querySelector('.sd-clear-btn');
+    }
+
+    it('stays hidden while clearable is off', () => {
+      typeValue('09:30');
+
+      expect(component.formControl.value).toBe('09:30');
+      expect(clearButton()).toBeNull();
+    });
+
+    it('appears once a value is typed into a clearable field', () => {
+      host.clearable = true;
+      fixture.detectChanges();
+      expect(clearButton()).toBeNull();
+
+      typeValue('09:30');
+
+      expect(component.showClear()).toBeTrue();
+      expect(clearButton()).not.toBeNull();
+    });
+
+    it('disappears again after the value is cleared', () => {
+      host.clearable = true;
+      fixture.detectChanges();
+      typeValue('09:30');
+
+      clearButton()!.click();
+      fixture.detectChanges();
+
+      expect(host.value).toBeNull();
+      expect(component.showClear()).toBeFalse();
+      expect(clearButton()).toBeNull();
+    });
+
+    it('appears for a value written programmatically through the model', () => {
+      host.clearable = true;
+      host.value = '09:30';
+      fixture.detectChanges();
+      fixture.detectChanges();
+
+      expect(component.formControl.value).toBe('09:30');
+      expect(component.showClear()).toBeTrue();
+      expect(clearButton()).not.toBeNull();
+    });
+
+    it('stays hidden on a required field even when it has a value', () => {
+      host.clearable = true;
+      host.required = true;
+      fixture.detectChanges();
+      typeValue('09:30');
+
+      expect(clearButton()).toBeNull();
+    });
+  });
 
   it('registers with the parent form and removes only its owned control on destroy', () => {
     expect(host.form.get('startTime')).toBe(component.formControl);

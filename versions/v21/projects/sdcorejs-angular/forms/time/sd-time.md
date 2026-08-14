@@ -27,13 +27,15 @@ import { SdTime } from '@sdcorejs/angular/forms/time';
 | `min` / `max`                      | `string \| null`               | `undefined`           | Inclusive time-only boundaries.                                                                     |
 | `step`                             | `number` minutes               | `1`                   | Positive integer minute interval, anchored to `min` when present and otherwise midnight.            |
 | `required`                         | `boolean`                      | `false`               | Rejects an empty value.                                                                             |
-| `clearable`                        | `boolean`                      | `false`               | Shows clear when optional and editable.                                                             |
+| `clearable`                        | `boolean`                      | `false`               | Shows a clear `×` in the input suffix while the field is optional, editable, and non-empty.        |
 | `disabled` / `readonly`            | `boolean`                      | `false`               | Disabled affects Angular Forms; readonly remains focusable but not editable.                        |
 | `viewed`                           | `boolean \| 'inline'`          | `false`               | Static or inline display policy shared by SDCoreJS controls.                                        |
 | `appearance`, `floatLabel`, `size` | Material/SDCoreJS form options | shared defaults       | Matches the other form controls.                                                                    |
 | `hideInlineError`, `inlineError`   | error options                  | `false` / `undefined` | Inline message or compact tooltip behavior.                                                         |
 
 Outputs are `sdChange`, `sdFocus`, and `sdBlur`. Public methods include `open()`, `focus()`, and `clear()`.
+
+The clear button is hover-gated (`.sd-clear-btn.sd-hover`) like `<sd-input>`: it reserves its slot but only becomes visible while the field is hovered or focused. `showClear()` tracks both user typing and programmatic model writes — the latter matter because the shared form connector writes with `{ emitEvent: false }`, so a value pushed through `[model]` never ticks the control-event stream. `clear()` still works regardless of `clearable`; the input only governs the affordance.
 
 ## Parsing and validation
 

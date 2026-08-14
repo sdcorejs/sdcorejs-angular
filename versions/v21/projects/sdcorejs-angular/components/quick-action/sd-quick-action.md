@@ -50,23 +50,23 @@ None. The component is driven entirely by the `opened` input — no imperative m
 ### 1. Canonical use — bulk actions in a table
 ```html
 <!-- Inside sd-table's selector-action component -->
-<sd-quick-action [opened]="hasSelection()">
+<sd-quick-action [opened]="hasSelection() && actions().length > 0">
   <div class="d-flex align-items-center" sdMessage>
     <div class="c-bg-length"><span class="c-length">{{ selected().length }}</span></div>
     <div class="c-message">{{ message() }}</div>
   </div>
-  @if (actions().length > 0) {
-    <div class="d-flex align-items-center" sdAction>
-      @for (action of actions(); track action.title) {
-        <sd-button class="ml-4" [title]="action.title" (click)="onAction(action)"></sd-button>
-      }
-      <sd-button class="ml-4" prefixIcon="close" type="outline" (click)="onClear()"></sd-button>
-    </div>
-  }
+  <div class="d-flex align-items-center" sdAction>
+    @for (action of actions(); track action.title) {
+      <sd-button class="ml-4" [title]="action.title" (click)="onAction(action)"></sd-button>
+    }
+    <sd-button class="ml-4" prefixIcon="close" type="outline" (click)="onClear()"></sd-button>
+  </div>
 </sd-quick-action>
 ```
 
-When `actions()` is empty, only the count message renders — and the toolbar shrinks to fit (no awkward 320px stretch).
+**Gate `opened` on the actions, not just on the selection.** A bar carrying a count and a lone `×` restates what the row checkboxes already show while floating over the content the user is trying to read — `<sd-table>` and `<sd-tree>` both keep it closed when the selection resolves to zero runnable actions, and `<sd-tree-select>` relies on that to keep its picker modal clean.
+
+A message-only bar is still legitimate when the message *is* the payload (example 2 below); the rule above is about selection bars specifically.
 
 ### 2. Message-only floating notice
 ```html
