@@ -515,6 +515,27 @@ describe('SdUploadFile', () => {
     });
   });
 
+  // ─── file-type icons ──────────────────────────────────────────────────────
+
+  describe('file-type icons', () => {
+    it('paints the document icon from the SVG set', async () => {
+      fixture.detectChanges();
+      // đợi effect model→previewFiles chạy xong, nếu không nó ghi đè set() thủ công bên dưới
+      await fixture.whenStable();
+
+      component.previewFiles.set([makePreviewFile({ fileName: 'hop-dong.pdf', extension: 'pdf' })]);
+      fixture.detectChanges();
+
+      const image = fixture.nativeElement.querySelector('.c-document-image') as HTMLElement;
+      const content = getComputedStyle(image).content;
+
+      // Bộ icon là SVG: build có thể giữ nguyên đường dẫn hoặc inline thành data URI, cả hai đều
+      // phải là svg — không được rơi lại về .png cũ.
+      expect(content).toMatch(/svg/);
+      expect(content).not.toMatch(/\.png/);
+    });
+  });
+
   // ─── onRemove ─────────────────────────────────────────────────────────────
 
   describe('onRemove', () => {

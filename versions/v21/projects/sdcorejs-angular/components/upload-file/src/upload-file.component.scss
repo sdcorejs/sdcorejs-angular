@@ -245,58 +245,58 @@
 
 .file {
   padding: 5px;
-  content: url('./assets/file-types/file.png');
+  content: url('./assets/file-types/file.svg');
 
   &.png {
-    content: url('./assets/file-types/png.png');
+    content: url('./assets/file-types/png.svg');
   }
 
   &.jpg {
-    content: url('./assets/file-types/jpg.png');
+    content: url('./assets/file-types/jpg.svg');
   }
 
   &.pdf {
-    content: url('./assets/file-types/pdf.png');
+    content: url('./assets/file-types/pdf.svg');
   }
 
   &.doc {
-    content: url('./assets/file-types/doc.png');
+    content: url('./assets/file-types/doc.svg');
   }
 
   &.docx {
-    content: url('./assets/file-types/docx.png');
+    content: url('./assets/file-types/docx.svg');
   }
 
   &.xls {
-    content: url('./assets/file-types/xls.png');
+    content: url('./assets/file-types/xls.svg');
   }
 
   &.xlsx {
-    content: url('./assets/file-types/xlsx.png');
+    content: url('./assets/file-types/xlsx.svg');
   }
 
   &.ppt {
-    content: url('./assets/file-types/xls.png');
+    content: url('./assets/file-types/xls.svg');
   }
 
   &.pptx {
-    content: url('./assets/file-types/xlsx.png');
+    content: url('./assets/file-types/xlsx.svg');
   }
 
   &.csv {
-    content: url('./assets/file-types/csv.png');
+    content: url('./assets/file-types/csv.svg');
   }
 
   &.psd {
-    content: url('./assets/file-types/psd.png');
+    content: url('./assets/file-types/psd.svg');
   }
 
   &.xml {
-    content: url('./assets/file-types/xml.png');
+    content: url('./assets/file-types/xml.svg');
   }
 
   &.zip {
-    content: url('./assets/file-types/zip.png');
+    content: url('./assets/file-types/zip.svg');
   }
 }
 
@@ -325,61 +325,61 @@
     height: 24px;
     max-width: 100%;
     margin-right: 4px;
-    content: url('./assets/file-types/file.png');
+    content: url('./assets/file-types/file.svg');
     &.png {
-      content: url('./assets/file-types/png.png');
+      content: url('./assets/file-types/png.svg');
     }
 
     &.jpg {
-      content: url('./assets/file-types/jpg.png');
+      content: url('./assets/file-types/jpg.svg');
     }
 
     &.pdf {
-      content: url('./assets/file-types/pdf.png');
+      content: url('./assets/file-types/pdf.svg');
     }
 
     &.doc {
-      content: url('./assets/file-types/doc.png');
+      content: url('./assets/file-types/doc.svg');
     }
 
     &.docx {
-      content: url('./assets/file-types/docx.png');
+      content: url('./assets/file-types/docx.svg');
     }
 
     &.xls {
-      content: url('./assets/file-types/xls.png');
+      content: url('./assets/file-types/xls.svg');
     }
 
     &.xlsx {
-      content: url('./assets/file-types/xlsx.png');
+      content: url('./assets/file-types/xlsx.svg');
     }
 
     &.ppt {
-      content: url('./assets/file-types/xls.png');
+      content: url('./assets/file-types/xls.svg');
     }
 
     &.pptx {
-      content: url('./assets/file-types/xlsx.png');
+      content: url('./assets/file-types/xlsx.svg');
     }
 
     &.csv {
-      content: url('./assets/file-types/csv.png');
+      content: url('./assets/file-types/csv.svg');
     }
 
     &.psd {
-      content: url('./assets/file-types/psd.png');
+      content: url('./assets/file-types/psd.svg');
     }
 
     &.xml {
-      content: url('./assets/file-types/xml.png');
+      content: url('./assets/file-types/xml.svg');
     }
 
     &.zip {
-      content: url('./assets/file-types/zip.png');
+      content: url('./assets/file-types/zip.svg');
     }
 
     &.tiff {
-      content: url('./assets/file-types/tiff.png');
+      content: url('./assets/file-types/tiff.svg');
     }
   }
   .c-file-name {

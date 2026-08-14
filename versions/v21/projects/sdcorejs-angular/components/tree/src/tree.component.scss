@@ -4,6 +4,7 @@
 :host {
   --sd-tree-row-height: 44px;
   --sd-tree-control-size: 28px;
+  --sd-tree-checkbox-size: 16px;
   --sd-tree-indent-size: 20px;
   --sd-tree-selected-bg: color-mix(in srgb, var(--sd-primary, #005cbb) 12%, #ffffff);
   --sd-tree-hover-bg: rgba(15, 23, 42, 0.04);
@@ -108,6 +109,25 @@
   --mdc-checkbox-selected-pressed-icon-color: var(--sd-primary, #005cbb);
 }
 
+// why: glyph mặc định của Material là 18px — to so với nhãn 14px của hàng. Material khoá con số đó
+// (`$_icon-size`) và tính cả padding của `.mdc-checkbox` lẫn top/left của `.mdc-checkbox__background`
+// theo nó, nên thu nhỏ phải sửa đồng bộ ba chỗ; chỉ đổi width/height sẽ đẩy glyph lệch khỏi tâm ô.
+// Padding vẫn bù đủ về `--sd-tree-control-size` nên ô control và touch target không đổi — chỉ hộp
+// tick nhỏ lại. Tick và dấu gạch indeterminate ăn theo 100% của background nên tự co.
+.sd-tree__checkbox ::ng-deep .mdc-checkbox {
+  flex: 0 0 var(--sd-tree-checkbox-size);
+  width: var(--sd-tree-checkbox-size);
+  height: var(--sd-tree-checkbox-size);
+  padding: calc((var(--sd-tree-control-size) - var(--sd-tree-checkbox-size)) / 2);
+}
+
+.sd-tree__checkbox ::ng-deep .mdc-checkbox .mdc-checkbox__background {
+  top: calc((var(--sd-tree-control-size) - var(--sd-tree-checkbox-size)) / 2);
+  left: calc((var(--sd-tree-control-size) - var(--sd-tree-checkbox-size)) / 2);
+  width: var(--sd-tree-checkbox-size);
+  height: var(--sd-tree-checkbox-size);
+}
+
 // why: hàng đã canh theo dòng đầu, nên icon 20px phải tự căn giữa trong ô 28px của dòng đó — nếu
 // không nó sẽ dính lên mép trên. Dùng min-height chứ không phải height: `sd-icon` có `:host { height }`
 // cùng độ ưu tiên, đặt height ở đây sẽ ăn thua theo thứ tự nạp stylesheet.
@@ -200,15 +220,17 @@
   line-height: 20px;
 }
 
+// why: khoảng cách với nhãn do `gap` của .sd-tree__command-menu-content lo, nên icon không cần
+// margin riêng. Trước đây ô này còn phải `overflow: hidden` + `margin: 0 !important` để chặn glyph
+// 24px mà Material ép vào `.mat-icon` bên trong mat-menu; sd-icon đã tự trung hoà nên bỏ được cả hai
+// (giữ overflow sẽ âm thầm xén icon nếu sau này lệch kích thước, thà thấy nó tràn).
 .sd-tree__command-menu-icon {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 16px;
-  margin: 0 !important;
   padding: 0;
   text-align: center;
-  overflow: hidden;
 }
 
 .sd-tree__command-title {
@@ -227,7 +249,9 @@
   height: 48px;
   padding: 12px 8px;
   background: var(--sd-primary);
-  border-radius: 4px 0 0 4px;
+  // why: badge nằm sát mép trái của `.c-quick-action` nên nó LÀ góc trái của thanh. Bo 4px trong khi
+  // thanh bo 8px làm hai đầu thanh lệch nhau — trái vuông hơn phải. Khớp đúng 8px của thanh.
+  border-radius: 8px 0 0 8px;
 }
 
 .c-bg-length .c-length {
