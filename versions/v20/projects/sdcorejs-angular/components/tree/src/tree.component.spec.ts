@@ -397,6 +397,38 @@ describe('SdTree', () => {
     expect(getComputedStyle(row(fixture.nativeElement, 'payable')).borderRadius).toBe('0px');
   });
 
+  it('draws the selection checkbox smaller than its slot while keeping the full hit area', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const checkbox = fixture.nativeElement.querySelector('.sd-tree__checkbox') as HTMLElement;
+    const background = checkbox.querySelector('.mdc-checkbox__background') as HTMLElement;
+    const touchTarget = checkbox.querySelector('.mat-mdc-checkbox-touch-target') as HTMLElement;
+    const checkboxRect = checkbox.getBoundingClientRect();
+    const backgroundRect = background.getBoundingClientRect();
+
+    expect(backgroundRect.width).toBeCloseTo(16, 0);
+    expect(backgroundRect.height).toBeCloseTo(16, 0);
+    // Chỉ glyph nhỏ đi — ô control vẫn 28px và touch target a11y 48px của Material giữ nguyên.
+    expect(checkboxRect.width).toBeCloseTo(28, 0);
+    expect(touchTarget.getBoundingClientRect().width).toBeCloseTo(48, 0);
+    // Glyph nhỏ hơn nhưng vẫn đúng tâm ô, nếu không cả cột control sẽ lệch.
+    expect(backgroundRect.left + backgroundRect.width / 2).toBeCloseTo(checkboxRect.left + checkboxRect.width / 2, 0);
+    expect(backgroundRect.top + backgroundRect.height / 2).toBeCloseTo(checkboxRect.top + checkboxRect.height / 2, 0);
+  });
+
+  it('rounds the quick-action count badge with the same radius as the bar', async () => {
+    const fixture = await createFixture(StaticHostComponent);
+    const bar = fixture.nativeElement.querySelector('.c-quick-action') as HTMLElement;
+    const badge = fixture.nativeElement.querySelector('.c-bg-length') as HTMLElement;
+    const barStyle = getComputedStyle(bar);
+    const badgeStyle = getComputedStyle(badge);
+
+    expect(badgeStyle.borderTopLeftRadius).toBe(barStyle.borderTopLeftRadius);
+    expect(badgeStyle.borderBottomLeftRadius).toBe(barStyle.borderBottomLeftRadius);
+    // Cạnh phải của badge nằm giữa thanh nên phải vuông.
+    expect(badgeStyle.borderTopRightRadius).toBe('0px');
+    expect(badgeStyle.borderBottomRightRadius).toBe('0px');
+  });
+
   it('renders quick action when selection is visible and rows are selected', async () => {
     const fixture = await createFixture(StaticHostComponent);
     const component = fixture.componentInstance;

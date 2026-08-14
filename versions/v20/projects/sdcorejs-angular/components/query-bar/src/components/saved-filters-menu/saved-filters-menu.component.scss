@@ -57,13 +57,14 @@ $qb-danger:        #d23535;
     line-height: 1.4;
   }
 
-  // why: leading sd-icon được slot trực tiếp bởi mat-menu-item (ngoài `.mat-mdc-menu-item-text`).
-  // Base CSS gắn `margin-right: 12px` — giữ nguyên để khoảng cách giữa leading icon và text span
-  // ổn định không phụ thuộc gap parent (parent là mat-menu-item, không phải flex thông thường).
+  // why: hàng này tự lo khoảng cách bằng `gap: 8px` trên `.mat-mdc-menu-item-text` ở trên, nên phải
+  // tắt margin mặc định của leading icon trong menu (core/menu.scss) — nếu không icon cách nhãn
+  // 8px + 12px.
   .c-sf-lead {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin-right: 0;
     font-size: 18px !important;
     width: 18px !important;
     height: 18px !important;
