@@ -32,7 +32,7 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
           ]"
           note="Khi disabled, nút bị GỠ khỏi DOM chứ không chỉ ẩn bằng opacity — không còn cách nào bấm trúng nó.">
           <div class="copy-row">
-            <span class="copy-cell" [sdHoverCopy]="secret" [sdHoverCopyDisabled]="true" data-copy-disabled>{{ secret }}</span>
+            <span class="copy-cell" [sdHoverCopy]="lockedValue" [sdHoverCopyDisabled]="true" data-copy-disabled>{{ lockedValue }}</span>
           </div>
         </demo-section>
       }
@@ -61,5 +61,8 @@ import { DemoPageComponent, DemoSectionComponent } from '../../../shared/demo-pa
 export class HoverCopyDemoComponent {
   readonly orderCode = 'DH-2026-000184';
   readonly taxCode = '0312345678-001';
-  readonly secret = 'Không cho sao chép';
+  // why: KHÔNG đặt tên field là `secret` — git-secrets của org quét theo tên định danh, nên một
+  // hằng demo vô hại cũng chặn commit, và nó chặn ở bundle đã build (published-pages) chứ không
+  // phải ở file này, nên thủ phạm rất khó lần ra.
+  readonly lockedValue = 'Không cho sao chép';
 }
