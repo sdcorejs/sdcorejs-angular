@@ -477,3 +477,99 @@ describe('ɵsdFormControlConnector', () => {
     expect(host.modelWrites).toEqual([]);
   });
 });
+
+// ---------------------------------------------------------------------------
+// `registeredControl` — register something other than the bound control
+//
+// why: `<sd-date>` / `<sd-datetime>` / `<sd-date-range>` bind their control straight to the Material
+// editor, so it holds a `Date` or a display string. With `transform` the consumer is promised that
+// `form.get(name).value` matches `model`, which only works if the *registration* can point
+// elsewhere. Everything else — validators, disabled, state, model binding — must stay on `control`.
+// ---------------------------------------------------------------------------
+
+@Component({
+  selector: 'sd-registered-host',
+  standalone: true,
+  template: '',
+})
+class RegisteredControlHost {
+  readonly form = signal<ɵSdFormControlParent>(undefined);
+  readonly name = signal<string | undefined>('field');
+  readonly control = signal<AbstractControl<string | null>>(new FormControl<string | null>('editor'));
+  readonly registered = signal<AbstractControl | null>(null);
+  readonly model = signal<string | null>('model');
+
+  readonly connector = ɵsdFormControlConnector<string | null, string | null>({
+    form: this.form,
+    name: this.name,
+    control: this.control,
+    registeredControl: this.registered,
+    model: this.model,
+    writeModel: (value: string | null) => this.model.set(value),
+  });
+}
+
+describe('ɵsdFormControlConnector (registeredControl)', () => {
+  let fixture: ComponentFixture<RegisteredControlHost>;
+  let host: RegisteredControlHost;
+  let group: FormGroup;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ imports: [RegisteredControlHost] });
+    fixture = TestBed.createComponent(RegisteredControlHost);
+    host = fixture.componentInstance;
+    group = new FormGroup({});
+  });
+
+  it('registers the bound control when no alternative is supplied', () => {
+    host.form.set(group);
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(host.control());
+  });
+
+  it('registers the alternative control instead when one is supplied', () => {
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    host.form.set(group);
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(modelFacing);
+    expect(group.get('field')).not.toBe(host.control());
+  });
+
+  it('swaps the registration when the alternative appears at runtime', () => {
+    host.form.set(group);
+    fixture.detectChanges();
+    expect(group.get('field')).toBe(host.control());
+
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    fixture.detectChanges();
+
+    expect(group.get('field')).toBe(modelFacing);
+  });
+
+  it('removes the alternative it owns on destroy', () => {
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    host.form.set(group);
+    fixture.detectChanges();
+
+    fixture.destroy();
+
+    expect(group.contains('field')).toBeFalse();
+  });
+
+  // why: registration đổi chỗ, còn model binding thì KHÔNG — nó vẫn phải chạy trên `control`.
+  it('keeps the model binding on the bound control', () => {
+    const modelFacing = new FormControl<string | null>('facing');
+    host.registered.set(modelFacing);
+    host.form.set(group);
+    fixture.detectChanges();
+
+    host.control().setValue('typed');
+
+    expect(host.model()).toBe('typed');
+  });
+});

@@ -1238,3 +1238,235 @@ describe('SdDatetime (accessibility)', () => {
     expect(el.getAttribute('aria-describedby')).toContain(cmp.errorId);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Value transform (`transform`)
+//
+// why: expected values dựng từ chính native `Date` local rồi `toISOString()` / `toUTCString()` —
+// hard-code offset sẽ đỏ trên CI ở múi giờ khác.
+// ---------------------------------------------------------------------------
+
+@Component({
+  standalone: true,
+  imports: [SdDatetime],
+  template: `<sd-datetime
+    name="startAt"
+    [form]="fg"
+    [transform]="transform"
+    [showSeconds]="showSeconds"
+    [model]="model"
+    (modelChange)="model = $event"
+    (sdChange)="changes.push($event)"></sd-datetime>`,
+})
+class DatetimeTransformHost {
+  @ViewChild(SdDatetime) datetime!: SdDatetime;
+  fg!: FormGroup;
+  transform: 'ISOString' | 'UTCString' | undefined = 'ISOString';
+  showSeconds = false;
+  model: unknown;
+  changes: unknown[] = [];
+}
+
+/** `dd/MM/yyyy HH:mm` of a local Date, built without a locale so it matches the editor exactly. */
+function localDisplay(value: Date): string {
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return (
+    pad(value.getDate()) +
+    '/' +
+    pad(value.getMonth() + 1) +
+    '/' +
+    value.getFullYear() +
+    ' ' +
+    pad(value.getHours()) +
+    ':' +
+    pad(value.getMinutes())
+  );
+}
+
+describe('SdDatetime (transform)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<DatetimeTransformHost>;
+  let host: DatetimeTransformHost;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({ imports: [DatetimeTransformHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(DatetimeTransformHost);
+    host = fixture.componentInstance;
+    host.fg = fg;
+    fixture.detectChanges();
+  });
+
+  /** Commits a datetime the way the editor does — through the display string. */
+  function commit(display: string): void {
+    host.datetime.formControl.setValue(display);
+    fixture.detectChanges();
+  }
+
+  function displayed(): string {
+    return (fixture.nativeElement.querySelector('input') as HTMLInputElement).value;
+  }
+
+  it('serializes a committed value to ISO and keeps model, form and sdChange identical', () => {
+    const expected = new Date(2026, 7, 15, 14, 30, 0, 0).toISOString();
+
+    commit('15/08/2026 14:30');
+
+    expect(host.model).toBe(expected);
+    expect(fg.get('startAt')!.value).toBe(expected);
+    expect(host.changes).toEqual([expected]);
+  });
+
+  it('serializes with toUTCString when asked', () => {
+    host.transform = 'UTCString';
+    fixture.detectChanges();
+    const expected = new Date(2026, 7, 15, 14, 30, 0, 0).toUTCString();
+
+    commit('15/08/2026 14:30');
+
+    expect(host.model).toBe(expected);
+    expect(fg.get('startAt')!.value).toBe(expected);
+  });
+
+  // why: precision đã do `showSeconds` quy định — transform không được đổi nó.
+  it('zeroes seconds when showSeconds is off', () => {
+    commit('15/08/2026 14:30');
+
+    expect(host.model).toBe(new Date(2026, 7, 15, 14, 30, 0, 0).toISOString());
+  });
+
+  it('keeps seconds when showSeconds is on, and always drops milliseconds', () => {
+    host.showSeconds = true;
+    fixture.detectChanges();
+
+    commit('15/08/2026 14:30:45');
+
+    expect(host.model).toBe(new Date(2026, 7, 15, 14, 30, 45, 0).toISOString());
+  });
+
+  it('does not let the transform change what the field displays', () => {
+    commit('15/08/2026 14:30');
+
+    expect(displayed()).toBe('15/08/2026 14:30');
+  });
+
+  it('renders an incoming ISO string with a Z suffix in local time', () => {
+    host.model = new Date(2026, 7, 15, 14, 30).toISOString();
+    fixture.detectChanges();
+
+    expect(displayed()).toBe('15/08/2026 14:30');
+  });
+
+  it('renders an incoming ISO string carrying an explicit offset as the same instant', () => {
+    const instant = new Date('2026-08-15T14:30:00+02:00');
+    host.model = '2026-08-15T14:30:00+02:00';
+    fixture.detectChanges();
+
+    expect(displayed()).toBe(localDisplay(instant));
+  });
+
+  it('renders an incoming UTC string in local time', () => {
+    host.transform = 'UTCString';
+    host.model = new Date(2026, 7, 15, 14, 30).toUTCString();
+    fixture.detectChanges();
+
+    expect(displayed()).toBe('15/08/2026 14:30');
+  });
+
+  it('does not feed an external model update back as a change', () => {
+    host.model = new Date(2026, 7, 15, 14, 30).toISOString();
+    fixture.detectChanges();
+
+    expect(host.changes).toEqual([]);
+  });
+
+  it('emits exactly once per commit', () => {
+    commit('15/08/2026 14:30');
+    commit('15/08/2026 15:45');
+
+    expect(host.changes.length).toBe(2);
+  });
+
+  it('keeps null semantics when cleared', () => {
+    commit('15/08/2026 14:30');
+
+    commit('');
+
+    expect(host.model).toBeNull();
+    expect(fg.get('startAt')!.value).toBeNull();
+  });
+
+  it('leaves an untouched model undefined', () => {
+    expect(host.model).toBeUndefined();
+    expect(host.changes).toEqual([]);
+  });
+
+  it('ignores an unparseable external value without throwing', () => {
+    expect(() => {
+      host.model = 'khong-phai-datetime';
+      fixture.detectChanges();
+    }).not.toThrow();
+  });
+
+  it('does not rewrite the bound model when the transform changes at runtime', () => {
+    commit('15/08/2026 14:30');
+    const iso = host.model;
+    host.changes.length = 0;
+
+    host.transform = 'UTCString';
+    fixture.detectChanges();
+
+    expect(host.model).toBe(iso);
+    expect(host.changes).toEqual([]);
+  });
+
+  it('uses the new strategy on the next commit after a runtime change', () => {
+    commit('15/08/2026 14:30');
+    host.transform = 'UTCString';
+    fixture.detectChanges();
+
+    commit('16/08/2026 09:15');
+
+    expect(host.model).toBe(new Date(2026, 7, 16, 9, 15, 0, 0).toUTCString());
+  });
+
+  it('renders a value written through the registered control', () => {
+    fg.get('startAt')!.setValue(new Date(2026, 7, 15, 14, 30).toISOString());
+    fixture.detectChanges();
+
+    expect(displayed()).toBe('15/08/2026 14:30');
+  });
+
+  it('mirrors the editor validity onto the registered control', () => {
+    host.datetime.formControl.setErrors({ required: true });
+    fixture.detectChanges();
+
+    expect(fg.get('startAt')!.hasError('required')).toBeTrue();
+    expect(fg.valid).toBeFalse();
+  });
+});
+
+describe('SdDatetime (transform absent)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<DatetimeTransformHost>;
+  let host: DatetimeTransformHost;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({ imports: [DatetimeTransformHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(DatetimeTransformHost);
+    host = fixture.componentInstance;
+    host.fg = fg;
+    host.transform = undefined;
+    fixture.detectChanges();
+  });
+
+  // why: khoá hợp đồng cũ — form cha vẫn nhận CHUỖI HIỂN THỊ của editor, model vẫn canonical.
+  it('keeps registering the editor control and emitting the canonical string', () => {
+    host.datetime.formControl.setValue('15/08/2026 14:30');
+    fixture.detectChanges();
+
+    expect(fg.get('startAt')!.value).toBe('15/08/2026 14:30');
+    expect(host.model).toBe('2026/08/15 14:30:00');
+  });
+});

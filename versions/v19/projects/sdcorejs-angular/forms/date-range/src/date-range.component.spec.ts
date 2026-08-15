@@ -960,3 +960,205 @@ describe('SdDateRange (accessibility)', () => {
     });
   });
 });
+
+// ---------------------------------------------------------------------------
+// Value transform (`transform`) — applied per endpoint, never to the range object
+// ---------------------------------------------------------------------------
+
+@Component({
+  standalone: true,
+  imports: [SdDateRange],
+  template: `<sd-date-range
+    name="period"
+    [form]="fg"
+    [transform]="transform"
+    [model]="model"
+    (modelChange)="model = $event"
+    (sdChange)="changes.push($event)"></sd-date-range>`,
+})
+class RangeTransformHost {
+  @ViewChild(SdDateRange) range!: SdDateRange;
+  fg!: FormGroup;
+  transform: 'ISOString' | 'UTCString' | undefined = 'ISOString';
+  model: SdDateRangeValue | null | undefined;
+  changes: (SdDateRangeValue | null | undefined)[] = [];
+}
+
+describe('SdDateRange (transform)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<RangeTransformHost>;
+  let host: RangeTransformHost;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({ imports: [RangeTransformHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(RangeTransformHost);
+    host = fixture.componentInstance;
+    host.fg = fg;
+    fixture.detectChanges();
+  });
+
+  /**
+   * Commits both endpoints the way the range picker does — the Material change events are what
+   * drive `#emit`, so setting the endpoint controls alone never reaches the model.
+   */
+  function pick(from: Date | null, to: Date | null): void {
+    host.range.control1.setValue(from);
+    host.range.control2.setValue(to);
+    host.range.onStartChange({ value: from } as never);
+    host.range.onEndChange({ value: to } as never);
+    fixture.detectChanges();
+  }
+
+  it('serializes each endpoint independently to ISO', () => {
+    const expectedFrom = new Date(2026, 7, 15, 0, 0, 0, 0).toISOString();
+    const expectedTo = new Date(2026, 7, 20, 0, 0, 0, 0).toISOString();
+
+    pick(new Date(2026, 7, 15), new Date(2026, 7, 20));
+
+    expect(host.model?.from).toBe(expectedFrom);
+    expect(host.model?.to).toBe(expectedTo);
+    expect(fg.get('period')!.value.from).toBe(expectedFrom);
+    expect(fg.get('period')!.value.to).toBe(expectedTo);
+  });
+
+  it('serializes each endpoint with toUTCString when asked', () => {
+    host.transform = 'UTCString';
+    fixture.detectChanges();
+    const expectedFrom = new Date(2026, 7, 15, 0, 0, 0, 0).toUTCString();
+    const expectedTo = new Date(2026, 7, 20, 0, 0, 0, 0).toUTCString();
+
+    pick(new Date(2026, 7, 15), new Date(2026, 7, 20));
+
+    expect(host.model?.from).toBe(expectedFrom);
+    expect(host.model?.to).toBe(expectedTo);
+  });
+
+  // why: hai đầu là NGÀY — editor mang giờ nào cũng phải quy về nửa đêm local trước khi serialize.
+  it('serializes local start-of-day for both ends', () => {
+    pick(new Date(2026, 7, 15, 18, 5, 30, 250), new Date(2026, 7, 20, 23, 59, 59, 999));
+
+    expect(host.model?.from).toBe(new Date(2026, 7, 15, 0, 0, 0, 0).toISOString());
+    expect(host.model?.to).toBe(new Date(2026, 7, 20, 0, 0, 0, 0).toISOString());
+  });
+
+  it('handles a partial range one endpoint at a time', () => {
+    pick(new Date(2026, 7, 15), null);
+
+    expect(host.model?.from).toBe(new Date(2026, 7, 15, 0, 0, 0, 0).toISOString());
+    expect(host.model?.to).toBeNull();
+  });
+
+  it('keeps the empty range shape on clear', () => {
+    pick(new Date(2026, 7, 15), new Date(2026, 7, 20));
+
+    host.range.clear();
+    fixture.detectChanges();
+
+    expect(host.model).toEqual({ from: null, to: null });
+  });
+
+  it('renders an incoming transformed range on its local calendar days', () => {
+    host.model = {
+      from: new Date(2026, 7, 15).toISOString(),
+      to: new Date(2026, 7, 20).toISOString(),
+    };
+    fixture.detectChanges();
+
+    const from = host.range.control1.value as Date;
+    const to = host.range.control2.value as Date;
+    expect([from.getFullYear(), from.getMonth(), from.getDate()]).toEqual([2026, 7, 15]);
+    expect([to.getFullYear(), to.getMonth(), to.getDate()]).toEqual([2026, 7, 20]);
+  });
+
+  // why: `DateUtilities.isDate` từ chối RFC-1123, nên nếu thiếu nhánh parse riêng thì range không
+  // đọc lại được chính output `UTCString` của nó.
+  it('renders an incoming UTC-string range on its local calendar days', () => {
+    host.transform = 'UTCString';
+    host.model = {
+      from: new Date(2026, 7, 15).toUTCString(),
+      to: new Date(2026, 7, 20).toUTCString(),
+    };
+    fixture.detectChanges();
+
+    const from = host.range.control1.value as Date;
+    expect([from.getFullYear(), from.getMonth(), from.getDate()]).toEqual([2026, 7, 15]);
+  });
+
+  it('does not feed an external model update back as a change', () => {
+    host.model = { from: new Date(2026, 7, 15).toISOString(), to: new Date(2026, 7, 20).toISOString() };
+    fixture.detectChanges();
+
+    expect(host.changes).toEqual([]);
+  });
+
+  it('leaves an untouched model undefined', () => {
+    expect(host.model).toBeUndefined();
+    expect(host.changes).toEqual([]);
+  });
+
+  it('ignores unparseable endpoints without throwing', () => {
+    expect(() => {
+      host.model = { from: 'khong-phai-ngay', to: null };
+      fixture.detectChanges();
+    }).not.toThrow();
+  });
+
+  it('does not rewrite the bound model when the transform changes at runtime', () => {
+    pick(new Date(2026, 7, 15), new Date(2026, 7, 20));
+    const before = host.model;
+
+    host.transform = 'UTCString';
+    fixture.detectChanges();
+
+    expect(host.model).toBe(before);
+  });
+
+  it('uses the new strategy on the next commit after a runtime change', () => {
+    pick(new Date(2026, 7, 15), new Date(2026, 7, 20));
+    host.transform = 'UTCString';
+    fixture.detectChanges();
+
+    pick(new Date(2026, 8, 1), new Date(2026, 8, 5));
+
+    expect(host.model?.from).toBe(new Date(2026, 8, 1, 0, 0, 0, 0).toUTCString());
+    expect(host.model?.to).toBe(new Date(2026, 8, 5, 0, 0, 0, 0).toUTCString());
+  });
+
+  it('mirrors the aggregate validity onto the registered control', () => {
+    host.range.formControl.setErrors({ required: true });
+    fixture.detectChanges();
+
+    expect(fg.get('period')!.hasError('required')).toBeTrue();
+    expect(fg.valid).toBeFalse();
+  });
+});
+
+describe('SdDateRange (transform absent)', () => {
+  let fg: FormGroup;
+  let fixture: ComponentFixture<RangeTransformHost>;
+  let host: RangeTransformHost;
+
+  beforeEach(async () => {
+    fg = new FormGroup({});
+    await TestBed.configureTestingModule({ imports: [RangeTransformHost, NoopAnimationsModule] }).compileComponents();
+    fixture = TestBed.createComponent(RangeTransformHost);
+    host = fixture.componentInstance;
+    host.fg = fg;
+    host.transform = undefined;
+    fixture.detectChanges();
+  });
+
+  // why: khoá hợp đồng cũ — form cha vẫn nhận `{ from: Date, to: Date }`, model vẫn canonical.
+  it('keeps registering the aggregate control and emitting canonical endpoints', () => {
+    host.range.control1.setValue(new Date(2026, 7, 15));
+    host.range.control2.setValue(new Date(2026, 7, 20));
+    host.range.onStartChange({ value: new Date(2026, 7, 15) } as never);
+    host.range.onEndChange({ value: new Date(2026, 7, 20) } as never);
+    fixture.detectChanges();
+
+    expect(host.model?.from).toBe('2026/08/15');
+    expect(host.model?.to).toBe('2026/08/20');
+    expect(fg.get('period')!.value.from instanceof Date).toBeTrue();
+  });
+});

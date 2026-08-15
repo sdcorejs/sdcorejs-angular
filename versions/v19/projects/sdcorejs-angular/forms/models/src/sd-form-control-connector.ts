@@ -13,6 +13,18 @@ interface ɵSdFormControlConnectorBaseOptions<TControl> {
   readonly name: Signal<string | null | undefined>;
   /** Canonical control registered in the parent form. */
   readonly control: Signal<AbstractControl<TControl>>;
+  /**
+   * Control to register in the parent form **instead of** `control`, when the two must differ.
+   *
+   * why: `<sd-date>` / `<sd-datetime>` / `<sd-date-range>` bind `control` straight to the Material
+   * editor, so it necessarily holds the editor's own representation (a `Date`, or the display
+   * string) — not the public model. That is fine until `transform` is set, at which point the
+   * consumer is promised that `form.get(name).value` matches `model` and the `sdChange` payload.
+   * Yielding a model-facing control here moves only the *registration*; validators, disabled, state
+   * and the model binding all stay on `control`, so a `null`/absent signal keeps today's behaviour
+   * exactly. The component owning both controls is responsible for mirroring value and validity.
+   */
+  readonly registeredControl?: Signal<AbstractControl | null | undefined>;
   readonly validators?: Signal<ValidatorFn | readonly ValidatorFn[] | null | undefined>;
   readonly asyncValidators?: Signal<AsyncValidatorFn | readonly AsyncValidatorFn[] | null | undefined>;
   /** Adds/removes Validators.required while preserving validators supplied above. */
@@ -171,7 +183,9 @@ export function ɵsdFormControlConnector<TModel, TControl>(
   effect(onCleanup => {
     const formGroup = ɵsdCoerceFormGroup(options.form());
     const name = options.name();
-    const control = options.control();
+    // why: `?? options.control()` chứ không phải một nhánh riêng — không khai `registeredControl`
+    // (hoặc trả null) là đi đúng đường cũ, nên mọi control hiện có giữ nguyên control đã đăng ký.
+    const control = options.registeredControl?.() ?? options.control();
 
     if (!formGroup || !name) return;
 

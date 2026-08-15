@@ -32,11 +32,16 @@ import {
   SD_FORM_CONFIGURATION,
   SdFormControl,
   SdInlineErrorValidator,
+  SdTemporalValueTransform,
   SdViewed,
   SdViewedInput,
+  sdLocalStartOfDay,
+  sdParseTransformedTemporal,
+  sdSerializeTemporalValue,
   sdViewedInline,
   sdViewedTransform,
   ɵsdFormControlConnector,
+  ɵsdModelFacingControl,
   ɵsdTimerScope,
 } from '@sdcorejs/angular/forms/models';
 import { sdSerializeDataValue, sdIsEmpty } from '@sdcorejs/angular/utilities/data-state';
@@ -56,8 +61,12 @@ type SdDateModelValue = string | number | Date | undefined | null;
 type SdDateKeyupEvent = Event | { target?: { value?: string | null } };
 
 function normalizeDateModel(value: SdDateModelValue): string | null {
-  if (!DateUtilities.isDate(value)) return null;
-  return DateUtilities.toFormat(value, 'yyyy/MM/dd') || null;
+  if (DateUtilities.isDate(value)) return DateUtilities.toFormat(value, 'yyyy/MM/dd') || null;
+  // why: chỉ chạy SAU khi parser hiện có từ chối. `DateUtilities.isDate` đã nhận Date, timestamp,
+  // canonical `yyyy/MM/dd` và ISO — nhưng KHÔNG nhận chuỗi RFC-1123 của `toUTCString()`, nên nếu
+  // không có nhánh này thì `<sd-date transform="UTCString">` không đọc lại được chính output của nó.
+  const parsed = sdParseTransformedTemporal(value);
+  return parsed ? DateUtilities.toFormat(parsed, 'yyyy/MM/dd') || null : null;
 }
 
 function dateModelToControl(value: SdDateModelValue): Date | null {
@@ -237,6 +246,13 @@ export class SdDate implements OnDestroy, OnInit {
   maxDateInput = input<any>(undefined, { alias: 'maxDate' });
   resolvedMax = computed(() => this.#parseDateBoundary(this.maxInput() ?? this.maxDateInput()));
 
+  /**
+   * Output serialization strategy for the committed value. Affects `model` / `modelChange` /
+   * `sdChange` and the registered form field only — the input keeps showing `dd/MM/yyyy`.
+   * Left unset, the component keeps emitting its canonical `yyyy/MM/dd` string.
+   */
+  transform = input<SdTemporalValueTransform | undefined>();
+
   valueModel = model<SdDateModelValue>(undefined, { alias: 'model' });
 
   // ==========================================
@@ -268,18 +284,57 @@ export class SdDate implements OnDestroy, OnInit {
     this.inlineError() ? [this.#dateFormatValidator, SdInlineErrorValidator] : [this.#dateFormatValidator]
   );
 
+  /**
+   * why: control gắn thẳng vào `matDatepicker` nên nó giữ `Date` — đó là biểu diễn của editor, không
+   * phải model. Khi có `transform`, consumer được hứa `form.get(name).value` bằng `model`, nên form
+   * phải nhận control này thay vì control của editor. Không có `transform` thì `registered` trả null
+   * và mọi thứ đi đúng đường cũ (form vẫn nhận `Date`).
+   */
+  readonly #modelFacing = ɵsdModelFacingControl<SdDateModelValue>({
+    active: computed(() => !!this.transform()),
+    model: this.valueModel,
+    writeModel: value => {
+      this.valueModel.set(value);
+      this.sdChange.emit(value);
+    },
+    source: computed<AbstractControl>(() => this.formControl),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
+  });
+  /** Control registered in the parent form while a `transform` is active; holds the public model. */
+  readonly modelControl = this.#modelFacing.control;
+
+  /**
+   * Serializes a committed date. Date-only, so the instant is always local start-of-day — the
+   * calendar day the user picked, not whatever time the editor happened to carry.
+   */
+  #serializeCommitted(value: Date | null): SdDateModelValue {
+    if (!value) return null;
+    return sdSerializeTemporalValue(sdLocalStartOfDay(value), this.transform()) ?? dateControlToModel(value);
+  }
+
+  /**
+   * why: `normalizeDateModel` gộp mọi giá trị về `yyyy/MM/dd`, nên hai chuỗi transform KHÁC NHAU của
+   * cùng một ngày sẽ so ra bằng nhau và `writeModel` bị bỏ qua — đổi `transform` lúc runtime rồi
+   * commit lại sẽ không phát ra chuỗi mới. Khi có transform thì so sánh nguyên văn.
+   */
+  #modelsEqual(left: SdDateModelValue, right: SdDateModelValue): boolean {
+    if (this.transform()) return Object.is(left, right);
+    return normalizeDateModel(left) === normalizeDateModel(right);
+  }
+
   readonly #formConnector = ɵsdFormControlConnector<SdDateModelValue, Date | null>({
     form: this.form,
     name: this.name,
     control: computed<AbstractControl<Date | null>>(() => this.formControl),
+    registeredControl: this.#modelFacing.registered,
     model: this.valueModel,
     writeModel: value => {
       this.valueModel.set(value);
       this.sdChange.emit(value);
     },
     modelToControl: dateModelToControl,
-    controlToModel: dateControlToModel,
-    modelEquals: (left, right) => normalizeDateModel(left) === normalizeDateModel(right),
+    controlToModel: value => this.#serializeCommitted(value),
+    modelEquals: (left, right) => this.#modelsEqual(left, right),
     controlEquals: dateControlsEqual,
     validators: this.#validators,
     required: this.required,
